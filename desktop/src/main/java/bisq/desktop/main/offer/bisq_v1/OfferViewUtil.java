@@ -20,6 +20,7 @@ package bisq.desktop.main.offer.bisq_v1;
 import bisq.desktop.Navigation;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.offer.offerbook.OfferBookView;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -33,6 +34,7 @@ import bisq.common.util.Tuple2;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 import javafx.geometry.HPos;
@@ -88,21 +90,32 @@ public class OfferViewUtil {
         var buyBsqButton = new AutoTooltipButton(buyBsqText);
         buyBsqButton.getStyleClass().add("action-button");
         buyBsqButton.getStyleClass().add("tiny-button");
-        buyBsqButton.setOnAction(e -> new Popup().headLine(buyBsqText)
+        buyBsqButton.setOnAction(e -> openBuyBsqOfferBook(navigation, preferences)
+        );
+
+        var info = new AutoTooltipLabel("BSQ is colored BTC that helps fund Bisq developers.");
+        var learnMore = new HyperlinkWithIcon("Learn More");
+        learnMore.setOnAction(e -> new Popup().headLine(buyBsqText)
                 .information(Res.get("createOffer.buyBsq.popupMessage"))
                 .actionButtonText(buyBsqText)
                 .buttonAlignment(HPos.CENTER)
-                .onAction(() -> {
-                    preferences.setSellScreenCurrencyCode("BSQ");
-                    navigation.navigateTo(
-                            MainView.class, SellOfferView.class, OfferBookView.class);
-                }).show());
+                .onAction(() -> openBuyBsqOfferBook(navigation, preferences)).show());
 
-        final VBox buyBsqButtonVBox = new VBox(buyBsqButton);
+        final HBox buyBsqBox = new HBox(buyBsqButton, info, learnMore);
+        buyBsqBox.setAlignment(Pos.BOTTOM_LEFT);
+        buyBsqBox.setSpacing(10);
+
+        final VBox buyBsqButtonVBox = new VBox(buyBsqBox);
         buyBsqButtonVBox.setAlignment(Pos.BOTTOM_LEFT);
         buyBsqButtonVBox.setPadding(new Insets(0, 0, 0, -20));
         VBox.setMargin(buyBsqButton, new Insets(0, 0, 4, 0));
 
         return new Tuple2<>(buyBsqButton, buyBsqButtonVBox);
+    }
+
+    private static void openBuyBsqOfferBook(Navigation navigation, Preferences preferences) {
+        preferences.setSellScreenCurrencyCode("BSQ");
+        navigation.navigateTo(
+                MainView.class, SellOfferView.class, OfferBookView.class);
     }
 }
