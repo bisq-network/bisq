@@ -168,7 +168,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     private ChangeListener<String> tradeCurrencyCodeListener, errorMessageListener,
             marketPriceMarginListener, volumeListener, buyerSecurityDepositInBTCListener;
     private ChangeListener<Number> marketPriceAvailableListener;
-    private Navigation.Listener navigationWithCloseListener;
+    private Navigation.Listener closeViewListener;
     private EventHandler<ActionEvent> currencyComboBoxSelectionHandler, paymentAccountsComboBoxSelectionHandler;
     private OfferView.CloseHandler closeHandler;
 
@@ -914,10 +914,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             }
         });
 
-        navigationWithCloseListener = (path, data) -> {
-            log.warn("*** target path={}, data={}, dir={}", path, data, model.getDataModel().getDirection());
-            if ("closeOfferView".equals(data)) {
-                log.warn("*** WILL CLOSE");
+        closeViewListener = (path, data) -> {
+            if (OfferViewUtil.isCloseView((String) data)) {
                 close();
             }
         };
@@ -978,7 +976,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         paymentAccountsComboBox.setOnAction(paymentAccountsComboBoxSelectionHandler);
         currencyComboBox.setOnAction(currencyComboBoxSelectionHandler);
 
-        navigation.addListener(navigationWithCloseListener);
+        navigation.addListener(closeViewListener);
     }
 
     private void removeListeners() {
@@ -1015,7 +1013,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         paymentAccountsComboBox.setOnAction(null);
         currencyComboBox.setOnAction(null);
 
-        navigation.removeListener(navigationWithCloseListener);
+        navigation.removeListener(closeViewListener);
     }
 
 

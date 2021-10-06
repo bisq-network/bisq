@@ -46,6 +46,9 @@ import java.util.concurrent.TimeUnit;
 
 // Shared utils for Views
 public class OfferViewUtil {
+
+    public static final String CLOSE_VIEW = "closeView";
+
     public static Label createPopOverLabel(String text) {
         final Label label = new Label(text);
         label.setPrefWidth(300);
@@ -101,7 +104,7 @@ public class OfferViewUtil {
                     preferences.setSellScreenCurrencyCode("BSQ");
                     navigation.navigateToWithData(
                             // FIXME: replace "closeOfferView" with a more unique object?
-                            directionClosure.getDirection() == OfferPayload.Direction.SELL ? "closeOfferView" : null,
+                            directionClosure.getDirection() == OfferPayload.Direction.SELL ? CLOSE_VIEW : null,
                             MainView.class, SellOfferView.class, OfferBookView.class);
                 }).show());
 
@@ -111,5 +114,9 @@ public class OfferViewUtil {
         VBox.setMargin(buyBsqButton, new Insets(0, 0, 4, 0));
 
         return new Tuple2<>(buyBsqButton, buyBsqButtonVBox);
+    }
+
+    public static boolean isCloseView(String data) {
+        return CLOSE_VIEW.equals(data);
     }
 }
