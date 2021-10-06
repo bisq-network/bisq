@@ -168,7 +168,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     private ChangeListener<String> tradeCurrencyCodeListener, errorMessageListener,
             marketPriceMarginListener, volumeListener, buyerSecurityDepositInBTCListener;
     private ChangeListener<Number> marketPriceAvailableListener;
-    private Navigation.Listener closeViewListener;
     private EventHandler<ActionEvent> currencyComboBoxSelectionHandler, paymentAccountsComboBoxSelectionHandler;
     private OfferView.CloseHandler closeHandler;
 
@@ -913,12 +912,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                 buyerSecurityDepositInputTextField.setDisable(false);
             }
         });
-
-        closeViewListener = (path, data) -> {
-            if (OfferViewUtil.isCloseView((String) data)) {
-                close();
-            }
-        };
     }
 
     private void setIsCurrencyForMakerFeeBtc(boolean isCurrencyForMakerFeeBtc) {
@@ -975,8 +968,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         // UI actions
         paymentAccountsComboBox.setOnAction(paymentAccountsComboBoxSelectionHandler);
         currencyComboBox.setOnAction(currencyComboBoxSelectionHandler);
-
-        navigation.addListener(closeViewListener);
     }
 
     private void removeListeners() {
@@ -1012,8 +1003,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         // UI actions
         paymentAccountsComboBox.setOnAction(null);
         currencyComboBox.setOnAction(null);
-
-        navigation.removeListener(closeViewListener);
     }
 
 
@@ -1112,7 +1101,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         gridPane.getChildren().add(advancedOptionsBox);
 
         Tuple2<AutoTooltipButton, VBox> buyBsqButtonBox = OfferViewUtil.createBuyBsqButtonBox(
-                navigation, preferences, model.dataModel::getDirection);
+                navigation, preferences);
         buyBsqButton = buyBsqButtonBox.first;
         buyBsqButton.setVisible(false);
 

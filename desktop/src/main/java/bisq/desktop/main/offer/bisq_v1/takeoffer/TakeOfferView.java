@@ -871,7 +871,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         gridPane.getChildren().add(advancedOptionsBox);
 
         Tuple2<AutoTooltipButton, VBox> buyBsqButtonBox = OfferViewUtil.createBuyBsqButtonBox(
-                navigation, model.dataModel.preferences, model.dataModel::getDirection);
+                navigation, model.dataModel.preferences);
 
         advancedOptionsBox.getChildren().addAll(getTradeFeeFieldsBox(), buyBsqButtonBox.second);
     }

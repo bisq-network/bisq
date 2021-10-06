@@ -25,7 +25,6 @@ import bisq.desktop.main.offer.offerbook.OfferBookView;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.locale.Res;
-import bisq.core.offer.OfferPayload;
 import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
@@ -46,8 +45,6 @@ import java.util.concurrent.TimeUnit;
 
 // Shared utils for Views
 public class OfferViewUtil {
-
-    public static final String CLOSE_VIEW = "closeView";
 
     public static Label createPopOverLabel(String text) {
         final Label label = new Label(text);
@@ -85,13 +82,8 @@ public class OfferViewUtil {
         infoGridPane.getChildren().addAll(label, textField);
     }
 
-    public interface DirectionClosure {
-        OfferPayload.Direction getDirection();
-    }
-
     public static Tuple2<AutoTooltipButton, VBox> createBuyBsqButtonBox(Navigation navigation,
-                                                                        Preferences preferences,
-                                                                        DirectionClosure directionClosure) {
+                                                                        Preferences preferences) {
         String buyBsqText = Res.get("shared.buyCurrency", "BSQ");
         var buyBsqButton = new AutoTooltipButton(buyBsqText);
         buyBsqButton.getStyleClass().add("action-button");
@@ -102,9 +94,7 @@ public class OfferViewUtil {
                 .buttonAlignment(HPos.CENTER)
                 .onAction(() -> {
                     preferences.setSellScreenCurrencyCode("BSQ");
-                    navigation.navigateToWithData(
-                            // FIXME: replace "closeOfferView" with a more unique object?
-                            directionClosure.getDirection() == OfferPayload.Direction.SELL ? CLOSE_VIEW : null,
+                    navigation.navigateTo(
                             MainView.class, SellOfferView.class, OfferBookView.class);
                 }).show());
 
@@ -114,9 +104,5 @@ public class OfferViewUtil {
         VBox.setMargin(buyBsqButton, new Insets(0, 0, 4, 0));
 
         return new Tuple2<>(buyBsqButton, buyBsqButtonVBox);
-    }
-
-    public static boolean isCloseView(String data) {
-        return CLOSE_VIEW.equals(data);
     }
 }
