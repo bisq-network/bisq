@@ -165,7 +165,9 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         CELPAY,
         NEQUI,
         BIZUM,
-        PIX
+        PIX,
+        MONESE,
+        SATISPAY
     }
 
     @Getter

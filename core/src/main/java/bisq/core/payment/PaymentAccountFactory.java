@@ -110,6 +110,10 @@ public class PaymentAccountFactory {
                 return new CapitualAccount();
             case PaymentMethod.CELPAY_ID:
                 return new CelPayAccount();
+            case PaymentMethod.MONESE_ID:
+                return new MoneseAccount();
+            case PaymentMethod.SATISPAY_ID:
+                return new SatispayAccount();
             case PaymentMethod.SWIFT_ID:
                 return new SwiftAccount();
 

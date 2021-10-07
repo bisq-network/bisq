@@ -38,6 +38,7 @@ import bisq.desktop.components.paymentmethods.HalCashForm;
 import bisq.desktop.components.paymentmethods.ImpsForm;
 import bisq.desktop.components.paymentmethods.InteracETransferForm;
 import bisq.desktop.components.paymentmethods.JapanBankTransferForm;
+import bisq.desktop.components.paymentmethods.MoneseForm;
 import bisq.desktop.components.paymentmethods.MoneyBeamForm;
 import bisq.desktop.components.paymentmethods.MoneyGramForm;
 import bisq.desktop.components.paymentmethods.NationalBankForm;
@@ -53,6 +54,7 @@ import bisq.desktop.components.paymentmethods.PromptPayForm;
 import bisq.desktop.components.paymentmethods.RevolutForm;
 import bisq.desktop.components.paymentmethods.RtgsForm;
 import bisq.desktop.components.paymentmethods.SameBankForm;
+import bisq.desktop.components.paymentmethods.SatispayForm;
 import bisq.desktop.components.paymentmethods.SepaForm;
 import bisq.desktop.components.paymentmethods.SepaInstantForm;
 import bisq.desktop.components.paymentmethods.SpecificBankForm;
@@ -372,6 +374,12 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.CELPAY_ID:
                 gridRow = CelPayForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.MONESE_ID:
+                gridRow = MoneseForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.SATISPAY_ID:
+                gridRow = SatispayForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.SWIFT_ID:
                 gridRow = SwiftForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, trade);
