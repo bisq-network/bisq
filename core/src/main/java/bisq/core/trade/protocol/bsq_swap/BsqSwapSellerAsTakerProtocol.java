@@ -22,18 +22,22 @@ import bisq.core.offer.Offer;
 import bisq.core.trade.model.bsq_swap.BsqSwapSellerAsTakerTrade;
 import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.bsq_swap.tasks.ApplyFilter;
+import bisq.core.trade.protocol.bsq_swap.tasks.seller.SellerMaybePublishesTx;
 import bisq.core.trade.protocol.bsq_swap.tasks.seller.SendBsqSwapFinalizeTxRequest;
 import bisq.core.trade.protocol.bsq_swap.tasks.seller_as_taker.ProcessBsqSwapTxInputsMessage;
 import bisq.core.trade.protocol.bsq_swap.tasks.seller_as_taker.SellerAsTakerCreatesAndSignsTx;
+import bisq.core.trade.protocol.bsq_swap.tasks.seller_as_taker.SellerAsTakerProcessBsqSwapFinalizedTxMessage;
 import bisq.core.trade.protocol.bsq_swap.tasks.seller_as_taker.SellerAsTakerSetupTxListener;
 import bisq.core.trade.protocol.bsq_swap.tasks.seller_as_taker.SendSellersBsqSwapRequest;
 import bisq.core.trade.protocol.messages.TradeMessage;
+import bisq.core.trade.protocol.messages.bsq_swap.BsqSwapFinalizedTxMessage;
 import bisq.core.trade.protocol.messages.bsq_swap.BsqSwapTxInputsMessage;
 
 import bisq.network.p2p.NodeAddress;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.model.bsq_swap.BsqSwapTrade.State.COMPLETED;
 import static bisq.core.trade.model.bsq_swap.BsqSwapTrade.State.PREPARATION;
 import static bisq.core.trade.protocol.bisq_v1.TakerProtocol.TakerEvent.TAKE_OFFER;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -63,7 +67,7 @@ public class BsqSwapSellerAsTakerProtocol extends BsqSwapSellerProtocol implemen
     // Incoming message handling
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void handle(BsqSwapTxInputsMessage message, NodeAddress sender) {
+    private void handle(BsqSwapTxInputsMessage message, NodeAddress sender) {
         expect(preCondition(PREPARATION == trade.getTradeState())
                 .with(message)
                 .from(sender))
@@ -81,6 +85,16 @@ public class BsqSwapSellerAsTakerProtocol extends BsqSwapSellerProtocol implemen
                 .executeTasks();
     }
 
+    private void handle(BsqSwapFinalizedTxMessage message, NodeAddress sender) {
+        expect(preCondition(PREPARATION == trade.getTradeState() || COMPLETED == trade.getTradeState())
+                .with(message)
+                .from(sender))
+                .setup(tasks(
+                        SellerAsTakerProcessBsqSwapFinalizedTxMessage.class,
+                        SellerMaybePublishesTx.class))
+                .executeTasks();
+    }
+
     @Override
     protected void onTradeMessage(TradeMessage message, NodeAddress peer) {
         log.info("Received {} from {} with tradeId {} and uid {}",
@@ -88,6 +102,8 @@ public class BsqSwapSellerAsTakerProtocol extends BsqSwapSellerProtocol implemen
 
         if (message instanceof BsqSwapTxInputsMessage) {
             handle((BsqSwapTxInputsMessage) message, peer);
+        } else if (message instanceof BsqSwapFinalizedTxMessage) {
+            handle((BsqSwapFinalizedTxMessage) message, peer);
         }
     }
 }

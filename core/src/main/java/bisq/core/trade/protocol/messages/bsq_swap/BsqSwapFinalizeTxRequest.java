@@ -40,17 +40,27 @@ public final class BsqSwapFinalizeTxRequest extends TradeMessage implements Dire
     private final NodeAddress senderNodeAddress;
     private final byte[] tx;
     private final List<RawTransactionInput> btcInputs;
+    private final long btcChange;
+    private final String bsqPayoutAddress;
+    private final String btcChangeAddress;
+
 
     public BsqSwapFinalizeTxRequest(String tradeId,
                                     NodeAddress senderNodeAddress,
                                     byte[] tx,
-                                    List<RawTransactionInput> btcInputs) {
+                                    List<RawTransactionInput> btcInputs,
+                                    long btcChange,
+                                    String bsqPayoutAddress,
+                                    String btcChangeAddress) {
         this(Version.getP2PMessageVersion(),
                 tradeId,
                 UUID.randomUUID().toString(),
                 senderNodeAddress,
                 tx,
-                btcInputs);
+                btcInputs,
+                btcChange,
+                bsqPayoutAddress,
+                btcChangeAddress);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -62,11 +72,17 @@ public final class BsqSwapFinalizeTxRequest extends TradeMessage implements Dire
                                      String uid,
                                      NodeAddress senderNodeAddress,
                                      byte[] tx,
-                                     List<RawTransactionInput> btcInputs) {
+                                     List<RawTransactionInput> btcInputs,
+                                     long btcChange,
+                                     String bsqPayoutAddress,
+                                     String btcChangeAddress) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
         this.tx = tx;
         this.btcInputs = btcInputs;
+        this.btcChange = btcChange;
+        this.bsqPayoutAddress = bsqPayoutAddress;
+        this.btcChangeAddress = btcChangeAddress;
     }
 
     @Override
@@ -78,7 +94,10 @@ public final class BsqSwapFinalizeTxRequest extends TradeMessage implements Dire
                         .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                         .setTx(ByteString.copyFrom(tx))
                         .addAllBtcInputs(btcInputs.stream().map(RawTransactionInput::toProtoMessage).collect(
-                                Collectors.toList())))
+                                Collectors.toList()))
+                        .setBtcChange(btcChange)
+                        .setBsqPayoutAddress(bsqPayoutAddress)
+                        .setBtcChangeAddress(btcChangeAddress))
                 .build();
     }
 
@@ -90,7 +109,21 @@ public final class BsqSwapFinalizeTxRequest extends TradeMessage implements Dire
                 proto.getTx().toByteArray(),
                 proto.getBtcInputsList().stream()
                         .map(RawTransactionInput::fromProto)
-                        .collect(Collectors.toList())
+                        .collect(Collectors.toList()),
+                proto.getBtcChange(),
+                proto.getBsqPayoutAddress(),
+                proto.getBtcChangeAddress()
         );
+    }
+
+    @Override
+    public String toString() {
+        return "BsqSwapFinalizeTxRequest{" +
+                "\r\n     senderNodeAddress=" + senderNodeAddress +
+                ",\r\n     btcInputs=" + btcInputs +
+                ",\r\n     btcChange=" + btcChange +
+                ",\r\n     bsqPayoutAddress='" + bsqPayoutAddress + '\'' +
+                ",\r\n     btcChangeAddress='" + btcChangeAddress + '\'' +
+                "\r\n} " + super.toString();
     }
 }

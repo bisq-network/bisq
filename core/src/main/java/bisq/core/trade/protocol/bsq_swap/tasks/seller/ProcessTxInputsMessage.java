@@ -19,6 +19,8 @@ package bisq.core.trade.protocol.bsq_swap.tasks.seller;
 
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.Restrictions;
+import bisq.core.dao.DaoFacade;
+import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsq_swap.BsqSwapCalculation;
 import bisq.core.trade.protocol.bsq_swap.BsqSwapTradePeer;
@@ -45,36 +47,43 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
     @Override
     protected void run() {
         try {
-            runInterceptHook();
+            TxInputsMessage message = checkNotNull((TxInputsMessage) protocolModel.getTradeMessage());
+            checkNotNull(message);
 
-            TxInputsMessage data = checkNotNull((TxInputsMessage) protocolModel.getTradeMessage());
-            checkNotNull(data);
+            List<RawTransactionInput> inputs = message.getBsqInputs();
+            checkArgument(!inputs.isEmpty(), "Buyers BSQ inputs must not be empty");
 
-            List<RawTransactionInput> inputs = data.getBsqInputs();
-            checkArgument(!inputs.isEmpty(), "inputs must not be empty");
             long sumInputs = inputs.stream().mapToLong(rawTransactionInput -> rawTransactionInput.value).sum();
-            // If taker is buyer the inputs are BSQ, otherwise BTC
-            checkArgument(sumInputs >= BsqSwapCalculation.getBuyersRequiredBsqInputs(trade).getValue(),
-                    "Buyers BSQ inputs are not sufficient");
+            long buyersBsqInputAmount = BsqSwapCalculation.getBuyersBsqInputValue(trade, getBuyersTradeFee()).getValue();
+            checkArgument(sumInputs >= buyersBsqInputAmount,
+                    "Buyers BSQ input amount do not match our calculated required BSQ input amount");
 
-            long change = data.getBsqChange();
+            DaoFacade daoFacade = protocolModel.getDaoFacade();
+            long numValidBsqInputs = inputs.stream()
+                    .map(input -> new TxOutputKey(txIdOfRawInputParentTx(input), (int) input.index))
+                    .filter(daoFacade::isTxOutputSpendable)
+                    .count();
+            checkArgument(inputs.size() == numValidBsqInputs,
+                    "Some of the buyers BSQ inputs are not from spendable BSQ utxos according to our DAO state data.");
+
+            long change = message.getBsqChange();
             checkArgument(change == 0 || Restrictions.isAboveDust(Coin.valueOf(change)),
                     "BSQ change must be 0 or above dust");
 
-            String buyersBtcAPayoutAddress = data.getBuyersBtcPayoutAddress();
-            checkNotNull(buyersBtcAPayoutAddress, "buyersBtcAPayoutAddress must not be null");
-            checkArgument(!buyersBtcAPayoutAddress.isEmpty(), "buyersBtcAPayoutAddress must not be empty");
+            String buyersBtcPayoutAddress = message.getBuyersBtcPayoutAddress();
+            checkNotNull(buyersBtcPayoutAddress, "buyersBtcPayoutAddress must not be null");
+            checkArgument(!buyersBtcPayoutAddress.isEmpty(), "buyersBtcPayoutAddress must not be empty");
 
-            String buyersBsqChangeAddress = data.getBuyersBsqChangeAddress();
+            String buyersBsqChangeAddress = message.getBuyersBsqChangeAddress();
             checkNotNull(buyersBsqChangeAddress, "buyersBsqChangeAddress must not be null");
             checkArgument(!buyersBsqChangeAddress.isEmpty(), "buyersBsqChangeAddress must not be empty");
 
             // Apply data
             BsqSwapTradePeer tradePeer = protocolModel.getTradePeer();
-            tradePeer.setInputs(data.getBsqInputs());
-            tradePeer.setChange(data.getBsqChange());
-            tradePeer.setBtcAddress(data.getBuyersBtcPayoutAddress());
-            tradePeer.setBsqAddress(data.getBuyersBsqChangeAddress());
+            tradePeer.setInputs(inputs);
+            tradePeer.setChange(change);
+            tradePeer.setBtcAddress(buyersBtcPayoutAddress);
+            tradePeer.setBsqAddress(buyersBsqChangeAddress);
 
             complete();
         } catch (Throwable t) {
@@ -82,4 +91,9 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
         }
     }
 
+    private String txIdOfRawInputParentTx(RawTransactionInput input) {
+        return protocolModel.getBtcWalletService().getTxFromSerializedTx(input.parentTransaction).getTxId().toString();
+    }
+
+    protected abstract long getBuyersTradeFee();
 }

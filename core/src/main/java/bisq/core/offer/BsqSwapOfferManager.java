@@ -17,17 +17,14 @@
 
 package bisq.core.offer;
 
-import bisq.core.btc.BsqSwapTxHelper;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.provider.fee.FeeService;
-import bisq.core.util.coin.CoinUtil;
 
 import bisq.common.UserThread;
 import bisq.common.crypto.KeyRing;
 
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.wallet.Wallet;
 import org.bitcoinj.wallet.listeners.WalletChangeEventListener;
 
@@ -186,7 +183,7 @@ public class BsqSwapOfferManager implements WalletChangeEventListener {
 
         }*/
 
-        var isMaker = offer.isMyOffer(keyRing);
+       /* var isMaker = offer.isMyOffer(keyRing);
         var isBuyer = isMaker == offer.isBuyOffer();
         var price = offer.getPrice();
         var btcAmount = offer.getAmount();
@@ -207,6 +204,8 @@ public class BsqSwapOfferManager implements WalletChangeEventListener {
             bsqSwapTxHelper.setMyTradeFee(takerFee);
             bsqSwapTxHelper.setPeerTradeFee(makerFee);
         }
-        return bsqSwapTxHelper.buildMySide(0, null, !isMaker) != null;
+        return bsqSwapTxHelper.buildMySide(0, null, !isMaker) != null;*/
+
+        return true;
     }
 }

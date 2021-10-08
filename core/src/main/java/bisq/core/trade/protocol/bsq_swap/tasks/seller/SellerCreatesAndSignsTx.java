@@ -56,60 +56,54 @@ public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
         try {
             TradeWalletService tradeWalletService = protocolModel.getTradeWalletService();
             BsqSwapTradePeer tradePeer = protocolModel.getTradePeer();
-
-            protocolModel.setBtcAddress(protocolModel.getBtcWalletService().getFreshAddressEntry().getAddressString());
-            protocolModel.setBsqAddress(protocolModel.getBsqWalletService().getUnusedAddress().toString());
-            protocolModel.setPayout(trade.getBsqTradeAmount());
+            long sellersTradeFee = getSellersTradeFee();
 
             // Figure out how large out tx will be
             int iterations = 0;
-            Tuple2<List<RawTransactionInput>, Coin> tuple = null;
+            Tuple2<List<RawTransactionInput>, Coin> inputsAndChange = null;
             Coin previous = null;
-            long sellersTradeFee = getSellersTradeFee();
+
             // At first we try with min. tx size
             int sellersTxSize = MIN_SELLERS_TX_SIZE;
-            Coin required = BsqSwapCalculation.getSellersRequiredBtcInput(trade, sellersTradeFee, sellersTxSize);
+            Coin required = BsqSwapCalculation.getSellersBtcInputValue(trade, sellersTxSize, sellersTradeFee);
 
             // As fee calculation is not deterministic it could be that we toggle between a too small and too large
             // input. We would take the latest result before we break iteration. Worst case is that we under- or
             // overpay a bit. As fee rate is anyway an estimation we ignore that imperfection.
             while (iterations < 10 && !required.equals(previous)) {
-                tuple = tradeWalletService.getSellersBtcInputsForBsqSwapTx(required);
+                inputsAndChange = tradeWalletService.getSellersBtcInputsForBsqSwapTx(required);
                 previous = required;
 
                 // We calculate more exact tx size based on resulted inputs and change
-                sellersTxSize = BsqSwapCalculation.getTxSize(protocolModel.getTradeWalletService(), tuple.first, tuple.second.getValue());
-                required = BsqSwapCalculation.getSellersRequiredBtcInput(trade, sellersTradeFee, sellersTxSize);
+                sellersTxSize = BsqSwapCalculation.getTxSize(tradeWalletService, inputsAndChange.first, inputsAndChange.second.getValue());
+                required = BsqSwapCalculation.getSellersBtcInputValue(trade, sellersTxSize, sellersTradeFee);
+
                 iterations++;
             }
 
-            checkNotNull(tuple);
-            List<RawTransactionInput> sellersInputs = tuple.first;
-            long sellersChange = tuple.second.value;
-
-            protocolModel.setInputs(sellersInputs);
-            protocolModel.setChange(sellersChange);
-
-            long buyersBtcPayout = BsqSwapCalculation.getBuyersBtcPayoutAmount(sellersTradeFee,
-                    trade,
-                    getBuyersTxSize(),
-                    getBuyersTradeFee());
-            tradePeer.setPayout(buyersBtcPayout);
+            checkNotNull(inputsAndChange);
 
             List<RawTransactionInput> buyersBsqInputs = Objects.requireNonNull(tradePeer.getInputs());
-            List<RawTransactionInput> sellersBtcInputs = Objects.requireNonNull(sellersInputs);
 
-            Coin sellersBsqPayoutAmount = Coin.valueOf(protocolModel.getPayout());
-            String sellersBsqPayoutAddress = protocolModel.getBsqAddress();
+            List<RawTransactionInput> sellersBtcInputs = inputsAndChange.first;
+            protocolModel.setInputs(sellersBtcInputs);
+
+            Coin sellersBsqPayoutAmount = BsqSwapCalculation.getSellerBsqPayoutValue(trade, sellersTradeFee);
+            protocolModel.setPayout(sellersBsqPayoutAmount.getValue());
+            String sellersBsqPayoutAddress = protocolModel.getBsqWalletService().getUnusedAddress().toString();
+            protocolModel.setBsqAddress(sellersBsqPayoutAddress);
 
             Coin buyersBsqChangeAmount = Coin.valueOf(tradePeer.getChange());
             String buyersBsqChangeAddress = tradePeer.getBsqAddress();
 
-            Coin buyersBtcPayoutAmount = Coin.valueOf(buyersBtcPayout);
+            Coin buyersBtcPayoutAmount = BsqSwapCalculation.getBuyersBtcPayoutValue(trade, getBuyersTxSize(), getBuyersTradeFee());
+            tradePeer.setPayout(buyersBtcPayoutAmount.getValue());
             String buyersBtcPayoutAddress = tradePeer.getBtcAddress();
 
-            Coin sellersBtcChangeAmount = Coin.valueOf(sellersChange);
-            String sellersBtcChangeAddress = protocolModel.getBtcAddress();
+            Coin sellersBtcChangeAmount = inputsAndChange.second;
+            protocolModel.setChange(sellersBtcChangeAmount.getValue());
+            String sellersBtcChangeAddress = protocolModel.getBtcWalletService().getFreshAddressEntry().getAddressString();
+            protocolModel.setBtcAddress(sellersBtcChangeAddress);
 
             Transaction transaction = tradeWalletService.sellerBuildBsqSwapTx(
                     buyersBsqInputs,
@@ -123,7 +117,7 @@ public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
                     sellersBtcChangeAmount,
                     sellersBtcChangeAddress);
 
-            // Sign tx
+            // Sign my inputs
             int buyersInputSize = buyersBsqInputs.size();
             List<TransactionInput> myInputs = transaction.getInputs().stream()
                     .filter(input -> input.getIndex() >= buyersInputSize)
@@ -141,7 +135,7 @@ public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
 
     private int getBuyersTxSize() {
         return BsqSwapCalculation.getTxSize(protocolModel.getTradeWalletService(),
-                protocolModel.getTradePeer().getInputs(),
+                Objects.requireNonNull(protocolModel.getTradePeer().getInputs()),
                 protocolModel.getTradePeer().getChange());
     }
 

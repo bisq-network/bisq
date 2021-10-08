@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bsq_swap.tasks.buyer;
+package bisq.core.trade.protocol.bsq_swap.tasks.seller;
 
 import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.wallet.TxBroadcaster;
@@ -32,9 +32,9 @@ import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BuyerPublishesTx extends BsqSwapTask {
+public class SellerMaybePublishesTx extends BsqSwapTask {
     @SuppressWarnings({"unused"})
-    public BuyerPublishesTx(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public SellerMaybePublishesTx(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 
@@ -43,14 +43,15 @@ public class BuyerPublishesTx extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            Transaction transaction = Objects.requireNonNull(protocolModel.getTransaction());
+            Transaction transaction = Objects.requireNonNull(trade.getTransaction(protocolModel.getBsqWalletService()));
             Transaction walletTx = protocolModel.getTradeWalletService().getWalletTx(transaction.getTxId());
             if (walletTx != null) {
-                log.warn("We have received already the tx in our wallet. This is not expected.");
+                // This is expected if we have already received the tx from the network
                 complete();
                 return;
             }
 
+            // We only publish if we do not have the tx already in our wallet received from the network
             protocolModel.getWalletsManager().publishAndCommitBsqTx(transaction,
                     TxType.TRANSFER_BSQ,
                     new TxBroadcaster.Callback() {
@@ -75,7 +76,6 @@ public class BuyerPublishesTx extends BsqSwapTask {
                             }
                         }
                     });
-            complete();
         } catch (Throwable t) {
             failed(t);
         }

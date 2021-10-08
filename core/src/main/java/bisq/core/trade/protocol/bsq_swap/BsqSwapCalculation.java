@@ -31,7 +31,10 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * The fees can be paid either by adding them to the inputs or by reducing them from the outputs. As we want to avoid extra inputs only needed for the fees (tx fee in case of buyer and trade fee in case of seller) we mix the cases so that buyer adds the trade fee to the BSQ input and reduce the tx fee from the BTC output. For the seller its the other way round.
+ * The fees can be paid either by adding them to the inputs or by reducing them from the outputs. As we want to avoid
+ * extra inputs only needed for the fees (tx fee in case of buyer and trade fee in case of seller) we let
+ * the buyer add the trade fee to the BSQ input and reduce the tx fee from the BTC output. For the seller its the
+ * other way round.
  *
  *
  * The example numbers are:
@@ -42,74 +45,46 @@ import lombok.extern.slf4j.Slf4j;
  * Buyer tx fee:  1950 sat (total tx fee would be 2000 but we subtract the 50 sat trade fee)
  * Seller tx fee:  1850 sat (total tx fee would be 2000 but we subtract the 150 sat trade fee)
  *
- * Input buyer: BSQ trade amount + buyer trade fee                                              5000000 + 50 = 5000050
- * Input seller: BTC trade amount + seller tx fee                                               100000000 + 1850 = 100001850
- * Output seller: BSQ trade amount - sellers trade fee                                          5000000 - 150 = 4999850
+ * Input buyer: BSQ trade amount + buyer trade fee                                              5000000 + 50
+ * Input seller: BTC trade amount + seller tx fee                                               100000000 + 1850
+ * Output seller: BSQ trade amount - sellers trade fee                                          5000000 - 150
  * Output buyer:  BSQ change                                                                    0
- * Output buyer:  BTC trade amount - buyers tx fee                                              100000000 - 1950 = 99998050
+ * Output buyer:  BTC trade amount - buyers tx fee                                              100000000 - 1950
  * Output seller:  BTC change                                                                   0
- * Tx fee: Buyer tx fee + seller tx fee + buyer trade fee + seller trade fee                    1950 + 1850 + 50 + 150 = 4000
+ * Tx fee: Buyer tx fee + seller tx fee + buyer trade fee + seller trade fee                    1950 + 1850 + 50 + 150
  */
 @Slf4j
 public class BsqSwapCalculation {
 
-    // Buyers BSQ Input
-    public static Coin getBuyersRequiredBsqInputs(BsqSwapTrade trade) {
-        return Coin.valueOf(trade.getBsqTradeAmount() + trade.getMakerFee() + trade.getTakerFee());
+    // Buyer
+    public static Coin getBuyersBsqInputValue(BsqSwapTrade trade, long buyerTradeFee) {
+        return Coin.valueOf(trade.getBsqTradeAmount() + buyerTradeFee);
     }
 
-    // Buyers BTC payout
-    public static long getBuyersBtcPayoutAmount(long sellersTradeFee,
-                                                BsqSwapTrade bsqSwapTrade,
-                                                int buyersTxSize,
-                                                long buyersTradeFee) {
-        long sellersTradeFeeConvertedToBtc = getTradeFeeConvertedToBtc(bsqSwapTrade, sellersTradeFee);
-        long buyersPartOfTxFee = bsqSwapTrade.getTxFeePerVbyte() * buyersTxSize;
-        long result = bsqSwapTrade.getAmount()          // Expected trade amount
-                + sellersTradeFeeConvertedToBtc         // Buyer has prefunded trade fee of seller with converted BSQ to BTC
-                - buyersPartOfTxFee                     // The seller has prefunded my part of the miner fee
-                + buyersTradeFee;                       // My burned BSQ fee was used to deduct from miner fee
-        log.error("Buyers BtcPayoutAmount:\n" +
-                        "TradeAmount={}\n" +
-                        "sellersTradeFeeConvertedToBtc={}\n" +
-                        "buyersPartOfTxFee={}\n" +
-                        "buyersTradeFee={}\n" +
-                        "result={}",
-                bsqSwapTrade.getAmount(),
-                sellersTradeFeeConvertedToBtc,
-                buyersPartOfTxFee,
-                buyersTradeFee,
-                result
-        );
-        return result;
+    public static Coin getBuyersBtcPayoutValue(BsqSwapTrade trade, int buyerTxSize, long buyerTradeFee) {
+        long buyerTxFee = getTxFee(trade, buyerTxSize, buyerTradeFee);
+        return getBuyersBtcPayoutValue(trade, buyerTxFee);
     }
 
-    // Sellers inputs
-    public static Coin getSellersRequiredBtcInput(BsqSwapTrade bsqSwapTrade, long sellersTradeFee, int sellersTxSize) {
-        long sellersTradeFeeConvertedToBtc = BsqSwapCalculation.getTradeFeeConvertedToBtc(bsqSwapTrade, sellersTradeFee);
-        // buyers part of the fee is deducted in output
-        long sellersPartOfTxFee = bsqSwapTrade.getTxFeePerVbyte() * sellersTxSize;
-        long result = bsqSwapTrade.getAmount()          // Trade amount
-                + sellersTradeFeeConvertedToBtc         // Peer has prepaid my tradeFee. Converted fee in BTC goes to peers output
-                + sellersPartOfTxFee                    // Sellers share of miner fee
-                - sellersTradeFee;                      // Burned BSQ deducted from txFee, depending on role its maker or takerFee
-
-        log.error("Seller RequiredBtcInput:\n" +
-                        "TradeAmount={}\n" +
-                        "sellersTradeFeeConvertedToBtc={}\n" +
-                        "sellersPartOfTxFee={}\n" +
-                        "sellersTradeFee={}\n" +
-                        "result={}\n" +
-                        "TxFeePerVbyte={}",
-                bsqSwapTrade.getAmount(),
-                sellersTradeFeeConvertedToBtc,
-                sellersPartOfTxFee,
-                sellersTradeFee,
-                result,
-                bsqSwapTrade.getTxFeePerVbyte()
-        );
-        return Coin.valueOf(result);
+    private static Coin getBuyersBtcPayoutValue(BsqSwapTrade trade, long buyerTxFee) {
+        return Coin.valueOf(trade.getAmount() - buyerTxFee);
     }
+
+    // Seller
+    public static Coin getSellersBtcInputValue(BsqSwapTrade trade, int sellersTxSize, long sellersTradeFee) {
+
+        long sellerTxFee = getTxFee(trade, sellersTxSize, sellersTradeFee);
+        return getSellersBtcInputValue(trade, sellerTxFee);
+    }
+
+    public static Coin getSellerBsqPayoutValue(BsqSwapTrade trade, long sellerTradeFee) {
+        return Coin.valueOf(trade.getBsqTradeAmount() - sellerTradeFee);
+    }
+
+    private static Coin getSellersBtcInputValue(BsqSwapTrade trade, long sellerTxFee) {
+        return Coin.valueOf(trade.getAmount() + sellerTxFee);
+    }
+
 
     public static int getTxSize(TradeWalletService tradeWalletService, List<RawTransactionInput> inputs, long change) {
         int size = 10 / 2; // Half of base tx size
@@ -129,7 +104,7 @@ public class BsqSwapCalculation {
         return Coin.valueOf(MathUtils.roundDoubleToLong(MathUtils.scaleDownByPowerOf10(volume.getValue(), 6)));
     }
 
-    private static long getTradeFeeConvertedToBtc(BsqSwapTrade bsqSwapTrade, long tradeFee) {
-        return bsqSwapTrade.getPrice().getValue() * tradeFee / 100;
+    private static long getTxFee(BsqSwapTrade trade, int txSize, long tradeFee) {
+        return trade.getTxFeePerVbyte() * txSize - tradeFee;
     }
 }

@@ -88,6 +88,7 @@ message NetworkEnvelope {
         BuyersBsqSwapRequest buyers_bsq_swap_request= 56;
         BsqSwapTxInputsMessage bsq_swap_tx_inputs_message= 57;
         BsqSwapFinalizeTxRequest bsq_swap_finalize_tx_request = 58;
+        BsqSwapFinalizedTxMessage bsq_swap_finalized_tx_message = 59;
     }
 }
 
@@ -423,6 +424,16 @@ message BsqSwapFinalizeTxRequest {
     NodeAddress sender_node_address = 3;
     bytes tx = 4;
     repeated RawTransactionInput btc_inputs = 5;
+    int64 btc_change = 6;
+    string bsq_payout_address = 7;
+    string btc_change_address = 8;
+}
+
+message BsqSwapFinalizedTxMessage {
+    string uid = 1;
+    string trade_id = 2;
+    NodeAddress sender_node_address = 3;
+    bytes tx = 4;
 }
 
 // dispute

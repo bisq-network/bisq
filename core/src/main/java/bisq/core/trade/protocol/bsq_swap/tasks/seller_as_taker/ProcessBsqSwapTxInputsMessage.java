@@ -48,4 +48,9 @@ public class ProcessBsqSwapTxInputsMessage extends ProcessTxInputsMessage {
             failed(t);
         }
     }
+
+    @Override
+    protected long getBuyersTradeFee() {
+        return trade.getMakerFee();
+    }
 }

@@ -28,6 +28,8 @@ import bisq.common.taskrunner.TaskRunner;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 
+import javafx.beans.value.ChangeListener;
+
 import java.util.Objects;
 
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +39,8 @@ import javax.annotation.Nullable;
 @Slf4j
 public abstract class SellerSetupTxListener extends BsqSwapTask {
     @Nullable
-    private TxConfidenceListener listener;
+    private TxConfidenceListener confidenceListener;
+    private ChangeListener<BsqSwapTrade.State> stateListener;
 
     public SellerSetupTxListener(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
@@ -54,7 +57,10 @@ public abstract class SellerSetupTxListener extends BsqSwapTask {
             }
 
             BsqWalletService walletService = protocolModel.getBsqWalletService();
-            //todo non segwit case?
+
+            // The confidence listener based on the txId only works if all buyers inputs are segWit inputs
+            // As we expect to receive anyway the buyers message with the finalized tx we can ignore the
+            // rare cases where an input is not segwit and therefore the txId not matching.
             String txId = Objects.requireNonNull(protocolModel.getTransaction()).getTxId().toString();
             TransactionConfidence confidence = walletService.getConfidenceForTxId(txId);
 
@@ -63,15 +69,24 @@ public abstract class SellerSetupTxListener extends BsqSwapTask {
                 return;
             }
 
-            listener = new TxConfidenceListener(txId) {
+            confidenceListener = new TxConfidenceListener(txId) {
                 @Override
                 public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
                     if (processConfidence(confidence)) {
-                        UserThread.execute(() -> walletService.removeTxConfidenceListener(listener));
+                        cleanup();
                     }
                 }
             };
-            walletService.addTxConfidenceListener(listener);
+            walletService.addTxConfidenceListener(confidenceListener);
+
+            // In case we received the message from the peer with the tx we get the trade state set to completed
+            // and we stop listening on the network for the tx
+            stateListener = (observable, oldValue, newValue) -> {
+                if (newValue == BsqSwapTrade.State.COMPLETED) {
+                    cleanup();
+                }
+            };
+            trade.stateProperty().addListener(stateListener);
 
             // We complete immediately, our object stays alive because the listener has a reference in the walletService
             complete();
@@ -80,11 +95,14 @@ public abstract class SellerSetupTxListener extends BsqSwapTask {
         }
     }
 
-    protected abstract void onTradeCompleted();
 
     private boolean processConfidence(TransactionConfidence confidence) {
+        if (confidence == null) {
+            return false;
+        }
+
         if (trade.getTransaction(protocolModel.getBsqWalletService()) != null) {
-            // If we have the tx already set we are done
+            // If we have the tx already set, we are done
             return true;
         }
 
@@ -102,7 +120,7 @@ public abstract class SellerSetupTxListener extends BsqSwapTask {
         protocolModel.getTradeManager().onBsqSwapTradeCompleted(trade);
         onTradeCompleted();
 
-        log.info("Received bsqSwapTx from network {}", walletTx);
+        log.info("Received buyers tx from network {}", walletTx);
         return true;
     }
 
@@ -112,4 +130,17 @@ public abstract class SellerSetupTxListener extends BsqSwapTask {
                 (confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING) ||
                         confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.PENDING));
     }
+
+    private void cleanup() {
+        UserThread.execute(() -> {
+            if (confidenceListener != null) {
+                protocolModel.getBsqWalletService().removeTxConfidenceListener(confidenceListener);
+            }
+            if (stateListener != null) {
+                trade.stateProperty().removeListener(stateListener);
+            }
+        });
+    }
+
+    protected abstract void onTradeCompleted();
 }

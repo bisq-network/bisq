@@ -21,11 +21,14 @@ package bisq.core.trade.protocol.bsq_swap;
 import bisq.core.trade.model.bsq_swap.BsqSwapSellerAsMakerTrade;
 import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.bsq_swap.tasks.ApplyFilter;
+import bisq.core.trade.protocol.bsq_swap.tasks.seller.SellerMaybePublishesTx;
 import bisq.core.trade.protocol.bsq_swap.tasks.seller.SendBsqSwapFinalizeTxRequest;
 import bisq.core.trade.protocol.bsq_swap.tasks.seller_as_maker.ProcessBuyersBsqSwapRequest;
 import bisq.core.trade.protocol.bsq_swap.tasks.seller_as_maker.SellerAsMakerCreatesAndSignsTx;
+import bisq.core.trade.protocol.bsq_swap.tasks.seller_as_maker.SellerAsMakerProcessBsqSwapFinalizedTxMessage;
 import bisq.core.trade.protocol.bsq_swap.tasks.seller_as_maker.SellerAsMakerSetupTxListener;
 import bisq.core.trade.protocol.messages.TradeMessage;
+import bisq.core.trade.protocol.messages.bsq_swap.BsqSwapFinalizedTxMessage;
 import bisq.core.trade.protocol.messages.bsq_swap.BsqSwapRequest;
 import bisq.core.trade.protocol.messages.bsq_swap.BuyersBsqSwapRequest;
 
@@ -35,6 +38,7 @@ import bisq.common.handlers.ErrorMessageHandler;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.model.bsq_swap.BsqSwapTrade.State.COMPLETED;
 import static bisq.core.trade.model.bsq_swap.BsqSwapTrade.State.PREPARATION;
 
 @Slf4j
@@ -71,9 +75,23 @@ public class BsqSwapSellerAsMakerProtocol extends BsqSwapSellerProtocol implemen
                 .executeTasks();
     }
 
+    private void handle(BsqSwapFinalizedTxMessage message, NodeAddress sender) {
+        expect(preCondition(PREPARATION == trade.getTradeState() || COMPLETED == trade.getTradeState())
+                .with(message)
+                .from(sender))
+                .setup(tasks(
+                        SellerAsMakerProcessBsqSwapFinalizedTxMessage.class,
+                        SellerMaybePublishesTx.class))
+                .executeTasks();
+    }
+
     @Override
     protected void onTradeMessage(TradeMessage message, NodeAddress peer) {
-        //todo we could add a msg for the final tx so we can publish it as well for better resiliance
-        // We do not expect a trade message beside the initial takeOfferMessage
+        log.info("Received {} from {} with tradeId {} and uid {}",
+                message.getClass().getSimpleName(), peer, message.getTradeId(), message.getUid());
+
+        if (message instanceof BsqSwapFinalizedTxMessage) {
+            handle((BsqSwapFinalizedTxMessage) message, peer);
+        }
     }
 }

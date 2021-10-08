@@ -64,6 +64,7 @@ import bisq.core.trade.protocol.messages.bisq_v1.RefreshTradeStateRequest;
 import bisq.core.trade.protocol.messages.bisq_v1.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.messages.bisq_v1.TraderSignedWitnessMessage;
 import bisq.core.trade.protocol.messages.bsq_swap.BsqSwapFinalizeTxRequest;
+import bisq.core.trade.protocol.messages.bsq_swap.BsqSwapFinalizedTxMessage;
 import bisq.core.trade.protocol.messages.bsq_swap.BsqSwapTxInputsMessage;
 import bisq.core.trade.protocol.messages.bsq_swap.BuyersBsqSwapRequest;
 import bisq.core.trade.protocol.messages.bsq_swap.SellersBsqSwapRequest;
@@ -176,6 +177,8 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return BsqSwapTxInputsMessage.fromProto(proto.getBsqSwapTxInputsMessage(), messageVersion);
                 case BSQ_SWAP_FINALIZE_TX_REQUEST:
                     return BsqSwapFinalizeTxRequest.fromProto(proto.getBsqSwapFinalizeTxRequest(), messageVersion);
+                case BSQ_SWAP_FINALIZED_TX_MESSAGE:
+                    return BsqSwapFinalizedTxMessage.fromProto(proto.getBsqSwapFinalizedTxMessage(), messageVersion);
 
                 case COUNTER_CURRENCY_TRANSFER_STARTED_MESSAGE:
                     return CounterCurrencyTransferStartedMessage.fromProto(proto.getCounterCurrencyTransferStartedMessage(), messageVersion);

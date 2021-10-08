@@ -17,7 +17,10 @@
 
 package bisq.core.trade.protocol.bsq_swap.tasks.buyer;
 
+import bisq.core.btc.model.RawTransactionInput;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
+import bisq.core.trade.protocol.bsq_swap.BsqSwapCalculation;
 import bisq.core.trade.protocol.bsq_swap.BsqSwapTradePeer;
 import bisq.core.trade.protocol.bsq_swap.tasks.BsqSwapTask;
 import bisq.core.trade.protocol.messages.bsq_swap.BsqSwapFinalizeTxRequest;
@@ -25,12 +28,21 @@ import bisq.core.util.Validator;
 
 import bisq.common.taskrunner.TaskRunner;
 
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionInput;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
+public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
     @SuppressWarnings({"unused"})
     public ProcessBsqSwapFinalizeTxRequest(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
@@ -39,20 +51,58 @@ public class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
     @Override
     protected void run() {
         try {
-            runInterceptHook();
-
             BsqSwapFinalizeTxRequest request = checkNotNull((BsqSwapFinalizeTxRequest) protocolModel.getTradeMessage());
             checkNotNull(request);
             Validator.checkTradeId(protocolModel.getOfferId(), request);
 
-            BsqSwapTradePeer tradePeer = protocolModel.getTradePeer();
+            // We will use only the sellers inputs from the tx so we do not verify anything else
+            byte[] tx = request.getTx();
+            Transaction sellersTransaction = protocolModel.getBtcWalletService().getTxFromSerializedTx(tx);
+            List<RawTransactionInput> rawInputs = request.getBtcInputs();
+            checkArgument(!rawInputs.isEmpty(), "Sellers BTC inputs must not be empty");
 
-            tradePeer.setTx(request.getTx());
-            tradePeer.setInputs(request.getBtcInputs());
+            int buyersInputSize = Objects.requireNonNull(protocolModel.getInputs()).size();
+            List<TransactionInput> sellersBtcInputs = sellersTransaction.getInputs().stream()
+                    .filter(i -> i.getIndex() >= buyersInputSize)
+                    .collect(Collectors.toList());
+            checkArgument(sellersBtcInputs.size() == rawInputs.size(),
+                    "Number of inputs in tx must match the number of rawInputs");
+
+            boolean hasUnSignedInputs = sellersBtcInputs.stream().anyMatch(i -> i.getScriptSig() == null && !i.hasWitness());
+            checkArgument(!hasUnSignedInputs, "Inputs from tx has unsigned inputs");
+
+            long sumInputs = rawInputs.stream().mapToLong(rawTransactionInput -> rawTransactionInput.value).sum();
+            int sellersTxSize = BsqSwapCalculation.getTxSize(protocolModel.getTradeWalletService(), rawInputs, request.getBtcChange());
+            long sellersBtcInputAmount = BsqSwapCalculation.getSellersBtcInputValue(trade, sellersTxSize, getSellersTradeFee()).getValue();
+            checkArgument(sumInputs >= sellersBtcInputAmount,
+                    "Sellers BTC input amount do not match our calculated required BTC input amount");
+
+            long change = request.getBtcChange();
+            checkArgument(change == 0 || Restrictions.isAboveDust(Coin.valueOf(change)),
+                    "BTC change must be 0 or above dust");
+
+            String sellersBsqPayoutAddress = request.getBsqPayoutAddress();
+            checkNotNull(sellersBsqPayoutAddress, "sellersBsqPayoutAddress must not be null");
+            checkArgument(!sellersBsqPayoutAddress.isEmpty(), "sellersBsqPayoutAddress must not be empty");
+
+            String sellersBtcChangeAddress = request.getBtcChangeAddress();
+            checkNotNull(sellersBtcChangeAddress, "sellersBtcChangeAddress must not be null");
+            checkArgument(!sellersBtcChangeAddress.isEmpty(), "sellersBtcChangeAddress must not be empty");
+
+            // Apply data
+            BsqSwapTradePeer tradePeer = protocolModel.getTradePeer();
+            tradePeer.setTx(tx);
+            tradePeer.setTransactionInputs(sellersBtcInputs);
+            tradePeer.setInputs(rawInputs);
+            tradePeer.setChange(change);
+            tradePeer.setBtcAddress(sellersBtcChangeAddress);
+            tradePeer.setBsqAddress(sellersBsqPayoutAddress);
 
             complete();
         } catch (Throwable t) {
             failed(t);
         }
     }
+
+    protected abstract long getSellersTradeFee();
 }

@@ -27,6 +27,8 @@ import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 
+import org.bitcoinj.core.TransactionInput;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -55,6 +57,8 @@ public final class BsqSwapTradePeer implements TradePeer, PersistablePayload {
     @Nullable
     @Setter
     private byte[] tx;
+    @Nullable
+    transient private List<TransactionInput> transactionInputs;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

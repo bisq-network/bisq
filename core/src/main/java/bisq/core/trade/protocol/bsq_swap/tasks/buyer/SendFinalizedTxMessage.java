@@ -15,26 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bsq_swap.tasks.seller;
+package bisq.core.trade.protocol.bsq_swap.tasks.buyer;
 
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsq_swap.tasks.BsqSwapTask;
-import bisq.core.trade.protocol.messages.bsq_swap.BsqSwapFinalizeTxRequest;
+import bisq.core.trade.protocol.messages.bsq_swap.BsqSwapFinalizedTxMessage;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SendDirectMessageListener;
 
 import bisq.common.taskrunner.TaskRunner;
 
-import java.util.Objects;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SendBsqSwapFinalizeTxRequest extends BsqSwapTask {
+public class SendFinalizedTxMessage extends BsqSwapTask {
 
     @SuppressWarnings({"unused"})
-    public SendBsqSwapFinalizeTxRequest(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public SendFinalizedTxMessage(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 
@@ -43,40 +41,36 @@ public class SendBsqSwapFinalizeTxRequest extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            BsqSwapFinalizeTxRequest request = new BsqSwapFinalizeTxRequest(
+            BsqSwapFinalizedTxMessage message = new BsqSwapFinalizedTxMessage(
                     protocolModel.getOfferId(),
                     protocolModel.getMyNodeAddress(),
-                    Objects.requireNonNull(protocolModel.getTx()),
-                    protocolModel.getInputs(),
-                    protocolModel.getChange(),
-                    protocolModel.getBsqAddress(),
-                    protocolModel.getBtcAddress());
+                    protocolModel.getTx());
 
-            log.info("BsqSwapFinalizeTxRequest={}", request);
+            log.info("BsqSwapFinalizedTxMessage={}", message);
 
             NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
             log.info("Send {} to peer {}. tradeId={}, uid={}",
-                    request.getClass().getSimpleName(), peersNodeAddress, request.getTradeId(), request.getUid());
+                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
             protocolModel.getP2PService().sendEncryptedDirectMessage(
                     peersNodeAddress,
                     protocolModel.getTradePeer().getPubKeyRing(),
-                    request,
+                    message,
                     new SendDirectMessageListener() {
                         @Override
                         public void onArrived() {
                             log.info("{} arrived at peer {}. tradeId={}, uid={}",
-                                    request.getClass().getSimpleName(), peersNodeAddress, request.getTradeId(),
-                                    request.getUid());
+                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(),
+                                    message.getUid());
                             complete();
                         }
 
                         @Override
                         public void onFault(String errorMessage) {
                             log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
-                                    request.getClass().getSimpleName(), peersNodeAddress, request.getTradeId(),
-                                    request.getUid(), errorMessage);
+                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(),
+                                    message.getUid(), errorMessage);
 
-                            appendToErrorMessage("Sending request failed: request=" + request + "\nerrorMessage=" +
+                            appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" +
                                     errorMessage);
                             failed();
                         }

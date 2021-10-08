@@ -22,11 +22,12 @@ import bisq.core.offer.Offer;
 import bisq.core.trade.model.bsq_swap.BsqSwapBuyerAsTakerTrade;
 import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.bsq_swap.tasks.ApplyFilter;
-import bisq.core.trade.protocol.bsq_swap.tasks.buyer.BuyerFinalizeTx;
 import bisq.core.trade.protocol.bsq_swap.tasks.buyer.BuyerPublishesTx;
-import bisq.core.trade.protocol.bsq_swap.tasks.buyer.ProcessBsqSwapFinalizeTxRequest;
 import bisq.core.trade.protocol.bsq_swap.tasks.buyer.PublishTradeStatistics;
+import bisq.core.trade.protocol.bsq_swap.tasks.buyer.SendFinalizedTxMessage;
+import bisq.core.trade.protocol.bsq_swap.tasks.buyer_as_taker.BuyerAsTakerCreatesAndSignsFinalizedTx;
 import bisq.core.trade.protocol.bsq_swap.tasks.buyer_as_taker.BuyerAsTakerCreatesBsqInputsAndChange;
+import bisq.core.trade.protocol.bsq_swap.tasks.buyer_as_taker.BuyerAsTakerProcessBsqSwapFinalizeTxRequest;
 import bisq.core.trade.protocol.bsq_swap.tasks.buyer_as_taker.SendBuyersBsqSwapRequest;
 import bisq.core.trade.protocol.messages.TradeMessage;
 import bisq.core.trade.protocol.messages.bsq_swap.BsqSwapFinalizeTxRequest;
@@ -72,10 +73,11 @@ public class BsqSwapBuyerAsTakerProtocol extends BsqSwapBuyerProtocol implements
                 .with(message)
                 .from(sender))
                 .setup(tasks(
-                        ProcessBsqSwapFinalizeTxRequest.class,
-                        BuyerFinalizeTx.class,
+                        BuyerAsTakerProcessBsqSwapFinalizeTxRequest.class,
+                        BuyerAsTakerCreatesAndSignsFinalizedTx.class,
                         BuyerPublishesTx.class,
-                        PublishTradeStatistics.class)
+                        PublishTradeStatistics.class,
+                        SendFinalizedTxMessage.class)
                         .using(new TradeTaskRunner(trade,
                                 () -> {
                                     stopTimeout();

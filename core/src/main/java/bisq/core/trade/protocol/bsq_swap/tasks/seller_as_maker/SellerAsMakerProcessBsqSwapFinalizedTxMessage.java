@@ -18,10 +18,8 @@
 package bisq.core.trade.protocol.bsq_swap.tasks.seller_as_maker;
 
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
-import bisq.core.trade.protocol.bsq_swap.tasks.seller.ProcessTxInputsMessage;
-import bisq.core.trade.protocol.messages.bsq_swap.BuyersBsqSwapRequest;
+import bisq.core.trade.protocol.bsq_swap.tasks.seller.ProcessBsqSwapFinalizedTxMessage;
 
-import bisq.common.crypto.PubKeyRing;
 import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
@@ -29,9 +27,10 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class ProcessBuyersBsqSwapRequest extends ProcessTxInputsMessage {
+public class SellerAsMakerProcessBsqSwapFinalizedTxMessage extends ProcessBsqSwapFinalizedTxMessage {
     @SuppressWarnings({"unused"})
-    public ProcessBuyersBsqSwapRequest(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
+    public SellerAsMakerProcessBsqSwapFinalizedTxMessage(TaskRunner<BsqSwapTrade> taskHandler,
+                                                         BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
     }
 
@@ -40,10 +39,6 @@ public class ProcessBuyersBsqSwapRequest extends ProcessTxInputsMessage {
         try {
             runInterceptHook();
 
-            BuyersBsqSwapRequest request = checkNotNull((BuyersBsqSwapRequest) protocolModel.getTradeMessage());
-            PubKeyRing pubKeyRing = checkNotNull(request.getTakerPubKeyRing(), "pubKeyRing must not be null");
-            protocolModel.getTradePeer().setPubKeyRing(pubKeyRing);
-
             super.run();
         } catch (Throwable t) {
             failed(t);
@@ -51,7 +46,7 @@ public class ProcessBuyersBsqSwapRequest extends ProcessTxInputsMessage {
     }
 
     @Override
-    protected long getBuyersTradeFee() {
-        return trade.getTakerFee();
+    protected void onTradeCompleted() {
+        protocolModel.getOpenOfferManager().closeOpenOffer(checkNotNull(trade.getOffer()));
     }
 }
