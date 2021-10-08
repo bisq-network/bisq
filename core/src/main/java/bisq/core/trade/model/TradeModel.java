@@ -9,22 +9,22 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.taskrunner.Model;
 
 public abstract class TradeModel implements Tradable, Model {
-    public abstract ProtocolModel<? extends TradePeer> getTradeProtocolModel();
-
-    public abstract NodeAddress getTradingPeerNodeAddress();
+    public abstract void initialize(Provider provider);
 
     public abstract void setErrorMessage(String errorMessage);
-
-    // TODO(sq): used for tradeModel.stateProperty().get()
-    public abstract String getStateInfo();
 
     public abstract String getUid();
 
     public abstract boolean isCompleted();
 
-    public abstract void initialize(Provider provider);
+    public abstract ProtocolModel<? extends TradePeer> getTradeProtocolModel();
 
-    public abstract TradePhase getTradePhase();
+    public abstract NodeAddress getTradingPeerNodeAddress();
 
     public abstract TradeState getTradeState();
+
+    // TODO(sq): used for tradeModel.stateProperty().get()
+    public abstract String getStateInfo();
+
+    public abstract TradePhase getTradePhase();
 }

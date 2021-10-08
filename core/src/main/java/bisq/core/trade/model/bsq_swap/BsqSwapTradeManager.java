@@ -70,10 +70,13 @@ public class BsqSwapTradeManager implements PersistedDataHost {
     }
 
     public void onAllServicesInitialized() {
-        // TODO(sq): Cleanup TradeModel
     }
 
     public void onTradeCompleted(BsqSwapTrade bsqSwapTrade) {
+        if (bsqSwapTrades.contains(bsqSwapTrade)) {
+            return;
+        }
+
         if (bsqSwapTrades.add(bsqSwapTrade)) {
             requestPersistence();
         }

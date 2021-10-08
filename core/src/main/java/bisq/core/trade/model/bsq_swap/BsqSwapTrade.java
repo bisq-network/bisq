@@ -82,9 +82,7 @@ public abstract class BsqSwapTrade extends TradeModel {
         }
     }
 
-    @Getter
     private final String uid;
-    @Getter
     private final Offer offer;
     @Getter
     private final long amount;
@@ -102,7 +100,7 @@ public abstract class BsqSwapTrade extends TradeModel {
     private final BsqSwapProtocolModel bsqSwapProtocolModel;
 
     @Getter
-    private State state;
+    private State state = State.PREPARATION;
 
     @Nullable
     private String errorMessage;
@@ -146,6 +144,9 @@ public abstract class BsqSwapTrade extends TradeModel {
         this.errorMessage = errorMessage;
         this.state = state;
         this.txId = txId;
+
+        stateProperty.set(state);
+        errorMessageProperty.set(errorMessage);
     }
 
 
@@ -173,60 +174,22 @@ public abstract class BsqSwapTrade extends TradeModel {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // TradeModel implementation
+    // Model implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void onComplete() {
     }
 
-    @Override
-    public BsqSwapTrade.State getTradeState() {
-        return state;
-    }
-
-    @Override
-    public TradePhase getTradePhase() {
-        return state.getTradePhase();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // TradeModel implementation
+    // Tradable implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void initialize(Provider serviceProvider) {
+    public Offer getOffer() {
+        return offer;
     }
-
-    @Override
-    public ProtocolModel<BsqSwapTradePeer> getTradeProtocolModel() {
-        return bsqSwapProtocolModel;
-    }
-
-    @Override
-    public NodeAddress getTradingPeerNodeAddress() {
-        return peerNodeAddress;
-    }
-
-    @Override
-    public String getStateInfo() {
-        if (stateProperty.get() == null) {
-            return State.FAILED.toString();
-        }
-        return stateProperty().get().toString();
-    }
-
-    @Override
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
-        errorMessageProperty.set(errorMessage);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // API
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public Date getDate() {
@@ -243,9 +206,57 @@ public abstract class BsqSwapTrade extends TradeModel {
         return Utilities.getShortId(getId());
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // TradeModel implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void initialize(Provider serviceProvider) {
+    }
+
+    @Override
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+        errorMessageProperty.set(errorMessage);
+    }
+
+    @Override
+    public ProtocolModel<BsqSwapTradePeer> getTradeProtocolModel() {
+        return bsqSwapProtocolModel;
+    }
+
+    @Override
+    public NodeAddress getTradingPeerNodeAddress() {
+        return peerNodeAddress;
+    }
+
+    @Override
+    public String getUid() {
+        return uid;
+    }
+
     @Override
     public boolean isCompleted() {
         return state == State.COMPLETED;
+    }
+
+    @Override
+    public BsqSwapTrade.State getTradeState() {
+        return state;
+    }
+
+    @Override
+    public String getStateInfo() {
+        if (stateProperty.get() == null) {
+            return State.FAILED.toString();
+        }
+        return stateProperty().get().toString();
+    }
+
+    @Override
+    public TradePhase getTradePhase() {
+        return state.getTradePhase();
     }
 
 

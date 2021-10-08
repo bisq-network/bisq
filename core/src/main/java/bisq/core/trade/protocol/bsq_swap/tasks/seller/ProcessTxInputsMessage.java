@@ -64,7 +64,7 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
                     .filter(daoFacade::isTxOutputSpendable)
                     .count();
             checkArgument(inputs.size() == numValidBsqInputs,
-                    "Some of the buyers BSQ inputs are not from spendable BSQ utxos according to our DAO state data.");
+                    "Some of the buyers BSQ inputs are not from spendable BSQ utxo's according to our DAO state data.");
 
             long change = message.getBsqChange();
             checkArgument(change == 0 || Restrictions.isAboveDust(Coin.valueOf(change)),

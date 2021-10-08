@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol.bsq_swap;
 
-/**
+/*
  * There are 2 possible pairs of protocols:
  * 1. BuyerAsTaker + SellerAsMaker
  * 2. SellerAsTaker + BuyerAsMaker
