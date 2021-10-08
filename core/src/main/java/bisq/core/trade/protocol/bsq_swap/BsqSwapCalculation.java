@@ -19,7 +19,10 @@ package bisq.core.trade.protocol.bsq_swap;
 
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.monetary.Volume;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
+
+import bisq.common.util.MathUtils;
 
 import org.bitcoinj.core.Coin;
 
@@ -117,6 +120,13 @@ public class BsqSwapCalculation {
         // Outputs: 31 (we only use segwit)
         size += change > 0 ? 2 * 31 : 31;
         return size;
+    }
+
+    public static Coin getBsqTradeAmount(Volume volume) {
+        // We treat BSQ as altcoin with smallest unit exponent 8 but we use 2 instead.
+        // To avoid a larger refactoring of the monetary domain we just hack in the conversion here
+        // by removing the last 6 digits.
+        return Coin.valueOf(MathUtils.roundDoubleToLong(MathUtils.scaleDownByPowerOf10(volume.getValue(), 6)));
     }
 
     private static long getTradeFeeConvertedToBtc(BsqSwapTrade bsqSwapTrade, long tradeFee) {

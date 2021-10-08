@@ -26,13 +26,13 @@ import bisq.core.trade.model.TradePhase;
 import bisq.core.trade.model.TradeState;
 import bisq.core.trade.protocol.ProtocolModel;
 import bisq.core.trade.protocol.Provider;
+import bisq.core.trade.protocol.bsq_swap.BsqSwapCalculation;
 import bisq.core.trade.protocol.bsq_swap.BsqSwapProtocolModel;
 import bisq.core.trade.protocol.bsq_swap.BsqSwapTradePeer;
 
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.proto.ProtoUtil;
-import bisq.common.util.MathUtils;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.Message;
@@ -309,10 +309,7 @@ public abstract class BsqSwapTrade extends TradeModel {
     }
 
     public long getBsqTradeAmount() {
-        // We treat BSQ as altcoin with smallest unit exponent 8 but we use 2 instead.
-        // To avoid a larger refactoring of the monetary domain we just hack in the conversion here
-        // by removing the last 6 digits.
-        return MathUtils.roundDoubleToLong(MathUtils.scaleDownByPowerOf10(getVolume().getValue(), 6));
+        return BsqSwapCalculation.getBsqTradeAmount(getVolume()).getValue();
     }
 
     @Nullable
