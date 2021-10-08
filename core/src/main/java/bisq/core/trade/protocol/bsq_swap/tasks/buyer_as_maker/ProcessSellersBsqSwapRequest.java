@@ -26,7 +26,6 @@ import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -42,7 +41,7 @@ public class ProcessSellersBsqSwapRequest extends BsqSwapTask {
         try {
             runInterceptHook();
 
-            checkArgument(trade.getOffer().isMyOffer(protocolModel.getKeyRing()), "Offer must be mine");
+            // Trade data are already verified at BsqSwapTakeOfferRequestVerification
             SellersBsqSwapRequest request = checkNotNull((SellersBsqSwapRequest) protocolModel.getTradeMessage());
 
             PubKeyRing pubKeyRing = checkNotNull(request.getTakerPubKeyRing(), "pubKeyRing must not be null");
