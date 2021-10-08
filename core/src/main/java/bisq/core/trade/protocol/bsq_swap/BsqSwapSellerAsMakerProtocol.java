@@ -75,6 +75,7 @@ public class BsqSwapSellerAsMakerProtocol extends BsqSwapSellerProtocol implemen
                 .executeTasks();
     }
 
+    // We treat BsqSwapFinalizedTxMessage as optional message, so we stop the timeout at handleTakeOfferRequest
     private void handle(BsqSwapFinalizedTxMessage message, NodeAddress sender) {
         expect(preCondition(PREPARATION == trade.getTradeState() || COMPLETED == trade.getTradeState())
                 .with(message)

@@ -85,6 +85,7 @@ public class BsqSwapSellerAsTakerProtocol extends BsqSwapSellerProtocol implemen
                 .executeTasks();
     }
 
+    // We treat BsqSwapFinalizedTxMessage as optional message, so we stop the timeout at handleBsqSwapTxInputsMessage
     private void handle(BsqSwapFinalizedTxMessage message, NodeAddress sender) {
         expect(preCondition(PREPARATION == trade.getTradeState() || COMPLETED == trade.getTradeState())
                 .with(message)

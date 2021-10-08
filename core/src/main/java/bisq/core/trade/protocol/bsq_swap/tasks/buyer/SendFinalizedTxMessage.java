@@ -18,18 +18,15 @@
 package bisq.core.trade.protocol.bsq_swap.tasks.buyer;
 
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
-import bisq.core.trade.protocol.bsq_swap.tasks.BsqSwapTask;
+import bisq.core.trade.protocol.bsq_swap.tasks.SendBsqSwapMessageTask;
 import bisq.core.trade.protocol.messages.bsq_swap.BsqSwapFinalizedTxMessage;
-
-import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.SendDirectMessageListener;
 
 import bisq.common.taskrunner.TaskRunner;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SendFinalizedTxMessage extends BsqSwapTask {
+public class SendFinalizedTxMessage extends SendBsqSwapMessageTask {
 
     @SuppressWarnings({"unused"})
     public SendFinalizedTxMessage(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
@@ -46,36 +43,7 @@ public class SendFinalizedTxMessage extends BsqSwapTask {
                     protocolModel.getMyNodeAddress(),
                     protocolModel.getTx());
 
-            log.info("BsqSwapFinalizedTxMessage={}", message);
-
-            NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
-            log.info("Send {} to peer {}. tradeId={}, uid={}",
-                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
-            protocolModel.getP2PService().sendEncryptedDirectMessage(
-                    peersNodeAddress,
-                    protocolModel.getTradePeer().getPubKeyRing(),
-                    message,
-                    new SendDirectMessageListener() {
-                        @Override
-                        public void onArrived() {
-                            log.info("{} arrived at peer {}. tradeId={}, uid={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(),
-                                    message.getUid());
-                            complete();
-                        }
-
-                        @Override
-                        public void onFault(String errorMessage) {
-                            log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
-                                    message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(),
-                                    message.getUid(), errorMessage);
-
-                            appendToErrorMessage("Sending message failed: message=" + message + "\nerrorMessage=" +
-                                    errorMessage);
-                            failed();
-                        }
-                    }
-            );
+            send(message);
         } catch (Throwable t) {
             failed(t);
         }

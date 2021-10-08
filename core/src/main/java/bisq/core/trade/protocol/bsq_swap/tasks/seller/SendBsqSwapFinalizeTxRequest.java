@@ -18,11 +18,8 @@
 package bisq.core.trade.protocol.bsq_swap.tasks.seller;
 
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
-import bisq.core.trade.protocol.bsq_swap.tasks.BsqSwapTask;
+import bisq.core.trade.protocol.bsq_swap.tasks.SendBsqSwapMessageTask;
 import bisq.core.trade.protocol.messages.bsq_swap.BsqSwapFinalizeTxRequest;
-
-import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.SendDirectMessageListener;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -31,7 +28,7 @@ import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SendBsqSwapFinalizeTxRequest extends BsqSwapTask {
+public class SendBsqSwapFinalizeTxRequest extends SendBsqSwapMessageTask {
 
     @SuppressWarnings({"unused"})
     public SendBsqSwapFinalizeTxRequest(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
@@ -52,36 +49,7 @@ public class SendBsqSwapFinalizeTxRequest extends BsqSwapTask {
                     protocolModel.getBsqAddress(),
                     protocolModel.getBtcAddress());
 
-            log.info("BsqSwapFinalizeTxRequest={}", request);
-
-            NodeAddress peersNodeAddress = trade.getTradingPeerNodeAddress();
-            log.info("Send {} to peer {}. tradeId={}, uid={}",
-                    request.getClass().getSimpleName(), peersNodeAddress, request.getTradeId(), request.getUid());
-            protocolModel.getP2PService().sendEncryptedDirectMessage(
-                    peersNodeAddress,
-                    protocolModel.getTradePeer().getPubKeyRing(),
-                    request,
-                    new SendDirectMessageListener() {
-                        @Override
-                        public void onArrived() {
-                            log.info("{} arrived at peer {}. tradeId={}, uid={}",
-                                    request.getClass().getSimpleName(), peersNodeAddress, request.getTradeId(),
-                                    request.getUid());
-                            complete();
-                        }
-
-                        @Override
-                        public void onFault(String errorMessage) {
-                            log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
-                                    request.getClass().getSimpleName(), peersNodeAddress, request.getTradeId(),
-                                    request.getUid(), errorMessage);
-
-                            appendToErrorMessage("Sending request failed: request=" + request + "\nerrorMessage=" +
-                                    errorMessage);
-                            failed();
-                        }
-                    }
-            );
+            send(request);
         } catch (Throwable t) {
             failed(t);
         }

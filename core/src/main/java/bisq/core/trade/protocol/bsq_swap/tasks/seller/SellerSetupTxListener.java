@@ -49,8 +49,6 @@ public abstract class SellerSetupTxListener extends BsqSwapTask {
     @Override
     protected void run() {
         try {
-            runInterceptHook();
-
             if (trade.isCompleted()) {
                 complete();
                 return;
