@@ -97,7 +97,7 @@ public class BsqSwapTakeOfferRequestVerification {
         // off their own fee from service. Both parties will use the same fee while
         // creating the bsq swap tx
         double diff = abs(1 - myFee / peersFee);
-        boolean isInTolerance = diff < 0.1;
+        boolean isInTolerance = diff < 0.5;
         if (!isInTolerance) {
             log.warn("Miner fee from taker not in tolerance. myFee={}, peersFee={}, diff={}", myFee, peersFee, diff);
         }
