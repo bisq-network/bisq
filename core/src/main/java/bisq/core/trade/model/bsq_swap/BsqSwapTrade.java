@@ -296,7 +296,7 @@ public abstract class BsqSwapTrade extends TradeModel {
     }
 
     //todo Not sure if that delivers the value as expected... -> getBsqTradeAmount
-    public Volume getTradeVolume() {
+    public Volume getVolume() {
         if (volume == null) {
             try {
                 volume = getPrice().getVolumeByAmount(Coin.valueOf(amount));
@@ -312,7 +312,7 @@ public abstract class BsqSwapTrade extends TradeModel {
         // We treat BSQ as altcoin with smallest unit exponent 8 but we use 2 instead.
         // To avoid a larger refactoring of the monetary domain we just hack in the conversion here
         // by removing the last 6 digits.
-        return MathUtils.roundDoubleToLong(MathUtils.scaleDownByPowerOf10(getTradeVolume().getValue(), 6));
+        return MathUtils.roundDoubleToLong(MathUtils.scaleDownByPowerOf10(getVolume().getValue(), 6));
     }
 
     @Nullable

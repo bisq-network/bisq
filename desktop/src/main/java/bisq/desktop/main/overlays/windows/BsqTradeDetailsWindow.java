@@ -131,7 +131,7 @@ public class BsqTradeDetailsWindow extends Overlay<BsqTradeDetailsWindow> {
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.btcAmount") + btcDirectionInfo,
                 formatter.formatCoinWithCode(bsqSwapTrade.getAmount()));
 
-        Volume volume = bsqSwapTrade.getTradeVolume();
+        Volume volume = bsqSwapTrade.getVolume();
 
         addConfirmationLabelLabel(gridPane, ++rowIndex,
                 DisplayUtils.formatVolumeLabel(offer.getCurrencyCode()) + bsqDirectionInfo,

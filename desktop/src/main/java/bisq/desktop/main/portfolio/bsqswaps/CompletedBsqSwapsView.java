@@ -186,7 +186,7 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
         directionColumn.setComparator(Comparator.comparing(o -> o.getBsqSwapTrade().getOffer().getDirection()));
         marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
         priceColumn.setComparator(Comparator.comparing(model::getPrice, Comparator.nullsFirst(Comparator.naturalOrder())));
-        volumeColumn.setComparator(nullsFirstComparingAsTrade(BsqSwapTrade::getTradeVolume));
+        volumeColumn.setComparator(nullsFirstComparingAsTrade(BsqSwapTrade::getVolume));
         amountColumn.setComparator(Comparator.comparing(model::getAmount, Comparator.nullsFirst(Comparator.naturalOrder())));
         avatarColumn.setComparator(Comparator.comparing(
                 o -> model.getNumPastTrades(o.getBsqSwapTrade()),

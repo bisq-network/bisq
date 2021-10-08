@@ -81,7 +81,7 @@ class CompletedBsqSwapsViewModel extends ActivatableWithDataModel<CompletedBsqSw
         if (item == null)
             return "";
 
-        return DisplayUtils.formatVolumeWithCode(item.getBsqSwapTrade().getTradeVolume());
+        return DisplayUtils.formatVolumeWithCode(item.getBsqSwapTrade().getVolume());
     }
 
     String getTxFee(CompletedBsqSwapsListItem item) {
