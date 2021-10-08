@@ -130,7 +130,8 @@ public class User implements PersistedDataHost {
             requestPersistence();
         });
 
-        // TODO(sq): move to some better location
+        // We create a default placeholder account for BSQ swaps. The account has not content, it is just used
+        // so that the BsqSwap use case fits into the current domain
         addBsqSwapAccount();
 
         requestPersistence();
