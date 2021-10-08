@@ -32,6 +32,7 @@ import org.bitcoinj.wallet.Wallet;
 import org.bitcoinj.wallet.listeners.WalletChangeEventListener;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import javafx.beans.InvalidationListener;
 
@@ -55,6 +56,7 @@ import lombok.extern.slf4j.Slf4j;
  * as well.
  */
 @Slf4j
+@Singleton
 public class BsqSwapOfferManager implements WalletChangeEventListener {
 
     private OpenOfferManager openOfferManager;

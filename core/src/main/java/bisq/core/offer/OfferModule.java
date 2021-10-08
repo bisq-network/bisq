@@ -33,7 +33,6 @@ public class OfferModule extends AppModule {
 
     @Override
     protected final void configure() {
-        bind(BsqSwapOfferManager.class).in(Singleton.class);
         bind(OpenOfferManager.class).in(Singleton.class);
         bind(OfferBookService.class).in(Singleton.class);
     }
