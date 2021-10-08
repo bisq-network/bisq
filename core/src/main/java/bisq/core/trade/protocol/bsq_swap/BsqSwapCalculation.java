@@ -27,6 +27,26 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * The fees can be paid either by adding them to the inputs or by reducing them from the outputs. As we want to avoid extra inputs only needed for the fees (tx fee in case of buyer and trade fee in case of seller) we mix the cases so that buyer adds the trade fee to the BSQ input and reduce the tx fee from the BTC output. For the seller its the other way round.
+ *
+ *
+ * The example numbers are:
+ * BTC trade amount 100000000 sat (1 BTC)
+ * BSQ trade amount: 5000000 sat (50000.00 BSQ)
+ * Buyer trade fee: 50 sat (0.5 BSQ)
+ * Seller trade fee: 150 sat (1.5 BSQ)
+ * Buyer tx fee:  1950 sat (total tx fee would be 2000 but we subtract the 50 sat trade fee)
+ * Seller tx fee:  1850 sat (total tx fee would be 2000 but we subtract the 150 sat trade fee)
+ *
+ * Input buyer: BSQ trade amount + buyer trade fee                                              5000000 + 50 = 5000050
+ * Input seller: BTC trade amount + seller tx fee                                               100000000 + 1850 = 100001850
+ * Output seller: BSQ trade amount - sellers trade fee                                          5000000 - 150 = 4999850
+ * Output buyer:  BSQ change                                                                    0
+ * Output buyer:  BTC trade amount - buyers tx fee                                              100000000 - 1950 = 99998050
+ * Output seller:  BTC change                                                                   0
+ * Tx fee: Buyer tx fee + seller tx fee + buyer trade fee + seller trade fee                    1950 + 1850 + 50 + 150 = 4000
+ */
 @Slf4j
 public class BsqSwapCalculation {
 
