@@ -42,7 +42,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BsqSwapWalletWatcher implements WalletChangeEventListener {
+public class BsqSwapOfferManager implements WalletChangeEventListener {
 
     private OpenOfferManager openOfferManager;
     private final BtcWalletService btcWalletService;
@@ -55,12 +55,12 @@ public class BsqSwapWalletWatcher implements WalletChangeEventListener {
     private int tryFeeServiceCounter = 0;
 
     @Inject
-    public BsqSwapWalletWatcher(OpenOfferManager openOfferManager,
-                                BtcWalletService btcWalletService,
-                                BsqWalletService bsqWalletService,
-                                TradeWalletService tradeWalletService,
-                                FeeService feeService,
-                                KeyRing keyRing) {
+    public BsqSwapOfferManager(OpenOfferManager openOfferManager,
+                               BtcWalletService btcWalletService,
+                               BsqWalletService bsqWalletService,
+                               TradeWalletService tradeWalletService,
+                               FeeService feeService,
+                               KeyRing keyRing) {
         this.openOfferManager = openOfferManager;
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;

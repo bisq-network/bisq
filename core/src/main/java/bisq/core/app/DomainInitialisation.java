@@ -33,7 +33,7 @@ import bisq.core.notifications.alerts.MyOfferTakenEvents;
 import bisq.core.notifications.alerts.TradeEvents;
 import bisq.core.notifications.alerts.market.MarketAlerts;
 import bisq.core.notifications.alerts.price.PriceAlert;
-import bisq.core.offer.BsqSwapWalletWatcher;
+import bisq.core.offer.BsqSwapOfferManager;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.TriggerPriceService;
 import bisq.core.payment.AmazonGiftCardAccount;
@@ -115,7 +115,7 @@ public class DomainInitialisation {
     private final DaoStateSnapshotService daoStateSnapshotService;
     private final TriggerPriceService triggerPriceService;
     private final MempoolService mempoolService;
-    private final BsqSwapWalletWatcher bsqSwapWalletWatcher;
+    private final BsqSwapOfferManager bsqSwapOfferManager;
 
     @Inject
     public DomainInitialisation(ClockWatcher clockWatcher,
@@ -155,7 +155,7 @@ public class DomainInitialisation {
                                 DaoStateSnapshotService daoStateSnapshotService,
                                 TriggerPriceService triggerPriceService,
                                 MempoolService mempoolService,
-                                BsqSwapWalletWatcher bsqSwapWalletWatcher) {
+                                BsqSwapOfferManager bsqSwapOfferManager) {
         this.clockWatcher = clockWatcher;
         this.tradeLimits = tradeLimits;
         this.arbitrationManager = arbitrationManager;
@@ -193,7 +193,7 @@ public class DomainInitialisation {
         this.daoStateSnapshotService = daoStateSnapshotService;
         this.triggerPriceService = triggerPriceService;
         this.mempoolService = mempoolService;
-        this.bsqSwapWalletWatcher = bsqSwapWalletWatcher;
+        this.bsqSwapOfferManager = bsqSwapOfferManager;
     }
 
     public void initDomainServices(Consumer<String> rejectedTxErrorMessageHandler,
@@ -223,7 +223,7 @@ public class DomainInitialisation {
         xmrTxProofService.onAllServicesInitialized();
 
         openOfferManager.onAllServicesInitialized();
-        bsqSwapWalletWatcher.onAllServicesInitialized();
+        bsqSwapOfferManager.onAllServicesInitialized();
 
         balances.onAllServicesInitialized();
 

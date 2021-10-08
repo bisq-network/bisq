@@ -46,7 +46,7 @@ public class OpenOfferManagerTest {
     public void testStartEditOfferForActiveOffer() {
         P2PService p2PService = mock(P2PService.class);
         OfferBookService offerBookService = mock(OfferBookService.class);
-        BsqSwapWalletWatcher bsqSwapWalletWatcher = mock(BsqSwapWalletWatcher.class);
+        BsqSwapOfferManager bsqSwapOfferManager = mock(BsqSwapOfferManager.class);
 
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
 
@@ -69,8 +69,8 @@ public class OpenOfferManagerTest {
                 null,
                 null,
                 null,
-                persistenceManager,
-                bsqSwapWalletWatcher);
+                persistenceManager
+        );
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 
@@ -96,7 +96,7 @@ public class OpenOfferManagerTest {
     public void testStartEditOfferForDeactivatedOffer() {
         P2PService p2PService = mock(P2PService.class);
         OfferBookService offerBookService = mock(OfferBookService.class);
-        BsqSwapWalletWatcher bsqSwapWalletWatcher = mock(BsqSwapWalletWatcher.class);
+        BsqSwapOfferManager bsqSwapOfferManager = mock(BsqSwapOfferManager.class);
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
 
         final OpenOfferManager manager = new OpenOfferManager(coreContext,
@@ -118,8 +118,8 @@ public class OpenOfferManagerTest {
                 null,
                 null,
                 null,
-                persistenceManager,
-                bsqSwapWalletWatcher);
+                persistenceManager
+        );
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 
@@ -137,7 +137,7 @@ public class OpenOfferManagerTest {
     public void testStartEditOfferForOfferThatIsCurrentlyEdited() {
         P2PService p2PService = mock(P2PService.class);
         OfferBookService offerBookService = mock(OfferBookService.class);
-        BsqSwapWalletWatcher bsqSwapWalletWatcher = mock(BsqSwapWalletWatcher.class);
+        BsqSwapOfferManager bsqSwapOfferManager = mock(BsqSwapOfferManager.class);
 
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
 
@@ -160,8 +160,8 @@ public class OpenOfferManagerTest {
                 null,
                 null,
                 null,
-                persistenceManager,
-                bsqSwapWalletWatcher);
+                persistenceManager
+        );
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 
