@@ -47,6 +47,12 @@ public class BuyerPublishesTx extends BsqSwapTask {
             Transaction walletTx = protocolModel.getTradeWalletService().getWalletTx(transaction.getTxId());
             if (walletTx != null) {
                 log.warn("We have received already the tx in our wallet. This is not expected.");
+
+                if (trade.getState() == BsqSwapTrade.State.PREPARATION) {
+                    trade.setState(BsqSwapTrade.State.COMPLETED);
+                    protocolModel.getTradeManager().onBsqSwapTradeCompleted(trade);
+                }
+
                 complete();
                 return;
             }
