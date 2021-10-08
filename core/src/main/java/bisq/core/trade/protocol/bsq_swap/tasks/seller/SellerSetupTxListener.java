@@ -54,6 +54,7 @@ public abstract class SellerSetupTxListener extends BsqSwapTask {
             }
 
             BsqWalletService walletService = protocolModel.getBsqWalletService();
+            //todo non segwit case?
             String txId = Objects.requireNonNull(protocolModel.getTransaction()).getTxId().toString();
             TransactionConfidence confidence = walletService.getConfidenceForTxId(txId);
 
