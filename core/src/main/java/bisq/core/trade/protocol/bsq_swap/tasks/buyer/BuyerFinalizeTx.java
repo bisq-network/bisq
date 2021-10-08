@@ -83,7 +83,9 @@ public class BuyerFinalizeTx extends BsqSwapTask {
                         transactionInput.getScriptBytes(),
                         transactionOutPoint,
                         value);
-                result.setWitness(transactionInput.getWitness());
+                if (transactionInput.hasWitness()) {
+                    result.setWitness(transactionInput.getWitness());
+                }
                 sellersBtcInputs.add(result);
             }
 
