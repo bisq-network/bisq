@@ -70,6 +70,11 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
             checkArgument(change == 0 || Restrictions.isAboveDust(Coin.valueOf(change)),
                     "BSQ change must be 0 or above dust");
 
+            Coin sellersBsqPayoutAmount = BsqSwapCalculation.getSellerBsqPayoutValue(trade, getSellersTradeFee());
+            long expectedChange = sumInputs - sellersBsqPayoutAmount.getValue();
+            checkArgument(expectedChange == change,
+                    "Buyers BSQ change is not as expected");
+
             String buyersBtcPayoutAddress = message.getBuyersBtcPayoutAddress();
             checkNotNull(buyersBtcPayoutAddress, "buyersBtcPayoutAddress must not be null");
             checkArgument(!buyersBtcPayoutAddress.isEmpty(), "buyersBtcPayoutAddress must not be empty");
@@ -96,4 +101,6 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
     }
 
     protected abstract long getBuyersTradeFee();
+
+    protected abstract long getSellersTradeFee();
 }

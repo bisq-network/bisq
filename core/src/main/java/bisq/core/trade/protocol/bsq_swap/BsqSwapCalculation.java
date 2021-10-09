@@ -72,7 +72,6 @@ public class BsqSwapCalculation {
 
     // Seller
     public static Coin getSellersBtcInputValue(BsqSwapTrade trade, int sellersTxSize, long sellersTradeFee) {
-
         long sellerTxFee = getTxFee(trade, sellersTxSize, sellersTradeFee);
         return getSellersBtcInputValue(trade, sellerTxFee);
     }
