@@ -1019,6 +1019,7 @@ message RawTransactionInput {
     int64 index = 1;
     bytes parent_transaction = 2;
     int64 value = 3;
+    int32 script_type_id = 4;
 }
 
 enum AvailabilityResult {
