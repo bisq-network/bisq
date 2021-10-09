@@ -18,6 +18,7 @@
 package bisq.core.trade.protocol.bsq_swap.tasks.seller;
 
 import bisq.core.btc.model.RawTransactionInput;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsq_swap.BsqSwapCalculation;
@@ -28,7 +29,6 @@ import bisq.common.taskrunner.TaskRunner;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 
@@ -43,10 +43,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
-    // Both traders pay half of base tx size: 10 / 2
-    // Smallest value is 1 segwit input: 41 + 29
-    // Min. 1 output for BSQ payout, change is optional: 31
-    private static final int MIN_SELLERS_TX_SIZE = 106;
+    private static final int MIN_SELLERS_TX_SIZE = 104;
 
     public SellerCreatesAndSignsTx(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
         super(taskHandler, bsqSwapTrade);
@@ -66,29 +63,32 @@ public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
 
             // At first we try with min. tx size
             int sellersTxSize = MIN_SELLERS_TX_SIZE;
+            Coin sellersBtcChangeAmount = Coin.ZERO;
             Coin required = BsqSwapCalculation.getSellersBtcInputValue(trade, sellersTxSize, sellersTradeFee);
+
+            // We do one iteration here to get the size of the inputs (segwit or not)
+            inputsAndChange = tradeWalletService.getSellersBtcInputsForBsqSwapTx(required);
+            sellersTxSize = BsqSwapCalculation.getVBytesSize(inputsAndChange.first, 0);
+            required = BsqSwapCalculation.getSellersBtcInputValue(trade, sellersTxSize, sellersTradeFee);
 
             // As fee calculation is not deterministic it could be that we toggle between a too small and too large
             // input. We would take the latest result before we break iteration. Worst case is that we under- or
             // overpay a bit. As fee rate is anyway an estimation we ignore that imperfection.
             while (iterations < 10 && !required.equals(previous)) {
-                try {
-                    inputsAndChange = tradeWalletService.getSellersBtcInputsForBsqSwapTx(required);
-                    previous = required;
+                inputsAndChange = tradeWalletService.getSellersBtcInputsForBsqSwapTx(required);
+                previous = required;
 
-                    // We calculate more exact tx size based on resulted inputs and change
-                    sellersTxSize = BsqSwapCalculation.getVBytesSize(inputsAndChange.first, inputsAndChange.second.getValue());
-                    required = BsqSwapCalculation.getSellersBtcInputValue(trade, sellersTxSize, sellersTradeFee);
-
-                    iterations++;
-                } catch (InsufficientMoneyException e) {
-                    // TODO with exact inputs for btc fee at seller we run into missing funds and/or
-                    //  below dust exceptions
-                    if (e.missing != null) {
-                        required = required.add(e.missing);
-                        iterations++;
-                    }
+                // We calculate more exact tx size based on resulted inputs and change
+                sellersBtcChangeAmount = inputsAndChange.second;
+                if (!Restrictions.isAboveDust(sellersBtcChangeAmount)) {
+                    log.warn("We got a change below dust. We ignore that and use it as miner fee.");
+                    sellersBtcChangeAmount = Coin.ZERO;
                 }
+
+                sellersTxSize = BsqSwapCalculation.getVBytesSize(inputsAndChange.first, sellersBtcChangeAmount.getValue());
+                required = BsqSwapCalculation.getSellersBtcInputValue(trade, sellersTxSize, sellersTradeFee);
+
+                iterations++;
             }
 
             checkNotNull(inputsAndChange);
@@ -109,7 +109,6 @@ public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
             tradePeer.setPayout(buyersBtcPayoutAmount.getValue());
             String buyersBtcPayoutAddress = tradePeer.getBtcAddress();
 
-            Coin sellersBtcChangeAmount = inputsAndChange.second;
             protocolModel.setChange(sellersBtcChangeAmount.getValue());
             String sellersBtcChangeAddress = protocolModel.getBtcWalletService().getFreshAddressEntry().getAddressString();
             protocolModel.setBtcAddress(sellersBtcChangeAddress);

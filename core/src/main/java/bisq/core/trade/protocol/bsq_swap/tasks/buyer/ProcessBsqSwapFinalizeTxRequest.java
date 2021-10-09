@@ -26,7 +26,6 @@ import bisq.core.trade.protocol.bsq_swap.tasks.BsqSwapTask;
 import bisq.core.trade.protocol.messages.bsq_swap.BsqSwapFinalizeTxRequest;
 import bisq.core.util.Validator;
 
-import bisq.common.app.DevEnv;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
@@ -75,6 +74,7 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
             long sumInputs = rawInputs.stream().mapToLong(rawTransactionInput -> rawTransactionInput.value).sum();
             int sellersTxSize = BsqSwapCalculation.getVBytesSize(rawInputs, request.getBtcChange());
             long sellersBtcInputAmount = BsqSwapCalculation.getSellersBtcInputValue(trade, sellersTxSize, getSellersTradeFee()).getValue();
+            // It can be that there have been dust change which got added to miner fees
             checkArgument(sumInputs >= sellersBtcInputAmount,
                     "Sellers BTC input amount do not match our calculated required BTC input amount");
 
@@ -87,14 +87,12 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
             long sellersTxFee = BsqSwapCalculation.getTxFee(trade, sellersTxSize, getSellersTradeFee());
             long buyersBtcPayout = protocolModel.getPayout();
             long expectedChange = sumInputs - buyersBtcPayout - sellersTxFee - buyersTxFee;
-            if (expectedChange != change) {
+            boolean isChangeAboveDust = Restrictions.isAboveDust(Coin.valueOf(expectedChange));
+            if (expectedChange != change && isChangeAboveDust) {
                 log.warn("Sellers BTC change is not as expected. This can happen if fee estimation for inputs did not " +
                         "succeed (e.g. dust change, max. iterations reached,...");
                 log.warn("buyersBtcPayout={}, sumInputs={}, sellersTxFee={}, buyersTxFee={}, expectedChange={}, change={}",
                         buyersBtcPayout, sumInputs, sellersTxFee, buyersTxFee, expectedChange, change);
-            }
-            if (DevEnv.isDevMode()) {
-                checkArgument(expectedChange == change);
             }
 
             String sellersBsqPayoutAddress = request.getBsqPayoutAddress();
