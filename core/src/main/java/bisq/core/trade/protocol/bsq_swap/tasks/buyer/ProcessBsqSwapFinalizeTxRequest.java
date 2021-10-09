@@ -26,6 +26,7 @@ import bisq.core.trade.protocol.bsq_swap.tasks.BsqSwapTask;
 import bisq.core.trade.protocol.messages.bsq_swap.BsqSwapFinalizeTxRequest;
 import bisq.core.util.Validator;
 
+import bisq.common.app.DevEnv;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
@@ -72,7 +73,7 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
             checkArgument(!hasUnSignedInputs, "Inputs from tx has unsigned inputs");
 
             long sumInputs = rawInputs.stream().mapToLong(rawTransactionInput -> rawTransactionInput.value).sum();
-            int sellersTxSize = BsqSwapCalculation.getVBytesSize(protocolModel.getTradeWalletService(), rawInputs, request.getBtcChange());
+            int sellersTxSize = BsqSwapCalculation.getVBytesSize(rawInputs, request.getBtcChange());
             long sellersBtcInputAmount = BsqSwapCalculation.getSellersBtcInputValue(trade, sellersTxSize, getSellersTradeFee()).getValue();
             checkArgument(sumInputs >= sellersBtcInputAmount,
                     "Sellers BTC input amount do not match our calculated required BTC input amount");
@@ -81,9 +82,20 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
             checkArgument(change == 0 || Restrictions.isAboveDust(Coin.valueOf(change)),
                     "BTC change must be 0 or above dust");
 
+            int buyersTxSize = BsqSwapCalculation.getVBytesSize(protocolModel.getInputs(), protocolModel.getChange());
+            long buyersTxFee = BsqSwapCalculation.getTxFee(trade, buyersTxSize, getBuyersTradeFee());
+            long sellersTxFee = BsqSwapCalculation.getTxFee(trade, sellersTxSize, getSellersTradeFee());
             long buyersBtcPayout = protocolModel.getPayout();
-            long expectedChange = sumInputs - buyersBtcPayout;
-            checkArgument(expectedChange == change, "Sellers BTC change is not as expected");
+            long expectedChange = sumInputs - buyersBtcPayout - sellersTxFee - buyersTxFee;
+            if (expectedChange != change) {
+                log.warn("Sellers BTC change is not as expected. This can happen if fee estimation for inputs did not " +
+                        "succeed (e.g. dust change, max. iterations reached,...");
+                log.warn("buyersBtcPayout={}, sumInputs={}, sellersTxFee={}, buyersTxFee={}, expectedChange={}, change={}",
+                        buyersBtcPayout, sumInputs, sellersTxFee, buyersTxFee, expectedChange, change);
+            }
+            if (DevEnv.isDevMode()) {
+                checkArgument(expectedChange == change);
+            }
 
             String sellersBsqPayoutAddress = request.getBsqPayoutAddress();
             checkNotNull(sellersBsqPayoutAddress, "sellersBsqPayoutAddress must not be null");
@@ -107,6 +119,8 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
             failed(t);
         }
     }
+
+    protected abstract long getBuyersTradeFee();
 
     protected abstract long getSellersTradeFee();
 }

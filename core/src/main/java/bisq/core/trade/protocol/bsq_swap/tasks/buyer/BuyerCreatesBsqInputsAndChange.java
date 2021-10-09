@@ -66,9 +66,7 @@ public abstract class BuyerCreatesBsqInputsAndChange extends BsqSwapTask {
     }
 
     private int getBuyersTxSize() {
-        return BsqSwapCalculation.getVBytesSize(protocolModel.getTradeWalletService(),
-                Objects.requireNonNull(protocolModel.getInputs()),
-                protocolModel.getChange());
+        return BsqSwapCalculation.getVBytesSize(Objects.requireNonNull(protocolModel.getInputs()), protocolModel.getChange());
     }
 
     protected abstract long getSellersTradeFee();

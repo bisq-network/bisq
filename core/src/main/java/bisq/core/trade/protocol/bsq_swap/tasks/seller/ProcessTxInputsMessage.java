@@ -27,6 +27,7 @@ import bisq.core.trade.protocol.bsq_swap.BsqSwapTradePeer;
 import bisq.core.trade.protocol.bsq_swap.tasks.BsqSwapTask;
 import bisq.core.trade.protocol.messages.bsq_swap.TxInputsMessage;
 
+import bisq.common.app.DevEnv;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Coin;
@@ -72,7 +73,20 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
 
             Coin sellersBsqPayoutAmount = BsqSwapCalculation.getSellerBsqPayoutValue(trade, getSellersTradeFee());
             protocolModel.setPayout(sellersBsqPayoutAmount.getValue());
-            long expectedChange = sumInputs - sellersBsqPayoutAmount.getValue();
+
+            long expectedChange = sumInputs - sellersBsqPayoutAmount.getValue() - getBuyersTradeFee() - getSellersTradeFee();
+            if (expectedChange != change) {
+                log.warn("Buyers BSQ change is not as expected. This can happen if change would be below dust. " +
+                        "The change would be used as miner fee in such cases.");
+                log.warn("sellersBsqPayoutAmount={}, sumInputs={}, getBuyersTradeFee={}, " +
+                                "getSellersTradeFee={}, expectedChange={},change={}",
+                        sellersBsqPayoutAmount.value, sumInputs, getBuyersTradeFee(),
+                        getSellersTradeFee(), expectedChange, change);
+            }
+            if (DevEnv.isDevMode()) {
+                checkArgument(expectedChange == change);
+            }
+
             checkArgument(expectedChange == change, "Buyers BSQ change is not as expected");
 
             String buyersBtcPayoutAddress = message.getBuyersBtcPayoutAddress();

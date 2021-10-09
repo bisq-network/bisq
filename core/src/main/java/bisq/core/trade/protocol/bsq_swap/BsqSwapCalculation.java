@@ -18,7 +18,6 @@
 package bisq.core.trade.protocol.bsq_swap;
 
 import bisq.core.btc.model.RawTransactionInput;
-import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.monetary.Volume;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 
@@ -85,9 +84,7 @@ public class BsqSwapCalculation {
     }
 
     // See https://bitcoin.stackexchange.com/questions/87275/how-to-calculate-segwit-transaction-fee-in-bytes
-    public static int getVBytesSize(TradeWalletService tradeWalletService,
-                                    List<RawTransactionInput> inputs,
-                                    long change) {
+    public static int getVBytesSize(List<RawTransactionInput> inputs, long change) {
         int size = 5; // Half of base tx size (10)
         size += inputs.stream()
                 .mapToLong(input -> input.isSegwit() ? 68 : 149)
@@ -103,7 +100,7 @@ public class BsqSwapCalculation {
         return Coin.valueOf(MathUtils.roundDoubleToLong(MathUtils.scaleDownByPowerOf10(volume.getValue(), 6)));
     }
 
-    private static long getTxFee(BsqSwapTrade trade, int vBytes, long tradeFee) {
+    public static long getTxFee(BsqSwapTrade trade, int vBytes, long tradeFee) {
         return trade.getTxFeePerVbyte() * vBytes - tradeFee;
     }
 }
