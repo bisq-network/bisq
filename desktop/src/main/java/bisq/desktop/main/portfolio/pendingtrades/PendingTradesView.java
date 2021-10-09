@@ -148,7 +148,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private final Map<String, Button> buttonByTrade = new HashMap<>();
     private final Map<String, JFXBadge> badgeByTrade = new HashMap<>();
     private final Map<String, ListChangeListener<ChatMessage>> listenerByTrade = new HashMap<>();
-    private ChangeListener<Trade.State> tradeStateListener;
     private ChangeListener<Trade.DisputeState> disputeStateListener;
     private ChangeListener<MediationResultState> mediationResultStateListener;
     private ChangeListener<Number> getMempoolStatusListener;
@@ -455,7 +454,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         model.dataModel.getTradeManager().requestPersistence();
         tradeIdOfOpenChat = trade.getId();
 
-        ChatView chatView = new ChatView(traderChatManager, formatter, Res.get("offerbook.trader"));
+        ChatView chatView = new ChatView(traderChatManager, Res.get("offerbook.trader"));
         chatView.setAllowAttachments(false);
         chatView.setDisplayHeader(false);
         chatView.initialize();
@@ -469,15 +468,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         boolean isTaker = !model.dataModel.isMaker(trade.getOffer());
         TradeChatSession tradeChatSession = new TradeChatSession(trade, isTaker);
-
-        tradeStateListener = (observable, oldValue, newValue) -> {
-            if (trade.isPayoutPublished()) {
-                if (chatPopupStage.isShowing()) {
-                    chatPopupStage.hide();
-                }
-            }
-        };
-        trade.stateProperty().addListener(tradeStateListener);
 
         disputeStateListener = (observable, oldValue, newValue) -> {
             if (newValue == Trade.DisputeState.DISPUTE_CLOSED || newValue == Trade.DisputeState.REFUND_REQUEST_CLOSED) {
@@ -521,7 +511,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 chatPopupStage.xProperty().removeListener(yPositionListener);
             }
 
-            trade.stateProperty().removeListener(tradeStateListener);
             trade.disputeStateProperty().addListener(disputeStateListener);
             trade.mediationResultStateProperty().addListener(mediationResultStateListener);
             traderChatManager.requestPersistence();

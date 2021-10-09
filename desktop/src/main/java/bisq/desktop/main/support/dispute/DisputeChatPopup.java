@@ -90,7 +90,7 @@ public class DisputeChatPopup {
         selectedDispute.getChatMessages().forEach(m -> m.setWasDisplayed(true));
         disputeManager.requestPersistence();
 
-        ChatView chatView = new ChatView(disputeManager, formatter, counterpartyName);
+        ChatView chatView = new ChatView(disputeManager, counterpartyName);
         chatView.setAllowAttachments(true);
         chatView.setDisplayHeader(false);
         chatView.initialize();
