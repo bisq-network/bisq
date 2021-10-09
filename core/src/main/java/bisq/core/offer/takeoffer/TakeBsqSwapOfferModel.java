@@ -316,10 +316,14 @@ public class TakeBsqSwapOfferModel implements Model {
     }
 
     public boolean hasEnoughBtc() {
-        return !btcWalletService.getSavingWalletBalance().isLessThan(bsqSwapTxHelper.myBtc.get());
+        return true;
+        //todo
+        //  return !btcWalletService.getSavingWalletBalance().isLessThan(bsqSwapTxHelper.myBtc.get());
     }
 
     public boolean hasEnoughBsq() {
-        return !offerUtil.getUsableBsqBalance().isLessThan(bsqSwapTxHelper.myBsq.get());
+        return true;
+        //todo
+        //  return !offerUtil.getUsableBsqBalance().isLessThan(bsqSwapTxHelper.myBsq.get());
     }
 }
