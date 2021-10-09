@@ -98,8 +98,7 @@ public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
             List<RawTransactionInput> sellersBtcInputs = inputsAndChange.first;
             protocolModel.setInputs(sellersBtcInputs);
 
-            Coin sellersBsqPayoutAmount = BsqSwapCalculation.getSellerBsqPayoutValue(trade, sellersTradeFee);
-            protocolModel.setPayout(sellersBsqPayoutAmount.getValue());
+            Coin sellersBsqPayoutAmount = Coin.valueOf(protocolModel.getPayout());
             String sellersBsqPayoutAddress = protocolModel.getBsqWalletService().getUnusedAddress().toString();
             protocolModel.setBsqAddress(sellersBsqPayoutAddress);
 

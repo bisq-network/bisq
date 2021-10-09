@@ -83,8 +83,7 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
 
             long buyersBtcPayout = protocolModel.getPayout();
             long expectedChange = sumInputs - buyersBtcPayout;
-            checkArgument(expectedChange == change,
-                    "Sellers BTC change is not as expected");
+            checkArgument(expectedChange == change, "Sellers BTC change is not as expected");
 
             String sellersBsqPayoutAddress = request.getBsqPayoutAddress();
             checkNotNull(sellersBsqPayoutAddress, "sellersBsqPayoutAddress must not be null");

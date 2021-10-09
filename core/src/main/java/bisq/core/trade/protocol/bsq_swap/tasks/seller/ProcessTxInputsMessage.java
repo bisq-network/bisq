@@ -71,9 +71,9 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
                     "BSQ change must be 0 or above dust");
 
             Coin sellersBsqPayoutAmount = BsqSwapCalculation.getSellerBsqPayoutValue(trade, getSellersTradeFee());
+            protocolModel.setPayout(sellersBsqPayoutAmount.getValue());
             long expectedChange = sumInputs - sellersBsqPayoutAmount.getValue();
-            checkArgument(expectedChange == change,
-                    "Buyers BSQ change is not as expected");
+            checkArgument(expectedChange == change, "Buyers BSQ change is not as expected");
 
             String buyersBtcPayoutAddress = message.getBuyersBtcPayoutAddress();
             checkNotNull(buyersBtcPayoutAddress, "buyersBtcPayoutAddress must not be null");
