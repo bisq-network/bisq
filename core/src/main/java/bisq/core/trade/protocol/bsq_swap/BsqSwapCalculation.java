@@ -86,7 +86,9 @@ public class BsqSwapCalculation {
     }
 
 
-    public static int getTxSize(TradeWalletService tradeWalletService, List<RawTransactionInput> inputs, long change) {
+    public static int getVBytesSize(TradeWalletService tradeWalletService,
+                                    List<RawTransactionInput> inputs,
+                                    long change) {
         int size = 10 / 2; // Half of base tx size
         size += inputs.stream()
                 .map(rawInput -> tradeWalletService.getTransactionInput(null, new byte[]{}, rawInput))
@@ -104,7 +106,7 @@ public class BsqSwapCalculation {
         return Coin.valueOf(MathUtils.roundDoubleToLong(MathUtils.scaleDownByPowerOf10(volume.getValue(), 6)));
     }
 
-    private static long getTxFee(BsqSwapTrade trade, int txSize, long tradeFee) {
-        return trade.getTxFeePerVbyte() * txSize - tradeFee;
+    private static long getTxFee(BsqSwapTrade trade, int vBytes, long tradeFee) {
+        return trade.getTxFeePerVbyte() * vBytes - tradeFee;
     }
 }

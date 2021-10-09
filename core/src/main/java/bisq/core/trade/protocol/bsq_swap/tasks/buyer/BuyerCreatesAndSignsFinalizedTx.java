@@ -99,7 +99,7 @@ public abstract class BuyerCreatesAndSignsFinalizedTx extends BsqSwapTask {
     }
 
     private int getBuyersTxSize() {
-        return BsqSwapCalculation.getTxSize(protocolModel.getTradeWalletService(),
+        return BsqSwapCalculation.getVBytesSize(protocolModel.getTradeWalletService(),
                 Objects.requireNonNull(protocolModel.getInputs()),
                 protocolModel.getChange());
     }

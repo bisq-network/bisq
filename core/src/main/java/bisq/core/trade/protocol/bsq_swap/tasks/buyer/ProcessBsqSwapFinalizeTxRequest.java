@@ -72,7 +72,7 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
             checkArgument(!hasUnSignedInputs, "Inputs from tx has unsigned inputs");
 
             long sumInputs = rawInputs.stream().mapToLong(rawTransactionInput -> rawTransactionInput.value).sum();
-            int sellersTxSize = BsqSwapCalculation.getTxSize(protocolModel.getTradeWalletService(), rawInputs, request.getBtcChange());
+            int sellersTxSize = BsqSwapCalculation.getVBytesSize(protocolModel.getTradeWalletService(), rawInputs, request.getBtcChange());
             long sellersBtcInputAmount = BsqSwapCalculation.getSellersBtcInputValue(trade, sellersTxSize, getSellersTradeFee()).getValue();
             checkArgument(sumInputs >= sellersBtcInputAmount,
                     "Sellers BTC input amount do not match our calculated required BTC input amount");

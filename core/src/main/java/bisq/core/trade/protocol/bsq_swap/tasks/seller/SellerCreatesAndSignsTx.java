@@ -75,7 +75,7 @@ public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
                 previous = required;
 
                 // We calculate more exact tx size based on resulted inputs and change
-                sellersTxSize = BsqSwapCalculation.getTxSize(tradeWalletService, inputsAndChange.first, inputsAndChange.second.getValue());
+                sellersTxSize = BsqSwapCalculation.getVBytesSize(tradeWalletService, inputsAndChange.first, inputsAndChange.second.getValue());
                 required = BsqSwapCalculation.getSellersBtcInputValue(trade, sellersTxSize, sellersTradeFee);
 
                 iterations++;
@@ -134,7 +134,7 @@ public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
     }
 
     private int getBuyersTxSize() {
-        return BsqSwapCalculation.getTxSize(protocolModel.getTradeWalletService(),
+        return BsqSwapCalculation.getVBytesSize(protocolModel.getTradeWalletService(),
                 Objects.requireNonNull(protocolModel.getTradePeer().getInputs()),
                 protocolModel.getTradePeer().getChange());
     }
