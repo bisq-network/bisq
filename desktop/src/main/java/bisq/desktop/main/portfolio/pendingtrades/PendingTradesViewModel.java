@@ -433,15 +433,9 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
 
             // #################### Phase DEPOSIT_PAID
-            case SELLER_PUBLISHED_DEPOSIT_TX:
-
                 // DEPOSIT_TX_PUBLISHED_MSG
                 // seller perspective
-            case SELLER_SENT_DEPOSIT_TX_PUBLISHED_MSG:
-            case SELLER_SAW_ARRIVED_DEPOSIT_TX_PUBLISHED_MSG:
-            case SELLER_STORED_IN_MAILBOX_DEPOSIT_TX_PUBLISHED_MSG:
-            case SELLER_SEND_FAILED_DEPOSIT_TX_PUBLISHED_MSG:
-
+            case SELLER_PUBLISHED_DEPOSIT_TX:
                 // buyer perspective
             case BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:
 
