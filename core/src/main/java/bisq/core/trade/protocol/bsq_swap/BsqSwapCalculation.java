@@ -85,17 +85,15 @@ public class BsqSwapCalculation {
         return Coin.valueOf(trade.getAmount() + sellerTxFee);
     }
 
-
+    // See https://bitcoin.stackexchange.com/questions/87275/how-to-calculate-segwit-transaction-fee-in-bytes
     public static int getVBytesSize(TradeWalletService tradeWalletService,
                                     List<RawTransactionInput> inputs,
                                     long change) {
-        int size = 10 / 2; // Half of base tx size
+        int size = 5; // Half of base tx size (10)
         size += inputs.stream()
-                .map(rawInput -> tradeWalletService.getTransactionInput(null, new byte[]{}, rawInput))
-                .mapToLong(transactionInput -> 41 + (transactionInput.hasWitness() ? 29 : 108))
+                .mapToLong(input -> input.isSegwit() ? 68 : 149)
                 .sum();
-        // Outputs: 31 (we only use segwit)
-        size += change > 0 ? 2 * 31 : 31;
+        size += change > 0 ? 62 : 31;
         return size;
     }
 
