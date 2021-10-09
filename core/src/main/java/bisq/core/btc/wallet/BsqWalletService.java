@@ -783,7 +783,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         Transaction dummyTx = new Transaction(params);
         coinSelection.gathered.forEach(dummyTx::addInput);
         List<RawTransactionInput> inputs = dummyTx.getInputs().stream()
-                .map(WalletService::getRawInputFromTransactionInput)
+                .map(RawTransactionInput::new)
                 .collect(Collectors.toList());
         return new Tuple2<>(inputs, change);
     }
