@@ -62,10 +62,10 @@ public class BuyerPublishesTx extends BsqSwapTask {
                     new TxBroadcaster.Callback() {
                         @Override
                         public void onSuccess(Transaction transaction) {
-                            if (!completed) {
-                                trade.setState(BsqSwapTrade.State.COMPLETED);
-                                protocolModel.getTradeManager().onBsqSwapTradeCompleted(trade);
+                            trade.setState(BsqSwapTrade.State.COMPLETED);
+                            protocolModel.getTradeManager().onBsqSwapTradeCompleted(trade);
 
+                            if (!completed) {
                                 complete();
                             } else {
                                 log.warn("We got the onSuccess callback called after the timeout has been triggered a complete().");
