@@ -18,7 +18,6 @@
 package bisq.core.btc.wallet;
 
 import bisq.core.btc.TxFeeEstimationService;
-import bisq.core.btc.exceptions.InsufficientBsqException;
 import bisq.core.btc.exceptions.SigningException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
@@ -1178,7 +1177,7 @@ public class TradeWalletService {
     // BsqSwap tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Tuple2<List<RawTransactionInput>, Coin> getSellersBtcInputsForBsqSwapTx(Coin required) throws InsufficientBsqException {
+    public Tuple2<List<RawTransactionInput>, Coin> getSellersBtcInputsForBsqSwapTx(Coin required) throws InsufficientMoneyException {
         BtcCoinSelector coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE),
                 preferences.getIgnoreDustThreshold());
         CoinSelection coinSelection = coinSelector.select(required, Objects.requireNonNull(wallet).calculateAllSpendCandidates());
@@ -1186,12 +1185,14 @@ public class TradeWalletService {
         Coin change = Coin.ZERO;
         try {
             change = coinSelector.getChange(required, coinSelection);
-            checkArgument(change.isZero() || Restrictions.isAboveDust(change));
+            checkArgument(change.isZero() || Restrictions.isAboveDust(change),
+                    "change is below dust (546)");
         } catch (InsufficientMoneyException e) {
-            log.error("Missing funds in takerPreparesAtomicBsqInputs");
-            throw new InsufficientBsqException(e.missing);
-        } catch (Exception e) {
-            throw new InsufficientBsqException(Restrictions.getMinNonDustOutput().subtract(change));
+            log.error("Missing funds in getSellersBtcInputsForBsqSwapTx. missing={}", e.missing);
+            throw new InsufficientMoneyException(e.missing);
+        } catch (IllegalArgumentException e) {
+            log.error("{}; change={}", e, change);
+            throw new InsufficientMoneyException(Restrictions.getMinNonDustOutput().subtract(change));
         }
 
         Transaction dummyTx = new Transaction(params);
