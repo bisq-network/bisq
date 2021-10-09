@@ -81,6 +81,11 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
             checkArgument(change == 0 || Restrictions.isAboveDust(Coin.valueOf(change)),
                     "BTC change must be 0 or above dust");
 
+            long buyersBtcPayout = protocolModel.getPayout();
+            long expectedChange = sumInputs - buyersBtcPayout;
+            checkArgument(expectedChange == change,
+                    "Sellers BTC change is not as expected");
+
             String sellersBsqPayoutAddress = request.getBsqPayoutAddress();
             checkNotNull(sellersBsqPayoutAddress, "sellersBsqPayoutAddress must not be null");
             checkArgument(!sellersBsqPayoutAddress.isEmpty(), "sellersBsqPayoutAddress must not be empty");

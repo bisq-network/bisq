@@ -59,7 +59,7 @@ public abstract class BuyerCreatesAndSignsFinalizedTx extends BsqSwapTask {
             Coin buyersBsqChangeAmount = Coin.valueOf(protocolModel.getChange());
             String buyersBsqChangeAddress = protocolModel.getBsqAddress();
 
-            Coin buyersBtcPayoutAmount = BsqSwapCalculation.getBuyersBtcPayoutValue(trade, getBuyersTxSize(), getBuyersTradeFee());
+            Coin buyersBtcPayoutAmount = Coin.valueOf(protocolModel.getPayout());
             String buyersBtcPayoutAddress = protocolModel.getBtcAddress();
 
             Coin sellersBtcChangeAmount = Coin.valueOf(tradePeer.getChange());
@@ -96,12 +96,6 @@ public abstract class BuyerCreatesAndSignsFinalizedTx extends BsqSwapTask {
         } catch (Throwable t) {
             failed(t);
         }
-    }
-
-    private int getBuyersTxSize() {
-        return BsqSwapCalculation.getVBytesSize(protocolModel.getTradeWalletService(),
-                Objects.requireNonNull(protocolModel.getInputs()),
-                protocolModel.getChange());
     }
 
     protected abstract long getSellersTradeFee();
