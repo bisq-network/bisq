@@ -1182,17 +1182,12 @@ public class TradeWalletService {
                 preferences.getIgnoreDustThreshold());
         CoinSelection coinSelection = coinSelector.select(required, Objects.requireNonNull(wallet).calculateAllSpendCandidates());
 
-        Coin change = Coin.ZERO;
+        Coin change;
         try {
             change = coinSelector.getChange(required, coinSelection);
-            checkArgument(change.isZero() || Restrictions.isAboveDust(change),
-                    "change is below dust (546)");
         } catch (InsufficientMoneyException e) {
             log.error("Missing funds in getSellersBtcInputsForBsqSwapTx. missing={}", e.missing);
             throw new InsufficientMoneyException(e.missing);
-        } catch (IllegalArgumentException e) {
-            log.error("{}; change={}", e, change);
-            throw new InsufficientMoneyException(Restrictions.getMinNonDustOutput().subtract(change));
         }
 
         Transaction dummyTx = new Transaction(params);
