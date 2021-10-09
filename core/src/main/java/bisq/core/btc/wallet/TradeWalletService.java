@@ -371,7 +371,7 @@ public class TradeWalletService {
             checkNotNull(e.getConnectedOutput().getParentTransaction(),
                     "e.getConnectedOutput().getParentTransaction() must not be null");
             checkNotNull(e.getValue(), "e.getValue() must not be null");
-            return WalletService.getRawInputFromTransactionInput(e);
+            return getRawInputFromTransactionInput(e);
         }).collect(Collectors.toList());
 
 
@@ -485,7 +485,7 @@ public class TradeWalletService {
             // Add buyer inputs
             for (TransactionInput input : makerInputs) {
                 preparedDepositTx.addInput(input);
-                makerRawTransactionInputs.add(WalletService.getRawInputFromTransactionInput(input));
+                makerRawTransactionInputs.add(this.getRawInputFromTransactionInput(input));
             }
 
             // Add seller inputs
@@ -503,7 +503,7 @@ public class TradeWalletService {
             // Add seller inputs
             for (TransactionInput input : makerInputs) {
                 preparedDepositTx.addInput(input);
-                makerRawTransactionInputs.add(WalletService.getRawInputFromTransactionInput(input));
+                makerRawTransactionInputs.add(this.getRawInputFromTransactionInput(input));
             }
         }
 
@@ -1197,7 +1197,7 @@ public class TradeWalletService {
         Transaction dummyTx = new Transaction(params);
         coinSelection.gathered.forEach(dummyTx::addInput);
         List<RawTransactionInput> inputs = dummyTx.getInputs().stream()
-                .map(WalletService::getRawInputFromTransactionInput)
+                .map(RawTransactionInput::new)
                 .collect(Collectors.toList());
         return new Tuple2<>(inputs, change);
     }
@@ -1532,5 +1532,26 @@ public class TradeWalletService {
         var dummyTx = new Transaction(params);
         dummyTx.addInput(connectedOutputTx.getOutput(input.getOutpoint().getIndex()));
         return dummyTx.getInput(0);
+    }
+
+    // This method might be replace by RawTransactionInput constructor taking the TransactionInput as param.
+    // As we used segwit=false for the bitcoinSerialize method here we still keep it to not risk to break anything,
+    // though it very likely should be fine to replace it with the RawTransactionInput constructor call.
+    @Deprecated
+    private RawTransactionInput getRawInputFromTransactionInput(TransactionInput input) {
+        checkNotNull(input, "input must not be null");
+        checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
+        checkNotNull(input.getConnectedOutput().getParentTransaction(),
+                "input.getConnectedOutput().getParentTransaction() must not be null");
+        checkNotNull(input.getValue(), "input.getValue() must not be null");
+
+        // bitcoinSerialize(false) is used just in case the serialized tx is parsed by a bisq node still using
+        // bitcoinj 0.14. This is not supposed to happen ever since Version.TRADE_PROTOCOL_VERSION was set to 3,
+        // but it costs nothing to be on the safe side.
+        // The serialized tx is just used to obtain its hash, so the witness data is not relevant.
+        byte[] parentTransaction = input.getConnectedOutput().getParentTransaction().bitcoinSerialize(false);
+        return new RawTransactionInput(input.getOutpoint().getIndex(),
+                parentTransaction,
+                input.getValue().value);
     }
 }

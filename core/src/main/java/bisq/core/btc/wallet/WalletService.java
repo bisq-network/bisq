@@ -22,7 +22,6 @@ import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.listeners.AddressConfidenceListener;
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.listeners.TxConfidenceListener;
-import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.http.MemPoolSpaceTxBroadcaster;
 import bisq.core.provider.fee.FeeService;
@@ -823,24 +822,6 @@ public abstract class WalletService {
                                                  Wallet wallet,
                                                  TransactionConfidence.Source source) throws VerificationException {
         return maybeAddTxToWallet(transaction.bitcoinSerialize(), wallet, source);
-    }
-
-    public static RawTransactionInput getRawInputFromTransactionInput(TransactionInput input) {
-        checkNotNull(input, "input must not be null");
-        checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
-        checkNotNull(input.getConnectedOutput().getParentTransaction(),
-                "input.getConnectedOutput().getParentTransaction() must not be null");
-        checkNotNull(input.getValue(), "input.getValue() must not be null");
-
-        // todo check if that is correct to set to true
-        // bitcoinSerialize(false) is used just in case the serialized tx is parsed by a bisq node still using
-        // bitcoinj 0.14. This is not supposed to happen ever since Version.TRADE_PROTOCOL_VERSION was set to 3,
-        // but it costs nothing to be on the safe side.
-        // The serialized tx is just used to obtain its hash, so the witness data is not relevant.
-        byte[] parentTransaction = input.getConnectedOutput().getParentTransaction().bitcoinSerialize(false);
-        return new RawTransactionInput(input.getOutpoint().getIndex(),
-                parentTransaction,
-                input.getValue().value);
     }
 
 
