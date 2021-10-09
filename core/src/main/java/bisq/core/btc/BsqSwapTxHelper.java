@@ -24,8 +24,6 @@ import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 
-import bisq.common.util.Utilities;
-
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.script.ScriptPattern;
 
@@ -38,9 +36,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 
 /*  Helper for creating bsq swap transactions.
@@ -164,81 +159,7 @@ public class BsqSwapTxHelper {
     // Build tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * Recursively tries to build my side of bsq swap tx, using the tx size of the previous
-     * steps to calculate the mining fee of the current step. break recursion when two
-     * steps in a row produce the same tx.
-     *
-     * To avoid a non convergent case where the signatures of two consecutive steps
-     * differ in size, the tx size of the larger of the two previous steps is used.
-     *
-     * Break after 10 steps if not converging.
-     *
-     * @param step              Current recursion step
-     * @param parent            TxData of previous recursion step
-     * @param payForOverhead    Pay for overhead bytes
-     *
-     * @return TxData of a my side of bsq swap tx or null if unable to create my side
-     */
-    public TxData buildMySide(int step, @Nullable TxData parent, boolean payForOverhead) {
-        if (step > 10) {
-            return null;
-        }
-        checkNotNull(btcAmount, "btcAmount must not be null");
-        checkNotNull(bsqAmount, "bsqAmount must not be null");
-        try {
-            // Buyer pays trade fee by burning BSQ
-            // Seller pays trade fee by buying extra BSQ for buyer to burn
-            // This is calculated in updateAmounts()
-            var txFee = getTxFee(parent, payForOverhead);
-            var requiredBsq = isBuyer ? buyerBsqIn : Coin.ZERO;
-            var requiredBtc = isBuyer ? Coin.ZERO : sellerBtcIn.add(txFee);
-            checkArgument(!requiredBsq.isNegative(), "required BSQ cannot be negative");
-            checkArgument(!requiredBtc.isNegative(), "required BTC cannot be negative");
 
-            // This prepares a tx with no inputs if no BSQ is required
-            var preparedBsq = bsqWalletService.prepareBsqInputsForBsqSwap(requiredBsq);
-
-            // Set outputs to change from inputs plus amount to receive in the trade
-            var bsqOut = preparedBsq.second.add(isBuyer ? Coin.ZERO : bsqAmount);
-            var btcOut = parent == null ? Coin.ZERO : parent.btcChange;
-            if (isBuyer) {
-                // Buyer pays tx fee by using the burnt BSQ satoshis, and if that's not
-                // enough, reducing the BTC output received in the trade (or increasing
-                // if more BSQ is burnt than the tx fee)
-                var txFeeAdjustment = txFee.subtract(buyerTradeFee).subtract(sellerTradeFee);
-                btcOut = btcOut.add(btcAmount).subtract(txFeeAdjustment);
-            }
-
-            // Build my side of tx with signed BTC inputs
-            var txData = tradeWalletService.buildMySideBsqSwapTx(
-                    preparedBsq.first,
-                    requiredBtc,
-                    myBsqAddress,
-                    bsqOut,
-                    myBtcAddress,
-                    btcOut
-            );
-
-            // Sign BSQ inputs
-            txData.setTx(bsqWalletService.signInputs(txData.tx, txData.bsqInputs));
-
-            // No more inputs are needed if this iteration didn't generate a different tx
-            if (parent != null && txData.tx.equals(parent.tx)) {
-                log.debug("feePerVbyte={} My fee={} vsize={} Raw myside tx={}",
-                        txFeePerVbyte,
-                        getTxFee(parent, payForOverhead),
-                        txData.tx.getVsize(),
-                        Utilities.bytesAsHexString(txData.tx.bitcoinSerialize()));
-                return txData;
-            }
-
-            return buildMySide(step + 1, txData, payForOverhead);
-        } catch (Throwable t) {
-            log.error("Exception while building my side of tx {}", t.getMessage());
-        }
-        return null;
-    }
 
     private static Coin bsqFromBtc(Coin btcAmount, Price price) {
         // Round BSQ down

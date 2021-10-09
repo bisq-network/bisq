@@ -506,25 +506,6 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         return tx;
     }
 
-    public Transaction signInputs(Transaction tx, List<RawTransactionInput> transactionInputs)
-            throws WalletException, TransactionVerificationException {
-
-        for (int i = 0; i < tx.getInputs().size(); i++) {
-            if (transactionInputs.contains(new RawTransactionInput(tx.getInput(i)))) {
-                signInput(tx, i);
-            }
-        }
-
-        for (TransactionOutput txo : tx.getOutputs()) {
-            verifyNonDustTxo(tx, txo);
-        }
-
-        checkWalletConsistency(wallet);
-        verifyTransaction(tx);
-        printTx("BSQ wallet: Signed Tx", tx);
-        return tx;
-    }
-
     private void signInput(Transaction tx, int i) throws TransactionVerificationException {
         TransactionInput txIn = tx.getInputs().get(i);
         TransactionOutput connectedOutput = txIn.getConnectedOutput();
