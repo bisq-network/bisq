@@ -28,6 +28,7 @@ import bisq.common.taskrunner.TaskRunner;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 
@@ -71,14 +72,23 @@ public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
             // input. We would take the latest result before we break iteration. Worst case is that we under- or
             // overpay a bit. As fee rate is anyway an estimation we ignore that imperfection.
             while (iterations < 10 && !required.equals(previous)) {
-                inputsAndChange = tradeWalletService.getSellersBtcInputsForBsqSwapTx(required);
-                previous = required;
+                try {
+                    inputsAndChange = tradeWalletService.getSellersBtcInputsForBsqSwapTx(required);
+                    previous = required;
 
-                // We calculate more exact tx size based on resulted inputs and change
-                sellersTxSize = BsqSwapCalculation.getVBytesSize(tradeWalletService, inputsAndChange.first, inputsAndChange.second.getValue());
-                required = BsqSwapCalculation.getSellersBtcInputValue(trade, sellersTxSize, sellersTradeFee);
+                    // We calculate more exact tx size based on resulted inputs and change
+                    sellersTxSize = BsqSwapCalculation.getVBytesSize(tradeWalletService, inputsAndChange.first, inputsAndChange.second.getValue());
+                    required = BsqSwapCalculation.getSellersBtcInputValue(trade, sellersTxSize, sellersTradeFee);
 
-                iterations++;
+                    iterations++;
+                } catch (InsufficientMoneyException e) {
+                    // TODO with exact inputs for btc fee at seller we run into missing funds and/or
+                    //  below dust exceptions
+                    if (e.missing != null) {
+                        required = required.add(e.missing);
+                        iterations++;
+                    }
+                }
             }
 
             checkNotNull(inputsAndChange);
