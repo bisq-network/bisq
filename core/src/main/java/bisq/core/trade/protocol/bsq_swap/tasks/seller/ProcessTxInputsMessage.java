@@ -27,7 +27,6 @@ import bisq.core.trade.protocol.bsq_swap.BsqSwapTradePeer;
 import bisq.core.trade.protocol.bsq_swap.tasks.BsqSwapTask;
 import bisq.core.trade.protocol.messages.bsq_swap.TxInputsMessage;
 
-import bisq.common.app.DevEnv;
 import bisq.common.taskrunner.TaskRunner;
 
 import org.bitcoinj.core.Address;
@@ -85,11 +84,8 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
                         sellersBsqPayoutAmount.value, sumInputs, getBuyersTradeFee(),
                         getSellersTradeFee(), expectedChange, change);
             }
-            if (DevEnv.isDevMode()) {
-                checkArgument(expectedChange == change);
-            }
-
-            checkArgument(expectedChange == change, "Buyers BSQ change is not as expected");
+            checkArgument(change <= expectedChange,
+                    "Change must be smaller or equal to expectedChange");
 
             NetworkParameters params = protocolModel.getBtcWalletService().getParams();
             String buyersBtcPayoutAddress = message.getBuyersBtcPayoutAddress();

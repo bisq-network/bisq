@@ -96,6 +96,8 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
                 log.warn("buyersBtcPayout={}, sumInputs={}, sellersTxFee={}, buyersTxFee={}, expectedChange={}, change={}",
                         buyersBtcPayout, sumInputs, sellersTxFee, buyersTxFee, expectedChange, change);
             }
+            checkArgument(change <= expectedChange,
+                    "Change must be smaller or equal to expectedChange");
 
             NetworkParameters params = protocolModel.getBtcWalletService().getParams();
             String sellersBsqPayoutAddress = request.getBsqPayoutAddress();
