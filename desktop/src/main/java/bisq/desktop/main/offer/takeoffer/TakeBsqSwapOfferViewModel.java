@@ -26,7 +26,7 @@ import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.trade.model.bsqswap.BsqSwapTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
@@ -265,12 +265,11 @@ class TakeBsqSwapOfferViewModel extends ActivatableWithDataModel<TakeBsqSwapOffe
     private void applyTradeErrorMessage(@Nullable String errorMessage) {
         if (errorMessage != null) {
             String appendMsg;
-            switch (bsqSwapTrade.getState()) {
+            switch (bsqSwapTrade.getTradeState()) {
                 case PREPARATION:
                     appendMsg = Res.get("takeOffer.error.noFundsLost");
                     break;
-                case TX_PUBLISHED:
-                case TX_CONFIRMED:
+                case COMPLETED:
                     appendMsg = Res.get("takeOffer.error.payoutPublished");
                     break;
                 default:
@@ -286,8 +285,7 @@ class TakeBsqSwapOfferViewModel extends ActivatableWithDataModel<TakeBsqSwapOffe
     }
 
     private void applyTradeState() {
-        if (bsqSwapTrade.getState().equals(BsqSwapTrade.State.TX_PUBLISHED) ||
-                bsqSwapTrade.getState().equals(BsqSwapTrade.State.TX_CONFIRMED)) {
+        if (bsqSwapTrade.getTradeState().equals(BsqSwapTrade.State.COMPLETED)) {
             if (takeOfferSucceededHandler != null)
                 takeOfferSucceededHandler.run();
 

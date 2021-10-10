@@ -20,7 +20,7 @@ package bisq.core.trade.txproof.xmr;
 import bisq.core.monetary.Volume;
 import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.txproof.AssetTxProofModel;
 import bisq.core.user.AutoConfirmSettings;
 

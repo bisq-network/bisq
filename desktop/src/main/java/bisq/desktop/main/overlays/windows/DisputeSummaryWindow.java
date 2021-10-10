@@ -47,7 +47,7 @@ import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.misc.TradeDataValidation;
-import bisq.core.trade.model.Contract;
+import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.CoinFormatter;

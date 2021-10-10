@@ -506,31 +506,20 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         return tx;
     }
 
-    public Transaction signInputs(Transaction tx, List<RawTransactionInput> transactionInputs)
-            throws WalletException, TransactionVerificationException {
-
-        for (int i = 0; i < tx.getInputs().size(); i++) {
-            if (transactionInputs.contains(new RawTransactionInput(tx.getInput(i)))) {
-                signInput(tx, i);
-            }
-        }
-
-        for (TransactionOutput txo : tx.getOutputs()) {
-            verifyNonDustTxo(tx, txo);
-        }
-
-        checkWalletConsistency(wallet);
-        verifyTransaction(tx);
-        printTx("BSQ wallet: Signed Tx", tx);
-        return tx;
-    }
-
     private void signInput(Transaction tx, int i) throws TransactionVerificationException {
         TransactionInput txIn = tx.getInputs().get(i);
         TransactionOutput connectedOutput = txIn.getConnectedOutput();
         if (connectedOutput != null && connectedOutput.isMine(wallet)) {
             signTransactionInput(wallet, aesKey, tx, txIn, i);
             checkScriptSig(tx, txIn, i);
+        } else {
+            if (connectedOutput == null) {
+                log.error("connectedOutput is null");
+                return;
+            }
+            if (!connectedOutput.isMine(wallet)) {
+                log.error("connectedOutput is not mine");
+            }
         }
     }
 
@@ -772,6 +761,52 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // BsqSwap tx
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Tuple2<List<RawTransactionInput>, Coin> getBuyersBsqInputsForBsqSwapTx(Coin required) throws InsufficientBsqException {
+        daoKillSwitch.assertDaoIsNotDisabled();
+        // As unconfirmed BSQ inputs cannot be verified by the peer we can only use confirmed BSQ.
+        boolean prev = bsqCoinSelector.isUnconfirmedSpendable();
+        bsqCoinSelector.setUnconfirmedSpendable(false);
+        CoinSelection coinSelection = bsqCoinSelector.select(required, wallet.calculateAllSpendCandidates());
+        Coin change;
+        try {
+            change = bsqCoinSelector.getChange(required, coinSelection);
+        } catch (InsufficientMoneyException e) {
+            throw new InsufficientBsqException(e.missing);
+        } finally {
+            bsqCoinSelector.setUnconfirmedSpendable(prev);
+        }
+
+        Transaction dummyTx = new Transaction(params);
+        coinSelection.gathered.forEach(dummyTx::addInput);
+        List<RawTransactionInput> inputs = dummyTx.getInputs().stream()
+                .map(RawTransactionInput::new)
+                .collect(Collectors.toList());
+        return new Tuple2<>(inputs, change);
+    }
+
+    public void signBsqSwapTransaction(Transaction transaction, List<TransactionInput> myInputs) {
+        for (TransactionInput input : myInputs) {
+            log.error("signBsqSwapTransaction input={}", input);
+            // signInput(transaction, input.getIndex());
+
+            TransactionOutput connectedOutput = input.getConnectedOutput();
+            log.error("signInput connectedOutput={}", connectedOutput);
+            if (connectedOutput != null && connectedOutput.isMine(wallet)) {
+                signTransactionInput(wallet, aesKey, transaction, input, input.getIndex());
+                // checkScriptSig(transaction, input, input.getIndex());
+            } else {
+                if (connectedOutput == null) {
+                    log.error("connectedOutput is null");
+                    return;
+                }
+                if (!connectedOutput.isMine(wallet)) {
+                    log.error("connectedOutput is not mine");
+                }
+            }
+        }
+    }
+
 
     // Only use confirmed BSQ inputs as the counterparty cannot verify unconfirmed BSQ inputs
     public Tuple2<Transaction, Coin> prepareBsqInputsForBsqSwap(Coin requiredInput) throws InsufficientBsqException {

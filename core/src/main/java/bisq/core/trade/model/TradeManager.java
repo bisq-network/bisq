@@ -30,31 +30,34 @@ import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
-import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxRequest;
-import bisq.core.trade.messages.trade.InputsForDepositTxRequest;
-import bisq.core.trade.misc.ClosedTradableManager;
 import bisq.core.trade.misc.DumpDelayedPayoutTx;
-import bisq.core.trade.misc.FailedTradesManager;
 import bisq.core.trade.misc.TradeResultHandler;
 import bisq.core.trade.misc.TradeTxException;
 import bisq.core.trade.misc.TradeUtil;
-import bisq.core.trade.model.bsqswap.BsqSwapMakerTrade;
-import bisq.core.trade.model.bsqswap.BsqSwapTakerTrade;
-import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.model.bsqswap.BsqSwapTradeManager;
-import bisq.core.trade.model.trade.BuyerAsMakerTrade;
-import bisq.core.trade.model.trade.BuyerAsTakerTrade;
-import bisq.core.trade.model.trade.SellerAsMakerTrade;
-import bisq.core.trade.model.trade.SellerAsTakerTrade;
-import bisq.core.trade.model.trade.Trade;
-import bisq.core.trade.protocol.MakerProtocol;
+import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
+import bisq.core.trade.model.bisq_v1.BuyerAsTakerTrade;
+import bisq.core.trade.model.bisq_v1.SellerAsMakerTrade;
+import bisq.core.trade.model.bisq_v1.SellerAsTakerTrade;
+import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.model.bsq_swap.BsqSwapBuyerAsMakerTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapBuyerAsTakerTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapSellerAsMakerTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapSellerAsTakerTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTakeOfferRequestVerification;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTradeManager;
 import bisq.core.trade.protocol.Provider;
-import bisq.core.trade.protocol.TakerProtocol;
 import bisq.core.trade.protocol.TradeProtocol;
-import bisq.core.trade.protocol.bsqswap.BsqSwapMakerProtocol;
-import bisq.core.trade.protocol.bsqswap.BsqSwapProtocolModel;
-import bisq.core.trade.protocol.trade.ProcessModel;
-import bisq.core.trade.protocol.trade.TradeProtocolFactory;
+import bisq.core.trade.protocol.TradeProtocolFactory;
+import bisq.core.trade.protocol.bisq_v1.MakerProtocol;
+import bisq.core.trade.protocol.bisq_v1.ProcessModel;
+import bisq.core.trade.protocol.bisq_v1.TakerProtocol;
+import bisq.core.trade.protocol.bsq_swap.BsqSwapMakerProtocol;
+import bisq.core.trade.protocol.bsq_swap.BsqSwapProtocolModel;
+import bisq.core.trade.protocol.messages.bisq_v1.InputsForDepositTxRequest;
+import bisq.core.trade.protocol.messages.bsq_swap.BsqSwapRequest;
+import bisq.core.trade.protocol.messages.bsq_swap.BuyersBsqSwapRequest;
+import bisq.core.trade.protocol.messages.bsq_swap.SellersBsqSwapRequest;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.User;
@@ -145,8 +148,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private final ClockWatcher clockWatcher;
 
     private final Map<String, TradeProtocol> tradeProtocolByTradeId = new HashMap<>();
-    private final PersistenceManager<TradableList<TradeModel>> persistenceManager;
-    private final TradableList<TradeModel> tradableList = new TradableList<>();
+    private final PersistenceManager<TradableList<Trade>> persistenceManager;
+    private final TradableList<Trade> tradableList = new TradableList<>();
     @Getter
     private final BooleanProperty persistedTradesInitialized = new SimpleBooleanProperty();
     @Setter
@@ -181,7 +184,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                         MediatorManager mediatorManager,
                         Provider provider,
                         ClockWatcher clockWatcher,
-                        PersistenceManager<TradableList<TradeModel>> persistenceManager,
+                        PersistenceManager<TradableList<Trade>> persistenceManager,
                         ReferralIdService referralIdService,
                         DumpDelayedPayoutTx dumpDelayedPayoutTx,
                         @Named(Config.ALLOW_FAULTY_DELAYED_TXS) boolean allowFaultyDelayedTxs) {
@@ -241,10 +244,11 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         NetworkEnvelope networkEnvelope = message.getNetworkEnvelope();
         if (networkEnvelope instanceof InputsForDepositTxRequest) {
             handleTakeOfferRequest(peer, (InputsForDepositTxRequest) networkEnvelope);
-        } else if (networkEnvelope instanceof CreateBsqSwapTxRequest) {
-            handleTakeBsqSwapOfferRequest(peer, (CreateBsqSwapTxRequest) networkEnvelope);
+        } else if (networkEnvelope instanceof BsqSwapRequest) {
+            handleBsqSwapRequest(peer, (BsqSwapRequest) networkEnvelope);
         }
     }
+
 
     // The maker received a TakeOfferRequest
     private void handleTakeOfferRequest(NodeAddress peer, InputsForDepositTxRequest inputsForDepositTxRequest) {
@@ -307,52 +311,57 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         requestPersistence();
     }
 
-    // The maker received a TakeOfferRequest
-    private void handleTakeBsqSwapOfferRequest(NodeAddress peer, CreateBsqSwapTxRequest createBsqSwapTxRequest) {
-        log.info("Received createAtomicTxRequest from {} with tradeId {} and uid {}",
-                peer, createBsqSwapTxRequest.getTradeId(), createBsqSwapTxRequest.getUid());
 
-        try {
-            Validator.nonEmptyStringOf(createBsqSwapTxRequest.getTradeId());
-        } catch (Throwable t) {
-            log.warn("Invalid inputsForDepositTxRequest " + createBsqSwapTxRequest.toString());
+    private void handleBsqSwapRequest(NodeAddress peer, BsqSwapRequest request) {
+        if (!BsqSwapTakeOfferRequestVerification.isValid(openOfferManager, provider.getFeeService(), keyRing, peer, request)) {
             return;
         }
 
-        Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(createBsqSwapTxRequest.getTradeId());
-        if (!openOfferOptional.isPresent()) {
-            return;
-        }
-
+        Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(request.getTradeId());
+        checkArgument(openOfferOptional.isPresent());
         OpenOffer openOffer = openOfferOptional.get();
-        if (openOffer.getState() != OpenOffer.State.AVAILABLE) {
-            return;
-        }
-
         Offer offer = openOffer.getOffer();
         openOfferManager.reserveOpenOffer(openOffer);
-        BsqSwapTrade bsqSwapTrade = new BsqSwapMakerTrade(
-                UUID.randomUUID().toString(),
-                offer,
-                Coin.valueOf(createBsqSwapTxRequest.getBtcTradeAmount()),
-                createBsqSwapTxRequest.getTradePrice(),
-                new Date().getTime(),
-                createBsqSwapTxRequest.getSenderNodeAddress(),
-                createBsqSwapTxRequest.getTxFeePerVbyte(),
-                createBsqSwapTxRequest.getMakerFee(),
-                createBsqSwapTxRequest.getTakerFee(),
-                new BsqSwapProtocolModel(keyRing.getPubKeyRing()),
-                "",
-                BsqSwapTrade.State.PREPARATION);
+
+        BsqSwapTrade bsqSwapTrade;
+        Coin amount = Coin.valueOf(request.getTradeAmount());
+        BsqSwapProtocolModel bsqSwapProtocolModel = new BsqSwapProtocolModel(keyRing.getPubKeyRing());
+        if (request instanceof BuyersBsqSwapRequest) {
+            checkArgument(!offer.isBuyOffer(),
+                    "offer is expected to be a sell offer at handleBsqSwapRequest");
+            bsqSwapTrade = new BsqSwapSellerAsMakerTrade(
+                    offer,
+                    amount,
+                    request.getTradeDate(),
+                    request.getSenderNodeAddress(),
+                    request.getTxFeePerVbyte(),
+                    request.getMakerFee(),
+                    request.getTakerFee(),
+                    bsqSwapProtocolModel);
+        } else {
+            checkArgument(request instanceof SellersBsqSwapRequest);
+            checkArgument(offer.isBuyOffer(),
+                    "offer is expected to be a buy offer at handleBsqSwapRequest");
+            bsqSwapTrade = new BsqSwapBuyerAsMakerTrade(
+                    offer,
+                    amount,
+                    request.getTradeDate(),
+                    request.getSenderNodeAddress(),
+                    request.getTxFeePerVbyte(),
+                    request.getMakerFee(),
+                    request.getTakerFee(),
+                    bsqSwapProtocolModel);
+        }
 
         TradeProtocol tradeProtocol = createTradeProtocol(bsqSwapTrade);
-
         initTradeAndProtocol(bsqSwapTrade, tradeProtocol);
 
-        ((BsqSwapMakerProtocol) tradeProtocol).handleCreateBsqSwapTxRequest(createBsqSwapTxRequest, peer, errorMessage -> {
-            if (takeOfferRequestErrorMessageHandler != null)
-                takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
-        });
+        ((BsqSwapMakerProtocol) tradeProtocol).handleTakeOfferRequest(request,
+                peer,
+                errorMessage -> {
+                    if (takeOfferRequestErrorMessageHandler != null)
+                        takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
+                });
 
         requestPersistence();
     }
@@ -406,7 +415,18 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initPersistedTrades() {
-        tradableList.forEach(this::initPersistedTrade);
+        Set<Trade> toRemove = new HashSet<>();
+        tradableList.forEach(tradeModel -> {
+            boolean valid = initPersistedTrade(tradeModel);
+            if (!valid) {
+                toRemove.add(tradeModel);
+            }
+        });
+        toRemove.forEach(tradableList::remove);
+        if (!toRemove.isEmpty()) {
+            requestPersistence();
+        }
+
         persistedTradesInitialized.set(true);
 
         // We do not include failed trades as they should not be counted anyway in the trade statistics
@@ -418,20 +438,25 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         tradeStatisticsManager.maybeRepublishTradeStatistics(allTrades, referralId, isTorNetworkNode);
     }
 
-    private void initPersistedTrade(TradeModel tradeModel) {
+    private boolean initPersistedTrade(TradeModel tradeModel) {
+        if (tradeModel instanceof BsqSwapTrade && !tradeModel.isCompleted()) {
+            // We do not keep pending or failed BsqSwap trades in our list and
+            // do not process them at restart.
+            // We remove the trade from the list after iterations in initPersistedTrades
+            return false;
+        }
         initTradeAndProtocol(tradeModel, getTradeProtocol(tradeModel));
 
         if (tradeModel instanceof Trade) {
             ((Trade) tradeModel).updateDepositTxFromWallet();
         }
         requestPersistence();
+        return true;
     }
 
     private void initTradeAndProtocol(TradeModel tradeModel, TradeProtocol tradeProtocol) {
         tradeProtocol.initialize(provider, this, tradeModel.getOffer());
-        if (tradeModel instanceof Trade) {
-            ((Trade) tradeModel).initialize(provider);
-        }
+        tradeModel.initialize(provider);
         requestPersistence();
     }
 
@@ -529,8 +554,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     public void onTakeBsqSwapOffer(Offer offer,
                                    Coin amount,
-                                   long price,
-                                   long miningFeePerByte,
+                                   long txFeePerVbyte,
                                    long makerFee,
                                    long takerFee,
                                    boolean isTakerApiUser,
@@ -543,18 +567,28 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         offer.checkOfferAvailability(model,
                 () -> {
                     if (offer.getState() == Offer.State.AVAILABLE) {
-                        BsqSwapTrade bsqSwapTrade = new BsqSwapTakerTrade(UUID.randomUUID().toString(),
-                                offer,
-                                amount,
-                                price,
-                                new Date().getTime(),
-                                model.getPeerNodeAddress(),
-                                miningFeePerByte,
-                                makerFee,
-                                takerFee,
-                                new BsqSwapProtocolModel(keyRing.getPubKeyRing()),
-                                "",
-                                BsqSwapTrade.State.PREPARATION);
+                        BsqSwapTrade bsqSwapTrade;
+                        NodeAddress peerNodeAddress = model.getPeerNodeAddress();
+                        BsqSwapProtocolModel bsqSwapProtocolModel = new BsqSwapProtocolModel(keyRing.getPubKeyRing());
+                        if (offer.isBuyOffer()) {
+                            bsqSwapTrade = new BsqSwapSellerAsTakerTrade(
+                                    offer,
+                                    amount,
+                                    peerNodeAddress,
+                                    txFeePerVbyte,
+                                    makerFee,
+                                    takerFee,
+                                    bsqSwapProtocolModel);
+                        } else {
+                            bsqSwapTrade = new BsqSwapBuyerAsTakerTrade(
+                                    offer,
+                                    amount,
+                                    peerNodeAddress,
+                                    txFeePerVbyte,
+                                    makerFee,
+                                    takerFee,
+                                    bsqSwapProtocolModel);
+                        }
 
                         TradeProtocol tradeProtocol = createTradeProtocol(bsqSwapTrade);
 
@@ -571,13 +605,18 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     }
 
     @NotNull
-    private TradeProtocol createTradeProtocol(TradeModel trade) {
-        TradeProtocol tradeProtocol = TradeProtocolFactory.getNewTradeProtocol(trade);
-        TradeProtocol prev = tradeProtocolByTradeId.put(trade.getUid(), tradeProtocol);
+    private TradeProtocol createTradeProtocol(TradeModel tradeModel) {
+        TradeProtocol tradeProtocol = TradeProtocolFactory.getNewTradeProtocol(tradeModel);
+        TradeProtocol prev = tradeProtocolByTradeId.put(tradeModel.getUid(), tradeProtocol);
         if (prev != null) {
-            log.error("We had already an entry with uid {}", trade.getUid());
+            log.error("We had already an entry with uid {}", tradeModel.getUid());
         }
-        tradableList.add(trade);
+        if (tradeModel instanceof Trade) {
+            tradableList.add((Trade) tradeModel);
+        }
+
+        // For BsqTrades we only store the trade at completion
+
         return tradeProtocol;
     }
 
@@ -644,15 +683,12 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     }
 
     // If trade was completed (closed without fault but might be closed by a dispute) we move it to the closed trades
-    public void onTradeCompleted(TradeModel tradeModel) {
-        removeTrade(tradeModel);
-        if (tradeModel instanceof BsqSwapTrade) {
-            bsqSwapTradeManager.add((BsqSwapTrade) tradeModel);
-        } else {
-            closedTradableManager.add(tradeModel);
-        }
+    public void onTradeCompleted(Trade trade) {
+        removeTrade(trade);
+        closedTradableManager.add(trade);
+
         // TODO The address entry should have been removed already. Check and if its the case remove that.
-        btcWalletService.resetAddressEntriesForPendingTrade(tradeModel.getId());
+        btcWalletService.resetAddressEntriesForPendingTrade(trade.getId());
         requestPersistence();
     }
 
@@ -775,6 +811,89 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         return tradesIdSet;
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BsqSwapTradeManager delegates
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void onBsqSwapTradeCompleted(BsqSwapTrade bsqSwapTrade) {
+        bsqSwapTradeManager.onTradeCompleted(bsqSwapTrade);
+    }
+
+    public Optional<BsqSwapTrade> findBsqSwapTradeById(String tradeId) {
+        return bsqSwapTradeManager.findBsqSwapTradeById(tradeId);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Getters, Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public ObservableList<Trade> getObservableList() {
+        return tradableList.getObservableList();
+    }
+
+    public BooleanProperty persistedTradesInitializedProperty() {
+        return persistedTradesInitialized;
+    }
+
+    public boolean isMyOffer(Offer offer) {
+        return offer.isMyOffer(keyRing);
+    }
+
+    public boolean wasOfferAlreadyUsedInTrade(String offerId) {
+        Stream<Tradable> combinedStream = Stream.concat(getPendingAndBsqSwapTrades(),
+                failedTradesManager.getObservableList().stream());
+
+        combinedStream = Stream.concat(combinedStream,
+                closedTradableManager.getObservableList().stream());
+
+        return combinedStream.anyMatch(t -> t.getOffer().getId().equals(offerId));
+    }
+
+    public boolean isBuyer(Offer offer) {
+        // If I am the maker, we use the OfferDirection, otherwise the mirrored direction
+        if (isMyOffer(offer))
+            return offer.isBuyOffer();
+        else
+            return offer.getDirection() == OfferDirection.SELL;
+    }
+
+    public Optional<TradeModel> getTradeModelById(String tradeId) {
+        return getPendingAndBsqSwapTrades()
+                .filter(tradeModel -> tradeModel.getId().equals(tradeId))
+                .findFirst();
+    }
+
+    public Optional<Trade> getTradeById(String tradeId) {
+        return getTradeModelById(tradeId)
+                .filter(tradeModel -> tradeModel instanceof Trade)
+                .map(tradeModel -> (Trade) tradeModel);
+    }
+
+    private void removeTrade(Trade trade) {
+        if (tradableList.remove(trade)) {
+            requestPersistence();
+        }
+    }
+
+    private void addTrade(Trade trade) {
+        if (tradableList.add(trade)) {
+            requestPersistence();
+        }
+    }
+
+    private Stream<TradeModel> getPendingAndBsqSwapTrades() {
+        return Stream.concat(tradableList.stream(),
+                bsqSwapTradeManager.getObservableList().stream());
+    }
+
+    // TODO Remove once tradableList is refactored to a final field
+    //  (part of the persistence refactor PR)
+    private void onTradesChanged() {
+        this.numPendingTrades.set(getObservableList().size());
+    }
+
     // If trade still has funds locked up it might come back from failed trades
     // Aborts unfailing if the address entries needed are not available
     private boolean unFailTrade(Trade trade) {
@@ -806,73 +925,4 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         return true;
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters, Utils
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public ObservableList<TradeModel> getObservableList() {
-        return tradableList.getObservableList();
-    }
-
-    public BooleanProperty persistedTradesInitializedProperty() {
-        return persistedTradesInitialized;
-    }
-
-    public boolean isMyOffer(Offer offer) {
-        return offer.isMyOffer(keyRing);
-    }
-
-    public boolean wasOfferAlreadyUsedInTrade(String offerId) {
-        var hasTaken = tradableList.stream()
-                .anyMatch(t -> t.getOffer().getId().equals(offerId));
-        hasTaken &= failedTradesManager.getObservableList().stream()
-                .anyMatch(t -> t.getOffer().getId().equals(offerId));
-        Stream<Tradable> oldTradables = Stream.concat(closedTradableManager.getObservableList().stream(),
-                bsqSwapTradeManager.getObservableList().stream());
-        return hasTaken && oldTradables
-                .anyMatch(t -> t.getOffer().getId().equals(offerId));
-    }
-
-    public boolean isBuyer(Offer offer) {
-        // If I am the maker, we use the OfferDirection, otherwise the mirrored direction
-        if (isMyOffer(offer))
-            return offer.isBuyOffer();
-        else
-            return offer.getDirection() == OfferDirection.SELL;
-    }
-
-    public Optional<TradeModel> getTradeModelById(String tradeId) {
-        return tradableList.stream()
-                .filter(tradeModel -> tradeModel.getId().equals(tradeId))
-                .findFirst();
-    }
-
-    public Optional<BsqSwapTrade> getBsqSwapTradeById(String tradeId) {
-        return bsqSwapTradeManager.findBsqSwapTradeById(tradeId);
-    }
-
-    public Optional<Trade> getTradeById(String tradeId) {
-        return getTradeModelById(tradeId)
-                .filter(tradeModel -> tradeModel instanceof Trade)
-                .map(tradeModel -> (Trade) tradeModel);
-    }
-
-    private void removeTrade(TradeModel tradeModel) {
-        if (tradableList.remove(tradeModel)) {
-            requestPersistence();
-        }
-    }
-
-    private void addTrade(TradeModel trade) {
-        if (tradableList.add(trade)) {
-            requestPersistence();
-        }
-    }
-
-    // TODO Remove once tradableList is refactored to a final field
-    //  (part of the persistence refactor PR)
-    private void onTradesChanged() {
-        this.numPendingTrades.set(getObservableList().size());
-    }
 }

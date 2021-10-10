@@ -60,6 +60,7 @@ import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
+import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.Ballot;
 import bisq.core.dao.state.model.governance.BondedRoleType;
@@ -647,6 +648,14 @@ public class DaoFacade implements DaoSetupService {
 
     public Set<TxOutput> getUnspentTxOutputs() {
         return daoStateService.getUnspentTxOutputs();
+    }
+
+    public boolean isTxOutputSpendable(TxOutputKey txOutputKey) {
+        return daoStateService.isTxOutputSpendable(txOutputKey);
+    }
+
+    public long getUnspentTxOutputValue(TxOutputKey key) {
+        return daoStateService.getUnspentTxOutputValue(key);
     }
 
     public int getNumTxs() {

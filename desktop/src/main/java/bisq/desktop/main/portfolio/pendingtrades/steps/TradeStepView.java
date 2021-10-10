@@ -31,8 +31,8 @@ import bisq.core.locale.Res;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.mediation.MediationResultState;
-import bisq.core.trade.model.Contract;
-import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
@@ -570,7 +570,7 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     private boolean peerAccepted() {
-        return trade.getProcessModel().getTradingPeer().getMediatedPayoutTxSignature() != null;
+        return trade.getProcessModel().getTradePeer().getMediatedPayoutTxSignature() != null;
     }
 
     private void openMediationResultPopup(String headLine) {

@@ -49,22 +49,25 @@ import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
 import bisq.core.support.dispute.refund.refundagent.RefundAgent;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxRequest;
-import bisq.core.trade.messages.bsqswap.CreateBsqSwapTxResponse;
-import bisq.core.trade.messages.trade.CounterCurrencyTransferStartedMessage;
-import bisq.core.trade.messages.trade.DelayedPayoutTxSignatureRequest;
-import bisq.core.trade.messages.trade.DelayedPayoutTxSignatureResponse;
-import bisq.core.trade.messages.trade.DepositTxAndDelayedPayoutTxMessage;
-import bisq.core.trade.messages.trade.DepositTxMessage;
-import bisq.core.trade.messages.trade.InputsForDepositTxRequest;
-import bisq.core.trade.messages.trade.InputsForDepositTxResponse;
-import bisq.core.trade.messages.trade.MediatedPayoutTxPublishedMessage;
-import bisq.core.trade.messages.trade.MediatedPayoutTxSignatureMessage;
-import bisq.core.trade.messages.trade.PayoutTxPublishedMessage;
-import bisq.core.trade.messages.trade.PeerPublishedDelayedPayoutTxMessage;
-import bisq.core.trade.messages.trade.RefreshTradeStateRequest;
-import bisq.core.trade.messages.trade.ShareBuyerPaymentAccountMessage;
-import bisq.core.trade.messages.trade.TraderSignedWitnessMessage;
+import bisq.core.trade.protocol.messages.bisq_v1.CounterCurrencyTransferStartedMessage;
+import bisq.core.trade.protocol.messages.bisq_v1.DelayedPayoutTxSignatureRequest;
+import bisq.core.trade.protocol.messages.bisq_v1.DelayedPayoutTxSignatureResponse;
+import bisq.core.trade.protocol.messages.bisq_v1.DepositTxAndDelayedPayoutTxMessage;
+import bisq.core.trade.protocol.messages.bisq_v1.DepositTxMessage;
+import bisq.core.trade.protocol.messages.bisq_v1.InputsForDepositTxRequest;
+import bisq.core.trade.protocol.messages.bisq_v1.InputsForDepositTxResponse;
+import bisq.core.trade.protocol.messages.bisq_v1.MediatedPayoutTxPublishedMessage;
+import bisq.core.trade.protocol.messages.bisq_v1.MediatedPayoutTxSignatureMessage;
+import bisq.core.trade.protocol.messages.bisq_v1.PayoutTxPublishedMessage;
+import bisq.core.trade.protocol.messages.bisq_v1.PeerPublishedDelayedPayoutTxMessage;
+import bisq.core.trade.protocol.messages.bisq_v1.RefreshTradeStateRequest;
+import bisq.core.trade.protocol.messages.bisq_v1.ShareBuyerPaymentAccountMessage;
+import bisq.core.trade.protocol.messages.bisq_v1.TraderSignedWitnessMessage;
+import bisq.core.trade.protocol.messages.bsq_swap.BsqSwapFinalizeTxRequest;
+import bisq.core.trade.protocol.messages.bsq_swap.BsqSwapFinalizedTxMessage;
+import bisq.core.trade.protocol.messages.bsq_swap.BsqSwapTxInputsMessage;
+import bisq.core.trade.protocol.messages.bsq_swap.BuyersBsqSwapRequest;
+import bisq.core.trade.protocol.messages.bsq_swap.SellersBsqSwapRequest;
 
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.BundleOfEnvelopes;
@@ -165,10 +168,17 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return DepositTxAndDelayedPayoutTxMessage.fromProto(proto.getDepositTxAndDelayedPayoutTxMessage(), this, messageVersion);
                 case SHARE_BUYER_PAYMENT_ACCOUNT_MESSAGE:
                     return ShareBuyerPaymentAccountMessage.fromProto(proto.getShareBuyerPaymentAccountMessage(), this, messageVersion);
-                case CREATE_BSQ_SWAP_TX_REQUEST:
-                    return CreateBsqSwapTxRequest.fromProto(proto.getCreateBsqSwapTxRequest(), messageVersion);
-                case CREATE_BSQ_SWAP_TX_RESPONSE:
-                    return CreateBsqSwapTxResponse.fromProto(proto.getCreateBsqSwapTxResponse(), messageVersion);
+
+                case SELLERS_BSQ_SWAP_REQUEST:
+                    return SellersBsqSwapRequest.fromProto(proto.getSellersBsqSwapRequest(), messageVersion);
+                case BUYERS_BSQ_SWAP_REQUEST:
+                    return BuyersBsqSwapRequest.fromProto(proto.getBuyersBsqSwapRequest(), messageVersion);
+                case BSQ_SWAP_TX_INPUTS_MESSAGE:
+                    return BsqSwapTxInputsMessage.fromProto(proto.getBsqSwapTxInputsMessage(), messageVersion);
+                case BSQ_SWAP_FINALIZE_TX_REQUEST:
+                    return BsqSwapFinalizeTxRequest.fromProto(proto.getBsqSwapFinalizeTxRequest(), messageVersion);
+                case BSQ_SWAP_FINALIZED_TX_MESSAGE:
+                    return BsqSwapFinalizedTxMessage.fromProto(proto.getBsqSwapFinalizedTxMessage(), messageVersion);
 
                 case COUNTER_CURRENCY_TRANSFER_STARTED_MESSAGE:
                     return CounterCurrencyTransferStartedMessage.fromProto(proto.getCounterCurrencyTransferStartedMessage(), messageVersion);

@@ -21,6 +21,7 @@ import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.model.DaoState;
+import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.SpentInfo;
 import bisq.core.dao.state.model.blockchain.Tx;
@@ -484,6 +485,12 @@ public class DaoStateService implements DaoSetupService {
         return Optional.ofNullable(getUnspentTxOutputMap().getOrDefault(key, null));
     }
 
+    public long getUnspentTxOutputValue(TxOutputKey key) {
+        return getUnspentTxOutput(key)
+                .map(BaseTxOutput::getValue)
+                .orElse(0L);
+    }
+
     public boolean isTxOutputSpendable(TxOutputKey key) {
         if (!isUnspent(key))
             return false;
@@ -492,7 +499,12 @@ public class DaoStateService implements DaoSetupService {
         // The above isUnspent call satisfies optionalTxOutput.isPresent()
         checkArgument(optionalTxOutput.isPresent(), "optionalTxOutput must be present");
         TxOutput txOutput = optionalTxOutput.get();
+        return isTxOutputSpendable(txOutput);
+    }
 
+    public boolean isTxOutputSpendable(TxOutput txOutput) {
+        // OP_RETURN_OUTPUTs are actually not spendable but as we have no value on them
+        // they would not be used anyway.
         switch (txOutput.getTxOutputType()) {
             case UNDEFINED_OUTPUT:
                 return false;

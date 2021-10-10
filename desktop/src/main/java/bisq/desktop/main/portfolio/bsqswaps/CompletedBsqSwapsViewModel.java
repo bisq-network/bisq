@@ -24,7 +24,7 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.trade.model.bsqswap.BsqSwapTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
@@ -67,7 +67,7 @@ class CompletedBsqSwapsViewModel extends ActivatableWithDataModel<CompletedBsqSw
         if (item == null)
             return "";
 
-        return btcFormatter.formatCoin(item.getBsqSwapTrade().getAmount());
+        return btcFormatter.formatCoin(Coin.valueOf(item.getBsqSwapTrade().getAmount()));
     }
 
     String getPrice(CompletedBsqSwapsListItem item) {
@@ -81,14 +81,14 @@ class CompletedBsqSwapsViewModel extends ActivatableWithDataModel<CompletedBsqSw
         if (item == null)
             return "";
 
-        return DisplayUtils.formatVolumeWithCode(item.getBsqSwapTrade().getTradeVolume());
+        return DisplayUtils.formatVolumeWithCode(item.getBsqSwapTrade().getVolume());
     }
 
     String getTxFee(CompletedBsqSwapsListItem item) {
         if (item == null)
             return "";
 
-        return btcFormatter.formatCoin(Coin.valueOf(item.getBsqSwapTrade().getMiningFeePerByte()));
+        return btcFormatter.formatCoin(Coin.valueOf(item.getBsqSwapTrade().getTxFeePerVbyte()));
     }
 
     String getTradeFee(CompletedBsqSwapsListItem item) {

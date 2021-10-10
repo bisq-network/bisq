@@ -50,12 +50,12 @@ import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.misc.TradeDataValidation;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradeManager;
-import bisq.core.trade.model.trade.BuyerTrade;
-import bisq.core.trade.model.trade.SellerTrade;
-import bisq.core.trade.model.trade.Trade;
-import bisq.core.trade.protocol.trade.BuyerProtocol;
-import bisq.core.trade.protocol.trade.DisputeProtocol;
-import bisq.core.trade.protocol.trade.SellerProtocol;
+import bisq.core.trade.model.bisq_v1.BuyerTrade;
+import bisq.core.trade.model.bisq_v1.SellerTrade;
+import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.bisq_v1.BuyerProtocol;
+import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
+import bisq.core.trade.protocol.bisq_v1.SellerProtocol;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 

@@ -21,8 +21,8 @@ import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.sign.SignedWitnessStorageService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessStorageService;
-import bisq.core.trade.misc.ClosedTradableManager;
-import bisq.core.trade.misc.FailedTradesManager;
+import bisq.core.trade.model.ClosedTradableManager;
+import bisq.core.trade.model.FailedTradesManager;
 import bisq.core.trade.model.TradeManager;
 import bisq.core.trade.statistics.ReferralIdService;
 

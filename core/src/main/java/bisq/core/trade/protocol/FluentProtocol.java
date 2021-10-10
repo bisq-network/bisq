@@ -17,9 +17,10 @@
 
 package bisq.core.trade.protocol;
 
-import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.model.TradeModel;
-import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.TradePhase;
+import bisq.core.trade.model.TradeState;
+import bisq.core.trade.protocol.messages.TradeMessage;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -42,7 +43,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 // Main class. Contains the condition and setup, if condition is valid it will execute the
 // taskRunner and the optional runnable.
 public class FluentProtocol {
-
 
     public interface Event {
         String name();
@@ -99,14 +99,14 @@ public class FluentProtocol {
 
         NodeAddress peer = condition.getPeer();
         if (peer != null) {
-            tradeProtocol.tradeProtocolModel.setTempTradingPeerNodeAddress(peer);
-            tradeProtocol.tradeProtocolModel.getTradeManager().requestPersistence();
+            tradeProtocol.protocolModel.setTempTradingPeerNodeAddress(peer);
+            tradeProtocol.protocolModel.getTradeManager().requestPersistence();
         }
 
         TradeMessage message = condition.getMessage();
         if (message != null) {
-            tradeProtocol.tradeProtocolModel.setTradeMessage(message);
-            tradeProtocol.tradeProtocolModel.getTradeManager().requestPersistence();
+            tradeProtocol.protocolModel.setTradeMessage(message);
+            tradeProtocol.protocolModel.getTradeManager().requestPersistence();
         }
 
         TradeTaskRunner taskRunner = setup.getTaskRunner(message, condition.getEvent());
@@ -147,8 +147,8 @@ public class FluentProtocol {
             }
         }
 
-        private final Set<Trade.Phase> expectedPhases = new HashSet<>();
-        private final Set<Trade.State> expectedStates = new HashSet<>();
+        private final Set<TradePhase> expectedPhases = new HashSet<>();
+        private final Set<TradeState> expectedStates = new HashSet<>();
         private final Set<Boolean> preConditions = new HashSet<>();
         private final TradeModel tradeModel;
         @Nullable
@@ -171,25 +171,25 @@ public class FluentProtocol {
             this.tradeModel = tradeModel;
         }
 
-        public Condition phase(Trade.Phase expectedPhase) {
+        public Condition phase(TradePhase expectedPhase) {
             checkArgument(result == null);
             this.expectedPhases.add(expectedPhase);
             return this;
         }
 
-        public Condition anyPhase(Trade.Phase... expectedPhases) {
+        public Condition anyPhase(TradePhase... expectedPhases) {
             checkArgument(result == null);
             this.expectedPhases.addAll(Set.of(expectedPhases));
             return this;
         }
 
-        public Condition state(Trade.State state) {
+        public Condition state(TradeState state) {
             checkArgument(result == null);
             this.expectedStates.add(state);
             return this;
         }
 
-        public Condition anyState(Trade.State... states) {
+        public Condition anyState(TradeState... states) {
             checkArgument(result == null);
             this.expectedStates.addAll(Set.of(states));
             return this;
@@ -271,10 +271,8 @@ public class FluentProtocol {
             if (expectedPhases.isEmpty()) {
                 return Result.VALID;
             }
-            checkArgument(tradeModel instanceof Trade);
-            Trade trade = (Trade) tradeModel;
 
-            boolean isPhaseValid = expectedPhases.stream().anyMatch(e -> e == trade.getPhase());
+            boolean isPhaseValid = expectedPhases.stream().anyMatch(e -> e == tradeModel.getTradePhase());
             String trigger = message != null ?
                     message.getClass().getSimpleName() :
                     event != null ?
@@ -283,9 +281,9 @@ public class FluentProtocol {
             if (isPhaseValid) {
                 String info = MessageFormat.format("We received a {0} at phase {1} and state {2}, tradeId={3}",
                         trigger,
-                        trade.getPhase(),
-                        trade.getState(),
-                        trade.getId());
+                        tradeModel.getTradePhase(),
+                        tradeModel.getTradeState(),
+                        tradeModel.getId());
                 log.info(info);
                 return Result.VALID.info(info);
             } else {
@@ -295,9 +293,9 @@ public class FluentProtocol {
                                 "Expected phases={1},\nTrade phase={2},\nTrade state= {3},\ntradeId={4}",
                         trigger,
                         expectedPhases,
-                        trade.getPhase(),
-                        trade.getState(),
-                        trade.getId());
+                        tradeModel.getTradePhase(),
+                        tradeModel.getTradeState(),
+                        tradeModel.getId());
                 return Result.INVALID_PHASE.info(info);
             }
         }
@@ -307,10 +305,7 @@ public class FluentProtocol {
                 return Result.VALID;
             }
 
-            checkArgument(tradeModel instanceof Trade);
-            Trade trade = (Trade) tradeModel;
-
-            boolean isStateValid = expectedStates.stream().anyMatch(e -> e == trade.getState());
+            boolean isStateValid = expectedStates.stream().anyMatch(e -> e == tradeModel.getTradeState());
             String trigger = message != null ?
                     message.getClass().getSimpleName() :
                     event != null ?
@@ -319,8 +314,8 @@ public class FluentProtocol {
             if (isStateValid) {
                 String info = MessageFormat.format("We received a {0} at state {1}, tradeId={2}",
                         trigger,
-                        trade.getState(),
-                        trade.getId());
+                        tradeModel.getTradeState(),
+                        tradeModel.getId());
                 log.info(info);
                 return Result.VALID.info(info);
             } else {
@@ -328,8 +323,8 @@ public class FluentProtocol {
                                 "Expected states={1}, Trade state= {2}, tradeId={3}",
                         trigger,
                         expectedStates,
-                        trade.getState(),
-                        trade.getId());
+                        tradeModel.getTradeState(),
+                        tradeModel.getId());
                 return Result.INVALID_STATE.info(info);
             }
         }

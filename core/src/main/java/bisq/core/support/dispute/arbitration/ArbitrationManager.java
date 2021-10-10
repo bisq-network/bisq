@@ -40,11 +40,11 @@ import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.messages.SupportMessage;
-import bisq.core.trade.misc.ClosedTradableManager;
-import bisq.core.trade.model.Contract;
+import bisq.core.trade.model.ClosedTradableManager;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradeManager;
-import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.NodeAddress;

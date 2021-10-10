@@ -17,8 +17,8 @@
 
 package bisq.core.trade.misc;
 
-import bisq.core.trade.messages.TradeMessage;
-import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.messages.TradeMessage;
 
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.AckMessageSourceType;
@@ -123,7 +123,7 @@ public class CleanupMailboxMessages {
     private boolean isPubKeyValid(DecryptedMessageWithPubKey decryptedMessageWithPubKey, Trade trade) {
         // We can only validate the peers pubKey if we have it already. If we are the taker we get it from the offer
         // Otherwise it depends on the state of the trade protocol if we have received the peers pubKeyRing already.
-        PubKeyRing peersPubKeyRing = trade.getProcessModel().getTradingPeer().getPubKeyRing();
+        PubKeyRing peersPubKeyRing = trade.getProcessModel().getTradePeer().getPubKeyRing();
         boolean isValid = true;
         if (peersPubKeyRing != null &&
                 !decryptedMessageWithPubKey.getSignaturePubKey().equals(peersPubKeyRing.getSignaturePubKey())) {

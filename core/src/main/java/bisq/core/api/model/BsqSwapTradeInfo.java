@@ -17,7 +17,7 @@
 
 package bisq.core.api.model;
 
-import bisq.core.trade.model.bsqswap.BsqSwapTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 
 import bisq.common.Payload;
 
@@ -86,6 +86,7 @@ public class BsqSwapTradeInfo implements Payload {
         return toBsqSwapTradeInfo(trade, null);
     }
 
+    //TODO
     public static BsqSwapTradeInfo toBsqSwapTradeInfo(BsqSwapTrade trade, String role) {
         return new BsqSwapTradeInfoBuilder()
                 .withBsqSwapOffer(toBsqSwapOfferInfo(trade.getOffer()))
@@ -93,23 +94,23 @@ public class BsqSwapTradeInfo implements Payload {
                 .withTempTradingPeerNodeAddress(trade.getBsqSwapProtocolModel().getTempTradingPeerNodeAddress().getFullAddress())
                 .withPeerNodeAddress(trade.getPeerNodeAddress().getFullAddress())
                 .withTxId(trade.getTxId())
-                .withBsqTradeAmount(trade.getBsqSwapProtocolModel().getBsqTradeAmount())
-                .withBsqMaxTradeAmount(trade.getBsqSwapProtocolModel().getBsqMaxTradeAmount())
-                .withBsqMinTradeAmount(trade.getBsqSwapProtocolModel().getBsqMinTradeAmount())
-                .withBtcTradeAmount(trade.getBsqSwapProtocolModel().getBtcTradeAmount())
-                .withBtcMaxTradeAmount(trade.getBsqSwapProtocolModel().getBtcMaxTradeAmount())
-                .withBtcMinTradeAmount(trade.getBsqSwapProtocolModel().getBtcMinTradeAmount())
-                .withTradePrice(trade.getBsqSwapProtocolModel().getTradePrice())
-                .withBsqMakerTradeFee(trade.getBsqSwapProtocolModel().getBsqMakerTradeFee())
-                .withBsqTakerTradeFee(trade.getBsqSwapProtocolModel().getBsqTakerTradeFee())
-                .withTxFeePerVbyte(trade.getBsqSwapProtocolModel().getTxFeePerVbyte())
-                .withTxFee(trade.getBsqSwapProtocolModel().getTxFee())
-                .withMakerBsqAddress(trade.getBsqSwapProtocolModel().getMakerBsqAddress())
-                .withMakerBtcAddress(trade.getBsqSwapProtocolModel().getMakerBtcAddress())
-                .withTakerBsqAddress(trade.getBsqSwapProtocolModel().getTakerBsqAddress())
-                .withTakerBtcAddress(trade.getBsqSwapProtocolModel().getTakerBtcAddress())
+                /*   .withBsqTradeAmount(trade.getBsqSwapProtocolModel().getBsqTradeAmount())
+                   .withBsqMaxTradeAmount(trade.getBsqSwapProtocolModel().getBsqMaxTradeAmount())
+                   .withBsqMinTradeAmount(trade.getBsqSwapProtocolModel().getBsqMinTradeAmount())
+                   .withBtcTradeAmount(trade.getBsqSwapProtocolModel().getBtcTradeAmount())
+                   .withBtcMaxTradeAmount(trade.getBsqSwapProtocolModel().getBtcMaxTradeAmount())
+                   .withBtcMinTradeAmount(trade.getBsqSwapProtocolModel().getBtcMinTradeAmount())
+                   .withTradePrice(trade.getBsqSwapProtocolModel().getTradePrice())
+                   .withBsqMakerTradeFee(trade.getBsqSwapProtocolModel().getBsqMakerTradeFee())
+                   .withBsqTakerTradeFee(trade.getBsqSwapProtocolModel().getBsqTakerTradeFee())
+                   .withTxFeePerVbyte(trade.getBsqSwapProtocolModel().getTxFeePerVbyte())
+                   .withTxFee(trade.getBsqSwapProtocolModel().getTxFee())
+                   .withMakerBsqAddress(trade.getBsqSwapProtocolModel().getMakerBsqAddress())
+                   .withMakerBtcAddress(trade.getBsqSwapProtocolModel().getMakerBtcAddress())
+                   .withTakerBsqAddress(trade.getBsqSwapProtocolModel().getTakerBsqAddress())
+                   .withTakerBtcAddress(trade.getBsqSwapProtocolModel().getTakerBtcAddress())*/
                 .withTakeOfferDate(trade.getTakeOfferDate())
-                .withState(trade.getState().name())
+                .withState(trade.getTradeState().name())
                 .withErrorMessage(trade.getErrorMessage())
                 .build();
     }

@@ -35,11 +35,11 @@ import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.messages.SupportMessage;
-import bisq.core.trade.misc.ClosedTradableManager;
+import bisq.core.trade.model.ClosedTradableManager;
 import bisq.core.trade.model.TradeManager;
-import bisq.core.trade.model.trade.Trade;
-import bisq.core.trade.protocol.trade.DisputeProtocol;
-import bisq.core.trade.protocol.trade.ProcessModel;
+import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
+import bisq.core.trade.protocol.bisq_v1.ProcessModel;
 
 import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.NodeAddress;
@@ -251,7 +251,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
 
         // If we have not got yet the peers signature we sign and send to the peer our signature.
         // Otherwise we sign and complete with the peers signature the payout tx.
-        if (processModel.getTradingPeer().getMediatedPayoutTxSignature() == null) {
+        if (processModel.getTradePeer().getMediatedPayoutTxSignature() == null) {
             tradeProtocol.onAcceptMediationResult(() -> {
                 if (trade.getPayoutTx() != null) {
                     tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.MEDIATION_CLOSED);

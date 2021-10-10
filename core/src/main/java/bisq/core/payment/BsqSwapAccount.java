@@ -23,6 +23,8 @@ import bisq.core.payment.payload.PaymentMethod;
 
 import lombok.EqualsAndHashCode;
 
+// Placeholder account for Bsq swaps. We do not hold any data here, its just used to fit into the
+// standard domain. We mimic the different trade protocol as a payment method with a dedicated account.
 @EqualsAndHashCode(callSuper = true)
 public final class BsqSwapAccount extends PaymentAccount {
 

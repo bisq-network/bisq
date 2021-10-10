@@ -355,14 +355,16 @@ public abstract class WalletService {
                         TransactionSignature txSig = tx.calculateWitnessSignature(index, key, aesKey, scriptCode, value,
                                 Transaction.SigHash.ALL, false);
                         txIn.setScriptSig(ScriptBuilder.createEmpty());
-                        txIn.setWitness(TransactionWitness.redeemP2WPKH(txSig, key));
+                        TransactionWitness witness = TransactionWitness.redeemP2WPKH(txSig, key);
+                        txIn.setWitness(witness);
                     } catch (ECKey.KeyIsEncryptedException e1) {
+                        log.error(e1.toString());
                         throw e1;
                     } catch (ECKey.MissingPrivateKeyException e1) {
                         log.warn("No private key in keypair for input {}", index);
                     }
                 } else {
-                    // log.error("Unexpected script type.");
+                    log.error("Unexpected script type.");
                     throw new RuntimeException("Unexpected script type.");
                 }
             } else {
@@ -822,6 +824,7 @@ public abstract class WalletService {
         return maybeAddTxToWallet(transaction.bitcoinSerialize(), wallet, source);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // bisqWalletEventListener
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -852,7 +855,7 @@ public abstract class WalletService {
                     .filter(txConfidenceListener -> tx != null &&
                             tx.getTxId().toString() != null &&
                             txConfidenceListener != null &&
-                            tx.getTxId().toString().equals(txConfidenceListener.getTxID()))
+                            tx.getTxId().toString().equals(txConfidenceListener.getTxId()))
                     .forEach(txConfidenceListener ->
                             txConfidenceListener.onTransactionConfidenceChanged(tx.getConfidence()));
         }

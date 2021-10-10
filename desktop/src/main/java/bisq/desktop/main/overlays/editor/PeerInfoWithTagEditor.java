@@ -25,7 +25,7 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
@@ -251,7 +251,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
                 UserThread.runAfter(() -> {
                     PubKeyRing peersPubKeyRing = null;
                     if (trade != null) {
-                        peersPubKeyRing = trade.getProcessModel().getTradingPeer().getPubKeyRing();
+                        peersPubKeyRing = trade.getProcessModel().getTradePeer().getPubKeyRing();
                     } else if (offer != null) {
                         peersPubKeyRing = offer.getPubKeyRing();
                     }

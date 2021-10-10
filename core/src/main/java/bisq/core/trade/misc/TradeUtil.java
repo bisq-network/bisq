@@ -22,9 +22,9 @@ import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.trade.model.Contract;
 import bisq.core.trade.model.TradeModel;
-import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -237,7 +237,7 @@ public class TradeUtil {
     public static void applyFilter(TradeModel tradeModel,
                                    FilterManager filterManager,
                                    NodeAddress nodeAddress,
-                                   PaymentAccountPayload paymentAccountPayload,
+                                   @Nullable PaymentAccountPayload paymentAccountPayload,
                                    ResultHandler complete,
                                    ErrorMessageHandler failed) {
         if (filterManager.isNodeAddressBanned(nodeAddress)) {

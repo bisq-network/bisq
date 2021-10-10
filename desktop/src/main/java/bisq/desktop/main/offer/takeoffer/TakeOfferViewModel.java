@@ -41,7 +41,7 @@ import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
-import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
@@ -263,8 +263,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             return true;
         } else {
             new Popup().warning(Res.get("shared.notEnoughFunds",
-                            btcFormatter.formatCoinWithCode(dataModel.getTotalToPayAsCoin().get()),
-                            btcFormatter.formatCoinWithCode(dataModel.getTotalAvailableBalance())))
+                    btcFormatter.formatCoinWithCode(dataModel.getTotalToPayAsCoin().get()),
+                    btcFormatter.formatCoinWithCode(dataModel.getTotalAvailableBalance())))
                     .actionButtonTextWithGoTo("navigation.funds.depositFunds")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
                     .show();
@@ -419,7 +419,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private void applyTradeErrorMessage(@Nullable String errorMessage) {
         if (errorMessage != null) {
             String appendMsg = "";
-            switch (trade.getState().getPhase()) {
+            switch (trade.getTradePhase()) {
                 case INIT:
                     appendMsg = Res.get("takeOffer.error.noFundsLost");
                     break;

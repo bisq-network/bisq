@@ -30,7 +30,7 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.model.Tradable;
-import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
@@ -235,7 +235,7 @@ public class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTrades
                 } else if (trade.getDisputeState() == Trade.DisputeState.REFUND_REQUEST_CLOSED) {
                     return Res.get("portfolio.closed.ticketClosed");
                 } else {
-                    log.error("That must not happen. We got a pending state but we are in the closed trades list. state={}", trade.getState().toString());
+                    log.error("That must not happen. We got a pending state but we are in the closed trades list. state={}", trade.getTradeState().toString());
                     return Res.get("shared.na");
                 }
             } else if (item.getTradable() instanceof OpenOffer) {

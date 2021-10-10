@@ -17,8 +17,8 @@
 
 package bisq.core.api.model;
 
-import bisq.core.trade.model.Contract;
-import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.common.Payload;
 
@@ -138,8 +138,8 @@ public class TradeInfo implements Payload {
                 .withTradeVolume(trade.getTradeVolume() == null ? 0 : trade.getTradeVolume().getValue())
                 .withTradingPeerNodeAddress(Objects.requireNonNull(
                         trade.getTradingPeerNodeAddress()).getHostNameWithoutPostFix())
-                .withState(trade.getState().name())
-                .withPhase(trade.getPhase().name())
+                .withState(trade.getTradeState().name())
+                .withPhase(trade.getTradePhase().name())
                 .withTradePeriodState(trade.getTradePeriodState().name())
                 .withIsDepositPublished(trade.isDepositPublished())
                 .withIsDepositConfirmed(trade.isDepositConfirmed())

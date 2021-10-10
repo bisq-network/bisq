@@ -23,15 +23,15 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.takeoffer.TakeBsqSwapOfferModel;
 import bisq.core.offer.takeoffer.TakeOfferModel;
-import bisq.core.trade.misc.ClosedTradableManager;
 import bisq.core.trade.misc.TradeResultHandler;
 import bisq.core.trade.misc.TradeUtil;
+import bisq.core.trade.model.ClosedTradableManager;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradeManager;
-import bisq.core.trade.model.bsqswap.BsqSwapTrade;
-import bisq.core.trade.model.trade.Trade;
-import bisq.core.trade.protocol.trade.BuyerProtocol;
-import bisq.core.trade.protocol.trade.SellerProtocol;
+import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
+import bisq.core.trade.protocol.bisq_v1.BuyerProtocol;
+import bisq.core.trade.protocol.bisq_v1.SellerProtocol;
 import bisq.core.user.User;
 import bisq.core.util.validation.BtcAddressValidator;
 
@@ -111,7 +111,6 @@ class CoreTradesService {
                 takeOfferModel);
         tradeManager.onTakeBsqSwapOffer(offer,
                 takeBsqSwapOfferModel.getAmount().getValue(),  // TODO get rid of jfx property dep?
-                takeBsqSwapOfferModel.getTradePrice().getValue(),
                 takeBsqSwapOfferModel.getBsqSwapTxHelper().getTxFeePerVbyte().getValue(),
                 takeBsqSwapOfferModel.getMakerFee().getValue(),
                 takeBsqSwapOfferModel.getTakerFee().getValue(),
@@ -243,7 +242,7 @@ class CoreTradesService {
     BsqSwapTrade getBsqSwapTrade(String tradeId) {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
-        return tradeManager.getBsqSwapTradeById(tradeId).orElseThrow(() ->
+        return tradeManager.findBsqSwapTradeById(tradeId).orElseThrow(() ->
                 new IllegalArgumentException(format("trade with id '%s' not found", tradeId)));
     }
 

@@ -84,8 +84,11 @@ message NetworkEnvelope {
 
         ShareBuyerPaymentAccountMessage share_buyer_payment_account_message = 54; // Added at 1.7.0
 
-        CreateBsqSwapTxRequest create_bsq_swap_tx_request = 55;
-        CreateBsqSwapTxResponse create_bsq_swap_tx_response = 56;
+        SellersBsqSwapRequest sellers_bsq_swap_request = 55;
+        BuyersBsqSwapRequest buyers_bsq_swap_request= 56;
+        BsqSwapTxInputsMessage bsq_swap_tx_inputs_message= 57;
+        BsqSwapFinalizeTxRequest bsq_swap_finalize_tx_request = 58;
+        BsqSwapFinalizedTxMessage bsq_swap_finalized_tx_message = 59;
     }
 }
 
@@ -377,39 +380,60 @@ message TraderSignedWitnessMessage {
 }
 
 // BsqSwapTrade
-
-message CreateBsqSwapTxRequest {
+message SellersBsqSwapRequest {
     string uid = 1;
     string trade_id = 2;
     NodeAddress sender_node_address = 3;
     PubKeyRing taker_pub_key_ring = 4;
-    int64 bsq_trade_amount = 5;
-    int64 btc_trade_amount = 6;
-    int64 trade_price = 7;
-    int64 tx_fee_per_vbyte = 8;
-    int64 maker_fee = 9;
-    int64 taker_fee = 10;
-    bool is_currency_for_maker_fee_btc = 11;
-    bool is_currency_for_taker_fee_btc = 12;
-    int64 taker_bsq_output_value = 13;
-    string taker_bsq_output_address = 14;
-    int64 taker_btc_output_value = 15;
-    string taker_btc_output_address = 16;
-    repeated RawTransactionInput taker_bsq_inputs = 17;
-    repeated RawTransactionInput taker_btc_inputs = 18;
+    int64 trade_amount = 5;
+    int64 tx_fee_per_vbyte = 6;
+    int64 maker_fee = 7;
+    int64 taker_fee = 8;
+    int64 trade_date = 9;
 }
 
-message CreateBsqSwapTxResponse {
+message BuyersBsqSwapRequest {
+    string uid = 1;
+    string trade_id = 2;
+    NodeAddress sender_node_address = 3;
+    PubKeyRing taker_pub_key_ring = 4;
+    int64 trade_amount = 5;
+    int64 tx_fee_per_vbyte = 6;
+    int64 maker_fee = 7;
+    int64 taker_fee = 8;
+    int64 trade_date = 9;
+    repeated RawTransactionInput bsq_inputs = 10;
+    int64 bsq_change = 11;
+    string buyers_btc_payout_address = 12;
+    string buyers_bsq_change_address = 13;
+}
+
+message BsqSwapTxInputsMessage {
+    string uid = 1;
+    string trade_id = 2;
+    NodeAddress sender_node_address = 3;
+    repeated RawTransactionInput bsq_inputs = 4;
+    int64 bsq_change = 5;
+    string buyers_btc_payout_address = 6;
+    string buyers_bsq_change_address = 7;
+}
+
+message BsqSwapFinalizeTxRequest {
     string uid = 1;
     string trade_id = 2;
     NodeAddress sender_node_address = 3;
     bytes tx = 4;
-    int64 maker_bsq_output_value = 5;
-    string maker_bsq_output_address = 6;
-    int64 maker_btc_output_value = 7;
-    string maker_btc_output_address = 8;
-    repeated RawTransactionInput maker_bsq_inputs = 9;
-    repeated RawTransactionInput maker_btc_inputs = 10;
+    repeated RawTransactionInput btc_inputs = 5;
+    int64 btc_change = 6;
+    string bsq_payout_address = 7;
+    string btc_change_address = 8;
+}
+
+message BsqSwapFinalizedTxMessage {
+    string uid = 1;
+    string trade_id = 2;
+    NodeAddress sender_node_address = 3;
+    bytes tx = 4;
 }
 
 // dispute
@@ -995,6 +1019,7 @@ message RawTransactionInput {
     int64 index = 1;
     bytes parent_transaction = 2;
     int64 value = 3;
+    int32 script_type_id = 4;
 }
 
 enum AvailabilityResult {
@@ -1527,8 +1552,10 @@ message Tradable {
         BuyerAsTakerTrade buyer_as_taker_trade = 3;
         SellerAsMakerTrade seller_as_maker_trade = 4;
         SellerAsTakerTrade seller_as_taker_trade = 5;
-        BsqSwapMakerTrade bsq_swap_maker_trade = 6;
-        BsqSwapTakerTrade bsq_swap_taker_trade = 7;
+        BsqSwapBuyerAsMakerTrade bsq_swap_buyer_as_maker_trade = 6;
+        BsqSwapBuyerAsTakerTrade bsq_swap_buyer_as_taker_trade = 7;
+        BsqSwapSellerAsMakerTrade bsq_swap_seller_as_maker_trade = 8;
+        BsqSwapSellerAsTakerTrade bsq_swap_seller_as_taker_trade = 9;
     }
 }
 
@@ -1661,31 +1688,37 @@ message BsqSwapTrade {
     enum State {
         PB_ERROR_STATE = 0;
         PREPARATION = 1;
-        TX_PUBLISHED = 2;
-        TX_CONFIRMED = 3;
-        FAILED = 4;
+        COMPLETED = 2;
+        FAILED = 3;
     }
 
     string uid = 1;
     Offer offer = 2;
-    string tx_id = 3;
-    int64 amount = 4;
-    int64 price = 5;
-    int64 take_offer_date = 6;
-    NodeAddress peer_node_address = 7;
-    int64 mining_fee_per_byte = 8;
-    int64 maker_fee = 9;
-    int64 taker_fee = 10;
-    BsqSwapProtocolModel bsq_swap_protocol_model = 11;
-    string error_message = 12;
-    State state = 13;
+    int64 amount = 3;
+    int64 take_offer_date = 4;
+    NodeAddress peer_node_address = 5;
+    int64 mining_fee_per_byte = 6;
+    int64 maker_fee = 7;
+    int64 taker_fee = 8;
+    BsqSwapProtocolModel bsq_swap_protocol_model = 9;
+    string tx_id = 10;
+    string error_message = 11;
+    State state = 12;
 }
 
-message BsqSwapMakerTrade {
+message BsqSwapBuyerAsMakerTrade {
     BsqSwapTrade bsq_swap_trade = 1;
 }
 
-message BsqSwapTakerTrade {
+message BsqSwapBuyerAsTakerTrade {
+    BsqSwapTrade bsq_swap_trade = 1;
+}
+
+message BsqSwapSellerAsMakerTrade {
+    BsqSwapTrade bsq_swap_trade = 1;
+}
+
+message BsqSwapSellerAsTakerTrade {
     BsqSwapTrade bsq_swap_trade = 1;
 }
 
@@ -1712,12 +1745,6 @@ message ProcessModel {
     int64 seller_payout_amount_from_mediation = 20;
 }
 
-message BsqSwapProtocolModel {
-    TradingPeer trading_peer = 1;
-    PubKeyRing pub_key_ring = 2;
-    NodeAddress temp_trading_peer_node_address = 3;
-}
-
 message TradingPeer {
     string account_id = 1;
     PaymentAccountPayload payment_account_payload = 2;
@@ -1736,6 +1763,29 @@ message TradingPeer {
     bytes mediated_payout_tx_signature = 15;
     bytes hash_of_payment_account_payload = 16;
 }
+
+
+message BsqSwapProtocolModel {
+    BsqSwapTradePeer trade_peer = 1;
+    PubKeyRing pub_key_ring = 2;
+    string btc_address = 3;
+    string bsq_address = 4;
+    repeated RawTransactionInput inputs = 5;
+    int64 change = 6;
+    int64 payout = 7;
+    bytes tx = 8;
+}
+
+message BsqSwapTradePeer {
+    PubKeyRing pub_key_ring = 1;
+    string btc_address = 2;
+    string bsq_address = 3;
+    repeated RawTransactionInput inputs = 4;
+    int64 change = 5;
+    int64 payout = 6;
+    bytes tx = 7;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Dispute

@@ -35,7 +35,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.misc.TradeResultHandler;
 import bisq.core.trade.model.TradeManager;
-import bisq.core.trade.model.bsqswap.BsqSwapTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.coin.CoinUtil;
@@ -195,7 +195,6 @@ public class TakeBsqSwapOfferModel implements Model {
         } else {
             tradeManager.onTakeBsqSwapOffer(offer,
                     amount.get(),
-                    tradePrice.getValue(),
                     feeService.getTxFeePerVbyte().getValue(),
                     getMakerFee().getValue(),
                     getTakerFee().getValue(),
@@ -317,10 +316,14 @@ public class TakeBsqSwapOfferModel implements Model {
     }
 
     public boolean hasEnoughBtc() {
-        return !btcWalletService.getSavingWalletBalance().isLessThan(bsqSwapTxHelper.myBtc.get());
+        return true;
+        //todo
+        //  return !btcWalletService.getSavingWalletBalance().isLessThan(bsqSwapTxHelper.myBtc.get());
     }
 
     public boolean hasEnoughBsq() {
-        return !offerUtil.getUsableBsqBalance().isLessThan(bsqSwapTxHelper.myBsq.get());
+        return true;
+        //todo
+        //  return !offerUtil.getUsableBsqBalance().isLessThan(bsqSwapTxHelper.myBsq.get());
     }
 }

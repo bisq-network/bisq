@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.core.locale.Res;
+
 import com.google.protobuf.Message;
 
 import lombok.EqualsAndHashCode;
@@ -30,12 +32,11 @@ import lombok.extern.slf4j.Slf4j;
 @Setter
 @Getter
 @Slf4j
-public final class BsqSwapAccountPayload extends AssetsAccountPayload {
+public final class BsqSwapAccountPayload extends PaymentAccountPayload {
 
     public BsqSwapAccountPayload(String paymentMethod, String id) {
         super(paymentMethod, id);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
@@ -50,5 +51,20 @@ public final class BsqSwapAccountPayload extends AssetsAccountPayload {
 
     public static BsqSwapAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new BsqSwapAccountPayload(proto.getPaymentMethodId(), proto.getId());
+    }
+
+    @Override
+    public String getPaymentDetails() {
+        return Res.getWithCol("shared.na");
+    }
+
+    @Override
+    public String getPaymentDetailsForTradePopup() {
+        return getPaymentDetails();
+    }
+
+    @Override
+    public byte[] getAgeWitnessInputData() {
+        return super.getAgeWitnessInputData(new byte[]{});
     }
 }

@@ -24,7 +24,7 @@ import bisq.desktop.main.portfolio.pendingtrades.steps.TradeWizardItem;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
-import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;

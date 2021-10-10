@@ -24,11 +24,11 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.refund.RefundManager;
-import bisq.core.trade.misc.ClosedTradableManager;
-import bisq.core.trade.misc.FailedTradesManager;
+import bisq.core.trade.model.ClosedTradableManager;
+import bisq.core.trade.model.FailedTradesManager;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradeManager;
-import bisq.core.trade.model.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.common.UserThread;
 

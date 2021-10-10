@@ -24,14 +24,13 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PeerInfoIconTrading;
-import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
-import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
+import bisq.desktop.main.overlays.windows.BsqTradeDetailsWindow;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.trade.model.bsqswap.BsqSwapTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;
@@ -131,9 +130,8 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
     @FXML
     Region footerSpacer;
 
-    private final OfferDetailsWindow offerDetailsWindow;
+    private final BsqTradeDetailsWindow window;
     private final Preferences preferences;
-    private final TradeDetailsWindow tradeDetailsWindow;
     private final PrivateNotificationManager privateNotificationManager;
     private SortedList<CompletedBsqSwapsListItem> sortedList;
     private FilteredList<CompletedBsqSwapsListItem> filteredList;
@@ -142,15 +140,13 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
 
     @Inject
     public CompletedBsqSwapsView(CompletedBsqSwapsViewModel model,
-                                 OfferDetailsWindow offerDetailsWindow,
+                                 BsqTradeDetailsWindow bsqTradeDetailsWindow,
                                  Preferences preferences,
-                                 TradeDetailsWindow tradeDetailsWindow,
                                  PrivateNotificationManager privateNotificationManager,
                                  @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
-        this.offerDetailsWindow = offerDetailsWindow;
+        this.window = bsqTradeDetailsWindow;
         this.preferences = preferences;
-        this.tradeDetailsWindow = tradeDetailsWindow;
         this.privateNotificationManager = privateNotificationManager;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
@@ -190,13 +186,13 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
         directionColumn.setComparator(Comparator.comparing(o -> o.getBsqSwapTrade().getOffer().getDirection()));
         marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
         priceColumn.setComparator(Comparator.comparing(model::getPrice, Comparator.nullsFirst(Comparator.naturalOrder())));
-        volumeColumn.setComparator(nullsFirstComparingAsTrade(BsqSwapTrade::getTradeVolume));
+        volumeColumn.setComparator(nullsFirstComparingAsTrade(BsqSwapTrade::getVolume));
         amountColumn.setComparator(Comparator.comparing(model::getAmount, Comparator.nullsFirst(Comparator.naturalOrder())));
         avatarColumn.setComparator(Comparator.comparing(
                 o -> model.getNumPastTrades(o.getBsqSwapTrade()),
                 Comparator.nullsFirst(Comparator.naturalOrder())
         ));
-        txFeeColumn.setComparator(nullsFirstComparing(BsqSwapTrade::getMiningFeePerByte));
+        txFeeColumn.setComparator(nullsFirstComparing(BsqSwapTrade::getTxFeePerVbyte));
         txFeeColumn.setComparator(Comparator.comparing(model::getTxFee, Comparator.nullsFirst(Comparator.naturalOrder())));
 
         //
@@ -364,11 +360,7 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
                                 if (item != null && !empty) {
                                     field = new HyperlinkWithIcon(model.getTradeId(item));
                                     field.setOnAction(event -> {
-                                        // TODO(sq): fix bsq swap trade details
-                                        // tradeDetailsWindow.show(item.getAtomicTrade());
-
-                                        // Show offer for now
-                                        offerDetailsWindow.show(item.getBsqSwapTrade().getOffer());
+                                        window.show(item.getBsqSwapTrade());
                                     });
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);

@@ -27,7 +27,7 @@ import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
-import bisq.core.trade.model.bsqswap.BsqSwapTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.util.coin.BsqFormatter;
 
 import org.bitcoinj.core.Address;

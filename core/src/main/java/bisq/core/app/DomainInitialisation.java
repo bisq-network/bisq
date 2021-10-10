@@ -33,7 +33,7 @@ import bisq.core.notifications.alerts.MyOfferTakenEvents;
 import bisq.core.notifications.alerts.TradeEvents;
 import bisq.core.notifications.alerts.market.MarketAlerts;
 import bisq.core.notifications.alerts.price.PriceAlert;
-import bisq.core.offer.BsqSwapWalletWatcher;
+import bisq.core.offer.BsqSwapOfferManager;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.TriggerPriceService;
 import bisq.core.payment.AmazonGiftCardAccount;
@@ -49,10 +49,10 @@ import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.support.traderchat.TraderChatManager;
-import bisq.core.trade.misc.ClosedTradableManager;
-import bisq.core.trade.misc.FailedTradesManager;
+import bisq.core.trade.model.ClosedTradableManager;
+import bisq.core.trade.model.FailedTradesManager;
 import bisq.core.trade.model.TradeManager;
-import bisq.core.trade.model.bsqswap.BsqSwapTradeManager;
+import bisq.core.trade.model.bsq_swap.BsqSwapTradeManager;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.trade.txproof.xmr.XmrTxProofService;
 import bisq.core.user.User;
@@ -115,7 +115,7 @@ public class DomainInitialisation {
     private final DaoStateSnapshotService daoStateSnapshotService;
     private final TriggerPriceService triggerPriceService;
     private final MempoolService mempoolService;
-    private final BsqSwapWalletWatcher bsqSwapWalletWatcher;
+    private final BsqSwapOfferManager bsqSwapOfferManager;
 
     @Inject
     public DomainInitialisation(ClockWatcher clockWatcher,
@@ -155,7 +155,7 @@ public class DomainInitialisation {
                                 DaoStateSnapshotService daoStateSnapshotService,
                                 TriggerPriceService triggerPriceService,
                                 MempoolService mempoolService,
-                                BsqSwapWalletWatcher bsqSwapWalletWatcher) {
+                                BsqSwapOfferManager bsqSwapOfferManager) {
         this.clockWatcher = clockWatcher;
         this.tradeLimits = tradeLimits;
         this.arbitrationManager = arbitrationManager;
@@ -193,7 +193,7 @@ public class DomainInitialisation {
         this.daoStateSnapshotService = daoStateSnapshotService;
         this.triggerPriceService = triggerPriceService;
         this.mempoolService = mempoolService;
-        this.bsqSwapWalletWatcher = bsqSwapWalletWatcher;
+        this.bsqSwapOfferManager = bsqSwapOfferManager;
     }
 
     public void initDomainServices(Consumer<String> rejectedTxErrorMessageHandler,
@@ -223,7 +223,7 @@ public class DomainInitialisation {
         xmrTxProofService.onAllServicesInitialized();
 
         openOfferManager.onAllServicesInitialized();
-        bsqSwapWalletWatcher.onAllServicesInitialized();
+        bsqSwapOfferManager.onAllServicesInitialized();
 
         balances.onAllServicesInitialized();
 
