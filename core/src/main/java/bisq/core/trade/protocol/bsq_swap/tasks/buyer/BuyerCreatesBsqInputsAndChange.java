@@ -56,7 +56,8 @@ public abstract class BuyerCreatesBsqInputsAndChange extends BsqSwapTask {
             protocolModel.setBsqAddress(bsqWalletService.getUnusedAddress().toString());
             protocolModel.setBtcAddress(btcWalletService.getFreshAddressEntry().getAddressString());
 
-            long btcPayout = BsqSwapCalculation.getBuyersBtcPayoutValue(trade, getBuyersTxSize(), getBuyersTradeFee()).getValue();
+            long btcPayout = BsqSwapCalculation.getBuyersBtcPayoutValue(trade, getBuyersTxSize(),
+                    getBuyersTradeFee()).getValue();
             protocolModel.setPayout(btcPayout);
 
             complete();
@@ -66,7 +67,8 @@ public abstract class BuyerCreatesBsqInputsAndChange extends BsqSwapTask {
     }
 
     private int getBuyersTxSize() {
-        return BsqSwapCalculation.getVBytesSize(Objects.requireNonNull(protocolModel.getInputs()), protocolModel.getChange());
+        return BsqSwapCalculation.getVBytesSize(Objects.requireNonNull(protocolModel.getInputs()),
+                protocolModel.getChange());
     }
 
     protected abstract long getSellersTradeFee();

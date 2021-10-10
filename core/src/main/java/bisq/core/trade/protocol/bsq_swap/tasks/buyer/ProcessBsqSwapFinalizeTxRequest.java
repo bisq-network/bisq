@@ -28,7 +28,9 @@ import bisq.core.util.Validator;
 
 import bisq.common.taskrunner.TaskRunner;
 
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 
@@ -95,13 +97,16 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
                         buyersBtcPayout, sumInputs, sellersTxFee, buyersTxFee, expectedChange, change);
             }
 
+            NetworkParameters params = protocolModel.getBtcWalletService().getParams();
             String sellersBsqPayoutAddress = request.getBsqPayoutAddress();
             checkNotNull(sellersBsqPayoutAddress, "sellersBsqPayoutAddress must not be null");
             checkArgument(!sellersBsqPayoutAddress.isEmpty(), "sellersBsqPayoutAddress must not be empty");
+            Address.fromString(params, sellersBsqPayoutAddress); // If address is not a BTC address it throws an exception
 
             String sellersBtcChangeAddress = request.getBtcChangeAddress();
             checkNotNull(sellersBtcChangeAddress, "sellersBtcChangeAddress must not be null");
             checkArgument(!sellersBtcChangeAddress.isEmpty(), "sellersBtcChangeAddress must not be empty");
+            Address.fromString(params, sellersBtcChangeAddress); // If address is not a BTC address it throws an exception
 
             // Apply data
             BsqSwapTradePeer tradePeer = protocolModel.getTradePeer();
