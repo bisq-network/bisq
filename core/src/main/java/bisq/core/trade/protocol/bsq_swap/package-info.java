@@ -26,7 +26,6 @@ package bisq.core.trade.protocol.bsq_swap;
  * feeRate,... to the maker.
  *
  * For the tx creation the buyer/seller perspective is the relevant view.
- * We require an additional message to be sent in the second protocol pair.
  *
  * 1. BuyerAsTaker + SellerAsMaker:
  *

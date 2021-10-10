@@ -56,13 +56,13 @@ import lombok.extern.slf4j.Slf4j;
 public class BsqSwapCalculation {
 
     // Buyer
-    public static Coin getBuyersBsqInputValue(BsqSwapTrade trade, long buyerTradeFee) {
-        return Coin.valueOf(trade.getBsqTradeAmount() + buyerTradeFee);
+    public static Coin getBuyersBsqInputValue(BsqSwapTrade trade, long buyersTradeFee) {
+        return Coin.valueOf(trade.getBsqTradeAmount() + buyersTradeFee);
     }
 
-    public static Coin getBuyersBtcPayoutValue(BsqSwapTrade trade, int buyerTxSize, long buyerTradeFee) {
-        long buyerTxFee = getTxFee(trade, buyerTxSize, buyerTradeFee);
-        return getBuyersBtcPayoutValue(trade, buyerTxFee);
+    public static Coin getBuyersBtcPayoutValue(BsqSwapTrade trade, int buyersTxSize, long buyerTradeFee) {
+        long buyersTxFee = getAdjustedTxFee(trade, buyersTxSize, buyerTradeFee);
+        return getBuyersBtcPayoutValue(trade, buyersTxFee);
     }
 
     private static Coin getBuyersBtcPayoutValue(BsqSwapTrade trade, long buyerTxFee) {
@@ -71,11 +71,11 @@ public class BsqSwapCalculation {
 
     // Seller
     public static Coin getSellersBtcInputValue(BsqSwapTrade trade, int sellersTxSize, long sellersTradeFee) {
-        long sellerTxFee = getTxFee(trade, sellersTxSize, sellersTradeFee);
-        return getSellersBtcInputValue(trade, sellerTxFee);
+        long sellersTxFee = getAdjustedTxFee(trade, sellersTxSize, sellersTradeFee);
+        return getSellersBtcInputValue(trade, sellersTxFee);
     }
 
-    public static Coin getSellerBsqPayoutValue(BsqSwapTrade trade, long sellerTradeFee) {
+    public static Coin getSellersBsqPayoutValue(BsqSwapTrade trade, long sellerTradeFee) {
         return Coin.valueOf(trade.getBsqTradeAmount() - sellerTradeFee);
     }
 
@@ -100,7 +100,7 @@ public class BsqSwapCalculation {
         return Coin.valueOf(MathUtils.roundDoubleToLong(MathUtils.scaleDownByPowerOf10(volume.getValue(), 6)));
     }
 
-    public static long getTxFee(BsqSwapTrade trade, int vBytes, long tradeFee) {
+    public static long getAdjustedTxFee(BsqSwapTrade trade, int vBytes, long tradeFee) {
         return trade.getTxFeePerVbyte() * vBytes - tradeFee;
     }
 }

@@ -72,7 +72,7 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
             checkArgument(change == 0 || Restrictions.isAboveDust(Coin.valueOf(change)),
                     "BSQ change must be 0 or above dust");
 
-            Coin sellersBsqPayoutAmount = BsqSwapCalculation.getSellerBsqPayoutValue(trade, getSellersTradeFee());
+            Coin sellersBsqPayoutAmount = BsqSwapCalculation.getSellersBsqPayoutValue(trade, getSellersTradeFee());
             protocolModel.setPayout(sellersBsqPayoutAmount.getValue());
 
             long expectedChange = sumInputs - sellersBsqPayoutAmount.getValue() - getBuyersTradeFee() - getSellersTradeFee();

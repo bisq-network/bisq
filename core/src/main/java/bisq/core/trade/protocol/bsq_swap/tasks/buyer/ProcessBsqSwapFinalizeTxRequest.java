@@ -85,8 +85,8 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
                     "BTC change must be 0 or above dust");
 
             int buyersTxSize = BsqSwapCalculation.getVBytesSize(protocolModel.getInputs(), protocolModel.getChange());
-            long buyersTxFee = BsqSwapCalculation.getTxFee(trade, buyersTxSize, getBuyersTradeFee());
-            long sellersTxFee = BsqSwapCalculation.getTxFee(trade, sellersTxSize, getSellersTradeFee());
+            long buyersTxFee = BsqSwapCalculation.getAdjustedTxFee(trade, buyersTxSize, getBuyersTradeFee());
+            long sellersTxFee = BsqSwapCalculation.getAdjustedTxFee(trade, sellersTxSize, getSellersTradeFee());
             long buyersBtcPayout = protocolModel.getPayout();
             long expectedChange = sumInputs - buyersBtcPayout - sellersTxFee - buyersTxFee;
             boolean isChangeAboveDust = Restrictions.isAboveDust(Coin.valueOf(expectedChange));

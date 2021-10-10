@@ -53,7 +53,7 @@ public abstract class BuyerCreatesAndSignsFinalizedTx extends BsqSwapTask {
             List<RawTransactionInput> buyersBsqInputs = Objects.requireNonNull(protocolModel.getInputs());
             List<TransactionInput> sellersBtcInputs = tradePeer.getTransactionInputs();
 
-            Coin sellersBsqPayoutAmount = BsqSwapCalculation.getSellerBsqPayoutValue(trade, getSellersTradeFee());
+            Coin sellersBsqPayoutAmount = BsqSwapCalculation.getSellersBsqPayoutValue(trade, getSellersTradeFee());
             String sellersBsqPayoutAddress = tradePeer.getBsqAddress();
 
             Coin buyersBsqChangeAmount = Coin.valueOf(protocolModel.getChange());
