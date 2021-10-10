@@ -18,6 +18,7 @@
 package bisq.core.trade.protocol.bsq_swap.tasks.seller;
 
 import bisq.core.btc.model.RawTransactionInput;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.model.blockchain.TxOutputKey;
@@ -61,8 +62,10 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
                     "Buyers BSQ input amount do not match our calculated required BSQ input amount");
 
             DaoFacade daoFacade = protocolModel.getDaoFacade();
+            BtcWalletService btcWalletService = protocolModel.getBtcWalletService();
+
             long numValidBsqInputs = inputs.stream()
-                    .map(input -> new TxOutputKey(txIdOfRawInputParentTx(input), (int) input.index))
+                    .map(input -> new TxOutputKey(input.getParentTxId(btcWalletService), (int) input.index))
                     .filter(daoFacade::isTxOutputSpendable)
                     .count();
             checkArgument(inputs.size() == numValidBsqInputs,
@@ -87,7 +90,7 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
             checkArgument(change <= expectedChange,
                     "Change must be smaller or equal to expectedChange");
 
-            NetworkParameters params = protocolModel.getBtcWalletService().getParams();
+            NetworkParameters params = btcWalletService.getParams();
             String buyersBtcPayoutAddress = message.getBuyersBtcPayoutAddress();
             checkNotNull(buyersBtcPayoutAddress, "buyersBtcPayoutAddress must not be null");
             checkArgument(!buyersBtcPayoutAddress.isEmpty(), "buyersBtcPayoutAddress must not be empty");
@@ -109,10 +112,6 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
         } catch (Throwable t) {
             failed(t);
         }
-    }
-
-    private String txIdOfRawInputParentTx(RawTransactionInput input) {
-        return protocolModel.getBtcWalletService().getTxFromSerializedTx(input.parentTransaction).getTxId().toString();
     }
 
     protected abstract long getBuyersTradeFee();
