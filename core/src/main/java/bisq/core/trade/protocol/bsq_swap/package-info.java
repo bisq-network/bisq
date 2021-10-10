@@ -37,16 +37,21 @@ package bisq.core.trade.protocol.bsq_swap;
  *
  * SellerAsMaker:
  * - ApplyFilter
- * - ProcessSendBuyersBsqSwapRequest
+ * - ProcessBuyersBsqSwapRequest
  * - SellerAsMakerCreatesAndSignsTx
- * - SellerSetupTxListener
+ * - SellerAsMakerSetupTxListener
  * - SendBsqSwapFinalizeTxRequest
  *
  * BuyerAsTaker:
- * - ProcessBsqSwapFinalizeTxRequest
- * - BuyerFinalizeTx
+ * - BuyerAsTakerProcessBsqSwapFinalizeTxRequest
+ * - BuyerAsTakerCreatesAndSignsFinalizedTx
  * - BuyerPublishesTx
  * - PublishTradeStatistics
+ * - SendFinalizedTxMessage
+ *
+ * SellerAsMaker:
+ * - SellerAsMakerProcessBsqSwapFinalizedTxMessage
+ * - SellerMaybePublishesTx
  *
  *
  * 2. SellerAsTaker + BuyerAsMaker:
@@ -62,15 +67,21 @@ package bisq.core.trade.protocol.bsq_swap;
  * - SendBsqSwapTxInputsMessage
  *
  * SellerAsTaker:
- * - ProcessBsqSwapTxInputMessage
+ * - ProcessBsqSwapTxInputsMessage
  * - SellerAsTakerCreatesAndSignsTx
+ * - SellerAsTakerSetupTxListener
  * - SendBsqSwapFinalizeTxRequest
  *
  * BuyerAsMaker:
- * - ProcessBsqSwapFinalizeTxRequest
- * - BuyerFinalizeTx
+ * - BuyerAsMakerProcessBsqSwapFinalizeTxRequest
+ * - BuyerAsMakerCreatesAndSignsFinalizedTx
  * - BuyerPublishesTx
- * - RemoveOpenOffer
+ * - BuyerAsMakerRemoveOpenOffer
  * - PublishTradeStatistics
+ * - SendFinalizedTxMessage
+ *
+ * SellerAsTaker:
+ * - SellerAsTakerProcessBsqSwapFinalizedTxMessage
+ * - SellerMaybePublishesTx
  *
  */
