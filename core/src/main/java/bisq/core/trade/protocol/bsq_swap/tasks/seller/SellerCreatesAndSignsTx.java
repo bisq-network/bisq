@@ -80,7 +80,7 @@ public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
 
                 // We calculate more exact tx size based on resulted inputs and change
                 sellersBtcChangeAmount = inputsAndChange.second;
-                if (!Restrictions.isAboveDust(sellersBtcChangeAmount)) {
+                if (Restrictions.isDust(sellersBtcChangeAmount)) {
                     log.warn("We got a change below dust. We ignore that and use it as miner fee.");
                     sellersBtcChangeAmount = Coin.ZERO;
                 }
