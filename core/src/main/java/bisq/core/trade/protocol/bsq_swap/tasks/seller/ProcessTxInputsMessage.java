@@ -41,6 +41,15 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+/**
+ * We verify the BSQ inputs to match our calculation for the required inputs. As we have the BSQ inputs in our
+ * DAO state we can verify the inputs if they exist and matching the peers values.
+ * The change cannot be verified exactly as there are some scenarios with dust spent to miners which are not reflected
+ * by the calculations.
+ *
+ * The sellersBsqPayoutAmount is calculated here independent of the peers data. The BTC change output will be calculated
+ * in SellerCreatesAndSignsTx.
+ */
 @Slf4j
 public abstract class ProcessTxInputsMessage extends BsqSwapTask {
     public ProcessTxInputsMessage(TaskRunner<BsqSwapTrade> taskHandler, BsqSwapTrade bsqSwapTrade) {
@@ -64,6 +73,14 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
             DaoFacade daoFacade = protocolModel.getDaoFacade();
             BtcWalletService btcWalletService = protocolModel.getBtcWalletService();
 
+            long sumValidBsqInputValue = inputs.stream()
+                    .mapToLong(input -> daoFacade.getUnspentTxOutputValue(
+                            new TxOutputKey(input.getParentTxId(btcWalletService), (int) input.index))
+                    )
+                    .sum();
+            checkArgument(sumInputs == sumValidBsqInputValue,
+                    "Buyers BSQ input amount must match input amount for the DAO data");
+
             long numValidBsqInputs = inputs.stream()
                     .map(input -> new TxOutputKey(input.getParentTxId(btcWalletService), (int) input.index))
                     .filter(daoFacade::isTxOutputSpendable)
@@ -75,6 +92,8 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
             checkArgument(change == 0 || Restrictions.isAboveDust(Coin.valueOf(change)),
                     "BSQ change must be 0 or above dust");
 
+            // sellersBsqPayoutAmount is not related to peers inputs but we need it in the following steps so we
+            // calculate and set it here.
             Coin sellersBsqPayoutAmount = BsqSwapCalculation.getSellersBsqPayoutValue(trade, getSellersTradeFee());
             protocolModel.setPayout(sellersBsqPayoutAmount.getValue());
 

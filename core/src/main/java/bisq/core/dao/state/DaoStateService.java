@@ -21,6 +21,7 @@ import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.model.DaoState;
+import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.SpentInfo;
 import bisq.core.dao.state.model.blockchain.Tx;
@@ -482,6 +483,12 @@ public class DaoStateService implements DaoSetupService {
 
     public Optional<TxOutput> getUnspentTxOutput(TxOutputKey key) {
         return Optional.ofNullable(getUnspentTxOutputMap().getOrDefault(key, null));
+    }
+
+    public long getUnspentTxOutputValue(TxOutputKey key) {
+        return getUnspentTxOutput(key)
+                .map(BaseTxOutput::getValue)
+                .orElse(0L);
     }
 
     public boolean isTxOutputSpendable(TxOutputKey key) {

@@ -654,6 +654,10 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.isTxOutputSpendable(txOutputKey);
     }
 
+    public long getUnspentTxOutputValue(TxOutputKey key) {
+        return daoStateService.getUnspentTxOutputValue(key);
+    }
+
     public int getNumTxs() {
         return daoStateService.getNumTxs();
     }
