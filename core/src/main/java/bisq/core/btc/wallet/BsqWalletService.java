@@ -768,14 +768,11 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         boolean prev = bsqCoinSelector.isUnconfirmedSpendable();
         bsqCoinSelector.setUnconfirmedSpendable(false);
         CoinSelection coinSelection = bsqCoinSelector.select(required, wallet.calculateAllSpendCandidates());
-        Coin change = Coin.ZERO;
+        Coin change;
         try {
             change = bsqCoinSelector.getChange(required, coinSelection);
-            checkArgument(change.isZero() || Restrictions.isAboveDust(change));
         } catch (InsufficientMoneyException e) {
             throw new InsufficientBsqException(e.missing);
-        } catch (Exception e) {
-            throw new InsufficientBsqException(Restrictions.getMinNonDustOutput().subtract(change));
         } finally {
             bsqCoinSelector.setUnconfirmedSpendable(prev);
         }
@@ -786,10 +783,6 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                 .map(RawTransactionInput::new)
                 .collect(Collectors.toList());
         return new Tuple2<>(inputs, change);
-    }
-
-    public void verifySufficientBsqSwapTxInputs(Coin requiredInput) throws InsufficientBsqException {
-        getBuyersBsqInputsForBsqSwapTx(requiredInput);
     }
 
     public void signBsqSwapTransaction(Transaction transaction, List<TransactionInput> myInputs) {

@@ -43,6 +43,15 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+/**
+ * We cannot verify the sellers inputs if they really exist as we do not have the blockchain data for it.
+ * Worst case would be that the seller pays less for miner fee as expected and thus risks to get the tx never confirmed.
+ * The change output cannot be verified exactly due potential dust values and non-deterministic behaviour of the
+ * fee estimation.
+ * The important values for out BTC output and out BSQ change output are set already in BuyerCreatesBsqInputsAndChange
+ * and are not related to the data provided by the peer. If the peers inputs would not be sufficient the tx would
+ * fail anyway.
+ */
 @Slf4j
 public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
     @SuppressWarnings({"unused"})

@@ -20,6 +20,7 @@ package bisq.core.trade.protocol.bsq_swap.tasks.buyer;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.Restrictions;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsq_swap.BsqSwapCalculation;
 import bisq.core.trade.protocol.bsq_swap.tasks.BsqSwapTask;
@@ -49,10 +50,17 @@ public abstract class BuyerCreatesBsqInputsAndChange extends BsqSwapTask {
             BtcWalletService btcWalletService = protocolModel.getBtcWalletService();
 
             Coin required = BsqSwapCalculation.getBuyersBsqInputValue(trade, getBuyersTradeFee());
-            Tuple2<List<RawTransactionInput>, Coin> tuple = bsqWalletService.getBuyersBsqInputsForBsqSwapTx(required);
+            Tuple2<List<RawTransactionInput>, Coin> inputsAndChange = bsqWalletService.getBuyersBsqInputsForBsqSwapTx(required);
 
-            protocolModel.setInputs(tuple.first);
-            protocolModel.setChange(tuple.second.value);
+            protocolModel.setInputs(inputsAndChange.first);
+
+            long change = inputsAndChange.second.value;
+            if (Restrictions.isDust(Coin.valueOf(change))) {
+                // If change would be dust we give spend it as miner fees
+                change = 0;
+            }
+            protocolModel.setChange(change);
+
             protocolModel.setBsqAddress(bsqWalletService.getUnusedAddress().toString());
             protocolModel.setBtcAddress(btcWalletService.getFreshAddressEntry().getAddressString());
 
