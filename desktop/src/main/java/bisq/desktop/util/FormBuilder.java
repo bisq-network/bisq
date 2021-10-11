@@ -393,6 +393,33 @@ public class FormBuilder {
         return new Tuple2<>(label1, label2);
     }
 
+    public static Tuple2<Label, TextField> addConfirmationLabelTextField(GridPane gridPane,
+                                                     int rowIndex,
+                                                     String title1,
+                                                     String title2) {
+        return addConfirmationLabelTextField(gridPane, rowIndex, title1, title2, 0);
+    }
+
+    public static Tuple2<Label, TextField> addConfirmationLabelTextField(GridPane gridPane,
+                                                     int rowIndex,
+                                                     String title1,
+                                                     String title2,
+                                                     double top) {
+        Label label1 = addLabel(gridPane, rowIndex, title1);
+        label1.getStyleClass().add("confirmation-label");
+        TextField label2 = new BisqTextField(title2);
+        gridPane.getChildren().add(label2);
+        label2.getStyleClass().add("confirmation-text-field-as-label");
+        label2.setEditable(false);
+        label2.setFocusTraversable(false);
+        GridPane.setRowIndex(label2, rowIndex);
+        GridPane.setColumnIndex(label2, 1);
+        GridPane.setMargin(label1, new Insets(top, 0, 0, 0));
+        GridPane.setHalignment(label1, HPos.LEFT);
+        GridPane.setMargin(label2, new Insets(top, 0, 0, 0));
+        return new Tuple2<>(label1, label2);
+    }
+
     public static Tuple2<Label, TextFieldWithCopyIcon> addConfirmationLabelLabelWithCopyIcon(GridPane gridPane,
                                                                  int rowIndex,
                                                                  String title1,
@@ -446,7 +473,6 @@ public class FormBuilder {
                                                                                 double top) {
 
         TextFieldWithIcon textFieldWithIcon = new TextFieldWithIcon();
-        textFieldWithIcon.setMouseTransparent(true);
         textFieldWithIcon.setFocusTraversable(false);
 
         return new Tuple2<>(addTopLabelWithVBox(gridPane, rowIndex, columnIndex, title, textFieldWithIcon, top).first, textFieldWithIcon);

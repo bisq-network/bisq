@@ -29,13 +29,9 @@ import javafx.scene.text.TextAlignment;
 
 import javafx.geometry.Pos;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import lombok.Getter;
 
 public class TextFieldWithIcon extends AnchorPane {
-    public static final Logger log = LoggerFactory.getLogger(TextFieldWithIcon.class);
     @Getter
     private final Label iconLabel;
     @Getter
@@ -45,7 +41,6 @@ public class TextFieldWithIcon extends AnchorPane {
     public TextFieldWithIcon() {
         textField = new JFXTextField();
         textField.setEditable(false);
-        textField.setMouseTransparent(true);
         textField.setFocusTraversable(false);
         setLeftAnchor(textField, 0d);
         setRightAnchor(textField, 0d);

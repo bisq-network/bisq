@@ -286,16 +286,16 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private void addInfoPane() {
         Contract contract = dispute.getContract();
         addTitledGroupBg(gridPane, ++rowIndex, 17, Res.get("disputeSummaryWindow.title")).getStyleClass().add("last");
-        addConfirmationLabelLabel(gridPane, rowIndex, Res.get("shared.tradeId"), dispute.getShortTradeId(),
+        addConfirmationLabelTextField(gridPane, rowIndex, Res.get("shared.tradeId"), dispute.getShortTradeId(),
                 Layout.TWICE_FIRST_ROW_DISTANCE);
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.openDate"), DisplayUtils.formatDateTime(dispute.getOpeningDate()));
+        addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.openDate"), DisplayUtils.formatDateTime(dispute.getOpeningDate()));
         role = dispute.getRoleString();
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.role"), role);
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradeAmount"),
+        addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.role"), role);
+        addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("shared.tradeAmount"),
                 formatter.formatCoinWithCode(contract.getTradeAmount()));
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
+        addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
                 FormattingUtils.formatPrice(contract.getTradePrice()));
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradeVolume"),
+        addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("shared.tradeVolume"),
                 VolumeUtil.formatVolumeWithCode(contract.getTradeVolume()));
         String securityDeposit = Res.getWithColAndCap("shared.buyer") +
                 " " +
@@ -304,7 +304,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 Res.getWithColAndCap("shared.seller") +
                 " " +
                 formatter.formatCoinWithCode(contract.getOfferPayload().getSellerSecurityDeposit());
-        addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.securityDeposit"), securityDeposit);
+        addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("shared.securityDeposit"), securityDeposit);
 
         boolean isMediationDispute = getDisputeManager(dispute) instanceof MediationManager;
         if (isMediationDispute) {
@@ -320,7 +320,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 for (Map.Entry<String, String> entry : dispute.getExtraDataMap().entrySet()) {
                     extraDataSummary += "[" + entry.getKey() + ":" + entry.getValue() + "] ";
                 }
-                addConfirmationLabelLabelWithCopyIcon(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.extraInfo"), extraDataSummary);
+                addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.extraInfo"), extraDataSummary);
             }
         } else {
             delayedPayoutTxStatus = addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.delayedPayoutStatus"), "Checking...").second;
