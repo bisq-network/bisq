@@ -1001,6 +1001,7 @@ message PaymentAccountPayload {
         PaxumAccountPayload Paxum_account_payload = 35;
         SwiftAccountPayload swift_account_payload = 36;
         CelPayAccountPayload cel_pay_account_payload = 37;
+        MoneseAccountPayload monese_account_payload = 38;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -1038,6 +1039,7 @@ message CountryBasedPaymentAccountPayload {
         NequiAccountPayload nequi_account_payload = 12;
         BizumAccountPayload bizum_account_payload = 13;
         PixAccountPayload pix_account_payload = 14;
+        SatispayAccountPayload satispay_account_payload = 15;
     }
 }
 
@@ -1282,6 +1284,16 @@ message BizumAccountPayload {
 
 message PixAccountPayload {
     string pix_key = 1;
+}
+
+message MoneseAccountPayload {
+    string mobile_nr = 1;
+    string holder_name = 2;
+}
+
+message SatispayAccountPayload {
+    string mobile_nr = 1;
+    string holder_name = 2;
 }
 
 message SwiftAccountPayload {
