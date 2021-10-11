@@ -84,9 +84,8 @@ public class CountryUtil {
     }
 
     public static boolean containsAllSepaEuroCountries(List<String> countryCodesToCompare) {
-        countryCodesToCompare.sort(String::compareTo);
         List<String> countryCodesBase = getAllSepaEuroCountries().stream().map(c -> c.code).collect(Collectors.toList());
-        return countryCodesToCompare.toString().equals(countryCodesBase.toString());
+        return countryCodesToCompare.containsAll(countryCodesBase) && countryCodesBase.containsAll(countryCodesToCompare);
     }
 
     public static boolean containsAllSepaInstantEuroCountries(List<String> countryCodesToCompare) {
