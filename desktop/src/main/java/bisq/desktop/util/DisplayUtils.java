@@ -251,4 +251,16 @@ public class DisplayUtils {
     public static Coin reduceTo4Decimals(Coin coin, CoinFormatter coinFormatter) {
         return ParsingUtils.parseToCoin(coinFormatter.formatCoin(coin), coinFormatter);
     }
+
+    public static String createAccountName(String paymentMethodId, String name) {
+        name = name.trim();
+        name = StringUtils.abbreviate(name, 9);
+        String method = Res.get(paymentMethodId);
+        return method.concat(": ").concat(name);
+    }
+
+    public static String createAssetsAccountName(String currency, String address) {
+        address = StringUtils.abbreviate(address, 9);
+        return currency.concat(": ").concat(address);
+    }
 }

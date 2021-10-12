@@ -41,8 +41,6 @@ import bisq.core.util.validation.InputValidator;
 import bisq.common.UserThread;
 import bisq.common.util.Tuple3;
 
-import org.apache.commons.lang3.StringUtils;
-
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -53,6 +51,7 @@ import javafx.geometry.Insets;
 
 import javafx.util.StringConverter;
 
+import static bisq.desktop.util.DisplayUtils.createAssetsAccountName;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addLabelCheckBox;
@@ -169,9 +168,7 @@ public class AssetsForm extends PaymentMethodForm {
         if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
             String currency = paymentAccount.getSingleTradeCurrency() != null ? paymentAccount.getSingleTradeCurrency().getCode() : "";
             if (currency != null) {
-                String address = addressInputTextField.getText();
-                address = StringUtils.abbreviate(address, 9);
-                accountNameTextField.setText(currency.concat(": ").concat(address));
+                accountNameTextField.setText(createAssetsAccountName(currency, addressInputTextField.getText()));
             }
         }
     }
