@@ -167,7 +167,9 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         BIZUM,
         PIX,
         MONESE,
-        SATISPAY
+        SATISPAY,
+        VERSE,
+        STRIKE
     }
 
     @Getter

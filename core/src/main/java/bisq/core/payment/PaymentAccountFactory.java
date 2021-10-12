@@ -114,6 +114,10 @@ public class PaymentAccountFactory {
                 return new MoneseAccount();
             case PaymentMethod.SATISPAY_ID:
                 return new SatispayAccount();
+            case PaymentMethod.VERSE_ID:
+                return new VerseAccount();
+            case PaymentMethod.STRIKE_ID:
+                return new StrikeAccount();
             case PaymentMethod.SWIFT_ID:
                 return new SwiftAccount();
 

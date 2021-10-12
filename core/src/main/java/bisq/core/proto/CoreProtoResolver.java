@@ -63,6 +63,7 @@ import bisq.core.payment.payload.SatispayAccountPayload;
 import bisq.core.payment.payload.SepaAccountPayload;
 import bisq.core.payment.payload.SepaInstantAccountPayload;
 import bisq.core.payment.payload.SpecificBanksAccountPayload;
+import bisq.core.payment.payload.StrikeAccountPayload;
 import bisq.core.payment.payload.SwiftAccountPayload;
 import bisq.core.payment.payload.SwishAccountPayload;
 import bisq.core.payment.payload.TransferwiseAccountPayload;
@@ -70,6 +71,7 @@ import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.UpholdAccountPayload;
 import bisq.core.payment.payload.UpiAccountPayload;
 import bisq.core.payment.payload.VenmoAccountPayload;
+import bisq.core.payment.payload.VerseAccountPayload;
 import bisq.core.payment.payload.WeChatPayAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
 import bisq.core.trade.statistics.TradeStatistics2;
@@ -141,6 +143,8 @@ public class CoreProtoResolver implements ProtoResolver {
                             return PixAccountPayload.fromProto(proto);
                         case SATISPAY_ACCOUNT_PAYLOAD:
                             return SatispayAccountPayload.fromProto(proto);
+                        case STRIKE_ACCOUNT_PAYLOAD:
+                            return StrikeAccountPayload.fromProto(proto);
                         case IFSC_BASED_ACCOUNT_PAYLOAD:
                             final protobuf.IfscBasedAccountPayload.MessageCase messageCaseIfsc = proto.getCountryBasedPaymentAccountPayload().getIfscBasedAccountPayload().getMessageCase();
                             switch (messageCaseIfsc) {
@@ -210,6 +214,8 @@ public class CoreProtoResolver implements ProtoResolver {
                     return CelPayAccountPayload.fromProto(proto);
                 case MONESE_ACCOUNT_PAYLOAD:
                     return MoneseAccountPayload.fromProto(proto);
+                case VERSE_ACCOUNT_PAYLOAD:
+                    return VerseAccountPayload.fromProto(proto);
                 case SWIFT_ACCOUNT_PAYLOAD:
                     return SwiftAccountPayload.fromProto(proto);
 
