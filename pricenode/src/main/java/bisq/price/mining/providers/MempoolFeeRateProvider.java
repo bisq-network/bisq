@@ -43,7 +43,7 @@ import java.util.Set;
 
 /**
  * {@link FeeRateProvider} that interprets the Mempool API format to retrieve a mining
- * fee estimate. See https://mempool.space.
+ * fee estimate. See: http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/api
  */
 abstract class MempoolFeeRateProvider extends FeeRateProvider {
 
@@ -112,7 +112,7 @@ abstract class MempoolFeeRateProvider extends FeeRateProvider {
             RequestEntity
                 .get(UriComponentsBuilder
                     // See https://github.com/bisq-network/projects/issues/27
-                    .fromUriString("https://" + getMempoolApiHostname() + "/api/v1/fees/recommended")
+                    .fromUriString("http://" + getMempoolApiHostname() + "/api/v1/fees/recommended")
                     .build().toUri())
                 .build(),
             new ParameterizedTypeReference<Map<String, Long>>() { }
@@ -155,10 +155,10 @@ abstract class MempoolFeeRateProvider extends FeeRateProvider {
 
         protected String getMempoolApiHostname() {
             // This is the primary instance, so if no API point is set in
-            // application.properties file, then it defaults to mempool.space
+            // application.properties file, then it defaults to mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion (mempool.space)
             // This ensures there is at least one provider attempting to connect,
             // even if the properties file is corrupt or empty
-            return env.getProperty(MEMPOOL_HOSTNAME_KEY_1, "mempool.space");
+            return env.getProperty(MEMPOOL_HOSTNAME_KEY_1, "mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion");
         }
     }
 
