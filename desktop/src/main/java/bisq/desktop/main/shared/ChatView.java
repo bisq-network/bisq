@@ -22,7 +22,6 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.BisqTextArea;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.TableGroupHeadline;
-import bisq.desktop.components.TextFieldWithIcon;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
@@ -102,7 +101,7 @@ import lombok.Setter;
 import javax.annotation.Nullable;
 
 public class ChatView extends AnchorPane {
-    public static final Logger log = LoggerFactory.getLogger(TextFieldWithIcon.class);
+    public static final Logger log = LoggerFactory.getLogger(ChatView.class);
 
     // UI
     private TextArea inputTextArea;
@@ -416,7 +415,7 @@ public class ChatView extends AnchorPane {
                             String metaData = DisplayUtils.formatDateTime(new Date(message.getDate()));
                             if (!message.isSystemMessage())
                                 metaData = (isMyMsg ? "Sent " : "Received ") + metaData
-                                    + (isMyMsg ? "" : " from " + counterpartyName);
+                                        + (isMyMsg ? "" : " from " + counterpartyName);
                             headerLabel.setText(metaData);
                             messageLabel.setText(message.getMessage());
                             attachmentsBox.getChildren().clear();
