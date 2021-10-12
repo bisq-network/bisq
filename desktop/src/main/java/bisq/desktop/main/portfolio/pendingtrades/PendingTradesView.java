@@ -367,7 +367,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     }
 
     private boolean isMaybeInvalidTrade(Trade trade) {
-        return trade.isTxChainInvalid() || trade.hasErrorMessage();
+        return trade.hasErrorMessage() ||
+                (Trade.Phase.DEPOSIT_PUBLISHED.ordinal() <= trade.getPhase().ordinal() && trade.isTxChainInvalid());
     }
 
     private void onMoveInvalidTradeToFailedTrades(Trade trade) {

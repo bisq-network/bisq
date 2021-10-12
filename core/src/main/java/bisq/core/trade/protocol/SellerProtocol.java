@@ -87,7 +87,7 @@ public abstract class SellerProtocol extends DisputeProtocol {
     }
 
     protected void handle(ShareBuyerPaymentAccountMessage message, NodeAddress peer) {
-        expect(anyPhase(Trade.Phase.DEPOSIT_PUBLISHED, Trade.Phase.DEPOSIT_CONFIRMED)
+        expect(anyPhase(Trade.Phase.TAKER_FEE_PUBLISHED, Trade.Phase.DEPOSIT_PUBLISHED, Trade.Phase.DEPOSIT_CONFIRMED)
                 .with(message)
                 .from(peer))
                 .setup(tasks(SellerProcessShareBuyerPaymentAccountMessage.class,
