@@ -113,6 +113,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static final String CELPAY_ID = "CELPAY";
     public static final String MONESE_ID = "MONESE";
     public static final String SATISPAY_ID = "SATISPAY";
+    public static final String VERSE_ID = "VERSE";
+    public static final String STRIKE_ID = "STRIKE";
     public static final String SWIFT_ID = "SWIFT";
 
     // Cannot be deleted as it would break old trade history entries
@@ -169,6 +171,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static PaymentMethod CELPAY;
     public static PaymentMethod MONESE;
     public static PaymentMethod SATISPAY;
+    public static PaymentMethod VERSE;
+    public static PaymentMethod STRIKE;
     public static PaymentMethod SWIFT;
 
     // Cannot be deleted as it would break old trade history entries
@@ -235,6 +239,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
             CELPAY = new PaymentMethod(CELPAY_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             MONESE = new PaymentMethod(MONESE_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             SATISPAY = new PaymentMethod(SATISPAY_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+            VERSE = new PaymentMethod(VERSE_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+            STRIKE = new PaymentMethod(STRIKE_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             SWIFT = new PaymentMethod(SWIFT_ID, 7 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
 
             // Japan

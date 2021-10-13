@@ -55,6 +55,7 @@ import bisq.desktop.components.paymentmethods.SatispayForm;
 import bisq.desktop.components.paymentmethods.SepaForm;
 import bisq.desktop.components.paymentmethods.SepaInstantForm;
 import bisq.desktop.components.paymentmethods.SpecificBankForm;
+import bisq.desktop.components.paymentmethods.StrikeForm;
 import bisq.desktop.components.paymentmethods.SwiftForm;
 import bisq.desktop.components.paymentmethods.SwishForm;
 import bisq.desktop.components.paymentmethods.TransferwiseForm;
@@ -63,6 +64,7 @@ import bisq.desktop.components.paymentmethods.PaxumForm;
 import bisq.desktop.components.paymentmethods.USPostalMoneyOrderForm;
 import bisq.desktop.components.paymentmethods.UpholdForm;
 import bisq.desktop.components.paymentmethods.UpiForm;
+import bisq.desktop.components.paymentmethods.VerseForm;
 import bisq.desktop.components.paymentmethods.WeChatPayForm;
 import bisq.desktop.components.paymentmethods.WesternUnionForm;
 import bisq.desktop.main.account.content.PaymentAccountsView;
@@ -583,6 +585,10 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                 return new MoneseForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SATISPAY_ID:
                 return new SatispayForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.VERSE_ID:
+                return new VerseForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.STRIKE_ID:
+                return new StrikeForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SWIFT_ID:
                 return new SwiftForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             default:

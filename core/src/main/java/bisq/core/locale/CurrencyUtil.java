@@ -445,6 +445,17 @@ public class CurrencyUtil {
         ));
     }
 
+    // https://github.com/bisq-network/growth/issues/223
+    public static List<TradeCurrency> getAllVerseCurrencies() {
+        return new ArrayList<>(Arrays.asList(
+                new FiatCurrency("DKK"),
+                new FiatCurrency("EUR"),
+                new FiatCurrency("HUF"),
+                new FiatCurrency("PLN"),
+                new FiatCurrency("SEK")
+        ));
+    }
+
     // https://www.revolut.com/help/getting-started/exchanging-currencies/what-fiat-currencies-are-supported-for-holding-and-exchange
     public static List<TradeCurrency> getAllRevolutCurrencies() {
         ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
