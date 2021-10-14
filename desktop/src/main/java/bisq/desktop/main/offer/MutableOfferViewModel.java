@@ -1156,7 +1156,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
             long maxTradeLimit = dataModel.getMaxTradeLimit();
             Price price = dataModel.getPrice().get();
-            if (price != null) {
+            if (price != null && price.isPositive()) {
                 if (dataModel.isUsingHalCashAccount())
                     amount = CoinUtil.getAdjustedAmountForHalCash(amount, price, maxTradeLimit);
                 else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
@@ -1180,7 +1180,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
             Price price = dataModel.getPrice().get();
             long maxTradeLimit = dataModel.getMaxTradeLimit();
-            if (price != null) {
+            if (price != null && price.isPositive()) {
                 if (dataModel.isUsingHalCashAccount())
                     minAmount = CoinUtil.getAdjustedAmountForHalCash(minAmount, price, maxTradeLimit);
                 else if (CurrencyUtil.isFiatCurrency(tradeCurrencyCode.get()))
