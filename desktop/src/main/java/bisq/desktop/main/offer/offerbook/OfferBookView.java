@@ -752,7 +752,18 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             new Popup().headLine(headline)
                     .instruction(Res.get("offerbook.warning.noMatchingBsqAccount.msg"))
                     .actionButtonText(Res.get("offerbook.takeOffer.createAccount"))
-                    .onAction(() -> model.createBsqAccountAndTakeOffer(offer)).show();
+                    .onAction(() -> {
+                        var bsqAccount = model.createBsqAccount(offer);
+                        var message = Res.get("offerbook.info.accountCreated.message", bsqAccount.getAccountName());
+                        if (model.isInstantPaymentMethod(offer)) {
+                            message += Res.get("offerbook.info.accountCreated.tradeInstant");
+                        }
+                        message += Res.get("offerbook.info.accountCreated.takeOffer");
+                        new Popup().headLine(Res.get("offerbook.info.accountCreated.headline"))
+                                .information(message)
+                                .onClose(() -> model.onTakeOffer(offer))
+                                .show();
+                    }).show();
         } else {
 
             var accountViewClass = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ? FiatAccountsView.class : AltCoinAccountsView.class;

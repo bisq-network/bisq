@@ -21,7 +21,6 @@ import bisq.desktop.Navigation;
 import bisq.desktop.common.model.ActivatableViewModel;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.offer.OfferView;
-import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
 import bisq.desktop.util.DisplayUtils;
@@ -679,22 +678,17 @@ class OfferBookViewModel extends ActivatableViewModel {
         return PaymentMethod.getDummyPaymentMethod(GUIUtil.SHOW_ALL_FLAG);
     }
 
-    public void createBsqAccountAndTakeOffer(Offer offer) {
+    public boolean isInstantPaymentMethod(Offer offer) {
+        return offer.getPaymentMethod().equals(PaymentMethod.BLOCK_CHAINS_INSTANT);
+    }
+
+    public PaymentAccount createBsqAccount(Offer offer) {
         var unusedBsqAddressAsString = bsqWalletService.getUnusedBsqAddressAsString();
 
-        // create required BSQ payment account
-        boolean isInstantPaymentMethod = offer.getPaymentMethod().equals(PaymentMethod.BLOCK_CHAINS_INSTANT);
-        coreApi.createCryptoCurrencyPaymentAccount(DisplayUtils.createAssetsAccountName("BSQ", unusedBsqAddressAsString),
+        return coreApi.createCryptoCurrencyPaymentAccount(DisplayUtils.createAssetsAccountName("BSQ", unusedBsqAddressAsString),
                 "BSQ",
                 unusedBsqAddressAsString,
-                isInstantPaymentMethod);
-
-        if (isInstantPaymentMethod) {
-            new Popup().information(Res.get("payment.altcoin.tradeInstant.popup")).show();
-        }
-
-        // take offer
-        onTakeOffer(offer);
+                isInstantPaymentMethod(offer));
     }
 
     public void setOfferActionHandler(OfferView.OfferActionHandler offerActionHandler) {
