@@ -24,8 +24,10 @@ Therefore, upgrading tor in Bisq comes down to upgrading these two artefacts.
    - Find out the current `netlayer` version (see `netlayerVersion` in `bisq/build.gradle`)
    - Find that release on the project's [releases page][3]
    - The release description says which tor version it includes
-- Find out the latest available tor release
-   - See the [official tor changelog][4]
+ - Find the desired tor release
+    - See the [tor changelog][4]
+ - Find which tor browser version introduces the desired tor binary version
+   - See the [tor browser changelog][6]
 
 
 ### 2. Update `tor-binary`
@@ -120,3 +122,4 @@ Thanks to freimair, JesusMcCloud, mrosseel, sschuberth and cedricwalter for thei
 [3]: https://github.com/bisq-network/netlayer/releases "netlayer releases"
 [4]: https://gitweb.torproject.org/tor.git/plain/ChangeLog "tor changelog"
 [5]: https://support.torproject.org/tbb/how-to-verify-signature/ "verify tor signature"
+[6]: https://gitweb.torproject.org/builders/tor-browser-build.git/plain/projects/tor-browser/Bundle-Data/Docs/ChangeLog.txt?h=maint-10.5 "tor browser 10.5.x changelog"
