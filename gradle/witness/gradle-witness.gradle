@@ -12,6 +12,7 @@
 // Note: The checksums are SHA-256.
 //
 // See https://github.com/signalapp/gradle-witness#using-witness for further details.
+
 dependencyVerification {
     verify = [
         'aopalliance:aopalliance:0addec670fedcd3f113c5c8091d783280d23f75e3acb841b61a9cdb079376a08',
@@ -21,14 +22,14 @@ dependencyVerification {
         'com.fasterxml.jackson.core:jackson-core:cc899cb6eae0c80b87d590eea86528797369cc4feb7b79463207d6bb18f0c257',
         'com.fasterxml.jackson.core:jackson-databind:f2ca3c28ebded59c98447d51afe945323df961540af66a063c015597af936aa0',
         'com.github.JesusMcCloud:jtorctl:389d61b1b5a85eb2f23c582c3913ede49f80c9f2b553e4762382c836270e57e5',
-        'com.github.bisq-network.netlayer:tor.external:e1d6b8fe73891207701c6b14317be789fd4acd25f7b499425d2471598d9a22ac',
-        'com.github.bisq-network.netlayer:tor.native:aa3edf9c27071fdc2b7d55b00dbc7c6cd5dc9aa9f87aafa4be0805f818a466be',
-        'com.github.bisq-network.netlayer:tor:37198bc56e8fe112f8c80441544a2b9731929dae586bda841a4a926fdc04f457',
-        'com.github.bisq-network.tor-binary:tor-binary-geoip:cfefbf2d8591b5dd321ec17a02a3682d21763cf50525fa5496c9ec8968413c4e',
-        'com.github.bisq-network.tor-binary:tor-binary-linux32:b82b6595f78ef52a44e58000fe5d7f679681739451872f5bbd123e5dbd2af050',
-        'com.github.bisq-network.tor-binary:tor-binary-linux64:d5c1d54b2c2323ac1124435be633c7822a28e6fe9160486d03102cc2b444df24',
-        'com.github.bisq-network.tor-binary:tor-binary-macos:6216d66241e020fec1a55648d7176ef64959e094c493df8f49e7e8e8f62fe1e1',
-        'com.github.bisq-network.tor-binary:tor-binary-windows:28a1031d7610863f774eedbd00b83b06b132781c31077b805033299de3e3a263',
+        'com.github.bisq-network.netlayer:tor.external:45daf9b30f753c49b62cf56226539e824886ce1ff430e03dbef1bddff919cbfc',
+        'com.github.bisq-network.netlayer:tor.native:ebb37e76fa14461be1ab2750daa3f8e5b78c8ff0d2adb72832ca0d38a1fb8f0d',
+        'com.github.bisq-network.netlayer:tor:48b097d756bf1221a2fe7f9bfd4ec6c505719502997d87cc18d912d4323e59d3',
+        'com.github.bisq-network.tor-binary:tor-binary-geoip:5a55df3a5bed0aa57165e9bae9ecda8b14d5e85b97dd1a266fa77602fbdaec54',
+        'com.github.bisq-network.tor-binary:tor-binary-linux32:fe8b0ddb1c109b453adf9b055e067be04b6ca4cda9d2b33c875b99d2092f0eae',
+        'com.github.bisq-network.tor-binary:tor-binary-linux64:7f58d31dd684b2e361e2980ba23922cadd5d9d8f8dbab9b3a2c6737741b21f7e',
+        'com.github.bisq-network.tor-binary:tor-binary-macos:a23802ff66d4ac01366ebe712879e2f51df960572dc34db269588da87453a70d',
+        'com.github.bisq-network.tor-binary:tor-binary-windows:8e0dee7429228aa0c9f7a36f40f303a016ed8dfb40fea77382f7076c13fc27f1',
         'com.github.bisq-network:bitcoinj:59e4d2370fcbfe38f9f3f01f0830f4b5c0448cd27c867ea4eb23457a79d83c0b',
         'com.github.bisq-network:jsonrpc4j:842b4a660440ef53cd436da2e21c3e1fed939b620a3fc7542307deb3e77fdeb6',
         'com.github.ravn:jsocks:3c71600af027b2b6d4244e4ad14d98ff2352a379410daebefff5d8cd48d742a4',

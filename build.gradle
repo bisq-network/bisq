@@ -67,7 +67,7 @@ configure(subprojects) {
         loggingVersion = '1.2'
         lombokVersion = '1.18.12'
         mockitoVersion = '3.5.15'
-        netlayerVersion = '8db4a13' // Commit ID from https://github.com/bisq-network/netlayer/commits/externaltor
+        netlayerVersion = '0.7.2' // Tag from https://github.com/bisq-network/netlayer/tags based on externaltor branch
         protobufVersion = '3.10.0'
         protocVersion = protobufVersion
         pushyVersion = '0.13.2'
