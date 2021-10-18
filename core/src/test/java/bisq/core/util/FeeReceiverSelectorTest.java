@@ -17,8 +17,6 @@
 
 package bisq.core.util;
 
-import bisq.core.dao.DaoFacade;
-import bisq.core.dao.governance.param.Param;
 import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
 
@@ -43,8 +41,6 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class FeeReceiverSelectorTest {
     @Mock
-    private DaoFacade daoFacade;
-    @Mock
     private FilterManager filterManager;
 
     @Test
@@ -55,7 +51,7 @@ public class FeeReceiverSelectorTest {
 
         Map<String, Integer> selectionCounts = new HashMap<>();
         for (int i = 0; i < 400; i++) {
-            String address = FeeReceiverSelector.getAddress(daoFacade, filterManager, rnd);
+            String address = FeeReceiverSelector.getAddress(filterManager, rnd);
             selectionCounts.compute(address, (k, n) -> n != null ? n + 1 : 1);
         }
 
@@ -69,34 +65,26 @@ public class FeeReceiverSelectorTest {
 
     @Test
     public void testGetAddress_noValidReceivers_nullFilter() {
-        when(daoFacade.getParamValue(Param.RECIPIENT_BTC_ADDRESS)).thenReturn("default");
-
         when(filterManager.getFilter()).thenReturn(null);
-        assertEquals("default", FeeReceiverSelector.getAddress(daoFacade, filterManager));
+        assertEquals(FeeReceiverSelector.getMostRecentAddress(), FeeReceiverSelector.getAddress(filterManager));
     }
 
     @Test
     public void testGetAddress_noValidReceivers_filterWithNullList() {
-        when(daoFacade.getParamValue(Param.RECIPIENT_BTC_ADDRESS)).thenReturn("default");
-
         when(filterManager.getFilter()).thenReturn(filterWithReceivers(null));
-        assertEquals("default", FeeReceiverSelector.getAddress(daoFacade, filterManager));
+        assertEquals(FeeReceiverSelector.getMostRecentAddress(), FeeReceiverSelector.getAddress(filterManager));
     }
 
     @Test
     public void testGetAddress_noValidReceivers_filterWithEmptyList() {
-        when(daoFacade.getParamValue(Param.RECIPIENT_BTC_ADDRESS)).thenReturn("default");
-
         when(filterManager.getFilter()).thenReturn(filterWithReceivers(List.of()));
-        assertEquals("default", FeeReceiverSelector.getAddress(daoFacade, filterManager));
+        assertEquals(FeeReceiverSelector.getMostRecentAddress(), FeeReceiverSelector.getAddress(filterManager));
     }
 
     @Test
     public void testGetAddress_noValidReceivers_filterWithIllFormedList() {
-        when(daoFacade.getParamValue(Param.RECIPIENT_BTC_ADDRESS)).thenReturn("default");
-
         when(filterManager.getFilter()).thenReturn(filterWithReceivers(List.of("ill-formed")));
-        assertEquals("default", FeeReceiverSelector.getAddress(daoFacade, filterManager));
+        assertEquals(FeeReceiverSelector.getMostRecentAddress(), FeeReceiverSelector.getAddress(filterManager));
     }
 
     @Test
