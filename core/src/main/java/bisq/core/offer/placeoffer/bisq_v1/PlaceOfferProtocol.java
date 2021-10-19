@@ -15,12 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.offer.placeoffer;
+package bisq.core.offer.placeoffer.bisq_v1;
 
-import bisq.core.offer.placeoffer.tasks.AddToOfferBook;
-import bisq.core.offer.placeoffer.tasks.CheckNumberOfUnconfirmedTransactions;
-import bisq.core.offer.placeoffer.tasks.CreateMakerFeeTx;
-import bisq.core.offer.placeoffer.tasks.ValidateOffer;
+import bisq.core.offer.placeoffer.bisq_v1.tasks.AddToOfferBook;
+import bisq.core.offer.placeoffer.bisq_v1.tasks.CheckNumberOfUnconfirmedTransactions;
+import bisq.core.offer.placeoffer.bisq_v1.tasks.CreateMakerFeeTx;
+import bisq.core.offer.placeoffer.bisq_v1.tasks.ValidateOffer;
 import bisq.core.trade.handlers.TransactionResultHandler;
 
 import bisq.common.handlers.ErrorMessageHandler;
