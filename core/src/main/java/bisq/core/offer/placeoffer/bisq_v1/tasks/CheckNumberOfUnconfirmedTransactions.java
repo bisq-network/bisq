@@ -1,7 +1,7 @@
-package bisq.core.offer.placeoffer.tasks;
+package bisq.core.offer.placeoffer.bisq_v1.tasks;
 
 import bisq.core.locale.Res;
-import bisq.core.offer.placeoffer.PlaceOfferModel;
+import bisq.core.offer.placeoffer.bisq_v1.PlaceOfferModel;
 
 import bisq.common.taskrunner.Task;
 import bisq.common.taskrunner.TaskRunner;
