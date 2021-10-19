@@ -22,7 +22,7 @@ import bisq.desktop.main.market.trades.charts.CandleData;
 
 import bisq.core.locale.FiatCurrency;
 import bisq.core.monetary.Price;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatistics3;

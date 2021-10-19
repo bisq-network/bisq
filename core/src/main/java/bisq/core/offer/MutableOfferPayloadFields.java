@@ -17,6 +17,8 @@
 
 package bisq.core.offer;
 
+import bisq.core.offer.bisq_v1.OfferPayload;
+
 import java.util.List;
 import java.util.Map;
 
