@@ -37,6 +37,7 @@ import bisq.core.trade.TradeManager;
 import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.model.MakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.bisq_v1.TradingPeer;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.User;

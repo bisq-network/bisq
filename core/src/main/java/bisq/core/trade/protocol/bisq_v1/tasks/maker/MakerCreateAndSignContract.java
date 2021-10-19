@@ -23,7 +23,7 @@ import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.ProcessModel;
-import bisq.core.trade.protocol.TradingPeer;
+import bisq.core.trade.protocol.bisq_v1.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 
 import bisq.network.p2p.NodeAddress;
