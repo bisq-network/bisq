@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade;
+package bisq.core.trade.bisq_v1;
 
 public class TradeTxException extends Exception {
     public TradeTxException(String message) {
