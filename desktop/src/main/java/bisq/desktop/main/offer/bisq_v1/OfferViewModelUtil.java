@@ -32,6 +32,7 @@ import org.bitcoinj.core.Coin;
 
 import java.util.Optional;
 
+// Shared utils for ViewModels
 public class OfferViewModelUtil {
     public static String getTradeFeeWithFiatEquivalent(OfferUtil offerUtil,
                                                        Coin tradeFee,
@@ -66,8 +67,8 @@ public class OfferViewModelUtil {
                         " " + Res.get("guiUtil.ofTradeAmount");
             }
             return offerUtil.getFeeInUserFiatCurrency(tradeFee,
-                            isCurrencyForMakerFeeBtc,
-                            formatter)
+                    isCurrencyForMakerFeeBtc,
+                    formatter)
                     .map(VolumeUtil::formatAverageVolumeWithCode)
                     .map(feeInFiat -> Res.get("feeOptionWindow.btcFeeWithFiatAndPercentage", feeAsBtc, feeInFiat, percentage))
                     .orElseGet(() -> Res.get("feeOptionWindow.btcFeeWithPercentage", feeAsBtc, percentage));

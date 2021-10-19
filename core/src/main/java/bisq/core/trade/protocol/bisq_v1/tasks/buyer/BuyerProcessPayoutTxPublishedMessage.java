@@ -44,7 +44,6 @@ public class BuyerProcessPayoutTxPublishedMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            log.debug("current trade state " + trade.getState());
             PayoutTxPublishedMessage message = (PayoutTxPublishedMessage) processModel.getTradeMessage();
             Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);

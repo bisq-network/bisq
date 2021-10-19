@@ -55,11 +55,11 @@ public class TxFeeEstimationService {
 //  segwit deposit tx with change vsize = 263
 //  segwit payout tx vsize = 169
 //  segwit delayed payout tx vsize = 139
-    public static int TYPICAL_TX_WITH_1_INPUT_VSIZE = 175;
-    private static int DEPOSIT_TX_VSIZE = 233;
+public static final int TYPICAL_TX_WITH_1_INPUT_VSIZE = 175;
+    private static final int DEPOSIT_TX_VSIZE = 233;
 
-    private static int BSQ_INPUT_INCREASE = 70;
-    private static int MAX_ITERATIONS = 10;
+    private static final int BSQ_INPUT_INCREASE = 70;
+    private static final int MAX_ITERATIONS = 10;
 
     private final FeeService feeService;
     private final BtcWalletService btcWalletService;

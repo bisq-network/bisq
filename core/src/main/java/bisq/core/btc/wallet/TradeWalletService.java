@@ -1077,14 +1077,14 @@ public class TradeWalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Tuple2<String, String> emergencyBuildPayoutTxFrom2of2MultiSig(String depositTxHex,
-                                            Coin buyerPayoutAmount,
-                                            Coin sellerPayoutAmount,
-                                            Coin txFee,
-                                            String buyerAddressString,
-                                            String sellerAddressString,
-                                            String buyerPubKeyAsHex,
-                                            String sellerPubKeyAsHex,
-                                            boolean hashedMultiSigOutputIsLegacy) {
+                                                                         Coin buyerPayoutAmount,
+                                                                         Coin sellerPayoutAmount,
+                                                                         Coin txFee,
+                                                                         String buyerAddressString,
+                                                                         String sellerAddressString,
+                                                                         String buyerPubKeyAsHex,
+                                                                         String sellerPubKeyAsHex,
+                                                                         boolean hashedMultiSigOutputIsLegacy) {
         byte[] buyerPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(buyerPubKeyAsHex)).getPubKey();
         byte[] sellerPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(sellerPubKeyAsHex)).getPubKey();
         Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
@@ -1105,7 +1105,10 @@ public class TradeWalletService {
         return new Tuple2<>(redeemScriptHex, unsignedTxHex);
     }
 
-    public String emergencyGenerateSignature(String rawTxHex, String redeemScriptHex, Coin inputValue, String myPrivKeyAsHex)
+    public String emergencyGenerateSignature(String rawTxHex,
+                                             String redeemScriptHex,
+                                             Coin inputValue,
+                                             String myPrivKeyAsHex)
             throws IllegalArgumentException {
         boolean hashedMultiSigOutputIsLegacy = true;
         if (rawTxHex.startsWith("010000000001"))
@@ -1129,10 +1132,10 @@ public class TradeWalletService {
     }
 
     public Tuple2<String, String> emergencyApplySignatureToPayoutTxFrom2of2MultiSig(String unsignedTxHex,
-                                        String redeemScriptHex,
-                                        String buyerSignatureAsHex,
-                                        String sellerSignatureAsHex,
-                                        boolean hashedMultiSigOutputIsLegacy)
+                                                                                    String redeemScriptHex,
+                                                                                    String buyerSignatureAsHex,
+                                                                                    String sellerSignatureAsHex,
+                                                                                    boolean hashedMultiSigOutputIsLegacy)
             throws AddressFormatException, SignatureDecodeException {
         Transaction payoutTx = new Transaction(params, Utils.HEX.decode(unsignedTxHex));
         TransactionSignature buyerTxSig = TransactionSignature.decodeFromBitcoin(Utils.HEX.decode(buyerSignatureAsHex), true, true);
