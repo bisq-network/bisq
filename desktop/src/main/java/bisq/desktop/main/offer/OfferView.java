@@ -22,7 +22,7 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
-import bisq.desktop.main.offer.createoffer.CreateOfferView;
+import bisq.desktop.main.offer.bisq_v1.createoffer.CreateOfferView;
 import bisq.desktop.main.offer.offerbook.OfferBookView;
 import bisq.desktop.main.offer.takeoffer.TakeOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
