@@ -52,9 +52,9 @@ import bisq.core.trade.TradeManager;
 import bisq.core.trade.model.bisq_v1.BuyerTrade;
 import bisq.core.trade.model.bisq_v1.SellerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
-import bisq.core.trade.protocol.BuyerProtocol;
-import bisq.core.trade.protocol.DisputeProtocol;
-import bisq.core.trade.protocol.SellerProtocol;
+import bisq.core.trade.protocol.bisq_v1.BuyerProtocol;
+import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
+import bisq.core.trade.protocol.bisq_v1.SellerProtocol;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 

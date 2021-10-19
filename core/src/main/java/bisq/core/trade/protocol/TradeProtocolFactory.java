@@ -22,6 +22,10 @@ import bisq.core.trade.model.bisq_v1.BuyerAsTakerTrade;
 import bisq.core.trade.model.bisq_v1.SellerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.SellerAsTakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.bisq_v1.BuyerAsMakerProtocol;
+import bisq.core.trade.protocol.bisq_v1.BuyerAsTakerProtocol;
+import bisq.core.trade.protocol.bisq_v1.SellerAsMakerProtocol;
+import bisq.core.trade.protocol.bisq_v1.SellerAsTakerProtocol;
 
 public class TradeProtocolFactory {
     public static TradeProtocol getNewTradeProtocol(Trade trade) {

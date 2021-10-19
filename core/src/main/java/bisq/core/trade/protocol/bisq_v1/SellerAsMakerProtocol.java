@@ -15,29 +15,31 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol;
+package bisq.core.trade.protocol.bisq_v1;
 
-import bisq.core.trade.messages.DelayedPayoutTxSignatureRequest;
-import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
+
+import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
+import bisq.core.trade.messages.DelayedPayoutTxSignatureResponse;
+import bisq.core.trade.messages.DepositTxMessage;
 import bisq.core.trade.messages.InputsForDepositTxRequest;
-import bisq.core.trade.messages.PayoutTxPublishedMessage;
-import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
+import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.model.bisq_v1.SellerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.TradeTask;
-import bisq.core.trade.protocol.tasks.buyer.BuyerFinalizesDelayedPayoutTx;
-import bisq.core.trade.protocol.tasks.buyer.BuyerProcessDelayedPayoutTxSignatureRequest;
-import bisq.core.trade.protocol.tasks.buyer.BuyerSendsDelayedPayoutTxSignatureResponse;
-import bisq.core.trade.protocol.tasks.buyer.BuyerSetupDepositTxListener;
-import bisq.core.trade.protocol.tasks.buyer.BuyerSignsDelayedPayoutTx;
-import bisq.core.trade.protocol.tasks.buyer.BuyerVerifiesPreparedDelayedPayoutTx;
-import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerCreatesAndSignsDepositTx;
-import bisq.core.trade.protocol.tasks.buyer_as_maker.BuyerAsMakerSendsInputsForDepositTxResponse;
 import bisq.core.trade.protocol.tasks.maker.MakerCreateAndSignContract;
 import bisq.core.trade.protocol.tasks.maker.MakerProcessesInputsForDepositTxRequest;
 import bisq.core.trade.protocol.tasks.maker.MakerRemovesOpenOffer;
 import bisq.core.trade.protocol.tasks.maker.MakerSetsLockTime;
 import bisq.core.trade.protocol.tasks.maker.MakerVerifyTakerFeePayment;
+import bisq.core.trade.protocol.tasks.seller.SellerCreatesDelayedPayoutTx;
+import bisq.core.trade.protocol.tasks.seller.SellerSendDelayedPayoutTxSignatureRequest;
+import bisq.core.trade.protocol.tasks.seller.SellerSignsDelayedPayoutTx;
+import bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerCreatesUnsignedDepositTx;
+import bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerFinalizesDepositTx;
+import bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerProcessDepositTxMessage;
+import bisq.core.trade.protocol.tasks.seller_as_maker.SellerAsMakerSendsInputsForDepositTxResponse;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -47,13 +49,13 @@ import bisq.common.handlers.ResultHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BuyerAsMakerProtocol extends BuyerProtocol implements MakerProtocol {
+public class SellerAsMakerProtocol extends SellerProtocol implements MakerProtocol {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BuyerAsMakerProtocol(BuyerAsMakerTrade trade) {
+    public SellerAsMakerProtocol(SellerAsMakerTrade trade) {
         super(trade);
     }
 
@@ -75,10 +77,9 @@ public class BuyerAsMakerProtocol extends BuyerProtocol implements MakerProtocol
                         getVerifyPeersFeePaymentClass(),
                         MakerSetsLockTime.class,
                         MakerCreateAndSignContract.class,
-                        BuyerAsMakerCreatesAndSignsDepositTx.class,
-                        BuyerSetupDepositTxListener.class,
-                        BuyerAsMakerSendsInputsForDepositTxResponse.class).
-                        using(new TradeTaskRunner(trade,
+                        SellerAsMakerCreatesUnsignedDepositTx.class,
+                        SellerAsMakerSendsInputsForDepositTxResponse.class)
+                        .using(new TradeTaskRunner(trade,
                                 () -> handleTaskRunnerSuccess(message),
                                 errorMessage -> {
                                     errorMessageHandler.handleErrorMessage(errorMessage);
@@ -93,24 +94,35 @@ public class BuyerAsMakerProtocol extends BuyerProtocol implements MakerProtocol
     // Incoming messages Take offer process
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void handle(DelayedPayoutTxSignatureRequest message, NodeAddress peer) {
+    protected void handle(DepositTxMessage message, NodeAddress peer) {
         expect(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
                 .with(message)
                 .from(peer))
                 .setup(tasks(
                         MakerRemovesOpenOffer.class,
-                        BuyerProcessDelayedPayoutTxSignatureRequest.class,
-                        BuyerVerifiesPreparedDelayedPayoutTx.class,
-                        BuyerSignsDelayedPayoutTx.class,
-                        BuyerFinalizesDelayedPayoutTx.class,
-                        BuyerSendsDelayedPayoutTxSignatureResponse.class)
+                        SellerAsMakerProcessDepositTxMessage.class,
+                        SellerAsMakerFinalizesDepositTx.class,
+                        SellerCreatesDelayedPayoutTx.class,
+                        SellerSignsDelayedPayoutTx.class,
+                        SellerSendDelayedPayoutTxSignatureRequest.class)
                         .withTimeout(60))
                 .executeTasks();
     }
 
     // We keep the handler here in as well to make it more transparent which messages we expect
     @Override
-    protected void handle(DepositTxAndDelayedPayoutTxMessage message, NodeAddress peer) {
+    protected void handle(DelayedPayoutTxSignatureResponse message, NodeAddress peer) {
+        super.handle(message, peer);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Incoming message when buyer has clicked payment started button
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // We keep the handler here in as well to make it more transparent which messages we expect
+    @Override
+    protected void handle(CounterCurrencyTransferStartedMessage message, NodeAddress peer) {
         super.handle(message, peer);
     }
 
@@ -121,21 +133,26 @@ public class BuyerAsMakerProtocol extends BuyerProtocol implements MakerProtocol
 
     // We keep the handler here in as well to make it more transparent which events we expect
     @Override
-    public void onPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        super.onPaymentStarted(resultHandler, errorMessageHandler);
+    public void onPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        super.onPaymentReceived(resultHandler, errorMessageHandler);
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Incoming message Payout tx
+    // Massage dispatcher
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // We keep the handler here in as well to make it more transparent which messages we expect
     @Override
-    protected void handle(PayoutTxPublishedMessage message, NodeAddress peer) {
-        super.handle(message, peer);
-    }
+    protected void onTradeMessage(TradeMessage message, NodeAddress peer) {
+        super.onTradeMessage(message, peer);
 
+        log.info("Received {} from {} with tradeId {} and uid {}",
+                message.getClass().getSimpleName(), peer, message.getTradeId(), message.getUid());
+
+        if (message instanceof DepositTxMessage) {
+            handle((DepositTxMessage) message, peer);
+        }
+    }
 
     @Override
     protected Class<? extends TradeTask> getVerifyPeersFeePaymentClass() {
