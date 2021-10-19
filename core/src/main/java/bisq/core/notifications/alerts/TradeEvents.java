@@ -21,8 +21,8 @@ import bisq.core.locale.Res;
 import bisq.core.notifications.MobileMessage;
 import bisq.core.notifications.MobileMessageType;
 import bisq.core.notifications.MobileNotificationService;
-import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;

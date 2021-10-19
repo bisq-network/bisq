@@ -30,10 +30,10 @@ import bisq.core.locale.Res;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.MakerTrade;
-import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.model.bisq_v1.BuyerTrade;
 import bisq.core.trade.model.bisq_v1.SellerTrade;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 

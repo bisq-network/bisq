@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade;
+package bisq.core.trade.model.bisq_v1;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.CurrencyUtil;
@@ -28,7 +28,7 @@ import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.support.dispute.refund.RefundResultState;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.Tradable;
 import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.ProcessModelServiceProvider;
 import bisq.core.trade.txproof.AssetTxProofResult;
