@@ -23,7 +23,7 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.PriceUtil;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.deposit.DepositView;
-import bisq.desktop.main.offer.FeeUtil;
+import bisq.desktop.main.offer.OfferViewModelUtil;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
@@ -513,11 +513,11 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
         isTradeFeeVisible.setValue(true);
         tradeFee.set(getFormatterForMakerFee().formatCoin(makerFeeAsCoin));
-        tradeFeeInBtcWithFiat.set(FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+        tradeFeeInBtcWithFiat.set(OfferViewModelUtil.getTradeFeeWithFiatEquivalent(offerUtil,
                 dataModel.getMakerFeeInBtc(),
                 true,
                 btcFormatter));
-        tradeFeeInBsqWithFiat.set(FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+        tradeFeeInBsqWithFiat.set(OfferViewModelUtil.getTradeFeeWithFiatEquivalent(offerUtil,
                 dataModel.getMakerFeeInBsq(),
                 false,
                 bsqFormatter));
@@ -992,7 +992,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     }
 
     public String getTradeAmount() {
-        return FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+        return OfferViewModelUtil.getTradeFeeWithFiatEquivalent(offerUtil,
                 dataModel.getAmount().get(),
                 true,
                 btcFormatter);
@@ -1009,7 +1009,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     }
 
     public String getSecurityDepositInfo() {
-        return FeeUtil.getTradeFeeWithFiatEquivalentAndPercentage(offerUtil,
+        return OfferViewModelUtil.getTradeFeeWithFiatEquivalentAndPercentage(offerUtil,
                 dataModel.getSecurityDeposit(),
                 dataModel.getAmount().get(),
                 true,
@@ -1025,7 +1025,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
     public String getTradeFee() {
         if (dataModel.isCurrencyForMakerFeeBtc()) {
-            return FeeUtil.getTradeFeeWithFiatEquivalentAndPercentage(offerUtil,
+            return OfferViewModelUtil.getTradeFeeWithFiatEquivalentAndPercentage(offerUtil,
                     dataModel.getMakerFeeInBtc(),
                     dataModel.getAmount().get(),
                     true,
@@ -1034,7 +1034,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         } else {
             // For BSQ we use the fiat equivalent only. Calculating the % value would require to
             // calculate the BTC value of the BSQ fee and use that...
-            return FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+            return OfferViewModelUtil.getTradeFeeWithFiatEquivalent(offerUtil,
                     dataModel.getMakerFeeInBsq(),
                     false,
                     bsqFormatter);
@@ -1051,12 +1051,12 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
     public String getTotalToPayInfo() {
         if (dataModel.isCurrencyForMakerFeeBtc()) {
-            return FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+            return OfferViewModelUtil.getTradeFeeWithFiatEquivalent(offerUtil,
                     dataModel.totalToPayAsCoin.get(),
                     true,
                     btcFormatter);
         } else {
-            return FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+            return OfferViewModelUtil.getTradeFeeWithFiatEquivalent(offerUtil,
                     dataModel.totalToPayAsCoin.get(),
                     true,
                     btcFormatter) + " + " + getTradeFee();
@@ -1076,7 +1076,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     }
 
     public String getTxFee() {
-        return FeeUtil.getTradeFeeWithFiatEquivalentAndPercentage(offerUtil,
+        return OfferViewModelUtil.getTradeFeeWithFiatEquivalentAndPercentage(offerUtil,
                 dataModel.getTxFee(),
                 dataModel.getAmount().get(),
                 true,
