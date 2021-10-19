@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.offer;
+package bisq.desktop.main.offer.bisq_v1;
 
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
