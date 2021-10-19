@@ -30,8 +30,8 @@ import bisq.core.support.dispute.arbitration.ArbitrationDisputeListService;
 import bisq.core.support.dispute.mediation.MediationDisputeListService;
 import bisq.core.support.dispute.refund.RefundDisputeListService;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.closed.ClosedTradableManager;
-import bisq.core.trade.failed.FailedTradesManager;
+import bisq.core.trade.bisq_v1.ClosedTradableManager;
+import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 

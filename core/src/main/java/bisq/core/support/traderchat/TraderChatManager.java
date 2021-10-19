@@ -24,8 +24,8 @@ import bisq.core.support.SupportType;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.messages.SupportMessage;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.closed.ClosedTradableManager;
-import bisq.core.trade.failed.FailedTradesManager;
+import bisq.core.trade.bisq_v1.ClosedTradableManager;
+import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.network.p2p.AckMessageSourceType;

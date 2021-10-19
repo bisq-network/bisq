@@ -26,7 +26,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.trade.bisq_v1.ClosedTradableManager;
 import bisq.core.trade.closed.ClosedTradeUtil;
 import bisq.core.trade.model.Tradable;
 import bisq.core.user.Preferences;
