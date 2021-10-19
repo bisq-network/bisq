@@ -37,8 +37,8 @@ package bisq.core.trade.protocol.bisq_v1.tasks.seller;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
-import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
+import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 
 import bisq.common.crypto.Sig;

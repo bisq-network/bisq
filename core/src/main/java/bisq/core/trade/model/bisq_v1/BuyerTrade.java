@@ -19,7 +19,7 @@ package bisq.core.trade.model.bisq_v1;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
-import bisq.core.trade.protocol.ProcessModel;
+import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 
 import bisq.network.p2p.NodeAddress;
 

@@ -22,6 +22,7 @@ import bisq.core.trade.TradeManager;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
+import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.AckMessageSourceType;

@@ -18,7 +18,7 @@
 package bisq.core.trade.protocol.bisq_v1.tasks;
 
 import bisq.core.trade.model.bisq_v1.Trade;
-import bisq.core.trade.protocol.ProcessModel;
+import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 
 import bisq.common.taskrunner.Task;
 import bisq.common.taskrunner.TaskRunner;

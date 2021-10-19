@@ -29,8 +29,8 @@ import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.support.dispute.refund.RefundResultState;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.model.Tradable;
-import bisq.core.trade.protocol.ProcessModel;
 import bisq.core.trade.protocol.Provider;
+import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.util.VolumeUtil;
 
