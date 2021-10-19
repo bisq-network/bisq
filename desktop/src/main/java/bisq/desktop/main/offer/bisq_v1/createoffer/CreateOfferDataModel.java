@@ -22,7 +22,7 @@ see <http://www.gnu.org/licenses/>.
 package bisq.desktop.main.offer.bisq_v1.createoffer;
 
 import bisq.desktop.Navigation;
-import bisq.desktop.main.offer.MutableOfferDataModel;
+import bisq.desktop.main.offer.bisq_v1.MutableOfferDataModel;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;

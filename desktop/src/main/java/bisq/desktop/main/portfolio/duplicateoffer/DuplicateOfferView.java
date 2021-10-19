@@ -19,7 +19,7 @@ package bisq.desktop.main.portfolio.duplicateoffer;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.main.offer.MutableOfferView;
+import bisq.desktop.main.offer.bisq_v1.MutableOfferView;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 
 import bisq.core.locale.CurrencyUtil;

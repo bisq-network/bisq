@@ -19,7 +19,7 @@ package bisq.desktop.main.portfolio.editoffer;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.main.PriceUtil;
-import bisq.desktop.main.offer.MutableOfferViewModel;
+import bisq.desktop.main.offer.bisq_v1.MutableOfferViewModel;
 import bisq.desktop.util.validation.AltcoinValidator;
 import bisq.desktop.util.validation.BsqValidator;
 import bisq.desktop.util.validation.BtcValidator;

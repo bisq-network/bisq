@@ -19,7 +19,7 @@ package bisq.desktop.main.portfolio.editoffer;
 
 
 import bisq.desktop.Navigation;
-import bisq.desktop.main.offer.MutableOfferDataModel;
+import bisq.desktop.main.offer.bisq_v1.MutableOfferDataModel;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
