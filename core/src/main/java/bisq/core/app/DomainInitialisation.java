@@ -34,7 +34,7 @@ import bisq.core.notifications.alerts.TradeEvents;
 import bisq.core.notifications.alerts.market.MarketAlerts;
 import bisq.core.notifications.alerts.price.PriceAlert;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.offer.TriggerPriceService;
+import bisq.core.offer.bisq_v1.TriggerPriceService;
 import bisq.core.payment.AmazonGiftCardAccount;
 import bisq.core.payment.RevolutAccount;
 import bisq.core.payment.TradeLimits;

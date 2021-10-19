@@ -15,12 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.offer;
+package bisq.core.offer.bisq_v1;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
-import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.OpenOffer;
+import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.mempool.MempoolService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
