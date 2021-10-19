@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.portfolio.closedtrades;
 
-import bisq.core.trade.Tradable;
+import bisq.core.trade.model.Tradable;
 
 /**
  * We could remove that wrapper if it is not needed for additional UI only fields.
