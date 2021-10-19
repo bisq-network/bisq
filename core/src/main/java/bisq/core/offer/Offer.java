@@ -24,6 +24,7 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.offer.availability.OfferAvailabilityProtocol;
+import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.price.MarketPrice;
