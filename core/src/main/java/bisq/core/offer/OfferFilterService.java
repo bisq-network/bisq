@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class OfferFilter {
+public class OfferFilterService {
     private final User user;
     private final Preferences preferences;
     private final FilterManager filterManager;
@@ -52,10 +52,10 @@ public class OfferFilter {
     private final Map<String, Boolean> myInsufficientTradeLimitCache = new HashMap<>();
 
     @Inject
-    public OfferFilter(User user,
-                       Preferences preferences,
-                       FilterManager filterManager,
-                       AccountAgeWitnessService accountAgeWitnessService) {
+    public OfferFilterService(User user,
+                              Preferences preferences,
+                              FilterManager filterManager,
+                              AccountAgeWitnessService accountAgeWitnessService) {
         this.user = user;
         this.preferences = preferences;
         this.filterManager = filterManager;

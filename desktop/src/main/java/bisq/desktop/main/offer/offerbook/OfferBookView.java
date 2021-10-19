@@ -53,7 +53,7 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferFilter;
+import bisq.core.offer.OfferFilterService;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.PaymentAccount;
@@ -613,7 +613,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         }
     }
 
-    private void onShowInfo(Offer offer, OfferFilter.Result result) {
+    private void onShowInfo(Offer offer, OfferFilterService.Result result) {
         switch (result) {
             case VALID:
                 break;
@@ -1021,7 +1021,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                         return new TableCell<>() {
                             final ImageView iconView = new ImageView();
                             final AutoTooltipButton button = new AutoTooltipButton();
-                            OfferFilter.Result canTakeOfferResult = null;
+                            OfferFilterService.Result canTakeOfferResult = null;
 
                             {
                                 button.setGraphic(iconView);
@@ -1040,7 +1040,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     boolean myOffer = model.isMyOffer(offer);
 
                                     if (tableRow != null) {
-                                        canTakeOfferResult = model.offerFilter.canTakeOffer(offer, false);
+                                        canTakeOfferResult = model.offerFilterService.canTakeOffer(offer, false);
                                         tableRow.setOpacity(canTakeOfferResult.isValid() || myOffer ? 1 : 0.4);
 
                                         if (myOffer) {
@@ -1089,7 +1089,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
                                     if (!myOffer) {
                                         if (canTakeOfferResult == null) {
-                                            canTakeOfferResult = model.offerFilter.canTakeOffer(offer, false);
+                                            canTakeOfferResult = model.offerFilterService.canTakeOffer(offer, false);
                                         }
 
                                         if (!canTakeOfferResult.isValid()) {

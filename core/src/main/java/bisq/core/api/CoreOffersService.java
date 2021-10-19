@@ -21,7 +21,7 @@ import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
-import bisq.core.offer.OfferFilter;
+import bisq.core.offer.OfferFilterService;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
@@ -85,7 +85,7 @@ class CoreOffersService {
     private final CoreWalletsService coreWalletsService;
     private final CreateOfferService createOfferService;
     private final OfferBookService offerBookService;
-    private final OfferFilter offerFilter;
+    private final OfferFilterService offerFilterService;
     private final OpenOfferManager openOfferManager;
     private final OfferUtil offerUtil;
     private final PriceFeedService priceFeedService;
@@ -97,7 +97,7 @@ class CoreOffersService {
                              CoreWalletsService coreWalletsService,
                              CreateOfferService createOfferService,
                              OfferBookService offerBookService,
-                             OfferFilter offerFilter,
+                             OfferFilterService offerFilterService,
                              OpenOfferManager openOfferManager,
                              OfferUtil offerUtil,
                              PriceFeedService priceFeedService,
@@ -107,7 +107,7 @@ class CoreOffersService {
         this.coreWalletsService = coreWalletsService;
         this.createOfferService = createOfferService;
         this.offerBookService = offerBookService;
-        this.offerFilter = offerFilter;
+        this.offerFilterService = offerFilterService;
         this.openOfferManager = openOfferManager;
         this.offerUtil = offerUtil;
         this.priceFeedService = priceFeedService;
@@ -118,7 +118,7 @@ class CoreOffersService {
         return offerBookService.getOffers().stream()
                 .filter(o -> o.getId().equals(id))
                 .filter(o -> !o.isMyOffer(keyRing))
-                .filter(o -> offerFilter.canTakeOffer(o, coreContext.isApiUser()).isValid())
+                .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
                 .findAny().orElseThrow(() ->
                         new IllegalStateException(format("offer with id '%s' not found", id)));
     }
@@ -135,7 +135,7 @@ class CoreOffersService {
         return offerBookService.getOffers().stream()
                 .filter(o -> !o.isMyOffer(keyRing))
                 .filter(o -> offerMatchesDirectionAndCurrency(o, direction, currencyCode))
-                .filter(o -> offerFilter.canTakeOffer(o, coreContext.isApiUser()).isValid())
+                .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
                 .sorted(priceComparator(direction))
                 .collect(Collectors.toList());
     }
