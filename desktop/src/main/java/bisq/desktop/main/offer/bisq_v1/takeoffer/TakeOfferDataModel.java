@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.offer.takeoffer;
+package bisq.desktop.main.offer.bisq_v1.takeoffer;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.main.offer.OfferDataModel;
