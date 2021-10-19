@@ -40,7 +40,7 @@ import javax.inject.Inject;
 import lombok.Getter;
 
 @Getter
-public class ProcessModelServiceProvider {
+public class Provider {
     private final OpenOfferManager openOfferManager;
     private final P2PService p2PService;
     private final BtcWalletService btcWalletService;
@@ -58,21 +58,21 @@ public class ProcessModelServiceProvider {
     private final KeyRing keyRing;
 
     @Inject
-    public ProcessModelServiceProvider(OpenOfferManager openOfferManager,
-                                       P2PService p2PService,
-                                       BtcWalletService btcWalletService,
-                                       BsqWalletService bsqWalletService,
-                                       TradeWalletService tradeWalletService,
-                                       DaoFacade daoFacade,
-                                       ReferralIdService referralIdService,
-                                       User user,
-                                       FilterManager filterManager,
-                                       AccountAgeWitnessService accountAgeWitnessService,
-                                       TradeStatisticsManager tradeStatisticsManager,
-                                       ArbitratorManager arbitratorManager,
-                                       MediatorManager mediatorManager,
-                                       RefundAgentManager refundAgentManager,
-                                       KeyRing keyRing) {
+    public Provider(OpenOfferManager openOfferManager,
+                    P2PService p2PService,
+                    BtcWalletService btcWalletService,
+                    BsqWalletService bsqWalletService,
+                    TradeWalletService tradeWalletService,
+                    DaoFacade daoFacade,
+                    ReferralIdService referralIdService,
+                    User user,
+                    FilterManager filterManager,
+                    AccountAgeWitnessService accountAgeWitnessService,
+                    TradeStatisticsManager tradeStatisticsManager,
+                    ArbitratorManager arbitratorManager,
+                    MediatorManager mediatorManager,
+                    RefundAgentManager refundAgentManager,
+                    KeyRing keyRing) {
 
         this.openOfferManager = openOfferManager;
         this.p2PService = p2PService;

@@ -77,7 +77,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * This is the base model for the trade protocol. It is persisted with the trade (non transient fields).
- * It uses the {@link ProcessModelServiceProvider} for access to domain services.
+ * It uses the {@link Provider} for access to domain services.
  */
 
 @Getter
@@ -89,7 +89,7 @@ public class ProcessModel implements Model, PersistablePayload {
     }
 
     // Transient/Immutable (net set in constructor so they are not final, but at init)
-    transient private ProcessModelServiceProvider provider;
+    transient private Provider provider;
     transient private TradeManager tradeManager;
     transient private Offer offer;
 
@@ -181,7 +181,7 @@ public class ProcessModel implements Model, PersistablePayload {
         this.tradingPeer = tradingPeer != null ? tradingPeer : new TradingPeer();
     }
 
-    public void applyTransient(ProcessModelServiceProvider provider,
+    public void applyTransient(Provider provider,
                                TradeManager tradeManager,
                                Offer offer) {
         this.offer = offer;
