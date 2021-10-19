@@ -45,7 +45,7 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.mempool.MempoolService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.handlers.TradeResultHandler;
+import bisq.core.trade.bisq_v1.TradeResultHandler;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.VolumeUtil;
