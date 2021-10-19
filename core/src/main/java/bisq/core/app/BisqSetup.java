@@ -42,7 +42,7 @@ import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.TradeTxException;
+import bisq.core.trade.bisq_v1.TradeTxException;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
