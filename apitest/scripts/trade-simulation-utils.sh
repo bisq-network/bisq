@@ -458,7 +458,7 @@ delayconfirmpaymentreceived() {
 }
 
 # This is a large function that should be broken up if it ever makes sense to not treat a trade
-# execution simulation as an atomic operation.  But we are not testing api methods here, just
+# execution simulation as an bsq swap operation.  But we are not testing api methods here, just
 # demonstrating how to use them to get through the trade protocol.  It should work for any trade
 # between Bob & Alice, as long as Alice is maker, Bob is taker, and the offer to be taken is the
 # first displayed in Bob's getoffers command output.

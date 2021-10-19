@@ -100,7 +100,7 @@ class CoreTradesService {
             throw new IllegalArgumentException(format("payment account with id '%s' not found", paymentAccountId));
 
         var useSavingsWallet = true;
-        //noinspection ConstantConditions
+
         takeOfferModel.initModel(offer, paymentAccount, useSavingsWallet);
         log.info("Initiating take {} offer, {}",
                 offer.isBuyOffer() ? "buy" : "sell",
