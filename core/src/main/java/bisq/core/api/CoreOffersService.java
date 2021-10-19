@@ -19,7 +19,6 @@ package bisq.core.api;
 
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
-import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.MutableOfferPayloadFields;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
@@ -27,6 +26,7 @@ import bisq.core.offer.OfferFilter;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.offer.bisq_v1.CreateOfferService;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.price.PriceFeedService;
