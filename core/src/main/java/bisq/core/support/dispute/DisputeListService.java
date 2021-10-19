@@ -17,7 +17,7 @@
 
 package bisq.core.support.dispute;
 
-import bisq.core.trade.Contract;
+import bisq.core.trade.model.bisq_v1.Contract;
 
 import bisq.network.p2p.NodeAddress;
 

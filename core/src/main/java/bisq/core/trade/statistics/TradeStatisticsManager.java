@@ -21,8 +21,8 @@ import bisq.core.locale.CurrencyTuple;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.BuyerTrade;
 import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.BuyerTrade;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.P2PDataStorage;
