@@ -61,7 +61,7 @@ public class FluentProtocol {
         return this;
     }
 
-    protected FluentProtocol setup(Setup setup) {
+    public FluentProtocol setup(Setup setup) {
         this.setup = setup;
         return this;
     }
