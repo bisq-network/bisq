@@ -50,12 +50,12 @@ import lombok.extern.slf4j.Slf4j;
  * This class must not be injected as a singleton!
  */
 @Slf4j
-public class CleanupMailboxMessages {
+public class CleanupMailboxMessagesService {
     private final P2PService p2PService;
     private final MailboxMessageService mailboxMessageService;
 
     @Inject
-    public CleanupMailboxMessages(P2PService p2PService, MailboxMessageService mailboxMessageService) {
+    public CleanupMailboxMessagesService(P2PService p2PService, MailboxMessageService mailboxMessageService) {
         this.p2PService = p2PService;
         this.mailboxMessageService = mailboxMessageService;
     }

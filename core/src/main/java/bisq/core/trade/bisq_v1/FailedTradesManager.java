@@ -23,7 +23,7 @@ import bisq.core.offer.Offer;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.DumpDelayedPayoutTx;
 import bisq.core.trade.TradeUtil;
-import bisq.core.trade.closed.CleanupMailboxMessages;
+import bisq.core.trade.closed.CleanupMailboxMessagesService;
 import bisq.core.trade.model.TradableList;
 import bisq.core.trade.model.bisq_v1.Trade;
 
@@ -50,7 +50,7 @@ public class FailedTradesManager implements PersistedDataHost {
     private final KeyRing keyRing;
     private final PriceFeedService priceFeedService;
     private final BtcWalletService btcWalletService;
-    private final CleanupMailboxMessages cleanupMailboxMessages;
+    private final CleanupMailboxMessagesService cleanupMailboxMessagesService;
     private final PersistenceManager<TradableList<Trade>> persistenceManager;
     private final TradeUtil tradeUtil;
     private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
@@ -63,12 +63,12 @@ public class FailedTradesManager implements PersistedDataHost {
                                BtcWalletService btcWalletService,
                                PersistenceManager<TradableList<Trade>> persistenceManager,
                                TradeUtil tradeUtil,
-                               CleanupMailboxMessages cleanupMailboxMessages,
+                               CleanupMailboxMessagesService cleanupMailboxMessagesService,
                                DumpDelayedPayoutTx dumpDelayedPayoutTx) {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
         this.btcWalletService = btcWalletService;
-        this.cleanupMailboxMessages = cleanupMailboxMessages;
+        this.cleanupMailboxMessagesService = cleanupMailboxMessagesService;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
         this.persistenceManager = persistenceManager;
         this.tradeUtil = tradeUtil;
@@ -90,7 +90,7 @@ public class FailedTradesManager implements PersistedDataHost {
     }
 
     public void onAllServicesInitialized() {
-        cleanupMailboxMessages.handleTrades(failedTrades.getList());
+        cleanupMailboxMessagesService.handleTrades(failedTrades.getList());
     }
 
     public void add(Trade trade) {
