@@ -24,7 +24,7 @@ import bisq.core.offer.OfferUtil;
 import bisq.core.offer.bisq_v1.TakeOfferModel;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.TradeUtil;
-import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.trade.bisq_v1.ClosedTradableManager;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.BuyerProtocol;
