@@ -17,14 +17,14 @@
 
 package bisq.core.trade.protocol.bisq_v1;
 
-import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
-import bisq.core.trade.messages.DelayedPayoutTxSignatureResponse;
-import bisq.core.trade.messages.ShareBuyerPaymentAccountMessage;
-import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.model.bisq_v1.SellerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.FluentProtocol;
+import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.TradeTaskRunner;
+import bisq.core.trade.protocol.bisq_v1.messages.CounterCurrencyTransferStartedMessage;
+import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureResponse;
+import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.trade.protocol.bisq_v1.tasks.VerifyPeersAccountAgeWitness;
