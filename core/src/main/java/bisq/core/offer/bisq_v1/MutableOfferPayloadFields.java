@@ -15,9 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.offer;
-
-import bisq.core.offer.bisq_v1.OfferPayload;
+package bisq.core.offer.bisq_v1;
 
 import java.util.List;
 import java.util.Map;
