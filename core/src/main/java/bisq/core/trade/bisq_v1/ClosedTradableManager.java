@@ -20,7 +20,6 @@ package bisq.core.trade.bisq_v1;
 import bisq.core.offer.Offer;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.DumpDelayedPayoutTx;
-import bisq.core.trade.closed.CleanupMailboxMessagesService;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradableList;
 import bisq.core.trade.model.bisq_v1.Trade;
