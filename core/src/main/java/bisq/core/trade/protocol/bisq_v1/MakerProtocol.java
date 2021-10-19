@@ -18,7 +18,7 @@
 package bisq.core.trade.protocol.bisq_v1;
 
 
-import bisq.core.trade.messages.InputsForDepositTxRequest;
+import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 
 import bisq.network.p2p.NodeAddress;
 

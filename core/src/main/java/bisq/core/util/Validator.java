@@ -17,7 +17,7 @@
 
 package bisq.core.util;
 
-import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.protocol.TradeMessage;
 
 import org.bitcoinj.core.Coin;
 
