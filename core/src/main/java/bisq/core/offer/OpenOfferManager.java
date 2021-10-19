@@ -25,6 +25,7 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
+import bisq.core.offer.availability.AvailabilityResult;
 import bisq.core.offer.availability.DisputeAgentSelection;
 import bisq.core.offer.bisq_v1.CreateOfferService;
 import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
