@@ -22,8 +22,8 @@ import bisq.desktop.common.model.ActivatableDataModel;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.offer.TriggerPriceService;
 import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bisq_v1.TriggerPriceService;
 import bisq.core.provider.price.PriceFeedService;
 
 import bisq.common.handlers.ErrorMessageHandler;
