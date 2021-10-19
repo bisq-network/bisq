@@ -17,12 +17,12 @@
 
 package bisq.core.trade.protocol;
 
-import bisq.core.trade.SellerTrade;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.messages.DelayedPayoutTxSignatureResponse;
 import bisq.core.trade.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.model.bisq_v1.SellerTrade;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;

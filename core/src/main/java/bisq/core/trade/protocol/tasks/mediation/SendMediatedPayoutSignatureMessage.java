@@ -18,9 +18,9 @@
 package bisq.core.trade.protocol.tasks.mediation;
 
 import bisq.core.support.dispute.mediation.MediationResultState;
-import bisq.core.trade.Contract;
 import bisq.core.trade.Trade;
 import bisq.core.trade.messages.MediatedPayoutTxSignatureMessage;
+import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.protocol.tasks.TradeTask;
 
 import bisq.network.p2p.NodeAddress;

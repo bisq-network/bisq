@@ -20,6 +20,7 @@ package bisq.core.trade;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
+import bisq.core.trade.model.bisq_v1.Contract;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.util.Tuple2;

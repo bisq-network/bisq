@@ -40,9 +40,9 @@ import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.bisq_v1.OfferPayload;
-import bisq.core.trade.Contract;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;
