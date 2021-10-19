@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.offer.takeoffer;
+package bisq.core.offer.bisq_v1;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.model.AddressEntry;
