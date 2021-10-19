@@ -17,6 +17,8 @@
 
 package bisq.core.offer;
 
+import bisq.core.offer.bisq_v1.OfferPayload;
+
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.config.Config;

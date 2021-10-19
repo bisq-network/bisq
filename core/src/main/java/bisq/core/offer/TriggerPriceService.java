@@ -20,6 +20,7 @@ package bisq.core.offer;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
+import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.provider.mempool.MempoolService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
