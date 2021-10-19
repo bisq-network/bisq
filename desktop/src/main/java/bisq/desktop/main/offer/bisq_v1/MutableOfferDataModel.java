@@ -18,7 +18,6 @@
 package bisq.desktop.main.offer.bisq_v1;
 
 import bisq.desktop.Navigation;
-import bisq.desktop.main.offer.OfferDataModel;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 

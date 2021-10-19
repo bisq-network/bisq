@@ -18,7 +18,7 @@
 package bisq.desktop.main.offer.bisq_v1.takeoffer;
 
 import bisq.desktop.Navigation;
-import bisq.desktop.main.offer.OfferDataModel;
+import bisq.desktop.main.offer.bisq_v1.OfferDataModel;
 import bisq.desktop.main.offer.offerbook.OfferBook;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
