@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.offer;
+package bisq.core.offer.bisq_v1;
 
 public class MarketPriceNotAvailableException extends Exception {
     public MarketPriceNotAvailableException(@SuppressWarnings("SameParameterValue") String message) {
