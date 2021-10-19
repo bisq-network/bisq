@@ -43,7 +43,7 @@ import bisq.core.trade.model.bisq_v1.SellerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.SellerAsTakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.ProcessModel;
-import bisq.core.trade.protocol.ProcessModelServiceProvider;
+import bisq.core.trade.protocol.Provider;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.protocol.TradeProtocolFactory;
 import bisq.core.trade.protocol.bisq_v1.MakerProtocol;
@@ -134,7 +134,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     @Getter
     private final ArbitratorManager arbitratorManager;
     private final MediatorManager mediatorManager;
-    private final ProcessModelServiceProvider processModelServiceProvider;
+    private final Provider provider;
     private final ClockWatcher clockWatcher;
 
     private final Map<String, TradeProtocol> tradeProtocolByTradeId = new HashMap<>();
@@ -171,7 +171,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                         TradeUtil tradeUtil,
                         ArbitratorManager arbitratorManager,
                         MediatorManager mediatorManager,
-                        ProcessModelServiceProvider processModelServiceProvider,
+                        Provider provider,
                         ClockWatcher clockWatcher,
                         PersistenceManager<TradableList<Trade>> persistenceManager,
                         ReferralIdService referralIdService,
@@ -190,7 +190,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         this.tradeUtil = tradeUtil;
         this.arbitratorManager = arbitratorManager;
         this.mediatorManager = mediatorManager;
-        this.processModelServiceProvider = processModelServiceProvider;
+        this.provider = provider;
         this.clockWatcher = clockWatcher;
         this.referralIdService = referralIdService;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
@@ -367,8 +367,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     }
 
     private void initTradeAndProtocol(Trade trade, TradeProtocol tradeProtocol) {
-        tradeProtocol.initialize(processModelServiceProvider, this, trade.getOffer());
-        trade.initialize(processModelServiceProvider);
+        tradeProtocol.initialize(provider, this, trade.getOffer());
+        trade.initialize(provider);
         requestPersistence();
     }
 
@@ -471,8 +471,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
     private ProcessModel getNewProcessModel(Offer offer) {
         return new ProcessModel(checkNotNull(offer).getId(),
-                processModelServiceProvider.getUser().getAccountId(),
-                processModelServiceProvider.getKeyRing().getPubKeyRing());
+                provider.getUser().getAccountId(),
+                provider.getKeyRing().getPubKeyRing());
     }
 
     private OfferAvailabilityModel getOfferAvailabilityModel(Offer offer, boolean isTakerApiUser) {

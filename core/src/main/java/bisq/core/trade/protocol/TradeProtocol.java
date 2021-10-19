@@ -69,7 +69,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initialize(ProcessModelServiceProvider serviceProvider, TradeManager tradeManager, Offer offer) {
+    public void initialize(Provider serviceProvider, TradeManager tradeManager, Offer offer) {
         processModel.applyTransient(serviceProvider, tradeManager, offer);
         onInitialized();
     }
