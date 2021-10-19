@@ -25,17 +25,17 @@ import bisq.core.trade.model.bisq_v1.BuyerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.FluentProtocol;
 import bisq.core.trade.protocol.TradeTaskRunner;
-import bisq.core.trade.protocol.tasks.ApplyFilter;
-import bisq.core.trade.protocol.tasks.TradeTask;
-import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
-import bisq.core.trade.protocol.tasks.buyer.BuyerProcessDepositTxAndDelayedPayoutTxMessage;
-import bisq.core.trade.protocol.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
-import bisq.core.trade.protocol.tasks.buyer.BuyerSendCounterCurrencyTransferStartedMessage;
-import bisq.core.trade.protocol.tasks.buyer.BuyerSendsShareBuyerPaymentAccountMessage;
-import bisq.core.trade.protocol.tasks.buyer.BuyerSetupDepositTxListener;
-import bisq.core.trade.protocol.tasks.buyer.BuyerSetupPayoutTxListener;
-import bisq.core.trade.protocol.tasks.buyer.BuyerSignPayoutTx;
-import bisq.core.trade.protocol.tasks.buyer.BuyerVerifiesFinalDelayedPayoutTx;
+import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
+import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.protocol.bisq_v1.tasks.VerifyPeersAccountAgeWitness;
+import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerProcessDepositTxAndDelayedPayoutTxMessage;
+import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
+import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerSendCounterCurrencyTransferStartedMessage;
+import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerSendsShareBuyerPaymentAccountMessage;
+import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerSetupDepositTxListener;
+import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerSetupPayoutTxListener;
+import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerSignPayoutTx;
+import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerVerifiesFinalDelayedPayoutTx;
 
 import bisq.network.p2p.NodeAddress;
 
