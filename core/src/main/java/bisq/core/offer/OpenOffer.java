@@ -17,7 +17,7 @@
 
 package bisq.core.offer;
 
-import bisq.core.trade.Tradable;
+import bisq.core.trade.model.Tradable;
 
 import bisq.network.p2p.NodeAddress;
 

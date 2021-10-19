@@ -21,7 +21,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.OpenOffer;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.refund.RefundManager;
-import bisq.core.trade.Tradable;
+import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.common.crypto.PubKeyRing;

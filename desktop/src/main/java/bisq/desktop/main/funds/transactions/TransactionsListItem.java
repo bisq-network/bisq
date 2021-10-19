@@ -30,7 +30,7 @@ import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
-import bisq.core.trade.Tradable;
+import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.util.coin.CoinFormatter;
 
