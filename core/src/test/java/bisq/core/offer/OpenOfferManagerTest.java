@@ -2,7 +2,7 @@ package bisq.core.offer;
 
 import bisq.core.api.CoreContext;
 import bisq.core.offer.bisq_v1.OfferPayload;
-import bisq.core.trade.TradableList;
+import bisq.core.trade.model.TradableList;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.peers.PeerManager;
