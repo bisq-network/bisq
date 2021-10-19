@@ -23,7 +23,7 @@ import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.deposit.DepositView;
-import bisq.desktop.main.offer.FeeUtil;
+import bisq.desktop.main.offer.OfferViewModelUtil;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
@@ -288,11 +288,11 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
         isTradeFeeVisible.setValue(true);
         tradeFee.set(getFormatterForTakerFee().formatCoin(takerFeeAsCoin));
-        tradeFeeInBtcWithFiat.set(FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+        tradeFeeInBtcWithFiat.set(OfferViewModelUtil.getTradeFeeWithFiatEquivalent(offerUtil,
                 dataModel.getTakerFeeInBtc(),
                 true,
                 btcFormatter));
-        tradeFeeInBsqWithFiat.set(FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+        tradeFeeInBsqWithFiat.set(OfferViewModelUtil.getTradeFeeWithFiatEquivalent(offerUtil,
                 dataModel.getTakerFeeInBsq(),
                 false,
                 bsqFormatter));
@@ -685,14 +685,14 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     String getTradeAmount() {
-        return FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+        return OfferViewModelUtil.getTradeFeeWithFiatEquivalent(offerUtil,
                 dataModel.getAmount().get(),
                 true,
                 btcFormatter);
     }
 
     public String getSecurityDepositInfo() {
-        return FeeUtil.getTradeFeeWithFiatEquivalentAndPercentage(offerUtil,
+        return OfferViewModelUtil.getTradeFeeWithFiatEquivalentAndPercentage(offerUtil,
                 dataModel.getSecurityDeposit(),
                 dataModel.getAmount().get(),
                 true,
@@ -707,7 +707,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     public String getTradeFee() {
         if (dataModel.isCurrencyForTakerFeeBtc()) {
-            return FeeUtil.getTradeFeeWithFiatEquivalentAndPercentage(offerUtil,
+            return OfferViewModelUtil.getTradeFeeWithFiatEquivalentAndPercentage(offerUtil,
                     dataModel.getTakerFeeInBtc(),
                     dataModel.getAmount().get(),
                     true,
@@ -716,7 +716,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         } else {
             // For BSQ we use the fiat equivalent only. Calculating the % value would require to
             // calculate the BTC value of the BSQ fee and use that...
-            return FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+            return OfferViewModelUtil.getTradeFeeWithFiatEquivalent(offerUtil,
                     dataModel.getTakerFeeInBsq(),
                     false,
                     bsqFormatter);
@@ -733,12 +733,12 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     public String getTotalToPayInfo() {
         if (dataModel.isCurrencyForTakerFeeBtc()) {
-            return FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+            return OfferViewModelUtil.getTradeFeeWithFiatEquivalent(offerUtil,
                     dataModel.totalToPayAsCoin.get(),
                     true,
                     btcFormatter);
         } else {
-            return FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+            return OfferViewModelUtil.getTradeFeeWithFiatEquivalent(offerUtil,
                     dataModel.totalToPayAsCoin.get(),
                     true,
                     btcFormatter) + " + " + getTradeFee();
@@ -746,7 +746,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     public String getTxFee() {
-        return FeeUtil.getTradeFeeWithFiatEquivalentAndPercentage(offerUtil,
+        return OfferViewModelUtil.getTradeFeeWithFiatEquivalentAndPercentage(offerUtil,
                 dataModel.getTotalTxFee(),
                 dataModel.getAmount().get(),
                 true,

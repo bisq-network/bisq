@@ -32,7 +32,7 @@ import org.bitcoinj.core.Coin;
 
 import java.util.Optional;
 
-public class FeeUtil {
+public class OfferViewModelUtil {
     public static String getTradeFeeWithFiatEquivalent(OfferUtil offerUtil,
                                                        Coin tradeFee,
                                                        boolean isCurrencyForMakerFeeBtc,
@@ -74,7 +74,7 @@ public class FeeUtil {
         } else {
             // For BSQ we use the fiat equivalent only. Calculating the % value would be more effort.
             // We could calculate the BTC value if the BSQ fee and use that...
-            return FeeUtil.getTradeFeeWithFiatEquivalent(offerUtil,
+            return OfferViewModelUtil.getTradeFeeWithFiatEquivalent(offerUtil,
                     tradeFee,
                     false,
                     formatter);
