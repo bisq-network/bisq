@@ -848,7 +848,7 @@ public abstract class WalletService {
                     .filter(txConfidenceListener -> tx != null &&
                             tx.getTxId().toString() != null &&
                             txConfidenceListener != null &&
-                            tx.getTxId().toString().equals(txConfidenceListener.getTxID()))
+                            tx.getTxId().toString().equals(txConfidenceListener.getTxId()))
                     .forEach(txConfidenceListener ->
                             txConfidenceListener.onTransactionConfidenceChanged(tx.getConfidence()));
         }
