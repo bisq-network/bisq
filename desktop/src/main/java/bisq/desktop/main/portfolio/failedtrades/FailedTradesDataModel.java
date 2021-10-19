@@ -22,7 +22,7 @@ import bisq.desktop.common.model.ActivatableDataModel;
 import bisq.core.offer.Offer;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.failed.FailedTradesManager;
+import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.network.p2p.NodeAddress;
