@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.offer;
+package bisq.core.offer.availability;
 
 public enum AvailabilityResult {
     UNKNOWN_FAILURE("cannot take offer for unknown reason"),

@@ -18,7 +18,7 @@
 package bisq.core.offer.messages;
 
 
-import bisq.core.offer.AvailabilityResult;
+import bisq.core.offer.availability.AvailabilityResult;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SupportedCapabilitiesMessage;
