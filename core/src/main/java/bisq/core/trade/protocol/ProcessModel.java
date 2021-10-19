@@ -36,7 +36,7 @@ import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.model.MakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
-import bisq.core.trade.protocol.bisq_v1.TradingPeer;
+import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.User;
@@ -293,7 +293,7 @@ public class ProcessModel implements Model, PersistablePayload {
         return getP2PService().getAddress();
     }
 
-    void setPaymentStartedAckMessage(AckMessage ackMessage) {
+    public void setPaymentStartedAckMessage(AckMessage ackMessage) {
         MessageState messageState = ackMessage.isSuccess() ?
                 MessageState.ACKNOWLEDGED :
                 MessageState.FAILED;
@@ -307,7 +307,7 @@ public class ProcessModel implements Model, PersistablePayload {
         }
     }
 
-    void setDepositTxSentAckMessage(AckMessage ackMessage) {
+    public void setDepositTxSentAckMessage(AckMessage ackMessage) {
         MessageState messageState = ackMessage.isSuccess() ?
                 MessageState.ACKNOWLEDGED :
                 MessageState.FAILED;
