@@ -17,11 +17,11 @@
 
 package bisq.core.trade.protocol;
 
-import bisq.core.trade.Trade;
 import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.BuyerAsTakerTrade;
 import bisq.core.trade.model.bisq_v1.SellerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.SellerAsTakerTrade;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 public class TradeProtocolFactory {
     public static TradeProtocol getNewTradeProtocol(Trade trade) {

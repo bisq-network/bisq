@@ -22,7 +22,7 @@ import bisq.core.locale.Res;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.txproof.AssetTxProofRequestsPerTrade;
 import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.user.AutoConfirmSettings;

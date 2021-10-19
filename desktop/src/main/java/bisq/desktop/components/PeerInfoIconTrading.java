@@ -23,7 +23,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;
@@ -40,7 +40,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static bisq.desktop.util.Colors.*;
+import static bisq.desktop.util.Colors.AVATAR_BLUE;
+import static bisq.desktop.util.Colors.AVATAR_GREEN;
+import static bisq.desktop.util.Colors.AVATAR_ORANGE;
+import static bisq.desktop.util.Colors.AVATAR_RED;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j

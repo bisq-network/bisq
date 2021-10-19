@@ -21,7 +21,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.TitledGroupBg;
 
 import bisq.core.locale.Res;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
