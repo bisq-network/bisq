@@ -23,7 +23,7 @@ import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.monetary.Volume;
-import bisq.core.trade.closed.ClosedTradeUtil;
+import bisq.core.trade.bisq_v1.ClosedTradeUtil;
 import bisq.core.trade.model.Tradable;
 
 import org.bitcoinj.core.Coin;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.closed;
+package bisq.core.trade.bisq_v1;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.locale.CurrencyUtil;
@@ -25,7 +25,6 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
-import bisq.core.trade.bisq_v1.ClosedTradableManager;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.statistics.TradeStatisticsManager;
