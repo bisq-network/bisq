@@ -26,6 +26,7 @@ import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.availability.DisputeAgentSelection;
+import bisq.core.offer.bisq_v1.CreateOfferService;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.offer.messages.OfferAvailabilityRequest;
 import bisq.core.offer.messages.OfferAvailabilityResponse;

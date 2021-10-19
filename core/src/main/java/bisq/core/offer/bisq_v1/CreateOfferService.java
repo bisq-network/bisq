@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.offer;
+package bisq.core.offer.bisq_v1;
 
 import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -23,7 +23,8 @@ import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
-import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.provider.price.MarketPrice;
