@@ -21,7 +21,7 @@ import bisq.core.offer.placeoffer.bisq_v1.tasks.AddToOfferBook;
 import bisq.core.offer.placeoffer.bisq_v1.tasks.CheckNumberOfUnconfirmedTransactions;
 import bisq.core.offer.placeoffer.bisq_v1.tasks.CreateMakerFeeTx;
 import bisq.core.offer.placeoffer.bisq_v1.tasks.ValidateOffer;
-import bisq.core.trade.handlers.TransactionResultHandler;
+import bisq.core.trade.bisq_v1.TransactionResultHandler;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.taskrunner.TaskRunner;
