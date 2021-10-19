@@ -19,7 +19,7 @@ package bisq.monitor.metric;
 
 import bisq.monitor.Reporter;
 
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferPayload;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;

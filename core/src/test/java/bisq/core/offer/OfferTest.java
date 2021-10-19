@@ -17,6 +17,8 @@
 
 package bisq.core.offer;
 
+import bisq.core.offer.bisq_v1.OfferPayload;
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;

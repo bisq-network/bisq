@@ -19,6 +19,7 @@ package bisq.core.offer;
 
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
+import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.provider.price.PriceFeedService;
 
 import bisq.network.p2p.BootstrapListener;

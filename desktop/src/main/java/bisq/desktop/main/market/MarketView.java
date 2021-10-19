@@ -35,7 +35,7 @@ import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatistics3StorageService;
 import bisq.core.util.FormattingUtils;

@@ -21,7 +21,7 @@ import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CountryUtil;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.ChargeBackRisk;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
