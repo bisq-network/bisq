@@ -34,6 +34,7 @@ import bisq.core.trade.closed.ClosedTradableManager;
 import bisq.core.trade.failed.FailedTradesManager;
 import bisq.core.trade.handlers.TradeResultHandler;
 import bisq.core.trade.messages.InputsForDepositTxRequest;
+import bisq.core.trade.model.TradableList;
 import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.BuyerAsTakerTrade;
 import bisq.core.trade.model.bisq_v1.SellerAsMakerTrade;
