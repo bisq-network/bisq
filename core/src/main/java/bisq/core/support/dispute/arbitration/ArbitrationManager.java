@@ -40,9 +40,9 @@ import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.messages.SupportMessage;
-import bisq.core.trade.Tradable;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 

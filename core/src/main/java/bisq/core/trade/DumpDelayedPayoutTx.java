@@ -17,6 +17,7 @@
 
 package bisq.core.trade;
 
+import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.common.config.Config;
