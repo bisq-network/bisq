@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.offer;
+package bisq.desktop.main.offer.bisq_v1;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.common.model.ActivatableWithDataModel;
@@ -23,6 +23,7 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.PriceUtil;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.deposit.DepositView;
+import bisq.desktop.main.offer.FeeUtil;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
