@@ -37,7 +37,7 @@ import bisq.desktop.main.dao.wallet.receive.BsqReceiveView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.withdrawal.WithdrawalView;
 import bisq.desktop.main.offer.OfferView;
-import bisq.desktop.main.offer.OfferViewUtil;
+import bisq.desktop.main.offer.bisq_v1.OfferViewUtil;
 import bisq.desktop.main.overlays.notifications.Notification;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.GenericMessageWindow;
