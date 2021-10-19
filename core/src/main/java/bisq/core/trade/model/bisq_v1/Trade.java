@@ -30,7 +30,7 @@ import bisq.core.support.dispute.refund.RefundResultState;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.protocol.ProcessModel;
-import bisq.core.trade.protocol.ProcessModelServiceProvider;
+import bisq.core.trade.protocol.Provider;
 import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.util.VolumeUtil;
 
@@ -628,7 +628,7 @@ public abstract class Trade implements Tradable, Model {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initialize(ProcessModelServiceProvider serviceProvider) {
+    public void initialize(Provider serviceProvider) {
         serviceProvider.getArbitratorManager().getDisputeAgentByNodeAddress(arbitratorNodeAddress).ifPresent(arbitrator -> {
             arbitratorBtcPubKey = arbitrator.getBtcPubKey();
             arbitratorPubKeyRing = arbitrator.getPubKeyRing();
