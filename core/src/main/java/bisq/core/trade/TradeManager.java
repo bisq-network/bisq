@@ -32,7 +32,7 @@ import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.trade.bisq_v1.ClosedTradableManager;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
-import bisq.core.trade.handlers.TradeResultHandler;
+import bisq.core.trade.bisq_v1.TradeResultHandler;
 import bisq.core.trade.model.TradableList;
 import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.BuyerAsTakerTrade;

@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.handlers;
+package bisq.core.trade.bisq_v1;
 
-import bisq.core.trade.model.bisq_v1.Trade;
+import org.bitcoinj.core.Transaction;
 
-public interface TradeResultHandler {
-    void handleResult(Trade trade);
+public interface TransactionResultHandler {
+    void handleResult(Transaction transaction);
 }
