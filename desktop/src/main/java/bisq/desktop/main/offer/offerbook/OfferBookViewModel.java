@@ -38,7 +38,7 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferFilter;
+import bisq.core.offer.OfferFilterService;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.PaymentAccount;
@@ -106,7 +106,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
     private final PriceUtil priceUtil;
-    final OfferFilter offerFilter;
+    final OfferFilterService offerFilterService;
     private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
 
@@ -152,7 +152,7 @@ class OfferBookViewModel extends ActivatableViewModel {
                               AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
                               PriceUtil priceUtil,
-                              OfferFilter offerFilter,
+                              OfferFilterService offerFilterService,
                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                               BsqFormatter bsqFormatter) {
         super();
@@ -168,7 +168,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
         this.priceUtil = priceUtil;
-        this.offerFilter = offerFilter;
+        this.offerFilterService = offerFilterService;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
 
@@ -600,11 +600,11 @@ class OfferBookViewModel extends ActivatableViewModel {
         // This code duplicates code in the view at the button column. We need there the different results for
         // display in popups so we cannot replace that with the predicate. Any change need to be applied in both
         // places.
-        return offerBookListItem -> offerFilter.canTakeOffer(offerBookListItem.getOffer(), false).isValid();
+        return offerBookListItem -> offerFilterService.canTakeOffer(offerBookListItem.getOffer(), false).isValid();
     }
 
     boolean isOfferBanned(Offer offer) {
-        return offerFilter.isOfferBanned(offer);
+        return offerFilterService.isOfferBanned(offer);
     }
 
     private boolean isShowAllEntry(String id) {
