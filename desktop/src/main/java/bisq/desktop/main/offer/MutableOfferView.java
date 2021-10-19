@@ -361,14 +361,15 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         }
     }
 
-    private void showInsufficientBsqFundsForBtcFeePaymentPopup() {
+    private void showNoBsqFundsAvailableForBtcFeePaymentPopup() {
         Coin makerFee = model.getDataModel().getMakerFee(false);
         String message = null;
-        if (makerFee != null) {
+        if((daoFacade.getChainHeight() != bsqWalletService.getBestChainHeight()) || (bsqWalletService.getBestChainHeight() == 0))
+            message = Res.get("popup.warning.whileSynchronizingNoBsqFundsForBtcFeePayment");
+        else if (makerFee != null)
             message = Res.get("popup.warning.insufficientBsqFundsForBtcFeePayment",
                     bsqFormatter.formatCoinWithCode(makerFee.subtract(model.getDataModel().getUsableBsqBalance())));
-
-        } else if (model.getDataModel().getUsableBsqBalance().isZero())
+        else if (model.getDataModel().getUsableBsqBalance().isZero())
             message = Res.get("popup.warning.noBsqFundsForBtcFeePayment");
 
         if (message != null)
@@ -1132,13 +1133,13 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         if (!isPreferredFeeCurrencyBtc && !isBsqForFeeAvailable) {
             Coin makerFee = model.getDataModel().getMakerFee(false);
             String missingBsq = null;
-            if (makerFee != null) {
+            if((daoFacade.getChainHeight() != bsqWalletService.getBestChainHeight()) || (bsqWalletService.getBestChainHeight() == 0))
+                message = Res.get("popup.warning.whileSynchronizingNoBsqFundsForBtcFeePayment");
+            else if (makerFee != null)
                 missingBsq = Res.get("popup.warning.insufficientBsqFundsForBtcFeePayment",
                         bsqFormatter.formatCoinWithCode(makerFee.subtract(model.getDataModel().getUsableBsqBalance())));
-
-            } else if (model.getDataModel().getUsableBsqBalance().isZero()) {
+            else if (model.getDataModel().getUsableBsqBalance().isZero())
                 missingBsq = Res.get("popup.warning.noBsqFundsForBtcFeePayment");
-            }
 
             if (missingBsq != null) {
                 new Popup().warning(missingBsq)
