@@ -19,7 +19,7 @@ package bisq.core.trade.protocol.bisq_v1.tasks.seller;
 
 import bisq.core.trade.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.model.bisq_v1.Trade;
-import bisq.core.trade.protocol.TradingPeer;
+import bisq.core.trade.protocol.bisq_v1.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.util.Validator;
 

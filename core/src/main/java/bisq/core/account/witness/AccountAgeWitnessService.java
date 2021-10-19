@@ -35,7 +35,7 @@ import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.arbitration.TraderDataItem;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
-import bisq.core.trade.protocol.TradingPeer;
+import bisq.core.trade.protocol.bisq_v1.TradingPeer;
 import bisq.core.user.User;
 
 import bisq.network.p2p.BootstrapListener;
