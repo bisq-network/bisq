@@ -38,8 +38,8 @@ import bisq.core.dao.governance.bond.BondState;
 import bisq.core.dao.governance.bond.reputation.MyBondedReputation;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
-import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.ParsingUtils;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.validation.HexStringValidator;
 import bisq.core.util.validation.IntegerValidator;
 
