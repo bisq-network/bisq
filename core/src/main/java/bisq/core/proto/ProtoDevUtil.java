@@ -23,7 +23,7 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.offer.availability.AvailabilityResult;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.support.dispute.DisputeResult;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import lombok.extern.slf4j.Slf4j;
 

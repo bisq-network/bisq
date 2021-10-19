@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol.tasks.buyer;
 
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.tasks.SetupPayoutTxListener;
 
 import bisq.common.taskrunner.TaskRunner;

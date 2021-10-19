@@ -22,7 +22,7 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.payload.SwiftAccountPayload;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.util.VolumeUtil;
 
 import javafx.scene.control.Label;

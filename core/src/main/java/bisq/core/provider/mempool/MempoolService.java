@@ -21,7 +21,7 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.bisq_v1.OfferPayload;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.Preferences;
 
 import bisq.network.Socks5ProxyProvider;

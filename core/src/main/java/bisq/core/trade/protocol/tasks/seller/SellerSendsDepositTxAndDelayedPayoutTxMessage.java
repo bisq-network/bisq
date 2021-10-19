@@ -19,10 +19,10 @@ package bisq.core.trade.protocol.tasks.seller;
 
 import bisq.core.network.MessageState;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.trade.Trade;
 import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.messages.TradeMailboxMessage;
 import bisq.core.trade.messages.TradeMessage;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.tasks.SendMailboxMessageTask;
 
 import bisq.common.Timer;

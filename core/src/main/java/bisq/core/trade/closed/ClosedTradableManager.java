@@ -22,7 +22,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.DumpDelayedPayoutTx;
 import bisq.core.trade.Tradable;
 import bisq.core.trade.TradableList;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.persistence.PersistenceManager;

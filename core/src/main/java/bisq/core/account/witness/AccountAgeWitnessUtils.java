@@ -20,7 +20,7 @@ package bisq.core.account.witness;
 import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 

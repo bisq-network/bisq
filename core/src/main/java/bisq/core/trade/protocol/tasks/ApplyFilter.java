@@ -19,7 +19,7 @@ package bisq.core.trade.protocol.tasks;
 
 import bisq.core.filter.FilterManager;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.network.p2p.NodeAddress;
 

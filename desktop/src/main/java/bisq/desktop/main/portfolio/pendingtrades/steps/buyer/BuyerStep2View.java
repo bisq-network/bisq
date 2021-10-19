@@ -97,8 +97,8 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.SwiftAccountPayload;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
-import bisq.core.trade.Trade;
 import bisq.core.trade.TradeDataValidation;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.util.VolumeUtil;
 

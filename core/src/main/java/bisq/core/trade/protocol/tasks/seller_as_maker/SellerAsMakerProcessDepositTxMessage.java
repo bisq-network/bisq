@@ -17,8 +17,8 @@
 
 package bisq.core.trade.protocol.tasks.seller_as_maker;
 
-import bisq.core.trade.Trade;
 import bisq.core.trade.messages.DepositTxMessage;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.tasks.TradeTask;
 import bisq.core.util.Validator;
 

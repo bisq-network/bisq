@@ -22,6 +22,7 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.offer.Offer;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.util.validation.RegexValidatorFactory;
 
 import bisq.network.p2p.NodeAddress;

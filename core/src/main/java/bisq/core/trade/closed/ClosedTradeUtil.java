@@ -26,7 +26,7 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.Tradable;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.coin.BsqFormatter;
@@ -51,9 +51,9 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.trade.Trade.DisputeState.DISPUTE_CLOSED;
-import static bisq.core.trade.Trade.DisputeState.MEDIATION_CLOSED;
-import static bisq.core.trade.Trade.DisputeState.REFUND_REQUEST_CLOSED;
+import static bisq.core.trade.model.bisq_v1.Trade.DisputeState.DISPUTE_CLOSED;
+import static bisq.core.trade.model.bisq_v1.Trade.DisputeState.MEDIATION_CLOSED;
+import static bisq.core.trade.model.bisq_v1.Trade.DisputeState.REFUND_REQUEST_CLOSED;
 import static bisq.core.util.AveragePriceUtil.getAveragePriceTuple;
 import static bisq.core.util.FormattingUtils.BTC_FORMATTER_KEY;
 import static bisq.core.util.FormattingUtils.formatPercentagePrice;

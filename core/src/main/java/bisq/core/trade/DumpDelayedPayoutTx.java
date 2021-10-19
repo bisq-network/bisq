@@ -17,6 +17,8 @@
 
 package bisq.core.trade;
 
+import bisq.core.trade.model.bisq_v1.Trade;
+
 import bisq.common.config.Config;
 import bisq.common.file.JsonFileManager;
 import bisq.common.util.Utilities;

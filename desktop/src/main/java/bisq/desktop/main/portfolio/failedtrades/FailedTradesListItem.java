@@ -17,7 +17,7 @@
 
 package bisq.desktop.main.portfolio.failedtrades;
 
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import lombok.Getter;
 

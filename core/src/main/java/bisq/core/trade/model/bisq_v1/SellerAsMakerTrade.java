@@ -22,7 +22,6 @@ import bisq.core.offer.Offer;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.MakerTrade;
 import bisq.core.trade.Tradable;
-import bisq.core.trade.Trade;
 import bisq.core.trade.protocol.ProcessModel;
 
 import bisq.network.p2p.NodeAddress;
