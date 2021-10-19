@@ -20,9 +20,9 @@ package bisq.core.trade.protocol.bisq_v1.tasks.maker;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.offer.Offer;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
-import bisq.core.trade.messages.InputsForDepositTxRequest;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.TradingPeer;
+import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.user.User;
 

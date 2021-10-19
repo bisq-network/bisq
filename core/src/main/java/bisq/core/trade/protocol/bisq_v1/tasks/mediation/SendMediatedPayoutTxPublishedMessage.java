@@ -18,9 +18,9 @@
 package bisq.core.trade.protocol.bisq_v1.tasks.mediation;
 
 import bisq.core.support.dispute.mediation.MediationResultState;
-import bisq.core.trade.messages.MediatedPayoutTxPublishedMessage;
-import bisq.core.trade.messages.TradeMailboxMessage;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.bisq_v1.messages.MediatedPayoutTxPublishedMessage;
+import bisq.core.trade.protocol.bisq_v1.messages.TradeMailboxMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.SendMailboxMessageTask;
 
 import bisq.common.taskrunner.TaskRunner;

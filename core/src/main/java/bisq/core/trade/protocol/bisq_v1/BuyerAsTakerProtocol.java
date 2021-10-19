@@ -19,13 +19,13 @@ package bisq.core.trade.protocol.bisq_v1;
 
 
 import bisq.core.offer.Offer;
-import bisq.core.trade.messages.DelayedPayoutTxSignatureRequest;
-import bisq.core.trade.messages.DepositTxAndDelayedPayoutTxMessage;
-import bisq.core.trade.messages.InputsForDepositTxResponse;
-import bisq.core.trade.messages.PayoutTxPublishedMessage;
-import bisq.core.trade.messages.TradeMessage;
 import bisq.core.trade.model.bisq_v1.BuyerAsTakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.TradeMessage;
+import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureRequest;
+import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
+import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxResponse;
+import bisq.core.trade.protocol.bisq_v1.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerFinalizesDelayedPayoutTx;

@@ -15,11 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.messages;
+package bisq.core.trade.protocol.bisq_v1.messages;
 
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.trade.protocol.TradeMessage;
 
 import bisq.network.p2p.DirectMessage;
 import bisq.network.p2p.NodeAddress;
