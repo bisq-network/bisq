@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade;
+package bisq.core.trade.bisq_v1;
 
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradableList;

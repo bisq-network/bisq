@@ -21,8 +21,6 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.DumpDelayedPayoutTx;
-import bisq.core.trade.TradeUtil;
 import bisq.core.trade.model.TradableList;
 import bisq.core.trade.model.bisq_v1.Trade;
 

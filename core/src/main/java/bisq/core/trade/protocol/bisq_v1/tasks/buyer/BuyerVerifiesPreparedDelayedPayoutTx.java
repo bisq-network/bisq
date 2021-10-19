@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.buyer;
 
-import bisq.core.trade.TradeDataValidation;
+import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 

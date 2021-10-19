@@ -22,7 +22,7 @@ import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 
 import bisq.core.locale.Res;
-import bisq.core.trade.TradeDataValidation;
+import bisq.core.trade.bisq_v1.TradeDataValidation;
 
 public class SellerStep1View extends TradeStepView {
 

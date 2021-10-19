@@ -34,8 +34,8 @@ import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.agent.MultipleHolderNameDetection;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
-import bisq.core.trade.TradeDataValidation;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.util.coin.CoinFormatter;
@@ -64,7 +64,7 @@ import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 
-import static bisq.core.trade.TradeDataValidation.ValidationException;
+import static bisq.core.trade.bisq_v1.TradeDataValidation.ValidationException;
 import static bisq.desktop.util.FormBuilder.getIconForLabel;
 
 public abstract class DisputeAgentView extends DisputeView implements MultipleHolderNameDetection.Listener {
