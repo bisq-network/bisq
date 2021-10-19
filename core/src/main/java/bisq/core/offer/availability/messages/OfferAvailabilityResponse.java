@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.offer.messages;
+package bisq.core.offer.availability.messages;
 
 
 import bisq.core.offer.availability.AvailabilityResult;

@@ -19,7 +19,7 @@ package bisq.core.offer.availability.tasks;
 
 import bisq.core.offer.Offer;
 import bisq.core.offer.availability.OfferAvailabilityModel;
-import bisq.core.offer.messages.OfferAvailabilityRequest;
+import bisq.core.offer.availability.messages.OfferAvailabilityRequest;
 
 import bisq.network.p2p.SendDirectMessageListener;
 

@@ -18,10 +18,10 @@
 package bisq.core.offer.availability;
 
 import bisq.core.offer.Offer;
+import bisq.core.offer.availability.messages.OfferAvailabilityResponse;
+import bisq.core.offer.availability.messages.OfferMessage;
 import bisq.core.offer.availability.tasks.ProcessOfferAvailabilityResponse;
 import bisq.core.offer.availability.tasks.SendOfferAvailabilityRequest;
-import bisq.core.offer.messages.OfferAvailabilityResponse;
-import bisq.core.offer.messages.OfferMessage;
 import bisq.core.util.Validator;
 
 import bisq.network.p2p.AckMessage;
