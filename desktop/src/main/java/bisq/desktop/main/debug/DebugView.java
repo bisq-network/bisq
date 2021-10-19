@@ -23,9 +23,9 @@ import bisq.desktop.components.TitledGroupBg;
 
 import bisq.core.offer.availability.tasks.ProcessOfferAvailabilityResponse;
 import bisq.core.offer.availability.tasks.SendOfferAvailabilityRequest;
-import bisq.core.offer.placeoffer.tasks.AddToOfferBook;
-import bisq.core.offer.placeoffer.tasks.CreateMakerFeeTx;
-import bisq.core.offer.placeoffer.tasks.ValidateOffer;
+import bisq.core.offer.placeoffer.bisq_v1.tasks.AddToOfferBook;
+import bisq.core.offer.placeoffer.bisq_v1.tasks.CreateMakerFeeTx;
+import bisq.core.offer.placeoffer.bisq_v1.tasks.ValidateOffer;
 import bisq.core.trade.protocol.tasks.ApplyFilter;
 import bisq.core.trade.protocol.tasks.VerifyPeersAccountAgeWitness;
 import bisq.core.trade.protocol.tasks.buyer.BuyerProcessDelayedPayoutTxSignatureRequest;

@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.offer.placeoffer.tasks;
+package bisq.core.offer.placeoffer.bisq_v1.tasks;
 
 import bisq.core.offer.Offer;
-import bisq.core.offer.placeoffer.PlaceOfferModel;
+import bisq.core.offer.placeoffer.bisq_v1.PlaceOfferModel;
 import bisq.core.trade.messages.TradeMessage;
 
 import bisq.common.taskrunner.Task;

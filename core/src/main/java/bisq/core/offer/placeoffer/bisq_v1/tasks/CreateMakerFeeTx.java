@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.offer.placeoffer.tasks;
+package bisq.core.offer.placeoffer.bisq_v1.tasks;
 
 import bisq.core.btc.exceptions.TxBroadcastException;
 import bisq.core.btc.model.AddressEntry;
@@ -27,7 +27,7 @@ import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.exceptions.DaoDisabledException;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.offer.Offer;
-import bisq.core.offer.placeoffer.PlaceOfferModel;
+import bisq.core.offer.placeoffer.bisq_v1.PlaceOfferModel;
 import bisq.core.util.FeeReceiverSelector;
 
 import bisq.common.UserThread;
