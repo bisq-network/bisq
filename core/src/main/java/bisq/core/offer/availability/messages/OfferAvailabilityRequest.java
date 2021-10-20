@@ -27,7 +27,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import lombok.EqualsAndHashCode;
-import lombok.Value;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
 // Here we add the SupportedCapabilitiesMessage interface as that message always predates a direct connection
 // to the trading peer
 @EqualsAndHashCode(callSuper = true)
-@Value
+@Getter
 @Slf4j
 public final class OfferAvailabilityRequest extends OfferMessage implements SupportedCapabilitiesMessage {
     private final PubKeyRing pubKeyRing;

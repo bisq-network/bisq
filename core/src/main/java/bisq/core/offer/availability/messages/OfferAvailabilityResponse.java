@@ -31,14 +31,14 @@ import java.util.Optional;
 import java.util.UUID;
 
 import lombok.EqualsAndHashCode;
-import lombok.Value;
+import lombok.Getter;
 
 import javax.annotation.Nullable;
 
 // We add here the SupportedCapabilitiesMessage interface as that message always predates a direct connection
 // to the trading peer
 @EqualsAndHashCode(callSuper = true)
-@Value
+@Getter
 public final class OfferAvailabilityResponse extends OfferMessage implements SupportedCapabilitiesMessage {
     private final AvailabilityResult availabilityResult;
     @Nullable
