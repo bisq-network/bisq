@@ -155,21 +155,6 @@ public class BtcWalletService extends WalletService {
     // Public Methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction signTx(Transaction tx) throws WalletException, TransactionVerificationException {
-        for (int i = 0; i < tx.getInputs().size(); i++) {
-            TransactionInput input = tx.getInput(i);
-            if (input.getConnectedOutput() != null && input.getConnectedOutput().isMine(wallet)) {
-                signTransactionInput(wallet, aesKey, tx, input, i);
-                checkScriptSig(tx, input, i);
-            }
-        }
-
-        checkWalletConsistency(wallet);
-        verifyTransaction(tx);
-        printTx("BTC wallet: Signed Tx", tx);
-        return tx;
-    }
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Burn BSQ txs (some proposal txs, asset listing fee tx, proof of burn tx)
     ///////////////////////////////////////////////////////////////////////////////////////////
