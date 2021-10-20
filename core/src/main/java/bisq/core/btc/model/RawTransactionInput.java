@@ -17,33 +17,81 @@
 
 package bisq.core.btc.model;
 
+import bisq.core.btc.wallet.BtcWalletService;
+
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionInput;
+import org.bitcoinj.script.Script;
+
+import java.util.Objects;
+
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 import javax.annotation.concurrent.Immutable;
 
 @EqualsAndHashCode
 @Immutable
+@Getter
 public final class RawTransactionInput implements NetworkPayload, PersistablePayload {
     public final long index;                // Index of spending txo
     public final byte[] parentTransaction;  // Spending tx (fromTx)
     public final long value;
+
+    // Added at Bsq swap release
+    // id of the org.bitcoinj.script.Script.ScriptType. Useful to know if input is segwit
+    public final int scriptTypeId; // Lowest Script.ScriptType.id value is 1, so we use 0 as value for not defined
+
+    public RawTransactionInput(TransactionInput input) {
+        this(input.getOutpoint().getIndex(),
+                Objects.requireNonNull(Objects.requireNonNull(input.getConnectedOutput()).getParentTransaction()),
+                Objects.requireNonNull(input.getValue()).value,
+                input.getConnectedOutput() != null &&
+                        input.getConnectedOutput().getScriptPubKey() != null &&
+                        input.getConnectedOutput().getScriptPubKey().getScriptType() != null ?
+                        input.getConnectedOutput().getScriptPubKey().getScriptType().id : -1);
+    }
+
+    // Does not set the scriptTypeId. Use RawTransactionInput(TransactionInput input) for any new code.
+    @Deprecated
+    public RawTransactionInput(long index, byte[] parentTransaction, long value) {
+        this(index, parentTransaction, value, 0);
+    }
+
+    private RawTransactionInput(long index, Transaction parentTransaction, long value, int scriptTypeId) {
+        this(index,
+                parentTransaction.bitcoinSerialize(scriptTypeId == Script.ScriptType.P2WPKH.id ||
+                        scriptTypeId == Script.ScriptType.P2WSH.id),
+                value, scriptTypeId);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * Holds the relevant data for the connected output for a tx input.
      * @param index  the index of the parentTransaction
      * @param parentTransaction  the spending output tx, not the parent tx of the input
      * @param value  the number of satoshis being spent
+     * @param scriptTypeId The id of the org.bitcoinj.script.Script.ScriptType of the spending output
+     *                     If not set it is 0.
      */
-    public RawTransactionInput(long index, byte[] parentTransaction, long value) {
+    private RawTransactionInput(long index,
+                                byte[] parentTransaction,
+                                long value,
+                                int scriptTypeId) {
         this.index = index;
         this.parentTransaction = parentTransaction;
         this.value = value;
+        this.scriptTypeId = scriptTypeId;
     }
 
     @Override
@@ -52,11 +100,36 @@ public final class RawTransactionInput implements NetworkPayload, PersistablePay
                 .setIndex(index)
                 .setParentTransaction(ByteString.copyFrom(parentTransaction))
                 .setValue(value)
+                .setScriptTypeId(scriptTypeId)
                 .build();
     }
 
     public static RawTransactionInput fromProto(protobuf.RawTransactionInput proto) {
-        return new RawTransactionInput(proto.getIndex(), proto.getParentTransaction().toByteArray(), proto.getValue());
+        return new RawTransactionInput(proto.getIndex(),
+                proto.getParentTransaction().toByteArray(),
+                proto.getValue(),
+                proto.getScriptTypeId());
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // API
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public boolean isSegwit() {
+        return isP2WPKH() || isP2WSH();
+    }
+
+    public boolean isP2WPKH() {
+        return scriptTypeId == Script.ScriptType.P2WPKH.id;
+    }
+
+    public boolean isP2WSH() {
+        return scriptTypeId == Script.ScriptType.P2WSH.id;
+    }
+
+    public String getParentTxId(BtcWalletService btcWalletService) {
+        return btcWalletService.getTxFromSerializedTx(parentTransaction).getTxId().toString();
     }
 
     @Override
@@ -65,6 +138,7 @@ public final class RawTransactionInput implements NetworkPayload, PersistablePay
                 "index=" + index +
                 ", parentTransaction as HEX " + Utilities.bytesAsHexString(parentTransaction) +
                 ", value=" + value +
+                ", scriptTypeId=" + scriptTypeId +
                 '}';
     }
 }
