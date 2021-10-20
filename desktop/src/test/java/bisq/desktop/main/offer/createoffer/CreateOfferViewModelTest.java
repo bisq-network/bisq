@@ -119,7 +119,7 @@ public class CreateOfferViewModelTest {
         when(accountAgeWitnessService.getMyTradeLimit(any(), any(), any())).thenReturn(100000000L);
         when(preferences.getUserCountry()).thenReturn(new Country("ES", "Spain", null));
         when(bsqFormatter.formatCoin(any())).thenReturn("0");
-        when(bsqWalletService.getAvailableConfirmedBalance()).thenReturn(Coin.ZERO);
+        when(bsqWalletService.getAvailableBalance()).thenReturn(Coin.ZERO);
         when(createOfferService.getRandomOfferId()).thenReturn(UUID.randomUUID().toString());
         when(tradeStats.getObservableTradeStatisticsSet()).thenReturn(FXCollections.observableSet());
 

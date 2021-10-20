@@ -51,8 +51,8 @@ import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Role;
 import bisq.core.locale.Res;
 import bisq.core.util.FormattingUtils;
-import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.ParsingUtils;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.asset.Asset;
@@ -291,7 +291,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 checkNotNull(proposalDisplay.bondedRoleTypeComboBox, "proposalDisplay.bondedRoleTypeComboBox must not be null");
                 BondedRoleType bondedRoleType = proposalDisplay.bondedRoleTypeComboBox.getSelectionModel().getSelectedItem();
                 long requiredBond = daoFacade.getRequiredBond(bondedRoleType);
-                long availableBalance = bsqWalletService.getAvailableConfirmedBalance().value;
+                long availableBalance = bsqWalletService.getAvailableBalance().value;
 
                 if (requiredBond > availableBalance) {
                     long missing = requiredBond - availableBalance;

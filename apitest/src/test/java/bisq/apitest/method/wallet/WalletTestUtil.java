@@ -38,13 +38,13 @@ public class WalletTestUtil {
                     0);
 
     @SuppressWarnings("SameParameterValue")
-    public static bisq.core.api.model.BsqBalanceInfo bsqBalanceModel(long availableConfirmedBalance,
+    public static bisq.core.api.model.BsqBalanceInfo bsqBalanceModel(long availableBalance,
                                                                      long unverifiedBalance,
                                                                      long unconfirmedChangeBalance,
                                                                      long lockedForVotingBalance,
                                                                      long lockupBondsBalance,
                                                                      long unlockingBondsBalance) {
-        return bisq.core.api.model.BsqBalanceInfo.valueOf(availableConfirmedBalance,
+        return bisq.core.api.model.BsqBalanceInfo.valueOf(availableBalance,
                 unverifiedBalance,
                 unconfirmedChangeBalance,
                 lockedForVotingBalance,
@@ -54,7 +54,7 @@ public class WalletTestUtil {
 
     public static void verifyBsqBalances(bisq.core.api.model.BsqBalanceInfo expected,
                                          BsqBalanceInfo actual) {
-        assertEquals(expected.getAvailableConfirmedBalance(), actual.getAvailableConfirmedBalance());
+        assertEquals(expected.getAvailableBalance(), actual.getAvailableConfirmedBalance());
         assertEquals(expected.getUnverifiedBalance(), actual.getUnverifiedBalance());
         assertEquals(expected.getUnconfirmedChangeBalance(), actual.getUnconfirmedChangeBalance());
         assertEquals(expected.getLockedForVotingBalance(), actual.getLockedForVotingBalance());

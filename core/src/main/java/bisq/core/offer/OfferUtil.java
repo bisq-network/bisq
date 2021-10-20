@@ -184,7 +184,7 @@ public class OfferUtil {
         // We have to keep a minimum amount of BSQ == bitcoin dust limit, otherwise there
         // would be dust violations for change UTXOs; essentially means the minimum usable
         // balance of BSQ is 5.46.
-        Coin usableBsqBalance = bsqWalletService.getAvailableConfirmedBalance().subtract(getMinNonDustOutput());
+        Coin usableBsqBalance = bsqWalletService.getAvailableBalance().subtract(getMinNonDustOutput());
         return usableBsqBalance.isNegative() ? Coin.ZERO : usableBsqBalance;
     }
 
@@ -243,7 +243,7 @@ public class OfferUtil {
      * @return {@code true} if the balance is sufficient, {@code false} otherwise
      */
     public boolean isBsqForMakerFeeAvailable(@Nullable Coin amount) {
-        Coin availableBalance = bsqWalletService.getAvailableConfirmedBalance();
+        Coin availableBalance = bsqWalletService.getAvailableBalance();
         Coin makerFee = CoinUtil.getMakerFee(false, amount);
 
         // If we don't know yet the maker fee (amount is not set) we return true,
@@ -277,7 +277,7 @@ public class OfferUtil {
     }
 
     public boolean isBsqForTakerFeeAvailable(@Nullable Coin amount) {
-        Coin availableBalance = bsqWalletService.getAvailableConfirmedBalance();
+        Coin availableBalance = bsqWalletService.getAvailableBalance();
         Coin takerFee = getTakerFee(false, amount);
 
         // If we don't know yet the maker fee (amount is not set) we return true,

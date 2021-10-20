@@ -482,7 +482,7 @@ public abstract class WalletService {
     // Balance
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Coin getAvailableConfirmedBalance() {
+    public Coin getAvailableBalance() {
         return wallet != null ? wallet.getBalance(Wallet.BalanceType.AVAILABLE) : Coin.ZERO;
     }
 
@@ -860,7 +860,7 @@ public abstract class WalletService {
                 if (balanceListener.getAddress() != null)
                     balance = getBalanceForAddress(balanceListener.getAddress());
                 else
-                    balance = getAvailableConfirmedBalance();
+                    balance = getAvailableBalance();
 
                 balanceListener.onBalanceChanged(balance, tx);
             }

@@ -222,7 +222,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
         stakeInputTextField.textProperty().addListener(stakeListener);
         voteButton.setOnAction(e -> onVote());
 
-        onUpdateBalances(bsqWalletService.getAvailableConfirmedBalance(),
+        onUpdateBalances(bsqWalletService.getAvailableBalance(),
                 bsqWalletService.getAvailableNonBsqBalance(),
                 bsqWalletService.getUnverifiedBalance(),
                 bsqWalletService.getUnconfirmedChangeBalance(),
@@ -272,7 +272,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onUpdateBalances(Coin availableConfirmedBalance,
+    public void onUpdateBalances(Coin availableBalance,
                                  Coin availableNonBsqBalance,
                                  Coin unverifiedBalance,
                                  Coin unconfirmedChangeBalance,
@@ -281,7 +281,7 @@ public class ProposalsView extends ActivatableView<GridPane, Void> implements Bs
                                  Coin unlockingBondsBalance) {
         Coin blindVoteFee = BlindVoteConsensus.getFee(daoStateService, daoStateService.getChainHeight());
         if (isBlindVotePhaseButNotLastBlock()) {
-            Coin availableForVoting = availableConfirmedBalance.subtract(blindVoteFee);
+            Coin availableForVoting = availableBalance.subtract(blindVoteFee);
             if (availableForVoting.isNegative())
                 availableForVoting = Coin.valueOf(0);
             stakeInputTextField.setPromptText(Res.get("dao.proposal.myVote.stake.prompt",
