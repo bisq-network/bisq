@@ -100,7 +100,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     @Getter
     private Coin availableNonBsqBalance = Coin.ZERO;
     @Getter
-    private Coin availableConfirmedBalance = Coin.ZERO;
+    private Coin availableBalance = Coin.ZERO;
     @Getter
     private Coin unverifiedBalance = Coin.ZERO;
     @Getter
@@ -284,18 +284,18 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                 .mapToLong(TxOutput::getValue)
                 .sum());
 
-        availableConfirmedBalance = bsqCoinSelector.select(NetworkParameters.MAX_MONEY,
+        availableBalance = bsqCoinSelector.select(NetworkParameters.MAX_MONEY,
                 wallet.calculateAllSpendCandidates()).valueGathered;
 
-        if (availableConfirmedBalance.isNegative())
-            availableConfirmedBalance = Coin.ZERO;
+        if (availableBalance.isNegative())
+            availableBalance = Coin.ZERO;
 
         unconfirmedChangeBalance = unconfirmedBsqChangeOutputListService.getBalance();
 
         availableNonBsqBalance = nonBsqCoinSelector.select(NetworkParameters.MAX_MONEY,
                 wallet.calculateAllSpendCandidates()).valueGathered;
 
-        bsqBalanceListeners.forEach(e -> e.onUpdateBalances(availableConfirmedBalance, availableNonBsqBalance, unverifiedBalance,
+        bsqBalanceListeners.forEach(e -> e.onUpdateBalances(availableBalance, availableNonBsqBalance, unverifiedBalance,
                 unconfirmedChangeBalance, lockedForVotingBalance, lockupBondsBalance, unlockingBondsBalance));
         log.info("updateBsqBalance took {} ms", System.currentTimeMillis() - ts);
     }

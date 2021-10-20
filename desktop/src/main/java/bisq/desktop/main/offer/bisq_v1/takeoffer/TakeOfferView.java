@@ -52,7 +52,7 @@ import bisq.desktop.util.Transitions;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.payment.FasterPaymentsAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
@@ -163,7 +163,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             isOfferAvailableSubscription;
 
     private int gridRow = 0;
-    private HashMap<String, Boolean> paymentAccountWarningDisplayed = new HashMap<>();
+    private final HashMap<String, Boolean> paymentAccountWarningDisplayed = new HashMap<>();
     private boolean offerDetailsWindowDisplayed, clearXchangeWarningDisplayed, fasterPaymentsWarningDisplayed,
             takeOfferFromUnsignedAccountWarningDisplayed, cashByMailWarningDisplayed;
     private SimpleBooleanProperty errorPopupDisplayed;
@@ -354,7 +354,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         model.initWithData(offer);
         priceAsPercentageInputBox.setVisible(offer.isUseMarketBasedPrice());
 
-        if (model.getOffer().getDirection() == OfferPayload.Direction.SELL) {
+        if (model.getOffer().getDirection() == OfferDirection.SELL) {
             takeOfferButton.setId("buy-button-big");
             takeOfferButton.updateText(Res.get("takeOffer.takeOfferButton", Res.get("shared.buy")));
             nextButton.setId("buy-button");
@@ -691,7 +691,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         errorMessageSubscription = EasyBind.subscribe(model.errorMessage, newValue -> {
             if (newValue != null) {
-                new Popup().error(Res.get("takeOffer.error.message", model.errorMessage.get()) +
+                new Popup().error(Res.get("takeOffer.error.message", model.errorMessage.get()) + "\n\n" +
                         Res.get("popup.error.tryRestart"))
                         .onClose(() -> {
                             errorPopupDisplayed.set(true);
@@ -734,7 +734,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             } else if (newValue && model.getTrade() != null && !model.getTrade().hasFailed()) {
                 String key = "takeOfferSuccessInfo";
                 if (DontShowAgainLookup.showAgain(key)) {
-                    UserThread.runAfter(() -> new Popup().headLine(Res.get("takeOffer.success.headline"))
+                    new Popup().headLine(Res.get("takeOffer.success.headline"))
                             .feedback(Res.get("takeOffer.success.info"))
                             .actionButtonTextWithGoTo("navigation.portfolio.pending")
                             .dontShowAgainId(key)
@@ -745,7 +745,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                                 close();
                             })
                             .onClose(this::close)
-                            .show(), 1);
+                            .show();
                 } else {
                     close();
                 }
@@ -966,6 +966,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private void addOfferAvailabilityLabel() {
         offerAvailabilityBusyAnimation = new BusyAnimation(false);
         offerAvailabilityLabel = new AutoTooltipLabel(Res.get("takeOffer.fundsBox.isOfferAvailable"));
+        HBox.setMargin(offerAvailabilityLabel, new Insets(6, 0, 0, 0));
         buttonBox.getChildren().addAll(offerAvailabilityBusyAnimation, offerAvailabilityLabel);
     }
 

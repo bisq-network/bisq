@@ -37,7 +37,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.bisq_v1.CreateOfferService;
-import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
@@ -59,8 +59,6 @@ import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
-
-import com.google.inject.Inject;
 
 import javax.inject.Named;
 
@@ -113,7 +111,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     private final BalanceListener btcBalanceListener;
     private final SetChangeListener<PaymentAccount> paymentAccountsChangeListener;
 
-    protected OfferPayload.Direction direction;
+    protected OfferDirection direction;
     protected TradeCurrency tradeCurrency;
     protected final StringProperty tradeCurrencyCode = new SimpleStringProperty();
     protected final BooleanProperty useMarketBasedPrice = new SimpleBooleanProperty();
@@ -149,7 +147,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Inject
     public MutableOfferDataModel(CreateOfferService createOfferService,
                                  OpenOfferManager openOfferManager,
                                  OfferUtil offerUtil,
@@ -229,7 +226,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // called before activate()
-    public boolean initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
+    public boolean initWithData(OfferDirection direction, TradeCurrency tradeCurrency) {
         this.direction = direction;
         this.tradeCurrency = tradeCurrency;
 
@@ -352,8 +349,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                 return;
             }
             // Get average historic prices over for the prior trade period equaling the lock time
-            var blocksRange = Restrictions.getLockTime(paymentAccount.getPaymentMethod().isAsset());
-            var startDate = new Date(System.currentTimeMillis() - blocksRange * 10 * 60000);
+            var blocksRange = Restrictions.getLockTime(paymentAccount.getPaymentMethod().isBlockchain());
+            var startDate = new Date(System.currentTimeMillis() - blocksRange * 10L * 60000);
             var sortedRangeData = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
                     .filter(e -> e.getCurrency().equals(getTradeCurrency().getCode()))
                     .filter(e -> e.getDate().compareTo(startDate) >= 0)
@@ -423,7 +420,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     @Override
-    public void onUpdateBalances(Coin availableConfirmedBalance,
+    public void onUpdateBalances(Coin availableBalance,
                                  Coin availableNonBsqBalance,
                                  Coin unverifiedBalance,
                                  Coin unconfirmedChangeBalance,
@@ -471,16 +468,16 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return true;
     }
 
-    OfferPayload.Direction getDirection() {
+    OfferDirection getDirection() {
         return direction;
     }
 
     boolean isSellOffer() {
-        return direction == OfferPayload.Direction.SELL;
+        return direction == OfferDirection.SELL;
     }
 
     boolean isBuyOffer() {
-        return direction == OfferPayload.Direction.BUY;
+        return direction == OfferDirection.BUY;
     }
 
     AddressEntry getAddressEntry() {

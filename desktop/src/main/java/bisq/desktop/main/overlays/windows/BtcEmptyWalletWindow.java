@@ -103,7 +103,7 @@ public final class BtcEmptyWalletWindow extends Overlay<BtcEmptyWalletWindow> {
     private void addContent() {
         addMultilineLabel(gridPane, ++rowIndex, Res.get("emptyWalletWindow.info"), 0);
 
-        Coin totalBalance = btcWalletService.getAvailableConfirmedBalance();
+        Coin totalBalance = btcWalletService.getAvailableBalance();
         balanceTextField = addTopLabelTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.balance"),
                 btcFormatter.formatCoinWithCode(totalBalance), 10).second;
 
@@ -164,7 +164,7 @@ public final class BtcEmptyWalletWindow extends Overlay<BtcEmptyWalletWindow> {
                         aesKey,
                         () -> {
                             closeButton.updateText(Res.get("shared.close"));
-                            balanceTextField.setText(btcFormatter.formatCoinWithCode(btcWalletService.getAvailableConfirmedBalance()));
+                            balanceTextField.setText(btcFormatter.formatCoinWithCode(btcWalletService.getAvailableBalance()));
                             emptyWalletButton.setDisable(true);
                             log.debug("wallet empty successful");
                             onClose(() -> UserThread.runAfter(() -> new Popup()

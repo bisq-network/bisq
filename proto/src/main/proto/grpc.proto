@@ -620,7 +620,7 @@ message BalancesInfo {
 }
 
 message BsqBalanceInfo {
-    uint64 availableConfirmedBalance = 1;
+    uint64 availableConfirmedBalance = 1;  // todo rename to availableBalance if possible
     uint64 unverifiedBalance = 2;
     uint64 unconfirmedChangeBalance = 3;
     uint64 lockedForVotingBalance = 4;

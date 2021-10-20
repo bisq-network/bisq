@@ -63,19 +63,6 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     // Enum
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public enum Direction {
-        BUY,
-        SELL;
-
-        public static OfferPayload.Direction fromProto(protobuf.OfferPayload.Direction direction) {
-            return ProtoUtil.enumFromProto(OfferPayload.Direction.class, direction.name());
-        }
-
-        public static protobuf.OfferPayload.Direction toProtoMessage(Direction direction) {
-            return protobuf.OfferPayload.Direction.valueOf(direction.name());
-        }
-    }
-
     // Keys for extra map
     // Only set for fiat offers
     public static final String ACCOUNT_AGE_WITNESS_HASH = "accountAgeWitnessHash";
@@ -103,7 +90,7 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
     private final NodeAddress ownerNodeAddress;
     @JsonExclude
     private final PubKeyRing pubKeyRing;
-    private final Direction direction;
+    private final OfferDirection direction;
     // price if fixed price is used (usePercentageBasedPrice = false), otherwise 0
     private final long price;
     // Distance form market price if percentage based price is used (usePercentageBasedPrice = true), otherwise 0.
@@ -190,7 +177,7 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
                         long date,
                         NodeAddress ownerNodeAddress,
                         PubKeyRing pubKeyRing,
-                        Direction direction,
+                        OfferDirection direction,
                         long price,
                         double marketPriceMargin,
                         boolean useMarketBasedPrice,
@@ -286,7 +273,7 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
                 .setDate(date)
                 .setOwnerNodeAddress(ownerNodeAddress.toProtoMessage())
                 .setPubKeyRing(pubKeyRing.toProtoMessage())
-                .setDirection(Direction.toProtoMessage(direction))
+                .setDirection(OfferDirection.toProtoMessage(direction))
                 .setPrice(price)
                 .setMarketPriceMargin(marketPriceMargin)
                 .setUseMarketBasedPrice(useMarketBasedPrice)
@@ -345,7 +332,7 @@ public final class OfferPayload implements ProtectedStoragePayload, ExpirablePay
                 proto.getDate(),
                 NodeAddress.fromProto(proto.getOwnerNodeAddress()),
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
-                OfferPayload.Direction.fromProto(proto.getDirection()),
+                OfferDirection.fromProto(proto.getDirection()),
                 proto.getPrice(),
                 proto.getMarketPriceMargin(),
                 proto.getUseMarketBasedPrice(),

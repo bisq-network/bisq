@@ -26,7 +26,7 @@ import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
-import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -139,7 +139,7 @@ public class PriceUtil {
     }
 
     public Optional<Double> getMarketBasedPrice(Offer offer,
-                                                OfferPayload.Direction direction) {
+                                                OfferDirection direction) {
         if (offer.isUseMarketBasedPrice()) {
             return Optional.of(offer.getMarketPriceMargin());
         }
@@ -169,7 +169,7 @@ public class PriceUtil {
 
     public Optional<Double> calculatePercentage(Offer offer,
                                                 double marketPrice,
-                                                OfferPayload.Direction direction) {
+                                                OfferDirection direction) {
         // If the offer did not use % price we calculate % from current market price
         String currencyCode = offer.getCurrencyCode();
         Price price = offer.getPrice();
@@ -179,7 +179,7 @@ public class PriceUtil {
         long priceAsLong = checkNotNull(price).getValue();
         double scaled = MathUtils.scaleDownByPowerOf10(priceAsLong, precision);
         double value;
-        if (direction == OfferPayload.Direction.SELL) {
+        if (direction == OfferDirection.SELL) {
             if (CurrencyUtil.isFiatCurrency(currencyCode)) {
                 if (marketPrice == 0) {
                     return Optional.empty();

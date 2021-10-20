@@ -26,6 +26,7 @@ import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.bisq_v1.MutableOfferPayloadFields;
+import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.CashByMailAccount;
 import bisq.core.payment.F2FAccount;
@@ -134,13 +135,13 @@ public class OfferUtil {
      * @return {@code true} for an offer to buy BTC from the taker, {@code false} for an
      * offer to sell BTC to the taker
      */
-    public boolean isBuyOffer(Direction direction) {
-        return direction == Direction.BUY;
+    public boolean isBuyOffer(OfferDirection direction) {
+        return direction == OfferDirection.BUY;
     }
 
     public long getMaxTradeLimit(PaymentAccount paymentAccount,
                                  String currencyCode,
-                                 Direction direction) {
+                                 OfferDirection direction) {
         return paymentAccount != null
                 ? accountAgeWitnessService.getMyTradeLimit(paymentAccount, currencyCode, direction)
                 : 0;
@@ -183,7 +184,7 @@ public class OfferUtil {
         // We have to keep a minimum amount of BSQ == bitcoin dust limit, otherwise there
         // would be dust violations for change UTXOs; essentially means the minimum usable
         // balance of BSQ is 5.46.
-        Coin usableBsqBalance = bsqWalletService.getAvailableConfirmedBalance().subtract(getMinNonDustOutput());
+        Coin usableBsqBalance = bsqWalletService.getAvailableBalance().subtract(getMinNonDustOutput());
         return usableBsqBalance.isNegative() ? Coin.ZERO : usableBsqBalance;
     }
 
@@ -242,7 +243,7 @@ public class OfferUtil {
      * @return {@code true} if the balance is sufficient, {@code false} otherwise
      */
     public boolean isBsqForMakerFeeAvailable(@Nullable Coin amount) {
-        Coin availableBalance = bsqWalletService.getAvailableConfirmedBalance();
+        Coin availableBalance = bsqWalletService.getAvailableBalance();
         Coin makerFee = CoinUtil.getMakerFee(false, amount);
 
         // If we don't know yet the maker fee (amount is not set) we return true,
@@ -276,7 +277,7 @@ public class OfferUtil {
     }
 
     public boolean isBsqForTakerFeeAvailable(@Nullable Coin amount) {
-        Coin availableBalance = bsqWalletService.getAvailableConfirmedBalance();
+        Coin availableBalance = bsqWalletService.getAvailableBalance();
         Coin takerFee = getTakerFee(false, amount);
 
         // If we don't know yet the maker fee (amount is not set) we return true,
@@ -293,7 +294,7 @@ public class OfferUtil {
     }
 
     public boolean isBlockChainPaymentMethod(Offer offer) {
-        return offer != null && offer.getPaymentMethod().isAsset();
+        return offer != null && offer.getPaymentMethod().isBlockchain();
     }
 
     public Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee,
@@ -315,7 +316,7 @@ public class OfferUtil {
 
     public Map<String, String> getExtraDataMap(PaymentAccount paymentAccount,
                                                String currencyCode,
-                                               Direction direction) {
+                                               OfferDirection direction) {
         Map<String, String> extraDataMap = new HashMap<>();
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             String myWitnessHashAsHex = accountAgeWitnessService
@@ -338,7 +339,7 @@ public class OfferUtil {
 
         extraDataMap.put(CAPABILITIES, Capabilities.app.toStringList());
 
-        if (currencyCode.equals("XMR") && direction == Direction.SELL) {
+        if (currencyCode.equals("XMR") && direction == OfferDirection.SELL) {
             preferences.getAutoConfirmSettingsList().stream()
                     .filter(e -> e.getCurrencyCode().equals("XMR"))
                     .filter(AutoConfirmSettings::isEnabled)
@@ -484,7 +485,7 @@ public class OfferUtil {
             }
         } else {
             errorMsg = "The maker fee tx is invalid as it does not has at least 2 outputs." + extraString +
-                    "\nMakerFeeTx=" + makerFeeTx.toString();
+                    "\nMakerFeeTx=" + makerFeeTx;
         }
 
         if (errorMsg == null) {

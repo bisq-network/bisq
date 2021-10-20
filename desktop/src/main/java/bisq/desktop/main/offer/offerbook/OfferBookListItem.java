@@ -66,7 +66,7 @@ public class OfferBookListItem {
 
     public OfferBookListItem(Offer offer) {
         this.offer = offer;
-        this.hashOfPayload = new P2PDataStorage.ByteArray(offer.getOfferPayload().getHash());
+        this.hashOfPayload = new P2PDataStorage.ByteArray(offer.getOfferPayloadHash());
     }
 
     public WitnessAgeData getWitnessAgeData(AccountAgeWitnessService accountAgeWitnessService,

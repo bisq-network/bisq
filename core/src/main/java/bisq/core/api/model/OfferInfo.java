@@ -144,8 +144,8 @@ public class OfferInfo implements Payload {
                 .withPaymentAccountId(offer.getMakerPaymentAccountId())
                 .withPaymentMethodId(offer.getPaymentMethod().getId())
                 .withPaymentMethodShortName(offer.getPaymentMethod().getShortName())
-                .withBaseCurrencyCode(offer.getOfferPayload().getBaseCurrencyCode())
-                .withCounterCurrencyCode(offer.getOfferPayload().getCounterCurrencyCode())
+                .withBaseCurrencyCode(offer.getBaseCurrencyCode())
+                .withCounterCurrencyCode(offer.getCounterCurrencyCode())
                 .withDate(offer.getDate().getTime())
                 .withState(offer.getState().name())
                 .withIsMyOffer(isMyOffer);

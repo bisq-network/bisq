@@ -24,7 +24,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferRestrictions;
-import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.ChargeBackRisk;
 import bisq.core.payment.PaymentAccount;
@@ -421,11 +421,11 @@ public class AccountAgeWitnessService {
                                String currencyCode,
                                AccountAgeWitness accountAgeWitness,
                                AccountAge accountAgeCategory,
-                               OfferPayload.Direction direction,
+                               OfferDirection direction,
                                PaymentMethod paymentMethod) {
         if (CurrencyUtil.isCryptoCurrency(currencyCode) ||
                 !PaymentMethod.hasChargebackRisk(paymentMethod, currencyCode) ||
-                direction == OfferPayload.Direction.SELL) {
+                direction == OfferDirection.SELL) {
             return maxTradeLimit.value;
         }
 
@@ -500,7 +500,7 @@ public class AccountAgeWitnessService {
         return getAccountAge(getMyWitness(paymentAccountPayload), new Date());
     }
 
-    public long getMyTradeLimit(PaymentAccount paymentAccount, String currencyCode, OfferPayload.Direction direction) {
+    public long getMyTradeLimit(PaymentAccount paymentAccount, String currencyCode, OfferDirection direction) {
         if (paymentAccount == null)
             return 0;
 
@@ -642,12 +642,12 @@ public class AccountAgeWitnessService {
         checkNotNull(offer);
         final String currencyCode = offer.getCurrencyCode();
         final Coin defaultMaxTradeLimit = PaymentMethod.getPaymentMethodById(
-                offer.getOfferPayload().getPaymentMethodId()).getMaxTradeLimitAsCoin(currencyCode);
+                offer.getPaymentMethodId()).getMaxTradeLimitAsCoin(currencyCode);
         long peersCurrentTradeLimit = defaultMaxTradeLimit.value;
         if (!hasTradeLimitException(peersWitness)) {
             final long accountSignAge = getWitnessSignAge(peersWitness, peersCurrentDate);
             AccountAge accountAgeCategory = getPeersAccountAgeCategory(accountSignAge);
-            OfferPayload.Direction direction = offer.isMyOffer(keyRing) ?
+            OfferDirection direction = offer.isMyOffer(keyRing) ?
                     offer.getMirroredDirection() : offer.getDirection();
             peersCurrentTradeLimit = getTradeLimit(defaultMaxTradeLimit, currencyCode, peersWitness,
                     accountAgeCategory, direction, offer.getPaymentMethod());

@@ -15,19 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.btc.listeners;
+package bisq.core.offer.bisq_v1;
 
-import org.bitcoinj.core.TransactionConfidence;
+import bisq.common.proto.ProtoUtil;
 
-import lombok.Getter;
+public enum OfferDirection {
+    BUY,
+    SELL;
 
-public abstract class TxConfidenceListener {
-    @Getter
-    private final String txId;
-
-    public TxConfidenceListener(String txId) {
-        this.txId = txId;
+    public static OfferDirection fromProto(protobuf.OfferPayload.Direction direction) {
+        return ProtoUtil.enumFromProto(OfferDirection.class, direction.name());
     }
 
-    abstract public void onTransactionConfidenceChanged(TransactionConfidence confidence);
+    public static protobuf.OfferPayload.Direction toProtoMessage(OfferDirection direction) {
+        return protobuf.OfferPayload.Direction.valueOf(direction.name());
+    }
 }

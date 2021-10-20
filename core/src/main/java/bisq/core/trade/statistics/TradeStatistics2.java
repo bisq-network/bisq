@@ -22,6 +22,7 @@ import bisq.core.monetary.AltcoinExchangeRate;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
+import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.util.VolumeUtil;
@@ -106,7 +107,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
     @SuppressWarnings("SpellCheckingInspection")
     public static final String REFUND_AGENT_ADDRESS = "refAddr";
 
-    private final OfferPayload.Direction direction;
+    private final OfferDirection direction;
     private final String baseCurrency;
     private final String counterCurrency;
     private final String offerPaymentMethod;
@@ -165,7 +166,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TradeStatistics2(OfferPayload.Direction direction,
+    public TradeStatistics2(OfferDirection direction,
                             String baseCurrency,
                             String counterCurrency,
                             String offerPaymentMethod,
@@ -209,7 +210,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
 
     private protobuf.TradeStatistics2.Builder getBuilder() {
         final protobuf.TradeStatistics2.Builder builder = protobuf.TradeStatistics2.newBuilder()
-                .setDirection(OfferPayload.Direction.toProtoMessage(direction))
+                .setDirection(OfferDirection.toProtoMessage(direction))
                 .setBaseCurrency(baseCurrency)
                 .setCounterCurrency(counterCurrency)
                 .setPaymentMethodId(offerPaymentMethod)
@@ -239,7 +240,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
 
     public static TradeStatistics2 fromProto(protobuf.TradeStatistics2 proto) {
         return new TradeStatistics2(
-                OfferPayload.Direction.fromProto(proto.getDirection()),
+                OfferDirection.fromProto(proto.getDirection()),
                 proto.getBaseCurrency(),
                 proto.getCounterCurrency(),
                 proto.getPaymentMethodId(),

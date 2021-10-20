@@ -176,7 +176,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
         assetService.updateAssetStates();
         updateList();
 
-        onUpdateAvailableConfirmedBalance(bsqWalletService.getAvailableConfirmedBalance());
+        onUpdateAvailableBalance(bsqWalletService.getAvailableBalance());
 
         payFeeButton.setOnAction((event) -> {
             Coin listingFee = getListingFee();
@@ -235,7 +235,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onUpdateBalances(Coin availableConfirmedBalance,
+    public void onUpdateBalances(Coin availableBalance,
                                  Coin availableNonBsqBalance,
                                  Coin unverifiedBalance,
                                  Coin unconfirmedChangeBalance,
@@ -243,7 +243,7 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
                                  Coin lockupBondsBalance,
                                  Coin unlockingBondsBalance) {
 
-        onUpdateAvailableConfirmedBalance(availableConfirmedBalance);
+        onUpdateAvailableBalance(availableBalance);
     }
 
 
@@ -278,8 +278,8 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
         };
     }
 
-    private void onUpdateAvailableConfirmedBalance(Coin availableConfirmedBalance) {
-        bsqValidator.setAvailableBalance(availableConfirmedBalance);
+    private void onUpdateAvailableBalance(Coin availableBalance) {
+        bsqValidator.setAvailableBalance(availableBalance);
         updateButtonState();
     }
 

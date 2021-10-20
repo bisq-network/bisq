@@ -41,7 +41,7 @@ public class MakerSetsLockTime extends TradeTask {
             // For regtest dev environment we use 5 blocks
             int delay = Config.baseCurrencyNetwork().isRegtest() ?
                     5 :
-                    Restrictions.getLockTime(processModel.getOffer().getPaymentMethod().isAsset());
+                    Restrictions.getLockTime(processModel.getOffer().getPaymentMethod().isBlockchain());
 
             long lockTime = processModel.getBtcWalletService().getBestChainHeight() + delay;
             log.info("lockTime={}, delay={}", lockTime, delay);

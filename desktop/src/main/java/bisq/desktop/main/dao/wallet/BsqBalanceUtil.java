@@ -135,7 +135,7 @@ public class BsqBalanceUtil implements BsqBalanceListener, DaoStateListener {
 
 
     private void triggerUpdate() {
-        onUpdateBalances(bsqWalletService.getAvailableConfirmedBalance(),
+        onUpdateBalances(bsqWalletService.getAvailableBalance(),
                 bsqWalletService.getAvailableNonBsqBalance(),
                 bsqWalletService.getUnverifiedBalance(),
                 bsqWalletService.getUnconfirmedChangeBalance(),

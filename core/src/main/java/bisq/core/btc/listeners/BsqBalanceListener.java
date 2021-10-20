@@ -20,7 +20,7 @@ package bisq.core.btc.listeners;
 import org.bitcoinj.core.Coin;
 
 public interface BsqBalanceListener {
-    void onUpdateBalances(Coin availableConfirmedBalance,
+    void onUpdateBalances(Coin availableBalance,
                           Coin availableNonBsqBalance,
                           Coin unverifiedBalance,
                           Coin unconfirmedChangeBalance,

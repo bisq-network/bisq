@@ -9,6 +9,7 @@ import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.bisq_v1.CreateOfferService;
+import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.payment.ClearXchangeAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.RevolutAccount;
@@ -98,7 +99,7 @@ public class CreateOfferDataModelTest {
         when(preferences.getSelectedPaymentAccountForCreateOffer()).thenReturn(revolutAccount);
         when(offerUtil.getMakerFee(any())).thenReturn(Coin.ZERO);
 
-        model.initWithData(Direction.BUY, new FiatCurrency("USD"));
+        model.initWithData(OfferDirection.BUY, new FiatCurrency("USD"));
         assertEquals("USD", model.getTradeCurrencyCode().get());
     }
 
@@ -120,7 +121,7 @@ public class CreateOfferDataModelTest {
         when(preferences.getSelectedPaymentAccountForCreateOffer()).thenReturn(revolutAccount);
         when(offerUtil.getMakerFee(any())).thenReturn(Coin.ZERO);
 
-        model.initWithData(Direction.BUY, new FiatCurrency("USD"));
+        model.initWithData(OfferDirection.BUY, new FiatCurrency("USD"));
         assertEquals("USD", model.getTradeCurrencyCode().get());
     }
 }

@@ -124,7 +124,7 @@ public class BsqWalletTest extends MethodTest {
         genBtcBlocksThenWait(1, 4000);
 
         BsqBalanceInfo alicesBsqBalances = aliceClient.getBalances().getBsq();
-        BsqBalanceInfo bobsBsqBalances = waitForBsqNewAvailableConfirmedBalance(bobClient, 150000000);
+        BsqBalanceInfo bobsBsqBalances = waitForBsqNewAvailableBalance(bobClient, 150000000);
 
         log.debug("See Available Confirmed BSQ Balances...");
         printBobAndAliceBsqBalances(testInfo,
@@ -166,8 +166,8 @@ public class BsqWalletTest extends MethodTest {
         return bsqBalance;
     }
 
-    private BsqBalanceInfo waitForBsqNewAvailableConfirmedBalance(GrpcClient grpcClient,
-                                                                  long staleBalance) {
+    private BsqBalanceInfo waitForBsqNewAvailableBalance(GrpcClient grpcClient,
+                                                         long staleBalance) {
         BsqBalanceInfo bsqBalance = grpcClient.getBsqBalances();
         for (int numRequests = 1;
              numRequests <= 15 && bsqBalance.getAvailableConfirmedBalance() == staleBalance;

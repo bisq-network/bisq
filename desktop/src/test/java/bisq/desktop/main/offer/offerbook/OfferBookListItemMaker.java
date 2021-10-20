@@ -19,7 +19,7 @@ package bisq.desktop.main.offer.offerbook;
 
 import bisq.desktop.maker.OfferMaker;
 
-import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferDirection;
 
 import com.natpryce.makeiteasy.Instantiator;
 import com.natpryce.makeiteasy.MakeItEasy;
@@ -37,7 +37,7 @@ public class OfferBookListItemMaker {
     public static final Property<OfferBookListItem, Long> price = new Property<>();
     public static final Property<OfferBookListItem, Long> amount = new Property<>();
     public static final Property<OfferBookListItem, Long> minAmount = new Property<>();
-    public static final Property<OfferBookListItem, OfferPayload.Direction> direction = new Property<>();
+    public static final Property<OfferBookListItem, OfferDirection> direction = new Property<>();
     public static final Property<OfferBookListItem, Boolean> useMarketBasedPrice = new Property<>();
     public static final Property<OfferBookListItem, Double> marketPriceMargin = new Property<>();
     public static final Property<OfferBookListItem, String> baseCurrencyCode = new Property<>();
@@ -48,7 +48,7 @@ public class OfferBookListItemMaker {
                     MakeItEasy.with(OfferMaker.price, lookup.valueOf(price, 100000L)),
                     with(OfferMaker.amount, lookup.valueOf(amount, 100000L)),
                     with(OfferMaker.minAmount, lookup.valueOf(amount, 100000L)),
-                    with(OfferMaker.direction, lookup.valueOf(direction, OfferPayload.Direction.BUY)),
+                    with(OfferMaker.direction, lookup.valueOf(direction, OfferDirection.BUY)),
                     with(OfferMaker.useMarketBasedPrice, lookup.valueOf(useMarketBasedPrice, false)),
                     with(OfferMaker.marketPriceMargin, lookup.valueOf(marketPriceMargin, 0.0)),
                     with(OfferMaker.baseCurrencyCode, lookup.valueOf(baseCurrencyCode, "BTC")),
@@ -63,7 +63,7 @@ public class OfferBookListItemMaker {
                     with(OfferMaker.amount, lookup.valueOf(amount, 200000L)))));
 
     public static final Maker<OfferBookListItem> btcBuyItem = a(OfferBookListItem);
-    public static final Maker<OfferBookListItem> btcSellItem = a(OfferBookListItem, with(direction, OfferPayload.Direction.SELL));
+    public static final Maker<OfferBookListItem> btcSellItem = a(OfferBookListItem, with(direction, OfferDirection.SELL));
 
     public static final Maker<OfferBookListItem> btcItemWithRange = a(OfferBookListItemWithRange);
 }

@@ -242,14 +242,14 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     }
 
     @Override
-    public void onUpdateBalances(Coin availableConfirmedBalance,
+    public void onUpdateBalances(Coin availableBalance,
                                  Coin availableNonBsqBalance,
                                  Coin unverifiedBalance,
                                  Coin unconfirmedChangeBalance,
                                  Coin lockedForVotingBalance,
                                  Coin lockupBondsBalance,
                                  Coin unlockingBondsBalance) {
-        updateBsqValidator(availableConfirmedBalance);
+        updateBsqValidator(availableBalance);
         updateBtcValidator(availableNonBsqBalance);
 
         setSendBtcGroupVisibleState(availableNonBsqBalance.isPositive());
@@ -260,15 +260,15 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         receiversAddressInputTextField.setText(tuple.second);
     }
 
-    private void updateBsqValidator(Coin availableConfirmedBalance) {
-        bsqValidator.setAvailableBalance(availableConfirmedBalance);
+    private void updateBsqValidator(Coin availableBalance) {
+        bsqValidator.setAvailableBalance(availableBalance);
         boolean isValid = bsqAddressValidator.validate(receiversAddressInputTextField.getText()).isValid &&
                 bsqValidator.validate(amountInputTextField.getText()).isValid;
         sendBsqButton.setDisable(!isValid);
     }
 
-    private void updateBtcValidator(Coin availableConfirmedBalance) {
-        btcValidator.setMaxValue(availableConfirmedBalance);
+    private void updateBtcValidator(Coin availableBalance) {
+        btcValidator.setMaxValue(availableBalance);
         boolean isValid = btcAddressValidator.validate(receiversBtcAddressInputTextField.getText()).isValid &&
                 btcValidator.validate(btcAmountInputTextField.getText()).isValid;
         sendBtcButton.setDisable(!isValid);
@@ -359,11 +359,11 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         amountInputTextField.refreshValidation();
     }
 
-    // We have used input selection it is the sum of our selected inputs, otherwise the availableConfirmedBalance
+    // We have used input selection it is the sum of our selected inputs, otherwise the availableBalance
     private Coin getSpendableBsqBalance() {
         return bsqUtxoCandidates != null ?
                 Coin.valueOf(bsqUtxoCandidates.stream().mapToLong(e -> e.getValue().value).sum()) :
-                bsqWalletService.getAvailableConfirmedBalance();
+                bsqWalletService.getAvailableBalance();
     }
 
     private void setSendBtcGroupVisibleState(boolean visible) {

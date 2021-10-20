@@ -211,8 +211,8 @@ public class MarketView extends ActivatableView<TabPane, Void> {
     private String getAllOffersWithReferralId() {
         List<String> list = offerBook.getOfferBookListItems().stream()
                 .map(OfferBookListItem::getOffer)
-                .filter(offer -> offer.getOfferPayload().getExtraDataMap() != null)
-                .filter(offer -> offer.getOfferPayload().getExtraDataMap().get(OfferPayload.REFERRAL_ID) != null)
+                .filter(offer -> offer.getExtraDataMap() != null)
+                .filter(offer -> offer.getExtraDataMap().get(OfferPayload.REFERRAL_ID) != null)
                 .map(offer -> {
                     StringBuilder sb = new StringBuilder();
                     sb.append("Offer ID: ").append(offer.getId()).append("\n")
@@ -221,7 +221,7 @@ public class MarketView extends ActivatableView<TabPane, Void> {
                             .append("Price: ").append(FormattingUtils.formatPrice(offer.getPrice())).append("\n")
                             .append("Amount: ").append(DisplayUtils.formatAmount(offer, formatter)).append(" BTC\n")
                             .append("Payment method: ").append(Res.get(offer.getPaymentMethod().getId())).append("\n")
-                            .append("ReferralID: ").append(offer.getOfferPayload().getExtraDataMap().get(OfferPayload.REFERRAL_ID));
+                            .append("ReferralID: ").append(offer.getExtraDataMap().get(OfferPayload.REFERRAL_ID));
                     return sb.toString();
                 })
                 .collect(Collectors.toList());

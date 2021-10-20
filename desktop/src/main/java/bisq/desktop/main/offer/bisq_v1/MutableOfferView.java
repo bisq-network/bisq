@@ -49,7 +49,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
-import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.payment.FasterPaymentsAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
@@ -171,7 +171,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
     protected int gridRow = 0;
     private final List<Node> editOfferElements = new ArrayList<>();
-    private HashMap<String, Boolean> paymentAccountWarningDisplayed = new HashMap<>();
+    private final HashMap<String, Boolean> paymentAccountWarningDisplayed = new HashMap<>();
     private boolean clearXchangeWarningDisplayed, fasterPaymentsWarningDisplayed, isActivated;
     private InfoInputTextField marketBasedPriceInfoInputTextField, volumeInfoInputTextField,
             buyerSecurityDepositInfoInputTextField, triggerPriceInfoInputTextField;
@@ -300,7 +300,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         model.getDataModel().onTabSelected(isSelected);
     }
 
-    public void initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
+    public void initWithData(OfferDirection direction, TradeCurrency tradeCurrency) {
         boolean result = model.initWithData(direction, tradeCurrency);
 
         if (!result) {
@@ -313,7 +313,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                     }).show();
         }
 
-        if (direction == OfferPayload.Direction.BUY) {
+        if (direction == OfferDirection.BUY) {
             placeOfferButton.setId("buy-button-big");
             placeOfferButton.updateText(Res.get("createOffer.placeOfferButton", Res.get("shared.buy")));
         } else {
@@ -1525,8 +1525,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             addPayInfoEntry(infoGridPane, i++, Res.getWithCol("shared.tradeAmount"), model.tradeAmount.get());
 
         addPayInfoEntry(infoGridPane, i++, Res.getWithCol("shared.yourSecurityDeposit"), model.getSecurityDepositInfo());
-        addPayInfoEntry(infoGridPane, i++, Res.get("createOffer.fundsBox.offerFee"), model.getTradeFee());
-        addPayInfoEntry(infoGridPane, i++, Res.get("createOffer.fundsBox.networkFee"), model.getTxFee());
+        addPayInfoEntry(infoGridPane, i++, Res.getWithCol("createOffer.fundsBox.offerFee"), model.getTradeFee());
+        addPayInfoEntry(infoGridPane, i++, Res.getWithCol("createOffer.fundsBox.networkFee"), model.getTxFee());
         Separator separator = new Separator();
         separator.setOrientation(Orientation.HORIZONTAL);
         separator.getStyleClass().add("offer-separator");

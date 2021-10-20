@@ -32,6 +32,7 @@ import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.bisq_v1.CreateOfferService;
+import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
@@ -117,7 +118,7 @@ public class CreateOfferViewModelTest {
         when(accountAgeWitnessService.getMyTradeLimit(any(), any(), any())).thenReturn(100000000L);
         when(preferences.getUserCountry()).thenReturn(new Country("ES", "Spain", null));
         when(bsqFormatter.formatCoin(any())).thenReturn("0");
-        when(bsqWalletService.getAvailableConfirmedBalance()).thenReturn(Coin.ZERO);
+        when(bsqWalletService.getAvailableBalance()).thenReturn(Coin.ZERO);
         when(createOfferService.getRandomOfferId()).thenReturn(UUID.randomUUID().toString());
         when(tradeStats.getObservableTradeStatisticsSet()).thenReturn(FXCollections.observableSet());
 
@@ -135,7 +136,7 @@ public class CreateOfferViewModelTest {
                 coinFormatter,
                 tradeStats,
                 null);
-        dataModel.initWithData(Direction.BUY, new CryptoCurrency("BTC", "bitcoin"));
+        dataModel.initWithData(OfferDirection.BUY, new CryptoCurrency("BTC", "bitcoin"));
         dataModel.activate();
 
         model = new CreateOfferViewModel(dataModel,

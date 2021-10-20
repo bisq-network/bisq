@@ -22,7 +22,7 @@ import bisq.desktop.common.model.ActivatableDataModel;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.offer.bisq_v1.TriggerPriceService;
 import bisq.core.provider.price.PriceFeedService;
 
@@ -86,7 +86,7 @@ class OpenOffersDataModel extends ActivatableDataModel {
         return list;
     }
 
-    public OfferPayload.Direction getDirection(Offer offer) {
+    public OfferDirection getDirection(Offer offer) {
         return openOfferManager.isMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
     }
 

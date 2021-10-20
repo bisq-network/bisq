@@ -70,7 +70,7 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             long lockTime = response.getLockTime();
             if (Config.baseCurrencyNetwork().isMainnet()) {
                 int myLockTime = processModel.getBtcWalletService().getBestChainHeight() +
-                        Restrictions.getLockTime(processModel.getOffer().getPaymentMethod().isAsset());
+                        Restrictions.getLockTime(processModel.getOffer().getPaymentMethod().isBlockchain());
                 // We allow a tolerance of 3 blocks as BestChainHeight might be a bit different on maker and taker in case a new
                 // block was just found
                 checkArgument(Math.abs(lockTime - myLockTime) <= 3,

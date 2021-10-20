@@ -21,9 +21,7 @@ import javafx.scene.control.Label;
 
 import javafx.geometry.Insets;
 
-/**
- * Reusable methods for CreateOfferView, TakeOfferView or other related views
- */
+// Shared utils for Views
 public class OfferViewUtil {
     public static Label createPopOverLabel(String text) {
         final Label label = new Label(text);

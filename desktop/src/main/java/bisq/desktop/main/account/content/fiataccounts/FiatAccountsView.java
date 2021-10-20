@@ -42,7 +42,9 @@ import bisq.desktop.components.paymentmethods.MoneyGramForm;
 import bisq.desktop.components.paymentmethods.NationalBankForm;
 import bisq.desktop.components.paymentmethods.NeftForm;
 import bisq.desktop.components.paymentmethods.NequiForm;
+import bisq.desktop.components.paymentmethods.PaxumForm;
 import bisq.desktop.components.paymentmethods.PaymentMethodForm;
+import bisq.desktop.components.paymentmethods.PayseraForm;
 import bisq.desktop.components.paymentmethods.PaytmForm;
 import bisq.desktop.components.paymentmethods.PerfectMoneyForm;
 import bisq.desktop.components.paymentmethods.PixForm;
@@ -59,8 +61,6 @@ import bisq.desktop.components.paymentmethods.StrikeForm;
 import bisq.desktop.components.paymentmethods.SwiftForm;
 import bisq.desktop.components.paymentmethods.SwishForm;
 import bisq.desktop.components.paymentmethods.TransferwiseForm;
-import bisq.desktop.components.paymentmethods.PayseraForm;
-import bisq.desktop.components.paymentmethods.PaxumForm;
 import bisq.desktop.components.paymentmethods.USPostalMoneyOrderForm;
 import bisq.desktop.components.paymentmethods.UpholdForm;
 import bisq.desktop.components.paymentmethods.UpiForm;
@@ -84,6 +84,7 @@ import bisq.desktop.util.validation.HalCashValidator;
 import bisq.desktop.util.validation.IBANValidator;
 import bisq.desktop.util.validation.InteracETransferValidator;
 import bisq.desktop.util.validation.JapanBankTransferValidator;
+import bisq.desktop.util.validation.LengthValidator;
 import bisq.desktop.util.validation.MoneyBeamValidator;
 import bisq.desktop.util.validation.PerfectMoneyValidator;
 import bisq.desktop.util.validation.PopmoneyValidator;
@@ -94,7 +95,6 @@ import bisq.desktop.util.validation.TransferwiseValidator;
 import bisq.desktop.util.validation.USPostalMoneyOrderValidator;
 import bisq.desktop.util.validation.UpholdValidator;
 import bisq.desktop.util.validation.WeChatPayValidator;
-import bisq.desktop.util.validation.LengthValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
@@ -418,7 +418,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         paymentMethodComboBox.setVisibleRowCount(11);
         paymentMethodComboBox.setPrefWidth(250);
         List<PaymentMethod> list = PaymentMethod.getPaymentMethods().stream()
-                .filter(paymentMethod -> !paymentMethod.isAsset())
+                .filter(PaymentMethod::isFiat)
                 .sorted()
                 .collect(Collectors.toList());
         paymentMethodComboBox.setItems(FXCollections.observableArrayList(list));

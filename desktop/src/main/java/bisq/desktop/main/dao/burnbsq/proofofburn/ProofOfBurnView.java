@@ -164,7 +164,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
 
         proofOfBurnService.getUpdateFlag().addListener(updateListener);
         bsqWalletService.addBsqBalanceListener(this);
-        onUpdateAvailableConfirmedBalance(bsqWalletService.getAvailableConfirmedBalance());
+        onUpdateAvailableBalance(bsqWalletService.getAvailableBalance());
 
         burnButton.setOnAction((event) -> {
             Coin amount = getAmountFee();
@@ -216,14 +216,14 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onUpdateBalances(Coin availableConfirmedBalance,
+    public void onUpdateBalances(Coin availableBalance,
                                  Coin availableNonBsqBalance,
                                  Coin unverifiedBalance,
                                  Coin unconfirmedChangeBalance,
                                  Coin lockedForVotingBalance,
                                  Coin lockupBondsBalance,
                                  Coin unlockingBondsBalance) {
-        onUpdateAvailableConfirmedBalance(availableConfirmedBalance);
+        onUpdateAvailableBalance(availableBalance);
     }
 
 
@@ -255,8 +255,8 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
         updateListener = observable -> updateList();
     }
 
-    private void onUpdateAvailableConfirmedBalance(Coin availableConfirmedBalance) {
-        bsqValidator.setAvailableBalance(availableConfirmedBalance);
+    private void onUpdateAvailableBalance(Coin availableBalance) {
+        bsqValidator.setAvailableBalance(availableBalance);
         updateButtonState();
     }
 
