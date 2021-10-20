@@ -70,7 +70,6 @@ import bisq.common.util.MathUtils;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
 
-import javax.inject.Inject;
 import javax.inject.Named;
 
 import javafx.scene.control.ComboBox;
@@ -194,7 +193,6 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Inject
     public MutableOfferViewModel(M dataModel,
                                  FiatVolumeValidator fiatVolumeValidator,
                                  FiatPriceValidator fiatPriceValidator,

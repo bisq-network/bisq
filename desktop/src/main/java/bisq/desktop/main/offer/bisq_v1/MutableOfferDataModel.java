@@ -60,8 +60,6 @@ import bisq.common.util.Utilities;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
-import com.google.inject.Inject;
-
 import javax.inject.Named;
 
 import javafx.beans.property.BooleanProperty;
@@ -149,7 +147,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Inject
     public MutableOfferDataModel(CreateOfferService createOfferService,
                                  OpenOfferManager openOfferManager,
                                  OfferUtil offerUtil,
