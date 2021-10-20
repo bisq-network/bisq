@@ -889,8 +889,7 @@ public class TradeWalletService {
             input.setScriptSig(inputScript);
         } else {
             input.setScriptSig(ScriptBuilder.createEmpty());
-            TransactionWitness witness = TransactionWitness.redeemP2WSH(redeemScript, sellerTxSig, buyerTxSig);
-            input.setWitness(witness);
+            input.setWitness(TransactionWitness.redeemP2WSH(redeemScript, sellerTxSig, buyerTxSig));
         }
         WalletService.printTx("payoutTx", payoutTx);
         WalletService.verifyTransaction(payoutTx);
@@ -969,8 +968,7 @@ public class TradeWalletService {
             input.setScriptSig(inputScript);
         } else {
             input.setScriptSig(ScriptBuilder.createEmpty());
-            TransactionWitness witness = TransactionWitness.redeemP2WSH(redeemScript, sellerTxSig, buyerTxSig);
-            input.setWitness(witness);
+            input.setWitness(TransactionWitness.redeemP2WSH(redeemScript, sellerTxSig, buyerTxSig));
         }
         WalletService.printTx("mediated payoutTx", payoutTx);
         WalletService.verifyTransaction(payoutTx);
@@ -1057,8 +1055,7 @@ public class TradeWalletService {
             input.setScriptSig(inputScript);
         } else {
             input.setScriptSig(ScriptBuilder.createEmpty());
-            TransactionWitness witness = TransactionWitness.redeemP2WSH(redeemScript, arbitratorTxSig, tradersTxSig);
-            input.setWitness(witness);
+            input.setWitness(TransactionWitness.redeemP2WSH(redeemScript, arbitratorTxSig, tradersTxSig));
         }
         WalletService.printTx("disputed payoutTx", payoutTx);
         WalletService.verifyTransaction(payoutTx);
@@ -1147,8 +1144,7 @@ public class TradeWalletService {
             input.setScriptSig(inputScript);
         } else {
             input.setScriptSig(ScriptBuilder.createEmpty());
-            TransactionWitness witness = TransactionWitness.redeemP2WSH(redeemScript, sellerTxSig, buyerTxSig);
-            input.setWitness(witness);
+            input.setWitness(TransactionWitness.redeemP2WSH(redeemScript, sellerTxSig, buyerTxSig));
         }
         String txId = payoutTx.getTxId().toString();
         String signedTxHex = Utils.HEX.encode(payoutTx.bitcoinSerialize(!hashedMultiSigOutputIsLegacy));
@@ -1228,10 +1224,13 @@ public class TradeWalletService {
                 input.getValue().value);
     }
 
-    private TransactionInput getTransactionInput(Transaction depositTx,
+    private TransactionInput getTransactionInput(Transaction parentTransaction,
                                                  byte[] scriptProgram,
                                                  RawTransactionInput rawTransactionInput) {
-        return new TransactionInput(params, depositTx, scriptProgram, getConnectedOutPoint(rawTransactionInput),
+        return new TransactionInput(params,
+                parentTransaction,
+                scriptProgram,
+                getConnectedOutPoint(rawTransactionInput),
                 Coin.valueOf(rawTransactionInput.value));
     }
 
@@ -1244,7 +1243,6 @@ public class TradeWalletService {
         return ScriptPattern.isP2WH(
                 checkNotNull(getConnectedOutPoint(rawTransactionInput).getConnectedOutput()).getScriptPubKey());
     }
-
 
     // TODO: Once we have removed legacy arbitrator from dispute domain we can remove that method as well.
     // Atm it is still used by traderSignAndFinalizeDisputedPayoutTx which is used by ArbitrationManager.
