@@ -65,7 +65,7 @@ public class ConfigFileEditor {
                 if (ConfigFileOption.isOption(line)) {
                     ConfigFileOption option = ConfigFileOption.parse(line);
                     if (option.name.equals(name)) {
-                        log.warn("Cleared existing config file option '{}'", option);
+                        log.debug("Cleared existing config file option '{}'", option);
                         continue;
                     }
                 }
