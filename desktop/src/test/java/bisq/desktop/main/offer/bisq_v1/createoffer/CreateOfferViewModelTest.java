@@ -61,7 +61,6 @@ import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
 
-import static bisq.core.offer.bisq_v1.OfferPayload.Direction;
 import static bisq.desktop.maker.PreferenceMakers.empty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
