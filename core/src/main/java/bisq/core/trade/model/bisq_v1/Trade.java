@@ -171,7 +171,7 @@ public abstract class Trade implements Tradable, Model {
 
         private final Phase phase;
 
-        State(@NotNull Phase phase) {
+        State(Phase phase) {
             this.phase = phase;
         }
 
@@ -519,8 +519,8 @@ public abstract class Trade implements Tradable, Model {
                 processModel,
                 uid);
         this.tradePrice = tradePrice;
-        this.tradingPeerNodeAddress = tradingPeerNodeAddress;
 
+        setTradingPeerNodeAddress(tradingPeerNodeAddress);
         setTradeAmount(tradeAmount);
     }
 
@@ -726,6 +726,14 @@ public abstract class Trade implements Tradable, Model {
     public void onComplete() {
     }
 
+    public State getTradeState() {
+        return state;
+    }
+
+    public Phase getTradePhase() {
+        return state.getTradePhase();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Abstract
@@ -818,18 +826,6 @@ public abstract class Trade implements Tradable, Model {
     // Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Date getTakeOfferDate() {
-        return new Date(takeOfferDate);
-    }
-
-    public State getTradeState() {
-        return state;
-    }
-
-    public Phase getPhase() {
-        return state.getTradePhase();
-    }
-
     @Nullable
     public Volume getTradeVolume() {
         try {
@@ -859,16 +855,16 @@ public abstract class Trade implements Tradable, Model {
     }
 
     private long getMaxTradePeriod() {
-        return getOffer().getPaymentMethod().getMaxTradePeriod();
+        return offer.getPaymentMethod().getMaxTradePeriod();
     }
 
     private long getTradeStartTime() {
         long now = System.currentTimeMillis();
         long startTime;
         Transaction depositTx = getDepositTx();
-        if (depositTx != null && getTakeOfferDate() != null) {
+        if (depositTx != null && getDate() != null) {
             if (depositTx.getConfidence().getDepthInBlocks() > 0) {
-                final long tradeTime = getTakeOfferDate().getTime();
+                final long tradeTime = getDate().getTime();
                 // Use tx.getIncludedInBestChainAt() when available, otherwise use tx.getUpdateTime()
                 long blockTime = depositTx.getIncludedInBestChainAt() != null
                         ? depositTx.getIncludedInBestChainAt().getTime()
@@ -898,15 +894,15 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public boolean isInPreparation() {
-        return getTradeState().getTradePhase().ordinal() == Phase.INIT.ordinal();
+        return getTradePhase().ordinal() == Phase.INIT.ordinal();
     }
 
     public boolean isTakerFeePublished() {
-        return getTradeState().getTradePhase().ordinal() >= Phase.TAKER_FEE_PUBLISHED.ordinal();
+        return getTradePhase().ordinal() >= Phase.TAKER_FEE_PUBLISHED.ordinal();
     }
 
     public boolean isDepositPublished() {
-        return getTradeState().getTradePhase().ordinal() >= Phase.DEPOSIT_PUBLISHED.ordinal();
+        return getTradePhase().ordinal() >= Phase.DEPOSIT_PUBLISHED.ordinal();
     }
 
     public boolean isFundsLockedIn() {
@@ -940,23 +936,23 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public boolean isDepositConfirmed() {
-        return getTradeState().getTradePhase().ordinal() >= Phase.DEPOSIT_CONFIRMED.ordinal();
+        return getTradePhase().ordinal() >= Phase.DEPOSIT_CONFIRMED.ordinal();
     }
 
     public boolean isFiatSent() {
-        return getTradeState().getTradePhase().ordinal() >= Phase.FIAT_SENT.ordinal();
+        return getTradePhase().ordinal() >= Phase.FIAT_SENT.ordinal();
     }
 
     public boolean isFiatReceived() {
-        return getTradeState().getTradePhase().ordinal() >= Phase.FIAT_RECEIVED.ordinal();
+        return getTradePhase().ordinal() >= Phase.FIAT_RECEIVED.ordinal();
     }
 
     public boolean isPayoutPublished() {
-        return getTradeState().getTradePhase().ordinal() >= Phase.PAYOUT_PUBLISHED.ordinal() || isWithdrawn();
+        return getTradePhase().ordinal() >= Phase.PAYOUT_PUBLISHED.ordinal() || isWithdrawn();
     }
 
     public boolean isWithdrawn() {
-        return getTradeState().getTradePhase().ordinal() == Phase.WITHDRAWN.ordinal();
+        return getTradePhase().ordinal() == Phase.WITHDRAWN.ordinal();
     }
 
     public ReadOnlyObjectProperty<State> stateProperty() {
@@ -997,7 +993,7 @@ public abstract class Trade implements Tradable, Model {
 
     @Override
     public Date getDate() {
-        return getTakeOfferDate();
+        return new Date(takeOfferDate);
     }
 
     @Override
