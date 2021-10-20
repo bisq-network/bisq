@@ -35,12 +35,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-@EqualsAndHashCode
+@EqualsAndHashCode(exclude = {"state", "timeoutTimer", "mempoolStatus"})
 @Slf4j
 public final class OpenOffer implements Tradable {
     // Timeout for offer reservation during takeoffer process. If deposit tx is not completed in that time we reset the offer to AVAILABLE state.
     private static final long TIMEOUT = 60;
-    transient private Timer timeoutTimer;
 
     public enum State {
         AVAILABLE,
@@ -54,16 +53,19 @@ public final class OpenOffer implements Tradable {
     private final Offer offer;
     @Getter
     private State state;
+
+    // TODO Not used. Could be removed?
     @Getter
-    @Setter
     @Nullable
-    private NodeAddress arbitratorNodeAddress;
+    private final NodeAddress arbitratorNodeAddress;
+    // Is set at take offer request time
     @Getter
     @Setter
     @Nullable
     private NodeAddress mediatorNodeAddress;
 
     // Added v1.2.0
+    // Is set at take offer request time
     @Getter
     @Setter
     @Nullable
@@ -76,15 +78,24 @@ public final class OpenOffer implements Tradable {
     @Getter
     @Setter
     transient private long mempoolStatus = -1;
+    transient private Timer timeoutTimer;
 
     public OpenOffer(Offer offer) {
         this(offer, 0);
+    }
+
+    public OpenOffer(Offer offer, State state) {
+        this.offer = offer;
+        this.triggerPrice = 0;
+        this.state = state;
+        arbitratorNodeAddress = null;
     }
 
     public OpenOffer(Offer offer, long triggerPrice) {
         this.offer = offer;
         this.triggerPrice = triggerPrice;
         state = State.AVAILABLE;
+        arbitratorNodeAddress = null;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
