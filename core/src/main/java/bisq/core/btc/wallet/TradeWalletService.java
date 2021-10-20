@@ -68,8 +68,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.jetbrains.annotations.NotNull;
-
 import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -1210,7 +1208,12 @@ public class TradeWalletService {
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private RawTransactionInput getRawInputFromTransactionInput(@NotNull TransactionInput input) {
+    // This method might be replace by RawTransactionInput constructor taking the TransactionInput as param.
+    // As we used segwit=false for the bitcoinSerialize method here we still keep it to not risk to break anything,
+    // though it very likely should be fine to replace it with the RawTransactionInput constructor call.
+    @Deprecated
+    private RawTransactionInput getRawInputFromTransactionInput(TransactionInput input) {
+        checkNotNull(input, "input must not be null");
         checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
         checkNotNull(input.getConnectedOutput().getParentTransaction(),
                 "input.getConnectedOutput().getParentTransaction() must not be null");
