@@ -27,6 +27,11 @@ public class TradeTaskRunner extends TaskRunner<Trade> {
 
     public TradeTaskRunner(Trade sharedModel, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         //noinspection unchecked
-        super(sharedModel, (Class<Trade>) sharedModel.getClass().getSuperclass().getSuperclass(), resultHandler, errorMessageHandler);
+        super(sharedModel, getSharedModelClass(sharedModel), resultHandler, errorMessageHandler);
+    }
+
+    static Class<Trade> getSharedModelClass(Trade sharedModel) {
+        //noinspection unchecked
+        return (Class<Trade>) sharedModel.getClass().getSuperclass().getSuperclass();
     }
 }

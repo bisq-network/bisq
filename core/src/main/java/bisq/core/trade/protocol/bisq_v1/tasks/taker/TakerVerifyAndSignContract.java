@@ -19,6 +19,8 @@ package bisq.core.trade.protocol.bisq_v1.tasks.taker;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.offer.Offer;
+import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.SellerAsTakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
@@ -65,7 +67,8 @@ public class TakerVerifyAndSignContract extends TradeTask {
                     processModel.getTempTradingPeerNodeAddress();
 
             BtcWalletService walletService = processModel.getBtcWalletService();
-            String id = processModel.getOffer().getId();
+            Offer offer = processModel.getOffer();
+            String id = offer.getId();
             AddressEntry takerPayoutAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT);
             String takerPayoutAddressString = takerPayoutAddressEntry.getAddressString();
             AddressEntry takerMultiSigAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
@@ -80,8 +83,9 @@ public class TakerVerifyAndSignContract extends TradeTask {
             String takersPaymentMethodId = checkNotNull(processModel.getPaymentAccountPayload(trade)).getPaymentMethodId();
 
             Coin tradeAmount = checkNotNull(trade.getTradeAmount());
+            OfferPayload offerPayload = offer.getOfferPayload();
             Contract contract = new Contract(
-                    processModel.getOffer().getOfferPayload(),
+                    offerPayload,
                     tradeAmount.value,
                     trade.getTradePrice().getValue(),
                     takerFeeTxId,

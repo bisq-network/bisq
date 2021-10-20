@@ -107,7 +107,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                 trade.getTradePrice().getValue(),
                 trade.getTradeAmountAsLong(),
                 offer.getPaymentMethod().getId(),
-                trade.getTakeOfferDate().getTime(),
+                trade.getDate().getTime(),
                 truncatedMediatorNodeAddress,
                 truncatedRefundAgentNodeAddress,
                 extraDataMap);

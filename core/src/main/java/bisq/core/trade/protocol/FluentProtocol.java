@@ -41,7 +41,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 // taskRunner and the optional runnable.
 public class FluentProtocol {
 
-
     public interface Event {
         String name();
     }
@@ -270,7 +269,7 @@ public class FluentProtocol {
                 return Result.VALID;
             }
 
-            boolean isPhaseValid = expectedPhases.stream().anyMatch(e -> e == trade.getPhase());
+            boolean isPhaseValid = expectedPhases.stream().anyMatch(e -> e == trade.getTradePhase());
             String trigger = message != null ?
                     message.getClass().getSimpleName() :
                     event != null ?
@@ -279,7 +278,7 @@ public class FluentProtocol {
             if (isPhaseValid) {
                 String info = MessageFormat.format("We received a {0} at phase {1} and state {2}, tradeId={3}",
                         trigger,
-                        trade.getPhase(),
+                        trade.getTradePhase(),
                         trade.getTradeState(),
                         trade.getId());
                 log.info(info);
@@ -291,7 +290,7 @@ public class FluentProtocol {
                                 "Expected phases={1},\nTrade phase={2},\nTrade state= {3},\ntradeId={4}",
                         trigger,
                         expectedPhases,
-                        trade.getPhase(),
+                        trade.getTradePhase(),
                         trade.getTradeState(),
                         trade.getId());
                 return Result.INVALID_PHASE.info(info);

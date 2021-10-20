@@ -19,6 +19,8 @@ package bisq.core.trade.protocol.bisq_v1.tasks.maker;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.offer.Offer;
+import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
@@ -56,8 +58,8 @@ public class MakerCreateAndSignContract extends TradeTask {
             NodeAddress sellerNodeAddress = isBuyerMakerAndSellerTaker ?
                     processModel.getTempTradingPeerNodeAddress() : processModel.getMyNodeAddress();
             BtcWalletService walletService = processModel.getBtcWalletService();
-            String id = processModel.getOffer().getId();
-
+            Offer offer = processModel.getOffer();
+            String id = offer.getId();
             AddressEntry makerAddressEntry = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             byte[] makerMultiSigPubKey = makerAddressEntry.getPubKey();
 
@@ -67,9 +69,10 @@ public class MakerCreateAndSignContract extends TradeTask {
             byte[] hashOfTakersPaymentAccountPayload = taker.getHashOfPaymentAccountPayload();
             String makersPaymentMethodId = checkNotNull(processModel.getPaymentAccountPayload(trade)).getPaymentMethodId();
             String takersPaymentMethodId = checkNotNull(taker.getPaymentMethodId());
+            OfferPayload offerPayload = offer.getOfferPayload();
 
             Contract contract = new Contract(
-                    processModel.getOffer().getOfferPayload(),
+                    offerPayload,
                     checkNotNull(trade.getTradeAmount()).value,
                     trade.getTradePrice().getValue(),
                     takerFeeTxId,

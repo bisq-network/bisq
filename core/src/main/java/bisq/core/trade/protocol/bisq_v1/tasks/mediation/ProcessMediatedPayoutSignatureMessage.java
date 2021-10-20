@@ -39,7 +39,6 @@ public class ProcessMediatedPayoutSignatureMessage extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            log.debug("current trade state " + trade.getTradeState());
             MediatedPayoutTxSignatureMessage message = (MediatedPayoutTxSignatureMessage) processModel.getTradeMessage();
             Validator.checkTradeId(processModel.getOfferId(), message);
             checkNotNull(message);

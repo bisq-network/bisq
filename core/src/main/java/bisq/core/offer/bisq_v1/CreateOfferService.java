@@ -182,7 +182,7 @@ public class CreateOfferService {
                 creationTime,
                 makerAddress,
                 pubKeyRing,
-                OfferDirection.valueOf(direction.name()),
+                direction,
                 priceAsLong,
                 marketPriceMarginParam,
                 useMarketBasedPriceValue,

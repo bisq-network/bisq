@@ -21,9 +21,11 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.DaoFacade;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
@@ -46,6 +48,7 @@ public class Provider {
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
     private final TradeWalletService tradeWalletService;
+    private final WalletsManager walletsManager;
     private final DaoFacade daoFacade;
     private final ReferralIdService referralIdService;
     private final User user;
@@ -56,6 +59,7 @@ public class Provider {
     private final MediatorManager mediatorManager;
     private final RefundAgentManager refundAgentManager;
     private final KeyRing keyRing;
+    private final FeeService feeService;
 
     @Inject
     public Provider(OpenOfferManager openOfferManager,
@@ -63,6 +67,7 @@ public class Provider {
                     BtcWalletService btcWalletService,
                     BsqWalletService bsqWalletService,
                     TradeWalletService tradeWalletService,
+                    WalletsManager walletsManager,
                     DaoFacade daoFacade,
                     ReferralIdService referralIdService,
                     User user,
@@ -72,13 +77,15 @@ public class Provider {
                     ArbitratorManager arbitratorManager,
                     MediatorManager mediatorManager,
                     RefundAgentManager refundAgentManager,
-                    KeyRing keyRing) {
+                    KeyRing keyRing,
+                    FeeService feeService) {
 
         this.openOfferManager = openOfferManager;
         this.p2PService = p2PService;
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
         this.tradeWalletService = tradeWalletService;
+        this.walletsManager = walletsManager;
         this.daoFacade = daoFacade;
         this.referralIdService = referralIdService;
         this.user = user;
@@ -89,5 +96,6 @@ public class Provider {
         this.mediatorManager = mediatorManager;
         this.refundAgentManager = refundAgentManager;
         this.keyRing = keyRing;
+        this.feeService = feeService;
     }
 }

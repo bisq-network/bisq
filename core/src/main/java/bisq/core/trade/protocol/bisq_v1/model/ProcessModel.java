@@ -116,7 +116,6 @@ public class ProcessModel implements Model, PersistablePayload {
     @Getter
     transient private Transaction depositTx;
 
-
     // Persistable Immutable
     private final TradingPeer tradingPeer;
     private final String offerId;
@@ -324,10 +323,6 @@ public class ProcessModel implements Model, PersistablePayload {
         if (tradeManager != null) {
             tradeManager.requestPersistence();
         }
-    }
-
-    void witnessDebugLog(Trade trade) {
-        getAccountAgeWitnessService().getAccountAgeWitnessUtils().witnessDebugLog(trade, null);
     }
 
 

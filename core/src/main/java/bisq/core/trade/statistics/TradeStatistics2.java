@@ -54,7 +54,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import lombok.Value;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
@@ -68,7 +69,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Deprecated
 @Slf4j
-@Value
+@EqualsAndHashCode
+@Getter
 public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload,
         CapabilityRequiringPayload, Comparable<TradeStatistics2> {
 
@@ -94,7 +96,8 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
         Offer offer = trade.getOffer();
         checkNotNull(offer, "offer must not ne null");
         checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not ne null");
-        return new TradeStatistics2(offer.getOfferPayload(),
+        OfferPayload offerPayload = offer.getOfferPayload();
+        return new TradeStatistics2(offerPayload,
                 trade.getTradePrice(),
                 trade.getTradeAmount(),
                 trade.getDate(),

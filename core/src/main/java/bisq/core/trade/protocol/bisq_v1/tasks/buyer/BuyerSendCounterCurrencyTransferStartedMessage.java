@@ -35,6 +35,8 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.model.bisq_v1.Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG;
+
 /**
  * We send the seller the BuyerSendCounterCurrencyTransferStartedMessage.
  * We wait to receive a ACK message back and resend the message
@@ -83,8 +85,8 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends SendMailboxM
 
     @Override
     protected void setStateSent() {
-        if (trade.getTradeState().ordinal() < Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG.ordinal()) {
-            trade.setStateIfValidTransitionTo(Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG);
+        if (trade.getTradeState().ordinal() < BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG.ordinal()) {
+            trade.setStateIfValidTransitionTo(BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG);
         }
 
         processModel.getTradeManager().requestPersistence();

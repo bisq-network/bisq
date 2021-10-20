@@ -20,6 +20,7 @@ package bisq.core.offer.bisq_v1;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
+import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.mempool.MempoolService;
@@ -138,8 +139,9 @@ public class TriggerPriceService {
     }
 
     private void checkPriceThreshold(MarketPrice marketPrice, OpenOffer openOffer) {
+        Offer offer = openOffer.getOffer();
         if (wasTriggered(marketPrice, openOffer)) {
-            String currencyCode = openOffer.getOffer().getCurrencyCode();
+            String currencyCode = offer.getCurrencyCode();
             int smallestUnitExponent = CurrencyUtil.isCryptoCurrency(currencyCode) ?
                     Altcoin.SMALLEST_UNIT_EXPONENT :
                     Fiat.SMALLEST_UNIT_EXPONENT;
@@ -148,9 +150,9 @@ public class TriggerPriceService {
             log.info("Market price exceeded the trigger price of the open offer.\n" +
                             "We deactivate the open offer with ID {}.\nCurrency: {};\nOffer direction: {};\n" +
                             "Market price: {};\nTrigger price: {}",
-                    openOffer.getOffer().getShortId(),
+                    offer.getShortId(),
                     currencyCode,
-                    openOffer.getOffer().getDirection(),
+                    offer.getDirection(),
                     marketPrice.getPrice(),
                     MathUtils.scaleDownByPowerOf10(triggerPrice, smallestUnitExponent)
             );
@@ -160,14 +162,16 @@ public class TriggerPriceService {
             });
         } else if (openOffer.getState() == OpenOffer.State.AVAILABLE) {
             // check the mempool if it has not been done before
-            if (openOffer.getMempoolStatus() < 0 && mempoolService.canRequestBeMade(openOffer.getOffer().getOfferPayload())) {
-                mempoolService.validateOfferMakerTx(openOffer.getOffer().getOfferPayload(), (txValidator -> {
+            OfferPayload offerPayload = offer.getOfferPayload();
+            if (openOffer.getMempoolStatus() < 0 &&
+                    mempoolService.canRequestBeMade(offerPayload)) {
+                mempoolService.validateOfferMakerTx(offerPayload, (txValidator -> {
                     openOffer.setMempoolStatus(txValidator.isFail() ? 0 : 1);
                 }));
             }
             // if the mempool indicated failure then deactivate the open offer
             if (openOffer.getMempoolStatus() == 0) {
-                log.info("Deactivating open offer {} due to mempool validation", openOffer.getOffer().getShortId());
+                log.info("Deactivating open offer {} due to mempool validation", offer.getShortId());
                 openOfferManager.deactivateOpenOffer(openOffer, () -> {
                 }, errorMessage -> {
                 });

@@ -40,6 +40,8 @@ import java.util.Arrays;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.trade.model.bisq_v1.Trade.State.BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG;
+import static bisq.core.trade.model.bisq_v1.Trade.State.BUYER_SAW_DEPOSIT_TX_IN_NETWORK;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -105,8 +107,8 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
             }
 
             // If we got already the confirmation we don't want to apply an earlier state
-            if (trade.getTradeState().ordinal() < Trade.State.BUYER_SAW_DEPOSIT_TX_IN_NETWORK.ordinal()) {
-                trade.setState(Trade.State.BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
+            if (trade.getTradeState().ordinal() < BUYER_SAW_DEPOSIT_TX_IN_NETWORK.ordinal()) {
+                trade.setState(BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG);
             }
 
             processModel.getBtcWalletService().swapTradeEntryToAvailableEntry(trade.getId(),

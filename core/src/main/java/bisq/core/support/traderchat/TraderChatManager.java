@@ -110,7 +110,8 @@ public class TraderChatManager extends SupportManager {
 
     @Override
     public List<ChatMessage> getAllChatMessages(String tradeId) {
-        return getTradeById(tradeId).map(trade -> trade.getChatMessages()).orElse(FXCollections.emptyObservableList());
+        return getTradeById(tradeId).map(Trade::getChatMessages)
+                .orElse(FXCollections.emptyObservableList());
     }
 
     @Override
