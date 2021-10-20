@@ -399,8 +399,17 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
         return Res.get(id);
     }
 
+    public boolean isFiat() {
+        return !isAltcoin();
+    }
+
     public boolean isBlockchain() {
         return this.equals(BLOCK_CHAINS_INSTANT) || this.equals(BLOCK_CHAINS);
+    }
+
+    // Includes any non btc asset, not limited to blockchain payment methods
+    public boolean isAltcoin() {
+        return isBlockchain();
     }
 
     public static boolean hasChargebackRisk(PaymentMethod paymentMethod, List<TradeCurrency> tradeCurrencies) {
