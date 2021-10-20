@@ -49,7 +49,7 @@ public class TakerProcessesInputsForDepositTxResponse extends TradeTask {
             checkTradeId(processModel.getOfferId(), response);
             checkNotNull(response);
 
-            TradingPeer tradingPeer = processModel.getTradingPeer();
+            TradingPeer tradingPeer = processModel.getTradePeer();
 
             // 1.7.0: We do not expect the payment account anymore but in case peer has not updated we still process it.
             Optional.ofNullable(response.getMakerPaymentAccountPayload())

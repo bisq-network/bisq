@@ -570,7 +570,7 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     private boolean peerAccepted() {
-        return trade.getProcessModel().getTradingPeer().getMediatedPayoutTxSignature() != null;
+        return trade.getProcessModel().getTradePeer().getMediatedPayoutTxSignature() != null;
     }
 
     private void openMediationResultPopup(String headLine) {

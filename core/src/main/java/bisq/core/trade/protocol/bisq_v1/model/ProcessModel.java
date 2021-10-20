@@ -261,6 +261,10 @@ public class ProcessModel implements Model, PersistablePayload {
     public void onComplete() {
     }
 
+    public TradingPeer getTradePeer() {
+        return tradingPeer;
+    }
+
     public void setTakeOfferFeeTx(Transaction takeOfferFeeTx) {
         this.takeOfferFeeTx = takeOfferFeeTx;
         takeOfferFeeTxId = takeOfferFeeTx.getTxId().toString();

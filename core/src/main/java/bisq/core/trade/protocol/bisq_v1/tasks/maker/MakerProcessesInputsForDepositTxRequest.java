@@ -57,7 +57,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             checkNotNull(request);
             checkTradeId(processModel.getOfferId(), request);
 
-            TradingPeer tradingPeer = processModel.getTradingPeer();
+            TradingPeer tradingPeer = processModel.getTradePeer();
 
             // 1.7.0: We do not expect the payment account anymore but in case peer has not updated we still process it.
             Optional.ofNullable(request.getTakerPaymentAccountPayload())

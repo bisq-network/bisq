@@ -53,7 +53,7 @@ public class VerifyPeersAccountAgeWitness extends TradeTask {
             }
 
             AccountAgeWitnessService accountAgeWitnessService = processModel.getAccountAgeWitnessService();
-            TradingPeer tradingPeer = processModel.getTradingPeer();
+            TradingPeer tradingPeer = processModel.getTradePeer();
             PaymentAccountPayload peersPaymentAccountPayload = checkNotNull(tradingPeer.getPaymentAccountPayload(),
                     "Peers peersPaymentAccountPayload must not be null");
             PubKeyRing peersPubKeyRing = checkNotNull(tradingPeer.getPubKeyRing(), "peersPubKeyRing must not be null");

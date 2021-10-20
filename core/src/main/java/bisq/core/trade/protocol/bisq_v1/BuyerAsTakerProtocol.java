@@ -64,7 +64,7 @@ public class BuyerAsTakerProtocol extends BuyerProtocol implements TakerProtocol
         super(trade);
 
         Offer offer = checkNotNull(trade.getOffer());
-        processModel.getTradingPeer().setPubKeyRing(offer.getPubKeyRing());
+        processModel.getTradePeer().setPubKeyRing(offer.getPubKeyRing());
     }
 
 

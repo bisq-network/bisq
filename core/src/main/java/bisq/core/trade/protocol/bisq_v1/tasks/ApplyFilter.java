@@ -44,7 +44,7 @@ public class ApplyFilter extends TradeTask {
 
             NodeAddress nodeAddress = checkNotNull(processModel.getTempTradingPeerNodeAddress());
             @Nullable
-            PaymentAccountPayload paymentAccountPayload = processModel.getTradingPeer().getPaymentAccountPayload();
+            PaymentAccountPayload paymentAccountPayload = processModel.getTradePeer().getPaymentAccountPayload();
 
             FilterManager filterManager = processModel.getFilterManager();
             if (filterManager.isNodeAddressBanned(nodeAddress)) {

@@ -244,7 +244,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
     }
 
     protected void sendAckMessage(TradeMessage message, boolean result, @Nullable String errorMessage) {
-        PubKeyRing peersPubKeyRing = processModel.getTradingPeer().getPubKeyRing();
+        PubKeyRing peersPubKeyRing = processModel.getTradePeer().getPubKeyRing();
         if (peersPubKeyRing == null) {
             log.error("We cannot send the ACK message as peersPubKeyRing is null");
             return;
@@ -346,7 +346,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
     private boolean isPubKeyValid(DecryptedMessageWithPubKey message) {
         // We can only validate the peers pubKey if we have it already. If we are the taker we get it from the offer
         // Otherwise it depends on the state of the trade protocol if we have received the peers pubKeyRing already.
-        PubKeyRing peersPubKeyRing = processModel.getTradingPeer().getPubKeyRing();
+        PubKeyRing peersPubKeyRing = processModel.getTradePeer().getPubKeyRing();
         boolean isValid = true;
         if (peersPubKeyRing != null &&
                 !message.getSignaturePubKey().equals(peersPubKeyRing.getSignaturePubKey())) {

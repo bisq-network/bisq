@@ -84,7 +84,7 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
                 checkArgument(Arrays.equals(sellerPaymentAccountPayloadHash, peersPaymentAccountPayloadHash),
                         "Hash of payment account is invalid");
 
-                processModel.getTradingPeer().setPaymentAccountPayload(sellerPaymentAccountPayload);
+                processModel.getTradePeer().setPaymentAccountPayload(sellerPaymentAccountPayload);
                 contract.setPaymentAccountPayloads(sellerPaymentAccountPayload,
                         processModel.getPaymentAccountPayload(trade),
                         processModel.getPubKeyRing());

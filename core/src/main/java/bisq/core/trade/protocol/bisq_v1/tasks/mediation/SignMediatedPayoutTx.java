@@ -50,7 +50,7 @@ public class SignMediatedPayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
-            TradingPeer tradingPeer = processModel.getTradingPeer();
+            TradingPeer tradingPeer = processModel.getTradePeer();
             if (processModel.getMediatedPayoutTxSignature() != null) {
                 log.warn("processModel.getTxSignatureFromMediation is already set");
             }

@@ -142,7 +142,7 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
 
             processModel.getP2PService().sendEncryptedDirectMessage(
                     trade.getTradingPeerNodeAddress(),
-                    processModel.getTradingPeer().getPubKeyRing(),
+                    processModel.getTradePeer().getPubKeyRing(),
                     request,
                     new SendDirectMessageListener() {
                         public void onArrived() {
