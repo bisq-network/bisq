@@ -966,6 +966,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private void addOfferAvailabilityLabel() {
         offerAvailabilityBusyAnimation = new BusyAnimation(false);
         offerAvailabilityLabel = new AutoTooltipLabel(Res.get("takeOffer.fundsBox.isOfferAvailable"));
+        HBox.setMargin(offerAvailabilityLabel, new Insets(6, 0, 0, 0));
         buttonBox.getChildren().addAll(offerAvailabilityBusyAnimation, offerAvailabilityLabel);
     }
 

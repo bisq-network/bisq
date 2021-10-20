@@ -1525,8 +1525,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             addPayInfoEntry(infoGridPane, i++, Res.getWithCol("shared.tradeAmount"), model.tradeAmount.get());
 
         addPayInfoEntry(infoGridPane, i++, Res.getWithCol("shared.yourSecurityDeposit"), model.getSecurityDepositInfo());
-        addPayInfoEntry(infoGridPane, i++, Res.get("createOffer.fundsBox.offerFee"), model.getTradeFee());
-        addPayInfoEntry(infoGridPane, i++, Res.get("createOffer.fundsBox.networkFee"), model.getTxFee());
+        addPayInfoEntry(infoGridPane, i++, Res.getWithCol("createOffer.fundsBox.offerFee"), model.getTradeFee());
+        addPayInfoEntry(infoGridPane, i++, Res.getWithCol("createOffer.fundsBox.networkFee"), model.getTxFee());
         Separator separator = new Separator();
         separator.setOrientation(Orientation.HORIZONTAL);
         separator.getStyleClass().add("offer-separator");
