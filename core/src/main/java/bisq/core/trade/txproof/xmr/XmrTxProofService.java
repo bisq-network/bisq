@@ -204,7 +204,7 @@ public class XmrTxProofService implements AssetTxProofService {
     // Basic requirements are fulfilled.
     // We process further if we are in the expected state or register a listener
     private void processTradeOrAddListener(SellerTrade trade) {
-        if (isExpectedTradeState(trade.getState())) {
+        if (isExpectedTradeState(trade.getTradeState())) {
             startRequestsIfValid(trade);
         } else {
             // We are expecting SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG in the future, so listen on changes

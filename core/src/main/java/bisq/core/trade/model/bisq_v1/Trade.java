@@ -324,7 +324,6 @@ public abstract class Trade implements Tradable, Model {
     @Nullable
     @Getter
     private NodeAddress tradingPeerNodeAddress;
-    @Getter
     private State state = State.PREPARATION;
     @Getter
     private DisputeState disputeState = DisputeState.NO_DISPUTE;
@@ -823,6 +822,10 @@ public abstract class Trade implements Tradable, Model {
         return new Date(takeOfferDate);
     }
 
+    public State getTradeState() {
+        return state;
+    }
+
     public Phase getPhase() {
         return state.getTradePhase();
     }
@@ -895,15 +898,15 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public boolean isInPreparation() {
-        return getState().getTradePhase().ordinal() == Phase.INIT.ordinal();
+        return getTradeState().getTradePhase().ordinal() == Phase.INIT.ordinal();
     }
 
     public boolean isTakerFeePublished() {
-        return getState().getTradePhase().ordinal() >= Phase.TAKER_FEE_PUBLISHED.ordinal();
+        return getTradeState().getTradePhase().ordinal() >= Phase.TAKER_FEE_PUBLISHED.ordinal();
     }
 
     public boolean isDepositPublished() {
-        return getState().getTradePhase().ordinal() >= Phase.DEPOSIT_PUBLISHED.ordinal();
+        return getTradeState().getTradePhase().ordinal() >= Phase.DEPOSIT_PUBLISHED.ordinal();
     }
 
     public boolean isFundsLockedIn() {
@@ -937,23 +940,23 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public boolean isDepositConfirmed() {
-        return getState().getTradePhase().ordinal() >= Phase.DEPOSIT_CONFIRMED.ordinal();
+        return getTradeState().getTradePhase().ordinal() >= Phase.DEPOSIT_CONFIRMED.ordinal();
     }
 
     public boolean isFiatSent() {
-        return getState().getTradePhase().ordinal() >= Phase.FIAT_SENT.ordinal();
+        return getTradeState().getTradePhase().ordinal() >= Phase.FIAT_SENT.ordinal();
     }
 
     public boolean isFiatReceived() {
-        return getState().getTradePhase().ordinal() >= Phase.FIAT_RECEIVED.ordinal();
+        return getTradeState().getTradePhase().ordinal() >= Phase.FIAT_RECEIVED.ordinal();
     }
 
     public boolean isPayoutPublished() {
-        return getState().getTradePhase().ordinal() >= Phase.PAYOUT_PUBLISHED.ordinal() || isWithdrawn();
+        return getTradeState().getTradePhase().ordinal() >= Phase.PAYOUT_PUBLISHED.ordinal() || isWithdrawn();
     }
 
     public boolean isWithdrawn() {
-        return getState().getTradePhase().ordinal() == Phase.WITHDRAWN.ordinal();
+        return getTradeState().getTradePhase().ordinal() == Phase.WITHDRAWN.ordinal();
     }
 
     public ReadOnlyObjectProperty<State> stateProperty() {

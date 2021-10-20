@@ -280,7 +280,7 @@ public class FluentProtocol {
                 String info = MessageFormat.format("We received a {0} at phase {1} and state {2}, tradeId={3}",
                         trigger,
                         trade.getPhase(),
-                        trade.getState(),
+                        trade.getTradeState(),
                         trade.getId());
                 log.info(info);
                 return Result.VALID.info(info);
@@ -292,7 +292,7 @@ public class FluentProtocol {
                         trigger,
                         expectedPhases,
                         trade.getPhase(),
-                        trade.getState(),
+                        trade.getTradeState(),
                         trade.getId());
                 return Result.INVALID_PHASE.info(info);
             }
@@ -303,7 +303,7 @@ public class FluentProtocol {
                 return Result.VALID;
             }
 
-            boolean isStateValid = expectedStates.stream().anyMatch(e -> e == trade.getState());
+            boolean isStateValid = expectedStates.stream().anyMatch(e -> e == trade.getTradeState());
             String trigger = message != null ?
                     message.getClass().getSimpleName() :
                     event != null ?
@@ -312,7 +312,7 @@ public class FluentProtocol {
             if (isStateValid) {
                 String info = MessageFormat.format("We received a {0} at state {1}, tradeId={2}",
                         trigger,
-                        trade.getState(),
+                        trade.getTradeState(),
                         trade.getId());
                 log.info(info);
                 return Result.VALID.info(info);
@@ -321,7 +321,7 @@ public class FluentProtocol {
                                 "Expected states={1}, Trade state= {2}, tradeId={3}",
                         trigger,
                         expectedStates,
-                        trade.getState(),
+                        trade.getTradeState(),
                         trade.getId());
                 return Result.INVALID_STATE.info(info);
             }

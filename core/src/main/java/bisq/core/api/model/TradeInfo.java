@@ -138,7 +138,7 @@ public class TradeInfo implements Payload {
                 .withTradeVolume(trade.getTradeVolume() == null ? 0 : trade.getTradeVolume().getValue())
                 .withTradingPeerNodeAddress(Objects.requireNonNull(
                         trade.getTradingPeerNodeAddress()).getHostNameWithoutPostFix())
-                .withState(trade.getState().name())
+                .withState(trade.getTradeState().name())
                 .withPhase(trade.getPhase().name())
                 .withTradePeriodState(trade.getTradePeriodState().name())
                 .withIsDepositPublished(trade.isDepositPublished())

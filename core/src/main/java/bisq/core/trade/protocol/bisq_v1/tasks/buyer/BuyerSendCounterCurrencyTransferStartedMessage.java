@@ -83,7 +83,7 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends SendMailboxM
 
     @Override
     protected void setStateSent() {
-        if (trade.getState().ordinal() < Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG.ordinal()) {
+        if (trade.getTradeState().ordinal() < Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG.ordinal()) {
             trade.setStateIfValidTransitionTo(Trade.State.BUYER_SENT_FIAT_PAYMENT_INITIATED_MSG);
         }
 

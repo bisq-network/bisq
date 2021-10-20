@@ -324,7 +324,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             textArea.scrollTopProperty().addListener(changeListener);
             textArea.setScrollTop(30);
 
-            addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradeState"), trade.getState().getTradePhase().name());
+            addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradeState"), trade.getTradeState().getTradePhase().name());
         }
 
         Tuple3<Button, Button, HBox> tuple = add2ButtonsWithBox(gridPane, ++rowIndex,

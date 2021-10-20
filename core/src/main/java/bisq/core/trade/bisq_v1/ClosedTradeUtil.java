@@ -326,7 +326,7 @@ public class ClosedTradeUtil {
                 } else {
                     log.error("That must not happen. We got a pending state but we are in"
                                     + " the closed trades list. state={}",
-                            trade.getState().name());
+                            trade.getTradeState().name());
                     return Res.get("shared.na");
                 }
             } else if (tradable instanceof OpenOffer) {
