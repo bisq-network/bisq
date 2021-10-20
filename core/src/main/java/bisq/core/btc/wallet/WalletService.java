@@ -357,12 +357,13 @@ public abstract class WalletService {
                         txIn.setScriptSig(ScriptBuilder.createEmpty());
                         txIn.setWitness(TransactionWitness.redeemP2WPKH(txSig, key));
                     } catch (ECKey.KeyIsEncryptedException e1) {
+                        log.error(e1.toString());
                         throw e1;
                     } catch (ECKey.MissingPrivateKeyException e1) {
                         log.warn("No private key in keypair for input {}", index);
                     }
                 } else {
-                    // log.error("Unexpected script type.");
+                    log.error("Unexpected script type.");
                     throw new RuntimeException("Unexpected script type.");
                 }
             } else {
@@ -544,6 +545,10 @@ public abstract class WalletService {
 
     public boolean isAddressUnused(Address address) {
         return getNumTxOutputsForAddress(address) == 0;
+    }
+
+    public boolean isMine(TransactionOutput transactionOutput) {
+        return transactionOutput.isMine(wallet);
     }
 
     // BISQ issue #4039: Prevent dust outputs from being created.
