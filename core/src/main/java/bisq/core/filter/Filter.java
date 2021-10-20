@@ -39,13 +39,15 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import lombok.Value;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
 @Slf4j
-@Value
+@Getter
+@EqualsAndHashCode
 public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     public static final long TTL = TimeUnit.DAYS.toMillis(180);
 
