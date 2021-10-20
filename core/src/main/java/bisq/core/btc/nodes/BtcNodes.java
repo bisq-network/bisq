@@ -72,9 +72,6 @@ public class BtcNodes {
                         new BtcNode("btc2.bisq.services", "devinbtcyk643iruzfpaxw3on2jket7rbjmwygm42dmdyub3ietrbmid.onion", "173.255.240.205", BtcNode.DEFAULT_PORT, "@devinbileck"),
                         new BtcNode(null, "devinbtcmwkuitvxl3tfi5of4zau46ymeannkjv6fpnylkgf3q5fa3id.onion", null, BtcNode.DEFAULT_PORT, "@devinbileck"),
 
-                        // m52go
-                        new BtcNode(null, "rss2u4embqa6fzuaiuvpp6szklkdckrcfgv6zer3ngclkzclvstywjyd.onion", null, BtcNode.DEFAULT_PORT, "@m52go"),
-
                         // wiz
                         new BtcNode("node130.hnl.wiz.biz", "wizbit5555bsslwv4ctronnsgk5vh2w2pdx7v7eyuivlyuoteejk7lid.onion", "103.99.168.130", BtcNode.DEFAULT_PORT, "@wiz"),
                         new BtcNode("node140.hnl.wiz.biz", "jto2jfbsxhb6yvhcrrjddrgbakte6tgsy3c3z3prss64gndgvovvosyd.onion", "103.99.168.140", BtcNode.DEFAULT_PORT, "@wiz"),
