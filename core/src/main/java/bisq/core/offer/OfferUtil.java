@@ -31,6 +31,7 @@ import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.CashByMailAccount;
 import bisq.core.payment.F2FAccount;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
@@ -390,17 +391,21 @@ public class OfferUtil {
                                   PaymentAccount paymentAccount,
                                   String currencyCode,
                                   Coin makerFeeAsCoin) {
+        validateBasicOfferData(paymentAccount.getPaymentMethod(), currencyCode);
         checkNotNull(makerFeeAsCoin, "makerFee must not be null");
-        checkNotNull(p2PService.getAddress(), "Address must not be null");
         checkArgument(buyerSecurityDeposit <= getMaxBuyerSecurityDepositAsPercent(),
                 "securityDeposit must not exceed " +
                         getMaxBuyerSecurityDepositAsPercent());
         checkArgument(buyerSecurityDeposit >= getMinBuyerSecurityDepositAsPercent(),
                 "securityDeposit must not be less than " +
                         getMinBuyerSecurityDepositAsPercent());
+    }
+
+    public void validateBasicOfferData(PaymentMethod paymentMethod, String currencyCode) {
+        checkNotNull(p2PService.getAddress(), "Address must not be null");
         checkArgument(!filterManager.isCurrencyBanned(currencyCode),
                 Res.get("offerbook.warning.currencyBanned"));
-        checkArgument(!filterManager.isPaymentMethodBanned(paymentAccount.getPaymentMethod()),
+        checkArgument(!filterManager.isPaymentMethodBanned(paymentMethod),
                 Res.get("offerbook.warning.paymentMethodBanned"));
     }
 
@@ -410,45 +415,45 @@ public class OfferUtil {
     // Immutable fields are sourced from the original openOffer param.
     public OfferPayload getMergedOfferPayload(OpenOffer openOffer,
                                               MutableOfferPayloadFields mutableOfferPayloadFields) {
-        OfferPayload originalOfferPayload = openOffer.getOffer().getOfferPayload();
-        return new OfferPayload(originalOfferPayload.getId(),
-                originalOfferPayload.getDate(),
-                originalOfferPayload.getOwnerNodeAddress(),
-                originalOfferPayload.getPubKeyRing(),
-                originalOfferPayload.getDirection(),
+        OfferPayload original = openOffer.getOffer().getOfferPayload();
+        return new OfferPayload(original.getId(),
+                original.getDate(),
+                original.getOwnerNodeAddress(),
+                original.getPubKeyRing(),
+                original.getDirection(),
                 mutableOfferPayloadFields.getPrice(),
                 mutableOfferPayloadFields.getMarketPriceMargin(),
                 mutableOfferPayloadFields.isUseMarketBasedPrice(),
-                originalOfferPayload.getAmount(),
-                originalOfferPayload.getMinAmount(),
+                original.getAmount(),
+                original.getMinAmount(),
                 mutableOfferPayloadFields.getBaseCurrencyCode(),
                 mutableOfferPayloadFields.getCounterCurrencyCode(),
-                originalOfferPayload.getArbitratorNodeAddresses(),
-                originalOfferPayload.getMediatorNodeAddresses(),
+                original.getArbitratorNodeAddresses(),
+                original.getMediatorNodeAddresses(),
                 mutableOfferPayloadFields.getPaymentMethodId(),
                 mutableOfferPayloadFields.getMakerPaymentAccountId(),
-                originalOfferPayload.getOfferFeePaymentTxId(),
+                original.getOfferFeePaymentTxId(),
                 mutableOfferPayloadFields.getCountryCode(),
                 mutableOfferPayloadFields.getAcceptedCountryCodes(),
                 mutableOfferPayloadFields.getBankId(),
                 mutableOfferPayloadFields.getAcceptedBankIds(),
-                originalOfferPayload.getVersionNr(),
-                originalOfferPayload.getBlockHeightAtOfferCreation(),
-                originalOfferPayload.getTxFee(),
-                originalOfferPayload.getMakerFee(),
-                originalOfferPayload.isCurrencyForMakerFeeBtc(),
-                originalOfferPayload.getBuyerSecurityDeposit(),
-                originalOfferPayload.getSellerSecurityDeposit(),
-                originalOfferPayload.getMaxTradeLimit(),
-                originalOfferPayload.getMaxTradePeriod(),
-                originalOfferPayload.isUseAutoClose(),
-                originalOfferPayload.isUseReOpenAfterAutoClose(),
-                originalOfferPayload.getLowerClosePrice(),
-                originalOfferPayload.getUpperClosePrice(),
-                originalOfferPayload.isPrivateOffer(),
-                originalOfferPayload.getHashOfChallenge(),
+                original.getVersionNr(),
+                original.getBlockHeightAtOfferCreation(),
+                original.getTxFee(),
+                original.getMakerFee(),
+                original.isCurrencyForMakerFeeBtc(),
+                original.getBuyerSecurityDeposit(),
+                original.getSellerSecurityDeposit(),
+                original.getMaxTradeLimit(),
+                original.getMaxTradePeriod(),
+                original.isUseAutoClose(),
+                original.isUseReOpenAfterAutoClose(),
+                original.getLowerClosePrice(),
+                original.getUpperClosePrice(),
+                original.isPrivateOffer(),
+                original.getHashOfChallenge(),
                 mutableOfferPayloadFields.getExtraDataMap(),
-                originalOfferPayload.getProtocolVersion());
+                original.getProtocolVersion());
     }
 
     private Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee,
