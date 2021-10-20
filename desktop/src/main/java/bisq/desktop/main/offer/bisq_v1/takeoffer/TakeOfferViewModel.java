@@ -420,7 +420,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private void applyTradeErrorMessage(@Nullable String errorMessage) {
         if (errorMessage != null) {
             String appendMsg = "";
-            switch (trade.getState().getPhase()) {
+            switch (trade.getState().getTradePhase()) {
                 case INIT:
                     appendMsg = Res.get("takeOffer.error.noFundsLost");
                     break;

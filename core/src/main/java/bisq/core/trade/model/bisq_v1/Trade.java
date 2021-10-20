@@ -165,12 +165,10 @@ public abstract class Trade implements Tradable, Model {
         // #################### Phase WITHDRAWN
         WITHDRAW_COMPLETED(Phase.WITHDRAWN);
 
-        @NotNull
-        public Phase getPhase() {
+        public Phase getTradePhase() {
             return phase;
         }
 
-        @NotNull
         private final Phase phase;
 
         State(@NotNull Phase phase) {
@@ -189,8 +187,8 @@ public abstract class Trade implements Tradable, Model {
         // We allow a state change only if the phase is the next phase or if we do not change the phase by the
         // state change (e.g. detail change inside the same phase)
         public boolean isValidTransitionTo(State newState) {
-            Phase newPhase = newState.getPhase();
-            Phase currentPhase = this.getPhase();
+            Phase newPhase = newState.getTradePhase();
+            Phase currentPhase = this.getTradePhase();
             return currentPhase.isValidTransitionTo(newPhase) || newPhase.equals(currentPhase);
         }
     }
@@ -756,7 +754,7 @@ public abstract class Trade implements Tradable, Model {
             // We don't want to log at startup the setState calls from all persisted trades
             log.info("Set new state at {} (id={}): {}", this.getClass().getSimpleName(), getShortId(), state);
         }
-        if (state.getPhase().ordinal() < this.state.getPhase().ordinal()) {
+        if (state.getTradePhase().ordinal() < this.state.getTradePhase().ordinal()) {
             String message = "We got a state change to a previous phase.\n" +
                     "Old state is: " + this.state + ". New state is: " + state;
             log.warn(message);
@@ -764,7 +762,7 @@ public abstract class Trade implements Tradable, Model {
 
         this.state = state;
         stateProperty.set(state);
-        statePhaseProperty.set(state.getPhase());
+        statePhaseProperty.set(state.getTradePhase());
     }
 
     public void setDisputeState(DisputeState disputeState) {
@@ -826,7 +824,7 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public Phase getPhase() {
-        return state.getPhase();
+        return state.getTradePhase();
     }
 
     @Nullable
@@ -897,15 +895,15 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public boolean isInPreparation() {
-        return getState().getPhase().ordinal() == Phase.INIT.ordinal();
+        return getState().getTradePhase().ordinal() == Phase.INIT.ordinal();
     }
 
     public boolean isTakerFeePublished() {
-        return getState().getPhase().ordinal() >= Phase.TAKER_FEE_PUBLISHED.ordinal();
+        return getState().getTradePhase().ordinal() >= Phase.TAKER_FEE_PUBLISHED.ordinal();
     }
 
     public boolean isDepositPublished() {
-        return getState().getPhase().ordinal() >= Phase.DEPOSIT_PUBLISHED.ordinal();
+        return getState().getTradePhase().ordinal() >= Phase.DEPOSIT_PUBLISHED.ordinal();
     }
 
     public boolean isFundsLockedIn() {
@@ -939,23 +937,23 @@ public abstract class Trade implements Tradable, Model {
     }
 
     public boolean isDepositConfirmed() {
-        return getState().getPhase().ordinal() >= Phase.DEPOSIT_CONFIRMED.ordinal();
+        return getState().getTradePhase().ordinal() >= Phase.DEPOSIT_CONFIRMED.ordinal();
     }
 
     public boolean isFiatSent() {
-        return getState().getPhase().ordinal() >= Phase.FIAT_SENT.ordinal();
+        return getState().getTradePhase().ordinal() >= Phase.FIAT_SENT.ordinal();
     }
 
     public boolean isFiatReceived() {
-        return getState().getPhase().ordinal() >= Phase.FIAT_RECEIVED.ordinal();
+        return getState().getTradePhase().ordinal() >= Phase.FIAT_RECEIVED.ordinal();
     }
 
     public boolean isPayoutPublished() {
-        return getState().getPhase().ordinal() >= Phase.PAYOUT_PUBLISHED.ordinal() || isWithdrawn();
+        return getState().getTradePhase().ordinal() >= Phase.PAYOUT_PUBLISHED.ordinal() || isWithdrawn();
     }
 
     public boolean isWithdrawn() {
-        return getState().getPhase().ordinal() == Phase.WITHDRAWN.ordinal();
+        return getState().getTradePhase().ordinal() == Phase.WITHDRAWN.ordinal();
     }
 
     public ReadOnlyObjectProperty<State> stateProperty() {
