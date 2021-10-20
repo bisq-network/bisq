@@ -667,7 +667,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         return new CryptoCurrency(GUIUtil.EDIT_FLAG, "");
     }
 
-    private PaymentMethod getShowAllEntryForPaymentMethod() {
+    PaymentMethod getShowAllEntryForPaymentMethod() {
         return PaymentMethod.getDummyPaymentMethod(GUIUtil.SHOW_ALL_FLAG);
     }
 }
