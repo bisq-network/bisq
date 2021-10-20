@@ -590,7 +590,6 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     boolean wouldCreateDustForMaker() {
-        //noinspection SimplifiableIfStatement
         boolean result;
         if (amount.get() != null && offer != null) {
             Coin customAmount = offer.getAmount().subtract(amount.get());

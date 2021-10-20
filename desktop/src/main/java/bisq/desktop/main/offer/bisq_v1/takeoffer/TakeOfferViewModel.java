@@ -264,8 +264,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             return true;
         } else {
             new Popup().warning(Res.get("shared.notEnoughFunds",
-                            btcFormatter.formatCoinWithCode(dataModel.getTotalToPayAsCoin().get()),
-                            btcFormatter.formatCoinWithCode(dataModel.getTotalAvailableBalance())))
+                    btcFormatter.formatCoinWithCode(dataModel.getTotalToPayAsCoin().get()),
+                    btcFormatter.formatCoinWithCode(dataModel.getTotalAvailableBalance())))
                     .actionButtonTextWithGoTo("navigation.funds.depositFunds")
                     .onAction(() -> navigation.navigateTo(MainView.class, FundsView.class, DepositView.class))
                     .show();
@@ -350,14 +350,14 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             } else if (btcValidator.getMaxTradeLimit() != null && btcValidator.getMaxTradeLimit().value == OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value) {
                 if (dataModel.getDirection() == OfferPayload.Direction.BUY) {
                     new Popup().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.seller",
-                                    btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
-                                    Res.get("offerbook.warning.newVersionAnnouncement")))
+                            btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
+                            Res.get("offerbook.warning.newVersionAnnouncement")))
                             .width(900)
                             .show();
                 } else {
                     new Popup().information(Res.get("popup.warning.tradeLimitDueAccountAgeRestriction.buyer",
-                                    btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
-                                    Res.get("offerbook.warning.newVersionAnnouncement")))
+                            btcFormatter.formatCoinWithCode(OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT),
+                            Res.get("offerbook.warning.newVersionAnnouncement")))
                             .width(900)
                             .show();
                 }

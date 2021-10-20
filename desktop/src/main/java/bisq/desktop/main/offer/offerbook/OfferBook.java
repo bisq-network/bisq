@@ -57,6 +57,7 @@ public class OfferBook {
     private final Map<String, Integer> sellOfferCountMap = new HashMap<>();
     private final FilterManager filterManager;
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -201,7 +202,7 @@ public class OfferBook {
             // Investigate why....
             offerBookListItems.clear();
             offerBookListItems.addAll(offerBookService.getOffers().stream()
-                    .filter(o -> isOfferAllowed(o))
+                    .filter(this::isOfferAllowed)
                     .map(OfferBookListItem::new)
                     .collect(Collectors.toList()));
 

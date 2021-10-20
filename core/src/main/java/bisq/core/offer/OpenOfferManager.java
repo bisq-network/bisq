@@ -88,19 +88,15 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import lombok.Getter;
-
-import org.jetbrains.annotations.NotNull;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMessageListener, PersistedDataHost {
-    private static final Logger log = LoggerFactory.getLogger(OpenOfferManager.class);
 
     private static final long RETRY_REPUBLISH_DELAY_SEC = 10;
     private static final long REPUBLISH_AGAIN_AT_STARTUP_DELAY_SEC = 30;
@@ -546,7 +542,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         }
     }
 
-    private void onRemoved(@NotNull OpenOffer openOffer, ResultHandler resultHandler, Offer offer) {
+    private void onRemoved(OpenOffer openOffer, ResultHandler resultHandler, Offer offer) {
         offer.setState(Offer.State.REMOVED);
         openOffer.setState(OpenOffer.State.CANCELED);
         openOffers.remove(openOffer);
@@ -926,10 +922,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             //  messages in one go or to spread it over a delay. With power users who have 100-200 offers that can have
             //  some significant impact to user experience and the network
             republishOffer(openOffer, () -> processListForRepublishOffers(list));
-
-           /* republishOffer(openOffer,
-                    () -> UserThread.runAfter(() -> processListForRepublishOffers(list),
-                            30, TimeUnit.MILLISECONDS));*/
         } else {
             // If the offer was removed in the meantime or if its deactivated we skip and call
             // processListForRepublishOffers again with the list where we removed the offer already.
@@ -1032,7 +1024,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         startPeriodicRepublishOffersTimer();
     }
 
-    private void requestPersistence() {
+    public void requestPersistence() {
         persistenceManager.requestPersistence();
     }
 

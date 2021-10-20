@@ -163,7 +163,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             isOfferAvailableSubscription;
 
     private int gridRow = 0;
-    private HashMap<String, Boolean> paymentAccountWarningDisplayed = new HashMap<>();
+    private final HashMap<String, Boolean> paymentAccountWarningDisplayed = new HashMap<>();
     private boolean offerDetailsWindowDisplayed, clearXchangeWarningDisplayed, fasterPaymentsWarningDisplayed,
             takeOfferFromUnsignedAccountWarningDisplayed, cashByMailWarningDisplayed;
     private SimpleBooleanProperty errorPopupDisplayed;

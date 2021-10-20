@@ -131,9 +131,8 @@ public final class OpenOffer implements Tradable {
                 proto.getTriggerPrice());
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
+    // Tradable
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -150,6 +149,11 @@ public final class OpenOffer implements Tradable {
     public String getShortId() {
         return offer.getShortId();
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Misc
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void setState(State state) {
         this.state = state;
@@ -184,7 +188,6 @@ public final class OpenOffer implements Tradable {
             timeoutTimer = null;
         }
     }
-
 
     @Override
     public String toString() {
