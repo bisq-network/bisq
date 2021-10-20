@@ -49,7 +49,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
-import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.payment.FasterPaymentsAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
@@ -300,7 +300,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         model.getDataModel().onTabSelected(isSelected);
     }
 
-    public void initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
+    public void initWithData(OfferDirection direction, TradeCurrency tradeCurrency) {
         boolean result = model.initWithData(direction, tradeCurrency);
 
         if (!result) {
@@ -313,7 +313,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                     }).show();
         }
 
-        if (direction == OfferPayload.Direction.BUY) {
+        if (direction == OfferDirection.BUY) {
             placeOfferButton.setId("buy-button-big");
             placeOfferButton.updateText(Res.get("createOffer.placeOfferButton", Res.get("shared.buy")));
         } else {

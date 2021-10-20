@@ -33,7 +33,7 @@ import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
-import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.User;
@@ -175,7 +175,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         if (isF2F)
             rows++;
 
-        boolean showXmrAutoConf = offer.isXmr() && offer.getDirection() == OfferPayload.Direction.SELL;
+        boolean showXmrAutoConf = offer.isXmr() && offer.getDirection() == OfferDirection.SELL;
         if (showXmrAutoConf) {
             rows++;
         }
@@ -184,7 +184,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
         String fiatDirectionInfo = "";
         String btcDirectionInfo = "";
-        OfferPayload.Direction direction = offer.getDirection();
+        OfferDirection direction = offer.getDirection();
         String currencyCode = offer.getCurrencyCode();
         String offerTypeLabel = Res.get("shared.offerType");
         String toReceive = " " + Res.get("shared.toReceive");
@@ -193,13 +193,13 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         if (takeOfferHandlerOptional.isPresent()) {
             addConfirmationLabelLabel(gridPane, rowIndex, offerTypeLabel,
                     DisplayUtils.getDirectionForTakeOffer(direction, currencyCode), firstRowDistance);
-            fiatDirectionInfo = direction == OfferPayload.Direction.BUY ? toReceive : toSpend;
-            btcDirectionInfo = direction == OfferPayload.Direction.SELL ? toReceive : toSpend;
+            fiatDirectionInfo = direction == OfferDirection.BUY ? toReceive : toSpend;
+            btcDirectionInfo = direction == OfferDirection.SELL ? toReceive : toSpend;
         } else if (placeOfferHandlerOptional.isPresent()) {
             addConfirmationLabelLabel(gridPane, rowIndex, offerTypeLabel,
                     DisplayUtils.getOfferDirectionForCreateOffer(direction, currencyCode), firstRowDistance);
-            fiatDirectionInfo = direction == OfferPayload.Direction.SELL ? toReceive : toSpend;
-            btcDirectionInfo = direction == OfferPayload.Direction.BUY ? toReceive : toSpend;
+            fiatDirectionInfo = direction == OfferDirection.SELL ? toReceive : toSpend;
+            btcDirectionInfo = direction == OfferDirection.BUY ? toReceive : toSpend;
         } else {
             addConfirmationLabelLabel(gridPane, rowIndex, offerTypeLabel,
                     DisplayUtils.getDirectionBothSides(direction, currencyCode), firstRowDistance);

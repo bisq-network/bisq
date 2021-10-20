@@ -17,6 +17,7 @@
 
 package bisq.core.offer;
 
+import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.offer.bisq_v1.OfferPayload;
 
 import com.natpryce.makeiteasy.Instantiator;
@@ -32,7 +33,7 @@ public class OfferMaker {
     public static final Property<Offer, Long> amount = new Property<>();
     public static final Property<Offer, String> baseCurrencyCode = new Property<>();
     public static final Property<Offer, String> counterCurrencyCode = new Property<>();
-    public static final Property<Offer, OfferPayload.Direction> direction = new Property<>();
+    public static final Property<Offer, OfferDirection> direction = new Property<>();
     public static final Property<Offer, Boolean> useMarketBasedPrice = new Property<>();
     public static final Property<Offer, Double> marketPriceMargin = new Property<>();
     public static final Property<Offer, String> id = new Property<>();
@@ -42,7 +43,7 @@ public class OfferMaker {
                     0L,
                     null,
                     null,
-                    lookup.valueOf(direction, OfferPayload.Direction.BUY),
+                    lookup.valueOf(direction, OfferDirection.BUY),
                     lookup.valueOf(price, 100000L),
                     lookup.valueOf(marketPriceMargin, 0.0),
                     lookup.valueOf(useMarketBasedPrice, false),

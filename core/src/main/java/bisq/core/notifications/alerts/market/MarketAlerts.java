@@ -26,7 +26,7 @@ import bisq.core.notifications.MobileMessageType;
 import bisq.core.notifications.MobileNotificationService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
-import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.User;
@@ -119,7 +119,7 @@ public class MarketAlerts {
         MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
         Price offerPrice = offer.getPrice();
         if (marketPrice != null && offerPrice != null) {
-            boolean isSellOffer = offer.getDirection() == OfferPayload.Direction.SELL;
+            boolean isSellOffer = offer.getDirection() == OfferDirection.SELL;
             String shortOfferId = offer.getShortId();
             boolean isFiatCurrency = CurrencyUtil.isFiatCurrency(currencyCode);
             String alertId = getAlertId(offer);

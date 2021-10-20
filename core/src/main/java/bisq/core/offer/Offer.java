@@ -25,6 +25,7 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.offer.availability.OfferAvailabilityProtocol;
 import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
+import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.price.MarketPrice;
@@ -175,10 +176,10 @@ public class Offer implements NetworkPayload, PersistablePayload {
                 double factor;
                 double marketPriceMargin = offerPayload.getMarketPriceMargin();
                 if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
-                    factor = getDirection() == OfferPayload.Direction.SELL ?
+                    factor = getDirection() == OfferDirection.SELL ?
                             1 - marketPriceMargin : 1 + marketPriceMargin;
                 } else {
-                    factor = getDirection() == OfferPayload.Direction.BUY ?
+                    factor = getDirection() == OfferDirection.BUY ?
                             1 - marketPriceMargin : 1 + marketPriceMargin;
                 }
                 double marketPriceAsDouble = marketPrice.getPrice();
@@ -344,11 +345,11 @@ public class Offer implements NetworkPayload, PersistablePayload {
     }
 
     public boolean isBuyOffer() {
-        return getDirection() == OfferPayload.Direction.BUY;
+        return getDirection() == OfferDirection.BUY;
     }
 
-    public OfferPayload.Direction getMirroredDirection() {
-        return getDirection() == OfferPayload.Direction.BUY ? OfferPayload.Direction.SELL : OfferPayload.Direction.BUY;
+    public OfferDirection getMirroredDirection() {
+        return getDirection() == OfferDirection.BUY ? OfferDirection.SELL : OfferDirection.BUY;
     }
 
     public boolean isMyOffer(KeyRing keyRing) {
@@ -405,7 +406,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     // Delegate Getter (boilerplate code generated via IntelliJ generate delegate feature)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public OfferPayload.Direction getDirection() {
+    public OfferDirection getDirection() {
         return offerPayload.getDirection();
     }
 

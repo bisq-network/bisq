@@ -103,7 +103,7 @@ public class CreateOfferService {
     }
 
     public Offer createAndGetOffer(String offerId,
-                                   OfferPayload.Direction direction,
+                                   OfferDirection direction,
                                    String currencyCode,
                                    Coin amount,
                                    Coin minAmount,
@@ -190,7 +190,7 @@ public class CreateOfferService {
                 creationTime,
                 makerAddress,
                 pubKeyRing,
-                OfferPayload.Direction.valueOf(direction.name()),
+                OfferDirection.valueOf(direction.name()),
                 priceAsLong,
                 marketPriceMarginParam,
                 useMarketBasedPriceValue,
@@ -230,7 +230,7 @@ public class CreateOfferService {
     }
 
     public Tuple2<Coin, Integer> getEstimatedFeeAndTxVsize(Coin amount,
-                                                           OfferPayload.Direction direction,
+                                                           OfferDirection direction,
                                                            double buyerSecurityDeposit,
                                                            double sellerSecurityDeposit) {
         Coin reservedFundsForOffer = getReservedFundsForOffer(direction,
@@ -241,7 +241,7 @@ public class CreateOfferService {
                 offerUtil.getMakerFee(amount));
     }
 
-    public Coin getReservedFundsForOffer(OfferPayload.Direction direction,
+    public Coin getReservedFundsForOffer(OfferDirection direction,
                                          Coin amount,
                                          double buyerSecurityDeposit,
                                          double sellerSecurityDeposit) {
@@ -256,7 +256,7 @@ public class CreateOfferService {
         return reservedFundsForOffer;
     }
 
-    public Coin getSecurityDeposit(OfferPayload.Direction direction,
+    public Coin getSecurityDeposit(OfferDirection direction,
                                    Coin amount,
                                    double buyerSecurityDeposit,
                                    double sellerSecurityDeposit) {

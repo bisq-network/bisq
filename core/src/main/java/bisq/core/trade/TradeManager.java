@@ -26,7 +26,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.availability.OfferAvailabilityModel;
-import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
@@ -715,7 +715,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         if (isMyOffer(offer))
             return offer.isBuyOffer();
         else
-            return offer.getDirection() == OfferPayload.Direction.SELL;
+            return offer.getDirection() == OfferDirection.SELL;
     }
 
     public Optional<Trade> getTradeById(String tradeId) {

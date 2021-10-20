@@ -27,6 +27,7 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.bisq_v1.CreateOfferService;
 import bisq.core.offer.bisq_v1.MutableOfferPayloadFields;
+import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.price.PriceFeedService;
@@ -59,8 +60,7 @@ import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static bisq.core.offer.Offer.State;
 import static bisq.core.offer.OpenOffer.State.AVAILABLE;
 import static bisq.core.offer.OpenOffer.State.DEACTIVATED;
-import static bisq.core.offer.bisq_v1.OfferPayload.Direction;
-import static bisq.core.offer.bisq_v1.OfferPayload.Direction.BUY;
+import static bisq.core.offer.bisq_v1.OfferDirection.BUY;
 import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
 import static bisq.proto.grpc.EditOfferRequest.EditType;
 import static bisq.proto.grpc.EditOfferRequest.EditType.*;
@@ -184,7 +184,7 @@ class CoreOffersService {
 
         String upperCaseCurrencyCode = currencyCode.toUpperCase();
         String offerId = createOfferService.getRandomOfferId();
-        Direction direction = Direction.valueOf(directionAsString.toUpperCase());
+        OfferDirection direction = OfferDirection.valueOf(directionAsString.toUpperCase());
         Price price = Price.valueOf(upperCaseCurrencyCode, priceStringToLong(priceAsString, upperCaseCurrencyCode));
         Coin amount = Coin.valueOf(amountAsLong);
         Coin minAmount = Coin.valueOf(minAmountAsLong);

@@ -33,6 +33,7 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.bisq_v1.CreateOfferService;
 import bisq.core.offer.bisq_v1.MutableOfferPayloadFields;
+import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
@@ -147,7 +148,7 @@ class EditOfferDataModel extends MutableOfferDataModel {
     }
 
     @Override
-    public boolean initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
+    public boolean initWithData(OfferDirection direction, TradeCurrency tradeCurrency) {
         try {
             return super.initWithData(direction, tradeCurrency);
         } catch (NullPointerException e) {

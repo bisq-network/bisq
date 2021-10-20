@@ -129,8 +129,8 @@ public class TriggerPriceService {
             return false;
         }
 
-        OfferPayload.Direction direction = openOffer.getOffer().getDirection();
-        boolean isSellOffer = direction == OfferPayload.Direction.SELL;
+        OfferDirection direction = openOffer.getOffer().getDirection();
+        boolean isSellOffer = direction == OfferDirection.SELL;
         boolean condition = isSellOffer && !cryptoCurrency || !isSellOffer && cryptoCurrency;
         return condition ?
                 marketPriceAsLong < triggerPrice :

@@ -26,6 +26,7 @@ import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.bisq_v1.MutableOfferPayloadFields;
+import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.CashByMailAccount;
 import bisq.core.payment.F2FAccount;
@@ -134,13 +135,13 @@ public class OfferUtil {
      * @return {@code true} for an offer to buy BTC from the taker, {@code false} for an
      * offer to sell BTC to the taker
      */
-    public boolean isBuyOffer(Direction direction) {
-        return direction == Direction.BUY;
+    public boolean isBuyOffer(OfferDirection direction) {
+        return direction == OfferDirection.BUY;
     }
 
     public long getMaxTradeLimit(PaymentAccount paymentAccount,
                                  String currencyCode,
-                                 Direction direction) {
+                                 OfferDirection direction) {
         return paymentAccount != null
                 ? accountAgeWitnessService.getMyTradeLimit(paymentAccount, currencyCode, direction)
                 : 0;
@@ -315,7 +316,7 @@ public class OfferUtil {
 
     public Map<String, String> getExtraDataMap(PaymentAccount paymentAccount,
                                                String currencyCode,
-                                               Direction direction) {
+                                               OfferDirection direction) {
         Map<String, String> extraDataMap = new HashMap<>();
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             String myWitnessHashAsHex = accountAgeWitnessService
@@ -338,7 +339,7 @@ public class OfferUtil {
 
         extraDataMap.put(CAPABILITIES, Capabilities.app.toStringList());
 
-        if (currencyCode.equals("XMR") && direction == Direction.SELL) {
+        if (currencyCode.equals("XMR") && direction == OfferDirection.SELL) {
             preferences.getAutoConfirmSettingsList().stream()
                     .filter(e -> e.getCurrencyCode().equals("XMR"))
                     .filter(AutoConfirmSettings::isEnabled)
