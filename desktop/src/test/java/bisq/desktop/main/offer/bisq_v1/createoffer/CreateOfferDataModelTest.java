@@ -1,6 +1,5 @@
-package bisq.desktop.main.offer.createoffer;
+package bisq.desktop.main.offer.bisq_v1.createoffer;
 
-import bisq.desktop.main.offer.bisq_v1.createoffer.CreateOfferDataModel;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
