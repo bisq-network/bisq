@@ -205,6 +205,10 @@ public class Offer implements NetworkPayload, PersistablePayload {
         }
     }
 
+    public long getFixedPrice() {
+        return offerPayload.getPrice();
+    }
+
     public void checkTradePriceTolerance(long takersTradePrice) throws TradePriceOutOfToleranceException,
             MarketPriceNotAvailableException, IllegalArgumentException {
         Price tradePrice = Price.valueOf(getCurrencyCode(), takersTradePrice);
@@ -351,7 +355,6 @@ public class Offer implements NetworkPayload, PersistablePayload {
         return getPubKeyRing().equals(keyRing.getPubKeyRing());
     }
 
-
     public Optional<String> getAccountAgeWitnessHashAsHex() {
         Map<String, String> extraDataMap = getExtraDataMap();
         if (extraDataMap != null && extraDataMap.containsKey(OfferPayload.ACCOUNT_AGE_WITNESS_HASH))
@@ -435,10 +438,22 @@ public class Offer implements NetworkPayload, PersistablePayload {
             return currencyCode;
         }
 
-        currencyCode = offerPayload.getBaseCurrencyCode().equals("BTC") ?
-                offerPayload.getCounterCurrencyCode() :
-                offerPayload.getBaseCurrencyCode();
+        currencyCode = getBaseCurrencyCode().equals("BTC") ?
+                getCounterCurrencyCode() :
+                getBaseCurrencyCode();
         return currencyCode;
+    }
+
+    public String getCounterCurrencyCode() {
+        return offerPayload.getCounterCurrencyCode();
+    }
+
+    public String getBaseCurrencyCode() {
+        return offerPayload.getBaseCurrencyCode();
+    }
+
+    public String getPaymentMethodId() {
+        return offerPayload.getPaymentMethodId();
     }
 
     public long getProtocolVersion() {
@@ -495,25 +510,8 @@ public class Offer implements NetworkPayload, PersistablePayload {
         return offerPayload.isUseAutoClose();
     }
 
-    public long getBlockHeightAtOfferCreation() {
-        return offerPayload.getBlockHeightAtOfferCreation();
-    }
-
-    @Nullable
-    public String getHashOfChallenge() {
-        return offerPayload.getHashOfChallenge();
-    }
-
     public boolean isPrivateOffer() {
         return offerPayload.isPrivateOffer();
-    }
-
-    public long getUpperClosePrice() {
-        return offerPayload.getUpperClosePrice();
-    }
-
-    public long getLowerClosePrice() {
-        return offerPayload.getLowerClosePrice();
     }
 
     public boolean isUseReOpenAfterAutoClose() {
@@ -533,6 +531,10 @@ public class Offer implements NetworkPayload, PersistablePayload {
 
     public boolean isXmr() {
         return getCurrencyCode().equals("XMR");
+    }
+
+    public byte[] getOfferPayloadHash() {
+        return offerPayload.getHash();
     }
 
     @Override

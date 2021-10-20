@@ -1076,11 +1076,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         button.setStyle("-fx-text-fill: white");
                                         if (isSellOffer) {
                                             title = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
-                                                    Res.get("offerbook.takeOfferToBuy", offer.getOfferPayload().getBaseCurrencyCode()) :
+                                                    Res.get("offerbook.takeOfferToBuy", offer.getBaseCurrencyCode()) :
                                                     Res.get("offerbook.takeOfferToSell", offer.getCurrencyCode());
                                         } else {
                                             title = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
-                                                    Res.get("offerbook.takeOfferToSell", offer.getOfferPayload().getBaseCurrencyCode()) :
+                                                    Res.get("offerbook.takeOfferToSell", offer.getBaseCurrencyCode()) :
                                                     Res.get("offerbook.takeOfferToBuy", offer.getCurrencyCode());
                                         }
                                         button.setTooltip(new Tooltip(Res.get("offerbook.takeOfferButton.tooltip", model.getDirectionLabelTooltip(offer))));

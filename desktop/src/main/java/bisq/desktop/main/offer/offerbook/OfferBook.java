@@ -140,7 +140,7 @@ public class OfferBook {
         offer.setState(Offer.State.REMOVED);
         offer.cancelAvailabilityRequest();
 
-        P2PDataStorage.ByteArray hashOfPayload = new P2PDataStorage.ByteArray(offer.getOfferPayload().getHash());
+        P2PDataStorage.ByteArray hashOfPayload = new P2PDataStorage.ByteArray(offer.getOfferPayloadHash());
 
         if (log.isDebugEnabled()) {  // TODO delete debug stmt in future PR.
             log.debug("onRemoved: id = {}\n"
