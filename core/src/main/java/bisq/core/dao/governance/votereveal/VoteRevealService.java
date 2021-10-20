@@ -270,6 +270,6 @@ public class VoteRevealService implements DaoStateListener, DaoSetupService {
             throws InsufficientMoneyException, WalletException, TransactionVerificationException {
         Transaction preparedTx = bsqWalletService.getPreparedVoteRevealTx(stakeTxOutput);
         Transaction txWithBtcFee = btcWalletService.completePreparedVoteRevealTx(preparedTx, opReturnData);
-        return bsqWalletService.signTx(txWithBtcFee);
+        return bsqWalletService.signTxAndVerifyNoDustOutputs(txWithBtcFee);
     }
 }

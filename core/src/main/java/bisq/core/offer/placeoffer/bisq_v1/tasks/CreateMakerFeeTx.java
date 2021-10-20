@@ -119,7 +119,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
                         model.isUseSavingsWallet(),
                         offer.getTxFee());
 
-                Transaction signedTx = model.getBsqWalletService().signTx(txWithBsqFee);
+                Transaction signedTx = model.getBsqWalletService().signTxAndVerifyNoDustOutputs(txWithBsqFee);
                 WalletService.checkAllScriptSignaturesForTx(signedTx);
                 bsqWalletService.commitTx(signedTx, TxType.PAY_TRADE_FEE);
                 // We need to create another instance, otherwise the tx would trigger an invalid state exception

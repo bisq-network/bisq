@@ -99,7 +99,7 @@ public abstract class BaseProposalFactory<R extends Proposal> {
             Transaction txWithBtcFee = completeTx(preparedBurnFeeTx, opReturnData, proposal);
 
             // We sign the BSQ inputs of the final tx.
-            Transaction transaction = bsqWalletService.signTx(txWithBtcFee);
+            Transaction transaction = bsqWalletService.signTxAndVerifyNoDustOutputs(txWithBtcFee);
             log.info("Proposal tx: " + transaction);
             return transaction;
         } catch (WalletException | TransactionVerificationException e) {

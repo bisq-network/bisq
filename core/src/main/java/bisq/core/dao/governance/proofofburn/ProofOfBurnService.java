@@ -140,7 +140,7 @@ public class ProofOfBurnService implements DaoSetupService, DaoStateListener {
             // We add the BTC inputs for the miner fee.
             Transaction txWithBtcFee = btcWalletService.completePreparedBurnBsqTx(preparedBurnFeeTx, opReturnData);
             // We sign the BSQ inputs of the final tx.
-            Transaction transaction = bsqWalletService.signTx(txWithBtcFee);
+            Transaction transaction = bsqWalletService.signTxAndVerifyNoDustOutputs(txWithBtcFee);
             log.info("Proof of burn tx: " + transaction);
             return transaction;
         } catch (WalletException | TransactionVerificationException e) {

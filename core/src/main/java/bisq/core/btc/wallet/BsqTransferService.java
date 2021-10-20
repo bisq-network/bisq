@@ -42,7 +42,7 @@ public class BsqTransferService {
 
         Transaction preparedSendTx = bsqWalletService.getPreparedSendBsqTx(address.toString(), receiverAmount);
         Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx, txFeePerVbyte);
-        Transaction signedTx = bsqWalletService.signTx(txWithBtcFee);
+        Transaction signedTx = bsqWalletService.signTxAndVerifyNoDustOutputs(txWithBtcFee);
 
         return new BsqTransferModel(address,
                 receiverAmount,

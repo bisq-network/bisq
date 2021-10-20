@@ -491,7 +491,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     // Sign tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction signTx(Transaction tx) throws WalletException, TransactionVerificationException {
+    public Transaction signTxAndVerifyNoDustOutputs(Transaction tx) throws WalletException, TransactionVerificationException {
         WalletService.signTx(wallet, aesKey, tx);
         WalletService.verifyNonDustTxo(tx);
         return tx;
