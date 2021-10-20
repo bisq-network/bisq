@@ -294,7 +294,7 @@ public class OfferUtil {
     }
 
     public boolean isBlockChainPaymentMethod(Offer offer) {
-        return offer != null && offer.getPaymentMethod().isAsset();
+        return offer != null && offer.getPaymentMethod().isBlockchain();
     }
 
     public Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee,

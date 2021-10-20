@@ -139,7 +139,7 @@ class SpreadViewModel extends ActivatableViewModel {
 
         for (String key : offersByCurrencyMap.keySet()) {
             List<Offer> offers = offersByCurrencyMap.get(key);
-            final boolean isFiatCurrency = (offers.size() > 0 && !offers.get(0).getPaymentMethod().isAsset());
+            final boolean isFiatCurrency = (offers.size() > 0 && !offers.get(0).getPaymentMethod().isBlockchain());
 
             List<Offer> uniqueOffers = offers.stream().filter(distinctByKey(Offer::getId)).collect(Collectors.toList());
 

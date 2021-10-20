@@ -82,7 +82,7 @@ class CorePaymentAccountsService {
 
     List<PaymentMethod> getFiatPaymentMethods() {
         return PaymentMethod.getPaymentMethods().stream()
-                .filter(paymentMethod -> !paymentMethod.isAsset())
+                .filter(paymentMethod -> !paymentMethod.isBlockchain())
                 .sorted(Comparator.comparing(PaymentMethod::getId))
                 .collect(Collectors.toList());
     }
@@ -132,7 +132,7 @@ class CorePaymentAccountsService {
 
     List<PaymentMethod> getCryptoCurrencyPaymentMethods() {
         return PaymentMethod.getPaymentMethods().stream()
-                .filter(PaymentMethod::isAsset)
+                .filter(PaymentMethod::isBlockchain)
                 .sorted(Comparator.comparing(PaymentMethod::getId))
                 .collect(Collectors.toList());
     }
