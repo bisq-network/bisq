@@ -691,7 +691,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         errorMessageSubscription = EasyBind.subscribe(model.errorMessage, newValue -> {
             if (newValue != null) {
-                new Popup().error(Res.get("takeOffer.error.message", model.errorMessage.get()) +
+                new Popup().error(Res.get("takeOffer.error.message", model.errorMessage.get()) + "\n\n" +
                         Res.get("popup.error.tryRestart"))
                         .onClose(() -> {
                             errorPopupDisplayed.set(true);
@@ -734,7 +734,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             } else if (newValue && model.getTrade() != null && !model.getTrade().hasFailed()) {
                 String key = "takeOfferSuccessInfo";
                 if (DontShowAgainLookup.showAgain(key)) {
-                    UserThread.runAfter(() -> new Popup().headLine(Res.get("takeOffer.success.headline"))
+                    new Popup().headLine(Res.get("takeOffer.success.headline"))
                             .feedback(Res.get("takeOffer.success.info"))
                             .actionButtonTextWithGoTo("navigation.portfolio.pending")
                             .dontShowAgainId(key)
@@ -745,7 +745,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                                 close();
                             })
                             .onClose(this::close)
-                            .show(), 1);
+                            .show();
                 } else {
                     close();
                 }
