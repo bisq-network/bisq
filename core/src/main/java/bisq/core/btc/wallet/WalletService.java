@@ -102,6 +102,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -278,6 +279,31 @@ public abstract class WalletService {
     // Sign tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public static void signTx(Wallet wallet,
+                              KeyParameter aesKey,
+                              Transaction tx)
+            throws WalletException, TransactionVerificationException {
+        for (int i = 0; i < tx.getInputs().size(); i++) {
+            TransactionInput input = tx.getInput(i);
+            TransactionOutput connectedOutput = input.getConnectedOutput();
+            if (connectedOutput == null) {
+                log.error("connectedOutput is null");
+                continue;
+            }
+            if (!connectedOutput.isMine(wallet)) {
+                log.error("connectedOutput is not mine");
+                continue;
+            }
+
+            signTransactionInput(wallet, aesKey, tx, input, i);
+            checkScriptSig(tx, input, i);
+        }
+
+        checkWalletConsistency(wallet);
+        verifyTransaction(tx);
+        printTx("Signed Tx", tx);
+    }
+
     public static void signTransactionInput(Wallet wallet,
                                             KeyParameter aesKey,
                                             Transaction tx,
@@ -372,6 +398,23 @@ public abstract class WalletService {
         } else {
             log.error("Missing connected output, assuming already signed.");
         }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Dust
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static void verifyNonDustTxo(Transaction tx) {
+        for (TransactionOutput txo : tx.getOutputs()) {
+            Coin value = txo.getValue();
+            // OpReturn outputs have value 0
+            if (value.isPositive()) {
+                checkArgument(Restrictions.isAboveDust(txo.getValue()),
+                        "An output value is below dust limit. Transaction=" + tx);
+            }
+        }
+
     }
 
 
