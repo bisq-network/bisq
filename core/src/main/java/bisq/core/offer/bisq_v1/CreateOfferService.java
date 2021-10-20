@@ -39,7 +39,6 @@ import bisq.network.p2p.P2PService;
 import bisq.common.app.Version;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.util.Tuple2;
-import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
@@ -52,7 +51,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -95,12 +93,6 @@ public class CreateOfferService {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public String getRandomOfferId() {
-        return Utilities.getRandomPrefix(5, 8) + "-" +
-                UUID.randomUUID().toString() + "-" +
-                Version.VERSION.replace(".", "");
-    }
 
     public Offer createAndGetOffer(String offerId,
                                    OfferDirection direction,

@@ -176,7 +176,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         this.navigation = navigation;
         this.tradeStatisticsManager = tradeStatisticsManager;
 
-        offerId = createOfferService.getRandomOfferId();
+        offerId = OfferUtil.getRandomOfferId();
         shortOfferId = Utilities.getShortId(offerId);
         addressEntry = btcWalletService.getOrCreateAddressEntry(offerId, AddressEntry.Context.OFFER_FUNDING);
 

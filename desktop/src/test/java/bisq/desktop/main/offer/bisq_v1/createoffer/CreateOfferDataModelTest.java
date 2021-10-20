@@ -24,7 +24,6 @@ import org.bitcoinj.core.Coin;
 import javafx.collections.FXCollections;
 
 import java.util.HashSet;
-import java.util.UUID;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -61,7 +60,6 @@ public class CreateOfferDataModelTest {
         when(btcWalletService.getOrCreateAddressEntry(anyString(), any())).thenReturn(addressEntry);
         when(preferences.isUsePercentageBasedPrice()).thenReturn(true);
         when(preferences.getBuyerSecurityDepositAsPercent(null)).thenReturn(0.01);
-        when(createOfferService.getRandomOfferId()).thenReturn(UUID.randomUUID().toString());
         when(tradeStats.getObservableTradeStatisticsSet()).thenReturn(FXCollections.observableSet());
 
         model = new CreateOfferDataModel(createOfferService,

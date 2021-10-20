@@ -56,8 +56,6 @@ import javafx.collections.FXCollections;
 
 import java.time.Instant;
 
-import java.util.UUID;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -118,7 +116,6 @@ public class CreateOfferViewModelTest {
         when(preferences.getUserCountry()).thenReturn(new Country("ES", "Spain", null));
         when(bsqFormatter.formatCoin(any())).thenReturn("0");
         when(bsqWalletService.getAvailableBalance()).thenReturn(Coin.ZERO);
-        when(createOfferService.getRandomOfferId()).thenReturn(UUID.randomUUID().toString());
         when(tradeStats.getObservableTradeStatisticsSet()).thenReturn(FXCollections.observableSet());
 
         CreateOfferDataModel dataModel = new CreateOfferDataModel(createOfferService,

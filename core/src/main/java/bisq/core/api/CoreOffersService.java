@@ -183,7 +183,7 @@ class CoreOffersService {
             throw new IllegalArgumentException(format("payment account with id %s not found", paymentAccountId));
 
         String upperCaseCurrencyCode = currencyCode.toUpperCase();
-        String offerId = createOfferService.getRandomOfferId();
+        String offerId = OfferUtil.getRandomOfferId();
         OfferDirection direction = OfferDirection.valueOf(directionAsString.toUpperCase());
         Price price = Price.valueOf(upperCaseCurrencyCode, priceStringToLong(priceAsString, upperCaseCurrencyCode));
         Coin amount = Coin.valueOf(amountAsLong);

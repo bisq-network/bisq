@@ -33,8 +33,6 @@ import javafx.collections.FXCollections;
 
 import java.time.Instant;
 
-import java.util.UUID;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -95,7 +93,6 @@ public class EditOfferDataModelTest {
         when(preferences.getUserCountry()).thenReturn(new Country("US", "United States", null));
         when(bsqFormatter.formatCoin(any())).thenReturn("0");
         when(bsqWalletService.getAvailableBalance()).thenReturn(Coin.ZERO);
-        when(createOfferService.getRandomOfferId()).thenReturn(UUID.randomUUID().toString());
 
         model = new EditOfferDataModel(createOfferService,
                 null,

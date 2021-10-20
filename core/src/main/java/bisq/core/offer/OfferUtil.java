@@ -45,8 +45,10 @@ import bisq.core.util.coin.CoinUtil;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.app.Capabilities;
+import bisq.common.app.Version;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -60,6 +62,7 @@ import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Predicate;
 
 import lombok.extern.slf4j.Slf4j;
@@ -113,6 +116,40 @@ public class OfferUtil {
         this.p2PService = p2PService;
         this.referralIdService = referralIdService;
         this.tradeStatisticsManager = tradeStatisticsManager;
+    }
+
+    public static String getRandomOfferId() {
+        return Utilities.getRandomPrefix(5, 8) + "-" +
+                UUID.randomUUID() + "-" +
+                getStrippedVersion();
+    }
+
+    public static String getStrippedVersion() {
+        return Version.VERSION.replace(".", "");
+    }
+
+    // We add a counter at the end of the offer id signalling the number of times that offer has
+    // been mutated ether due edit or due pow adjustments.
+    public static String getOfferIdWithMutationCounter(String id) {
+        String[] split = id.split("-");
+        String base = id;
+        int counter = 0;
+        if (split.length > 7) {
+            String counterString = split[7];
+            int endIndex = id.length() - counterString.length() - 1;
+            base = id.substring(0, endIndex);
+            try {
+                counter = Integer.parseInt(counterString);
+            } catch (Exception ignore) {
+            }
+        }
+        counter++;
+        return base + "-" + counter;
+    }
+
+    public static String getVersionFromId(String id) {
+        String[] split = id.split("-");
+        return split[6];
     }
 
     public void maybeSetFeePaymentCurrencyPreference(String feeCurrencyCode) {

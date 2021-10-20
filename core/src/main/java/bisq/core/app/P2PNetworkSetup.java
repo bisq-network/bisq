@@ -84,7 +84,8 @@ public class P2PNetworkSetup {
         this.preferences = preferences;
     }
 
-    BooleanProperty init(Runnable initWalletServiceHandler, @Nullable Consumer<Boolean> displayTorNetworkSettingsHandler) {
+    BooleanProperty init(Runnable initWalletServiceHandler,
+                         @Nullable Consumer<Boolean> displayTorNetworkSettingsHandler) {
         StringProperty bootstrapState = new SimpleStringProperty();
         StringProperty bootstrapWarning = new SimpleStringProperty();
         BooleanProperty hiddenServicePublished = new SimpleBooleanProperty();

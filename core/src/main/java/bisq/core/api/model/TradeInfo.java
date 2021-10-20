@@ -34,7 +34,7 @@ import static bisq.core.api.model.PaymentAccountPayloadInfo.toPaymentAccountPayl
 @Getter
 public class TradeInfo implements Payload {
 
-    // The client cannot see bisq.core.trade.Trade or its fromProto method.  We use the
+    // The client cannot see Trade or its fromProto method.  We use the
     // lighter weight TradeInfo proto wrapper instead, containing just enough fields to
     // view and interact with trades.
 
