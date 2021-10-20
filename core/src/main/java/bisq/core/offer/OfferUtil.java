@@ -484,7 +484,7 @@ public class OfferUtil {
             }
         } else {
             errorMsg = "The maker fee tx is invalid as it does not has at least 2 outputs." + extraString +
-                    "\nMakerFeeTx=" + makerFeeTx.toString();
+                    "\nMakerFeeTx=" + makerFeeTx;
         }
 
         if (errorMsg == null) {
