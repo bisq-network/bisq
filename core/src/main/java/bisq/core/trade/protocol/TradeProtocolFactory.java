@@ -17,28 +17,28 @@
 
 package bisq.core.trade.protocol;
 
+import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.BuyerAsTakerTrade;
 import bisq.core.trade.model.bisq_v1.SellerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.SellerAsTakerTrade;
-import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.BuyerAsMakerProtocol;
 import bisq.core.trade.protocol.bisq_v1.BuyerAsTakerProtocol;
 import bisq.core.trade.protocol.bisq_v1.SellerAsMakerProtocol;
 import bisq.core.trade.protocol.bisq_v1.SellerAsTakerProtocol;
 
 public class TradeProtocolFactory {
-    public static TradeProtocol getNewTradeProtocol(Trade trade) {
-        if (trade instanceof BuyerAsMakerTrade) {
-            return new BuyerAsMakerProtocol((BuyerAsMakerTrade) trade);
-        } else if (trade instanceof BuyerAsTakerTrade) {
-            return new BuyerAsTakerProtocol((BuyerAsTakerTrade) trade);
-        } else if (trade instanceof SellerAsMakerTrade) {
-            return new SellerAsMakerProtocol((SellerAsMakerTrade) trade);
-        } else if (trade instanceof SellerAsTakerTrade) {
-            return new SellerAsTakerProtocol((SellerAsTakerTrade) trade);
+    public static TradeProtocol getNewTradeProtocol(TradeModel tradeModel) {
+        if (tradeModel instanceof BuyerAsMakerTrade) {
+            return new BuyerAsMakerProtocol((BuyerAsMakerTrade) tradeModel);
+        } else if (tradeModel instanceof BuyerAsTakerTrade) {
+            return new BuyerAsTakerProtocol((BuyerAsTakerTrade) tradeModel);
+        } else if (tradeModel instanceof SellerAsMakerTrade) {
+            return new SellerAsMakerProtocol((SellerAsMakerTrade) tradeModel);
+        } else if (tradeModel instanceof SellerAsTakerTrade) {
+            return new SellerAsTakerProtocol((SellerAsTakerTrade) tradeModel);
         } else {
-            throw new IllegalStateException("Trade not of expected type. Trade=" + trade);
+            throw new IllegalStateException("Trade not of expected type. Trade=" + tradeModel);
         }
     }
 }

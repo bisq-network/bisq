@@ -25,6 +25,7 @@ import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.ClosedTradableManager;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
+import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.bisq_v1.SellerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.SellerProtocol;
@@ -181,7 +182,7 @@ public class XmrTxProofService implements AssetTxProofService {
 
         // We listen on new trades
         ObservableList<Trade> tradableList = tradeManager.getObservableList();
-        tradableList.addListener((ListChangeListener<Trade>) c -> {
+        tradableList.addListener((ListChangeListener<Tradable>) c -> {
             c.next();
             if (c.wasAdded()) {
                 processTrades(c.getAddedSubList());
@@ -192,7 +193,7 @@ public class XmrTxProofService implements AssetTxProofService {
         processTrades(tradableList);
     }
 
-    private void processTrades(List<? extends Trade> trades) {
+    private void processTrades(List<? extends Tradable> trades) {
         trades.stream()
                 .filter(trade -> trade instanceof SellerTrade)
                 .map(trade -> (SellerTrade) trade)

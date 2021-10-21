@@ -36,7 +36,9 @@ import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.bisq_v1.TradeResultHandler;
 import bisq.core.trade.bisq_v1.TradeTxException;
 import bisq.core.trade.bisq_v1.TradeUtil;
+import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradableList;
+import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.BuyerAsTakerTrade;
 import bisq.core.trade.model.bisq_v1.SellerAsMakerTrade;
@@ -324,7 +326,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 });
     }
 
-    public TradeProtocol getTradeProtocol(Trade trade) {
+    public TradeProtocol getTradeProtocol(TradeModel trade) {
         String uid = trade.getUid();
         if (tradeProtocolByTradeId.containsKey(uid)) {
             return tradeProtocolByTradeId.get(uid);
@@ -360,23 +362,26 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         persistedTradesInitialized.set(true);
 
         // We do not include failed trades as they should not be counted anyway in the trade statistics
-        Set<Trade> allTrades = new HashSet<>(closedTradableManager.getClosedTrades());
+        Set<TradeModel> allTrades = new HashSet<>(closedTradableManager.getClosedTrades());
         allTrades.addAll(tradableList.getList());
         String referralId = referralIdService.getOptionalReferralId().orElse(null);
         boolean isTorNetworkNode = p2PService.getNetworkNode() instanceof TorNetworkNode;
         tradeStatisticsManager.maybeRepublishTradeStatistics(allTrades, referralId, isTorNetworkNode);
     }
 
-    private boolean initPersistedTrade(Trade trade) {
-        initTradeAndProtocol(trade, getTradeProtocol(trade));
-        trade.updateDepositTxFromWallet();
+    private boolean initPersistedTrade(TradeModel tradeModel) {
+        initTradeAndProtocol(tradeModel, getTradeProtocol(tradeModel));
+
+        if (tradeModel instanceof Trade) {
+            ((Trade) tradeModel).updateDepositTxFromWallet();
+        }
         requestPersistence();
         return true;
     }
 
-    private void initTradeAndProtocol(Trade trade, TradeProtocol tradeProtocol) {
-        tradeProtocol.initialize(provider, this, trade.getOffer());
-        trade.initialize(provider);
+    private void initTradeAndProtocol(TradeModel tradeModel, TradeProtocol tradeProtocol) {
+        tradeProtocol.initialize(provider, this, tradeModel.getOffer());
+        tradeModel.initialize(provider);
         requestPersistence();
     }
 
@@ -472,14 +477,14 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         requestPersistence();
     }
 
-    private TradeProtocol createTradeProtocol(Trade trade) {
-        TradeProtocol tradeProtocol = TradeProtocolFactory.getNewTradeProtocol(trade);
-        TradeProtocol prev = tradeProtocolByTradeId.put(trade.getUid(), tradeProtocol);
+    private TradeProtocol createTradeProtocol(TradeModel tradeModel) {
+        TradeProtocol tradeProtocol = TradeProtocolFactory.getNewTradeProtocol(tradeModel);
+        TradeProtocol prev = tradeProtocolByTradeId.put(tradeModel.getUid(), tradeProtocol);
         if (prev != null) {
-            log.error("We had already an entry with uid {}", trade.getUid());
+            log.error("We had already an entry with uid {}", tradeModel.getUid());
         }
-        if (trade instanceof Trade) {
-            tradableList.add(trade);
+        if (tradeModel instanceof Trade) {
+            tradableList.add((Trade) tradeModel);
         }
         return tradeProtocol;
     }
@@ -687,9 +692,13 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     }
 
     public boolean wasOfferAlreadyUsedInTrade(String offerId) {
-        return getTradeById(offerId).isPresent() ||
-                failedTradesManager.getTradeById(offerId).isPresent() ||
-                closedTradableManager.getTradableById(offerId).isPresent();
+        Stream<Tradable> combinedStream = Stream.concat(getPendingTrades(),
+                failedTradesManager.getObservableList().stream());
+
+        combinedStream = Stream.concat(combinedStream,
+                closedTradableManager.getObservableList().stream());
+
+        return combinedStream.anyMatch(t -> t.getOffer().getId().equals(offerId));
     }
 
     public boolean isBuyer(Offer offer) {
@@ -700,10 +709,16 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
             return offer.getDirection() == OfferDirection.SELL;
     }
 
-    public Optional<Trade> getTradeById(String tradeId) {
-        return tradableList.stream()
-                .filter(e -> e.getId().equals(tradeId))
+    public Optional<TradeModel> getTradeModelById(String tradeId) {
+        return getPendingTrades()
+                .filter(tradeModel -> tradeModel.getId().equals(tradeId))
                 .findFirst();
+    }
+
+    public Optional<Trade> getTradeById(String tradeId) {
+        return getTradeModelById(tradeId)
+                .filter(tradeModel -> tradeModel instanceof Trade)
+                .map(tradeModel -> (Trade) tradeModel);
     }
 
     private void removeTrade(Trade trade) {
@@ -716,6 +731,11 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         if (tradableList.add(trade)) {
             requestPersistence();
         }
+    }
+
+    private Stream<TradeModel> getPendingTrades() {
+        return Stream.concat(tradableList.stream(),
+                Stream.empty());
     }
 
     // TODO Remove once tradableList is refactored to a final field

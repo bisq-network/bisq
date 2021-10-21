@@ -148,11 +148,11 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
         ProtocolModel<? extends TradePeer> protocolModel = tradeModel.getTradeProtocolModel();
         if (mailboxMessage instanceof TradeMessage) {
             TradeMessage tradeMessage = (TradeMessage) mailboxMessage;
-            // We only remove here if we have already completed the trade.
+            // We only remove here if we have already completed the tradeModel.
             // Otherwise removal is done after successfully applied the task runner.
             if (tradeModel.isCompleted()) {
                 protocolModel.getP2PService().getMailboxMessageService().removeMailboxMsg(mailboxMessage);
-                log.info("Remove {} from the P2P network as trade is already completed.",
+                log.info("Remove {} from the P2P network as tradeModel is already completed.",
                         tradeMessage.getClass().getSimpleName());
                 return;
             }
@@ -160,7 +160,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
         } else if (mailboxMessage instanceof AckMessage) {
             AckMessage ackMessage = (AckMessage) mailboxMessage;
             if (!tradeModel.isCompleted()) {
-                // We only apply the msg if we have not already completed the trade
+                // We only apply the msg if we have not already completed the tradeModel
                 onAckMessage(ackMessage, mailboxMessage.getSenderNodeAddress());
             }
             // In any case we remove the msg
