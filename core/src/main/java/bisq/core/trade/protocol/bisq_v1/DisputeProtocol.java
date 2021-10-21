@@ -22,9 +22,12 @@ import bisq.core.trade.protocol.FluentProtocol;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.protocol.TradeTaskRunner;
+import bisq.core.trade.protocol.bisq_v1.messages.CounterCurrencyTransferStartedMessage;
+import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.MediatedPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.MediatedPayoutTxSignatureMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.PeerPublishedDelayedPayoutTxMessage;
+import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bisq_v1.tasks.ProcessPeerPublishedDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.arbitration.PublishedDelayedPayoutTx;
@@ -38,6 +41,7 @@ import bisq.core.trade.protocol.bisq_v1.tasks.mediation.SendMediatedPayoutTxPubl
 import bisq.core.trade.protocol.bisq_v1.tasks.mediation.SetupMediatedPayoutTxListener;
 import bisq.core.trade.protocol.bisq_v1.tasks.mediation.SignMediatedPayoutTx;
 
+import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.handlers.ErrorMessageHandler;
@@ -48,6 +52,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DisputeProtocol extends TradeProtocol {
 
+    protected Trade trade;
+    protected final ProcessModel processModel;
+
     enum DisputeEvent implements FluentProtocol.Event {
         MEDIATION_RESULT_ACCEPTED,
         MEDIATION_RESULT_REJECTED,
@@ -56,6 +63,31 @@ public class DisputeProtocol extends TradeProtocol {
 
     public DisputeProtocol(Trade trade) {
         super(trade);
+        this.trade = trade;
+        this.processModel = trade.getProcessModel();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // TradeProtocol implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void onAckMessage(AckMessage ackMessage, NodeAddress peer) {
+        // We handle the ack for CounterCurrencyTransferStartedMessage and DepositTxAndDelayedPayoutTxMessage
+        // as we support automatic re-send of the msg in case it was not ACKed after a certain time
+        if (ackMessage.getSourceMsgClassName().equals(CounterCurrencyTransferStartedMessage.class.getSimpleName())) {
+            processModel.setPaymentStartedAckMessage(ackMessage);
+        } else if (ackMessage.getSourceMsgClassName().equals(DepositTxAndDelayedPayoutTxMessage.class.getSimpleName())) {
+            processModel.setDepositTxSentAckMessage(ackMessage);
+        }
+
+        if (ackMessage.isSuccess()) {
+            log.info("Received AckMessage for {} from {} with tradeId {} and uid {}",
+                    ackMessage.getSourceMsgClassName(), peer, tradeModel.getId(), ackMessage.getSourceUid());
+        } else {
+            log.warn("Received AckMessage with error state for {} from {} with tradeId {} and errorMessage={}",
+                    ackMessage.getSourceMsgClassName(), peer, tradeModel.getId(), ackMessage.getErrorMessage());
+        }
     }
 
 
