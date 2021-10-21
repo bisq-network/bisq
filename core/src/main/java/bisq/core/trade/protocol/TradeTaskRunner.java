@@ -17,21 +17,22 @@
 
 package bisq.core.trade.protocol;
 
-import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.model.TradeModel;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.taskrunner.TaskRunner;
 
-public class TradeTaskRunner extends TaskRunner<Trade> {
+public class TradeTaskRunner extends TaskRunner<TradeModel> {
 
-    public TradeTaskRunner(Trade sharedModel, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        //noinspection unchecked
+    public TradeTaskRunner(TradeModel sharedModel,
+                           ResultHandler resultHandler,
+                           ErrorMessageHandler errorMessageHandler) {
         super(sharedModel, getSharedModelClass(sharedModel), resultHandler, errorMessageHandler);
     }
 
-    static Class<Trade> getSharedModelClass(Trade sharedModel) {
+    static Class<TradeModel> getSharedModelClass(TradeModel sharedModel) {
         //noinspection unchecked
-        return (Class<Trade>) sharedModel.getClass().getSuperclass().getSuperclass();
+        return (Class<TradeModel>) sharedModel.getClass().getSuperclass().getSuperclass();
     }
 }
