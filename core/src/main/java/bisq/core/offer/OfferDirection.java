@@ -23,11 +23,11 @@ public enum OfferDirection {
     BUY,
     SELL;
 
-    public static OfferDirection fromProto(protobuf.OfferPayload.Direction direction) {
+    public static OfferDirection fromProto(protobuf.OfferDirection direction) {
         return ProtoUtil.enumFromProto(OfferDirection.class, direction.name());
     }
 
-    public static protobuf.OfferPayload.Direction toProtoMessage(OfferDirection direction) {
-        return protobuf.OfferPayload.Direction.valueOf(direction.name());
+    public static protobuf.OfferDirection toProtoMessage(OfferDirection direction) {
+        return protobuf.OfferDirection.valueOf(direction.name());
     }
 }

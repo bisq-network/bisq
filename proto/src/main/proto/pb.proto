@@ -710,7 +710,7 @@ message Filter {
 message TradeStatistics2 {
     string base_currency = 1 [deprecated = true];
     string counter_currency = 2 [deprecated = true];
-    OfferPayload.Direction direction = 3 [deprecated = true];
+    OfferDirection direction = 3 [deprecated = true];
     int64 trade_price = 4 [deprecated = true];
     int64 trade_amount = 5 [deprecated = true];
     int64 trade_date = 6 [deprecated = true];
@@ -746,17 +746,11 @@ message MailboxStoragePayload {
 }
 
 message OfferPayload {
-    enum Direction {
-        PB_ERROR = 0;
-        BUY = 1;
-        SELL = 2;
-    }
-
     string id = 1;
     int64 date = 2;
     NodeAddress owner_node_address = 3;
     PubKeyRing pub_key_ring = 4;
-    Direction direction = 5;
+    OfferDirection direction = 5;
     int64 price = 6;
     double market_price_margin = 7;
     bool use_market_based_price = 8;
@@ -790,6 +784,12 @@ message OfferPayload {
     string hash_of_challenge = 36;
     map<string, string> extra_data = 37;
     int32 protocol_version = 38;
+}
+
+enum OfferDirection {
+    OFFER_DIRECTION_ERROR = 0;
+    BUY = 1;
+    SELL = 2;
 }
 
 message AccountAgeWitness {
