@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.offer.bsq_swap;
 
-import bisq.desktop.Navigation;
 import bisq.desktop.common.model.ActivatableDataModel;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
@@ -40,7 +39,6 @@ public abstract class BsqSwapOfferDataModel extends ActivatableDataModel {
     protected final User user;
     private final P2PService p2PService;
     private final CoinFormatter btcFormatter;
-    private final Navigation navigation;
 
     // We use the BsqSwapOfferModel from core as delegate
     // This contains all non UI specific domain aspects and is re-used from the API.
@@ -60,13 +58,11 @@ public abstract class BsqSwapOfferDataModel extends ActivatableDataModel {
     public BsqSwapOfferDataModel(BsqSwapOfferModel bsqSwapOfferModel,
                                  User user,
                                  P2PService p2PService,
-                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
-                                 Navigation navigation) {
+                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
         this.bsqSwapOfferModel = bsqSwapOfferModel;
         this.user = user;
         this.p2PService = p2PService;
         this.btcFormatter = btcFormatter;
-        this.navigation = navigation;
     }
 
     @Override

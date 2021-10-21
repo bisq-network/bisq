@@ -116,7 +116,6 @@ class GrpcOffersService extends OffersImplBase {
                                   StreamObserver<GetMyBsqSwapOfferReply> responseObserver) {
         try {
             Offer offer = coreApi.getMyBsqSwapOffer(req.getId());
-            OpenOffer openOffer = coreApi.getMyOpenBsqSwapOffer(req.getId());
             var reply = GetMyBsqSwapOfferReply.newBuilder()
                     .setBsqSwapOffer(toBsqSwapOfferInfo(offer /* TODO support triggerPrice */).toProtoMessage())
                     .build();

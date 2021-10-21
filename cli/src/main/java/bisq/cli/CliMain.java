@@ -569,7 +569,6 @@ public class CliMain {
                     var currencyCode = opts.getCurrencyCode();
                     var address = opts.getAddress();
                     var isTradeInstant = opts.getIsTradeInstant();
-                    var isTradeBsqSwap = opts.getIsTradeBsqSwap();
                     var paymentAccount = client.createCryptoCurrencyPaymentAccount(accountName,
                             currencyCode,
                             address,

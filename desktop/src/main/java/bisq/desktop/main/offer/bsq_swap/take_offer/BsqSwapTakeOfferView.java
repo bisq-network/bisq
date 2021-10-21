@@ -446,7 +446,6 @@ public class BsqSwapTakeOfferView extends BsqSwapOfferView<BsqSwapTakeOfferViewM
         HBox hBox = paymentAccountTuple.fourth;
         hBox.getChildren().remove(paymentAccountTuple.first);
 
-        Label paymentMethodLabel = paymentAccountTuple.second;
         paymentMethodTextField = paymentAccountTuple.third;
         paymentMethodTextField.setMinWidth(250);
         paymentMethodTextField.setEditable(false);
