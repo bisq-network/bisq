@@ -160,8 +160,14 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         return DisplayUtils.formatDateTime(item.getOffer().getDate());
     }
 
+    boolean isNotPublished(OpenOfferListItem item) {
+        return isDeactivated(item);
+    }
+
     boolean isDeactivated(OpenOfferListItem item) {
-        return item != null && item.getOpenOffer() != null && item.getOpenOffer().isDeactivated();
+        return item != null &&
+                item.getOpenOffer() != null &&
+                item.getOpenOffer().isDeactivated();
     }
 
     boolean isBootstrappedOrShowPopup() {
