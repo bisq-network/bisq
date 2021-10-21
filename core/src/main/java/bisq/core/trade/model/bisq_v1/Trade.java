@@ -28,9 +28,13 @@ import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.support.dispute.refund.RefundResultState;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.trade.model.Tradable;
+import bisq.core.trade.model.TradeModel;
+import bisq.core.trade.model.TradePhase;
+import bisq.core.trade.model.TradeState;
+import bisq.core.trade.protocol.ProtocolModel;
 import bisq.core.trade.protocol.Provider;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
+import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.util.VolumeUtil;
 
@@ -38,7 +42,6 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
-import bisq.common.taskrunner.Model;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
@@ -56,11 +59,8 @@ import com.google.common.util.concurrent.MoreExecutors;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -84,13 +84,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * stored in the task model.
  */
 @Slf4j
-public abstract class Trade implements Tradable, Model {
+public abstract class Trade extends TradeModel {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enums
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public enum State {
+    public enum State implements TradeState {
         // #################### Phase PREPARATION
         // When trade protocol starts no funds are on stake
         PREPARATION(Phase.INIT),
@@ -161,7 +161,6 @@ public abstract class Trade implements Tradable, Model {
         // Alternatively the maker could have seen the payout tx earlier before he received the PAYOUT_TX_PUBLISHED_MSG
         BUYER_SAW_PAYOUT_TX_IN_NETWORK(Phase.PAYOUT_PUBLISHED),
 
-
         // #################### Phase WITHDRAWN
         WITHDRAW_COMPLETED(Phase.WITHDRAWN);
 
@@ -193,7 +192,7 @@ public abstract class Trade implements Tradable, Model {
         }
     }
 
-    public enum Phase {
+    public enum Phase implements TradePhase {
         INIT,
         TAKER_FEE_PUBLISHED,
         DEPOSIT_PUBLISHED,
@@ -207,13 +206,13 @@ public abstract class Trade implements Tradable, Model {
             return ProtoUtil.enumFromProto(Trade.Phase.class, phase.name());
         }
 
-        public static protobuf.Trade.Phase toProtoMessage(Trade.Phase phase) {
+        public static protobuf.Trade.Phase toProtoMessage(Phase phase) {
             return protobuf.Trade.Phase.valueOf(phase.name());
         }
 
         // We allow a phase change only if the phase a future phase (we cannot limit it to next phase as we have cases where
         // we skip a phase as it is only relevant to one role -> states and phases need a redesign ;-( )
-        public boolean isValidTransitionTo(Phase newPhase) {
+        public boolean isValidTransitionTo(Trade.Phase newPhase) {
             // this is current phase
             return newPhase.ordinal() > this.ordinal();
         }
@@ -288,20 +287,11 @@ public abstract class Trade implements Tradable, Model {
     @Getter
     private final ProcessModel processModel;
     @Getter
-    private final Offer offer;
-    @Getter
     private final boolean isCurrencyForTakerFeeBtc;
     @Getter
     private final long txFeeAsLong;
     @Getter
     private final long takerFeeAsLong;
-
-    // Added in 1.5.1
-    @Getter
-    private final String uid;
-
-    @Setter
-    private long takeOfferDate;
 
     //  Mutable
     @Nullable
@@ -321,9 +311,6 @@ public abstract class Trade implements Tradable, Model {
     private long tradeAmountAsLong;
     @Setter
     private long tradePrice;
-    @Nullable
-    @Getter
-    private NodeAddress tradingPeerNodeAddress;
     private State state = State.PREPARATION;
     @Getter
     private DisputeState disputeState = DisputeState.NO_DISPUTE;
@@ -372,8 +359,7 @@ public abstract class Trade implements Tradable, Model {
     @Getter
     @Setter
     private String takerPaymentAccountId;
-    @Nullable
-    private String errorMessage;
+
     @Getter
     @Setter
     @Nullable
@@ -394,7 +380,6 @@ public abstract class Trade implements Tradable, Model {
     transient final private ObjectProperty<Phase> statePhaseProperty = new SimpleObjectProperty<>(state.phase);
     transient final private ObjectProperty<DisputeState> disputeStateProperty = new SimpleObjectProperty<>(disputeState);
     transient final private ObjectProperty<TradePeriodState> tradePeriodStateProperty = new SimpleObjectProperty<>(tradePeriodState);
-    transient final private StringProperty errorMessageProperty = new SimpleStringProperty();
 
     //  Mutable
     @Nullable
@@ -475,7 +460,7 @@ public abstract class Trade implements Tradable, Model {
                     BtcWalletService btcWalletService,
                     ProcessModel processModel,
                     String uid) {
-        this.offer = offer;
+        super(uid, offer);
         this.txFee = txFee;
         this.takerFee = takerFee;
         this.isCurrencyForTakerFeeBtc = isCurrencyForTakerFeeBtc;
@@ -484,11 +469,9 @@ public abstract class Trade implements Tradable, Model {
         this.refundAgentNodeAddress = refundAgentNodeAddress;
         this.btcWalletService = btcWalletService;
         this.processModel = processModel;
-        this.uid = uid;
 
         txFeeAsLong = txFee.value;
         takerFeeAsLong = takerFee.value;
-        takeOfferDate = new Date().getTime();
     }
 
 
@@ -719,21 +702,32 @@ public abstract class Trade implements Tradable, Model {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Model implementation
+    // TradeModel implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void onComplete() {
     }
 
+    @Override
     public State getTradeState() {
         return state;
     }
 
+    @Override
     public Phase getTradePhase() {
         return state.getTradePhase();
     }
 
+    @Override
+    public ProtocolModel<TradingPeer> getTradeProtocolModel() {
+        return processModel;
+    }
+
+    @Override
+    public boolean isCompleted() {
+        return isWithdrawn();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Abstract
@@ -792,13 +786,6 @@ public abstract class Trade implements Tradable, Model {
         tradePeriodStateProperty.set(tradePeriodState);
     }
 
-    public void setTradingPeerNodeAddress(NodeAddress tradingPeerNodeAddress) {
-        if (tradingPeerNodeAddress == null)
-            log.error("tradingPeerAddress=null");
-        else
-            this.tradingPeerNodeAddress = tradingPeerNodeAddress;
-    }
-
     public void setTradeAmount(Coin tradeAmount) {
         this.tradeAmount = tradeAmount;
         tradeAmountAsLong = tradeAmount.value;
@@ -809,11 +796,6 @@ public abstract class Trade implements Tradable, Model {
     public void setPayoutTx(Transaction payoutTx) {
         this.payoutTx = payoutTx;
         payoutTxId = payoutTx.getTxId().toString();
-    }
-
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
-        errorMessageProperty.set(errorMessage);
     }
 
     public void setAssetTxProofResult(@Nullable AssetTxProofResult assetTxProofResult) {
@@ -987,25 +969,6 @@ public abstract class Trade implements Tradable, Model {
         return tradeVolumeProperty;
     }
 
-    public ReadOnlyStringProperty errorMessageProperty() {
-        return errorMessageProperty;
-    }
-
-    @Override
-    public Date getDate() {
-        return new Date(takeOfferDate);
-    }
-
-    @Override
-    public String getId() {
-        return offer.getId();
-    }
-
-    @Override
-    public String getShortId() {
-        return offer.getShortId();
-    }
-
     public Price getTradePrice() {
         return Price.valueOf(offer.getCurrencyCode(), tradePrice);
     }
@@ -1026,11 +989,6 @@ public abstract class Trade implements Tradable, Model {
 
     public boolean hasErrorMessage() {
         return getErrorMessage() != null && !getErrorMessage().isEmpty();
-    }
-
-    @Nullable
-    public String getErrorMessage() {
-        return errorMessageProperty.get();
     }
 
     public boolean isTxChainInvalid() {
@@ -1151,7 +1109,6 @@ public abstract class Trade implements Tradable, Model {
                 ",\n     statePhaseProperty=" + statePhaseProperty +
                 ",\n     disputeStateProperty=" + disputeStateProperty +
                 ",\n     tradePeriodStateProperty=" + tradePeriodStateProperty +
-                ",\n     errorMessageProperty=" + errorMessageProperty +
                 ",\n     depositTx=" + depositTx +
                 ",\n     delayedPayoutTx=" + delayedPayoutTx +
                 ",\n     payoutTx=" + payoutTx +
