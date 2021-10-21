@@ -364,7 +364,9 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
         setupBadge(portfolioButtonWithBadge, model.getNumPendingTrades(), model.getShowPendingTradesNotification());
         setupBadge(supportButtonWithBadge, model.getNumOpenSupportTickets(), model.getShowOpenSupportTicketsNotification());
+
         setupBadge(settingsButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowSettingsUpdatesNotification());
+        settingsButtonWithBadge.getStyleClass().add("new");
 
         navigation.addListener((viewPath, data) -> {
             if (viewPath.size() != 2 || viewPath.indexOf(MainView.class) != 0)
