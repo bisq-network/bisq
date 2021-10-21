@@ -15,10 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.offer.createoffer;
+package bisq.desktop.main.offer.bisq_v1.createoffer;
 
-import bisq.desktop.main.offer.bisq_v1.createoffer.CreateOfferDataModel;
-import bisq.desktop.main.offer.bisq_v1.createoffer.CreateOfferViewModel;
 import bisq.desktop.util.validation.AltcoinValidator;
 import bisq.desktop.util.validation.BtcValidator;
 import bisq.desktop.util.validation.FiatPriceValidator;
