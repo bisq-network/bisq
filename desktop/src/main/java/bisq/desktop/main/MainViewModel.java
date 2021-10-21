@@ -241,34 +241,35 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             if (newValue) {
                 tradeManager.applyTradePeriodState();
 
-                tradeManager.getObservableList().forEach(trade -> {
-                    Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
-                    String key;
-                    switch (trade.getTradePeriodState()) {
-                        case FIRST_HALF:
-                            break;
-                        case SECOND_HALF:
-                            key = "displayHalfTradePeriodOver" + trade.getId();
-                            if (DontShowAgainLookup.showAgain(key)) {
-                                DontShowAgainLookup.dontShowAgain(key, true);
-                                new Popup().warning(Res.get("popup.warning.tradePeriod.halfReached",
-                                        trade.getShortId(),
-                                        DisplayUtils.formatDateTime(maxTradePeriodDate)))
-                                        .show();
+                tradeManager.getObservableList()
+                        .forEach(trade -> {
+                            Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
+                            String key;
+                            switch (trade.getTradePeriodState()) {
+                                case FIRST_HALF:
+                                    break;
+                                case SECOND_HALF:
+                                    key = "displayHalfTradePeriodOver" + trade.getId();
+                                    if (DontShowAgainLookup.showAgain(key)) {
+                                        DontShowAgainLookup.dontShowAgain(key, true);
+                                        new Popup().warning(Res.get("popup.warning.tradePeriod.halfReached",
+                                                trade.getShortId(),
+                                                DisplayUtils.formatDateTime(maxTradePeriodDate)))
+                                                .show();
+                                    }
+                                    break;
+                                case TRADE_PERIOD_OVER:
+                                    key = "displayTradePeriodOver" + trade.getId();
+                                    if (DontShowAgainLookup.showAgain(key)) {
+                                        DontShowAgainLookup.dontShowAgain(key, true);
+                                        new Popup().warning(Res.get("popup.warning.tradePeriod.ended",
+                                                trade.getShortId(),
+                                                DisplayUtils.formatDateTime(maxTradePeriodDate)))
+                                                .show();
+                                    }
+                                    break;
                             }
-                            break;
-                        case TRADE_PERIOD_OVER:
-                            key = "displayTradePeriodOver" + trade.getId();
-                            if (DontShowAgainLookup.showAgain(key)) {
-                                DontShowAgainLookup.dontShowAgain(key, true);
-                                new Popup().warning(Res.get("popup.warning.tradePeriod.ended",
-                                        trade.getShortId(),
-                                        DisplayUtils.formatDateTime(maxTradePeriodDate)))
-                                        .show();
-                            }
-                            break;
-                    }
-                });
+                        });
             }
         });
 
@@ -801,9 +802,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         return marketPricePresentation.getPriceFeedComboBoxItems();
     }
 
-    // We keep daoPresentation and accountPresentation support even it is not used atm. But if we add a new feature and
-    // add a badge again it will be needed.
-    @SuppressWarnings({"unused"})
     public BooleanProperty getShowDaoUpdatesNotification() {
         return daoPresentation.getShowDaoUpdatesNotification();
     }
