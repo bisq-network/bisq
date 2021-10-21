@@ -33,7 +33,6 @@ import javax.inject.Named;
 
 @FxmlView
 public class CreateOfferView extends MutableOfferView<CreateOfferViewModel> {
-
     @Inject
     private CreateOfferView(CreateOfferViewModel model,
                             Navigation navigation,
