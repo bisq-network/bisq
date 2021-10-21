@@ -96,14 +96,22 @@ public class CoinUtil {
      * @param amount                   the amount of BTC to trade
      * @return the maker fee for the given trade amount, or {@code null} if the amount is {@code null}
      */
-    @Nullable
     public static Coin getMakerFee(boolean isCurrencyForMakerFeeBtc, @Nullable Coin amount) {
-        if (amount != null) {
-            Coin feePerBtc = getFeePerBtc(FeeService.getMakerFeePerBtc(isCurrencyForMakerFeeBtc), amount);
-            return maxCoin(feePerBtc, FeeService.getMinMakerFee(isCurrencyForMakerFeeBtc));
-        } else {
-            return null;
+        Coin minMakerFee = FeeService.getMinMakerFee(isCurrencyForMakerFeeBtc);
+        if (amount == null) {
+            return minMakerFee;
         }
+        Coin feePerBtc = getFeePerBtc(FeeService.getMakerFeePerBtc(isCurrencyForMakerFeeBtc), amount);
+        return maxCoin(feePerBtc, minMakerFee);
+    }
+
+    public static Coin getTakerFee(boolean isCurrencyForTakerFeeBtc, @Nullable Coin amount) {
+        Coin minTakerFee = FeeService.getMinTakerFee(isCurrencyForTakerFeeBtc);
+        if (amount == null) {
+            return minTakerFee;
+        }
+        Coin feePerBtc = getFeePerBtc(FeeService.getTakerFeePerBtc(isCurrencyForTakerFeeBtc), amount);
+        return maxCoin(feePerBtc, minTakerFee);
     }
 
     /**
