@@ -21,7 +21,6 @@ see <http://www.gnu.org/licenses/>.
 
 package bisq.desktop.main.offer.bsq_swap.create_offer;
 
-import bisq.desktop.Navigation;
 import bisq.desktop.main.offer.bsq_swap.BsqSwapOfferDataModel;
 
 import bisq.core.locale.TradeCurrency;
@@ -76,13 +75,11 @@ class BsqSwapCreateOfferDataModel extends BsqSwapOfferDataModel {
                                 OpenBsqSwapOfferService openBsqSwapOfferService,
                                 User user,
                                 P2PService p2PService,
-                                @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
-                                Navigation navigation) {
+                                @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
         super(bsqSwapOfferModel,
                 user,
                 p2PService,
-                btcFormatter,
-                navigation);
+                btcFormatter);
 
         this.openBsqSwapOfferService = openBsqSwapOfferService;
 

@@ -63,7 +63,6 @@ import javafx.geometry.Insets;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 
-import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
@@ -234,7 +233,6 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
 
         numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
         exportButton.setOnAction(event -> {
-            final ObservableList<TableColumn<CompletedBsqSwapsListItem, ?>> tableColumns = tableView.getColumns();
             CSVEntryConverter<CompletedBsqSwapsListItem> headerConverter = item -> {
                 String[] columns = new String[ColumnNames.values().length];
                 for (ColumnNames m : ColumnNames.values()) {
@@ -257,7 +255,7 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
                 return columns;
             };
 
-            GUIUtil.exportCSV("tradeHistory.csv", headerConverter, contentConverter,
+            GUIUtil.exportCSV("bsqSwapHistory.csv", headerConverter, contentConverter,
                     new CompletedBsqSwapsListItem(), sortedList, (Stage) root.getScene().getWindow());
         });
 

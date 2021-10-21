@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import bisq.desktop.Navigation;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.overlays.Overlay;
@@ -63,7 +62,6 @@ public class BsqSwapOfferDetailsWindow extends Overlay<BsqSwapOfferDetailsWindow
     private final CoinFormatter formatter;
     private final User user;
     private final KeyRing keyRing;
-    private final Navigation navigation;
     private Offer offer;
     private Coin tradeAmount;
     private Price tradePrice;
@@ -79,12 +77,10 @@ public class BsqSwapOfferDetailsWindow extends Overlay<BsqSwapOfferDetailsWindow
     @Inject
     public BsqSwapOfferDetailsWindow(@Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                                      User user,
-                                     KeyRing keyRing,
-                                     Navigation navigation) {
+                                     KeyRing keyRing) {
         this.formatter = formatter;
         this.user = user;
         this.keyRing = keyRing;
-        this.navigation = navigation;
         type = Type.Confirmation;
     }
 

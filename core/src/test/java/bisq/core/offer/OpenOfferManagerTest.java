@@ -2,7 +2,6 @@ package bisq.core.offer;
 
 import bisq.core.api.CoreContext;
 import bisq.core.offer.bisq_v1.OfferPayload;
-import bisq.core.offer.bsq_swap.OpenBsqSwapOfferService;
 import bisq.core.trade.model.TradableList;
 
 import bisq.network.p2p.P2PService;
@@ -48,11 +47,8 @@ public class OpenOfferManagerTest {
     public void testStartEditOfferForActiveOffer() {
         P2PService p2PService = mock(P2PService.class);
         OfferBookService offerBookService = mock(OfferBookService.class);
-        OpenBsqSwapOfferService openBsqSwapOfferService = mock(OpenBsqSwapOfferService.class);
-
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
-
-        final OpenOfferManager manager = new OpenOfferManager(coreContext,
+        OpenOfferManager manager = new OpenOfferManager(coreContext,
                 null,
                 null,
                 null,
@@ -98,10 +94,8 @@ public class OpenOfferManagerTest {
     public void testStartEditOfferForDeactivatedOffer() {
         P2PService p2PService = mock(P2PService.class);
         OfferBookService offerBookService = mock(OfferBookService.class);
-        OpenBsqSwapOfferService openBsqSwapOfferService = mock(OpenBsqSwapOfferService.class);
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
-
-        final OpenOfferManager manager = new OpenOfferManager(coreContext,
+        OpenOfferManager manager = new OpenOfferManager(coreContext,
                 null,
                 null,
                 null,
@@ -139,11 +133,8 @@ public class OpenOfferManagerTest {
     public void testStartEditOfferForOfferThatIsCurrentlyEdited() {
         P2PService p2PService = mock(P2PService.class);
         OfferBookService offerBookService = mock(OfferBookService.class);
-        OpenBsqSwapOfferService openBsqSwapOfferService = mock(OpenBsqSwapOfferService.class);
-
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
-
-        final OpenOfferManager manager = new OpenOfferManager(coreContext,
+        OpenOfferManager manager = new OpenOfferManager(coreContext,
                 null,
                 null,
                 null,

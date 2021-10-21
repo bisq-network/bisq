@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.offer.bsq_swap.take_offer;
 
-import bisq.desktop.Navigation;
 import bisq.desktop.main.offer.bsq_swap.BsqSwapOfferDataModel;
 import bisq.desktop.main.offer.offerbook.OfferBook;
 
@@ -58,13 +57,11 @@ class BsqSwapTakeOfferDataModel extends BsqSwapOfferDataModel {
                               OfferBook offerBook,
                               User user,
                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
-                              Navigation navigation,
                               P2PService p2PService) {
         super(bsqSwapTakeOfferModel,
                 user,
                 p2PService,
-                btcFormatter,
-                navigation);
+                btcFormatter);
         this.bsqSwapTakeOfferModel = bsqSwapTakeOfferModel;
 
         this.offerBook = offerBook;

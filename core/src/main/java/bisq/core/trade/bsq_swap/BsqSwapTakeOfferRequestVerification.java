@@ -87,7 +87,7 @@ public class BsqSwapTakeOfferRequestVerification {
     }
 
     private static boolean isDateInTolerance(BsqSwapRequest request) {
-        return Math.abs(request.getTradeDate() - new Date().getTime()) < TimeUnit.MINUTES.toMillis(10);
+        return abs(request.getTradeDate() - new Date().getTime()) < TimeUnit.MINUTES.toMillis(10);
     }
 
     private static boolean isTxFeeInTolerance(BsqSwapRequest request, FeeService feeService) {
