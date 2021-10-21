@@ -21,6 +21,7 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.ClosedTradableManager;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
+import bisq.core.trade.bsq_swap.BsqSwapTradeManager;
 import bisq.core.trade.model.Tradable;
 
 import javax.inject.Inject;
@@ -36,16 +37,19 @@ public class TradableRepository {
     private final TradeManager tradeManager;
     private final ClosedTradableManager closedTradableManager;
     private final FailedTradesManager failedTradesManager;
+    private final BsqSwapTradeManager bsqSwapTradeManager;
 
     @Inject
     TradableRepository(OpenOfferManager openOfferManager,
                        TradeManager tradeManager,
                        ClosedTradableManager closedTradableManager,
-                       FailedTradesManager failedTradesManager) {
+                       FailedTradesManager failedTradesManager,
+                       BsqSwapTradeManager bsqSwapTradeManager) {
         this.openOfferManager = openOfferManager;
         this.tradeManager = tradeManager;
         this.closedTradableManager = closedTradableManager;
         this.failedTradesManager = failedTradesManager;
+        this.bsqSwapTradeManager = bsqSwapTradeManager;
     }
 
     public Set<Tradable> getAll() {
@@ -54,6 +58,7 @@ public class TradableRepository {
                 .addAll(tradeManager.getObservableList())
                 .addAll(closedTradableManager.getObservableList())
                 .addAll(failedTradesManager.getObservableList())
+                .addAll(bsqSwapTradeManager.getObservableList())
                 .build();
     }
 }

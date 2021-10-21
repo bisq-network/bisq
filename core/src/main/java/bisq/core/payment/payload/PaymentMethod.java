@@ -116,6 +116,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static final String VERSE_ID = "VERSE";
     public static final String STRIKE_ID = "STRIKE";
     public static final String SWIFT_ID = "SWIFT";
+    public static final String BSQ_SWAP_ID = "BSQ_SWAP";
 
     // Cannot be deleted as it would break old trade history entries
     @Deprecated
@@ -174,6 +175,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static PaymentMethod VERSE;
     public static PaymentMethod STRIKE;
     public static PaymentMethod SWIFT;
+    public static PaymentMethod BSQ_SWAP;
 
     // Cannot be deleted as it would break old trade history entries
     @Deprecated
@@ -259,7 +261,9 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
             // Altcoins
             BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
             // Altcoins with 1 hour trade period
-            BLOCK_CHAINS_INSTANT = new PaymentMethod(BLOCK_CHAINS_INSTANT_ID, TimeUnit.HOURS.toMillis(1), DEFAULT_TRADE_LIMIT_VERY_LOW_RISK)
+            BLOCK_CHAINS_INSTANT = new PaymentMethod(BLOCK_CHAINS_INSTANT_ID, TimeUnit.HOURS.toMillis(1), DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
+            // BsqSwap
+            BSQ_SWAP = new PaymentMethod(BSQ_SWAP_ID, 1, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK)
     ));
 
     static {
@@ -409,7 +413,11 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
 
     // Includes any non btc asset, not limited to blockchain payment methods
     public boolean isAltcoin() {
-        return isBlockchain();
+        return isBlockchain() || isBsqSwap();
+    }
+
+    public boolean isBsqSwap() {
+        return this.equals(BSQ_SWAP);
     }
 
     public static boolean hasChargebackRisk(PaymentMethod paymentMethod, List<TradeCurrency> tradeCurrencies) {

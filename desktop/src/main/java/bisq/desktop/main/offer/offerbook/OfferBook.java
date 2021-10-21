@@ -81,6 +81,11 @@ public class OfferBook {
                     return;
                 }
 
+                if (offer.isBsqSwapOffer() && !filterManager.isProofOfWorkValid(offer)) {
+                    log.info("Proof of work of offer with id {} is not valid.", offer.getId());
+                    return;
+                }
+
                 if (OfferRestrictions.requiresNodeAddressUpdate() && !Utils.isV3Address(offer.getMakerNodeAddress().getHostName())) {
                     log.debug("Ignored offer with Tor v2 node address. ID={}", offer.getId());
                     return;
@@ -113,6 +118,20 @@ public class OfferBook {
                 printOfferBookListItems("After onRemoved");
             }
         });
+
+        filterManager.filterProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                onProofOfWorkDifficultyChanged();
+            }
+        });
+    }
+
+    private void onProofOfWorkDifficultyChanged() {
+        List<OfferBookListItem> toRemove = offerBookListItems.stream()
+                .filter(item -> item.getOffer().isBsqSwapOffer())
+                .filter(item -> !filterManager.isProofOfWorkValid(item.getOffer()))
+                .collect(Collectors.toList());
+        toRemove.forEach(offerBookListItems::remove);
     }
 
     private void removeDuplicateItem(OfferBookListItem newOfferBookListItem) {
@@ -202,6 +221,7 @@ public class OfferBook {
             offerBookListItems.clear();
             offerBookListItems.addAll(offerBookService.getOffers().stream()
                     .filter(this::isOfferAllowed)
+                    .filter(offer -> !offer.isBsqSwapOffer() || filterManager.isProofOfWorkValid(offer))
                     .map(OfferBookListItem::new)
                     .collect(Collectors.toList()));
 

@@ -39,6 +39,7 @@ import bisq.core.network.p2p.inventory.messages.GetInventoryResponse;
 import bisq.core.offer.availability.messages.OfferAvailabilityRequest;
 import bisq.core.offer.availability.messages.OfferAvailabilityResponse;
 import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bsq_swap.BsqSwapOfferPayload;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.arbitration.messages.PeerPublishedDisputePayoutTxMessage;
@@ -62,6 +63,11 @@ import bisq.core.trade.protocol.bisq_v1.messages.PeerPublishedDelayedPayoutTxMes
 import bisq.core.trade.protocol.bisq_v1.messages.RefreshTradeStateRequest;
 import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.TraderSignedWitnessMessage;
+import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapFinalizeTxRequest;
+import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapFinalizedTxMessage;
+import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapTxInputsMessage;
+import bisq.core.trade.protocol.bsq_swap.messages.BuyersBsqSwapRequest;
+import bisq.core.trade.protocol.bsq_swap.messages.SellersBsqSwapRequest;
 
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.BundleOfEnvelopes;
@@ -162,6 +168,17 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return DepositTxAndDelayedPayoutTxMessage.fromProto(proto.getDepositTxAndDelayedPayoutTxMessage(), this, messageVersion);
                 case SHARE_BUYER_PAYMENT_ACCOUNT_MESSAGE:
                     return ShareBuyerPaymentAccountMessage.fromProto(proto.getShareBuyerPaymentAccountMessage(), this, messageVersion);
+
+                case SELLERS_BSQ_SWAP_REQUEST:
+                    return SellersBsqSwapRequest.fromProto(proto.getSellersBsqSwapRequest(), messageVersion);
+                case BUYERS_BSQ_SWAP_REQUEST:
+                    return BuyersBsqSwapRequest.fromProto(proto.getBuyersBsqSwapRequest(), messageVersion);
+                case BSQ_SWAP_TX_INPUTS_MESSAGE:
+                    return BsqSwapTxInputsMessage.fromProto(proto.getBsqSwapTxInputsMessage(), messageVersion);
+                case BSQ_SWAP_FINALIZE_TX_REQUEST:
+                    return BsqSwapFinalizeTxRequest.fromProto(proto.getBsqSwapFinalizeTxRequest(), messageVersion);
+                case BSQ_SWAP_FINALIZED_TX_MESSAGE:
+                    return BsqSwapFinalizedTxMessage.fromProto(proto.getBsqSwapFinalizedTxMessage(), messageVersion);
 
                 case COUNTER_CURRENCY_TRANSFER_STARTED_MESSAGE:
                     return CounterCurrencyTransferStartedMessage.fromProto(proto.getCounterCurrencyTransferStartedMessage(), messageVersion);
@@ -278,6 +295,8 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return MailboxStoragePayload.fromProto(proto.getMailboxStoragePayload());
                 case OFFER_PAYLOAD:
                     return OfferPayload.fromProto(proto.getOfferPayload());
+                case BSQ_SWAP_OFFER_PAYLOAD:
+                    return BsqSwapOfferPayload.fromProto(proto.getBsqSwapOfferPayload());
                 case TEMP_PROPOSAL_PAYLOAD:
                     return TempProposalPayload.fromProto(proto.getTempProposalPayload());
                 default:

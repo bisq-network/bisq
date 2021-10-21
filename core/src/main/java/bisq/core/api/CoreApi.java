@@ -25,7 +25,9 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.trade.bisq_v1.TradeResultHandler;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
@@ -117,12 +119,24 @@ public class CoreApi {
     // Offers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public Offer getBsqSwapOffer(String id) {
+        return coreOffersService.getBsqSwapOffer(id);
+    }
+
     public Offer getOffer(String id) {
         return coreOffersService.getOffer(id);
     }
 
     public OpenOffer getMyOffer(String id) {
         return coreOffersService.getMyOffer(id);
+    }
+
+    public Offer getMyBsqSwapOffer(String id) {
+        return coreOffersService.getMyBsqSwapOffer(id);
+    }
+
+    public List<Offer> getBsqSwapOffers(String direction, String currencyCode) {
+        return coreOffersService.getBsqSwapOffers(direction, currencyCode);
     }
 
     public List<Offer> getOffers(String direction, String currencyCode) {
@@ -133,18 +147,38 @@ public class CoreApi {
         return coreOffersService.getMyOffers(direction, currencyCode);
     }
 
-    public void createAnPlaceOffer(String currencyCode,
-                                   String directionAsString,
-                                   String priceAsString,
-                                   boolean useMarketBasedPrice,
-                                   double marketPriceMargin,
-                                   long amountAsLong,
-                                   long minAmountAsLong,
-                                   double buyerSecurityDeposit,
-                                   long triggerPrice,
-                                   String paymentAccountId,
-                                   String makerFeeCurrencyCode,
-                                   Consumer<Offer> resultHandler) {
+    public List<Offer> getMyBsqSwapOffers(String direction, String currencyCode) {
+        return coreOffersService.getMyBsqSwapOffers(direction, currencyCode);
+    }
+
+    public OpenOffer getMyOpenBsqSwapOffer(String id) {
+        return coreOffersService.getMyOpenBsqSwapOffer(id);
+    }
+
+    public void createAndPlaceBsqSwapOffer(String directionAsString,
+                                           long amountAsLong,
+                                           long minAmountAsLong,
+                                           String priceAsString,
+                                           Consumer<Offer> resultHandler) {
+        coreOffersService.createAndPlaceBsqSwapOffer(directionAsString,
+                amountAsLong,
+                minAmountAsLong,
+                priceAsString,
+                resultHandler);
+    }
+
+    public void createAndPlaceOffer(String currencyCode,
+                                    String directionAsString,
+                                    String priceAsString,
+                                    boolean useMarketBasedPrice,
+                                    double marketPriceMargin,
+                                    long amountAsLong,
+                                    long minAmountAsLong,
+                                    double buyerSecurityDeposit,
+                                    long triggerPrice,
+                                    String paymentAccountId,
+                                    String makerFeeCurrencyCode,
+                                    Consumer<Offer> resultHandler) {
         coreOffersService.createAndPlaceOffer(currencyCode,
                 directionAsString,
                 priceAsString,
@@ -206,11 +240,13 @@ public class CoreApi {
     public PaymentAccount createCryptoCurrencyPaymentAccount(String accountName,
                                                              String currencyCode,
                                                              String address,
-                                                             boolean tradeInstant) {
+                                                             boolean tradeInstant,
+                                                             boolean isBsqSwap) {
         return paymentAccountsService.createCryptoCurrencyPaymentAccount(accountName,
                 currencyCode,
                 address,
-                tradeInstant);
+                tradeInstant,
+                isBsqSwap);
     }
 
     public List<PaymentMethod> getCryptoCurrencyPaymentMethods() {
@@ -228,6 +264,19 @@ public class CoreApi {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Trades
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void takeBsqSwapOffer(String offerId,
+                                 String paymentAccountId,
+                                 String takerFeeCurrencyCode,
+                                 TradeResultHandler<BsqSwapTrade> tradeResultHandler,
+                                 ErrorMessageHandler errorMessageHandler) {
+        Offer bsqSwapOffer = coreOffersService.getBsqSwapOffer(offerId);
+        coreTradesService.takeBsqSwapOffer(bsqSwapOffer,
+                paymentAccountId,
+                takerFeeCurrencyCode,
+                tradeResultHandler,
+                errorMessageHandler);
+    }
 
     public void takeOffer(String offerId,
                           String paymentAccountId,
@@ -256,6 +305,10 @@ public class CoreApi {
 
     public void withdrawFunds(String tradeId, String address, String memo) {
         coreTradesService.withdrawFunds(tradeId, address, memo);
+    }
+
+    public BsqSwapTrade getBsqSwapTrade(String tradeId) {
+        return coreTradesService.getBsqSwapTrade(tradeId);
     }
 
     public Trade getTrade(String tradeId) {

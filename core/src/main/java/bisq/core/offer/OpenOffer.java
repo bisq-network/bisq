@@ -17,6 +17,7 @@
 
 package bisq.core.offer;
 
+import bisq.core.offer.bsq_swap.BsqSwapOfferPayload;
 import bisq.core.trade.model.Tradable;
 
 import bisq.network.p2p.NodeAddress;
@@ -35,7 +36,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-@EqualsAndHashCode(exclude = {"state", "timeoutTimer", "mempoolStatus"})
+import static com.google.common.base.Preconditions.checkArgument;
+
+@EqualsAndHashCode(exclude = {"bsqSwapOfferHasMissingFunds", "state", "timeoutTimer", "mempoolStatus"})
 @Slf4j
 public final class OpenOffer implements Tradable {
     // Timeout for offer reservation during takeoffer process. If deposit tx is not completed in that time we reset the offer to AVAILABLE state.
@@ -58,14 +61,12 @@ public final class OpenOffer implements Tradable {
     @Getter
     @Nullable
     private final NodeAddress arbitratorNodeAddress;
-    // Is set at take offer request time
     @Getter
     @Setter
     @Nullable
     private NodeAddress mediatorNodeAddress;
 
     // Added v1.2.0
-    // Is set at take offer request time
     @Getter
     @Setter
     @Nullable
@@ -79,6 +80,11 @@ public final class OpenOffer implements Tradable {
     @Setter
     transient private long mempoolStatus = -1;
     transient private Timer timeoutTimer;
+
+    // Added at BsqSwap release. We do not persist that field
+    @Getter
+    @Setter
+    transient private boolean bsqSwapOfferHasMissingFunds;
 
     public OpenOffer(Offer offer) {
         this(offer, 0);
@@ -181,6 +187,12 @@ public final class OpenOffer implements Tradable {
         return state == State.DEACTIVATED;
     }
 
+    public BsqSwapOfferPayload getBsqSwapOfferPayload() {
+        checkArgument(getOffer().getBsqSwapOfferPayload().isPresent(),
+                "getBsqSwapOfferPayload must be called only when BsqSwapOfferPayload is the expected payload");
+        return getOffer().getBsqSwapOfferPayload().get();
+    }
+
     private void startTimeout() {
         stopTimeout();
 
@@ -209,6 +221,7 @@ public final class OpenOffer implements Tradable {
                 ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
                 ",\n     refundAgentNodeAddress=" + refundAgentNodeAddress +
                 ",\n     triggerPrice=" + triggerPrice +
+                ",\n     bsqSwapOfferHasMissingFunds=" + bsqSwapOfferHasMissingFunds +
                 "\n}";
     }
 }

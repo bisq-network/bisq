@@ -32,6 +32,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Coin;
@@ -252,6 +253,21 @@ class TransactionsListItem {
                         }
                     }
                 }
+            } else if (tradable instanceof BsqSwapTrade) {
+                direction = amountAsCoin.isPositive() ? Res.get("funds.tx.bsqSwapBuy") :
+                        Res.get("funds.tx.bsqSwapSell");
+
+                // Find my BTC output address
+                var tx = btcWalletService.getTransaction(((BsqSwapTrade) tradable).getTxId());
+                addressString = tx != null ?
+                        tx.getOutputs().stream()
+                                .filter(output -> output.isMine(btcWalletService.getWallet()))
+                                .map(output -> output.getScriptPubKey().getToAddress(btcWalletService.getParams()))
+                                .map(Object::toString)
+                                .findFirst()
+                                .orElse("") :
+                        "";
+                details = Res.get("funds.tx.bsqSwapTx", tradeId);
             }
         } else {
             if (amountAsCoin.isZero()) {

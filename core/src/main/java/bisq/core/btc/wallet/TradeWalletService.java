@@ -63,6 +63,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -1160,6 +1161,96 @@ public class TradeWalletService {
         broadcastTx(payoutTx, callback, 20);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BsqSwap tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Transaction sellerBuildBsqSwapTx(List<RawTransactionInput> buyersBsqInputs,
+                                            List<RawTransactionInput> sellersBtcInputs,
+                                            Coin sellersBsqPayoutAmount,
+                                            String sellersBsqPayoutAddress,
+                                            @Nullable Coin buyersBsqChangeAmount,
+                                            @Nullable String buyersBsqChangeAddress,
+                                            Coin buyersBtcPayoutAmount,
+                                            String buyersBtcPayoutAddress,
+                                            @Nullable Coin sellersBtcChangeAmount,
+                                            @Nullable String sellersBtcChangeAddress) throws AddressFormatException {
+
+        Transaction transaction = new Transaction(params);
+        List<TransactionInput> sellersBtcTransactionInput = sellersBtcInputs.stream()
+                .map(rawInput -> getTransactionInput(transaction, new byte[]{}, rawInput))
+                .collect(Collectors.toList());
+        return buildBsqSwapTx(buyersBsqInputs,
+                sellersBtcTransactionInput,
+                sellersBsqPayoutAmount,
+                sellersBsqPayoutAddress,
+                buyersBsqChangeAmount,
+                buyersBsqChangeAddress,
+                buyersBtcPayoutAmount,
+                buyersBtcPayoutAddress,
+                sellersBtcChangeAmount,
+                sellersBtcChangeAddress,
+                transaction);
+    }
+
+    public Transaction buyerBuildBsqSwapTx(List<RawTransactionInput> buyersBsqInputs,
+                                           List<TransactionInput> sellersBtcInputs,
+                                           Coin sellersBsqPayoutAmount,
+                                           String sellersBsqPayoutAddress,
+                                           @Nullable Coin buyersBsqChangeAmount,
+                                           @Nullable String buyersBsqChangeAddress,
+                                           Coin buyersBtcPayoutAmount,
+                                           String buyersBtcPayoutAddress,
+                                           @Nullable Coin sellersBtcChangeAmount,
+                                           @Nullable String sellersBtcChangeAddress) throws AddressFormatException {
+        Transaction transaction = new Transaction(params);
+        return buildBsqSwapTx(buyersBsqInputs,
+                sellersBtcInputs,
+                sellersBsqPayoutAmount,
+                sellersBsqPayoutAddress,
+                buyersBsqChangeAmount,
+                buyersBsqChangeAddress,
+                buyersBtcPayoutAmount,
+                buyersBtcPayoutAddress,
+                sellersBtcChangeAmount,
+                sellersBtcChangeAddress,
+                transaction);
+    }
+
+    private Transaction buildBsqSwapTx(List<RawTransactionInput> buyersBsqInputs,
+                                       List<TransactionInput> sellersBtcInputs,
+                                       Coin sellersBsqPayoutAmount,
+                                       String sellersBsqPayoutAddress,
+                                       @Nullable Coin buyersBsqChangeAmount,
+                                       @Nullable String buyersBsqChangeAddress,
+                                       Coin buyersBtcPayoutAmount,
+                                       String buyersBtcPayoutAddress,
+                                       @Nullable Coin sellersBtcChangeAmount,
+                                       @Nullable String sellersBtcChangeAddress,
+                                       Transaction transaction) throws AddressFormatException {
+
+        buyersBsqInputs.forEach(rawInput -> transaction.addInput(getTransactionInput(transaction, new byte[]{}, rawInput)));
+        sellersBtcInputs.forEach(transaction::addInput);
+
+        transaction.addOutput(sellersBsqPayoutAmount, Address.fromString(params, sellersBsqPayoutAddress));
+
+        if (buyersBsqChangeAmount != null && buyersBsqChangeAmount.isPositive())
+            transaction.addOutput(buyersBsqChangeAmount, Address.fromString(params, Objects.requireNonNull(buyersBsqChangeAddress)));
+
+        transaction.addOutput(buyersBtcPayoutAmount, Address.fromString(params, buyersBtcPayoutAddress));
+
+        if (sellersBtcChangeAmount != null && sellersBtcChangeAmount.isPositive())
+            transaction.addOutput(sellersBtcChangeAmount, Address.fromString(params, Objects.requireNonNull(sellersBtcChangeAddress)));
+
+        return transaction;
+    }
+
+    public void signBsqSwapTransaction(Transaction transaction, List<TransactionInput> myInputs)
+            throws SigningException {
+        for (TransactionInput input : myInputs) {
+            signInput(transaction, input, input.getIndex());
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Broadcast tx

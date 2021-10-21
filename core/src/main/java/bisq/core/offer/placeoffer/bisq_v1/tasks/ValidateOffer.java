@@ -40,6 +40,8 @@ public class ValidateOffer extends Task<PlaceOfferModel> {
         try {
             runInterceptHook();
 
+            checkArgument(!offer.isBsqSwapOffer());
+
             // Coins
             checkCoinNotNullOrZero(offer.getAmount(), "Amount");
             checkCoinNotNullOrZero(offer.getMinAmount(), "MinAmount");

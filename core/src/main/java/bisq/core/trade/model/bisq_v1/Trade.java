@@ -1012,6 +1012,10 @@ public abstract class Trade extends TradeModel {
         return arbitratorBtcPubKey;
     }
 
+    public boolean isBsqSwap() {
+        return offer != null && offer.isBsqSwapOffer();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private

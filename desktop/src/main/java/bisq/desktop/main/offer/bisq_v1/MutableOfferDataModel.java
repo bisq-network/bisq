@@ -53,6 +53,7 @@ import bisq.core.util.coin.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
+import bisq.common.app.DevEnv;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
@@ -632,7 +633,12 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     private Set<PaymentAccount> getUserPaymentAccounts() {
         return Objects.requireNonNull(user.getPaymentAccounts()).stream()
+                .filter(this::isNotBsqSwapOrDaoActivated)
                 .collect(Collectors.toSet());
+    }
+
+    private boolean isNotBsqSwapOrDaoActivated(PaymentAccount paymentAccount) {
+        return !paymentAccount.getPaymentMethod().isBsqSwap() || DevEnv.isDaoActivated();
     }
 
     protected void setAmount(Coin amount) {

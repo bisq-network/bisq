@@ -141,6 +141,10 @@ public class TriggerPriceService {
 
     private void checkPriceThreshold(MarketPrice marketPrice, OpenOffer openOffer) {
         Offer offer = openOffer.getOffer();
+        if (offer.isBsqSwapOffer()) {
+            return;
+        }
+
         if (wasTriggered(marketPrice, openOffer)) {
             String currencyCode = offer.getCurrencyCode();
             int smallestUnitExponent = CurrencyUtil.isCryptoCurrency(currencyCode) ?

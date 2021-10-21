@@ -26,6 +26,7 @@ import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.offer.availability.OfferAvailabilityProtocol;
 import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
 import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bsq_swap.BsqSwapOfferPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
@@ -131,12 +132,21 @@ public class Offer implements NetworkPayload, PersistablePayload {
 
     @Override
     public protobuf.Offer toProtoMessage() {
-        return protobuf.Offer.newBuilder().setOfferPayload(((OfferPayload) offerPayloadBase)
-                .toProtoMessage().getOfferPayload()).build();
+        if (isBsqSwapOffer()) {
+            return protobuf.Offer.newBuilder().setBsqSwapOfferPayload(((BsqSwapOfferPayload) offerPayloadBase)
+                    .toProtoMessage().getBsqSwapOfferPayload()).build();
+        } else {
+            return protobuf.Offer.newBuilder().setOfferPayload(((OfferPayload) offerPayloadBase)
+                    .toProtoMessage().getOfferPayload()).build();
+        }
     }
 
     public static Offer fromProto(protobuf.Offer proto) {
-        return new Offer(OfferPayload.fromProto(proto.getOfferPayload()));
+        if (proto.hasOfferPayload()) {
+            return new Offer(OfferPayload.fromProto(proto.getOfferPayload()));
+        } else {
+            return new Offer(BsqSwapOfferPayload.fromProto(proto.getBsqSwapOfferPayload()));
+        }
     }
 
 
@@ -519,6 +529,10 @@ public class Offer implements NetworkPayload, PersistablePayload {
         return getOfferPayload().map(OfferPayload::isUseReOpenAfterAutoClose).orElse(false);
     }
 
+    public boolean isBsqSwapOffer() {
+        return getOfferPayloadBase() instanceof BsqSwapOfferPayload;
+    }
+
     public boolean isXmrAutoConf() {
         if (!isXmr()) {
             return false;
@@ -537,6 +551,13 @@ public class Offer implements NetworkPayload, PersistablePayload {
     public Optional<OfferPayload> getOfferPayload() {
         if (offerPayloadBase instanceof OfferPayload) {
             return Optional.of((OfferPayload) offerPayloadBase);
+        }
+        return Optional.empty();
+    }
+
+    public Optional<BsqSwapOfferPayload> getBsqSwapOfferPayload() {
+        if (offerPayloadBase instanceof BsqSwapOfferPayload) {
+            return Optional.of((BsqSwapOfferPayload) offerPayloadBase);
         }
         return Optional.empty();
     }

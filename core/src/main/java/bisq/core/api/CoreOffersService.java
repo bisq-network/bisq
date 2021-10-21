@@ -29,6 +29,7 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.bisq_v1.CreateOfferService;
 import bisq.core.offer.bisq_v1.MutableOfferPayloadFields;
 import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bsq_swap.OpenBsqSwapOfferService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.User;
@@ -87,6 +88,7 @@ class CoreOffersService {
     private final OfferBookService offerBookService;
     private final OfferFilterService offerFilterService;
     private final OpenOfferManager openOfferManager;
+    private final OpenBsqSwapOfferService openBsqSwapOfferService;
     private final OfferUtil offerUtil;
     private final PriceFeedService priceFeedService;
     private final User user;
@@ -99,6 +101,7 @@ class CoreOffersService {
                              OfferBookService offerBookService,
                              OfferFilterService offerFilterService,
                              OpenOfferManager openOfferManager,
+                             OpenBsqSwapOfferService openBsqSwapOfferService,
                              OfferUtil offerUtil,
                              PriceFeedService priceFeedService,
                              User user) {
@@ -109,9 +112,20 @@ class CoreOffersService {
         this.offerBookService = offerBookService;
         this.offerFilterService = offerFilterService;
         this.openOfferManager = openOfferManager;
+        this.openBsqSwapOfferService = openBsqSwapOfferService;
         this.offerUtil = offerUtil;
         this.priceFeedService = priceFeedService;
         this.user = user;
+    }
+
+    Offer getBsqSwapOffer(String id) {
+        return offerBookService.getOffers().stream()
+                .filter(o -> o.getId().equals(id))
+                .filter(o -> !o.isMyOffer(keyRing))
+                .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
+                .filter(o -> o.isBsqSwapOffer())
+                .findAny().orElseThrow(() ->
+                        new IllegalStateException(format("offer with id '%s' not found", id)));
     }
 
     Offer getOffer(String id) {
@@ -131,6 +145,26 @@ class CoreOffersService {
                         new IllegalStateException(format("offer with id '%s' not found", id)));
     }
 
+    Offer getMyBsqSwapOffer(String id) {
+        return offerBookService.getOffers().stream()
+                .filter(o -> o.getId().equals(id))
+                .filter(o -> o.isMyOffer(keyRing))
+                .filter(o -> o.isBsqSwapOffer())
+                .findAny().orElseThrow(() ->
+                        new IllegalStateException(format("offer with id '%s' not found", id)));
+    }
+
+
+    List<Offer> getBsqSwapOffers(String direction, String currencyCode) {
+        var offers = offerBookService.getOffers().stream()
+                .filter(o -> !o.isMyOffer(keyRing))
+                .filter(o -> offerMatchesDirectionAndCurrency(o, direction, currencyCode))
+                .filter(o -> o.isBsqSwapOffer())
+                .sorted(priceComparator(direction))
+                .collect(Collectors.toList());
+        return offers;
+    }
+
     List<Offer> getOffers(String direction, String currencyCode) {
         return offerBookService.getOffers().stream()
                 .filter(o -> !o.isMyOffer(keyRing))
@@ -148,6 +182,24 @@ class CoreOffersService {
                 .collect(Collectors.toList());
     }
 
+    List<Offer> getMyBsqSwapOffers(String direction, String currencyCode) {
+        var offers = offerBookService.getOffers().stream()
+                .filter(o -> o.isMyOffer(keyRing))
+                .filter(o -> offerMatchesDirectionAndCurrency(o, direction, currencyCode))
+                .filter(Offer::isBsqSwapOffer)
+                .sorted(priceComparator(direction))
+                .collect(Collectors.toList());
+        return offers;
+    }
+
+    OpenOffer getMyOpenBsqSwapOffer(String id) {
+        return openOfferManager.getOpenOfferById(id)
+                .filter(open -> open.getOffer().isMyOffer(keyRing))
+                .filter(open -> open.getOffer().isBsqSwapOffer())
+                .orElseThrow(() ->
+                        new IllegalStateException(format("openoffer with id '%s' not found", id)));
+    }
+
     OpenOffer getMyOpenOffer(String id) {
         return openOfferManager.getOpenOfferById(id)
                 .filter(open -> open.getOffer().isMyOffer(keyRing))
@@ -161,7 +213,28 @@ class CoreOffersService {
                 .isPresent();
     }
 
-    // Create and place new offer.
+    void createAndPlaceBsqSwapOffer(String directionAsString,
+                                    long amountAsLong,
+                                    long minAmountAsLong,
+                                    String priceAsString,
+                                    Consumer<Offer> resultHandler) {
+        coreWalletsService.verifyWalletsAreAvailable();
+        coreWalletsService.verifyEncryptedWalletIsUnlocked();
+
+        String currencyCode = "BSQ";
+        String offerId = OfferUtil.getRandomOfferId();
+        OfferDirection direction = OfferDirection.valueOf(directionAsString.toUpperCase());
+        Coin amount = Coin.valueOf(amountAsLong);
+        Coin minAmount = Coin.valueOf(minAmountAsLong);
+        Price price = Price.valueOf(currencyCode, priceStringToLong(priceAsString, currencyCode));
+        openBsqSwapOfferService.requestNewOffer(offerId,
+                direction,
+                amount,
+                minAmount,
+                price,
+                offer -> placeBsqSwapOffer(offer, () -> resultHandler.accept(offer)));
+    }
+
     void createAndPlaceOffer(String currencyCode,
                              String directionAsString,
                              String priceAsString,
@@ -275,6 +348,15 @@ class CoreOffersService {
                 () -> {
                 },
                 log::error);
+    }
+
+    private void placeBsqSwapOffer(Offer offer, Runnable resultHandler) {
+        openBsqSwapOfferService.placeBsqSwapOffer(offer,
+                resultHandler,
+                log::error);
+
+        if (offer.getErrorMessage() != null)
+            throw new IllegalStateException(offer.getErrorMessage());
     }
 
     private void placeOffer(Offer offer,

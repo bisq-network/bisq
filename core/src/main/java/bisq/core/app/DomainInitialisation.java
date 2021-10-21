@@ -35,6 +35,7 @@ import bisq.core.notifications.alerts.market.MarketAlerts;
 import bisq.core.notifications.alerts.price.PriceAlert;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.bisq_v1.TriggerPriceService;
+import bisq.core.offer.bsq_swap.OpenBsqSwapOfferService;
 import bisq.core.payment.AmazonGiftCardAccount;
 import bisq.core.payment.RevolutAccount;
 import bisq.core.payment.TradeLimits;
@@ -51,6 +52,7 @@ import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.ClosedTradableManager;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
+import bisq.core.trade.bsq_swap.BsqSwapTradeManager;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.trade.txproof.xmr.XmrTxProofService;
 import bisq.core.user.User;
@@ -84,6 +86,7 @@ public class DomainInitialisation {
     private final TraderChatManager traderChatManager;
     private final TradeManager tradeManager;
     private final ClosedTradableManager closedTradableManager;
+    private final BsqSwapTradeManager bsqSwapTradeManager;
     private final FailedTradesManager failedTradesManager;
     private final XmrTxProofService xmrTxProofService;
     private final OpenOfferManager openOfferManager;
@@ -112,6 +115,7 @@ public class DomainInitialisation {
     private final DaoStateSnapshotService daoStateSnapshotService;
     private final TriggerPriceService triggerPriceService;
     private final MempoolService mempoolService;
+    private final OpenBsqSwapOfferService openBsqSwapOfferService;
 
     @Inject
     public DomainInitialisation(ClockWatcher clockWatcher,
@@ -122,6 +126,7 @@ public class DomainInitialisation {
                                 TraderChatManager traderChatManager,
                                 TradeManager tradeManager,
                                 ClosedTradableManager closedTradableManager,
+                                BsqSwapTradeManager bsqSwapTradeManager,
                                 FailedTradesManager failedTradesManager,
                                 XmrTxProofService xmrTxProofService,
                                 OpenOfferManager openOfferManager,
@@ -149,7 +154,8 @@ public class DomainInitialisation {
                                 User user,
                                 DaoStateSnapshotService daoStateSnapshotService,
                                 TriggerPriceService triggerPriceService,
-                                MempoolService mempoolService) {
+                                MempoolService mempoolService,
+                                OpenBsqSwapOfferService openBsqSwapOfferService) {
         this.clockWatcher = clockWatcher;
         this.tradeLimits = tradeLimits;
         this.arbitrationManager = arbitrationManager;
@@ -158,6 +164,7 @@ public class DomainInitialisation {
         this.traderChatManager = traderChatManager;
         this.tradeManager = tradeManager;
         this.closedTradableManager = closedTradableManager;
+        this.bsqSwapTradeManager = bsqSwapTradeManager;
         this.failedTradesManager = failedTradesManager;
         this.xmrTxProofService = xmrTxProofService;
         this.openOfferManager = openOfferManager;
@@ -186,6 +193,7 @@ public class DomainInitialisation {
         this.daoStateSnapshotService = daoStateSnapshotService;
         this.triggerPriceService = triggerPriceService;
         this.mempoolService = mempoolService;
+        this.openBsqSwapOfferService = openBsqSwapOfferService;
     }
 
     public void initDomainServices(Consumer<String> rejectedTxErrorMessageHandler,
@@ -210,10 +218,12 @@ public class DomainInitialisation {
         traderChatManager.onAllServicesInitialized();
 
         closedTradableManager.onAllServicesInitialized();
+        bsqSwapTradeManager.onAllServicesInitialized();
         failedTradesManager.onAllServicesInitialized();
         xmrTxProofService.onAllServicesInitialized();
 
         openOfferManager.onAllServicesInitialized();
+        openBsqSwapOfferService.onAllServicesInitialized();
 
         balances.onAllServicesInitialized();
 

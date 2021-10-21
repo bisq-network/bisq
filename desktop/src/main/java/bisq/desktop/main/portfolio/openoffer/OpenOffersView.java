@@ -30,6 +30,7 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.withdrawal.WithdrawalView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.BsqSwapOfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.duplicateoffer.DuplicateOfferView;
@@ -68,6 +69,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 
 import javafx.geometry.Insets;
 
@@ -86,6 +88,7 @@ import java.util.Comparator;
 import org.jetbrains.annotations.NotNull;
 
 import static bisq.desktop.util.FormBuilder.getRegularIconButton;
+import static bisq.desktop.util.FormBuilder.getRegularIconForLabel;
 
 @FxmlView
 public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersViewModel> {
@@ -115,6 +118,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
+    private final BsqSwapOfferDetailsWindow bsqSwapOfferDetailsWindow;
     private SortedList<OpenOfferListItem> sortedList;
     private FilteredList<OpenOfferListItem> filteredList;
     private ChangeListener<String> filterTextFieldListener;
@@ -124,10 +128,12 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     @Inject
     public OpenOffersView(OpenOffersViewModel model,
                           Navigation navigation,
-                          OfferDetailsWindow offerDetailsWindow) {
+                          OfferDetailsWindow offerDetailsWindow,
+                          BsqSwapOfferDetailsWindow bsqSwapOfferDetailsWindow) {
         super(model);
         this.navigation = navigation;
         this.offerDetailsWindow = offerDetailsWindow;
+        this.bsqSwapOfferDetailsWindow = bsqSwapOfferDetailsWindow;
     }
 
     @Override
@@ -448,7 +454,14 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     field = new HyperlinkWithIcon(model.getOfferId(item));
-                                    field.setOnAction(event -> offerDetailsWindow.show(item.getOffer()));
+                                    field.setOnAction(event -> {
+                                        if (item.getOffer().isBsqSwapOffer()) {
+                                            bsqSwapOfferDetailsWindow.show(item.getOffer());
+                                        } else {
+                                            offerDetailsWindow.show(item.getOffer());
+                                        }
+                                    });
+
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);
                                 } else {
@@ -827,11 +840,26 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    if (button == null) {
-                                        button = getRegularIconButton(MaterialDesignIcon.PENCIL);
-                                        button.setTooltip(new Tooltip(Res.get("shared.editOffer")));
-                                        button.setOnAction(event -> onEditOpenOffer(item.getOpenOffer()));
-                                        setGraphic(button);
+                                    if (item.getOffer().isBsqSwapOffer()) {
+                                        if (button != null) {
+                                            button.setOnAction(null);
+                                            button = null;
+                                        }
+                                        if (item.getOpenOffer().isBsqSwapOfferHasMissingFunds()) {
+                                            Label label = new Label();
+                                            Text icon = getRegularIconForLabel(MaterialDesignIcon.EYE_OFF, label);
+                                            Tooltip.install(icon, new Tooltip(Res.get("openOffer.bsqSwap.missingFunds")));
+                                            setGraphic(icon);
+                                        } else {
+                                            setGraphic(null);
+                                        }
+                                    } else {
+                                        if (button == null) {
+                                            button = getRegularIconButton(MaterialDesignIcon.PENCIL);
+                                            button.setTooltip(new Tooltip(Res.get("shared.editOffer")));
+                                            button.setOnAction(event -> onEditOpenOffer(item.getOpenOffer()));
+                                            setGraphic(button);
+                                        }
                                     }
                                 } else {
                                     setGraphic(null);

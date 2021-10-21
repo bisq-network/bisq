@@ -525,6 +525,9 @@ public class BisqSetup {
         // miner fee was too low and the transaction got removed from mempool and got out from our wallet after a
         // resync.
         openOfferManager.getObservableList().forEach(e -> {
+            if (e.getOffer().isBsqSwapOffer()) {
+                return;
+            }
             String offerFeePaymentTxId = e.getOffer().getOfferFeePaymentTxId();
             if (btcWalletService.getConfidenceForTxId(offerFeePaymentTxId) == null) {
                 String message = Res.get("popup.warning.openOfferWithInvalidMakerFeeTx",

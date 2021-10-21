@@ -93,6 +93,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -371,6 +372,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                            TransactionResultHandler resultHandler,
                            ErrorMessageHandler errorMessageHandler) {
         checkNotNull(offer.getMakerFee(), "makerFee must not be null");
+        checkArgument(!offer.isBsqSwapOffer());
 
         Coin reservedFundsForOffer = createOfferService.getReservedFundsForOffer(offer.getDirection(),
                 offer.getAmount(),
@@ -407,6 +409,16 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         placeOfferProtocol.placeOffer();
     }
 
+    public void addOpenBsqSwapOffer(OpenOffer openOffer) {
+        addOpenOfferToList(openOffer);
+        if (!stopped) {
+            startPeriodicRepublishOffersTimer();
+            startPeriodicRefreshOffersTimer();
+        } else {
+            log.debug("We have stopped already. We ignore that placeOfferProtocol.placeOffer.onResult call.");
+        }
+    }
+
     // Remove from offerbook
     public void removeOffer(Offer offer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         Optional<OpenOffer> openOfferOptional = getOpenOfferById(offer.getId());
@@ -427,6 +439,15 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                                   ErrorMessageHandler errorMessageHandler) {
         if (offersToBeEdited.containsKey(openOffer.getId())) {
             errorMessageHandler.handleErrorMessage("You can't activate an offer that is currently edited.");
+            return;
+        }
+
+        // If there is not enough funds for a BsqSwapOffer we do not publish the offer, but still apply the state change.
+        // Once the wallet gets funded the offer gets published automatically.
+        if (isBsqSwapOfferLackingFunds(openOffer)) {
+            openOffer.setState(OpenOffer.State.AVAILABLE);
+            requestPersistence();
+            resultHandler.handleResult();
             return;
         }
 
@@ -550,8 +571,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         offer.setState(Offer.State.REMOVED);
         openOffer.setState(OpenOffer.State.CANCELED);
         removeOpenOfferFromList(openOffer);
-        closedTradableManager.add(openOffer);
-        btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
+        if (!openOffer.getOffer().isBsqSwapOffer()) {
+            closedTradableManager.add(openOffer);
+            btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
+        }
         log.info("onRemoved offerId={}", offer.getId());
         resultHandler.handleResult();
     }
@@ -789,7 +812,11 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         ArrayList<OpenOffer> openOffersClone = new ArrayList<>(openOffers.getList());
         openOffersClone.forEach(originalOpenOffer -> {
             Offer originalOffer = originalOpenOffer.getOffer();
-
+            if (originalOffer.isBsqSwapOffer()) {
+                // Offer without a fee transaction don't need to be updated, they can be removed and a new
+                // offer created without incurring any extra costs
+                return;
+            }
             OfferPayload original = originalOffer.getOfferPayload().orElseThrow();
             // We added CAPABILITIES with entry for Capability.MEDIATION in v1.1.6 and
             // Capability.REFUND_AGENT in v1.2.0 and want to rewrite a
@@ -1071,7 +1098,12 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         requestPersistence();
     }
 
+    private boolean isBsqSwapOfferLackingFunds(OpenOffer openOffer) {
+        return openOffer.getOffer().isBsqSwapOffer() &&
+                openOffer.isBsqSwapOfferHasMissingFunds();
+    }
+
     private boolean preventedFromPublishing(OpenOffer openOffer) {
-        return openOffer.isDeactivated();
+        return openOffer.isDeactivated() || openOffer.isBsqSwapOfferHasMissingFunds();
     }
 }

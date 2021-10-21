@@ -32,6 +32,7 @@ import bisq.core.support.dispute.refund.RefundDisputeListService;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.ClosedTradableManager;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
+import bisq.core.trade.bsq_swap.BsqSwapTradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
@@ -63,6 +64,7 @@ public class CorePersistedDataHost {
         persistedDataHosts.add(injector.getInstance(OpenOfferManager.class));
         persistedDataHosts.add(injector.getInstance(TradeManager.class));
         persistedDataHosts.add(injector.getInstance(ClosedTradableManager.class));
+        persistedDataHosts.add(injector.getInstance(BsqSwapTradeManager.class));
         persistedDataHosts.add(injector.getInstance(FailedTradesManager.class));
         persistedDataHosts.add(injector.getInstance(ArbitrationDisputeListService.class));
         persistedDataHosts.add(injector.getInstance(MediationDisputeListService.class));

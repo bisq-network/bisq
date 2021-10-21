@@ -30,6 +30,7 @@ import lombok.Getter;
 
 import static bisq.cli.opts.OptLabel.OPT_HELP;
 
+@SuppressWarnings("unchecked")
 abstract class AbstractMethodOptionParser implements MethodOpts {
 
     // The full command line args passed to CliMain.main(String[] args).

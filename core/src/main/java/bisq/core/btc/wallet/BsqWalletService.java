@@ -22,6 +22,7 @@ import bisq.core.btc.exceptions.InsufficientBsqException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.listeners.BsqBalanceListener;
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.dao.DaoKillSwitch;
 import bisq.core.dao.state.DaoStateListener;
@@ -37,6 +38,7 @@ import bisq.core.user.Preferences;
 import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.UserThread;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -722,6 +724,78 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
             log.error(tx.toString());
             throw new InsufficientBsqException(e.missing);
         }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BsqSwap tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Tuple2<List<RawTransactionInput>, Coin> getBuyersBsqInputsForBsqSwapTx(Coin required)
+            throws InsufficientBsqException {
+        daoKillSwitch.assertDaoIsNotDisabled();
+        // As unconfirmed BSQ inputs cannot be verified by the peer we can only use confirmed BSQ.
+        boolean prev = bsqCoinSelector.isAllowSpendMyOwnUnconfirmedTxOutputs();
+        bsqCoinSelector.setAllowSpendMyOwnUnconfirmedTxOutputs(false);
+        CoinSelection coinSelection = bsqCoinSelector.select(required, wallet.calculateAllSpendCandidates());
+        Coin change;
+        try {
+            change = bsqCoinSelector.getChange(required, coinSelection);
+        } catch (InsufficientMoneyException e) {
+            throw new InsufficientBsqException(e.missing);
+        } finally {
+            bsqCoinSelector.setAllowSpendMyOwnUnconfirmedTxOutputs(prev);
+        }
+
+        Transaction dummyTx = new Transaction(params);
+        coinSelection.gathered.forEach(dummyTx::addInput);
+        List<RawTransactionInput> inputs = dummyTx.getInputs().stream()
+                .map(RawTransactionInput::new)
+                .collect(Collectors.toList());
+        return new Tuple2<>(inputs, change);
+    }
+
+    public void signBsqSwapTransaction(Transaction transaction, List<TransactionInput> myInputs)
+            throws TransactionVerificationException {
+        for (TransactionInput input : myInputs) {
+            TransactionOutput connectedOutput = input.getConnectedOutput();
+            if (connectedOutput != null && connectedOutput.isMine(wallet)) {
+                signTransactionInput(wallet, aesKey, transaction, input, input.getIndex());
+                checkScriptSig(transaction, input, input.getIndex());
+            } else {
+                if (connectedOutput == null) {
+                    log.error("connectedOutput is null");
+                    return;
+                }
+                if (!connectedOutput.isMine(wallet)) {
+                    log.error("connectedOutput is not mine");
+                }
+            }
+        }
+    }
+
+    // Only use confirmed BSQ inputs as the counterparty cannot verify unconfirmed BSQ inputs
+    public Tuple2<Transaction, Coin> prepareBsqInputsForBsqSwap(Coin requiredInput) throws InsufficientBsqException {
+        daoKillSwitch.assertDaoIsNotDisabled();
+        bsqCoinSelector.setAllowSpendMyOwnUnconfirmedTxOutputs(false);
+
+        var dummyTx = new Transaction(params);
+        var coinSelection = bsqCoinSelector.select(requiredInput, wallet.calculateAllSpendCandidates());
+        coinSelection.gathered.forEach(dummyTx::addInput);
+
+        var change = Coin.ZERO;
+        try {
+            change = bsqCoinSelector.getChange(requiredInput, coinSelection);
+        } catch (InsufficientMoneyException e) {
+            log.error("Missing funds in takerPreparesAtomicBsqInputs");
+            throw new InsufficientBsqException(e.missing);
+        } finally {
+            bsqCoinSelector.setAllowSpendMyOwnUnconfirmedTxOutputs(true);
+        }
+        checkArgument(change.isZero() || Restrictions.isAboveDust(change));
+
+//        printTx("takerPreparesAtomicBsqInputs", dummyTx);
+        return new Tuple2<>(dummyTx, change);
     }
 
 

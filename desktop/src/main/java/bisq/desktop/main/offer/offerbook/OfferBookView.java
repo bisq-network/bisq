@@ -38,6 +38,7 @@ import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.withdrawal.WithdrawalView;
 import bisq.desktop.main.offer.OfferView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.BsqSwapOfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.util.CssTheme;
 import bisq.desktop.util.FormBuilder;
@@ -123,6 +124,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
+    private final BsqSwapOfferDetailsWindow bsqSwapOfferDetailsWindow;
     private final CoinFormatter formatter;
     private final PrivateNotificationManager privateNotificationManager;
     private final boolean useDevPrivilegeKeys;
@@ -153,6 +155,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     OfferBookView(OfferBookViewModel model,
                   Navigation navigation,
                   OfferDetailsWindow offerDetailsWindow,
+                  BsqSwapOfferDetailsWindow bsqSwapOfferDetailsWindow,
                   @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                   PrivateNotificationManager privateNotificationManager,
                   @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys,
@@ -162,6 +165,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         this.navigation = navigation;
         this.offerDetailsWindow = offerDetailsWindow;
+        this.bsqSwapOfferDetailsWindow = bsqSwapOfferDetailsWindow;
         this.formatter = formatter;
         this.privateNotificationManager = privateNotificationManager;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
@@ -668,6 +672,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             "isInsufficientTradeLimit case.");
                 }
                 break;
+            case HIDE_BSQ_SWAPS_DUE_DAO_DEACTIVATED:
+                new Popup().warning(Res.get("offerbook.warning.hideBsqSwapsDueDaoDeactivated")).show();
+                break;
             default:
                 break;
         }
@@ -945,7 +952,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         } else {
                                             field = new HyperlinkWithIcon(model.getPaymentMethod(item));
                                         }
-                                        field.setOnAction(event -> offerDetailsWindow.show(offer));
+                                        field.setOnAction(event -> {
+                                            if (offer.isBsqSwapOffer()) {
+                                                bsqSwapOfferDetailsWindow.show(offer);
+                                            } else {
+                                                offerDetailsWindow.show(offer);
+                                            }
+                                        });
                                         field.setTooltip(new Tooltip(model.getPaymentMethodToolTip(item)));
                                         setGraphic(field);
                                     }

@@ -123,8 +123,6 @@ import java.util.concurrent.TimeUnit;
 import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabel;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class BuyerStep2View extends TradeStepView {
 

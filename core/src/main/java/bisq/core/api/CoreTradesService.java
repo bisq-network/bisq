@@ -22,11 +22,14 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.bisq_v1.TakeOfferModel;
+import bisq.core.offer.bsq_swap.BsqSwapTakeOfferModel;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.ClosedTradableManager;
+import bisq.core.trade.bisq_v1.TradeResultHandler;
 import bisq.core.trade.bisq_v1.TradeUtil;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.trade.protocol.bisq_v1.BuyerProtocol;
 import bisq.core.trade.protocol.bisq_v1.SellerProtocol;
 import bisq.core.user.User;
@@ -60,6 +63,7 @@ class CoreTradesService {
     private final OfferUtil offerUtil;
     private final ClosedTradableManager closedTradableManager;
     private final TakeOfferModel takeOfferModel;
+    private final BsqSwapTakeOfferModel bsqSwapTakeOfferModel;
     private final TradeManager tradeManager;
     private final TradeUtil tradeUtil;
     private final User user;
@@ -71,6 +75,7 @@ class CoreTradesService {
                              OfferUtil offerUtil,
                              ClosedTradableManager closedTradableManager,
                              TakeOfferModel takeOfferModel,
+                             BsqSwapTakeOfferModel bsqSwapTakeOfferModel,
                              TradeManager tradeManager,
                              TradeUtil tradeUtil,
                              User user) {
@@ -80,9 +85,31 @@ class CoreTradesService {
         this.offerUtil = offerUtil;
         this.closedTradableManager = closedTradableManager;
         this.takeOfferModel = takeOfferModel;
+        this.bsqSwapTakeOfferModel = bsqSwapTakeOfferModel;
         this.tradeManager = tradeManager;
         this.tradeUtil = tradeUtil;
         this.user = user;
+    }
+
+    // todo we need to pass the intended trade amount
+    void takeBsqSwapOffer(Offer offer,
+                          String paymentAccountId,
+                          String takerFeeCurrencyCode,
+                          TradeResultHandler<BsqSwapTrade> tradeResultHandler,
+                          ErrorMessageHandler errorMessageHandler) {
+        coreWalletsService.verifyWalletsAreAvailable();
+        coreWalletsService.verifyEncryptedWalletIsUnlocked();
+
+        bsqSwapTakeOfferModel.initWithData(offer);
+
+        //todo use the intended trade amount
+        bsqSwapTakeOfferModel.applyAmount(offer.getAmount());
+
+        log.info("Initiating take {} offer, {}",
+                offer.isBuyOffer() ? "buy" : "sell",
+                bsqSwapTakeOfferModel);
+
+        bsqSwapTakeOfferModel.onTakeOffer(tradeResultHandler, log::warn, errorMessageHandler, coreContext.isApiUser());
     }
 
     void takeOffer(Offer offer,
@@ -203,6 +230,13 @@ class CoreTradesService {
                     log.error(errorMessage, throwable);
                     throw new IllegalStateException(errorMessage, throwable);
                 });
+    }
+
+    BsqSwapTrade getBsqSwapTrade(String tradeId) {
+        coreWalletsService.verifyWalletsAreAvailable();
+        coreWalletsService.verifyEncryptedWalletIsUnlocked();
+        return tradeManager.findBsqSwapTradeById(tradeId).orElseThrow(() ->
+                new IllegalArgumentException(format("trade with id '%s' not found", tradeId)));
     }
 
     String getTradeRole(String tradeId) {

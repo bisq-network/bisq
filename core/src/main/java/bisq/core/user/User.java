@@ -19,10 +19,13 @@ package bisq.core.user;
 
 import bisq.core.alert.Alert;
 import bisq.core.filter.Filter;
+import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.LanguageUtil;
+import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.notifications.alerts.market.MarketAlertFilter;
 import bisq.core.notifications.alerts.price.PriceAlertFilter;
+import bisq.core.payment.BsqSwapAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
@@ -127,7 +130,24 @@ public class User implements PersistedDataHost {
             requestPersistence();
         });
 
+        // We create a default placeholder account for BSQ swaps. The account has not content, it is just used
+        // so that the BsqSwap use case fits into the current domain
+        addBsqSwapAccount();
+
         requestPersistence();
+    }
+
+    private void addBsqSwapAccount() {
+        checkNotNull(userPayload.getPaymentAccounts(), "userPayload.getPaymentAccounts() must not be null");
+        if (userPayload.getPaymentAccounts().stream()
+                .anyMatch(paymentAccount -> paymentAccount instanceof BsqSwapAccount))
+            return;
+
+        var account = new BsqSwapAccount();
+        account.init();
+        account.setAccountName(Res.get("BSQ_SWAP"));
+        account.setSingleTradeCurrency(new CryptoCurrency("BSQ", "BSQ"));
+        addPaymentAccount(account);
     }
 
     public void requestPersistence() {
