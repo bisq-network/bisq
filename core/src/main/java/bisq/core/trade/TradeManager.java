@@ -415,7 +415,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                             String paymentAccountId,
                             boolean useSavingsWallet,
                             boolean isTakerApiUser,
-                            TradeResultHandler tradeResultHandler,
+                            TradeResultHandler<Trade> tradeResultHandler,
                             ErrorMessageHandler errorMessageHandler) {
 
         checkArgument(!wasOfferAlreadyUsedInTrade(offer.getId()));

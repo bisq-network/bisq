@@ -17,8 +17,6 @@
 
 package bisq.core.trade.bisq_v1;
 
-import bisq.core.trade.model.bisq_v1.Trade;
-
-public interface TradeResultHandler {
-    void handleResult(Trade trade);
+public interface TradeResultHandler<T> {
+    void handleResult(T trade);
 }

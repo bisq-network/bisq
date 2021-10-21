@@ -47,6 +47,7 @@ import bisq.core.provider.mempool.MempoolService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.TradeResultHandler;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.VolumeUtil;
@@ -314,7 +315,7 @@ class TakeOfferDataModel extends OfferDataModel {
 
     // errorMessageHandler is used only in the check availability phase. As soon we have a trade we write the error msg in the trade object as we want to
     // have it persisted as well.
-    void onTakeOffer(TradeResultHandler tradeResultHandler) {
+    void onTakeOffer(TradeResultHandler<Trade> tradeResultHandler) {
         checkNotNull(txFeeFromFeeService, "txFeeFromFeeService must not be null");
         checkNotNull(getTakerFee(), "takerFee must not be null");
 
