@@ -140,21 +140,21 @@ class BsqTxListItem extends TxConfidenceListItem {
         this.bsqFormatter = null;
     }
 
-    public TxType getTxType() {
+    TxType getTxType() {
         return daoFacade.getTx(txId)
                 .flatMap(tx -> daoFacade.getOptionalTxType(tx.getId()))
                 .orElse(confirmations == 0 ? TxType.UNVERIFIED : TxType.UNDEFINED_TX_TYPE);
     }
 
-    public boolean isWithdrawalToBTCWallet() {
+    boolean isWithdrawalToBTCWallet() {
         return withdrawalToBTCWallet;
     }
 
-    public String getDateAsString() {
+    String getDateAsString() {
         return DisplayUtils.formatDateTime(date);
     }
 
-    public String getAmountAsString() {
+    String getAmountAsString() {
         return bsqFormatter.formatCoin(amount);
     }
 }
