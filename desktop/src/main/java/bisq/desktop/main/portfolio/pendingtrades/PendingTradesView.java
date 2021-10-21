@@ -389,7 +389,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     private void onShowInfoForInvalidTrade(Trade trade) {
         new Popup().width(900).attention(Res.get("portfolio.pending.failedTrade.info.popup",
-                        getInvalidTradeDetails(trade)))
+                getInvalidTradeDetails(trade)))
                 .show();
     }
 

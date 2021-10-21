@@ -218,7 +218,7 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
                 selectOpenOffersView((OpenOffersView) view);
             }
         } else if (view instanceof DuplicateOfferView) {
-            if (duplicateOfferView == null && data instanceof OfferPayload && data != null) {
+            if (duplicateOfferView == null && data instanceof OfferPayload) {
                 viewLoader.removeFromCache(viewClass);  // remove cached dialog
                 view = viewLoader.load(viewClass);      // and load a fresh one
                 duplicateOfferView = (DuplicateOfferView) view;

@@ -38,6 +38,7 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferUtil;
+import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.payment.payload.PaymentMethod;
@@ -255,7 +256,8 @@ class TakeOfferDataModel extends OfferDataModel {
         });
 
         mempoolStatus.setValue(-1);
-        mempoolService.validateOfferMakerTx(offer.getOfferPayload(), (txValidator -> {
+        OfferPayload offerPayload = offer.getOfferPayload();
+        mempoolService.validateOfferMakerTx(offerPayload, (txValidator -> {
             mempoolStatus.setValue(txValidator.isFail() ? 0 : 1);
             if (txValidator.isFail()) {
                 mempoolStatusText = txValidator.toString();

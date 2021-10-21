@@ -464,7 +464,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     }
 
     private void addInformationColumn() {
-        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.information"));
+        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.details"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(160);
         column.setCellFactory(
@@ -481,7 +481,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                             public void updateItem(final BsqTxListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    final TxType txType = item.getTxType();
+                                    TxType txType = item.getTxType();
                                     String labelString = Res.get("dao.tx.type.enum." + txType.name());
                                     Label label;
                                     if (item.getConfirmations() > 0 && isValidType(txType)) {

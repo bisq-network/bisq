@@ -590,13 +590,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private void onCreateOffer() {
         if (model.canCreateOrTakeOffer()) {
+            TradeCurrency selectedTradeCurrency = model.getSelectedTradeCurrency();
             if (!model.hasPaymentAccountForCurrency()) {
                 new Popup().headLine(Res.get("offerbook.warning.noTradingAccountForCurrency.headline"))
                         .instruction(Res.get("offerbook.warning.noTradingAccountForCurrency.msg"))
                         .actionButtonText(Res.get("offerbook.yesCreateOffer"))
                         .onAction(() -> {
                             createOfferButton.setDisable(true);
-                            offerActionHandler.onCreateOffer(model.getSelectedTradeCurrency());
+                            offerActionHandler.onCreateOffer(selectedTradeCurrency);
                         })
                         .secondaryActionButtonText(Res.get("offerbook.setupNewAccount"))
                         .onSecondaryAction(() -> {
@@ -609,7 +610,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             }
 
             createOfferButton.setDisable(true);
-            offerActionHandler.onCreateOffer(model.getSelectedTradeCurrency());
+            offerActionHandler.onCreateOffer(selectedTradeCurrency);
         }
     }
 
@@ -934,15 +935,16 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
                                 if (item != null && !empty) {
 
-                                    if (model.isOfferBanned(item.getOffer())) {
+                                    Offer offer = item.getOffer();
+                                    if (model.isOfferBanned(offer)) {
                                         setGraphic(new AutoTooltipLabel(model.getPaymentMethod(item)));
                                     } else {
-                                        if (item.getOffer().isXmrAutoConf()) {
+                                        if (offer.isXmrAutoConf()) {
                                             field = new HyperlinkWithIcon(model.getPaymentMethod(item), AwesomeIcon.ROCKET);
                                         } else {
                                             field = new HyperlinkWithIcon(model.getPaymentMethod(item));
                                         }
-                                        field.setOnAction(event -> offerDetailsWindow.show(item.getOffer()));
+                                        field.setOnAction(event -> offerDetailsWindow.show(offer));
                                         field.setTooltip(new Tooltip(model.getPaymentMethodToolTip(item)));
                                         setGraphic(field);
                                     }

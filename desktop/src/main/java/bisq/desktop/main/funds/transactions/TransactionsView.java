@@ -85,8 +85,6 @@ import javax.annotation.Nullable;
 
 @FxmlView
 public class TransactionsView extends ActivatableView<VBox, Void> {
-
-
     @FXML
     TableView<TransactionsListItem> tableView;
     @FXML

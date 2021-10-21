@@ -246,7 +246,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         return arbitratorManager.getObservableMap().values().stream()
                 .flatMap(arbitrator -> arbitrator.getLanguageCodes().stream())
                 .distinct()
-                .map(languageCode -> LanguageUtil.getDisplayName(languageCode))
+                .map(LanguageUtil::getDisplayName)
                 .collect(Collectors.joining(", "));
     }
 

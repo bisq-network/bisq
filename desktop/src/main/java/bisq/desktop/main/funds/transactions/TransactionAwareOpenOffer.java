@@ -36,7 +36,7 @@ class TransactionAwareOpenOffer implements TransactionAwareTradable {
 
         String txId = transaction.getTxId().toString();
 
-        return paymentTxId.equals(txId);
+        return paymentTxId != null && paymentTxId.equals(txId);
     }
 
     public Tradable asTradable() {

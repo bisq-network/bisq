@@ -31,7 +31,6 @@ import lombok.Getter;
 
 @Singleton
 public class DaoPresentation implements DaoStateListener {
-
     public static final String DAO_NEWS = "daoNewsVersion1.0.0";
 
     private final Preferences preferences;

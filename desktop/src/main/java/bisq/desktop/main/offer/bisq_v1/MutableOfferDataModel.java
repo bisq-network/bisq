@@ -82,7 +82,9 @@ import javafx.collections.SetChangeListener;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -624,9 +626,13 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     private void fillPaymentAccounts() {
-        if (user.getPaymentAccounts() != null)
-            paymentAccounts.setAll(new HashSet<>(user.getPaymentAccounts()));
+        paymentAccounts.setAll(new HashSet<>(getUserPaymentAccounts()));
         paymentAccounts.sort(comparing(PaymentAccount::getAccountName));
+    }
+
+    private Set<PaymentAccount> getUserPaymentAccounts() {
+        return Objects.requireNonNull(user.getPaymentAccounts()).stream()
+                .collect(Collectors.toSet());
     }
 
     protected void setAmount(Coin amount) {

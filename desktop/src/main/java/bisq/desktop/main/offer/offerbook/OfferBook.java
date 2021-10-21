@@ -165,7 +165,6 @@ public class OfferBook {
         }
 
         OfferBookListItem candidate = candidateWithMatchingPayloadHash.get();
-
         // Remove the candidate only if the candidate's offer payload the hash matches the
         // onRemoved hashOfPayload parameter.  We may receive add/remove messages out of
         // order from the API's 'editoffer' method, and use the offer payload hash to
