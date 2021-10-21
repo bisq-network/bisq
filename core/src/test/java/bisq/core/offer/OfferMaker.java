@@ -17,7 +17,6 @@
 
 package bisq.core.offer;
 
-import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.offer.bisq_v1.OfferPayload;
 
 import com.natpryce.makeiteasy.Instantiator;

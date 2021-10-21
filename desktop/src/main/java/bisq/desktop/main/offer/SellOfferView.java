@@ -21,7 +21,7 @@ import bisq.desktop.Navigation;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.ViewLoader;
 
-import bisq.core.offer.bisq_v1.OfferDirection;
+import bisq.core.offer.OfferDirection;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;

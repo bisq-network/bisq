@@ -20,9 +20,9 @@ package bisq.desktop.main.portfolio.openoffer;
 import bisq.desktop.common.model.ActivatableDataModel;
 
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.offer.bisq_v1.TriggerPriceService;
 import bisq.core.provider.price.PriceFeedService;
 

@@ -22,7 +22,7 @@ import bisq.core.monetary.AltcoinExchangeRate;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
-import bisq.core.offer.bisq_v1.OfferDirection;
+import bisq.core.offer.OfferDirection;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.util.VolumeUtil;

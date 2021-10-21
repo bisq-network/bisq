@@ -26,7 +26,6 @@ import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.bisq_v1.MutableOfferPayloadFields;
-import bisq.core.offer.bisq_v1.OfferDirection;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.CashByMailAccount;
 import bisq.core.payment.F2FAccount;

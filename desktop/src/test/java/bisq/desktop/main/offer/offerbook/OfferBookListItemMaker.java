@@ -19,7 +19,7 @@ package bisq.desktop.main.offer.offerbook;
 
 import bisq.desktop.maker.OfferMaker;
 
-import bisq.core.offer.bisq_v1.OfferDirection;
+import bisq.core.offer.OfferDirection;
 
 import com.natpryce.makeiteasy.Instantiator;
 import com.natpryce.makeiteasy.MakeItEasy;

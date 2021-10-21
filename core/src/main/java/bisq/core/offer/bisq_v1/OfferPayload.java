@@ -17,6 +17,8 @@
 
 package bisq.core.offer.bisq_v1;
 
+import bisq.core.offer.OfferDirection;
+
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
