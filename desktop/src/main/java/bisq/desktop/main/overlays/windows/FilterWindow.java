@@ -244,8 +244,11 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 // working as expected)
                 if (filterManager.canRemoveDevFilter(privKeyString)) {
                     filterManager.removeDevFilter(privKeyString);
-                    UserThread.runAfter(() -> addDevFilter(removeFilterMessageButton, privKeyString, newFilter),
-                            5);
+                    if (DevEnv.isDevMode()) {
+                        addDevFilter(removeFilterMessageButton, privKeyString, newFilter);
+                    } else {
+                        UserThread.runAfter(() -> addDevFilter(removeFilterMessageButton, privKeyString, newFilter), 5);
+                    }
                 } else {
                     addDevFilter(removeFilterMessageButton, privKeyString, newFilter);
                 }
