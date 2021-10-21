@@ -20,10 +20,10 @@ package bisq.core.trade.protocol.bisq_v1.model;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.trade.protocol.TradePeer;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
-import bisq.common.proto.persistable.PersistablePayload;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
@@ -44,7 +44,7 @@ import javax.annotation.Nullable;
 @Slf4j
 @Getter
 @Setter
-public final class TradingPeer implements PersistablePayload {
+public final class TradingPeer implements TradePeer {
     // Transient/Mutable
     // Added in v1.2.0
     @Setter

@@ -36,6 +36,7 @@ import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.model.MakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.ProtocolModel;
 import bisq.core.trade.protocol.Provider;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.statistics.ReferralIdService;
@@ -50,8 +51,6 @@ import bisq.common.crypto.Hash;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
-import bisq.common.proto.persistable.PersistablePayload;
-import bisq.common.taskrunner.Model;
 
 import com.google.protobuf.ByteString;
 
@@ -83,7 +82,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Getter
 @Slf4j
-public class ProcessModel implements Model, PersistablePayload {
+public class ProcessModel implements ProtocolModel<TradingPeer> {
 
     public static byte[] hashOfPaymentAccountPayload(PaymentAccountPayload paymentAccountPayload) {
         return Hash.getRipemd160hash(checkNotNull(paymentAccountPayload).toProtoMessage().toByteArray());
@@ -260,6 +259,7 @@ public class ProcessModel implements Model, PersistablePayload {
     public void onComplete() {
     }
 
+    @Override
     public TradingPeer getTradePeer() {
         return tradingPeer;
     }
@@ -293,6 +293,7 @@ public class ProcessModel implements Model, PersistablePayload {
         return takeOfferFeeTx;
     }
 
+    @Override
     public NodeAddress getMyNodeAddress() {
         return getP2PService().getAddress();
     }
