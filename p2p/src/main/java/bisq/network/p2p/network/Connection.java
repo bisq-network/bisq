@@ -27,9 +27,9 @@ import bisq.network.p2p.peers.keepalive.messages.KeepAliveMessage;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.messages.AddDataMessage;
 import bisq.network.p2p.storage.messages.AddPersistableNetworkPayloadMessage;
+import bisq.network.p2p.storage.messages.RemoveDataMessage;
 import bisq.network.p2p.storage.payload.CapabilityRequiringPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
-import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.Proto;
 import bisq.common.UserThread;
@@ -77,6 +77,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import java.lang.ref.WeakReference;
 
@@ -262,39 +263,51 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         }
     }
 
-    // TODO: If msg is BundleOfEnvelopes we should check each individual message for capability and filter out those
-    //  which fail.
-    public boolean testCapability(Proto msg) {
-        boolean result;
-        if (msg instanceof AddDataMessage) {
-            final ProtectedStoragePayload protectedStoragePayload = (((AddDataMessage) msg).getProtectedStorageEntry()).getProtectedStoragePayload();
-            result = !(protectedStoragePayload instanceof CapabilityRequiringPayload);
-            if (!result)
-                result = capabilities.containsAll(((CapabilityRequiringPayload) protectedStoragePayload).getRequiredCapabilities());
-        } else if (msg instanceof AddPersistableNetworkPayloadMessage) {
-            final PersistableNetworkPayload persistableNetworkPayload = ((AddPersistableNetworkPayloadMessage) msg).getPersistableNetworkPayload();
-            result = !(persistableNetworkPayload instanceof CapabilityRequiringPayload);
-            if (!result)
-                result = capabilities.containsAll(((CapabilityRequiringPayload) persistableNetworkPayload).getRequiredCapabilities());
-        } else if (msg instanceof CapabilityRequiringPayload) {
-            result = capabilities.containsAll(((CapabilityRequiringPayload) msg).getRequiredCapabilities());
-        } else {
-            result = true;
+    public boolean testCapability(NetworkEnvelope networkEnvelope) {
+        if (networkEnvelope instanceof BundleOfEnvelopes) {
+            // We remove elements in the list which fail the capability test
+            BundleOfEnvelopes bundleOfEnvelopes = (BundleOfEnvelopes) networkEnvelope;
+            updateBundleOfEnvelopes(bundleOfEnvelopes);
+            // If the bundle is empty we dont send the networkEnvelope
+            return !bundleOfEnvelopes.getEnvelopes().isEmpty();
         }
 
+        return extractCapabilityRequiringPayload(networkEnvelope)
+                .map(this::testCapability)
+                .orElse(true);
+    }
+
+    private boolean testCapability(CapabilityRequiringPayload capabilityRequiringPayload) {
+        boolean result = capabilities.containsAll(capabilityRequiringPayload.getRequiredCapabilities());
         if (!result) {
-            if (capabilities.size() > 1) {
-                Proto data = msg;
-                if (msg instanceof AddDataMessage) {
-                    data = ((AddDataMessage) msg).getProtectedStorageEntry().getProtectedStoragePayload();
-                }
-                // Monitoring nodes have only one capability set, we don't want to log those
-                log.debug("We did not send the message because the peer does not support our required capabilities. " +
-                                "messageClass={}, peer={}, peers supportedCapabilities={}",
-                        data.getClass().getSimpleName(), peersNodeAddressOptional, capabilities);
-            }
+            log.debug("We did not send {} because capabilities are not supported.",
+                    capabilityRequiringPayload.getClass().getSimpleName());
         }
         return result;
+    }
+
+    private void updateBundleOfEnvelopes(BundleOfEnvelopes bundleOfEnvelopes) {
+        List<NetworkEnvelope> toRemove = bundleOfEnvelopes.getEnvelopes().stream()
+                .filter(networkEnvelope -> !testCapability(networkEnvelope))
+                .collect(Collectors.toList());
+        bundleOfEnvelopes.getEnvelopes().removeAll(toRemove);
+    }
+
+    private Optional<CapabilityRequiringPayload> extractCapabilityRequiringPayload(Proto proto) {
+        Proto candidate = proto;
+        // Lets check if our networkEnvelope is a wrapped data structure
+        if (proto instanceof AddDataMessage) {
+            candidate = (((AddDataMessage) proto).getProtectedStorageEntry()).getProtectedStoragePayload();
+        } else if (proto instanceof RemoveDataMessage) {
+            candidate = (((RemoveDataMessage) proto).getProtectedStorageEntry()).getProtectedStoragePayload();
+        } else if (proto instanceof AddPersistableNetworkPayloadMessage) {
+            candidate = (((AddPersistableNetworkPayloadMessage) proto).getPersistableNetworkPayload());
+        }
+
+        if (candidate instanceof CapabilityRequiringPayload) {
+            return Optional.of((CapabilityRequiringPayload) candidate);
+        }
+        return Optional.empty();
     }
 
     public void addMessageListener(MessageListener messageListener) {
