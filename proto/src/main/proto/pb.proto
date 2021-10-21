@@ -1479,7 +1479,9 @@ message Offer {
         MAKER_OFFLINE = 6;
     }
 
-    OfferPayload offer_payload = 1;
+    oneof message {
+        OfferPayload offer_payload = 1;
+    }
 }
 
 message OpenOffer {

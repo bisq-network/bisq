@@ -414,7 +414,7 @@ public class OfferUtil {
     // Immutable fields are sourced from the original openOffer param.
     public OfferPayload getMergedOfferPayload(OpenOffer openOffer,
                                               MutableOfferPayloadFields mutableOfferPayloadFields) {
-        OfferPayload original = openOffer.getOffer().getOfferPayload();
+        OfferPayload original = openOffer.getOffer().getOfferPayload().orElseThrow();
         return new OfferPayload(original.getId(),
                 original.getDate(),
                 original.getOwnerNodeAddress(),

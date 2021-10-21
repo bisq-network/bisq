@@ -188,7 +188,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     MenuItem editItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
                     editItem.setOnAction((event) -> {
                         try {
-                            OfferPayload offerPayload = row.getItem().getOffer().getOfferPayload();
+                            OfferPayload offerPayload = row.getItem().getOffer().getOfferPayload().orElseThrow();
                             navigation.navigateToWithData(offerPayload, MainView.class, PortfolioView.class,
                                     DuplicateOfferView.class);
                         } catch (NullPointerException e) {

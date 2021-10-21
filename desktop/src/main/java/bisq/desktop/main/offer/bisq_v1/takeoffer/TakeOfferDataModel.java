@@ -257,7 +257,7 @@ class TakeOfferDataModel extends OfferDataModel {
         });
 
         mempoolStatus.setValue(-1);
-        OfferPayload offerPayload = offer.getOfferPayload();
+        OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();
         mempoolService.validateOfferMakerTx(offerPayload, (txValidator -> {
             mempoolStatus.setValue(txValidator.isFail() ? 0 : 1);
             if (txValidator.isFail()) {

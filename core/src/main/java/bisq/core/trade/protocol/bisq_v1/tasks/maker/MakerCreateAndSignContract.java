@@ -69,7 +69,7 @@ public class MakerCreateAndSignContract extends TradeTask {
             byte[] hashOfTakersPaymentAccountPayload = taker.getHashOfPaymentAccountPayload();
             String makersPaymentMethodId = checkNotNull(processModel.getPaymentAccountPayload(trade)).getPaymentMethodId();
             String takersPaymentMethodId = checkNotNull(taker.getPaymentMethodId());
-            OfferPayload offerPayload = offer.getOfferPayload();
+            OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();
 
             Contract contract = new Contract(
                     offerPayload,

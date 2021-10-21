@@ -19,7 +19,6 @@ package bisq.core.offer;
 
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
-import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.provider.price.PriceFeedService;
 
 import bisq.network.p2p.BootstrapListener;
@@ -88,9 +87,9 @@ public class OfferBookService {
             @Override
             public void onAdded(Collection<ProtectedStorageEntry> protectedStorageEntries) {
                 protectedStorageEntries.forEach(protectedStorageEntry -> offerBookChangedListeners.forEach(listener -> {
-                    if (protectedStorageEntry.getProtectedStoragePayload() instanceof OfferPayload) {
-                        OfferPayload offerPayload = (OfferPayload) protectedStorageEntry.getProtectedStoragePayload();
-                        Offer offer = new Offer(offerPayload);
+                    if (protectedStorageEntry.getProtectedStoragePayload() instanceof OfferPayloadBase) {
+                        OfferPayloadBase offerPayloadBase = (OfferPayloadBase) protectedStorageEntry.getProtectedStoragePayload();
+                        Offer offer = new Offer(offerPayloadBase);
                         offer.setPriceFeedService(priceFeedService);
                         listener.onAdded(offer);
                     }
@@ -100,9 +99,9 @@ public class OfferBookService {
             @Override
             public void onRemoved(Collection<ProtectedStorageEntry> protectedStorageEntries) {
                 protectedStorageEntries.forEach(protectedStorageEntry -> offerBookChangedListeners.forEach(listener -> {
-                    if (protectedStorageEntry.getProtectedStoragePayload() instanceof OfferPayload) {
-                        OfferPayload offerPayload = (OfferPayload) protectedStorageEntry.getProtectedStoragePayload();
-                        Offer offer = new Offer(offerPayload);
+                    if (protectedStorageEntry.getProtectedStoragePayload() instanceof OfferPayloadBase) {
+                        OfferPayloadBase offerPayloadBase = (OfferPayloadBase) protectedStorageEntry.getProtectedStoragePayload();
+                        Offer offer = new Offer(offerPayloadBase);
                         offer.setPriceFeedService(priceFeedService);
                         listener.onRemoved(offer);
                     }
@@ -142,7 +141,7 @@ public class OfferBookService {
             return;
         }
 
-        boolean result = p2PService.addProtectedStorageEntry(offer.getOfferPayload());
+        boolean result = p2PService.addProtectedStorageEntry(offer.getOfferPayloadBase());
         if (result) {
             resultHandler.handleResult();
         } else {
@@ -150,7 +149,7 @@ public class OfferBookService {
         }
     }
 
-    public void refreshTTL(OfferPayload offerPayload,
+    public void refreshTTL(OfferPayloadBase offerPayloadBase,
                            ResultHandler resultHandler,
                            ErrorMessageHandler errorMessageHandler) {
         if (filterManager.requireUpdateToNewVersionForTrading()) {
@@ -158,7 +157,7 @@ public class OfferBookService {
             return;
         }
 
-        boolean result = p2PService.refreshTTL(offerPayload);
+        boolean result = p2PService.refreshTTL(offerPayloadBase);
         if (result) {
             resultHandler.handleResult();
         } else {
@@ -172,16 +171,16 @@ public class OfferBookService {
         addOffer(offer, resultHandler, errorMessageHandler);
     }
 
-    public void deactivateOffer(OfferPayload offerPayload,
+    public void deactivateOffer(OfferPayloadBase offerPayloadBase,
                                 @Nullable ResultHandler resultHandler,
                                 @Nullable ErrorMessageHandler errorMessageHandler) {
-        removeOffer(offerPayload, resultHandler, errorMessageHandler);
+        removeOffer(offerPayloadBase, resultHandler, errorMessageHandler);
     }
 
-    public void removeOffer(OfferPayload offerPayload,
+    public void removeOffer(OfferPayloadBase offerPayloadBase,
                             @Nullable ResultHandler resultHandler,
                             @Nullable ErrorMessageHandler errorMessageHandler) {
-        if (p2PService.removeData(offerPayload)) {
+        if (p2PService.removeData(offerPayloadBase)) {
             if (resultHandler != null)
                 resultHandler.handleResult();
         } else {
@@ -192,18 +191,18 @@ public class OfferBookService {
 
     public List<Offer> getOffers() {
         return p2PService.getDataMap().values().stream()
-                .filter(data -> data.getProtectedStoragePayload() instanceof OfferPayload)
+                .filter(data -> data.getProtectedStoragePayload() instanceof OfferPayloadBase)
                 .map(data -> {
-                    OfferPayload offerPayload = (OfferPayload) data.getProtectedStoragePayload();
-                    Offer offer = new Offer(offerPayload);
+                    OfferPayloadBase offerPayloadBase = (OfferPayloadBase) data.getProtectedStoragePayload();
+                    Offer offer = new Offer(offerPayloadBase);
                     offer.setPriceFeedService(priceFeedService);
                     return offer;
                 })
                 .collect(Collectors.toList());
     }
 
-    public void removeOfferAtShutDown(OfferPayload offerPayload) {
-        removeOffer(offerPayload, null, null);
+    public void removeOfferAtShutDown(OfferPayloadBase offerPayloadBase) {
+        removeOffer(offerPayloadBase, null, null);
     }
 
     public boolean isBootstrapped() {

@@ -83,7 +83,7 @@ public class TakerVerifyAndSignContract extends TradeTask {
             String takersPaymentMethodId = checkNotNull(processModel.getPaymentAccountPayload(trade)).getPaymentMethodId();
 
             Coin tradeAmount = checkNotNull(trade.getTradeAmount());
-            OfferPayload offerPayload = offer.getOfferPayload();
+            OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();
             Contract contract = new Contract(
                     offerPayload,
                     tradeAmount.value,

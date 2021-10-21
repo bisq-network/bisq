@@ -235,7 +235,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                     MenuItem editItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
                     editItem.setOnAction((event) -> {
                         try {
-                            OfferPayload offerPayload = row.getItem().getTrade().getOffer().getOfferPayload();
+                            OfferPayload offerPayload = row.getItem().getTrade().getOffer().getOfferPayload().orElseThrow();
                             if (offerPayload.getPubKeyRing().equals(keyRing.getPubKeyRing())) {
                                 navigation.navigateToWithData(offerPayload, MainView.class, PortfolioView.class, DuplicateOfferView.class);
                             } else {
