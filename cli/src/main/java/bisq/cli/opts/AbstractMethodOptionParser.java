@@ -53,7 +53,6 @@ abstract class AbstractMethodOptionParser implements MethodOpts {
     public AbstractMethodOptionParser parse() {
         try {
             options = parser.parse(new ArgumentList(args).getMethodArguments());
-            //noinspection unchecked
             nonOptionArguments = (List<String>) options.nonOptionArguments();
             return this;
         } catch (OptionException ex) {

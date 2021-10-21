@@ -254,15 +254,15 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     }
 
     private void openTakeOffer(Offer offer) {
-        OfferView.this.takeOfferViewOpen = true;
-        OfferView.this.offer = offer;
-        OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(), TakeOfferView.class);
+        this.takeOfferViewOpen = true;
+        this.offer = offer;
+        this.navigation.navigateTo(MainView.class, this.getClass(), TakeOfferView.class);
     }
 
     private void openCreateOffer(TradeCurrency tradeCurrency, PaymentMethod paymentMethod) {
-        OfferView.this.createOfferViewOpen = true;
-        OfferView.this.tradeCurrency = tradeCurrency;
-        OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(), CreateOfferView.class);
+        this.createOfferViewOpen = true;
+        this.tradeCurrency = tradeCurrency;
+        this.navigation.navigateTo(MainView.class, this.getClass(), CreateOfferView.class);
     }
 
     private void onCreateOfferViewRemoved() {

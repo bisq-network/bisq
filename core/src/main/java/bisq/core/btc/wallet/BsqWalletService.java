@@ -532,6 +532,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         return getPreparedSendTx(receiverAddress, receiverAmount, bsqCoinSelector);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Send BTC (non-BSQ) with BTC fee (e.g. the issuance output from a  lost comp. request)
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -772,6 +773,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         printTx("prepareLockupTx", tx);
         return tx;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Unlock bond tx

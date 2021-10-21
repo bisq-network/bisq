@@ -183,8 +183,7 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                                                       CoreProtoResolver coreProtoResolver,
                                                       int messageVersion) {
         List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().stream()
-                .map(rawTransactionInput -> new RawTransactionInput(rawTransactionInput.getIndex(),
-                        rawTransactionInput.getParentTransaction().toByteArray(), rawTransactionInput.getValue()))
+                .map(RawTransactionInput::fromProto)
                 .collect(Collectors.toList());
         List<NodeAddress> acceptedArbitratorNodeAddresses = proto.getAcceptedArbitratorNodeAddressesList().stream()
                 .map(NodeAddress::fromProto).collect(Collectors.toList());

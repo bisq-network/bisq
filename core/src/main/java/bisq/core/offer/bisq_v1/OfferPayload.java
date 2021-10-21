@@ -46,7 +46,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // OfferPayload has about 1.4 kb. We should look into options to make it smaller but will be hard to do it in a
 // backward compatible way. Maybe a candidate when segwit activation is done as hardfork?
 
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 @Getter
 @Slf4j
 public final class OfferPayload extends OfferPayloadBase {
