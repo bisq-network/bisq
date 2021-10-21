@@ -30,7 +30,7 @@ dependencyVerification {
         'com.github.bisq-network.tor-binary:tor-binary-linux64:7f58d31dd684b2e361e2980ba23922cadd5d9d8f8dbab9b3a2c6737741b21f7e',
         'com.github.bisq-network.tor-binary:tor-binary-macos:a23802ff66d4ac01366ebe712879e2f51df960572dc34db269588da87453a70d',
         'com.github.bisq-network.tor-binary:tor-binary-windows:8e0dee7429228aa0c9f7a36f40f303a016ed8dfb40fea77382f7076c13fc27f1',
-        'com.github.bisq-network:bitcoinj:59e4d2370fcbfe38f9f3f01f0830f4b5c0448cd27c867ea4eb23457a79d83c0b',
+        'com.github.bisq-network:bitcoinj:eccd3b5250d40ac3147d0e087e856ebaa8665720351b802d30ac53cf17b559c5',
         'com.github.bisq-network:jsonrpc4j:842b4a660440ef53cd436da2e21c3e1fed939b620a3fc7542307deb3e77fdeb6',
         'com.github.ravn:jsocks:3c71600af027b2b6d4244e4ad14d98ff2352a379410daebefff5d8cd48d742a4',
         'com.google.android:annotations:ba734e1e84c09d615af6a09d33034b4f0442f8772dec120efb376d86a565ae15',
