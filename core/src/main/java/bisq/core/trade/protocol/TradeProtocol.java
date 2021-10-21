@@ -215,6 +215,10 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
         return new FluentProtocol.Condition(trade).anyPhase(expectedPhases);
     }
 
+    protected FluentProtocol.Condition preCondition(boolean preCondition) {
+        return new FluentProtocol.Condition(trade).preCondition(preCondition);
+    }
+
     @SafeVarargs
     public final FluentProtocol.Setup tasks(Class<? extends Task<Trade>>... tasks) {
         return new FluentProtocol.Setup(this, trade).tasks(tasks);
@@ -302,7 +306,7 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
 
         timeoutTimer = UserThread.runAfter(() -> {
             log.error("Timeout reached. TradeID={}, state={}, timeoutSec={}",
-                    trade.getId(), trade.stateProperty().get(), timeoutSec);
+                    trade.getId(), trade.getTradeState(), timeoutSec);
             trade.setErrorMessage("Timeout reached. Protocol did not complete in " + timeoutSec + " sec.");
 
             processModel.getTradeManager().requestPersistence();
