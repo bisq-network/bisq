@@ -299,7 +299,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         if (isSelected && !model.getDataModel().isTabSelected) {
             doActivate();
         } else {
-            // todo check
             deactivate();
         }
 
