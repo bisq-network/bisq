@@ -22,7 +22,7 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.model.Tradable;
-import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.model.TradeModel;
 
 import bisq.common.crypto.PubKeyRing;
 
@@ -48,17 +48,17 @@ public class TransactionAwareTradableFactory {
         this.pubKeyRing = pubKeyRing;
     }
 
-    TransactionAwareTradable create(Tradable delegate) {
-        if (delegate instanceof OpenOffer) {
-            return new TransactionAwareOpenOffer((OpenOffer) delegate);
-        } else if (delegate instanceof Trade) {
-            return new TransactionAwareTrade((Trade) delegate,
+    TransactionAwareTradable create(Tradable tradable) {
+        if (tradable instanceof OpenOffer) {
+            return new TransactionAwareOpenOffer((OpenOffer) tradable);
+        } else if (tradable instanceof TradeModel) {
+            return new TransactionAwareTrade((TradeModel) tradable,
                     arbitrationManager,
                     refundManager,
                     btcWalletService,
                     pubKeyRing);
         } else {
-            return new DummyTransactionAwareTradable(delegate);
+            return new DummyTransactionAwareTradable(tradable);
         }
     }
 }

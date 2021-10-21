@@ -37,8 +37,8 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayloadBase;
 import bisq.core.offer.OpenOffer;
-import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.user.DontShowAgainLookup;
 
 import com.googlecode.jcsv.writer.CSVEntryConverter;
@@ -188,8 +188,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     MenuItem editItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
                     editItem.setOnAction((event) -> {
                         try {
-                            OfferPayload offerPayload = row.getItem().getOffer().getOfferPayload().orElseThrow();
-                            navigation.navigateToWithData(offerPayload, MainView.class, PortfolioView.class,
+                            OfferPayloadBase offerPayloadBase = row.getItem().getOffer().getOfferPayloadBase();
+                            navigation.navigateToWithData(offerPayloadBase, MainView.class, PortfolioView.class,
                                     DuplicateOfferView.class);
                         } catch (NullPointerException e) {
                             log.warn("Unable to get offerPayload - {}", e.toString());
@@ -576,7 +576,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 super.updateItem(item, empty);
                                 getStyleClass().removeAll("offer-disabled");
                                 if (item != null) {
-                                    if (model.isDeactivated(item)) getStyleClass().add("offer-disabled");
+                                    if (model.isNotPublished(item)) getStyleClass().add("offer-disabled");
                                     setGraphic(new AutoTooltipLabel(model.getTriggerPrice(item)));
                                 } else {
                                     setGraphic(null);

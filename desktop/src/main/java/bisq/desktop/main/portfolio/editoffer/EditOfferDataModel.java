@@ -184,7 +184,8 @@ class EditOfferDataModel extends MutableOfferDataModel {
     }
 
     public void onPublishOffer(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        OfferPayload offerPayload = createAndGetOffer().getOfferPayload().orElseThrow();
+        Offer offer = createAndGetOffer();
+        OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();
         var mutableOfferPayloadFields = new MutableOfferPayloadFields(offerPayload);
         OfferPayload editedPayload = offerUtil.getMergedOfferPayload(openOffer, mutableOfferPayloadFields);
         Offer editedOffer = new Offer(editedPayload);

@@ -117,6 +117,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import lombok.Setter;
+
 import org.jetbrains.annotations.NotNull;
 
 import static bisq.core.payment.payload.PaymentMethod.HAL_CASH_ID;
@@ -177,6 +179,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             buyerSecurityDepositInfoInputTextField, triggerPriceInfoInputTextField;
     private AutoTooltipSlideToggleButton tradeFeeInBtcToggle, tradeFeeInBsqToggle;
     private Text xIcon, fakeXIcon;
+
+    @Setter
+    private OfferView.OfferActionHandler offerActionHandler;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -291,16 +296,21 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onTabSelected(boolean isSelected) {
-        if (isSelected && !model.getDataModel().isTabSelected)
+        if (isSelected && !model.getDataModel().isTabSelected) {
             doActivate();
-        else
+        } else {
+            // todo check
             deactivate();
+        }
 
         isActivated = isSelected;
         model.getDataModel().onTabSelected(isSelected);
     }
 
-    public void initWithData(OfferDirection direction, TradeCurrency tradeCurrency) {
+    public void initWithData(OfferDirection direction, TradeCurrency tradeCurrency,
+                             OfferView.OfferActionHandler offerActionHandler) {
+        this.offerActionHandler = offerActionHandler;
+
         boolean result = model.initWithData(direction, tradeCurrency);
 
         if (!result) {

@@ -463,7 +463,7 @@ class TakeOfferDataModel extends OfferDataModel {
     }
 
     boolean canTakeOffer() {
-        return GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation) &&
+        return GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation, paymentAccount.getSelectedTradeCurrency()) &&
                 GUIUtil.isBootstrappedOrShowPopup(p2PService);
     }
 

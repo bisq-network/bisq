@@ -590,6 +590,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private void onCreateOffer() {
         if (model.canCreateOrTakeOffer()) {
+            PaymentMethod selectedPaymentMethod = model.selectedPaymentMethod;
             TradeCurrency selectedTradeCurrency = model.getSelectedTradeCurrency();
             if (!model.hasPaymentAccountForCurrency()) {
                 new Popup().headLine(Res.get("offerbook.warning.noTradingAccountForCurrency.headline"))
@@ -597,7 +598,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                         .actionButtonText(Res.get("offerbook.yesCreateOffer"))
                         .onAction(() -> {
                             createOfferButton.setDisable(true);
-                            offerActionHandler.onCreateOffer(selectedTradeCurrency);
+                            offerActionHandler.onCreateOffer(selectedTradeCurrency, selectedPaymentMethod);
                         })
                         .secondaryActionButtonText(Res.get("offerbook.setupNewAccount"))
                         .onSecondaryAction(() -> {
@@ -610,7 +611,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             }
 
             createOfferButton.setDisable(true);
-            offerActionHandler.onCreateOffer(selectedTradeCurrency);
+            offerActionHandler.onCreateOffer(selectedTradeCurrency, selectedPaymentMethod);
         }
     }
 

@@ -47,7 +47,7 @@ public final class RawTransactionInput implements NetworkPayload, PersistablePay
     // Added at Bsq swap release
     // id of the org.bitcoinj.script.Script.ScriptType. Useful to know if input is segwit.
     // Lowest Script.ScriptType.id value is 1, so we use 0 as value for not defined
-    public final int scriptTypeId; // Lowest Script.ScriptType.id value is 1, so we use 0 as value for not defined
+    public final int scriptTypeId;
 
     public RawTransactionInput(TransactionInput input) {
         this(input.getOutpoint().getIndex(),

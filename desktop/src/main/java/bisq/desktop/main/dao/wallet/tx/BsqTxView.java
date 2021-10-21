@@ -523,7 +523,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             setGraphic(field);
                                         }
                                     } else {
-
                                         if (item.isWithdrawalToBTCWallet())
                                             labelString = Res.get("dao.tx.withdrawnFromWallet");
 
@@ -539,7 +538,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                         };
                     }
                 });
-
         tableView.getColumns().add(column);
     }
 
