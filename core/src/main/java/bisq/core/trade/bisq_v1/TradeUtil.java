@@ -22,6 +22,7 @@ import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 
@@ -233,7 +234,7 @@ public class TradeUtil {
         }
     }
 
-    public static void applyFilter(Trade trade,
+    public static void applyFilter(TradeModel tradeModel,
                                    FilterManager filterManager,
                                    NodeAddress nodeAddress,
                                    @Nullable PaymentAccountPayload paymentAccountPayload,
@@ -242,15 +243,15 @@ public class TradeUtil {
         if (filterManager.isNodeAddressBanned(nodeAddress)) {
             failed.handleErrorMessage("Other trader is banned by their node address.\n" +
                     "tradingPeerNodeAddress=" + nodeAddress);
-        } else if (filterManager.isOfferIdBanned(trade.getId())) {
-            failed.handleErrorMessage("Offer ID is banned.\n" + "Offer ID=" + trade.getId());
-        } else if (trade.getOffer() != null &&
-                filterManager.isCurrencyBanned(trade.getOffer().getCurrencyCode())) {
+        } else if (filterManager.isOfferIdBanned(tradeModel.getId())) {
+            failed.handleErrorMessage("Offer ID is banned.\n" + "Offer ID=" + tradeModel.getId());
+        } else if (tradeModel.getOffer() != null &&
+                filterManager.isCurrencyBanned(tradeModel.getOffer().getCurrencyCode())) {
             failed.handleErrorMessage("Currency is banned.\n" +
-                    "Currency code=" + trade.getOffer().getCurrencyCode());
-        } else if (filterManager.isPaymentMethodBanned(checkNotNull(trade.getOffer()).getPaymentMethod())) {
+                    "Currency code=" + tradeModel.getOffer().getCurrencyCode());
+        } else if (filterManager.isPaymentMethodBanned(checkNotNull(tradeModel.getOffer()).getPaymentMethod())) {
             failed.handleErrorMessage("Payment method is banned.\n" +
-                    "Payment method=" + trade.getOffer().getPaymentMethod().getId());
+                    "Payment method=" + tradeModel.getOffer().getPaymentMethod().getId());
         } else if (paymentAccountPayload != null && filterManager.arePeersPaymentAccountDataBanned(paymentAccountPayload)) {
             failed.handleErrorMessage("Other trader is banned by their trading account data.\n" +
                     "paymentAccountPayload=" + paymentAccountPayload.getPaymentDetails());
