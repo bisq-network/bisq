@@ -25,6 +25,7 @@ import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
+import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
 
 import org.bitcoinj.core.Coin;
@@ -80,7 +81,8 @@ public class OfferFilterService {
         IS_NODE_ADDRESS_BANNED,
         REQUIRE_UPDATE_TO_NEW_VERSION,
         IS_INSUFFICIENT_COUNTERPARTY_TRADE_LIMIT,
-        IS_MY_INSUFFICIENT_TRADE_LIMIT;
+        IS_MY_INSUFFICIENT_TRADE_LIMIT,
+        HIDE_BSQ_SWAPS_DUE_DAO_DEACTIVATED;
 
         @Getter
         private final boolean isValid;
@@ -127,6 +129,9 @@ public class OfferFilterService {
         }
         if (isMyInsufficientTradeLimit(offer)) {
             return Result.IS_MY_INSUFFICIENT_TRADE_LIMIT;
+        }
+        if (!DevEnv.isDaoActivated() && offer.isBsqSwapOffer()) {
+            return Result.HIDE_BSQ_SWAPS_DUE_DAO_DEACTIVATED;
         }
 
         return Result.VALID;

@@ -25,6 +25,7 @@ import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.account.content.backup.BackupView;
 import bisq.desktop.main.overlays.Overlay;
+import bisq.desktop.main.overlays.notifications.Notification;
 import bisq.desktop.main.overlays.notifications.NotificationCenter;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.DisplayAlertMessageWindow;
@@ -34,6 +35,8 @@ import bisq.desktop.main.overlays.windows.UpdateAmazonGiftCardAccountWindow;
 import bisq.desktop.main.overlays.windows.UpdateRevolutAccountWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
+import bisq.desktop.main.portfolio.PortfolioView;
+import bisq.desktop.main.portfolio.bsqswaps.CompletedBsqSwapsView;
 import bisq.desktop.main.presentation.AccountPresentation;
 import bisq.desktop.main.presentation.DaoPresentation;
 import bisq.desktop.main.presentation.MarketPricePresentation;
@@ -64,6 +67,7 @@ import bisq.core.presentation.TradePresentation;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.bsq_swap.BsqSwapTradeManager;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -125,6 +129,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     private final SettingsPresentation settingsPresentation;
     private final P2PService p2PService;
     private final TradeManager tradeManager;
+    private final BsqSwapTradeManager bsqSwapTradeManager;
     private final OpenOfferManager openOfferManager;
     @Getter
     private final Preferences preferences;
@@ -173,6 +178,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                          SettingsPresentation settingsPresentation,
                          P2PService p2PService,
                          TradeManager tradeManager,
+                         BsqSwapTradeManager bsqSwapTradeManager,
                          OpenOfferManager openOfferManager,
                          Preferences preferences,
                          PrivateNotificationManager privateNotificationManager,
@@ -200,6 +206,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         this.settingsPresentation = settingsPresentation;
         this.p2PService = p2PService;
         this.tradeManager = tradeManager;
+        this.bsqSwapTradeManager = bsqSwapTradeManager;
         this.openOfferManager = openOfferManager;
         this.preferences = preferences;
         this.privateNotificationManager = privateNotificationManager;
@@ -270,6 +277,21 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                                     break;
                             }
                         });
+
+                bsqSwapTradeManager.getCompletedBsqSwapTrade().addListener((observable1, oldValue1, bsqSwapTrade) -> {
+                    if (bsqSwapTrade == null) {
+                        return;
+                    }
+                    if (bsqSwapTrade.getOffer().isMyOffer(tradeManager.getKeyRing())) {
+                        new Notification()
+                                .headLine(Res.get("notification.bsqSwap.maker.headline"))
+                                .notification(Res.get("notification.bsqSwap.maker.tradeCompleted", bsqSwapTrade.getShortId()))
+                                .actionButtonTextWithGoTo("navigation.portfolio.bsqSwapTrades.short")
+                                .onAction(() -> navigation.navigateTo(MainView.class, PortfolioView.class, CompletedBsqSwapsView.class))
+                                .show();
+                        bsqSwapTradeManager.resetCompletedBsqSwapTrade();
+                    }
+                });
             }
         });
 

@@ -161,13 +161,20 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
     }
 
     boolean isNotPublished(OpenOfferListItem item) {
-        return isDeactivated(item);
+        return isDeactivated(item) || isBsqSwapOfferHasMissingFunds(item);
     }
 
     boolean isDeactivated(OpenOfferListItem item) {
         return item != null &&
                 item.getOpenOffer() != null &&
                 item.getOpenOffer().isDeactivated();
+    }
+
+    boolean isBsqSwapOfferHasMissingFunds(OpenOfferListItem item) {
+        return item != null &&
+                item.getOpenOffer() != null &&
+                item.getOpenOffer().getOffer().isBsqSwapOffer() &&
+                item.getOpenOffer().isBsqSwapOfferHasMissingFunds();
     }
 
     boolean isBootstrappedOrShowPopup() {

@@ -534,6 +534,17 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
         PaymentAccount paymentAccount = paymentAccountsComboBox.getSelectionModel().getSelectedItem();
         if (paymentAccount != null) {
+            // We represent BSQ swaps as payment method and switch to a new view if it is selected
+            if (paymentAccount.getPaymentMethod().isBsqSwap()) {
+                close();
+
+                if (offerActionHandler != null) {
+                    offerActionHandler.onCreateOffer(paymentAccount.getSelectedTradeCurrency(),
+                            paymentAccount.getPaymentMethod());
+                }
+                return;
+            }
+
             maybeShowClearXchangeWarning(paymentAccount);
             maybeShowFasterPaymentsWarning(paymentAccount);
             maybeShowAccountWarning(paymentAccount, model.getDataModel().isBuyOffer());
