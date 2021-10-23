@@ -267,6 +267,9 @@ public class BsqSwapTakeOfferView extends BsqSwapOfferView<BsqSwapTakeOfferViewM
                         log.error(errorMessage);
                         new Popup().warning(errorMessage).show();
                     });
+            // JFXComboBox causes a bug with requesting focus. Not clear why that happens but requesting a focus
+            // on our view here avoids that the currency List overlay gets displayed.
+            requestFocus();
             return;
         }
 
@@ -287,9 +290,16 @@ public class BsqSwapTakeOfferView extends BsqSwapOfferView<BsqSwapTakeOfferViewM
                         log.error(errorMessage);
                         new Popup().warning(errorMessage).show();
                     });
+            requestFocus();
         }).show(model.offer, model.dataModel.getBtcAmount().get(), model.dataModel.getPrice().get());
 
         offerDetailsWindowDisplayed = true;
+    }
+
+    private void requestFocus() {
+        // JFXComboBox causes a bug with requesting focus. Not clear why that happens but requesting a focus
+        // on our view here avoids that the currency List overlay gets displayed.
+        root.requestFocus();
     }
 
     @Override
