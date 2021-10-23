@@ -177,6 +177,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 Res.get("filterWindow.disablePowMessage"));
         InputTextField powDifficultyTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.powDifficulty"));
+        powDifficultyTF.setText("0");
 
         Filter filter = filterManager.getDevFilter();
         if (filter != null) {
