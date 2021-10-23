@@ -79,7 +79,7 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
                     )
                     .sum();
             checkArgument(sumInputs == sumValidBsqInputValue,
-                    "Buyers BSQ input amount must match input amount for the DAO data");
+                    "Buyers BSQ input amount must match input amount from unspentTxOutputMap in DAO state");
 
             long numValidBsqInputs = inputs.stream()
                     .map(input -> new TxOutputKey(input.getParentTxId(btcWalletService), (int) input.index))
@@ -106,6 +106,8 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
                         sellersBsqPayoutAmount.value, sumInputs, getBuyersTradeFee(),
                         getSellersTradeFee(), expectedChange, change);
             }
+            // By enforcing that it must not be larger than expectedChange we guarantee that peer did not cheat on
+            // trade fees.
             checkArgument(change <= expectedChange,
                     "Change must be smaller or equal to expectedChange");
 

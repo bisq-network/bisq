@@ -1394,7 +1394,6 @@ public class TradeWalletService {
     private void signInput(Transaction transaction, TransactionInput input, int inputIndex) throws SigningException {
         checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
         Script scriptPubKey = input.getConnectedOutput().getScriptPubKey();
-        checkNotNull(wallet);
         ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
         checkNotNull(sigKey, "signInput: sigKey must not be null. input.getOutpoint()=" +
                 input.getOutpoint().toString());

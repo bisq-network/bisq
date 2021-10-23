@@ -108,6 +108,8 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
                 log.warn("buyersBtcPayout={}, sumInputs={}, sellersTxFee={}, buyersTxFee={}, expectedChange={}, change={}",
                         buyersBtcPayout, sumInputs, sellersTxFee, buyersTxFee, expectedChange, change);
             }
+            // By enforcing that it must not be larger than expectedChange we guarantee that peer did not cheat on
+            // tx fees.
             checkArgument(change <= expectedChange,
                     "Change must be smaller or equal to expectedChange");
 
