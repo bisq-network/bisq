@@ -53,10 +53,11 @@ public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
             List<RawTransactionInput> buyersBsqInputs = Objects.requireNonNull(tradePeer.getInputs());
 
             long sellersTradeFee = getSellersTradeFee();
+            long txFeePerVbyte = trade.getTxFeePerVbyte();
             Tuple2<List<RawTransactionInput>, Coin> btcInputsAndChange = BsqSwapCalculation.getSellersBtcInputsAndChange(
                     protocolModel.getBtcWalletService(),
                     trade.getAmount(),
-                    trade.getTxFeePerVbyte(),
+                    txFeePerVbyte,
                     sellersTradeFee);
             List<RawTransactionInput> sellersBtcInputs = btcInputsAndChange.first;
             protocolModel.setInputs(sellersBtcInputs);
@@ -68,7 +69,8 @@ public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
             Coin buyersBsqChangeAmount = Coin.valueOf(tradePeer.getChange());
             String buyersBsqChangeAddress = tradePeer.getBsqAddress();
 
-            Coin buyersBtcPayoutAmount = BsqSwapCalculation.getBuyersBtcPayoutValue(trade, getBuyersTxSize(), getBuyersTradeFee());
+            int buyersTxSize = BsqSwapCalculation.getVBytesSize(buyersBsqInputs, buyersBsqChangeAmount.getValue());
+            Coin buyersBtcPayoutAmount = BsqSwapCalculation.getBuyersBtcPayoutValue(trade, buyersTxSize, getBuyersTradeFee());
             tradePeer.setPayout(buyersBtcPayoutAmount.getValue());
             String buyersBtcPayoutAddress = tradePeer.getBtcAddress();
 
@@ -97,22 +99,18 @@ public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
                     .collect(Collectors.toList());
             tradeWalletService.signBsqSwapTransaction(transaction, myInputs);
 
-            log.info("Sellers signed transaction {}", transaction);
+            log.info("Sellers signed his inputs of transaction {}", transaction);
             protocolModel.applyTransaction(transaction);
 
             int sellersTxSize = BsqSwapCalculation.getVBytesSize(sellersBtcInputs, sellersBtcChangeAmount.getValue());
-            long sellersTxFee = BsqSwapCalculation.getAdjustedTxFee(trade.getTxFeePerVbyte(), sellersTxSize, sellersTradeFee);
+            long sellersTxFee = BsqSwapCalculation.getAdjustedTxFee(txFeePerVbyte, sellersTxSize, sellersTradeFee);
             protocolModel.setTxFee(sellersTxFee);
+            protocolModel.getTradeManager().requestPersistence();
 
             complete();
         } catch (Throwable t) {
             failed(t);
         }
-    }
-
-    private int getBuyersTxSize() {
-        return BsqSwapCalculation.getVBytesSize(Objects.requireNonNull(protocolModel.getTradePeer().getInputs()),
-                protocolModel.getTradePeer().getChange());
     }
 
     protected abstract long getBuyersTradeFee();

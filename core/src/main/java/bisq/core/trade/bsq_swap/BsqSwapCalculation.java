@@ -184,13 +184,14 @@ public class BsqSwapCalculation {
         Coin change = Coin.ZERO;
         Coin required = getSellersBtcInputValue(amount, txFeePerVbyte, sellersTxSize, sellersTradeFee);
 
-        // We do one iteration here to get the size of the inputs (segwit or not)
+        // We do a first calculation here to get the size of the inputs (segwit or not) and we adjust the sellersTxSize
+        // so that we avoid to get into dangling states.
         inputsAndChange = btcWalletService.getInputsAndChange(required);
         sellersTxSize = getVBytesSize(inputsAndChange.first, 0);
         required = getSellersBtcInputValue(amount, txFeePerVbyte, sellersTxSize, sellersTradeFee);
 
         // As fee calculation is not deterministic it could be that we toggle between a too small and too large
-        // input. We would take the latest result before we break iteration. Worst case is that we under- or
+        // inputs. We would take the latest result before we break iteration. Worst case is that we under- or
         // overpay a bit. As fee rate is anyway an estimation we ignore that imperfection.
         while (iterations < 10 && !required.equals(previous)) {
             inputsAndChange = btcWalletService.getInputsAndChange(required);
