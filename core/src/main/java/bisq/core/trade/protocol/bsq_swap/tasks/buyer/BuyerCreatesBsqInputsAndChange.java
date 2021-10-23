@@ -31,7 +31,6 @@ import bisq.common.util.Tuple2;
 import org.bitcoinj.core.Coin;
 
 import java.util.List;
-import java.util.Objects;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,7 +52,8 @@ public abstract class BuyerCreatesBsqInputsAndChange extends BsqSwapTask {
             Coin required = BsqSwapCalculation.getBuyersBsqInputValue(trade, buyersTradeFee);
             Tuple2<List<RawTransactionInput>, Coin> inputsAndChange = bsqWalletService.getBuyersBsqInputsForBsqSwapTx(required);
 
-            protocolModel.setInputs(inputsAndChange.first);
+            List<RawTransactionInput> inputs = inputsAndChange.first;
+            protocolModel.setInputs(inputs);
 
             long change = inputsAndChange.second.value;
             if (Restrictions.isDust(Coin.valueOf(change))) {
@@ -65,7 +65,7 @@ public abstract class BuyerCreatesBsqInputsAndChange extends BsqSwapTask {
             protocolModel.setBsqAddress(bsqWalletService.getUnusedAddress().toString());
             protocolModel.setBtcAddress(btcWalletService.getFreshAddressEntry().getAddressString());
 
-            int buyersTxSize = getBuyersTxSize();
+            int buyersTxSize = BsqSwapCalculation.getVBytesSize(inputs, change);
             long btcPayout = BsqSwapCalculation.getBuyersBtcPayoutValue(trade, buyersTxSize, buyersTradeFee).getValue();
             protocolModel.setPayout(btcPayout);
 
@@ -76,11 +76,6 @@ public abstract class BuyerCreatesBsqInputsAndChange extends BsqSwapTask {
         } catch (Throwable t) {
             failed(t);
         }
-    }
-
-    private int getBuyersTxSize() {
-        return BsqSwapCalculation.getVBytesSize(Objects.requireNonNull(protocolModel.getInputs()),
-                protocolModel.getChange());
     }
 
     protected abstract long getSellersTradeFee();

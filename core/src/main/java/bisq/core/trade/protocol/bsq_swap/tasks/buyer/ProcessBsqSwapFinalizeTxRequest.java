@@ -72,7 +72,8 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
             List<RawTransactionInput> rawInputs = request.getBtcInputs();
             checkArgument(!rawInputs.isEmpty(), "Sellers BTC inputs must not be empty");
 
-            int buyersInputSize = Objects.requireNonNull(protocolModel.getInputs()).size();
+            List<RawTransactionInput> inputs = protocolModel.getInputs();
+            int buyersInputSize = Objects.requireNonNull(inputs).size();
             List<TransactionInput> sellersBtcInputs = sellersTransaction.getInputs().stream()
                     .filter(i -> i.getIndex() >= buyersInputSize)
                     .collect(Collectors.toList());
@@ -93,7 +94,7 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
             checkArgument(change == 0 || Restrictions.isAboveDust(Coin.valueOf(change)),
                     "BTC change must be 0 or above dust");
 
-            int buyersTxSize = BsqSwapCalculation.getVBytesSize(protocolModel.getInputs(), protocolModel.getChange());
+            int buyersTxSize = BsqSwapCalculation.getVBytesSize(inputs, protocolModel.getChange());
             long buyersTxFee = BsqSwapCalculation.getAdjustedTxFee(trade, buyersTxSize, getBuyersTradeFee());
             long sellersTxFee = BsqSwapCalculation.getAdjustedTxFee(trade, sellersTxSize, getSellersTradeFee());
             long buyersBtcPayout = protocolModel.getPayout();
