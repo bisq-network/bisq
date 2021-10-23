@@ -36,6 +36,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static org.bitcoinj.core.TransactionConfidence.ConfidenceType.BUILDING;
+import static org.bitcoinj.core.TransactionConfidence.ConfidenceType.PENDING;
+
 @Slf4j
 public abstract class SellerSetupTxListener extends BsqSwapTask {
     @Nullable
@@ -93,7 +96,6 @@ public abstract class SellerSetupTxListener extends BsqSwapTask {
         }
     }
 
-
     private boolean processConfidence(TransactionConfidence confidence) {
         if (confidence == null) {
             return false;
@@ -126,8 +128,8 @@ public abstract class SellerSetupTxListener extends BsqSwapTask {
 
     private boolean isInNetwork(TransactionConfidence confidence) {
         return confidence != null &&
-                (confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING) ||
-                        confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.PENDING));
+                (confidence.getConfidenceType().equals(BUILDING) ||
+                        confidence.getConfidenceType().equals(PENDING));
     }
 
     private void cleanup() {

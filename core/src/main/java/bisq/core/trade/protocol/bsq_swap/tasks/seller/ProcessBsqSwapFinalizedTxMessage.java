@@ -53,10 +53,10 @@ public abstract class ProcessBsqSwapFinalizedTxMessage extends BsqSwapTask {
             Transaction buyersTransactionWithoutSigs = protocolModel.getBtcWalletService().getTxFromSerializedTx(message.getTx());
             int buyersInputSize = Objects.requireNonNull(protocolModel.getTradePeer().getInputs()).size();
             Objects.requireNonNull(buyersTransactionWithoutSigs.getInputs()).stream()
-                    .filter(i -> i.getIndex() < buyersInputSize)
-                    .forEach(i -> {
-                        i.clearScriptBytes();
-                        i.setWitness(TransactionWitness.EMPTY);
+                    .filter(input -> input.getIndex() < buyersInputSize)
+                    .forEach(input -> {
+                        input.clearScriptBytes();
+                        input.setWitness(TransactionWitness.EMPTY);
                     });
             byte[] sellersPartiallySignedTx = protocolModel.getTx();
             checkArgument(Arrays.equals(buyersTransactionWithoutSigs.bitcoinSerialize(), sellersPartiallySignedTx),
