@@ -536,6 +536,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         if (paymentAccount != null) {
             // We represent BSQ swaps as payment method and switch to a new view if it is selected
             if (paymentAccount.getPaymentMethod().isBsqSwap()) {
+                model.dataModel.resetAddressEntry();
                 close();
 
                 if (offerActionHandler != null) {

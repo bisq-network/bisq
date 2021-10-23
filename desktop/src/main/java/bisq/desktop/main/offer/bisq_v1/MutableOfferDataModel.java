@@ -657,6 +657,11 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         this.buyerSecurityDeposit.set(value);
     }
 
+    void resetAddressEntry() {
+        btcWalletService.resetAddressEntriesForOpenOffer(offerId);
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
