@@ -89,7 +89,7 @@ public abstract class BuyerCreatesAndSignsFinalizedTx extends BsqSwapTask {
                     .collect(Collectors.toList());
             protocolModel.getBsqWalletService().signBsqSwapTransaction(transaction, myInputs);
 
-            log.error("Fully signed transaction {}", transaction);
+            log.info("Fully signed transaction {}", transaction);
             protocolModel.applyTransaction(transaction);
 
             complete();

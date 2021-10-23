@@ -97,7 +97,7 @@ public abstract class SellerCreatesAndSignsTx extends BsqSwapTask {
                     .collect(Collectors.toList());
             tradeWalletService.signBsqSwapTransaction(transaction, myInputs);
 
-            log.error("Sellers signed transaction {}", transaction);
+            log.info("Sellers signed transaction {}", transaction);
             protocolModel.applyTransaction(transaction);
 
             int sellersTxSize = BsqSwapCalculation.getVBytesSize(sellersBtcInputs, sellersBtcChangeAmount.getValue());
