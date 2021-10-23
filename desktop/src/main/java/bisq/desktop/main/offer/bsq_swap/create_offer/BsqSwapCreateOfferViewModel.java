@@ -128,7 +128,7 @@ class BsqSwapCreateOfferViewModel extends BsqSwapOfferViewModel<BsqSwapCreateOff
     protected void activate() {
         if (DevEnv.isDevMode()) {
             UserThread.runAfter(() -> {
-                amount.set("1");
+                amount.set("0.001");
                 price.set("0.00002");
                 minAmount.set(amount.get());
                 applyTradeFee();
