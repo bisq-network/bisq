@@ -42,8 +42,6 @@ public class ProcessBsqSwapTxInputsMessage extends ProcessTxInputsMessage {
             checkArgument(protocolModel.getTradeMessage() instanceof BsqSwapTxInputsMessage);
 
             super.run();
-
-            complete();
         } catch (Throwable t) {
             failed(t);
         }
