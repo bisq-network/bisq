@@ -17,23 +17,26 @@
 
 package bisq.core.util;
 
+import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.trade.model.bisq_v1.Contract;
+
 import bisq.common.util.JsonExclude;
 
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-public class JsonUtil {
 
+public class JsonUtil {
     public static String objectToJson(Object object) {
-        Gson gson = new GsonBuilder()
+        GsonBuilder gsonBuilder = new GsonBuilder()
                 .setExclusionStrategies(new AnnotationExclusionStrategy())
-                /*.excludeFieldsWithModifiers(Modifier.TRANSIENT)*/
-                /*  .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)*/
-                .setPrettyPrinting()
-                .create();
-        return gson.toJson(object);
+                .setPrettyPrinting();
+        if (object instanceof Contract || object instanceof OfferPayload) {
+            gsonBuilder.registerTypeAdapter(OfferPayload.class,
+                    new OfferPayload.JsonSerializer());
+        }
+        return gsonBuilder.create().toJson(object);
     }
 
     private static class AnnotationExclusionStrategy implements ExclusionStrategy {
