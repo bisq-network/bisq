@@ -278,6 +278,7 @@ public class BsqSwapTakeOfferView extends BsqSwapOfferView<BsqSwapTakeOfferViewM
 
             model.onTakeOffer(() -> {
                         offerDetailsWindowDisplayed = false;
+                        model.dataModel.getMissingFunds().removeListener(missingFundsListener);
                     }, warningMessage -> {
                         log.warn(warningMessage);
                         new Popup().warning(warningMessage).show();
