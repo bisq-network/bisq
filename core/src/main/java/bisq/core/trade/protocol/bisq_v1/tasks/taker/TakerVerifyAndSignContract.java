@@ -27,13 +27,13 @@ import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.util.JsonUtil;
 
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.Sig;
 import bisq.common.taskrunner.TaskRunner;
-import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
@@ -110,7 +110,7 @@ public class TakerVerifyAndSignContract extends TradeTask {
                     makersPaymentMethodId,
                     takersPaymentMethodId
             );
-            String contractAsJson = Utilities.objectToJson(contract);
+            String contractAsJson = JsonUtil.objectToJson(contract);
 
             if (!contractAsJson.equals(processModel.getTradePeer().getContractAsJson())) {
                 contract.printDiff(processModel.getTradePeer().getContractAsJson());

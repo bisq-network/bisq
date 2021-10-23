@@ -25,6 +25,7 @@ import bisq.core.dao.state.model.blockchain.PubKeyScript;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxType;
+import bisq.core.util.JsonUtil;
 
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
@@ -154,9 +155,9 @@ public class ExportJsonFilesService implements DaoSetupService {
             JsonBlocks jsonBlocks = new JsonBlocks(daoState.getChainHeight(), jsonBlockList);
 
             ListenableFuture<Void> future = executor.submit(() -> {
-                bsqStateFileManager.writeToDisc(Utilities.objectToJson(jsonBlocks), "blocks");
-                allJsonTxOutputs.forEach(jsonTxOutput -> txOutputFileManager.writeToDisc(Utilities.objectToJson(jsonTxOutput), jsonTxOutput.getId()));
-                jsonTxs.forEach(jsonTx -> txFileManager.writeToDisc(Utilities.objectToJson(jsonTx), jsonTx.getId()));
+                bsqStateFileManager.writeToDisc(JsonUtil.objectToJson(jsonBlocks), "blocks");
+                allJsonTxOutputs.forEach(jsonTxOutput -> txOutputFileManager.writeToDisc(JsonUtil.objectToJson(jsonTxOutput), jsonTxOutput.getId()));
+                jsonTxs.forEach(jsonTx -> txFileManager.writeToDisc(JsonUtil.objectToJson(jsonTx), jsonTx.getId()));
 
                 GcUtil.maybeReleaseMemory();
 

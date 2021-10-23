@@ -20,6 +20,7 @@ package bisq.core.offer;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.util.JsonUtil;
 
 import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.P2PService;
@@ -31,7 +32,6 @@ import bisq.common.config.Config;
 import bisq.common.file.JsonFileManager;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -243,6 +243,6 @@ public class OfferBookService {
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        jsonFileManager.writeToDiscThreaded(Utilities.objectToJson(offerForJsonList), "offers_statistics");
+        jsonFileManager.writeToDiscThreaded(JsonUtil.objectToJson(offerForJsonList), "offers_statistics");
     }
 }
