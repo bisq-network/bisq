@@ -25,6 +25,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
+import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
 import bisq.core.payment.PaymentAccount;
@@ -139,14 +140,15 @@ public class BsqSwapOfferDetailsWindow extends Overlay<BsqSwapOfferDetailsWindow
         int rows = 5;
         boolean isTakeOfferScreen = takeOfferHandlerOptional.isPresent();
         boolean isMakeOfferScreen = placeOfferHandlerOptional.isPresent();
-        boolean isOpenOfferScreen = !isTakeOfferScreen && !isMakeOfferScreen;
+        boolean isMyOffer = offer.isMyOffer(keyRing);
+
         if (!isTakeOfferScreen)
             rows++;
 
         addTitledGroupBg(gridPane, ++rowIndex, rows, Res.get("shared.Offer"));
 
-        String bsqDirectionInfo = "";
-        String btcDirectionInfo = "";
+        String bsqDirectionInfo;
+        String btcDirectionInfo;
         OfferDirection direction = offer.getDirection();
         String currencyCode = offer.getCurrencyCode();
         String offerTypeLabel = Res.get("shared.offerType");
@@ -163,30 +165,36 @@ public class BsqSwapOfferDetailsWindow extends Overlay<BsqSwapOfferDetailsWindow
         boolean isBuyOffer = direction == OfferDirection.BUY;
         boolean isBuyer;
         String offerType;
-        if (isTakeOfferScreen) {
-            //taker
-            btcAmount = formatter.formatCoinWithCode(tradeAmount);
-            bsqAmount = VolumeUtil.formatVolumeWithCode(offer.getVolumeByAmount(tradeAmount));
-            offerType = DisplayUtils.getDirectionForTakeOffer(direction, currencyCode);
+        Coin amount = isTakeOfferScreen ? tradeAmount : offer.getAmount();
+        Volume volume = isTakeOfferScreen ? offer.getVolumeByAmount(tradeAmount) : offer.getVolume();
+        btcAmount = formatter.formatCoinWithCode(amount);
+        bsqAmount = VolumeUtil.formatVolumeWithCode(volume);
+        boolean isMaker = isMakeOfferScreen || isMyOffer;
+        boolean isTaker = !isMaker;
+
+        if (isTaker) {
             bsqDirectionInfo = isBuyOffer ? toReceive : toSpend;
             btcDirectionInfo = isSellOffer ? toReceive : toSpend;
             isBuyer = isSellOffer;
         } else {
-            // maker
-            btcAmount = formatter.formatCoinWithCode(offer.getAmount());
-            bsqAmount = VolumeUtil.formatVolumeWithCode(offer.getVolume());
-            if (offer.getVolume() != null && offer.getMinVolume() != null &&
-                    !offer.getVolume().equals(offer.getMinVolume())) {
-                bsqAmount += " " + Res.get("offerDetailsWindow.min", VolumeUtil.formatVolumeWithCode(offer.getMinVolume()));
-            }
-            offerType = DisplayUtils.getOfferDirectionForCreateOffer(direction, currencyCode);
             bsqDirectionInfo = isSellOffer ? toReceive : toSpend;
             btcDirectionInfo = isBuyOffer ? toReceive : toSpend;
             isBuyer = isBuyOffer;
         }
-
-        if (isOpenOfferScreen) {
-            offerType = DisplayUtils.getDirectionBothSides(direction, currencyCode);
+        if (isTakeOfferScreen) {
+            offerType = DisplayUtils.getDirectionForTakeOffer(direction, currencyCode);
+        } else if (isMakeOfferScreen) {
+            offerType = DisplayUtils.getOfferDirectionForCreateOffer(direction, currencyCode);
+        } else {
+            offerType = isBuyer ?
+                    DisplayUtils.getDirectionForBuyer(isMyOffer, offer.getCurrencyCode()) :
+                    DisplayUtils.getDirectionForSeller(isMyOffer, offer.getCurrencyCode());
+        }
+        if (!isTakeOfferScreen) {
+            if (offer.getVolume() != null && offer.getMinVolume() != null &&
+                    !offer.getVolume().equals(offer.getMinVolume())) {
+                bsqAmount += " " + Res.get("offerDetailsWindow.min", VolumeUtil.formatVolumeWithCode(offer.getMinVolume()));
+            }
         }
 
         addConfirmationLabelLabel(gridPane, rowIndex, offerTypeLabel, offerType, firstRowDistance);
@@ -200,20 +208,14 @@ public class BsqSwapOfferDetailsWindow extends Overlay<BsqSwapOfferDetailsWindow
         }
 
         String btcAmountTitle = Res.get("shared.btcAmount");
-        if (isTakeOfferScreen) {
-            addConfirmationLabelLabel(gridPane, ++rowIndex,
-                    btcAmountTitle + btcDirectionInfo, btcAmount);
-            addConfirmationLabelLabel(gridPane, ++rowIndex,
-                    VolumeUtil.formatVolumeLabel(currencyCode) + bsqDirectionInfo, bsqAmount);
-        } else {
-            addConfirmationLabelLabel(gridPane, ++rowIndex,
-                    btcAmountTitle + btcDirectionInfo,
-                    btcAmount);
+        addConfirmationLabelLabel(gridPane, ++rowIndex, btcAmountTitle + btcDirectionInfo, btcAmount);
+        if (!isTakeOfferScreen) {
             addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerDetailsWindow.minBtcAmount"),
                     formatter.formatCoinWithCode(offer.getMinAmount()));
-            addConfirmationLabelLabel(gridPane, ++rowIndex,
-                    VolumeUtil.formatVolumeLabel(currencyCode) + bsqDirectionInfo, bsqAmount);
+
         }
+        addConfirmationLabelLabel(gridPane, ++rowIndex,
+                VolumeUtil.formatVolumeLabel(currencyCode) + bsqDirectionInfo, bsqAmount);
 
         String priceLabel = Res.get("shared.price");
         if (isTakeOfferScreen) {
@@ -224,7 +226,7 @@ public class BsqSwapOfferDetailsWindow extends Overlay<BsqSwapOfferDetailsWindow
         PaymentMethod paymentMethod = offer.getPaymentMethod();
         String makerPaymentAccountId = offer.getMakerPaymentAccountId();
         PaymentAccount myPaymentAccount = user.getPaymentAccount(makerPaymentAccountId);
-        if (offer.isMyOffer(keyRing) && makerPaymentAccountId != null && myPaymentAccount != null) {
+        if (isMyOffer && makerPaymentAccountId != null && myPaymentAccount != null) {
             addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("offerDetailsWindow.myTradingAccount"), myPaymentAccount.getAccountName());
         } else {
             String method = Res.get(paymentMethod.getId());
@@ -245,7 +247,7 @@ public class BsqSwapOfferDetailsWindow extends Overlay<BsqSwapOfferDetailsWindow
 
         // commitment
 
-        if (placeOfferHandlerOptional.isPresent()) {
+        if (isMakeOfferScreen) {
             addConfirmAndCancelButtons(true);
         } else if (isTakeOfferScreen) {
             addConfirmAndCancelButtons(false);
