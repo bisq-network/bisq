@@ -27,11 +27,17 @@ import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.util.CollectionUtils;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSerializationContext;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import java.lang.reflect.Type;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -45,7 +51,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 // OfferPayload has about 1.4 kb. We should look into options to make it smaller but will be hard to do it in a
 // backward compatible way. Maybe a candidate when segwit activation is done as hardfork?
-
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @Slf4j
@@ -356,5 +361,48 @@ public final class OfferPayload extends OfferPayloadBase {
                 ",\r\n     isPrivateOffer=" + isPrivateOffer +
                 ",\r\n     hashOfChallenge='" + hashOfChallenge + '\'' +
                 "\r\n} " + super.toString();
+    }
+
+    // For backward compatibility we need to ensure same order for json fields as with 1.7.5. and earlier versions.
+    // The json is used for the hash in the contract and change of oder would cause a different hash and
+    // therefore a failure during trade.
+    public static class JsonSerializer implements com.google.gson.JsonSerializer<OfferPayload> {
+        @Override
+        public JsonElement serialize(OfferPayload offerPayload, Type type, JsonSerializationContext context) {
+            JsonObject object = new JsonObject();
+            object.add("id", context.serialize(offerPayload.getId()));
+            object.add("date", context.serialize(offerPayload.getDate()));
+            object.add("ownerNodeAddress", context.serialize(offerPayload.getOwnerNodeAddress()));
+            object.add("direction", context.serialize(offerPayload.getDirection()));
+            object.add("price", context.serialize(offerPayload.getPrice()));
+            object.add("marketPriceMargin", context.serialize(offerPayload.getMarketPriceMargin()));
+            object.add("useMarketBasedPrice", context.serialize(offerPayload.isUseMarketBasedPrice()));
+            object.add("amount", context.serialize(offerPayload.getAmount()));
+            object.add("minAmount", context.serialize(offerPayload.getMinAmount()));
+            object.add("baseCurrencyCode", context.serialize(offerPayload.getBaseCurrencyCode()));
+            object.add("counterCurrencyCode", context.serialize(offerPayload.getCounterCurrencyCode()));
+            object.add("arbitratorNodeAddresses", context.serialize(offerPayload.getArbitratorNodeAddresses()));
+            object.add("mediatorNodeAddresses", context.serialize(offerPayload.getMediatorNodeAddresses()));
+            object.add("paymentMethodId", context.serialize(offerPayload.getPaymentMethodId()));
+            object.add("makerPaymentAccountId", context.serialize(offerPayload.getMakerPaymentAccountId()));
+            object.add("offerFeePaymentTxId", context.serialize(offerPayload.getOfferFeePaymentTxId()));
+            object.add("versionNr", context.serialize(offerPayload.getVersionNr()));
+            object.add("blockHeightAtOfferCreation", context.serialize(offerPayload.getBlockHeightAtOfferCreation()));
+            object.add("txFee", context.serialize(offerPayload.getTxFee()));
+            object.add("makerFee", context.serialize(offerPayload.getMakerFee()));
+            object.add("isCurrencyForMakerFeeBtc", context.serialize(offerPayload.isCurrencyForMakerFeeBtc()));
+            object.add("buyerSecurityDeposit", context.serialize(offerPayload.getBuyerSecurityDeposit()));
+            object.add("sellerSecurityDeposit", context.serialize(offerPayload.getSellerSecurityDeposit()));
+            object.add("maxTradeLimit", context.serialize(offerPayload.getMaxTradeLimit()));
+            object.add("maxTradePeriod", context.serialize(offerPayload.getMaxTradePeriod()));
+            object.add("useAutoClose", context.serialize(offerPayload.isUseAutoClose()));
+            object.add("useReOpenAfterAutoClose", context.serialize(offerPayload.isUseReOpenAfterAutoClose()));
+            object.add("lowerClosePrice", context.serialize(offerPayload.getLowerClosePrice()));
+            object.add("upperClosePrice", context.serialize(offerPayload.getUpperClosePrice()));
+            object.add("isPrivateOffer", context.serialize(offerPayload.isPrivateOffer()));
+            object.add("extraDataMap", context.serialize(offerPayload.getExtraDataMap()));
+            object.add("protocolVersion", context.serialize(offerPayload.getProtocolVersion()));
+            return object;
+        }
     }
 }
