@@ -24,6 +24,7 @@ import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.util.JsonUtil;
 import bisq.core.util.VolumeUtil;
 
 import bisq.network.p2p.NodeAddress;
@@ -350,7 +351,7 @@ public final class Contract implements NetworkPayload {
     }
 
     public void printDiff(@Nullable String peersContractAsJson) {
-        String json = Utilities.objectToJson(this);
+        String json = JsonUtil.objectToJson(this);
         String diff = StringUtils.difference(json, peersContractAsJson);
         if (!diff.isEmpty()) {
             log.warn("Diff of both contracts: \n" + diff);

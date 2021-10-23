@@ -19,11 +19,6 @@ package bisq.common.util;
 
 import org.bitcoinj.core.Utils;
 
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import com.google.common.base.Splitter;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -87,15 +82,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class Utilities {
-    public static String objectToJson(Object object) {
-        Gson gson = new GsonBuilder()
-                .setExclusionStrategies(new AnnotationExclusionStrategy())
-                /*.excludeFieldsWithModifiers(Modifier.TRANSIENT)*/
-                /*  .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)*/
-                .setPrettyPrinting()
-                .create();
-        return gson.toJson(object);
-    }
 
     public static ExecutorService getSingleThreadExecutor(String name) {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
@@ -447,18 +433,6 @@ public class Utilities {
 
     public static String getPathOfCodeSource() throws URISyntaxException {
         return new File(Utilities.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getPath();
-    }
-
-    private static class AnnotationExclusionStrategy implements ExclusionStrategy {
-        @Override
-        public boolean shouldSkipField(FieldAttributes f) {
-            return f.getAnnotation(JsonExclude.class) != null;
-        }
-
-        @Override
-        public boolean shouldSkipClass(Class<?> clazz) {
-            return false;
-        }
     }
 
     public static String toTruncatedString(Object message) {

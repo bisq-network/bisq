@@ -40,10 +40,10 @@ import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.util.JsonUtil;
 
 import bisq.common.crypto.Sig;
 import bisq.common.taskrunner.TaskRunner;
-import bisq.common.util.Utilities;
 
 import java.util.Arrays;
 
@@ -82,7 +82,7 @@ public class SellerProcessShareBuyerPaymentAccountMessage extends TradeTask {
 
             // As we have added the payment accounts we need to update the json. We also update the signature
             // thought that has less relevance with the changes of 1.7.0
-            String contractAsJson = Utilities.objectToJson(contract);
+            String contractAsJson = JsonUtil.objectToJson(contract);
             String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);
             trade.setContractAsJson(contractAsJson);
             if (contract.isBuyerMakerAndSellerTaker()) {

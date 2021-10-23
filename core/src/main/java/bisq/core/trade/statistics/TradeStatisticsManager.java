@@ -24,6 +24,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.BuyerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.util.JsonUtil;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.P2PDataStorage;
@@ -31,7 +32,6 @@ import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
 import bisq.common.config.Config;
 import bisq.common.file.JsonFileManager;
-import bisq.common.util.Utilities;
 
 import com.google.inject.Inject;
 
@@ -132,13 +132,13 @@ public class TradeStatisticsManager {
             ArrayList<CurrencyTuple> fiatCurrencyList = CurrencyUtil.getAllSortedFiatCurrencies().stream()
                     .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
                     .collect(Collectors.toCollection(ArrayList::new));
-            jsonFileManager.writeToDiscThreaded(Utilities.objectToJson(fiatCurrencyList), "fiat_currency_list");
+            jsonFileManager.writeToDiscThreaded(JsonUtil.objectToJson(fiatCurrencyList), "fiat_currency_list");
 
             ArrayList<CurrencyTuple> cryptoCurrencyList = CurrencyUtil.getAllSortedCryptoCurrencies().stream()
                     .map(e -> new CurrencyTuple(e.getCode(), e.getName(), 8))
                     .collect(Collectors.toCollection(ArrayList::new));
             cryptoCurrencyList.add(0, new CurrencyTuple(Res.getBaseCurrencyCode(), Res.getBaseCurrencyName(), 8));
-            jsonFileManager.writeToDiscThreaded(Utilities.objectToJson(cryptoCurrencyList), "crypto_currency_list");
+            jsonFileManager.writeToDiscThreaded(JsonUtil.objectToJson(cryptoCurrencyList), "crypto_currency_list");
 
             Instant yearAgo = Instant.ofEpochSecond(Instant.now().getEpochSecond() - TimeUnit.DAYS.toSeconds(365));
             Set<String> activeCurrencies = observableTradeStatisticsSet.stream()
@@ -150,13 +150,13 @@ public class TradeStatisticsManager {
                     .filter(e -> activeCurrencies.contains(e.code))
                     .map(e -> new CurrencyTuple(e.code, e.name, 8))
                     .collect(Collectors.toCollection(ArrayList::new));
-            jsonFileManager.writeToDiscThreaded(Utilities.objectToJson(activeFiatCurrencyList), "active_fiat_currency_list");
+            jsonFileManager.writeToDiscThreaded(JsonUtil.objectToJson(activeFiatCurrencyList), "active_fiat_currency_list");
 
             ArrayList<CurrencyTuple> activeCryptoCurrencyList = cryptoCurrencyList.stream()
                     .filter(e -> activeCurrencies.contains(e.code))
                     .map(e -> new CurrencyTuple(e.code, e.name, 8))
                     .collect(Collectors.toCollection(ArrayList::new));
-            jsonFileManager.writeToDiscThreaded(Utilities.objectToJson(activeCryptoCurrencyList), "active_crypto_currency_list");
+            jsonFileManager.writeToDiscThreaded(JsonUtil.objectToJson(activeCryptoCurrencyList), "active_crypto_currency_list");
         }
 
         List<TradeStatisticsForJson> list = observableTradeStatisticsSet.stream()
@@ -165,7 +165,7 @@ public class TradeStatisticsManager {
                 .collect(Collectors.toList());
         TradeStatisticsForJson[] array = new TradeStatisticsForJson[list.size()];
         list.toArray(array);
-        jsonFileManager.writeToDiscThreaded(Utilities.objectToJson(array), "trade_statistics");
+        jsonFileManager.writeToDiscThreaded(JsonUtil.objectToJson(array), "trade_statistics");
     }
 
     public void maybeRepublishTradeStatistics(Set<TradeModel> trades,
