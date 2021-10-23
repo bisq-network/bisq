@@ -99,7 +99,7 @@ public class HashCashService {
             }
             while (!testDifficulty.apply(result, difficulty));
             ProofOfWork proofOfWork = new ProofOfWork(payload, counter, challenge, difficulty, System.currentTimeMillis() - ts);
-            // log.info("Completed minting proofOfWork: {}", proofOfWork);
+            log.info("Completed minting proofOfWork: {}", proofOfWork);
             return proofOfWork;
         });
     }
