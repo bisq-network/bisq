@@ -143,7 +143,6 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             }
         };
 
-
         offerActionHandler = new OfferActionHandler() {
             @Override
             public void onCreateOffer(TradeCurrency tradeCurrency, PaymentMethod paymentMethod) {
@@ -188,10 +187,9 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     }
 
     private String getCreateOfferTabName(Class<? extends View> viewClass) {
-        if (viewClass == BsqSwapCreateOfferView.class) {
-            return Res.get("offerbook.bsqSwap.createOffer").toUpperCase();
-        }
-        return Res.get("offerbook.createOffer").toUpperCase();
+        return viewClass == BsqSwapCreateOfferView.class ?
+                Res.get("offerbook.bsqSwap.createOffer").toUpperCase() :
+                Res.get("offerbook.createOffer").toUpperCase();
     }
 
     private String getTakeOfferTabName() {
@@ -297,24 +295,23 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     }
 
     private void openTakeOffer(Offer offer) {
-        this.takeOfferViewOpen = true;
+        takeOfferViewOpen = true;
         this.offer = offer;
         if (offer.isBsqSwapOffer()) {
-            this.navigation.navigateTo(MainView.class, this.getClass(), BsqSwapTakeOfferView.class);
+            navigation.navigateTo(MainView.class, this.getClass(), BsqSwapTakeOfferView.class);
         } else {
-            this.navigation.navigateTo(MainView.class, this.getClass(), TakeOfferView.class);
+            navigation.navigateTo(MainView.class, this.getClass(), TakeOfferView.class);
         }
     }
 
     private void openCreateOffer(TradeCurrency tradeCurrency, PaymentMethod paymentMethod) {
-        this.createOfferViewOpen = true;
+        createOfferViewOpen = true;
         this.tradeCurrency = tradeCurrency;
         if (tradeCurrency.getCode().equals("BSQ") && paymentMethod.isBsqSwap()) {
-            this.navigation.navigateTo(MainView.class, this.getClass(),
-                    BsqSwapCreateOfferView.class);
-            return;
+            navigation.navigateTo(MainView.class, this.getClass(), BsqSwapCreateOfferView.class);
+        } else {
+            navigation.navigateTo(MainView.class, this.getClass(), CreateOfferView.class);
         }
-        this.navigation.navigateTo(MainView.class, this.getClass(), CreateOfferView.class);
     }
 
     private void onCreateOfferViewRemoved() {
