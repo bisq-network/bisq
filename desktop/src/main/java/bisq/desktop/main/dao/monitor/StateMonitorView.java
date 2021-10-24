@@ -101,6 +101,7 @@ public abstract class StateMonitorView<StH extends StateHash,
     protected final BooleanProperty isInConflictWithSeedNode = new SimpleBooleanProperty();
     protected final BooleanProperty isDaoStateBlockChainNotConnecting = new SimpleBooleanProperty();
     protected final BooleanProperty reactivatedDaoStateMonitoring = new SimpleBooleanProperty();
+    protected final BooleanProperty useDaoStateMonitoring = new SimpleBooleanProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -284,9 +285,12 @@ public abstract class StateMonitorView<StH extends StateHash,
         } else if (reactivatedDaoStateMonitoring.get()) {
             statusTextField.setText(Res.get("dao.monitor.reactivatedDaoStateMonitoring"));
             statusTextField.getStyleClass().add("dao-inConflict");
-        } else {
+        } else if (useDaoStateMonitoring.get()) {
             statusTextField.setText(Res.get("dao.monitor.daoStateInSync"));
             statusTextField.getStyleClass().remove("dao-inConflict");
+        } else {
+            statusTextField.setText(Res.get("dao.monitor.deactivatedDaoStateMonitoring"));
+            statusTextField.getStyleClass().add("dao-inConflict");
         }
 
         GUIUtil.setFitToRowsForTableView(tableView, 25, 28, 2, 5);

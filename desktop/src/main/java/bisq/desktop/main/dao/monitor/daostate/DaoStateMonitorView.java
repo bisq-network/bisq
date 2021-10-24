@@ -246,6 +246,7 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
     private void updateActivationState() {
         boolean useDaoMonitor = preferences.isUseDaoMonitor();
         activationsToggle.setSelected(useDaoMonitor);
+        useDaoStateMonitoring.set(useDaoMonitor);
 
         if (useDaoMonitor) {
             String key = "DaoMonitorInfo";
@@ -261,8 +262,6 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
             onDataUpdate();
         } else {
             hasBeenDeactivated = true;
-            statusTextField.setText(Res.get("dao.monitor.deactivatedDaoStateMonitoring"));
-            statusTextField.getStyleClass().add("dao-inConflict");
         }
     }
 }
