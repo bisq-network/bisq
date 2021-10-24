@@ -31,6 +31,7 @@ import bisq.core.dao.state.GenesisTxInfo;
 import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.IssuanceType;
+import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
@@ -120,6 +121,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     private int numCalls;
     private long accumulatedDuration;
 
+    private final Preferences preferences;
     private final File storageDir;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -131,11 +133,13 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                                      DaoStateNetworkService daoStateNetworkService,
                                      GenesisTxInfo genesisTxInfo,
                                      SeedNodeRepository seedNodeRepository,
+                                     Preferences preferences,
                                      @Named(Config.STORAGE_DIR) File storageDir,
                                      @Named(Config.IGNORE_DEV_MSG) boolean ignoreDevMsg) {
         this.daoStateService = daoStateService;
         this.daoStateNetworkService = daoStateNetworkService;
         this.genesisTxInfo = genesisTxInfo;
+        this.preferences = preferences;
         this.storageDir = storageDir;
         this.ignoreDevMsg = ignoreDevMsg;
         seedNodeAddresses = seedNodeRepository.getSeedNodeAddresses().stream()
@@ -166,6 +170,10 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     @Override
     public void onParseBlockChainComplete() {
         parseBlockChainComplete = true;
+        if (!preferences.isUseDaoMonitor()) {
+            return;
+        }
+
         daoStateNetworkService.addListeners();
 
         // We wait for processing messages until we have completed batch processing
@@ -205,6 +213,10 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
 
     @Override
     public void onNewStateHashMessage(NewDaoStateHashMessage newStateHashMessage, Connection connection) {
+        if (!preferences.isUseDaoMonitor()) {
+            return;
+        }
+
         if (newStateHashMessage.getStateHash().getHeight() <= daoStateService.getChainHeight()) {
             processPeersDaoStateHash(newStateHashMessage.getStateHash(), connection.getPeersNodeAddressOptional(), true);
         }
@@ -212,6 +224,10 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
 
     @Override
     public void onGetStateHashRequest(Connection connection, GetDaoStateHashesRequest getStateHashRequest) {
+        if (!preferences.isUseDaoMonitor()) {
+            return;
+        }
+
         int fromHeight = getStateHashRequest.getHeight();
         List<DaoStateHash> daoStateHashes = daoStateBlockChain.stream()
                 .filter(e -> e.getHeight() >= fromHeight)
@@ -222,6 +238,10 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
 
     @Override
     public void onPeersStateHashes(List<DaoStateHash> stateHashes, Optional<NodeAddress> peersNodeAddress) {
+        if (!preferences.isUseDaoMonitor()) {
+            return;
+        }
+
         AtomicBoolean hasChanged = new AtomicBoolean(false);
 
         stateHashes.forEach(daoStateHash -> {
