@@ -190,11 +190,11 @@ public class BsqSwapOfferDetailsWindow extends Overlay<BsqSwapOfferDetailsWindow
                     DisplayUtils.getDirectionForBuyer(isMyOffer, offer.getCurrencyCode()) :
                     DisplayUtils.getDirectionForSeller(isMyOffer, offer.getCurrencyCode());
         }
-        if (!isTakeOfferScreen) {
-            if (offer.getVolume() != null && offer.getMinVolume() != null &&
-                    !offer.getVolume().equals(offer.getMinVolume())) {
-                bsqAmount += " " + Res.get("offerDetailsWindow.min", VolumeUtil.formatVolumeWithCode(offer.getMinVolume()));
-            }
+        if (!isTakeOfferScreen &&
+                offer.getVolume() != null &&
+                offer.getMinVolume() != null &&
+                !offer.getVolume().equals(offer.getMinVolume())) {
+            bsqAmount += " " + Res.get("offerDetailsWindow.min", VolumeUtil.formatVolumeWithCode(offer.getMinVolume()));
         }
 
         addConfirmationLabelLabel(gridPane, rowIndex, offerTypeLabel, offerType, firstRowDistance);
