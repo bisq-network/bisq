@@ -17,6 +17,7 @@
 
 package bisq.core.dao.state;
 
+import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.monitoring.model.DaoStateHash;
 import bisq.core.dao.state.model.DaoState;
@@ -49,7 +50,7 @@ import javax.annotation.Nullable;
  * SNAPSHOT_GRID old not less than 2 times the SNAPSHOT_GRID old.
  */
 @Slf4j
-public class DaoStateSnapshotService {
+public class DaoStateSnapshotService implements DaoSetupService, DaoStateListener {
     private static final int SNAPSHOT_GRID = 20;
 
     private final DaoStateService daoStateService;
@@ -82,6 +83,34 @@ public class DaoStateSnapshotService {
         this.daoStateStorageService = daoStateStorageService;
         this.daoStateMonitoringService = daoStateMonitoringService;
         this.storageDir = storageDir;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // DaoSetupService
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void addListeners() {
+        this.daoStateService.addDaoStateListener(this);
+    }
+
+    @Override
+    public void start() {
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // DaoStateListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // We listen onDaoStateChanged to ensure the dao state has been processed from listener clients after parsing.
+    // We need to listen during batch processing as well to write snapshots during that process.
+    @Override
+    public void onDaoStateChanged(Block block) {
+        // We need to execute first the daoStateMonitoringService.createHashFromBlock to get the hash created
+        daoStateMonitoringService.createHashFromBlock(block);
+        maybeCreateSnapshot(block);
     }
 
 

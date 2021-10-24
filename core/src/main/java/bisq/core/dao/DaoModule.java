@@ -102,7 +102,6 @@ public class DaoModule extends AppModule {
     protected void configure() {
         bind(DaoSetup.class).in(Singleton.class);
         bind(DaoFacade.class).in(Singleton.class);
-        bind(DaoEventCoordinator.class).in(Singleton.class);
         bind(DaoKillSwitch.class).in(Singleton.class);
 
         // Node, parser

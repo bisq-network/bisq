@@ -92,7 +92,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         new Thread(() -> {
             Thread.currentThread().setName("Serialize and write DaoState");
             persistenceManager.persistNow(() -> {
-                // After we have written to disk we remove the the daoState in the store to avoid that it stays in
+                // After we have written to disk we remove the daoState in the store to avoid that it stays in
                 // memory there until the next persist call.
                 store.setDaoState(null);
 
