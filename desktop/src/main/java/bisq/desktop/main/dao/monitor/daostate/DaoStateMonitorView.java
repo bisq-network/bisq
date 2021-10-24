@@ -31,6 +31,7 @@ import bisq.core.dao.monitoring.model.DaoStateHash;
 import bisq.core.dao.monitoring.model.UtxoMismatch;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.Res;
+import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.seed.SeedNodeRepository;
@@ -89,7 +90,7 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
         FormBuilder.addTitledGroupBg(root, gridRow, 4, Res.get("dao.monitor.daoState.headline"));
         statusTextField = FormBuilder.addTopLabelTextField(root, ++gridRow,
                 Res.get("dao.monitor.state")).second;
-        activationsToggle = FormBuilder.addSlideToggleButton(root, ++gridRow, "");
+        activationsToggle = FormBuilder.addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.dao.useDaoStateMonitoring"));
         resyncButton = FormBuilder.addButton(root, ++gridRow, Res.get("dao.monitor.resync"), 10);
 
         super.initialize();
@@ -245,9 +246,15 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
     private void updateActivationState() {
         boolean useDaoMonitor = preferences.isUseDaoMonitor();
         activationsToggle.setSelected(useDaoMonitor);
-        activationsToggle.setText(useDaoMonitor ? Res.get("dao.monitor.activated") : Res.get("dao.monitor.deactivated"));
 
         if (useDaoMonitor) {
+            String key = "DaoMonitorInfo";
+            if (DontShowAgainLookup.showAgain(key)) {
+                new Popup().information(Res.get("dao.monitor.activate.popup.info"))
+                        .dontShowAgainId(key)
+                        .closeButtonText(Res.get("shared.iUnderstand"))
+                        .show();
+            }
             if (hasBeenDeactivated) {
                 reactivatedDaoStateMonitoring.set(true);
             }
