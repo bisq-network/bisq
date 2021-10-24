@@ -100,6 +100,7 @@ public abstract class StateMonitorView<StH extends StateHash,
     protected final BooleanProperty isInConflictWithNonSeedNode = new SimpleBooleanProperty();
     protected final BooleanProperty isInConflictWithSeedNode = new SimpleBooleanProperty();
     protected final BooleanProperty isDaoStateBlockChainNotConnecting = new SimpleBooleanProperty();
+    protected final BooleanProperty reactivatedDaoStateMonitoring = new SimpleBooleanProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -135,8 +136,12 @@ public abstract class StateMonitorView<StH extends StateHash,
 
         daoStateService.addDaoStateListener(this);
 
-        resyncButton.visibleProperty().bind(isInConflictWithSeedNode.or(isDaoStateBlockChainNotConnecting));
-        resyncButton.managedProperty().bind(isInConflictWithSeedNode.or(isDaoStateBlockChainNotConnecting));
+        resyncButton.visibleProperty().bind(isInConflictWithSeedNode
+                .or(isDaoStateBlockChainNotConnecting)
+                .or(reactivatedDaoStateMonitoring));
+        resyncButton.managedProperty().bind(isInConflictWithSeedNode
+                .or(isDaoStateBlockChainNotConnecting)
+                .or(reactivatedDaoStateMonitoring));
 
         resyncButton.setOnAction(ev -> resyncDaoState());
 
@@ -275,7 +280,10 @@ public abstract class StateMonitorView<StH extends StateHash,
             statusTextField.getStyleClass().remove("dao-inConflict");
         } else if (isDaoStateBlockChainNotConnecting.get()) {
             statusTextField.setText(Res.get("dao.monitor.isDaoStateBlockChainNotConnecting"));
-            statusTextField.getStyleClass().remove("dao-inConflict");
+            statusTextField.getStyleClass().add("dao-inConflict");
+        } else if (reactivatedDaoStateMonitoring.get()) {
+            statusTextField.setText(Res.get("dao.monitor.reactivatedDaoStateMonitoring"));
+            statusTextField.getStyleClass().add("dao-inConflict");
         } else {
             statusTextField.setText(Res.get("dao.monitor.daoStateInSync"));
             statusTextField.getStyleClass().remove("dao-inConflict");

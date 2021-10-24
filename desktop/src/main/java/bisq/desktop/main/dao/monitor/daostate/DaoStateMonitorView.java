@@ -31,6 +31,7 @@ import bisq.core.dao.monitoring.model.DaoStateHash;
 import bisq.core.dao.monitoring.model.UtxoMismatch;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.Res;
+import bisq.core.user.Preferences;
 
 import bisq.network.p2p.seed.SeedNodeRepository;
 
@@ -39,6 +40,8 @@ import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+
+import javafx.scene.control.ToggleButton;
 
 import javafx.collections.ListChangeListener;
 
@@ -52,8 +55,11 @@ import java.util.stream.Collectors;
 public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoStateBlock, DaoStateBlockListItem, DaoStateInConflictListItem>
         implements DaoStateMonitoringService.Listener {
     private final DaoStateMonitoringService daoStateMonitoringService;
+    private final Preferences preferences;
     private ListChangeListener<UtxoMismatch> utxoMismatchListChangeListener;
     private Popup warningPopup;
+    private ToggleButton activationsToggle;
+    private boolean hasBeenDeactivated;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -68,20 +74,22 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
                                 CycleService cycleService,
                                 PeriodService periodService,
                                 SeedNodeRepository seedNodeRepository,
+                                Preferences preferences,
                                 @Named(Config.STORAGE_DIR) File storageDir) {
         super(daoStateService, daoFacade, cycleService, periodService, seedNodeRepository, storageDir);
 
         this.daoStateMonitoringService = daoStateMonitoringService;
+        this.preferences = preferences;
     }
 
     @Override
     public void initialize() {
         utxoMismatchListChangeListener = c -> updateUtxoMismatches();
 
-        FormBuilder.addTitledGroupBg(root, gridRow, 3, Res.get("dao.monitor.daoState.headline"));
-
+        FormBuilder.addTitledGroupBg(root, gridRow, 4, Res.get("dao.monitor.daoState.headline"));
         statusTextField = FormBuilder.addTopLabelTextField(root, ++gridRow,
                 Res.get("dao.monitor.state")).second;
+        activationsToggle = FormBuilder.addSlideToggleButton(root, ++gridRow, "");
         resyncButton = FormBuilder.addButton(root, ++gridRow, Res.get("dao.monitor.resync"), 10);
 
         super.initialize();
@@ -93,7 +101,9 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
 
         daoStateMonitoringService.addListener(this);
         daoStateMonitoringService.getUtxoMismatches().addListener(utxoMismatchListChangeListener);
+        activationsToggle.setOnAction(ev -> onToggleActivateButton());
 
+        updateActivationState();
         updateUtxoMismatches();
     }
 
@@ -223,6 +233,29 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
                         .onClose(() -> warningPopup = null);
                 warningPopup.show();
             }
+        }
+    }
+
+    private void onToggleActivateButton() {
+        boolean useDaoMonitor = preferences.isUseDaoMonitor();
+        preferences.setUseDaoMonitor(!useDaoMonitor);
+        updateActivationState();
+    }
+
+    private void updateActivationState() {
+        boolean useDaoMonitor = preferences.isUseDaoMonitor();
+        activationsToggle.setSelected(useDaoMonitor);
+        activationsToggle.setText(useDaoMonitor ? Res.get("dao.monitor.activated") : Res.get("dao.monitor.deactivated"));
+
+        if (useDaoMonitor) {
+            if (hasBeenDeactivated) {
+                reactivatedDaoStateMonitoring.set(true);
+            }
+            onDataUpdate();
+        } else {
+            hasBeenDeactivated = true;
+            statusTextField.setText(Res.get("dao.monitor.deactivatedDaoStateMonitoring"));
+            statusTextField.getStyleClass().add("dao-inConflict");
         }
     }
 }

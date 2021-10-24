@@ -68,7 +68,6 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     @Nullable
     private Runnable daoRequiresRestartHandler;
     private boolean requestPersistenceCalled;
-    private boolean useDaoMonitor;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +101,6 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
 
     @Override
     public void start() {
-        useDaoMonitor = preferences.isUseDaoMonitor();
     }
 
 
@@ -114,7 +112,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     // We need to listen during batch processing as well to write snapshots during that process.
     @Override
     public void onDaoStateChanged(Block block) {
-        if (useDaoMonitor) {
+        if (preferences.isUseDaoMonitor()) {
             // We need to execute first the daoStateMonitoringService.createHashFromBlock to get the hash created
             daoStateMonitoringService.createHashFromBlock(block);
         }
