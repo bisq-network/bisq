@@ -23,6 +23,7 @@ import bisq.core.dao.monitoring.model.DaoStateHash;
 import bisq.core.dao.state.model.DaoState;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.storage.DaoStateStorageService;
+import bisq.core.user.Preferences;
 
 import bisq.common.config.Config;
 import bisq.common.util.GcUtil;
@@ -57,6 +58,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     private final GenesisTxInfo genesisTxInfo;
     private final DaoStateStorageService daoStateStorageService;
     private final DaoStateMonitoringService daoStateMonitoringService;
+    private final Preferences preferences;
     private final File storageDir;
 
     private DaoState daoStateSnapshotCandidate;
@@ -66,6 +68,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     @Nullable
     private Runnable daoRequiresRestartHandler;
     private boolean requestPersistenceCalled;
+    private boolean useDaoMonitor;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -77,11 +80,13 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                                    GenesisTxInfo genesisTxInfo,
                                    DaoStateStorageService daoStateStorageService,
                                    DaoStateMonitoringService daoStateMonitoringService,
+                                   Preferences preferences,
                                    @Named(Config.STORAGE_DIR) File storageDir) {
         this.daoStateService = daoStateService;
         this.genesisTxInfo = genesisTxInfo;
         this.daoStateStorageService = daoStateStorageService;
         this.daoStateMonitoringService = daoStateMonitoringService;
+        this.preferences = preferences;
         this.storageDir = storageDir;
     }
 
@@ -92,11 +97,12 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
 
     @Override
     public void addListeners() {
-        this.daoStateService.addDaoStateListener(this);
+        daoStateService.addDaoStateListener(this);
     }
 
     @Override
     public void start() {
+        useDaoMonitor = preferences.isUseDaoMonitor();
     }
 
 
@@ -108,8 +114,10 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     // We need to listen during batch processing as well to write snapshots during that process.
     @Override
     public void onDaoStateChanged(Block block) {
-        // We need to execute first the daoStateMonitoringService.createHashFromBlock to get the hash created
-        daoStateMonitoringService.createHashFromBlock(block);
+        if (useDaoMonitor) {
+            // We need to execute first the daoStateMonitoringService.createHashFromBlock to get the hash created
+            daoStateMonitoringService.createHashFromBlock(block);
+        }
         maybeCreateSnapshot(block);
     }
 
@@ -118,8 +126,6 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // We do not use DaoStateListener.onDaoStateChanged but let the DaoEventCoordinator call maybeCreateSnapshot to ensure the
-    // correct order of execution.
     // We need to process during batch processing as well to write snapshots during that process.
     public void maybeCreateSnapshot(Block block) {
         int chainHeight = block.getHeight();
