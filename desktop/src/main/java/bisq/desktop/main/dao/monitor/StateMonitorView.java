@@ -99,6 +99,7 @@ public abstract class StateMonitorView<StH extends StateHash,
     private Subscription selectedItemSubscription;
     protected final BooleanProperty isInConflictWithNonSeedNode = new SimpleBooleanProperty();
     protected final BooleanProperty isInConflictWithSeedNode = new SimpleBooleanProperty();
+    protected final BooleanProperty isDaoStateBlockChainNotConnecting = new SimpleBooleanProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -134,8 +135,8 @@ public abstract class StateMonitorView<StH extends StateHash,
 
         daoStateService.addDaoStateListener(this);
 
-        resyncButton.visibleProperty().bind(isInConflictWithSeedNode);
-        resyncButton.managedProperty().bind(isInConflictWithSeedNode);
+        resyncButton.visibleProperty().bind(isInConflictWithSeedNode.or(isDaoStateBlockChainNotConnecting));
+        resyncButton.managedProperty().bind(isInConflictWithSeedNode.or(isDaoStateBlockChainNotConnecting));
 
         resyncButton.setOnAction(ev -> resyncDaoState());
 
@@ -271,6 +272,9 @@ public abstract class StateMonitorView<StH extends StateHash,
             statusTextField.getStyleClass().add("dao-inConflict");
         } else if (isInConflictWithNonSeedNode.get()) {
             statusTextField.setText(Res.get("dao.monitor.isInConflictWithNonSeedNode"));
+            statusTextField.getStyleClass().remove("dao-inConflict");
+        } else if (isDaoStateBlockChainNotConnecting.get()) {
+            statusTextField.setText(Res.get("dao.monitor.isDaoStateBlockChainNotConnecting"));
             statusTextField.getStyleClass().remove("dao-inConflict");
         } else {
             statusTextField.setText(Res.get("dao.monitor.daoStateInSync"));

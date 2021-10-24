@@ -66,8 +66,6 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 /**
  * Monitors the DaoState by using a hash for the complete daoState and make it accessible to the network
  * so we can detect quickly if any consensus issue arise.
@@ -109,6 +107,8 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     private boolean isInConflictWithNonSeedNode;
     @Getter
     private boolean isInConflictWithSeedNode;
+    @Getter
+    private boolean daoStateBlockChainNotConnecting;
     @Getter
     private final ObservableList<UtxoMismatch> utxoMismatches = FXCollections.observableArrayList();
 
@@ -162,9 +162,6 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // We do not use onDaoStateChanged but let the DaoEventCoordinator call createHashFromBlock to ensure the
-    // correct order of execution.
 
     @Override
     public void onParseBlockChainComplete() {
@@ -298,10 +295,15 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                 return;
             }
         } else {
-            checkArgument(height == daoStateBlockChain.getLast().getHeight() + 1,
-                    "New block must be 1 block above previous block. height={}, " +
-                            "daoStateBlockChain.getLast().getHeight()={}",
-                    height, daoStateBlockChain.getLast().getHeight());
+            if (height != daoStateBlockChain.getLast().getHeight() + 1) {
+                log.warn("New block must be 1 block above previous block. height={}, " +
+                                "daoStateBlockChain.getLast().getHeight()={}",
+                        height, daoStateBlockChain.getLast().getHeight());
+                daoStateBlockChainNotConnecting = true;
+                listeners.forEach(Listener::onChangeAfterBatchProcessing);
+                return;
+            }
+
             prevHash = daoStateBlockChain.getLast().getHash();
         }
         byte[] stateAsBytes = daoStateService.getSerializedStateForHashChain();

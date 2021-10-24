@@ -38,6 +38,7 @@ public class DaoStateSnapshotServiceTest {
                 mock(GenesisTxInfo.class),
                 mock(DaoStateStorageService.class),
                 mock(DaoStateMonitoringService.class),
+                null,
                 null);
     }
 
