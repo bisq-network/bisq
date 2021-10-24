@@ -259,9 +259,9 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
             if (hasBeenDeactivated) {
                 reactivatedDaoStateMonitoring.set(true);
             }
-            onDataUpdate();
         } else {
             hasBeenDeactivated = true;
         }
+        onDataUpdate();
     }
 }

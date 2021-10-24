@@ -271,7 +271,10 @@ public abstract class StateMonitorView<StH extends StateHash,
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void onDataUpdate() {
-        if (isInConflictWithSeedNode.get()) {
+        if (!useDaoStateMonitoring.get()) {
+            statusTextField.setText(Res.get("dao.monitor.deactivatedDaoStateMonitoring"));
+            statusTextField.getStyleClass().add("dao-inConflict");
+        } else if (isInConflictWithSeedNode.get()) {
             String msg = Res.get("dao.monitor.isInConflictWithSeedNode");
             log.warn(msg);
             statusTextField.setText(msg);
@@ -285,12 +288,9 @@ public abstract class StateMonitorView<StH extends StateHash,
         } else if (reactivatedDaoStateMonitoring.get()) {
             statusTextField.setText(Res.get("dao.monitor.reactivatedDaoStateMonitoring"));
             statusTextField.getStyleClass().add("dao-inConflict");
-        } else if (useDaoStateMonitoring.get()) {
+        } else {
             statusTextField.setText(Res.get("dao.monitor.daoStateInSync"));
             statusTextField.getStyleClass().remove("dao-inConflict");
-        } else {
-            statusTextField.setText(Res.get("dao.monitor.deactivatedDaoStateMonitoring"));
-            statusTextField.getStyleClass().add("dao-inConflict");
         }
 
         GUIUtil.setFitToRowsForTableView(tableView, 25, 28, 2, 5);
