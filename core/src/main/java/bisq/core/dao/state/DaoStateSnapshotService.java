@@ -113,15 +113,13 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     // We need to listen during batch processing as well to write snapshots during that process.
     @Override
     public void onDaoStateChanged(Block block) {
-        if (preferences.isUseDaoMonitor()) {
+        // If we have isUseDaoMonitor activated we apply the hash and snapshots at each new block during initial parsing.
+        // Otherwise we do it only after the initial blockchain parsing is completed to not delay the parsing.
+        // In that case we get the missing hashes from the seed nodes. At any new block we do the hash calculation
+        // ourself and therefore get back confidence that our DAO state is in sync with the network.
+        if (preferences.isUseDaoMonitor() || isParseBlockChainComplete) {
             // We need to execute first the daoStateMonitoringService.createHashFromBlock to get the hash created
             daoStateMonitoringService.createHashFromBlock(block);
-        }
-
-        // We only call maybeCreateSnapshot if we are done with parsing or if we have dao monitoring activated.
-        // In that case parsing is anyway slow and we prefer to have at each snapshot height a snapshot. It does not
-        // make syncing much slower by that.
-        if (preferences.isUseDaoMonitor() || isParseBlockChainComplete) {
             maybeCreateSnapshot(block);
         }
     }
@@ -132,19 +130,15 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
 
         // In case we have dao monitoring deactivated we create the snapshot after we are completed with parsing.
         if (!preferences.isUseDaoMonitor()) {
-            // We use a thread to avoid that cloning slows down user thread.
-            new Thread(() -> {
-                Thread.currentThread().setName("Create-snapshot-after-parseBlockChainComplete");
-                long ts = System.currentTimeMillis();
-                daoStateSnapshotCandidate = daoStateService.getClone();
-                daoStateHashChainSnapshotCandidate = new LinkedList<>(daoStateMonitoringService.getDaoStateHashChain());
-                daoStateStorageService.requestPersistence(daoStateSnapshotCandidate,
-                        daoStateHashChainSnapshotCandidate,
-                        () -> {
-                            log.info("Persisted daoState after parsing completed at height {}. Took {} ms",
-                                    daoStateService.getChainHeight(), System.currentTimeMillis() - ts);
-                        });
-            }).start();
+            long ts = System.currentTimeMillis();
+            daoStateSnapshotCandidate = daoStateService.getClone();
+            daoStateHashChainSnapshotCandidate = new LinkedList<>(daoStateMonitoringService.getDaoStateHashChain());
+            daoStateStorageService.requestPersistence(daoStateSnapshotCandidate,
+                    daoStateHashChainSnapshotCandidate,
+                    () -> {
+                        log.info("Persisted daoState after parsing completed at height {}. Took {} ms",
+                                daoStateService.getChainHeight(), System.currentTimeMillis() - ts);
+                    });
         }
     }
 

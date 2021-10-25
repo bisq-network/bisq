@@ -95,6 +95,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
                 // After we have written to disk we remove the daoState in the store to avoid that it stays in
                 // memory there until the next persist call.
                 store.setDaoState(null);
+                store.setDaoStateHashChain(null);
 
                 completeHandler.run();
             });

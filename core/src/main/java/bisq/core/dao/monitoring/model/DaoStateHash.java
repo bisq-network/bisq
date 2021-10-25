@@ -21,12 +21,17 @@ package bisq.core.dao.monitoring.model;
 import com.google.protobuf.ByteString;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
-// About 134 693 items with 48 bytes/item =  6.4 MB
+@Getter
 @EqualsAndHashCode(callSuper = true)
 public final class DaoStateHash extends StateHash {
-    public DaoStateHash(int height, byte[] hash) {
+    // If we have built the hash by ourself opposed to that we got delivered the hash from seed nodes or resources
+    private final boolean isSelfConstructed;
+
+    public DaoStateHash(int height, byte[] hash, boolean isSelfConstructed) {
         super(height, hash);
+        this.isSelfConstructed = isSelfConstructed;
     }
 
 
@@ -39,10 +44,11 @@ public final class DaoStateHash extends StateHash {
         return protobuf.DaoStateHash.newBuilder()
                 .setHeight(height)
                 .setHash(ByteString.copyFrom(hash))
+                .setIsSelfConstructed(isSelfConstructed)
                 .build();
     }
 
     public static DaoStateHash fromProto(protobuf.DaoStateHash proto) {
-        return new DaoStateHash(proto.getHeight(), proto.getHash().toByteArray());
+        return new DaoStateHash(proto.getHeight(), proto.getHash().toByteArray(), proto.getIsSelfConstructed());
     }
 }

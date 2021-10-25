@@ -447,7 +447,6 @@ public abstract class StateMonitorView<StH extends StateHash,
         tableView.getColumns().add(column);
     }
 
-
     protected void createConflictColumns() {
         TableColumn<CLI, CLI> column;
 

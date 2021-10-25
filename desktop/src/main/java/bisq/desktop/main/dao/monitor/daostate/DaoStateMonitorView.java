@@ -18,6 +18,7 @@
 package bisq.desktop.main.dao.monitor.daostate;
 
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.main.dao.monitor.StateMonitorView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
@@ -42,15 +43,21 @@ import bisq.common.util.Utilities;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.ToggleButton;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 
 import javafx.collections.ListChangeListener;
 
+import javafx.util.Callback;
+
 import java.io.File;
 
+import java.util.Comparator;
 import java.util.Map;
 import java.util.function.IntSupplier;
 import java.util.stream.Collectors;
@@ -231,6 +238,35 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
     @Override
     protected void requestHashesFromGenesisBlockHeight(String peerAddress) {
         daoStateMonitoringService.requestHashesFromGenesisBlockHeight(peerAddress);
+    }
+
+    @Override
+    protected void createColumns() {
+        super.createColumns();
+
+        TableColumn<DaoStateBlockListItem, DaoStateBlockListItem> column = new AutoTooltipTableColumn<>(Res.get("dao.monitor.table.isSelfConstructed"));
+        column.setMinWidth(50);
+        column.setMaxWidth(column.getMinWidth());
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<DaoStateBlockListItem, DaoStateBlockListItem> call(
+                            TableColumn<DaoStateBlockListItem, DaoStateBlockListItem> column) {
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final DaoStateBlockListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                if (item != null)
+                                    setText(item.isSelfConstructed());
+                                else
+                                    setText("");
+                            }
+                        };
+                    }
+                });
+        column.setComparator(Comparator.comparing(e -> e.getStateBlock().getPeersMap().size()));
+        tableView.getColumns().add(2, column);
     }
 
 

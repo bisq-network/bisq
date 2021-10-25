@@ -167,6 +167,10 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage,
         requestStateHashHandlerMap.clear();
     }
 
+    public boolean isSeedNode(NodeAddress nodeAddress) {
+        return peerManager.isSeedNode(nodeAddress);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listeners

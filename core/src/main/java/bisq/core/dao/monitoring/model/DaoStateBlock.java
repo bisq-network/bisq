@@ -18,12 +18,14 @@
 package bisq.core.dao.monitoring.model;
 
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 
-@Getter
 @EqualsAndHashCode(callSuper = true)
 public class DaoStateBlock extends StateBlock<DaoStateHash> {
     public DaoStateBlock(DaoStateHash myDaoStateHash) {
         super(myDaoStateHash);
+    }
+
+    public boolean isSelfConstructed() {
+        return myStateHash.isSelfConstructed();
     }
 }

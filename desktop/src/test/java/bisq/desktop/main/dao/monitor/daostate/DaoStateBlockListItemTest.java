@@ -41,7 +41,7 @@ public class DaoStateBlockListItemTest {
 
     @Test
     public void testEqualsAndHashCode() {
-        var block = new DaoStateBlock(new DaoStateHash(0, new byte[0]));
+        var block = new DaoStateBlock(new DaoStateHash(0, new byte[0], true));
         var item1 = new DaoStateBlockListItem(block, newSupplier(1));
         var item2 = new DaoStateBlockListItem(block, newSupplier(2));
         var item3 = new DaoStateBlockListItem(block, newSupplier(1));

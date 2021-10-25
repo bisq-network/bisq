@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode
 public abstract class StateBlockListItem<StH extends StateHash, StB extends StateBlock<StH>> {
-    private final StateBlock<StH> stateBlock;
+    protected final StateBlock<StH> stateBlock;
     private final Supplier<String> height;
     private final String hash;
     private final String numNetworkMessages;
