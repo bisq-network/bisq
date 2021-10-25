@@ -51,4 +51,11 @@ public final class DaoStateHash extends StateHash {
     public static DaoStateHash fromProto(protobuf.DaoStateHash proto) {
         return new DaoStateHash(proto.getHeight(), proto.getHash().toByteArray(), proto.getIsSelfConstructed());
     }
+
+    @Override
+    public String toString() {
+        return "DaoStateHash{" +
+                "\r\n     isSelfConstructed=" + isSelfConstructed +
+                "\r\n} " + super.toString();
+    }
 }

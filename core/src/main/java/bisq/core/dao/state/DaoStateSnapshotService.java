@@ -128,17 +128,28 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     public void onParseBlockChainComplete() {
         isParseBlockChainComplete = true;
 
-        // In case we have dao monitoring deactivated we create the snapshot after we are completed with parsing.
+        // In case we have dao monitoring deactivated we create the snapshot after we are completed with parsing
+        // and we got called back from daoStateMonitoringService once the hashes are created from peers data.
         if (!preferences.isUseDaoMonitor()) {
-            long ts = System.currentTimeMillis();
-            daoStateSnapshotCandidate = daoStateService.getClone();
-            daoStateHashChainSnapshotCandidate = new LinkedList<>(daoStateMonitoringService.getDaoStateHashChain());
-            daoStateStorageService.requestPersistence(daoStateSnapshotCandidate,
-                    daoStateHashChainSnapshotCandidate,
-                    () -> {
-                        log.info("Persisted daoState after parsing completed at height {}. Took {} ms",
-                                daoStateService.getChainHeight(), System.currentTimeMillis() - ts);
-                    });
+            // We register a callback handler once the daoStateMonitoringService has received the missing hashes from
+            // the seed node and applied the latest hash. After that we are ready to make a snapshot and persist it.
+            daoStateMonitoringService.setCreateSnapshotHandler(() -> {
+                // As we did not have created any snapshots during initial parsing we create it now. We cannot use the past
+                // snapshot height as we have not cloned a candidate (that would cause quite some delay during parsing).
+                // The next snapshots will be created again according to the snapshot height grid (each 20 blocks).
+                // This also comes with the improvement that the user does not need to load the past blocks back to the last
+                // snapshot height. Thought it comes also with the small risk that in case of re-orgs the user need to do
+                // a resync in case the dao state would have been affected by that reorg.
+                long ts = System.currentTimeMillis();
+                daoStateSnapshotCandidate = daoStateService.getClone();
+                daoStateHashChainSnapshotCandidate = new LinkedList<>(daoStateMonitoringService.getDaoStateHashChain());
+                daoStateStorageService.requestPersistence(daoStateSnapshotCandidate,
+                        daoStateHashChainSnapshotCandidate,
+                        () -> {
+                            log.info("Persisted daoState after parsing completed at height {}. Took {} ms",
+                                    daoStateService.getChainHeight(), System.currentTimeMillis() - ts);
+                        });
+            });
         }
     }
 
