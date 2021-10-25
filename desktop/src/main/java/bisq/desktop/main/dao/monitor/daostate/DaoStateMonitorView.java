@@ -44,6 +44,9 @@ import javax.inject.Named;
 
 import javafx.scene.control.ToggleButton;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+
 import javafx.collections.ListChangeListener;
 
 import java.io.File;
@@ -61,12 +64,13 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
     private Popup warningPopup;
     private ToggleButton activationsToggle;
     private boolean hasBeenDeactivated;
+    private final BooleanProperty useDaoStateMonitoring = new SimpleBooleanProperty();
+    private final BooleanProperty reactivatedDaoStateMonitoring = new SimpleBooleanProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     @Inject
     private DaoStateMonitorView(DaoStateService daoStateService,
@@ -197,6 +201,16 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
+    protected void setResyncButtonBindings() {
+        resyncButton.visibleProperty().bind(isInConflictWithSeedNode
+                .or(isDaoStateBlockChainNotConnecting)
+                .or(reactivatedDaoStateMonitoring));
+        resyncButton.managedProperty().bind(isInConflictWithSeedNode
+                .or(isDaoStateBlockChainNotConnecting)
+                .or(reactivatedDaoStateMonitoring));
+    }
+
+    @Override
     protected void onDataUpdate() {
         isInConflictWithSeedNode.set(daoStateMonitoringService.isInConflictWithSeedNode());
         isInConflictWithNonSeedNode.set(daoStateMonitoringService.isInConflictWithNonSeedNode());
@@ -207,6 +221,16 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
                 .collect(Collectors.toList()));
 
         super.onDataUpdate();
+
+        if (reactivatedDaoStateMonitoring.get()) {
+            statusTextField.setText(Res.get("dao.monitor.reactivatedDaoStateMonitoring"));
+            statusTextField.getStyleClass().add("dao-inConflict");
+        }
+
+        if (!useDaoStateMonitoring.get()) {
+            statusTextField.setText(Res.get("dao.monitor.deactivatedDaoStateMonitoring"));
+            statusTextField.getStyleClass().add("dao-inConflict");
+        }
     }
 
     @Override
