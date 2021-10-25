@@ -68,6 +68,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     @Nullable
     private Runnable daoRequiresRestartHandler;
     private boolean requestPersistenceCalled;
+    private boolean isParseBlockChainComplete;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -116,7 +117,35 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
             // We need to execute first the daoStateMonitoringService.createHashFromBlock to get the hash created
             daoStateMonitoringService.createHashFromBlock(block);
         }
-        maybeCreateSnapshot(block);
+
+        // We only call maybeCreateSnapshot if we are done with parsing or if we have dao monitoring activated.
+        // In that case parsing is anyway slow and we prefer to have at each snapshot height a snapshot. It does not
+        // make syncing much slower by that.
+        if (preferences.isUseDaoMonitor() || isParseBlockChainComplete) {
+            maybeCreateSnapshot(block);
+        }
+    }
+
+    @Override
+    public void onParseBlockChainComplete() {
+        isParseBlockChainComplete = true;
+
+        // In case we have dao monitoring deactivated we create the snapshot after we are completed with parsing.
+        if (!preferences.isUseDaoMonitor()) {
+            // We use a thread to avoid that cloning slows down user thread.
+            new Thread(() -> {
+                Thread.currentThread().setName("Create-snapshot-after-parseBlockChainComplete");
+                long ts = System.currentTimeMillis();
+                daoStateSnapshotCandidate = daoStateService.getClone();
+                daoStateHashChainSnapshotCandidate = new LinkedList<>(daoStateMonitoringService.getDaoStateHashChain());
+                daoStateStorageService.requestPersistence(daoStateSnapshotCandidate,
+                        daoStateHashChainSnapshotCandidate,
+                        () -> {
+                            log.info("Persisted daoState after parsing completed at height {}. Took {} ms",
+                                    daoStateService.getChainHeight(), System.currentTimeMillis() - ts);
+                        });
+            }).start();
+        }
     }
 
 
