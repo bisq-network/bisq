@@ -170,6 +170,8 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     @Override
     public void onParseBlockChainComplete() {
         parseBlockChainComplete = true;
+        daoStateService.getLastBlock().ifPresent(this::checkUtxos);
+
         if (!preferences.isUseDaoMonitor()) {
             return;
         }
@@ -193,16 +195,9 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
 
     @Override
     public void onDaoStateChanged(Block block) {
-        long genesisTotalSupply = daoStateService.getGenesisTotalSupply().value;
-        long compensationIssuance = daoStateService.getTotalIssuedAmount(IssuanceType.COMPENSATION);
-        long reimbursementIssuance = daoStateService.getTotalIssuedAmount(IssuanceType.REIMBURSEMENT);
-        long totalAmountOfBurntBsq = daoStateService.getTotalAmountOfBurntBsq();
-        // confiscated funds are still in the utxo set
-        long sumUtxo = daoStateService.getUnspentTxOutputMap().values().stream().mapToLong(BaseTxOutput::getValue).sum();
-        long sumBsq = genesisTotalSupply + compensationIssuance + reimbursementIssuance - totalAmountOfBurntBsq;
-
-        if (sumBsq != sumUtxo) {
-            utxoMismatches.add(new UtxoMismatch(block.getHeight(), sumUtxo, sumBsq));
+        // During syncing we do not call checkUtxos as its a bit slow (about 4 ms)
+        if (parseBlockChainComplete) {
+            checkUtxos(block);
         }
     }
 
@@ -407,6 +402,20 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         GcUtil.maybeReleaseMemory();
 
         return changed.get();
+    }
+
+    private void checkUtxos(Block block) {
+        long genesisTotalSupply = daoStateService.getGenesisTotalSupply().value;
+        long compensationIssuance = daoStateService.getTotalIssuedAmount(IssuanceType.COMPENSATION);
+        long reimbursementIssuance = daoStateService.getTotalIssuedAmount(IssuanceType.REIMBURSEMENT);
+        long totalAmountOfBurntBsq = daoStateService.getTotalAmountOfBurntBsq();
+        // confiscated funds are still in the utxo set
+        long sumUtxo = daoStateService.getUnspentTxOutputMap().values().stream().mapToLong(BaseTxOutput::getValue).sum();
+        long sumBsq = genesisTotalSupply + compensationIssuance + reimbursementIssuance - totalAmountOfBurntBsq;
+
+        if (sumBsq != sumUtxo) {
+            utxoMismatches.add(new UtxoMismatch(block.getHeight(), sumUtxo, sumBsq));
+        }
     }
 
     private void verifyCheckpoints() {
