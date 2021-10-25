@@ -22,10 +22,11 @@ import com.google.protobuf.ByteString;
 
 import lombok.EqualsAndHashCode;
 
+// About 134 693 items with 48 bytes/item =  6.4 MB
 @EqualsAndHashCode(callSuper = true)
 public final class DaoStateHash extends StateHash {
-    public DaoStateHash(int height, byte[] hash, byte[] prevHash) {
-        super(height, hash, prevHash);
+    public DaoStateHash(int height, byte[] hash) {
+        super(height, hash);
     }
 
 
@@ -38,12 +39,10 @@ public final class DaoStateHash extends StateHash {
         return protobuf.DaoStateHash.newBuilder()
                 .setHeight(height)
                 .setHash(ByteString.copyFrom(hash))
-                .setPrevHash(ByteString.copyFrom(prevHash)).build();
+                .build();
     }
 
     public static DaoStateHash fromProto(protobuf.DaoStateHash proto) {
-        return new DaoStateHash(proto.getHeight(),
-                proto.getHash().toByteArray(),
-                proto.getPrevHash().toByteArray());
+        return new DaoStateHash(proto.getHeight(), proto.getHash().toByteArray());
     }
 }

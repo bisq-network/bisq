@@ -40,13 +40,10 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class StateHash implements PersistablePayload, NetworkPayload {
     protected final int height;
     protected final byte[] hash;
-    // For first block the prevHash is an empty byte array
-    protected final byte[] prevHash;
 
-    StateHash(int height, byte[] hash, byte[] prevHash) {
+    StateHash(int height, byte[] hash) {
         this.height = height;
         this.hash = hash;
-        this.prevHash = prevHash;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -67,7 +64,6 @@ public abstract class StateHash implements PersistablePayload, NetworkPayload {
         return "StateHash{" +
                 "\n     height=" + height +
                 ",\n     hash=" + Utilities.bytesAsHexString(hash) +
-                ",\n     prevHash=" + Utilities.bytesAsHexString(prevHash) +
                 "\n}";
     }
 }

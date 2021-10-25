@@ -184,8 +184,6 @@ public abstract class StateMonitorView<StH extends StateHash,
 
     protected abstract String getPeersTableHeader();
 
-    protected abstract String getPrevHashTableHeader();
-
     protected abstract String getHashTableHeader();
 
     protected abstract String getBlockHeightTableHeader();
@@ -363,31 +361,6 @@ public abstract class StateMonitorView<StH extends StateHash,
         tableView.getColumns().add(column);
 
 
-        column = new AutoTooltipTableColumn<>(getPrevHashTableHeader());
-        column.setMinWidth(120);
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(
-                new Callback<>() {
-
-                    @Override
-                    public TableCell<BLI, BLI> call(TableColumn<BLI,
-                            BLI> column) {
-                        return new TableCell<>() {
-                            @Override
-                            public void updateItem(final BLI item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null)
-                                    setText(item.getPrevHash());
-                                else
-                                    setText("");
-                            }
-                        };
-                    }
-                });
-        column.setComparator(Comparator.comparing(BLI::getPrevHash));
-        tableView.getColumns().add(column);
-
-
         column = new AutoTooltipTableColumn<>(getPeersTableHeader());
         column.setMinWidth(80);
         column.setMaxWidth(column.getMinWidth());
@@ -550,30 +523,6 @@ public abstract class StateMonitorView<StH extends StateHash,
                     }
                 });
         column.setComparator(Comparator.comparing(CLI::getHash));
-        conflictTableView.getColumns().add(column);
-
-
-        column = new AutoTooltipTableColumn<>(getPrevHashTableHeader());
-        column.setMinWidth(120);
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(
-                new Callback<>() {
-                    @Override
-                    public TableCell<CLI, CLI> call(
-                            TableColumn<CLI, CLI> column) {
-                        return new TableCell<>() {
-                            @Override
-                            public void updateItem(final CLI item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null)
-                                    setText(item.getPrevHash());
-                                else
-                                    setText("");
-                            }
-                        };
-                    }
-                });
-        column.setComparator(Comparator.comparing(CLI::getPrevHash));
         conflictTableView.getColumns().add(column);
 
 

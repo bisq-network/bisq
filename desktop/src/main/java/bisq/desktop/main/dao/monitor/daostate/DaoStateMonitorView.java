@@ -176,11 +176,6 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
     }
 
     @Override
-    protected String getPrevHashTableHeader() {
-        return Res.get("dao.monitor.daoState.table.prev");
-    }
-
-    @Override
     protected String getHashTableHeader() {
         return Res.get("dao.monitor.daoState.table.hash");
     }
