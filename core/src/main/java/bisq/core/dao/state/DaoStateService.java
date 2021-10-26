@@ -305,6 +305,10 @@ public class DaoStateService implements DaoSetupService {
         return Optional.ofNullable(daoState.getBlocksByHeight().get(height));
     }
 
+    public long getBlockTimeAtBlockHeight(int height) {
+        return getBlockAtHeight(height).map(Block::getTime).orElse(0L);
+    }
+
     public boolean containsBlock(Block block) {
         return getBlocks().contains(block);
     }

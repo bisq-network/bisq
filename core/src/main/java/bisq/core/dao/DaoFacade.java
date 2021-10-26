@@ -35,6 +35,7 @@ import bisq.core.dao.governance.bond.unlock.UnlockTxService;
 import bisq.core.dao.governance.myvote.MyVote;
 import bisq.core.dao.governance.myvote.MyVoteListService;
 import bisq.core.dao.governance.param.Param;
+import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.governance.proposal.ProposalConsensus;
@@ -99,14 +100,13 @@ import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -128,6 +128,7 @@ public class DaoFacade implements DaoSetupService {
     private final DaoStateService daoStateService;
     private final DaoStateMonitoringService daoStateMonitoringService;
     private final PeriodService periodService;
+    private final CycleService cycleService;
     private final MyBlindVoteListService myBlindVoteListService;
     private final MyVoteListService myVoteListService;
     private final CompensationProposalFactory compensationProposalFactory;
@@ -155,6 +156,7 @@ public class DaoFacade implements DaoSetupService {
                      DaoStateService daoStateService,
                      DaoStateMonitoringService daoStateMonitoringService,
                      PeriodService periodService,
+                     CycleService cycleService,
                      MyBlindVoteListService myBlindVoteListService,
                      MyVoteListService myVoteListService,
                      CompensationProposalFactory compensationProposalFactory,
@@ -178,6 +180,7 @@ public class DaoFacade implements DaoSetupService {
         this.daoStateService = daoStateService;
         this.daoStateMonitoringService = daoStateMonitoringService;
         this.periodService = periodService;
+        this.cycleService = cycleService;
         this.myBlindVoteListService = myBlindVoteListService;
         this.myVoteListService = myVoteListService;
         this.compensationProposalFactory = compensationProposalFactory;
@@ -438,12 +441,10 @@ public class DaoFacade implements DaoSetupService {
     }
 
     public Map<Integer, Date> getBlockStartDateByCycleIndex() {
-        AtomicInteger index = new AtomicInteger();
-        Map<Integer, Date> map = new HashMap<>();
-        periodService.getCycles()
-                .forEach(cycle -> daoStateService.getBlockAtHeight(cycle.getHeightOfFirstBlock())
-                        .ifPresent(block -> map.put(index.getAndIncrement(), new Date(block.getTime()))));
-        return map;
+        return periodService.getCycles().stream().collect(Collectors.toMap(
+                cycleService::getCycleIndex,
+                cycle -> new Date(daoStateService.getBlockTimeAtBlockHeight(cycle.getHeightOfFirstBlock()))
+        ));
     }
 
     // Because last block in request and voting phases must not be used for making a tx as it will get confirmed in the
