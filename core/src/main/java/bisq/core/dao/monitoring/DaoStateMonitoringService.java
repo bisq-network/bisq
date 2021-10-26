@@ -88,7 +88,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         DaoStateNetworkService.Listener<NewDaoStateHashMessage, GetDaoStateHashesRequest, DaoStateHash> {
 
     public interface Listener {
-        void onChangeAfterBatchProcessing();
+        void onDaoStateHashesChanged();
 
         void onCheckpointFail();
     }
@@ -235,7 +235,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         });
 
         if (hasChanged.get()) {
-            listeners.forEach(Listener::onChangeAfterBatchProcessing);
+            listeners.forEach(Listener::onDaoStateHashesChanged);
         }
     }
 
@@ -318,7 +318,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         // We only broadcast after parsing of blockchain is complete
         if (parseBlockChainComplete) {
             // We notify listeners only after batch processing to avoid performance issues at UI code
-            listeners.forEach(Listener::onChangeAfterBatchProcessing);
+            listeners.forEach(Listener::onDaoStateHashesChanged);
 
             // We delay broadcast to give peers enough time to have received the block.
             // Otherwise they would ignore our data if received block is in future to their local blockchain.
@@ -379,7 +379,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         }
 
         if (notifyListeners && changed.get()) {
-            listeners.forEach(Listener::onChangeAfterBatchProcessing);
+            listeners.forEach(Listener::onDaoStateHashesChanged);
         }
 
         GcUtil.maybeReleaseMemory();
