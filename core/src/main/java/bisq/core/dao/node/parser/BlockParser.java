@@ -113,8 +113,11 @@ public class BlockParser {
                         .ifPresent(tx -> daoStateService.onNewTxForLastBlock(block, tx)));
 
         daoStateService.onParseBlockComplete(block);
-        log.info("Parsing {} transactions at block height {} took {} ms", rawBlock.getRawTxs().size(),
-                blockHeight, System.currentTimeMillis() - startTs);
+        long duration = System.currentTimeMillis() - startTs;
+        if (duration > 10) {
+            log.info("Parsing {} transactions at block height {} took {} ms", rawBlock.getRawTxs().size(),
+                    blockHeight, duration);
+        }
 
         GcUtil.maybeReleaseMemory();
         return block;

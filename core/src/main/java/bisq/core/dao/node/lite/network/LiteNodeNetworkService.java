@@ -200,6 +200,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
 
     @Override
     public void onAllConnectionsLost() {
+        log.info("onAllConnectionsLost");
         closeAllHandlers();
         stopRetryTimer();
         stopped = true;
@@ -208,6 +209,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
 
     @Override
     public void onNewConnectionAfterAllConnectionsLost() {
+        log.info("onNewConnectionAfterAllConnectionsLost");
         closeAllHandlers();
         stopped = false;
         tryWithNewSeedNode(lastRequestedBlockHeight);
