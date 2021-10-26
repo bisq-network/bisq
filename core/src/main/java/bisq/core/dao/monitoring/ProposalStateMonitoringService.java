@@ -275,7 +275,7 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
             }
             byte[] combined = ArrayUtils.addAll(prevHash, serializedProposals);
             byte[] hash = Hash.getSha256Ripemd160hash(combined);
-            ProposalStateHash myProposalStateHash = new ProposalStateHash(blockHeight, hash, prevHash, proposals.size());
+            ProposalStateHash myProposalStateHash = new ProposalStateHash(blockHeight, hash, proposals.size());
             ProposalStateBlock proposalStateBlock = new ProposalStateBlock(myProposalStateHash);
             proposalStateBlockChain.add(proposalStateBlock);
             proposalStateHashChain.add(myProposalStateHash);

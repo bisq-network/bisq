@@ -150,11 +150,6 @@ public class BlindVoteStateMonitorView extends StateMonitorView<BlindVoteStateHa
     }
 
     @Override
-    protected String getPrevHashTableHeader() {
-        return Res.get("dao.monitor.blindVote.table.prev");
-    }
-
-    @Override
     protected String getHashTableHeader() {
         return Res.get("dao.monitor.blindVote.table.hash");
     }

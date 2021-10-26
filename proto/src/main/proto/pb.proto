@@ -2382,20 +2382,21 @@ message DaoStateStore {
 message DaoStateHash {
     int32 height = 1;
     bytes hash = 2;
-    bytes prev_hash = 3;
+    bytes prev_hash = 3  [deprecated = true];
+    bool is_self_created = 4;
 }
 
 message ProposalStateHash {
     int32 height = 1;
     bytes hash = 2;
-    bytes prev_hash = 3;
+    bytes prev_hash = 3  [deprecated = true];
     int32 num_proposals = 4;
 }
 
 message BlindVoteStateHash {
     int32 height = 1;
     bytes hash = 2;
-    bytes prev_hash = 3;
+    bytes prev_hash = 3  [deprecated = true];
     int32 num_blind_votes = 4;
 }
 

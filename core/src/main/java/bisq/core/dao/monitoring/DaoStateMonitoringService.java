@@ -310,7 +310,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         byte[] combined = ArrayUtils.addAll(prevHash, stateAsBytes);
         byte[] hash = Hash.getSha256Ripemd160hash(combined);
 
-        DaoStateHash myDaoStateHash = new DaoStateHash(height, hash, prevHash);
+        DaoStateHash myDaoStateHash = new DaoStateHash(height, hash, true);
         DaoStateBlock daoStateBlock = new DaoStateBlock(myDaoStateHash);
         daoStateBlockChain.add(daoStateBlock);
         daoStateHashChain.add(myDaoStateHash);

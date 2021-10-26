@@ -38,7 +38,6 @@ public abstract class StateInConflictListItem<T extends StateHash> {
     private final String peerAddressString;
     private final String height;
     private final String hash;
-    private final String prevHash;
     private final T stateHash;
 
     protected StateInConflictListItem(String peerAddress, T stateHash, int cycleIndex,
@@ -52,7 +51,5 @@ public abstract class StateInConflictListItem<T extends StateHash> {
                 cycleIndex + 1,
                 String.valueOf(stateHash.getHeight()));
         hash = Utilities.bytesAsHexString(stateHash.getHash());
-        prevHash = stateHash.getPrevHash().length > 0 ?
-                Utilities.bytesAsHexString(stateHash.getPrevHash()) : "-";
     }
 }

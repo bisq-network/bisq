@@ -148,11 +148,6 @@ public class ProposalStateMonitorView extends StateMonitorView<ProposalStateHash
     }
 
     @Override
-    protected String getPrevHashTableHeader() {
-        return Res.get("dao.monitor.proposal.table.prev");
-    }
-
-    @Override
     protected String getHashTableHeader() {
         return Res.get("dao.monitor.proposal.table.hash");
     }

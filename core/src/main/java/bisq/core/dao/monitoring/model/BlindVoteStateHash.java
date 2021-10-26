@@ -29,8 +29,8 @@ public final class BlindVoteStateHash extends StateHash {
     @Getter
     private final int numBlindVotes;
 
-    public BlindVoteStateHash(int cycleStartBlockHeight, byte[] hash, byte[] prevHash, int numBlindVotes) {
-        super(cycleStartBlockHeight, hash, prevHash);
+    public BlindVoteStateHash(int cycleStartBlockHeight, byte[] hash, int numBlindVotes) {
+        super(cycleStartBlockHeight, hash);
         this.numBlindVotes = numBlindVotes;
     }
 
@@ -43,14 +43,12 @@ public final class BlindVoteStateHash extends StateHash {
         return protobuf.BlindVoteStateHash.newBuilder()
                 .setHeight(height)
                 .setHash(ByteString.copyFrom(hash))
-                .setPrevHash(ByteString.copyFrom(prevHash))
                 .setNumBlindVotes(numBlindVotes).build();
     }
 
     public static BlindVoteStateHash fromProto(protobuf.BlindVoteStateHash proto) {
         return new BlindVoteStateHash(proto.getHeight(),
                 proto.getHash().toByteArray(),
-                proto.getPrevHash().toByteArray(),
                 proto.getNumBlindVotes());
     }
 
