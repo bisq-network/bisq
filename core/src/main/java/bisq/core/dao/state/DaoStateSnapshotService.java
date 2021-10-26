@@ -17,6 +17,7 @@
 
 package bisq.core.dao.state;
 
+import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.monitoring.model.DaoStateHash;
 import bisq.core.dao.state.model.DaoState;
@@ -50,7 +51,7 @@ import javax.annotation.Nullable;
  * SNAPSHOT_GRID old not less than 2 times the SNAPSHOT_GRID old.
  */
 @Slf4j
-public class DaoStateSnapshotService {
+public class DaoStateSnapshotService implements DaoSetupService {
     private static final int SNAPSHOT_GRID = 20;
 
     private final DaoStateService daoStateService;
@@ -86,6 +87,18 @@ public class DaoStateSnapshotService {
         this.daoStateMonitoringService = daoStateMonitoringService;
         this.preferences = preferences;
         this.storageDir = storageDir;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // DaoSetupService
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void addListeners() {
+    }
+
+    @Override
+    public void start() {
     }
 
 
