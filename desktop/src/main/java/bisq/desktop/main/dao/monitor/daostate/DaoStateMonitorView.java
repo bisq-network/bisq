@@ -192,6 +192,7 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
     protected void onDataUpdate() {
         isInConflictWithSeedNode.set(daoStateMonitoringService.isInConflictWithSeedNode());
         isInConflictWithNonSeedNode.set(daoStateMonitoringService.isInConflictWithNonSeedNode());
+        isDaoStateBlockChainNotConnecting.set(daoStateMonitoringService.isDaoStateBlockChainNotConnecting());
 
         listItems.setAll(daoStateMonitoringService.getDaoStateBlockChain().stream()
                 .map(this::getStateBlockListItem)

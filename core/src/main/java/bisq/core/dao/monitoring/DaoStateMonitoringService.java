@@ -31,6 +31,7 @@ import bisq.core.dao.state.GenesisTxInfo;
 import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.IssuanceType;
+import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
@@ -110,6 +111,8 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     @Getter
     private boolean isInConflictWithSeedNode;
     @Getter
+    private boolean daoStateBlockChainNotConnecting;
+    @Getter
     private final ObservableList<UtxoMismatch> utxoMismatches = FXCollections.observableArrayList();
 
     private final List<Checkpoint> checkpoints = Arrays.asList(
@@ -120,6 +123,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     private int numCalls;
     private long accumulatedDuration;
 
+    private final Preferences preferences;
     private final File storageDir;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -131,11 +135,13 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                                      DaoStateNetworkService daoStateNetworkService,
                                      GenesisTxInfo genesisTxInfo,
                                      SeedNodeRepository seedNodeRepository,
+                                     Preferences preferences,
                                      @Named(Config.STORAGE_DIR) File storageDir,
                                      @Named(Config.IGNORE_DEV_MSG) boolean ignoreDevMsg) {
         this.daoStateService = daoStateService;
         this.daoStateNetworkService = daoStateNetworkService;
         this.genesisTxInfo = genesisTxInfo;
+        this.preferences = preferences;
         this.storageDir = storageDir;
         this.ignoreDevMsg = ignoreDevMsg;
         seedNodeAddresses = seedNodeRepository.getSeedNodeAddresses().stream()

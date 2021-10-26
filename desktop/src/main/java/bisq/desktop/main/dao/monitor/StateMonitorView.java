@@ -99,6 +99,7 @@ public abstract class StateMonitorView<StH extends StateHash,
     private Subscription selectedItemSubscription;
     protected final BooleanProperty isInConflictWithNonSeedNode = new SimpleBooleanProperty();
     protected final BooleanProperty isInConflictWithSeedNode = new SimpleBooleanProperty();
+    protected final BooleanProperty isDaoStateBlockChainNotConnecting = new SimpleBooleanProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -134,8 +135,10 @@ public abstract class StateMonitorView<StH extends StateHash,
 
         daoStateService.addDaoStateListener(this);
 
-        resyncButton.visibleProperty().bind(isInConflictWithSeedNode);
-        resyncButton.managedProperty().bind(isInConflictWithSeedNode);
+        resyncButton.visibleProperty().bind(isInConflictWithSeedNode
+                .or(isDaoStateBlockChainNotConnecting));
+        resyncButton.managedProperty().bind(isInConflictWithSeedNode
+                .or(isDaoStateBlockChainNotConnecting));
 
         resyncButton.setOnAction(ev -> resyncDaoState());
 
@@ -270,6 +273,9 @@ public abstract class StateMonitorView<StH extends StateHash,
         } else if (isInConflictWithNonSeedNode.get()) {
             statusTextField.setText(Res.get("dao.monitor.isInConflictWithNonSeedNode"));
             statusTextField.getStyleClass().remove("dao-inConflict");
+        } else if (isDaoStateBlockChainNotConnecting.get()) {
+            statusTextField.setText(Res.get("dao.monitor.isDaoStateBlockChainNotConnecting"));
+            statusTextField.getStyleClass().add("dao-inConflict");
         } else {
             statusTextField.setText(Res.get("dao.monitor.daoStateInSync"));
             statusTextField.getStyleClass().remove("dao-inConflict");
@@ -399,6 +405,7 @@ public abstract class StateMonitorView<StH extends StateHash,
                 });
         column.setComparator(Comparator.comparing(e -> e.getStateBlock().getInConflictMap().size()));
         tableView.getColumns().add(column);
+
 
         column = new AutoTooltipTableColumn<>("");
         column.setMinWidth(40);

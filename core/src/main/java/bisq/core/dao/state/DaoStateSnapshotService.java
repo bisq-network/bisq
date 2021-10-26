@@ -22,6 +22,7 @@ import bisq.core.dao.monitoring.model.DaoStateHash;
 import bisq.core.dao.state.model.DaoState;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.storage.DaoStateStorageService;
+import bisq.core.user.Preferences;
 
 import bisq.common.config.Config;
 import bisq.common.util.GcUtil;
@@ -56,6 +57,7 @@ public class DaoStateSnapshotService {
     private final GenesisTxInfo genesisTxInfo;
     private final DaoStateStorageService daoStateStorageService;
     private final DaoStateMonitoringService daoStateMonitoringService;
+    private final Preferences preferences;
     private final File storageDir;
 
     private DaoState daoStateSnapshotCandidate;
@@ -76,11 +78,13 @@ public class DaoStateSnapshotService {
                                    GenesisTxInfo genesisTxInfo,
                                    DaoStateStorageService daoStateStorageService,
                                    DaoStateMonitoringService daoStateMonitoringService,
+                                   Preferences preferences,
                                    @Named(Config.STORAGE_DIR) File storageDir) {
         this.daoStateService = daoStateService;
         this.genesisTxInfo = genesisTxInfo;
         this.daoStateStorageService = daoStateStorageService;
         this.daoStateMonitoringService = daoStateMonitoringService;
+        this.preferences = preferences;
         this.storageDir = storageDir;
     }
 
