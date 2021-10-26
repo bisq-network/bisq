@@ -24,7 +24,6 @@ import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 
 import bisq.common.app.DevEnv;
-import bisq.common.util.GcUtil;
 
 import org.bitcoinj.core.Coin;
 
@@ -119,7 +118,6 @@ public class BlockParser {
                     blockHeight, duration);
         }
 
-        GcUtil.maybeReleaseMemory();
         return block;
     }
 
