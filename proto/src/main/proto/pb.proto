@@ -1945,6 +1945,7 @@ message PreferencesPayload {
     bool show_offers_matching_my_accounts = 59;
     bool deny_api_taker = 60;
     bool notify_on_pre_release = 61;
+    bool use_full_mode_dao_monitor = 62;
 }
 
 message AutoConfirmSettings {

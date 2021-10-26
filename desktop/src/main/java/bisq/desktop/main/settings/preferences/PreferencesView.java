@@ -48,6 +48,7 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
+import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
@@ -122,13 +123,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     private ToggleButton showOwnOffersInOfferBook, useAnimations, useDarkMode, sortMarketCurrenciesNumerically,
             avoidStandbyMode, useCustomFee, autoConfirmXmrToggle, hideNonAccountPaymentMethodsToggle, denyApiTakerToggle,
-            notifyOnPreReleaseToggle;
+            notifyOnPreReleaseToggle, isDaoFullNodeToggleButton, daoActivatedToggleButton, fullModeDaoMonitorToggleButton;
     private int gridRow = 0;
     private int displayCurrenciesGridRowIndex = 0;
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, ignoreDustThresholdInputTextField,
-            autoConfRequiredConfirmationsTf, autoConfServiceAddressTf, autoConfTradeLimitTf, /*referralIdInputTextField,*/
+            autoConfRequiredConfirmationsTf, autoConfServiceAddressTf, autoConfTradeLimitTf,
             rpcUserTextField, blockNotifyPortTextField;
-    private ToggleButton isDaoFullNodeToggleButton, daoActivatedToggleButton;
     private PasswordTextField rpcPwTextField;
     private TitledGroupBg daoOptionsTitledGroupBg;
 
@@ -623,7 +623,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void initializeDaoOptions() {
-        int rowSpan = DevEnv.isDaoActivated() ? 5 : 1;
+        int rowSpan = DevEnv.isDaoActivated() ? 6 : 1;
         daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, rowSpan,
                 Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
         daoActivatedToggleButton = addSlideToggleButton(root, gridRow,
@@ -631,6 +631,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         if (!DevEnv.isDaoActivated()) {
             return;
         }
+
+        fullModeDaoMonitorToggleButton = addSlideToggleButton(root, ++gridRow,
+                Res.get("setting.preferences.dao.fullModeDaoMonitor"));
 
         resyncDaoFromResourcesButton = addButton(root, ++gridRow, Res.get("setting.preferences.dao.resyncFromResources.label"));
         resyncDaoFromResourcesButton.setMaxWidth(Double.MAX_VALUE);
@@ -1021,6 +1024,21 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             return;
         }
 
+        fullModeDaoMonitorToggleButton.setSelected(preferences.isUseFullModeDaoMonitor());
+        fullModeDaoMonitorToggleButton.setOnAction(e -> {
+            preferences.setUseFullModeDaoMonitor(fullModeDaoMonitorToggleButton.isSelected());
+            if (fullModeDaoMonitorToggleButton.isSelected()) {
+                String key = "fullModeDaoMonitor";
+                if (DontShowAgainLookup.showAgain(key)) {
+                    new Popup().information(Res.get("setting.preferences.dao.fullModeDaoMonitor.popup"))
+                            .width(1000)
+                            .dontShowAgainId(key)
+                            .closeButtonText(Res.get("shared.iUnderstand"))
+                            .show();
+                }
+            }
+        });
+
         boolean daoFullNode = preferences.isDaoFullNode();
         isDaoFullNodeToggleButton.setSelected(daoFullNode);
 
@@ -1173,6 +1191,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             return;
         }
 
+        fullModeDaoMonitorToggleButton.setOnAction(null);
         resyncDaoFromResourcesButton.setOnAction(null);
         resyncDaoFromGenesisButton.setOnAction(null);
         bsqAverageTrimThresholdTextField.textProperty().removeListener(bsqAverageTrimThresholdListener);

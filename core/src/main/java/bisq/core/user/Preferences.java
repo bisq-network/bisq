@@ -800,6 +800,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         requestPersistence();
     }
 
+    public void setUseFullModeDaoMonitor(boolean value) {
+        prefPayload.setUseFullModeDaoMonitor(value);
+        requestPersistence();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -1115,5 +1120,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setDenyApiTaker(boolean value);
 
         void setNotifyOnPreRelease(boolean value);
+
+        void setUseFullModeDaoMonitor(boolean value);
     }
 }
