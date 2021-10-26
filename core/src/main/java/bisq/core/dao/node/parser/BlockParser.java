@@ -135,6 +135,8 @@ public class BlockParser {
     }
 
     private boolean isBlockAlreadyAdded(RawBlock rawBlock) {
-        return daoStateService.isBlockHashKnown(rawBlock.getHash());
+        return daoStateService.getBlockAtHeight(rawBlock.getHeight())
+                .map(block -> block.getHash().equals(rawBlock.getHash()))
+                .orElse(false);
     }
 }

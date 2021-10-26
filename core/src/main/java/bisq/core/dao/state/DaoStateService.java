@@ -286,17 +286,6 @@ public class DaoStateService implements DaoSetupService {
         return daoState.getBlocks();
     }
 
-    /**
-     * Whether specified block hash belongs to a block we already know about.
-     *
-     * @param blockHash The hash of a {@link Block}.
-     * @return True if the hash belongs to a {@link Block} we know about, otherwise
-     * {@code false}.
-     */
-    public boolean isBlockHashKnown(String blockHash) {
-        return daoState.getBlockHashes().contains(blockHash);
-    }
-
     public Optional<Block> getLastBlock() {
         if (!getBlocks().isEmpty())
             return Optional.of(daoState.getLastBlock());
