@@ -46,7 +46,6 @@ import lombok.extern.slf4j.Slf4j;
 public class DaoStateStorageService extends StoreService<DaoStateStore> {
     private static final String FILE_NAME = "DaoStateStore";
 
-    private final DaoState daoState;
     private final DaoStateMonitoringService daoStateMonitoringService;
 
 
@@ -56,12 +55,10 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
 
     @Inject
     public DaoStateStorageService(ResourceDataStoreService resourceDataStoreService,
-                                  DaoState daoState,
                                   DaoStateMonitoringService daoStateMonitoringService,
                                   @Named(Config.STORAGE_DIR) File storageDir,
                                   PersistenceManager<DaoStateStore> persistenceManager) {
         super(storageDir, persistenceManager);
-        this.daoState = daoState;
         this.daoStateMonitoringService = daoStateMonitoringService;
 
         resourceDataStoreService.addService(this);
