@@ -71,6 +71,10 @@ public class DaoState implements PersistablePayload {
         return DaoState.fromProto(daoState.getBsqStateBuilder().build());
     }
 
+    public static protobuf.DaoState getCloneAsProto(DaoState daoState) {
+        return daoState.getBsqStateBuilder().build();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Fields

@@ -149,6 +149,10 @@ public class DaoStateService implements DaoSetupService {
         return DaoState.getClone(daoState);
     }
 
+    public protobuf.DaoState getCloneAsProto() {
+        return DaoState.getCloneAsProto(daoState);
+    }
+
     public byte[] getSerializedStateForHashChain() {
         return daoState.getSerializedStateForHashChain();
     }

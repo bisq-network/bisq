@@ -61,7 +61,8 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     private final Preferences preferences;
     private final File storageDir;
 
-    private DaoState daoStateSnapshotCandidate;
+    private protobuf.DaoState snapshotCandidate;
+    private int snapshotCandidateHeight;
     private LinkedList<DaoStateHash> daoStateHashChainSnapshotCandidate = new LinkedList<>();
     private int chainHeightOfLastApplySnapshot;
     @Setter
@@ -144,7 +145,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                 // We do not keep a copy of the clone as we use it immediately for persistence.
                 GcUtil.maybeReleaseMemory();
                 log.info("Create snapshot at height {}", daoStateService.getChainHeight());
-                daoStateStorageService.requestPersistence(daoStateService.getClone(),
+                daoStateStorageService.requestPersistence(daoStateService.getCloneAsProto(),
                         new LinkedList<>(daoStateMonitoringService.getDaoStateHashChain()),
                         () -> {
                             log.info("Persisted daoState after parsing completed at height {}. Took {} ms",
@@ -166,8 +167,8 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
 
         // Either we don't have a snapshot candidate yet, or if we have one the height at that snapshot candidate must be
         // different to our current height.
-        boolean noSnapshotCandidateOrDifferentHeight = daoStateSnapshotCandidate == null ||
-                daoStateSnapshotCandidate.getChainHeight() != chainHeight;
+        boolean noSnapshotCandidateOrDifferentHeight = snapshotCandidate == null ||
+                snapshotCandidateHeight != chainHeight;
         if (isSnapshotHeight(chainHeight) &&
                 !daoStateService.getBlocks().isEmpty() &&
                 isValidHeight(daoStateService.getBlockHeightOfLastBlock()) &&
@@ -190,10 +191,10 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                 return;
             }
 
-            if (daoStateSnapshotCandidate != null) {
+            if (snapshotCandidate != null) {
                 persist();
             } else {
-                createClones();
+                createSnapshot();
             }
         }
     }
@@ -201,39 +202,40 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     private void persist() {
         long ts = System.currentTimeMillis();
         readyForPersisting = false;
-        daoStateStorageService.requestPersistence(daoStateSnapshotCandidate,
+        daoStateStorageService.requestPersistence(snapshotCandidate,
                 daoStateHashChainSnapshotCandidate,
                 () -> {
                     log.info("Serializing snapshotCandidate for writing to Disc at chainHeight {} took {} ms.\n" +
-                                    "daoStateSnapshotCandidate.height={};\n" +
+                                    "snapshotCandidateHeight={};\n" +
                                     "daoStateHashChainSnapshotCandidate.height={}",
                             daoStateService.getChainHeight(),
                             System.currentTimeMillis() - ts,
-                            daoStateSnapshotCandidate != null ? daoStateSnapshotCandidate.getChainHeight() : "N/A",
+                            snapshotCandidateHeight,
                             daoStateHashChainSnapshotCandidate != null && !daoStateHashChainSnapshotCandidate.isEmpty() ?
                                     daoStateHashChainSnapshotCandidate.getLast().getHeight() : "N/A");
 
-                    createClones();
+                    createSnapshot();
                     readyForPersisting = true;
                 });
     }
 
-    private void createClones() {
+    private void createSnapshot() {
         long ts = System.currentTimeMillis();
         // Now we clone and keep it in memory for the next trigger event
         // We do not fit into the target grid of 20 blocks as we get called here once persistence is
         // done from the write thread (mapped back to user thread).
         // As we want to prevent to maintain 2 clones we prefer that strategy. If we would do the clone
         // after the persist call we would keep an additional copy in memory.
-        daoStateSnapshotCandidate = daoStateService.getClone();
+        snapshotCandidate = daoStateService.getCloneAsProto();
+        snapshotCandidateHeight = daoStateService.getChainHeight();
         daoStateHashChainSnapshotCandidate = new LinkedList<>(daoStateMonitoringService.getDaoStateHashChain());
         GcUtil.maybeReleaseMemory();
 
         log.info("Cloned new snapshotCandidate at chainHeight {} took {} ms.\n" +
-                        "daoStateSnapshotCandidate.height={};\n" +
+                        "snapshotCandidateHeight={};\n" +
                         "daoStateHashChainSnapshotCandidate.height={}",
                 daoStateService.getChainHeight(), System.currentTimeMillis() - ts,
-                daoStateSnapshotCandidate != null ? daoStateSnapshotCandidate.getChainHeight() : "N/A",
+                snapshotCandidateHeight,
                 daoStateHashChainSnapshotCandidate != null && !daoStateHashChainSnapshotCandidate.isEmpty() ?
                         daoStateHashChainSnapshotCandidate.getLast().getHeight() : "N/A");
     }

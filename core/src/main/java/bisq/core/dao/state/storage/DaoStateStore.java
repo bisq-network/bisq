@@ -18,7 +18,6 @@
 package bisq.core.dao.state.storage;
 
 import bisq.core.dao.monitoring.model.DaoStateHash;
-import bisq.core.dao.state.model.DaoState;
 
 import bisq.common.proto.persistable.PersistableEnvelope;
 
@@ -38,18 +37,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class DaoStateStore implements PersistableEnvelope {
-    // DaoState is always a clone and must not be used for read access beside initial read from disc when we apply
-    // the snapshot!
     @Getter
     @Setter
     @Nullable
-    private DaoState daoState;
+    private protobuf.DaoState daoStateAsProto;
+
     @Getter
     @Setter
     private LinkedList<DaoStateHash> daoStateHashChain;
 
-    DaoStateStore(@Nullable DaoState daoState, LinkedList<DaoStateHash> daoStateHashChain) {
-        this.daoState = daoState;
+    DaoStateStore(@Nullable protobuf.DaoState daoStateAsProto, LinkedList<DaoStateHash> daoStateHashChain) {
+        this.daoStateAsProto = daoStateAsProto;
         this.daoStateHashChain = daoStateHashChain;
     }
 
@@ -59,9 +57,9 @@ public class DaoStateStore implements PersistableEnvelope {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Message toProtoMessage() {
-        checkNotNull(daoState, "daoState must not be null when toProtoMessage is invoked");
+        checkNotNull(daoStateAsProto, "daoStateAsProto must not be null when toProtoMessage is invoked");
         protobuf.DaoStateStore.Builder builder = protobuf.DaoStateStore.newBuilder()
-                .setDaoState(daoState.getBsqStateBuilder())
+                .setDaoState(daoStateAsProto)
                 .addAllDaoStateHash(daoStateHashChain.stream()
                         .map(DaoStateHash::toProtoMessage)
                         .collect(Collectors.toList()));
@@ -76,6 +74,6 @@ public class DaoStateStore implements PersistableEnvelope {
                 new LinkedList<>(proto.getDaoStateHashList().stream()
                         .map(DaoStateHash::fromProto)
                         .collect(Collectors.toList()));
-        return new DaoStateStore(DaoState.fromProto(proto.getDaoState()), daoStateHashList);
+        return new DaoStateStore(proto.getDaoState(), daoStateHashList);
     }
 }

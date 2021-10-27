@@ -74,15 +74,15 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         return FILE_NAME;
     }
 
-    public void requestPersistence(DaoState daoState,
+    public void requestPersistence(protobuf.DaoState daoStateAsProto,
                                    LinkedList<DaoStateHash> daoStateHashChain,
                                    Runnable completeHandler) {
-        if (daoState == null) {
+        if (daoStateAsProto == null) {
             completeHandler.run();
             return;
         }
 
-        store.setDaoState(daoState);
+        store.setDaoStateAsProto(daoStateAsProto);
         store.setDaoStateHashChain(daoStateHashChain);
 
         // We let the persistence run in a thread to avoid the slow protobuf serialisation to happen on the user
@@ -90,7 +90,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         new Thread(() -> {
             Thread.currentThread().setName("Serialize and write DaoState");
             persistenceManager.persistNow(() -> {
-                // After we have written to disk we remove the daoState in the store to avoid that it stays in
+                // After we have written to disk we remove the daoStateAsProto in the store to avoid that it stays in
                 // memory there until the next persist call.
                 pruneStore();
                 completeHandler.run();
@@ -99,13 +99,18 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     }
 
     public void pruneStore() {
-        store.setDaoState(null);
+        store.setDaoStateAsProto(null);
         store.setDaoStateHashChain(null);
         GcUtil.maybeReleaseMemory();
     }
 
     public DaoState getPersistedBsqState() {
-        return store.getDaoState();
+        protobuf.DaoState daoStateAsProto = store.getDaoStateAsProto();
+        if (daoStateAsProto != null) {
+            return DaoState.fromProto(daoStateAsProto);
+        } else {
+            return new DaoState();
+        }
     }
 
     public LinkedList<DaoStateHash> getPersistedDaoStateHashChain() {
@@ -113,7 +118,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     }
 
     public void resyncDaoStateFromGenesis(Runnable resultHandler) {
-        store.setDaoState(new DaoState());
+        store.setDaoStateAsProto(DaoState.getCloneAsProto(new DaoState()));
         store.setDaoStateHashChain(new LinkedList<>());
         persistenceManager.persistNow(resultHandler);
     }
