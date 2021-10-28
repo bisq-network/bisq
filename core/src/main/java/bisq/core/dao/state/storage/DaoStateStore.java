@@ -76,4 +76,10 @@ public class DaoStateStore implements PersistableEnvelope {
                         .collect(Collectors.toList()));
         return new DaoStateStore(proto.getDaoState(), daoStateHashList);
     }
+
+
+    public void releaseMemory() {
+        daoStateAsProto = null;
+        daoStateHashChain = null;
+    }
 }

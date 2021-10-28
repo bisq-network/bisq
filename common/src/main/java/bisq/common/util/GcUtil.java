@@ -18,7 +18,6 @@
 package bisq.common.util;
 
 import bisq.common.UserThread;
-import bisq.common.app.DevEnv;
 
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +28,8 @@ public class GcUtil {
     private static boolean DISABLE_GC_CALLS = false;
     private static int TRIGGER_MEM = 1000;
     private static int TRIGGER_MAX_MEM = 3000;
+    private static int totalInvocations;
+    private static long totalGCTime;
 
     public static void autoReleaseMemory() {
         if (DISABLE_GC_CALLS)
@@ -59,20 +60,25 @@ public class GcUtil {
         long preGcMemory = Runtime.getRuntime().totalMemory();
         if (preGcMemory > trigger * 1024 * 1024) {
             System.gc();
+            totalInvocations++;
             long postGcMemory = Runtime.getRuntime().totalMemory();
-            log.info("GC reduced memory by {}. Total memory before/after: {}/{}. Took {} ms.",
+            long duration = System.currentTimeMillis() - ts;
+            totalGCTime += duration;
+            log.info("GC reduced memory by {}. Total memory before/after: {}/{}. Took {} ms. Total GC invocations: {} / Total GC time {} sec",
                     Utilities.readableFileSize(preGcMemory - postGcMemory),
                     Utilities.readableFileSize(preGcMemory),
                     Utilities.readableFileSize(postGcMemory),
-                    System.currentTimeMillis() - ts);
-            if (DevEnv.isDevMode()) {
+                    duration,
+                    totalInvocations,
+                    totalGCTime / 1000d);
+           /* if (DevEnv.isDevMode()) {
                 try {
                     // To see from where we got called
                     throw new RuntimeException("Dummy Exception for print stacktrace at maybeReleaseMemory");
                 } catch (Throwable t) {
                     t.printStackTrace();
                 }
-            }
+            }*/
         }
     }
 }

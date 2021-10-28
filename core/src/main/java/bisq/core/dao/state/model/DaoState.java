@@ -71,8 +71,8 @@ public class DaoState implements PersistablePayload {
         return DaoState.fromProto(daoState.getBsqStateBuilder().build());
     }
 
-    public static protobuf.DaoState getCloneAsProto(DaoState daoState) {
-        return daoState.getBsqStateBuilder().build();
+    public static protobuf.DaoState getBsqStateCloneExcludingBlocks(DaoState daoState) {
+        return daoState.getBsqStateBuilderExcludingBlocks().build();
     }
 
 
@@ -210,6 +210,10 @@ public class DaoState implements PersistablePayload {
         LinkedList<Block> blocks = proto.getBlocksList().stream()
                 .map(Block::fromProto)
                 .collect(Collectors.toCollection(LinkedList::new));
+        return fromProto(proto, blocks);
+    }
+
+    public static DaoState fromProto(protobuf.DaoState proto, LinkedList<Block> blocks) {
         LinkedList<Cycle> cycles = proto.getCyclesList().stream()
                 .map(Cycle::fromProto).collect(Collectors.toCollection(LinkedList::new));
         TreeMap<TxOutputKey, TxOutput> unspentTxOutputMap = new TreeMap<>(proto.getUnspentTxOutputMapMap().entrySet().stream()

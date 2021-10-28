@@ -63,6 +63,7 @@ configure(subprojects) {
         kotlinVersion = '1.3.41'
         knowmXchangeVersion = '4.4.2'
         langVersion = '3.11'
+        leveldbVersion = '1.2'
         logbackVersion = '1.1.11'
         loggingVersion = '1.2'
         lombokVersion = '1.18.12'
@@ -238,7 +239,7 @@ configure(project(':common')) {
 
     javafx {
         version = "$javafxVersion"
-        modules =  ['javafx.graphics']
+        modules = ['javafx.graphics']
     }
 
     dependencies {
@@ -264,6 +265,10 @@ configure(project(':common')) {
             exclude(module: 'okhttp')
             exclude(module: 'okio')
         }
+        implementation("io.github.pcmind:leveldb:$leveldbVersion") {
+            exclude(module: 'guava')
+        }
+
         runtimeOnly("io.grpc:grpc-netty-shaded:$grpcVersion") {
             exclude(module: 'guava')
             exclude(module: 'animal-sniffer-annotations')
@@ -284,7 +289,7 @@ configure(project(':p2p')) {
 
     javafx {
         version = "$javafxVersion"
-        modules =  ['javafx.base']
+        modules = ['javafx.base']
     }
 
     dependencies {
@@ -298,6 +303,7 @@ configure(project(':p2p')) {
         implementation("org.apache.httpcomponents:httpclient:$httpclientVersion") {
             exclude(module: 'commons-codec')
         }
+
         compile "org.fxmisc.easybind:easybind:$easybindVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
@@ -324,7 +330,7 @@ configure(project(':core')) {
 
     javafx {
         version = "$javafxVersion"
-        modules =  ['javafx.base']
+        modules = ['javafx.base']
     }
 
     dependencies {
@@ -411,7 +417,7 @@ configure(project(':desktop')) {
 
     javafx {
         version = "$javafxVersion"
-        modules =  ['javafx.controls', 'javafx.fxml']
+        modules = ['javafx.controls', 'javafx.fxml']
     }
 
     version = '1.7.5-SNAPSHOT'
@@ -459,7 +465,7 @@ configure(project(':monitor')) {
 
     javafx {
         version = "$javafxVersion"
-        modules =  ['javafx.base']
+        modules = ['javafx.base']
     }
 
     mainClassName = 'bisq.monitor.Monitor'

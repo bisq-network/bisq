@@ -1469,6 +1469,7 @@ message PersistableEnvelope {
         MailboxMessageList mailbox_message_list = 32;
         IgnoredMailboxMap ignored_mailbox_map = 33;
         RemovedPayloadsMap removed_payloads_map = 34;
+        BsqBlockStore bsq_block_store = 35;
     }
 }
 
@@ -1994,6 +1995,10 @@ message BaseBlock {
         RawBlock raw_block = 5;
         Block block = 6;
     }
+}
+
+message BsqBlockStore {
+   repeated BaseBlock blocks = 1;
 }
 
 message RawBlock {
