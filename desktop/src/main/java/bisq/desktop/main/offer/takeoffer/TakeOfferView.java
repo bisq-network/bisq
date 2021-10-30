@@ -939,7 +939,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         if (!isPreferredFeeCurrencyBtc && !isBsqForFeeAvailable) {
             Coin takerFee = model.dataModel.getTakerFee(false);
             String missingBsq = null;
-            if((daoFacade.getChainHeight() != bsqWalletService.getBestChainHeight()) || (bsqWalletService.getBestChainHeight() == 0))
+            if ((daoFacade.getChainHeight() != bsqWalletService.getBestChainHeight()) || (bsqWalletService.getBestChainHeight() == 0))
                 message = Res.get("popup.warning.whileSynchronizingNoBsqFundsForBtcFeePayment");
             else if (takerFee != null)
                 missingBsq = Res.get("popup.warning.insufficientBsqFundsForBtcFeePayment",
