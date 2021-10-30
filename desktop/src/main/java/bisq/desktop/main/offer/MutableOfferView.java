@@ -323,7 +323,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         updatePriceToggle();
 
         if (!model.getDataModel().isMakerFeeValid() && model.getDataModel().getMakerFee() != null)
-            showInsufficientBsqFundsForBtcFeePaymentPopup();
+            showNoBsqFundsAvailableForBtcFeePaymentPopup();
     }
 
     // called form parent as the view does not get notified when the tab is closed
@@ -356,7 +356,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                     });
                 }
             } else {
-                showInsufficientBsqFundsForBtcFeePaymentPopup();
+                howNoBsqFundsAvailableForBtcFeePaymentPopup();
             }
         }
     }
