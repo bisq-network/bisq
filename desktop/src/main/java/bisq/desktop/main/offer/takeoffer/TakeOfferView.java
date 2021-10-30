@@ -430,7 +430,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         }
 
         if (!model.dataModel.isTakerFeeValid()) {
-            showInsufficientBsqFundsForBtcFeePaymentPopup();
+            showNoBsqFundsAvailabeForBtcFeePaymentPopup();
             return;
         }
 
@@ -941,7 +941,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             String missingBsq = null;
             if((daoFacade.getChainHeight() != bsqWalletService.getBestChainHeight()) || (bsqWalletService.getBestChainHeight() == 0))
                 message = Res.get("popup.warning.whileSynchronizingNoBsqFundsForBtcFeePayment");
-            else if (takerFee != null) 
+            else if (takerFee != null)
                 missingBsq = Res.get("popup.warning.insufficientBsqFundsForBtcFeePayment",
                         bsqFormatter.formatCoinWithCode(takerFee.subtract(model.dataModel.getUsableBsqBalance())));
             else if (model.dataModel.getUsableBsqBalance().isZero())
@@ -1237,7 +1237,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private void showNoBsqFundsAvailabeForBtcFeePaymentPopup() {
         Coin takerFee = model.dataModel.getTakerFee(false);
         String message = null;
-        if((daoFacade.getChainHeight() != bsqWalletService.getBestChainHeight()) || (bsqWalletService.getBestChainHeight() == 0)){
+        if ((daoFacade.getChainHeight() != bsqWalletService.getBestChainHeight()) || (bsqWalletService.getBestChainHeight() == 0)){
             message = Res.get("popup.warning.whileSynchronizingNoBsqFundsForBtcFeePayment");
         else if (takerFee != null) {
             message = Res.get("popup.warning.insufficientBsqFundsForBtcFeePayment",
