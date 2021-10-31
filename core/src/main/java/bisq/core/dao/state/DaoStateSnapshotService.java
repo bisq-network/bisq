@@ -44,6 +44,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * Manages periodical snapshots of the DaoState.
  * At startup we apply a snapshot if available.
@@ -149,9 +151,13 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                 int chainHeight = daoStateService.getChainHeight();
                 log.info("Create snapshot at height {}", chainHeight);
                 // We do not keep the data in our fields to enable gc as soon its released in the store
-                daoStateStorageService.requestPersistence(getDaoStateForSnapshot(),
-                        getBlocksForSnapshot(),
-                        getHashChainForSnapshot(),
+
+                protobuf.DaoState daoStateForSnapshot = getDaoStateForSnapshot();
+                List<Block> blocksForSnapshot = getBlocksForSnapshot();
+                LinkedList<DaoStateHash> hashChainForSnapshot = getHashChainForSnapshot();
+                daoStateStorageService.requestPersistence(daoStateForSnapshot,
+                        blocksForSnapshot,
+                        hashChainForSnapshot,
                         () -> {
                             GcUtil.maybeReleaseMemory();
                             log.info("Persisted daoState after parsing completed at height {}. Took {} ms",
@@ -243,6 +249,8 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
             int chainHeightOfPersisted = persistedBsqState.getChainHeight();
             if (!persistedBsqState.getBlocks().isEmpty()) {
                 int heightOfLastBlock = persistedBsqState.getLastBlock().getHeight();
+                checkArgument(heightOfLastBlock == chainHeightOfPersisted,
+                        "chainHeightOfPersisted must be same as heightOfLastBlock");
                 if (isValidHeight(heightOfLastBlock)) {
                     if (chainHeightOfLastApplySnapshot != chainHeightOfPersisted) {
                         chainHeightOfLastApplySnapshot = chainHeightOfPersisted;
@@ -265,6 +273,8 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                         "We remove all dao store files and shutdown. " +
                         "After a restart resource files will be applied if available.");
                 resyncDaoStateFromResources();
+            } else {
+                log.info("No Bsq blocks in DaoState. Expected if not data are provided yet from resources or persisted data.");
             }
         } else {
             log.info("Try to apply snapshot but no stored snapshot available. That is expected at first blocks.");

@@ -34,8 +34,6 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
 @Slf4j
 public class BlocksPersistence {
     public static final int BUCKET_SIZE = 1000; // results in about 1 MB files and about 1 new file per week
@@ -69,7 +67,7 @@ public class BlocksPersistence {
                 int first = bucketIndex * BUCKET_SIZE - BUCKET_SIZE + 1;
                 int last = bucketIndex * BUCKET_SIZE;
                 File storageFile = new File(storageDir, fileName + "_" + first + "-" + last);
-                writeToDisk(storageFile, new BsqBlockStore(temp), null);
+                writeToDisk(storageFile, new BsqBlockStore(temp));
                 temp = new ArrayList<>();
             }
         }
@@ -78,7 +76,7 @@ public class BlocksPersistence {
             int first = bucketIndex * BUCKET_SIZE - BUCKET_SIZE + 1;
             int last = bucketIndex * BUCKET_SIZE;
             File storageFile = new File(storageDir, fileName + "_" + first + "-" + last);
-            writeToDisk(storageFile, new BsqBlockStore(temp), null);
+            writeToDisk(storageFile, new BsqBlockStore(temp));
 
         }
         log.info("Write {} blocks to disk took {} msec", protobufBlocks.size(), System.currentTimeMillis() - ts);
@@ -130,9 +128,7 @@ public class BlocksPersistence {
         }
     }
 
-    private void writeToDisk(File storageFile,
-                             BsqBlockStore bsqBlockStore,
-                             @Nullable Runnable completeHandler) {
+    private void writeToDisk(File storageFile, BsqBlockStore bsqBlockStore) {
         File tempFile = null;
         FileOutputStream fileOutputStream = null;
         try {
@@ -176,9 +172,6 @@ public class BlocksPersistence {
             } catch (IOException e) {
                 e.printStackTrace();
                 log.error("Cannot close resources." + e.getMessage());
-            }
-            if (completeHandler != null) {
-                completeHandler.run();
             }
         }
     }

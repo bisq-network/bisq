@@ -41,6 +41,8 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * Manages persistence of the daoState.
  */
@@ -125,7 +127,11 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
                     if (daoStateAsProto != null) {
                         LinkedList<Block> list;
                         if (daoStateAsProto.getBlocksList().isEmpty()) {
-                            list = bsqBlocksStorageService.readBlocks(daoStateAsProto.getChainHeight());
+                            int chainHeight = daoStateAsProto.getChainHeight();
+                            list = bsqBlocksStorageService.readBlocks(chainHeight);
+                            int heightOfLastBlock = list.getLast().getHeight();
+                            checkArgument(heightOfLastBlock == chainHeight,
+                                    "heightOfLastBlock must match chainHeight");
                         } else {
                             list = bsqBlocksStorageService.migrateBlocks(daoStateAsProto.getBlocksList());
                         }
