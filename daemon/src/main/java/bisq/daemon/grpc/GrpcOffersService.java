@@ -145,7 +145,7 @@ class GrpcOffersService extends OffersImplBase {
     public void getBsqSwapOffers(GetOffersRequest req,
                                  StreamObserver<GetBsqSwapOffersReply> responseObserver) {
         try {
-            List<BsqSwapOfferInfo> result = coreApi.getBsqSwapOffers(req.getDirection(), req.getCurrencyCode())
+            List<BsqSwapOfferInfo> result = coreApi.getBsqSwapOffers(req.getDirection())
                     .stream().map(BsqSwapOfferInfo::toBsqSwapOfferInfo)
                     .collect(Collectors.toList());
             var reply = GetBsqSwapOffersReply.newBuilder()
@@ -183,7 +183,7 @@ class GrpcOffersService extends OffersImplBase {
     public void getMyBsqSwapOffers(GetMyOffersRequest req,
                                    StreamObserver<GetMyBsqSwapOffersReply> responseObserver) {
         try {
-            List<BsqSwapOfferInfo> result = coreApi.getMyBsqSwapOffers(req.getDirection(), req.getCurrencyCode())
+            List<BsqSwapOfferInfo> result = coreApi.getMyBsqSwapOffers(req.getDirection())
                     .stream().map(BsqSwapOfferInfo::toBsqSwapOfferInfo)
                     .collect(Collectors.toList());
             var reply = GetMyBsqSwapOffersReply.newBuilder()

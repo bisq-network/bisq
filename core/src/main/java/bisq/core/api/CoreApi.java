@@ -135,8 +135,8 @@ public class CoreApi {
         return coreOffersService.getMyBsqSwapOffer(id);
     }
 
-    public List<Offer> getBsqSwapOffers(String direction, String currencyCode) {
-        return coreOffersService.getBsqSwapOffers(direction, currencyCode);
+    public List<Offer> getBsqSwapOffers(String direction) {
+        return coreOffersService.getBsqSwapOffers(direction);
     }
 
     public List<Offer> getOffers(String direction, String currencyCode) {
@@ -147,8 +147,8 @@ public class CoreApi {
         return coreOffersService.getMyOffers(direction, currencyCode);
     }
 
-    public List<Offer> getMyBsqSwapOffers(String direction, String currencyCode) {
-        return coreOffersService.getMyBsqSwapOffers(direction, currencyCode);
+    public List<Offer> getMyBsqSwapOffers(String direction) {
+        return coreOffersService.getMyBsqSwapOffers(direction);
     }
 
     public OpenOffer getMyOpenBsqSwapOffer(String id) {

@@ -155,10 +155,10 @@ class CoreOffersService {
     }
 
 
-    List<Offer> getBsqSwapOffers(String direction, String currencyCode) {
+    List<Offer> getBsqSwapOffers(String direction) {
         var offers = offerBookService.getOffers().stream()
                 .filter(o -> !o.isMyOffer(keyRing))
-                .filter(o -> offerMatchesDirectionAndCurrency(o, direction, currencyCode))
+                .filter(o -> o.getDirection().name().equalsIgnoreCase(direction))
                 .filter(o -> o.isBsqSwapOffer())
                 .sorted(priceComparator(direction))
                 .collect(Collectors.toList());
@@ -182,10 +182,10 @@ class CoreOffersService {
                 .collect(Collectors.toList());
     }
 
-    List<Offer> getMyBsqSwapOffers(String direction, String currencyCode) {
+    List<Offer> getMyBsqSwapOffers(String direction) {
         var offers = offerBookService.getOffers().stream()
                 .filter(o -> o.isMyOffer(keyRing))
-                .filter(o -> offerMatchesDirectionAndCurrency(o, direction, currencyCode))
+                .filter(o -> o.getDirection().name().equalsIgnoreCase(direction))
                 .filter(Offer::isBsqSwapOffer)
                 .sorted(priceComparator(direction))
                 .collect(Collectors.toList());
