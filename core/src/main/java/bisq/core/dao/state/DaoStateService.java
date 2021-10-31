@@ -330,7 +330,6 @@ public class DaoStateService implements DaoSetupService {
         // large network data in case a node requests too far back in history.
         return getBlocks().stream()
                 .filter(block -> block.getHeight() >= fromBlockHeight)
-                .sorted(Comparator.comparing(Block::getHeight)) //todo not needed
                 .limit(numMaxBlocks)
                 .collect(Collectors.toList());
     }
