@@ -80,10 +80,10 @@ public class BsqBlocksStorageService {
     public LinkedList<Block> readBlocks(int chainHeight) {
         long ts = System.currentTimeMillis();
         LinkedList<Block> blocks = new LinkedList<>();
-        blocksPersistence.readBlocks(genesisBlockHeight, chainHeight).stream()
-                .map(Block::fromProto)
+        List<BaseBlock> list = blocksPersistence.readBlocks(genesisBlockHeight, chainHeight);
+        list.stream().map(Block::fromProto)
                 .forEach(blocks::add);
-        log.error("Reading {} blocks took {} ms", blocks.size(), System.currentTimeMillis() - ts);
+        log.error("Reading and deserializing {} blocks took {} ms", blocks.size(), System.currentTimeMillis() - ts);
         if (!blocks.isEmpty()) {
             chainHeightOfPersistedBlocks = getHeightOfLastFullBucket(blocks);
         }
