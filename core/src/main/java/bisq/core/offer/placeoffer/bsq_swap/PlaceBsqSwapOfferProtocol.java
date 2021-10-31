@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.offer.placeoffer.bsqswap;
+package bisq.core.offer.placeoffer.bsq_swap;
 
-import bisq.core.offer.placeoffer.bsqswap.tasks.AddBsqSwapOfferToOfferBook;
-import bisq.core.offer.placeoffer.bsqswap.tasks.ValidateBsqSwapOffer;
+import bisq.core.offer.placeoffer.bsq_swap.tasks.AddBsqSwapOfferToOfferBook;
+import bisq.core.offer.placeoffer.bsq_swap.tasks.ValidateBsqSwapOffer;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.taskrunner.TaskRunner;

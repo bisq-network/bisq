@@ -32,8 +32,8 @@ import bisq.core.offer.OfferPayloadBase;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.offer.placeoffer.bsqswap.PlaceBsqSwapOfferModel;
-import bisq.core.offer.placeoffer.bsqswap.PlaceBsqSwapOfferProtocol;
+import bisq.core.offer.placeoffer.bsq_swap.PlaceBsqSwapOfferModel;
+import bisq.core.offer.placeoffer.bsq_swap.PlaceBsqSwapOfferProtocol;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 
