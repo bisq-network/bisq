@@ -46,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class BsqBlocksStorageService {
     public final static String NAME = "BsqBlocks";
+
     private final int genesisBlockHeight;
     private final File storageDir;
     private final BlocksPersistence blocksPersistence;
@@ -72,7 +73,7 @@ public class BsqBlocksStorageService {
             chainHeightOfPersistedBlocks = Math.max(chainHeightOfPersistedBlocks,
                     getHeightOfLastFullBucket(blocks));
         }
-        log.error("Persist (serialize+write) {} blocks took {} ms",
+        log.info("Persist (serialize+write) {} blocks took {} ms",
                 blocks.size(),
                 System.currentTimeMillis() - ts);
     }
@@ -83,18 +84,15 @@ public class BsqBlocksStorageService {
         List<BaseBlock> list = blocksPersistence.readBlocks(genesisBlockHeight, chainHeight);
         list.stream().map(Block::fromProto)
                 .forEach(blocks::add);
-        log.error("Reading and deserializing {} blocks took {} ms", blocks.size(), System.currentTimeMillis() - ts);
+        log.info("Reading and deserializing {} blocks took {} ms", blocks.size(), System.currentTimeMillis() - ts);
         if (!blocks.isEmpty()) {
             chainHeightOfPersistedBlocks = getHeightOfLastFullBucket(blocks);
         }
         return blocks;
     }
 
-    public LinkedList<Block> swapBlocks(List<protobuf.BaseBlock> protobufBlocks) {
+    public LinkedList<Block> migrateBlocks(List<protobuf.BaseBlock> protobufBlocks) {
         long ts = System.currentTimeMillis();
-        log.error("We have {} blocks in the daoStateAsProto", protobufBlocks.size());
-
-
         blocksPersistence.writeBlocks(protobufBlocks);
         LinkedList<Block> blocks = new LinkedList<>();
         protobufBlocks.forEach(protobufBlock -> blocks.add(Block.fromProto(protobufBlock)));
@@ -102,7 +100,7 @@ public class BsqBlocksStorageService {
             chainHeightOfPersistedBlocks = getHeightOfLastFullBucket(blocks);
         }
 
-        log.error("Mapping blocks (write+deserialization) from DaoStateStore took {} ms", System.currentTimeMillis() - ts);
+        log.info("Migrating blocks (write+deserialization) from DaoStateStore took {} ms", System.currentTimeMillis() - ts);
         return blocks;
     }
 
@@ -138,18 +136,15 @@ public class BsqBlocksStorageService {
                 File destinationFile = new File(storageDir, fileName);
                 FileUtils.copyFile(resourceFile, destinationFile);
             }
-            log.error("Copying {} resource files took {} ms", fileNames.length, System.currentTimeMillis() - ts);
+            log.info("Copying {} resource files took {} ms", fileNames.length, System.currentTimeMillis() - ts);
         } catch (Throwable e) {
             e.printStackTrace();
         }
     }
 
-    // todo
     private int getHeightOfLastFullBucket(List<Block> blocks) {
-        int i = blocks.get(blocks.size() - 1).getHeight() / BlocksPersistence.BUCKET_SIZE;
-        int i1 = i * BlocksPersistence.BUCKET_SIZE;
-        //  log.error("getHeightOfLastFullBucket {}", i * BlocksPersistence.BUCKET_SIZE);
-        return i1;
+        int bucketIndex = blocks.get(blocks.size() - 1).getHeight() / BlocksPersistence.BUCKET_SIZE;
+        return bucketIndex * BlocksPersistence.BUCKET_SIZE;
     }
 
     public void removeBlocksDirectory() {
@@ -163,11 +158,5 @@ public class BsqBlocksStorageService {
         if (!storageDir.exists()) {
             storageDir.mkdir();
         }
-      /*  List<protobuf.BaseBlock> blocks = new ArrayList<>();
-        // height, long time, String hash, String previousBlockHash
-        for (int i = genesisBlockHeight; i <= chainHeightOfPersistedBlocks; i++) {
-            blocks.add(new Block(i, 0, "", "").toProtoMessage());
-        }
-        blocksPersistence.addAll(blocks);*/
     }
 }

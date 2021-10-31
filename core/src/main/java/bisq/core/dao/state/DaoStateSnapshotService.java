@@ -143,7 +143,6 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                 // This also comes with the improvement that the user does not need to load the past blocks back to the last
                 // snapshot height. Though it comes also with the small risk that in case of re-orgs the user need to do
                 // a resync in case the dao state would have been affected by that reorg.
-                //todo
                 long ts = System.currentTimeMillis();
                 // We do not keep a copy of the clone as we use it immediately for persistence.
                 GcUtil.maybeReleaseMemory();

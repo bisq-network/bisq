@@ -102,7 +102,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
             persistenceManager.persistNow(() -> {
                 // After we have written to disk we remove the daoStateAsProto in the store to avoid that it stays in
                 // memory there until the next persist call.
-                log.error("Persist daoState took {} ms", System.currentTimeMillis() - ts);
+                log.info("Persist daoState took {} ms", System.currentTimeMillis() - ts);
                 store.releaseMemory();
                 GcUtil.maybeReleaseMemory();
                 UserThread.execute(completeHandler);
@@ -116,7 +116,6 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
             Thread.currentThread().setName("copyBsqBlocksFromResources");
             bsqBlocksStorageService.copyFromResources(postFix);
 
-            // We read daoState and blocks ane keep them in fields in store and
             super.readFromResources(postFix, () -> {
                 // We got mapped back to user thread so we need to create a new thread again as we dont want to
                 // execute on user thread
@@ -128,7 +127,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
                         if (daoStateAsProto.getBlocksList().isEmpty()) {
                             list = bsqBlocksStorageService.readBlocks(daoStateAsProto.getChainHeight());
                         } else {
-                            list = bsqBlocksStorageService.swapBlocks(daoStateAsProto.getBlocksList());
+                            list = bsqBlocksStorageService.migrateBlocks(daoStateAsProto.getBlocksList());
                         }
                         blocks.clear();
                         blocks.addAll(list);
@@ -144,11 +143,10 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         if (daoStateAsProto != null) {
             long ts = System.currentTimeMillis();
             DaoState daoState = DaoState.fromProto(daoStateAsProto, blocks);
-            log.error("Deserializing DaoState with {} blocks took {} ms",
+            log.info("Deserializing DaoState with {} blocks took {} ms",
                     daoState.getBlocks().size(), System.currentTimeMillis() - ts);
             return daoState;
         }
-
         return new DaoState();
     }
 
@@ -189,7 +187,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     }
 
     private void removeAndBackupDaoConsensusFiles(File storageDir, String backupDirName) throws IOException {
-        // We delete all DAO consensus data. Some will be rebuild from resources.
+        // We delete all DAO related data. Some will be rebuild from resources.
         long currentTime = System.currentTimeMillis();
         String newFileName = "BlindVoteStore_" + currentTime;
         FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "BlindVoteStore"), newFileName, backupDirName);

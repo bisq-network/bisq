@@ -38,8 +38,6 @@ import javax.annotation.Nullable;
 
 @Slf4j
 public class BlocksPersistence {
-    // 10000->Writing 130014 blocks took 1658 msec
-    // 1000-> Writing 130014 blocks took 1685 msec  Mapping blocks from DaoStateStore took 2250 ms
     public static final int BUCKET_SIZE = 1000; // results in about 1 MB files and about 1 new file per week
 
     private final File storageDir;
@@ -51,10 +49,6 @@ public class BlocksPersistence {
         this.storageDir = storageDir;
         this.fileName = fileName;
         this.persistenceProtoResolver = persistenceProtoResolver;
-
-       /* if (!storageDir.exists()) {
-            storageDir.mkdir();
-        }*/
     }
 
     public void writeBlocks(List<BaseBlock> protobufBlocks) {
@@ -75,7 +69,6 @@ public class BlocksPersistence {
                 int first = bucketIndex * BUCKET_SIZE - BUCKET_SIZE + 1;
                 int last = bucketIndex * BUCKET_SIZE;
                 File storageFile = new File(storageDir, fileName + "_" + first + "-" + last);
-                //  log.error("addAll height={} items={}", height, temp.stream().map(e -> e.getHeight() + ", ").collect(Collectors.toList()));
                 writeToDisk(storageFile, new BsqBlockStore(temp), null);
                 temp = new ArrayList<>();
             }
@@ -85,11 +78,10 @@ public class BlocksPersistence {
             int first = bucketIndex * BUCKET_SIZE - BUCKET_SIZE + 1;
             int last = bucketIndex * BUCKET_SIZE;
             File storageFile = new File(storageDir, fileName + "_" + first + "-" + last);
-            // log.error("items={}", temp.stream().map(e -> e.getHeight()).collect(Collectors.toList()));
             writeToDisk(storageFile, new BsqBlockStore(temp), null);
 
         }
-        log.error("Write {} blocks to disk took {} msec", protobufBlocks.size(), System.currentTimeMillis() - ts);
+        log.info("Write {} blocks to disk took {} msec", protobufBlocks.size(), System.currentTimeMillis() - ts);
     }
 
     public void removeBlocksDirectory() {
@@ -107,19 +99,15 @@ public class BlocksPersistence {
             storageDir.mkdir();
         }
 
-        //  log.error("getBlocks {}-{}", from, to);
         long ts = System.currentTimeMillis();
-        // from = Math.max(571747, from);
         List<BaseBlock> buckets = new ArrayList<>();
         int start = from / BUCKET_SIZE + 1;
         int end = to / BUCKET_SIZE + 1;
         for (int bucketIndex = start; bucketIndex <= end; bucketIndex++) {
             List<BaseBlock> bucket = readBucket(bucketIndex);
-            //  log.error("read bucketIndex {},  items={}", bucketIndex, bucket.stream().map(e -> e.getHeight() + ", ").collect(Collectors.toList()));
             buckets.addAll(bucket);
         }
-        log.error("Reading {} blocks took {} msec", buckets.size(), System.currentTimeMillis() - ts);
-        // System.exit(0);
+        log.info("Reading {} blocks took {} msec", buckets.size(), System.currentTimeMillis() - ts);
         return buckets;
     }
 
@@ -127,23 +115,17 @@ public class BlocksPersistence {
     private List<BaseBlock> readBucket(int bucketIndex) {
         int first = bucketIndex * BUCKET_SIZE - BUCKET_SIZE + 1;
         int last = bucketIndex * BUCKET_SIZE;
-
-       /* int first = bucketIndex * BUCKET_SIZE + 1;
-        int last = first + BUCKET_SIZE - 1;*/
         String child = fileName + "_" + first + "-" + last;
-        // log.error("getBlocksOfBucket {}", child);
         File storageFile = new File(storageDir, child);
         if (!storageFile.exists()) {
-            // log.error("storageFile not existing {}", storageFile.getName());
             return new ArrayList<>();
         }
-
         try (FileInputStream fileInputStream = new FileInputStream(storageFile)) {
             protobuf.PersistableEnvelope proto = protobuf.PersistableEnvelope.parseDelimitedFrom(fileInputStream);
             BsqBlockStore bsqBlockStore = (BsqBlockStore) persistenceProtoResolver.fromProto(proto);
             return bsqBlockStore.getBlocksAsProto();
         } catch (Throwable t) {
-            log.error("Reading {} failed with {}.", fileName, t.getMessage());
+            log.info("Reading {} failed with {}.", fileName, t.getMessage());
             return new ArrayList<>();
         }
     }
@@ -151,7 +133,6 @@ public class BlocksPersistence {
     private void writeToDisk(File storageFile,
                              BsqBlockStore bsqBlockStore,
                              @Nullable Runnable completeHandler) {
-        long ts = System.currentTimeMillis();
         File tempFile = null;
         FileOutputStream fileOutputStream = null;
         try {
@@ -196,7 +177,6 @@ public class BlocksPersistence {
                 e.printStackTrace();
                 log.error("Cannot close resources." + e.getMessage());
             }
-            // log.info("Writing the serialized {} completed in {} msec", fileName, System.currentTimeMillis() - ts);
             if (completeHandler != null) {
                 completeHandler.run();
             }

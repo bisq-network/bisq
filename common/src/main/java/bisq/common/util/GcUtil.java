@@ -26,8 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 public class GcUtil {
     @Setter
     private static boolean DISABLE_GC_CALLS = false;
-    private static int TRIGGER_MEM = 1000;
-    private static int TRIGGER_MAX_MEM = 3000;
+    private static final int TRIGGER_MEM = 1000;
+    private static final int TRIGGER_MAX_MEM = 3000;
     private static int totalInvocations;
     private static long totalGCTime;
 
