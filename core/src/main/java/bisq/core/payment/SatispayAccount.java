@@ -34,6 +34,14 @@ public final class SatispayAccount extends CountryBasedPaymentAccount {
         return new SatispayAccountPayload(paymentMethod.getId(), id);
     }
 
+    public void setHolderName(String accountId) {
+        ((SatispayAccountPayload) paymentAccountPayload).setHolderName(accountId);
+    }
+
+    public String getHolderName() {
+        return ((SatispayAccountPayload) paymentAccountPayload).getHolderName();
+    }
+
     public void setMobileNr(String accountId) {
         ((SatispayAccountPayload) paymentAccountPayload).setMobileNr(accountId);
     }

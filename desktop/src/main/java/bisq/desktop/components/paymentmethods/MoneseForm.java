@@ -31,7 +31,6 @@ import bisq.core.payment.payload.MoneseAccountPayload;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 
@@ -41,11 +40,14 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 public class MoneseForm extends PaymentMethodForm {
     private final MoneseAccount account;
+    private InputTextField holderNameInputTextField;
     private InputTextField mobileNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
-        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.mobile"),
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, 0, Res.get("payment.account.owner"),
+                ((MoneseAccountPayload) paymentAccountPayload).getHolderName());
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.mobile"),
                 ((MoneseAccountPayload) paymentAccountPayload).getMobileNr());
         return gridRow;
     }
@@ -60,6 +62,13 @@ public class MoneseForm extends PaymentMethodForm {
     @Override
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
+
+        holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.account.owner"));
+        holderNameInputTextField.setValidator(inputValidator);
+        holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+            account.setHolderName(newValue.trim());
+            updateFromInputs();
+        });
 
         mobileNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.mobile"));
         mobileNrInputTextField.setValidator(inputValidator);
@@ -99,9 +108,10 @@ public class MoneseForm extends PaymentMethodForm {
                 account.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(account.getPaymentMethod().getId()));
-        TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.mobile"),
-                account.getMobileNr()).second;
-        field.setMouseTransparent(false);
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"), account.getHolderName())
+                .second.setMouseTransparent(false);
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.mobile"), account.getMobileNr())
+                .second.setMouseTransparent(false);
         addLimitations(true);
         addCurrenciesGrid(false);
     }
@@ -109,7 +119,7 @@ public class MoneseForm extends PaymentMethodForm {
     @Override
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
-                && account.getMobileNr() != null
+                && inputValidator.validate(account.getHolderName()).isValid
                 && inputValidator.validate(account.getMobileNr()).isValid
                 && account.getTradeCurrencies().size() > 0);
     }

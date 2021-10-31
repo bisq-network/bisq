@@ -32,21 +32,23 @@ import bisq.core.payment.payload.SatispayAccountPayload;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
 public class SatispayForm extends PaymentMethodForm {
     private final SatispayAccount account;
+    private InputTextField holderNameField;
     private InputTextField mobileNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
-        addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.mobile"),
-                ((SatispayAccountPayload) paymentAccountPayload).getMobileNr(), Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, 0, Res.get("payment.account.owner"),
+                ((SatispayAccountPayload) paymentAccountPayload).getHolderName());
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.mobile"),
+                ((SatispayAccountPayload) paymentAccountPayload).getMobileNr());
         return gridRow;
     }
 
@@ -64,6 +66,13 @@ public class SatispayForm extends PaymentMethodForm {
         CountryUtil.findCountryByCode("IT").ifPresent(c -> account.setCountry(c));
 
         gridRowFrom = gridRow + 1;
+
+        holderNameField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.account.owner"));
+        holderNameField.setValidator(inputValidator);
+        holderNameField.textProperty().addListener((ov, oldValue, newValue) -> {
+            account.setHolderName(newValue.trim());
+            updateFromInputs();
+        });
 
         mobileNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.mobile"));
         mobileNrInputTextField.setValidator(inputValidator);
@@ -90,9 +99,10 @@ public class SatispayForm extends PaymentMethodForm {
                 account.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(account.getPaymentMethod().getId()));
-        TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.mobile"),
-                account.getMobileNr()).second;
-        field.setMouseTransparent(false);
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"), account.getHolderName())
+                .second.setMouseTransparent(false);
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.mobile"), account.getMobileNr())
+                .second.setMouseTransparent(false);
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), account.getSingleTradeCurrency().getNameAndCode());
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.country"), account.getCountry().name);
         addLimitations(true);
@@ -101,6 +111,7 @@ public class SatispayForm extends PaymentMethodForm {
     @Override
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
+                && inputValidator.validate(account.getHolderName()).isValid
                 && inputValidator.validate(account.getMobileNr()).isValid);
     }
 }

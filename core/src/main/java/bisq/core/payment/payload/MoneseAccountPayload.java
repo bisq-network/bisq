@@ -38,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class MoneseAccountPayload extends PaymentAccountPayload {
+    private String holderName = "";
     private String mobileNr = "";
 
     public MoneseAccountPayload(String paymentMethod, String id) {
@@ -46,6 +47,7 @@ public final class MoneseAccountPayload extends PaymentAccountPayload {
 
     private MoneseAccountPayload(String paymentMethod,
                                  String id,
+                                 String holderName,
                                  String mobileNr,
                                  long maxTradePeriod,
                                  Map<String, String> excludeFromJsonDataMap) {
@@ -54,19 +56,23 @@ public final class MoneseAccountPayload extends PaymentAccountPayload {
                 maxTradePeriod,
                 excludeFromJsonDataMap);
 
+        this.holderName = holderName;
         this.mobileNr = mobileNr;
     }
 
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setMoneseAccountPayload(protobuf.MoneseAccountPayload.newBuilder().setMobileNr(mobileNr))
+                .setMoneseAccountPayload(protobuf.MoneseAccountPayload.newBuilder()
+                        .setHolderName(holderName)
+                        .setMobileNr(mobileNr))
                 .build();
     }
 
     public static MoneseAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new MoneseAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
+                proto.getMoneseAccountPayload().getHolderName(),
                 proto.getMoneseAccountPayload().getMobileNr(),
                 proto.getMaxTradePeriod(),
                 new HashMap<>(proto.getExcludeFromJsonDataMap()));
@@ -74,7 +80,7 @@ public final class MoneseAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.mobile") + " " + mobileNr;
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.userName") + " " + holderName;
     }
 
     @Override
@@ -84,6 +90,6 @@ public final class MoneseAccountPayload extends PaymentAccountPayload {
 
     @Override
     public byte[] getAgeWitnessInputData() {
-        return super.getAgeWitnessInputData(mobileNr.getBytes(StandardCharsets.UTF_8));
+        return super.getAgeWitnessInputData(holderName.getBytes(StandardCharsets.UTF_8));
     }
 }
