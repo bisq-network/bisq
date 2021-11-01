@@ -172,6 +172,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private ChangeListener<String> priceColumnLabelListener;
     private ListChangeListener<XYChart.Data<Number, Number>> itemsChangeListener;
     private ListChangeListener<TradeStatistics3> tradeStatisticsByCurrencyListener;
+    private ChangeListener<Boolean> modelReadyListener;
 
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Void> currencySelectionBinding;
@@ -243,7 +244,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         };
         tradeStatisticsByCurrencyListener = c -> {
             nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades", model.selectedTradeStatistics.size()));
-            fillList();
+            if (model.modelReady.get()) {
+                fillList();
+            }
         };
         parentHeightListener = (observable, oldValue, newValue) -> layout();
 
@@ -283,10 +286,23 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                     return null;
                 });
 
+        modelReadyListener = (observable, oldValue, newValue) -> {
+            if (newValue) {
+                long ts = System.currentTimeMillis();
+
+                fillList();
+                tableView.setItems(sortedList);
+                layout();
+
+                log.error("{}", System.currentTimeMillis() - ts);
+                UserThread.execute(() -> model.modelReady.removeListener(modelReadyListener));
+            }
+        };
     }
 
     @Override
     protected void activate() {
+        long ts = System.currentTimeMillis();
         // root.getParent() is null at initialize
         tabPaneSelectionModel = GUIUtil.getParentOfType(root, JFXTabPane.class).getSelectionModel();
         selectedTabIndexListener = (observable, oldValue, newValue) -> model.setSelectedTabIndex((int) newValue);
@@ -358,9 +374,10 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             user.requestPersistence();
         });
 
-        fillList();
-        tableView.setItems(sortedList);
-        layout();
+        model.modelReady.addListener(modelReadyListener);
+
+        // modelReadyListener will get triggered once async data preparation in model is completed
+        log.error("activate took {} ms", System.currentTimeMillis() - ts);
     }
 
     @Override
@@ -388,6 +405,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         if (rootParent != null) {
             rootParent.heightProperty().removeListener(parentHeightListener);
         }
+        model.modelReady.removeListener(modelReadyListener);
     }
 
     private void showVolumeAsUsd(Boolean showUsd) {

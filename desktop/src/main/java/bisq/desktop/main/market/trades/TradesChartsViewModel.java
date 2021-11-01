@@ -114,6 +114,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private int selectedTabIndex;
     final Map<TickUnit, Map<Long, Long>> usdAveragePriceMapsPerTickUnit = new HashMap<>();
     private boolean fillTradeCurrenciesOnActivateCalled;
+    final BooleanProperty modelReady = new SimpleBooleanProperty(false);
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -168,6 +170,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
                         updateSelectedTradeStatistics(getCurrencyCode());
                         updateChartData();
+                        modelReady.set(true);
                     });
                 });
     }
