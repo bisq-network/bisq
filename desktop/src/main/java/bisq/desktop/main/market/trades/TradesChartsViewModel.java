@@ -168,7 +168,11 @@ class TradesChartsViewModel extends ActivatableViewModel {
                         this.usdAveragePriceMapsPerTickUnit.clear();
                         this.usdAveragePriceMapsPerTickUnit.putAll(usdAveragePriceMapsPerTickUnit);
 
-                        updateSelectedTradeStatistics(getCurrencyCode());
+                        List<TradeStatistics3> list = getTradeStatisticsForCurrency(tradeStatisticsManager.getObservableTradeStatisticsSet(),
+                                getCurrencyCode(),
+                                showAllTradeCurrenciesProperty.get());
+                        selectedTradeStatistics.setAll(list);
+
                         updateChartData();
                         modelReady.set(true);
                     });
@@ -316,6 +320,14 @@ class TradesChartsViewModel extends ActivatableViewModel {
         volumeInUsdItems.setAll(candleDataList.stream()
                 .map(candleData -> new XYChart.Data<Number, Number>(candleData.tick, candleData.volumeInUsd, candleData))
                 .collect(Collectors.toList()));
+    }
+
+    private static List<TradeStatistics3> getTradeStatisticsForCurrency(Set<TradeStatistics3> tradeStatisticsSet,
+                                                                        String currencyCode,
+                                                                        boolean showAllTradeCurrencies) {
+        return tradeStatisticsSet.stream()
+                .filter(e -> showAllTradeCurrencies || e.getCurrency().equals(currencyCode))
+                .collect(Collectors.toList());
     }
 
     private void updateSelectedTradeStatistics(String currencyCode) {
