@@ -27,11 +27,43 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class ChartCalculations {
     static final ZoneId ZONE_ID = ZoneId.systemDefault();
+
+    static void buildUsdPricesPerTickUnit(Map<TradesChartsViewModel.TickUnit, Map<Long, Long>> usdAveragePriceMapsPerTickUnit,
+                                          Set<TradeStatistics3> tradeStatisticsSet) {
+        if (usdAveragePriceMapsPerTickUnit.isEmpty()) {
+            Map<TradesChartsViewModel.TickUnit, Map<Long, List<TradeStatistics3>>> dateMapsPerTickUnit = new HashMap<>();
+            for (TradesChartsViewModel.TickUnit tick : TradesChartsViewModel.TickUnit.values()) {
+                dateMapsPerTickUnit.put(tick, new HashMap<>());
+            }
+
+            tradeStatisticsSet.stream()
+                    .filter(e -> e.getCurrency().equals("USD"))
+                    .forEach(tradeStatistics -> {
+                        for (TradesChartsViewModel.TickUnit tick : TradesChartsViewModel.TickUnit.values()) {
+                            long time = roundToTick(tradeStatistics.getLocalDateTime(), tick).getTime();
+                            Map<Long, List<TradeStatistics3>> map = dateMapsPerTickUnit.get(tick);
+                            map.putIfAbsent(time, new ArrayList<>());
+                            map.get(time).add(tradeStatistics);
+                        }
+                    });
+
+            dateMapsPerTickUnit.forEach((tick, map) -> {
+                HashMap<Long, Long> priceMap = new HashMap<>();
+                map.forEach((date, tradeStatisticsList) -> priceMap.put(date, getAveragePrice(tradeStatisticsList)));
+                usdAveragePriceMapsPerTickUnit.put(tick, priceMap);
+            });
+        }
+    }
+
 
     static long getAveragePrice(List<TradeStatistics3> tradeStatisticsList) {
         long accumulatedAmount = 0;

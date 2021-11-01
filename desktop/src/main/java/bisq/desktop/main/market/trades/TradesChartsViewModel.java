@@ -153,7 +153,9 @@ class TradesChartsViewModel extends ActivatableViewModel {
         }
         syncPriceFeedCurrency();
         setMarketPriceFeedCurrency();
-        buildUsdPricesPerTickUnit(usdAveragePriceMapsPerTickUnit, tradeStatisticsManager.getObservableTradeStatisticsSet());
+
+        ChartCalculations.buildUsdPricesPerTickUnit(usdAveragePriceMapsPerTickUnit, tradeStatisticsManager.getObservableTradeStatisticsSet());
+
         updateSelectedTradeStatistics(getCurrencyCode());
         updateChartData();
     }
@@ -246,33 +248,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private void syncPriceFeedCurrency() {
         if (selectedTabIndex == TAB_INDEX)
             priceFeedService.setCurrencyCode(selectedTradeCurrencyProperty.get().getCode());
-    }
-
-    private static void buildUsdPricesPerTickUnit(Map<TickUnit, Map<Long, Long>> usdAveragePriceMapsPerTickUnit,
-                                                  Set<TradeStatistics3> tradeStatisticsSet) {
-        if (usdAveragePriceMapsPerTickUnit.isEmpty()) {
-            Map<TickUnit, Map<Long, List<TradeStatistics3>>> dateMapsPerTickUnit = new HashMap<>();
-            for (TickUnit tick : TickUnit.values()) {
-                dateMapsPerTickUnit.put(tick, new HashMap<>());
-            }
-
-            tradeStatisticsSet.stream()
-                    .filter(e -> e.getCurrency().equals("USD"))
-                    .forEach(tradeStatistics -> {
-                        for (TickUnit tick : TickUnit.values()) {
-                            long time = ChartCalculations.roundToTick(tradeStatistics.getLocalDateTime(), tick).getTime();
-                            Map<Long, List<TradeStatistics3>> map = dateMapsPerTickUnit.get(tick);
-                            map.putIfAbsent(time, new ArrayList<>());
-                            map.get(time).add(tradeStatistics);
-                        }
-                    });
-
-            dateMapsPerTickUnit.forEach((tick, map) -> {
-                HashMap<Long, Long> priceMap = new HashMap<>();
-                map.forEach((date, tradeStatisticsList) -> priceMap.put(date, ChartCalculations.getAveragePrice(tradeStatisticsList)));
-                usdAveragePriceMapsPerTickUnit.put(tick, priceMap);
-            });
-        }
     }
 
     private void updateChartData() {
