@@ -59,10 +59,6 @@ import javafx.collections.SetChangeListener;
 
 import javafx.util.Pair;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -81,7 +77,6 @@ import javax.annotation.Nullable;
 class TradesChartsViewModel extends ActivatableViewModel {
 
     private static final int TAB_INDEX = 2;
-    private static final ZoneId ZONE_ID = ZoneId.systemDefault();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -116,7 +111,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     TickUnit tickUnit;
     final int maxTicks = 90;
     private int selectedTabIndex;
-    final Map<TickUnit, Map<Long, Long>> usdPriceMapsPerTickUnit = new HashMap<>();
+    final Map<TickUnit, Map<Long, Long>> usdAveragePriceMapsPerTickUnit = new HashMap<>();
     private boolean fillTradeCurrenciesOnActivateCalled;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -156,16 +151,17 @@ class TradesChartsViewModel extends ActivatableViewModel {
             fillTradeCurrencies();
             fillTradeCurrenciesOnActivateCalled = true;
         }
-        buildUsdPricesPerDay();
-        updateSelectedTradeStatistics(getCurrencyCode());
-        updateChartData();
         syncPriceFeedCurrency();
         setMarketPriceFeedCurrency();
+        buildUsdPricesPerTickUnit(usdAveragePriceMapsPerTickUnit, tradeStatisticsManager.getObservableTradeStatisticsSet());
+        updateSelectedTradeStatistics(getCurrencyCode());
+        updateChartData();
     }
 
     @Override
     protected void deactivate() {
         tradeStatisticsManager.getObservableTradeStatisticsSet().removeListener(setChangeListener);
+        usdAveragePriceMapsPerTickUnit.clear();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -252,18 +248,19 @@ class TradesChartsViewModel extends ActivatableViewModel {
             priceFeedService.setCurrencyCode(selectedTradeCurrencyProperty.get().getCode());
     }
 
-    private void buildUsdPricesPerDay() {
-        if (usdPriceMapsPerTickUnit.isEmpty()) {
+    private static void buildUsdPricesPerTickUnit(Map<TickUnit, Map<Long, Long>> usdAveragePriceMapsPerTickUnit,
+                                                  Set<TradeStatistics3> tradeStatisticsSet) {
+        if (usdAveragePriceMapsPerTickUnit.isEmpty()) {
             Map<TickUnit, Map<Long, List<TradeStatistics3>>> dateMapsPerTickUnit = new HashMap<>();
             for (TickUnit tick : TickUnit.values()) {
                 dateMapsPerTickUnit.put(tick, new HashMap<>());
             }
 
-            tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+            tradeStatisticsSet.stream()
                     .filter(e -> e.getCurrency().equals("USD"))
                     .forEach(tradeStatistics -> {
                         for (TickUnit tick : TickUnit.values()) {
-                            long time = roundToTick(tradeStatistics.getLocalDateTime(), tick).getTime();
+                            long time = ChartCalculations.roundToTick(tradeStatistics.getLocalDateTime(), tick).getTime();
                             Map<Long, List<TradeStatistics3>> map = dateMapsPerTickUnit.get(tick);
                             map.putIfAbsent(time, new ArrayList<>());
                             map.get(time).add(tradeStatistics);
@@ -272,22 +269,10 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
             dateMapsPerTickUnit.forEach((tick, map) -> {
                 HashMap<Long, Long> priceMap = new HashMap<>();
-                map.forEach((date, tradeStatisticsList) -> priceMap.put(date, getAveragePrice(tradeStatisticsList)));
-                usdPriceMapsPerTickUnit.put(tick, priceMap);
+                map.forEach((date, tradeStatisticsList) -> priceMap.put(date, ChartCalculations.getAveragePrice(tradeStatisticsList)));
+                usdAveragePriceMapsPerTickUnit.put(tick, priceMap);
             });
         }
-    }
-
-    private long getAveragePrice(List<TradeStatistics3> tradeStatisticsList) {
-        long accumulatedAmount = 0;
-        long accumulatedVolume = 0;
-        for (TradeStatistics3 tradeStatistics : tradeStatisticsList) {
-            accumulatedAmount += tradeStatistics.getAmount();
-            accumulatedVolume += tradeStatistics.getTradeVolume().getValue();
-        }
-
-        double accumulatedVolumeAsDouble = MathUtils.scaleUpByPowerOf10((double) accumulatedVolume, Coin.SMALLEST_UNIT_EXPONENT);
-        return MathUtils.roundDoubleToLong(accumulatedVolumeAsDouble / (double) accumulatedAmount);
     }
 
     private void updateChartData() {
@@ -313,7 +298,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
             }
         });
 
-        Map<Long, Long> map = usdPriceMapsPerTickUnit.get(tickUnit);
+        Map<Long, Long> usdAveragePriceMap = usdAveragePriceMapsPerTickUnit.get(tickUnit);
         AtomicLong averageUsdPrice = new AtomicLong(0);
 
         // create CandleData for defined time interval
@@ -322,8 +307,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
                 .map(entry -> {
                     long tickStartDate = entry.getValue().getKey().getTime();
                     // If we don't have a price we take the previous one
-                    if (map.containsKey(tickStartDate)) {
-                        averageUsdPrice.set(map.get(tickStartDate));
+                    if (usdAveragePriceMap.containsKey(tickStartDate)) {
+                        averageUsdPrice.set(usdAveragePriceMap.get(tickStartDate));
                     }
                     return getCandleData(entry.getKey(), entry.getValue().getValue(), averageUsdPrice.get());
                 })
@@ -409,28 +394,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     }
 
     Date roundToTick(Date time, TickUnit tickUnit) {
-        return roundToTick(time.toInstant().atZone(ZONE_ID).toLocalDateTime(), tickUnit);
-    }
-
-    Date roundToTick(LocalDateTime localDate, TickUnit tickUnit) {
-        switch (tickUnit) {
-            case YEAR:
-                return Date.from(localDate.withMonth(1).withDayOfYear(1).withHour(0).withMinute(0).withSecond(0).withNano(0).atZone(ZONE_ID).toInstant());
-            case MONTH:
-                return Date.from(localDate.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0).atZone(ZONE_ID).toInstant());
-            case WEEK:
-                int dayOfWeek = localDate.getDayOfWeek().getValue();
-                LocalDateTime firstDayOfWeek = ChronoUnit.DAYS.addTo(localDate, 1 - dayOfWeek);
-                return Date.from(firstDayOfWeek.withHour(0).withMinute(0).withSecond(0).withNano(0).atZone(ZONE_ID).toInstant());
-            case DAY:
-                return Date.from(localDate.withHour(0).withMinute(0).withSecond(0).withNano(0).atZone(ZONE_ID).toInstant());
-            case HOUR:
-                return Date.from(localDate.withMinute(0).withSecond(0).withNano(0).atZone(ZONE_ID).toInstant());
-            case MINUTE_10:
-                return Date.from(localDate.withMinute(localDate.getMinute() - localDate.getMinute() % 10).withSecond(0).withNano(0).atZone(ZONE_ID).toInstant());
-            default:
-                return Date.from(localDate.atZone(ZONE_ID).toInstant());
-        }
+        return ChartCalculations.roundToTick(time.toInstant().atZone(ChartCalculations.ZONE_ID).toLocalDateTime(), tickUnit);
     }
 
     private long getTimeFromTick(long tick) {
