@@ -53,6 +53,8 @@ import java.util.stream.Collectors;
 
 import lombok.Getter;
 
+import static bisq.desktop.main.market.trades.TradesChartsViewModel.MAX_TICKS;
+
 public class ChartCalculations {
     static final ZoneId ZONE_ID = ZoneId.systemDefault();
 
@@ -169,7 +171,7 @@ public class ChartCalculations {
         // Generate date range and create sets for all ticks
         Map<Long, Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = new HashMap<>();
         Date time = new Date();
-        for (long i = TradesChartsViewModel.MAX_TICKS + 1; i >= 0; --i) {
+        for (long i = MAX_TICKS + 1; i >= 0; --i) {
             Pair<Date, Set<TradeStatistics3>> pair = new Pair<>((Date) time.clone(), new HashSet<>());
             itemsPerInterval.put(i, pair);
             // We adjust the time for the next iteration
@@ -179,7 +181,7 @@ public class ChartCalculations {
 
         // Get all entries for the defined time interval
         tradeStatisticsByCurrency.forEach(tradeStatistics -> {
-            for (long i = TradesChartsViewModel.MAX_TICKS; i > 0; --i) {
+            for (long i = MAX_TICKS; i > 0; --i) {
                 Pair<Date, Set<TradeStatistics3>> pair = itemsPerInterval.get(i);
                 if (tradeStatistics.getDate().after(pair.getKey())) {
                     pair.getValue().add(tradeStatistics);
@@ -292,7 +294,7 @@ public class ChartCalculations {
     }
 
     static long getTimeFromTickIndex(long tick, Map<Long, Pair<Date, Set<TradeStatistics3>>> itemsPerInterval) {
-        if (tick > TradesChartsViewModel.MAX_TICKS + 1 ||
+        if (tick > MAX_TICKS + 1 ||
                 itemsPerInterval.get(tick) == null) {
             return 0;
         }

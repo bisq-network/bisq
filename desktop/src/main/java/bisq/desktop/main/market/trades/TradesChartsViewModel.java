@@ -118,8 +118,17 @@ class TradesChartsViewModel extends ActivatableViewModel {
         this.navigation = navigation;
 
         setChangeListener = change -> {
-            updateSelectedTradeStatistics(getCurrencyCode()); //todo
-            updateChartData();
+            applyAsyncTradeStatisticsForCurrency(getCurrencyCode())
+                    .whenComplete((result, throwable) -> {
+                        if (deactivateCalled) {
+                            return;
+                        }
+                        if (throwable != null) {
+                            log.error("Error at setChangeListener/applyAsyncTradeStatisticsForCurrency. {}", throwable.toString());
+                            return;
+                        }
+                        applyAsyncChartData();
+                    });
             fillTradeCurrencies();
         };
 
@@ -137,9 +146,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     @Override
     protected void activate() {
-        deactivateCalled = false;
         long ts = System.currentTimeMillis();
-
+        deactivateCalled = false;
 
         tradeStatisticsManager.getObservableTradeStatisticsSet().addListener(setChangeListener);
         if (!fillTradeCurrenciesOnActivateCalled) {
@@ -148,8 +156,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
         }
         syncPriceFeedCurrency();
         setMarketPriceFeedCurrency();
-
-        long ts1 = System.currentTimeMillis();
 
         List<CompletableFuture<Boolean>> allFutures = new ArrayList<>();
         CompletableFuture<Boolean> task1Done = new CompletableFuture<>();
@@ -165,76 +171,17 @@ class TradesChartsViewModel extends ActivatableViewModel {
                         log.error(throwable.toString());
                         return;
                     }
-                    //Once getUsdAveragePriceMapsPerTickUnit and getUsdAveragePriceMapsPerTickUnit are both completed we
-                    // call updateChartData2
-                    UserThread.execute(this::updateChartData);
+                    //Once applyAsyncUsdAveragePriceMapsPerTickUnit and applyAsyncTradeStatisticsForCurrency are
+                    // both completed we call applyAsyncChartData
+                    UserThread.execute(this::applyAsyncChartData);
                 });
 
-        // We start getUsdAveragePriceMapsPerTickUnit and getUsdAveragePriceMapsPerTickUnit in parallel threads for
-        // better performance
-        ChartCalculations.getUsdAveragePriceMapsPerTickUnit(tradeStatisticsManager.getObservableTradeStatisticsSet())
-                .whenComplete((usdAveragePriceMapsPerTickUnit, throwable) -> {
-                    if (deactivateCalled) {
-                        return;
-                    }
-                    if (throwable != null) {
-                        log.error(throwable.toString());
-                        task1Done.completeExceptionally(throwable);
-                        return;
-                    }
-                    UserThread.execute(() -> {
-                        this.usdAveragePriceMapsPerTickUnit.clear();
-                        this.usdAveragePriceMapsPerTickUnit.putAll(usdAveragePriceMapsPerTickUnit);
-                        log.error("getUsdAveragePriceMapsPerTickUnit took {}", System.currentTimeMillis() - ts1);
-                        task1Done.complete(true);
-                    });
-                });
+        // We call applyAsyncUsdAveragePriceMapsPerTickUnit and applyAsyncTradeStatisticsForCurrency
+        // in parallel for better performance
+        applyAsyncUsdAveragePriceMapsPerTickUnit(task1Done);
+        applyAsyncTradeStatisticsForCurrency(getCurrencyCode(), task2Done);
 
-        long ts2 = System.currentTimeMillis();
-        ChartCalculations.getTradeStatisticsForCurrency(tradeStatisticsManager.getObservableTradeStatisticsSet(),
-                getCurrencyCode(),
-                showAllTradeCurrenciesProperty.get())
-                .whenComplete((list, throwable) -> {
-                    if (deactivateCalled) {
-                        return;
-                    }
-                    if (throwable != null) {
-                        log.error(throwable.toString());
-                        task2Done.completeExceptionally(throwable);
-                        return;
-                    }
-
-                    UserThread.execute(() -> {
-                        tradeStatisticsByCurrency.setAll(list);
-                        log.error("getTradeStatisticsForCurrency took {}", System.currentTimeMillis() - ts2);
-                        task2Done.complete(true);
-                    });
-                });
-
-        log.error("activate took {}", System.currentTimeMillis() - ts);
-    }
-
-    private void updateChartData() {
-        long ts = System.currentTimeMillis();
-        ChartCalculations.getUpdateChartResult(tradeStatisticsByCurrency, tickUnit, usdAveragePriceMapsPerTickUnit, getCurrencyCode())
-                .whenComplete((updateChartResult, throwable) -> {
-                    if (deactivateCalled) {
-                        return;
-                    }
-                    if (throwable != null) {
-                        log.error(throwable.toString());
-                        return;
-                    }
-                    UserThread.execute(() -> {
-                        itemsPerInterval.clear();
-                        itemsPerInterval.putAll(updateChartResult.getItemsPerInterval());
-
-                        priceItems.setAll(updateChartResult.getPriceItems());
-                        volumeItems.setAll(updateChartResult.getVolumeItems());
-                        volumeInUsdItems.setAll(updateChartResult.getVolumeInUsdItems());
-                        log.error("updateChartData took {}", System.currentTimeMillis() - ts);
-                    });
-                });
+        log.debug("activate took {}", System.currentTimeMillis() - ts);
     }
 
     @Override
@@ -253,6 +200,94 @@ class TradesChartsViewModel extends ActivatableViewModel {
             itemsPerInterval.clear();
         });
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Async calls
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void applyAsyncUsdAveragePriceMapsPerTickUnit(CompletableFuture<Boolean> completeFuture) {
+        long ts = System.currentTimeMillis();
+        ChartCalculations.getUsdAveragePriceMapsPerTickUnit(tradeStatisticsManager.getObservableTradeStatisticsSet())
+                .whenComplete((usdAveragePriceMapsPerTickUnit, throwable) -> {
+                    if (deactivateCalled) {
+                        return;
+                    }
+                    if (throwable != null) {
+                        log.error("Error at applyAsyncUsdAveragePriceMapsPerTickUnit. {}", throwable.toString());
+                        completeFuture.completeExceptionally(throwable);
+                        return;
+                    }
+                    UserThread.execute(() -> {
+                        this.usdAveragePriceMapsPerTickUnit.clear();
+                        this.usdAveragePriceMapsPerTickUnit.putAll(usdAveragePriceMapsPerTickUnit);
+                        log.debug("applyAsyncUsdAveragePriceMapsPerTickUnit took {}", System.currentTimeMillis() - ts);
+                        completeFuture.complete(true);
+                    });
+                });
+    }
+
+    private CompletableFuture<Boolean> applyAsyncTradeStatisticsForCurrency(String currencyCode) {
+        return applyAsyncTradeStatisticsForCurrency(currencyCode, null);
+    }
+
+    private CompletableFuture<Boolean> applyAsyncTradeStatisticsForCurrency(String currencyCode,
+                                                                            @Nullable CompletableFuture<Boolean> completeFuture) {
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        long ts = System.currentTimeMillis();
+        ChartCalculations.getTradeStatisticsForCurrency(tradeStatisticsManager.getObservableTradeStatisticsSet(),
+                currencyCode,
+                showAllTradeCurrenciesProperty.get())
+                .whenComplete((list, throwable) -> {
+                    if (deactivateCalled) {
+                        return;
+                    }
+                    if (throwable != null) {
+                        log.error("Error at applyAsyncTradeStatisticsForCurrency. {}", throwable.toString());
+                        if (completeFuture != null) {
+                            completeFuture.completeExceptionally(throwable);
+                        }
+                        return;
+                    }
+
+                    UserThread.execute(() -> {
+                        tradeStatisticsByCurrency.setAll(list);
+                        log.debug("applyAsyncTradeStatisticsForCurrency took {}", System.currentTimeMillis() - ts);
+                        if (completeFuture != null) {
+                            completeFuture.complete(true);
+                        }
+                        future.complete(true);
+                    });
+                });
+        return future;
+    }
+
+    private void applyAsyncChartData() {
+        long ts = System.currentTimeMillis();
+        ChartCalculations.getUpdateChartResult(new ArrayList<>(tradeStatisticsByCurrency),
+                tickUnit,
+                usdAveragePriceMapsPerTickUnit,
+                getCurrencyCode())
+                .whenComplete((updateChartResult, throwable) -> {
+                    if (deactivateCalled) {
+                        return;
+                    }
+                    if (throwable != null) {
+                        log.error("Error at applyAsyncChartData. {}", throwable.toString());
+                        return;
+                    }
+                    UserThread.execute(() -> {
+                        itemsPerInterval.clear();
+                        itemsPerInterval.putAll(updateChartResult.getItemsPerInterval());
+
+                        priceItems.setAll(updateChartResult.getPriceItems());
+                        volumeItems.setAll(updateChartResult.getVolumeItems());
+                        volumeInUsdItems.setAll(updateChartResult.getVolumeInUsdItems());
+                        log.debug("applyAsyncChartData took {}", System.currentTimeMillis() - ts);
+                    });
+                });
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI actions
@@ -278,15 +313,24 @@ class TradesChartsViewModel extends ActivatableViewModel {
             }
             preferences.setTradeChartsScreenCurrencyCode(code);
 
-            updateSelectedTradeStatistics(getCurrencyCode());//todo
-            updateChartData();
+            applyAsyncTradeStatisticsForCurrency(getCurrencyCode())
+                    .whenComplete((result, throwable) -> {
+                        if (deactivateCalled) {
+                            return;
+                        }
+                        if (throwable != null) {
+                            log.error("Error at onSetTradeCurrency/applyAsyncTradeStatisticsForCurrency. {}", throwable.toString());
+                            return;
+                        }
+                        applyAsyncChartData();
+                    });
         }
     }
 
     void setTickUnit(TickUnit tickUnit) {
         this.tickUnit = tickUnit;
         preferences.setTradeStatisticsTickUnitIndex(tickUnit.ordinal());
-        updateChartData();
+        applyAsyncChartData();
     }
 
     void setSelectedTabIndex(int selectedTabIndex) {
@@ -294,6 +338,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         syncPriceFeedCurrency();
         setMarketPriceFeedCurrency();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -311,6 +356,11 @@ class TradesChartsViewModel extends ActivatableViewModel {
         return currencyListItems.getObservableList().stream().filter(e -> e.tradeCurrency.equals(selectedTradeCurrencyProperty.get())).findAny();
     }
 
+    long getTimeFromTickIndex(long tick) {
+        return ChartCalculations.getTimeFromTickIndex(tick, itemsPerInterval);
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -320,7 +370,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
         List<TradeCurrency> tradeCurrencyList = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
                 .flatMap(e -> CurrencyUtil.getTradeCurrency(e.getCurrency()).stream())
                 .collect(Collectors.toList());
-
         currencyListItems.updateWithCurrencies(tradeCurrencyList, showAllCurrencyListItem);
     }
 
@@ -338,17 +387,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
             priceFeedService.setCurrencyCode(selectedTradeCurrencyProperty.get().getCode());
     }
 
-    //todo
-    private void updateSelectedTradeStatistics(String currencyCode) {
-        tradeStatisticsByCurrency.setAll(tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
-                .filter(e -> showAllTradeCurrenciesProperty.get() || e.getCurrency().equals(currencyCode))
-                .collect(Collectors.toList()));
-    }
-
-    long getTimeFromTickIndex(long tick) {
-        return ChartCalculations.getTimeFromTickIndex(tick, itemsPerInterval);
-    }
-
     private boolean isShowAllEntry(@Nullable String id) {
         return id != null && id.equals(GUIUtil.SHOW_ALL_FLAG);
     }
@@ -356,5 +394,4 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private boolean isEditEntry(@Nullable String id) {
         return id != null && id.equals(GUIUtil.EDIT_FLAG);
     }
-
 }
