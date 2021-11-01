@@ -473,7 +473,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private void createCharts() {
         priceSeries = new XYChart.Series<>();
 
-        priceAxisX = new NumberAxis(0, model.maxTicks + 1, 1);
+        priceAxisX = new NumberAxis(0, TradesChartsViewModel.MAX_TICKS + 1, 1);
         priceAxisX.setTickUnit(4);
         priceAxisX.setMinorTickCount(4);
         priceAxisX.setMinorTickVisible(true);
@@ -539,11 +539,11 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         priceChartPane.getChildren().add(priceChart);
 
-        volumeAxisX = new NumberAxis(0, model.maxTicks + 1, 1);
+        volumeAxisX = new NumberAxis(0, TradesChartsViewModel.MAX_TICKS + 1, 1);
         volumeAxisY = new NumberAxis();
         volumeChart = getVolumeChart(volumeAxisX, volumeAxisY, volumeSeries, "BTC");
 
-        volumeInUsdAxisX = new NumberAxis(0, model.maxTicks + 1, 1);
+        volumeInUsdAxisX = new NumberAxis(0, TradesChartsViewModel.MAX_TICKS + 1, 1);
         NumberAxis volumeInUsdAxisY = new NumberAxis();
         volumeInUsdChart = getVolumeChart(volumeInUsdAxisX, volumeInUsdAxisY, volumeInUsdSeries, "USD");
         volumeInUsdChart.setVisible(false);
@@ -650,7 +650,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 long index = MathUtils.doubleToLong((double) object);
                 // The last tick is on the chart edge, it is not well spaced with
                 // the previous tick and interferes with its label.
-                if (model.maxTicks + 1 == index) return "";
+                if (TradesChartsViewModel.MAX_TICKS + 1 == index) return "";
 
                 long time = model.getTimeFromTickIndex(index);
                 String fmt = "";

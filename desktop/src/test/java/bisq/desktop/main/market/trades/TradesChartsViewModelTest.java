@@ -35,6 +35,8 @@ import org.bitcoinj.utils.Fiat;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 
+import javafx.util.Pair;
+
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -45,6 +47,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.Before;
@@ -115,7 +118,8 @@ public class TradesChartsViewModelTest {
     @SuppressWarnings("ConstantConditions")
     @Test
     public void testGetCandleData() {
-        model.selectedTradeCurrencyProperty.setValue(new FiatCurrency("EUR"));
+        String currencyCode = "EUR";
+        model.selectedTradeCurrencyProperty.setValue(new FiatCurrency(currencyCode));
 
         long low = Fiat.parseFiat("EUR", "500").value;
         long open = Fiat.parseFiat("EUR", "520").value;
@@ -167,7 +171,13 @@ public class TradesChartsViewModelTest {
                 null,
                 null));
 
-        CandleData candleData = model.getCandleData(model.roundToTick(now, TradesChartsViewModel.TickUnit.DAY).getTime(), set, 0);
+        Map<Long, Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = null;
+        long tick = ChartCalculations.roundToTick(now, TradesChartsViewModel.TickUnit.DAY).getTime();
+        CandleData candleData = ChartCalculations.getCandleData(tick,
+                set,
+                0,
+                TradesChartsViewModel.TickUnit.DAY, currencyCode,
+                itemsPerInterval);
         assertEquals(open, candleData.open);
         assertEquals(close, candleData.close);
         assertEquals(high, candleData.high);

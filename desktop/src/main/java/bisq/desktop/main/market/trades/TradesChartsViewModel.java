@@ -20,19 +20,16 @@ package bisq.desktop.main.market.trades;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.model.ActivatableViewModel;
 import bisq.desktop.main.MainView;
-import bisq.desktop.main.market.trades.charts.CandleData;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
 import bisq.desktop.util.CurrencyList;
 import bisq.desktop.util.CurrencyListItem;
-import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.monetary.Altcoin;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -40,13 +37,8 @@ import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
 import bisq.common.util.CompletableFutureUtils;
-import bisq.common.util.MathUtils;
-
-import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
-
-import com.google.common.annotations.VisibleForTesting;
 
 import javafx.scene.chart.XYChart;
 
@@ -62,25 +54,20 @@ import javafx.collections.SetChangeListener;
 import javafx.util.Pair;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
 class TradesChartsViewModel extends ActivatableViewModel {
-
+    static final int MAX_TICKS = 90;
     private static final int TAB_INDEX = 2;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enum
@@ -112,7 +99,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private final Map<Long, Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = new HashMap<>();
 
     TickUnit tickUnit;
-    final int maxTicks = 90;
     private int selectedTabIndex;
     final Map<TickUnit, Map<Long, Long>> usdAveragePriceMapsPerTickUnit = new HashMap<>();
     private boolean fillTradeCurrenciesOnActivateCalled;
@@ -132,7 +118,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         this.navigation = navigation;
 
         setChangeListener = change -> {
-            updateSelectedTradeStatistics(getCurrencyCode());
+            updateSelectedTradeStatistics(getCurrencyCode()); //todo
             updateChartData();
             fillTradeCurrencies();
         };
@@ -275,7 +261,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
             }
             preferences.setTradeChartsScreenCurrencyCode(code);
 
-            updateSelectedTradeStatistics(getCurrencyCode());
+            updateSelectedTradeStatistics(getCurrencyCode());//todo
             updateChartData();
         }
     }
@@ -335,136 +321,26 @@ class TradesChartsViewModel extends ActivatableViewModel {
             priceFeedService.setCurrencyCode(selectedTradeCurrencyProperty.get().getCode());
     }
 
-    private void updateChartData() {
-        // Generate date range and create sets for all ticks
+    void updateChartData() {
+        ChartCalculations.UpdateChartResult updateChartResult = ChartCalculations.getUpdateChartResult(tradeStatisticsByCurrency, tickUnit, usdAveragePriceMapsPerTickUnit, getCurrencyCode());
         itemsPerInterval.clear();
-        Date time = new Date();
-        for (long i = maxTicks + 1; i >= 0; --i) {
-            Pair<Date, Set<TradeStatistics3>> pair = new Pair<>((Date) time.clone(), new HashSet<>());
-            itemsPerInterval.put(i, pair);
-            // We adjust the time for the next iteration
-            time.setTime(time.getTime() - 1);
-            time = roundToTick(time, tickUnit);
-        }
+        itemsPerInterval.putAll(updateChartResult.getItemsPerInterval());
 
-        // Get all entries for the defined time interval
-        tradeStatisticsByCurrency.forEach(tradeStatistics -> {
-            for (long i = maxTicks; i > 0; --i) {
-                Pair<Date, Set<TradeStatistics3>> pair = itemsPerInterval.get(i);
-                if (tradeStatistics.getDate().after(pair.getKey())) {
-                    pair.getValue().add(tradeStatistics);
-                    break;
-                }
-            }
-        });
-
-        Map<Long, Long> usdAveragePriceMap = usdAveragePriceMapsPerTickUnit.get(tickUnit);
-        AtomicLong averageUsdPrice = new AtomicLong(0);
-
-        // create CandleData for defined time interval
-        List<CandleData> candleDataList = itemsPerInterval.entrySet().stream()
-                .filter(entry -> entry.getKey() >= 0 && !entry.getValue().getValue().isEmpty())
-                .map(entry -> {
-                    long tickStartDate = entry.getValue().getKey().getTime();
-                    // If we don't have a price we take the previous one
-                    if (usdAveragePriceMap.containsKey(tickStartDate)) {
-                        averageUsdPrice.set(usdAveragePriceMap.get(tickStartDate));
-                    }
-                    return getCandleData(entry.getKey(), entry.getValue().getValue(), averageUsdPrice.get());
-                })
-                .sorted(Comparator.comparingLong(o -> o.tick))
-                .collect(Collectors.toList());
-
-        priceItems.setAll(candleDataList.stream()
-                .map(e -> new XYChart.Data<Number, Number>(e.tick, e.open, e))
-                .collect(Collectors.toList()));
-
-        volumeItems.setAll(candleDataList.stream()
-                .map(candleData -> new XYChart.Data<Number, Number>(candleData.tick, candleData.accumulatedAmount, candleData))
-                .collect(Collectors.toList()));
-
-        volumeInUsdItems.setAll(candleDataList.stream()
-                .map(candleData -> new XYChart.Data<Number, Number>(candleData.tick, candleData.volumeInUsd, candleData))
-                .collect(Collectors.toList()));
+        priceItems.setAll(updateChartResult.getPriceItems());
+        volumeItems.setAll(updateChartResult.getVolumeItems());
+        volumeInUsdItems.setAll(updateChartResult.getVolumeInUsdItems());
+        getCurrencyCode();
     }
 
+    //todo
     private void updateSelectedTradeStatistics(String currencyCode) {
         tradeStatisticsByCurrency.setAll(tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
                 .filter(e -> showAllTradeCurrenciesProperty.get() || e.getCurrency().equals(currencyCode))
                 .collect(Collectors.toList()));
     }
 
-    @VisibleForTesting
-    CandleData getCandleData(long tick, Set<TradeStatistics3> set, long averageUsdPrice) {
-        long open = 0;
-        long close = 0;
-        long high = 0;
-        long low = 0;
-        long accumulatedVolume = 0;
-        long accumulatedAmount = 0;
-        long numTrades = set.size();
-        List<Long> tradePrices = new ArrayList<>();
-        for (TradeStatistics3 item : set) {
-            long tradePriceAsLong = item.getTradePrice().getValue();
-            // Previously a check was done which inverted the low and high for cryptocurrencies.
-            low = (low != 0) ? Math.min(low, tradePriceAsLong) : tradePriceAsLong;
-            high = (high != 0) ? Math.max(high, tradePriceAsLong) : tradePriceAsLong;
-
-            accumulatedVolume += item.getTradeVolume().getValue();
-            accumulatedAmount += item.getTradeAmount().getValue();
-            tradePrices.add(tradePriceAsLong);
-        }
-        Collections.sort(tradePrices);
-
-        List<TradeStatistics3> list = new ArrayList<>(set);
-        list.sort(Comparator.comparingLong(TradeStatistics3::getDateAsLong));
-        if (list.size() > 0) {
-            open = list.get(0).getTradePrice().getValue();
-            close = list.get(list.size() - 1).getTradePrice().getValue();
-        }
-
-        long averagePrice;
-        Long[] prices = new Long[tradePrices.size()];
-        tradePrices.toArray(prices);
-        long medianPrice = MathUtils.getMedian(prices);
-        boolean isBullish;
-        if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
-            isBullish = close < open;
-            double accumulatedAmountAsDouble = MathUtils.scaleUpByPowerOf10((double) accumulatedAmount, Altcoin.SMALLEST_UNIT_EXPONENT);
-            averagePrice = MathUtils.roundDoubleToLong(accumulatedAmountAsDouble / (double) accumulatedVolume);
-        } else {
-            isBullish = close > open;
-            double accumulatedVolumeAsDouble = MathUtils.scaleUpByPowerOf10((double) accumulatedVolume, Coin.SMALLEST_UNIT_EXPONENT);
-            averagePrice = MathUtils.roundDoubleToLong(accumulatedVolumeAsDouble / (double) accumulatedAmount);
-        }
-
-        Date dateFrom = new Date(getTimeFromTickIndex(tick));
-        Date dateTo = new Date(getTimeFromTickIndex(tick + 1));
-        String dateString = tickUnit.ordinal() > TickUnit.DAY.ordinal() ?
-                DisplayUtils.formatDateTimeSpan(dateFrom, dateTo) :
-                DisplayUtils.formatDate(dateFrom) + " - " + DisplayUtils.formatDate(dateTo);
-
-        // We do not need precision, so we scale down before multiplication otherwise we could get an overflow.
-        averageUsdPrice = (long) MathUtils.scaleDownByPowerOf10((double) averageUsdPrice, 4);
-        long volumeInUsd = averageUsdPrice * (long) MathUtils.scaleDownByPowerOf10((double) accumulatedAmount, 4);
-        // We store USD value without decimals as its only total volume, no precision is needed.
-        volumeInUsd = (long) MathUtils.scaleDownByPowerOf10((double) volumeInUsd, 4);
-        return new CandleData(tick, open, close, high, low, averagePrice, medianPrice, accumulatedAmount, accumulatedVolume,
-                numTrades, isBullish, dateString, volumeInUsd);
-    }
-
-    Date roundToTick(Date time, TickUnit tickUnit) {
-        return ChartCalculations.roundToTick(time.toInstant().atZone(ChartCalculations.ZONE_ID).toLocalDateTime(), tickUnit);
-    }
-
-    private long getTimeFromTick(long tick) {
-        if (itemsPerInterval == null || itemsPerInterval.get(tick) == null) return 0;
-        return itemsPerInterval.get(tick).getKey().getTime();
-    }
-
-    long getTimeFromTickIndex(long index) {
-        if (index > maxTicks + 1) return 0;
-        return getTimeFromTick(index);
+    long getTimeFromTickIndex(long tick) {
+        return ChartCalculations.getTimeFromTickIndex(tick, itemsPerInterval);
     }
 
     private boolean isShowAllEntry(@Nullable String id) {
@@ -474,4 +350,5 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private boolean isEditEntry(@Nullable String id) {
         return id != null && id.equals(GUIUtil.EDIT_FLAG);
     }
+
 }
