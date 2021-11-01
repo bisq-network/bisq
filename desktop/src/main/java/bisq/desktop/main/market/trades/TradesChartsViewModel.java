@@ -167,7 +167,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
                     }
                     //Once getUsdAveragePriceMapsPerTickUnit and getUsdAveragePriceMapsPerTickUnit are both completed we
                     // call updateChartData2
-                    UserThread.execute(this::asyncUpdateChartData);
+                    UserThread.execute(this::updateChartData);
                 });
 
         // We start getUsdAveragePriceMapsPerTickUnit and getUsdAveragePriceMapsPerTickUnit in parallel threads for
@@ -214,10 +214,27 @@ class TradesChartsViewModel extends ActivatableViewModel {
         log.error("activate took {}", System.currentTimeMillis() - ts);
     }
 
-    private void asyncUpdateChartData() {
+    private void updateChartData() {
         long ts = System.currentTimeMillis();
-        updateChartData();
-        log.error("updateChartData took {}", System.currentTimeMillis() - ts);
+        ChartCalculations.getUpdateChartResult(tradeStatisticsByCurrency, tickUnit, usdAveragePriceMapsPerTickUnit, getCurrencyCode())
+                .whenComplete((updateChartResult, throwable) -> {
+                    if (deactivateCalled) {
+                        return;
+                    }
+                    if (throwable != null) {
+                        log.error(throwable.toString());
+                        return;
+                    }
+                    UserThread.execute(() -> {
+                        itemsPerInterval.clear();
+                        itemsPerInterval.putAll(updateChartResult.getItemsPerInterval());
+
+                        priceItems.setAll(updateChartResult.getPriceItems());
+                        volumeItems.setAll(updateChartResult.getVolumeItems());
+                        volumeInUsdItems.setAll(updateChartResult.getVolumeInUsdItems());
+                        log.error("updateChartData took {}", System.currentTimeMillis() - ts);
+                    });
+                });
     }
 
     @Override
@@ -319,17 +336,6 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private void syncPriceFeedCurrency() {
         if (selectedTabIndex == TAB_INDEX)
             priceFeedService.setCurrencyCode(selectedTradeCurrencyProperty.get().getCode());
-    }
-
-    void updateChartData() {
-        ChartCalculations.UpdateChartResult updateChartResult = ChartCalculations.getUpdateChartResult(tradeStatisticsByCurrency, tickUnit, usdAveragePriceMapsPerTickUnit, getCurrencyCode());
-        itemsPerInterval.clear();
-        itemsPerInterval.putAll(updateChartResult.getItemsPerInterval());
-
-        priceItems.setAll(updateChartResult.getPriceItems());
-        volumeItems.setAll(updateChartResult.getVolumeItems());
-        volumeInUsdItems.setAll(updateChartResult.getVolumeInUsdItems());
-        getCurrencyCode();
     }
 
     //todo

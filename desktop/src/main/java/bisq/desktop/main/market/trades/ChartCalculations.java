@@ -99,43 +99,45 @@ public class ChartCalculations {
         });
     }
 
-    static UpdateChartResult getUpdateChartResult(List<TradeStatistics3> tradeStatisticsByCurrency,
-                                                  TradesChartsViewModel.TickUnit tickUnit,
-                                                  Map<TradesChartsViewModel.TickUnit, Map<Long, Long>> usdAveragePriceMapsPerTickUnit,
-                                                  String currencyCode) {
-        // Generate date range and create sets for all ticks
-        Map<Long, Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = getItemsPerInterval(tradeStatisticsByCurrency, tickUnit);
+    static CompletableFuture<UpdateChartResult> getUpdateChartResult(List<TradeStatistics3> tradeStatisticsByCurrency,
+                                                                     TradesChartsViewModel.TickUnit tickUnit,
+                                                                     Map<TradesChartsViewModel.TickUnit, Map<Long, Long>> usdAveragePriceMapsPerTickUnit,
+                                                                     String currencyCode) {
+        return CompletableFuture.supplyAsync(() -> {
+            // Generate date range and create sets for all ticks
+            Map<Long, Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = getItemsPerInterval(tradeStatisticsByCurrency, tickUnit);
 
-        Map<Long, Long> usdAveragePriceMap = usdAveragePriceMapsPerTickUnit.get(tickUnit);
-        AtomicLong averageUsdPrice = new AtomicLong(0);
+            Map<Long, Long> usdAveragePriceMap = usdAveragePriceMapsPerTickUnit.get(tickUnit);
+            AtomicLong averageUsdPrice = new AtomicLong(0);
 
-        // create CandleData for defined time interval
-        List<CandleData> candleDataList = itemsPerInterval.entrySet().stream()
-                .filter(entry -> entry.getKey() >= 0 && !entry.getValue().getValue().isEmpty())
-                .map(entry -> {
-                    long tickStartDate = entry.getValue().getKey().getTime();
-                    // If we don't have a price we take the previous one
-                    if (usdAveragePriceMap.containsKey(tickStartDate)) {
-                        averageUsdPrice.set(usdAveragePriceMap.get(tickStartDate));
-                    }
-                    return getCandleData(entry.getKey(), entry.getValue().getValue(), averageUsdPrice.get(), tickUnit, currencyCode, itemsPerInterval);
-                })
-                .sorted(Comparator.comparingLong(o -> o.tick))
-                .collect(Collectors.toList());
+            // create CandleData for defined time interval
+            List<CandleData> candleDataList = itemsPerInterval.entrySet().stream()
+                    .filter(entry -> entry.getKey() >= 0 && !entry.getValue().getValue().isEmpty())
+                    .map(entry -> {
+                        long tickStartDate = entry.getValue().getKey().getTime();
+                        // If we don't have a price we take the previous one
+                        if (usdAveragePriceMap.containsKey(tickStartDate)) {
+                            averageUsdPrice.set(usdAveragePriceMap.get(tickStartDate));
+                        }
+                        return getCandleData(entry.getKey(), entry.getValue().getValue(), averageUsdPrice.get(), tickUnit, currencyCode, itemsPerInterval);
+                    })
+                    .sorted(Comparator.comparingLong(o -> o.tick))
+                    .collect(Collectors.toList());
 
-        List<XYChart.Data<Number, Number>> priceItems = candleDataList.stream()
-                .map(e -> new XYChart.Data<Number, Number>(e.tick, e.open, e))
-                .collect(Collectors.toList());
+            List<XYChart.Data<Number, Number>> priceItems = candleDataList.stream()
+                    .map(e -> new XYChart.Data<Number, Number>(e.tick, e.open, e))
+                    .collect(Collectors.toList());
 
-        List<XYChart.Data<Number, Number>> volumeItems = candleDataList.stream()
-                .map(candleData -> new XYChart.Data<Number, Number>(candleData.tick, candleData.accumulatedAmount, candleData))
-                .collect(Collectors.toList());
+            List<XYChart.Data<Number, Number>> volumeItems = candleDataList.stream()
+                    .map(candleData -> new XYChart.Data<Number, Number>(candleData.tick, candleData.accumulatedAmount, candleData))
+                    .collect(Collectors.toList());
 
-        List<XYChart.Data<Number, Number>> volumeInUsdItems = candleDataList.stream()
-                .map(candleData -> new XYChart.Data<Number, Number>(candleData.tick, candleData.volumeInUsd, candleData))
-                .collect(Collectors.toList());
+            List<XYChart.Data<Number, Number>> volumeInUsdItems = candleDataList.stream()
+                    .map(candleData -> new XYChart.Data<Number, Number>(candleData.tick, candleData.volumeInUsd, candleData))
+                    .collect(Collectors.toList());
 
-        return new UpdateChartResult(itemsPerInterval, priceItems, volumeItems, volumeInUsdItems);
+            return new UpdateChartResult(itemsPerInterval, priceItems, volumeItems, volumeInUsdItems);
+        });
     }
 
     @Getter
