@@ -38,6 +38,7 @@ import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 
+import bisq.common.UserThread;
 import bisq.common.util.MathUtils;
 
 import org.bitcoinj.core.Coin;
@@ -154,10 +155,21 @@ class TradesChartsViewModel extends ActivatableViewModel {
         syncPriceFeedCurrency();
         setMarketPriceFeedCurrency();
 
-        ChartCalculations.buildUsdPricesPerTickUnit(usdAveragePriceMapsPerTickUnit, tradeStatisticsManager.getObservableTradeStatisticsSet());
+        ChartCalculations.buildUsdPricesPerTickUnit(tradeStatisticsManager.getObservableTradeStatisticsSet())
+                .whenComplete((usdAveragePriceMapsPerTickUnit, throwable) -> {
+                    if (throwable != null) {
+                        log.error(throwable.toString());
+                        return;
+                    }
 
-        updateSelectedTradeStatistics(getCurrencyCode());
-        updateChartData();
+                    UserThread.execute(() -> {
+                        this.usdAveragePriceMapsPerTickUnit.clear();
+                        this.usdAveragePriceMapsPerTickUnit.putAll(usdAveragePriceMapsPerTickUnit);
+
+                        updateSelectedTradeStatistics(getCurrencyCode());
+                        updateChartData();
+                    });
+                });
     }
 
     @Override

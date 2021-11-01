@@ -33,13 +33,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 public class ChartCalculations {
     static final ZoneId ZONE_ID = ZoneId.systemDefault();
 
-    static void buildUsdPricesPerTickUnit(Map<TradesChartsViewModel.TickUnit, Map<Long, Long>> usdAveragePriceMapsPerTickUnit,
-                                          Set<TradeStatistics3> tradeStatisticsSet) {
-        if (usdAveragePriceMapsPerTickUnit.isEmpty()) {
+    static CompletableFuture<Map<TradesChartsViewModel.TickUnit, Map<Long, Long>>> buildUsdPricesPerTickUnit(Set<TradeStatistics3> tradeStatisticsSet) {
+        return CompletableFuture.supplyAsync(() -> {
+            Map<TradesChartsViewModel.TickUnit, Map<Long, Long>> usdAveragePriceMapsPerTickUnit = new HashMap<>();
             Map<TradesChartsViewModel.TickUnit, Map<Long, List<TradeStatistics3>>> dateMapsPerTickUnit = new HashMap<>();
             for (TradesChartsViewModel.TickUnit tick : TradesChartsViewModel.TickUnit.values()) {
                 dateMapsPerTickUnit.put(tick, new HashMap<>());
@@ -61,7 +62,8 @@ public class ChartCalculations {
                 map.forEach((date, tradeStatisticsList) -> priceMap.put(date, getAveragePrice(tradeStatisticsList)));
                 usdAveragePriceMapsPerTickUnit.put(tick, priceMap);
             });
-        }
+            return usdAveragePriceMapsPerTickUnit;
+        });
     }
 
 
