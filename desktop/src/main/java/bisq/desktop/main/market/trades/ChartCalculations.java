@@ -34,11 +34,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 public class ChartCalculations {
     static final ZoneId ZONE_ID = ZoneId.systemDefault();
 
-    static CompletableFuture<Map<TradesChartsViewModel.TickUnit, Map<Long, Long>>> buildUsdPricesPerTickUnit(Set<TradeStatistics3> tradeStatisticsSet) {
+    static CompletableFuture<Map<TradesChartsViewModel.TickUnit, Map<Long, Long>>> getUsdAveragePriceMapsPerTickUnit(Set<TradeStatistics3> tradeStatisticsSet) {
         return CompletableFuture.supplyAsync(() -> {
             Map<TradesChartsViewModel.TickUnit, Map<Long, Long>> usdAveragePriceMapsPerTickUnit = new HashMap<>();
             Map<TradesChartsViewModel.TickUnit, Map<Long, List<TradeStatistics3>>> dateMapsPerTickUnit = new HashMap<>();
@@ -66,6 +67,15 @@ public class ChartCalculations {
         });
     }
 
+    static CompletableFuture<List<TradeStatistics3>> getTradeStatisticsForCurrency(Set<TradeStatistics3> tradeStatisticsSet,
+                                                                                   String currencyCode,
+                                                                                   boolean showAllTradeCurrencies) {
+        return CompletableFuture.supplyAsync(() -> {
+            return tradeStatisticsSet.stream()
+                    .filter(e -> showAllTradeCurrencies || e.getCurrency().equals(currencyCode))
+                    .collect(Collectors.toList());
+        });
+    }
 
     static long getAveragePrice(List<TradeStatistics3> tradeStatisticsList) {
         long accumulatedAmount = 0;

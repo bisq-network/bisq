@@ -39,6 +39,7 @@ import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
+import bisq.common.util.CompletableFutureUtils;
 import bisq.common.util.MathUtils;
 
 import org.bitcoinj.core.Coin;
@@ -70,6 +71,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -103,18 +105,18 @@ class TradesChartsViewModel extends ActivatableViewModel {
     final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(false);
     private final CurrencyList currencyListItems;
     private final CurrencyListItem showAllCurrencyListItem = new CurrencyListItem(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, ""), -1);
-    final ObservableList<TradeStatistics3> selectedTradeStatistics = FXCollections.observableArrayList();
+    final ObservableList<TradeStatistics3> tradeStatisticsByCurrency = FXCollections.observableArrayList();
     final ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
     final ObservableList<XYChart.Data<Number, Number>> volumeItems = FXCollections.observableArrayList();
     final ObservableList<XYChart.Data<Number, Number>> volumeInUsdItems = FXCollections.observableArrayList();
-    private Map<Long, Pair<Date, Set<TradeStatistics3>>> itemsPerInterval;
+    private final Map<Long, Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = new HashMap<>();
 
     TickUnit tickUnit;
     final int maxTicks = 90;
     private int selectedTabIndex;
     final Map<TickUnit, Map<Long, Long>> usdAveragePriceMapsPerTickUnit = new HashMap<>();
     private boolean fillTradeCurrenciesOnActivateCalled;
-    final BooleanProperty modelReady = new SimpleBooleanProperty(false);
+    private volatile boolean deactivateCalled;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -149,6 +151,10 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     @Override
     protected void activate() {
+        deactivateCalled = false;
+        long ts = System.currentTimeMillis();
+
+
         tradeStatisticsManager.getObservableTradeStatisticsSet().addListener(setChangeListener);
         if (!fillTradeCurrenciesOnActivateCalled) {
             fillTradeCurrencies();
@@ -157,32 +163,92 @@ class TradesChartsViewModel extends ActivatableViewModel {
         syncPriceFeedCurrency();
         setMarketPriceFeedCurrency();
 
-        ChartCalculations.buildUsdPricesPerTickUnit(tradeStatisticsManager.getObservableTradeStatisticsSet())
-                .whenComplete((usdAveragePriceMapsPerTickUnit, throwable) -> {
+        long ts1 = System.currentTimeMillis();
+
+        List<CompletableFuture<Boolean>> allFutures = new ArrayList<>();
+        CompletableFuture<Boolean> task1Done = new CompletableFuture<>();
+        allFutures.add(task1Done);
+        CompletableFuture<Boolean> task2Done = new CompletableFuture<>();
+        allFutures.add(task2Done);
+        CompletableFutureUtils.allOf(allFutures)
+                .whenComplete((res, throwable) -> {
+                    if (deactivateCalled) {
+                        return;
+                    }
                     if (throwable != null) {
                         log.error(throwable.toString());
                         return;
                     }
+                    //Once getUsdAveragePriceMapsPerTickUnit and getUsdAveragePriceMapsPerTickUnit are both completed we
+                    // call updateChartData2
+                    UserThread.execute(this::asyncUpdateChartData);
+                });
 
+        // We start getUsdAveragePriceMapsPerTickUnit and getUsdAveragePriceMapsPerTickUnit in parallel threads for
+        // better performance
+        ChartCalculations.getUsdAveragePriceMapsPerTickUnit(tradeStatisticsManager.getObservableTradeStatisticsSet())
+                .whenComplete((usdAveragePriceMapsPerTickUnit, throwable) -> {
+                    if (deactivateCalled) {
+                        return;
+                    }
+                    if (throwable != null) {
+                        log.error(throwable.toString());
+                        task1Done.completeExceptionally(throwable);
+                        return;
+                    }
                     UserThread.execute(() -> {
                         this.usdAveragePriceMapsPerTickUnit.clear();
                         this.usdAveragePriceMapsPerTickUnit.putAll(usdAveragePriceMapsPerTickUnit);
-
-                        List<TradeStatistics3> list = getTradeStatisticsForCurrency(tradeStatisticsManager.getObservableTradeStatisticsSet(),
-                                getCurrencyCode(),
-                                showAllTradeCurrenciesProperty.get());
-                        selectedTradeStatistics.setAll(list);
-
-                        updateChartData();
-                        modelReady.set(true);
+                        log.error("getUsdAveragePriceMapsPerTickUnit took {}", System.currentTimeMillis() - ts1);
+                        task1Done.complete(true);
                     });
                 });
+
+        long ts2 = System.currentTimeMillis();
+        ChartCalculations.getTradeStatisticsForCurrency(tradeStatisticsManager.getObservableTradeStatisticsSet(),
+                getCurrencyCode(),
+                showAllTradeCurrenciesProperty.get())
+                .whenComplete((list, throwable) -> {
+                    if (deactivateCalled) {
+                        return;
+                    }
+                    if (throwable != null) {
+                        log.error(throwable.toString());
+                        task2Done.completeExceptionally(throwable);
+                        return;
+                    }
+
+                    UserThread.execute(() -> {
+                        tradeStatisticsByCurrency.setAll(list);
+                        log.error("getTradeStatisticsForCurrency took {}", System.currentTimeMillis() - ts2);
+                        task2Done.complete(true);
+                    });
+                });
+
+        log.error("activate took {}", System.currentTimeMillis() - ts);
+    }
+
+    private void asyncUpdateChartData() {
+        long ts = System.currentTimeMillis();
+        updateChartData();
+        log.error("updateChartData took {}", System.currentTimeMillis() - ts);
     }
 
     @Override
     protected void deactivate() {
+        deactivateCalled = true;
         tradeStatisticsManager.getObservableTradeStatisticsSet().removeListener(setChangeListener);
-        usdAveragePriceMapsPerTickUnit.clear();
+
+        // We want to avoid to trigger listeners in the view so we delay a bit. Deactivate on model is called before
+        // deactivate on view.
+        UserThread.execute(() -> {
+            usdAveragePriceMapsPerTickUnit.clear();
+            tradeStatisticsByCurrency.clear();
+            priceItems.clear();
+            volumeItems.clear();
+            volumeInUsdItems.clear();
+            itemsPerInterval.clear();
+        });
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -271,7 +337,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     private void updateChartData() {
         // Generate date range and create sets for all ticks
-        itemsPerInterval = new HashMap<>();
+        itemsPerInterval.clear();
         Date time = new Date();
         for (long i = maxTicks + 1; i >= 0; --i) {
             Pair<Date, Set<TradeStatistics3>> pair = new Pair<>((Date) time.clone(), new HashSet<>());
@@ -282,7 +348,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
         }
 
         // Get all entries for the defined time interval
-        selectedTradeStatistics.forEach(tradeStatistics -> {
+        tradeStatisticsByCurrency.forEach(tradeStatistics -> {
             for (long i = maxTicks; i > 0; --i) {
                 Pair<Date, Set<TradeStatistics3>> pair = itemsPerInterval.get(i);
                 if (tradeStatistics.getDate().after(pair.getKey())) {
@@ -322,16 +388,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
                 .collect(Collectors.toList()));
     }
 
-    private static List<TradeStatistics3> getTradeStatisticsForCurrency(Set<TradeStatistics3> tradeStatisticsSet,
-                                                                        String currencyCode,
-                                                                        boolean showAllTradeCurrencies) {
-        return tradeStatisticsSet.stream()
-                .filter(e -> showAllTradeCurrencies || e.getCurrency().equals(currencyCode))
-                .collect(Collectors.toList());
-    }
-
     private void updateSelectedTradeStatistics(String currencyCode) {
-        selectedTradeStatistics.setAll(tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+        tradeStatisticsByCurrency.setAll(tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
                 .filter(e -> showAllTradeCurrenciesProperty.get() || e.getCurrency().equals(currencyCode))
                 .collect(Collectors.toList()));
     }
