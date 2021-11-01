@@ -103,6 +103,7 @@ import java.text.DecimalFormat;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -172,7 +173,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private ChangeListener<String> priceColumnLabelListener;
     private ListChangeListener<XYChart.Data<Number, Number>> itemsChangeListener;
     private ListChangeListener<TradeStatistics3> tradeStatisticsByCurrencyListener;
-    private ChangeListener<Boolean> modelReadyListener;
 
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Void> currencySelectionBinding;
@@ -243,10 +243,8 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             layoutChart();
         };
         tradeStatisticsByCurrencyListener = c -> {
-            nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades", model.selectedTradeStatistics.size()));
-            if (model.modelReady.get()) {
-                fillList();
-            }
+            nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades", model.tradeStatisticsByCurrency.size()));
+            fillList();
         };
         parentHeightListener = (observable, oldValue, newValue) -> layout();
 
@@ -285,19 +283,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                     layout();
                     return null;
                 });
-
-        modelReadyListener = (observable, oldValue, newValue) -> {
-            if (newValue) {
-                long ts = System.currentTimeMillis();
-
-                fillList();
-                tableView.setItems(sortedList);
-                layout();
-
-                log.error("{}", System.currentTimeMillis() - ts);
-                UserThread.execute(() -> model.modelReady.removeListener(modelReadyListener));
-            }
-        };
     }
 
     @Override
@@ -336,7 +321,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         toggleGroup.selectedToggleProperty().addListener(timeUnitChangeListener);
         priceAxisY.widthProperty().addListener(priceAxisYWidthListener);
         volumeAxisY.widthProperty().addListener(volumeAxisYWidthListener);
-        model.selectedTradeStatistics.addListener(tradeStatisticsByCurrencyListener);
+        model.tradeStatisticsByCurrency.addListener(tradeStatisticsByCurrencyListener);
 
         priceAxisY.labelProperty().bind(priceColumnLabel);
         priceColumnLabel.addListener(priceColumnLabelListener);
@@ -353,7 +338,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         volumeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
         volumeInUsdAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
 
-        nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades", model.selectedTradeStatistics.size()));
+        nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades", model.tradeStatisticsByCurrency.size()));
 
         exportLink.setOnAction(e -> exportToCsv());
         UserThread.runAfter(this::updateChartData, 100, TimeUnit.MILLISECONDS);
@@ -374,9 +359,10 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             user.requestPersistence();
         });
 
-        model.modelReady.addListener(modelReadyListener);
+        tableView.setItems(sortedList);
+        fillList();
+        layout();
 
-        // modelReadyListener will get triggered once async data preparation in model is completed
         log.error("activate took {} ms", System.currentTimeMillis() - ts);
     }
 
@@ -387,7 +373,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         toggleGroup.selectedToggleProperty().removeListener(timeUnitChangeListener);
         priceAxisY.widthProperty().removeListener(priceAxisYWidthListener);
         volumeAxisY.widthProperty().removeListener(volumeAxisYWidthListener);
-        model.selectedTradeStatistics.removeListener(tradeStatisticsByCurrencyListener);
+        model.tradeStatisticsByCurrency.removeListener(tradeStatisticsByCurrencyListener);
 
         priceAxisY.labelProperty().unbind();
         priceColumnLabel.removeListener(priceColumnLabelListener);
@@ -405,7 +391,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         if (rootParent != null) {
             rootParent.heightProperty().removeListener(parentHeightListener);
         }
-        model.modelReady.removeListener(modelReadyListener);
     }
 
     private void showVolumeAsUsd(Boolean showUsd) {
@@ -416,12 +401,22 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     }
 
     private void fillList() {
-        List<TradeStatistics3ListItem> tradeStatistics3ListItems = model.selectedTradeStatistics.stream()
-                .map(tradeStatistics -> new TradeStatistics3ListItem(tradeStatistics,
-                        coinFormatter,
-                        model.showAllTradeCurrenciesProperty.get()))
-                .collect(Collectors.toList());
-        listItems.setAll(tradeStatistics3ListItems);
+        long ts = System.currentTimeMillis();
+        CompletableFuture.supplyAsync(() -> {
+            return model.tradeStatisticsByCurrency.stream()
+                    .map(tradeStatistics -> new TradeStatistics3ListItem(tradeStatistics,
+                            coinFormatter,
+                            model.showAllTradeCurrenciesProperty.get()))
+                    .collect(Collectors.toList());
+        }).whenComplete((items, throwable) -> {
+            log.error("Creating listItems took {} ms", System.currentTimeMillis() - ts);
+            long ts2 = System.currentTimeMillis();
+            listItems.setAll(items);
+            // Is slow because of sorting of > 100k items. But at least it seems it works on the thread from the
+            // CompletableFuture callback, so we do not block the UI thread;.
+            log.error("Applying sorted list took {} ms",
+                    System.currentTimeMillis() - ts2);
+        });
     }
 
     private void exportToCsv() {
