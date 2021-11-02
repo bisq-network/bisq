@@ -93,7 +93,7 @@ public final class BuyerAsTakerTrade extends BuyerTrade implements TakerTrade {
         if (uid == null) {
             uid = UUID.randomUUID().toString();
         }
-        return fromProto(new BuyerAsTakerTrade(
+        return Trade.fromProto(new BuyerAsTakerTrade(
                         Offer.fromProto(proto.getOffer()),
                         Coin.valueOf(proto.getTradeAmountAsLong()),
                         Coin.valueOf(proto.getTxFeeAsLong()),

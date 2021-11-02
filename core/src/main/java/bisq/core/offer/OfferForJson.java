@@ -21,6 +21,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
+import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.payload.PaymentMethod;
 
 import bisq.common.util.MathUtils;

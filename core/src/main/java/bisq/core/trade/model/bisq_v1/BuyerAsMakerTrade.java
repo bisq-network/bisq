@@ -102,7 +102,7 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
         trade.setTradePrice(proto.getTradePrice());
         trade.setTradingPeerNodeAddress(proto.hasTradingPeerNodeAddress() ? NodeAddress.fromProto(proto.getTradingPeerNodeAddress()) : null);
 
-        return fromProto(trade,
+        return Trade.fromProto(trade,
                 proto,
                 coreProtoResolver);
     }
