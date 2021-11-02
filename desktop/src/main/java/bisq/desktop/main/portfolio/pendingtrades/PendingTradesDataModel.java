@@ -493,7 +493,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         }
         Trade.DisputeState disputeState = trade.getDisputeState();
         DisputeManager<? extends DisputeList<Dispute>> disputeManager;
-        long remainingLockTime = trade.getDelayedPayoutTx().getLockTime() - btcWalletService.getBestChainHeight();
+        long lockTime = trade.getDelayedPayoutTx() == null ? trade.getLockTime() : trade.getDelayedPayoutTx().getLockTime();
+        long remainingLockTime = lockTime - btcWalletService.getBestChainHeight();
         // In case we re-open a dispute we allow Trade.DisputeState.MEDIATION_REQUESTED
         boolean useMediation = disputeState == Trade.DisputeState.NO_DISPUTE ||
                 (disputeState == Trade.DisputeState.MEDIATION_REQUESTED && remainingLockTime > 0);
