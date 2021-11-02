@@ -79,7 +79,7 @@ public class ClockWatcher {
         }
     }
 
-    public void stop() {
+    public void shutDown() {
         timer.stop();
         timer = null;
         counter = 0;
