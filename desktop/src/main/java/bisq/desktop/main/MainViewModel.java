@@ -77,10 +77,14 @@ import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
 import bisq.common.config.Config;
+import bisq.common.crypto.Hash;
 import bisq.common.file.CorruptedStorageFileHandler;
+import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
 
 import com.google.inject.Inject;
+
+import com.google.common.base.Charsets;
 
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.monadic.MonadicBinding;
@@ -340,7 +344,15 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         bisqSetup.setChainFileLockedExceptionHandler(msg -> new Popup().warning(msg)
                 .useShutDownButton()
                 .show());
-        bisqSetup.setLockedUpFundsHandler(msg -> new Popup().width(850).warning(msg).show());
+        bisqSetup.setLockedUpFundsHandler(msg -> {
+            // repeated popups of the same message text can be stopped by selecting the "Dont show again" checkbox
+            String key = Hex.encode(Hash.getSha256Ripemd160hash(msg.getBytes(Charsets.UTF_8)));
+            if (preferences.showAgain(key)) {
+                new Popup().width(850).warning(msg)
+                        .dontShowAgainId(key)
+                        .show();
+            }
+        });
         bisqSetup.setShowFirstPopupIfResyncSPVRequestedHandler(this::showFirstPopupIfResyncSPVRequested);
         bisqSetup.setRequestWalletPasswordHandler(aesKeyHandler -> walletPasswordWindow
                 .onAesKey(aesKeyHandler::accept)
