@@ -1064,20 +1064,18 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber + " / hashOfData=" + hashOfData.toString());*/
                 return true;
             } else if (newSequenceNumber == storedSequenceNumber) {
-                String msg;
                 if (newSequenceNumber == 0) {
-                    msg = "Sequence number is equal to the stored one and both are 0." +
-                            "That is expected for network_messages which never got updated (mailbox msg).";
+                    log.debug("Sequence number is equal to the stored one and both are 0." +
+                            "That is expected for network_messages which never got updated (mailbox msg).");
                 } else {
-                    msg = "Sequence number is equal to the stored one. sequenceNumber = "
-                            + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber;
+                    log.debug("Sequence number is equal to the stored one. sequenceNumber = {} / storedSequenceNumber={}",
+                            newSequenceNumber, storedSequenceNumber);
                 }
-                log.debug(msg);
                 return false;
             } else {
-                log.debug("Sequence number is invalid. sequenceNumber = "
-                        + newSequenceNumber + " / storedSequenceNumber=" + storedSequenceNumber + "\n" +
-                        "That can happen if the data owner gets an old delayed data storage message.");
+                log.debug("Sequence number is invalid. sequenceNumber = {} / storedSequenceNumber={} " +
+                                "That can happen if the data owner gets an old delayed data storage message.",
+                        newSequenceNumber, storedSequenceNumber);
                 return false;
             }
         } else {
