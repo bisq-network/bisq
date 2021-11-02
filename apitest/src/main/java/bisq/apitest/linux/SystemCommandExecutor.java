@@ -57,15 +57,13 @@ class SystemCommandExecutor {
     private ThreadedStreamHandler errorStreamHandler;
 
     public SystemCommandExecutor(final List<String> cmdOptions) {
-        if (log.isDebugEnabled())
-            log.debug("cmd options {}", cmdOptions.toString());
-
         if (cmdOptions.isEmpty())
             throw new IllegalStateException("No command params specified.");
 
         if (cmdOptions.contains("sudo"))
             throw new IllegalStateException("'sudo' commands are prohibited.");
 
+        log.trace("System cmd options {}", cmdOptions);
         this.cmdOptions = cmdOptions;
     }
 

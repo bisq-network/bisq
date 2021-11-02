@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.apitest.method.trade;
+package bisq.apitest.scenario;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,15 +24,21 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.condition.EnabledIf;
+
+import static java.lang.System.getenv;
 
 
 
 import bisq.apitest.method.offer.AbstractOfferTest;
+import bisq.apitest.method.trade.BsqSwapTradeTest;
 
-// @Disabled
+@EnabledIf("envLongRunningTestEnabled")
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class BsqSwapTradeTestLoop extends AbstractOfferTest {
+public class LongRunningBsqSwapTest extends AbstractOfferTest {
+
+    private static final int MAX_SWAPS = 250;
 
     @BeforeAll
     public static void setUp() {
@@ -42,24 +48,39 @@ public class BsqSwapTradeTestLoop extends AbstractOfferTest {
 
     @Test
     @Order(1)
-    public void testGetBalancesBeforeTrade() {
+    public void testBsqSwaps() {
+        // TODO Fix wallet inconsistency bugs after N(?) trades.
         BsqSwapTradeTest test = new BsqSwapTradeTest();
-        runTradeLoop(test);
-    }
+        test.setCheckForLoggedExceptions(true);
 
-    private void runTradeLoop(BsqSwapTradeTest test) {
-        // TODO Fix wallet inconsistency bugs after 2nd trades.
-        for (int tradeCount = 1; tradeCount <= 2; tradeCount++) {
-            log.warn("================================ Trade # {} ================================", tradeCount);
+        for (int swapCount = 1; swapCount <= MAX_SWAPS; swapCount++) {
+            log.info("Beginning BSQ Swap # {}", swapCount);
+
             test.testGetBalancesBeforeTrade();
 
             test.testAliceCreateBsqSwapBuyOffer();
-            genBtcBlocksThenWait(1, 8000);
+            genBtcBlocksThenWait(1, 8_000);
 
             test.testBobTakesBsqSwapOffer();
-            genBtcBlocksThenWait(1, 8000);
+            genBtcBlocksThenWait(1, 8_000);
 
             test.testGetBalancesAfterTrade();
+            log.info("Finished  BSQ Swap # {}", swapCount);
+        }
+    }
+
+    protected static boolean envLongRunningTestEnabled() {
+        String envName = "LONG_RUNNING_BSQ_SWAP_TEST_ENABLED";
+        String envX = getenv(envName);
+        if (envX != null) {
+            log.info("Enabled, found {}.", envName);
+            return true;
+        } else {
+            log.info("Skipped, no environment variable {} defined.", envName);
+            log.info("To enable on Mac OS or Linux:"
+                    + "\tIf running in terminal, export LONG_RUNNING_BSQ_SWAP_TEST_ENABLED=true in bash shell."
+                    + "\tIf running in Intellij, set LONG_RUNNING_BSQ_SWAP_TEST_ENABLED=true in launcher's Environment variables field.");
+            return false;
         }
     }
 }

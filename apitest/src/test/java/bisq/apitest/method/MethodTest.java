@@ -31,7 +31,12 @@ import java.io.PrintWriter;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+
+import javax.annotation.Nullable;
+
 import static bisq.apitest.config.ApiTestRateMeterInterceptorConfig.getTestRateMeterInterceptorConfig;
+import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -39,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 
 import bisq.apitest.ApiTestCase;
+import bisq.apitest.linux.BashCommand;
 import bisq.cli.GrpcClient;
 
 public class MethodTest extends ApiTestCase {
@@ -144,14 +150,42 @@ public class MethodTest extends ApiTestCase {
     protected final bisq.core.payment.PaymentAccount createPaymentAccount(GrpcClient grpcClient, String jsonString) {
         // Normally, we do asserts on the protos from the gRPC service, but in this
         // case we need a bisq.core.payment.PaymentAccount so it can be cast to its
-        // sub type.
+        // sub-type.
         var paymentAccount = grpcClient.createPaymentAccount(jsonString);
         return bisq.core.payment.PaymentAccount.fromProto(paymentAccount, CORE_PROTO_RESOLVER);
     }
 
-    // Static conveniences for test methods and test case fixture setups.
-
     protected static String encodeToHex(String s) {
         return Utilities.bytesAsHexString(s.getBytes(UTF_8));
+    }
+
+    protected void verifyNoLoggedNodeExceptions() {
+        var loggedExceptions = getNodeExceptionMessages();
+        if (loggedExceptions != null) {
+            String err = format("Exception(s) found in daemon log(s):%n%s", loggedExceptions);
+            fail(err);
+        }
+    }
+
+    protected void printNodeExceptionMessages(Logger log) {
+        var loggedExceptions = getNodeExceptionMessages();
+        if (loggedExceptions != null)
+            log.error("Exception(s) found in daemon log(s):\n{}", loggedExceptions);
+    }
+
+    @Nullable
+    protected static String getNodeExceptionMessages() {
+        var nodeLogsSpec = config.rootAppDataDir.getAbsolutePath() + "/bisq-BTC_REGTEST_*_dao/bisq.log";
+        var grep = "grep Exception " + nodeLogsSpec;
+        var bashCommand = new BashCommand(grep);
+        try {
+            bashCommand.run();
+        } catch (IOException | InterruptedException ex) {
+            fail("Bash command execution error: " + ex);
+        }
+        if (bashCommand.getError() == null)
+            return bashCommand.getOutput();
+        else
+            throw new IllegalStateException("Bash command execution error: " + bashCommand.getError());
     }
 }

@@ -25,6 +25,7 @@ import protobuf.BsqSwapTrade;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -55,6 +56,10 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
 
     private static final String BISQ_FEE_CURRENCY_CODE = BSQ;
 
+    // Long-running swap trade tests might want to check node logs for exceptions.
+    @Setter
+    private boolean checkForLoggedExceptions;
+
     @BeforeAll
     public static void setUp() {
         AbstractOfferTest.setUp();
@@ -79,17 +84,18 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
     @Order(2)
     public void testAliceCreateBsqSwapBuyOffer() {
         var bsqSwapOffer = aliceClient.createBsqSwapOffer(BUY.name(),
-                100_000_000L,
-                100_000_000L,
+                1_000_000L,
+                1_000_000L,
                 "0.00005",
                 alicesBsqAcct.getId());
-        log.info("BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", bsqSwapOffer);
+        verifyNoLoggedNodeExceptions();
+        log.debug("BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", bsqSwapOffer);
         var newOfferId = bsqSwapOffer.getId();
         assertNotEquals("", newOfferId);
         assertEquals(BUY.name(), bsqSwapOffer.getDirection());
         assertEquals(5_000, bsqSwapOffer.getPrice());
-        assertEquals(100_000_000L, bsqSwapOffer.getAmount());
-        assertEquals(100_000_000L, bsqSwapOffer.getMinAmount());
+        assertEquals(1_000_000L, bsqSwapOffer.getAmount());
+        assertEquals(1_000_000L, bsqSwapOffer.getMinAmount());
         // assertEquals(alicesBsqAcct.getId(), atomicOffer.getMakerPaymentAccountId());
         assertEquals(BSQ, bsqSwapOffer.getBaseCurrencyCode());
         assertEquals(BTC, bsqSwapOffer.getCounterCurrencyCode());
@@ -99,16 +105,15 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
     @Order(3)
     public void testBobTakesBsqSwapOffer() {
         var bsqSwapOffer = getAvailableBsqSwapOffer();
-
         var bsqSwapTradeInfo = bobClient.takeBsqSwapOffer(bsqSwapOffer.getId(),
                 bobsBsqAcct.getId(),
                 BISQ_FEE_CURRENCY_CODE);
-        log.info("Trade at t1: {}", bsqSwapTradeInfo);
+        log.debug("Trade at t1: {}", bsqSwapTradeInfo);
         assertEquals(BsqSwapTrade.State.PREPARATION.name(), bsqSwapTradeInfo.getState());
-        genBtcBlocksThenWait(1, 3000);
+        genBtcBlocksThenWait(1, 3_000);
 
         bsqSwapTradeInfo = getBsqSwapTrade(bsqSwapTradeInfo.getTradeId());
-        log.info("Trade at t2: {}", bsqSwapTradeInfo);
+        log.debug("Trade at t2: {}", bsqSwapTradeInfo);
         assertEquals(BsqSwapTrade.State.COMPLETED.name(), bsqSwapTradeInfo.getState());
     }
 
@@ -122,26 +127,28 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
     }
 
     private BsqSwapOfferInfo getAvailableBsqSwapOffer() {
-        List<BsqSwapOfferInfo> bsqSwapOfferInfos = new ArrayList<>();
+        List<BsqSwapOfferInfo> bsqSwapOffers = new ArrayList<>();
         int numFetchAttempts = 0;
-        while (bsqSwapOfferInfos.size() == 0) {
-            bsqSwapOfferInfos.addAll(bobClient.getBsqSwapOffers(BUY.name(), "BSQ"));
+        while (bsqSwapOffers.size() == 0) {
+            bsqSwapOffers.addAll(bobClient.getBsqSwapOffers(BUY.name(), BSQ));
             numFetchAttempts++;
-            if (bsqSwapOfferInfos.size() == 0) {
-                log.warn("No available bsq swap offer found after {} fetch attempts.", numFetchAttempts);
+            if (bsqSwapOffers.size() == 0) {
+                log.warn("No available bsq swap offers found after {} fetch attempts.", numFetchAttempts);
                 if (numFetchAttempts > 9) {
-                    fail(format("Bob gave up on fetching available bsq swap offer after %d attempts.", numFetchAttempts));
+                    if (checkForLoggedExceptions) {
+                        printNodeExceptionMessages(log);
+                    }
+                    fail(format("Bob gave up on fetching available bsq swap offers after %d attempts.", numFetchAttempts));
                 }
                 sleep(1000);
             } else {
-                assertEquals(1, bsqSwapOfferInfos.size());
-                log.info("Bob found new available bsq swap offer on attempt # {}.", numFetchAttempts);
+                assertEquals(1, bsqSwapOffers.size());
+                log.debug("Bob found new available bsq swap offer on attempt # {}.", numFetchAttempts);
                 break;
             }
         }
-        // Test api's getBsqSwapOffer(id).
-        var bsqSwapOffer = bobClient.getBsqSwapOffer(bsqSwapOfferInfos.get(0).getId());
-        assertEquals(bsqSwapOfferInfos.get(0).getId(), bsqSwapOffer.getId());
+        var bsqSwapOffer = bobClient.getBsqSwapOffer(bsqSwapOffers.get(0).getId());
+        assertEquals(bsqSwapOffers.get(0).getId(), bsqSwapOffer.getId());
         return bsqSwapOffer;
     }
 
@@ -154,6 +161,9 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
             } catch (Exception ex) {
                 log.warn(ex.getMessage());
                 if (numFetchAttempts > 9) {
+                    if (checkForLoggedExceptions) {
+                        printNodeExceptionMessages(log);
+                    }
                     fail(format("Could not find new bsq swap trade after %d attempts.", numFetchAttempts));
                 } else {
                     sleep(1000);

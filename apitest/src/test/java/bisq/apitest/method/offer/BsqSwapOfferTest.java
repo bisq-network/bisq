@@ -58,9 +58,9 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
     @Order(1)
     public void testGetBalancesBeforeCreateOffers() {
         var alicesBalances = aliceClient.getBalances();
-        log.info("Alice's Before Trade Balance:\n{}", formatBalancesTbls(alicesBalances));
+        log.debug("Alice's Before Trade Balance:\n{}", formatBalancesTbls(alicesBalances));
         var bobsBalances = bobClient.getBalances();
-        log.info("Bob's Before Trade Balance:\n{}", formatBalancesTbls(bobsBalances));
+        log.debug("Bob's Before Trade Balance:\n{}", formatBalancesTbls(bobsBalances));
     }
 
     @Test
@@ -87,19 +87,42 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
         createBsqSwapOffer();
     }
 
+    @Test
+    @Order(6)
+    public void testGetMyBsqSwapOffers() {
+        var offers = aliceClient.getMyBsqSwapBsqOffersSortedByDate();
+        assertEquals(4, offers.size());
+    }
+
+    @Test
+    @Order(7)
+    public void testGetAvailableBsqSwapOffers() {
+        var offers = bobClient.getBsqSwapOffersSortedByDate();
+        assertEquals(4, offers.size());
+    }
+
+    @Test
+    @Order(8)
+    public void testGetBalancesAfterCreateOffers() {
+        var alicesBalances = aliceClient.getBalances();
+        log.debug("Alice's After Trade Balance:\n{}", formatBalancesTbls(alicesBalances));
+        var bobsBalances = bobClient.getBalances();
+        log.debug("Bob's After Trade Balance:\n{}", formatBalancesTbls(bobsBalances));
+    }
+
     private void createBsqSwapOffer() {
         var bsqSwapOffer = aliceClient.createBsqSwapOffer(BUY.name(),
-                100_000_000L,
-                100_000_000L,
+                1_000_000L,
+                1_000_000L,
                 "0.00005",
                 alicesBsqAcct.getId());
-        log.info("BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", bsqSwapOffer);
+        log.debug("BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", bsqSwapOffer);
         var newOfferId = bsqSwapOffer.getId();
         assertNotEquals("", newOfferId);
         assertEquals(BUY.name(), bsqSwapOffer.getDirection());
         assertEquals(5_000, bsqSwapOffer.getPrice());
-        assertEquals(100_000_000L, bsqSwapOffer.getAmount());
-        assertEquals(100_000_000L, bsqSwapOffer.getMinAmount());
+        assertEquals(1_000_000L, bsqSwapOffer.getAmount());
+        assertEquals(1_000_000L, bsqSwapOffer.getMinAmount());
         // assertEquals(alicesBsqAcct.getId(), atomicOffer.getMakerPaymentAccountId());
         assertEquals(BSQ, bsqSwapOffer.getBaseCurrencyCode());
         assertEquals(BTC, bsqSwapOffer.getCounterCurrencyCode());
@@ -115,7 +138,7 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
                 numFetchAttempts++;
                 var fetchedBsqSwapOffer = aliceClient.getMyBsqSwapOffer(bsqSwapOfferInfo.getId());
                 assertEquals(bsqSwapOfferInfo.getId(), fetchedBsqSwapOffer.getId());
-                log.info("Alice found her (my) new bsq swap offer on attempt # {}.", numFetchAttempts);
+                log.debug("Alice found her (my) new bsq swap offer on attempt # {}.", numFetchAttempts);
                 break;
             } catch (Exception ex) {
                 log.warn(ex.getMessage());
@@ -135,7 +158,7 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
                 numFetchAttempts++;
                 var fetchedBsqSwapOffer = bobClient.getBsqSwapOffer(bsqSwapOfferInfo.getId());
                 assertEquals(bsqSwapOfferInfo.getId(), fetchedBsqSwapOffer.getId());
-                log.info("Bob found new available bsq swap offer on attempt # {}.", numFetchAttempts);
+                log.debug("Bob found new available bsq swap offer on attempt # {}.", numFetchAttempts);
                 break;
             } catch (Exception ex) {
                 log.warn(ex.getMessage());
@@ -146,28 +169,5 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
                 sleep(1000);
             }
         }
-    }
-
-    @Test
-    @Order(6)
-    public void testGetMyBsqSwapOffers() {
-        var offers = aliceClient.getMyBsqSwapBsqOffersSortedByDate();
-        assertEquals(4, offers.size());
-    }
-
-    @Test
-    @Order(7)
-    public void testGetAvailableBsqSwapOffers() {
-        var offers = bobClient.getBsqSwapOffersSortedByDate();
-        assertEquals(4, offers.size());
-    }
-
-    @Test
-    @Order(8)
-    public void testGetBalancesAfterCreateOffers() {
-        var alicesBalances = aliceClient.getBalances();
-        log.info("Alice's After Trade Balance:\n{}", formatBalancesTbls(alicesBalances));
-        var bobsBalances = bobClient.getBalances();
-        log.info("Bob's After Trade Balance:\n{}", formatBalancesTbls(bobsBalances));
     }
 }

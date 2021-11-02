@@ -24,7 +24,7 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.jetbrains.annotations.NotNull;
+import javax.annotation.Nullable;
 
 import static bisq.apitest.config.ApiTestConfig.BASH_PATH_VALUE;
 import static java.lang.management.ManagementFactory.getRuntimeMXBean;
@@ -33,7 +33,9 @@ import static java.lang.management.ManagementFactory.getRuntimeMXBean;
 public class BashCommand {
 
     private int exitStatus = -1;
+    @Nullable
     private String output;
+    @Nullable
     private String error;
 
     private final String command;
@@ -92,6 +94,7 @@ public class BashCommand {
     }
 
     // TODO return Optional<String>
+    @Nullable
     public String getOutput() {
         return this.output;
     }
@@ -101,7 +104,6 @@ public class BashCommand {
         return this.error;
     }
 
-    @NotNull
     private List<String> tokenizeSystemCommand() {
         return new ArrayList<>() {{
             add(BASH_PATH_VALUE);
