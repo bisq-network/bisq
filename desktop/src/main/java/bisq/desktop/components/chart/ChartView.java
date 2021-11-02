@@ -73,6 +73,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import lombok.Setter;
@@ -226,10 +227,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         findTimeIntervalToggleByTemporalAdjuster(temporalAdjuster).ifPresent(timeIntervalToggleGroup::selectToggle);
 
         defineAndAddActiveSeries();
-        applyData(); //todo
         initBoundsForTimelineNavigation();
-
-        updateChartAfterDataChange(); //todo
 
         // Apply listeners and handlers
         root.widthProperty().addListener(widthListener);
@@ -554,7 +552,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         chart.getData().add(series);
         activeSeries.add(series);
         legendToggleBySeriesName.get(getSeriesId(series)).setSelected(true);
-        updateChartAfterDataChange();
+        applyDataAndUpdate();
     }
 
 
@@ -562,7 +560,17 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     // Data
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected abstract void applyData();
+    protected abstract CompletableFuture<Boolean> applyData();
+
+    private void applyDataAndUpdate() {
+        long ts = System.currentTimeMillis();
+        applyData().whenComplete((r, t) -> {
+            log.debug("applyData took {}", System.currentTimeMillis() - ts);
+            long ts2 = System.currentTimeMillis();
+            updateChartAfterDataChange();
+            log.debug("updateChartAfterDataChange took {}", System.currentTimeMillis() - ts2);
+        });
+    }
 
     /**
      * Implementations define which series will be used for setBoundsForTimelineNavigation
@@ -588,16 +596,14 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         TemporalAdjusterModel.Interval interval = (TemporalAdjusterModel.Interval) newValue.getUserData();
         applyTemporalAdjuster(interval.getAdjuster());
         model.invalidateCache();
-        applyData();
-        updateChartAfterDataChange();
+        applyDataAndUpdate();
     }
 
     private void onTimelineChanged() {
         updateTimeLinePositions();
 
         model.invalidateCache();
-        applyData();
-        updateChartAfterDataChange();
+        applyDataAndUpdate();//3
     }
 
     private void updateTimeLinePositions() {
@@ -635,8 +641,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         if (isSelected) {
             chart.getData().add(series);
             activeSeries.add(series);
-            //model.invalidateCache();
-            applyData();
+            applyDataAndUpdate();
 
             if (isRadioButtonBehaviour) {
                 // We support different y-axis formats only if isRadioButtonBehaviour is set, otherwise we would get
@@ -646,9 +651,8 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         } else if (!isRadioButtonBehaviour) { // if isRadioButtonBehaviour we have removed it already via the code above
             chart.getData().remove(series);
             activeSeries.remove(series);
-
+            updateChartAfterDataChange();
         }
-        updateChartAfterDataChange();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -785,7 +789,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
             dataApplied = true;
             UserThread.execute(() -> {
                 applyTimeLineNavigationLabels();
-                onTimelineChanged();
+                updateTimeLinePositions();
             });
         }
     }

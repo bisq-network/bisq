@@ -21,6 +21,8 @@ import bisq.desktop.components.chart.ChartView;
 
 import bisq.core.locale.Res;
 
+import bisq.common.util.CompletableFutureUtils;
+
 import javax.inject.Inject;
 
 import javafx.scene.chart.XYChart;
@@ -29,8 +31,12 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 
+import javafx.collections.ObservableList;
+
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -121,64 +127,80 @@ public class PriceChartView extends ChartView<PriceChartViewModel> {
         onSetYAxisFormatter(seriesBsqUsdPrice);
     }
 
-    @Override
-    protected void activateSeries(XYChart.Series<Number, Number> series) {
-        super.activateSeries(series);
-        String seriesId = getSeriesId(series);
-        if (seriesId.equals(getSeriesId(seriesBsqUsdPrice))) {
-            applyBsqUsdPriceChartDataAsync();
-        } else if (seriesId.equals(getSeriesId(seriesBsqBtcPrice))) {
-            applyBsqBtcPriceChartData();
-        } else if (seriesId.equals(getSeriesId(seriesBtcUsdPrice))) {
-            applyBtcUsdPriceChartData();
-        }
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Data
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void applyData() {
+    protected CompletableFuture<Boolean> applyData() {
+        List<CompletableFuture<Boolean>> allFutures = new ArrayList<>();
+
         if (activeSeries.contains(seriesBsqUsdPrice)) {
-            applyBsqUsdPriceChartDataAsync();
+            CompletableFuture<Boolean> task1Done = new CompletableFuture<>();
+            allFutures.add(task1Done);
+            applyBsqUsdPriceChartDataAsync(task1Done);
         }
         if (activeSeries.contains(seriesBsqBtcPrice)) {
-            applyBsqBtcPriceChartData();
+            CompletableFuture<Boolean> task2Done = new CompletableFuture<>();
+            allFutures.add(task2Done);
+            applyBsqBtcPriceChartData(task2Done);
         }
         if (activeSeries.contains(seriesBtcUsdPrice)) {
-            applyBtcUsdPriceChartData();
+            CompletableFuture<Boolean> task3Done = new CompletableFuture<>();
+            allFutures.add(task3Done);
+            applyBtcUsdPriceChartData(task3Done);
         }
 
+        CompletableFuture<Boolean> task4Done = new CompletableFuture<>();
+        allFutures.add(task4Done);
         model.averageBsqBtcPrice()
                 .whenComplete((data, t) ->
-                        mapToUserThread(() ->
-                                averageBsqBtcPriceProperty.set(data)));
+                        mapToUserThread(() -> {
+                            averageBsqBtcPriceProperty.set(data);
+                            task4Done.complete(true);
+                        }));
+
+        CompletableFuture<Boolean> task5Done = new CompletableFuture<>();
+        allFutures.add(task5Done);
         model.averageBsqUsdPrice()
                 .whenComplete((data, t) ->
-                        mapToUserThread(() ->
-                                averageBsqUsdPriceProperty.set(data)));
+                        mapToUserThread(() -> {
+                            averageBsqUsdPriceProperty.set(data);
+                            task5Done.complete(true);
+                        }));
+
+        return CompletableFutureUtils.allOf(allFutures).thenApply(e -> {
+            return true;
+        });
     }
 
-    private void applyBsqUsdPriceChartDataAsync() {
+    private void applyBsqUsdPriceChartDataAsync(CompletableFuture<Boolean> completeFuture) {
         model.getBsqUsdPriceChartData()
                 .whenComplete((data, t) ->
-                        mapToUserThread(() ->
-                                seriesBsqUsdPrice.getData().setAll(data)));
+                        mapToUserThread(() -> {
+                            ObservableList<XYChart.Data<Number, Number>> data1 = seriesBsqUsdPrice.getData();
+                            data1.setAll(data);
+                            completeFuture.complete(true);
+                        })
+                );
     }
 
-    private void applyBtcUsdPriceChartData() {
+    private void applyBtcUsdPriceChartData(CompletableFuture<Boolean> completeFuture) {
         model.getBtcUsdPriceChartData()
                 .whenComplete((data, t) ->
-                        mapToUserThread(() ->
-                                seriesBtcUsdPrice.getData().setAll(data)));
+                        mapToUserThread(() -> {
+                            seriesBtcUsdPrice.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
     }
 
-    private void applyBsqBtcPriceChartData() {
+    private void applyBsqBtcPriceChartData(CompletableFuture<Boolean> completeFuture) {
         model.getBsqBtcPriceChartData()
                 .whenComplete((data, t) ->
-                        mapToUserThread(() ->
-                                seriesBsqBtcPrice.getData().setAll(data)));
+                        mapToUserThread(() -> {
+                            seriesBsqBtcPrice.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
     }
 }
