@@ -885,6 +885,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             broadcaster.broadcast(refreshTTLMessage, sender);
 
         } catch (IllegalArgumentException e) {
+            log.error("refreshTTL failed, missing data: {}", e.toString());
             e.printStackTrace();
             return false;
         }
