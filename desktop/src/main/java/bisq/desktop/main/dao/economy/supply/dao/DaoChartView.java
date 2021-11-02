@@ -21,8 +21,6 @@ import bisq.desktop.components.chart.ChartView;
 
 import bisq.core.locale.Res;
 
-import bisq.common.UserThread;
-
 import javax.inject.Inject;
 
 import javafx.scene.chart.XYChart;
@@ -38,10 +36,10 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DaoChartView extends ChartView<DaoChartViewModel> {
-    private LongProperty compensationAmountProperty = new SimpleLongProperty();
-    private LongProperty reimbursementAmountProperty = new SimpleLongProperty();
-    private LongProperty bsqTradeFeeAmountProperty = new SimpleLongProperty();
-    private LongProperty proofOfBurnAmountProperty = new SimpleLongProperty();
+    private final LongProperty compensationAmountProperty = new SimpleLongProperty();
+    private final LongProperty reimbursementAmountProperty = new SimpleLongProperty();
+    private final LongProperty bsqTradeFeeAmountProperty = new SimpleLongProperty();
+    private final LongProperty proofOfBurnAmountProperty = new SimpleLongProperty();
 
     private XYChart.Series<Number, Number> seriesBsqTradeFee, seriesProofOfBurn, seriesCompensation,
             seriesReimbursement, seriesTotalIssued, seriesTotalBurned;
@@ -183,61 +181,61 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
 
         model.getCompensationAmount()
                 .whenComplete((data, t) ->
-                        UserThread.execute(() ->
+                        mapToUserThread(() ->
                                 compensationAmountProperty.set(data)));
         model.getReimbursementAmount()
                 .whenComplete((data, t) ->
-                        UserThread.execute(() ->
+                        mapToUserThread(() ->
                                 reimbursementAmountProperty.set(data)));
         model.getBsqTradeFeeAmount()
                 .whenComplete((data, t) ->
-                        UserThread.execute(() ->
+                        mapToUserThread(() ->
                                 bsqTradeFeeAmountProperty.set(data)));
         model.getProofOfBurnAmount()
                 .whenComplete((data, t) ->
-                        UserThread.execute(() ->
+                        mapToUserThread(() ->
                                 proofOfBurnAmountProperty.set(data)));
     }
 
     private void applyTotalIssued() {
         model.getTotalIssuedChartData()
                 .whenComplete((data, t) ->
-                        UserThread.execute(() ->
+                        mapToUserThread(() ->
                                 seriesTotalIssued.getData().setAll(data)));
     }
 
     private void applyCompensation() {
         model.getCompensationChartData()
                 .whenComplete((data, t) ->
-                        UserThread.execute(() ->
+                        mapToUserThread(() ->
                                 seriesCompensation.getData().setAll(data)));
     }
 
     private void applyReimbursement() {
         model.getReimbursementChartData()
                 .whenComplete((data, t) ->
-                        UserThread.execute(() ->
+                        mapToUserThread(() ->
                                 seriesReimbursement.getData().setAll(data)));
     }
 
     private void applyTotalBurned() {
         model.getTotalBurnedChartData()
                 .whenComplete((data, t) ->
-                        UserThread.execute(() ->
+                        mapToUserThread(() ->
                                 seriesTotalBurned.getData().setAll(data)));
     }
 
     private void applyBsqTradeFee() {
         model.getBsqTradeFeeChartData()
                 .whenComplete((data, t) ->
-                        UserThread.execute(() ->
+                        mapToUserThread(() ->
                                 seriesBsqTradeFee.getData().setAll(data)));
     }
 
     private void applyProofOfBurn() {
         model.getProofOfBurnChartData()
                 .whenComplete((data, t) ->
-                        UserThread.execute(() ->
+                        mapToUserThread(() ->
                                 seriesProofOfBurn.getData().setAll(data)));
     }
 }

@@ -107,8 +107,9 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     private int maxDataPointsForShowingSymbols = 100;
     private ChangeListener<Number> yAxisWidthListener;
     private EventHandler<MouseEvent> dividerMouseDraggedEventHandler;
-    private StringProperty fromProperty = new SimpleStringProperty();
-    private StringProperty toProperty = new SimpleStringProperty();
+    private final StringProperty fromProperty = new SimpleStringProperty();
+    private final StringProperty toProperty = new SimpleStringProperty();
+    private boolean dataApplied;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -219,18 +220,16 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     @Override
     public void activate() {
         timelineNavigation.setDividerPositions(model.getDividerPositions()[0], model.getDividerPositions()[1]);
-        UserThread.execute(this::applyTimeLineNavigationLabels);
-        UserThread.execute(this::onTimelineChanged);
 
         TemporalAdjuster temporalAdjuster = model.getTemporalAdjuster();
         applyTemporalAdjuster(temporalAdjuster);
         findTimeIntervalToggleByTemporalAdjuster(temporalAdjuster).ifPresent(timeIntervalToggleGroup::selectToggle);
 
         defineAndAddActiveSeries();
-        applyData();
+        applyData(); //todo
         initBoundsForTimelineNavigation();
 
-        updateChartAfterDataChange();
+        updateChartAfterDataChange(); //todo
 
         // Apply listeners and handlers
         root.widthProperty().addListener(widthListener);
@@ -770,5 +769,24 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     // We use the name as id as there is no other suitable data inside series
     protected String getSeriesId(XYChart.Series<Number, Number> series) {
         return series.getName();
+    }
+
+    protected void mapToUserThread(Runnable command) {
+        UserThread.execute(() -> {
+            command.run();
+            onDataApplied();
+        });
+    }
+
+    // For the async handling we need to wait until we get the data applied and then still delay a bit otherwise
+    // the UI does not get rendered at first start
+    protected void onDataApplied() {
+        if (!dataApplied) {
+            dataApplied = true;
+            UserThread.execute(() -> {
+                applyTimeLineNavigationLabels();
+                onTimelineChanged();
+            });
+        }
     }
 }

@@ -21,8 +21,6 @@ import bisq.desktop.components.chart.ChartView;
 
 import bisq.core.locale.Res;
 
-import bisq.common.UserThread;
-
 import javax.inject.Inject;
 
 import javafx.scene.chart.XYChart;
@@ -39,8 +37,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PriceChartView extends ChartView<PriceChartViewModel> {
     private XYChart.Series<Number, Number> seriesBsqUsdPrice, seriesBsqBtcPrice, seriesBtcUsdPrice;
-    private DoubleProperty averageBsqUsdPriceProperty = new SimpleDoubleProperty();
-    private DoubleProperty averageBsqBtcPriceProperty = new SimpleDoubleProperty();
+    private final DoubleProperty averageBsqUsdPriceProperty = new SimpleDoubleProperty();
+    private final DoubleProperty averageBsqBtcPriceProperty = new SimpleDoubleProperty();
 
     @Inject
     public PriceChartView(PriceChartViewModel model) {
@@ -155,32 +153,32 @@ public class PriceChartView extends ChartView<PriceChartViewModel> {
 
         model.averageBsqBtcPrice()
                 .whenComplete((data, t) ->
-                        UserThread.execute(() ->
+                        mapToUserThread(() ->
                                 averageBsqBtcPriceProperty.set(data)));
         model.averageBsqUsdPrice()
                 .whenComplete((data, t) ->
-                        UserThread.execute(() ->
+                        mapToUserThread(() ->
                                 averageBsqUsdPriceProperty.set(data)));
     }
 
     private void applyBsqUsdPriceChartDataAsync() {
         model.getBsqUsdPriceChartData()
                 .whenComplete((data, t) ->
-                        UserThread.execute(() ->
+                        mapToUserThread(() ->
                                 seriesBsqUsdPrice.getData().setAll(data)));
     }
 
     private void applyBtcUsdPriceChartData() {
         model.getBtcUsdPriceChartData()
                 .whenComplete((data, t) ->
-                        UserThread.execute(() ->
+                        mapToUserThread(() ->
                                 seriesBtcUsdPrice.getData().setAll(data)));
     }
 
     private void applyBsqBtcPriceChartData() {
         model.getBsqBtcPriceChartData()
                 .whenComplete((data, t) ->
-                        UserThread.execute(() ->
+                        mapToUserThread(() ->
                                 seriesBsqBtcPrice.getData().setAll(data)));
     }
 }

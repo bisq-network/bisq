@@ -21,8 +21,6 @@ import bisq.desktop.components.chart.ChartView;
 
 import bisq.core.locale.Res;
 
-import bisq.common.UserThread;
-
 import javax.inject.Inject;
 
 import javafx.scene.chart.XYChart;
@@ -40,8 +38,8 @@ import lombok.extern.slf4j.Slf4j;
 public class VolumeChartView extends ChartView<VolumeChartViewModel> {
     private XYChart.Series<Number, Number> seriesUsdVolume, seriesBtcVolume;
 
-    private LongProperty usdVolumeProperty = new SimpleLongProperty();
-    private LongProperty btcVolumeProperty = new SimpleLongProperty();
+    private final LongProperty usdVolumeProperty = new SimpleLongProperty();
+    private final LongProperty btcVolumeProperty = new SimpleLongProperty();
 
     @Inject
     public VolumeChartView(VolumeChartViewModel model) {
@@ -146,25 +144,25 @@ public class VolumeChartView extends ChartView<VolumeChartViewModel> {
 
         model.getUsdVolume()
                 .whenComplete((data, t) ->
-                        UserThread.execute(() ->
+                        mapToUserThread(() ->
                                 usdVolumeProperty.set(data)));
         model.getBtcVolume()
                 .whenComplete((data, t) ->
-                        UserThread.execute(() ->
+                        mapToUserThread(() ->
                                 btcVolumeProperty.set(data)));
     }
 
     private void applyBtcVolumeChartData() {
         model.getBtcVolumeChartData()
                 .whenComplete((data, t) ->
-                        UserThread.execute(() ->
+                        mapToUserThread(() ->
                                 seriesBtcVolume.getData().setAll(data)));
     }
 
     private void applyUsdVolumeChartData() {
         model.getUsdVolumeChartData()
                 .whenComplete((data, t) ->
-                        UserThread.execute(() ->
+                        mapToUserThread(() ->
                                 seriesUsdVolume.getData().setAll(data)));
     }
 }
