@@ -32,6 +32,7 @@ import javafx.util.StringConverter;
 import java.text.DecimalFormat;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 import lombok.extern.slf4j.Slf4j;
@@ -54,12 +55,12 @@ public class VolumeChartViewModel extends ChartViewModel<VolumeChartDataModel> {
     // Total amounts
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    long getUsdVolume() {
-        return dataModel.getUsdVolume();
+    CompletableFuture<Long> getUsdVolume() {
+        return CompletableFuture.supplyAsync(dataModel::getUsdVolume);
     }
 
-    long getBtcVolume() {
-        return dataModel.getBtcVolume();
+    CompletableFuture<Long> getBtcVolume() {
+        return CompletableFuture.supplyAsync(dataModel::getBtcVolume);
     }
 
 
@@ -67,12 +68,12 @@ public class VolumeChartViewModel extends ChartViewModel<VolumeChartDataModel> {
     // Chart data
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    List<XYChart.Data<Number, Number>> getUsdVolumeChartData() {
-        return toChartLongData(dataModel.getUsdVolumeByInterval());
+    CompletableFuture<List<XYChart.Data<Number, Number>>> getUsdVolumeChartData() {
+        return CompletableFuture.supplyAsync(() -> toChartLongData(dataModel.getUsdVolumeByInterval()));
     }
 
-    List<XYChart.Data<Number, Number>> getBtcVolumeChartData() {
-        return toChartLongData(dataModel.getBtcVolumeByInterval());
+    CompletableFuture<List<XYChart.Data<Number, Number>>> getBtcVolumeChartData() {
+        return CompletableFuture.supplyAsync(() -> toChartLongData(dataModel.getBtcVolumeByInterval()));
     }
 
 

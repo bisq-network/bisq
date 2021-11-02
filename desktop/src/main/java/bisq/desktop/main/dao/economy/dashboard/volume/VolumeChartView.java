@@ -21,6 +21,8 @@ import bisq.desktop.components.chart.ChartView;
 
 import bisq.core.locale.Res;
 
+import bisq.common.UserThread;
+
 import javax.inject.Inject;
 
 import javafx.scene.chart.XYChart;
@@ -122,9 +124,9 @@ public class VolumeChartView extends ChartView<VolumeChartViewModel> {
         super.activateSeries(series);
 
         if (getSeriesId(series).equals(getSeriesId(seriesUsdVolume))) {
-            seriesUsdVolume.getData().setAll(model.getUsdVolumeChartData());
+            applyUsdVolumeChartData();
         } else if (getSeriesId(series).equals(getSeriesId(seriesBtcVolume))) {
-            seriesBtcVolume.getData().setAll(model.getBtcVolumeChartData());
+            applyBtcVolumeChartData();
         }
     }
 
@@ -136,13 +138,33 @@ public class VolumeChartView extends ChartView<VolumeChartViewModel> {
     @Override
     protected void applyData() {
         if (activeSeries.contains(seriesUsdVolume)) {
-            seriesUsdVolume.getData().setAll(model.getUsdVolumeChartData());
+            applyUsdVolumeChartData();
         }
         if (activeSeries.contains(seriesBtcVolume)) {
-            seriesBtcVolume.getData().setAll(model.getBtcVolumeChartData());
+            applyBtcVolumeChartData();
         }
 
-        usdVolumeProperty.set(model.getUsdVolume());
-        btcVolumeProperty.set(model.getBtcVolume());
+        model.getUsdVolume()
+                .whenComplete((data, t) ->
+                        UserThread.execute(() ->
+                                usdVolumeProperty.set(data)));
+        model.getBtcVolume()
+                .whenComplete((data, t) ->
+                        UserThread.execute(() ->
+                                btcVolumeProperty.set(data)));
+    }
+
+    private void applyBtcVolumeChartData() {
+        model.getBtcVolumeChartData()
+                .whenComplete((data, t) ->
+                        UserThread.execute(() ->
+                                seriesBtcVolume.getData().setAll(data)));
+    }
+
+    private void applyUsdVolumeChartData() {
+        model.getUsdVolumeChartData()
+                .whenComplete((data, t) ->
+                        UserThread.execute(() ->
+                                seriesUsdVolume.getData().setAll(data)));
     }
 }

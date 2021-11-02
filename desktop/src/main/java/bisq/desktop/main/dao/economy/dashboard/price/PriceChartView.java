@@ -21,6 +21,8 @@ import bisq.desktop.components.chart.ChartView;
 
 import bisq.core.locale.Res;
 
+import bisq.common.UserThread;
+
 import javax.inject.Inject;
 
 import javafx.scene.chart.XYChart;
@@ -124,14 +126,13 @@ public class PriceChartView extends ChartView<PriceChartViewModel> {
     @Override
     protected void activateSeries(XYChart.Series<Number, Number> series) {
         super.activateSeries(series);
-
         String seriesId = getSeriesId(series);
         if (seriesId.equals(getSeriesId(seriesBsqUsdPrice))) {
-            seriesBsqUsdPrice.getData().setAll(model.getBsqUsdPriceChartData());
+            applyBsqUsdPriceChartDataAsync();
         } else if (seriesId.equals(getSeriesId(seriesBsqBtcPrice))) {
-            seriesBsqBtcPrice.getData().setAll(model.getBsqBtcPriceChartData());
+            applyBsqBtcPriceChartData();
         } else if (seriesId.equals(getSeriesId(seriesBtcUsdPrice))) {
-            seriesBtcUsdPrice.getData().setAll(model.getBtcUsdPriceChartData());
+            applyBtcUsdPriceChartData();
         }
     }
 
@@ -143,16 +144,43 @@ public class PriceChartView extends ChartView<PriceChartViewModel> {
     @Override
     protected void applyData() {
         if (activeSeries.contains(seriesBsqUsdPrice)) {
-            seriesBsqUsdPrice.getData().setAll(model.getBsqUsdPriceChartData());
+            applyBsqUsdPriceChartDataAsync();
         }
         if (activeSeries.contains(seriesBsqBtcPrice)) {
-            seriesBsqBtcPrice.getData().setAll(model.getBsqBtcPriceChartData());
+            applyBsqBtcPriceChartData();
         }
         if (activeSeries.contains(seriesBtcUsdPrice)) {
-            seriesBtcUsdPrice.getData().setAll(model.getBtcUsdPriceChartData());
+            applyBtcUsdPriceChartData();
         }
 
-        averageBsqBtcPriceProperty.set(model.averageBsqBtcPrice());
-        averageBsqUsdPriceProperty.set(model.averageBsqUsdPrice());
+        model.averageBsqBtcPrice()
+                .whenComplete((data, t) ->
+                        UserThread.execute(() ->
+                                averageBsqBtcPriceProperty.set(data)));
+        model.averageBsqUsdPrice()
+                .whenComplete((data, t) ->
+                        UserThread.execute(() ->
+                                averageBsqUsdPriceProperty.set(data)));
+    }
+
+    private void applyBsqUsdPriceChartDataAsync() {
+        model.getBsqUsdPriceChartData()
+                .whenComplete((data, t) ->
+                        UserThread.execute(() ->
+                                seriesBsqUsdPrice.getData().setAll(data)));
+    }
+
+    private void applyBtcUsdPriceChartData() {
+        model.getBtcUsdPriceChartData()
+                .whenComplete((data, t) ->
+                        UserThread.execute(() ->
+                                seriesBtcUsdPrice.getData().setAll(data)));
+    }
+
+    private void applyBsqBtcPriceChartData() {
+        model.getBsqBtcPriceChartData()
+                .whenComplete((data, t) ->
+                        UserThread.execute(() ->
+                                seriesBsqBtcPrice.getData().setAll(data)));
     }
 }
