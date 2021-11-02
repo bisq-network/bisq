@@ -21,6 +21,8 @@ import bisq.desktop.components.chart.ChartView;
 
 import bisq.core.locale.Res;
 
+import bisq.common.UserThread;
+
 import javax.inject.Inject;
 
 import javafx.scene.chart.XYChart;
@@ -179,33 +181,63 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
             applyProofOfBurn();
         }
 
-        compensationAmountProperty.set(model.getCompensationAmount());
-        reimbursementAmountProperty.set(model.getReimbursementAmount());
-        bsqTradeFeeAmountProperty.set(model.getBsqTradeFeeAmount());
-        proofOfBurnAmountProperty.set(model.getProofOfBurnAmount());
+        model.getCompensationAmount()
+                .whenComplete((data, t) ->
+                        UserThread.execute(() ->
+                                compensationAmountProperty.set(data)));
+        model.getReimbursementAmount()
+                .whenComplete((data, t) ->
+                        UserThread.execute(() ->
+                                reimbursementAmountProperty.set(data)));
+        model.getBsqTradeFeeAmount()
+                .whenComplete((data, t) ->
+                        UserThread.execute(() ->
+                                bsqTradeFeeAmountProperty.set(data)));
+        model.getProofOfBurnAmount()
+                .whenComplete((data, t) ->
+                        UserThread.execute(() ->
+                                proofOfBurnAmountProperty.set(data)));
     }
 
     private void applyTotalIssued() {
-        seriesTotalIssued.getData().setAll(model.getTotalIssuedChartData());
+        model.getTotalIssuedChartData()
+                .whenComplete((data, t) ->
+                        UserThread.execute(() ->
+                                seriesTotalIssued.getData().setAll(data)));
     }
 
     private void applyCompensation() {
-        seriesCompensation.getData().setAll(model.getCompensationChartData());
+        model.getCompensationChartData()
+                .whenComplete((data, t) ->
+                        UserThread.execute(() ->
+                                seriesCompensation.getData().setAll(data)));
     }
 
     private void applyReimbursement() {
-        seriesReimbursement.getData().setAll(model.getReimbursementChartData());
+        model.getReimbursementChartData()
+                .whenComplete((data, t) ->
+                        UserThread.execute(() ->
+                                seriesReimbursement.getData().setAll(data)));
     }
 
     private void applyTotalBurned() {
-        seriesTotalBurned.getData().setAll(model.getTotalBurnedChartData());
+        model.getTotalBurnedChartData()
+                .whenComplete((data, t) ->
+                        UserThread.execute(() ->
+                                seriesTotalBurned.getData().setAll(data)));
     }
 
     private void applyBsqTradeFee() {
-        seriesBsqTradeFee.getData().setAll(model.getBsqTradeFeeChartData());
+        model.getBsqTradeFeeChartData()
+                .whenComplete((data, t) ->
+                        UserThread.execute(() ->
+                                seriesBsqTradeFee.getData().setAll(data)));
     }
 
     private void applyProofOfBurn() {
-        seriesProofOfBurn.getData().setAll(model.getProofOfBurnChartData());
+        model.getProofOfBurnChartData()
+                .whenComplete((data, t) ->
+                        UserThread.execute(() ->
+                                seriesProofOfBurn.getData().setAll(data)));
     }
 }
