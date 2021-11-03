@@ -105,7 +105,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             try {
                 long takersTradePrice = request.getTradePrice();
                 offer.checkTradePriceTolerance(takersTradePrice);
-                trade.setTradePrice(takersTradePrice);
+                trade.setPriceAsLong(takersTradePrice);
             } catch (TradePriceOutOfToleranceException e) {
                 failed(e.getMessage());
             } catch (Throwable e2) {

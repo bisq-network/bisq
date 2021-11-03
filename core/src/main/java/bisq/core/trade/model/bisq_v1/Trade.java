@@ -310,7 +310,7 @@ public abstract class Trade extends TradeModel {
     @Setter
     private long amountAsLong;
     @Setter
-    private long tradePrice;
+    private long priceAsLong;
     private State state = State.PREPARATION;
     @Getter
     private DisputeState disputeState = DisputeState.NO_DISPUTE;
@@ -482,7 +482,7 @@ public abstract class Trade extends TradeModel {
                     Coin txFee,
                     Coin takerFee,
                     boolean isCurrencyForTakerFeeBtc,
-                    long tradePrice,
+                    long priceAsLong,
                     NodeAddress tradingPeerNodeAddress,
                     @Nullable NodeAddress arbitratorNodeAddress,
                     @Nullable NodeAddress mediatorNodeAddress,
@@ -501,7 +501,7 @@ public abstract class Trade extends TradeModel {
                 btcWalletService,
                 processModel,
                 uid);
-        this.tradePrice = tradePrice;
+        this.priceAsLong = priceAsLong;
 
         setTradingPeerNodeAddress(tradingPeerNodeAddress);
         setAmount(amount);
@@ -522,7 +522,7 @@ public abstract class Trade extends TradeModel {
                 .setTakeOfferDate(takeOfferDate)
                 .setProcessModel(processModel.toProtoMessage())
                 .setTradeAmountAsLong(amountAsLong)
-                .setTradePrice(tradePrice)
+                .setTradePrice(priceAsLong)
                 .setState(Trade.State.toProtoMessage(state))
                 .setDisputeState(Trade.DisputeState.toProtoMessage(disputeState))
                 .setTradePeriodState(Trade.TradePeriodState.toProtoMessage(tradePeriodState))
@@ -970,7 +970,7 @@ public abstract class Trade extends TradeModel {
     }
 
     public Price getPrice() {
-        return Price.valueOf(offer.getCurrencyCode(), tradePrice);
+        return Price.valueOf(offer.getCurrencyCode(), priceAsLong);
     }
 
     @Nullable
@@ -1085,7 +1085,7 @@ public abstract class Trade extends TradeModel {
                 ",\n     depositTxId='" + depositTxId + '\'' +
                 ",\n     payoutTxId='" + payoutTxId + '\'' +
                 ",\n     tradeAmountAsLong=" + amountAsLong +
-                ",\n     tradePrice=" + tradePrice +
+                ",\n     tradePrice=" + priceAsLong +
                 ",\n     tradingPeerNodeAddress=" + tradingPeerNodeAddress +
                 ",\n     state=" + state +
                 ",\n     disputeState=" + disputeState +

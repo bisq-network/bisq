@@ -100,7 +100,7 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
                 uid);
 
         trade.setAmountAsLong(proto.getTradeAmountAsLong());
-        trade.setTradePrice(proto.getTradePrice());
+        trade.setPriceAsLong(proto.getTradePrice());
         trade.setTradingPeerNodeAddress(proto.hasTradingPeerNodeAddress() ? NodeAddress.fromProto(proto.getTradingPeerNodeAddress()) : null);
 
         return fromProto(trade,
