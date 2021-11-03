@@ -369,7 +369,6 @@ public abstract class Trade extends TradeModel {
     // Transient
     // Immutable
     transient final private Coin txFee;
-    @Getter
     transient final private Coin takerFee;
     @Getter
     transient final private BtcWalletService btcWalletService;
@@ -768,6 +767,11 @@ public abstract class Trade extends TradeModel {
     @Override
     public Coin getTxFee() {
         return txFee;
+    }
+
+    @Override
+    public Coin getTakerFee() {
+        return takerFee;
     }
 
 

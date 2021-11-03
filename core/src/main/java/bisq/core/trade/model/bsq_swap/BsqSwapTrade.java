@@ -75,6 +75,7 @@ public abstract class BsqSwapTrade extends TradeModel {
     @Getter
     private final long txFeePerVbyte;
     private final long makerFee;
+    @Getter
     private final long takerFeeAsLong;
     @Getter
     private final BsqSwapProtocolModel bsqSwapProtocolModel;
@@ -216,8 +217,9 @@ public abstract class BsqSwapTrade extends TradeModel {
         return makerFee;
     }
 
-    public long getTakerFeeAsLong() {
-        return takerFeeAsLong;
+    @Override
+    public Coin getTakerFee() {
+        return Coin.valueOf(takerFeeAsLong);
     }
 
 
