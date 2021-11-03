@@ -396,7 +396,7 @@ public abstract class Trade extends TradeModel {
     @Nullable
     transient private Coin amount;
 
-    transient private ObjectProperty<Coin> tradeAmountProperty;
+    transient private ObjectProperty<Coin> amountProperty;
     transient private ObjectProperty<Volume> volumeProperty;
 
     // Added in v1.1.6
@@ -789,7 +789,7 @@ public abstract class Trade extends TradeModel {
     public void setAmount(Coin amount) {
         this.amount = amount;
         tradeAmountAsLong = amount.value;
-        getTradeAmountProperty().set(amount);
+        getAmountProperty().set(amount);
         getVolumeProperty().set(getTradeVolume());
     }
 
@@ -962,7 +962,7 @@ public abstract class Trade extends TradeModel {
     }
 
     public ReadOnlyObjectProperty<Coin> amountProperty() {
-        return tradeAmountProperty;
+        return amountProperty;
     }
 
     public ReadOnlyObjectProperty<Volume> volumeProperty() {
@@ -1022,11 +1022,11 @@ public abstract class Trade extends TradeModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // lazy initialization
-    private ObjectProperty<Coin> getTradeAmountProperty() {
-        if (tradeAmountProperty == null)
-            tradeAmountProperty = getAmount() != null ? new SimpleObjectProperty<>(getAmount()) : new SimpleObjectProperty<>();
+    private ObjectProperty<Coin> getAmountProperty() {
+        if (amountProperty == null)
+            amountProperty = getAmount() != null ? new SimpleObjectProperty<>(getAmount()) : new SimpleObjectProperty<>();
 
-        return tradeAmountProperty;
+        return amountProperty;
     }
 
     // lazy initialization
@@ -1117,7 +1117,7 @@ public abstract class Trade extends TradeModel {
                 ",\n     delayedPayoutTx=" + delayedPayoutTx +
                 ",\n     payoutTx=" + payoutTx +
                 ",\n     tradeAmount=" + amount +
-                ",\n     tradeAmountProperty=" + tradeAmountProperty +
+                ",\n     tradeAmountProperty=" + amountProperty +
                 ",\n     tradeVolumeProperty=" + volumeProperty +
                 ",\n     mediationResultState=" + mediationResultState +
                 ",\n     mediationResultStateProperty=" + mediationResultStateProperty +
