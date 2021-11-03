@@ -19,6 +19,7 @@ package bisq.desktop.main.portfolio.bsqswaps;
 
 import bisq.desktop.common.model.ActivatableDataModel;
 
+import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
@@ -39,24 +40,31 @@ class UnconfirmedBsqSwapsDataModel extends ActivatableDataModel {
     private final BsqWalletService bsqWalletService;
     private final ObservableList<UnconfirmedBsqSwapsListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<BsqSwapTrade> tradesListChangeListener;
+    private final BsqBalanceListener bsqBalanceListener;
 
     @Inject
-    public UnconfirmedBsqSwapsDataModel(BsqSwapTradeManager bsqSwapTradeManager, BsqWalletService bsqWalletService) {
+    public UnconfirmedBsqSwapsDataModel(BsqSwapTradeManager bsqSwapTradeManager,
+                                        BsqWalletService bsqWalletService) {
         this.bsqSwapTradeManager = bsqSwapTradeManager;
         this.bsqWalletService = bsqWalletService;
 
         tradesListChangeListener = change -> applyList();
+        bsqBalanceListener = (availableBalance, availableNonBsqBalance, unverifiedBalance,
+                              unconfirmedChangeBalance, lockedForVotingBalance, lockedInBondsBalance,
+                              unlockingBondsBalance) -> applyList();
     }
 
     @Override
     protected void activate() {
         applyList();
         bsqSwapTradeManager.getObservableList().addListener(tradesListChangeListener);
+        bsqWalletService.addBsqBalanceListener(bsqBalanceListener);
     }
 
     @Override
     protected void deactivate() {
         bsqSwapTradeManager.getObservableList().removeListener(tradesListChangeListener);
+        bsqWalletService.removeBsqBalanceListener(bsqBalanceListener);
     }
 
     public ObservableList<UnconfirmedBsqSwapsListItem> getList() {
@@ -70,12 +78,11 @@ class UnconfirmedBsqSwapsDataModel extends ActivatableDataModel {
     private void applyList() {
         list.clear();
 
-        list.addAll(bsqSwapTradeManager.getObservableList().stream()
+        list.addAll(bsqSwapTradeManager.getUnconfirmedBsqSwapTrades()
                 .map(bsqSwapTrade -> new UnconfirmedBsqSwapsListItem(bsqWalletService, bsqSwapTrade))
                 .collect(Collectors.toList()));
 
         // we sort by date, the earliest first
         list.sort((o1, o2) -> o2.getBsqSwapTrade().getDate().compareTo(o1.getBsqSwapTrade().getDate()));
     }
-
 }

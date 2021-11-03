@@ -28,6 +28,7 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PeerInfoIconTrading;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.BsqTradeDetailsWindow;
 import bisq.desktop.main.overlays.windows.ClosedTradesSummaryWindow;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
@@ -41,8 +42,10 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.trade.model.Tradable;
+import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;
@@ -143,6 +146,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     Region footerSpacer;
 
     private final OfferDetailsWindow offerDetailsWindow;
+    private final BsqTradeDetailsWindow bsqTradeDetailsWindow;
     private final Navigation navigation;
     private final KeyRing keyRing;
     private final Preferences preferences;
@@ -156,6 +160,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     @Inject
     public ClosedTradesView(ClosedTradesViewModel model,
                             OfferDetailsWindow offerDetailsWindow,
+                            BsqTradeDetailsWindow bsqTradeDetailsWindow,
                             Navigation navigation,
                             KeyRing keyRing,
                             Preferences preferences,
@@ -164,6 +169,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.offerDetailsWindow = offerDetailsWindow;
+        this.bsqTradeDetailsWindow = bsqTradeDetailsWindow;
         this.navigation = navigation;
         this.keyRing = keyRing;
         this.preferences = preferences;
@@ -217,14 +223,14 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         deviationColumn.setComparator(Comparator.comparing(o ->
                         o.getTradable().getOffer().isUseMarketBasedPrice() ? o.getTradable().getOffer().getMarketPriceMargin() : 1,
                 Comparator.nullsFirst(Comparator.naturalOrder())));
-        volumeColumn.setComparator(nullsFirstComparingAsTrade(Trade::getVolume));
+        volumeColumn.setComparator(nullsFirstComparingAsTrade(TradeModel::getVolume));
         amountColumn.setComparator(Comparator.comparing(model::getAmount, Comparator.nullsFirst(Comparator.naturalOrder())));
         avatarColumn.setComparator(Comparator.comparing(
                 o -> model.getNumPastTrades(o.getTradable()),
                 Comparator.nullsFirst(Comparator.naturalOrder())
         ));
         txFeeColumn.setComparator(nullsFirstComparing(o ->
-                o instanceof Trade ? ((Trade) o).getTxFee() : o.getOffer().getTxFee()
+                o instanceof TradeModel ? ((TradeModel) o).getTxFee() : o.getOffer().getTxFee()
         ));
         txFeeColumn.setComparator(Comparator.comparing(model::getTxFee, Comparator.nullsFirst(Comparator.naturalOrder())));
 
@@ -360,9 +366,9 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         );
     }
 
-    private static <T extends Comparable<T>> Comparator<ClosedTradableListItem> nullsFirstComparingAsTrade(Function<Trade, T> keyExtractor) {
+    private static <T extends Comparable<T>> Comparator<ClosedTradableListItem> nullsFirstComparingAsTrade(Function<TradeModel, T> keyExtractor) {
         return Comparator.comparing(
-                o -> o.getTradable() instanceof Trade ? keyExtractor.apply((Trade) o.getTradable()) : null,
+                o -> o.getTradable() instanceof TradeModel ? keyExtractor.apply((TradeModel) o.getTradable()) : null,
                 Comparator.nullsFirst(Comparator.naturalOrder())
         );
     }
@@ -429,6 +435,16 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 return true;
             }
 
+            if (tradable instanceof BsqSwapTrade) {
+                BsqSwapTrade bsqSwapTrade = (BsqSwapTrade) tradable;
+                if (bsqSwapTrade.getTxId() != null && bsqSwapTrade.getTxId().contains(filterString)) {
+                    return true;
+                }
+                if (bsqSwapTrade.getTradeProtocolModel().getTempTradingPeerNodeAddress().getFullAddress().contains(filterString)) {
+                    return true;
+                }
+            }
+
             if (tradable instanceof Trade) {
                 Trade trade = (Trade) tradable;
                 if (trade.getTakerFeeTxId() != null && trade.getTakerFeeTxId().contains(filterString)) {
@@ -481,10 +497,13 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                     field = new HyperlinkWithIcon(model.getTradeId(item));
                                     field.setOnAction(event -> {
                                         Tradable tradable = item.getTradable();
-                                        if (tradable instanceof Trade)
+                                        if (tradable instanceof Trade) {
                                             tradeDetailsWindow.show((Trade) tradable);
-                                        else if (tradable instanceof OpenOffer)
+                                        } else if (tradable instanceof BsqSwapTrade) {
+                                            bsqTradeDetailsWindow.show((BsqSwapTrade) tradable);
+                                        } else if (tradable instanceof OpenOffer) {
                                             offerDetailsWindow.show(tradable.getOffer());
+                                        }
                                     });
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);
@@ -570,19 +589,19 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                         return new TableCell<>() {
 
                             @Override
-                            public void updateItem(final ClosedTradableListItem newItem, boolean empty) {
-                                super.updateItem(newItem, empty);
+                            public void updateItem(final ClosedTradableListItem item, boolean empty) {
+                                super.updateItem(item, empty);
 
-                                if (newItem != null && !empty && newItem.getTradable() instanceof Trade) {
-                                    Trade trade = (Trade) newItem.getTradable();
-                                    int numPastTrades = model.getNumPastTrades(trade);
-                                    NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
+                                if (item != null && !empty && item.getTradable() instanceof TradeModel) {
+                                    TradeModel tradeModel = (TradeModel) item.getTradable();
+                                    int numPastTrades = model.getNumPastTrades(tradeModel);
+                                    NodeAddress tradingPeerNodeAddress = tradeModel.getTradingPeerNodeAddress();
                                     String role = Res.get("peerInfoIcon.tooltip.tradePeer");
                                     Node peerInfoIcon = new PeerInfoIconTrading(tradingPeerNodeAddress,
                                             role,
                                             numPastTrades,
                                             privateNotificationManager,
-                                            trade,
+                                            tradeModel,
                                             preferences,
                                             model.accountAgeWitnessService,
                                             useDevPrivilegeKeys);

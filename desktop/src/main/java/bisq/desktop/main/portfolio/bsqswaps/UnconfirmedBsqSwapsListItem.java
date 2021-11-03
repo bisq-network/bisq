@@ -30,6 +30,8 @@ import javafx.scene.control.Tooltip;
 
 import lombok.Getter;
 
+import javax.annotation.Nullable;
+
 class UnconfirmedBsqSwapsListItem {
     @Getter
     private final BsqSwapTrade bsqSwapTrade;
@@ -70,7 +72,7 @@ class UnconfirmedBsqSwapsListItem {
 
     }
 
-    private void updateConfidence(TransactionConfidence confidence, Tooltip tooltip) {
+    private void updateConfidence(@Nullable TransactionConfidence confidence, Tooltip tooltip) {
         if (confidence != null) {
             GUIUtil.updateConfidence(confidence, tooltip, txConfidenceIndicator);
             confirmations = confidence.getDepthInBlocks();

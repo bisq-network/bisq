@@ -201,6 +201,10 @@ public class ClosedTradeUtil {
                 .sum());
     }
 
+    public long getTradeFee(Tradable tradable, boolean expectBtcFee) {
+        return expectBtcFee ? getBtcTradeFee(tradable) : getBsqTradeFee(tradable);
+    }
+
     public String getTradeFeeAsString(Tradable tradable, boolean appendCode) {
         if (isBsqTradeFee(tradable)) {
             return bsqFormatter.formatCoin(Coin.valueOf(getBsqTradeFee(tradable)), appendCode);
@@ -218,12 +222,12 @@ public class ClosedTradeUtil {
     }
 
     public String getBuyerSecurityDepositAsString(Tradable tradable) {
-        return isBsqSwapTrade(tradable) ? "" :
+        return isBsqSwapTrade(tradable) ? Res.get("shared.na") :
                 btcFormatter.formatCoin(tradable.getOffer().getBuyerSecurityDeposit());
     }
 
     public String getSellerSecurityDepositAsString(Tradable tradable) {
-        return isBsqSwapTrade(tradable) ? "" :
+        return isBsqSwapTrade(tradable) ? Res.get("shared.na") :
                 btcFormatter.formatCoin(tradable.getOffer().getSellerSecurityDeposit());
     }
 
@@ -312,10 +316,6 @@ public class ClosedTradeUtil {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Fee utils
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private long getTradeFee(Tradable tradable, boolean expectBtcFee) {
-        return expectBtcFee ? getBtcTradeFee(tradable) : getBsqTradeFee(tradable);
-    }
 
     private long getBtcTradeFee(Tradable tradable) {
         if (isBsqSwapTrade(tradable) || isBsqTradeFee(tradable)) {

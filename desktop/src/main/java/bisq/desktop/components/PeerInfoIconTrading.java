@@ -23,6 +23,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.Preferences;
 
@@ -74,7 +75,7 @@ public class PeerInfoIconTrading extends PeerInfoIcon {
                                String role,
                                int numTrades,
                                PrivateNotificationManager privateNotificationManager,
-                               Trade trade,
+                               TradeModel tradeModel,
                                Preferences preferences,
                                AccountAgeWitnessService accountAgeWitnessService,
                                boolean useDevPrivilegeKeys) {
@@ -82,8 +83,8 @@ public class PeerInfoIconTrading extends PeerInfoIcon {
                 role,
                 numTrades,
                 privateNotificationManager,
-                trade.getOffer(),
-                trade,
+                tradeModel.getOffer(),
+                tradeModel,
                 preferences,
                 accountAgeWitnessService,
                 useDevPrivilegeKeys);
@@ -94,7 +95,7 @@ public class PeerInfoIconTrading extends PeerInfoIcon {
                                 int numTrades,
                                 PrivateNotificationManager privateNotificationManager,
                                 @Nullable Offer offer,
-                                @Nullable Trade trade,
+                                @Nullable TradeModel tradeModel,
                                 Preferences preferences,
                                 AccountAgeWitnessService accountAgeWitnessService,
                                 boolean useDevPrivilegeKeys) {
@@ -102,17 +103,21 @@ public class PeerInfoIconTrading extends PeerInfoIcon {
         this.numTrades = numTrades;
         this.accountAgeWitnessService = accountAgeWitnessService;
         if (offer == null) {
-            checkNotNull(trade, "Trade must not be null if offer is null.");
-            offer = trade.getOffer();
+            checkNotNull(tradeModel, "Trade must not be null if offer is null.");
+            offer = tradeModel.getOffer();
         }
         checkNotNull(offer, "Offer must not be null");
-        isFiatCurrency = offer != null && CurrencyUtil.isFiatCurrency(offer.getCurrencyCode());
-        initialize(role, offer, trade, privateNotificationManager, useDevPrivilegeKeys);
+        isFiatCurrency = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode());
+        initialize(role, offer, tradeModel, privateNotificationManager, useDevPrivilegeKeys);
     }
 
-    protected void initialize(String role, Offer offer, Trade trade, PrivateNotificationManager privateNotificationManager, boolean useDevPrivilegeKeys) {
+    protected void initialize(String role,
+                              Offer offer,
+                              TradeModel tradeModel,
+                              PrivateNotificationManager privateNotificationManager,
+                              boolean useDevPrivilegeKeys) {
         boolean hasTraded = numTrades > 0;
-        Tuple5<Long, Long, String, String, String> peersAccount = getPeersAccountAge(trade, offer);
+        Tuple5<Long, Long, String, String, String> peersAccount = getPeersAccountAge(tradeModel, offer);
 
         Long accountAge = peersAccount.first;
         Long signAge = peersAccount.second;
@@ -121,8 +126,8 @@ public class PeerInfoIconTrading extends PeerInfoIcon {
                 Res.get("peerInfoIcon.tooltip.trade.traded", role, fullAddress, numTrades, getAccountAgeTooltip(accountAge)) :
                 Res.get("peerInfoIcon.tooltip.trade.notTraded", role, fullAddress, getAccountAgeTooltip(accountAge));
 
-        createAvatar(getRingColor(offer, trade, accountAge, signAge));
-        addMouseListener(numTrades, privateNotificationManager, trade, offer, preferences, useDevPrivilegeKeys,
+        createAvatar(getRingColor(offer, tradeModel, accountAge, signAge));
+        addMouseListener(numTrades, privateNotificationManager, tradeModel, offer, preferences, useDevPrivilegeKeys,
                 isFiatCurrency, accountAge, signAge, peersAccount.third, peersAccount.fourth, peersAccount.fifth);
     }
 
@@ -130,12 +135,12 @@ public class PeerInfoIconTrading extends PeerInfoIcon {
         return isFiatCurrency ? super.getAccountAgeTooltip(accountAge) : "";
     }
 
-    protected Color getRingColor(Offer offer, Trade trade, Long accountAge, Long signAge) {
+    protected Color getRingColor(Offer offer, TradeModel tradeModel, Long accountAge, Long signAge) {
         // outer circle
         // for altcoins we always display green
         Color ringColor = AVATAR_GREEN;
         if (isFiatCurrency) {
-            switch (accountAgeWitnessService.getPeersAccountAgeCategory(hasChargebackRisk(trade, offer) ? signAge : accountAge)) {
+            switch (accountAgeWitnessService.getPeersAccountAgeCategory(hasChargebackRisk(tradeModel, offer) ? signAge : accountAge)) {
                 case TWO_MONTHS_OR_MORE:
                     ringColor = AVATAR_GREEN;
                     break;
@@ -155,25 +160,28 @@ public class PeerInfoIconTrading extends PeerInfoIcon {
     }
 
     /**
-     * @param trade Open trade for trading peer info to be shown
+     * @param tradeModel Open trade for trading peer info to be shown
      * @param offer Open offer for trading peer info to be shown
      * @return account age, sign age, account info, sign info, sign state
      */
-    private Tuple5<Long, Long, String, String, String> getPeersAccountAge(@Nullable Trade trade,
+    private Tuple5<Long, Long, String, String, String> getPeersAccountAge(@Nullable TradeModel tradeModel,
                                                                           @Nullable Offer offer) {
-        AccountAgeWitnessService.SignState signState;
+        AccountAgeWitnessService.SignState signState = null;
         long signAge = -1L;
         long accountAge = -1L;
 
-        if (trade != null) {
-            offer = trade.getOffer();
+        if (tradeModel != null) {
+            offer = tradeModel.getOffer();
             if (offer == null) {
                 // unexpected
                 return new Tuple5<>(signAge, accountAge, Res.get("peerInfo.age.noRisk"), null, null);
             }
-            signState = accountAgeWitnessService.getSignState(trade);
-            signAge = accountAgeWitnessService.getWitnessSignAge(trade, new Date());
-            accountAge = accountAgeWitnessService.getAccountAge(trade);
+            if (tradeModel instanceof Trade) {
+                Trade trade = (Trade) tradeModel;
+                signState = accountAgeWitnessService.getSignState(trade);
+                signAge = accountAgeWitnessService.getWitnessSignAge(trade, new Date());
+                accountAge = accountAgeWitnessService.getAccountAge(trade);
+            }
         } else {
             checkNotNull(offer, "Offer must not be null if trade is null.");
             signState = accountAgeWitnessService.getSignState(offer);
@@ -181,19 +189,20 @@ public class PeerInfoIconTrading extends PeerInfoIcon {
             accountAge = accountAgeWitnessService.getAccountAge(offer);
         }
 
-        if (hasChargebackRisk(trade, offer)) {
+        if (signState != null && hasChargebackRisk(tradeModel, offer)) {
             String signAgeInfo = Res.get("peerInfo.age.chargeBackRisk");
             String accountSigningState = StringUtils.capitalize(signState.getDisplayString());
-            if (signState.equals(AccountAgeWitnessService.SignState.UNSIGNED))
+            if (signState.equals(AccountAgeWitnessService.SignState.UNSIGNED)) {
                 signAgeInfo = null;
+            }
 
             return new Tuple5<>(accountAge, signAge, Res.get("peerInfo.age.noRisk"), signAgeInfo, accountSigningState);
         }
         return new Tuple5<>(accountAge, signAge, Res.get("peerInfo.age.noRisk"), null, null);
     }
 
-    private static boolean hasChargebackRisk(@Nullable Trade trade, @Nullable Offer offer) {
-        Offer offerToCheck = trade != null ? trade.getOffer() : offer;
+    private static boolean hasChargebackRisk(@Nullable TradeModel tradeModel, @Nullable Offer offer) {
+        Offer offerToCheck = tradeModel != null ? tradeModel.getOffer() : offer;
 
         return offerToCheck != null &&
                 PaymentMethod.hasChargebackRisk(offerToCheck.getPaymentMethod(), offerToCheck.getCurrencyCode());

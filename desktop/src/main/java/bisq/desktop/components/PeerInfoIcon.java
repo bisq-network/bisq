@@ -23,7 +23,7 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.model.TradeModel;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;
@@ -147,7 +147,7 @@ public class PeerInfoIcon extends Group {
 
     protected void addMouseListener(int numTrades,
                                     PrivateNotificationManager privateNotificationManager,
-                                    @Nullable Trade trade,
+                                    @Nullable TradeModel tradeModel,
                                     Offer offer,
                                     Preferences preferences,
                                     boolean useDevPrivilegeKeys,
@@ -170,7 +170,7 @@ public class PeerInfoIcon extends Group {
                         Res.get("peerInfo.unknownAge") :
                 null;
 
-        setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, trade, offer, preferences, useDevPrivilegeKeys)
+        setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, tradeModel, offer, preferences, useDevPrivilegeKeys)
                 .fullAddress(fullAddress)
                 .numTrades(numTrades)
                 .accountAge(accountAgeFormatted)

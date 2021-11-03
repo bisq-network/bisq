@@ -20,18 +20,18 @@ package bisq.desktop.main.portfolio.closedtrades;
 import bisq.desktop.common.model.ActivatableDataModel;
 import bisq.desktop.main.PriceUtil;
 
+import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
-import bisq.core.offer.OpenOffer;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.ClosedTradeUtil;
+import bisq.core.trade.bsq_swap.BsqSwapTradeManager;
 import bisq.core.trade.model.Tradable;
-import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.Preferences;
 import bisq.core.util.VolumeUtil;
 
@@ -44,20 +44,22 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 class ClosedTradesDataModel extends ActivatableDataModel {
 
     final ClosedTradableManager closedTradableManager;
-    private final ClosedTradeUtil closedTradeUtil;
     private final BsqWalletService bsqWalletService;
+    private final ClosedTradeUtil closedTradeUtil;
+    private final BsqSwapTradeManager bsqSwapTradeManager;
     private final Preferences preferences;
     private final PriceFeedService priceFeedService;
     private final ObservableList<ClosedTradableListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<Tradable> tradesListChangeListener;
+    private final BsqBalanceListener bsqBalanceListener;
 
     /**
      * Supplies a List<Tradable> from this JFX ObservableList<ClosedTradableListItem>
@@ -69,64 +71,56 @@ class ClosedTradesDataModel extends ActivatableDataModel {
 
     @Inject
     public ClosedTradesDataModel(ClosedTradableManager closedTradableManager,
+                                 BsqSwapTradeManager bsqSwapTradeManager,
                                  BsqWalletService bsqWalletService,
                                  ClosedTradeUtil closedTradeUtil,
                                  Preferences preferences,
                                  PriceFeedService priceFeedService) {
         this.closedTradableManager = closedTradableManager;
+        this.bsqSwapTradeManager = bsqSwapTradeManager;
         this.bsqWalletService = bsqWalletService;
         this.closedTradeUtil = closedTradeUtil;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
 
         tradesListChangeListener = change -> applyList();
+        bsqBalanceListener = (availableBalance, availableNonBsqBalance, unverifiedBalance,
+                              unconfirmedChangeBalance, lockedForVotingBalance, lockedInBondsBalance,
+                              unlockingBondsBalance) -> applyList();
     }
 
     @Override
     protected void activate() {
         applyList();
         closedTradableManager.getObservableList().addListener(tradesListChangeListener);
+        bsqSwapTradeManager.getObservableList().addListener(tradesListChangeListener);
+        bsqWalletService.addBsqBalanceListener(bsqBalanceListener);
     }
 
     @Override
     protected void deactivate() {
         closedTradableManager.getObservableList().removeListener(tradesListChangeListener);
+        bsqSwapTradeManager.getObservableList().removeListener(tradesListChangeListener);
+        bsqWalletService.removeBsqBalanceListener(bsqBalanceListener);
     }
 
-    public ObservableList<ClosedTradableListItem> getList() {
+    ObservableList<ClosedTradableListItem> getList() {
         return list;
     }
 
-    public OfferDirection getDirection(Offer offer) {
+    OfferDirection getDirection(Offer offer) {
         return closedTradableManager.wasMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
-    }
-
-    private void applyList() {
-        list.clear();
-
-        list.addAll(closedTradableManager.getObservableList().stream().map(ClosedTradableListItem::new).collect(Collectors.toList()));
-
-        // we sort by date, earliest first
-        list.sort((o1, o2) -> o2.getTradable().getDate().compareTo(o1.getTradable().getDate()));
-    }
-
-    boolean wasMyOffer(Tradable tradable) {
-        return closedTradableManager.wasMyOffer(tradable.getOffer());
     }
 
     Coin getTotalAmount() {
         return closedTradeUtil.getTotalAmount(tradableList.get());
     }
 
-    Map<String, Long> getTotalVolumeByCurrency() {
-        return closedTradeUtil.getTotalVolumeByCurrency(tradableList.get());
-    }
-
-    public Optional<Volume> getVolumeInUserFiatCurrency(Coin amount) {
+    Optional<Volume> getVolumeInUserFiatCurrency(Coin amount) {
         return getVolume(amount, preferences.getPreferredTradeCurrency().getCode());
     }
 
-    public Optional<Volume> getVolume(Coin amount, String currencyCode) {
+    Optional<Volume> getVolume(Coin amount, String currencyCode) {
         MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
         if (marketPrice == null) {
             return Optional.empty();
@@ -138,53 +132,26 @@ class ClosedTradesDataModel extends ActivatableDataModel {
         return Optional.of(VolumeUtil.getVolume(amount, price));
     }
 
-    public Volume getBsqVolumeInUsdWithAveragePrice(Coin amount) {
+    Volume getBsqVolumeInUsdWithAveragePrice(Coin amount) {
         return closedTradeUtil.getBsqVolumeInUsdWithAveragePrice(amount);
     }
 
-    public Coin getTotalTxFee() {
+    Coin getTotalTxFee() {
         return closedTradeUtil.getTotalTxFee(tradableList.get());
     }
 
-    public Coin getTotalTradeFee(boolean expectBtcFee) {
+    Coin getTotalTradeFee(boolean expectBtcFee) {
         return closedTradeUtil.getTotalTradeFee(tradableList.get(), expectBtcFee);
     }
 
-    protected long getTradeFee(Tradable tradable, boolean expectBtcFee) {
-        Offer offer = tradable.getOffer();
-        if (wasMyOffer(tradable) || tradable instanceof OpenOffer) {
-            String makerFeeTxId = offer.getOfferFeePaymentTxId();
-            boolean notInBsqWallet = bsqWalletService.getTransaction(makerFeeTxId) == null;
-            if (expectBtcFee) {
-                if (notInBsqWallet) {
-                    return offer.getMakerFee().value;
-                } else {
-                    return 0;
-                }
-            } else {
-                if (notInBsqWallet) {
-                    return 0;
-                } else {
-                    return offer.getMakerFee().value;
-                }
-            }
-        } else {
-            Trade trade = (Trade) tradable;
-            String takerFeeTxId = trade.getTakerFeeTxId();
-            boolean notInBsqWallet = bsqWalletService.getTransaction(takerFeeTxId) == null;
-            if (expectBtcFee) {
-                if (notInBsqWallet) {
-                    return trade.getTakerFee().value;
-                } else {
-                    return 0;
-                }
-            } else {
-                if (notInBsqWallet) {
-                    return 0;
-                } else {
-                    return trade.getTakerFee().value;
-                }
-            }
-        }
+    private void applyList() {
+        list.clear();
+        list.addAll(getTradableStream().map(ClosedTradableListItem::new).collect(Collectors.toList()));
+        // We sort by date, the earliest first
+        list.sort((o1, o2) -> o2.getTradable().getDate().compareTo(o1.getTradable().getDate()));
+    }
+
+    private Stream<Tradable> getTradableStream() {
+        return Stream.concat(bsqSwapTradeManager.getConfirmedBsqSwapTrades(), closedTradableManager.getObservableList().stream());
     }
 }

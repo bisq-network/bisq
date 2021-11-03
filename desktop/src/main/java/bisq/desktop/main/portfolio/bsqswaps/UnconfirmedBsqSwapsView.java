@@ -335,6 +335,12 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
             if (offer.getPaymentMethod().getDisplayString().contains(filterString)) {
                 return true;
             }
+            if (bsqSwapTrade.getTxId() != null && bsqSwapTrade.getTxId().contains(filterString)) {
+                return true;
+            }
+            if (bsqSwapTrade.getTradeProtocolModel().getTempTradingPeerNodeAddress().getFullAddress().contains(filterString)) {
+                return true;
+            }
 
             return false;
         });

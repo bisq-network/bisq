@@ -19,18 +19,17 @@ package bisq.desktop.main.portfolio.closedtrades;
 
 import bisq.core.trade.model.Tradable;
 
+import lombok.Getter;
+
 /**
  * We could remove that wrapper if it is not needed for additional UI only fields.
  */
+// TODO remove
 class ClosedTradableListItem {
-
+    @Getter
     private final Tradable tradable;
 
     ClosedTradableListItem(Tradable tradable) {
         this.tradable = tradable;
-    }
-
-    Tradable getTradable() {
-        return tradable;
     }
 }

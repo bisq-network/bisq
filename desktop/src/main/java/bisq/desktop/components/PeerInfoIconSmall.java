@@ -3,7 +3,7 @@ package bisq.desktop.components;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.offer.Offer;
-import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.model.TradeModel;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;
@@ -36,7 +36,7 @@ public class PeerInfoIconSmall extends PeerInfoIconTrading {
     @Override
     protected void addMouseListener(int numTrades,
                                     PrivateNotificationManager privateNotificationManager,
-                                    @Nullable Trade trade,
+                                    @Nullable TradeModel tradeModel,
                                     Offer offer,
                                     Preferences preferences,
                                     boolean useDevPrivilegeKeys,
