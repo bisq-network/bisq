@@ -64,4 +64,12 @@ public interface Tradable extends PersistablePayload {
     default Optional<Coin> getOptionalTxFee() {
         return asTradeModel().map(TradeModel::getTxFee);
     }
+
+    default Optional<Coin> getOptionalTakerFee() {
+        return asTradeModel().map(TradeModel::getTakerFee);
+    }
+
+    default Optional<Coin> getOptionalMakerFee() {
+        return asTradeModel().map(TradeModel::getMakerFee).or(() -> Optional.ofNullable(getOffer().getMakerFee()));
+    }
 }
