@@ -761,6 +761,12 @@ public abstract class Trade extends TradeModel {
         }
     }
 
+    @Override
+    public Price getPrice() {
+        return Price.valueOf(offer.getCurrencyCode(), priceAsLong);
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Abstract
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -980,10 +986,6 @@ public abstract class Trade extends TradeModel {
 
     public ReadOnlyObjectProperty<Volume> volumeProperty() {
         return volumeProperty;
-    }
-
-    public Price getPrice() {
-        return Price.valueOf(offer.getCurrencyCode(), priceAsLong);
     }
 
 

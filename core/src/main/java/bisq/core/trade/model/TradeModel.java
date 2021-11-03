@@ -1,5 +1,6 @@
 package bisq.core.trade.model;
 
+import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.trade.protocol.ProtocolModel;
@@ -75,6 +76,7 @@ public abstract class TradeModel implements Tradable, Model {
     @Nullable
     public abstract Volume getVolume();
 
+    public abstract Price getPrice();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Tradable implementation

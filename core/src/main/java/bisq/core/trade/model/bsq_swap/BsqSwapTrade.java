@@ -204,6 +204,12 @@ public abstract class BsqSwapTrade extends TradeModel {
         return volume;
     }
 
+    @Override
+    public Price getPrice() {
+        return Price.valueOf(offer.getCurrencyCode(), offer.getFixedPrice());
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -236,11 +242,6 @@ public abstract class BsqSwapTrade extends TradeModel {
     public boolean hasFailed() {
         return errorMessageProperty().get() != null;
     }
-
-    public Price getPrice() {
-        return Price.valueOf(offer.getCurrencyCode(), offer.getFixedPrice());
-    }
-
 
     public long getBsqTradeAmount() {
         return BsqSwapCalculation.getBsqTradeAmount(getVolume()).getValue();
