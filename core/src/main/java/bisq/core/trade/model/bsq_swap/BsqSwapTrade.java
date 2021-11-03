@@ -185,6 +185,10 @@ public abstract class BsqSwapTrade extends TradeModel {
         return amountAsLong;
     }
 
+    @Override
+    public Coin getAmount() {
+        return Coin.valueOf(amountAsLong);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters

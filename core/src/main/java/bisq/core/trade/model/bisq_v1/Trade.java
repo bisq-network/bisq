@@ -733,6 +733,12 @@ public abstract class Trade extends TradeModel {
         return amountAsLong;
     }
 
+    @Override
+    public Coin getAmount() {
+        if (amount == null)
+            amount = Coin.valueOf(amountAsLong);
+        return amount;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Abstract
@@ -978,12 +984,6 @@ public abstract class Trade extends TradeModel {
         return Price.valueOf(offer.getCurrencyCode(), priceAsLong);
     }
 
-    @Nullable
-    public Coin getAmount() {
-        if (amount == null)
-            amount = Coin.valueOf(amountAsLong);
-        return amount;
-    }
 
     @Nullable
     public Transaction getPayoutTx() {

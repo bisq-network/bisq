@@ -10,6 +10,8 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.taskrunner.Model;
 import bisq.common.util.Utilities;
 
+import org.bitcoinj.core.Coin;
+
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -66,6 +68,8 @@ public abstract class TradeModel implements Tradable, Model {
     public abstract TradePhase getTradePhase();
 
     public abstract long getAmountAsLong();
+
+    public abstract Coin getAmount();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
