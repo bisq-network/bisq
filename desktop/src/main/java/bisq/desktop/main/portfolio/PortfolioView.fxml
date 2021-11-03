@@ -27,7 +27,7 @@
 
     <Tab fx:id="openOffersTab" closable="false"/>
     <Tab fx:id="pendingTradesTab" closable="false"/>
-    <Tab fx:id="closedTradesTab" closable="false"/>
     <Tab fx:id="bsqSwapTradesTab" closable="false"/>
+    <Tab fx:id="closedTradesTab" closable="false"/>
 
 </JFXTabPane>
