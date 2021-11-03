@@ -87,7 +87,7 @@ public class TakerVerifyAndSignContract extends TradeTask {
             Contract contract = new Contract(
                     offerPayload,
                     tradeAmount.value,
-                    trade.getTradePrice().getValue(),
+                    trade.getPrice().getValue(),
                     takerFeeTxId,
                     buyerNodeAddress,
                     sellerNodeAddress,

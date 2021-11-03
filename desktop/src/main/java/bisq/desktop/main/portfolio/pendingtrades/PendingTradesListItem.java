@@ -49,7 +49,7 @@ public class PendingTradesListItem {
     }
 
     public Price getPrice() {
-        return trade.getTradePrice();
+        return trade.getPrice();
     }
 
 }

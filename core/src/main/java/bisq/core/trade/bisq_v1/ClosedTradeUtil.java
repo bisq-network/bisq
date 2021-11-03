@@ -121,7 +121,7 @@ public class ClosedTradeUtil {
 
     public String getPriceAsString(Tradable tradable) {
         if (tradable instanceof Trade)
-            return formatPrice(((Trade) tradable).getTradePrice());
+            return formatPrice(((Trade) tradable).getPrice());
         else
             return formatPrice(tradable.getOffer().getPrice());
     }

@@ -74,7 +74,7 @@ public class MakerCreateAndSignContract extends TradeTask {
             Contract contract = new Contract(
                     offerPayload,
                     checkNotNull(trade.getAmount()).value,
-                    trade.getTradePrice().getValue(),
+                    trade.getPrice().getValue(),
                     takerFeeTxId,
                     buyerNodeAddress,
                     sellerNodeAddress,

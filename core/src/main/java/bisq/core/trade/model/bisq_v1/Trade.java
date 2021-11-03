@@ -811,8 +811,8 @@ public abstract class Trade extends TradeModel {
     @Nullable
     public Volume getTradeVolume() {
         try {
-            if (getAmount() != null && getTradePrice() != null) {
-                Volume volumeByAmount = getTradePrice().getVolumeByAmount(getAmount());
+            if (getAmount() != null && getPrice() != null) {
+                Volume volumeByAmount = getPrice().getVolumeByAmount(getAmount());
                 if (offer != null) {
                     if (offer.getPaymentMethod().getId().equals(PaymentMethod.HAL_CASH_ID))
                         volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
@@ -969,7 +969,7 @@ public abstract class Trade extends TradeModel {
         return tradeVolumeProperty;
     }
 
-    public Price getTradePrice() {
+    public Price getPrice() {
         return Price.valueOf(offer.getCurrencyCode(), tradePrice);
     }
 

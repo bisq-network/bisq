@@ -171,7 +171,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 VolumeUtil.formatVolumeLabel(offer.getCurrencyCode()) + fiatDirectionInfo,
                 VolumeUtil.formatVolumeWithCode(trade.getTradeVolume()));
         addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
-                FormattingUtils.formatPrice(trade.getTradePrice()));
+                FormattingUtils.formatPrice(trade.getPrice()));
         String paymentMethodText = Res.get(offer.getPaymentMethod().getId());
         addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("shared.paymentMethod"), paymentMethodText);
 

@@ -134,7 +134,7 @@ public class TradeInfo implements Payload {
                 .withDepositTxId(trade.getDepositTxId())
                 .withPayoutTxId(trade.getPayoutTxId())
                 .withTradeAmountAsLong(trade.getTradeAmountAsLong())
-                .withTradePrice(trade.getTradePrice().getValue())
+                .withTradePrice(trade.getPrice().getValue())
                 .withTradeVolume(trade.getTradeVolume() == null ? 0 : trade.getTradeVolume().getValue())
                 .withTradingPeerNodeAddress(Objects.requireNonNull(
                         trade.getTradingPeerNodeAddress()).getHostNameWithoutPostFix())
