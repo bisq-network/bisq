@@ -57,6 +57,6 @@ public class ProcessBuyersBsqSwapRequest extends ProcessTxInputsMessage {
 
     @Override
     protected long getSellersTradeFee() {
-        return trade.getMakerFee();
+        return trade.getMakerFeeAsLong();
     }
 }

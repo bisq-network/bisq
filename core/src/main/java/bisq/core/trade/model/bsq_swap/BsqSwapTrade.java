@@ -74,7 +74,7 @@ public abstract class BsqSwapTrade extends TradeModel {
     private final long amountAsLong;
     @Getter
     private final long txFeePerVbyte;
-    private final long makerFee;
+    private final long makerFeeAsLong;
     @Getter
     private final long takerFeeAsLong;
     @Getter
@@ -104,7 +104,7 @@ public abstract class BsqSwapTrade extends TradeModel {
                            long takeOfferDate,
                            NodeAddress tradingPeerNodeAddress,
                            long txFeePerVbyte,
-                           long makerFee,
+                           long makerFeeAsLong,
                            long takerFeeAsLong,
                            BsqSwapProtocolModel bsqSwapProtocolModel,
                            @Nullable String errorMessage,
@@ -113,7 +113,7 @@ public abstract class BsqSwapTrade extends TradeModel {
         super(uid, offer, takeOfferDate, tradingPeerNodeAddress, errorMessage);
         this.amountAsLong = amount.value;
         this.txFeePerVbyte = txFeePerVbyte;
-        this.makerFee = makerFee;
+        this.makerFeeAsLong = makerFeeAsLong;
         this.takerFeeAsLong = takerFeeAsLong;
         this.bsqSwapProtocolModel = bsqSwapProtocolModel;
         this.state = state;
@@ -135,7 +135,7 @@ public abstract class BsqSwapTrade extends TradeModel {
                 .setAmount(amountAsLong)
                 .setTakeOfferDate(takeOfferDate)
                 .setMiningFeePerByte(txFeePerVbyte)
-                .setMakerFee(makerFee)
+                .setMakerFee(makerFeeAsLong)
                 .setTakerFee(takerFeeAsLong)
                 .setBsqSwapProtocolModel(bsqSwapProtocolModel.toProtoMessage())
                 .setState(State.toProtoMessage(state))
@@ -213,8 +213,8 @@ public abstract class BsqSwapTrade extends TradeModel {
         return Coin.valueOf(bsqSwapProtocolModel.getTxFee());
     }
 
-    public long getMakerFee() {
-        return makerFee;
+    public long getMakerFeeAsLong() {
+        return makerFeeAsLong;
     }
 
     @Override

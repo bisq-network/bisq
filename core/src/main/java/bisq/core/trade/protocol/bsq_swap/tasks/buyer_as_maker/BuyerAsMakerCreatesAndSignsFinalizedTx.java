@@ -50,6 +50,6 @@ public class BuyerAsMakerCreatesAndSignsFinalizedTx extends BuyerCreatesAndSigns
 
     @Override
     protected long getBuyersTradeFee() {
-        return trade.getMakerFee();
+        return trade.getMakerFeeAsLong();
     }
 }

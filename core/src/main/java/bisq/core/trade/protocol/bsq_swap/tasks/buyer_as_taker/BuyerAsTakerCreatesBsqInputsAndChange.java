@@ -50,6 +50,6 @@ public class BuyerAsTakerCreatesBsqInputsAndChange extends BuyerCreatesBsqInputs
 
     @Override
     protected long getSellersTradeFee() {
-        return trade.getMakerFee();
+        return trade.getMakerFeeAsLong();
     }
 }

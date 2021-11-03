@@ -49,7 +49,7 @@ public class ProcessBsqSwapTxInputsMessage extends ProcessTxInputsMessage {
 
     @Override
     protected long getBuyersTradeFee() {
-        return trade.getMakerFee();
+        return trade.getMakerFeeAsLong();
     }
 
     @Override

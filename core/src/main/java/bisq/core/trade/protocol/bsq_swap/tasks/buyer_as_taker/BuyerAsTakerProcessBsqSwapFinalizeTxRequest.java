@@ -45,7 +45,7 @@ public class BuyerAsTakerProcessBsqSwapFinalizeTxRequest extends ProcessBsqSwapF
 
     @Override
     protected long getSellersTradeFee() {
-        return trade.getMakerFee();
+        return trade.getMakerFeeAsLong();
     }
 
     @Override
