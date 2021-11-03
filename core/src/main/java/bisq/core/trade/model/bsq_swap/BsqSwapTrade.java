@@ -222,6 +222,11 @@ public abstract class BsqSwapTrade extends TradeModel {
         return Coin.valueOf(takerFeeAsLong);
     }
 
+    @Override
+    public Coin getMakerFee() {
+        return Coin.valueOf(makerFeeAsLong);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters

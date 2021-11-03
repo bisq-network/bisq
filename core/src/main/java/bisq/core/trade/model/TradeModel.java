@@ -82,6 +82,8 @@ public abstract class TradeModel implements Tradable, Model {
 
     public abstract Coin getTakerFee();
 
+    public abstract Coin getMakerFee();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Tradable implementation

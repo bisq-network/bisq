@@ -774,6 +774,11 @@ public abstract class Trade extends TradeModel {
         return takerFee;
     }
 
+    @Override
+    public Coin getMakerFee() {
+        return offer.getMakerFee();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Abstract
