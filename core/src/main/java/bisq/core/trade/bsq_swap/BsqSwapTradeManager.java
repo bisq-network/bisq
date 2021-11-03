@@ -17,6 +17,7 @@
 
 package bisq.core.trade.bsq_swap;
 
+import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.model.TradableList;
@@ -25,6 +26,8 @@ import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.common.crypto.KeyRing;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
+
+import org.bitcoinj.core.TransactionConfidence;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -39,6 +42,7 @@ import javafx.collections.ObservableList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class BsqSwapTradeManager implements PersistedDataHost {
+    private final BsqWalletService bsqWalletService;
     private final PersistenceManager<TradableList<BsqSwapTrade>> persistenceManager;
     private final TradableList<BsqSwapTrade> bsqSwapTrades = new TradableList<>();
     private final KeyRing keyRing;
@@ -58,9 +63,11 @@ public class BsqSwapTradeManager implements PersistedDataHost {
     @Inject
     public BsqSwapTradeManager(KeyRing keyRing,
                                PriceFeedService priceFeedService,
+                               BsqWalletService bsqWalletService,
                                PersistenceManager<TradableList<BsqSwapTrade>> persistenceManager) {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
+        this.bsqWalletService = bsqWalletService;
         this.persistenceManager = persistenceManager;
 
         this.persistenceManager.initialize(bsqSwapTrades, "BsqSwapTrades", PersistenceManager.Source.PRIVATE);
@@ -111,6 +118,28 @@ public class BsqSwapTradeManager implements PersistedDataHost {
 
     public Optional<BsqSwapTrade> findBsqSwapTradeById(String id) {
         return bsqSwapTrades.stream().filter(e -> e.getId().equals(id)).findFirst();
+    }
+
+    public Stream<BsqSwapTrade> getUnconfirmedBsqSwapTrades() {
+        return getObservableList().stream().filter(this::isUnconfirmedTx);
+    }
+
+    public Stream<BsqSwapTrade> getConfirmedBsqSwapTrades() {
+        return getObservableList().stream().filter(this::isConfirmedTx);
+    }
+
+    private boolean isUnconfirmedTx(BsqSwapTrade bsqSwapTrade) {
+        return isConfirmedTx(bsqSwapTrade, TransactionConfidence.ConfidenceType.PENDING);
+    }
+
+    private boolean isConfirmedTx(BsqSwapTrade bsqSwapTrade) {
+        return isConfirmedTx(bsqSwapTrade, TransactionConfidence.ConfidenceType.BUILDING);
+    }
+
+    private boolean isConfirmedTx(BsqSwapTrade bsqSwapTrade, TransactionConfidence.ConfidenceType confidenceTyp) {
+        TransactionConfidence confidenceForTxId = bsqWalletService.getConfidenceForTxId(bsqSwapTrade.getTxId());
+        return confidenceForTxId != null &&
+                confidenceForTxId.getConfidenceType() == confidenceTyp;
     }
 
     private void requestPersistence() {
