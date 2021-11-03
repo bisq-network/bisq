@@ -70,7 +70,7 @@ public abstract class BsqSwapTrade extends TradeModel {
         }
     }
 
-    @Getter
+
     private final long amountAsLong;
     @Getter
     private final long txFeePerVbyte;
@@ -178,6 +178,11 @@ public abstract class BsqSwapTrade extends TradeModel {
     @Override
     public TradePhase getTradePhase() {
         return state.getTradePhase();
+    }
+
+    @Override
+    public long getAmountAsLong() {
+        return amountAsLong;
     }
 
 

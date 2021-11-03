@@ -65,6 +65,8 @@ public abstract class TradeModel implements Tradable, Model {
 
     public abstract TradePhase getTradePhase();
 
+    public abstract long getAmountAsLong();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Tradable implementation

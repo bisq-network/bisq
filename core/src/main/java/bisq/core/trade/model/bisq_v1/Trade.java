@@ -306,7 +306,6 @@ public abstract class Trade extends TradeModel {
     @Getter
     @Setter
     private String payoutTxId;
-    @Getter
     @Setter
     private long amountAsLong;
     @Setter
@@ -728,6 +727,12 @@ public abstract class Trade extends TradeModel {
     public boolean isCompleted() {
         return isWithdrawn();
     }
+
+    @Override
+    public long getAmountAsLong() {
+        return amountAsLong;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Abstract
