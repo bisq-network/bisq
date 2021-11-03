@@ -24,6 +24,7 @@ import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.OpenOffer;
+import bisq.core.trade.bsq_swap.BsqSwapTradeManager;
 import bisq.core.trade.model.MakerTrade;
 import bisq.core.trade.model.TakerTrade;
 import bisq.core.trade.model.Tradable;
@@ -43,6 +44,7 @@ import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Monetary;
+import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.utils.Fiat;
 
 import javax.inject.Inject;
@@ -78,6 +80,7 @@ public class ClosedTradeUtil {
     private static final String I18N_KEY_TOTAL_TRADE_FEE_BSQ = "closedTradesSummaryWindow.totalTradeFeeInBsq.value";
 
     private final ClosedTradableManager closedTradableManager;
+    private final BsqSwapTradeManager bsqSwapTradeManager;
     private final BsqWalletService bsqWalletService;
     private final BsqFormatter bsqFormatter;
     private final CoinFormatter btcFormatter;
@@ -87,6 +90,7 @@ public class ClosedTradeUtil {
 
     @Inject
     public ClosedTradeUtil(ClosedTradableManager closedTradableManager,
+                           BsqSwapTradeManager bsqSwapTradeManager,
                            BsqWalletService bsqWalletService,
                            BsqFormatter bsqFormatter,
                            @Named(BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
@@ -94,6 +98,7 @@ public class ClosedTradeUtil {
                            KeyRing keyRing,
                            TradeStatisticsManager tradeStatisticsManager) {
         this.closedTradableManager = closedTradableManager;
+        this.bsqSwapTradeManager = bsqSwapTradeManager;
         this.bsqWalletService = bsqWalletService;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
@@ -240,14 +245,11 @@ public class ClosedTradeUtil {
             return 0;
         }
         NodeAddress addressInTrade = castToTradeModel(tradable).getTradingPeerNodeAddress();
-        return getClosedTradableStream()
-                .filter(this::isTradeModel)
-                .map(this::castToTradeModel)
+        return (int) getTradeModelStream()
                 .map(TradeModel::getTradingPeerNodeAddress)
                 .filter(Objects::nonNull)
                 .filter(address -> address.equals(addressInTrade))
-                .collect(Collectors.toSet())
-                .size();
+                .count();
     }
 
     public String getTotalTradeFeeInBsqAsString(Coin totalTradeFee,
@@ -297,10 +299,17 @@ public class ClosedTradeUtil {
                     return state.name();
             }
         } else if (isBsqSwapTrade(tradable)) {
-            BsqSwapTrade bsqSwapTrade = castToBsqSwapTrade(tradable);
-            //todo
+            String txId = castToBsqSwapTrade(tradable).getTxId();
+            TransactionConfidence confidence = bsqWalletService.getConfidenceForTxId(txId);
+            if (confidence != null && confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
+                return Res.get("confidence.confirmed.short");
+            } else {
+                log.warn("Unexpected confidence in a BSQ swap trade which has been moved to closed trades. " +
+                                "This could happen at a wallet SPV resycn or a reorg. confidence={} tradeID={}",
+                        confidence, tradable.getId());
+            }
         }
-        return "";
+        return Res.get("shared.na");
     }
 
 
@@ -308,10 +317,10 @@ public class ClosedTradeUtil {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Stream<Trade> getClosedTradableStream() {
-        return closedTradableManager.getClosedTrades().stream();
+    private Stream<TradeModel> getTradeModelStream() {
+        return Stream.concat(bsqSwapTradeManager.getConfirmedBsqSwapTrades(),
+                closedTradableManager.getClosedTrades().stream());
     }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Fee utils

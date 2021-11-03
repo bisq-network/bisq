@@ -121,22 +121,22 @@ public class BsqSwapTradeManager implements PersistedDataHost {
     }
 
     public Stream<BsqSwapTrade> getUnconfirmedBsqSwapTrades() {
-        return getObservableList().stream().filter(this::isUnconfirmedTx);
+        return getObservableList().stream().filter(this::isUnconfirmed);
     }
 
     public Stream<BsqSwapTrade> getConfirmedBsqSwapTrades() {
-        return getObservableList().stream().filter(this::isConfirmedTx);
+        return getObservableList().stream().filter(this::isConfirmed);
     }
 
-    private boolean isUnconfirmedTx(BsqSwapTrade bsqSwapTrade) {
-        return isConfirmedTx(bsqSwapTrade, TransactionConfidence.ConfidenceType.PENDING);
+    private boolean isUnconfirmed(BsqSwapTrade bsqSwapTrade) {
+        return matchesConfidence(bsqSwapTrade, TransactionConfidence.ConfidenceType.PENDING);
     }
 
-    private boolean isConfirmedTx(BsqSwapTrade bsqSwapTrade) {
-        return isConfirmedTx(bsqSwapTrade, TransactionConfidence.ConfidenceType.BUILDING);
+    private boolean isConfirmed(BsqSwapTrade bsqSwapTrade) {
+        return matchesConfidence(bsqSwapTrade, TransactionConfidence.ConfidenceType.BUILDING);
     }
 
-    private boolean isConfirmedTx(BsqSwapTrade bsqSwapTrade, TransactionConfidence.ConfidenceType confidenceTyp) {
+    private boolean matchesConfidence(BsqSwapTrade bsqSwapTrade, TransactionConfidence.ConfidenceType confidenceTyp) {
         TransactionConfidence confidenceForTxId = bsqWalletService.getConfidenceForTxId(bsqSwapTrade.getTxId());
         return confidenceForTxId != null &&
                 confidenceForTxId.getConfidenceType() == confidenceTyp;
