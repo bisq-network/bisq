@@ -397,7 +397,7 @@ public abstract class Trade extends TradeModel {
     transient private Coin amount;
 
     transient private ObjectProperty<Coin> tradeAmountProperty;
-    transient private ObjectProperty<Volume> tradeVolumeProperty;
+    transient private ObjectProperty<Volume> volumeProperty;
 
     // Added in v1.1.6
     @Getter
@@ -790,7 +790,7 @@ public abstract class Trade extends TradeModel {
         this.amount = amount;
         tradeAmountAsLong = amount.value;
         getTradeAmountProperty().set(amount);
-        getTradeVolumeProperty().set(getTradeVolume());
+        getVolumeProperty().set(getTradeVolume());
     }
 
     public void setPayoutTx(Transaction payoutTx) {
@@ -965,8 +965,8 @@ public abstract class Trade extends TradeModel {
         return tradeAmountProperty;
     }
 
-    public ReadOnlyObjectProperty<Volume> tradeVolumeProperty() {
-        return tradeVolumeProperty;
+    public ReadOnlyObjectProperty<Volume> volumeProperty() {
+        return volumeProperty;
     }
 
     public Price getPrice() {
@@ -1030,10 +1030,10 @@ public abstract class Trade extends TradeModel {
     }
 
     // lazy initialization
-    private ObjectProperty<Volume> getTradeVolumeProperty() {
-        if (tradeVolumeProperty == null)
-            tradeVolumeProperty = getTradeVolume() != null ? new SimpleObjectProperty<>(getTradeVolume()) : new SimpleObjectProperty<>();
-        return tradeVolumeProperty;
+    private ObjectProperty<Volume> getVolumeProperty() {
+        if (volumeProperty == null)
+            volumeProperty = getTradeVolume() != null ? new SimpleObjectProperty<>(getTradeVolume()) : new SimpleObjectProperty<>();
+        return volumeProperty;
     }
 
     private void setupConfidenceListener() {
@@ -1118,7 +1118,7 @@ public abstract class Trade extends TradeModel {
                 ",\n     payoutTx=" + payoutTx +
                 ",\n     tradeAmount=" + amount +
                 ",\n     tradeAmountProperty=" + tradeAmountProperty +
-                ",\n     tradeVolumeProperty=" + tradeVolumeProperty +
+                ",\n     tradeVolumeProperty=" + volumeProperty +
                 ",\n     mediationResultState=" + mediationResultState +
                 ",\n     mediationResultStateProperty=" + mediationResultStateProperty +
                 ",\n     lockTime=" + lockTime +

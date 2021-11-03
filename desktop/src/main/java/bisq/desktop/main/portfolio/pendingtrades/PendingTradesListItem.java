@@ -45,7 +45,7 @@ public class PendingTradesListItem {
     }
 
     public ReadOnlyObjectProperty<Volume> tradeVolumeProperty() {
-        return trade.tradeVolumeProperty();
+        return trade.volumeProperty();
     }
 
     public Price getPrice() {
