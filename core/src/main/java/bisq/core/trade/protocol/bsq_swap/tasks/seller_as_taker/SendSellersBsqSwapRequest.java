@@ -45,7 +45,7 @@ public class SendSellersBsqSwapRequest extends SendBsqSwapMessageTask {
                     trade.getAmountAsLong(),
                     trade.getTxFeePerVbyte(),
                     trade.getMakerFee(),
-                    trade.getTakerFee(),
+                    trade.getTakerFeeAsLong(),
                     trade.getTakeOfferDate());
 
             send(request);

@@ -74,10 +74,8 @@ public abstract class BsqSwapTrade extends TradeModel {
     private final long amountAsLong;
     @Getter
     private final long txFeePerVbyte;
-    @Getter
     private final long makerFee;
-    @Getter
-    private final long takerFee;
+    private final long takerFeeAsLong;
     @Getter
     private final BsqSwapProtocolModel bsqSwapProtocolModel;
 
@@ -106,7 +104,7 @@ public abstract class BsqSwapTrade extends TradeModel {
                            NodeAddress tradingPeerNodeAddress,
                            long txFeePerVbyte,
                            long makerFee,
-                           long takerFee,
+                           long takerFeeAsLong,
                            BsqSwapProtocolModel bsqSwapProtocolModel,
                            @Nullable String errorMessage,
                            State state,
@@ -115,7 +113,7 @@ public abstract class BsqSwapTrade extends TradeModel {
         this.amountAsLong = amount.value;
         this.txFeePerVbyte = txFeePerVbyte;
         this.makerFee = makerFee;
-        this.takerFee = takerFee;
+        this.takerFeeAsLong = takerFeeAsLong;
         this.bsqSwapProtocolModel = bsqSwapProtocolModel;
         this.state = state;
         this.txId = txId;
@@ -137,7 +135,7 @@ public abstract class BsqSwapTrade extends TradeModel {
                 .setTakeOfferDate(takeOfferDate)
                 .setMiningFeePerByte(txFeePerVbyte)
                 .setMakerFee(makerFee)
-                .setTakerFee(takerFee)
+                .setTakerFee(takerFeeAsLong)
                 .setBsqSwapProtocolModel(bsqSwapProtocolModel.toProtoMessage())
                 .setState(State.toProtoMessage(state))
                 .setPeerNodeAddress(tradingPeerNodeAddress.toProtoMessage());
@@ -212,6 +210,14 @@ public abstract class BsqSwapTrade extends TradeModel {
     @Override
     public Coin getTxFee() {
         return Coin.valueOf(bsqSwapProtocolModel.getTxFee());
+    }
+
+    public long getMakerFee() {
+        return makerFee;
+    }
+
+    public long getTakerFeeAsLong() {
+        return takerFeeAsLong;
     }
 
 

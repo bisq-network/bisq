@@ -171,7 +171,7 @@ public class BsqTradeDetailsWindow extends Overlay<BsqTradeDetailsWindow> {
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.txFee"), txFee);*/
 
         String tradeFee = Res.get("shared.makerTxFee", bsqFormatter.formatCoinWithCode(bsqSwapTrade.getMakerFee())) +
-                " / " + Res.get("shared.takerTxFee", bsqFormatter.formatCoinWithCode(bsqSwapTrade.getTakerFee()));
+                " / " + Res.get("shared.takerTxFee", bsqFormatter.formatCoinWithCode(bsqSwapTrade.getTakerFeeAsLong()));
         addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("shared.tradeFee"), tradeFee);
 
 

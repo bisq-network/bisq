@@ -98,7 +98,7 @@ class CompletedBsqSwapsViewModel extends ActivatableWithDataModel<CompletedBsqSw
         if (wasMyOffer(item.getBsqSwapTrade())) {
             return bsqFormatter.formatCoinWithCode(item.getBsqSwapTrade().getMakerFee());
         } else {
-            return bsqFormatter.formatCoinWithCode(item.getBsqSwapTrade().getTakerFee());
+            return bsqFormatter.formatCoinWithCode(item.getBsqSwapTrade().getTakerFeeAsLong());
         }
     }
 

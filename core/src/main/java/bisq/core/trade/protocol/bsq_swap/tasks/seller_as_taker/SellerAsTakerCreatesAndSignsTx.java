@@ -48,6 +48,6 @@ public class SellerAsTakerCreatesAndSignsTx extends SellerCreatesAndSignsTx {
 
     @Override
     protected long getSellersTradeFee() {
-        return trade.getTakerFee();
+        return trade.getTakerFeeAsLong();
     }
 }
