@@ -107,7 +107,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         Offer offer = checkNotNull(trade.getOffer());
         return new TradeStatistics3(offer.getCurrencyCode(),
                 trade.getPrice().getValue(),
-                trade.getTradeAmountAsLong(),
+                trade.getAmountAsLong(),
                 offer.getPaymentMethod().getId(),
                 trade.getDate().getTime(),
                 truncatedMediatorNodeAddress,

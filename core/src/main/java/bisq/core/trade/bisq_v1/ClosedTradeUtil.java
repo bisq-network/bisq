@@ -102,7 +102,7 @@ public class ClosedTradeUtil {
         return Coin.valueOf(tradableList.stream()
                 .filter(e -> e instanceof Trade)
                 .map(e -> (Trade) e)
-                .mapToLong(Trade::getTradeAmountAsLong)
+                .mapToLong(Trade::getAmountAsLong)
                 .sum());
     }
 

@@ -308,7 +308,7 @@ public abstract class Trade extends TradeModel {
     private String payoutTxId;
     @Getter
     @Setter
-    private long tradeAmountAsLong;
+    private long amountAsLong;
     @Setter
     private long tradePrice;
     private State state = State.PREPARATION;
@@ -521,7 +521,7 @@ public abstract class Trade extends TradeModel {
                 .setTakerFeeAsLong(takerFeeAsLong)
                 .setTakeOfferDate(takeOfferDate)
                 .setProcessModel(processModel.toProtoMessage())
-                .setTradeAmountAsLong(tradeAmountAsLong)
+                .setTradeAmountAsLong(amountAsLong)
                 .setTradePrice(tradePrice)
                 .setState(Trade.State.toProtoMessage(state))
                 .setDisputeState(Trade.DisputeState.toProtoMessage(disputeState))
@@ -788,7 +788,7 @@ public abstract class Trade extends TradeModel {
 
     public void setAmount(Coin amount) {
         this.amount = amount;
-        tradeAmountAsLong = amount.value;
+        amountAsLong = amount.value;
         getAmountProperty().set(amount);
         getVolumeProperty().set(getTradeVolume());
     }
@@ -976,7 +976,7 @@ public abstract class Trade extends TradeModel {
     @Nullable
     public Coin getAmount() {
         if (amount == null)
-            amount = Coin.valueOf(tradeAmountAsLong);
+            amount = Coin.valueOf(amountAsLong);
         return amount;
     }
 
@@ -1084,7 +1084,7 @@ public abstract class Trade extends TradeModel {
                 ",\n     takerFeeTxId='" + takerFeeTxId + '\'' +
                 ",\n     depositTxId='" + depositTxId + '\'' +
                 ",\n     payoutTxId='" + payoutTxId + '\'' +
-                ",\n     tradeAmountAsLong=" + tradeAmountAsLong +
+                ",\n     tradeAmountAsLong=" + amountAsLong +
                 ",\n     tradePrice=" + tradePrice +
                 ",\n     tradingPeerNodeAddress=" + tradingPeerNodeAddress +
                 ",\n     state=" + state +

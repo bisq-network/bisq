@@ -99,7 +99,7 @@ public final class SellerAsMakerTrade extends SellerTrade implements MakerTrade 
                 processModel,
                 uid);
 
-        trade.setTradeAmountAsLong(proto.getTradeAmountAsLong());
+        trade.setAmountAsLong(proto.getTradeAmountAsLong());
         trade.setTradePrice(proto.getTradePrice());
         trade.setTradingPeerNodeAddress(proto.hasTradingPeerNodeAddress() ? NodeAddress.fromProto(proto.getTradingPeerNodeAddress()) : null);
 
