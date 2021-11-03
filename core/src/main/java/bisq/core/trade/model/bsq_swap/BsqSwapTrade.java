@@ -190,6 +190,20 @@ public abstract class BsqSwapTrade extends TradeModel {
         return Coin.valueOf(amountAsLong);
     }
 
+    @Override
+    @Nullable
+    public Volume getVolume() {
+        if (volume == null) {
+            try {
+                volume = getPrice().getVolumeByAmount(Coin.valueOf(amountAsLong));
+            } catch (Throwable e) {
+                log.error(e.toString());
+                return null;
+            }
+        }
+        return volume;
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -227,18 +241,6 @@ public abstract class BsqSwapTrade extends TradeModel {
         return Price.valueOf(offer.getCurrencyCode(), offer.getFixedPrice());
     }
 
-    //todo Not sure if that delivers the value as expected... -> getBsqTradeAmount
-    public Volume getVolume() {
-        if (volume == null) {
-            try {
-                volume = getPrice().getVolumeByAmount(Coin.valueOf(amountAsLong));
-            } catch (Throwable e) {
-                log.error(e.toString());
-                return null;
-            }
-        }
-        return volume;
-    }
 
     public long getBsqTradeAmount() {
         return BsqSwapCalculation.getBsqTradeAmount(getVolume()).getValue();

@@ -740,6 +740,27 @@ public abstract class Trade extends TradeModel {
         return amount;
     }
 
+    @Nullable
+    @Override
+    public Volume getVolume() {
+        try {
+            if (getAmount() != null && getPrice() != null) {
+                Volume volumeByAmount = getPrice().getVolumeByAmount(getAmount());
+                if (offer != null) {
+                    if (offer.getPaymentMethod().getId().equals(PaymentMethod.HAL_CASH_ID))
+                        volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
+                    else if (CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()))
+                        volumeByAmount = VolumeUtil.getRoundedFiatVolume(volumeByAmount);
+                }
+                return volumeByAmount;
+            } else {
+                return null;
+            }
+        } catch (Throwable ignore) {
+            return null;
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Abstract
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -819,25 +840,6 @@ public abstract class Trade extends TradeModel {
     // Getter
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Nullable
-    public Volume getVolume() {
-        try {
-            if (getAmount() != null && getPrice() != null) {
-                Volume volumeByAmount = getPrice().getVolumeByAmount(getAmount());
-                if (offer != null) {
-                    if (offer.getPaymentMethod().getId().equals(PaymentMethod.HAL_CASH_ID))
-                        volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
-                    else if (CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()))
-                        volumeByAmount = VolumeUtil.getRoundedFiatVolume(volumeByAmount);
-                }
-                return volumeByAmount;
-            } else {
-                return null;
-            }
-        } catch (Throwable ignore) {
-            return null;
-        }
-    }
 
     public Date getHalfTradePeriodDate() {
         return new Date(getTradeStartTime() + getMaxTradePeriod() / 2);
