@@ -939,13 +939,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         if (!isPreferredFeeCurrencyBtc && !isBsqForFeeAvailable) {
             Coin takerFee = model.dataModel.getTakerFee(false);
             String missingBsq = null;
-            if (takerFee != null) {
+            if ((daoFacade.getChainHeight() != bsqWalletService.getBestChainHeight()) || (bsqWalletService.getBestChainHeight() == 0))
+                message = Res.get("popup.warning.whileSynchronizingNoBsqFundsForBtcFeePayment");
+            else if (takerFee != null)
                 missingBsq = Res.get("popup.warning.insufficientBsqFundsForBtcFeePayment",
                         bsqFormatter.formatCoinWithCode(takerFee.subtract(model.dataModel.getUsableBsqBalance())));
-
-            } else if (model.dataModel.getUsableBsqBalance().isZero()) {
+           else if (model.dataModel.getUsableBsqBalance().isZero())
                 missingBsq = Res.get("popup.warning.noBsqFundsForBtcFeePayment");
-            }
 
             if (missingBsq != null) {
                 new Popup().warning(missingBsq)
@@ -1237,10 +1237,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private void showInsufficientBsqFundsForBtcFeePaymentPopup() {
         Coin takerFee = model.dataModel.getTakerFee(false);
         String message = null;
-        if (takerFee != null)
+        if ((daoFacade.getChainHeight() != bsqWalletService.getBestChainHeight()) || (bsqWalletService.getBestChainHeight() == 0))
+            message = Res.get("popup.warning.whileSynchronizingNoBsqFundsForBtcFeePayment");
+        else if (takerFee != null)
             message = Res.get("popup.warning.insufficientBsqFundsForBtcFeePayment",
                     bsqFormatter.formatCoinWithCode(takerFee.subtract(model.dataModel.getUsableBsqBalance())));
-
         else if (model.dataModel.getUsableBsqBalance().isZero())
             message = Res.get("popup.warning.noBsqFundsForBtcFeePayment");
 
@@ -1357,4 +1358,3 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         infoGridPane.getChildren().addAll(label, textField);
     }
 }
-
