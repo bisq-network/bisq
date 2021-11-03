@@ -394,7 +394,7 @@ public abstract class Trade extends TradeModel {
     @Nullable
     transient private Transaction payoutTx;
     @Nullable
-    transient private Coin tradeAmount;
+    transient private Coin amount;
 
     transient private ObjectProperty<Coin> tradeAmountProperty;
     transient private ObjectProperty<Volume> tradeVolumeProperty;
@@ -478,7 +478,7 @@ public abstract class Trade extends TradeModel {
     // taker
     @SuppressWarnings("NullableProblems")
     protected Trade(Offer offer,
-                    Coin tradeAmount,
+                    Coin amount,
                     Coin txFee,
                     Coin takerFee,
                     boolean isCurrencyForTakerFeeBtc,
@@ -504,7 +504,7 @@ public abstract class Trade extends TradeModel {
         this.tradePrice = tradePrice;
 
         setTradingPeerNodeAddress(tradingPeerNodeAddress);
-        setTradeAmount(tradeAmount);
+        setAmount(amount);
     }
 
 
@@ -786,10 +786,10 @@ public abstract class Trade extends TradeModel {
         tradePeriodStateProperty.set(tradePeriodState);
     }
 
-    public void setTradeAmount(Coin tradeAmount) {
-        this.tradeAmount = tradeAmount;
-        tradeAmountAsLong = tradeAmount.value;
-        getTradeAmountProperty().set(tradeAmount);
+    public void setAmount(Coin amount) {
+        this.amount = amount;
+        tradeAmountAsLong = amount.value;
+        getTradeAmountProperty().set(amount);
         getTradeVolumeProperty().set(getTradeVolume());
     }
 
@@ -811,8 +811,8 @@ public abstract class Trade extends TradeModel {
     @Nullable
     public Volume getTradeVolume() {
         try {
-            if (getTradeAmount() != null && getTradePrice() != null) {
-                Volume volumeByAmount = getTradePrice().getVolumeByAmount(getTradeAmount());
+            if (getAmount() != null && getTradePrice() != null) {
+                Volume volumeByAmount = getTradePrice().getVolumeByAmount(getAmount());
                 if (offer != null) {
                     if (offer.getPaymentMethod().getId().equals(PaymentMethod.HAL_CASH_ID))
                         volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
@@ -961,7 +961,7 @@ public abstract class Trade extends TradeModel {
         return tradePeriodStateProperty;
     }
 
-    public ReadOnlyObjectProperty<Coin> tradeAmountProperty() {
+    public ReadOnlyObjectProperty<Coin> amountProperty() {
         return tradeAmountProperty;
     }
 
@@ -974,10 +974,10 @@ public abstract class Trade extends TradeModel {
     }
 
     @Nullable
-    public Coin getTradeAmount() {
-        if (tradeAmount == null)
-            tradeAmount = Coin.valueOf(tradeAmountAsLong);
-        return tradeAmount;
+    public Coin getAmount() {
+        if (amount == null)
+            amount = Coin.valueOf(tradeAmountAsLong);
+        return amount;
     }
 
     @Nullable
@@ -1024,7 +1024,7 @@ public abstract class Trade extends TradeModel {
     // lazy initialization
     private ObjectProperty<Coin> getTradeAmountProperty() {
         if (tradeAmountProperty == null)
-            tradeAmountProperty = getTradeAmount() != null ? new SimpleObjectProperty<>(getTradeAmount()) : new SimpleObjectProperty<>();
+            tradeAmountProperty = getAmount() != null ? new SimpleObjectProperty<>(getAmount()) : new SimpleObjectProperty<>();
 
         return tradeAmountProperty;
     }
@@ -1116,7 +1116,7 @@ public abstract class Trade extends TradeModel {
                 ",\n     depositTx=" + depositTx +
                 ",\n     delayedPayoutTx=" + delayedPayoutTx +
                 ",\n     payoutTx=" + payoutTx +
-                ",\n     tradeAmount=" + tradeAmount +
+                ",\n     tradeAmount=" + amount +
                 ",\n     tradeAmountProperty=" + tradeAmountProperty +
                 ",\n     tradeVolumeProperty=" + tradeVolumeProperty +
                 ",\n     mediationResultState=" + mediationResultState +

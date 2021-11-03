@@ -57,7 +57,7 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            Coin tradeAmount = checkNotNull(trade.getTradeAmount(), "TradeAmount must not be null");
+            Coin tradeAmount = checkNotNull(trade.getAmount(), "TradeAmount must not be null");
             String takerFeeTxId = checkNotNull(processModel.getTakeOfferFeeTxId(), "TakeOfferFeeTxId must not be null");
             User user = checkNotNull(processModel.getUser(), "User must not be null");
             List<NodeAddress> acceptedArbitratorAddresses = user.getAcceptedArbitratorAddresses() == null ?

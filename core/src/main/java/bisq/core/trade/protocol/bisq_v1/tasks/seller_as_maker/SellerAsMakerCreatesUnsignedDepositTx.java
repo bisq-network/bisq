@@ -51,7 +51,7 @@ public class SellerAsMakerCreatesUnsignedDepositTx extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
+            checkNotNull(trade.getAmount(), "trade.getTradeAmount() must not be null");
 
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
@@ -66,7 +66,7 @@ public class SellerAsMakerCreatesUnsignedDepositTx extends TradeTask {
                     + trade.getContractAsJson()
                     + "\n------------------------------------------------------------\n");
 
-            Coin makerInputAmount = offer.getSellerSecurityDeposit().add(trade.getTradeAmount());
+            Coin makerInputAmount = offer.getSellerSecurityDeposit().add(trade.getAmount());
             Optional<AddressEntry> addressEntryOptional = walletService.getAddressEntry(id, AddressEntry.Context.MULTI_SIG);
             checkArgument(addressEntryOptional.isPresent(), "addressEntryOptional must be present");
             AddressEntry makerMultiSigAddressEntry = addressEntryOptional.get();

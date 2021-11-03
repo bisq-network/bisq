@@ -73,7 +73,7 @@ public class SellerAsTakerSignsDepositTx extends TradeTask {
 
             Offer offer = trade.getOffer();
             Coin msOutputAmount = offer.getBuyerSecurityDeposit().add(offer.getSellerSecurityDeposit()).add(trade.getTxFee())
-                    .add(checkNotNull(trade.getTradeAmount()));
+                    .add(checkNotNull(trade.getAmount()));
 
             TradingPeer tradingPeer = processModel.getTradePeer();
 

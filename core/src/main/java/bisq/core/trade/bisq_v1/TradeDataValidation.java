@@ -305,7 +305,7 @@ public class TradeDataValidation {
         Offer offer = checkNotNull(trade.getOffer());
         Coin msOutputAmount = offer.getBuyerSecurityDeposit()
                 .add(offer.getSellerSecurityDeposit())
-                .add(checkNotNull(trade.getTradeAmount()));
+                .add(checkNotNull(trade.getAmount()));
 
         if (!output.getValue().equals(msOutputAmount)) {
             errorMsg = "Output value of deposit tx and delayed payout tx is not matching. Output: " + output + " / msOutputAmount: " + msOutputAmount;

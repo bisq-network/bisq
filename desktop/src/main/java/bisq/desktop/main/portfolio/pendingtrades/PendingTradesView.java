@@ -211,7 +211,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         tradeIdColumn.setComparator(Comparator.comparing(o -> o.getTrade().getId()));
         dateColumn.setComparator(Comparator.comparing(o -> o.getTrade().getDate()));
         volumeColumn.setComparator(Comparator.comparing(o -> o.getTrade().getTradeVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
-        amountColumn.setComparator(Comparator.comparing(o -> o.getTrade().getTradeAmount(), Comparator.nullsFirst(Comparator.naturalOrder())));
+        amountColumn.setComparator(Comparator.comparing(o -> o.getTrade().getAmount(), Comparator.nullsFirst(Comparator.naturalOrder())));
         priceColumn.setComparator(Comparator.comparing(item -> FormattingUtils.formatPrice(item.getPrice())));
         paymentMethodColumn.setComparator(Comparator.comparing(
                 item -> item.getTrade().getOffer() != null ?
@@ -684,7 +684,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setGraphic(new AutoTooltipLabel(formatter.formatCoin(item.getTrade().getTradeAmount())));
+                                    setGraphic(new AutoTooltipLabel(formatter.formatCoin(item.getTrade().getAmount())));
                                 else
                                     setGraphic(null);
                             }

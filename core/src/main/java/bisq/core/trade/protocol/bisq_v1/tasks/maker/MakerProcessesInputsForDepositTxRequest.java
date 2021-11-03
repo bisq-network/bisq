@@ -113,7 +113,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             }
 
             checkArgument(request.getTradeAmount() > 0);
-            trade.setTradeAmount(Coin.valueOf(request.getTradeAmount()));
+            trade.setAmount(Coin.valueOf(request.getTradeAmount()));
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 

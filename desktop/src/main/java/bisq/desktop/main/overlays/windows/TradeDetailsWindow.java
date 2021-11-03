@@ -166,7 +166,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         }
 
         addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("shared.btcAmount") + btcDirectionInfo,
-                formatter.formatCoinWithCode(trade.getTradeAmount()));
+                formatter.formatCoinWithCode(trade.getAmount()));
         addConfirmationLabelTextField(gridPane, ++rowIndex,
                 VolumeUtil.formatVolumeLabel(offer.getCurrencyCode()) + fiatDirectionInfo,
                 VolumeUtil.formatVolumeWithCode(trade.getTradeVolume()));

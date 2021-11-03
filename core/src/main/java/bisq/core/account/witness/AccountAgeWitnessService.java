@@ -564,7 +564,7 @@ public class AccountAgeWitnessService {
             return false;
 
         // Check if the peers trade limit is not less than the trade amount
-        if (!verifyPeersTradeLimit(trade.getOffer(), trade.getTradeAmount(), peersWitness, peersCurrentDate,
+        if (!verifyPeersTradeLimit(trade.getOffer(), trade.getAmount(), peersWitness, peersCurrentDate,
                 errorMessageHandler)) {
             log.error("verifyPeersTradeLimit failed: peersPaymentAccountPayload {}", peersPaymentAccountPayload);
             return false;
@@ -730,7 +730,7 @@ public class AccountAgeWitnessService {
 
     public Optional<SignedWitness> traderSignAndPublishPeersAccountAgeWitness(Trade trade) {
         AccountAgeWitness peersWitness = findTradePeerWitness(trade).orElse(null);
-        Coin tradeAmount = trade.getTradeAmount();
+        Coin tradeAmount = trade.getAmount();
         checkNotNull(trade.getProcessModel().getTradePeer().getPubKeyRing(), "Peer must have a keyring");
         PublicKey peersPubKey = trade.getProcessModel().getTradePeer().getPubKeyRing().getSignaturePubKey();
         checkNotNull(peersWitness, "Not able to find peers witness, unable to sign for trade {}",
@@ -925,7 +925,7 @@ public class AccountAgeWitnessService {
 
         return accountIsSigner(myWitness) &&
                 !peerHasSignedWitness(trade) &&
-                tradeAmountIsSufficient(trade.getTradeAmount());
+                tradeAmountIsSufficient(trade.getAmount());
     }
 
     public String getSignInfoFromAccount(PaymentAccount paymentAccount) {

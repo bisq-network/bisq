@@ -48,14 +48,14 @@ public class BuyerSignPayoutTx extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            Preconditions.checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
+            Preconditions.checkNotNull(trade.getAmount(), "trade.getTradeAmount() must not be null");
             Preconditions.checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
             Offer offer = checkNotNull(trade.getOffer(), "offer must not be null");
 
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
 
-            Coin buyerPayoutAmount = offer.getBuyerSecurityDeposit().add(trade.getTradeAmount());
+            Coin buyerPayoutAmount = offer.getBuyerSecurityDeposit().add(trade.getAmount());
             Coin sellerPayoutAmount = offer.getSellerSecurityDeposit();
 
             String buyerPayoutAddressString = walletService.getOrCreateAddressEntry(id,

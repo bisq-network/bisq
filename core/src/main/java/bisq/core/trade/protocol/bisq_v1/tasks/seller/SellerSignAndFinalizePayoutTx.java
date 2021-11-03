@@ -49,7 +49,7 @@ public class SellerSignAndFinalizePayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
-            checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
+            checkNotNull(trade.getAmount(), "trade.getTradeAmount() must not be null");
 
             Offer offer = trade.getOffer();
             TradingPeer tradingPeer = processModel.getTradePeer();
@@ -58,7 +58,7 @@ public class SellerSignAndFinalizePayoutTx extends TradeTask {
 
             final byte[] buyerSignature = tradingPeer.getSignature();
 
-            Coin buyerPayoutAmount = checkNotNull(offer.getBuyerSecurityDeposit()).add(trade.getTradeAmount());
+            Coin buyerPayoutAmount = checkNotNull(offer.getBuyerSecurityDeposit()).add(trade.getAmount());
             Coin sellerPayoutAmount = offer.getSellerSecurityDeposit();
 
             final String buyerPayoutAddressString = tradingPeer.getPayoutAddressString();

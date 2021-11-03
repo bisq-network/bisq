@@ -55,7 +55,7 @@ class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataMod
 
     String getAmount(FailedTradesListItem item) {
         if (item != null && item.getTrade() != null)
-            return formatter.formatCoin(item.getTrade().getTradeAmount());
+            return formatter.formatCoin(item.getTrade().getAmount());
         else
             return "";
     }

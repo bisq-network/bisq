@@ -59,7 +59,7 @@ public class SignMediatedPayoutTx extends TradeTask {
             BtcWalletService walletService = processModel.getBtcWalletService();
             Transaction depositTx = checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
             Offer offer = checkNotNull(trade.getOffer(), "offer must not be null");
-            Coin tradeAmount = checkNotNull(trade.getTradeAmount(), "tradeAmount must not be null");
+            Coin tradeAmount = checkNotNull(trade.getAmount(), "tradeAmount must not be null");
             Contract contract = checkNotNull(trade.getContract(), "contract must not be null");
 
             Coin totalPayoutAmount = offer.getBuyerSecurityDeposit().add(tradeAmount).add(offer.getSellerSecurityDeposit());

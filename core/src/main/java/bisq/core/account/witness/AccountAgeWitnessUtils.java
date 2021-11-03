@@ -143,7 +143,7 @@ public class AccountAgeWitnessUtils {
         }
         boolean isSignWitnessTrade = accountAgeWitnessService.accountIsSigner(witness) &&
                 !accountAgeWitnessService.peerHasSignedWitness(trade) &&
-                accountAgeWitnessService.tradeAmountIsSufficient(trade.getTradeAmount());
+                accountAgeWitnessService.tradeAmountIsSufficient(trade.getAmount());
         log.info("AccountSigning debug log: " +
                         "\ntradeId: {}" +
                         "\nis buyer: {}" +
@@ -164,8 +164,8 @@ public class AccountAgeWitnessUtils {
                 checkingSignTrade, // Following cases added to use same logic as in seller signing check
                 accountAgeWitnessService.accountIsSigner(witness),
                 accountAgeWitnessService.peerHasSignedWitness(trade),
-                trade.getTradeAmount(),
-                accountAgeWitnessService.tradeAmountIsSufficient(trade.getTradeAmount()),
+                trade.getAmount(),
+                accountAgeWitnessService.tradeAmountIsSufficient(trade.getAmount()),
                 isSignWitnessTrade);
     }
 }

@@ -41,7 +41,7 @@ public class SellerAsTakerCreatesDepositTxInputs extends TradeTask {
         try {
             runInterceptHook();
 
-            Coin tradeAmount = checkNotNull(trade.getTradeAmount());
+            Coin tradeAmount = checkNotNull(trade.getAmount());
             Offer offer = checkNotNull(trade.getOffer());
             Coin txFee = trade.getTxFee();
             Coin takerInputAmount = offer.getSellerSecurityDeposit()

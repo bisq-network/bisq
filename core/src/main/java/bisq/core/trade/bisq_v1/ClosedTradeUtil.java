@@ -108,7 +108,7 @@ public class ClosedTradeUtil {
 
     public String getAmountAsString(Tradable tradable) {
         if (tradable instanceof Trade)
-            return btcFormatter.formatCoin(((Trade) tradable).getTradeAmount());
+            return btcFormatter.formatCoin(((Trade) tradable).getAmount());
         else
             return "";
     }

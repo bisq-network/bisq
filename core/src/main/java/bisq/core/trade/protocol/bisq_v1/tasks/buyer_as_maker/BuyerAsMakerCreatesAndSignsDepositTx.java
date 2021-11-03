@@ -52,7 +52,7 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
     protected void run() {
         try {
             runInterceptHook();
-            Coin tradeAmount = checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not be null");
+            Coin tradeAmount = checkNotNull(trade.getAmount(), "trade.getTradeAmount() must not be null");
 
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();

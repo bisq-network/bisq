@@ -96,11 +96,11 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
 
         Offer offer = trade.getOffer();
         checkNotNull(offer, "offer must not ne null");
-        checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not ne null");
+        checkNotNull(trade.getAmount(), "trade.getTradeAmount() must not ne null");
         OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();
         return new TradeStatistics2(offerPayload,
                 trade.getTradePrice(),
-                trade.getTradeAmount(),
+                trade.getAmount(),
                 trade.getDate(),
                 trade.getDepositTxId(),
                 extraDataMap);

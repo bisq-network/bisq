@@ -106,7 +106,7 @@ public class MempoolService {
     }
 
     public void validateOfferTakerTx(Trade trade, Consumer<TxValidator> resultHandler) {
-        validateOfferTakerTx(new TxValidator(daoStateService, trade.getTakerFeeTxId(), trade.getTradeAmount(),
+        validateOfferTakerTx(new TxValidator(daoStateService, trade.getTakerFeeTxId(), trade.getAmount(),
                 trade.isCurrencyForTakerFeeBtc()), resultHandler);
     }
 

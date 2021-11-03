@@ -327,7 +327,7 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean isTradeAmountAboveLimit(Trade trade) {
-        Coin tradeAmount = trade.getTradeAmount();
+        Coin tradeAmount = trade.getAmount();
         Coin tradeLimit = Coin.valueOf(autoConfirmSettings.getTradeLimit());
         if (tradeAmount != null && tradeAmount.isGreaterThan(tradeLimit)) {
             log.warn("Trade amount {} is higher than limit from auto-conf setting {}.",
