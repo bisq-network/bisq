@@ -60,4 +60,8 @@ public interface Tradable extends PersistablePayload {
     default Optional<Long> getOptionalAmountAsLong() {
         return asTradeModel().map(TradeModel::getAmountAsLong);
     }
+
+    default Optional<Coin> getOptionalTxFee() {
+        return asTradeModel().map(TradeModel::getTxFee);
+    }
 }
