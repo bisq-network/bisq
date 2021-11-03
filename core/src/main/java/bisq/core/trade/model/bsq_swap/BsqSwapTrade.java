@@ -262,7 +262,11 @@ public abstract class BsqSwapTrade extends TradeModel {
     }
 
     public long getBsqTradeAmount() {
-        return BsqSwapCalculation.getBsqTradeAmount(getVolume()).getValue();
+        Volume volume = getVolume();
+        if (volume == null) {
+            return 0L;
+        }
+        return BsqSwapCalculation.getBsqTradeAmount(volume).getValue();
     }
 
     @Nullable
