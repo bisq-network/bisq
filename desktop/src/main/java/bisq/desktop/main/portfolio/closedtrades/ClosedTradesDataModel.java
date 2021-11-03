@@ -18,7 +18,6 @@
 package bisq.desktop.main.portfolio.closedtrades;
 
 import bisq.desktop.common.model.ActivatableDataModel;
-import bisq.desktop.main.PriceUtil;
 
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -33,6 +32,7 @@ import bisq.core.trade.ClosedTradeUtil;
 import bisq.core.trade.bsq_swap.BsqSwapTradeManager;
 import bisq.core.trade.model.Tradable;
 import bisq.core.user.Preferences;
+import bisq.core.util.PriceUtil;
 import bisq.core.util.VolumeUtil;
 
 import org.bitcoinj.core.Coin;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main;
+package bisq.core.util;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -27,9 +27,6 @@ import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
-import bisq.core.util.AveragePriceUtil;
-import bisq.core.util.FormattingUtils;
-import bisq.core.util.ParsingUtils;
 import bisq.core.util.validation.AltcoinValidator;
 import bisq.core.util.validation.FiatPriceValidator;
 import bisq.core.util.validation.InputValidator;
@@ -44,11 +41,13 @@ import javax.inject.Singleton;
 
 import java.util.Optional;
 
+import lombok.extern.slf4j.Slf4j;
+
 import javax.annotation.Nullable;
 
-import static bisq.desktop.main.shared.ChatView.log;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@Slf4j
 @Singleton
 public class PriceUtil {
     private final PriceFeedService priceFeedService;
@@ -166,9 +165,9 @@ public class PriceUtil {
         return calculatePercentage(offer, marketPriceAsDouble, direction);
     }
 
-    public Optional<Double> calculatePercentage(Offer offer,
-                                                double marketPrice,
-                                                OfferDirection direction) {
+    public static Optional<Double> calculatePercentage(Offer offer,
+                                                       double marketPrice,
+                                                       OfferDirection direction) {
         // If the offer did not use % price we calculate % from current market price
         String currencyCode = offer.getCurrencyCode();
         Price price = offer.getPrice();
