@@ -113,7 +113,7 @@ class ClosedTradesDataModel extends ActivatableDataModel {
     }
 
     Coin getTotalAmount() {
-        return closedTradeUtil.getTotalAmount(tradableList.get());
+        return ClosedTradeUtil.getTotalAmount(tradableList.get());
     }
 
     Optional<Volume> getVolumeInUserFiatCurrency(Coin amount) {

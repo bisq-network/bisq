@@ -22,7 +22,9 @@ import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Volume;
+import bisq.core.trade.ClosedTradeFormatter;
 import bisq.core.trade.ClosedTradeUtil;
 import bisq.core.trade.model.Tradable;
 
@@ -36,14 +38,17 @@ import java.util.Map;
 
 public class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTradesDataModel> implements ViewModel {
     private final ClosedTradeUtil closedTradeUtil;
+    private final ClosedTradeFormatter closedTradeFormatter;
     final AccountAgeWitnessService accountAgeWitnessService;
 
     @Inject
     public ClosedTradesViewModel(ClosedTradesDataModel dataModel,
                                  ClosedTradeUtil closedTradeUtil,
+                                 ClosedTradeFormatter closedTradeFormatter,
                                  AccountAgeWitnessService accountAgeWitnessService) {
         super(dataModel);
         this.closedTradeUtil = closedTradeUtil;
+        this.closedTradeFormatter = closedTradeFormatter;
         this.accountAgeWitnessService = accountAgeWitnessService;
     }
 
@@ -56,7 +61,7 @@ public class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTrades
     }
 
     String getAmount(ClosedTradableListItem item) {
-        return item != null ? closedTradeUtil.getAmountAsString(item.getTradable()) : "";
+        return item != null ? closedTradeFormatter.getAmountAsString(item.getTradable()) : "";
     }
 
     String getPrice(ClosedTradableListItem item) {
@@ -76,7 +81,7 @@ public class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTrades
     }
 
     String getTxFee(ClosedTradableListItem item) {
-        return item != null ? closedTradeUtil.getTxFeeAsString(item.getTradable()) : "";
+        return item != null ? closedTradeFormatter.getTxFeeAsString(item.getTradable()) : "";
     }
 
     boolean isCurrencyForTradeFeeBtc(ClosedTradableListItem item) {
@@ -84,15 +89,15 @@ public class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTrades
     }
 
     String getTradeFee(ClosedTradableListItem item, boolean appendCode) {
-        return item != null ? closedTradeUtil.getTradeFeeAsString(item.getTradable(), appendCode) : "";
+        return item != null ? closedTradeFormatter.getTradeFeeAsString(item.getTradable(), appendCode) : "";
     }
 
     String getBuyerSecurityDeposit(ClosedTradableListItem item) {
-        return item != null ? closedTradeUtil.getBuyerSecurityDepositAsString(item.getTradable()) : "";
+        return item != null ? closedTradeFormatter.getBuyerSecurityDepositAsString(item.getTradable()) : "";
     }
 
     String getSellerSecurityDeposit(ClosedTradableListItem item) {
-        return item != null ? closedTradeUtil.getSellerSecurityDepositAsString(item.getTradable()) : "";
+        return item != null ? closedTradeFormatter.getSellerSecurityDepositAsString(item.getTradable()) : "";
     }
 
     String getDirectionLabel(ClosedTradableListItem item) {
@@ -104,11 +109,11 @@ public class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTrades
     }
 
     String getMarketLabel(ClosedTradableListItem item) {
-        return item != null ? closedTradeUtil.getMarketLabel(item.getTradable()) : "";
+        return item != null ? CurrencyUtil.getCurrencyPair(item.getTradable().getOffer().getCurrencyCode()) : "";
     }
 
     String getState(ClosedTradableListItem item) {
-        return item != null ? closedTradeUtil.getStateAsString(item.getTradable()) : "";
+        return item != null ? closedTradeFormatter.getStateAsString(item.getTradable()) : "";
     }
 
     int getNumPastTrades(Tradable tradable) {
@@ -121,7 +126,7 @@ public class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTrades
 
     public String getTotalAmountWithVolume(Coin totalTradeAmount) {
         return dataModel.getVolumeInUserFiatCurrency(totalTradeAmount)
-                .map(volume -> closedTradeUtil.getTotalAmountWithVolumeAsString(totalTradeAmount, volume))
+                .map(volume -> closedTradeFormatter.getTotalAmountWithVolumeAsString(totalTradeAmount, volume))
                 .orElse("");
     }
 
@@ -131,12 +136,12 @@ public class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTrades
 
     public String getTotalTxFee(Coin totalTradeAmount) {
         Coin totalTxFee = dataModel.getTotalTxFee();
-        return closedTradeUtil.getTotalTxFeeAsString(totalTradeAmount, totalTxFee);
+        return closedTradeFormatter.getTotalTxFeeAsString(totalTradeAmount, totalTxFee);
     }
 
     public String getTotalTradeFeeInBtc(Coin totalTradeAmount) {
         Coin totalTradeFee = dataModel.getTotalTradeFee(true);
-        return closedTradeUtil.getTotalTradeFeeInBtcAsString(totalTradeAmount, totalTradeFee);
+        return closedTradeFormatter.getTotalTradeFeeInBtcAsString(totalTradeAmount, totalTradeFee);
     }
 
     public String getTotalTradeFeeInBsq(Coin totalTradeAmount) {
@@ -145,7 +150,7 @@ public class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTrades
                 .map(tradeAmountVolume -> {
                     Coin totalTradeFee = dataModel.getTotalTradeFee(false);
                     Volume bsqVolumeInUsd = dataModel.getBsqVolumeInUsdWithAveragePrice(totalTradeFee); // with 4 decimal
-                    return closedTradeUtil.getTotalTradeFeeInBsqAsString(totalTradeFee,
+                    return closedTradeFormatter.getTotalTradeFeeInBsqAsString(totalTradeFee,
                             tradeAmountVolume,
                             bsqVolumeInUsd);
                 })
