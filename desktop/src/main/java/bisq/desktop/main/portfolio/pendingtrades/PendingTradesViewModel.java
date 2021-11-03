@@ -310,7 +310,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public String getFiatVolume() {
         return dataModel.getTrade() != null
-                ? VolumeUtil.formatVolumeWithCode(dataModel.getTrade().getTradeVolume())
+                ? VolumeUtil.formatVolumeWithCode(dataModel.getTrade().getVolume())
                 : "";
     }
 

@@ -67,7 +67,7 @@ class CompletedBsqSwapsViewModel extends ActivatableWithDataModel<CompletedBsqSw
         if (item == null)
             return "";
 
-        return btcFormatter.formatCoin(Coin.valueOf(item.getBsqSwapTrade().getAmountAsLong()));
+        return btcFormatter.formatCoin(item.getBsqSwapTrade().getAmount());
     }
 
     String getPrice(CompletedBsqSwapsListItem item) {

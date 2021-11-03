@@ -140,7 +140,7 @@ public class ClosedTradeUtil {
         }
 
         Trade trade = (Trade) tradable;
-        return formatVolume(trade.getTradeVolume(), appendCode);
+        return formatVolume(trade.getVolume(), appendCode);
     }
 
     public String getVolumeCurrencyAsString(Tradable tradable) {
@@ -150,7 +150,7 @@ public class ClosedTradeUtil {
             volume = openOffer.getOffer().getVolume();
         } else {
             Trade trade = (Trade) tradable;
-            volume = trade.getTradeVolume();
+            volume = trade.getVolume();
         }
         return volume != null ? volume.getCurrencyCode() : "";
     }
@@ -160,7 +160,7 @@ public class ClosedTradeUtil {
         tradableList.stream()
                 .filter(e -> e instanceof Trade)
                 .map(e -> (Trade) e)
-                .map(Trade::getTradeVolume)
+                .map(Trade::getVolume)
                 .filter(Objects::nonNull)
                 .forEach(volume -> {
                     String currencyCode = volume.getCurrencyCode();

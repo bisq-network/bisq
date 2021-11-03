@@ -74,7 +74,7 @@ public class SwiftPaymentDetails extends Overlay<SwiftPaymentDetails> {
 
         gridPane.add(new Label(""), 0, ++rowIndex);  // spacer
         addLabelsAndCopy(Res.get("portfolio.pending.step2_buyer.amountToTransfer"),
-                VolumeUtil.formatVolumeWithCode(trade.getTradeVolume()));
+                VolumeUtil.formatVolumeWithCode(trade.getVolume()));
         addLabelsAndCopy(Res.get(SWIFT_CODE + BANKPOSTFIX), payload.getBankSwiftCode());
         addLabelsAndCopy(Res.get(SNAME + BANKPOSTFIX), payload.getBankName());
         addLabelsAndCopy(Res.get(BRANCH + BANKPOSTFIX), payload.getBankBranch());

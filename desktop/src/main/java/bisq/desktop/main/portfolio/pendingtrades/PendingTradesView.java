@@ -210,7 +210,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         tradeIdColumn.setComparator(Comparator.comparing(o -> o.getTrade().getId()));
         dateColumn.setComparator(Comparator.comparing(o -> o.getTrade().getDate()));
-        volumeColumn.setComparator(Comparator.comparing(o -> o.getTrade().getTradeVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
+        volumeColumn.setComparator(Comparator.comparing(o -> o.getTrade().getVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
         amountColumn.setComparator(Comparator.comparing(o -> o.getTrade().getAmount(), Comparator.nullsFirst(Comparator.naturalOrder())));
         priceColumn.setComparator(Comparator.comparing(item -> FormattingUtils.formatPrice(item.getPrice())));
         paymentMethodColumn.setComparator(Comparator.comparing(
@@ -727,7 +727,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     try {
-                                        String volume = VolumeUtil.formatVolumeWithCode(item.getTrade().getTradeVolume());
+                                        String volume = VolumeUtil.formatVolumeWithCode(item.getTrade().getVolume());
                                         setGraphic(new AutoTooltipLabel(volume));
                                     } catch (Throwable ignore) {
                                         log.debug(ignore.toString()); // Stupidity to make Codacy happy

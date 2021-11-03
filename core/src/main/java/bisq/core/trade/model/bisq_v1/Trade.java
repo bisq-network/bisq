@@ -801,7 +801,7 @@ public abstract class Trade extends TradeModel {
         this.amount = amount;
         amountAsLong = amount.value;
         getAmountProperty().set(amount);
-        getVolumeProperty().set(getTradeVolume());
+        getVolumeProperty().set(getVolume());
     }
 
     public void setPayoutTx(Transaction payoutTx) {
@@ -820,7 +820,7 @@ public abstract class Trade extends TradeModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Nullable
-    public Volume getTradeVolume() {
+    public Volume getVolume() {
         try {
             if (getAmount() != null && getPrice() != null) {
                 Volume volumeByAmount = getPrice().getVolumeByAmount(getAmount());
@@ -1037,7 +1037,7 @@ public abstract class Trade extends TradeModel {
     // lazy initialization
     private ObjectProperty<Volume> getVolumeProperty() {
         if (volumeProperty == null)
-            volumeProperty = getTradeVolume() != null ? new SimpleObjectProperty<>(getTradeVolume()) : new SimpleObjectProperty<>();
+            volumeProperty = getVolume() != null ? new SimpleObjectProperty<>(getVolume()) : new SimpleObjectProperty<>();
         return volumeProperty;
     }
 

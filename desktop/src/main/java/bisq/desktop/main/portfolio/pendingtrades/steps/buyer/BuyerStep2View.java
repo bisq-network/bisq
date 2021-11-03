@@ -432,7 +432,7 @@ public class BuyerStep2View extends TradeStepView {
             hBox.getChildren().add(1, fillBsqButton);
             fillBsqButton.setOnAction(e -> {
                 AssetsAccountPayload assetsAccountPayload = (AssetsAccountPayload) paymentAccountPayload;
-                Tuple2<Volume, String> data = new Tuple2<>(trade.getTradeVolume(), assetsAccountPayload.getAddress());
+                Tuple2<Volume, String> data = new Tuple2<>(trade.getVolume(), assetsAccountPayload.getAddress());
                 model.getNavigation().navigateToWithData(data, MainView.class, DaoView.class, BsqWalletView.class,
                         BsqSendView.class);
             });
@@ -625,7 +625,7 @@ public class BuyerStep2View extends TradeStepView {
             String refTextWarn = Res.get("portfolio.pending.step2_buyer.refTextWarn");
             String fees = Res.get("portfolio.pending.step2_buyer.fees");
             String id = trade.getShortId();
-            String amount = VolumeUtil.formatVolumeWithCode(trade.getTradeVolume());
+            String amount = VolumeUtil.formatVolumeWithCode(trade.getVolume());
             if (paymentAccountPayload instanceof AssetsAccountPayload) {
                 message += Res.get("portfolio.pending.step2_buyer.altcoin",
                         getCurrencyName(trade),

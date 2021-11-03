@@ -217,7 +217,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         deviationColumn.setComparator(Comparator.comparing(o ->
                         o.getTradable().getOffer().isUseMarketBasedPrice() ? o.getTradable().getOffer().getMarketPriceMargin() : 1,
                 Comparator.nullsFirst(Comparator.naturalOrder())));
-        volumeColumn.setComparator(nullsFirstComparingAsTrade(Trade::getTradeVolume));
+        volumeColumn.setComparator(nullsFirstComparingAsTrade(Trade::getVolume));
         amountColumn.setComparator(Comparator.comparing(model::getAmount, Comparator.nullsFirst(Comparator.naturalOrder())));
         avatarColumn.setComparator(Comparator.comparing(
                 o -> model.getNumPastTrades(o.getTradable()),

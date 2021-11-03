@@ -402,7 +402,7 @@ public class SellerStep3View extends TradeStepView {
         PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
         String key = "confirmPayment" + trade.getId();
         String message = "";
-        String tradeVolumeWithCode = VolumeUtil.formatVolumeWithCode(trade.getTradeVolume());
+        String tradeVolumeWithCode = VolumeUtil.formatVolumeWithCode(trade.getVolume());
         String currencyName = getCurrencyName(trade);
         String part1 = Res.get("portfolio.pending.step3_seller.part", currencyName);
         if (paymentAccountPayload instanceof AssetsAccountPayload) {
