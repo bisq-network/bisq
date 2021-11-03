@@ -23,7 +23,7 @@ import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
 import bisq.desktop.main.MainView;
-import bisq.desktop.main.portfolio.bsqswaps.CompletedBsqSwapsView;
+import bisq.desktop.main.portfolio.bsqswaps.UnconfirmedBsqSwapsView;
 import bisq.desktop.main.portfolio.closedtrades.ClosedTradesView;
 import bisq.desktop.main.portfolio.duplicateoffer.DuplicateOfferView;
 import bisq.desktop.main.portfolio.editoffer.EditOfferView;
@@ -103,7 +103,7 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
             else if (newValue == closedTradesTab)
                 navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class);
             else if (newValue == bsqSwapTradesTab)
-                navigation.navigateTo(MainView.class, PortfolioView.class, CompletedBsqSwapsView.class);
+                navigation.navigateTo(MainView.class, PortfolioView.class, UnconfirmedBsqSwapsView.class);
             else if (newValue == failedTradesTab)
                 navigation.navigateTo(MainView.class, PortfolioView.class, FailedTradesView.class);
             else if (newValue == editOpenOfferTab)
@@ -168,7 +168,7 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
         else if (root.getSelectionModel().getSelectedItem() == closedTradesTab)
             navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class);
         else if (root.getSelectionModel().getSelectedItem() == bsqSwapTradesTab)
-            navigation.navigateTo(MainView.class, PortfolioView.class, CompletedBsqSwapsView.class);
+            navigation.navigateTo(MainView.class, PortfolioView.class, UnconfirmedBsqSwapsView.class);
         else if (root.getSelectionModel().getSelectedItem() == failedTradesTab)
             navigation.navigateTo(MainView.class, PortfolioView.class, FailedTradesView.class);
         else if (root.getSelectionModel().getSelectedItem() == editOpenOfferTab) {
@@ -202,7 +202,7 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
             currentTab = pendingTradesTab;
         } else if (view instanceof ClosedTradesView) {
             currentTab = closedTradesTab;
-        } else if (view instanceof CompletedBsqSwapsView) {
+        } else if (view instanceof UnconfirmedBsqSwapsView) {
             currentTab = bsqSwapTradesTab;
         } else if (view instanceof FailedTradesView) {
             currentTab = failedTradesTab;

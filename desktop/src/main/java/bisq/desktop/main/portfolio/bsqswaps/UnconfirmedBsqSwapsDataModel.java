@@ -33,16 +33,15 @@ import javafx.collections.ObservableList;
 
 import java.util.stream.Collectors;
 
-class CompletedBsqSwapsDataModel extends ActivatableDataModel {
+class UnconfirmedBsqSwapsDataModel extends ActivatableDataModel {
 
-    //    final ClosedTradableManager closedTradableManager;
     final BsqSwapTradeManager bsqSwapTradeManager;
     private final BsqWalletService bsqWalletService;
-    private final ObservableList<CompletedBsqSwapsListItem> list = FXCollections.observableArrayList();
+    private final ObservableList<UnconfirmedBsqSwapsListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<BsqSwapTrade> tradesListChangeListener;
 
     @Inject
-    public CompletedBsqSwapsDataModel(BsqSwapTradeManager bsqSwapTradeManager, BsqWalletService bsqWalletService) {
+    public UnconfirmedBsqSwapsDataModel(BsqSwapTradeManager bsqSwapTradeManager, BsqWalletService bsqWalletService) {
         this.bsqSwapTradeManager = bsqSwapTradeManager;
         this.bsqWalletService = bsqWalletService;
 
@@ -60,7 +59,7 @@ class CompletedBsqSwapsDataModel extends ActivatableDataModel {
         bsqSwapTradeManager.getObservableList().removeListener(tradesListChangeListener);
     }
 
-    public ObservableList<CompletedBsqSwapsListItem> getList() {
+    public ObservableList<UnconfirmedBsqSwapsListItem> getList() {
         return list;
     }
 
@@ -72,10 +71,10 @@ class CompletedBsqSwapsDataModel extends ActivatableDataModel {
         list.clear();
 
         list.addAll(bsqSwapTradeManager.getObservableList().stream()
-                .map(bsqSwapTrade -> new CompletedBsqSwapsListItem(bsqWalletService, bsqSwapTrade))
+                .map(bsqSwapTrade -> new UnconfirmedBsqSwapsListItem(bsqWalletService, bsqSwapTrade))
                 .collect(Collectors.toList()));
 
-        // we sort by date, earliest first
+        // we sort by date, the earliest first
         list.sort((o1, o2) -> o2.getBsqSwapTrade().getDate().compareTo(o1.getBsqSwapTrade().getDate()));
     }
 

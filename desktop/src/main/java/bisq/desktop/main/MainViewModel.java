@@ -36,7 +36,7 @@ import bisq.desktop.main.overlays.windows.UpdateRevolutAccountWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
 import bisq.desktop.main.portfolio.PortfolioView;
-import bisq.desktop.main.portfolio.bsqswaps.CompletedBsqSwapsView;
+import bisq.desktop.main.portfolio.bsqswaps.UnconfirmedBsqSwapsView;
 import bisq.desktop.main.presentation.AccountPresentation;
 import bisq.desktop.main.presentation.DaoPresentation;
 import bisq.desktop.main.presentation.MarketPricePresentation;
@@ -291,7 +291,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                                 .headLine(Res.get("notification.bsqSwap.maker.headline"))
                                 .notification(Res.get("notification.bsqSwap.maker.tradeCompleted", bsqSwapTrade.getShortId()))
                                 .actionButtonTextWithGoTo("navigation.portfolio.bsqSwapTrades.short")
-                                .onAction(() -> navigation.navigateTo(MainView.class, PortfolioView.class, CompletedBsqSwapsView.class))
+                                .onAction(() -> navigation.navigateTo(MainView.class, PortfolioView.class, UnconfirmedBsqSwapsView.class))
                                 .show();
                         bsqSwapTradeManager.resetCompletedBsqSwapTrade();
                     }

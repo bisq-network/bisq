@@ -72,7 +72,7 @@ import java.util.Comparator;
 import java.util.function.Function;
 
 @FxmlView
-public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, CompletedBsqSwapsViewModel> {
+public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, UnconfirmedBsqSwapsViewModel> {
     private final boolean useDevPrivilegeKeys;
 
     private enum ColumnNames {
@@ -100,9 +100,9 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
     }
 
     @FXML
-    TableView<CompletedBsqSwapsListItem> tableView;
+    TableView<UnconfirmedBsqSwapsListItem> tableView;
     @FXML
-    TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem>
+    TableColumn<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem>
             priceColumn,
             amountColumn,
             volumeColumn,
@@ -132,17 +132,17 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
     private final BsqTradeDetailsWindow window;
     private final Preferences preferences;
     private final PrivateNotificationManager privateNotificationManager;
-    private SortedList<CompletedBsqSwapsListItem> sortedList;
-    private FilteredList<CompletedBsqSwapsListItem> filteredList;
+    private SortedList<UnconfirmedBsqSwapsListItem> sortedList;
+    private FilteredList<UnconfirmedBsqSwapsListItem> filteredList;
     private ChangeListener<String> filterTextFieldListener;
     private ChangeListener<Number> widthListener;
 
     @Inject
-    public CompletedBsqSwapsView(CompletedBsqSwapsViewModel model,
-                                 BsqTradeDetailsWindow bsqTradeDetailsWindow,
-                                 Preferences preferences,
-                                 PrivateNotificationManager privateNotificationManager,
-                                 @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
+    public UnconfirmedBsqSwapsView(UnconfirmedBsqSwapsViewModel model,
+                                   BsqTradeDetailsWindow bsqTradeDetailsWindow,
+                                   Preferences preferences,
+                                   PrivateNotificationManager privateNotificationManager,
+                                   @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.window = bsqTradeDetailsWindow;
         this.preferences = preferences;
@@ -233,14 +233,14 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
 
         numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
         exportButton.setOnAction(event -> {
-            CSVEntryConverter<CompletedBsqSwapsListItem> headerConverter = item -> {
+            CSVEntryConverter<UnconfirmedBsqSwapsListItem> headerConverter = item -> {
                 String[] columns = new String[ColumnNames.values().length];
                 for (ColumnNames m : ColumnNames.values()) {
                     columns[m.ordinal()] = m.toString();
                 }
                 return columns;
             };
-            CSVEntryConverter<CompletedBsqSwapsListItem> contentConverter = item -> {
+            CSVEntryConverter<UnconfirmedBsqSwapsListItem> contentConverter = item -> {
                 String[] columns = new String[ColumnNames.values().length];
                 columns[ColumnNames.TRADE_ID.ordinal()] = model.getTradeId(item);
                 columns[ColumnNames.DATE.ordinal()] = model.getDate(item);
@@ -256,7 +256,7 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
             };
 
             GUIUtil.exportCSV("bsqSwapHistory.csv", headerConverter, contentConverter,
-                    new CompletedBsqSwapsListItem(), sortedList, (Stage) root.getScene().getWindow());
+                    new UnconfirmedBsqSwapsListItem(), sortedList, (Stage) root.getScene().getWindow());
         });
 
         filterTextField.textProperty().addListener(filterTextFieldListener);
@@ -274,7 +274,7 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
         root.widthProperty().removeListener(widthListener);
     }
 
-    private static <T extends Comparable<T>> Comparator<CompletedBsqSwapsListItem> nullsFirstComparing(
+    private static <T extends Comparable<T>> Comparator<UnconfirmedBsqSwapsListItem> nullsFirstComparing(
             Function<BsqSwapTrade, T> keyExtractor) {
         return Comparator.comparing(
                 o -> o.getBsqSwapTrade() != null ? keyExtractor.apply(o.getBsqSwapTrade()) : null,
@@ -282,7 +282,7 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
         );
     }
 
-    private static <T extends Comparable<T>> Comparator<CompletedBsqSwapsListItem> nullsFirstComparingAsTrade(
+    private static <T extends Comparable<T>> Comparator<UnconfirmedBsqSwapsListItem> nullsFirstComparingAsTrade(
             Function<BsqSwapTrade, T> keyExtractor) {
         return Comparator.comparing(
                 o -> keyExtractor.apply(o.getBsqSwapTrade()),
@@ -347,13 +347,13 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
                 new Callback<>() {
 
                     @Override
-                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(TableColumn<CompletedBsqSwapsListItem,
-                            CompletedBsqSwapsListItem> column) {
+                    public TableCell<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> call(TableColumn<UnconfirmedBsqSwapsListItem,
+                            UnconfirmedBsqSwapsListItem> column) {
                         return new TableCell<>() {
                             private HyperlinkWithIcon field;
 
                             @Override
-                            public void updateItem(final CompletedBsqSwapsListItem item, boolean empty) {
+                            public void updateItem(final UnconfirmedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     field = new HyperlinkWithIcon(model.getTradeId(item));
@@ -378,11 +378,11 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
         dateColumn.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(
-                            TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> column) {
+                    public TableCell<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> call(
+                            TableColumn<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final CompletedBsqSwapsListItem item, boolean empty) {
+                            public void updateItem(final UnconfirmedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setGraphic(new AutoTooltipLabel(model.getDate(item)));
@@ -399,11 +399,11 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
         marketColumn.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(
-                            TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> column) {
+                    public TableCell<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> call(
+                            TableColumn<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final CompletedBsqSwapsListItem item, boolean empty) {
+                            public void updateItem(final UnconfirmedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setGraphic(new AutoTooltipLabel(model.getMarketLabel(item)));
                             }
@@ -417,11 +417,11 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
         confidenceColumn.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(
-                            TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> column) {
+                    public TableCell<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> call(
+                            TableColumn<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final CompletedBsqSwapsListItem item, boolean empty) {
+                            public void updateItem(final UnconfirmedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
@@ -436,17 +436,17 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    private TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> setAvatarColumnCellFactory() {
+    private TableColumn<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> setAvatarColumnCellFactory() {
         avatarColumn.getStyleClass().addAll("last-column", "avatar-column");
         avatarColumn.setCellValueFactory((offer) -> new ReadOnlyObjectWrapper<>(offer.getValue()));
         avatarColumn.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> column) {
+                    public TableCell<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> call(TableColumn<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> column) {
                         return new TableCell<>() {
 
                             @Override
-                            public void updateItem(final CompletedBsqSwapsListItem newItem, boolean empty) {
+                            public void updateItem(final UnconfirmedBsqSwapsListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
 
                                 if (newItem != null && !empty/* && newItem.getAtomicTrade() instanceof Trade*/) {
@@ -479,11 +479,11 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
         amountColumn.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(
-                            TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> column) {
+                    public TableCell<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> call(
+                            TableColumn<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final CompletedBsqSwapsListItem item, boolean empty) {
+                            public void updateItem(final UnconfirmedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setGraphic(new AutoTooltipLabel(model.getAmount(item)));
                             }
@@ -497,11 +497,11 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
         priceColumn.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(
-                            TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> column) {
+                    public TableCell<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> call(
+                            TableColumn<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final CompletedBsqSwapsListItem item, boolean empty) {
+                            public void updateItem(final UnconfirmedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setGraphic(new AutoTooltipLabel(model.getPrice(item)));
                             }
@@ -515,11 +515,11 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
         volumeColumn.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(
-                            TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> column) {
+                    public TableCell<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> call(
+                            TableColumn<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final CompletedBsqSwapsListItem item, boolean empty) {
+                            public void updateItem(final UnconfirmedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
                                     setGraphic(new AutoTooltipLabel(model.getVolume(item)));
@@ -536,11 +536,11 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
         directionColumn.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(
-                            TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> column) {
+                    public TableCell<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> call(
+                            TableColumn<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final CompletedBsqSwapsListItem item, boolean empty) {
+                            public void updateItem(final UnconfirmedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setGraphic(new AutoTooltipLabel(model.getDirectionLabel(item)));
                             }
@@ -554,11 +554,11 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
         txFeeColumn.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(
-                            TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> column) {
+                    public TableCell<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> call(
+                            TableColumn<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final CompletedBsqSwapsListItem item, boolean empty) {
+                            public void updateItem(final UnconfirmedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setGraphic(new AutoTooltipLabel(model.getTxFee(item)));
                             }
@@ -572,11 +572,11 @@ public class CompletedBsqSwapsView extends ActivatableViewAndModel<VBox, Complet
         tradeFeeColumn.setCellFactory(
                 new Callback<>() {
                     @Override
-                    public TableCell<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> call(
-                            TableColumn<CompletedBsqSwapsListItem, CompletedBsqSwapsListItem> column) {
+                    public TableCell<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> call(
+                            TableColumn<UnconfirmedBsqSwapsListItem, UnconfirmedBsqSwapsListItem> column) {
                         return new TableCell<>() {
                             @Override
-                            public void updateItem(final CompletedBsqSwapsListItem item, boolean empty) {
+                            public void updateItem(final UnconfirmedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 setGraphic(new AutoTooltipLabel(model.getTradeFee(item)));
                             }

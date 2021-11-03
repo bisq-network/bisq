@@ -30,7 +30,7 @@ import javafx.scene.control.Tooltip;
 
 import lombok.Getter;
 
-class CompletedBsqSwapsListItem {
+class UnconfirmedBsqSwapsListItem {
     @Getter
     private final BsqSwapTrade bsqSwapTrade;
     private final BsqWalletService bsqWalletService;
@@ -41,7 +41,7 @@ class CompletedBsqSwapsListItem {
     private TxConfidenceIndicator txConfidenceIndicator;
     private TxConfidenceListener txConfidenceListener;
 
-    CompletedBsqSwapsListItem(BsqWalletService bsqWalletService, BsqSwapTrade bsqSwapTrade) {
+    UnconfirmedBsqSwapsListItem(BsqWalletService bsqWalletService, BsqSwapTrade bsqSwapTrade) {
         this.bsqSwapTrade = bsqSwapTrade;
         this.bsqWalletService = bsqWalletService;
 
@@ -63,7 +63,7 @@ class CompletedBsqSwapsListItem {
         updateConfidence(bsqWalletService.getConfidenceForTxId(txId), tooltip);
     }
 
-    CompletedBsqSwapsListItem() {
+    UnconfirmedBsqSwapsListItem() {
         bsqSwapTrade = null;
         bsqWalletService = null;
         txId = null;

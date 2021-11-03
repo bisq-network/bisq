@@ -29,7 +29,7 @@ import bisq.desktop.main.offer.bsq_swap.BsqSwapOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.BsqSwapOfferDetailsWindow;
 import bisq.desktop.main.portfolio.PortfolioView;
-import bisq.desktop.main.portfolio.bsqswaps.CompletedBsqSwapsView;
+import bisq.desktop.main.portfolio.bsqswaps.UnconfirmedBsqSwapsView;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.CurrencyUtil;
@@ -418,7 +418,7 @@ public class BsqSwapTakeOfferView extends BsqSwapOfferView<BsqSwapTakeOfferViewM
                     .width(730)
                     .onAction(() -> {
                         UserThread.runAfter(
-                                () -> navigation.navigateTo(MainView.class, PortfolioView.class, CompletedBsqSwapsView.class),
+                                () -> navigation.navigateTo(MainView.class, PortfolioView.class, UnconfirmedBsqSwapsView.class),
                                 100, TimeUnit.MILLISECONDS);
                         close();
                     })

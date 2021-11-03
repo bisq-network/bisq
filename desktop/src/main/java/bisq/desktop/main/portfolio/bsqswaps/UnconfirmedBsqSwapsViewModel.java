@@ -39,59 +39,59 @@ import javafx.collections.ObservableList;
 
 import java.util.stream.Collectors;
 
-class CompletedBsqSwapsViewModel extends ActivatableWithDataModel<CompletedBsqSwapsDataModel> implements ViewModel {
+class UnconfirmedBsqSwapsViewModel extends ActivatableWithDataModel<UnconfirmedBsqSwapsDataModel> implements ViewModel {
     private final BsqFormatter bsqFormatter;
     private final CoinFormatter btcFormatter;
     final AccountAgeWitnessService accountAgeWitnessService;
 
     @Inject
-    public CompletedBsqSwapsViewModel(CompletedBsqSwapsDataModel dataModel,
-                                      AccountAgeWitnessService accountAgeWitnessService,
-                                      BsqFormatter bsqFormatter,
-                                      @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
+    public UnconfirmedBsqSwapsViewModel(UnconfirmedBsqSwapsDataModel dataModel,
+                                        AccountAgeWitnessService accountAgeWitnessService,
+                                        BsqFormatter bsqFormatter,
+                                        @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
         super(dataModel);
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
     }
 
-    public ObservableList<CompletedBsqSwapsListItem> getList() {
+    public ObservableList<UnconfirmedBsqSwapsListItem> getList() {
         return dataModel.getList();
     }
 
-    String getTradeId(CompletedBsqSwapsListItem item) {
+    String getTradeId(UnconfirmedBsqSwapsListItem item) {
         return item.getBsqSwapTrade().getShortId();
     }
 
-    String getAmount(CompletedBsqSwapsListItem item) {
+    String getAmount(UnconfirmedBsqSwapsListItem item) {
         if (item == null)
             return "";
 
         return btcFormatter.formatCoin(item.getBsqSwapTrade().getAmount());
     }
 
-    String getPrice(CompletedBsqSwapsListItem item) {
+    String getPrice(UnconfirmedBsqSwapsListItem item) {
         if (item == null)
             return "";
 
         return FormattingUtils.formatPrice(item.getBsqSwapTrade().getPrice());
     }
 
-    String getVolume(CompletedBsqSwapsListItem item) {
+    String getVolume(UnconfirmedBsqSwapsListItem item) {
         if (item == null)
             return "";
 
         return VolumeUtil.formatVolumeWithCode(item.getBsqSwapTrade().getVolume());
     }
 
-    String getTxFee(CompletedBsqSwapsListItem item) {
+    String getTxFee(UnconfirmedBsqSwapsListItem item) {
         if (item == null)
             return "";
 
         return btcFormatter.formatCoinWithCode(Coin.valueOf(item.getBsqSwapTrade().getBsqSwapProtocolModel().getTxFee()));
     }
 
-    String getTradeFee(CompletedBsqSwapsListItem item) {
+    String getTradeFee(UnconfirmedBsqSwapsListItem item) {
         if (item == null)
             return "";
 
@@ -102,7 +102,7 @@ class CompletedBsqSwapsViewModel extends ActivatableWithDataModel<CompletedBsqSw
         }
     }
 
-    String getDirectionLabel(CompletedBsqSwapsListItem item) {
+    String getDirectionLabel(UnconfirmedBsqSwapsListItem item) {
         if (item == null)
             return "";
 
@@ -110,18 +110,18 @@ class CompletedBsqSwapsViewModel extends ActivatableWithDataModel<CompletedBsqSw
                 item.getBsqSwapTrade().getOffer().getCurrencyCode());
     }
 
-    String getDate(CompletedBsqSwapsListItem item) {
+    String getDate(UnconfirmedBsqSwapsListItem item) {
         return DisplayUtils.formatDateTime(item.getBsqSwapTrade().getDate());
     }
 
-    String getMarketLabel(CompletedBsqSwapsListItem item) {
+    String getMarketLabel(UnconfirmedBsqSwapsListItem item) {
         if ((item == null))
             return "";
 
         return CurrencyUtil.getCurrencyPair(item.getBsqSwapTrade().getOffer().getCurrencyCode());
     }
 
-    int getConfidence(CompletedBsqSwapsListItem item) {
+    int getConfidence(UnconfirmedBsqSwapsListItem item) {
         if ((item == null))
             return 0;
         return item.getConfirmations();
