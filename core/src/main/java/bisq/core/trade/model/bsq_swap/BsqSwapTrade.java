@@ -209,6 +209,11 @@ public abstract class BsqSwapTrade extends TradeModel {
         return Price.valueOf(offer.getCurrencyCode(), offer.getFixedPrice());
     }
 
+    @Override
+    public Coin getTxFee() {
+        return Coin.valueOf(bsqSwapProtocolModel.getTxFee());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters

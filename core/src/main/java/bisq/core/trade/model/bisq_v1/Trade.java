@@ -368,7 +368,6 @@ public abstract class Trade extends TradeModel {
 
     // Transient
     // Immutable
-    @Getter
     transient final private Coin txFee;
     @Getter
     transient final private Coin takerFee;
@@ -764,6 +763,11 @@ public abstract class Trade extends TradeModel {
     @Override
     public Price getPrice() {
         return Price.valueOf(offer.getCurrencyCode(), priceAsLong);
+    }
+
+    @Override
+    public Coin getTxFee() {
+        return txFee;
     }
 
 
