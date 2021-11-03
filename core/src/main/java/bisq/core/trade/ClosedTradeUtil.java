@@ -23,17 +23,22 @@ import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
-import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
+import bisq.core.trade.model.MakerTrade;
+import bisq.core.trade.model.TakerTrade;
 import bisq.core.trade.model.Tradable;
+import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.crypto.KeyRing;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
@@ -48,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,7 +63,6 @@ import static bisq.core.trade.model.bisq_v1.Trade.DisputeState.REFUND_REQUEST_CL
 import static bisq.core.util.AveragePriceUtil.getAveragePriceTuple;
 import static bisq.core.util.FormattingUtils.BTC_FORMATTER_KEY;
 import static bisq.core.util.FormattingUtils.formatPercentagePrice;
-import static bisq.core.util.FormattingUtils.formatPrice;
 import static bisq.core.util.FormattingUtils.formatToPercentWithSymbol;
 import static bisq.core.util.VolumeUtil.formatVolume;
 import static bisq.core.util.VolumeUtil.formatVolumeWithCode;
@@ -77,6 +82,7 @@ public class ClosedTradeUtil {
     private final BsqFormatter bsqFormatter;
     private final CoinFormatter btcFormatter;
     private final Preferences preferences;
+    private final KeyRing keyRing;
     private final TradeStatisticsManager tradeStatisticsManager;
 
     @Inject
@@ -85,32 +91,26 @@ public class ClosedTradeUtil {
                            BsqFormatter bsqFormatter,
                            @Named(BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                            Preferences preferences,
+                           KeyRing keyRing,
                            TradeStatisticsManager tradeStatisticsManager) {
         this.closedTradableManager = closedTradableManager;
         this.bsqWalletService = bsqWalletService;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
         this.preferences = preferences;
+        this.keyRing = keyRing;
         this.tradeStatisticsManager = tradeStatisticsManager;
-    }
-
-    public boolean wasMyOffer(Tradable tradable) {
-        return closedTradableManager.wasMyOffer(tradable.getOffer());
     }
 
     public Coin getTotalAmount(List<Tradable> tradableList) {
         return Coin.valueOf(tradableList.stream()
-                .filter(e -> e instanceof Trade)
-                .map(e -> (Trade) e)
-                .mapToLong(Trade::getAmountAsLong)
+                .flatMap(tradable -> tradable.getOptionalAmountAsLong().stream())
+                .mapToLong(value -> value)
                 .sum());
     }
 
     public String getAmountAsString(Tradable tradable) {
-        if (tradable instanceof Trade)
-            return btcFormatter.formatCoin(((Trade) tradable).getAmount());
-        else
-            return "";
+        return tradable.getOptionalAmount().map(btcFormatter::formatCoin).orElse("");
     }
 
     public String getTotalAmountWithVolumeAsString(Coin totalTradeAmount, Volume volume) {
@@ -120,10 +120,7 @@ public class ClosedTradeUtil {
     }
 
     public String getPriceAsString(Tradable tradable) {
-        if (tradable instanceof Trade)
-            return formatPrice(((Trade) tradable).getPrice());
-        else
-            return formatPrice(tradable.getOffer().getPrice());
+        return tradable.getOptionalPrice().map(FormattingUtils::formatPrice).orElse("");
     }
 
     public String getPriceDeviationAsString(Tradable tradable) {
@@ -135,33 +132,17 @@ public class ClosedTradeUtil {
     }
 
     public String getVolumeAsString(Tradable tradable, boolean appendCode) {
-        if (tradable instanceof OpenOffer) {
-            return "";
-        }
-
-        Trade trade = (Trade) tradable;
-        return formatVolume(trade.getVolume(), appendCode);
+        return tradable.getOptionalVolume().map(volume -> formatVolume(volume, appendCode)).orElse("");
     }
 
     public String getVolumeCurrencyAsString(Tradable tradable) {
-        Volume volume;
-        if (tradable instanceof OpenOffer) {
-            OpenOffer openOffer = (OpenOffer) tradable;
-            volume = openOffer.getOffer().getVolume();
-        } else {
-            Trade trade = (Trade) tradable;
-            volume = trade.getVolume();
-        }
-        return volume != null ? volume.getCurrencyCode() : "";
+        return tradable.getOptionalVolume().map(Volume::getCurrencyCode).orElse("");
     }
 
     public Map<String, Long> getTotalVolumeByCurrency(List<Tradable> tradableList) {
         Map<String, Long> map = new HashMap<>();
         tradableList.stream()
-                .filter(e -> e instanceof Trade)
-                .map(e -> (Trade) e)
-                .map(Trade::getVolume)
-                .filter(Objects::nonNull)
+                .flatMap(tradable -> tradable.getOptionalVolume().stream())
                 .forEach(volume -> {
                     String currencyCode = volume.getCurrencyCode();
                     map.putIfAbsent(currencyCode, 0L);
@@ -195,24 +176,12 @@ public class ClosedTradeUtil {
 
     public Coin getTotalTxFee(List<Tradable> tradableList) {
         return Coin.valueOf(tradableList.stream()
-                .mapToLong(tradable -> {
-                    if (wasMyOffer(tradable) || tradable instanceof OpenOffer) {
-                        return tradable.getOffer().getTxFee().value;
-                    } else {
-                        // taker pays for 3 transactions
-                        return ((Trade) tradable).getTxFee().multiply(3).value;
-                    }
-                })
+                .mapToLong(tradable -> getTxFee(tradable).getValue())
                 .sum());
     }
 
     public String getTxFeeAsString(Tradable tradable) {
-        if (!wasMyOffer(tradable) && (tradable instanceof Trade)) {
-            // taker pays for 3 transactions
-            return btcFormatter.formatCoin(((Trade) tradable).getTxFee().multiply(3));
-        } else {
-            return btcFormatter.formatCoin(tradable.getOffer().getTxFee());
-        }
+        return btcFormatter.formatCoin(getTxFee(tradable));
     }
 
     public String getTotalTxFeeAsString(Coin totalTradeAmount, Coin totalTxFee) {
@@ -223,16 +192,7 @@ public class ClosedTradeUtil {
     }
 
     public boolean isCurrencyForTradeFeeBtc(Tradable tradable) {
-        Offer offer = tradable.getOffer();
-        if (wasMyOffer(tradable) || tradable instanceof OpenOffer) {
-            // I was maker so we use offer
-            return offer.isCurrencyForMakerFeeBtc();
-        } else {
-            Trade trade = (Trade) tradable;
-            String takerFeeTxId = trade.getTakerFeeTxId();
-            // If we find our tx in the bsq wallet it's a BSQ trade fee tx.
-            return bsqWalletService.getTransaction(takerFeeTxId) == null;
-        }
+        return !isBsqTradeFee(tradable);
     }
 
     public Coin getTotalTradeFee(List<Tradable> tradableList, boolean expectBtcFee) {
@@ -242,20 +202,11 @@ public class ClosedTradeUtil {
     }
 
     public String getTradeFeeAsString(Tradable tradable, boolean appendCode) {
-        Offer offer = tradable.getOffer();
-        if (wasMyOffer(tradable) || tradable instanceof OpenOffer) {
-            CoinFormatter formatter = offer.isCurrencyForMakerFeeBtc() ? btcFormatter : bsqFormatter;
-            return formatter.formatCoin(offer.getMakerFee(), appendCode);
+        if (isBsqTradeFee(tradable)) {
+            return bsqFormatter.formatCoin(Coin.valueOf(getBsqTradeFee(tradable)), appendCode);
         } else {
-            Trade trade = (Trade) tradable;
-            String takerFeeTxId = trade.getTakerFeeTxId();
-            if (bsqWalletService.getTransaction(takerFeeTxId) == null) {
-                // Was BTC fee
-                return btcFormatter.formatCoin(trade.getTakerFee(), appendCode);
-            } else {
-                // BSQ fee
-                return bsqFormatter.formatCoin(trade.getTakerFee(), appendCode);
-            }
+            getBtcTradeFee(tradable);
+            return btcFormatter.formatCoin(Coin.valueOf(getBtcTradeFee(tradable)), appendCode);
         }
     }
 
@@ -267,17 +218,13 @@ public class ClosedTradeUtil {
     }
 
     public String getBuyerSecurityDepositAsString(Tradable tradable) {
-        if (tradable.getOffer() != null)
-            return btcFormatter.formatCoin(tradable.getOffer().getBuyerSecurityDeposit());
-        else
-            return "";
+        return isBsqSwapTrade(tradable) ? "" :
+                btcFormatter.formatCoin(tradable.getOffer().getBuyerSecurityDeposit());
     }
 
     public String getSellerSecurityDepositAsString(Tradable tradable) {
-        if (tradable.getOffer() != null)
-            return btcFormatter.formatCoin(tradable.getOffer().getSellerSecurityDeposit());
-        else
-            return "";
+        return isBsqSwapTrade(tradable) ? "" :
+                btcFormatter.formatCoin(tradable.getOffer().getSellerSecurityDeposit());
     }
 
     public String getMarketLabel(Tradable tradable) {
@@ -285,17 +232,16 @@ public class ClosedTradeUtil {
     }
 
     public int getNumPastTrades(Tradable tradable) {
-        if (!(tradable instanceof Trade))
+        if (isOpenOffer(tradable)) {
             return 0;
-
-        return closedTradableManager.getClosedTrades().stream()
-                .filter(candidate -> {
-                    NodeAddress candidateAddress = candidate.getTradingPeerNodeAddress();
-                    NodeAddress tradableAddress = ((Trade) tradable).getTradingPeerNodeAddress();
-                    return candidateAddress != null
-                            && tradableAddress != null
-                            && candidateAddress.getFullAddress().equals(tradableAddress.getFullAddress());
-                })
+        }
+        NodeAddress addressInTrade = castToTradeModel(tradable).getTradingPeerNodeAddress();
+        return getClosedTradableStream()
+                .filter(this::isTradeModel)
+                .map(this::castToTradeModel)
+                .map(TradeModel::getTradingPeerNodeAddress)
+                .filter(Objects::nonNull)
+                .filter(address -> address.equals(addressInTrade))
                 .collect(Collectors.toSet())
                 .size();
     }
@@ -309,82 +255,149 @@ public class ClosedTradeUtil {
                 formatToPercentWithSymbol(percentage));
     }
 
-
     public String getStateAsString(Tradable tradable) {
-        if (tradable != null) {
-            if (tradable instanceof Trade) {
-                Trade trade = (Trade) tradable;
+        if (tradable == null) {
+            return "";
+        }
 
-                if (trade.isWithdrawn() || trade.isPayoutPublished()) {
-                    return Res.get("portfolio.closed.completed");
-                } else if (trade.getDisputeState() == DISPUTE_CLOSED) {
-                    return Res.get("portfolio.closed.ticketClosed");
-                } else if (trade.getDisputeState() == MEDIATION_CLOSED) {
-                    return Res.get("portfolio.closed.mediationTicketClosed");
-                } else if (trade.getDisputeState() == REFUND_REQUEST_CLOSED) {
-                    return Res.get("portfolio.closed.ticketClosed");
-                } else {
-                    log.error("That must not happen. We got a pending state but we are in"
-                                    + " the closed trades list. state={}",
-                            trade.getTradeState().name());
-                    return Res.get("shared.na");
-                }
-            } else if (tradable instanceof OpenOffer) {
-                OpenOffer.State state = ((OpenOffer) tradable).getState();
-                log.trace("OpenOffer state={}", state);
-                switch (state) {
-                    case AVAILABLE:
-                    case RESERVED:
-                    case CLOSED:
-                    case DEACTIVATED:
-                        log.error("Invalid state {}", state);
-                        return state.name();
-                    case CANCELED:
-                        return Res.get("portfolio.closed.canceled");
-                    default:
-                        log.error("Unhandled state {}", state);
-                        return state.name();
-                }
+        if (isBisqV1Trade(tradable)) {
+            Trade trade = castToTrade(tradable);
+            if (trade.isWithdrawn() || trade.isPayoutPublished()) {
+                return Res.get("portfolio.closed.completed");
+            } else if (trade.getDisputeState() == DISPUTE_CLOSED) {
+                return Res.get("portfolio.closed.ticketClosed");
+            } else if (trade.getDisputeState() == MEDIATION_CLOSED) {
+                return Res.get("portfolio.closed.mediationTicketClosed");
+            } else if (trade.getDisputeState() == REFUND_REQUEST_CLOSED) {
+                return Res.get("portfolio.closed.ticketClosed");
+            } else {
+                log.error("That must not happen. We got a pending state but we are in"
+                                + " the closed trades list. state={}",
+                        trade.getTradeState().name());
+                return Res.get("shared.na");
             }
+        } else if (isOpenOffer(tradable)) {
+            OpenOffer.State state = ((OpenOffer) tradable).getState();
+            log.trace("OpenOffer state={}", state);
+            switch (state) {
+                case AVAILABLE:
+                case RESERVED:
+                case CLOSED:
+                case DEACTIVATED:
+                    log.error("Invalid state {}", state);
+                    return state.name();
+                case CANCELED:
+                    return Res.get("portfolio.closed.canceled");
+                default:
+                    log.error("Unhandled state {}", state);
+                    return state.name();
+            }
+        } else if (isBsqSwapTrade(tradable)) {
+            BsqSwapTrade bsqSwapTrade = castToBsqSwapTrade(tradable);
+            //todo
         }
         return "";
     }
 
-    protected long getTradeFee(Tradable tradable, boolean expectBtcFee) {
-        Offer offer = tradable.getOffer();
-        if (wasMyOffer(tradable) || tradable instanceof OpenOffer) {
-            String makerFeeTxId = offer.getOfferFeePaymentTxId();
-            boolean notInBsqWallet = bsqWalletService.getTransaction(makerFeeTxId) == null;
-            if (expectBtcFee) {
-                if (notInBsqWallet) {
-                    return offer.getMakerFee().value;
-                } else {
-                    return 0;
-                }
-            } else {
-                if (notInBsqWallet) {
-                    return 0;
-                } else {
-                    return offer.getMakerFee().value;
-                }
-            }
-        } else {
-            Trade trade = (Trade) tradable;
-            String takerFeeTxId = trade.getTakerFeeTxId();
-            boolean notInBsqWallet = bsqWalletService.getTransaction(takerFeeTxId) == null;
-            if (expectBtcFee) {
-                if (notInBsqWallet) {
-                    return trade.getTakerFee().value;
-                } else {
-                    return 0;
-                }
-            } else {
-                if (notInBsqWallet) {
-                    return 0;
-                } else {
-                    return trade.getTakerFee().value;
-                }
-            }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private Stream<Trade> getClosedTradableStream() {
+        return closedTradableManager.getClosedTrades().stream();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Fee utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private long getTradeFee(Tradable tradable, boolean expectBtcFee) {
+        return expectBtcFee ? getBtcTradeFee(tradable) : getBsqTradeFee(tradable);
+    }
+
+    private long getBtcTradeFee(Tradable tradable) {
+        if (isBsqSwapTrade(tradable) || isBsqTradeFee(tradable)) {
+            return 0L;
         }
+        return isMaker(tradable) ?
+                tradable.getOptionalMakerFee().orElse(Coin.ZERO).value :
+                tradable.getOptionalTakerFee().orElse(Coin.ZERO).value;
+    }
+
+    private long getBsqTradeFee(Tradable tradable) {
+        if (isBsqSwapTrade(tradable) || isBsqTradeFee(tradable)) {
+            return isMaker(tradable) ?
+                    tradable.getOptionalMakerFee().orElse(Coin.ZERO).value :
+                    tradable.getOptionalTakerFee().orElse(Coin.ZERO).value;
+        }
+        return 0L;
+    }
+
+    private boolean isBsqTradeFee(Tradable tradable) {
+        if (isBsqSwapTrade(tradable)) {
+            return true;
+        }
+
+        if (isMaker(tradable)) {
+            return !tradable.getOffer().isCurrencyForMakerFeeBtc();
+        }
+
+        String feeTxId = castToTrade(tradable).getTakerFeeTxId();
+        return bsqWalletService.getTransaction(feeTxId) != null;
+    }
+
+    private Coin getTxFee(Tradable tradable) {
+        Coin txFee = tradable.getOptionalTxFee().orElse(Coin.ZERO);
+        if (isBisqV1TakerTrade(tradable)) {
+            txFee = txFee.multiply(3);
+        }
+        return txFee;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private boolean isOpenOffer(Tradable tradable) {
+        return tradable instanceof OpenOffer;
+    }
+
+    private boolean isTradeModel(Tradable tradable) {
+        return tradable instanceof TradeModel;
+    }
+
+    private boolean isMaker(Tradable tradable) {
+        return tradable instanceof MakerTrade || tradable.getOffer().isMyOffer(keyRing);
+    }
+
+    private boolean isTakerTrade(Tradable tradable) {
+        return tradable instanceof TakerTrade;
+    }
+
+    private boolean isBsqSwapTrade(Tradable tradable) {
+        return tradable instanceof BsqSwapTrade;
+    }
+
+    private boolean isBisqV1Trade(Tradable tradable) {
+        return tradable instanceof Trade;
+    }
+
+    private boolean isBisqV1TakerTrade(Tradable tradable) {
+        return isBisqV1Trade(tradable) && isTakerTrade(tradable);
+    }
+
+    private Trade castToTrade(Tradable tradable) {
+        return (Trade) tradable;
+    }
+
+    private TradeModel castToTradeModel(Tradable tradable) {
+        return (TradeModel) tradable;
+    }
+
+    private BsqSwapTrade castToBsqSwapTrade(Tradable tradable) {
+        return (BsqSwapTrade) tradable;
     }
 }
