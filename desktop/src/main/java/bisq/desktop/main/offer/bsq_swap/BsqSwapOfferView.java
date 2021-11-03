@@ -386,4 +386,10 @@ public abstract class BsqSwapOfferView<M extends BsqSwapOfferViewModel<?>> exten
     }
 
     protected abstract void checkForMissingFunds(Coin newValue);
+
+    protected void requestFocus() {
+        // JFXComboBox causes a bug with requesting focus. Not clear why that happens but requesting a focus
+        // on our view here avoids that the currency List overlay gets displayed.
+        root.requestFocus();
+    }
 }

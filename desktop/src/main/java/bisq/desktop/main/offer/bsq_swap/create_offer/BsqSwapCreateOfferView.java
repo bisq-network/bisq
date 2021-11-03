@@ -233,10 +233,12 @@ public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferV
 
         if (DevEnv.isDevMode()) {
             model.onPlaceOffer();
+            requestFocus();
             return;
         }
 
         bsqSwapOfferDetailsWindow.onPlaceOffer(model::onPlaceOffer).show(model.dataModel.offer);
+        requestFocus();
     }
 
     @Override

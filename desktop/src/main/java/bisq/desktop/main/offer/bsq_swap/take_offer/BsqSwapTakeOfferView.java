@@ -296,11 +296,6 @@ public class BsqSwapTakeOfferView extends BsqSwapOfferView<BsqSwapTakeOfferViewM
         offerDetailsWindowDisplayed = true;
     }
 
-    private void requestFocus() {
-        // JFXComboBox causes a bug with requesting focus. Not clear why that happens but requesting a focus
-        // on our view here avoids that the currency List overlay gets displayed.
-        root.requestFocus();
-    }
 
     @Override
     protected void onCancel2() {
