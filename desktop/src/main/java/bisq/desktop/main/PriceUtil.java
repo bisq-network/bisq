@@ -17,10 +17,6 @@
 
 package bisq.desktop.main;
 
-import bisq.desktop.util.validation.AltcoinValidator;
-import bisq.desktop.util.validation.FiatPriceValidator;
-import bisq.desktop.util.validation.MonetaryValidator;
-
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
@@ -34,7 +30,10 @@ import bisq.core.user.Preferences;
 import bisq.core.util.AveragePriceUtil;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
+import bisq.core.util.validation.AltcoinValidator;
+import bisq.core.util.validation.FiatPriceValidator;
 import bisq.core.util.validation.InputValidator;
+import bisq.core.util.validation.MonetaryValidator;
 
 import bisq.common.util.MathUtils;
 

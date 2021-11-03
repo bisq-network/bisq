@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.util.validation;
+package bisq.core.util.validation;
 
 import javax.inject.Inject;
 

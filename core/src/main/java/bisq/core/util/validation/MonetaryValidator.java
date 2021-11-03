@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.util.validation;
+package bisq.core.util.validation;
 
 import bisq.core.locale.Res;
 
@@ -33,8 +33,8 @@ public abstract class MonetaryValidator extends NumberValidator {
     }
 
     @Override
-    public ValidationResult validate(String input) {
-        ValidationResult result = validateIfNotEmpty(input);
+    public InputValidator.ValidationResult validate(String input) {
+        InputValidator.ValidationResult result = validateIfNotEmpty(input);
         if (result.isValid) {
             input = cleanInput(input);
             result = validateIfNumber(input);
@@ -51,19 +51,19 @@ public abstract class MonetaryValidator extends NumberValidator {
         return result;
     }
 
-    protected ValidationResult validateIfNotExceedsMinValue(String input) {
+    protected InputValidator.ValidationResult validateIfNotExceedsMinValue(String input) {
         double d = Double.parseDouble(input);
         if (d < getMinValue())
-            return new ValidationResult(false, Res.get("validation.fiat.toSmall"));
+            return new InputValidator.ValidationResult(false, Res.get("validation.fiat.toSmall"));
         else
-            return new ValidationResult(true);
+            return new InputValidator.ValidationResult(true);
     }
 
-    protected ValidationResult validateIfNotExceedsMaxValue(String input) {
+    protected InputValidator.ValidationResult validateIfNotExceedsMaxValue(String input) {
         double d = Double.parseDouble(input);
         if (d > getMaxValue())
-            return new ValidationResult(false, Res.get("validation.fiat.toLarge"));
+            return new InputValidator.ValidationResult(false, Res.get("validation.fiat.toLarge"));
         else
-            return new ValidationResult(true);
+            return new InputValidator.ValidationResult(true);
     }
 }

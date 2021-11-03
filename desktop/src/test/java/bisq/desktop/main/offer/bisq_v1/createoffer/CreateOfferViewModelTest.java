@@ -17,9 +17,7 @@
 
 package bisq.desktop.main.offer.bisq_v1.createoffer;
 
-import bisq.desktop.util.validation.AltcoinValidator;
 import bisq.desktop.util.validation.BtcValidator;
-import bisq.desktop.util.validation.FiatPriceValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -44,6 +42,8 @@ import bisq.core.user.User;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.ImmutableCoinFormatter;
+import bisq.core.util.validation.AltcoinValidator;
+import bisq.core.util.validation.FiatPriceValidator;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.config.Config;

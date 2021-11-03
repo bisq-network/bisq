@@ -15,11 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.util.validation;
+package bisq.core.util.validation;
 
 import bisq.core.locale.Res;
 import bisq.core.util.ParsingUtils;
-import bisq.core.util.validation.InputValidator;
 
 /**
  * NumberValidator for validating basic number values.

@@ -21,7 +21,6 @@ import bisq.desktop.common.model.ViewModel;
 import bisq.desktop.main.offer.bsq_swap.BsqSwapOfferViewModel;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.DisplayUtils;
-import bisq.desktop.util.validation.AltcoinValidator;
 import bisq.desktop.util.validation.BsqValidator;
 import bisq.desktop.util.validation.BtcValidator;
 
@@ -37,6 +36,7 @@ import bisq.core.util.FormattingUtils;
 import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.validation.AltcoinValidator;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.Timer;

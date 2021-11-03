@@ -28,12 +28,9 @@ import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
-import bisq.desktop.util.validation.AltcoinValidator;
 import bisq.desktop.util.validation.BsqValidator;
 import bisq.desktop.util.validation.BtcValidator;
-import bisq.desktop.util.validation.FiatPriceValidator;
 import bisq.desktop.util.validation.FiatVolumeValidator;
-import bisq.desktop.util.validation.MonetaryValidator;
 import bisq.desktop.util.validation.SecurityDepositValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -60,7 +57,10 @@ import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.CoinUtil;
+import bisq.core.util.validation.AltcoinValidator;
+import bisq.core.util.validation.FiatPriceValidator;
 import bisq.core.util.validation.InputValidator;
+import bisq.core.util.validation.MonetaryValidator;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
