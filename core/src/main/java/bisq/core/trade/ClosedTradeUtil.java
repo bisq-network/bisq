@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.bisq_v1;
+package bisq.core.trade;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.locale.CurrencyUtil;

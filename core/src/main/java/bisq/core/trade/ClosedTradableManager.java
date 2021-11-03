@@ -15,10 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.bisq_v1;
+package bisq.core.trade;
 
 import bisq.core.offer.Offer;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.bisq_v1.CleanupMailboxMessagesService;
+import bisq.core.trade.bisq_v1.DumpDelayedPayoutTx;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradableList;
 import bisq.core.trade.model.bisq_v1.Trade;
