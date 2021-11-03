@@ -358,11 +358,7 @@ public class ClosedTradeUtil {
     }
 
     private Coin getTxFee(Tradable tradable) {
-        Coin txFee = tradable.getOptionalTxFee().orElse(Coin.ZERO);
-        if (isBisqV1TakerTrade(tradable)) {
-            txFee = txFee.multiply(3);
-        }
-        return txFee;
+        return tradable.getOptionalTxFee().orElse(Coin.ZERO);
     }
 
 

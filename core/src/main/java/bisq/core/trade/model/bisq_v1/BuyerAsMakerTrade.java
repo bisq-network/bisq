@@ -106,4 +106,9 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
                 proto,
                 coreProtoResolver);
     }
+
+    @Override
+    public Coin getTxFee() {
+        return offer.getTxFee();
+    }
 }

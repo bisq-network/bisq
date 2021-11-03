@@ -110,7 +110,7 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
                     processModel.getMyNodeAddress(),
                     tradeAmount.value,
                     trade.getPrice().getValue(),
-                    trade.getTxFee().getValue(),
+                    trade.getTradeTxFee().getValue(),
                     trade.getTakerFee().getValue(),
                     trade.isCurrencyForTakerFeeBtc(),
                     processModel.getRawTransactionInputs(),

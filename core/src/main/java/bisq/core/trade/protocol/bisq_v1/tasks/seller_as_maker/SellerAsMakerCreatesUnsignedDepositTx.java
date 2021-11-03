@@ -75,7 +75,7 @@ public class SellerAsMakerCreatesUnsignedDepositTx extends TradeTask {
             walletService.saveAddressEntryList();
 
             Coin msOutputAmount = makerInputAmount
-                    .add(trade.getTxFee())
+                    .add(trade.getTradeTxFee())
                     .add(offer.getBuyerSecurityDeposit());
 
             List<RawTransactionInput> takerRawTransactionInputs = checkNotNull(tradingPeer.getRawTransactionInputs());

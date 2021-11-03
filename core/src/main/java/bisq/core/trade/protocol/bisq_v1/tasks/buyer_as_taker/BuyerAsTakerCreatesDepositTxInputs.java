@@ -41,7 +41,7 @@ public class BuyerAsTakerCreatesDepositTxInputs extends TradeTask {
         try {
             runInterceptHook();
 
-            Coin txFee = trade.getTxFee();
+            Coin txFee = trade.getTradeTxFee();
             Coin takerInputAmount = checkNotNull(trade.getOffer()).getBuyerSecurityDeposit()
                     .add(txFee)
                     .add(txFee); // 2 times the fee as we need it for payout tx as well

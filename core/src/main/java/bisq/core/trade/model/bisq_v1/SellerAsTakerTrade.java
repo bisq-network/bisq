@@ -110,4 +110,11 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                 proto,
                 coreProtoResolver);
     }
+
+    // The tx fee the user has paid. Not to be confused to the tradeTxFee which is the takers txFee and used for
+    // all trade txs
+    @Override
+    public Coin getTxFee() {
+        return tradeTxFee.multiply(3);
+    }
 }

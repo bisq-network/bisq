@@ -66,13 +66,13 @@ public class SellerAsTakerSignsDepositTx extends TradeTask {
 
             Coin sellerInput = Coin.valueOf(sellerInputs.stream().mapToLong(input -> input.value).sum());
 
-            Coin totalFee = trade.getTxFee().multiply(2); // Fee for deposit and payout tx
+            Coin totalFee = trade.getTradeTxFee().multiply(2); // Fee for deposit and payout tx
             Coin multiSigValue = sellerInput.subtract(totalFee);
             processModel.getBtcWalletService().setCoinLockedInMultiSigAddressEntry(sellerMultiSigAddressEntry, multiSigValue.value);
             walletService.saveAddressEntryList();
 
             Offer offer = trade.getOffer();
-            Coin msOutputAmount = offer.getBuyerSecurityDeposit().add(offer.getSellerSecurityDeposit()).add(trade.getTxFee())
+            Coin msOutputAmount = offer.getBuyerSecurityDeposit().add(offer.getSellerSecurityDeposit()).add(trade.getTradeTxFee())
                     .add(checkNotNull(trade.getAmount()));
 
             TradingPeer tradingPeer = processModel.getTradePeer();

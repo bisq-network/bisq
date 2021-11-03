@@ -317,9 +317,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 }
             } else {
                 if (trade.isCurrencyForTakerFeeBtc())
-                    return trade.getTxFee().multiply(3);
+                    return trade.getTradeTxFee().multiply(3);
                 else
-                    return trade.getTxFee().multiply(3).subtract(trade.getTakerFee()); // BSQ will be used as part of the miner fee
+                    return trade.getTradeTxFee().multiply(3).subtract(trade.getTakerFee()); // BSQ will be used as part of the miner fee
             }
         } else {
             log.error("Trade is null at getTotalFees");

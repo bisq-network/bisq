@@ -67,7 +67,7 @@ public class BuyerAsMakerCreatesAndSignsDepositTx extends TradeTask {
             walletService.saveAddressEntryList();
 
             Coin msOutputAmount = makerInputAmount
-                    .add(trade.getTxFee())
+                    .add(trade.getTradeTxFee())
                     .add(offer.getSellerSecurityDeposit())
                     .add(tradeAmount);
 

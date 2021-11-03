@@ -45,7 +45,7 @@ public class SellerCreatesDelayedPayoutTx extends TradeTask {
             runInterceptHook();
 
             String donationAddressString = processModel.getDaoFacade().getParamValue(Param.RECIPIENT_BTC_ADDRESS);
-            Coin minerFee = trade.getTxFee();
+            Coin minerFee = trade.getTradeTxFee();
             TradeWalletService tradeWalletService = processModel.getTradeWalletService();
             Transaction depositTx = checkNotNull(processModel.getDepositTx());
 

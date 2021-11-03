@@ -75,7 +75,7 @@ public class CreateTakerFeeTx extends TradeTask {
                         processModel.getFundsNeededForTrade(),
                         processModel.isUseSavingsWallet(),
                         trade.getTakerFee(),
-                        trade.getTxFee(),
+                        trade.getTradeTxFee(),
                         feeReceiver,
                         false,
                         null);
@@ -87,7 +87,7 @@ public class CreateTakerFeeTx extends TradeTask {
                         changeAddress,
                         processModel.getFundsNeededForTrade(),
                         processModel.isUseSavingsWallet(),
-                        trade.getTxFee());
+                        trade.getTradeTxFee());
                 transaction = processModel.getBsqWalletService().signTxAndVerifyNoDustOutputs(txWithBsqFee);
                 WalletService.checkAllScriptSignaturesForTx(transaction);
             }

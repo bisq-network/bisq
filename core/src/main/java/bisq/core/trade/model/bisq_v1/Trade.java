@@ -289,7 +289,7 @@ public abstract class Trade extends TradeModel {
     @Getter
     private final boolean isCurrencyForTakerFeeBtc;
     @Getter
-    private final long txFeeAsLong;
+    private final long tradeTxFeeAsLong;
     @Getter
     private final long takerFeeAsLong;
 
@@ -368,7 +368,8 @@ public abstract class Trade extends TradeModel {
 
     // Transient
     // Immutable
-    transient final private Coin txFee;
+    @Getter
+    transient final protected Coin tradeTxFee; // is takers tx fee and the tx fee used for all the trade txs.
     transient final private Coin takerFee;
     @Getter
     transient final private BtcWalletService btcWalletService;
@@ -448,7 +449,7 @@ public abstract class Trade extends TradeModel {
 
     // maker
     protected Trade(Offer offer,
-                    Coin txFee,
+                    Coin tradeTxFee,
                     Coin takerFee,
                     boolean isCurrencyForTakerFeeBtc,
                     @Nullable NodeAddress arbitratorNodeAddress,
@@ -458,7 +459,7 @@ public abstract class Trade extends TradeModel {
                     ProcessModel processModel,
                     String uid) {
         super(uid, offer);
-        this.txFee = txFee;
+        this.tradeTxFee = tradeTxFee;
         this.takerFee = takerFee;
         this.isCurrencyForTakerFeeBtc = isCurrencyForTakerFeeBtc;
         this.arbitratorNodeAddress = arbitratorNodeAddress;
@@ -467,7 +468,7 @@ public abstract class Trade extends TradeModel {
         this.btcWalletService = btcWalletService;
         this.processModel = processModel;
 
-        txFeeAsLong = txFee.value;
+        tradeTxFeeAsLong = tradeTxFee.value;
         takerFeeAsLong = takerFee.value;
     }
 
@@ -514,7 +515,7 @@ public abstract class Trade extends TradeModel {
         protobuf.Trade.Builder builder = protobuf.Trade.newBuilder()
                 .setOffer(offer.toProtoMessage())
                 .setIsCurrencyForTakerFeeBtc(isCurrencyForTakerFeeBtc)
-                .setTxFeeAsLong(txFeeAsLong)
+                .setTxFeeAsLong(tradeTxFeeAsLong)
                 .setTakerFeeAsLong(takerFeeAsLong)
                 .setTakeOfferDate(takeOfferDate)
                 .setProcessModel(processModel.toProtoMessage())
@@ -764,10 +765,8 @@ public abstract class Trade extends TradeModel {
         return Price.valueOf(offer.getCurrencyCode(), priceAsLong);
     }
 
-    @Override
-    public Coin getTxFee() {
-        return txFee;
-    }
+    // getTxFee() is implemented in concrete classes
+    // Maker use fee from offer, taker use this.txFee
 
     @Override
     public Coin getTakerFee() {
@@ -1099,7 +1098,7 @@ public abstract class Trade extends TradeModel {
         return "Trade{" +
                 "\n     offer=" + offer +
                 ",\n     isCurrencyForTakerFeeBtc=" + isCurrencyForTakerFeeBtc +
-                ",\n     txFeeAsLong=" + txFeeAsLong +
+                ",\n     tradeTxFeeAsLong=" + tradeTxFeeAsLong +
                 ",\n     takerFeeAsLong=" + takerFeeAsLong +
                 ",\n     takeOfferDate=" + takeOfferDate +
                 ",\n     processModel=" + processModel +
@@ -1128,7 +1127,7 @@ public abstract class Trade extends TradeModel {
                 ",\n     counterCurrencyExtraData='" + counterCurrencyExtraData + '\'' +
                 ",\n     assetTxProofResult='" + assetTxProofResult + '\'' +
                 ",\n     chatMessages=" + chatMessages +
-                ",\n     txFee=" + txFee +
+                ",\n     tradeTxFee=" + tradeTxFee +
                 ",\n     takerFee=" + takerFee +
                 ",\n     btcWalletService=" + btcWalletService +
                 ",\n     stateProperty=" + stateProperty +

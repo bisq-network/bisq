@@ -127,7 +127,7 @@ public class TradeInfo implements Payload {
                 .withDate(trade.getDate().getTime())
                 .withRole(role == null ? "" : role)
                 .withIsCurrencyForTakerFeeBtc(trade.isCurrencyForTakerFeeBtc())
-                .withTxFeeAsLong(trade.getTxFeeAsLong())
+                .withTxFeeAsLong(trade.getTradeTxFeeAsLong())
                 .withTakerFeeAsLong(trade.getTakerFeeAsLong())
                 .withTakerFeeAsLong(trade.getTakerFeeAsLong())
                 .withTakerFeeTxId(trade.getTakerFeeTxId())

@@ -43,7 +43,7 @@ public class SellerAsTakerCreatesDepositTxInputs extends TradeTask {
 
             Coin tradeAmount = checkNotNull(trade.getAmount());
             Offer offer = checkNotNull(trade.getOffer());
-            Coin txFee = trade.getTxFee();
+            Coin txFee = trade.getTradeTxFee();
             Coin takerInputAmount = offer.getSellerSecurityDeposit()
                     .add(txFee)
                     .add(txFee) // We add 2 times the fee as one is for the payout tx
