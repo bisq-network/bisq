@@ -23,7 +23,7 @@ import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CurrencyUtil;
-import bisq.core.trade.ClosedTradeUtil;
+import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.VolumeUtil;
@@ -39,20 +39,20 @@ import javax.inject.Named;
 import javafx.collections.ObservableList;
 
 class UnconfirmedBsqSwapsViewModel extends ActivatableWithDataModel<UnconfirmedBsqSwapsDataModel> implements ViewModel {
-    private final ClosedTradeUtil closedTradeUtil;
     private final BsqFormatter bsqFormatter;
     private final CoinFormatter btcFormatter;
     final AccountAgeWitnessService accountAgeWitnessService;
+    private final ClosedTradableManager closedTradableManager;
 
     @Inject
     public UnconfirmedBsqSwapsViewModel(UnconfirmedBsqSwapsDataModel dataModel,
                                         AccountAgeWitnessService accountAgeWitnessService,
-                                        ClosedTradeUtil closedTradeUtil,
+                                        ClosedTradableManager closedTradableManager,
                                         BsqFormatter bsqFormatter,
                                         @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
         super(dataModel);
         this.accountAgeWitnessService = accountAgeWitnessService;
-        this.closedTradeUtil = closedTradeUtil;
+        this.closedTradableManager = closedTradableManager;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
     }
@@ -130,7 +130,7 @@ class UnconfirmedBsqSwapsViewModel extends ActivatableWithDataModel<UnconfirmedB
     }
 
     int getNumPastTrades(BsqSwapTrade bsqSwapTrade) {
-        return closedTradeUtil.getNumPastTrades(bsqSwapTrade);
+        return closedTradableManager.getNumPastTrades(bsqSwapTrade);
     }
 
     boolean wasMyOffer(BsqSwapTrade bsqSwapTrade) {

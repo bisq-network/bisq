@@ -226,7 +226,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         volumeColumn.setComparator(nullsFirstComparingAsTrade(TradeModel::getVolume));
         amountColumn.setComparator(Comparator.comparing(model::getAmount, Comparator.nullsFirst(Comparator.naturalOrder())));
         avatarColumn.setComparator(Comparator.comparing(
-                o -> model.getNumPastTrades(o.getTradable()),
+                o -> model.dataModel.getNumPastTrades(o.getTradable()),
                 Comparator.nullsFirst(Comparator.naturalOrder())
         ));
         txFeeColumn.setComparator(nullsFirstComparing(o ->
@@ -296,7 +296,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
     @Override
     protected void activate() {
-        filteredList = new FilteredList<>(model.getList());
+        filteredList = new FilteredList<>(model.dataModel.getList());
 
         sortedList = new SortedList<>(filteredList);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
@@ -323,7 +323,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 columns[ColumnNames.VOLUME.ordinal()] = model.getVolume(item, false);
                 columns[ColumnNames.VOLUME_CURRENCY.ordinal()] = model.getVolumeCurrency(item);
                 columns[ColumnNames.TX_FEE.ordinal()] = model.getTxFee(item);
-                if (model.isCurrencyForTradeFeeBtc(item)) {
+                if (model.dataModel.isCurrencyForTradeFeeBtc(item)) {
                     columns[ColumnNames.TRADE_FEE_BTC.ordinal()] = model.getTradeFee(item, false);
                     columns[ColumnNames.TRADE_FEE_BSQ.ordinal()] = "";
                 } else {
@@ -594,7 +594,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
                                 if (item != null && !empty && item.getTradable() instanceof TradeModel) {
                                     TradeModel tradeModel = (TradeModel) item.getTradable();
-                                    int numPastTrades = model.getNumPastTrades(tradeModel);
+                                    int numPastTrades = model.dataModel.getNumPastTrades(tradeModel);
                                     NodeAddress tradingPeerNodeAddress = tradeModel.getTradingPeerNodeAddress();
                                     String role = Res.get("peerInfoIcon.tooltip.tradePeer");
                                     Node peerInfoIcon = new PeerInfoIconTrading(tradingPeerNodeAddress,
@@ -603,7 +603,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                             privateNotificationManager,
                                             tradeModel,
                                             preferences,
-                                            model.accountAgeWitnessService,
+                                            model.dataModel.accountAgeWitnessService,
                                             useDevPrivilegeKeys);
                                     setPadding(new Insets(1, 15, 0, 0));
                                     setGraphic(peerInfoIcon);
