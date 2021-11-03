@@ -119,7 +119,7 @@ public class BsqTradeDetailsWindow extends Overlay<BsqTradeDetailsWindow> {
         String plus = " (+ ";
         String minerFeePostFix = Res.get("tradeDetailsWindow.txFee") + ")";
         String tradeFeePostFix = Res.get("shared.tradeFee") + ")";
-        String btcAmount = formatter.formatCoinWithCode(bsqSwapTrade.getAmount());
+        String btcAmount = formatter.formatCoinWithCode(bsqSwapTrade.getAmountAsLong());
         String bsqAmount = VolumeUtil.formatVolumeWithCode(bsqSwapTrade.getVolume());
         if (tradeManager.isBuyer(offer)) {
             addConfirmationLabelLabel(gridPane, rowIndex, offerType,

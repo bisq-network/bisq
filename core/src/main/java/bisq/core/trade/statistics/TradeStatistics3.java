@@ -119,7 +119,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         Offer offer = checkNotNull(bsqSwapTrade.getOffer());
         return new TradeStatistics3(offer.getCurrencyCode(),
                 bsqSwapTrade.getPrice().getValue(),
-                bsqSwapTrade.getAmount(),
+                bsqSwapTrade.getAmountAsLong(),
                 offer.getPaymentMethod().getId(),
                 bsqSwapTrade.getTakeOfferDate(),
                 null,

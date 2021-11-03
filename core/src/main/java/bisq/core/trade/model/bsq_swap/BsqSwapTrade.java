@@ -71,7 +71,7 @@ public abstract class BsqSwapTrade extends TradeModel {
     }
 
     @Getter
-    private final long amount;
+    private final long amountAsLong;
     @Getter
     private final long txFeePerVbyte;
     @Getter
@@ -112,7 +112,7 @@ public abstract class BsqSwapTrade extends TradeModel {
                            State state,
                            @Nullable String txId) {
         super(uid, offer, takeOfferDate, tradingPeerNodeAddress, errorMessage);
-        this.amount = amount.value;
+        this.amountAsLong = amount.value;
         this.txFeePerVbyte = txFeePerVbyte;
         this.makerFee = makerFee;
         this.takerFee = takerFee;
@@ -133,7 +133,7 @@ public abstract class BsqSwapTrade extends TradeModel {
         protobuf.BsqSwapTrade.Builder builder = protobuf.BsqSwapTrade.newBuilder()
                 .setUid(uid)
                 .setOffer(offer.toProtoMessage())
-                .setAmount(amount)
+                .setAmount(amountAsLong)
                 .setTakeOfferDate(takeOfferDate)
                 .setMiningFeePerByte(txFeePerVbyte)
                 .setMakerFee(makerFee)
@@ -222,7 +222,7 @@ public abstract class BsqSwapTrade extends TradeModel {
     public Volume getVolume() {
         if (volume == null) {
             try {
-                volume = getPrice().getVolumeByAmount(Coin.valueOf(amount));
+                volume = getPrice().getVolumeByAmount(Coin.valueOf(amountAsLong));
             } catch (Throwable e) {
                 log.error(e.toString());
                 return null;

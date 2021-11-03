@@ -42,7 +42,7 @@ public class SendSellersBsqSwapRequest extends SendBsqSwapMessageTask {
                     protocolModel.getOfferId(),
                     protocolModel.getMyNodeAddress(),
                     protocolModel.getPubKeyRing(),
-                    trade.getAmount(),
+                    trade.getAmountAsLong(),
                     trade.getTxFeePerVbyte(),
                     trade.getMakerFee(),
                     trade.getTakerFee(),
