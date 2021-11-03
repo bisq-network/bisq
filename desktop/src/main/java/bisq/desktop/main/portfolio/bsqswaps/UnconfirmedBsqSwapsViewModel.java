@@ -23,6 +23,7 @@ import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CurrencyUtil;
+import bisq.core.trade.ClosedTradeUtil;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.VolumeUtil;
@@ -37,9 +38,8 @@ import javax.inject.Named;
 
 import javafx.collections.ObservableList;
 
-import java.util.stream.Collectors;
-
 class UnconfirmedBsqSwapsViewModel extends ActivatableWithDataModel<UnconfirmedBsqSwapsDataModel> implements ViewModel {
+    private final ClosedTradeUtil closedTradeUtil;
     private final BsqFormatter bsqFormatter;
     private final CoinFormatter btcFormatter;
     final AccountAgeWitnessService accountAgeWitnessService;
@@ -47,10 +47,12 @@ class UnconfirmedBsqSwapsViewModel extends ActivatableWithDataModel<UnconfirmedB
     @Inject
     public UnconfirmedBsqSwapsViewModel(UnconfirmedBsqSwapsDataModel dataModel,
                                         AccountAgeWitnessService accountAgeWitnessService,
+                                        ClosedTradeUtil closedTradeUtil,
                                         BsqFormatter bsqFormatter,
                                         @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
         super(dataModel);
         this.accountAgeWitnessService = accountAgeWitnessService;
+        this.closedTradeUtil = closedTradeUtil;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
     }
@@ -115,7 +117,7 @@ class UnconfirmedBsqSwapsViewModel extends ActivatableWithDataModel<UnconfirmedB
     }
 
     String getMarketLabel(UnconfirmedBsqSwapsListItem item) {
-        if ((item == null))
+        if (item == null)
             return "";
 
         return CurrencyUtil.getCurrencyPair(item.getBsqSwapTrade().getOffer().getCurrencyCode());
@@ -128,17 +130,7 @@ class UnconfirmedBsqSwapsViewModel extends ActivatableWithDataModel<UnconfirmedB
     }
 
     int getNumPastTrades(BsqSwapTrade bsqSwapTrade) {
-        // TODO(sq): include closed trades in count
-        return dataModel.bsqSwapTradeManager.getObservableList().stream()
-                .filter(e -> {
-                    var candidate = e.getTradingPeerNodeAddress();
-                    var current = bsqSwapTrade.getTradingPeerNodeAddress();
-                    return candidate != null &&
-                            current != null &&
-                            candidate.getFullAddress().equals(current.getFullAddress());
-                })
-                .collect(Collectors.toSet())
-                .size();
+        return closedTradeUtil.getNumPastTrades(bsqSwapTrade);
     }
 
     boolean wasMyOffer(BsqSwapTrade bsqSwapTrade) {
