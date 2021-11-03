@@ -17,11 +17,16 @@
 
 package bisq.core.trade.model;
 
+import bisq.core.monetary.Price;
+import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 
 import bisq.common.proto.persistable.PersistablePayload;
 
+import org.bitcoinj.core.Coin;
+
 import java.util.Date;
+import java.util.Optional;
 
 public interface Tradable extends PersistablePayload {
     Offer getOffer();
@@ -31,4 +36,28 @@ public interface Tradable extends PersistablePayload {
     String getId();
 
     String getShortId();
+
+    default Optional<TradeModel> asTradeModel() {
+        if (this instanceof TradeModel) {
+            return Optional.of(((TradeModel) this));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    default Optional<Volume> getOptionalVolume() {
+        return asTradeModel().map(TradeModel::getVolume).or(() -> Optional.ofNullable(getOffer().getVolume()));
+    }
+
+    default Optional<Price> getOptionalPrice() {
+        return asTradeModel().map(TradeModel::getPrice).or(() -> Optional.ofNullable(getOffer().getPrice()));
+    }
+
+    default Optional<Coin> getOptionalAmount() {
+        return asTradeModel().map(TradeModel::getAmount);
+    }
+
+    default Optional<Long> getOptionalAmountAsLong() {
+        return asTradeModel().map(TradeModel::getAmountAsLong);
+    }
 }
