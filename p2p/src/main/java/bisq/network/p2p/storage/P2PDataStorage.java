@@ -859,42 +859,48 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     public boolean refreshTTL(RefreshOfferMessage refreshTTLMessage,
                               @Nullable NodeAddress sender) {
 
-        ByteArray hashOfPayload = new ByteArray(refreshTTLMessage.getHashOfPayload());
-        ProtectedStorageEntry storedData = map.get(hashOfPayload);
+        try {
+            ByteArray hashOfPayload = new ByteArray(refreshTTLMessage.getHashOfPayload());
+            ProtectedStorageEntry storedData = map.get(hashOfPayload);
 
-        if (storedData == null) {
-            log.debug("We don't have data for that refresh message in our map. That is expected if we missed the data publishing.");
+            if (storedData == null) {
+                log.debug("We don't have data for that refresh message in our map. That is expected if we missed the data publishing.");
 
+                return false;
+            }
+
+            ProtectedStorageEntry storedEntry = map.get(hashOfPayload);
+            ProtectedStorageEntry updatedEntry = new ProtectedStorageEntry(
+                    storedEntry.getProtectedStoragePayload(),
+                    storedEntry.getOwnerPubKey(),
+                    refreshTTLMessage.getSequenceNumber(),
+                    refreshTTLMessage.getSignature(),
+                    this.clock);
+
+
+            // If we have seen a more recent operation for this payload, we ignore the current one
+            if (!hasSequenceNrIncreased(updatedEntry.getSequenceNumber(), hashOfPayload))
+                return false;
+
+            // Verify the updated ProtectedStorageEntry is well formed and valid for update
+            if (!updatedEntry.isValidForAddOperation())
+                return false;
+
+            // Update the hash map with the updated entry
+            map.put(hashOfPayload, updatedEntry);
+
+            // Record the latest sequence number and persist it
+            sequenceNumberMap.put(hashOfPayload, new MapValue(updatedEntry.getSequenceNumber(), this.clock.millis()));
+            requestPersistence();
+
+            // Always broadcast refreshes
+            broadcaster.broadcast(refreshTTLMessage, sender);
+
+        } catch (IllegalArgumentException e) {
+            log.error("refreshTTL failed, missing data: {}", e.toString());
+            e.printStackTrace();
             return false;
         }
-
-        ProtectedStorageEntry storedEntry = map.get(hashOfPayload);
-        ProtectedStorageEntry updatedEntry = new ProtectedStorageEntry(
-                storedEntry.getProtectedStoragePayload(),
-                storedEntry.getOwnerPubKey(),
-                refreshTTLMessage.getSequenceNumber(),
-                refreshTTLMessage.getSignature(),
-                this.clock);
-
-
-        // If we have seen a more recent operation for this payload, we ignore the current one
-        if (!hasSequenceNrIncreased(updatedEntry.getSequenceNumber(), hashOfPayload))
-            return false;
-
-        // Verify the updated ProtectedStorageEntry is well formed and valid for update
-        if (!updatedEntry.isValidForAddOperation())
-            return false;
-
-        // Update the hash map with the updated entry
-        map.put(hashOfPayload, updatedEntry);
-
-        // Record the latest sequence number and persist it
-        sequenceNumberMap.put(hashOfPayload, new MapValue(updatedEntry.getSequenceNumber(), this.clock.millis()));
-        requestPersistence();
-
-        // Always broadcast refreshes
-        broadcaster.broadcast(refreshTTLMessage, sender);
-
         return true;
     }
 
