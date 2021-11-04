@@ -34,6 +34,14 @@ public final class MoneseAccount extends PaymentAccount {
         return new MoneseAccountPayload(paymentMethod.getId(), id);
     }
 
+    public void setHolderName(String accountId) {
+        ((MoneseAccountPayload) paymentAccountPayload).setHolderName(accountId);
+    }
+
+    public String getHolderName() {
+        return ((MoneseAccountPayload) paymentAccountPayload).getHolderName();
+    }
+
     public void setMobileNr(String accountId) {
         ((MoneseAccountPayload) paymentAccountPayload).setMobileNr(accountId);
     }

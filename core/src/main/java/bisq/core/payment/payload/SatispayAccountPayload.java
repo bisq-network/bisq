@@ -38,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class SatispayAccountPayload extends CountryBasedPaymentAccountPayload {
+    private String holderName = "";
     private String mobileNr = "";
 
     public SatispayAccountPayload(String paymentMethod, String id) {
@@ -47,6 +48,7 @@ public final class SatispayAccountPayload extends CountryBasedPaymentAccountPayl
     private SatispayAccountPayload(String paymentMethod,
                                    String id,
                                    String countryCode,
+                                   String holderName,
                                    String mobileNr,
                                    long maxTradePeriod,
                                    Map<String, String> excludeFromJsonDataMap) {
@@ -56,12 +58,14 @@ public final class SatispayAccountPayload extends CountryBasedPaymentAccountPayl
                 maxTradePeriod,
                 excludeFromJsonDataMap);
 
+        this.holderName = holderName;
         this.mobileNr = mobileNr;
     }
 
     @Override
     public Message toProtoMessage() {
         protobuf.SatispayAccountPayload.Builder builder = protobuf.SatispayAccountPayload.newBuilder()
+                .setHolderName(holderName)
                 .setMobileNr(mobileNr);
         final protobuf.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload = getPaymentAccountPayloadBuilder()
                 .getCountryBasedPaymentAccountPayloadBuilder()
@@ -73,18 +77,19 @@ public final class SatispayAccountPayload extends CountryBasedPaymentAccountPayl
 
     public static SatispayAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.CountryBasedPaymentAccountPayload countryBasedPaymentAccountPayload = proto.getCountryBasedPaymentAccountPayload();
-        protobuf.SatispayAccountPayload paytmAccountPayloadPB = countryBasedPaymentAccountPayload.getSatispayAccountPayload();
+        protobuf.SatispayAccountPayload accountPayloadPB = countryBasedPaymentAccountPayload.getSatispayAccountPayload();
         return new SatispayAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
-                paytmAccountPayloadPB.getMobileNr(),
+                accountPayloadPB.getHolderName(),
+                accountPayloadPB.getMobileNr(),
                 proto.getMaxTradePeriod(),
                 new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.mobile") + " " + mobileNr;
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.userName") + " " + holderName;
     }
 
     @Override
@@ -94,6 +99,6 @@ public final class SatispayAccountPayload extends CountryBasedPaymentAccountPayl
 
     @Override
     public byte[] getAgeWitnessInputData() {
-        return super.getAgeWitnessInputData(mobileNr.getBytes(StandardCharsets.UTF_8));
+        return super.getAgeWitnessInputData(holderName.getBytes(StandardCharsets.UTF_8));
     }
 }
