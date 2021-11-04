@@ -226,16 +226,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     protected void activate() {
         filteredItems.addListener(filterItemsListener);
 
-        String code = direction == OfferDirection.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
-        if (code != null && !code.isEmpty() && !isShowAllEntry(code) &&
-                CurrencyUtil.getTradeCurrency(code).isPresent()) {
-            showAllTradeCurrenciesProperty.set(false);
-            selectedTradeCurrency = CurrencyUtil.getTradeCurrency(code).get();
-        } else {
-            showAllTradeCurrenciesProperty.set(true);
-            selectedTradeCurrency = GlobalSettings.getDefaultTradeCurrency();
-        }
-        tradeCurrencyCode.set(selectedTradeCurrency.getCode());
+        updateSelectedTradeCurrency();
 
         if (user != null) {
             disableMatchToggle.set(user.getPaymentAccounts() == null || user.getPaymentAccounts().isEmpty());
@@ -269,6 +260,11 @@ class OfferBookViewModel extends ActivatableViewModel {
     void onTabSelected(boolean isSelected) {
         this.isTabSelected = isSelected;
         setMarketPriceFeedCurrency();
+
+        if (isTabSelected) {
+            updateSelectedTradeCurrency();
+            filterOffers();
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -702,5 +698,18 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     public void onTakeOffer(Offer offer) {
         offerActionHandler.onTakeOffer(offer);
+    }
+
+    private void updateSelectedTradeCurrency() {
+        String code = direction == OfferDirection.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
+        if (code != null && !code.isEmpty() && !isShowAllEntry(code) &&
+                CurrencyUtil.getTradeCurrency(code).isPresent()) {
+            showAllTradeCurrenciesProperty.set(false);
+            selectedTradeCurrency = CurrencyUtil.getTradeCurrency(code).get();
+        } else {
+            showAllTradeCurrenciesProperty.set(true);
+            selectedTradeCurrency = GlobalSettings.getDefaultTradeCurrency();
+        }
+        tradeCurrencyCode.set(selectedTradeCurrency.getCode());
     }
 }

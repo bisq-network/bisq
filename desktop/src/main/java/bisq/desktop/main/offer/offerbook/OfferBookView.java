@@ -613,6 +613,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     public void onTabSelected(boolean isSelected) {
         model.onTabSelected(isSelected);
+
+        if (isSelected) {
+            updateCurrencyComboBoxFromModel();
+            root.requestFocus();
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
