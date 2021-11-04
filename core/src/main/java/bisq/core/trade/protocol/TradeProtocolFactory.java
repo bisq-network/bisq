@@ -17,24 +17,43 @@
 
 package bisq.core.trade.protocol;
 
-import bisq.core.trade.BuyerAsMakerTrade;
-import bisq.core.trade.BuyerAsTakerTrade;
-import bisq.core.trade.SellerAsMakerTrade;
-import bisq.core.trade.SellerAsTakerTrade;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.TradeModel;
+import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
+import bisq.core.trade.model.bisq_v1.BuyerAsTakerTrade;
+import bisq.core.trade.model.bisq_v1.SellerAsMakerTrade;
+import bisq.core.trade.model.bisq_v1.SellerAsTakerTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapBuyerAsMakerTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapBuyerAsTakerTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapSellerAsMakerTrade;
+import bisq.core.trade.model.bsq_swap.BsqSwapSellerAsTakerTrade;
+import bisq.core.trade.protocol.bisq_v1.BuyerAsMakerProtocol;
+import bisq.core.trade.protocol.bisq_v1.BuyerAsTakerProtocol;
+import bisq.core.trade.protocol.bisq_v1.SellerAsMakerProtocol;
+import bisq.core.trade.protocol.bisq_v1.SellerAsTakerProtocol;
+import bisq.core.trade.protocol.bsq_swap.BsqSwapBuyerAsMakerProtocol;
+import bisq.core.trade.protocol.bsq_swap.BsqSwapBuyerAsTakerProtocol;
+import bisq.core.trade.protocol.bsq_swap.BsqSwapSellerAsMakerProtocol;
+import bisq.core.trade.protocol.bsq_swap.BsqSwapSellerAsTakerProtocol;
 
 public class TradeProtocolFactory {
-    public static TradeProtocol getNewTradeProtocol(Trade trade) {
-        if (trade instanceof BuyerAsMakerTrade) {
-            return new BuyerAsMakerProtocol((BuyerAsMakerTrade) trade);
-        } else if (trade instanceof BuyerAsTakerTrade) {
-            return new BuyerAsTakerProtocol((BuyerAsTakerTrade) trade);
-        } else if (trade instanceof SellerAsMakerTrade) {
-            return new SellerAsMakerProtocol((SellerAsMakerTrade) trade);
-        } else if (trade instanceof SellerAsTakerTrade) {
-            return new SellerAsTakerProtocol((SellerAsTakerTrade) trade);
-        } else {
-            throw new IllegalStateException("Trade not of expected type. Trade=" + trade);
-        }
+    public static TradeProtocol getNewTradeProtocol(TradeModel tradeModel) {
+        if (tradeModel instanceof BuyerAsMakerTrade) {
+            return new BuyerAsMakerProtocol((BuyerAsMakerTrade) tradeModel);
+        } else if (tradeModel instanceof BuyerAsTakerTrade) {
+            return new BuyerAsTakerProtocol((BuyerAsTakerTrade) tradeModel);
+        } else if (tradeModel instanceof SellerAsMakerTrade) {
+            return new SellerAsMakerProtocol((SellerAsMakerTrade) tradeModel);
+        } else if (tradeModel instanceof SellerAsTakerTrade) {
+            return new SellerAsTakerProtocol((SellerAsTakerTrade) tradeModel);
+        } else if (tradeModel instanceof BsqSwapBuyerAsMakerTrade) {
+            return new BsqSwapBuyerAsMakerProtocol((BsqSwapBuyerAsMakerTrade) tradeModel);
+        } else if (tradeModel instanceof BsqSwapBuyerAsTakerTrade) {
+            return new BsqSwapBuyerAsTakerProtocol((BsqSwapBuyerAsTakerTrade) tradeModel);
+        } else if (tradeModel instanceof BsqSwapSellerAsMakerTrade) {
+            return new BsqSwapSellerAsMakerProtocol((BsqSwapSellerAsMakerTrade) tradeModel);
+        } else if (tradeModel instanceof BsqSwapSellerAsTakerTrade) {
+            return new BsqSwapSellerAsTakerProtocol((BsqSwapSellerAsTakerTrade) tradeModel);
+        } else
+            throw new IllegalStateException("Trade not of expected type. Trade=" + tradeModel);
     }
 }

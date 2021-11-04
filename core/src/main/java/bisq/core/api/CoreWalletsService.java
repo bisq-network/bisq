@@ -82,7 +82,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static bisq.common.config.BaseCurrencyNetwork.BTC_DAO_REGTEST;
 import static bisq.core.btc.wallet.Restrictions.getMinNonDustOutput;
 import static bisq.core.util.ParsingUtils.parseToCoin;
 import static java.lang.String.format;
@@ -583,14 +582,14 @@ class CoreWalletsService {
         verifyWalletsAreAvailable();
         verifyEncryptedWalletIsUnlocked();
 
-        var availableConfirmedBalance = bsqWalletService.getAvailableConfirmedBalance();
+        var availableBalance = bsqWalletService.getAvailableBalance();
         var unverifiedBalance = bsqWalletService.getUnverifiedBalance();
         var unconfirmedChangeBalance = bsqWalletService.getUnconfirmedChangeBalance();
         var lockedForVotingBalance = bsqWalletService.getLockedForVotingBalance();
         var lockupBondsBalance = bsqWalletService.getLockupBondsBalance();
         var unlockingBondsBalance = bsqWalletService.getUnlockingBondsBalance();
 
-        return new BsqBalanceInfo(availableConfirmedBalance.value,
+        return new BsqBalanceInfo(availableBalance.value,
                 unverifiedBalance.value,
                 unconfirmedChangeBalance.value,
                 lockedForVotingBalance.value,

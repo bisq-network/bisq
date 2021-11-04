@@ -22,9 +22,11 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
-import bisq.desktop.main.offer.createoffer.CreateOfferView;
+import bisq.desktop.main.offer.bisq_v1.createoffer.CreateOfferView;
+import bisq.desktop.main.offer.bisq_v1.takeoffer.TakeOfferView;
+import bisq.desktop.main.offer.bsq_swap.create_offer.BsqSwapCreateOfferView;
+import bisq.desktop.main.offer.bsq_swap.take_offer.BsqSwapTakeOfferView;
 import bisq.desktop.main.offer.offerbook.OfferBookView;
-import bisq.desktop.main.offer.takeoffer.TakeOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.GUIUtil;
 
@@ -34,7 +36,8 @@ import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferDirection;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -57,7 +60,9 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
 
     private OfferBookView offerBookView;
     private CreateOfferView createOfferView;
+    private BsqSwapCreateOfferView bsqSwapCreateOfferView;
     private TakeOfferView takeOfferView;
+    private BsqSwapTakeOfferView bsqSwapTakeOfferView;
     private AnchorPane createOfferPane, takeOfferPane;
     private Tab takeOfferTab, createOfferTab, offerBookTab;
 
@@ -66,7 +71,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private final Preferences preferences;
     private final User user;
     private final P2PService p2PService;
-    private final OfferPayload.Direction direction;
+    private final OfferDirection direction;
     private final ArbitratorManager arbitratorManager;
 
     private Offer offer;
@@ -75,6 +80,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
     private ListChangeListener<Tab> tabListChangeListener;
+    private OfferView.OfferActionHandler offerActionHandler;
 
     protected OfferView(ViewLoader viewLoader,
                         Navigation navigation,
@@ -82,7 +88,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                         ArbitratorManager arbitratorManager,
                         User user,
                         P2PService p2PService,
-                        OfferPayload.Direction direction) {
+                        OfferDirection direction) {
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         this.preferences = preferences;
@@ -102,8 +108,12 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             if (newValue != null) {
                 if (newValue.equals(createOfferTab) && createOfferView != null) {
                     createOfferView.onTabSelected(true);
+                } else if (newValue.equals(createOfferTab) && bsqSwapCreateOfferView != null) {
+                    bsqSwapCreateOfferView.onTabSelected(true);
                 } else if (newValue.equals(takeOfferTab) && takeOfferView != null) {
                     takeOfferView.onTabSelected(true);
+                } else if (newValue.equals(takeOfferTab) && bsqSwapTakeOfferView != null) {
+                    bsqSwapTakeOfferView.onTabSelected(true);
                 } else if (newValue.equals(offerBookTab) && offerBookView != null) {
                     offerBookView.onTabSelected(true);
                 }
@@ -111,8 +121,12 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             if (oldValue != null) {
                 if (oldValue.equals(createOfferTab) && createOfferView != null) {
                     createOfferView.onTabSelected(false);
+                } else if (oldValue.equals(createOfferTab) && bsqSwapCreateOfferView != null) {
+                    bsqSwapCreateOfferView.onTabSelected(false);
                 } else if (oldValue.equals(takeOfferTab) && takeOfferView != null) {
                     takeOfferView.onTabSelected(false);
+                } else if (oldValue.equals(takeOfferTab) && bsqSwapTakeOfferView != null) {
+                    bsqSwapTakeOfferView.onTabSelected(false);
                 } else if (oldValue.equals(offerBookTab) && offerBookView != null) {
                     offerBookView.onTabSelected(false);
                 }
@@ -128,11 +142,33 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                     onTakeOfferViewRemoved();
             }
         };
+
+        offerActionHandler = new OfferActionHandler() {
+            @Override
+            public void onCreateOffer(TradeCurrency tradeCurrency, PaymentMethod paymentMethod) {
+                if (createOfferViewOpen) {
+                    root.getTabs().remove(createOfferTab);
+                }
+                if (canCreateOrTakeOffer(tradeCurrency)) {
+                    openCreateOffer(tradeCurrency, paymentMethod);
+                }
+            }
+
+            @Override
+            public void onTakeOffer(Offer offer) {
+                if (takeOfferViewOpen) {
+                    root.getTabs().remove(takeOfferTab);
+                }
+                if (canCreateOrTakeOffer(CurrencyUtil.getTradeCurrency(offer.getCurrencyCode()).get())) {
+                    openTakeOffer(offer);
+                }
+            }
+        };
     }
 
     @Override
     protected void activate() {
-        Optional<TradeCurrency> tradeCurrencyOptional = (this.direction == OfferPayload.Direction.SELL) ?
+        Optional<TradeCurrency> tradeCurrencyOptional = (this.direction == OfferDirection.SELL) ?
                 CurrencyUtil.getTradeCurrency(preferences.getSellScreenCurrencyCode()) :
                 CurrencyUtil.getTradeCurrency(preferences.getBuyScreenCurrencyCode());
         tradeCurrency = tradeCurrencyOptional.orElseGet(GlobalSettings::getDefaultTradeCurrency);
@@ -150,8 +186,10 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         root.getTabs().removeListener(tabListChangeListener);
     }
 
-    private String getCreateOfferTabName() {
-        return Res.get("offerbook.createOffer").toUpperCase();
+    private String getCreateOfferTabName(Class<? extends View> viewClass) {
+        return viewClass == BsqSwapCreateOfferView.class ?
+                Res.get("offerbook.bsqSwap.createOffer").toUpperCase() :
+                Res.get("offerbook.createOffer").toUpperCase();
     }
 
     private String getTakeOfferTabName() {
@@ -162,7 +200,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         TabPane tabPane = root;
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
         View view;
-        boolean isBuy = direction == OfferPayload.Direction.BUY;
+        boolean isBuy = direction == OfferDirection.BUY;
 
         if (viewClass == OfferBookView.class && offerBookView == null) {
             view = viewLoader.load(viewClass);
@@ -173,28 +211,6 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             tabPane.getTabs().add(offerBookTab);
             offerBookView = (OfferBookView) view;
             offerBookView.onTabSelected(true);
-
-            OfferActionHandler offerActionHandler = new OfferActionHandler() {
-                @Override
-                public void onCreateOffer(TradeCurrency tradeCurrency) {
-                    if (createOfferViewOpen) {
-                        tabPane.getTabs().remove(createOfferTab);
-                    }
-                    if (canCreateOrTakeOffer()) {
-                        openCreateOffer(tradeCurrency);
-                    }
-                }
-
-                @Override
-                public void onTakeOffer(Offer offer) {
-                    if (takeOfferViewOpen) {
-                        tabPane.getTabs().remove(takeOfferTab);
-                    }
-                    if (canCreateOrTakeOffer()) {
-                        openTakeOffer(offer);
-                    }
-                }
-            };
             offerBookView.setOfferActionHandler(offerActionHandler);
             offerBookView.setDirection(direction);
         } else if (viewClass == CreateOfferView.class && createOfferView == null) {
@@ -202,15 +218,29 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
             // in different graphs
             createOfferView = (CreateOfferView) view;
-            createOfferView.initWithData(direction, tradeCurrency);
+            createOfferView.initWithData(direction, tradeCurrency, offerActionHandler);
             createOfferPane = createOfferView.getRoot();
-            createOfferTab = new Tab(getCreateOfferTabName());
+            createOfferTab = new Tab(getCreateOfferTabName(viewClass));
             createOfferTab.setClosable(true);
             // close handler from close on create offer action
             createOfferView.setCloseHandler(() -> tabPane.getTabs().remove(createOfferTab));
             createOfferTab.setContent(createOfferPane);
             tabPane.getTabs().add(createOfferTab);
             tabPane.getSelectionModel().select(createOfferTab);
+            createOfferViewOpen = true;
+        } else if (viewClass == BsqSwapCreateOfferView.class && bsqSwapCreateOfferView == null) {
+            view = viewLoader.load(viewClass);
+            bsqSwapCreateOfferView = (BsqSwapCreateOfferView) view;
+            bsqSwapCreateOfferView.initWithData(direction, offerActionHandler);
+            createOfferPane = bsqSwapCreateOfferView.getRoot();
+            createOfferTab = new Tab(getCreateOfferTabName(viewClass));
+            createOfferTab.setClosable(true);
+            // close handler from close on create offer action
+            bsqSwapCreateOfferView.setCloseHandler(() -> tabPane.getTabs().remove(createOfferTab));
+            createOfferTab.setContent(createOfferPane);
+            tabPane.getTabs().add(createOfferTab);
+            tabPane.getSelectionModel().select(createOfferTab);
+            createOfferViewOpen = true;
         } else if (viewClass == TakeOfferView.class && takeOfferView == null && offer != null) {
             view = viewLoader.load(viewClass);
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
@@ -225,12 +255,26 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             takeOfferTab.setContent(takeOfferPane);
             tabPane.getTabs().add(takeOfferTab);
             tabPane.getSelectionModel().select(takeOfferTab);
+        } else if (viewClass == BsqSwapTakeOfferView.class && takeOfferView == null && offer != null) {
+            view = viewLoader.load(viewClass);
+            // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
+            // in different graphs
+            bsqSwapTakeOfferView = (BsqSwapTakeOfferView) view;
+            bsqSwapTakeOfferView.initWithData(offer);
+            takeOfferPane = bsqSwapTakeOfferView.getRoot();
+            takeOfferTab = new Tab(getTakeOfferTabName());
+            takeOfferTab.setClosable(true);
+            // close handler from close on take offer action
+            bsqSwapTakeOfferView.setCloseHandler(() -> tabPane.getTabs().remove(takeOfferTab));
+            takeOfferTab.setContent(takeOfferPane);
+            tabPane.getTabs().add(takeOfferTab);
+            tabPane.getSelectionModel().select(takeOfferTab);
         }
     }
 
-    protected boolean canCreateOrTakeOffer() {
+    protected boolean canCreateOrTakeOffer(TradeCurrency tradeCurrency) {
         return GUIUtil.isBootstrappedOrShowPopup(p2PService) &&
-                GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation);
+                GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation, tradeCurrency);
     }
 
     private void showNoArbitratorForUserLocaleWarning() {
@@ -246,20 +290,28 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         return arbitratorManager.getObservableMap().values().stream()
                 .flatMap(arbitrator -> arbitrator.getLanguageCodes().stream())
                 .distinct()
-                .map(languageCode -> LanguageUtil.getDisplayName(languageCode))
+                .map(LanguageUtil::getDisplayName)
                 .collect(Collectors.joining(", "));
     }
 
     private void openTakeOffer(Offer offer) {
-        OfferView.this.takeOfferViewOpen = true;
-        OfferView.this.offer = offer;
-        OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(), TakeOfferView.class);
+        takeOfferViewOpen = true;
+        this.offer = offer;
+        if (offer.isBsqSwapOffer()) {
+            navigation.navigateTo(MainView.class, this.getClass(), BsqSwapTakeOfferView.class);
+        } else {
+            navigation.navigateTo(MainView.class, this.getClass(), TakeOfferView.class);
+        }
     }
 
-    private void openCreateOffer(TradeCurrency tradeCurrency) {
-        OfferView.this.createOfferViewOpen = true;
-        OfferView.this.tradeCurrency = tradeCurrency;
-        OfferView.this.navigation.navigateTo(MainView.class, OfferView.this.getClass(), CreateOfferView.class);
+    private void openCreateOffer(TradeCurrency tradeCurrency, PaymentMethod paymentMethod) {
+        createOfferViewOpen = true;
+        this.tradeCurrency = tradeCurrency;
+        if (tradeCurrency.getCode().equals("BSQ") && paymentMethod.isBsqSwap()) {
+            navigation.navigateTo(MainView.class, this.getClass(), BsqSwapCreateOfferView.class);
+        } else {
+            navigation.navigateTo(MainView.class, this.getClass(), CreateOfferView.class);
+        }
     }
 
     private void onCreateOfferViewRemoved() {
@@ -267,6 +319,9 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         if (createOfferView != null) {
             createOfferView.onClose();
             createOfferView = null;
+        }
+        if (bsqSwapCreateOfferView != null) {
+            bsqSwapCreateOfferView = null;
         }
         offerBookView.enableCreateOfferButton();
 
@@ -280,12 +335,15 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             takeOfferView.onClose();
             takeOfferView = null;
         }
+        if (bsqSwapTakeOfferView != null) {
+            bsqSwapTakeOfferView = null;
+        }
 
         navigation.navigateTo(MainView.class, this.getClass(), OfferBookView.class);
     }
 
     public interface OfferActionHandler {
-        void onCreateOffer(TradeCurrency tradeCurrency);
+        void onCreateOffer(TradeCurrency tradeCurrency, PaymentMethod paymentMethod);
 
         void onTakeOffer(Offer offer);
     }

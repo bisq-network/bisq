@@ -583,7 +583,7 @@ public class GUIUtil {
                     HBox box = new HBox();
                     box.setSpacing(20);
                     Label paymentType = new AutoTooltipLabel(
-                            method.isAsset() ? Res.get("shared.crypto") : Res.get("shared.fiat"));
+                            method.isAltcoin() ? Res.get("shared.crypto") : Res.get("shared.fiat"));
 
                     paymentType.getStyleClass().add("currency-label-small");
                     Label paymentMethod = new AutoTooltipLabel(Res.get(id));
@@ -835,7 +835,11 @@ public class GUIUtil {
         return true;
     }
 
-    public static boolean canCreateOrTakeOfferOrShowPopup(User user, Navigation navigation) {
+    public static boolean canCreateOrTakeOfferOrShowPopup(User user, Navigation navigation, TradeCurrency currency) {
+        if (currency.getCode().equals("BSQ")) {
+            return true;
+        }
+
         if (!user.hasAcceptedRefundAgents()) {
             new Popup().warning(Res.get("popup.warning.noArbitratorsAvailable")).show();
             return false;

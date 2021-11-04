@@ -26,6 +26,8 @@ import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.dao.wallet.BsqBalanceUtil;
+import bisq.desktop.main.funds.transactions.TradableRepository;
+import bisq.desktop.main.overlays.windows.BsqTradeDetailsWindow;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
@@ -40,6 +42,7 @@ import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.locale.Res;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.user.Preferences;
 import bisq.core.util.coin.BsqFormatter;
 
@@ -103,6 +106,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     private final BtcWalletService btcWalletService;
     private final BsqBalanceUtil bsqBalanceUtil;
     private final Preferences preferences;
+    private final TradableRepository tradableRepository;
+    private final BsqTradeDetailsWindow bsqTradeDetailsWindow;
 
     private final ObservableList<BsqTxListItem> observableList = FXCollections.observableArrayList();
     // Need to be DoubleProperty as we pass it as reference
@@ -128,7 +133,9 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                       Preferences preferences,
                       BtcWalletService btcWalletService,
                       BsqBalanceUtil bsqBalanceUtil,
-                      BsqFormatter bsqFormatter) {
+                      BsqFormatter bsqFormatter,
+                      TradableRepository tradableRepository,
+                      BsqTradeDetailsWindow bsqTradeDetailsWindow) {
         this.daoFacade = daoFacade;
         this.daoStateService = daoStateService;
         this.bsqFormatter = bsqFormatter;
@@ -136,6 +143,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         this.preferences = preferences;
         this.btcWalletService = btcWalletService;
         this.bsqBalanceUtil = bsqBalanceUtil;
+        this.tradableRepository = tradableRepository;
+        this.bsqTradeDetailsWindow = bsqTradeDetailsWindow;
     }
 
     @Override
@@ -268,7 +277,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onUpdateBalances(Coin availableConfirmedBalance,
+    public void onUpdateBalances(Coin availableBalance,
                                  Coin availableNonBsqBalance,
                                  Coin unverifiedBalance,
                                  Coin unconfirmedChangeBalance,
@@ -359,7 +368,8 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                             daoFacade,
                             // Use tx.getIncludedInBestChainAt() when available, otherwise use tx.getUpdateTime()
                             transaction.getIncludedInBestChainAt() != null ? transaction.getIncludedInBestChainAt() : transaction.getUpdateTime(),
-                            bsqFormatter);
+                            bsqFormatter,
+                            tradableRepository);
                 })
                 .collect(Collectors.toList());
         observableList.setAll(items);
@@ -464,7 +474,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     }
 
     private void addInformationColumn() {
-        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.information"));
+        TableColumn<BsqTxListItem, BsqTxListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.details"));
         column.setCellValueFactory(item -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setMinWidth(160);
         column.setCellFactory(
@@ -481,11 +491,21 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                             public void updateItem(final BsqTxListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    final TxType txType = item.getTxType();
+                                    TxType txType = item.getTxType();
                                     String labelString = Res.get("dao.tx.type.enum." + txType.name());
                                     Label label;
                                     if (item.getConfirmations() > 0 && isValidType(txType)) {
-                                        if (txType == TxType.COMPENSATION_REQUEST &&
+                                        if (item.getOptionalBsqTrade().isPresent()) {
+                                            if (field != null)
+                                                field.setOnAction(null);
+
+                                            BsqSwapTrade bsqSwapTrade = item.getOptionalBsqTrade().get();
+                                            String text = Res.get("dao.tx.bsqSwapTrade", bsqSwapTrade.getShortId());
+                                            HyperlinkWithIcon hyperlinkWithIcon = new HyperlinkWithIcon(text, AwesomeIcon.INFO_SIGN);
+                                            hyperlinkWithIcon.setOnAction(e -> bsqTradeDetailsWindow.show(bsqSwapTrade));
+                                            hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
+                                            setGraphic(hyperlinkWithIcon);
+                                        } else if (txType == TxType.COMPENSATION_REQUEST &&
                                                 daoFacade.isIssuanceTx(item.getTxId(), IssuanceType.COMPENSATION)) {
                                             if (field != null)
                                                 field.setOnAction(null);
@@ -523,7 +543,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             setGraphic(field);
                                         }
                                     } else {
-
                                         if (item.isWithdrawalToBTCWallet())
                                             labelString = Res.get("dao.tx.withdrawnFromWallet");
 
@@ -539,7 +558,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                         };
                     }
                 });
-
         tableView.getColumns().add(column);
     }
 
@@ -664,8 +682,19 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             }
                                             break;
                                         case PAY_TRADE_FEE:
-                                            awesomeIcon = AwesomeIcon.LEAF;
-                                            style = "dao-tx-type-trade-fee-icon";
+                                            // We do not detect a BSQ swap tx. It is considered a PAY_TRADE_FEE tx
+                                            // which is correct as well as it pays a trade fee.
+                                            // Locally we can derive the information to distinguish a BSQ swap tx
+                                            // by looking up our closed trades. Globally (like on the explorer) we do
+                                            // not have the data to make that distinction.
+                                            if (item.isBsqSwapTx()) {
+                                                awesomeIcon = AwesomeIcon.EXCHANGE;
+                                                style = "dao-tx-type-bsq-swap-icon";
+                                                toolTipText = Res.get("dao.tx.bsqSwapTx");
+                                            } else {
+                                                awesomeIcon = AwesomeIcon.LEAF;
+                                                style = "dao-tx-type-trade-fee-icon";
+                                            }
                                             break;
                                         case PROPOSAL:
                                         case COMPENSATION_REQUEST:

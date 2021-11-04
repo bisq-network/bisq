@@ -19,11 +19,11 @@ package bisq.desktop.main.portfolio.duplicateoffer;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.main.offer.MutableOfferView;
+import bisq.desktop.main.offer.bisq_v1.MutableOfferView;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 
 import bisq.core.locale.CurrencyUtil;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
@@ -62,7 +62,9 @@ public class DuplicateOfferView extends MutableOfferView<DuplicateOfferViewModel
     }
 
     public void initWithData(OfferPayload offerPayload) {
-        initWithData(offerPayload.getDirection(), CurrencyUtil.getTradeCurrency(offerPayload.getCurrencyCode()).get());
+        initWithData(offerPayload.getDirection(),
+                CurrencyUtil.getTradeCurrency(offerPayload.getCurrencyCode()).get(),
+                null);
         model.initWithData(offerPayload);
     }
 }

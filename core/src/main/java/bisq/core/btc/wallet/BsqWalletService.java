@@ -22,6 +22,7 @@ import bisq.core.btc.exceptions.InsufficientBsqException;
 import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.listeners.BsqBalanceListener;
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.dao.DaoKillSwitch;
 import bisq.core.dao.state.DaoStateListener;
@@ -34,8 +35,10 @@ import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputListService;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
+import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.UserThread;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -95,14 +98,19 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     private final CopyOnWriteArraySet<BsqBalanceListener> bsqBalanceListeners = new CopyOnWriteArraySet<>();
     private final List<WalletTransactionsChangeListener> walletTransactionsChangeListeners = new ArrayList<>();
     private boolean updateBsqWalletTransactionsPending;
+    @Getter
+    private final BsqFormatter bsqFormatter;
+
 
     // balance of non BSQ satoshis
     @Getter
     private Coin availableNonBsqBalance = Coin.ZERO;
     @Getter
-    private Coin availableConfirmedBalance = Coin.ZERO;
+    private Coin availableBalance = Coin.ZERO;
     @Getter
     private Coin unverifiedBalance = Coin.ZERO;
+    @Getter
+    private Coin verifiedBalance = Coin.ZERO;
     @Getter
     private Coin unconfirmedChangeBalance = Coin.ZERO;
     @Getter
@@ -125,7 +133,8 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                             UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService,
                             Preferences preferences,
                             FeeService feeService,
-                            DaoKillSwitch daoKillSwitch) {
+                            DaoKillSwitch daoKillSwitch,
+                            BsqFormatter bsqFormatter) {
         super(walletsSetup,
                 preferences,
                 feeService);
@@ -135,6 +144,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         this.daoStateService = daoStateService;
         this.unconfirmedBsqChangeOutputListService = unconfirmedBsqChangeOutputListService;
         this.daoKillSwitch = daoKillSwitch;
+        this.bsqFormatter = bsqFormatter;
 
         nonBsqCoinSelector.setPreferences(preferences);
 
@@ -284,18 +294,20 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                 .mapToLong(TxOutput::getValue)
                 .sum());
 
-        availableConfirmedBalance = bsqCoinSelector.select(NetworkParameters.MAX_MONEY,
+        availableBalance = bsqCoinSelector.select(NetworkParameters.MAX_MONEY,
                 wallet.calculateAllSpendCandidates()).valueGathered;
 
-        if (availableConfirmedBalance.isNegative())
-            availableConfirmedBalance = Coin.ZERO;
+        if (availableBalance.isNegative())
+            availableBalance = Coin.ZERO;
 
         unconfirmedChangeBalance = unconfirmedBsqChangeOutputListService.getBalance();
 
         availableNonBsqBalance = nonBsqCoinSelector.select(NetworkParameters.MAX_MONEY,
                 wallet.calculateAllSpendCandidates()).valueGathered;
 
-        bsqBalanceListeners.forEach(e -> e.onUpdateBalances(availableConfirmedBalance, availableNonBsqBalance, unverifiedBalance,
+        verifiedBalance = availableBalance.subtract(unconfirmedChangeBalance);
+
+        bsqBalanceListeners.forEach(e -> e.onUpdateBalances(availableBalance, availableNonBsqBalance, unverifiedBalance,
                 unconfirmedChangeBalance, lockedForVotingBalance, lockupBondsBalance, unlockingBondsBalance));
         log.info("updateBsqBalance took {} ms", System.currentTimeMillis() - ts);
     }
@@ -481,28 +493,10 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     // Sign tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction signTx(Transaction tx) throws WalletException, TransactionVerificationException {
-        for (int i = 0; i < tx.getInputs().size(); i++) {
-            TransactionInput txIn = tx.getInputs().get(i);
-            TransactionOutput connectedOutput = txIn.getConnectedOutput();
-            if (connectedOutput != null && connectedOutput.isMine(wallet)) {
-                signTransactionInput(wallet, aesKey, tx, txIn, i);
-                checkScriptSig(tx, txIn, i);
-            }
-        }
-
-        for (TransactionOutput txo : tx.getOutputs()) {
-            Coin value = txo.getValue();
-            // OpReturn outputs have value 0
-            if (value.isPositive()) {
-                checkArgument(Restrictions.isAboveDust(txo.getValue()),
-                        "An output value is below dust limit. Transaction=" + tx);
-            }
-        }
-
-        checkWalletConsistency(wallet);
-        verifyTransaction(tx);
-        printTx("BSQ wallet: Signed Tx", tx);
+    public Transaction signTxAndVerifyNoDustOutputs(Transaction tx)
+            throws WalletException, TransactionVerificationException {
+        WalletService.signTx(wallet, aesKey, tx);
+        WalletService.verifyNonDustTxo(tx);
         return tx;
     }
 
@@ -539,6 +533,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         }
         return getPreparedSendTx(receiverAddress, receiverAmount, bsqCoinSelector);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Send BTC (non-BSQ) with BTC fee (e.g. the issuance output from a  lost comp. request)
@@ -733,6 +728,46 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // BsqSwap tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Tuple2<List<RawTransactionInput>, Coin> getBuyersBsqInputsForBsqSwapTx(Coin required)
+            throws InsufficientBsqException {
+        daoKillSwitch.assertDaoIsNotDisabled();
+        // As unconfirmed BSQ inputs cannot be verified by the peer we can only use confirmed BSQ.
+        boolean prev = bsqCoinSelector.isAllowSpendMyOwnUnconfirmedTxOutputs();
+        bsqCoinSelector.setAllowSpendMyOwnUnconfirmedTxOutputs(false);
+        CoinSelection coinSelection = bsqCoinSelector.select(required, wallet.calculateAllSpendCandidates());
+        Coin change;
+        try {
+            change = bsqCoinSelector.getChange(required, coinSelection);
+        } catch (InsufficientMoneyException e) {
+            throw new InsufficientBsqException(e.missing);
+        } finally {
+            bsqCoinSelector.setAllowSpendMyOwnUnconfirmedTxOutputs(prev);
+        }
+
+        Transaction dummyTx = new Transaction(params);
+        coinSelection.gathered.forEach(dummyTx::addInput);
+        List<RawTransactionInput> inputs = dummyTx.getInputs().stream()
+                .map(RawTransactionInput::new)
+                .collect(Collectors.toList());
+        return new Tuple2<>(inputs, change);
+    }
+
+    public void signBsqSwapTransaction(Transaction transaction, List<TransactionInput> myInputs)
+            throws TransactionVerificationException {
+        for (TransactionInput input : myInputs) {
+            TransactionOutput connectedOutput = input.getConnectedOutput();
+            checkNotNull(connectedOutput, "connectedOutput must not be null");
+            checkArgument(connectedOutput.isMine(wallet), "connectedOutput is not mine");
+            signTransactionInput(wallet, aesKey, transaction, input, input.getIndex());
+            checkScriptSig(transaction, input, input.getIndex());
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Blind vote tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -780,6 +815,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         printTx("prepareLockupTx", tx);
         return tx;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Unlock bond tx

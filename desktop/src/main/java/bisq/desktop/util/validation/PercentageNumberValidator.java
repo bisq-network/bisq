@@ -18,6 +18,7 @@
 package bisq.desktop.util.validation;
 
 import bisq.core.locale.Res;
+import bisq.core.util.validation.NumberValidator;
 
 import lombok.Setter;
 

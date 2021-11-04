@@ -22,7 +22,7 @@ import bisq.core.locale.Res;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.txproof.AssetTxProofRequestsPerTrade;
 import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.user.AutoConfirmSettings;
@@ -327,7 +327,7 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean isTradeAmountAboveLimit(Trade trade) {
-        Coin tradeAmount = trade.getTradeAmount();
+        Coin tradeAmount = trade.getAmount();
         Coin tradeLimit = Coin.valueOf(autoConfirmSettings.getTradeLimit());
         if (tradeAmount != null && tradeAmount.isGreaterThan(tradeLimit)) {
             log.warn("Trade amount {} is higher than limit from auto-conf setting {}.",

@@ -145,8 +145,12 @@ public class DaoView extends ActivatableView<TabPane, Void> {
     protected void activate() {
         if (DevEnv.isDaoActivated()) {
 
-            // Hide dao new badge if user saw this section
-            preferences.dontShowAgain(DaoPresentation.DAO_NEWS, true);
+            if (preferences.showAgain(DaoPresentation.DAO_NEWS)) {
+                preferences.dontShowAgain(DaoPresentation.DAO_NEWS, true);
+                new Popup().headLine(Res.get("news.bsqSwap.title"))
+                        .information(Res.get("news.bsqSwap.description"))
+                        .show();
+            }
 
             navigation.addListener(navigationListener);
             root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);

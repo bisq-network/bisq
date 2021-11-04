@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.offer.OfferPayload.Direction.BUY;
+import static bisq.core.offer.OfferDirection.BUY;
 
 /**
  * Holds and manages the unsorted and unfiltered offerbook list (except for banned offers) of both buy and sell offers.
@@ -56,6 +56,7 @@ public class OfferBook {
     private final Map<String, Integer> buyOfferCountMap = new HashMap<>();
     private final Map<String, Integer> sellOfferCountMap = new HashMap<>();
     private final FilterManager filterManager;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -77,6 +78,11 @@ public class OfferBook {
 
                 if (filterManager.isOfferIdBanned(offer.getId())) {
                     log.debug("Ignored banned offer. ID={}", offer.getId());
+                    return;
+                }
+
+                if (offer.isBsqSwapOffer() && !filterManager.isProofOfWorkValid(offer)) {
+                    log.info("Proof of work of offer with id {} is not valid.", offer.getId());
                     return;
                 }
 
@@ -112,6 +118,20 @@ public class OfferBook {
                 printOfferBookListItems("After onRemoved");
             }
         });
+
+        filterManager.filterProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                onProofOfWorkDifficultyChanged();
+            }
+        });
+    }
+
+    private void onProofOfWorkDifficultyChanged() {
+        List<OfferBookListItem> toRemove = offerBookListItems.stream()
+                .filter(item -> item.getOffer().isBsqSwapOffer())
+                .filter(item -> !filterManager.isProofOfWorkValid(item.getOffer()))
+                .collect(Collectors.toList());
+        toRemove.forEach(offerBookListItems::remove);
     }
 
     private void removeDuplicateItem(OfferBookListItem newOfferBookListItem) {
@@ -139,7 +159,7 @@ public class OfferBook {
         offer.setState(Offer.State.REMOVED);
         offer.cancelAvailabilityRequest();
 
-        P2PDataStorage.ByteArray hashOfPayload = new P2PDataStorage.ByteArray(offer.getOfferPayload().getHash());
+        P2PDataStorage.ByteArray hashOfPayload = new P2PDataStorage.ByteArray(offer.getOfferPayloadHash());
 
         if (log.isDebugEnabled()) {  // TODO delete debug stmt in future PR.
             log.debug("onRemoved: id = {}\n"
@@ -164,7 +184,6 @@ public class OfferBook {
         }
 
         OfferBookListItem candidate = candidateWithMatchingPayloadHash.get();
-
         // Remove the candidate only if the candidate's offer payload the hash matches the
         // onRemoved hashOfPayload parameter.  We may receive add/remove messages out of
         // order from the API's 'editoffer' method, and use the offer payload hash to
@@ -201,7 +220,8 @@ public class OfferBook {
             // Investigate why....
             offerBookListItems.clear();
             offerBookListItems.addAll(offerBookService.getOffers().stream()
-                    .filter(o -> isOfferAllowed(o))
+                    .filter(this::isOfferAllowed)
+                    .filter(offer -> !offer.isBsqSwapOffer() || filterManager.isProofOfWorkValid(offer))
                     .map(OfferBookListItem::new)
                     .collect(Collectors.toList()));
 

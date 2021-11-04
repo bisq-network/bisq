@@ -20,13 +20,11 @@ package bisq.core.trade.txproof.xmr;
 import bisq.core.monetary.Volume;
 import bisq.core.payment.payload.AssetsAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.txproof.AssetTxProofModel;
 import bisq.core.user.AutoConfirmSettings;
 
 import bisq.common.app.DevEnv;
-
-import org.bitcoinj.core.Coin;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -60,7 +58,7 @@ public class XmrTxProofModel implements AssetTxProofModel {
         this.serviceAddress = serviceAddress;
         this.autoConfirmSettings = autoConfirmSettings;
 
-        Volume volume = trade.getTradeVolume();
+        Volume volume = trade.getVolume();
         amount = DevEnv.isDevMode() ?
                 XmrTxProofModel.DEV_AMOUNT : // For dev testing we need to add the matching address to the dev tx key and dev view key
                 volume != null ? volume.getValue() * 10000L : 0L; // XMR satoshis have 12 decimal places vs. bitcoin's 8

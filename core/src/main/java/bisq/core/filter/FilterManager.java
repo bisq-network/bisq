@@ -19,6 +19,7 @@ package bisq.core.filter;
 
 import bisq.core.btc.nodes.BtcNodes;
 import bisq.core.locale.Res;
+import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.ProvidersRepository;
@@ -36,6 +37,7 @@ import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
 import bisq.common.config.Config;
 import bisq.common.config.ConfigFileEditor;
+import bisq.common.crypto.HashCashService;
 import bisq.common.crypto.KeyRing;
 
 import org.bitcoinj.core.ECKey;
@@ -55,6 +57,7 @@ import java.nio.charset.StandardCharsets;
 
 import java.math.BigInteger;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -62,6 +65,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import java.lang.reflect.Method;
@@ -70,6 +74,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.bitcoinj.core.Utils.HEX;
 
@@ -81,6 +86,11 @@ public class FilterManager {
     private static final String BANNED_PRICE_RELAY_NODES = "bannedPriceRelayNodes";
     private static final String BANNED_SEED_NODES = "bannedSeedNodes";
     private static final String BANNED_BTC_NODES = "bannedBtcNodes";
+
+    private final BiFunction<byte[], byte[], Boolean> challengeValidation = Arrays::equals;
+    // We only require a new pow if difficulty has increased
+    private final BiFunction<Integer, Integer, Boolean> difficultyValidation =
+            (value, controlValue) -> value - controlValue >= 0;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -476,6 +486,20 @@ public class FilterManager {
                         .anyMatch(e -> e.equals(witnessSignerPubKeyAsHex));
     }
 
+    public boolean isProofOfWorkValid(Offer offer) {
+        Filter filter = getFilter();
+        if (filter == null) {
+            return true;
+        }
+        checkArgument(offer.getBsqSwapOfferPayload().isPresent(),
+                "Offer payload must be BsqSwapOfferPayload");
+        return HashCashService.verify(offer.getBsqSwapOfferPayload().get().getProofOfWork(),
+                HashCashService.getBytes(offer.getId() + offer.getOwnerNodeAddress().toString()),
+                filter.getPowDifficulty(),
+                challengeValidation,
+                difficultyValidation);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -499,13 +523,13 @@ public class FilterManager {
 
         if (currentFilter != null) {
             if (currentFilter.getCreationDate() > newFilter.getCreationDate()) {
-                log.warn("We received a new filter from the network but the creation date is older than the " +
+                log.debug("We received a new filter from the network but the creation date is older than the " +
                         "filter we have already. We ignore the new filter.");
 
                 addToInvalidFilters(newFilter);
                 return;
             } else {
-                log.warn("We received a new filter from the network and the creation date is newer than the " +
+                log.debug("We received a new filter from the network and the creation date is newer than the " +
                         "filter we have already. We ignore the old filter.");
                 addToInvalidFilters(currentFilter);
             }

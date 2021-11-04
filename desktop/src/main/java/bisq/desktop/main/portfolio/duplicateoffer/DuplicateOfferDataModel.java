@@ -19,16 +19,16 @@ package bisq.desktop.main.portfolio.duplicateoffer;
 
 
 import bisq.desktop.Navigation;
-import bisq.desktop.main.offer.MutableOfferDataModel;
+import bisq.desktop.main.offer.bisq_v1.MutableOfferDataModel;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
-import bisq.core.offer.CreateOfferService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.offer.bisq_v1.CreateOfferService;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatisticsManager;

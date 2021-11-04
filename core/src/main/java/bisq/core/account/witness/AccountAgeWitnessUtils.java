@@ -20,7 +20,7 @@ package bisq.core.account.witness;
 import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 
@@ -143,7 +143,7 @@ public class AccountAgeWitnessUtils {
         }
         boolean isSignWitnessTrade = accountAgeWitnessService.accountIsSigner(witness) &&
                 !accountAgeWitnessService.peerHasSignedWitness(trade) &&
-                accountAgeWitnessService.tradeAmountIsSufficient(trade.getTradeAmount());
+                accountAgeWitnessService.tradeAmountIsSufficient(trade.getAmount());
         log.info("AccountSigning debug log: " +
                         "\ntradeId: {}" +
                         "\nis buyer: {}" +
@@ -164,8 +164,8 @@ public class AccountAgeWitnessUtils {
                 checkingSignTrade, // Following cases added to use same logic as in seller signing check
                 accountAgeWitnessService.accountIsSigner(witness),
                 accountAgeWitnessService.peerHasSignedWitness(trade),
-                trade.getTradeAmount(),
-                accountAgeWitnessService.tradeAmountIsSufficient(trade.getTradeAmount()),
+                trade.getAmount(),
+                accountAgeWitnessService.tradeAmountIsSufficient(trade.getAmount()),
                 isSignWitnessTrade);
     }
 }

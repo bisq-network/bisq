@@ -22,8 +22,10 @@ import bisq.core.monetary.AltcoinExchangeRate;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
-import bisq.core.trade.Trade;
+import bisq.core.offer.OfferDirection;
+import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.util.JsonUtil;
 import bisq.core.util.VolumeUtil;
 
 import bisq.network.p2p.NodeAddress;
@@ -53,7 +55,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import lombok.Value;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
@@ -67,7 +70,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Deprecated
 @Slf4j
-@Value
+@EqualsAndHashCode
+@Getter
 public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload,
         CapabilityRequiringPayload, Comparable<TradeStatistics2> {
 
@@ -92,10 +96,11 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
 
         Offer offer = trade.getOffer();
         checkNotNull(offer, "offer must not ne null");
-        checkNotNull(trade.getTradeAmount(), "trade.getTradeAmount() must not ne null");
-        return new TradeStatistics2(offer.getOfferPayload(),
-                trade.getTradePrice(),
-                trade.getTradeAmount(),
+        checkNotNull(trade.getAmount(), "trade.getTradeAmount() must not ne null");
+        OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();
+        return new TradeStatistics2(offerPayload,
+                trade.getPrice(),
+                trade.getAmount(),
                 trade.getDate(),
                 trade.getDepositTxId(),
                 extraDataMap);
@@ -106,7 +111,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
     @SuppressWarnings("SpellCheckingInspection")
     public static final String REFUND_AGENT_ADDRESS = "refAddr";
 
-    private final OfferPayload.Direction direction;
+    private final OfferDirection direction;
     private final String baseCurrency;
     private final String counterCurrency;
     private final String offerPaymentMethod;
@@ -165,7 +170,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public TradeStatistics2(OfferPayload.Direction direction,
+    public TradeStatistics2(OfferDirection direction,
                             String baseCurrency,
                             String counterCurrency,
                             String offerPaymentMethod,
@@ -204,12 +209,12 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
         // We create hash from all fields excluding hash itself. We use json as simple data serialisation.
         // TradeDate is different for both peers so we ignore it for hash. ExtraDataMap is ignored as well as at
         // software updates we might have different entries which would cause a different hash.
-        return Hash.getSha256Ripemd160hash(Utilities.objectToJson(this).getBytes(Charsets.UTF_8));
+        return Hash.getSha256Ripemd160hash(JsonUtil.objectToJson(this).getBytes(Charsets.UTF_8));
     }
 
     private protobuf.TradeStatistics2.Builder getBuilder() {
         final protobuf.TradeStatistics2.Builder builder = protobuf.TradeStatistics2.newBuilder()
-                .setDirection(OfferPayload.Direction.toProtoMessage(direction))
+                .setDirection(OfferDirection.toProtoMessage(direction))
                 .setBaseCurrency(baseCurrency)
                 .setCounterCurrency(counterCurrency)
                 .setPaymentMethodId(offerPaymentMethod)
@@ -239,7 +244,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
 
     public static TradeStatistics2 fromProto(protobuf.TradeStatistics2 proto) {
         return new TradeStatistics2(
-                OfferPayload.Direction.fromProto(proto.getDirection()),
+                OfferDirection.fromProto(proto.getDirection()),
                 proto.getBaseCurrency(),
                 proto.getCounterCurrency(),
                 proto.getPaymentMethodId(),

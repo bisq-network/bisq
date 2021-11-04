@@ -28,6 +28,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 
 import bisq.apitest.method.offer.AbstractOfferTest;
+import bisq.apitest.method.offer.BsqSwapOfferTest;
 import bisq.apitest.method.offer.CancelOfferTest;
 import bisq.apitest.method.offer.CreateBSQOffersTest;
 import bisq.apitest.method.offer.CreateOfferUsingFixedPriceTest;
@@ -90,6 +91,19 @@ public class OfferTest extends AbstractOfferTest {
 
     @Test
     @Order(6)
+    public void testCreateBSQSwapOffers() {
+        BsqSwapOfferTest test = new BsqSwapOfferTest();
+        BsqSwapOfferTest.createBsqSwapBsqPaymentAccounts();
+        test.testAliceCreateBsqSwapBuyOffer1();
+        test.testAliceCreateBsqSwapBuyOffer2();
+        test.testAliceCreateBsqSwapBuyOffer3();
+        test.testAliceCreateBsqSwapBuyOffer4();
+        test.testGetMyBsqSwapOffers();
+        test.testGetAvailableBsqSwapOffers();
+    }
+
+    @Test
+    @Order(7)
     public void testEditOffer() {
         EditOfferTest test = new EditOfferTest();
         // Edit fiat offer tests

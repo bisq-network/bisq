@@ -34,7 +34,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.support.SupportType;
@@ -47,14 +47,14 @@ import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.traderchat.TraderChatManager;
-import bisq.core.trade.BuyerTrade;
-import bisq.core.trade.SellerTrade;
-import bisq.core.trade.Trade;
-import bisq.core.trade.TradeDataValidation;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.protocol.BuyerProtocol;
-import bisq.core.trade.protocol.DisputeProtocol;
-import bisq.core.trade.protocol.SellerProtocol;
+import bisq.core.trade.bisq_v1.TradeDataValidation;
+import bisq.core.trade.model.bisq_v1.BuyerTrade;
+import bisq.core.trade.model.bisq_v1.SellerTrade;
+import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.bisq_v1.BuyerProtocol;
+import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
+import bisq.core.trade.protocol.bisq_v1.SellerProtocol;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 
@@ -194,7 +194,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public void onPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         Trade trade = getTrade();
         checkNotNull(trade, "trade must not be null");
-        checkArgument(trade instanceof BuyerTrade, "Check failed: trade instanceof BuyerTrade");
+        checkArgument(trade instanceof BuyerTrade, "Check failed: trade instanceof BuyerTrade. Was: " + trade.getClass().getSimpleName());
         ((BuyerProtocol) tradeManager.getTradeProtocol(trade)).onPaymentStarted(resultHandler, errorMessageHandler);
     }
 
@@ -317,9 +317,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 }
             } else {
                 if (trade.isCurrencyForTakerFeeBtc())
-                    return trade.getTxFee().multiply(3);
+                    return trade.getTradeTxFee().multiply(3);
                 else
-                    return trade.getTxFee().multiply(3).subtract(trade.getTakerFee()); // BSQ will be used as part of the miner fee
+                    return trade.getTradeTxFee().multiply(3).subtract(trade.getTakerFee()); // BSQ will be used as part of the miner fee
             }
         } else {
             log.error("Trade is null at getTotalFees");
@@ -380,7 +380,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     private void onListChanged() {
         list.clear();
-        list.addAll(tradeManager.getObservableList().stream().map(PendingTradesListItem::new).collect(Collectors.toList()));
+        list.addAll(tradeManager.getObservableList().stream()
+                .map(PendingTradesListItem::new)
+                .collect(Collectors.toList()));
 
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));
@@ -534,7 +536,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             Dispute dispute = new Dispute(new Date().getTime(),
                     trade.getId(),
                     pubKeyRing.hashCode(), // traderId
-                    (offer.getDirection() == OfferPayload.Direction.BUY) == isMaker,
+                    (offer.getDirection() == OfferDirection.BUY) == isMaker,
                     isMaker,
                     pubKeyRing,
                     trade.getDate().getTime(),
@@ -595,7 +597,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             Dispute dispute = new Dispute(new Date().getTime(),
                     trade.getId(),
                     pubKeyRing.hashCode(), // traderId
-                    (offer.getDirection() == OfferPayload.Direction.BUY) == isMaker,
+                    (offer.getDirection() == OfferDirection.BUY) == isMaker,
                     isMaker,
                     pubKeyRing,
                     trade.getDate().getTime(),

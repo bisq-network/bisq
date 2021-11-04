@@ -17,8 +17,8 @@
 
 package bisq.core.api.model;
 
-import bisq.core.trade.Contract;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.common.Payload;
 
@@ -34,7 +34,7 @@ import static bisq.core.api.model.PaymentAccountPayloadInfo.toPaymentAccountPayl
 @Getter
 public class TradeInfo implements Payload {
 
-    // The client cannot see bisq.core.trade.Trade or its fromProto method.  We use the
+    // The client cannot see Trade or its fromProto method.  We use the
     // lighter weight TradeInfo proto wrapper instead, containing just enough fields to
     // view and interact with trades.
 
@@ -127,19 +127,19 @@ public class TradeInfo implements Payload {
                 .withDate(trade.getDate().getTime())
                 .withRole(role == null ? "" : role)
                 .withIsCurrencyForTakerFeeBtc(trade.isCurrencyForTakerFeeBtc())
-                .withTxFeeAsLong(trade.getTxFeeAsLong())
+                .withTxFeeAsLong(trade.getTradeTxFeeAsLong())
                 .withTakerFeeAsLong(trade.getTakerFeeAsLong())
                 .withTakerFeeAsLong(trade.getTakerFeeAsLong())
                 .withTakerFeeTxId(trade.getTakerFeeTxId())
                 .withDepositTxId(trade.getDepositTxId())
                 .withPayoutTxId(trade.getPayoutTxId())
-                .withTradeAmountAsLong(trade.getTradeAmountAsLong())
-                .withTradePrice(trade.getTradePrice().getValue())
-                .withTradeVolume(trade.getTradeVolume() == null ? 0 : trade.getTradeVolume().getValue())
+                .withTradeAmountAsLong(trade.getAmountAsLong())
+                .withTradePrice(trade.getPrice().getValue())
+                .withTradeVolume(trade.getVolume() == null ? 0 : trade.getVolume().getValue())
                 .withTradingPeerNodeAddress(Objects.requireNonNull(
                         trade.getTradingPeerNodeAddress()).getHostNameWithoutPostFix())
-                .withState(trade.getState().name())
-                .withPhase(trade.getPhase().name())
+                .withState(trade.getTradeState().name())
+                .withPhase(trade.getTradePhase().name())
                 .withTradePeriodState(trade.getTradePeriodState().name())
                 .withIsDepositPublished(trade.isDepositPublished())
                 .withIsDepositConfirmed(trade.isDepositConfirmed())

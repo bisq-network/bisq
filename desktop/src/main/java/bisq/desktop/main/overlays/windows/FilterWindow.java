@@ -173,6 +173,11 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 Res.get("filterWindow.disableMempoolValidation"));
         CheckBox disableApiCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
                 Res.get("filterWindow.disableApi"));
+        CheckBox disablePowMessage = addLabelCheckBox(gridPane, ++rowIndex,
+                Res.get("filterWindow.disablePowMessage"));
+        InputTextField powDifficultyTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.powDifficulty"));
+        powDifficultyTF.setText("0");
 
         Filter filter = filterManager.getDevFilter();
         if (filter != null) {
@@ -200,6 +205,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
             disableTradeBelowVersionTF.setText(filter.getDisableTradeBelowVersion());
             disableMempoolValidationCheckBox.setSelected(filter.isDisableMempoolValidation());
             disableApiCheckBox.setSelected(filter.isDisableApi());
+            disablePowMessage.setSelected(filter.isDisablePowMessage());
+            powDifficultyTF.setText(String.valueOf(filter.getPowDifficulty()));
         }
 
         Button removeFilterMessageButton = new AutoTooltipButton(Res.get("filterWindow.remove"));
@@ -235,7 +242,9 @@ public class FilterWindow extends Overlay<FilterWindow> {
                         readAsList(autoConfExplorersTF),
                         new HashSet<>(readAsList(bannedFromNetworkTF)),
                         disableMempoolValidationCheckBox.isSelected(),
-                        disableApiCheckBox.isSelected()
+                        disableApiCheckBox.isSelected(),
+                        disablePowMessage.isSelected(),
+                        Integer.parseInt(powDifficultyTF.getText())
                 );
 
                 // We remove first the old filter
@@ -244,8 +253,11 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 // working as expected)
                 if (filterManager.canRemoveDevFilter(privKeyString)) {
                     filterManager.removeDevFilter(privKeyString);
-                    UserThread.runAfter(() -> addDevFilter(removeFilterMessageButton, privKeyString, newFilter),
-                            5);
+                    if (DevEnv.isDevMode()) {
+                        addDevFilter(removeFilterMessageButton, privKeyString, newFilter);
+                    } else {
+                        UserThread.runAfter(() -> addDevFilter(removeFilterMessageButton, privKeyString, newFilter), 5);
+                    }
                 } else {
                     addDevFilter(removeFilterMessageButton, privKeyString, newFilter);
                 }

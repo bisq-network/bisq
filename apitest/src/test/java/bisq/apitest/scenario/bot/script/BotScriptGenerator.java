@@ -17,8 +17,9 @@
 
 package bisq.apitest.scenario.bot.script;
 
+import bisq.core.util.JsonUtil;
+
 import bisq.common.file.JsonFileManager;
-import bisq.common.util.Utilities;
 
 import joptsimple.BuiltinHelpFormatter;
 import joptsimple.OptionParser;
@@ -214,7 +215,7 @@ public class BotScriptGenerator {
     }
 
     private String generateBotScriptTemplate() {
-        return Utilities.objectToJson(new BotScript(
+        return JsonUtil.objectToJson(new BotScript(
                 useTestHarness,
                 botPaymentMethodId,
                 countryCode,

@@ -24,6 +24,9 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.offer.availability.OfferAvailabilityProtocol;
+import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
+import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bsq_swap.BsqSwapOfferPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
@@ -75,7 +78,6 @@ public class Offer implements NetworkPayload, PersistablePayload {
     // from one provider.
     private final static double PRICE_TOLERANCE = 0.01;
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Enums
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +96,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Getter
-    private final OfferPayload offerPayload;
+    private final OfferPayloadBase offerPayloadBase;
     @JsonExclude
     @Getter
     final transient private ObjectProperty<Offer.State> stateProperty = new SimpleObjectProperty<>(Offer.State.UNKNOWN);
@@ -119,8 +121,8 @@ public class Offer implements NetworkPayload, PersistablePayload {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Offer(OfferPayload offerPayload) {
-        this.offerPayload = offerPayload;
+    public Offer(OfferPayloadBase offerPayloadBase) {
+        this.offerPayloadBase = offerPayloadBase;
     }
 
 
@@ -130,11 +132,21 @@ public class Offer implements NetworkPayload, PersistablePayload {
 
     @Override
     public protobuf.Offer toProtoMessage() {
-        return protobuf.Offer.newBuilder().setOfferPayload(offerPayload.toProtoMessage().getOfferPayload()).build();
+        if (isBsqSwapOffer()) {
+            return protobuf.Offer.newBuilder().setBsqSwapOfferPayload(((BsqSwapOfferPayload) offerPayloadBase)
+                    .toProtoMessage().getBsqSwapOfferPayload()).build();
+        } else {
+            return protobuf.Offer.newBuilder().setOfferPayload(((OfferPayload) offerPayloadBase)
+                    .toProtoMessage().getOfferPayload()).build();
+        }
     }
 
     public static Offer fromProto(protobuf.Offer proto) {
-        return new Offer(OfferPayload.fromProto(proto.getOfferPayload()));
+        if (proto.hasOfferPayload()) {
+            return new Offer(OfferPayload.fromProto(proto.getOfferPayload()));
+        } else {
+            return new Offer(BsqSwapOfferPayload.fromProto(proto.getBsqSwapOfferPayload()));
+        }
     }
 
 
@@ -166,41 +178,51 @@ public class Offer implements NetworkPayload, PersistablePayload {
     @Nullable
     public Price getPrice() {
         String currencyCode = getCurrencyCode();
-        if (offerPayload.isUseMarketBasedPrice()) {
-            checkNotNull(priceFeedService, "priceFeed must not be null");
-            MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
-            if (marketPrice != null && marketPrice.isRecentExternalPriceAvailable()) {
-                double factor;
-                double marketPriceMargin = offerPayload.getMarketPriceMargin();
-                if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
-                    factor = getDirection() == OfferPayload.Direction.SELL ?
-                            1 - marketPriceMargin : 1 + marketPriceMargin;
-                } else {
-                    factor = getDirection() == OfferPayload.Direction.BUY ?
-                            1 - marketPriceMargin : 1 + marketPriceMargin;
-                }
-                double marketPriceAsDouble = marketPrice.getPrice();
-                double targetPriceAsDouble = marketPriceAsDouble * factor;
-                try {
-                    int precision = CurrencyUtil.isCryptoCurrency(currencyCode) ?
-                            Altcoin.SMALLEST_UNIT_EXPONENT :
-                            Fiat.SMALLEST_UNIT_EXPONENT;
-                    double scaled = MathUtils.scaleUpByPowerOf10(targetPriceAsDouble, precision);
-                    final long roundedToLong = MathUtils.roundDoubleToLong(scaled);
-                    return Price.valueOf(currencyCode, roundedToLong);
-                } catch (Exception e) {
-                    log.error("Exception at getPrice / parseToFiat: " + e.toString() + "\n" +
-                            "That case should never happen.");
-                    return null;
-                }
+        Optional<OfferPayload> optionalOfferPayload = getOfferPayload();
+        if (!optionalOfferPayload.isPresent()) {
+            return Price.valueOf(currencyCode, offerPayloadBase.getPrice());
+        }
+
+        OfferPayload offerPayload = optionalOfferPayload.get();
+        if (!offerPayload.isUseMarketBasedPrice()) {
+            return Price.valueOf(currencyCode, offerPayloadBase.getPrice());
+        }
+
+        checkNotNull(priceFeedService, "priceFeed must not be null");
+        MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
+        if (marketPrice != null && marketPrice.isRecentExternalPriceAvailable()) {
+            double factor;
+            double marketPriceMargin = offerPayload.getMarketPriceMargin();
+            if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
+                factor = getDirection() == OfferDirection.SELL ?
+                        1 - marketPriceMargin : 1 + marketPriceMargin;
             } else {
-                log.trace("We don't have a market price. " +
-                        "That case could only happen if you don't have a price feed.");
+                factor = getDirection() == OfferDirection.BUY ?
+                        1 - marketPriceMargin : 1 + marketPriceMargin;
+            }
+            double marketPriceAsDouble = marketPrice.getPrice();
+            double targetPriceAsDouble = marketPriceAsDouble * factor;
+            try {
+                int precision = CurrencyUtil.isCryptoCurrency(currencyCode) ?
+                        Altcoin.SMALLEST_UNIT_EXPONENT :
+                        Fiat.SMALLEST_UNIT_EXPONENT;
+                double scaled = MathUtils.scaleUpByPowerOf10(targetPriceAsDouble, precision);
+                final long roundedToLong = MathUtils.roundDoubleToLong(scaled);
+                return Price.valueOf(currencyCode, roundedToLong);
+            } catch (Exception e) {
+                log.error("Exception at getPrice / parseToFiat: " + e + "\n" +
+                        "That case should never happen.");
                 return null;
             }
         } else {
-            return Price.valueOf(currencyCode, offerPayload.getPrice());
+            log.trace("We don't have a market price. " +
+                    "That case could only happen if you don't have a price feed.");
+            return null;
         }
+    }
+
+    public long getFixedPrice() {
+        return offerPayloadBase.getPrice();
     }
 
     public void checkTradePriceTolerance(long takersTradePrice) throws TradePriceOutOfToleranceException,
@@ -234,17 +256,16 @@ public class Offer implements NetworkPayload, PersistablePayload {
     @Nullable
     public Volume getVolumeByAmount(Coin amount) {
         Price price = getPrice();
-        if (price != null && amount != null) {
-            Volume volumeByAmount = price.getVolumeByAmount(amount);
-            if (offerPayload.getPaymentMethodId().equals(PaymentMethod.HAL_CASH_ID))
-                volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
-            else if (CurrencyUtil.isFiatCurrency(offerPayload.getCurrencyCode()))
-                volumeByAmount = VolumeUtil.getRoundedFiatVolume(volumeByAmount);
-
-            return volumeByAmount;
-        } else {
+        if (price == null || amount == null) {
             return null;
         }
+        Volume volumeByAmount = price.getVolumeByAmount(amount);
+        if (offerPayloadBase.getPaymentMethodId().equals(PaymentMethod.HAL_CASH_ID))
+            volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
+        else if (CurrencyUtil.isFiatCurrency(offerPayloadBase.getCurrencyCode()))
+            volumeByAmount = VolumeUtil.getRoundedFiatVolume(volumeByAmount);
+
+        return volumeByAmount;
     }
 
     public void resetState() {
@@ -265,7 +286,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     }
 
     public void setOfferFeePaymentTxId(String offerFeePaymentTxID) {
-        offerPayload.setOfferFeePaymentTxId(offerFeePaymentTxID);
+        getOfferPayload().ifPresent(p -> p.setOfferFeePaymentTxId(offerFeePaymentTxID));
     }
 
     public void setErrorMessage(String errorMessage) {
@@ -279,52 +300,52 @@ public class Offer implements NetworkPayload, PersistablePayload {
 
     // converted payload properties
     public Coin getTxFee() {
-        return Coin.valueOf(offerPayload.getTxFee());
+        return Coin.valueOf(getOfferPayload().map(OfferPayload::getTxFee).orElse(0L));
     }
 
     public Coin getMakerFee() {
-        return Coin.valueOf(offerPayload.getMakerFee());
+        return getOfferPayload().map(OfferPayload::getMakerFee).map(Coin::valueOf).orElse(Coin.ZERO);
     }
 
     public boolean isCurrencyForMakerFeeBtc() {
-        return offerPayload.isCurrencyForMakerFeeBtc();
+        return getOfferPayload().map(OfferPayload::isCurrencyForMakerFeeBtc).orElse(false);
     }
 
     public Coin getBuyerSecurityDeposit() {
-        return Coin.valueOf(offerPayload.getBuyerSecurityDeposit());
+        return Coin.valueOf(getOfferPayload().map(OfferPayload::getBuyerSecurityDeposit).orElse(0L));
     }
 
     public Coin getSellerSecurityDeposit() {
-        return Coin.valueOf(offerPayload.getSellerSecurityDeposit());
+        return Coin.valueOf(getOfferPayload().map(OfferPayload::getSellerSecurityDeposit).orElse(0L));
     }
 
     public Coin getMaxTradeLimit() {
-        return Coin.valueOf(offerPayload.getMaxTradeLimit());
+        return getOfferPayload().map(OfferPayload::getMaxTradeLimit).map(Coin::valueOf).orElse(Coin.ZERO);
     }
 
     public Coin getAmount() {
-        return Coin.valueOf(offerPayload.getAmount());
+        return Coin.valueOf(offerPayloadBase.getAmount());
     }
 
     public Coin getMinAmount() {
-        return Coin.valueOf(offerPayload.getMinAmount());
+        return Coin.valueOf(offerPayloadBase.getMinAmount());
     }
 
     public boolean isRange() {
-        return offerPayload.getAmount() != offerPayload.getMinAmount();
+        return offerPayloadBase.getAmount() != offerPayloadBase.getMinAmount();
     }
 
     public Date getDate() {
-        return new Date(offerPayload.getDate());
+        return new Date(offerPayloadBase.getDate());
     }
 
     public PaymentMethod getPaymentMethod() {
-        return PaymentMethod.getPaymentMethodById(offerPayload.getPaymentMethodId());
+        return PaymentMethod.getPaymentMethodById(offerPayloadBase.getPaymentMethodId());
     }
 
     // utils
     public String getShortId() {
-        return Utilities.getShortId(offerPayload.getId());
+        return Utilities.getShortId(offerPayloadBase.getId());
     }
 
     @Nullable
@@ -338,17 +359,16 @@ public class Offer implements NetworkPayload, PersistablePayload {
     }
 
     public boolean isBuyOffer() {
-        return getDirection() == OfferPayload.Direction.BUY;
+        return getDirection() == OfferDirection.BUY;
     }
 
-    public OfferPayload.Direction getMirroredDirection() {
-        return getDirection() == OfferPayload.Direction.BUY ? OfferPayload.Direction.SELL : OfferPayload.Direction.BUY;
+    public OfferDirection getMirroredDirection() {
+        return getDirection() == OfferDirection.BUY ? OfferDirection.SELL : OfferDirection.BUY;
     }
 
     public boolean isMyOffer(KeyRing keyRing) {
         return getPubKeyRing().equals(keyRing.getPubKeyRing());
     }
-
 
     public Optional<String> getAccountAgeWitnessHashAsHex() {
         Map<String, String> extraDataMap = getExtraDataMap();
@@ -400,32 +420,32 @@ public class Offer implements NetworkPayload, PersistablePayload {
     // Delegate Getter (boilerplate code generated via IntelliJ generate delegate feature)
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public OfferPayload.Direction getDirection() {
-        return offerPayload.getDirection();
+    public OfferDirection getDirection() {
+        return offerPayloadBase.getDirection();
     }
 
     public String getId() {
-        return offerPayload.getId();
+        return offerPayloadBase.getId();
     }
 
     @Nullable
     public List<String> getAcceptedBankIds() {
-        return offerPayload.getAcceptedBankIds();
+        return getOfferPayload().map(OfferPayload::getAcceptedBankIds).orElse(null);
     }
 
     @Nullable
     public String getBankId() {
-        return offerPayload.getBankId();
+        return getOfferPayload().map(OfferPayload::getBankId).orElse(null);
     }
 
     @Nullable
     public List<String> getAcceptedCountryCodes() {
-        return offerPayload.getAcceptedCountryCodes();
+        return getOfferPayload().map(OfferPayload::getAcceptedCountryCodes).orElse(null);
     }
 
     @Nullable
     public String getCountryCode() {
-        return offerPayload.getCountryCode();
+        return getOfferPayload().map(OfferPayload::getCountryCode).orElse(null);
     }
 
     public String getCurrencyCode() {
@@ -433,89 +453,84 @@ public class Offer implements NetworkPayload, PersistablePayload {
             return currencyCode;
         }
 
-        currencyCode = offerPayload.getBaseCurrencyCode().equals("BTC") ?
-                offerPayload.getCounterCurrencyCode() :
-                offerPayload.getBaseCurrencyCode();
+        currencyCode = getBaseCurrencyCode().equals("BTC") ?
+                getCounterCurrencyCode() :
+                getBaseCurrencyCode();
         return currencyCode;
     }
 
+    public String getCounterCurrencyCode() {
+        return offerPayloadBase.getCounterCurrencyCode();
+    }
+
+    public String getBaseCurrencyCode() {
+        return offerPayloadBase.getBaseCurrencyCode();
+    }
+
+    public String getPaymentMethodId() {
+        return offerPayloadBase.getPaymentMethodId();
+    }
+
     public long getProtocolVersion() {
-        return offerPayload.getProtocolVersion();
+        return offerPayloadBase.getProtocolVersion();
     }
 
     public boolean isUseMarketBasedPrice() {
-        return offerPayload.isUseMarketBasedPrice();
+        return getOfferPayload().map(OfferPayload::isUseMarketBasedPrice).orElse(false);
     }
 
     public double getMarketPriceMargin() {
-        return offerPayload.getMarketPriceMargin();
+        return getOfferPayload().map(OfferPayload::getMarketPriceMargin).orElse(0D);
     }
 
     public NodeAddress getMakerNodeAddress() {
-        return offerPayload.getOwnerNodeAddress();
+        return offerPayloadBase.getOwnerNodeAddress();
     }
 
     public PubKeyRing getPubKeyRing() {
-        return offerPayload.getPubKeyRing();
+        return offerPayloadBase.getPubKeyRing();
     }
 
     public String getMakerPaymentAccountId() {
-        return offerPayload.getMakerPaymentAccountId();
+        return offerPayloadBase.getMakerPaymentAccountId();
     }
 
     public String getOfferFeePaymentTxId() {
-        return offerPayload.getOfferFeePaymentTxId();
+        return getOfferPayload().map(OfferPayload::getOfferFeePaymentTxId).orElse(null);
     }
 
     public String getVersionNr() {
-        return offerPayload.getVersionNr();
+        return offerPayloadBase.getVersionNr();
     }
 
     public long getMaxTradePeriod() {
-        return offerPayload.getMaxTradePeriod();
+        return getOfferPayload().map(OfferPayload::getMaxTradePeriod).orElse(0L);
     }
 
     public NodeAddress getOwnerNodeAddress() {
-        return offerPayload.getOwnerNodeAddress();
+        return offerPayloadBase.getOwnerNodeAddress();
     }
 
     // Yet unused
     public PublicKey getOwnerPubKey() {
-        return offerPayload.getOwnerPubKey();
+        return offerPayloadBase.getOwnerPubKey();
     }
 
     @Nullable
     public Map<String, String> getExtraDataMap() {
-        return offerPayload.getExtraDataMap();
+        return offerPayloadBase.getExtraDataMap();
     }
 
     public boolean isUseAutoClose() {
-        return offerPayload.isUseAutoClose();
-    }
-
-    public long getBlockHeightAtOfferCreation() {
-        return offerPayload.getBlockHeightAtOfferCreation();
-    }
-
-    @Nullable
-    public String getHashOfChallenge() {
-        return offerPayload.getHashOfChallenge();
-    }
-
-    public boolean isPrivateOffer() {
-        return offerPayload.isPrivateOffer();
-    }
-
-    public long getUpperClosePrice() {
-        return offerPayload.getUpperClosePrice();
-    }
-
-    public long getLowerClosePrice() {
-        return offerPayload.getLowerClosePrice();
+        return getOfferPayload().map(OfferPayload::isUseAutoClose).orElse(false);
     }
 
     public boolean isUseReOpenAfterAutoClose() {
-        return offerPayload.isUseReOpenAfterAutoClose();
+        return getOfferPayload().map(OfferPayload::isUseReOpenAfterAutoClose).orElse(false);
+    }
+
+    public boolean isBsqSwapOffer() {
+        return getOfferPayloadBase() instanceof BsqSwapOfferPayload;
     }
 
     public boolean isXmrAutoConf() {
@@ -533,6 +548,24 @@ public class Offer implements NetworkPayload, PersistablePayload {
         return getCurrencyCode().equals("XMR");
     }
 
+    public Optional<OfferPayload> getOfferPayload() {
+        if (offerPayloadBase instanceof OfferPayload) {
+            return Optional.of((OfferPayload) offerPayloadBase);
+        }
+        return Optional.empty();
+    }
+
+    public Optional<BsqSwapOfferPayload> getBsqSwapOfferPayload() {
+        if (offerPayloadBase instanceof BsqSwapOfferPayload) {
+            return Optional.of((BsqSwapOfferPayload) offerPayloadBase);
+        }
+        return Optional.empty();
+    }
+
+    public byte[] getOfferPayloadHash() {
+        return offerPayloadBase.getHash();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -540,7 +573,8 @@ public class Offer implements NetworkPayload, PersistablePayload {
 
         Offer offer = (Offer) o;
 
-        if (offerPayload != null ? !offerPayload.equals(offer.offerPayload) : offer.offerPayload != null) return false;
+        if (offerPayloadBase != null ? !offerPayloadBase.equals(offer.offerPayloadBase) : offer.offerPayloadBase != null)
+            return false;
         //noinspection SimplifiableIfStatement
         if (getState() != offer.getState()) return false;
         return !(getErrorMessage() != null ? !getErrorMessage().equals(offer.getErrorMessage()) : offer.getErrorMessage() != null);
@@ -549,7 +583,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
 
     @Override
     public int hashCode() {
-        int result = offerPayload != null ? offerPayload.hashCode() : 0;
+        int result = offerPayloadBase != null ? offerPayloadBase.hashCode() : 0;
         result = 31 * result + (getState() != null ? getState().hashCode() : 0);
         result = 31 * result + (getErrorMessage() != null ? getErrorMessage().hashCode() : 0);
         return result;
@@ -560,7 +594,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
         return "Offer{" +
                 "getErrorMessage()='" + getErrorMessage() + '\'' +
                 ", state=" + getState() +
-                ", offerPayload=" + offerPayload +
+                ", offerPayloadBase=" + offerPayloadBase +
                 '}';
     }
 }

@@ -19,7 +19,8 @@ package bisq.monitor.metric;
 
 import bisq.monitor.Reporter;
 
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferUtil;
+import bisq.core.offer.bisq_v1.OfferPayload;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.network.Connection;
@@ -144,10 +145,8 @@ public class P2PMarketStats extends P2PSeedNodeSnapshotBase {
         public void log(Object message) {
 
             if (message instanceof OfferPayload) {
-                OfferPayload currentMessage = (OfferPayload) message;
-
-                String version = "v" + currentMessage.getId().substring(currentMessage.getId().lastIndexOf("-") + 1);
-
+                OfferPayload offerPayload = (OfferPayload) message;
+                String version = "v" + OfferUtil.getVersionFromId(offerPayload.getId());
                 buckets.putIfAbsent(version, new Aggregator());
                 buckets.get(version).increment();
             }

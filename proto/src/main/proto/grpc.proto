@@ -62,13 +62,23 @@ message GetMethodHelpReply {
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 service Offers {
+    rpc GetBsqSwapOffer (GetOfferRequest) returns (GetBsqSwapOfferReply) {
+    }
     rpc GetOffer (GetOfferRequest) returns (GetOfferReply) {
+    }
+    rpc GetMyBsqSwapOffer (GetMyOfferRequest) returns (GetMyBsqSwapOfferReply) {
     }
     rpc GetMyOffer (GetMyOfferRequest) returns (GetMyOfferReply) {
     }
+    rpc GetBsqSwapOffers (GetOffersRequest) returns (GetBsqSwapOffersReply) {
+    }
     rpc GetOffers (GetOffersRequest) returns (GetOffersReply) {
     }
+    rpc GetMyBsqSwapOffers (GetMyOffersRequest) returns (GetMyBsqSwapOffersReply) {
+    }
     rpc GetMyOffers (GetMyOffersRequest) returns (GetMyOffersReply) {
+    }
+    rpc CreateBsqSwapOffer (CreateBsqSwapOfferRequest) returns (CreateBsqSwapOfferReply) {
     }
     rpc CreateOffer (CreateOfferRequest) returns (CreateOfferReply) {
     }
@@ -78,12 +88,20 @@ service Offers {
     }
 }
 
+message GetBsqSwapOfferReply {
+    BsqSwapOfferInfo bsqSwapOffer = 1;
+}
+
 message GetOfferRequest {
     string id = 1;
 }
 
 message GetOfferReply {
     OfferInfo offer = 1;
+}
+
+message GetMyBsqSwapOfferReply {
+    BsqSwapOfferInfo bsqSwapOffer = 1;
 }
 
 message GetMyOfferRequest {
@@ -103,6 +121,10 @@ message GetOffersReply {
     repeated OfferInfo offers = 1;
 }
 
+message GetBsqSwapOffersReply {
+    repeated BsqSwapOfferInfo bsqSwapOffers = 1;
+}
+
 message GetMyOffersRequest {
     string direction = 1;
     string currencyCode = 2;
@@ -110,6 +132,22 @@ message GetMyOffersRequest {
 
 message GetMyOffersReply {
     repeated OfferInfo offers = 1;
+}
+
+message GetMyBsqSwapOffersReply {
+    repeated BsqSwapOfferInfo bsqSwapOffers = 1;
+}
+
+message CreateBsqSwapOfferRequest {
+    string direction = 1;
+    uint64 amount = 2;
+    uint64 minAmount = 3;
+    string price = 4;
+    string paymentAccountId = 5;
+}
+
+message CreateBsqSwapOfferReply {
+    BsqSwapOfferInfo bsqSwapOffer = 1;
 }
 
 message CreateOfferRequest {
@@ -164,6 +202,25 @@ message CancelOfferRequest {
 }
 
 message CancelOfferReply {
+}
+
+message BsqSwapOfferInfo {
+    string id = 1;
+    string direction = 2;
+    uint64 amount = 3;
+    uint64 minAmount = 4;
+    uint64 price = 5;
+    string makerPaymentAccountId = 6;
+    string paymentMethodId = 7;
+    string paymentMethodShortName = 8;
+    string baseCurrencyCode = 9;
+    string counterCurrencyCode = 10;
+    uint64 getMakerFee = 11;
+    uint64 date = 12;
+    string ownerNodeAddress = 13;
+    string pubKeyRing = 14;
+    string versionNr = 15;
+    int32 protocolVersion = 16;
 }
 
 message OfferInfo {
@@ -254,6 +311,7 @@ message CreateCryptoCurrencyPaymentAccountRequest {
     string currencyCode = 2;
     string address = 3;
     bool tradeInstant = 4;
+    bool isBsqSwap = 5;
 }
 
 message CreateCryptoCurrencyPaymentAccountReply {
@@ -320,7 +378,11 @@ message StopReply {
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 service Trades {
+    rpc GetBsqSwapTrade (GetTradeRequest) returns (GetBsqSwapTradeReply) {
+    }
     rpc GetTrade (GetTradeRequest) returns (GetTradeReply) {
+    }
+    rpc TakeBsqSwapOffer (TakeBsqSwapOfferRequest) returns (TakeBsqSwapOfferReply) {
     }
     rpc TakeOffer (TakeOfferRequest) returns (TakeOfferReply) {
     }
@@ -332,6 +394,17 @@ service Trades {
     }
     rpc WithdrawFunds (WithdrawFundsRequest) returns (WithdrawFundsReply) {
     }
+}
+
+message TakeBsqSwapOfferRequest {
+    string offerId = 1;
+    string paymentAccountId = 2;
+    string takerFeeCurrencyCode = 3;
+}
+
+message TakeBsqSwapOfferReply {
+    BsqSwapTradeInfo bsqSwapTrade = 1;
+    AvailabilityResultWithDescription failureReason = 2;
 }
 
 message TakeOfferRequest {
@@ -359,6 +432,10 @@ message ConfirmPaymentReceivedRequest {
 message ConfirmPaymentReceivedReply {
 }
 
+message GetBsqSwapTradeReply {
+    BsqSwapTradeInfo bsqSwapTrade = 1;
+}
+
 message GetTradeRequest {
     string tradeId = 1;
 }
@@ -381,6 +458,36 @@ message WithdrawFundsRequest {
 }
 
 message WithdrawFundsReply {
+}
+
+message BsqSwapTradeInfo {
+    BsqSwapOfferInfo bsqSwapOfferInfo = 1;
+    string tradeId = 2;
+    string tempTradingPeerNodeAddress = 3;
+    string peerNodeAddress = 4;
+    string txId = 5;
+    uint64 bsqTradeAmount = 6;
+    uint64 bsqMaxTradeAmount = 7;
+    uint64 bsqMinTradeAmount = 8;
+    uint64 btcTradeAmount = 9;
+    uint64 btcMaxTradeAmount = 10;
+    uint64 btcMinTradeAmount = 11;
+    uint64 tradePrice = 12;
+    bool isCurrencyForMakerFeeBtc = 13;
+    bool isCurrencyForTakerFeeBtc = 14;
+    uint64 bsqMakerTradeFee = 15;
+    uint64 btcMakerTradeFee = 16;
+    uint64 bsqTakerTradeFee = 17;
+    uint64 btcTakerTradeFee = 18;
+    uint64 txFeePerVbyte = 19;
+    uint64 txFee = 20;
+    string makerBsqAddress = 21;
+    string makerBtcAddress = 22;
+    string takerBsqAddress = 23;
+    string takerBtcAddress = 24;
+    uint64 takeOfferDate = 25;
+    string state = 26;
+    string errorMessage = 27;
 }
 
 message TradeInfo {

@@ -18,6 +18,7 @@
 package bisq.desktop.main.dao.wallet.tx;
 
 import bisq.desktop.components.TxConfidenceListItem;
+import bisq.desktop.main.funds.transactions.TradableRepository;
 import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.btc.wallet.BsqWalletService;
@@ -26,6 +27,7 @@ import bisq.core.btc.wallet.WalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.util.coin.BsqFormatter;
 
 import org.bitcoinj.core.Address;
@@ -34,6 +36,7 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
 import java.util.Date;
+import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -54,6 +57,7 @@ class BsqTxListItem extends TxConfidenceListItem {
     private final String address;
     private final String direction;
     private final Coin amount;
+    private final Optional<BsqSwapTrade> optionalBsqTrade;
     private boolean received;
 
     BsqTxListItem(Transaction transaction,
@@ -61,7 +65,8 @@ class BsqTxListItem extends TxConfidenceListItem {
                   BtcWalletService btcWalletService,
                   DaoFacade daoFacade,
                   Date date,
-                  BsqFormatter bsqFormatter) {
+                  BsqFormatter bsqFormatter,
+                  TradableRepository tradableRepository) {
         super(transaction, bsqWalletService);
 
         this.daoFacade = daoFacade;
@@ -127,6 +132,13 @@ class BsqTxListItem extends TxConfidenceListItem {
             address = received ? receivedWithAddress : sendToAddress;
         else
             address = "";
+
+
+        optionalBsqTrade = tradableRepository.getAll().stream()
+                .filter(tradable -> tradable instanceof BsqSwapTrade)
+                .map(tradable -> (BsqSwapTrade) tradable)
+                .filter(tradable -> txId.equals(tradable.getTxId()))
+                .findFirst();
     }
 
     BsqTxListItem() {
@@ -138,24 +150,29 @@ class BsqTxListItem extends TxConfidenceListItem {
         this.direction = null;
         this.amount = null;
         this.bsqFormatter = null;
+        optionalBsqTrade = Optional.empty();
     }
 
-    public TxType getTxType() {
+    TxType getTxType() {
         return daoFacade.getTx(txId)
                 .flatMap(tx -> daoFacade.getOptionalTxType(tx.getId()))
                 .orElse(confirmations == 0 ? TxType.UNVERIFIED : TxType.UNDEFINED_TX_TYPE);
     }
 
-    public boolean isWithdrawalToBTCWallet() {
+    boolean isWithdrawalToBTCWallet() {
         return withdrawalToBTCWallet;
     }
 
-    public String getDateAsString() {
+    String getDateAsString() {
         return DisplayUtils.formatDateTime(date);
     }
 
-    public String getAmountAsString() {
+    String getAmountAsString() {
         return bsqFormatter.formatCoin(amount);
+    }
+
+    boolean isBsqSwapTx() {
+        return getOptionalBsqTrade().isPresent();
     }
 }
 

@@ -20,7 +20,6 @@ package bisq.desktop.main.offer.offerbook;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.model.ActivatableViewModel;
 import bisq.desktop.main.MainView;
-import bisq.desktop.main.PriceUtil;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
 import bisq.desktop.util.DisplayUtils;
@@ -38,18 +37,19 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferFilter;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferDirection;
+import bisq.core.offer.OfferFilterService;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.price.PriceFeedService;
-import bisq.core.trade.Trade;
-import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.trade.ClosedTradableManager;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.PriceUtil;
 import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
@@ -106,7 +106,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
     private final PriceUtil priceUtil;
-    final OfferFilter offerFilter;
+    final OfferFilterService offerFilterService;
     private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
 
@@ -117,7 +117,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private TradeCurrency selectedTradeCurrency;
     private final ObservableList<TradeCurrency> allTradeCurrencies = FXCollections.observableArrayList();
 
-    private OfferPayload.Direction direction;
+    private OfferDirection direction;
 
     final StringProperty tradeCurrencyCode = new SimpleStringProperty();
 
@@ -152,7 +152,7 @@ class OfferBookViewModel extends ActivatableViewModel {
                               AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
                               PriceUtil priceUtil,
-                              OfferFilter offerFilter,
+                              OfferFilterService offerFilterService,
                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                               BsqFormatter bsqFormatter) {
         super();
@@ -168,7 +168,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
         this.priceUtil = priceUtil;
-        this.offerFilter = offerFilter;
+        this.offerFilterService = offerFilterService;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
 
@@ -215,7 +215,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     protected void activate() {
         filteredItems.addListener(filterItemsListener);
 
-        String code = direction == OfferPayload.Direction.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
+        String code = direction == OfferDirection.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
         if (code != null && !code.isEmpty() && !isShowAllEntry(code) &&
                 CurrencyUtil.getTradeCurrency(code).isPresent()) {
             showAllTradeCurrenciesProperty.set(false);
@@ -251,7 +251,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void initWithDirection(OfferPayload.Direction direction) {
+    void initWithDirection(OfferDirection direction) {
         this.direction = direction;
     }
 
@@ -279,7 +279,7 @@ class OfferBookViewModel extends ActivatableViewModel {
             setMarketPriceFeedCurrency();
             filterOffers();
 
-            if (direction == OfferPayload.Direction.BUY)
+            if (direction == OfferDirection.BUY)
                 preferences.setBuyScreenCurrencyCode(code);
             else
                 preferences.setSellScreenCurrencyCode(code);
@@ -341,7 +341,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         return openOfferManager.isMyOffer(offer);
     }
 
-    OfferPayload.Direction getDirection() {
+    OfferDirection getDirection() {
         return direction;
     }
 
@@ -566,7 +566,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     boolean canCreateOrTakeOffer() {
-        return GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation) &&
+        return GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation, selectedTradeCurrency) &&
                 GUIUtil.isChainHeightSyncedWithinToleranceOrShowPopup(walletsSetup) &&
                 GUIUtil.isBootstrappedOrShowPopup(p2PService);
     }
@@ -600,11 +600,11 @@ class OfferBookViewModel extends ActivatableViewModel {
         // This code duplicates code in the view at the button column. We need there the different results for
         // display in popups so we cannot replace that with the predicate. Any change need to be applied in both
         // places.
-        return offerBookListItem -> offerFilter.canTakeOffer(offerBookListItem.getOffer(), false).isValid();
+        return offerBookListItem -> offerFilterService.canTakeOffer(offerBookListItem.getOffer(), false).isValid();
     }
 
     boolean isOfferBanned(Offer offer) {
-        return offerFilter.isOfferBanned(offer);
+        return offerFilterService.isOfferBanned(offer);
     }
 
     private boolean isShowAllEntry(String id) {
@@ -647,11 +647,11 @@ class OfferBookViewModel extends ActivatableViewModel {
                 bsqFormatter.formatCoinWithCode(offer.getMakerFee());
     }
 
-    private static String getDirectionWithCodeDetailed(OfferPayload.Direction direction, String currencyCode) {
+    private static String getDirectionWithCodeDetailed(OfferDirection direction, String currencyCode) {
         if (CurrencyUtil.isFiatCurrency(currencyCode))
-            return (direction == OfferPayload.Direction.BUY) ? Res.get("shared.buyingBTCWith", currencyCode) : Res.get("shared.sellingBTCFor", currencyCode);
+            return (direction == OfferDirection.BUY) ? Res.get("shared.buyingBTCWith", currencyCode) : Res.get("shared.sellingBTCFor", currencyCode);
         else
-            return (direction == OfferPayload.Direction.SELL) ? Res.get("shared.buyingCurrency", currencyCode) : Res.get("shared.sellingCurrency", currencyCode);
+            return (direction == OfferDirection.SELL) ? Res.get("shared.buyingCurrency", currencyCode) : Res.get("shared.sellingCurrency", currencyCode);
     }
 
     public String formatDepositString(Coin deposit, long amount) {
@@ -667,7 +667,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         return new CryptoCurrency(GUIUtil.EDIT_FLAG, "");
     }
 
-    private PaymentMethod getShowAllEntryForPaymentMethod() {
+    PaymentMethod getShowAllEntryForPaymentMethod() {
         return PaymentMethod.getDummyPaymentMethod(GUIUtil.SHOW_ALL_FLAG);
     }
 }

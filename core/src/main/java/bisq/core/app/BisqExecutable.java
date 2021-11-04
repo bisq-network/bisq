@@ -23,6 +23,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoSetup;
 import bisq.core.dao.node.full.RpcService;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.offer.bsq_swap.OpenBsqSwapOfferService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.setup.CorePersistedDataHost;
 import bisq.core.setup.CoreSetup;
@@ -227,6 +228,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         }
 
         try {
+            injector.getInstance(OpenBsqSwapOfferService.class).shutDown();
             injector.getInstance(PriceFeedService.class).shutDown();
             injector.getInstance(ArbitratorManager.class).shutDown();
             injector.getInstance(TradeStatisticsManager.class).shutDown();

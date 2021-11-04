@@ -19,15 +19,17 @@ package bisq.core.api;
 
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
-import bisq.core.offer.CreateOfferService;
-import bisq.core.offer.MutableOfferPayloadFields;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
-import bisq.core.offer.OfferFilter;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferDirection;
+import bisq.core.offer.OfferFilterService;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.offer.bisq_v1.CreateOfferService;
+import bisq.core.offer.bisq_v1.MutableOfferPayloadFields;
+import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bsq_swap.OpenBsqSwapOfferService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.User;
@@ -57,8 +59,7 @@ import static bisq.common.util.MathUtils.roundDoubleToLong;
 import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
 import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static bisq.core.offer.Offer.State;
-import static bisq.core.offer.OfferPayload.Direction;
-import static bisq.core.offer.OfferPayload.Direction.BUY;
+import static bisq.core.offer.OfferDirection.BUY;
 import static bisq.core.offer.OpenOffer.State.AVAILABLE;
 import static bisq.core.offer.OpenOffer.State.DEACTIVATED;
 import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
@@ -85,8 +86,9 @@ class CoreOffersService {
     private final CoreWalletsService coreWalletsService;
     private final CreateOfferService createOfferService;
     private final OfferBookService offerBookService;
-    private final OfferFilter offerFilter;
+    private final OfferFilterService offerFilterService;
     private final OpenOfferManager openOfferManager;
+    private final OpenBsqSwapOfferService openBsqSwapOfferService;
     private final OfferUtil offerUtil;
     private final PriceFeedService priceFeedService;
     private final User user;
@@ -97,8 +99,9 @@ class CoreOffersService {
                              CoreWalletsService coreWalletsService,
                              CreateOfferService createOfferService,
                              OfferBookService offerBookService,
-                             OfferFilter offerFilter,
+                             OfferFilterService offerFilterService,
                              OpenOfferManager openOfferManager,
+                             OpenBsqSwapOfferService openBsqSwapOfferService,
                              OfferUtil offerUtil,
                              PriceFeedService priceFeedService,
                              User user) {
@@ -107,18 +110,29 @@ class CoreOffersService {
         this.coreWalletsService = coreWalletsService;
         this.createOfferService = createOfferService;
         this.offerBookService = offerBookService;
-        this.offerFilter = offerFilter;
+        this.offerFilterService = offerFilterService;
         this.openOfferManager = openOfferManager;
+        this.openBsqSwapOfferService = openBsqSwapOfferService;
         this.offerUtil = offerUtil;
         this.priceFeedService = priceFeedService;
         this.user = user;
+    }
+
+    Offer getBsqSwapOffer(String id) {
+        return offerBookService.getOffers().stream()
+                .filter(o -> o.getId().equals(id))
+                .filter(o -> !o.isMyOffer(keyRing))
+                .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
+                .filter(o -> o.isBsqSwapOffer())
+                .findAny().orElseThrow(() ->
+                        new IllegalStateException(format("offer with id '%s' not found", id)));
     }
 
     Offer getOffer(String id) {
         return offerBookService.getOffers().stream()
                 .filter(o -> o.getId().equals(id))
                 .filter(o -> !o.isMyOffer(keyRing))
-                .filter(o -> offerFilter.canTakeOffer(o, coreContext.isApiUser()).isValid())
+                .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
                 .findAny().orElseThrow(() ->
                         new IllegalStateException(format("offer with id '%s' not found", id)));
     }
@@ -131,11 +145,31 @@ class CoreOffersService {
                         new IllegalStateException(format("offer with id '%s' not found", id)));
     }
 
+    Offer getMyBsqSwapOffer(String id) {
+        return offerBookService.getOffers().stream()
+                .filter(o -> o.getId().equals(id))
+                .filter(o -> o.isMyOffer(keyRing))
+                .filter(o -> o.isBsqSwapOffer())
+                .findAny().orElseThrow(() ->
+                        new IllegalStateException(format("offer with id '%s' not found", id)));
+    }
+
+
+    List<Offer> getBsqSwapOffers(String direction) {
+        var offers = offerBookService.getOffers().stream()
+                .filter(o -> !o.isMyOffer(keyRing))
+                .filter(o -> o.getDirection().name().equalsIgnoreCase(direction))
+                .filter(o -> o.isBsqSwapOffer())
+                .sorted(priceComparator(direction))
+                .collect(Collectors.toList());
+        return offers;
+    }
+
     List<Offer> getOffers(String direction, String currencyCode) {
         return offerBookService.getOffers().stream()
                 .filter(o -> !o.isMyOffer(keyRing))
                 .filter(o -> offerMatchesDirectionAndCurrency(o, direction, currencyCode))
-                .filter(o -> offerFilter.canTakeOffer(o, coreContext.isApiUser()).isValid())
+                .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
                 .sorted(priceComparator(direction))
                 .collect(Collectors.toList());
     }
@@ -146,6 +180,24 @@ class CoreOffersService {
                 .filter(o -> offerMatchesDirectionAndCurrency(o.getOffer(), direction, currencyCode))
                 .sorted(openOfferPriceComparator(direction))
                 .collect(Collectors.toList());
+    }
+
+    List<Offer> getMyBsqSwapOffers(String direction) {
+        var offers = offerBookService.getOffers().stream()
+                .filter(o -> o.isMyOffer(keyRing))
+                .filter(o -> o.getDirection().name().equalsIgnoreCase(direction))
+                .filter(Offer::isBsqSwapOffer)
+                .sorted(priceComparator(direction))
+                .collect(Collectors.toList());
+        return offers;
+    }
+
+    OpenOffer getMyOpenBsqSwapOffer(String id) {
+        return openOfferManager.getOpenOfferById(id)
+                .filter(open -> open.getOffer().isMyOffer(keyRing))
+                .filter(open -> open.getOffer().isBsqSwapOffer())
+                .orElseThrow(() ->
+                        new IllegalStateException(format("openoffer with id '%s' not found", id)));
     }
 
     OpenOffer getMyOpenOffer(String id) {
@@ -161,7 +213,28 @@ class CoreOffersService {
                 .isPresent();
     }
 
-    // Create and place new offer.
+    void createAndPlaceBsqSwapOffer(String directionAsString,
+                                    long amountAsLong,
+                                    long minAmountAsLong,
+                                    String priceAsString,
+                                    Consumer<Offer> resultHandler) {
+        coreWalletsService.verifyWalletsAreAvailable();
+        coreWalletsService.verifyEncryptedWalletIsUnlocked();
+
+        String currencyCode = "BSQ";
+        String offerId = OfferUtil.getRandomOfferId();
+        OfferDirection direction = OfferDirection.valueOf(directionAsString.toUpperCase());
+        Coin amount = Coin.valueOf(amountAsLong);
+        Coin minAmount = Coin.valueOf(minAmountAsLong);
+        Price price = Price.valueOf(currencyCode, priceStringToLong(priceAsString, currencyCode));
+        openBsqSwapOfferService.requestNewOffer(offerId,
+                direction,
+                amount,
+                minAmount,
+                price,
+                offer -> placeBsqSwapOffer(offer, () -> resultHandler.accept(offer)));
+    }
+
     void createAndPlaceOffer(String currencyCode,
                              String directionAsString,
                              String priceAsString,
@@ -183,8 +256,8 @@ class CoreOffersService {
             throw new IllegalArgumentException(format("payment account with id %s not found", paymentAccountId));
 
         String upperCaseCurrencyCode = currencyCode.toUpperCase();
-        String offerId = createOfferService.getRandomOfferId();
-        Direction direction = Direction.valueOf(directionAsString.toUpperCase());
+        String offerId = OfferUtil.getRandomOfferId();
+        OfferDirection direction = OfferDirection.valueOf(directionAsString.toUpperCase());
         Price price = Price.valueOf(upperCaseCurrencyCode, priceStringToLong(priceAsString, upperCaseCurrencyCode));
         Coin amount = Coin.valueOf(amountAsLong);
         Coin minAmount = Coin.valueOf(minAmountAsLong);
@@ -256,7 +329,7 @@ class CoreOffersService {
                 editedMarketPriceMargin,
                 editType);
         Offer editedOffer = new Offer(editedPayload);
-        priceFeedService.setCurrencyCode(openOffer.getOffer().getOfferPayload().getCurrencyCode());
+        priceFeedService.setCurrencyCode(openOffer.getOffer().getCurrencyCode());
         editedOffer.setPriceFeedService(priceFeedService);
         editedOffer.setState(State.AVAILABLE);
         openOfferManager.editOpenOfferStart(openOffer,
@@ -275,6 +348,15 @@ class CoreOffersService {
                 () -> {
                 },
                 log::error);
+    }
+
+    private void placeBsqSwapOffer(Offer offer, Runnable resultHandler) {
+        openBsqSwapOfferService.placeBsqSwapOffer(offer,
+                resultHandler,
+                log::error);
+
+        if (offer.getErrorMessage() != null)
+            throw new IllegalStateException(offer.getErrorMessage());
     }
 
     private void placeOffer(Offer offer,
@@ -302,7 +384,7 @@ class CoreOffersService {
         // code fields.  Note: triggerPrice isDeactivated fields are in OpenOffer, not
         // in OfferPayload.
         Offer offer = openOffer.getOffer();
-        String currencyCode = offer.getOfferPayload().getCurrencyCode();
+        String currencyCode = offer.getCurrencyCode();
         boolean isEditingPrice = editType.equals(FIXED_PRICE_ONLY) || editType.equals(FIXED_PRICE_AND_ACTIVATION_STATE);
         Price editedPrice;
         if (isEditingPrice) {
@@ -320,15 +402,15 @@ class CoreOffersService {
                 Objects.requireNonNull(editedPrice).getValue(),
                 isUsingMktPriceMargin ? exactMultiply(editedMarketPriceMargin, 0.01) : 0.00,
                 isUsingMktPriceMargin,
-                offer.getOfferPayload().getBaseCurrencyCode(),
-                offer.getOfferPayload().getCounterCurrencyCode(),
+                offer.getBaseCurrencyCode(),
+                offer.getCounterCurrencyCode(),
                 offer.getPaymentMethod().getId(),
                 offer.getMakerPaymentAccountId(),
-                offer.getOfferPayload().getCountryCode(),
-                offer.getOfferPayload().getAcceptedCountryCodes(),
-                offer.getOfferPayload().getBankId(),
-                offer.getOfferPayload().getAcceptedBankIds(),
-                offer.getOfferPayload().getExtraDataMap());
+                offer.getCountryCode(),
+                offer.getAcceptedCountryCodes(),
+                offer.getBankId(),
+                offer.getAcceptedBankIds(),
+                offer.getExtraDataMap());
         log.info("Merging OfferPayload with {}", mutableOfferPayloadFields);
         return offerUtil.getMergedOfferPayload(openOffer, mutableOfferPayloadFields);
     }
@@ -336,7 +418,7 @@ class CoreOffersService {
     private void verifyPaymentAccountIsValidForNewOffer(Offer offer, PaymentAccount paymentAccount) {
         if (!isPaymentAccountValidForOffer(offer, paymentAccount)) {
             String error = format("cannot create %s offer with payment account %s",
-                    offer.getOfferPayload().getCounterCurrencyCode(),
+                    offer.getCounterCurrencyCode(),
                     paymentAccount.getId());
             throw new IllegalStateException(error);
         }
@@ -346,7 +428,7 @@ class CoreOffersService {
                                                      String direction,
                                                      String currencyCode) {
         var offerOfWantedDirection = offer.getDirection().name().equalsIgnoreCase(direction);
-        var offerInWantedCurrency = offer.getOfferPayload().getCounterCurrencyCode()
+        var offerInWantedCurrency = offer.getCounterCurrencyCode()
                 .equalsIgnoreCase(currencyCode);
         return offerOfWantedDirection && offerInWantedCurrency;
     }

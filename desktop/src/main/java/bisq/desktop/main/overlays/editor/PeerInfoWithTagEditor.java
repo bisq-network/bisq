@@ -25,7 +25,7 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.TradeModel;
 import bisq.core.user.Preferences;
 
 import bisq.common.UserThread;
@@ -87,7 +87,7 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     private ChangeListener<Boolean> focusListener;
     private final PrivateNotificationManager privateNotificationManager;
     @Nullable
-    private final Trade trade;
+    private final TradeModel tradeModel;
     private final Offer offer;
     private final Preferences preferences;
     private EventHandler<KeyEvent> keyEventEventHandler;
@@ -102,12 +102,12 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
     private String signAgeInfo;
 
     public PeerInfoWithTagEditor(PrivateNotificationManager privateNotificationManager,
-                                 @Nullable Trade trade,
+                                 @Nullable TradeModel tradeModel,
                                  Offer offer,
                                  Preferences preferences,
                                  boolean useDevPrivilegeKeys) {
         this.privateNotificationManager = privateNotificationManager;
-        this.trade = trade;
+        this.tradeModel = tradeModel;
         this.offer = offer;
         this.preferences = preferences;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
@@ -250,8 +250,8 @@ public class PeerInfoWithTagEditor extends Overlay<PeerInfoWithTagEditor> {
                 doClose();
                 UserThread.runAfter(() -> {
                     PubKeyRing peersPubKeyRing = null;
-                    if (trade != null) {
-                        peersPubKeyRing = trade.getProcessModel().getTradingPeer().getPubKeyRing();
+                    if (tradeModel != null) {
+                        peersPubKeyRing = tradeModel.getTradeProtocolModel().getTradePeer().getPubKeyRing();
                     } else if (offer != null) {
                         peersPubKeyRing = offer.getPubKeyRing();
                     }

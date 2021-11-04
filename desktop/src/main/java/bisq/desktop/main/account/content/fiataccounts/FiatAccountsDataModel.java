@@ -88,7 +88,7 @@ class FiatAccountsDataModel extends ActivatableDataModel {
     private void fillAndSortPaymentAccounts() {
         if (user.getPaymentAccounts() != null) {
             List<PaymentAccount> list = user.getPaymentAccounts().stream()
-                    .filter(paymentAccount -> !paymentAccount.getPaymentMethod().isAsset())
+                    .filter(paymentAccount -> paymentAccount.getPaymentMethod().isFiat())
                     .collect(Collectors.toList());
             paymentAccounts.setAll(list);
             paymentAccounts.sort(Comparator.comparing(PaymentAccount::getAccountName));
@@ -134,13 +134,17 @@ class FiatAccountsDataModel extends ActivatableDataModel {
     }
 
     public boolean onDeleteAccount(PaymentAccount paymentAccount) {
-        boolean isPaymentAccountUsed = openOfferManager.getObservableList().stream()
-                .anyMatch(o -> o.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()));
-        isPaymentAccountUsed = isPaymentAccountUsed || tradeManager.getObservableList().stream()
-                .anyMatch(t -> t.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()) ||
-                        paymentAccount.getId().equals(t.getTakerPaymentAccountId()));
-        if (!isPaymentAccountUsed)
+        boolean usedInOpenOffers = openOfferManager.getObservableList().stream()
+                .anyMatch(openOffer -> openOffer.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()));
+
+        boolean usedInTrades = tradeManager.getObservableList().stream()
+                .anyMatch(trade -> trade.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()) ||
+                        paymentAccount.getId().equals(trade.getTakerPaymentAccountId()));
+        boolean isPaymentAccountUsed = usedInOpenOffers || usedInTrades;
+
+        if (!isPaymentAccountUsed) {
             user.removePaymentAccount(paymentAccount);
+        }
         return isPaymentAccountUsed;
     }
 

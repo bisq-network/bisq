@@ -17,6 +17,8 @@
 
 package bisq.desktop.util.validation;
 
+import bisq.core.util.validation.MonetaryValidator;
+
 import javax.inject.Inject;
 
 public class FiatVolumeValidator extends MonetaryValidator {

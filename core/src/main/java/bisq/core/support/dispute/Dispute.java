@@ -21,7 +21,7 @@ import bisq.core.locale.Res;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.SupportType;
 import bisq.core.support.messages.ChatMessage;
-import bisq.core.trade.Contract;
+import bisq.core.trade.model.bisq_v1.Contract;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;

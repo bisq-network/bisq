@@ -63,12 +63,11 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
@@ -891,8 +890,7 @@ public class TradeWalletService {
             input.setScriptSig(inputScript);
         } else {
             input.setScriptSig(ScriptBuilder.createEmpty());
-            TransactionWitness witness = TransactionWitness.redeemP2WSH(redeemScript, sellerTxSig, buyerTxSig);
-            input.setWitness(witness);
+            input.setWitness(TransactionWitness.redeemP2WSH(redeemScript, sellerTxSig, buyerTxSig));
         }
         WalletService.printTx("payoutTx", payoutTx);
         WalletService.verifyTransaction(payoutTx);
@@ -971,8 +969,7 @@ public class TradeWalletService {
             input.setScriptSig(inputScript);
         } else {
             input.setScriptSig(ScriptBuilder.createEmpty());
-            TransactionWitness witness = TransactionWitness.redeemP2WSH(redeemScript, sellerTxSig, buyerTxSig);
-            input.setWitness(witness);
+            input.setWitness(TransactionWitness.redeemP2WSH(redeemScript, sellerTxSig, buyerTxSig));
         }
         WalletService.printTx("mediated payoutTx", payoutTx);
         WalletService.verifyTransaction(payoutTx);
@@ -1059,8 +1056,7 @@ public class TradeWalletService {
             input.setScriptSig(inputScript);
         } else {
             input.setScriptSig(ScriptBuilder.createEmpty());
-            TransactionWitness witness = TransactionWitness.redeemP2WSH(redeemScript, arbitratorTxSig, tradersTxSig);
-            input.setWitness(witness);
+            input.setWitness(TransactionWitness.redeemP2WSH(redeemScript, arbitratorTxSig, tradersTxSig));
         }
         WalletService.printTx("disputed payoutTx", payoutTx);
         WalletService.verifyTransaction(payoutTx);
@@ -1077,14 +1073,14 @@ public class TradeWalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Tuple2<String, String> emergencyBuildPayoutTxFrom2of2MultiSig(String depositTxHex,
-                                            Coin buyerPayoutAmount,
-                                            Coin sellerPayoutAmount,
-                                            Coin txFee,
-                                            String buyerAddressString,
-                                            String sellerAddressString,
-                                            String buyerPubKeyAsHex,
-                                            String sellerPubKeyAsHex,
-                                            boolean hashedMultiSigOutputIsLegacy) {
+                                                                         Coin buyerPayoutAmount,
+                                                                         Coin sellerPayoutAmount,
+                                                                         Coin txFee,
+                                                                         String buyerAddressString,
+                                                                         String sellerAddressString,
+                                                                         String buyerPubKeyAsHex,
+                                                                         String sellerPubKeyAsHex,
+                                                                         boolean hashedMultiSigOutputIsLegacy) {
         byte[] buyerPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(buyerPubKeyAsHex)).getPubKey();
         byte[] sellerPubKey = ECKey.fromPublicOnly(Utils.HEX.decode(sellerPubKeyAsHex)).getPubKey();
         Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
@@ -1105,7 +1101,10 @@ public class TradeWalletService {
         return new Tuple2<>(redeemScriptHex, unsignedTxHex);
     }
 
-    public String emergencyGenerateSignature(String rawTxHex, String redeemScriptHex, Coin inputValue, String myPrivKeyAsHex)
+    public String emergencyGenerateSignature(String rawTxHex,
+                                             String redeemScriptHex,
+                                             Coin inputValue,
+                                             String myPrivKeyAsHex)
             throws IllegalArgumentException {
         boolean hashedMultiSigOutputIsLegacy = true;
         if (rawTxHex.startsWith("010000000001"))
@@ -1129,10 +1128,10 @@ public class TradeWalletService {
     }
 
     public Tuple2<String, String> emergencyApplySignatureToPayoutTxFrom2of2MultiSig(String unsignedTxHex,
-                                        String redeemScriptHex,
-                                        String buyerSignatureAsHex,
-                                        String sellerSignatureAsHex,
-                                        boolean hashedMultiSigOutputIsLegacy)
+                                                                                    String redeemScriptHex,
+                                                                                    String buyerSignatureAsHex,
+                                                                                    String sellerSignatureAsHex,
+                                                                                    boolean hashedMultiSigOutputIsLegacy)
             throws AddressFormatException, SignatureDecodeException {
         Transaction payoutTx = new Transaction(params, Utils.HEX.decode(unsignedTxHex));
         TransactionSignature buyerTxSig = TransactionSignature.decodeFromBitcoin(Utils.HEX.decode(buyerSignatureAsHex), true, true);
@@ -1146,8 +1145,7 @@ public class TradeWalletService {
             input.setScriptSig(inputScript);
         } else {
             input.setScriptSig(ScriptBuilder.createEmpty());
-            TransactionWitness witness = TransactionWitness.redeemP2WSH(redeemScript, sellerTxSig, buyerTxSig);
-            input.setWitness(witness);
+            input.setWitness(TransactionWitness.redeemP2WSH(redeemScript, sellerTxSig, buyerTxSig));
         }
         String txId = payoutTx.getTxId().toString();
         String signedTxHex = Utils.HEX.encode(payoutTx.bitcoinSerialize(!hashedMultiSigOutputIsLegacy));
@@ -1163,6 +1161,96 @@ public class TradeWalletService {
         broadcastTx(payoutTx, callback, 20);
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BsqSwap tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Transaction sellerBuildBsqSwapTx(List<RawTransactionInput> buyersBsqInputs,
+                                            List<RawTransactionInput> sellersBtcInputs,
+                                            Coin sellersBsqPayoutAmount,
+                                            String sellersBsqPayoutAddress,
+                                            @Nullable Coin buyersBsqChangeAmount,
+                                            @Nullable String buyersBsqChangeAddress,
+                                            Coin buyersBtcPayoutAmount,
+                                            String buyersBtcPayoutAddress,
+                                            @Nullable Coin sellersBtcChangeAmount,
+                                            @Nullable String sellersBtcChangeAddress) throws AddressFormatException {
+
+        Transaction transaction = new Transaction(params);
+        List<TransactionInput> sellersBtcTransactionInput = sellersBtcInputs.stream()
+                .map(rawInput -> getTransactionInput(transaction, new byte[]{}, rawInput))
+                .collect(Collectors.toList());
+        return buildBsqSwapTx(buyersBsqInputs,
+                sellersBtcTransactionInput,
+                sellersBsqPayoutAmount,
+                sellersBsqPayoutAddress,
+                buyersBsqChangeAmount,
+                buyersBsqChangeAddress,
+                buyersBtcPayoutAmount,
+                buyersBtcPayoutAddress,
+                sellersBtcChangeAmount,
+                sellersBtcChangeAddress,
+                transaction);
+    }
+
+    public Transaction buyerBuildBsqSwapTx(List<RawTransactionInput> buyersBsqInputs,
+                                           List<TransactionInput> sellersBtcInputs,
+                                           Coin sellersBsqPayoutAmount,
+                                           String sellersBsqPayoutAddress,
+                                           @Nullable Coin buyersBsqChangeAmount,
+                                           @Nullable String buyersBsqChangeAddress,
+                                           Coin buyersBtcPayoutAmount,
+                                           String buyersBtcPayoutAddress,
+                                           @Nullable Coin sellersBtcChangeAmount,
+                                           @Nullable String sellersBtcChangeAddress) throws AddressFormatException {
+        Transaction transaction = new Transaction(params);
+        return buildBsqSwapTx(buyersBsqInputs,
+                sellersBtcInputs,
+                sellersBsqPayoutAmount,
+                sellersBsqPayoutAddress,
+                buyersBsqChangeAmount,
+                buyersBsqChangeAddress,
+                buyersBtcPayoutAmount,
+                buyersBtcPayoutAddress,
+                sellersBtcChangeAmount,
+                sellersBtcChangeAddress,
+                transaction);
+    }
+
+    private Transaction buildBsqSwapTx(List<RawTransactionInput> buyersBsqInputs,
+                                       List<TransactionInput> sellersBtcInputs,
+                                       Coin sellersBsqPayoutAmount,
+                                       String sellersBsqPayoutAddress,
+                                       @Nullable Coin buyersBsqChangeAmount,
+                                       @Nullable String buyersBsqChangeAddress,
+                                       Coin buyersBtcPayoutAmount,
+                                       String buyersBtcPayoutAddress,
+                                       @Nullable Coin sellersBtcChangeAmount,
+                                       @Nullable String sellersBtcChangeAddress,
+                                       Transaction transaction) throws AddressFormatException {
+
+        buyersBsqInputs.forEach(rawInput -> transaction.addInput(getTransactionInput(transaction, new byte[]{}, rawInput)));
+        sellersBtcInputs.forEach(transaction::addInput);
+
+        transaction.addOutput(sellersBsqPayoutAmount, Address.fromString(params, sellersBsqPayoutAddress));
+
+        if (buyersBsqChangeAmount != null && buyersBsqChangeAmount.isPositive())
+            transaction.addOutput(buyersBsqChangeAmount, Address.fromString(params, Objects.requireNonNull(buyersBsqChangeAddress)));
+
+        transaction.addOutput(buyersBtcPayoutAmount, Address.fromString(params, buyersBtcPayoutAddress));
+
+        if (sellersBtcChangeAmount != null && sellersBtcChangeAmount.isPositive())
+            transaction.addOutput(sellersBtcChangeAmount, Address.fromString(params, Objects.requireNonNull(sellersBtcChangeAddress)));
+
+        return transaction;
+    }
+
+    public void signBsqSwapTransaction(Transaction transaction, List<TransactionInput> myInputs)
+            throws SigningException {
+        for (TransactionInput input : myInputs) {
+            signInput(transaction, input, input.getIndex());
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Broadcast tx
@@ -1207,7 +1295,12 @@ public class TradeWalletService {
     // Private methods
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private RawTransactionInput getRawInputFromTransactionInput(@NotNull TransactionInput input) {
+    // This method might be replace by RawTransactionInput constructor taking the TransactionInput as param.
+    // As we used segwit=false for the bitcoinSerialize method here we still keep it to not risk to break anything,
+    // though it very likely should be fine to replace it with the RawTransactionInput constructor call.
+    @Deprecated
+    private RawTransactionInput getRawInputFromTransactionInput(TransactionInput input) {
+        checkNotNull(input, "input must not be null");
         checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
         checkNotNull(input.getConnectedOutput().getParentTransaction(),
                 "input.getConnectedOutput().getParentTransaction() must not be null");
@@ -1222,10 +1315,13 @@ public class TradeWalletService {
                 input.getValue().value);
     }
 
-    private TransactionInput getTransactionInput(Transaction depositTx,
+    private TransactionInput getTransactionInput(Transaction parentTransaction,
                                                  byte[] scriptProgram,
                                                  RawTransactionInput rawTransactionInput) {
-        return new TransactionInput(params, depositTx, scriptProgram, getConnectedOutPoint(rawTransactionInput),
+        return new TransactionInput(params,
+                parentTransaction,
+                scriptProgram,
+                getConnectedOutPoint(rawTransactionInput),
                 Coin.valueOf(rawTransactionInput.value));
     }
 
@@ -1238,7 +1334,6 @@ public class TradeWalletService {
         return ScriptPattern.isP2WH(
                 checkNotNull(getConnectedOutPoint(rawTransactionInput).getConnectedOutput()).getScriptPubKey());
     }
-
 
     // TODO: Once we have removed legacy arbitrator from dispute domain we can remove that method as well.
     // Atm it is still used by traderSignAndFinalizeDisputedPayoutTx which is used by ArbitrationManager.
@@ -1299,7 +1394,6 @@ public class TradeWalletService {
     private void signInput(Transaction transaction, TransactionInput input, int inputIndex) throws SigningException {
         checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
         Script scriptPubKey = input.getConnectedOutput().getScriptPubKey();
-        checkNotNull(wallet);
         ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
         checkNotNull(sigKey, "signInput: sigKey must not be null. input.getOutpoint()=" +
                 input.getOutpoint().toString());

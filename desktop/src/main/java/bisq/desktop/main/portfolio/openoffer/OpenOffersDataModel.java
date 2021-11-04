@@ -20,10 +20,11 @@ package bisq.desktop.main.portfolio.openoffer;
 import bisq.desktop.common.model.ActivatableDataModel;
 
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.offer.TriggerPriceService;
+import bisq.core.offer.bisq_v1.TriggerPriceService;
+import bisq.core.offer.bsq_swap.OpenBsqSwapOfferService;
 import bisq.core.provider.price.PriceFeedService;
 
 import bisq.common.handlers.ErrorMessageHandler;
@@ -41,6 +42,7 @@ import java.util.stream.Collectors;
 
 class OpenOffersDataModel extends ActivatableDataModel {
     private final OpenOfferManager openOfferManager;
+    private final OpenBsqSwapOfferService openBsqSwapOfferService;
     private final PriceFeedService priceFeedService;
 
     private final ObservableList<OpenOfferListItem> list = FXCollections.observableArrayList();
@@ -48,8 +50,11 @@ class OpenOffersDataModel extends ActivatableDataModel {
     private final ChangeListener<Number> currenciesUpdateFlagPropertyListener;
 
     @Inject
-    public OpenOffersDataModel(OpenOfferManager openOfferManager, PriceFeedService priceFeedService) {
+    public OpenOffersDataModel(OpenOfferManager openOfferManager,
+                               OpenBsqSwapOfferService openBsqSwapOfferService,
+                               PriceFeedService priceFeedService) {
         this.openOfferManager = openOfferManager;
+        this.openBsqSwapOfferService = openBsqSwapOfferService;
         this.priceFeedService = priceFeedService;
 
         tradesListChangeListener = change -> applyList();
@@ -69,11 +74,19 @@ class OpenOffersDataModel extends ActivatableDataModel {
         priceFeedService.updateCounterProperty().removeListener(currenciesUpdateFlagPropertyListener);
     }
 
-    void onActivateOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        openOfferManager.activateOpenOffer(openOffer, resultHandler, errorMessageHandler);
+    void onActivateOpenOffer(OpenOffer openOffer,
+                             ResultHandler resultHandler,
+                             ErrorMessageHandler errorMessageHandler) {
+        if (openOffer.getOffer().isBsqSwapOffer()) {
+            openBsqSwapOfferService.activateOpenOffer(openOffer, resultHandler, errorMessageHandler);
+        } else {
+            openOfferManager.activateOpenOffer(openOffer, resultHandler, errorMessageHandler);
+        }
     }
 
-    void onDeactivateOpenOffer(OpenOffer openOffer, ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+    void onDeactivateOpenOffer(OpenOffer openOffer,
+                               ResultHandler resultHandler,
+                               ErrorMessageHandler errorMessageHandler) {
         openOfferManager.deactivateOpenOffer(openOffer, resultHandler, errorMessageHandler);
     }
 
@@ -86,7 +99,7 @@ class OpenOffersDataModel extends ActivatableDataModel {
         return list;
     }
 
-    public OfferPayload.Direction getDirection(Offer offer) {
+    public OfferDirection getDirection(Offer offer) {
         return openOfferManager.isMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
     }
 
@@ -100,6 +113,7 @@ class OpenOffersDataModel extends ActivatableDataModel {
     }
 
     boolean wasTriggered(OpenOffer openOffer) {
-        return TriggerPriceService.wasTriggered(priceFeedService.getMarketPrice(openOffer.getOffer().getCurrencyCode()), openOffer);
+        return TriggerPriceService.wasTriggered(priceFeedService.getMarketPrice(openOffer.getOffer().getCurrencyCode()),
+                openOffer);
     }
 }

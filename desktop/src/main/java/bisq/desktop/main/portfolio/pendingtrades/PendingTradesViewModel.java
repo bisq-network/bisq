@@ -32,10 +32,10 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.mempool.MempoolService;
-import bisq.core.trade.Contract;
-import bisq.core.trade.Trade;
-import bisq.core.trade.TradeUtil;
-import bisq.core.trade.closed.ClosedTradableManager;
+import bisq.core.trade.ClosedTradableManager;
+import bisq.core.trade.bisq_v1.TradeUtil;
+import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.VolumeUtil;
@@ -304,21 +304,21 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     // summary
     public String getTradeVolume() {
         return dataModel.getTrade() != null
-                ? btcFormatter.formatCoinWithCode(dataModel.getTrade().getTradeAmount())
+                ? btcFormatter.formatCoinWithCode(dataModel.getTrade().getAmount())
                 : "";
     }
 
     public String getFiatVolume() {
         return dataModel.getTrade() != null
-                ? VolumeUtil.formatVolumeWithCode(dataModel.getTrade().getTradeVolume())
+                ? VolumeUtil.formatVolumeWithCode(dataModel.getTrade().getVolume())
                 : "";
     }
 
     public String getTxFee() {
-        if (trade != null && trade.getTradeAmount() != null) {
+        if (trade != null && trade.getAmount() != null) {
             Coin txFee = dataModel.getTxFee();
             String percentage = GUIUtil.getPercentageOfTradeAmount(txFee,
-                    trade.getTradeAmount(),
+                    trade.getAmount(),
                     Coin.ZERO);
             return btcFormatter.formatCoinWithCode(txFee) + percentage;
         } else {
@@ -327,7 +327,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public String getTradeFee() {
-        if (trade != null && dataModel.getOffer() != null && trade.getTradeAmount() != null) {
+        if (trade != null && dataModel.getOffer() != null && trade.getAmount() != null) {
             checkNotNull(dataModel.getTrade());
             if (dataModel.isMaker() && dataModel.getOffer().isCurrencyForMakerFeeBtc() ||
                     !dataModel.isMaker() && dataModel.getTrade().isCurrencyForTakerFeeBtc()) {
@@ -337,7 +337,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                         FeeService.getMinMakerFee(true) :
                         FeeService.getMinTakerFee(true);
 
-                String percentage = GUIUtil.getPercentageOfTradeAmount(tradeFeeInBTC, trade.getTradeAmount(),
+                String percentage = GUIUtil.getPercentageOfTradeAmount(tradeFeeInBTC, trade.getAmount(),
                         minTradeFee);
                 return btcFormatter.formatCoinWithCode(tradeFeeInBTC) + percentage;
             } else {
@@ -351,7 +351,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     public String getSecurityDeposit() {
         Offer offer = dataModel.getOffer();
         Trade trade = dataModel.getTrade();
-        if (offer != null && trade != null && trade.getTradeAmount() != null) {
+        if (offer != null && trade != null && trade.getAmount() != null) {
             Coin securityDeposit = dataModel.isBuyer() ?
                     offer.getBuyerSecurityDeposit()
                     : offer.getSellerSecurityDeposit();
@@ -361,7 +361,7 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
                     Restrictions.getMinSellerSecurityDepositAsCoin();
 
             String percentage = GUIUtil.getPercentageOfTradeAmount(securityDeposit,
-                    trade.getTradeAmount(),
+                    trade.getAmount(),
                     minSecurityDeposit);
             return btcFormatter.formatCoinWithCode(securityDeposit) + percentage;
         } else {
@@ -433,8 +433,8 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
 
             // #################### Phase DEPOSIT_PAID
-                // DEPOSIT_TX_PUBLISHED_MSG
-                // seller perspective
+            // DEPOSIT_TX_PUBLISHED_MSG
+            // seller perspective
             case SELLER_PUBLISHED_DEPOSIT_TX:
                 // buyer perspective
             case BUYER_RECEIVED_DEPOSIT_TX_PUBLISHED_MSG:

@@ -19,7 +19,6 @@ package bisq.desktop.main.portfolio.openoffer;
 
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
-import bisq.desktop.main.PriceUtil;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
@@ -29,6 +28,7 @@ import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.PriceUtil;
 import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
@@ -160,8 +160,21 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         return DisplayUtils.formatDateTime(item.getOffer().getDate());
     }
 
+    boolean isNotPublished(OpenOfferListItem item) {
+        return isDeactivated(item) || isBsqSwapOfferHasMissingFunds(item);
+    }
+
     boolean isDeactivated(OpenOfferListItem item) {
-        return item != null && item.getOpenOffer() != null && item.getOpenOffer().isDeactivated();
+        return item != null &&
+                item.getOpenOffer() != null &&
+                item.getOpenOffer().isDeactivated();
+    }
+
+    boolean isBsqSwapOfferHasMissingFunds(OpenOfferListItem item) {
+        return item != null &&
+                item.getOpenOffer() != null &&
+                item.getOpenOffer().getOffer().isBsqSwapOffer() &&
+                item.getOpenOffer().isBsqSwapOfferHasMissingFunds();
     }
 
     boolean isBootstrappedOrShowPopup() {

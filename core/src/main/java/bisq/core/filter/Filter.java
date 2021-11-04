@@ -39,13 +39,15 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import lombok.Value;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
 @Slf4j
-@Value
+@Getter
+@EqualsAndHashCode
 public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     public static final long TTL = TimeUnit.DAYS.toMillis(180);
 
@@ -101,6 +103,12 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     // added at v1.6.0
     private final boolean disableMempoolValidation;
 
+    // added at BsqSwap release
+    private final boolean disablePowMessage;
+    // Number of leading zeros for pow for BSQ swap offers. Difficulty of 8 requires 0.856 ms in average, 15 about 100 ms.
+    // See ProofOfWorkTest for more info.
+    private final int powDifficulty;
+
     // After we have created the signature from the filter data we clone it and apply the signature
     static Filter cloneWithSig(Filter filter, String signatureAsBase64) {
         return new Filter(filter.getBannedOfferIds(),
@@ -130,7 +138,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 filter.getBannedAutoConfExplorers(),
                 filter.getNodeAddressesBannedFromNetwork(),
                 filter.isDisableMempoolValidation(),
-                filter.isDisableApi());
+                filter.isDisableApi(),
+                filter.isDisablePowMessage(),
+                filter.getPowDifficulty());
     }
 
     // Used for signature verification as we created the sig without the signatureAsBase64 field we set it to null again
@@ -162,7 +172,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 filter.getBannedAutoConfExplorers(),
                 filter.getNodeAddressesBannedFromNetwork(),
                 filter.isDisableMempoolValidation(),
-                filter.isDisableApi());
+                filter.isDisableApi(),
+                filter.isDisablePowMessage(),
+                filter.getPowDifficulty());
     }
 
     public Filter(List<String> bannedOfferIds,
@@ -189,7 +201,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   List<String> bannedAutoConfExplorers,
                   Set<String> nodeAddressesBannedFromNetwork,
                   boolean disableMempoolValidation,
-                  boolean disableApi) {
+                  boolean disableApi,
+                  boolean disablePowMessage,
+                  int powDifficulty) {
         this(bannedOfferIds,
                 nodeAddressesBannedFromTrading,
                 bannedPaymentAccounts,
@@ -217,7 +231,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 bannedAutoConfExplorers,
                 nodeAddressesBannedFromNetwork,
                 disableMempoolValidation,
-                disableApi);
+                disableApi,
+                disablePowMessage,
+                powDifficulty);
     }
 
 
@@ -253,7 +269,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   List<String> bannedAutoConfExplorers,
                   Set<String> nodeAddressesBannedFromNetwork,
                   boolean disableMempoolValidation,
-                  boolean disableApi) {
+                  boolean disableApi,
+                  boolean disablePowMessage,
+                  int powDifficulty) {
         this.bannedOfferIds = bannedOfferIds;
         this.nodeAddressesBannedFromTrading = nodeAddressesBannedFromTrading;
         this.bannedPaymentAccounts = bannedPaymentAccounts;
@@ -282,6 +300,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         this.nodeAddressesBannedFromNetwork = nodeAddressesBannedFromNetwork;
         this.disableMempoolValidation = disableMempoolValidation;
         this.disableApi = disableApi;
+        this.disablePowMessage = disablePowMessage;
+        this.powDifficulty = powDifficulty;
 
         // ownerPubKeyBytes can be null when called from tests
         if (ownerPubKeyBytes != null) {
@@ -322,7 +342,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 .addAllBannedAutoConfExplorers(bannedAutoConfExplorers)
                 .addAllNodeAddressesBannedFromNetwork(nodeAddressesBannedFromNetwork)
                 .setDisableMempoolValidation(disableMempoolValidation)
-                .setDisableApi(disableApi);
+                .setDisableApi(disableApi)
+                .setDisablePowMessage(disablePowMessage)
+                .setPowDifficulty(powDifficulty);
 
         Optional.ofNullable(signatureAsBase64).ifPresent(builder::setSignatureAsBase64);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
@@ -363,7 +385,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 ProtoUtil.protocolStringListToList(proto.getBannedAutoConfExplorersList()),
                 ProtoUtil.protocolStringListToSet(proto.getNodeAddressesBannedFromNetworkList()),
                 proto.getDisableMempoolValidation(),
-                proto.getDisableApi()
+                proto.getDisableApi(),
+                proto.getDisablePowMessage(),
+                proto.getPowDifficulty()
         );
     }
 
@@ -409,6 +433,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 ",\n     nodeAddressesBannedFromNetwork=" + nodeAddressesBannedFromNetwork +
                 ",\n     disableMempoolValidation=" + disableMempoolValidation +
                 ",\n     disableApi=" + disableApi +
+                ",\n     disablePowMessage=" + disablePowMessage +
+                ",\n     powDifficulty=" + powDifficulty +
                 "\n}";
     }
 }

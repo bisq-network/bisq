@@ -33,9 +33,9 @@ import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.support.dispute.agent.DisputeAgentLookupMap;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
-import bisq.core.trade.Contract;
-import bisq.core.trade.Trade;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.VolumeUtil;
@@ -166,12 +166,12 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
         }
 
         addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("shared.btcAmount") + btcDirectionInfo,
-                formatter.formatCoinWithCode(trade.getTradeAmount()));
+                formatter.formatCoinWithCode(trade.getAmount()));
         addConfirmationLabelTextField(gridPane, ++rowIndex,
                 VolumeUtil.formatVolumeLabel(offer.getCurrencyCode()) + fiatDirectionInfo,
-                VolumeUtil.formatVolumeWithCode(trade.getTradeVolume()));
+                VolumeUtil.formatVolumeWithCode(trade.getVolume()));
         addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("shared.tradePrice"),
-                FormattingUtils.formatPrice(trade.getTradePrice()));
+                FormattingUtils.formatPrice(trade.getPrice()));
         String paymentMethodText = Res.get(offer.getPaymentMethod().getId());
         addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("shared.paymentMethod"), paymentMethodText);
 
@@ -228,7 +228,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
 
         String txFee = Res.get("shared.makerTxFee", formatter.formatCoinWithCode(offer.getTxFee())) +
                 " / " +
-                Res.get("shared.takerTxFee", formatter.formatCoinWithCode(trade.getTxFee().multiply(3)));
+                Res.get("shared.takerTxFee", formatter.formatCoinWithCode(trade.getTradeTxFee().multiply(3)));
         addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.txFee"), txFee);
 
         NodeAddress arbitratorNodeAddress = trade.getArbitratorNodeAddress();
@@ -324,7 +324,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             textArea.scrollTopProperty().addListener(changeListener);
             textArea.setScrollTop(30);
 
-            addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradeState"), trade.getState().getPhase().name());
+            addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("tradeDetailsWindow.tradeState"), trade.getTradePhase().name());
         }
 
         Tuple3<Button, Button, HBox> tuple = add2ButtonsWithBox(gridPane, ++rowIndex,

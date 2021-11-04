@@ -23,7 +23,7 @@ import bisq.core.filter.FilterManager;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.ChargeBackRisk;
@@ -33,9 +33,9 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.arbitration.TraderDataItem;
-import bisq.core.trade.Contract;
-import bisq.core.trade.Trade;
-import bisq.core.trade.protocol.TradingPeer;
+import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.user.User;
 
 import bisq.network.p2p.BootstrapListener;
@@ -308,7 +308,7 @@ public class AccountAgeWitnessService {
     }
 
     private Optional<AccountAgeWitness> findTradePeerWitness(Trade trade) {
-        TradingPeer tradingPeer = trade.getProcessModel().getTradingPeer();
+        TradingPeer tradingPeer = trade.getProcessModel().getTradePeer();
         return (tradingPeer == null ||
                 tradingPeer.getPaymentAccountPayload() == null ||
                 tradingPeer.getPubKeyRing() == null) ?
@@ -421,11 +421,11 @@ public class AccountAgeWitnessService {
                                String currencyCode,
                                AccountAgeWitness accountAgeWitness,
                                AccountAge accountAgeCategory,
-                               OfferPayload.Direction direction,
+                               OfferDirection direction,
                                PaymentMethod paymentMethod) {
         if (CurrencyUtil.isCryptoCurrency(currencyCode) ||
                 !PaymentMethod.hasChargebackRisk(paymentMethod, currencyCode) ||
-                direction == OfferPayload.Direction.SELL) {
+                direction == OfferDirection.SELL) {
             return maxTradeLimit.value;
         }
 
@@ -500,7 +500,7 @@ public class AccountAgeWitnessService {
         return getAccountAge(getMyWitness(paymentAccountPayload), new Date());
     }
 
-    public long getMyTradeLimit(PaymentAccount paymentAccount, String currencyCode, OfferPayload.Direction direction) {
+    public long getMyTradeLimit(PaymentAccount paymentAccount, String currencyCode, OfferDirection direction) {
         if (paymentAccount == null)
             return 0;
 
@@ -564,7 +564,7 @@ public class AccountAgeWitnessService {
             return false;
 
         // Check if the peers trade limit is not less than the trade amount
-        if (!verifyPeersTradeLimit(trade.getOffer(), trade.getTradeAmount(), peersWitness, peersCurrentDate,
+        if (!verifyPeersTradeLimit(trade.getOffer(), trade.getAmount(), peersWitness, peersCurrentDate,
                 errorMessageHandler)) {
             log.error("verifyPeersTradeLimit failed: peersPaymentAccountPayload {}", peersPaymentAccountPayload);
             return false;
@@ -641,13 +641,12 @@ public class AccountAgeWitnessService {
                                           ErrorMessageHandler errorMessageHandler) {
         checkNotNull(offer);
         final String currencyCode = offer.getCurrencyCode();
-        final Coin defaultMaxTradeLimit = PaymentMethod.getPaymentMethodById(
-                offer.getOfferPayload().getPaymentMethodId()).getMaxTradeLimitAsCoin(currencyCode);
+        final Coin defaultMaxTradeLimit = offer.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode);
         long peersCurrentTradeLimit = defaultMaxTradeLimit.value;
         if (!hasTradeLimitException(peersWitness)) {
             final long accountSignAge = getWitnessSignAge(peersWitness, peersCurrentDate);
             AccountAge accountAgeCategory = getPeersAccountAgeCategory(accountSignAge);
-            OfferPayload.Direction direction = offer.isMyOffer(keyRing) ?
+            OfferDirection direction = offer.isMyOffer(keyRing) ?
                     offer.getMirroredDirection() : offer.getDirection();
             peersCurrentTradeLimit = getTradeLimit(defaultMaxTradeLimit, currencyCode, peersWitness,
                     accountAgeCategory, direction, offer.getPaymentMethod());
@@ -731,9 +730,9 @@ public class AccountAgeWitnessService {
 
     public Optional<SignedWitness> traderSignAndPublishPeersAccountAgeWitness(Trade trade) {
         AccountAgeWitness peersWitness = findTradePeerWitness(trade).orElse(null);
-        Coin tradeAmount = trade.getTradeAmount();
-        checkNotNull(trade.getProcessModel().getTradingPeer().getPubKeyRing(), "Peer must have a keyring");
-        PublicKey peersPubKey = trade.getProcessModel().getTradingPeer().getPubKeyRing().getSignaturePubKey();
+        Coin tradeAmount = trade.getAmount();
+        checkNotNull(trade.getProcessModel().getTradePeer().getPubKeyRing(), "Peer must have a keyring");
+        PublicKey peersPubKey = trade.getProcessModel().getTradePeer().getPubKeyRing().getSignaturePubKey();
         checkNotNull(peersWitness, "Not able to find peers witness, unable to sign for trade {}",
                 trade.toString());
         checkNotNull(tradeAmount, "Trade amount must not be null");
@@ -926,7 +925,7 @@ public class AccountAgeWitnessService {
 
         return accountIsSigner(myWitness) &&
                 !peerHasSignedWitness(trade) &&
-                tradeAmountIsSufficient(trade.getTradeAmount());
+                tradeAmountIsSufficient(trade.getAmount());
     }
 
     public String getSignInfoFromAccount(PaymentAccount paymentAccount) {

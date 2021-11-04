@@ -20,8 +20,8 @@ package bisq.core.provider.mempool;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.filter.FilterManager;
-import bisq.core.offer.OfferPayload;
-import bisq.core.trade.Trade;
+import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.Preferences;
 
 import bisq.network.Socks5ProxyProvider;
@@ -106,7 +106,7 @@ public class MempoolService {
     }
 
     public void validateOfferTakerTx(Trade trade, Consumer<TxValidator> resultHandler) {
-        validateOfferTakerTx(new TxValidator(daoStateService, trade.getTakerFeeTxId(), trade.getTradeAmount(),
+        validateOfferTakerTx(new TxValidator(daoStateService, trade.getTakerFeeTxId(), trade.getAmount(),
                 trade.isCurrencyForTakerFeeBtc()), resultHandler);
     }
 

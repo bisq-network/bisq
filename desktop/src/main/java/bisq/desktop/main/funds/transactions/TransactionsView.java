@@ -25,6 +25,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.BsqTradeDetailsWindow;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.util.GUIUtil;
@@ -33,8 +34,9 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
-import bisq.core.trade.Tradable;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.Tradable;
+import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.P2PService;
@@ -85,8 +87,6 @@ import javax.annotation.Nullable;
 
 @FxmlView
 public class TransactionsView extends ActivatableView<VBox, Void> {
-
-
     @FXML
     TableView<TransactionsListItem> tableView;
     @FXML
@@ -106,6 +106,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     private final WalletsSetup walletsSetup;
     private final Preferences preferences;
     private final TradeDetailsWindow tradeDetailsWindow;
+    private final BsqTradeDetailsWindow bsqTradeDetailsWindow;
     private final OfferDetailsWindow offerDetailsWindow;
 
     private WalletChangeEventListener walletChangeEventListener;
@@ -123,6 +124,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                              WalletsSetup walletsSetup,
                              Preferences preferences,
                              TradeDetailsWindow tradeDetailsWindow,
+                             BsqTradeDetailsWindow bsqTradeDetailsWindow,
                              OfferDetailsWindow offerDetailsWindow,
                              DisplayedTransactionsFactory displayedTransactionsFactory) {
         this.btcWalletService = btcWalletService;
@@ -130,6 +132,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         this.walletsSetup = walletsSetup;
         this.preferences = preferences;
         this.tradeDetailsWindow = tradeDetailsWindow;
+        this.bsqTradeDetailsWindow = bsqTradeDetailsWindow;
         this.offerDetailsWindow = offerDetailsWindow;
         this.displayedTransactions = displayedTransactionsFactory.create();
         this.sortedDisplayedTransactions = displayedTransactions.asSortedList();
@@ -260,10 +263,13 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     }
 
     private void openDetailPopup(TransactionsListItem item) {
-        if (item.getTradable() instanceof OpenOffer)
+        if (item.getTradable() instanceof OpenOffer) {
             offerDetailsWindow.show(item.getTradable().getOffer());
-        else if (item.getTradable() instanceof Trade)
+        } else if ((item.getTradable()) instanceof Trade) {
             tradeDetailsWindow.show((Trade) item.getTradable());
+        } else if ((item.getTradable()) instanceof BsqSwapTrade) {
+            bsqTradeDetailsWindow.show((BsqSwapTrade) item.getTradable());
+        }
     }
 
 

@@ -17,7 +17,8 @@
 
 package bisq.core.offer;
 
-import bisq.core.trade.Tradable;
+import bisq.core.offer.bsq_swap.BsqSwapOfferPayload;
+import bisq.core.trade.model.Tradable;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -35,12 +36,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-@EqualsAndHashCode
+import static com.google.common.base.Preconditions.checkArgument;
+
+@EqualsAndHashCode(exclude = {"bsqSwapOfferHasMissingFunds", "state", "timeoutTimer", "mempoolStatus"})
 @Slf4j
 public final class OpenOffer implements Tradable {
     // Timeout for offer reservation during takeoffer process. If deposit tx is not completed in that time we reset the offer to AVAILABLE state.
     private static final long TIMEOUT = 60;
-    transient private Timer timeoutTimer;
 
     public enum State {
         AVAILABLE,
@@ -54,10 +56,11 @@ public final class OpenOffer implements Tradable {
     private final Offer offer;
     @Getter
     private State state;
+
+    // TODO Not used. Could be removed?
     @Getter
-    @Setter
     @Nullable
-    private NodeAddress arbitratorNodeAddress;
+    private final NodeAddress arbitratorNodeAddress;
     @Getter
     @Setter
     @Nullable
@@ -76,15 +79,29 @@ public final class OpenOffer implements Tradable {
     @Getter
     @Setter
     transient private long mempoolStatus = -1;
+    transient private Timer timeoutTimer;
+
+    // Added at BsqSwap release. We do not persist that field
+    @Getter
+    @Setter
+    transient private boolean bsqSwapOfferHasMissingFunds;
 
     public OpenOffer(Offer offer) {
         this(offer, 0);
+    }
+
+    public OpenOffer(Offer offer, State state) {
+        this.offer = offer;
+        this.triggerPrice = 0;
+        this.state = state;
+        arbitratorNodeAddress = null;
     }
 
     public OpenOffer(Offer offer, long triggerPrice) {
         this.offer = offer;
         this.triggerPrice = triggerPrice;
         state = State.AVAILABLE;
+        arbitratorNodeAddress = null;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -131,9 +148,8 @@ public final class OpenOffer implements Tradable {
                 proto.getTriggerPrice());
     }
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Getters
+    // Tradable
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -151,6 +167,11 @@ public final class OpenOffer implements Tradable {
         return offer.getShortId();
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Misc
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     public void setState(State state) {
         this.state = state;
 
@@ -164,6 +185,12 @@ public final class OpenOffer implements Tradable {
 
     public boolean isDeactivated() {
         return state == State.DEACTIVATED;
+    }
+
+    public BsqSwapOfferPayload getBsqSwapOfferPayload() {
+        checkArgument(getOffer().getBsqSwapOfferPayload().isPresent(),
+                "getBsqSwapOfferPayload must be called only when BsqSwapOfferPayload is the expected payload");
+        return getOffer().getBsqSwapOfferPayload().get();
     }
 
     private void startTimeout() {
@@ -185,7 +212,6 @@ public final class OpenOffer implements Tradable {
         }
     }
 
-
     @Override
     public String toString() {
         return "OpenOffer{" +
@@ -195,6 +221,7 @@ public final class OpenOffer implements Tradable {
                 ",\n     mediatorNodeAddress=" + mediatorNodeAddress +
                 ",\n     refundAgentNodeAddress=" + refundAgentNodeAddress +
                 ",\n     triggerPrice=" + triggerPrice +
+                ",\n     bsqSwapOfferHasMissingFunds=" + bsqSwapOfferHasMissingFunds +
                 "\n}";
     }
 }

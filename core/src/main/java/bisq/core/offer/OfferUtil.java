@@ -25,9 +25,12 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
+import bisq.core.offer.bisq_v1.MutableOfferPayloadFields;
+import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.CashByMailAccount;
 import bisq.core.payment.F2FAccount;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
@@ -42,8 +45,10 @@ import bisq.core.util.coin.CoinUtil;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.app.Capabilities;
+import bisq.common.app.Version;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -57,6 +62,7 @@ import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Predicate;
 
 import lombok.extern.slf4j.Slf4j;
@@ -69,7 +75,7 @@ import static bisq.core.btc.wallet.Restrictions.getMaxBuyerSecurityDepositAsPerc
 import static bisq.core.btc.wallet.Restrictions.getMinBuyerSecurityDepositAsPercent;
 import static bisq.core.btc.wallet.Restrictions.getMinNonDustOutput;
 import static bisq.core.btc.wallet.Restrictions.isDust;
-import static bisq.core.offer.OfferPayload.*;
+import static bisq.core.offer.bisq_v1.OfferPayload.*;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -112,6 +118,40 @@ public class OfferUtil {
         this.tradeStatisticsManager = tradeStatisticsManager;
     }
 
+    public static String getRandomOfferId() {
+        return Utilities.getRandomPrefix(5, 8) + "-" +
+                UUID.randomUUID() + "-" +
+                getStrippedVersion();
+    }
+
+    public static String getStrippedVersion() {
+        return Version.VERSION.replace(".", "");
+    }
+
+    // We add a counter at the end of the offer id signalling the number of times that offer has
+    // been mutated ether due edit or due pow adjustments.
+    public static String getOfferIdWithMutationCounter(String id) {
+        String[] split = id.split("-");
+        String base = id;
+        int counter = 0;
+        if (split.length > 7) {
+            String counterString = split[7];
+            int endIndex = id.length() - counterString.length() - 1;
+            base = id.substring(0, endIndex);
+            try {
+                counter = Integer.parseInt(counterString);
+            } catch (Exception ignore) {
+            }
+        }
+        counter++;
+        return base + "-" + counter;
+    }
+
+    public static String getVersionFromId(String id) {
+        String[] split = id.split("-");
+        return split[6];
+    }
+
     public void maybeSetFeePaymentCurrencyPreference(String feeCurrencyCode) {
         if (!feeCurrencyCode.isEmpty()) {
             if (!isValidFeePaymentCurrencyCode.test(feeCurrencyCode))
@@ -132,13 +172,13 @@ public class OfferUtil {
      * @return {@code true} for an offer to buy BTC from the taker, {@code false} for an
      * offer to sell BTC to the taker
      */
-    public boolean isBuyOffer(Direction direction) {
-        return direction == Direction.BUY;
+    public boolean isBuyOffer(OfferDirection direction) {
+        return direction == OfferDirection.BUY;
     }
 
     public long getMaxTradeLimit(PaymentAccount paymentAccount,
                                  String currencyCode,
-                                 Direction direction) {
+                                 OfferDirection direction) {
         return paymentAccount != null
                 ? accountAgeWitnessService.getMyTradeLimit(paymentAccount, currencyCode, direction)
                 : 0;
@@ -181,7 +221,7 @@ public class OfferUtil {
         // We have to keep a minimum amount of BSQ == bitcoin dust limit, otherwise there
         // would be dust violations for change UTXOs; essentially means the minimum usable
         // balance of BSQ is 5.46.
-        Coin usableBsqBalance = bsqWalletService.getAvailableConfirmedBalance().subtract(getMinNonDustOutput());
+        Coin usableBsqBalance = bsqWalletService.getAvailableBalance().subtract(getMinNonDustOutput());
         return usableBsqBalance.isNegative() ? Coin.ZERO : usableBsqBalance;
     }
 
@@ -240,7 +280,7 @@ public class OfferUtil {
      * @return {@code true} if the balance is sufficient, {@code false} otherwise
      */
     public boolean isBsqForMakerFeeAvailable(@Nullable Coin amount) {
-        Coin availableBalance = bsqWalletService.getAvailableConfirmedBalance();
+        Coin availableBalance = bsqWalletService.getAvailableBalance();
         Coin makerFee = CoinUtil.getMakerFee(false, amount);
 
         // If we don't know yet the maker fee (amount is not set) we return true,
@@ -274,7 +314,7 @@ public class OfferUtil {
     }
 
     public boolean isBsqForTakerFeeAvailable(@Nullable Coin amount) {
-        Coin availableBalance = bsqWalletService.getAvailableConfirmedBalance();
+        Coin availableBalance = bsqWalletService.getAvailableBalance();
         Coin takerFee = getTakerFee(false, amount);
 
         // If we don't know yet the maker fee (amount is not set) we return true,
@@ -291,7 +331,7 @@ public class OfferUtil {
     }
 
     public boolean isBlockChainPaymentMethod(Offer offer) {
-        return offer != null && offer.getPaymentMethod().isAsset();
+        return offer != null && offer.getPaymentMethod().isBlockchain();
     }
 
     public Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee,
@@ -313,7 +353,7 @@ public class OfferUtil {
 
     public Map<String, String> getExtraDataMap(PaymentAccount paymentAccount,
                                                String currencyCode,
-                                               Direction direction) {
+                                               OfferDirection direction) {
         Map<String, String> extraDataMap = new HashMap<>();
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             String myWitnessHashAsHex = accountAgeWitnessService
@@ -336,7 +376,7 @@ public class OfferUtil {
 
         extraDataMap.put(CAPABILITIES, Capabilities.app.toStringList());
 
-        if (currencyCode.equals("XMR") && direction == Direction.SELL) {
+        if (currencyCode.equals("XMR") && direction == OfferDirection.SELL) {
             preferences.getAutoConfirmSettingsList().stream()
                     .filter(e -> e.getCurrencyCode().equals("XMR"))
                     .filter(AutoConfirmSettings::isEnabled)
@@ -350,17 +390,21 @@ public class OfferUtil {
                                   PaymentAccount paymentAccount,
                                   String currencyCode,
                                   Coin makerFeeAsCoin) {
+        validateBasicOfferData(paymentAccount.getPaymentMethod(), currencyCode);
         checkNotNull(makerFeeAsCoin, "makerFee must not be null");
-        checkNotNull(p2PService.getAddress(), "Address must not be null");
         checkArgument(buyerSecurityDeposit <= getMaxBuyerSecurityDepositAsPercent(),
                 "securityDeposit must not exceed " +
                         getMaxBuyerSecurityDepositAsPercent());
         checkArgument(buyerSecurityDeposit >= getMinBuyerSecurityDepositAsPercent(),
                 "securityDeposit must not be less than " +
                         getMinBuyerSecurityDepositAsPercent());
+    }
+
+    public void validateBasicOfferData(PaymentMethod paymentMethod, String currencyCode) {
+        checkNotNull(p2PService.getAddress(), "Address must not be null");
         checkArgument(!filterManager.isCurrencyBanned(currencyCode),
                 Res.get("offerbook.warning.currencyBanned"));
-        checkArgument(!filterManager.isPaymentMethodBanned(paymentAccount.getPaymentMethod()),
+        checkArgument(!filterManager.isPaymentMethodBanned(paymentMethod),
                 Res.get("offerbook.warning.paymentMethodBanned"));
     }
 
@@ -370,45 +414,45 @@ public class OfferUtil {
     // Immutable fields are sourced from the original openOffer param.
     public OfferPayload getMergedOfferPayload(OpenOffer openOffer,
                                               MutableOfferPayloadFields mutableOfferPayloadFields) {
-        OfferPayload originalOfferPayload = openOffer.getOffer().getOfferPayload();
-        return new OfferPayload(originalOfferPayload.getId(),
-                originalOfferPayload.getDate(),
-                originalOfferPayload.getOwnerNodeAddress(),
-                originalOfferPayload.getPubKeyRing(),
-                originalOfferPayload.getDirection(),
+        OfferPayload original = openOffer.getOffer().getOfferPayload().orElseThrow();
+        return new OfferPayload(original.getId(),
+                original.getDate(),
+                original.getOwnerNodeAddress(),
+                original.getPubKeyRing(),
+                original.getDirection(),
                 mutableOfferPayloadFields.getPrice(),
                 mutableOfferPayloadFields.getMarketPriceMargin(),
                 mutableOfferPayloadFields.isUseMarketBasedPrice(),
-                originalOfferPayload.getAmount(),
-                originalOfferPayload.getMinAmount(),
+                original.getAmount(),
+                original.getMinAmount(),
                 mutableOfferPayloadFields.getBaseCurrencyCode(),
                 mutableOfferPayloadFields.getCounterCurrencyCode(),
-                originalOfferPayload.getArbitratorNodeAddresses(),
-                originalOfferPayload.getMediatorNodeAddresses(),
+                original.getArbitratorNodeAddresses(),
+                original.getMediatorNodeAddresses(),
                 mutableOfferPayloadFields.getPaymentMethodId(),
                 mutableOfferPayloadFields.getMakerPaymentAccountId(),
-                originalOfferPayload.getOfferFeePaymentTxId(),
+                original.getOfferFeePaymentTxId(),
                 mutableOfferPayloadFields.getCountryCode(),
                 mutableOfferPayloadFields.getAcceptedCountryCodes(),
                 mutableOfferPayloadFields.getBankId(),
                 mutableOfferPayloadFields.getAcceptedBankIds(),
-                originalOfferPayload.getVersionNr(),
-                originalOfferPayload.getBlockHeightAtOfferCreation(),
-                originalOfferPayload.getTxFee(),
-                originalOfferPayload.getMakerFee(),
-                originalOfferPayload.isCurrencyForMakerFeeBtc(),
-                originalOfferPayload.getBuyerSecurityDeposit(),
-                originalOfferPayload.getSellerSecurityDeposit(),
-                originalOfferPayload.getMaxTradeLimit(),
-                originalOfferPayload.getMaxTradePeriod(),
-                originalOfferPayload.isUseAutoClose(),
-                originalOfferPayload.isUseReOpenAfterAutoClose(),
-                originalOfferPayload.getLowerClosePrice(),
-                originalOfferPayload.getUpperClosePrice(),
-                originalOfferPayload.isPrivateOffer(),
-                originalOfferPayload.getHashOfChallenge(),
+                original.getVersionNr(),
+                original.getBlockHeightAtOfferCreation(),
+                original.getTxFee(),
+                original.getMakerFee(),
+                original.isCurrencyForMakerFeeBtc(),
+                original.getBuyerSecurityDeposit(),
+                original.getSellerSecurityDeposit(),
+                original.getMaxTradeLimit(),
+                original.getMaxTradePeriod(),
+                original.isUseAutoClose(),
+                original.isUseReOpenAfterAutoClose(),
+                original.getLowerClosePrice(),
+                original.getUpperClosePrice(),
+                original.isPrivateOffer(),
+                original.getHashOfChallenge(),
                 mutableOfferPayloadFields.getExtraDataMap(),
-                originalOfferPayload.getProtocolVersion());
+                original.getProtocolVersion());
     }
 
     private Optional<Volume> getFeeInUserFiatCurrency(Coin makerFee,
@@ -482,7 +526,7 @@ public class OfferUtil {
             }
         } else {
             errorMsg = "The maker fee tx is invalid as it does not has at least 2 outputs." + extraString +
-                    "\nMakerFeeTx=" + makerFeeTx.toString();
+                    "\nMakerFeeTx=" + makerFeeTx;
         }
 
         if (errorMsg == null) {

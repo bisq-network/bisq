@@ -38,6 +38,7 @@ import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.withdrawal.WithdrawalView;
 import bisq.desktop.main.offer.OfferView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.BsqSwapOfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.util.CssTheme;
 import bisq.desktop.util.FormBuilder;
@@ -53,8 +54,8 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferFilter;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferDirection;
+import bisq.core.offer.OfferFilterService;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
@@ -123,6 +124,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
+    private final BsqSwapOfferDetailsWindow bsqSwapOfferDetailsWindow;
     private final CoinFormatter formatter;
     private final PrivateNotificationManager privateNotificationManager;
     private final boolean useDevPrivilegeKeys;
@@ -153,6 +155,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     OfferBookView(OfferBookViewModel model,
                   Navigation navigation,
                   OfferDetailsWindow offerDetailsWindow,
+                  BsqSwapOfferDetailsWindow bsqSwapOfferDetailsWindow,
                   @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                   PrivateNotificationManager privateNotificationManager,
                   @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys,
@@ -162,6 +165,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
         this.navigation = navigation;
         this.offerDetailsWindow = offerDetailsWindow;
+        this.bsqSwapOfferDetailsWindow = bsqSwapOfferDetailsWindow;
         this.formatter = formatter;
         this.privateNotificationManager = privateNotificationManager;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
@@ -265,7 +269,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             if (price2 == null || price1 == null) {
                 return 0;
             }
-            if (model.getDirection() == OfferPayload.Direction.SELL) {
+            if (model.getDirection() == OfferDirection.SELL) {
                 return price1.compareTo(price2);
             } else {
                 return price2.compareTo(price1);
@@ -277,7 +281,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         paymentMethodColumn.setComparator(Comparator.comparing(o -> Res.get(o.getOffer().getPaymentMethod().getId())));
         avatarColumn.setComparator(Comparator.comparing(o -> model.getNumTrades(o.getOffer())));
         depositColumn.setComparator(Comparator.comparing(item -> {
-            boolean isSellOffer = item.getOffer().getDirection() == OfferPayload.Direction.SELL;
+            boolean isSellOffer = item.getOffer().getDirection() == OfferDirection.SELL;
             Coin deposit = isSellOffer ?
                     item.getOffer().getBuyerSecurityDeposit() :
                     item.getOffer().getSellerSecurityDeposit();
@@ -314,7 +318,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     protected void activate() {
         currencyComboBox.setCellFactory(GUIUtil.getTradeCurrencyCellFactory(Res.get("shared.oneOffer"),
                 Res.get("shared.multipleOffers"),
-                (model.getDirection() == OfferPayload.Direction.BUY ? model.getSellOfferCounts() : model.getBuyOfferCounts())));
+                (model.getDirection() == OfferDirection.BUY ? model.getSellOfferCounts() : model.getBuyOfferCounts())));
 
         currencyComboBox.setConverter(new CurrencyStringConverter(currencyComboBox));
         currencyComboBox.getEditor().getStyleClass().add("combo-box-editor-bold");
@@ -536,38 +540,38 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         createOfferButton.setDisable(false);
     }
 
-    public void setDirection(OfferPayload.Direction direction) {
+    public void setDirection(OfferDirection direction) {
         model.initWithDirection(direction);
         ImageView iconView = new ImageView();
 
         createOfferButton.setGraphic(iconView);
-        iconView.setId(direction == OfferPayload.Direction.SELL ? "image-sell-white" : "image-buy-white");
-        createOfferButton.setId(direction == OfferPayload.Direction.SELL ? "sell-button-big" : "buy-button-big");
-        avatarColumn.setTitle(direction == OfferPayload.Direction.SELL ? Res.get("shared.buyerUpperCase") : Res.get("shared.sellerUpperCase"));
+        iconView.setId(direction == OfferDirection.SELL ? "image-sell-white" : "image-buy-white");
+        createOfferButton.setId(direction == OfferDirection.SELL ? "sell-button-big" : "buy-button-big");
+        avatarColumn.setTitle(direction == OfferDirection.SELL ? Res.get("shared.buyerUpperCase") : Res.get("shared.sellerUpperCase"));
         setDirectionTitles();
     }
 
     private void setDirectionTitles() {
         TradeCurrency selectedTradeCurrency = model.getSelectedTradeCurrency();
         if (selectedTradeCurrency != null) {
-            OfferPayload.Direction direction = model.getDirection();
+            OfferDirection direction = model.getDirection();
             String offerButtonText;
             String code = selectedTradeCurrency.getCode();
 
             if (model.showAllTradeCurrenciesProperty.get()) {
-                offerButtonText = direction == OfferPayload.Direction.BUY ?
+                offerButtonText = direction == OfferDirection.BUY ?
                         Res.get("offerbook.createOfferToBuy",
                                 Res.getBaseCurrencyCode()) :
                         Res.get("offerbook.createOfferToSell",
                                 Res.getBaseCurrencyCode());
             } else if (selectedTradeCurrency instanceof FiatCurrency) {
-                offerButtonText = direction == OfferPayload.Direction.BUY ?
+                offerButtonText = direction == OfferDirection.BUY ?
                         Res.get("offerbook.createOfferToBuy.withFiat",
                                 Res.getBaseCurrencyCode(), code) :
                         Res.get("offerbook.createOfferToSell.forFiat", Res.getBaseCurrencyCode(), code);
 
             } else {
-                offerButtonText = direction == OfferPayload.Direction.BUY ?
+                offerButtonText = direction == OfferDirection.BUY ?
                         Res.get("offerbook.createOfferToBuy.withCrypto",
                                 code, Res.getBaseCurrencyCode()) :
                         Res.get("offerbook.createOfferToSell.forCrypto", code, Res.getBaseCurrencyCode());
@@ -590,13 +594,15 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private void onCreateOffer() {
         if (model.canCreateOrTakeOffer()) {
+            PaymentMethod selectedPaymentMethod = model.selectedPaymentMethod;
+            TradeCurrency selectedTradeCurrency = model.getSelectedTradeCurrency();
             if (!model.hasPaymentAccountForCurrency()) {
                 new Popup().headLine(Res.get("offerbook.warning.noTradingAccountForCurrency.headline"))
                         .instruction(Res.get("offerbook.warning.noTradingAccountForCurrency.msg"))
                         .actionButtonText(Res.get("offerbook.yesCreateOffer"))
                         .onAction(() -> {
                             createOfferButton.setDisable(true);
-                            offerActionHandler.onCreateOffer(model.getSelectedTradeCurrency());
+                            offerActionHandler.onCreateOffer(selectedTradeCurrency, selectedPaymentMethod);
                         })
                         .secondaryActionButtonText(Res.get("offerbook.setupNewAccount"))
                         .onSecondaryAction(() -> {
@@ -609,11 +615,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             }
 
             createOfferButton.setDisable(true);
-            offerActionHandler.onCreateOffer(model.getSelectedTradeCurrency());
+            offerActionHandler.onCreateOffer(selectedTradeCurrency, selectedPaymentMethod);
         }
     }
 
-    private void onShowInfo(Offer offer, OfferFilter.Result result) {
+    private void onShowInfo(Offer offer, OfferFilterService.Result result) {
         switch (result) {
             case VALID:
                 break;
@@ -666,6 +672,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             "isInsufficientTradeLimit case.");
                 }
                 break;
+            case HIDE_BSQ_SWAPS_DUE_DAO_DEACTIVATED:
+                new Popup().warning(Res.get("offerbook.warning.hideBsqSwapsDueDaoDeactivated")).show();
+                break;
             default:
                 break;
         }
@@ -673,7 +682,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private void onTakeOffer(Offer offer) {
         if (model.canCreateOrTakeOffer()) {
-            if (offer.getDirection() == OfferPayload.Direction.SELL &&
+            if (offer.getDirection() == OfferDirection.SELL &&
                     offer.getPaymentMethod().getId().equals(PaymentMethod.CASH_DEPOSIT.getId())) {
                 new Popup().confirmation(Res.get("popup.info.cashDepositInfo", offer.getBankId()))
                         .actionButtonText(Res.get("popup.info.cashDepositInfo.confirm"))
@@ -934,15 +943,22 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
                                 if (item != null && !empty) {
 
-                                    if (model.isOfferBanned(item.getOffer())) {
+                                    Offer offer = item.getOffer();
+                                    if (model.isOfferBanned(offer)) {
                                         setGraphic(new AutoTooltipLabel(model.getPaymentMethod(item)));
                                     } else {
-                                        if (item.getOffer().isXmrAutoConf()) {
+                                        if (offer.isXmrAutoConf()) {
                                             field = new HyperlinkWithIcon(model.getPaymentMethod(item), AwesomeIcon.ROCKET);
                                         } else {
                                             field = new HyperlinkWithIcon(model.getPaymentMethod(item));
                                         }
-                                        field.setOnAction(event -> offerDetailsWindow.show(item.getOffer()));
+                                        field.setOnAction(event -> {
+                                            if (offer.isBsqSwapOffer()) {
+                                                bsqSwapOfferDetailsWindow.show(offer);
+                                            } else {
+                                                offerDetailsWindow.show(offer);
+                                            }
+                                        });
                                         field.setTooltip(new Tooltip(model.getPaymentMethodToolTip(item)));
                                         setGraphic(field);
                                     }
@@ -981,7 +997,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             public void updateItem(final OfferBookListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    var isSellOffer = item.getOffer().getDirection() == OfferPayload.Direction.SELL;
+                                    var isSellOffer = item.getOffer().getDirection() == OfferDirection.SELL;
                                     var deposit = isSellOffer ? item.getOffer().getBuyerSecurityDeposit() :
                                             item.getOffer().getSellerSecurityDeposit();
                                     if (deposit == null) {
@@ -1021,7 +1037,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                         return new TableCell<>() {
                             final ImageView iconView = new ImageView();
                             final AutoTooltipButton button = new AutoTooltipButton();
-                            OfferFilter.Result canTakeOfferResult = null;
+                            OfferFilterService.Result canTakeOfferResult = null;
 
                             {
                                 button.setGraphic(iconView);
@@ -1040,7 +1056,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     boolean myOffer = model.isMyOffer(offer);
 
                                     if (tableRow != null) {
-                                        canTakeOfferResult = model.offerFilter.canTakeOffer(offer, false);
+                                        canTakeOfferResult = model.offerFilterService.canTakeOffer(offer, false);
                                         tableRow.setOpacity(canTakeOfferResult.isValid() || myOffer ? 1 : 0.4);
 
                                         if (myOffer) {
@@ -1070,17 +1086,17 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         button.setStyle(CssTheme.isDarkTheme() ? "-fx-text-fill: white" : "-fx-text-fill: #444444");
                                         button.setOnAction(e -> onRemoveOpenOffer(offer));
                                     } else {
-                                        boolean isSellOffer = offer.getDirection() == OfferPayload.Direction.SELL;
+                                        boolean isSellOffer = offer.getDirection() == OfferDirection.SELL;
                                         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
                                         button.setId(isSellOffer ? "buy-button" : "sell-button");
                                         button.setStyle("-fx-text-fill: white");
                                         if (isSellOffer) {
                                             title = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
-                                                    Res.get("offerbook.takeOfferToBuy", offer.getOfferPayload().getBaseCurrencyCode()) :
+                                                    Res.get("offerbook.takeOfferToBuy", offer.getBaseCurrencyCode()) :
                                                     Res.get("offerbook.takeOfferToSell", offer.getCurrencyCode());
                                         } else {
                                             title = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
-                                                    Res.get("offerbook.takeOfferToSell", offer.getOfferPayload().getBaseCurrencyCode()) :
+                                                    Res.get("offerbook.takeOfferToSell", offer.getBaseCurrencyCode()) :
                                                     Res.get("offerbook.takeOfferToBuy", offer.getCurrencyCode());
                                         }
                                         button.setTooltip(new Tooltip(Res.get("offerbook.takeOfferButton.tooltip", model.getDirectionLabelTooltip(offer))));
@@ -1089,7 +1105,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
                                     if (!myOffer) {
                                         if (canTakeOfferResult == null) {
-                                            canTakeOfferResult = model.offerFilter.canTakeOffer(offer, false);
+                                            canTakeOfferResult = model.offerFilterService.canTakeOffer(offer, false);
                                         }
 
                                         if (!canTakeOfferResult.isValid()) {

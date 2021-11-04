@@ -52,8 +52,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static protobuf.OfferPayload.Direction.BUY;
-import static protobuf.OfferPayload.Direction.SELL;
+import static protobuf.OfferDirection.BUY;
+import static protobuf.OfferDirection.SELL;
 
 @SuppressWarnings("ConstantConditions")
 @Disabled

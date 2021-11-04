@@ -18,12 +18,12 @@
 package bisq.core.proto;
 
 import bisq.core.btc.model.AddressEntry;
-import bisq.core.support.dispute.DisputeResult;
-import bisq.core.offer.AvailabilityResult;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OpenOffer;
-import bisq.core.trade.Trade;
+import bisq.core.offer.availability.AvailabilityResult;
+import bisq.core.support.dispute.DisputeResult;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -81,8 +81,8 @@ public class ProtoDevUtil {
 
         sb.append("    enum Direction {\n");
         sb.append("        PB_ERROR = 0;\n");
-        for (int i = 0; i < OfferPayload.Direction.values().length; i++) {
-            OfferPayload.Direction s = OfferPayload.Direction.values()[i];
+        for (int i = 0; i < OfferDirection.values().length; i++) {
+            OfferDirection s = OfferDirection.values()[i];
             sb.append("        ");
             sb.append(s.toString());
             sb.append(" = ");

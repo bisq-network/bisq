@@ -23,6 +23,7 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.model.AddressEntryList;
+import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.http.MemPoolSpaceTxBroadcaster;
 import bisq.core.provider.fee.FeeService;
@@ -47,6 +48,7 @@ import org.bitcoinj.crypto.KeyCrypterScrypt;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.script.ScriptPattern;
+import org.bitcoinj.wallet.CoinSelection;
 import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
 
@@ -61,6 +63,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -1329,5 +1332,31 @@ public class BtcWalletService extends WalletService {
         WalletService.printTx("createRefundPayoutTx", resultTx);
 
         return resultTx;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Find inputs and change
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Tuple2<List<RawTransactionInput>, Coin> getInputsAndChange(Coin required) throws InsufficientMoneyException {
+        BtcCoinSelector coinSelector = new BtcCoinSelector(walletsSetup.getAddressesByContext(AddressEntry.Context.AVAILABLE),
+                preferences.getIgnoreDustThreshold());
+        CoinSelection coinSelection = coinSelector.select(required, Objects.requireNonNull(wallet).calculateAllSpendCandidates());
+
+        Coin change;
+        try {
+            change = coinSelector.getChange(required, coinSelection);
+        } catch (InsufficientMoneyException e) {
+            log.error("Missing funds in getSellersBtcInputsForBsqSwapTx. missing={}", e.missing);
+            throw new InsufficientMoneyException(e.missing);
+        }
+
+        Transaction dummyTx = new Transaction(params);
+        coinSelection.gathered.forEach(dummyTx::addInput);
+        List<RawTransactionInput> inputs = dummyTx.getInputs().stream()
+                .map(RawTransactionInput::new)
+                .collect(Collectors.toList());
+        return new Tuple2<>(inputs, change);
     }
 }

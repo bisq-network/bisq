@@ -20,6 +20,7 @@ package bisq.core.api;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.api.model.PaymentAccountForm;
 import bisq.core.locale.CryptoCurrency;
+import bisq.core.payment.AssetAccount;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.InstantCryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
@@ -82,7 +83,7 @@ class CorePaymentAccountsService {
 
     List<PaymentMethod> getFiatPaymentMethods() {
         return PaymentMethod.getPaymentMethods().stream()
-                .filter(paymentMethod -> !paymentMethod.isAsset())
+                .filter(PaymentMethod::isFiat)
                 .sorted(Comparator.comparing(PaymentMethod::getId))
                 .collect(Collectors.toList());
     }
@@ -102,7 +103,8 @@ class CorePaymentAccountsService {
     PaymentAccount createCryptoCurrencyPaymentAccount(String accountName,
                                                       String currencyCode,
                                                       String address,
-                                                      boolean tradeInstant) {
+                                                      boolean tradeInstant,
+                                                      boolean isBsqSwap) {
         String bsqCode = currencyCode.toUpperCase();
         if (!bsqCode.equals("BSQ"))
             throw new IllegalArgumentException("api does not currently support " + currencyCode + " accounts");
@@ -110,12 +112,21 @@ class CorePaymentAccountsService {
         // Validate the BSQ address string but ignore the return value.
         coreWalletsService.getValidBsqAddress(address);
 
-        var cryptoCurrencyAccount = tradeInstant
-                ? (InstantCryptoCurrencyAccount) PaymentAccountFactory.getPaymentAccount(PaymentMethod.BLOCK_CHAINS_INSTANT)
-                : (CryptoCurrencyAccount) PaymentAccountFactory.getPaymentAccount(PaymentMethod.BLOCK_CHAINS);
+        // TODO Split into 2 methods: createAtomicPaymentAccount(), createCryptoCurrencyPaymentAccount().
+        PaymentAccount cryptoCurrencyAccount;
+        if (isBsqSwap) {
+            cryptoCurrencyAccount = PaymentAccountFactory.getPaymentAccount(PaymentMethod.BSQ_SWAP);
+        } else {
+            cryptoCurrencyAccount = tradeInstant
+                    ? (InstantCryptoCurrencyAccount) PaymentAccountFactory.getPaymentAccount(PaymentMethod.BLOCK_CHAINS_INSTANT)
+                    : (CryptoCurrencyAccount) PaymentAccountFactory.getPaymentAccount(PaymentMethod.BLOCK_CHAINS);
+        }
         cryptoCurrencyAccount.init();
         cryptoCurrencyAccount.setAccountName(accountName);
-        cryptoCurrencyAccount.setAddress(address);
+        if (!isBsqSwap) {
+            ((AssetAccount) cryptoCurrencyAccount).setAddress(address);
+        }
+
         Optional<CryptoCurrency> cryptoCurrency = getCryptoCurrency(bsqCode);
         cryptoCurrency.ifPresent(cryptoCurrencyAccount::setSingleTradeCurrency);
         user.addPaymentAccount(cryptoCurrencyAccount);
@@ -132,7 +143,7 @@ class CorePaymentAccountsService {
 
     List<PaymentMethod> getCryptoCurrencyPaymentMethods() {
         return PaymentMethod.getPaymentMethods().stream()
-                .filter(PaymentMethod::isAsset)
+                .filter(PaymentMethod::isAltcoin)
                 .sorted(Comparator.comparing(PaymentMethod::getId))
                 .collect(Collectors.toList());
     }

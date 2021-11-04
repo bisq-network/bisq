@@ -37,7 +37,7 @@ import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.dispute.arbitration.ArbitrationDisputeList;
 import bisq.core.support.dispute.mediation.MediationDisputeList;
 import bisq.core.support.dispute.refund.RefundDisputeList;
-import bisq.core.trade.TradableList;
+import bisq.core.trade.model.TradableList;
 import bisq.core.trade.statistics.TradeStatistics2Store;
 import bisq.core.trade.statistics.TradeStatistics3Store;
 import bisq.core.user.PreferencesPayload;

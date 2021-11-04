@@ -30,8 +30,8 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.trade.Contract;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.common.config.Config;
 import bisq.common.util.Utilities;
@@ -144,9 +144,9 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
 
         tradeIdColumn.setComparator(Comparator.comparing(o -> o.getTrade().getId()));
         dateColumn.setComparator(Comparator.comparing(o -> o.getTrade().getDate()));
-        priceColumn.setComparator(Comparator.comparing(o -> o.getTrade().getTradePrice()));
-        volumeColumn.setComparator(Comparator.comparing(o -> o.getTrade().getTradeVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
-        amountColumn.setComparator(Comparator.comparing(o -> o.getTrade().getTradeAmount(), Comparator.nullsFirst(Comparator.naturalOrder())));
+        priceColumn.setComparator(Comparator.comparing(o -> o.getTrade().getPrice()));
+        volumeColumn.setComparator(Comparator.comparing(o -> o.getTrade().getVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
+        amountColumn.setComparator(Comparator.comparing(o -> o.getTrade().getAmount(), Comparator.nullsFirst(Comparator.naturalOrder())));
         stateColumn.setComparator(Comparator.comparing(model::getState));
         marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
 
@@ -273,7 +273,8 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
             if (model.getDirectionLabel(item).contains(filterString)) {
                 return true;
             }
-            if (offer.getOfferFeePaymentTxId().contains(filterString)) {
+            if (offer.getOfferFeePaymentTxId() != null &&
+                    offer.getOfferFeePaymentTxId().contains(filterString)) {
                 return true;
             }
 

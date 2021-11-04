@@ -17,16 +17,14 @@
 
 package bisq.desktop.main.offer.offerbook;
 
-import bisq.desktop.main.PriceUtil;
-
 import bisq.core.locale.Country;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.AliPayAccount;
 import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.CryptoCurrencyAccount;
@@ -44,6 +42,7 @@ import bisq.core.payment.payload.SpecificBanksAccountPayload;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
+import bisq.core.util.PriceUtil;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.ImmutableCoinFormatter;

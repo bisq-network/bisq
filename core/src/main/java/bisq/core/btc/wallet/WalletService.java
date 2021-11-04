@@ -102,6 +102,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -278,6 +279,31 @@ public abstract class WalletService {
     // Sign tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public static void signTx(Wallet wallet,
+                              KeyParameter aesKey,
+                              Transaction tx)
+            throws WalletException, TransactionVerificationException {
+        for (int i = 0; i < tx.getInputs().size(); i++) {
+            TransactionInput input = tx.getInput(i);
+            TransactionOutput connectedOutput = input.getConnectedOutput();
+            if (connectedOutput == null) {
+                log.error("connectedOutput is null");
+                continue;
+            }
+            if (!connectedOutput.isMine(wallet)) {
+                log.error("connectedOutput is not mine");
+                continue;
+            }
+
+            signTransactionInput(wallet, aesKey, tx, input, i);
+            checkScriptSig(tx, input, i);
+        }
+
+        checkWalletConsistency(wallet);
+        verifyTransaction(tx);
+        printTx("Signed Tx", tx);
+    }
+
     public static void signTransactionInput(Wallet wallet,
                                             KeyParameter aesKey,
                                             Transaction tx,
@@ -357,12 +383,13 @@ public abstract class WalletService {
                         txIn.setScriptSig(ScriptBuilder.createEmpty());
                         txIn.setWitness(TransactionWitness.redeemP2WPKH(txSig, key));
                     } catch (ECKey.KeyIsEncryptedException e1) {
+                        log.error(e1.toString());
                         throw e1;
                     } catch (ECKey.MissingPrivateKeyException e1) {
                         log.warn("No private key in keypair for input {}", index);
                     }
                 } else {
-                    // log.error("Unexpected script type.");
+                    log.error("Unexpected script type.");
                     throw new RuntimeException("Unexpected script type.");
                 }
             } else {
@@ -371,6 +398,23 @@ public abstract class WalletService {
         } else {
             log.error("Missing connected output, assuming already signed.");
         }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Dust
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public static void verifyNonDustTxo(Transaction tx) {
+        for (TransactionOutput txo : tx.getOutputs()) {
+            Coin value = txo.getValue();
+            // OpReturn outputs have value 0
+            if (value.isPositive()) {
+                checkArgument(Restrictions.isAboveDust(txo.getValue()),
+                        "An output value is below dust limit. Transaction=" + tx);
+            }
+        }
+
     }
 
 
@@ -482,7 +526,7 @@ public abstract class WalletService {
     // Balance
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Coin getAvailableConfirmedBalance() {
+    public Coin getAvailableBalance() {
         return wallet != null ? wallet.getBalance(Wallet.BalanceType.AVAILABLE) : Coin.ZERO;
     }
 
@@ -544,6 +588,10 @@ public abstract class WalletService {
 
     public boolean isAddressUnused(Address address) {
         return getNumTxOutputsForAddress(address) == 0;
+    }
+
+    public boolean isMine(TransactionOutput transactionOutput) {
+        return transactionOutput.isMine(wallet);
     }
 
     // BISQ issue #4039: Prevent dust outputs from being created.
@@ -818,11 +866,15 @@ public abstract class WalletService {
         return maybeAddTxToWallet(transaction.bitcoinSerialize(), wallet, source);
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // bisqWalletEventListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public class BisqWalletListener implements WalletCoinsReceivedEventListener, WalletCoinsSentEventListener, WalletReorganizeEventListener, TransactionConfidenceEventListener {
+    public class BisqWalletListener implements WalletCoinsReceivedEventListener,
+            WalletCoinsSentEventListener,
+            WalletReorganizeEventListener,
+            TransactionConfidenceEventListener {
         @Override
         public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
             notifyBalanceListeners(tx);
@@ -848,7 +900,7 @@ public abstract class WalletService {
                     .filter(txConfidenceListener -> tx != null &&
                             tx.getTxId().toString() != null &&
                             txConfidenceListener != null &&
-                            tx.getTxId().toString().equals(txConfidenceListener.getTxID()))
+                            tx.getTxId().toString().equals(txConfidenceListener.getTxId()))
                     .forEach(txConfidenceListener ->
                             txConfidenceListener.onTransactionConfidenceChanged(tx.getConfidence()));
         }
@@ -859,7 +911,7 @@ public abstract class WalletService {
                 if (balanceListener.getAddress() != null)
                     balance = getBalanceForAddress(balanceListener.getAddress());
                 else
-                    balance = getAvailableConfirmedBalance();
+                    balance = getAvailableBalance();
 
                 balanceListener.onBalanceChanged(balance, tx);
             }

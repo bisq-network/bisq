@@ -21,13 +21,10 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.main.PriceUtil;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
-import bisq.desktop.util.validation.AltcoinValidator;
-import bisq.desktop.util.validation.FiatPriceValidator;
 import bisq.desktop.util.validation.PercentageNumberValidator;
 
 import bisq.core.locale.CurrencyUtil;
@@ -48,6 +45,9 @@ import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
+import bisq.core.util.PriceUtil;
+import bisq.core.util.validation.AltcoinValidator;
+import bisq.core.util.validation.FiatPriceValidator;
 import bisq.core.util.validation.InputValidator;
 
 import bisq.common.UserThread;

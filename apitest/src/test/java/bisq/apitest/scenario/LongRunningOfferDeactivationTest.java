@@ -35,8 +35,8 @@ import static bisq.cli.CurrencyFormat.formatPrice;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static java.lang.System.getenv;
 import static org.junit.jupiter.api.Assertions.fail;
-import static protobuf.OfferPayload.Direction.BUY;
-import static protobuf.OfferPayload.Direction.SELL;
+import static protobuf.OfferDirection.BUY;
+import static protobuf.OfferDirection.SELL;
 
 
 

@@ -42,7 +42,7 @@ import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.TradeTxException;
+import bisq.core.trade.bisq_v1.TradeTxException;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
@@ -525,6 +525,9 @@ public class BisqSetup {
         // miner fee was too low and the transaction got removed from mempool and got out from our wallet after a
         // resync.
         openOfferManager.getObservableList().forEach(e -> {
+            if (e.getOffer().isBsqSwapOffer()) {
+                return;
+            }
             String offerFeePaymentTxId = e.getOffer().getOfferFeePaymentTxId();
             if (btcWalletService.getConfidenceForTxId(offerFeePaymentTxId) == null) {
                 String message = Res.get("popup.warning.openOfferWithInvalidMakerFeeTx",
@@ -657,7 +660,10 @@ public class BisqSetup {
     }
 
     private void maybeShowLocalhostRunningInfo() {
-        maybeTriggerDisplayHandler("bitcoinLocalhostNode", displayLocalhostHandler, localBitcoinNode.shouldBeUsed());
+        if (Config.baseCurrencyNetwork().isMainnet()) {
+            maybeTriggerDisplayHandler("bitcoinLocalhostNode", displayLocalhostHandler,
+                    localBitcoinNode.shouldBeUsed());
+        }
     }
 
     private void maybeShowAccountSigningStateInfo() {

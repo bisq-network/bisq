@@ -17,20 +17,20 @@ public class BsqBalanceInfo implements Payload {
             -1);
 
     // All balances are in BSQ satoshis.
-    private final long availableConfirmedBalance;
+    private final long availableBalance;
     private final long unverifiedBalance;
     private final long unconfirmedChangeBalance;
     private final long lockedForVotingBalance;
     private final long lockupBondsBalance;
     private final long unlockingBondsBalance;
 
-    public BsqBalanceInfo(long availableConfirmedBalance,
+    public BsqBalanceInfo(long availableBalance,
                           long unverifiedBalance,
                           long unconfirmedChangeBalance,
                           long lockedForVotingBalance,
                           long lockupBondsBalance,
                           long unlockingBondsBalance) {
-        this.availableConfirmedBalance = availableConfirmedBalance;
+        this.availableBalance = availableBalance;
         this.unverifiedBalance = unverifiedBalance;
         this.unconfirmedChangeBalance = unconfirmedChangeBalance;
         this.lockedForVotingBalance = lockedForVotingBalance;
@@ -39,14 +39,14 @@ public class BsqBalanceInfo implements Payload {
     }
 
     @VisibleForTesting
-    public static BsqBalanceInfo valueOf(long availableConfirmedBalance,
+    public static BsqBalanceInfo valueOf(long availableBalance,
                                          long unverifiedBalance,
                                          long unconfirmedChangeBalance,
                                          long lockedForVotingBalance,
                                          long lockupBondsBalance,
                                          long unlockingBondsBalance) {
         // Convenience for creating a model instance instead of a proto.
-        return new BsqBalanceInfo(availableConfirmedBalance,
+        return new BsqBalanceInfo(availableBalance,
                 unverifiedBalance,
                 unconfirmedChangeBalance,
                 lockedForVotingBalance,
@@ -58,10 +58,11 @@ public class BsqBalanceInfo implements Payload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // TODO rename availableConfirmedBalance in proto if possible
     @Override
     public bisq.proto.grpc.BsqBalanceInfo toProtoMessage() {
         return bisq.proto.grpc.BsqBalanceInfo.newBuilder()
-                .setAvailableConfirmedBalance(availableConfirmedBalance)
+                .setAvailableConfirmedBalance(availableBalance)
                 .setUnverifiedBalance(unverifiedBalance)
                 .setUnconfirmedChangeBalance(unconfirmedChangeBalance)
                 .setLockedForVotingBalance(lockedForVotingBalance)
@@ -83,7 +84,7 @@ public class BsqBalanceInfo implements Payload {
     @Override
     public String toString() {
         return "BsqBalanceInfo{" +
-                "availableConfirmedBalance=" + availableConfirmedBalance +
+                "availableBalance=" + availableBalance +
                 ", unverifiedBalance=" + unverifiedBalance +
                 ", unconfirmedChangeBalance=" + unconfirmedChangeBalance +
                 ", lockedForVotingBalance=" + lockedForVotingBalance +

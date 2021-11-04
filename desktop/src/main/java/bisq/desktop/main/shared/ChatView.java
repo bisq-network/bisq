@@ -92,16 +92,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+@Slf4j
 public class ChatView extends AnchorPane {
-    public static final Logger log = LoggerFactory.getLogger(ChatView.class);
 
     // UI
     private TextArea inputTextArea;

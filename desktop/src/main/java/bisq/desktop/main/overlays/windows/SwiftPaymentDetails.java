@@ -22,7 +22,7 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.payload.SwiftAccountPayload;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.util.VolumeUtil;
 
 import javafx.scene.control.Label;
@@ -74,7 +74,7 @@ public class SwiftPaymentDetails extends Overlay<SwiftPaymentDetails> {
 
         gridPane.add(new Label(""), 0, ++rowIndex);  // spacer
         addLabelsAndCopy(Res.get("portfolio.pending.step2_buyer.amountToTransfer"),
-                VolumeUtil.formatVolumeWithCode(trade.getTradeVolume()));
+                VolumeUtil.formatVolumeWithCode(trade.getVolume()));
         addLabelsAndCopy(Res.get(SWIFT_CODE + BANKPOSTFIX), payload.getBankSwiftCode());
         addLabelsAndCopy(Res.get(SNAME + BANKPOSTFIX), payload.getBankName());
         addLabelsAndCopy(Res.get(BRANCH + BANKPOSTFIX), payload.getBankBranch());

@@ -22,9 +22,11 @@ import bisq.core.offer.Offer;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.arbitration.ArbitrationManager;
 import bisq.core.support.dispute.refund.RefundManager;
-import bisq.core.trade.Contract;
-import bisq.core.trade.Tradable;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.Tradable;
+import bisq.core.trade.model.TradeModel;
+import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 
 import bisq.common.crypto.PubKeyRing;
 
@@ -43,18 +45,18 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 class TransactionAwareTrade implements TransactionAwareTradable {
-    private final Trade trade;
+    private final TradeModel tradeModel;
     private final ArbitrationManager arbitrationManager;
     private final RefundManager refundManager;
     private final BtcWalletService btcWalletService;
     private final PubKeyRing pubKeyRing;
 
-    TransactionAwareTrade(Trade trade,
+    TransactionAwareTrade(TradeModel tradeModel,
                           ArbitrationManager arbitrationManager,
                           RefundManager refundManager,
                           BtcWalletService btcWalletService,
                           PubKeyRing pubKeyRing) {
-        this.trade = trade;
+        this.tradeModel = tradeModel;
         this.arbitrationManager = arbitrationManager;
         this.refundManager = refundManager;
         this.btcWalletService = btcWalletService;
@@ -66,19 +68,34 @@ class TransactionAwareTrade implements TransactionAwareTradable {
         Sha256Hash hash = transaction.getTxId();
         String txId = hash.toString();
 
-        boolean isTakerOfferFeeTx = txId.equals(trade.getTakerFeeTxId());
-        boolean isOfferFeeTx = isOfferFeeTx(txId);
-        boolean isDepositTx = isDepositTx(hash);
-        boolean isPayoutTx = isPayoutTx(hash);
-        boolean isDisputedPayoutTx = isDisputedPayoutTx(txId);
-        boolean isDelayedPayoutTx = transaction.getLockTime() != 0 && isDelayedPayoutTx(txId);
-        boolean isRefundPayoutTx = isRefundPayoutTx(txId);
+        boolean tradeRelated = false;
+        if (tradeModel instanceof Trade) {
+            Trade trade = (Trade) tradeModel;
+            boolean isTakerOfferFeeTx = txId.equals(trade.getTakerFeeTxId());
+            boolean isOfferFeeTx = isOfferFeeTx(txId);
+            boolean isDepositTx = isDepositTx(hash);
+            boolean isPayoutTx = isPayoutTx(hash);
+            boolean isDisputedPayoutTx = isDisputedPayoutTx(txId);
+            boolean isDelayedPayoutTx = transaction.getLockTime() != 0 && isDelayedPayoutTx(txId);
+            boolean isRefundPayoutTx = isRefundPayoutTx(trade, txId);
+            tradeRelated = isTakerOfferFeeTx ||
+                    isOfferFeeTx ||
+                    isDepositTx ||
+                    isPayoutTx ||
+                    isDisputedPayoutTx ||
+                    isDelayedPayoutTx ||
+                    isRefundPayoutTx;
+        }
+        boolean isBsqSwapTrade = isBsqSwapTrade(txId);
 
-        return isTakerOfferFeeTx || isOfferFeeTx || isDepositTx || isPayoutTx ||
-                isDisputedPayoutTx || isDelayedPayoutTx || isRefundPayoutTx;
+        return tradeRelated || isBsqSwapTrade;
     }
 
     private boolean isPayoutTx(Sha256Hash txId) {
+        if (isBsqSwapTrade())
+            return false;
+
+        Trade trade = (Trade) tradeModel;
         return Optional.ofNullable(trade.getPayoutTx())
                 .map(Transaction::getTxId)
                 .map(hash -> hash.equals(txId))
@@ -86,6 +103,10 @@ class TransactionAwareTrade implements TransactionAwareTradable {
     }
 
     private boolean isDepositTx(Sha256Hash txId) {
+        if (isBsqSwapTrade())
+            return false;
+
+        Trade trade = (Trade) tradeModel;
         return Optional.ofNullable(trade.getDepositTx())
                 .map(Transaction::getTxId)
                 .map(hash -> hash.equals(txId))
@@ -93,17 +114,23 @@ class TransactionAwareTrade implements TransactionAwareTradable {
     }
 
     private boolean isOfferFeeTx(String txId) {
-        return Optional.ofNullable(trade.getOffer())
+        if (isBsqSwapTrade())
+            return false;
+
+        return Optional.ofNullable(tradeModel.getOffer())
                 .map(Offer::getOfferFeePaymentTxId)
                 .map(paymentTxId -> paymentTxId.equals(txId))
                 .orElse(false);
     }
 
     private boolean isDisputedPayoutTx(String txId) {
-        String delegateId = trade.getId();
+        if (isBsqSwapTrade())
+            return false;
+
+        String delegateId = tradeModel.getId();
         ObservableList<Dispute> disputes = arbitrationManager.getDisputesAsObservableList();
 
-        boolean isAnyDisputeRelatedToThis = arbitrationManager.getDisputedTradeIds().contains(trade.getId());
+        boolean isAnyDisputeRelatedToThis = arbitrationManager.getDisputedTradeIds().contains(tradeModel.getId());
 
         return isAnyDisputeRelatedToThis && disputes.stream()
                 .anyMatch(dispute -> {
@@ -118,6 +145,9 @@ class TransactionAwareTrade implements TransactionAwareTradable {
     }
 
     boolean isDelayedPayoutTx(String txId) {
+        if (isBsqSwapTrade())
+            return false;
+
         Transaction transaction = btcWalletService.getTransaction(txId);
         if (transaction == null)
             return false;
@@ -142,8 +172,11 @@ class TransactionAwareTrade implements TransactionAwareTradable {
                 });
     }
 
-    private boolean isRefundPayoutTx(String txId) {
-        String tradeId = trade.getId();
+    private boolean isRefundPayoutTx(Trade trade, String txId) {
+        if (isBsqSwapTrade())
+            return false;
+
+        String tradeId = tradeModel.getId();
         ObservableList<Dispute> disputes = refundManager.getDisputesAsObservableList();
 
         boolean isAnyDisputeRelatedToThis = refundManager.getDisputedTradeIds().contains(tradeId);
@@ -171,8 +204,19 @@ class TransactionAwareTrade implements TransactionAwareTradable {
         return false;
     }
 
+    private boolean isBsqSwapTrade() {
+        return tradeModel instanceof BsqSwapTrade;
+    }
+
+    private boolean isBsqSwapTrade(String txId) {
+        if (isBsqSwapTrade()) {
+            return (txId.equals(((BsqSwapTrade) tradeModel).getTxId()));
+        }
+        return false;
+    }
+
     @Override
     public Tradable asTradable() {
-        return trade;
+        return tradeModel;
     }
 }

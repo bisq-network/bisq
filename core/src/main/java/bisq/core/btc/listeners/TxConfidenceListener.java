@@ -19,18 +19,15 @@ package bisq.core.btc.listeners;
 
 import org.bitcoinj.core.TransactionConfidence;
 
-public class TxConfidenceListener {
-    private final String txID;
+import lombok.Getter;
 
-    public TxConfidenceListener(String txID) {
-        this.txID = txID;
+public abstract class TxConfidenceListener {
+    @Getter
+    private final String txId;
+
+    public TxConfidenceListener(String txId) {
+        this.txId = txId;
     }
 
-    public String getTxID() {
-        return txID;
-    }
-
-    @SuppressWarnings("UnusedParameters")
-    public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-    }
+    abstract public void onTransactionConfidenceChanged(TransactionConfidence confidence);
 }

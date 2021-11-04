@@ -19,7 +19,7 @@ package bisq.desktop.main.portfolio.editoffer;
 
 
 import bisq.desktop.Navigation;
-import bisq.desktop.main.offer.MutableOfferDataModel;
+import bisq.desktop.main.offer.bisq_v1.MutableOfferDataModel;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -27,13 +27,14 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.offer.CreateOfferService;
-import bisq.core.offer.MutableOfferPayloadFields;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.offer.bisq_v1.CreateOfferService;
+import bisq.core.offer.bisq_v1.MutableOfferPayloadFields;
+import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
 import bisq.core.provider.fee.FeeService;
@@ -147,7 +148,7 @@ class EditOfferDataModel extends MutableOfferDataModel {
     }
 
     @Override
-    public boolean initWithData(OfferPayload.Direction direction, TradeCurrency tradeCurrency) {
+    public boolean initWithData(OfferDirection direction, TradeCurrency tradeCurrency) {
         try {
             return super.initWithData(direction, tradeCurrency);
         } catch (NullPointerException e) {
@@ -183,10 +184,15 @@ class EditOfferDataModel extends MutableOfferDataModel {
     }
 
     public void onPublishOffer(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        MutableOfferPayloadFields mutableOfferPayloadFields =
-                new MutableOfferPayloadFields(createAndGetOffer().getOfferPayload());
-        final OfferPayload editedPayload = offerUtil.getMergedOfferPayload(openOffer, mutableOfferPayloadFields);
-        final Offer editedOffer = new Offer(editedPayload);
+        Offer offer = createAndGetOffer();
+        if (offer.isBsqSwapOffer()) {
+            return;
+        }
+
+        OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();
+        var mutableOfferPayloadFields = new MutableOfferPayloadFields(offerPayload);
+        OfferPayload editedPayload = offerUtil.getMergedOfferPayload(openOffer, mutableOfferPayloadFields);
+        Offer editedOffer = new Offer(editedPayload);
         editedOffer.setPriceFeedService(priceFeedService);
         editedOffer.setState(Offer.State.AVAILABLE);
         openOfferManager.editOpenOfferPublish(editedOffer, triggerPrice, initialState, () -> {

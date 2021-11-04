@@ -1,7 +1,8 @@
 package bisq.core.offer;
 
 import bisq.core.api.CoreContext;
-import bisq.core.trade.TradableList;
+import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.trade.model.TradableList;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.peers.PeerManager;
@@ -46,10 +47,8 @@ public class OpenOfferManagerTest {
     public void testStartEditOfferForActiveOffer() {
         P2PService p2PService = mock(P2PService.class);
         OfferBookService offerBookService = mock(OfferBookService.class);
-
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
-
-        final OpenOfferManager manager = new OpenOfferManager(coreContext,
+        OpenOfferManager manager = new OpenOfferManager(coreContext,
                 null,
                 null,
                 null,
@@ -68,7 +67,8 @@ public class OpenOfferManagerTest {
                 null,
                 null,
                 null,
-                persistenceManager);
+                persistenceManager
+        );
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 
@@ -95,8 +95,7 @@ public class OpenOfferManagerTest {
         P2PService p2PService = mock(P2PService.class);
         OfferBookService offerBookService = mock(OfferBookService.class);
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
-
-        final OpenOfferManager manager = new OpenOfferManager(coreContext,
+        OpenOfferManager manager = new OpenOfferManager(coreContext,
                 null,
                 null,
                 null,
@@ -115,7 +114,8 @@ public class OpenOfferManagerTest {
                 null,
                 null,
                 null,
-                persistenceManager);
+                persistenceManager
+        );
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 
@@ -133,10 +133,8 @@ public class OpenOfferManagerTest {
     public void testStartEditOfferForOfferThatIsCurrentlyEdited() {
         P2PService p2PService = mock(P2PService.class);
         OfferBookService offerBookService = mock(OfferBookService.class);
-
         when(p2PService.getPeerManager()).thenReturn(mock(PeerManager.class));
-
-        final OpenOfferManager manager = new OpenOfferManager(coreContext,
+        OpenOfferManager manager = new OpenOfferManager(coreContext,
                 null,
                 null,
                 null,
@@ -155,7 +153,8 @@ public class OpenOfferManagerTest {
                 null,
                 null,
                 null,
-                persistenceManager);
+                persistenceManager
+        );
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
 

@@ -22,8 +22,10 @@ import bisq.core.monetary.AltcoinExchangeRate;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayload;
-import bisq.core.trade.Trade;
+import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
+import bisq.core.util.JsonUtil;
 import bisq.core.util.VolumeUtil;
 
 import bisq.network.p2p.NodeAddress;
@@ -104,13 +106,26 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
 
         Offer offer = checkNotNull(trade.getOffer());
         return new TradeStatistics3(offer.getCurrencyCode(),
-                trade.getTradePrice().getValue(),
-                trade.getTradeAmountAsLong(),
+                trade.getPrice().getValue(),
+                trade.getAmountAsLong(),
                 offer.getPaymentMethod().getId(),
-                trade.getTakeOfferDate().getTime(),
+                trade.getDate().getTime(),
                 truncatedMediatorNodeAddress,
                 truncatedRefundAgentNodeAddress,
                 extraDataMap);
+    }
+
+    public static TradeStatistics3 from(BsqSwapTrade bsqSwapTrade) {
+        Offer offer = checkNotNull(bsqSwapTrade.getOffer());
+        return new TradeStatistics3(offer.getCurrencyCode(),
+                bsqSwapTrade.getPrice().getValue(),
+                bsqSwapTrade.getAmountAsLong(),
+                offer.getPaymentMethod().getId(),
+                bsqSwapTrade.getTakeOfferDate(),
+                null,
+                null,
+                null,
+                null);
     }
 
     // This enum must not change the order as we use the ordinal for storage to reduce data size.
@@ -291,7 +306,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         // We create hash from all fields excluding hash itself. We use json as simple data serialisation.
         // TradeDate is different for both peers so we ignore it for hash. ExtraDataMap is ignored as well as at
         // software updates we might have different entries which would cause a different hash.
-        return Hash.getSha256Ripemd160hash(Utilities.objectToJson(this).getBytes(Charsets.UTF_8));
+        return Hash.getSha256Ripemd160hash(JsonUtil.objectToJson(this).getBytes(Charsets.UTF_8));
     }
 
     private protobuf.TradeStatistics3.Builder getBuilder() {

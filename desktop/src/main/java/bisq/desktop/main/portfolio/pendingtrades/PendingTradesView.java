@@ -35,13 +35,13 @@ import bisq.desktop.util.FormBuilder;
 
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.Res;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.traderchat.TradeChatSession;
 import bisq.core.support.traderchat.TraderChatManager;
-import bisq.core.trade.Contract;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.VolumeUtil;
@@ -210,8 +210,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         tradeIdColumn.setComparator(Comparator.comparing(o -> o.getTrade().getId()));
         dateColumn.setComparator(Comparator.comparing(o -> o.getTrade().getDate()));
-        volumeColumn.setComparator(Comparator.comparing(o -> o.getTrade().getTradeVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
-        amountColumn.setComparator(Comparator.comparing(o -> o.getTrade().getTradeAmount(), Comparator.nullsFirst(Comparator.naturalOrder())));
+        volumeColumn.setComparator(Comparator.comparing(o -> o.getTrade().getVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
+        amountColumn.setComparator(Comparator.comparing(o -> o.getTrade().getAmount(), Comparator.nullsFirst(Comparator.naturalOrder())));
         priceColumn.setComparator(Comparator.comparing(item -> FormattingUtils.formatPrice(item.getPrice())));
         paymentMethodColumn.setComparator(Comparator.comparing(
                 item -> item.getTrade().getOffer() != null ?
@@ -235,7 +235,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                     MenuItem editItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
                     editItem.setOnAction((event) -> {
                         try {
-                            OfferPayload offerPayload = row.getItem().getTrade().getOffer().getOfferPayload();
+                            OfferPayload offerPayload = row.getItem().getTrade().getOffer().getOfferPayload().orElseThrow();
                             if (offerPayload.getPubKeyRing().equals(keyRing.getPubKeyRing())) {
                                 navigation.navigateToWithData(offerPayload, MainView.class, PortfolioView.class, DuplicateOfferView.class);
                             } else {
@@ -368,7 +368,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     private boolean isMaybeInvalidTrade(Trade trade) {
         return trade.hasErrorMessage() ||
-                (Trade.Phase.DEPOSIT_PUBLISHED.ordinal() <= trade.getPhase().ordinal() && trade.isTxChainInvalid());
+                (Trade.Phase.DEPOSIT_PUBLISHED.ordinal() <= trade.getTradePhase().ordinal() && trade.isTxChainInvalid());
     }
 
     private void onMoveInvalidTradeToFailedTrades(Trade trade) {
@@ -389,7 +389,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     private void onShowInfoForInvalidTrade(Trade trade) {
         new Popup().width(900).attention(Res.get("portfolio.pending.failedTrade.info.popup",
-                        getInvalidTradeDetails(trade)))
+                getInvalidTradeDetails(trade)))
                 .show();
     }
 
@@ -684,7 +684,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setGraphic(new AutoTooltipLabel(formatter.formatCoin(item.getTrade().getTradeAmount())));
+                                    setGraphic(new AutoTooltipLabel(formatter.formatCoin(item.getTrade().getAmount())));
                                 else
                                     setGraphic(null);
                             }
@@ -727,7 +727,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     try {
-                                        String volume = VolumeUtil.formatVolumeWithCode(item.getTrade().getTradeVolume());
+                                        String volume = VolumeUtil.formatVolumeWithCode(item.getTrade().getVolume());
                                         setGraphic(new AutoTooltipLabel(volume));
                                     } catch (Throwable ignore) {
                                         log.debug(ignore.toString()); // Stupidity to make Codacy happy

@@ -40,7 +40,7 @@ import javax.annotation.Nullable;
 public class OfferForJson {
     private static final Logger log = LoggerFactory.getLogger(OfferForJson.class);
 
-    public final OfferPayload.Direction direction;
+    public final OfferDirection direction;
     public final String currencyCode;
     public final long minAmount;
     public final long amount;
@@ -53,7 +53,7 @@ public class OfferForJson {
 
     // primaryMarket fields are based on industry standard where primaryMarket is always in the focus (in the app BTC is always in the focus - will be changed in a larger refactoring once)
     public String currencyPair;
-    public OfferPayload.Direction primaryMarketDirection;
+    public OfferDirection primaryMarketDirection;
 
     public String priceDisplayString;
     public String primaryMarketAmountDisplayString;
@@ -75,7 +75,7 @@ public class OfferForJson {
     transient private final MonetaryFormat coinFormat = MonetaryFormat.BTC;
 
 
-    public OfferForJson(OfferPayload.Direction direction,
+    public OfferForJson(OfferDirection direction,
                         String currencyCode,
                         Coin minAmount,
                         Coin amount,
@@ -104,7 +104,7 @@ public class OfferForJson {
         try {
             final Price price = getPrice();
             if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
-                primaryMarketDirection = direction == OfferPayload.Direction.BUY ? OfferPayload.Direction.SELL : OfferPayload.Direction.BUY;
+                primaryMarketDirection = direction == OfferDirection.BUY ? OfferDirection.SELL : OfferDirection.BUY;
                 currencyPair = currencyCode + "/" + Res.getBaseCurrencyCode();
 
                 // int precision = 8;

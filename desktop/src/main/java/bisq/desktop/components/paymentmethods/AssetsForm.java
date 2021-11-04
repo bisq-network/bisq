@@ -236,8 +236,13 @@ public class AssetsForm extends PaymentMethodForm {
         ((AutocompleteComboBox<?>) currencyComboBox).setOnChangeConfirmed(e -> {
             addressInputTextField.resetValidation();
             addressInputTextField.validate();
-            paymentAccount.setSingleTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
+            TradeCurrency tradeCurrency = currencyComboBox.getSelectionModel().getSelectedItem();
+            paymentAccount.setSingleTradeCurrency(tradeCurrency);
             updateFromInputs();
+
+            if (tradeCurrency != null && tradeCurrency.getCode().equals("BSQ")) {
+                new Popup().information(Res.get("payment.select.altcoin.bsq.warning")).show();
+            }
         });
     }
 }

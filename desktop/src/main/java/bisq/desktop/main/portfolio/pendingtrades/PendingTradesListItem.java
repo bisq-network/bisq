@@ -19,7 +19,7 @@ package bisq.desktop.main.portfolio.pendingtrades;
 
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
-import bisq.core.trade.Trade;
+import bisq.core.trade.model.bisq_v1.Trade;
 
 import org.bitcoinj.core.Coin;
 
@@ -41,15 +41,15 @@ public class PendingTradesListItem {
     }
 
     public ReadOnlyObjectProperty<Coin> tradeAmountProperty() {
-        return trade.tradeAmountProperty();
+        return trade.amountProperty();
     }
 
     public ReadOnlyObjectProperty<Volume> tradeVolumeProperty() {
-        return trade.tradeVolumeProperty();
+        return trade.volumeProperty();
     }
 
     public Price getPrice() {
-        return trade.getTradePrice();
+        return trade.getPrice();
     }
 
 }

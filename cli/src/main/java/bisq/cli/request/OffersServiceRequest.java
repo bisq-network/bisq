@@ -17,6 +17,7 @@
 
 package bisq.cli.request;
 
+import bisq.proto.grpc.BsqSwapOfferInfo;
 import bisq.proto.grpc.CancelOfferRequest;
 import bisq.proto.grpc.CreateOfferRequest;
 import bisq.proto.grpc.EditOfferRequest;
@@ -38,8 +39,8 @@ import static bisq.proto.grpc.EditOfferRequest.EditType.MKT_PRICE_MARGIN_ONLY;
 import static bisq.proto.grpc.EditOfferRequest.EditType.TRIGGER_PRICE_ONLY;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
-import static protobuf.OfferPayload.Direction.BUY;
-import static protobuf.OfferPayload.Direction.SELL;
+import static protobuf.OfferDirection.BUY;
+import static protobuf.OfferDirection.SELL;
 
 
 
@@ -207,6 +208,13 @@ public class OffersServiceRequest {
         grpcStubs.offersService.cancelOffer(request);
     }
 
+    public BsqSwapOfferInfo getBsqSwapOffer(String offerId) {
+        var request = GetOfferRequest.newBuilder()
+                .setId(offerId)
+                .build();
+        return grpcStubs.offersService.getBsqSwapOffer(request).getBsqSwapOffer();
+    }
+
     public OfferInfo getOffer(String offerId) {
         var request = GetOfferRequest.newBuilder()
                 .setId(offerId)
@@ -214,11 +222,28 @@ public class OffersServiceRequest {
         return grpcStubs.offersService.getOffer(request).getOffer();
     }
 
+    public BsqSwapOfferInfo getMyBsqSwapOffer(String offerId) {
+        var request = GetMyOfferRequest.newBuilder()
+                .setId(offerId)
+                .build();
+        return grpcStubs.offersService.getMyBsqSwapOffer(request).getBsqSwapOffer();
+
+    }
+
     public OfferInfo getMyOffer(String offerId) {
         var request = GetMyOfferRequest.newBuilder()
                 .setId(offerId)
                 .build();
         return grpcStubs.offersService.getMyOffer(request).getOffer();
+    }
+
+    public List<BsqSwapOfferInfo> getBsqSwapOffers(String direction, String currencyCode) {
+        var request = GetOffersRequest.newBuilder()
+                .setDirection(direction)
+                .setCurrencyCode(currencyCode)
+                .build();
+
+        return grpcStubs.offersService.getBsqSwapOffers(request).getBsqSwapOffersList();
     }
 
     public List<OfferInfo> getOffers(String direction, String currencyCode) {
@@ -251,11 +276,26 @@ public class OffersServiceRequest {
         return offers.isEmpty() ? offers : sortOffersByDate(offers);
     }
 
+    public List<BsqSwapOfferInfo> getBsqSwapOffersSortedByDate() {
+        ArrayList<BsqSwapOfferInfo> offers = new ArrayList<>();
+        offers.addAll(getBsqSwapOffers(BUY.name(), "BSQ"));
+        offers.addAll(getBsqSwapOffers(SELL.name(), "BSQ"));
+        return sortBsqSwapOffersByDate(offers);
+    }
+
     public List<OfferInfo> getBsqOffersSortedByDate() {
         ArrayList<OfferInfo> offers = new ArrayList<>();
         offers.addAll(getCryptoCurrencyOffers(BUY.name(), "BSQ"));
         offers.addAll(getCryptoCurrencyOffers(SELL.name(), "BSQ"));
         return sortOffersByDate(offers);
+    }
+
+    public List<BsqSwapOfferInfo> getMyBsqSwapOffers(String direction, String currencyCode) {
+        var request = GetMyOffersRequest.newBuilder()
+                .setDirection(direction)
+                .setCurrencyCode(currencyCode)
+                .build();
+        return grpcStubs.offersService.getMyBsqSwapOffers(request).getBsqSwapOffersList();
     }
 
     public List<OfferInfo> getMyOffers(String direction, String currencyCode) {
@@ -295,9 +335,23 @@ public class OffersServiceRequest {
         return sortOffersByDate(offers);
     }
 
+    public List<BsqSwapOfferInfo> getMyBsqSwapOffersSortedByDate() {
+        ArrayList<BsqSwapOfferInfo> offers = new ArrayList<>();
+        offers.addAll(getMyBsqSwapOffers(BUY.name(), "BSQ"));
+        offers.addAll(getMyBsqSwapOffers(SELL.name(), "BSQ"));
+        return sortBsqSwapOffersByDate(offers);
+    }
+
     public OfferInfo getMostRecentOffer(String direction, String currencyCode) {
         List<OfferInfo> offers = getOffersSortedByDate(direction, currencyCode);
         return offers.isEmpty() ? null : offers.get(offers.size() - 1);
+    }
+
+    public List<BsqSwapOfferInfo> sortBsqSwapOffersByDate(List<BsqSwapOfferInfo> offerInfoList) {
+        return offerInfoList.stream()
+                .sorted(comparing(BsqSwapOfferInfo::getDate))
+                .collect(toList());
+
     }
 
     public List<OfferInfo> sortOffersByDate(List<OfferInfo> offerInfoList) {

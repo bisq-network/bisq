@@ -104,7 +104,7 @@ public class UnlockTxService {
         TxOutput lockupTxOutput = optionalLockupTxOutput.get();
         Transaction preparedTx = bsqWalletService.getPreparedUnlockTx(lockupTxOutput);
         Transaction txWithBtcFee = btcWalletService.completePreparedBsqTx(preparedTx, null);
-        Transaction transaction = bsqWalletService.signTx(txWithBtcFee);
+        Transaction transaction = bsqWalletService.signTxAndVerifyNoDustOutputs(txWithBtcFee);
         log.info("Unlock tx: " + transaction);
         return transaction;
     }

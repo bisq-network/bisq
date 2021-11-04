@@ -10,10 +10,10 @@ import bisq.core.locale.Country;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
-import bisq.core.offer.CreateOfferService;
-import bisq.core.offer.OfferPayload;
+import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOffer;
+import bisq.core.offer.bisq_v1.CreateOfferService;
 import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
@@ -32,8 +32,6 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 
 import java.time.Instant;
-
-import java.util.UUID;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -94,8 +92,7 @@ public class EditOfferDataModelTest {
         when(accountAgeWitnessService.getMyTradeLimit(any(), any(), any())).thenReturn(100000000L);
         when(preferences.getUserCountry()).thenReturn(new Country("US", "United States", null));
         when(bsqFormatter.formatCoin(any())).thenReturn("0");
-        when(bsqWalletService.getAvailableConfirmedBalance()).thenReturn(Coin.ZERO);
-        when(createOfferService.getRandomOfferId()).thenReturn(UUID.randomUUID().toString());
+        when(bsqWalletService.getAvailableBalance()).thenReturn(Coin.ZERO);
 
         model = new EditOfferDataModel(createOfferService,
                 null,
@@ -129,6 +126,6 @@ public class EditOfferDataModelTest {
     @Test
     public void testInitializeEditOfferWithRemovedAsset() {
         exception.expect(IllegalArgumentException.class);
-        model.initWithData(OfferPayload.Direction.BUY, null);
+        model.initWithData(OfferDirection.BUY, null);
     }
 }

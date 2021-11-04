@@ -60,7 +60,7 @@ public final class BsqEmptyWalletWindow extends Overlay<BsqEmptyWalletWindow> {
         gridPane.getColumnConstraints().remove(1);
 
         addTopLabelTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.balance"),
-                bsqFormatter.formatCoinWithCode(bsqWalletService.getAvailableConfirmedBalance()), 10);
+                bsqFormatter.formatCoinWithCode(bsqWalletService.getAvailableBalance()), 10);
 
         addTopLabelTextField(gridPane, ++rowIndex, Res.get("emptyWalletWindow.bsq.btcBalance"),
                 bsqFormatter.formatBTCWithCode(bsqWalletService.getAvailableNonBsqBalance().value), 10);

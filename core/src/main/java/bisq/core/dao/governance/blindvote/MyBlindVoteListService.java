@@ -356,7 +356,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
             throws InsufficientMoneyException, WalletException, TransactionVerificationException {
         Transaction preparedTx = bsqWalletService.getPreparedBlindVoteTx(fee, stake);
         Transaction txWithBtcFee = btcWalletService.completePreparedBlindVoteTx(preparedTx, opReturnData);
-        return bsqWalletService.signTx(txWithBtcFee);
+        return bsqWalletService.signTxAndVerifyNoDustOutputs(txWithBtcFee);
     }
 
     private void maybeRePublishMyBlindVote() {
