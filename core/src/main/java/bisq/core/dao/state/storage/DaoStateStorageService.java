@@ -129,9 +129,11 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
                         if (daoStateAsProto.getBlocksList().isEmpty()) {
                             int chainHeight = daoStateAsProto.getChainHeight();
                             list = bsqBlocksStorageService.readBlocks(chainHeight);
-                            int heightOfLastBlock = list.getLast().getHeight();
-                            checkArgument(heightOfLastBlock == chainHeight,
-                                    "heightOfLastBlock must match chainHeight");
+                            if (!list.isEmpty()) {
+                                int heightOfLastBlock = list.getLast().getHeight();
+                                checkArgument(heightOfLastBlock == chainHeight,
+                                        "heightOfLastBlock must match chainHeight");
+                            }
                         } else {
                             list = bsqBlocksStorageService.migrateBlocks(daoStateAsProto.getBlocksList());
                         }
