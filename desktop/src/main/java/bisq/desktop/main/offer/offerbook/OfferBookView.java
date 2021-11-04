@@ -91,6 +91,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 
@@ -146,6 +147,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private ChangeListener<Number> priceFeedUpdateCounterListener;
     private Subscription currencySelectionSubscriber;
     private static final int SHOW_ALL = 0;
+    private Label disabledCreateOfferButtonTooltip;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -200,13 +202,23 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         matchingOffersToggle.setText(Res.get("offerbook.matchingOffers"));
         HBox.setMargin(matchingOffersToggle, new Insets(7, 0, -9, -15));
 
-
         createOfferButton = new AutoTooltipButton();
         createOfferButton.setMinHeight(40);
         createOfferButton.setGraphicTextGap(10);
 
+        disabledCreateOfferButtonTooltip = new Label("");
+        disabledCreateOfferButtonTooltip.setMinSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+        disabledCreateOfferButtonTooltip.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+        disabledCreateOfferButtonTooltip.prefWidthProperty().bind(createOfferButton.widthProperty());
+        disabledCreateOfferButtonTooltip.prefHeightProperty().bind(createOfferButton.heightProperty());
+        disabledCreateOfferButtonTooltip.setTooltip(new Tooltip(Res.get("offerbook.createOfferDisabled.tooltip")));
+        disabledCreateOfferButtonTooltip.setManaged(false);
+        disabledCreateOfferButtonTooltip.setVisible(false);
+
+        var createOfferButtonStack = new StackPane(createOfferButton, disabledCreateOfferButtonTooltip);
+
         offerToolsBox.getChildren().addAll(currencyBoxTuple.first, paymentBoxTuple.first,
-                matchingOffersToggle, getSpacer(), createOfferButton);
+                matchingOffersToggle, getSpacer(), createOfferButtonStack);
 
         GridPane.setHgrow(offerToolsBox, Priority.ALWAYS);
         GridPane.setRowIndex(offerToolsBox, gridRow);
@@ -538,6 +550,16 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     public void enableCreateOfferButton() {
         createOfferButton.setDisable(false);
+        disabledCreateOfferButtonTooltip.setManaged(false);
+        disabledCreateOfferButtonTooltip.setVisible(false);
+    }
+
+    private void disableCreateOfferButton() {
+        createOfferButton.setDisable(true);
+        disabledCreateOfferButtonTooltip.setManaged(true);
+        disabledCreateOfferButtonTooltip.setVisible(true);
+
+        offerActionHandler.onCreateOffer(model.getSelectedTradeCurrency(), model.selectedPaymentMethod);
     }
 
     public void setDirection(OfferDirection direction) {
@@ -594,15 +616,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private void onCreateOffer() {
         if (model.canCreateOrTakeOffer()) {
-            PaymentMethod selectedPaymentMethod = model.selectedPaymentMethod;
-            TradeCurrency selectedTradeCurrency = model.getSelectedTradeCurrency();
             if (!model.hasPaymentAccountForCurrency()) {
                 new Popup().headLine(Res.get("offerbook.warning.noTradingAccountForCurrency.headline"))
                         .instruction(Res.get("offerbook.warning.noTradingAccountForCurrency.msg"))
                         .actionButtonText(Res.get("offerbook.yesCreateOffer"))
                         .onAction(() -> {
-                            createOfferButton.setDisable(true);
-                            offerActionHandler.onCreateOffer(selectedTradeCurrency, selectedPaymentMethod);
+                            disableCreateOfferButton();
                         })
                         .secondaryActionButtonText(Res.get("offerbook.setupNewAccount"))
                         .onSecondaryAction(() -> {
@@ -614,8 +633,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 return;
             }
 
-            createOfferButton.setDisable(true);
-            offerActionHandler.onCreateOffer(selectedTradeCurrency, selectedPaymentMethod);
+            disableCreateOfferButton();
         }
     }
 

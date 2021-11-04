@@ -175,7 +175,8 @@
     -fx-padding: 0 10 0 10;
 }
 
-.tiny-button, .action-button.tiny-button {
+.tiny-button,
+.action-button.tiny-button {
     -fx-font-size: 0.769em;
     -fx-pref-height: 20;
     -fx-padding: 3 8 3 8;
