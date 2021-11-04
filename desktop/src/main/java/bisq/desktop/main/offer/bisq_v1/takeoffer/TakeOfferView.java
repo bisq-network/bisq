@@ -90,7 +90,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -119,6 +118,7 @@ import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.NotNull;
 
 import static bisq.desktop.util.FormBuilder.*;
+import static bisq.desktop.util.GUIUtil.addPayInfoEntry;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 @FxmlView
@@ -672,7 +672,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     offerDetailsWindow.hide();
 
                 UserThread.runAfter(() -> new Popup().warning(newValue + "\n\n" +
-                        Res.get("takeOffer.alreadyPaidInFunds"))
+                                Res.get("takeOffer.alreadyPaidInFunds"))
                         .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                         .onAction(() -> {
                             errorPopupDisplayed.set(true);
@@ -787,15 +787,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addScrollPane() {
-        scrollPane = new ScrollPane();
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setFitToHeight(true);
-        AnchorPane.setLeftAnchor(scrollPane, 0d);
-        AnchorPane.setTopAnchor(scrollPane, 0d);
-        AnchorPane.setRightAnchor(scrollPane, 0d);
-        AnchorPane.setBottomAnchor(scrollPane, 0d);
+        scrollPane = GUIUtil.createScrollPane();
         root.getChildren().add(scrollPane);
     }
 
@@ -805,13 +797,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         gridPane.setPadding(new Insets(15, 15, -1, 15));
         gridPane.setHgap(5);
         gridPane.setVgap(5);
-        ColumnConstraints columnConstraints1 = new ColumnConstraints();
-        columnConstraints1.setHalignment(HPos.RIGHT);
-        columnConstraints1.setHgrow(Priority.NEVER);
-        columnConstraints1.setMinWidth(200);
-        ColumnConstraints columnConstraints2 = new ColumnConstraints();
-        columnConstraints2.setHgrow(Priority.ALWAYS);
-        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
+        GUIUtil.setDefaultTwoColumnConstraintsForGridPane(gridPane);
         scrollPane.setContent(gridPane);
     }
 
@@ -1282,17 +1268,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private void maybeShowAccountWarning(PaymentAccount paymentAccount, boolean isBuyer) {
         String msgKey = paymentAccount.getPreTradeMessage(!isBuyer);
-        if (msgKey == null || paymentAccountWarningDisplayed.getOrDefault(msgKey, false)) {
-            return;
-        }
-        paymentAccountWarningDisplayed.put(msgKey, true);
-        UserThread.runAfter(() -> {
-            new Popup().information(Res.get(msgKey))
-                    .width(900)
-                    .closeButtonText(Res.get("shared.iConfirm"))
-                    .dontShowAgainId(msgKey)
-                    .show();
-        }, 500, TimeUnit.MILLISECONDS);
+        GUIUtil.showPaymentAccountWarning(msgKey, paymentAccountWarningDisplayed);
     }
 
     private void maybeShowCashByMailWarning(PaymentAccount paymentAccount, Offer offer) {
@@ -1332,8 +1308,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         infoGridPane.setPadding(new Insets(10, 10, 10, 10));
 
         int i = 0;
-        if (model.isSeller())
+        if (model.isSeller()) {
             addPayInfoEntry(infoGridPane, i++, Res.get("takeOffer.fundsBox.tradeAmount"), model.getTradeAmount());
+        }
 
         addPayInfoEntry(infoGridPane, i++, Res.getWithCol("shared.yourSecurityDeposit"), model.getSecurityDepositInfo());
         addPayInfoEntry(infoGridPane, i++, Res.get("takeOffer.fundsBox.offerFee"), model.getTradeFee());
@@ -1347,18 +1324,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 model.getTotalToPayInfo());
 
         return infoGridPane;
-    }
-
-    private void addPayInfoEntry(GridPane infoGridPane, int row, String labelText, String value) {
-        Label label = new AutoTooltipLabel(labelText);
-        TextField textField = new TextField(value);
-        textField.setMinWidth(500);
-        textField.setEditable(false);
-        textField.setFocusTraversable(false);
-        textField.setId("payment-info");
-        GridPane.setConstraints(label, 0, row, 1, 1, HPos.RIGHT, VPos.CENTER);
-        GridPane.setConstraints(textField, 1, row);
-        infoGridPane.getChildren().addAll(label, textField);
     }
 }
 
