@@ -25,6 +25,7 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.OfferDirection;
 import bisq.core.trade.ClosedTradableFormatter;
+import bisq.core.trade.model.Tradable;
 
 import org.bitcoinj.core.Coin;
 
@@ -42,66 +43,66 @@ public class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTrades
         this.closedTradableFormatter = closedTradableFormatter;
     }
 
-    String getTradeId(ClosedTradableListItem item) {
-        return item.getTradable().getShortId();
+    String getTradeId(Tradable item) {
+        return item.getShortId();
     }
 
-    String getAmount(ClosedTradableListItem item) {
-        return item != null ? closedTradableFormatter.getAmountAsString(item.getTradable()) : "";
+    String getAmount(Tradable item) {
+        return item != null ? closedTradableFormatter.getAmountAsString(item) : "";
     }
 
-    String getPrice(ClosedTradableListItem item) {
-        return item != null ? closedTradableFormatter.getPriceAsString(item.getTradable()) : "";
+    String getPrice(Tradable item) {
+        return item != null ? closedTradableFormatter.getPriceAsString(item) : "";
     }
 
-    String getPriceDeviation(ClosedTradableListItem item) {
-        return item != null ? closedTradableFormatter.getPriceDeviationAsString(item.getTradable()) : "";
+    String getPriceDeviation(Tradable item) {
+        return item != null ? closedTradableFormatter.getPriceDeviationAsString(item) : "";
     }
 
-    String getVolume(ClosedTradableListItem item, boolean appendCode) {
-        return item != null ? closedTradableFormatter.getVolumeAsString(item.getTradable(), appendCode) : "";
+    String getVolume(Tradable item, boolean appendCode) {
+        return item != null ? closedTradableFormatter.getVolumeAsString(item, appendCode) : "";
     }
 
-    String getVolumeCurrency(ClosedTradableListItem item) {
-        return item != null ? closedTradableFormatter.getVolumeCurrencyAsString(item.getTradable()) : "";
+    String getVolumeCurrency(Tradable item) {
+        return item != null ? closedTradableFormatter.getVolumeCurrencyAsString(item) : "";
     }
 
-    String getTxFee(ClosedTradableListItem item) {
-        return item != null ? closedTradableFormatter.getTxFeeAsString(item.getTradable()) : "";
+    String getTxFee(Tradable item) {
+        return item != null ? closedTradableFormatter.getTxFeeAsString(item) : "";
     }
 
-    String getTradeFee(ClosedTradableListItem item, boolean appendCode) {
-        return item != null ? closedTradableFormatter.getTradeFeeAsString(item.getTradable(), appendCode) : "";
+    String getTradeFee(Tradable item, boolean appendCode) {
+        return item != null ? closedTradableFormatter.getTradeFeeAsString(item, appendCode) : "";
     }
 
-    String getBuyerSecurityDeposit(ClosedTradableListItem item) {
-        return item != null ? closedTradableFormatter.getBuyerSecurityDepositAsString(item.getTradable()) : "";
+    String getBuyerSecurityDeposit(Tradable item) {
+        return item != null ? closedTradableFormatter.getBuyerSecurityDepositAsString(item) : "";
     }
 
-    String getSellerSecurityDeposit(ClosedTradableListItem item) {
-        return item != null ? closedTradableFormatter.getSellerSecurityDepositAsString(item.getTradable()) : "";
+    String getSellerSecurityDeposit(Tradable item) {
+        return item != null ? closedTradableFormatter.getSellerSecurityDepositAsString(item) : "";
     }
 
-    String getDirectionLabel(ClosedTradableListItem item) {
+    String getDirectionLabel(Tradable item) {
         if ((item != null)) {
-            OfferDirection direction = dataModel.getDirection(item.getTradable().getOffer());
-            String currencyCode = item.getTradable().getOffer().getCurrencyCode();
+            OfferDirection direction = dataModel.getDirection(item.getOffer());
+            String currencyCode = item.getOffer().getCurrencyCode();
             return DisplayUtils.getDirectionWithCode(direction, currencyCode);
         } else {
             return "";
         }
     }
 
-    String getDate(ClosedTradableListItem item) {
-        return DisplayUtils.formatDateTime(item.getTradable().getDate());
+    String getDate(Tradable item) {
+        return DisplayUtils.formatDateTime(item.getDate());
     }
 
-    String getMarketLabel(ClosedTradableListItem item) {
-        return item != null ? CurrencyUtil.getCurrencyPair(item.getTradable().getOffer().getCurrencyCode()) : "";
+    String getMarketLabel(Tradable item) {
+        return item != null ? CurrencyUtil.getCurrencyPair(item.getOffer().getCurrencyCode()) : "";
     }
 
-    String getState(ClosedTradableListItem item) {
-        return item != null ? closedTradableFormatter.getStateAsString(item.getTradable()) : "";
+    String getState(Tradable item) {
+        return item != null ? closedTradableFormatter.getStateAsString(item) : "";
     }
 
 
@@ -120,7 +121,7 @@ public class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTrades
     }
 
     public Map<String, String> getTotalVolumeByCurrency() {
-        return closedTradableFormatter.getTotalVolumeByCurrencyAsString(dataModel.tradableList.get());
+        return closedTradableFormatter.getTotalVolumeByCurrencyAsString(dataModel.getList());
     }
 
     public String getTotalTxFee(Coin totalTradeAmount) {
