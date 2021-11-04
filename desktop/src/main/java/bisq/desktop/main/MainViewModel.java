@@ -37,6 +37,7 @@ import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.main.overlays.windows.downloadupdate.DisplayUpdateDownloadWindow;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.bsqswaps.UnconfirmedBsqSwapsView;
+import bisq.desktop.main.portfolio.closedtrades.ClosedTradesView;
 import bisq.desktop.main.presentation.AccountPresentation;
 import bisq.desktop.main.presentation.DaoPresentation;
 import bisq.desktop.main.presentation.MarketPricePresentation;
@@ -51,6 +52,7 @@ import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.app.BisqSetup;
 import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyUtil;
@@ -85,6 +87,8 @@ import bisq.common.crypto.Hash;
 import bisq.common.file.CorruptedStorageFileHandler;
 import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
+
+import org.bitcoinj.core.TransactionConfidence;
 
 import com.google.inject.Inject;
 
@@ -123,6 +127,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     private final BisqSetup bisqSetup;
     private final WalletsSetup walletsSetup;
+    private final BsqWalletService bsqWalletService;
     private final User user;
     private final BalancePresentation balancePresentation;
     private final TradePresentation tradePresentation;
@@ -172,6 +177,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
     public MainViewModel(BisqSetup bisqSetup,
                          WalletsSetup walletsSetup,
                          BtcWalletService btcWalletService,
+                         BsqWalletService bsqWalletService,
                          User user,
                          BalancePresentation balancePresentation,
                          TradePresentation tradePresentation,
@@ -200,6 +206,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                          Navigation navigation) {
         this.bisqSetup = bisqSetup;
         this.walletsSetup = walletsSetup;
+        this.bsqWalletService = bsqWalletService;
         this.user = user;
         this.balancePresentation = balancePresentation;
         this.tradePresentation = tradePresentation;
@@ -264,8 +271,8 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                                     if (DontShowAgainLookup.showAgain(key)) {
                                         DontShowAgainLookup.dontShowAgain(key, true);
                                         new Popup().warning(Res.get("popup.warning.tradePeriod.halfReached",
-                                                trade.getShortId(),
-                                                DisplayUtils.formatDateTime(maxTradePeriodDate)))
+                                                        trade.getShortId(),
+                                                        DisplayUtils.formatDateTime(maxTradePeriodDate)))
                                                 .show();
                                     }
                                     break;
@@ -274,8 +281,8 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                                     if (DontShowAgainLookup.showAgain(key)) {
                                         DontShowAgainLookup.dontShowAgain(key, true);
                                         new Popup().warning(Res.get("popup.warning.tradePeriod.ended",
-                                                trade.getShortId(),
-                                                DisplayUtils.formatDateTime(maxTradePeriodDate)))
+                                                        trade.getShortId(),
+                                                        DisplayUtils.formatDateTime(maxTradePeriodDate)))
                                                 .show();
                                     }
                                     break;
@@ -296,6 +303,9 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                         bsqSwapTradeManager.resetCompletedBsqSwapTrade();
                     }
                 });
+
+                maybeNotifyBsqSwapTxConfirmed();
+                bsqWalletService.getWallet().addTransactionConfidenceEventListener((wallet, tx) -> maybeNotifyBsqSwapTxConfirmed());
             }
         });
 
@@ -314,6 +324,25 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         }
 
         getShowAppScreen().set(true);
+    }
+
+    private void maybeNotifyBsqSwapTxConfirmed() {
+        bsqSwapTradeManager.getObservableList().stream()
+                .filter(bsqSwapTrade -> bsqSwapTrade.getTxId() != null)
+                .filter(bsqSwapTrade -> DontShowAgainLookup.showAgain(bsqSwapTrade.getTxId()))
+                .filter(bsqSwapTrade -> {
+                    TransactionConfidence confidenceForTxId = bsqWalletService.getConfidenceForTxId(bsqSwapTrade.getTxId());
+                    return confidenceForTxId != null && confidenceForTxId.getDepthInBlocks() > 0;
+                })
+                .forEach(bsqSwapTrade -> {
+                    DontShowAgainLookup.dontShowAgain(bsqSwapTrade.getTxId(), true);
+                    new Notification()
+                            .headLine(Res.get("notification.bsqSwap.confirmed.headline"))
+                            .notification(Res.get("notification.bsqSwap.confirmed.text", bsqSwapTrade.getShortId()))
+                            .actionButtonTextWithGoTo("navigation.portfolio.closedTrades")
+                            .onAction(() -> navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class))
+                            .show();
+                });
     }
 
 

@@ -871,7 +871,10 @@ public abstract class WalletService {
     // bisqWalletEventListener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public class BisqWalletListener implements WalletCoinsReceivedEventListener, WalletCoinsSentEventListener, WalletReorganizeEventListener, TransactionConfidenceEventListener {
+    public class BisqWalletListener implements WalletCoinsReceivedEventListener,
+            WalletCoinsSentEventListener,
+            WalletReorganizeEventListener,
+            TransactionConfidenceEventListener {
         @Override
         public void onCoinsReceived(Wallet wallet, Transaction tx, Coin prevBalance, Coin newBalance) {
             notifyBalanceListeners(tx);
