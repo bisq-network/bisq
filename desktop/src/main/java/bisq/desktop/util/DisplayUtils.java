@@ -6,8 +6,9 @@ import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferDirection;
 import bisq.core.util.FormattingUtils;
+import bisq.core.offer.OfferDirection;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.CoinFormatter;
@@ -257,6 +258,11 @@ public class DisplayUtils {
         name = StringUtils.abbreviate(name, 9);
         String method = Res.get(paymentMethodId);
         return method.concat(": ").concat(name);
+    }
+
+    public static String createAssetsAccountName(PaymentAccount paymentAccount, String address) {
+        String currency = paymentAccount.getSingleTradeCurrency() != null ? paymentAccount.getSingleTradeCurrency().getCode() : "";
+        return createAssetsAccountName(currency, address);
     }
 
     public static String createAssetsAccountName(String currency, String address) {

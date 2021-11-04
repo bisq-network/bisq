@@ -166,10 +166,7 @@ public class AssetsForm extends PaymentMethodForm {
     @Override
     protected void autoFillNameTextField() {
         if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
-            String currency = paymentAccount.getSingleTradeCurrency() != null ? paymentAccount.getSingleTradeCurrency().getCode() : "";
-            if (currency != null) {
-                accountNameTextField.setText(createAssetsAccountName(currency, addressInputTextField.getText()));
-            }
+            accountNameTextField.setText(createAssetsAccountName(paymentAccount, addressInputTextField.getText()));
         }
     }
 

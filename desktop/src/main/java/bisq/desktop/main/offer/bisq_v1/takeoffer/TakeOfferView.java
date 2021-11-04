@@ -132,7 +132,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private ScrollPane scrollPane;
     private GridPane gridPane;
     private TitledGroupBg payFundsTitledGroupBg, paymentAccountTitledGroupBg, advancedOptionsGroup;
-    private VBox priceAsPercentageInputBox, amountRangeBox;
+    private VBox priceAsPercentageInputBox, amountRangeBox, buyBsqBox;
     private HBox fundingHBox, amountValueCurrencyBox, priceValueCurrencyBox, volumeValueCurrencyBox,
             priceAsPercentageValueCurrencyBox, minAmountValueCurrencyBox, advancedOptionsBox,
             takeOfferBox, buttonBox, firstRowHBox;
@@ -247,6 +247,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             if (DevEnv.isDaoActivated()) {
                 tradeFeeInBtcToggle.setVisible(newValue);
                 tradeFeeInBsqToggle.setVisible(newValue);
+                if (model.isShowBuyBsqHint()) {
+                    buyBsqBox.setVisible(newValue);
+                    buyBsqBox.setManaged(newValue);
+                }
             }
         };
 
@@ -330,6 +334,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             tradeFeeInBtcToggle.setManaged(false);
             tradeFeeInBsqToggle.setVisible(false);
             tradeFeeInBsqToggle.setManaged(false);
+            buyBsqBox.setVisible(false);
+            buyBsqBox.setManaged(false);
+        }
+
+        if (!model.isShowBuyBsqHint()) {
+            buyBsqBox.setVisible(false);
+            buyBsqBox.setManaged(false);
         }
     }
 
@@ -470,6 +481,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         tradeFeeInBtcToggle.setMouseTransparent(true);
         tradeFeeInBsqToggle.setMouseTransparent(true);
+        buyBsqBox.setVisible(false);
+        buyBsqBox.setManaged(false);
 
         int delay = 500;
         int diff = 100;
@@ -872,8 +885,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         Tuple2<AutoTooltipButton, VBox> buyBsqButtonBox = OfferViewUtil.createBuyBsqButtonBox(
                 navigation, model.dataModel.preferences);
+        buyBsqBox = buyBsqButtonBox.second;
+        buyBsqBox.setManaged(false);
+        buyBsqBox.setVisible(false);
 
-        advancedOptionsBox.getChildren().addAll(getTradeFeeFieldsBox(), buyBsqButtonBox.second);
+        advancedOptionsBox.getChildren().addAll(getTradeFeeFieldsBox(), buyBsqBox);
     }
 
     private void addButtons() {

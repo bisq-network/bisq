@@ -712,4 +712,8 @@ class TakeOfferDataModel extends OfferDataModel {
     public boolean isBsqForFeeAvailable() {
         return offerUtil.isBsqForTakerFeeAvailable(amount.get());
     }
+
+    public boolean isBuyBsqOffer() {
+        return !isBuyOffer() && getOffer().getCurrencyCode().equals("BSQ");
+    }
 }

@@ -800,4 +800,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                     Res.get("shared.aboveInPercent");
         }
     }
+
+    public boolean isShowBuyBsqHint() {
+        return !dataModel.isBsqForFeeAvailable() && !dataModel.isBuyBsqOffer();
+    }
 }

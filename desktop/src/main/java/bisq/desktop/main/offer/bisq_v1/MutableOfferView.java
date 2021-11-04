@@ -274,6 +274,11 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                 buyBsqBox.setManaged(false);
             }
 
+            if (!model.isShowBuyBsqHint()) {
+                buyBsqBox.setVisible(false);
+                buyBsqBox.setManaged(false);
+            }
+
             Label popOverLabel = OfferViewUtil.createPopOverLabel(Res.get("createOffer.triggerPrice.tooltip"));
             triggerPriceInfoInputTextField.setContentForPopOver(popOverLabel, AwesomeIcon.SHIELD);
         }
@@ -405,11 +410,11 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         cancelButton1.setVisible(false);
         cancelButton1.setManaged(false);
         cancelButton1.setOnAction(null);
-        buyBsqBox.setVisible(false);
-        buyBsqBox.setManaged(false);
 
         tradeFeeInBtcToggle.setMouseTransparent(true);
         tradeFeeInBsqToggle.setMouseTransparent(true);
+        buyBsqBox.setVisible(false);
+        buyBsqBox.setManaged(false);
 
         setDepositTitledGroupBg.setVisible(false);
         setDepositTitledGroupBg.setManaged(false);
@@ -896,6 +901,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                 tradeFeeInBsqToggle.setVisible(newValue);
                 if (model.isShowBuyBsqHint()) {
                     buyBsqBox.setVisible(newValue);
+                    buyBsqBox.setManaged(newValue);
                 }
             }
         };
@@ -1102,6 +1108,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         Tuple2<AutoTooltipButton, VBox> buyBsqButtonBox = OfferViewUtil.createBuyBsqButtonBox(
                 navigation, preferences);
         buyBsqBox = buyBsqButtonBox.second;
+        buyBsqBox.setManaged(false);
         buyBsqBox.setVisible(false);
 
         advancedOptionsBox.getChildren().addAll(getBuyerSecurityDepositBox(), getTradeFeeFieldsBox(), buyBsqBox);

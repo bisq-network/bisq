@@ -33,6 +33,7 @@ import bisq.desktop.components.PeerInfoIconTrading;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
+import bisq.desktop.main.account.content.altcoinaccounts.AltCoinAccountsView;
 import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.withdrawal.WithdrawalView;
@@ -136,11 +137,15 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private AutocompleteComboBox<PaymentMethod> paymentMethodComboBox;
     private AutoTooltipButton createOfferButton;
     private AutoTooltipSlideToggleButton matchingOffersToggle;
-    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> amountColumn, volumeColumn, marketColumn,
-            priceColumn, paymentMethodColumn, depositColumn, signingStateColumn, avatarColumn;
+    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> amountColumn;
+    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> volumeColumn;
+    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> marketColumn;
+    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> priceColumn;
+    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> depositColumn;
+    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> signingStateColumn;
+    private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> avatarColumn;
     private TableView<OfferBookListItem> tableView;
 
-    private OfferView.OfferActionHandler offerActionHandler;
     private int gridRow = 0;
     private Label nrOfOffersLabel;
     private ListChangeListener<OfferBookListItem> offerListListener;
@@ -243,7 +248,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         tableView.getColumns().add(amountColumn);
         volumeColumn = getVolumeColumn();
         tableView.getColumns().add(volumeColumn);
-        paymentMethodColumn = getPaymentMethodColumn();
+        AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> paymentMethodColumn = getPaymentMethodColumn();
         tableView.getColumns().add(paymentMethodColumn);
         depositColumn = getDepositColumn();
         tableView.getColumns().add(depositColumn);
@@ -559,7 +564,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         disabledCreateOfferButtonTooltip.setManaged(true);
         disabledCreateOfferButtonTooltip.setVisible(true);
 
-        offerActionHandler.onCreateOffer(model.getSelectedTradeCurrency(), model.selectedPaymentMethod);
+        model.onCreateOffer();
     }
 
     public void setDirection(OfferDirection direction) {
@@ -603,7 +608,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     public void setOfferActionHandler(OfferView.OfferActionHandler offerActionHandler) {
-        this.offerActionHandler = offerActionHandler;
+        model.setOfferActionHandler(offerActionHandler);
     }
 
     public void onTabSelected(boolean isSelected) {
@@ -620,9 +625,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 new Popup().headLine(Res.get("offerbook.warning.noTradingAccountForCurrency.headline"))
                         .instruction(Res.get("offerbook.warning.noTradingAccountForCurrency.msg"))
                         .actionButtonText(Res.get("offerbook.yesCreateOffer"))
-                        .onAction(() -> {
-                            disableCreateOfferButton();
-                        })
+                        .onAction(this::disableCreateOfferButton)
                         .secondaryActionButtonText(Res.get("offerbook.setupNewAccount"))
                         .onSecondaryAction(() -> {
                             navigation.setReturnPath(navigation.getCurrentPath());
@@ -639,17 +642,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     private void onShowInfo(Offer offer, OfferFilterService.Result result) {
         switch (result) {
-            case VALID:
-                break;
             case API_DISABLED:
                 DevEnv.logErrorAndThrowIfDevMode("We are in desktop and in the taker position " +
                         "viewing offers, so it cannot be that we got that result as we are not an API user.");
                 break;
             case HAS_NO_PAYMENT_ACCOUNT_VALID_FOR_OFFER:
-                openPopupForMissingAccountSetup(Res.get("offerbook.warning.noMatchingAccount.headline"),
-                        Res.get("offerbook.warning.noMatchingAccount.msg"),
-                        FiatAccountsView.class,
-                        "navigation.account");
+                openPopupForMissingAccountSetup(offer);
                 break;
             case HAS_NOT_SAME_PROTOCOL_VERSION:
                 new Popup().warning(Res.get("offerbook.warning.wrongTradeProtocol")).show();
@@ -693,6 +691,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
             case HIDE_BSQ_SWAPS_DUE_DAO_DEACTIVATED:
                 new Popup().warning(Res.get("offerbook.warning.hideBsqSwapsDueDaoDeactivated")).show();
                 break;
+            case VALID:
             default:
                 break;
         }
@@ -704,10 +703,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     offer.getPaymentMethod().getId().equals(PaymentMethod.CASH_DEPOSIT.getId())) {
                 new Popup().confirmation(Res.get("popup.info.cashDepositInfo", offer.getBankId()))
                         .actionButtonText(Res.get("popup.info.cashDepositInfo.confirm"))
-                        .onAction(() -> offerActionHandler.onTakeOffer(offer))
+                        .onAction(() -> model.onTakeOffer(offer))
                         .show();
             } else {
-                offerActionHandler.onTakeOffer(offer);
+                model.onTakeOffer(offer);
             }
         }
     }
@@ -746,14 +745,26 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                 });
     }
 
-    private void openPopupForMissingAccountSetup(String headLine, String message, Class target, String targetAsString) {
-        new Popup().headLine(headLine)
-                .instruction(message)
-                .actionButtonTextWithGoTo(targetAsString)
-                .onAction(() -> {
-                    navigation.setReturnPath(navigation.getCurrentPath());
-                    navigation.navigateTo(MainView.class, AccountView.class, target);
-                }).show();
+    private void openPopupForMissingAccountSetup(Offer offer) {
+        String headline = Res.get("offerbook.warning.noMatchingAccount.headline");
+
+        if (offer.getCurrencyCode().equals("BSQ")) {
+            new Popup().headLine(headline)
+                    .instruction(Res.get("offerbook.warning.noMatchingBsqAccount.msg"))
+                    .actionButtonText(Res.get("offerbook.takeOffer.createAccount"))
+                    .onAction(() -> model.createBsqAccountAndTakeOffer(offer)).show();
+        } else {
+
+            var accountViewClass = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ? FiatAccountsView.class : AltCoinAccountsView.class;
+
+            new Popup().headLine(headline)
+                    .instruction(Res.get("offerbook.warning.noMatchingAccount.msg"))
+                    .actionButtonTextWithGoTo("navigation.account")
+                    .onAction(() -> {
+                        navigation.setReturnPath(navigation.getCurrentPath());
+                        navigation.navigateTo(MainView.class, AccountView.class, accountViewClass);
+                    }).show();
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -1086,13 +1097,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                             tableRow.setOnMousePressed(null);
                                         } else {
                                             button.setDefaultButton(false);
-                                            if (!myOffer) {
-                                                tableRow.setOnMousePressed(e -> {
-                                                    // ugly hack to get the icon clickable when deactivated
-                                                    if (!(e.getTarget() instanceof ImageView || e.getTarget() instanceof Canvas))
-                                                        onShowInfo(offer, canTakeOfferResult);
-                                                });
-                                            }
+                                            tableRow.setOnMousePressed(e -> {
+                                                // ugly hack to get the icon clickable when deactivated
+                                                if (!(e.getTarget() instanceof ImageView || e.getTarget() instanceof Canvas))
+                                                    onShowInfo(offer, canTakeOfferResult);
+                                            });
                                         }
                                     }
 
