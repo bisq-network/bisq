@@ -379,7 +379,7 @@ public class BsqSwapTakeOfferView extends BsqSwapOfferView<BsqSwapTakeOfferViewM
                 return;
             }
             new Popup().error(Res.get("takeOffer.error.message", model.errorMessage.get()) + "\n\n" +
-                    Res.get("popup.error.tryRestart"))
+                            Res.get("popup.error.tryRestart"))
                     .onClose(() -> {
                         model.resetErrorMessage();
                         model.dataModel.removeOffer();
@@ -565,6 +565,7 @@ public class BsqSwapTakeOfferView extends BsqSwapOfferView<BsqSwapTakeOfferViewM
     private void addOfferAvailabilityLabel() {
         offerAvailabilityBusyAnimation = new BusyAnimation(false);
         offerAvailabilityLabel = new AutoTooltipLabel(Res.get("takeOffer.fundsBox.isOfferAvailable"));
+        HBox.setMargin(offerAvailabilityLabel, new Insets(6, 0, 0, 0));
         nextButtonBar.getChildren().addAll(offerAvailabilityBusyAnimation, offerAvailabilityLabel);
     }
 
