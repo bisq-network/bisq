@@ -168,6 +168,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     private ChangeListener<String> tradeCurrencyCodeListener, errorMessageListener,
             marketPriceMarginListener, volumeListener, buyerSecurityDepositInBTCListener;
     private ChangeListener<Number> marketPriceAvailableListener;
+    private Navigation.Listener navigationWithCloseListener;
     private EventHandler<ActionEvent> currencyComboBoxSelectionHandler, paymentAccountsComboBoxSelectionHandler;
     private OfferView.CloseHandler closeHandler;
 
@@ -916,6 +917,14 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                 buyerSecurityDepositInputTextField.setDisable(false);
             }
         });
+
+        navigationWithCloseListener = (path, data) -> {
+            log.warn("*** target path={}, data={}, dir={}", path, data, model.getDataModel().getDirection());
+            if ("closeOfferView".equals(data)) {
+                log.warn("*** WILL CLOSE");
+                close();
+            }
+        };
     }
 
     private void setIsCurrencyForMakerFeeBtc(boolean isCurrencyForMakerFeeBtc) {
@@ -972,6 +981,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         // UI actions
         paymentAccountsComboBox.setOnAction(paymentAccountsComboBoxSelectionHandler);
         currencyComboBox.setOnAction(currencyComboBoxSelectionHandler);
+
+        navigation.addListener(navigationWithCloseListener);
     }
 
     private void removeListeners() {
@@ -1007,6 +1018,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         // UI actions
         paymentAccountsComboBox.setOnAction(null);
         currencyComboBox.setOnAction(null);
+
+        navigation.removeListener(navigationWithCloseListener);
     }
 
 
@@ -1118,7 +1131,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         GridPane.setMargin(advancedOptionsBox, new Insets(Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(advancedOptionsBox);
 
-        Tuple2<AutoTooltipButton, VBox> buyBsqButtonBox = OfferViewUtil.createBuyBsqButtonBox(navigation, preferences);
+        Tuple2<AutoTooltipButton, VBox> buyBsqButtonBox = OfferViewUtil.createBuyBsqButtonBox(
+                navigation, preferences, model.dataModel::getDirection);
         buyBsqButton = buyBsqButtonBox.first;
         buyBsqButton.setVisible(false);
 
