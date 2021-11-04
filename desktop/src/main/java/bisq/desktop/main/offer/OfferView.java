@@ -176,7 +176,9 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         root.getTabs().addListener(tabListChangeListener);
         navigation.addListener(navigationListener);
-        navigation.navigateTo(MainView.class, this.getClass(), OfferBookView.class);
+        if (offerBookView == null) {
+            navigation.navigateTo(MainView.class, this.getClass(), OfferBookView.class);
+        }
     }
 
     @Override
@@ -202,17 +204,21 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         View view;
         boolean isBuy = direction == OfferDirection.BUY;
 
-        if (viewClass == OfferBookView.class && offerBookView == null) {
-            view = viewLoader.load(viewClass);
-            // Offerbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.
-            offerBookTab = new Tab(isBuy ? Res.get("shared.buyBitcoin").toUpperCase() : Res.get("shared.sellBitcoin").toUpperCase());
-            offerBookTab.setClosable(false);
-            offerBookTab.setContent(view.getRoot());
-            tabPane.getTabs().add(offerBookTab);
-            offerBookView = (OfferBookView) view;
-            offerBookView.onTabSelected(true);
-            offerBookView.setOfferActionHandler(offerActionHandler);
-            offerBookView.setDirection(direction);
+        if (viewClass == OfferBookView.class) {
+            if (offerBookTab != null && offerBookView != null) {
+                tabPane.getSelectionModel().select(offerBookTab);
+            } else {
+                view = viewLoader.load(viewClass);
+                // Offerbook must not be cached by ViewLoader as we use 2 instances for sell and buy screens.
+                offerBookTab = new Tab(isBuy ? Res.get("shared.buyBitcoin").toUpperCase() : Res.get("shared.sellBitcoin").toUpperCase());
+                offerBookTab.setClosable(false);
+                offerBookTab.setContent(view.getRoot());
+                tabPane.getTabs().add(offerBookTab);
+                offerBookView = (OfferBookView) view;
+                offerBookView.onTabSelected(true);
+                offerBookView.setOfferActionHandler(offerActionHandler);
+                offerBookView.setDirection(direction);
+            }
         } else if (viewClass == CreateOfferView.class && createOfferView == null) {
             view = viewLoader.load(viewClass);
             // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
