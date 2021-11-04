@@ -121,7 +121,7 @@ import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 
 import static bisq.core.payment.payload.PaymentMethod.HAL_CASH_ID;
-import static bisq.desktop.main.offer.OfferViewUtil.addPayInfoEntry;
+import static bisq.desktop.main.offer.bisq_v1.OfferViewUtil.addPayInfoEntry;
 import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
