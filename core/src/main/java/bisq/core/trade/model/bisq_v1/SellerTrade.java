@@ -91,11 +91,6 @@ public abstract class SellerTrade extends Trade {
 
     @Override
     public boolean confirmPermitted() {
-        // For altcoin there is no reason to delay BTC release as no chargeback risk
-        if (CurrencyUtil.isCryptoCurrency(getOffer().getCurrencyCode())) {
-            return true;
-        }
-
         switch (getDisputeState()) {
             case NO_DISPUTE:
                 return true;
