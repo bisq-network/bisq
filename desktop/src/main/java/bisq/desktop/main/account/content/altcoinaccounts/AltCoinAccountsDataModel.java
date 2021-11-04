@@ -20,9 +20,7 @@ package bisq.desktop.main.account.content.altcoinaccounts;
 import bisq.desktop.common.model.ActivatableDataModel;
 import bisq.desktop.util.GUIUtil;
 
-import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CryptoCurrency;
-import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AssetAccount;
@@ -44,7 +42,6 @@ import javafx.collections.SetChangeListener;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
 import java.util.stream.Collectors;
 
 class AltCoinAccountsDataModel extends ActivatableDataModel {
@@ -53,7 +50,6 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
     private final Preferences preferences;
     private final OpenOfferManager openOfferManager;
     private final TradeManager tradeManager;
-    private final AccountAgeWitnessService accountAgeWitnessService;
     final ObservableList<PaymentAccount> paymentAccounts = FXCollections.observableArrayList();
     private final SetChangeListener<PaymentAccount> setChangeListener;
     private final String accountsFileName = "AltcoinPaymentAccounts";
@@ -65,14 +61,12 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
                                     Preferences preferences,
                                     OpenOfferManager openOfferManager,
                                     TradeManager tradeManager,
-                                    AccountAgeWitnessService accountAgeWitnessService,
                                     PersistenceProtoResolver persistenceProtoResolver,
                                     CorruptedStorageFileHandler corruptedStorageFileHandler) {
         this.user = user;
         this.preferences = preferences;
         this.openOfferManager = openOfferManager;
         this.tradeManager = tradeManager;
-        this.accountAgeWitnessService = accountAgeWitnessService;
         this.persistenceProtoResolver = persistenceProtoResolver;
         this.corruptedStorageFileHandler = corruptedStorageFileHandler;
         setChangeListener = change -> fillAndSortPaymentAccounts();
@@ -105,25 +99,8 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
 
     public void onSaveNewAccount(PaymentAccount paymentAccount) {
         TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
-        List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
-        if (singleTradeCurrency != null) {
-            if (singleTradeCurrency instanceof FiatCurrency)
-                preferences.addFiatCurrency((FiatCurrency) singleTradeCurrency);
-            else
-                preferences.addCryptoCurrency((CryptoCurrency) singleTradeCurrency);
-        } else if (tradeCurrencies != null && !tradeCurrencies.isEmpty()) {
-            tradeCurrencies.forEach(tradeCurrency -> {
-                if (tradeCurrency instanceof FiatCurrency)
-                    preferences.addFiatCurrency((FiatCurrency) tradeCurrency);
-                else
-                    preferences.addCryptoCurrency((CryptoCurrency) tradeCurrency);
-            });
-        }
-
+        preferences.addCryptoCurrency((CryptoCurrency) singleTradeCurrency);
         user.addPaymentAccount(paymentAccount);
-
-        if (!(paymentAccount instanceof AssetAccount))
-            accountAgeWitnessService.publishMyAccountAgeWitness(paymentAccount.getPaymentAccountPayload());
     }
 
     public boolean onDeleteAccount(PaymentAccount paymentAccount) {
@@ -147,9 +124,9 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
 
     public void exportAccounts(Stage stage) {
         if (user.getPaymentAccounts() != null) {
-            ArrayList<PaymentAccount> accounts = new ArrayList<>(user.getPaymentAccounts().stream()
+            ArrayList<PaymentAccount> accounts = user.getPaymentAccounts().stream()
                     .filter(paymentAccount -> paymentAccount instanceof AssetAccount)
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toCollection(ArrayList::new));
             GUIUtil.exportAccounts(accounts, accountsFileName, preferences, stage, persistenceProtoResolver, corruptedStorageFileHandler);
         }
     }
