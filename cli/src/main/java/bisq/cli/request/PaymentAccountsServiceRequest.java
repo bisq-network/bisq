@@ -29,6 +29,8 @@ import protobuf.PaymentMethod;
 
 import java.util.List;
 
+import static java.lang.String.format;
+
 
 
 import bisq.cli.GrpcStubs;
@@ -63,6 +65,22 @@ public class PaymentAccountsServiceRequest {
     public List<PaymentAccount> getPaymentAccounts() {
         var request = GetPaymentAccountsRequest.newBuilder().build();
         return grpcStubs.paymentAccountsService.getPaymentAccounts(request).getPaymentAccountsList();
+    }
+
+    /**
+     * Returns the first PaymentAccount found with the given name, or throws an
+     * IllegalArgumentException if not found.  This method should be used with care;
+     * it will only return one PaymentAccount, and the account name must be an exact
+     * match on the name argument.
+     * @param accountName the name of the stored PaymentAccount to retrieve
+     * @return PaymentAccount with given name
+     */
+    public PaymentAccount getPaymentAccount(String accountName) {
+        return getPaymentAccounts().stream()
+                .filter(a -> a.getAccountName().equals(accountName)).findFirst()
+                .orElseThrow(() ->
+                        new IllegalArgumentException(format("payment account with name '%s' not found",
+                                accountName)));
     }
 
     public PaymentAccount createCryptoCurrencyPaymentAccount(String accountName,

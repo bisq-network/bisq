@@ -72,7 +72,7 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
     @BeforeAll
     public static void setUp() {
         AbstractOfferTest.setUp();
-        createBsqPaymentAccounts();
+        createLegacyBsqPaymentAccounts();
         EXPECTED_PROTOCOL_STATUS.init();
     }
 
@@ -90,7 +90,7 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
                     7_500_000L,
                     "0.000035",   // FIXED PRICE IN BTC (satoshis) FOR 1 BSQ
                     getDefaultBuyerSecurityDepositAsPercent(),
-                    alicesBsqAcct.getId(),
+                    alicesLegacyBsqAcct.getId(),
                     TRADE_FEE_CURRENCY_CODE);
             log.info("ALICE'S BUY BSQ (SELL BTC) OFFER:\n{}", formatOfferTable(singletonList(alicesOffer), BSQ));
             genBtcBlocksThenWait(1, 5000);
@@ -100,7 +100,7 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
             var alicesBsqOffers = aliceClient.getMyCryptoCurrencyOffers(btcTradeDirection, BSQ);
             assertEquals(1, alicesBsqOffers.size());
 
-            var trade = takeAlicesOffer(offerId, bobsBsqAcct.getId(), TRADE_FEE_CURRENCY_CODE);
+            var trade = takeAlicesOffer(offerId, bobsLegacyBsqAcct.getId(), TRADE_FEE_CURRENCY_CODE);
             assertNotNull(trade);
             assertEquals(offerId, trade.getTradeId());
             assertFalse(trade.getIsCurrencyForTakerFeeBtc());

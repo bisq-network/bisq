@@ -46,7 +46,6 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
     @BeforeAll
     public static void setUp() {
         AbstractOfferTest.setUp();
-        createBsqSwapBsqPaymentAccounts();
     }
 
     @BeforeEach
@@ -115,7 +114,7 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
                 1_000_000L,
                 1_000_000L,
                 "0.00005",
-                alicesBsqAcct.getId());
+                alicesBsqSwapAcct.getId());
         log.debug("BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", bsqSwapOffer);
         var newOfferId = bsqSwapOffer.getId();
         assertNotEquals("", newOfferId);

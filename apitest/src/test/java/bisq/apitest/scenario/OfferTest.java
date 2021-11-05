@@ -80,7 +80,7 @@ public class OfferTest extends AbstractOfferTest {
     @Order(5)
     public void testCreateBSQOffers() {
         CreateBSQOffersTest test = new CreateBSQOffersTest();
-        CreateBSQOffersTest.createBsqPaymentAccounts();
+        CreateBSQOffersTest.createLegacyBsqPaymentAccounts();
         test.testCreateBuy1BTCFor20KBSQOffer();
         test.testCreateSell1BTCFor20KBSQOffer();
         test.testCreateBuyBTCWith1To2KBSQOffer();
@@ -93,7 +93,6 @@ public class OfferTest extends AbstractOfferTest {
     @Order(6)
     public void testCreateBSQSwapOffers() {
         BsqSwapOfferTest test = new BsqSwapOfferTest();
-        BsqSwapOfferTest.createBsqSwapBsqPaymentAccounts();
         test.testAliceCreateBsqSwapBuyOffer1();
         test.testAliceCreateBsqSwapBuyOffer2();
         test.testAliceCreateBsqSwapBuyOffer3();

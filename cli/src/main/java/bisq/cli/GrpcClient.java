@@ -414,6 +414,10 @@ public final class GrpcClient {
         return paymentAccountsServiceRequest.getPaymentAccounts();
     }
 
+    public PaymentAccount getPaymentAccount(String accountName) {
+        return paymentAccountsServiceRequest.getPaymentAccount(accountName);
+    }
+
     public PaymentAccount createCryptoCurrencyPaymentAccount(String accountName,
                                                              String currencyCode,
                                                              String address,

@@ -427,14 +427,14 @@ public class EditOfferTest extends AbstractOfferTest {
     @Test
     @Order(13)
     public void testChangeFixedPricedBsqOfferToPriceMarginBasedOfferShouldThrowException() {
-        createBsqPaymentAccounts();
+        createLegacyBsqPaymentAccounts();
         OfferInfo originalOffer = aliceClient.createFixedPricedOffer(BUY.name(),
                 BSQ,
                 100_000_000L,
                 100_000_000L,
                 "0.00005",   // FIXED PRICE IN BTC (satoshis) FOR 1 BSQ
                 getDefaultBuyerSecurityDepositAsPercent(),
-                alicesBsqAcct.getId(),
+                alicesLegacyBsqAcct.getId(),
                 BSQ);
         log.info("ORIGINAL BSQ OFFER:\n{}", formatOfferTable(singletonList(originalOffer), "BSQ"));
         genBtcBlocksThenWait(1, 2500); // Wait for offer book entry.
@@ -455,14 +455,14 @@ public class EditOfferTest extends AbstractOfferTest {
     @Test
     @Order(14)
     public void testEditTriggerPriceOnFixedPriceBsqOfferShouldThrowException() {
-        createBsqPaymentAccounts();
+        createLegacyBsqPaymentAccounts();
         OfferInfo originalOffer = aliceClient.createFixedPricedOffer(BUY.name(),
                 BSQ,
                 100_000_000L,
                 100_000_000L,
                 "0.00005",   // FIXED PRICE IN BTC (satoshis) FOR 1 BSQ
                 getDefaultBuyerSecurityDepositAsPercent(),
-                alicesBsqAcct.getId(),
+                alicesLegacyBsqAcct.getId(),
                 BSQ);
         log.info("ORIGINAL BSQ OFFER:\n{}", formatOfferTable(singletonList(originalOffer), "BSQ"));
         genBtcBlocksThenWait(1, 2500); // Wait for offer book entry.
@@ -484,7 +484,7 @@ public class EditOfferTest extends AbstractOfferTest {
     @Test
     @Order(15)
     public void testEditFixedPriceOnBsqOffer() {
-        createBsqPaymentAccounts();
+        createLegacyBsqPaymentAccounts();
         String fixedPriceAsString = "0.00005"; // FIXED PRICE IN BTC (satoshis) FOR 1 BSQ
         final OfferInfo originalOffer = aliceClient.createFixedPricedOffer(BUY.name(),
                 BSQ,
@@ -492,7 +492,7 @@ public class EditOfferTest extends AbstractOfferTest {
                 100_000_000L,
                 fixedPriceAsString,
                 getDefaultBuyerSecurityDepositAsPercent(),
-                alicesBsqAcct.getId(),
+                alicesLegacyBsqAcct.getId(),
                 BSQ);
         log.info("ORIGINAL BSQ OFFER:\n{}", formatOfferTable(singletonList(originalOffer), "BSQ"));
         genBtcBlocksThenWait(1, 2500); // Wait for offer book entry.
@@ -518,7 +518,7 @@ public class EditOfferTest extends AbstractOfferTest {
     @Test
     @Order(16)
     public void testDisableBsqOffer() {
-        createBsqPaymentAccounts();
+        createLegacyBsqPaymentAccounts();
         String fixedPriceAsString = "0.00005"; // FIXED PRICE IN BTC (satoshis) FOR 1 BSQ
         final OfferInfo originalOffer = aliceClient.createFixedPricedOffer(BUY.name(),
                 BSQ,
@@ -526,7 +526,7 @@ public class EditOfferTest extends AbstractOfferTest {
                 100_000_000L,
                 fixedPriceAsString,
                 getDefaultBuyerSecurityDepositAsPercent(),
-                alicesBsqAcct.getId(),
+                alicesLegacyBsqAcct.getId(),
                 BSQ);
         log.info("ORIGINAL BSQ OFFER:\n{}", formatOfferTable(singletonList(originalOffer), "BSQ"));
         genBtcBlocksThenWait(1, 2500); // Wait for offer book entry.
@@ -551,7 +551,7 @@ public class EditOfferTest extends AbstractOfferTest {
     @Test
     @Order(17)
     public void testEditFixedPriceAndDisableBsqOffer() {
-        createBsqPaymentAccounts();
+        createLegacyBsqPaymentAccounts();
         String fixedPriceAsString = "0.00005"; // FIXED PRICE IN BTC (satoshis) FOR 1 BSQ
         final OfferInfo originalOffer = aliceClient.createFixedPricedOffer(BUY.name(),
                 BSQ,
@@ -559,7 +559,7 @@ public class EditOfferTest extends AbstractOfferTest {
                 100_000_000L,
                 fixedPriceAsString,
                 getDefaultBuyerSecurityDepositAsPercent(),
-                alicesBsqAcct.getId(),
+                alicesLegacyBsqAcct.getId(),
                 BSQ);
         log.info("ORIGINAL BSQ OFFER:\n{}", formatOfferTable(singletonList(originalOffer), "BSQ"));
         genBtcBlocksThenWait(1, 2500); // Wait for offer book entry.

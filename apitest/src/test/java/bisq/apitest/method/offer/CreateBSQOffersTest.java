@@ -53,7 +53,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
     @BeforeAll
     public static void setUp() {
         AbstractOfferTest.setUp();
-        createBsqPaymentAccounts();
+        createLegacyBsqPaymentAccounts();
     }
 
     @Test
@@ -68,7 +68,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
                 100_000_000L,
                 "0.00005",   // FIXED PRICE IN BTC (satoshis) FOR 1 BSQ
                 getDefaultBuyerSecurityDepositAsPercent(),
-                alicesBsqAcct.getId(),
+                alicesLegacyBsqAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
         log.info("Sell BSQ (Buy BTC) OFFER:\n{}", formatOfferTable(singletonList(newOffer), BSQ));
         assertTrue(newOffer.getIsMyOffer());
@@ -82,7 +82,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertEquals(100_000_000L, newOffer.getAmount());
         assertEquals(100_000_000L, newOffer.getMinAmount());
         assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesBsqAcct.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals(BSQ, newOffer.getBaseCurrencyCode());
         assertEquals(BTC, newOffer.getCounterCurrencyCode());
         assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
@@ -99,7 +99,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertEquals(100_000_000L, newOffer.getAmount());
         assertEquals(100_000_000L, newOffer.getMinAmount());
         assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesBsqAcct.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals(BSQ, newOffer.getBaseCurrencyCode());
         assertEquals(BTC, newOffer.getCounterCurrencyCode());
         assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
@@ -115,7 +115,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
                 100_000_000L,
                 "0.00005",   // FIXED PRICE IN BTC (satoshis) FOR 1 BSQ
                 getDefaultBuyerSecurityDepositAsPercent(),
-                alicesBsqAcct.getId(),
+                alicesLegacyBsqAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
         log.info("SELL 20K BSQ OFFER:\n{}", formatOfferTable(singletonList(newOffer), BSQ));
         assertTrue(newOffer.getIsMyOffer());
@@ -129,7 +129,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertEquals(100_000_000L, newOffer.getAmount());
         assertEquals(100_000_000L, newOffer.getMinAmount());
         assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesBsqAcct.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals(BSQ, newOffer.getBaseCurrencyCode());
         assertEquals(BTC, newOffer.getCounterCurrencyCode());
         assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
@@ -146,7 +146,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertEquals(100_000_000L, newOffer.getAmount());
         assertEquals(100_000_000L, newOffer.getMinAmount());
         assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesBsqAcct.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals(BSQ, newOffer.getBaseCurrencyCode());
         assertEquals(BTC, newOffer.getCounterCurrencyCode());
         assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
@@ -162,7 +162,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
                 5_000_000L,
                 "0.00005",   // FIXED PRICE IN BTC sats FOR 1 BSQ
                 getDefaultBuyerSecurityDepositAsPercent(),
-                alicesBsqAcct.getId(),
+                alicesLegacyBsqAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
         log.info("BUY 1-2K BSQ OFFER:\n{}", formatOfferTable(singletonList(newOffer), BSQ));
         assertTrue(newOffer.getIsMyOffer());
@@ -176,7 +176,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertEquals(10_000_000L, newOffer.getAmount());
         assertEquals(5_000_000L, newOffer.getMinAmount());
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesBsqAcct.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals(BSQ, newOffer.getBaseCurrencyCode());
         assertEquals(BTC, newOffer.getCounterCurrencyCode());
         assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
@@ -193,7 +193,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertEquals(10_000_000L, newOffer.getAmount());
         assertEquals(5_000_000L, newOffer.getMinAmount());
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesBsqAcct.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals(BSQ, newOffer.getBaseCurrencyCode());
         assertEquals(BTC, newOffer.getCounterCurrencyCode());
         assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
@@ -209,7 +209,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
                 25_000_000L,
                 "0.00005",   // FIXED PRICE IN BTC sats FOR 1 BSQ
                 getDefaultBuyerSecurityDepositAsPercent(),
-                alicesBsqAcct.getId(),
+                alicesLegacyBsqAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
         log.info("SELL 5-10K BSQ OFFER:\n{}", formatOfferTable(singletonList(newOffer), BSQ));
         assertTrue(newOffer.getIsMyOffer());
@@ -223,7 +223,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertEquals(50_000_000L, newOffer.getAmount());
         assertEquals(25_000_000L, newOffer.getMinAmount());
         assertEquals(7_500_000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesBsqAcct.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals(BSQ, newOffer.getBaseCurrencyCode());
         assertEquals(BTC, newOffer.getCounterCurrencyCode());
         assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
@@ -240,7 +240,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertEquals(50_000_000L, newOffer.getAmount());
         assertEquals(25_000_000L, newOffer.getMinAmount());
         assertEquals(7_500_000, newOffer.getBuyerSecurityDeposit());
-        assertEquals(alicesBsqAcct.getId(), newOffer.getPaymentAccountId());
+        assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals(BSQ, newOffer.getBaseCurrencyCode());
         assertEquals(BTC, newOffer.getCounterCurrencyCode());
         assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());

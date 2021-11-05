@@ -52,8 +52,11 @@ public abstract class AbstractOfferTest extends MethodTest {
     @Setter
     protected static boolean isLongRunningTest;
 
-    protected static PaymentAccount alicesBsqAcct;
-    protected static PaymentAccount bobsBsqAcct;
+    protected static PaymentAccount alicesBsqSwapAcct;
+    protected static PaymentAccount bobsBsqSwapAcct;
+    // TODO Deprecate legacy BSQ accounts when no longer in use.
+    protected static PaymentAccount alicesLegacyBsqAcct;
+    protected static PaymentAccount bobsLegacyBsqAcct;
 
     @BeforeAll
     public static void setUp() {
@@ -64,17 +67,8 @@ public abstract class AbstractOfferTest extends MethodTest {
                 arbdaemon,
                 alicedaemon,
                 bobdaemon);
-    }
 
-    public static void createBsqSwapBsqPaymentAccounts() {
-        alicesBsqAcct = aliceClient.createCryptoCurrencyPaymentAccount("Alice's BsqSwap Account",
-                BSQ,
-                aliceClient.getUnusedBsqAddress(), // TODO refactor, bsq address not needed for atom acct
-                false);
-        bobsBsqAcct = bobClient.createCryptoCurrencyPaymentAccount("Bob's BsqSwap Account",
-                BSQ,
-                bobClient.getUnusedBsqAddress(),   // TODO refactor, bsq address not needed for atom acct
-                false);
+        initSwapPaymentAccounts();
     }
 
     // Mkt Price Margin value of offer returned from server is scaled down by 10^-2.
@@ -105,13 +99,20 @@ public abstract class AbstractOfferTest extends MethodTest {
         return priceAsBigDecimal.toPlainString();
     };
 
+    public static void initSwapPaymentAccounts() {
+        // A bot may not know what the default 'BSQ Swap' account name is,
+        // but API test cases do:  the value of the i18n property 'BSQ_SWAP'.
+        alicesBsqSwapAcct = aliceClient.getPaymentAccount("BSQ Swap");
+        bobsBsqSwapAcct = bobClient.getPaymentAccount("BSQ Swap");
+    }
+
     @SuppressWarnings("ConstantConditions")
-    public static void createBsqPaymentAccounts() {
-        alicesBsqAcct = aliceClient.createCryptoCurrencyPaymentAccount("Alice's BSQ Account",
+    public static void createLegacyBsqPaymentAccounts() {
+        alicesLegacyBsqAcct = aliceClient.createCryptoCurrencyPaymentAccount("Alice's Legacy BSQ Account",
                 BSQ,
                 aliceClient.getUnusedBsqAddress(),
                 false);
-        bobsBsqAcct = bobClient.createCryptoCurrencyPaymentAccount("Bob's BSQ Account",
+        bobsLegacyBsqAcct = bobClient.createCryptoCurrencyPaymentAccount("Bob's Legacy BSQ Account",
                 BSQ,
                 bobClient.getUnusedBsqAddress(),
                 false);
