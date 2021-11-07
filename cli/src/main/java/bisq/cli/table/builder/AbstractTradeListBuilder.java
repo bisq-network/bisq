@@ -47,7 +47,7 @@ import bisq.cli.table.column.MixedVolumeColumn;
 abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
 
     protected final List<TradeInfo> trades;
-    
+
     protected final TradeTableColumnSupplier colSupplier;
 
     protected final Column<String> colTradeId;
