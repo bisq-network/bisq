@@ -103,8 +103,7 @@ class CorePaymentAccountsService {
     PaymentAccount createCryptoCurrencyPaymentAccount(String accountName,
                                                       String currencyCode,
                                                       String address,
-                                                      boolean tradeInstant,
-                                                      boolean isBsqSwap) {
+                                                      boolean tradeInstant) {
         String bsqCode = currencyCode.toUpperCase();
         if (!bsqCode.equals("BSQ"))
             throw new IllegalArgumentException("api does not currently support " + currencyCode + " accounts");
@@ -112,21 +111,12 @@ class CorePaymentAccountsService {
         // Validate the BSQ address string but ignore the return value.
         coreWalletsService.getValidBsqAddress(address);
 
-        // TODO Split into 2 methods: createAtomicPaymentAccount(), createCryptoCurrencyPaymentAccount().
-        PaymentAccount cryptoCurrencyAccount;
-        if (isBsqSwap) {
-            cryptoCurrencyAccount = PaymentAccountFactory.getPaymentAccount(PaymentMethod.BSQ_SWAP);
-        } else {
-            cryptoCurrencyAccount = tradeInstant
-                    ? (InstantCryptoCurrencyAccount) PaymentAccountFactory.getPaymentAccount(PaymentMethod.BLOCK_CHAINS_INSTANT)
-                    : (CryptoCurrencyAccount) PaymentAccountFactory.getPaymentAccount(PaymentMethod.BLOCK_CHAINS);
-        }
+        AssetAccount cryptoCurrencyAccount = tradeInstant
+                ? (InstantCryptoCurrencyAccount) PaymentAccountFactory.getPaymentAccount(PaymentMethod.BLOCK_CHAINS_INSTANT)
+                : (CryptoCurrencyAccount) PaymentAccountFactory.getPaymentAccount(PaymentMethod.BLOCK_CHAINS);
         cryptoCurrencyAccount.init();
         cryptoCurrencyAccount.setAccountName(accountName);
-        if (!isBsqSwap) {
-            ((AssetAccount) cryptoCurrencyAccount).setAddress(address);
-        }
-
+        cryptoCurrencyAccount.setAddress(address);
         Optional<CryptoCurrency> cryptoCurrency = getCryptoCurrency(bsqCode);
         cryptoCurrency.ifPresent(cryptoCurrencyAccount::setSingleTradeCurrency);
         user.addPaymentAccount(cryptoCurrencyAccount);
