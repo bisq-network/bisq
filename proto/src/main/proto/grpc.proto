@@ -311,7 +311,6 @@ message CreateCryptoCurrencyPaymentAccountRequest {
     string currencyCode = 2;
     string address = 3;
     bool tradeInstant = 4;
-    bool isBsqSwap = 5;
 }
 
 message CreateCryptoCurrencyPaymentAccountReply {
