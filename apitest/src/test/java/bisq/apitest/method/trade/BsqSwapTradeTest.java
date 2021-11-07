@@ -36,7 +36,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.ApiTestConfig.BTC;
-import static bisq.cli.TableFormat.formatBalancesTbls;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -74,9 +73,9 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
     @Order(1)
     public void testGetBalancesBeforeTrade() {
         var alicesBalances = aliceClient.getBalances();
-        log.info("Alice's Before Trade Balance:\n{}", formatBalancesTbls(alicesBalances));
+        log.debug("Alice's Before Trade Balance:\n{}", formatBalancesTbls(alicesBalances));
         var bobsBalances = bobClient.getBalances();
-        log.info("Bob's Before Trade Balance:\n{}", formatBalancesTbls(bobsBalances));
+        log.debug("Bob's Before Trade Balance:\n{}", formatBalancesTbls(bobsBalances));
     }
 
     @Test
@@ -120,9 +119,9 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
     public void testGetBalancesAfterTrade() {
         sleep(2_500); // Give wallet time to finish processing TX.
         var alicesBalances = aliceClient.getBalances();
-        log.info("Alice's After Trade Balance:\n{}", formatBalancesTbls(alicesBalances));
+        log.debug("Alice's After Trade Balance:\n{}", formatBalancesTbls(alicesBalances));
         var bobsBalances = bobClient.getBalances();
-        log.info("Bob's After Trade Balance:\n{}", formatBalancesTbls(bobsBalances));
+        log.debug("Bob's After Trade Balance:\n{}", formatBalancesTbls(bobsBalances));
     }
 
     private BsqSwapOfferInfo getAvailableBsqSwapOffer() {

@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.apitest.scenario.bot.protocol.ProtocolStep.DONE;
 import static bisq.apitest.scenario.bot.protocol.ProtocolStep.WAIT_FOR_OFFER_TAKER;
 import static bisq.apitest.scenario.bot.shutdown.ManualShutdown.checkIfShutdownCalled;
-import static bisq.cli.TableFormat.formatOfferTable;
+import static bisq.cli.OfferFormat.formatOfferTable;
 import static java.util.Collections.singletonList;
 
 

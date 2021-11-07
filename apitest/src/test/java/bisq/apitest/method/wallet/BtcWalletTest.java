@@ -19,9 +19,8 @@ import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
 import static bisq.apitest.method.wallet.WalletTestUtil.INITIAL_BTC_BALANCES;
 import static bisq.apitest.method.wallet.WalletTestUtil.verifyBtcBalances;
-import static bisq.cli.TableFormat.formatAddressBalanceTbl;
-import static bisq.cli.TableFormat.formatBtcBalanceInfoTbl;
-import static java.util.Collections.singletonList;
+import static bisq.cli.table.builder.TableType.ADDRESS_BALANCE_TBL;
+import static bisq.cli.table.builder.TableType.BTC_BALANCE_TBL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,6 +29,7 @@ import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 
 
 import bisq.apitest.method.MethodTest;
+import bisq.cli.table.builder.TableBuilder;
 
 @Disabled
 @Slf4j
@@ -54,10 +54,14 @@ public class BtcWalletTest extends MethodTest {
         // Bob & Alice's regtest Bisq wallets were initialized with 10 BTC.
 
         BtcBalanceInfo alicesBalances = aliceClient.getBtcBalances();
-        log.debug("{} Alice's BTC Balances:\n{}", testName(testInfo), formatBtcBalanceInfoTbl(alicesBalances));
+        log.debug("{} Alice's BTC Balances:\n{}",
+                testName(testInfo),
+                new TableBuilder(BTC_BALANCE_TBL, alicesBalances).build());
 
         BtcBalanceInfo bobsBalances = bobClient.getBtcBalances();
-        log.debug("{} Bob's BTC Balances:\n{}", testName(testInfo), formatBtcBalanceInfoTbl(bobsBalances));
+        log.debug("{} Bob's BTC Balances:\n{}",
+                testName(testInfo),
+                new TableBuilder(BTC_BALANCE_TBL, bobsBalances).build());
 
         assertEquals(INITIAL_BTC_BALANCES.getAvailableBalance(), alicesBalances.getAvailableBalance());
         assertEquals(INITIAL_BTC_BALANCES.getAvailableBalance(), bobsBalances.getAvailableBalance());
@@ -76,7 +80,8 @@ public class BtcWalletTest extends MethodTest {
 
         log.debug("{} -> Alice's Funded Address Balance -> \n{}",
                 testName(testInfo),
-                formatAddressBalanceTbl(singletonList(aliceClient.getAddressBalance(newAddress))));
+                new TableBuilder(ADDRESS_BALANCE_TBL,
+                        aliceClient.getAddressBalance(newAddress)));
 
         // New balance is 12.5 BTC
         btcBalanceInfo = aliceClient.getBtcBalances();
@@ -88,7 +93,7 @@ public class BtcWalletTest extends MethodTest {
         verifyBtcBalances(alicesExpectedBalances, btcBalanceInfo);
         log.debug("{} -> Alice's BTC Balances After Sending 2.5 BTC -> \n{}",
                 testName(testInfo),
-                formatBtcBalanceInfoTbl(btcBalanceInfo));
+                new TableBuilder(BTC_BALANCE_TBL, btcBalanceInfo).build());
     }
 
     @Test
@@ -115,7 +120,7 @@ public class BtcWalletTest extends MethodTest {
         BtcBalanceInfo alicesBalances = aliceClient.getBtcBalances();
         log.debug("{} Alice's BTC Balances:\n{}",
                 testName(testInfo),
-                formatBtcBalanceInfoTbl(alicesBalances));
+                new TableBuilder(BTC_BALANCE_TBL, alicesBalances).build());
         bisq.core.api.model.BtcBalanceInfo alicesExpectedBalances =
                 bisq.core.api.model.BtcBalanceInfo.valueOf(700000000,
                         0,
@@ -126,7 +131,7 @@ public class BtcWalletTest extends MethodTest {
         BtcBalanceInfo bobsBalances = bobClient.getBtcBalances();
         log.debug("{} Bob's BTC Balances:\n{}",
                 testName(testInfo),
-                formatBtcBalanceInfoTbl(bobsBalances));
+                new TableBuilder(BTC_BALANCE_TBL, bobsBalances).build());
         // The sendbtc tx weight and size randomly varies between two distinct values
         // (876 wu, 219 bytes, OR 880 wu, 220 bytes) from test run to test run, hence
         // the assertion of an available balance range [1549978000, 1549978100].

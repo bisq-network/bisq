@@ -80,7 +80,6 @@ public class OfferTest extends AbstractOfferTest {
     @Order(5)
     public void testCreateBSQOffers() {
         CreateBSQOffersTest test = new CreateBSQOffersTest();
-        CreateBSQOffersTest.createLegacyBsqPaymentAccounts();
         test.testCreateBuy1BTCFor20KBSQOffer();
         test.testCreateSell1BTCFor20KBSQOffer();
         test.testCreateBuyBTCWith1To2KBSQOffer();

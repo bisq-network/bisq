@@ -53,7 +53,7 @@ public class TradeTest extends AbstractTradeTest {
         test.testTakeAlicesBuyOffer(testInfo);
         test.testAlicesConfirmPaymentStarted(testInfo);
         test.testBobsConfirmPaymentReceived(testInfo);
-        test.testAlicesKeepFunds(testInfo);
+        test.testKeepFunds(testInfo);
     }
 
     @Test
@@ -70,11 +70,10 @@ public class TradeTest extends AbstractTradeTest {
     @Order(3)
     public void testTakeBuyBSQOffer(final TestInfo testInfo) {
         TakeBuyBSQOfferTest test = new TakeBuyBSQOfferTest();
-        TakeBuyBSQOfferTest.createLegacyBsqPaymentAccounts();
         test.testTakeAlicesSellBTCForBSQOffer(testInfo);
         test.testBobsConfirmPaymentStarted(testInfo);
         test.testAlicesConfirmPaymentReceived(testInfo);
-        test.testBobsKeepFunds(testInfo);
+        test.testKeepFunds(testInfo);
     }
 
     @Test
@@ -85,14 +84,13 @@ public class TradeTest extends AbstractTradeTest {
         test.testBankAcctDetailsIncludedInContracts(testInfo);
         test.testAlicesConfirmPaymentStarted(testInfo);
         test.testBobsConfirmPaymentReceived(testInfo);
-        test.testAlicesKeepFunds(testInfo);
+        test.testKeepFunds(testInfo);
     }
 
     @Test
     @Order(5)
     public void testTakeSellBSQOffer(final TestInfo testInfo) {
         TakeSellBSQOfferTest test = new TakeSellBSQOfferTest();
-        TakeSellBSQOfferTest.createLegacyBsqPaymentAccounts();
         test.testTakeAlicesBuyBTCForBSQOffer(testInfo);
         test.testAlicesConfirmPaymentStarted(testInfo);
         test.testBobsConfirmPaymentReceived(testInfo);
