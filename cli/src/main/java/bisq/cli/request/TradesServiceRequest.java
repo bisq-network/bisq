@@ -74,6 +74,7 @@ public class TradesServiceRequest {
         var request = ConfirmPaymentStartedRequest.newBuilder()
                 .setTradeId(tradeId)
                 .build();
+        //noinspection ResultOfMethodCallIgnored
         grpcStubs.tradesService.confirmPaymentStarted(request);
     }
 
@@ -81,6 +82,7 @@ public class TradesServiceRequest {
         var request = ConfirmPaymentReceivedRequest.newBuilder()
                 .setTradeId(tradeId)
                 .build();
+        //noinspection ResultOfMethodCallIgnored
         grpcStubs.tradesService.confirmPaymentReceived(request);
     }
 
@@ -88,6 +90,7 @@ public class TradesServiceRequest {
         var request = KeepFundsRequest.newBuilder()
                 .setTradeId(tradeId)
                 .build();
+        //noinspection ResultOfMethodCallIgnored
         grpcStubs.tradesService.keepFunds(request);
     }
 
@@ -97,6 +100,7 @@ public class TradesServiceRequest {
                 .setAddress(address)
                 .setMemo(memo)
                 .build();
+        //noinspection ResultOfMethodCallIgnored
         grpcStubs.tradesService.withdrawFunds(request);
     }
 }

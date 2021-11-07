@@ -327,6 +327,10 @@ public final class GrpcClient {
         return offersServiceRequest.getMyOffersSortedByDate(currencyCode);
     }
 
+    public List<OfferInfo> getMyCryptoCurrencyOffersSortedByDate(String currencyCode) {
+        return offersServiceRequest.getMyCryptoCurrencyOffersSortedByDate(currencyCode);
+    }
+
     public List<OfferInfo> getMyBsqOffersSortedByDate() {
         return offersServiceRequest.getMyBsqOffersSortedByDate();
     }

@@ -161,6 +161,7 @@ public class WalletsServiceRequest {
 
     public void lockWallet() {
         var request = LockWalletRequest.newBuilder().build();
+        //noinspection ResultOfMethodCallIgnored
         grpcStubs.walletsService.lockWallet(request);
     }
 
@@ -168,18 +169,21 @@ public class WalletsServiceRequest {
         var request = UnlockWalletRequest.newBuilder()
                 .setPassword(walletPassword)
                 .setTimeout(timeout).build();
+        //noinspection ResultOfMethodCallIgnored
         grpcStubs.walletsService.unlockWallet(request);
     }
 
     public void removeWalletPassword(String walletPassword) {
         var request = RemoveWalletPasswordRequest.newBuilder()
                 .setPassword(walletPassword).build();
+        //noinspection ResultOfMethodCallIgnored
         grpcStubs.walletsService.removeWalletPassword(request);
     }
 
     public void setWalletPassword(String walletPassword) {
         var request = SetWalletPasswordRequest.newBuilder()
                 .setPassword(walletPassword).build();
+        //noinspection ResultOfMethodCallIgnored
         grpcStubs.walletsService.setWalletPassword(request);
     }
 
@@ -187,6 +191,7 @@ public class WalletsServiceRequest {
         var request = SetWalletPasswordRequest.newBuilder()
                 .setPassword(oldWalletPassword)
                 .setNewPassword(newWalletPassword).build();
+        //noinspection ResultOfMethodCallIgnored
         grpcStubs.walletsService.setWalletPassword(request);
     }
 }
