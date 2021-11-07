@@ -130,7 +130,6 @@ class CorePaymentAccountsService {
         Optional<CryptoCurrency> cryptoCurrency = getCryptoCurrency(bsqCode);
         cryptoCurrency.ifPresent(cryptoCurrencyAccount::setSingleTradeCurrency);
         user.addPaymentAccount(cryptoCurrencyAccount);
-        accountAgeWitnessService.publishMyAccountAgeWitness(cryptoCurrencyAccount.getPaymentAccountPayload());
         log.info("Saved crypto payment account with id {} and payment method {}.",
                 cryptoCurrencyAccount.getId(),
                 cryptoCurrencyAccount.getPaymentAccountPayload().getPaymentMethodId());
