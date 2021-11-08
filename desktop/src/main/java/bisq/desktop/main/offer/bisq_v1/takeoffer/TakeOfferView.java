@@ -132,10 +132,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private ScrollPane scrollPane;
     private GridPane gridPane;
     private TitledGroupBg payFundsTitledGroupBg, paymentAccountTitledGroupBg, advancedOptionsGroup;
-    private VBox priceAsPercentageInputBox, amountRangeBox, buyBsqBox;
+    private VBox priceAsPercentageInputBox, amountRangeBox;
     private HBox fundingHBox, amountValueCurrencyBox, priceValueCurrencyBox, volumeValueCurrencyBox,
             priceAsPercentageValueCurrencyBox, minAmountValueCurrencyBox, advancedOptionsBox,
-            takeOfferBox, buttonBox, firstRowHBox;
+            takeOfferBox, buttonBox, firstRowHBox, buyBsqBox;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private Label amountDescriptionLabel,
             paymentMethodLabel,
@@ -878,18 +878,21 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         advancedOptionsBox.setSpacing(40);
 
         GridPane.setRowIndex(advancedOptionsBox, gridRow);
+        GridPane.setColumnSpan(advancedOptionsBox, GridPane.REMAINING);
         GridPane.setColumnIndex(advancedOptionsBox, 0);
         GridPane.setHalignment(advancedOptionsBox, HPos.LEFT);
         GridPane.setMargin(advancedOptionsBox, new Insets(Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(advancedOptionsBox);
 
-        Tuple2<AutoTooltipButton, VBox> buyBsqButtonBox = OfferViewUtil.createBuyBsqButtonBox(
+        Tuple2<AutoTooltipButton, HBox> buyBsqButtonBox = OfferViewUtil.createBuyBsqButtonBox(
                 navigation, model.dataModel.preferences);
         buyBsqBox = buyBsqButtonBox.second;
         buyBsqBox.setManaged(false);
         buyBsqBox.setVisible(false);
 
-        advancedOptionsBox.getChildren().addAll(getTradeFeeFieldsBox(), buyBsqBox);
+        VBox tradeFeeFieldsBox = getTradeFeeFieldsBox();
+        tradeFeeFieldsBox.setMinWidth(240);
+        advancedOptionsBox.getChildren().addAll(tradeFeeFieldsBox, buyBsqBox);
     }
 
     private void addButtons() {

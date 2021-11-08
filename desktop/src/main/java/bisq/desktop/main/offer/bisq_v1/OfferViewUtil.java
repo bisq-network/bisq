@@ -36,7 +36,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
@@ -85,12 +84,13 @@ public class OfferViewUtil {
         infoGridPane.getChildren().addAll(label, textField);
     }
 
-    public static Tuple2<AutoTooltipButton, VBox> createBuyBsqButtonBox(Navigation navigation,
+    public static Tuple2<AutoTooltipButton, HBox> createBuyBsqButtonBox(Navigation navigation,
                                                                         Preferences preferences) {
         String buyBsqText = Res.get("shared.buyCurrency", "BSQ");
         var buyBsqButton = new AutoTooltipButton(buyBsqText);
         buyBsqButton.getStyleClass().add("action-button");
         buyBsqButton.getStyleClass().add("tiny-button");
+        buyBsqButton.setMinWidth(60);
         buyBsqButton.setOnAction(e -> openBuyBsqOfferBook(navigation, preferences)
         );
 
@@ -101,17 +101,14 @@ public class OfferViewUtil {
                 .actionButtonText(buyBsqText)
                 .buttonAlignment(HPos.CENTER)
                 .onAction(() -> openBuyBsqOfferBook(navigation, preferences)).show());
+        learnMore.setMinWidth(100);
 
-        final HBox buyBsqBox = new HBox(buyBsqButton, info, learnMore);
+        HBox buyBsqBox = new HBox(buyBsqButton, info, learnMore);
         buyBsqBox.setAlignment(Pos.BOTTOM_LEFT);
         buyBsqBox.setSpacing(10);
+        buyBsqBox.setPadding(new Insets(0, 0, 4, -20));
 
-        final VBox buyBsqButtonVBox = new VBox(buyBsqBox);
-        buyBsqButtonVBox.setAlignment(Pos.BOTTOM_LEFT);
-        buyBsqButtonVBox.setPadding(new Insets(0, 0, 0, -20));
-        VBox.setMargin(buyBsqButton, new Insets(0, 0, 4, 0));
-
-        return new Tuple2<>(buyBsqButton, buyBsqButtonVBox);
+        return new Tuple2<>(buyBsqButton, buyBsqBox);
     }
 
     private static void openBuyBsqOfferBook(Navigation navigation, Preferences preferences) {
