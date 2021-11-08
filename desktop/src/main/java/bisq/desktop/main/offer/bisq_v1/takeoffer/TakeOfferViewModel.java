@@ -802,6 +802,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     }
 
     public boolean isShowBuyBsqHint() {
-        return !dataModel.isBsqForFeeAvailable() && !dataModel.isBuyBsqOffer();
+        return !dataModel.isBsqForFeeAvailable() && !dataModel.isAttemptToBuyBsq();
     }
 }

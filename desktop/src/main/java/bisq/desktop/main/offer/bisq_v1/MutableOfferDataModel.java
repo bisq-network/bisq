@@ -781,7 +781,9 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return offerUtil.isBsqForMakerFeeAvailable(amount.get());
     }
 
-    boolean isBuyBsqOffer() {
+    boolean isAttemptToBuyBsq() {
+        // When you buy an asset you actually sell BTC.
+        // This is why an offer to buy BSQ is actually an offer to sell BTC for BSQ.
         return !isBuyOffer() && getTradeCurrency().getCode().equals("BSQ");
     }
 

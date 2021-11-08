@@ -1355,6 +1355,6 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     }
 
     public boolean isShowBuyBsqHint() {
-        return !dataModel.isBsqForFeeAvailable() && !dataModel.isBuyBsqOffer();
+        return !dataModel.isBsqForFeeAvailable() && !dataModel.isAttemptToBuyBsq();
     }
 }
