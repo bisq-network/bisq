@@ -34,8 +34,6 @@ import bisq.core.util.validation.InputValidator;
 
 import bisq.common.util.Tuple2;
 
-import org.apache.commons.lang3.StringUtils;
-
 import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
@@ -100,12 +98,7 @@ public class CapitualForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
-            String accountNr = accountNrInputTextField.getText();
-            accountNr = StringUtils.abbreviate(accountNr, 9);
-            String method = Res.get(paymentAccount.getPaymentMethod().getId());
-            accountNameTextField.setText(method.concat(": ").concat(accountNr));
-        }
+        setAccountNameWithString(accountNrInputTextField.getText());
     }
 
     @Override

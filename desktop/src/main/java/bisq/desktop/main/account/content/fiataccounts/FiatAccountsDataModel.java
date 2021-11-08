@@ -21,7 +21,6 @@ import bisq.desktop.common.model.ActivatableDataModel;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.TradeCurrency;
@@ -109,22 +108,14 @@ class FiatAccountsDataModel extends ActivatableDataModel {
         TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
         List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
         if (singleTradeCurrency != null) {
-            if (singleTradeCurrency instanceof FiatCurrency)
-                preferences.addFiatCurrency((FiatCurrency) singleTradeCurrency);
-            else
-                preferences.addCryptoCurrency((CryptoCurrency) singleTradeCurrency);
+            preferences.addFiatCurrency((FiatCurrency) singleTradeCurrency);
         } else if (tradeCurrencies != null && !tradeCurrencies.isEmpty()) {
             if (tradeCurrencies.contains(CurrencyUtil.getDefaultTradeCurrency()))
                 paymentAccount.setSelectedTradeCurrency(CurrencyUtil.getDefaultTradeCurrency());
             else
                 paymentAccount.setSelectedTradeCurrency(tradeCurrencies.get(0));
 
-            tradeCurrencies.forEach(tradeCurrency -> {
-                if (tradeCurrency instanceof FiatCurrency)
-                    preferences.addFiatCurrency((FiatCurrency) tradeCurrency);
-                else
-                    preferences.addCryptoCurrency((CryptoCurrency) tradeCurrency);
-            });
+            tradeCurrencies.forEach(tradeCurrency -> preferences.addFiatCurrency((FiatCurrency) tradeCurrency));
         }
 
         user.addPaymentAccount(paymentAccount);
@@ -154,9 +145,9 @@ class FiatAccountsDataModel extends ActivatableDataModel {
 
     public void exportAccounts(Stage stage) {
         if (user.getPaymentAccounts() != null) {
-            ArrayList<PaymentAccount> accounts = new ArrayList<>(user.getPaymentAccounts().stream()
+            ArrayList<PaymentAccount> accounts = user.getPaymentAccounts().stream()
                     .filter(paymentAccount -> !(paymentAccount instanceof AssetAccount))
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toCollection(ArrayList::new));
             GUIUtil.exportAccounts(accounts, accountsFileName, preferences, stage, persistenceProtoResolver, corruptedStorageFileHandler);
         }
     }

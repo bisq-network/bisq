@@ -108,13 +108,17 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 
+import javafx.geometry.HPos;
 import javafx.geometry.Orientation;
 
 import javafx.collections.FXCollections;
@@ -1218,4 +1222,28 @@ public class GUIUtil {
                 return result.name();
         }
     }
+
+    public static ScrollPane createScrollPane() {
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        AnchorPane.setLeftAnchor(scrollPane, 0d);
+        AnchorPane.setTopAnchor(scrollPane, 0d);
+        AnchorPane.setRightAnchor(scrollPane, 0d);
+        AnchorPane.setBottomAnchor(scrollPane, 0d);
+        return scrollPane;
+    }
+
+    public static void setDefaultTwoColumnConstraintsForGridPane(GridPane gridPane) {
+        ColumnConstraints columnConstraints1 = new ColumnConstraints();
+        columnConstraints1.setHalignment(HPos.RIGHT);
+        columnConstraints1.setHgrow(Priority.NEVER);
+        columnConstraints1.setMinWidth(200);
+        ColumnConstraints columnConstraints2 = new ColumnConstraints();
+        columnConstraints2.setHgrow(Priority.ALWAYS);
+        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
+    }
+
 }

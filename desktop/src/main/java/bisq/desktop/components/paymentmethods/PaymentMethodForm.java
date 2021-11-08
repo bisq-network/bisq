@@ -73,6 +73,7 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.desktop.util.DisplayUtils.createAccountName;
 import static bisq.desktop.util.FormBuilder.*;
 
 @Slf4j
@@ -287,10 +288,8 @@ public abstract class PaymentMethodForm {
 
     void setAccountNameWithString(String name) {
         if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
-            name = name.trim();
-            name = StringUtils.abbreviate(name, 9);
-            String method = Res.get(paymentAccount.getPaymentMethod().getId());
-            accountNameTextField.setText(method.concat(": ").concat(name));
+            String accountName = createAccountName(paymentAccount.getPaymentMethod().getId(), name);
+            accountNameTextField.setText(accountName);
         }
     }
 
