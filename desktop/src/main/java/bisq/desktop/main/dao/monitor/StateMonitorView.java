@@ -332,7 +332,6 @@ public abstract class StateMonitorView<StH extends StateHash,
         tableView.getSortOrder().add(column);
         tableView.getColumns().add(column);
 
-
         column = new AutoTooltipTableColumn<>(getHashTableHeader());
         column.setMinWidth(120);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -381,7 +380,6 @@ public abstract class StateMonitorView<StH extends StateHash,
         column.setComparator(Comparator.comparing(e -> e.getStateBlock().getPeersMap().size()));
         tableView.getColumns().add(column);
 
-
         column = new AutoTooltipTableColumn<>(getConflictsTableHeader());
         column.setMinWidth(80);
         column.setMaxWidth(column.getMinWidth());
@@ -405,7 +403,6 @@ public abstract class StateMonitorView<StH extends StateHash,
                 });
         column.setComparator(Comparator.comparing(e -> e.getStateBlock().getInConflictMap().size()));
         tableView.getColumns().add(column);
-
 
         column = new AutoTooltipTableColumn<>("");
         column.setMinWidth(40);

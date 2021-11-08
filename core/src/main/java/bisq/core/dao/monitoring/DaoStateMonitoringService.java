@@ -369,7 +369,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         stateHashes.forEach(peersHash -> {
             Optional<DaoStateBlock> optionalDaoStateBlock;
             // If we do not add own hashes during initial parsing we fill the missing hashes from the peer and create
-            // the at the last block our own hash.
+            // at the last block our own hash.
             int height = peersHash.getHeight();
             if (!useDaoMonitor &&
                     !findDaoStateBlock(height).isPresent()) {

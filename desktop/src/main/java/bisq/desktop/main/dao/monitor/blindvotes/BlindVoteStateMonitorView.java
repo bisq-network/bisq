@@ -216,7 +216,6 @@ public class BlindVoteStateMonitorView extends StateMonitorView<BlindVoteStateHa
         tableView.getColumns().add(1, column);
     }
 
-
     protected void createConflictColumns() {
         super.createConflictColumns();
 

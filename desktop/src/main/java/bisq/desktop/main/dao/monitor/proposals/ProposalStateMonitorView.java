@@ -214,7 +214,6 @@ public class ProposalStateMonitorView extends StateMonitorView<ProposalStateHash
         tableView.getColumns().add(1, column);
     }
 
-
     protected void createConflictColumns() {
         super.createConflictColumns();
 
