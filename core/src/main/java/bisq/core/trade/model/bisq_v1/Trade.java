@@ -919,8 +919,8 @@ public abstract class Trade extends TradeModel {
     }
 
     public boolean isFundsLockedIn() {
-        // If no deposit tx was published we have no funds locked in
-        if (!isDepositPublished()) {
+        // If no deposit tx was confirmed we have no funds locked in
+        if (!isDepositConfirmed()) {
             return false;
         }
 
