@@ -134,6 +134,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private boolean showOffersMatchingMyAccounts;
     private boolean denyApiTaker;
     private boolean notifyOnPreRelease;
+    private boolean useFullModeDaoMonitor;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -201,7 +202,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setHideNonAccountPaymentMethods(hideNonAccountPaymentMethods)
                 .setShowOffersMatchingMyAccounts(showOffersMatchingMyAccounts)
                 .setDenyApiTaker(denyApiTaker)
-                .setNotifyOnPreRelease(notifyOnPreRelease);
+                .setNotifyOnPreRelease(notifyOnPreRelease)
+                .setUseFullModeDaoMonitor(useFullModeDaoMonitor);
 
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((protobuf.TradeCurrency) e.toProtoMessage()));
@@ -299,7 +301,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getHideNonAccountPaymentMethods(),
                 proto.getShowOffersMatchingMyAccounts(),
                 proto.getDenyApiTaker(),
-                proto.getNotifyOnPreRelease()
+                proto.getNotifyOnPreRelease(),
+                proto.getUseFullModeDaoMonitor()
         );
     }
 }

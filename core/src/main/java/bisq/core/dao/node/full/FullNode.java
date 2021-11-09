@@ -135,10 +135,11 @@ public class FullNode extends BsqNode {
     protected void onParseBlockChainComplete() {
         super.onParseBlockChainComplete();
 
-        if (p2pNetworkReady)
+        if (p2pNetworkReady) {
             addBlockHandler();
-        else
+        } else {
             log.info("onParseBlockChainComplete but P2P network is not ready yet.");
+        }
     }
 
 

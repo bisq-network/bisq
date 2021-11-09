@@ -21,11 +21,17 @@ package bisq.core.dao.monitoring.model;
 import com.google.protobuf.ByteString;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
+@Getter
 @EqualsAndHashCode(callSuper = true)
 public final class DaoStateHash extends StateHash {
-    public DaoStateHash(int height, byte[] hash, byte[] prevHash) {
-        super(height, hash, prevHash);
+    // If we have built the hash by ourself opposed to that we got delivered the hash from seed nodes or resources
+    private final boolean isSelfCreated;
+
+    public DaoStateHash(int height, byte[] hash, boolean isSelfCreated) {
+        super(height, hash);
+        this.isSelfCreated = isSelfCreated;
     }
 
 
@@ -38,12 +44,18 @@ public final class DaoStateHash extends StateHash {
         return protobuf.DaoStateHash.newBuilder()
                 .setHeight(height)
                 .setHash(ByteString.copyFrom(hash))
-                .setPrevHash(ByteString.copyFrom(prevHash)).build();
+                .setIsSelfCreated(isSelfCreated)
+                .build();
     }
 
     public static DaoStateHash fromProto(protobuf.DaoStateHash proto) {
-        return new DaoStateHash(proto.getHeight(),
-                proto.getHash().toByteArray(),
-                proto.getPrevHash().toByteArray());
+        return new DaoStateHash(proto.getHeight(), proto.getHash().toByteArray(), proto.getIsSelfCreated());
+    }
+
+    @Override
+    public String toString() {
+        return "DaoStateHash{" +
+                "\r\n     isSelfCreated=" + isSelfCreated +
+                "\r\n} " + super.toString();
     }
 }

@@ -18,6 +18,7 @@
 package bisq.common.util;
 
 import bisq.common.UserThread;
+import bisq.common.app.DevEnv;
 
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -47,18 +48,31 @@ public class GcUtil {
      * @param trigger  Threshold for free memory in MB when we invoke the garbage collector
      */
     private static void autoReleaseMemory(long trigger) {
-        UserThread.runPeriodically(() -> maybeReleaseMemory(trigger), 60);
+        UserThread.runPeriodically(() -> maybeReleaseMemory(trigger), 120);
     }
 
     /**
      * @param trigger  Threshold for free memory in MB when we invoke the garbage collector
      */
     private static void maybeReleaseMemory(long trigger) {
-        long totalMemory = Runtime.getRuntime().totalMemory();
-        if (totalMemory > trigger * 1024 * 1024) {
-            log.info("Invoke garbage collector. Total memory: {} {} {}", Utilities.readableFileSize(totalMemory), totalMemory, trigger * 1024 * 1024);
+        long ts = System.currentTimeMillis();
+        long preGcMemory = Runtime.getRuntime().totalMemory();
+        if (preGcMemory > trigger * 1024 * 1024) {
             System.gc();
-            log.info("Total memory after gc() call: {}", Utilities.readableFileSize(Runtime.getRuntime().totalMemory()));
+            long postGcMemory = Runtime.getRuntime().totalMemory();
+            log.info("GC reduced memory by {}. Total memory before/after: {}/{}. Took {} ms.",
+                    Utilities.readableFileSize(preGcMemory - postGcMemory),
+                    Utilities.readableFileSize(preGcMemory),
+                    Utilities.readableFileSize(postGcMemory),
+                    System.currentTimeMillis() - ts);
+            if (DevEnv.isDevMode()) {
+                try {
+                    // To see from where we got called
+                    throw new RuntimeException("Dummy Exception for print stacktrace at maybeReleaseMemory");
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
+            }
         }
     }
 }

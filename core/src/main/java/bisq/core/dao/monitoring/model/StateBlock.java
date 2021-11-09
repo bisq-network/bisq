@@ -56,10 +56,6 @@ public abstract class StateBlock<T extends StateHash> {
         return myStateHash.getHash();
     }
 
-    public byte[] getPrevHash() {
-        return myStateHash.getPrevHash();
-    }
-
     @Override
     public String toString() {
         return "StateBlock{" +

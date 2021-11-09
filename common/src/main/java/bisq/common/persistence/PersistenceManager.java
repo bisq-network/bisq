@@ -501,8 +501,6 @@ public class PersistenceManager<T extends PersistableEnvelope> {
             if (completeHandler != null) {
                 UserThread.execute(completeHandler);
             }
-
-            GcUtil.maybeReleaseMemory();
         }
     }
 

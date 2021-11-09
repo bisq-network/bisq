@@ -274,7 +274,7 @@ public class BlindVoteStateMonitoringService implements DaoSetupService, DaoStat
             byte[] combined = ArrayUtils.addAll(prevHash, serializedBlindVotes);
             byte[] hash = Hash.getSha256Ripemd160hash(combined);
 
-            BlindVoteStateHash myBlindVoteStateHash = new BlindVoteStateHash(blockHeight, hash, prevHash, blindVotes.size());
+            BlindVoteStateHash myBlindVoteStateHash = new BlindVoteStateHash(blockHeight, hash, blindVotes.size());
             BlindVoteStateBlock blindVoteStateBlock = new BlindVoteStateBlock(myBlindVoteStateHash);
             blindVoteStateBlockChain.add(blindVoteStateBlock);
             blindVoteStateHashChain.add(myBlindVoteStateHash);

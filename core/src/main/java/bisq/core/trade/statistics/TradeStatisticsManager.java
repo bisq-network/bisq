@@ -82,7 +82,6 @@ public class TradeStatisticsManager {
         this.storageDir = storageDir;
         this.dumpStatistics = dumpStatistics;
 
-
         appendOnlyDataStoreService.addService(tradeStatistics3StorageService);
     }
 

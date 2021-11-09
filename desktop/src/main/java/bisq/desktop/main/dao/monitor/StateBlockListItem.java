@@ -36,10 +36,9 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode
 public abstract class StateBlockListItem<StH extends StateHash, StB extends StateBlock<StH>> {
-    private final StateBlock<StH> stateBlock;
+    protected final StateBlock<StH> stateBlock;
     private final Supplier<String> height;
     private final String hash;
-    private final String prevHash;
     private final String numNetworkMessages;
     private final String numMisMatches;
     private final boolean isInSync;
@@ -58,7 +57,6 @@ public abstract class StateBlockListItem<StH extends StateHash, StB extends Stat
                 Res.get("dao.monitor.table.cycleBlockHeight", cycleIndexSupplier.getAsInt() + 1,
                         String.valueOf(stateBlock.getHeight())))::get;
         hash = Utilities.bytesAsHexString(stateBlock.getHash());
-        prevHash = stateBlock.getPrevHash().length > 0 ? Utilities.bytesAsHexString(stateBlock.getPrevHash()) : "-";
         numNetworkMessages = String.valueOf(stateBlock.getPeersMap().size());
         int size = stateBlock.getInConflictMap().size();
         numMisMatches = String.valueOf(size);
