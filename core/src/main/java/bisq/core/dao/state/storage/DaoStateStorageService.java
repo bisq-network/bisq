@@ -17,13 +17,14 @@
 
 package bisq.core.dao.state.storage;
 
-import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.monitoring.model.DaoStateHash;
 import bisq.core.dao.state.model.DaoState;
+import bisq.core.dao.state.model.blockchain.Block;
 
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.StoreService;
 
+import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
 import bisq.common.persistence.PersistenceManager;
@@ -36,8 +37,11 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.LinkedList;
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Manages persistence of the daoState.
@@ -46,8 +50,9 @@ import lombok.extern.slf4j.Slf4j;
 public class DaoStateStorageService extends StoreService<DaoStateStore> {
     private static final String FILE_NAME = "DaoStateStore";
 
-    private final DaoState daoState;
-    private final DaoStateMonitoringService daoStateMonitoringService;
+    private final BsqBlocksStorageService bsqBlocksStorageService;
+    private final File storageDir;
+    private final LinkedList<Block> blocks = new LinkedList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -56,13 +61,12 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
 
     @Inject
     public DaoStateStorageService(ResourceDataStoreService resourceDataStoreService,
-                                  DaoState daoState,
-                                  DaoStateMonitoringService daoStateMonitoringService,
+                                  BsqBlocksStorageService bsqBlocksStorageService,
                                   @Named(Config.STORAGE_DIR) File storageDir,
                                   PersistenceManager<DaoStateStore> persistenceManager) {
         super(storageDir, persistenceManager);
-        this.daoState = daoState;
-        this.daoStateMonitoringService = daoStateMonitoringService;
+        this.bsqBlocksStorageService = bsqBlocksStorageService;
+        this.storageDir = storageDir;
 
         resourceDataStoreService.addService(this);
     }
@@ -77,55 +81,122 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         return FILE_NAME;
     }
 
-    public void requestPersistence(DaoState daoState,
+    public int getChainHeightOfPersistedBlocks() {
+        return bsqBlocksStorageService.getChainHeightOfPersistedBlocks();
+    }
+
+    public void requestPersistence(protobuf.DaoState daoStateAsProto,
+                                   List<Block> blocks,
                                    LinkedList<DaoStateHash> daoStateHashChain,
                                    Runnable completeHandler) {
-        if (daoState == null) {
+        if (daoStateAsProto == null) {
             completeHandler.run();
             return;
         }
 
-        store.setDaoState(daoState);
-        store.setDaoStateHashChain(daoStateHashChain);
-
-        // We let the persistence run in a thread to avoid the slow protobuf serialisation to happen on the user
-        // thread. We also call it immediately to get notified about the completion event.
         new Thread(() -> {
-            Thread.currentThread().setName("Serialize and write DaoState");
+            Thread.currentThread().setName("Write-blocks-and-DaoState");
+            bsqBlocksStorageService.persistBlocks(blocks);
+
+            store.setDaoStateAsProto(daoStateAsProto);
+            store.setDaoStateHashChain(daoStateHashChain);
+            long ts = System.currentTimeMillis();
             persistenceManager.persistNow(() -> {
-                // After we have written to disk we remove the daoState in the store to avoid that it stays in
+                // After we have written to disk we remove the daoStateAsProto in the store to avoid that it stays in
                 // memory there until the next persist call.
-                pruneStore();
-                completeHandler.run();
+                log.info("Persist daoState took {} ms", System.currentTimeMillis() - ts);
+                store.releaseMemory();
+                GcUtil.maybeReleaseMemory();
+                UserThread.execute(completeHandler);
             });
         }).start();
     }
 
-    public void pruneStore() {
-        store.setDaoState(null);
-        store.setDaoStateHashChain(null);
-        GcUtil.maybeReleaseMemory();
+    @Override
+    protected void readFromResources(String postFix, Runnable completeHandler) {
+        new Thread(() -> {
+            Thread.currentThread().setName("copyBsqBlocksFromResources");
+            bsqBlocksStorageService.copyFromResources(postFix);
+
+            super.readFromResources(postFix, () -> {
+                // We got mapped back to user thread so we need to create a new thread again as we dont want to
+                // execute on user thread
+                new Thread(() -> {
+                    Thread.currentThread().setName("Read-BsqBlocksStore");
+                    protobuf.DaoState daoStateAsProto = store.getDaoStateAsProto();
+                    if (daoStateAsProto != null) {
+                        LinkedList<Block> list;
+                        if (daoStateAsProto.getBlocksList().isEmpty()) {
+                            int chainHeight = daoStateAsProto.getChainHeight();
+                            list = bsqBlocksStorageService.readBlocks(chainHeight);
+                            if (!list.isEmpty()) {
+                                int heightOfLastBlock = list.getLast().getHeight();
+                                checkArgument(heightOfLastBlock == chainHeight,
+                                        "heightOfLastBlock must match chainHeight");
+                            }
+                        } else {
+                            list = bsqBlocksStorageService.migrateBlocks(daoStateAsProto.getBlocksList());
+                        }
+                        blocks.clear();
+                        blocks.addAll(list);
+                    }
+                    UserThread.execute(completeHandler);
+                }).start();
+            });
+        }).start();
     }
 
     public DaoState getPersistedBsqState() {
-        return store.getDaoState();
+        protobuf.DaoState daoStateAsProto = store.getDaoStateAsProto();
+        if (daoStateAsProto != null) {
+            long ts = System.currentTimeMillis();
+            DaoState daoState = DaoState.fromProto(daoStateAsProto, blocks);
+            log.info("Deserializing DaoState with {} blocks took {} ms",
+                    daoState.getBlocks().size(), System.currentTimeMillis() - ts);
+            return daoState;
+        }
+        return new DaoState();
     }
 
     public LinkedList<DaoStateHash> getPersistedDaoStateHashChain() {
         return store.getDaoStateHashChain();
     }
 
+    public void releaseMemory() {
+        blocks.clear();
+        store.releaseMemory();
+        GcUtil.maybeReleaseMemory();
+    }
+
     public void resyncDaoStateFromGenesis(Runnable resultHandler) {
-        store.setDaoState(new DaoState());
+        String backupDirName = "out_of_sync_dao_data";
+        try {
+            removeAndBackupDaoConsensusFiles(storageDir, backupDirName);
+        } catch (Throwable t) {
+            log.error(t.toString());
+        }
+
+        store.setDaoStateAsProto(DaoState.getBsqStateCloneExcludingBlocks(new DaoState()));
         store.setDaoStateHashChain(new LinkedList<>());
         persistenceManager.persistNow(resultHandler);
+        bsqBlocksStorageService.removeBlocksInDirectory();
     }
 
     public void resyncDaoStateFromResources(File storageDir) throws IOException {
-        // We delete all DAO consensus payload data and remove the daoState so it will rebuild from latest
+        // We delete all DAO consensus data and remove the daoState so it will rebuild from latest
         // resource files.
-        long currentTime = System.currentTimeMillis();
         String backupDirName = "out_of_sync_dao_data";
+        removeAndBackupDaoConsensusFiles(storageDir, backupDirName);
+
+        String newFileName = "DaoStateStore_" + System.currentTimeMillis();
+        FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "DaoStateStore"), newFileName, backupDirName);
+
+        bsqBlocksStorageService.removeBlocksDirectory();
+    }
+
+    private void removeAndBackupDaoConsensusFiles(File storageDir, String backupDirName) throws IOException {
+        // We delete all DAO related data. Some will be rebuild from resources.
+        long currentTime = System.currentTimeMillis();
         String newFileName = "BlindVoteStore_" + currentTime;
         FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "BlindVoteStore"), newFileName, backupDirName);
 
@@ -138,9 +209,6 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
 
         newFileName = "UnconfirmedBsqChangeOutputList_" + currentTime;
         FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "UnconfirmedBsqChangeOutputList"), newFileName, backupDirName);
-
-        newFileName = "DaoStateStore_" + currentTime;
-        FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "DaoStateStore"), newFileName, backupDirName);
     }
 
 
@@ -150,7 +218,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
 
     @Override
     protected DaoStateStore createStore() {
-        return new DaoStateStore(null, new LinkedList<>(daoStateMonitoringService.getDaoStateHashChain()));
+        return new DaoStateStore(null, new LinkedList<>());
     }
 
     @Override

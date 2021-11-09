@@ -18,7 +18,6 @@
 package bisq.desktop.main.dao.governance.result;
 
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.Cycle;
 import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
@@ -81,9 +80,7 @@ class ResultsOfCycle {
         // At a new cycle we have cycleStartTime 0 as the block is not processed yet.
         // To display a correct value we access again from the daoStateService
         if (cycleStartTime == 0)
-            cycleStartTime = daoStateService.getBlockAtHeight(cycle.getHeightOfFirstBlock())
-                    .map(Block::getTime)
-                    .orElse(0L);
+            cycleStartTime = daoStateService.getBlockTimeAtBlockHeight(cycle.getHeightOfFirstBlock());
         return cycleStartTime;
     }
 }

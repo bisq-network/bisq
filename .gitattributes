@@ -13,3 +13,4 @@
 *.jpeg          binary
 *.png           binary
 p2p/src/main/resources/*BTC_MAINNET filter=lfs diff=lfs merge=lfs -text
+p2p/src/main/resources/BsqBlocks_BTC_MAINNET/* filter=lfs diff=lfs merge=lfs -text

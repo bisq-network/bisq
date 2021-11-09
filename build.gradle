@@ -238,7 +238,7 @@ configure(project(':common')) {
 
     javafx {
         version = "$javafxVersion"
-        modules =  ['javafx.graphics']
+        modules = ['javafx.graphics']
     }
 
     dependencies {
@@ -284,7 +284,7 @@ configure(project(':p2p')) {
 
     javafx {
         version = "$javafxVersion"
-        modules =  ['javafx.base']
+        modules = ['javafx.base']
     }
 
     dependencies {
@@ -324,7 +324,7 @@ configure(project(':core')) {
 
     javafx {
         version = "$javafxVersion"
-        modules =  ['javafx.base']
+        modules = ['javafx.base']
     }
 
     dependencies {
@@ -411,7 +411,7 @@ configure(project(':desktop')) {
 
     javafx {
         version = "$javafxVersion"
-        modules =  ['javafx.controls', 'javafx.fxml']
+        modules = ['javafx.controls', 'javafx.fxml']
     }
 
     version = '1.7.5-SNAPSHOT'
@@ -459,7 +459,7 @@ configure(project(':monitor')) {
 
     javafx {
         version = "$javafxVersion"
-        modules =  ['javafx.base']
+        modules = ['javafx.base']
     }
 
     mainClassName = 'bisq.monitor.Monitor'

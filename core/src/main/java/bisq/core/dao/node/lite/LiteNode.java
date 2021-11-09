@@ -35,6 +35,7 @@ import bisq.network.p2p.network.Connection;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.util.MathUtils;
 
 import com.google.inject.Inject;
 
@@ -222,8 +223,11 @@ public class LiteNode extends BsqNode {
 
         runDelayedBatchProcessing(new ArrayList<>(blockList),
                 () -> {
-                    log.info("Parsing {} blocks took {} seconds.", blockList.size(),
-                            (System.currentTimeMillis() - ts) / 1000d);
+                    double duration = System.currentTimeMillis() - ts;
+                    log.info("Parsing {} blocks took {} seconds ({} min.) / {} ms in average / block", blockList.size(),
+                            MathUtils.roundDouble(duration / 1000d, 2),
+                            MathUtils.roundDouble(duration / 1000d / 60, 2),
+                            MathUtils.roundDouble(duration / blockList.size(), 2));
                     // We only request again if wallet is synced, otherwise we would get repeated calls we want to avoid.
                     // We deal with that case at the setupWalletBestBlockListener method above.
                     if (walletsSetup.isDownloadComplete() &&

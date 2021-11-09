@@ -30,6 +30,7 @@ import bisq.core.dao.governance.proposal.MyProposalList;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalStore;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalStore;
 import bisq.core.dao.state.model.governance.BallotList;
+import bisq.core.dao.state.storage.BsqBlockStore;
 import bisq.core.dao.state.storage.DaoStateStore;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputList;
 import bisq.core.payment.PaymentAccountList;
@@ -138,6 +139,8 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return IgnoredMailboxMap.fromProto(proto.getIgnoredMailboxMap());
                 case REMOVED_PAYLOADS_MAP:
                     return RemovedPayloadsMap.fromProto(proto.getRemovedPayloadsMap());
+                case BSQ_BLOCK_STORE:
+                    return BsqBlockStore.fromProto(proto.getBsqBlockStore());
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case(PB.PersistableEnvelope). " +
                             "messageCase=" + proto.getMessageCase() + "; proto raw data=" + proto.toString());

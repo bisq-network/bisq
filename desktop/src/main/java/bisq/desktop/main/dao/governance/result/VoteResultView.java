@@ -418,9 +418,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                             .peek(decryptedBallotsWithMerits -> stakeAndMerit.getAndAdd(decryptedBallotsWithMerits.getStake() + decryptedBallotsWithMerits.getMerit(daoStateService)))
                             .collect(Collectors.toList());
 
-                    long cycleStartTime = daoStateService.getBlockAtHeight(cycle.getHeightOfFirstBlock())
-                            .map(Block::getTime)
-                            .orElse(0L);
+                    long cycleStartTime = daoStateService.getBlockTimeAtBlockHeight(cycle.getHeightOfFirstBlock());
                     int cycleIndex = cycleService.getCycleIndex(cycle);
                     ResultsOfCycle resultsOfCycle = new ResultsOfCycle(cycle,
                             cycleIndex,
