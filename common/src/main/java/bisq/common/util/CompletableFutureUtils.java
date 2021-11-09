@@ -1,4 +1,4 @@
-package bisq.common.util;/*
+/*
  * This file is part of Bisq.
  *
  * Bisq is free software: you can redistribute it and/or modify it
@@ -14,6 +14,8 @@ package bisq.common.util;/*
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
+
+package bisq.common.util;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
