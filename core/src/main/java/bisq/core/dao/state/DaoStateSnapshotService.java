@@ -148,7 +148,6 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         }
     }
 
-
     @Override
     public void onParseBlockChainComplete() {
         isParseBlockChainComplete = true;

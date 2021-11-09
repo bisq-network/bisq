@@ -32,8 +32,10 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class FeeReceiverSelector {
+    public static final String BTC_FEE_RECEIVER_ADDRESS = "38bZBj5peYS3Husdz7AH3gEUiUbYRD951t";
+
     public static String getMostRecentAddress() {
-        return "38bZBj5peYS3Husdz7AH3gEUiUbYRD951t";
+        return BTC_FEE_RECEIVER_ADDRESS;
     }
 
     public static String getAddress(FilterManager filterManager) {

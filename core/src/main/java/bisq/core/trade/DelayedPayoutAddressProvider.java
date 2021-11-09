@@ -24,24 +24,30 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DelayedPayoutAddressProvider {
+    public static final String INITIAL_BM_ADDRESS = "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7"; // Initial DAO donation address
+    public static final String BM2019_ADDRESS = "3EtUWqsGThPtjwUczw27YCo6EWvQdaPUyp"; // burning2019
+    public static final String BM2_ADDRESS = "3A8Zc1XioE2HRzYfbb5P8iemCS72M6vRJV";  // burningman2
+    // burningman3 https://github.com/bisq-network/roles/issues/80#issuecomment-723577776
+    public static final String BM3_ADDRESS = "34VLFgtFKAtwTdZ5rengTT2g2zC99sWQLC";
+
     public static String getDelayedPayoutAddress(DaoFacade daoFacade) {
         String address = daoFacade.getParamValue(Param.RECIPIENT_BTC_ADDRESS);
         if (isOutdatedAddress(address)) {
             log.warn("Outdated delayed payout address. " +
                     "This can be the case if the DAO is deactivated or if the user has an invalid DAO state." +
-                    "We set the address to the recent one (34VLFgtFKAtwTdZ5rengTT2g2zC99sWQLC).");
+                    "We set the address to the recent one (BM3_ADDRESS).");
             return getAddress();
         }
         return address;
     }
 
     public static boolean isOutdatedAddress(String address) {
-        return address.equals("1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7") ||   // Initial DAO donation address
-                address.equals("3EtUWqsGThPtjwUczw27YCo6EWvQdaPUyp") ||  // burning2019
-                address.equals("3A8Zc1XioE2HRzYfbb5P8iemCS72M6vRJV");    // burningman2
+        return address.equals(INITIAL_BM_ADDRESS) ||
+                address.equals(BM2019_ADDRESS) ||
+                address.equals(BM2_ADDRESS);
     }
 
     public static String getAddress() {
-        return "34VLFgtFKAtwTdZ5rengTT2g2zC99sWQLC";
+        return BM3_ADDRESS;
     }
 }

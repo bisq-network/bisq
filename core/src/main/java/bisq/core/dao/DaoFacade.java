@@ -73,6 +73,7 @@ import bisq.core.dao.state.model.governance.Role;
 import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.dao.state.storage.DaoStateStorageService;
+import bisq.core.trade.DelayedPayoutAddressProvider;
 
 import bisq.asset.Asset;
 
@@ -799,9 +800,9 @@ public class DaoFacade implements DaoSetupService {
         if (Config.baseCurrencyNetwork().isMainnet()) {
             // If Dao is deactivated we need to add the past addresses used as well.
             // This list need to be updated once a new address gets defined.
-            allPastParamValues.add("3EtUWqsGThPtjwUczw27YCo6EWvQdaPUyp"); // burning man 2019
-            allPastParamValues.add("3A8Zc1XioE2HRzYfbb5P8iemCS72M6vRJV"); // burningman2
-            allPastParamValues.add("34VLFgtFKAtwTdZ5rengTT2g2zC99sWQLC"); // burningman3 (https://github.com/bisq-network/roles/issues/80#issuecomment-723577776)
+            allPastParamValues.add(DelayedPayoutAddressProvider.BM2019_ADDRESS);
+            allPastParamValues.add(DelayedPayoutAddressProvider.BM2_ADDRESS);
+            allPastParamValues.add(DelayedPayoutAddressProvider.BM3_ADDRESS);
         }
 
         return allPastParamValues;
