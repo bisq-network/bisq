@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BTC;
-import static bisq.cli.TableFormat.formatOfferTable;
+import static bisq.apitest.config.ApiTestConfig.USD;
 import static bisq.common.util.MathUtils.roundDouble;
 import static bisq.common.util.MathUtils.scaleDownByPowerOf10;
 import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
@@ -47,7 +47,6 @@ import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 import static java.math.RoundingMode.HALF_UP;
-import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -81,7 +80,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
                 usdAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE,
                 NO_TRIGGER_PRICE);
-        log.info("OFFER #1:\n{}", formatOfferTable(singletonList(newOffer), "usd"));
+        log.debug("OFFER #1:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -94,7 +93,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
         assertEquals(usdAccount.getId(), newOffer.getPaymentAccountId());
         assertEquals(BTC, newOffer.getBaseCurrencyCode());
-        assertEquals("USD", newOffer.getCounterCurrencyCode());
+        assertEquals(USD, newOffer.getCounterCurrencyCode());
         assertTrue(newOffer.getIsCurrencyForMakerFeeBtc());
 
         newOffer = aliceClient.getMyOffer(newOfferId);
@@ -108,7 +107,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
         assertEquals(usdAccount.getId(), newOffer.getPaymentAccountId());
         assertEquals(BTC, newOffer.getBaseCurrencyCode());
-        assertEquals("USD", newOffer.getCounterCurrencyCode());
+        assertEquals(USD, newOffer.getCounterCurrencyCode());
         assertTrue(newOffer.getIsCurrencyForMakerFeeBtc());
 
         assertCalculatedPriceIsCorrect(newOffer, priceMarginPctInput);
@@ -128,7 +127,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
                 nzdAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE,
                 NO_TRIGGER_PRICE);
-        log.info("OFFER #2:\n{}", formatOfferTable(singletonList(newOffer), "nzd"));
+        log.debug("OFFER #2:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -175,7 +174,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
                 gbpAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE,
                 NO_TRIGGER_PRICE);
-        log.info("OFFER #3:\n{}", formatOfferTable(singletonList(newOffer), "gbp"));
+        log.debug("OFFER #3:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -222,7 +221,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
                 brlAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE,
                 NO_TRIGGER_PRICE);
-        log.info("OFFER #4:\n{}", formatOfferTable(singletonList(newOffer), "brl"));
+        log.debug("OFFER #4:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -262,7 +261,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         double mktPriceAsDouble = aliceClient.getBtcPrice("usd");
         BigDecimal mktPrice = new BigDecimal(Double.toString(mktPriceAsDouble));
         BigDecimal triggerPrice = mktPrice.add(new BigDecimal("1000.9999"));
-        long triggerPriceAsLong = Price.parse("USD", triggerPrice.toString()).getValue();
+        long triggerPriceAsLong = Price.parse(USD, triggerPrice.toString()).getValue();
 
         var newOffer = aliceClient.createMarketBasedPricedOffer(BUY.name(),
                 "usd",
@@ -278,7 +277,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
 
         genBtcBlocksThenWait(1, 4000); // give time to add to offer book
         newOffer = aliceClient.getMyOffer(newOffer.getId());
-        log.info("OFFER #5:\n{}", formatOfferTable(singletonList(newOffer), "usd"));
+        log.debug("OFFER #5:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(triggerPriceAsLong, newOffer.getTriggerPrice());

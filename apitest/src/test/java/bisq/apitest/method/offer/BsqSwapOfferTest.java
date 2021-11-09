@@ -31,7 +31,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.ApiTestConfig.BTC;
-import static bisq.cli.TableFormat.formatBalancesTbls;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -46,7 +45,6 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
     @BeforeAll
     public static void setUp() {
         AbstractOfferTest.setUp();
-        createBsqSwapBsqPaymentAccounts();
     }
 
     @BeforeEach
@@ -115,7 +113,7 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
                 1_000_000L,
                 1_000_000L,
                 "0.00005",
-                alicesBsqAcct.getId());
+                alicesBsqSwapAcct.getId());
         log.debug("BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", bsqSwapOffer);
         var newOfferId = bsqSwapOffer.getId();
         assertNotEquals("", newOfferId);

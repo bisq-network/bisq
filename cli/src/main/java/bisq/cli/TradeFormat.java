@@ -30,6 +30,7 @@ import static bisq.cli.ColumnHeaderConstants.*;
 import static bisq.cli.CurrencyFormat.*;
 import static com.google.common.base.Strings.padEnd;
 
+@Deprecated
 @VisibleForTesting
 public class TradeFormat {
 
@@ -164,7 +165,7 @@ public class TradeFormat {
     private static final Function<TradeInfo, String> amountFormat = (t) ->
             t.getOffer().getBaseCurrencyCode().equals("BTC")
                     ? formatSatoshis(t.getTradeAmountAsLong())
-                    : formatCryptoCurrencyOfferVolume(t.getTradeVolume());
+                    : formatCryptoCurrencyVolume(t.getTradeVolume());
 
     private static final BiFunction<TradeInfo, Boolean, String> makerTakerMinerTxFeeFormat = (t, isTaker) -> {
         if (isTaker) {
@@ -188,7 +189,7 @@ public class TradeFormat {
 
     private static final Function<TradeInfo, String> tradeCostFormat = (t) ->
             t.getOffer().getBaseCurrencyCode().equals("BTC")
-                    ? formatOfferVolume(t.getTradeVolume())
+                    ? formatFiatVolume(t.getTradeVolume())
                     : formatSatoshis(t.getTradeAmountAsLong());
 
     private static final BiFunction<TradeInfo, Boolean, String> bsqReceiveAddress = (t, showBsqBuyerAddress) -> {

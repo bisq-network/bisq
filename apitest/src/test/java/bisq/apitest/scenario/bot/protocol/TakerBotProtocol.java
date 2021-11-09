@@ -17,7 +17,7 @@ import static bisq.apitest.scenario.bot.protocol.ProtocolStep.DONE;
 import static bisq.apitest.scenario.bot.protocol.ProtocolStep.FIND_OFFER;
 import static bisq.apitest.scenario.bot.protocol.ProtocolStep.TAKE_OFFER;
 import static bisq.apitest.scenario.bot.shutdown.ManualShutdown.checkIfShutdownCalled;
-import static bisq.cli.TableFormat.formatOfferTable;
+import static bisq.cli.OfferFormat.formatOfferTable;
 import static bisq.core.payment.payload.PaymentMethod.F2F_ID;
 
 

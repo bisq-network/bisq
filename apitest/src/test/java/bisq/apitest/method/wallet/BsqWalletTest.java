@@ -24,7 +24,7 @@ import static bisq.apitest.method.wallet.WalletTestUtil.ALICES_INITIAL_BSQ_BALAN
 import static bisq.apitest.method.wallet.WalletTestUtil.BOBS_INITIAL_BSQ_BALANCES;
 import static bisq.apitest.method.wallet.WalletTestUtil.bsqBalanceModel;
 import static bisq.apitest.method.wallet.WalletTestUtil.verifyBsqBalances;
-import static bisq.cli.TableFormat.formatBsqBalanceInfoTbl;
+import static bisq.cli.table.builder.TableType.BSQ_BALANCE_TBL;
 import static org.bitcoinj.core.NetworkParameters.ID_REGTEST;
 import static org.bitcoinj.core.NetworkParameters.PAYMENT_PROTOCOL_ID_REGTEST;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -36,6 +36,7 @@ import static org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import bisq.apitest.config.BisqAppConfig;
 import bisq.apitest.method.MethodTest;
 import bisq.cli.GrpcClient;
+import bisq.cli.table.builder.TableBuilder;
 
 @Disabled
 @Slf4j
@@ -55,6 +56,7 @@ public class BsqWalletTest extends MethodTest {
                 bobdaemon);
     }
 
+
     @Test
     @Order(1)
     public void testGetUnusedBsqAddress() {
@@ -73,13 +75,13 @@ public class BsqWalletTest extends MethodTest {
         BsqBalanceInfo alicesBsqBalances = aliceClient.getBsqBalances();
         log.debug("{} -> Alice's BSQ Initial Balances -> \n{}",
                 testName(testInfo),
-                formatBsqBalanceInfoTbl(alicesBsqBalances));
+                new TableBuilder(BSQ_BALANCE_TBL, alicesBsqBalances).build());
         verifyBsqBalances(ALICES_INITIAL_BSQ_BALANCES, alicesBsqBalances);
 
         BsqBalanceInfo bobsBsqBalances = bobClient.getBsqBalances();
         log.debug("{} -> Bob's BSQ Initial Balances -> \n{}",
                 testName(testInfo),
-                formatBsqBalanceInfoTbl(bobsBsqBalances));
+                new TableBuilder(BSQ_BALANCE_TBL, bobsBsqBalances).build());
         verifyBsqBalances(BOBS_INITIAL_BSQ_BALANCES, bobsBsqBalances);
     }
 
@@ -100,19 +102,19 @@ public class BsqWalletTest extends MethodTest {
                 alicedaemon);
 
         verifyBsqBalances(bsqBalanceModel(150000000,
-                2500050,
-                0,
-                0,
-                0,
-                0),
+                        2500050,
+                        0,
+                        0,
+                        0,
+                        0),
                 bobsBsqBalances);
 
         verifyBsqBalances(bsqBalanceModel(97499950,
-                97499950,
-                97499950,
-                0,
-                0,
-                0),
+                        97499950,
+                        97499950,
+                        0,
+                        0,
+                        0),
                 alicesBsqBalances);
     }
 
@@ -124,7 +126,7 @@ public class BsqWalletTest extends MethodTest {
         genBtcBlocksThenWait(1, 4000);
 
         BsqBalanceInfo alicesBsqBalances = aliceClient.getBalances().getBsq();
-        BsqBalanceInfo bobsBsqBalances = waitForBsqNewAvailableBalance(bobClient, 150000000);
+        BsqBalanceInfo bobsBsqBalances = waitForBsqNewAvailableConfirmedBalance(bobClient, 150000000);
 
         log.debug("See Available Confirmed BSQ Balances...");
         printBobAndAliceBsqBalances(testInfo,
@@ -133,19 +135,19 @@ public class BsqWalletTest extends MethodTest {
                 alicedaemon);
 
         verifyBsqBalances(bsqBalanceModel(152500050,
-                0,
-                0,
-                0,
-                0,
-                0),
+                        0,
+                        0,
+                        0,
+                        0,
+                        0),
                 bobsBsqBalances);
 
         verifyBsqBalances(bsqBalanceModel(97499950,
-                0,
-                0,
-                0,
-                0,
-                0),
+                        0,
+                        0,
+                        0,
+                        0,
+                        0),
                 alicesBsqBalances);
     }
 
@@ -166,8 +168,8 @@ public class BsqWalletTest extends MethodTest {
         return bsqBalance;
     }
 
-    private BsqBalanceInfo waitForBsqNewAvailableBalance(GrpcClient grpcClient,
-                                                         long staleBalance) {
+    private BsqBalanceInfo waitForBsqNewAvailableConfirmedBalance(GrpcClient grpcClient,
+                                                                  long staleBalance) {
         BsqBalanceInfo bsqBalance = grpcClient.getBsqBalances();
         for (int numRequests = 1;
              numRequests <= 15 && bsqBalance.getAvailableConfirmedBalance() == staleBalance;
@@ -187,12 +189,12 @@ public class BsqWalletTest extends MethodTest {
                 testName(testInfo),
                 senderApp.equals(bobdaemon) ? "Sending" : "Receiving",
                 SEND_BSQ_AMOUNT,
-                formatBsqBalanceInfoTbl(bobsBsqBalances));
+                new TableBuilder(BSQ_BALANCE_TBL, bobsBsqBalances).build());
 
         log.debug("{} -> Alice's Balances After {} {} BSQ-> \n{}",
                 testName(testInfo),
                 senderApp.equals(alicedaemon) ? "Sending" : "Receiving",
                 SEND_BSQ_AMOUNT,
-                formatBsqBalanceInfoTbl(alicesBsqBalances));
+                new TableBuilder(BSQ_BALANCE_TBL, alicesBsqBalances).build());
     }
 }

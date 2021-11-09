@@ -327,6 +327,10 @@ public final class GrpcClient {
         return offersServiceRequest.getMyOffersSortedByDate(currencyCode);
     }
 
+    public List<OfferInfo> getMyCryptoCurrencyOffersSortedByDate(String currencyCode) {
+        return offersServiceRequest.getMyCryptoCurrencyOffersSortedByDate(currencyCode);
+    }
+
     public List<OfferInfo> getMyBsqOffersSortedByDate() {
         return offersServiceRequest.getMyBsqOffersSortedByDate();
     }
@@ -412,6 +416,10 @@ public final class GrpcClient {
 
     public List<PaymentAccount> getPaymentAccounts() {
         return paymentAccountsServiceRequest.getPaymentAccounts();
+    }
+
+    public PaymentAccount getPaymentAccount(String accountName) {
+        return paymentAccountsServiceRequest.getPaymentAccount(accountName);
     }
 
     public PaymentAccount createCryptoCurrencyPaymentAccount(String accountName,

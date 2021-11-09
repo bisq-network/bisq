@@ -39,14 +39,15 @@ public class CurrencyFormat {
     // Use the US locale for all DecimalFormat objects.
     private static final DecimalFormatSymbols DECIMAL_FORMAT_SYMBOLS = DecimalFormatSymbols.getInstance(Locale.US);
 
-    // Formats numbers in US locale, human friendly style.
+    // Format numbers in US locale for CLI console.
     private static final NumberFormat FRIENDLY_NUMBER_FORMAT = NumberFormat.getInstance(Locale.US);
 
     // Formats numbers for internal use, i.e., grpc request parameters.
     private static final DecimalFormat INTERNAL_FIAT_DECIMAL_FORMAT = new DecimalFormat("##############0.0000");
 
     static final BigDecimal SATOSHI_DIVISOR = new BigDecimal(100_000_000);
-    static final DecimalFormat BTC_FORMAT = new DecimalFormat("###,##0.00000000", DECIMAL_FORMAT_SYMBOLS);
+    static final DecimalFormat SATOSHI_FORMAT = new DecimalFormat("###,##0.00000000", DECIMAL_FORMAT_SYMBOLS);
+    static final DecimalFormat BTC_FORMAT = new DecimalFormat("###,##0.########", DECIMAL_FORMAT_SYMBOLS);
     static final DecimalFormat BTC_TX_FEE_FORMAT = new DecimalFormat("###,###,##0", DECIMAL_FORMAT_SYMBOLS);
 
     static final BigDecimal BSQ_SATOSHI_DIVISOR = new BigDecimal(100);
@@ -57,6 +58,11 @@ public class CurrencyFormat {
 
     @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
     public static String formatSatoshis(long sats) {
+        return SATOSHI_FORMAT.format(BigDecimal.valueOf(sats).divide(SATOSHI_DIVISOR));
+    }
+
+    @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
+    public static String formatBtc(long sats) {
         return BTC_FORMAT.format(BigDecimal.valueOf(sats).divide(SATOSHI_DIVISOR));
     }
 
@@ -84,22 +90,25 @@ public class CurrencyFormat {
                     formatFeeSatoshis(txFeeRateInfo.getMinFeeServiceRate()));
     }
 
+    @Deprecated
     public static String formatAmountRange(long minAmount, long amount) {
         return minAmount != amount
                 ? formatSatoshis(minAmount) + " - " + formatSatoshis(amount)
                 : formatSatoshis(amount);
     }
 
+    @Deprecated
     public static String formatVolumeRange(long minVolume, long volume) {
         return minVolume != volume
-                ? formatOfferVolume(minVolume) + " - " + formatOfferVolume(volume)
-                : formatOfferVolume(volume);
+                ? formatFiatVolume(minVolume) + " - " + formatFiatVolume(volume)
+                : formatFiatVolume(volume);
     }
 
+    @Deprecated
     public static String formatCryptoCurrencyVolumeRange(long minVolume, long volume) {
         return minVolume != volume
-                ? formatCryptoCurrencyOfferVolume(minVolume) + " - " + formatCryptoCurrencyOfferVolume(volume)
-                : formatCryptoCurrencyOfferVolume(volume);
+                ? formatCryptoCurrencyVolume(minVolume) + " - " + formatCryptoCurrencyVolume(volume)
+                : formatCryptoCurrencyVolume(volume);
     }
 
     public static String formatInternalFiatPrice(BigDecimal price) {
@@ -128,22 +137,31 @@ public class CurrencyFormat {
         return FRIENDLY_NUMBER_FORMAT.format((double) price / SATOSHI_DIVISOR.doubleValue());
     }
 
-    public static String formatOfferVolume(long volume) {
+    public static String formatFiatVolume(long volume) {
         FRIENDLY_NUMBER_FORMAT.setMinimumFractionDigits(0);
         FRIENDLY_NUMBER_FORMAT.setMaximumFractionDigits(0);
         FRIENDLY_NUMBER_FORMAT.setRoundingMode(HALF_UP);
         return FRIENDLY_NUMBER_FORMAT.format((double) volume / 10_000);
     }
 
-    public static String formatCryptoCurrencyOfferVolume(long volume) {
-        FRIENDLY_NUMBER_FORMAT.setMinimumFractionDigits(2);
-        FRIENDLY_NUMBER_FORMAT.setMaximumFractionDigits(2);
+    public static String formatCryptoCurrencyVolume(long volume) {
+        int defaultPrecision = 2;
+        return formatCryptoCurrencyVolume(volume, defaultPrecision);
+    }
+
+    public static String formatCryptoCurrencyVolume(long volume, int precision) {
+        FRIENDLY_NUMBER_FORMAT.setMinimumFractionDigits(precision);
+        FRIENDLY_NUMBER_FORMAT.setMaximumFractionDigits(precision);
         FRIENDLY_NUMBER_FORMAT.setRoundingMode(HALF_UP);
         return FRIENDLY_NUMBER_FORMAT.format((double) volume / SATOSHI_DIVISOR.doubleValue());
     }
 
-    public static long toInternalFiatPrice(BigDecimal humanFriendlyFiatPrice) {
-        return humanFriendlyFiatPrice.multiply(new BigDecimal(10_000)).longValue();
+    public static long toInternalFiatPrice(BigDecimal fiatPrice) {
+        return fiatPrice.multiply(new BigDecimal(10_000)).longValue();
+    }
+
+    public static long toInternalCryptoCurrencyPrice(BigDecimal altcoinPrice) {
+        return altcoinPrice.multiply(new BigDecimal(100_000_000)).longValue();
     }
 
     public static long toSatoshis(String btc) {

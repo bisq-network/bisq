@@ -20,8 +20,6 @@ package bisq.apitest.method.trade;
 import bisq.proto.grpc.BsqSwapOfferInfo;
 import bisq.proto.grpc.BsqSwapTradeInfo;
 
-import protobuf.BsqSwapTrade;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,11 +36,12 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.ApiTestConfig.BTC;
-import static bisq.cli.TableFormat.formatBalancesTbls;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.fail;
+import static protobuf.BsqSwapTrade.State.COMPLETED;
+import static protobuf.BsqSwapTrade.State.PREPARATION;
 import static protobuf.OfferDirection.BUY;
 
 
@@ -63,7 +62,6 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
     @BeforeAll
     public static void setUp() {
         AbstractOfferTest.setUp();
-        createBsqSwapBsqPaymentAccounts();
     }
 
     @BeforeEach
@@ -75,9 +73,9 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
     @Order(1)
     public void testGetBalancesBeforeTrade() {
         var alicesBalances = aliceClient.getBalances();
-        log.info("Alice's Before Trade Balance:\n{}", formatBalancesTbls(alicesBalances));
+        log.debug("Alice's Before Trade Balance:\n{}", formatBalancesTbls(alicesBalances));
         var bobsBalances = bobClient.getBalances();
-        log.info("Bob's Before Trade Balance:\n{}", formatBalancesTbls(bobsBalances));
+        log.debug("Bob's Before Trade Balance:\n{}", formatBalancesTbls(bobsBalances));
     }
 
     @Test
@@ -87,7 +85,7 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
                 1_000_000L,
                 1_000_000L,
                 "0.00005",
-                alicesBsqAcct.getId());
+                alicesBsqSwapAcct.getId());
         log.debug("BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", bsqSwapOffer);
         var newOfferId = bsqSwapOffer.getId();
         assertNotEquals("", newOfferId);
@@ -105,24 +103,25 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
     public void testBobTakesBsqSwapOffer() {
         var bsqSwapOffer = getAvailableBsqSwapOffer();
         var bsqSwapTradeInfo = bobClient.takeBsqSwapOffer(bsqSwapOffer.getId(),
-                bobsBsqAcct.getId(),
+                bobsBsqSwapAcct.getId(),
                 BISQ_FEE_CURRENCY_CODE);
         log.debug("Trade at t1: {}", bsqSwapTradeInfo);
-        assertEquals(BsqSwapTrade.State.PREPARATION.name(), bsqSwapTradeInfo.getState());
+        assertEquals(PREPARATION.name(), bsqSwapTradeInfo.getState());
         genBtcBlocksThenWait(1, 3_000);
 
         bsqSwapTradeInfo = getBsqSwapTrade(bsqSwapTradeInfo.getTradeId());
         log.debug("Trade at t2: {}", bsqSwapTradeInfo);
-        assertEquals(BsqSwapTrade.State.COMPLETED.name(), bsqSwapTradeInfo.getState());
+        assertEquals(COMPLETED.name(), bsqSwapTradeInfo.getState());
     }
 
     @Test
     @Order(4)
     public void testGetBalancesAfterTrade() {
+        sleep(2_500); // Give wallet time to finish processing TX.
         var alicesBalances = aliceClient.getBalances();
-        log.info("Alice's After Trade Balance:\n{}", formatBalancesTbls(alicesBalances));
+        log.debug("Alice's After Trade Balance:\n{}", formatBalancesTbls(alicesBalances));
         var bobsBalances = bobClient.getBalances();
-        log.info("Bob's After Trade Balance:\n{}", formatBalancesTbls(bobsBalances));
+        log.debug("Bob's After Trade Balance:\n{}", formatBalancesTbls(bobsBalances));
     }
 
     private BsqSwapOfferInfo getAvailableBsqSwapOffer() {

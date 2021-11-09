@@ -60,6 +60,7 @@ public class OffersServiceRequest {
         this.grpcStubs = grpcStubs;
     }
 
+    @SuppressWarnings("unused")
     public OfferInfo createFixedPricedOffer(String direction,
                                             String currencyCode,
                                             long amount,
@@ -81,6 +82,7 @@ public class OffersServiceRequest {
                 0 /* no trigger price */);
     }
 
+    @SuppressWarnings("unused")
     public OfferInfo createMarketBasedPricedOffer(String direction,
                                                   String currencyCode,
                                                   long amount,
@@ -325,6 +327,13 @@ public class OffersServiceRequest {
         ArrayList<OfferInfo> offers = new ArrayList<>();
         offers.addAll(getMyOffers(BUY.name(), currencyCode));
         offers.addAll(getMyOffers(SELL.name(), currencyCode));
+        return sortOffersByDate(offers);
+    }
+
+    public List<OfferInfo> getMyCryptoCurrencyOffersSortedByDate(String currencyCode) {
+        ArrayList<OfferInfo> offers = new ArrayList<>();
+        offers.addAll(getMyCryptoCurrencyOffers(BUY.name(), currencyCode));
+        offers.addAll(getMyCryptoCurrencyOffers(SELL.name(), currencyCode));
         return sortOffersByDate(offers);
     }
 

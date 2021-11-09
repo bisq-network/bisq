@@ -240,13 +240,11 @@ public class CoreApi {
     public PaymentAccount createCryptoCurrencyPaymentAccount(String accountName,
                                                              String currencyCode,
                                                              String address,
-                                                             boolean tradeInstant,
-                                                             boolean isBsqSwap) {
+                                                             boolean tradeInstant) {
         return paymentAccountsService.createCryptoCurrencyPaymentAccount(accountName,
                 currencyCode,
                 address,
-                tradeInstant,
-                isBsqSwap);
+                tradeInstant);
     }
 
     public List<PaymentMethod> getCryptoCurrencyPaymentMethods() {

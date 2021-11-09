@@ -684,8 +684,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         return coreApi.createCryptoCurrencyPaymentAccount(DisplayUtils.createAssetsAccountName("BSQ", unusedBsqAddressAsString),
                 "BSQ",
                 unusedBsqAddressAsString,
-                isInstantPaymentMethod(offer),
-                false);
+                isInstantPaymentMethod(offer));
     }
 
     public void setOfferActionHandler(OfferView.OfferActionHandler offerActionHandler) {

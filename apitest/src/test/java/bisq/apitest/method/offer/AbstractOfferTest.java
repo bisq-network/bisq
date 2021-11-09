@@ -17,10 +17,14 @@
 
 package bisq.apitest.method.offer;
 
+import bisq.proto.grpc.BsqSwapOfferInfo;
+import bisq.proto.grpc.OfferInfo;
+
 import protobuf.PaymentAccount;
 
 import java.math.BigDecimal;
 
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -36,11 +40,13 @@ import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
+import static bisq.cli.table.builder.TableType.OFFER_TBL;
 import static bisq.common.util.MathUtils.exactMultiply;
 
 
 
 import bisq.apitest.method.MethodTest;
+import bisq.cli.table.builder.TableBuilder;
 
 @Slf4j
 public abstract class AbstractOfferTest extends MethodTest {
@@ -52,8 +58,11 @@ public abstract class AbstractOfferTest extends MethodTest {
     @Setter
     protected static boolean isLongRunningTest;
 
-    protected static PaymentAccount alicesBsqAcct;
-    protected static PaymentAccount bobsBsqAcct;
+    protected static PaymentAccount alicesBsqSwapAcct;
+    protected static PaymentAccount bobsBsqSwapAcct;
+    // TODO Deprecate legacy BSQ accounts when no longer in use.
+    protected static PaymentAccount alicesLegacyBsqAcct;
+    protected static PaymentAccount bobsLegacyBsqAcct;
 
     @BeforeAll
     public static void setUp() {
@@ -64,17 +73,9 @@ public abstract class AbstractOfferTest extends MethodTest {
                 arbdaemon,
                 alicedaemon,
                 bobdaemon);
-    }
 
-    public static void createBsqSwapBsqPaymentAccounts() {
-        alicesBsqAcct = aliceClient.createCryptoCurrencyPaymentAccount("Alice's BsqSwap Account",
-                BSQ,
-                aliceClient.getUnusedBsqAddress(), // TODO refactor, bsq address not needed for atom acct
-                false);
-        bobsBsqAcct = bobClient.createCryptoCurrencyPaymentAccount("Bob's BsqSwap Account",
-                BSQ,
-                bobClient.getUnusedBsqAddress(),   // TODO refactor, bsq address not needed for atom acct
-                false);
+        initSwapPaymentAccounts();
+        createLegacyBsqPaymentAccounts();
     }
 
     // Mkt Price Margin value of offer returned from server is scaled down by 10^-2.
@@ -105,13 +106,31 @@ public abstract class AbstractOfferTest extends MethodTest {
         return priceAsBigDecimal.toPlainString();
     };
 
+    protected final Function<OfferInfo, String> toOfferTable = (offer) ->
+            new TableBuilder(OFFER_TBL, offer).build().toString();
+
+    protected final Function<List<OfferInfo>, String> toOffersTable = (offers) ->
+            new TableBuilder(OFFER_TBL, offers).build().toString();
+
+    // TODO
+    protected final Function<BsqSwapOfferInfo, String> toBsqSwapOfferTable = (offer) ->
+            new TableBuilder(OFFER_TBL, offer).build().toString();
+
+
+    public static void initSwapPaymentAccounts() {
+        // A bot may not know what the default 'BSQ Swap' account name is,
+        // but API test cases do:  the value of the i18n property 'BSQ_SWAP'.
+        alicesBsqSwapAcct = aliceClient.getPaymentAccount("BSQ Swap");
+        bobsBsqSwapAcct = bobClient.getPaymentAccount("BSQ Swap");
+    }
+
     @SuppressWarnings("ConstantConditions")
-    public static void createBsqPaymentAccounts() {
-        alicesBsqAcct = aliceClient.createCryptoCurrencyPaymentAccount("Alice's BSQ Account",
+    public static void createLegacyBsqPaymentAccounts() {
+        alicesLegacyBsqAcct = aliceClient.createCryptoCurrencyPaymentAccount("Alice's Legacy BSQ Account",
                 BSQ,
                 aliceClient.getUnusedBsqAddress(),
                 false);
-        bobsBsqAcct = bobClient.createCryptoCurrencyPaymentAccount("Bob's BSQ Account",
+        bobsLegacyBsqAcct = bobClient.createCryptoCurrencyPaymentAccount("Bob's Legacy BSQ Account",
                 BSQ,
                 bobClient.getUnusedBsqAddress(),
                 false);

@@ -20,6 +20,7 @@ package bisq.cli;
 import static com.google.common.base.Strings.padEnd;
 import static com.google.common.base.Strings.padStart;
 
+@Deprecated
 class ColumnHeaderConstants {
 
     // For inserting 2 spaces between column headers.

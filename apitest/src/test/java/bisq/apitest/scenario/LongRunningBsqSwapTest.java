@@ -43,7 +43,6 @@ public class LongRunningBsqSwapTest extends AbstractOfferTest {
     @BeforeAll
     public static void setUp() {
         AbstractOfferTest.setUp();
-        createBsqSwapBsqPaymentAccounts();
     }
 
     @Test
