@@ -32,6 +32,7 @@ import javafx.util.StringConverter;
 import java.text.DecimalFormat;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 import lombok.extern.slf4j.Slf4j;
@@ -53,12 +54,12 @@ public class PriceChartViewModel extends ChartViewModel<PriceChartDataModel> {
     // Average price from timeline selection
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    double averageBsqUsdPrice() {
-        return dataModel.averageBsqUsdPrice();
+    CompletableFuture<Double> averageBsqUsdPrice() {
+        return CompletableFuture.supplyAsync(() -> dataModel.averageBsqUsdPrice());
     }
 
-    double averageBsqBtcPrice() {
-        return dataModel.averageBsqBtcPrice();
+    CompletableFuture<Double> averageBsqBtcPrice() {
+        return CompletableFuture.supplyAsync(() -> dataModel.averageBsqBtcPrice());
     }
 
 
@@ -66,16 +67,17 @@ public class PriceChartViewModel extends ChartViewModel<PriceChartDataModel> {
     // Chart data
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    List<XYChart.Data<Number, Number>> getBsqUsdPriceChartData() {
-        return toChartDoubleData(dataModel.getBsqUsdPriceByInterval());
+
+    CompletableFuture<List<XYChart.Data<Number, Number>>> getBsqUsdPriceChartData() {
+        return CompletableFuture.supplyAsync(() -> toChartDoubleData(dataModel.getBsqUsdPriceByInterval()));
     }
 
-    List<XYChart.Data<Number, Number>> getBsqBtcPriceChartData() {
-        return toChartDoubleData(dataModel.getBsqBtcPriceByInterval());
+    CompletableFuture<List<XYChart.Data<Number, Number>>> getBsqBtcPriceChartData() {
+        return CompletableFuture.supplyAsync(() -> toChartDoubleData(dataModel.getBsqBtcPriceByInterval()));
     }
 
-    List<XYChart.Data<Number, Number>> getBtcUsdPriceChartData() {
-        return toChartDoubleData(dataModel.getBtcUsdPriceByInterval());
+    CompletableFuture<List<XYChart.Data<Number, Number>>> getBtcUsdPriceChartData() {
+        return CompletableFuture.supplyAsync(() -> toChartDoubleData(dataModel.getBtcUsdPriceByInterval()));
     }
 
 

@@ -31,6 +31,7 @@ import ch.qos.logback.core.util.FileSize;
 
 public class Log {
     private static Logger logbackLogger;
+    public static final Level DEFAULT_LOG_LEVEL = Level.INFO;
 
     public static void setLevel(Level logLevel) {
         logbackLogger.setLevel(logLevel);
@@ -67,23 +68,7 @@ public class Log {
 
         logbackLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         logbackLogger.addAppender(appender);
-        logbackLogger.setLevel(Level.INFO);
-
-        // log errors in separate file
-        // not working as expected still.... damn logback...
-       /* FileAppender errorAppender = new FileAppender();
-        errorAppender.setEncoder(encoder);
-        errorAppender.setName("Error");
-        errorAppender.setContext(loggerContext);
-        errorAppender.setFile(fileName + "_error.log");
-        LevelFilter levelFilter = new LevelFilter();
-        levelFilter.setLevel(Level.ERROR);
-        levelFilter.setOnMatch(FilterReply.ACCEPT);
-        levelFilter.setOnMismatch(FilterReply.DENY);
-        levelFilter.start();
-        errorAppender.addFilter(levelFilter);
-        errorAppender.start();
-        logbackLogger.addAppender(errorAppender);*/
+        logbackLogger.setLevel(DEFAULT_LOG_LEVEL);
     }
 
     public static void setCustomLogLevel(String pattern, Level logLevel) {

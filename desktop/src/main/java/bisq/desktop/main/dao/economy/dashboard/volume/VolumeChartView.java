@@ -21,6 +21,8 @@ import bisq.desktop.components.chart.ChartView;
 
 import bisq.core.locale.Res;
 
+import bisq.common.util.CompletableFutureUtils;
+
 import javax.inject.Inject;
 
 import javafx.scene.chart.XYChart;
@@ -29,8 +31,10 @@ import javafx.beans.property.LongProperty;
 import javafx.beans.property.ReadOnlyLongProperty;
 import javafx.beans.property.SimpleLongProperty;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,8 +42,8 @@ import lombok.extern.slf4j.Slf4j;
 public class VolumeChartView extends ChartView<VolumeChartViewModel> {
     private XYChart.Series<Number, Number> seriesUsdVolume, seriesBtcVolume;
 
-    private LongProperty usdVolumeProperty = new SimpleLongProperty();
-    private LongProperty btcVolumeProperty = new SimpleLongProperty();
+    private final LongProperty usdVolumeProperty = new SimpleLongProperty();
+    private final LongProperty btcVolumeProperty = new SimpleLongProperty();
 
     @Inject
     public VolumeChartView(VolumeChartViewModel model) {
@@ -117,32 +121,61 @@ public class VolumeChartView extends ChartView<VolumeChartViewModel> {
         onSetYAxisFormatter(seriesUsdVolume);
     }
 
-    @Override
-    protected void activateSeries(XYChart.Series<Number, Number> series) {
-        super.activateSeries(series);
-
-        if (getSeriesId(series).equals(getSeriesId(seriesUsdVolume))) {
-            seriesUsdVolume.getData().setAll(model.getUsdVolumeChartData());
-        } else if (getSeriesId(series).equals(getSeriesId(seriesBtcVolume))) {
-            seriesBtcVolume.getData().setAll(model.getBtcVolumeChartData());
-        }
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Data
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void applyData() {
+    protected CompletableFuture<Boolean> applyData() {
+        List<CompletableFuture<Boolean>> allFutures = new ArrayList<>();
         if (activeSeries.contains(seriesUsdVolume)) {
-            seriesUsdVolume.getData().setAll(model.getUsdVolumeChartData());
+            CompletableFuture<Boolean> task1Done = new CompletableFuture<>();
+            allFutures.add(task1Done);
+            applyUsdVolumeChartData(task1Done);
         }
         if (activeSeries.contains(seriesBtcVolume)) {
-            seriesBtcVolume.getData().setAll(model.getBtcVolumeChartData());
+            CompletableFuture<Boolean> task2Done = new CompletableFuture<>();
+            allFutures.add(task2Done);
+            applyBtcVolumeChartData(task2Done);
         }
 
-        usdVolumeProperty.set(model.getUsdVolume());
-        btcVolumeProperty.set(model.getBtcVolume());
+        CompletableFuture<Boolean> task3Done = new CompletableFuture<>();
+        allFutures.add(task3Done);
+        model.getUsdVolume()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            usdVolumeProperty.set(data);
+                            task3Done.complete(true);
+                        }));
+
+        CompletableFuture<Boolean> task4Done = new CompletableFuture<>();
+        allFutures.add(task4Done);
+        model.getBtcVolume()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            btcVolumeProperty.set(data);
+                            task4Done.complete(true);
+                        }));
+
+        return CompletableFutureUtils.allOf(allFutures).thenApply(e -> true);
+    }
+
+    private void applyBtcVolumeChartData(CompletableFuture<Boolean> completeFuture) {
+        model.getBtcVolumeChartData()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            seriesBtcVolume.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
+    }
+
+    private void applyUsdVolumeChartData(CompletableFuture<Boolean> completeFuture) {
+        model.getUsdVolumeChartData()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            seriesUsdVolume.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
     }
 }

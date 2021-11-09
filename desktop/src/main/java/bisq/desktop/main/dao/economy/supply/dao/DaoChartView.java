@@ -21,6 +21,8 @@ import bisq.desktop.components.chart.ChartView;
 
 import bisq.core.locale.Res;
 
+import bisq.common.util.CompletableFutureUtils;
+
 import javax.inject.Inject;
 
 import javafx.scene.chart.XYChart;
@@ -29,17 +31,19 @@ import javafx.beans.property.LongProperty;
 import javafx.beans.property.ReadOnlyLongProperty;
 import javafx.beans.property.SimpleLongProperty;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DaoChartView extends ChartView<DaoChartViewModel> {
-    private LongProperty compensationAmountProperty = new SimpleLongProperty();
-    private LongProperty reimbursementAmountProperty = new SimpleLongProperty();
-    private LongProperty bsqTradeFeeAmountProperty = new SimpleLongProperty();
-    private LongProperty proofOfBurnAmountProperty = new SimpleLongProperty();
+    private final LongProperty compensationAmountProperty = new SimpleLongProperty();
+    private final LongProperty reimbursementAmountProperty = new SimpleLongProperty();
+    private final LongProperty bsqTradeFeeAmountProperty = new SimpleLongProperty();
+    private final LongProperty proofOfBurnAmountProperty = new SimpleLongProperty();
 
     private XYChart.Series<Number, Number> seriesBsqTradeFee, seriesProofOfBurn, seriesCompensation,
             seriesReimbursement, seriesTotalIssued, seriesTotalBurned;
@@ -134,78 +138,135 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         activateSeries(seriesTotalBurned);
     }
 
-    @Override
-    protected void activateSeries(XYChart.Series<Number, Number> series) {
-        super.activateSeries(series);
-
-        if (getSeriesId(series).equals(getSeriesId(seriesTotalIssued))) {
-            applyTotalIssued();
-        } else if (getSeriesId(series).equals(getSeriesId(seriesCompensation))) {
-            applyCompensation();
-        } else if (getSeriesId(series).equals(getSeriesId(seriesReimbursement))) {
-            applyReimbursement();
-        } else if (getSeriesId(series).equals(getSeriesId(seriesTotalBurned))) {
-            applyTotalBurned();
-        } else if (getSeriesId(series).equals(getSeriesId(seriesBsqTradeFee))) {
-            applyBsqTradeFee();
-        } else if (getSeriesId(series).equals(getSeriesId(seriesProofOfBurn))) {
-            applyProofOfBurn();
-        }
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Data
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    protected void applyData() {
+    protected CompletableFuture<Boolean> applyData() {
+        List<CompletableFuture<Boolean>> allFutures = new ArrayList<>();
         if (activeSeries.contains(seriesTotalIssued)) {
-            applyTotalIssued();
+            CompletableFuture<Boolean> task1Done = new CompletableFuture<>();
+            allFutures.add(task1Done);
+            applyTotalIssued(task1Done);
         }
         if (activeSeries.contains(seriesCompensation)) {
-            applyCompensation();
+            CompletableFuture<Boolean> task2Done = new CompletableFuture<>();
+            allFutures.add(task2Done);
+            applyCompensation(task2Done);
         }
         if (activeSeries.contains(seriesReimbursement)) {
-            applyReimbursement();
+            CompletableFuture<Boolean> task3Done = new CompletableFuture<>();
+            allFutures.add(task3Done);
+            applyReimbursement(task3Done);
         }
         if (activeSeries.contains(seriesTotalBurned)) {
-            applyTotalBurned();
+            CompletableFuture<Boolean> task4Done = new CompletableFuture<>();
+            allFutures.add(task4Done);
+            applyTotalBurned(task4Done);
         }
         if (activeSeries.contains(seriesBsqTradeFee)) {
-            applyBsqTradeFee();
+            CompletableFuture<Boolean> task5Done = new CompletableFuture<>();
+            allFutures.add(task5Done);
+            applyBsqTradeFee(task5Done);
         }
         if (activeSeries.contains(seriesProofOfBurn)) {
-            applyProofOfBurn();
+            CompletableFuture<Boolean> task6Done = new CompletableFuture<>();
+            allFutures.add(task6Done);
+            applyProofOfBurn(task6Done);
         }
 
-        compensationAmountProperty.set(model.getCompensationAmount());
-        reimbursementAmountProperty.set(model.getReimbursementAmount());
-        bsqTradeFeeAmountProperty.set(model.getBsqTradeFeeAmount());
-        proofOfBurnAmountProperty.set(model.getProofOfBurnAmount());
+        CompletableFuture<Boolean> task7Done = new CompletableFuture<>();
+        allFutures.add(task7Done);
+        model.getCompensationAmount()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            compensationAmountProperty.set(data);
+                            task7Done.complete(true);
+                        }));
+
+        CompletableFuture<Boolean> task8Done = new CompletableFuture<>();
+        allFutures.add(task8Done);
+        model.getReimbursementAmount()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            reimbursementAmountProperty.set(data);
+                            task8Done.complete(true);
+                        }));
+
+        CompletableFuture<Boolean> task9Done = new CompletableFuture<>();
+        allFutures.add(task9Done);
+        model.getBsqTradeFeeAmount()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            bsqTradeFeeAmountProperty.set(data);
+                            task9Done.complete(true);
+                        }));
+
+        CompletableFuture<Boolean> task10Done = new CompletableFuture<>();
+        allFutures.add(task10Done);
+        model.getProofOfBurnAmount()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            proofOfBurnAmountProperty.set(data);
+                            task10Done.complete(true);
+                        }));
+
+        return CompletableFutureUtils.allOf(allFutures).thenApply(e -> true);
     }
 
-    private void applyTotalIssued() {
-        seriesTotalIssued.getData().setAll(model.getTotalIssuedChartData());
+    private void applyTotalIssued(CompletableFuture<Boolean> completeFuture) {
+        model.getTotalIssuedChartData()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            seriesTotalIssued.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
     }
 
-    private void applyCompensation() {
-        seriesCompensation.getData().setAll(model.getCompensationChartData());
+    private void applyCompensation(CompletableFuture<Boolean> completeFuture) {
+        model.getCompensationChartData()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            seriesCompensation.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
     }
 
-    private void applyReimbursement() {
-        seriesReimbursement.getData().setAll(model.getReimbursementChartData());
+    private void applyReimbursement(CompletableFuture<Boolean> completeFuture) {
+        model.getReimbursementChartData()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            seriesReimbursement.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
     }
 
-    private void applyTotalBurned() {
-        seriesTotalBurned.getData().setAll(model.getTotalBurnedChartData());
+    private void applyTotalBurned(CompletableFuture<Boolean> completeFuture) {
+        model.getTotalBurnedChartData()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            seriesTotalBurned.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
     }
 
-    private void applyBsqTradeFee() {
-        seriesBsqTradeFee.getData().setAll(model.getBsqTradeFeeChartData());
+    private void applyBsqTradeFee(CompletableFuture<Boolean> completeFuture) {
+        model.getBsqTradeFeeChartData()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            seriesBsqTradeFee.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
     }
 
-    private void applyProofOfBurn() {
-        seriesProofOfBurn.getData().setAll(model.getProofOfBurnChartData());
+    private void applyProofOfBurn(CompletableFuture<Boolean> completeFuture) {
+        model.getProofOfBurnChartData()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            seriesProofOfBurn.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
     }
 }

@@ -31,6 +31,7 @@ import javafx.util.StringConverter;
 import java.text.DecimalFormat;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,28 +54,28 @@ public class DaoChartViewModel extends ChartViewModel<DaoChartDataModel> {
     // Chart data
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    List<XYChart.Data<Number, Number>> getTotalIssuedChartData() {
-        return toChartData(dataModel.getTotalIssuedByInterval());
+    CompletableFuture<List<XYChart.Data<Number, Number>>> getTotalIssuedChartData() {
+        return CompletableFuture.supplyAsync(() -> toChartData(dataModel.getTotalIssuedByInterval()));
     }
 
-    List<XYChart.Data<Number, Number>> getCompensationChartData() {
-        return toChartData(dataModel.getCompensationByInterval());
+    CompletableFuture<List<XYChart.Data<Number, Number>>> getCompensationChartData() {
+        return CompletableFuture.supplyAsync(() -> toChartData(dataModel.getCompensationByInterval()));
     }
 
-    List<XYChart.Data<Number, Number>> getReimbursementChartData() {
-        return toChartData(dataModel.getReimbursementByInterval());
+    CompletableFuture<List<XYChart.Data<Number, Number>>> getReimbursementChartData() {
+        return CompletableFuture.supplyAsync(() -> toChartData(dataModel.getReimbursementByInterval()));
     }
 
-    List<XYChart.Data<Number, Number>> getTotalBurnedChartData() {
-        return toChartData(dataModel.getTotalBurnedByInterval());
+    CompletableFuture<List<XYChart.Data<Number, Number>>> getTotalBurnedChartData() {
+        return CompletableFuture.supplyAsync(() -> toChartData(dataModel.getTotalBurnedByInterval()));
     }
 
-    List<XYChart.Data<Number, Number>> getBsqTradeFeeChartData() {
-        return toChartData(dataModel.getBsqTradeFeeByInterval());
+    CompletableFuture<List<XYChart.Data<Number, Number>>> getBsqTradeFeeChartData() {
+        return CompletableFuture.supplyAsync(() -> toChartData(dataModel.getBsqTradeFeeByInterval()));
     }
 
-    List<XYChart.Data<Number, Number>> getProofOfBurnChartData() {
-        return toChartData(dataModel.getProofOfBurnByInterval());
+    CompletableFuture<List<XYChart.Data<Number, Number>>> getProofOfBurnChartData() {
+        return CompletableFuture.supplyAsync(() -> toChartData(dataModel.getProofOfBurnByInterval()));
     }
 
 
@@ -107,19 +108,19 @@ public class DaoChartViewModel extends ChartViewModel<DaoChartDataModel> {
     // DaoChartDataModel delegates
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    long getCompensationAmount() {
-        return dataModel.getCompensationAmount();
+    CompletableFuture<Long> getCompensationAmount() {
+        return CompletableFuture.supplyAsync(dataModel::getCompensationAmount);
     }
 
-    long getReimbursementAmount() {
-        return dataModel.getReimbursementAmount();
+    CompletableFuture<Long> getReimbursementAmount() {
+        return CompletableFuture.supplyAsync(dataModel::getReimbursementAmount);
     }
 
-    long getBsqTradeFeeAmount() {
-        return dataModel.getBsqTradeFeeAmount();
+    CompletableFuture<Long> getBsqTradeFeeAmount() {
+        return CompletableFuture.supplyAsync(dataModel::getBsqTradeFeeAmount);
     }
 
-    long getProofOfBurnAmount() {
-        return dataModel.getProofOfBurnAmount();
+    CompletableFuture<Long> getProofOfBurnAmount() {
+        return CompletableFuture.supplyAsync(dataModel::getProofOfBurnAmount);
     }
 }

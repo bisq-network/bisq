@@ -33,6 +33,7 @@ import bisq.core.trade.txproof.xmr.XmrTxProofService;
 
 import bisq.network.p2p.P2PService;
 
+import bisq.common.ClockWatcher;
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.config.BisqHelpFormatter;
@@ -228,6 +229,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         }
 
         try {
+            injector.getInstance(ClockWatcher.class).shutDown();
             injector.getInstance(OpenBsqSwapOfferService.class).shutDown();
             injector.getInstance(PriceFeedService.class).shutDown();
             injector.getInstance(ArbitratorManager.class).shutDown();

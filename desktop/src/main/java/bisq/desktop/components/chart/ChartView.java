@@ -73,6 +73,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import lombok.Setter;
@@ -107,8 +108,9 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     private int maxDataPointsForShowingSymbols = 100;
     private ChangeListener<Number> yAxisWidthListener;
     private EventHandler<MouseEvent> dividerMouseDraggedEventHandler;
-    private StringProperty fromProperty = new SimpleStringProperty();
-    private StringProperty toProperty = new SimpleStringProperty();
+    private final StringProperty fromProperty = new SimpleStringProperty();
+    private final StringProperty toProperty = new SimpleStringProperty();
+    private boolean dataApplied;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -219,18 +221,13 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     @Override
     public void activate() {
         timelineNavigation.setDividerPositions(model.getDividerPositions()[0], model.getDividerPositions()[1]);
-        UserThread.execute(this::applyTimeLineNavigationLabels);
-        UserThread.execute(this::onTimelineChanged);
 
         TemporalAdjuster temporalAdjuster = model.getTemporalAdjuster();
         applyTemporalAdjuster(temporalAdjuster);
         findTimeIntervalToggleByTemporalAdjuster(temporalAdjuster).ifPresent(timeIntervalToggleGroup::selectToggle);
 
         defineAndAddActiveSeries();
-        applyData();
         initBoundsForTimelineNavigation();
-
-        updateChartAfterDataChange();
 
         // Apply listeners and handlers
         root.widthProperty().addListener(widthListener);
@@ -555,7 +552,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         chart.getData().add(series);
         activeSeries.add(series);
         legendToggleBySeriesName.get(getSeriesId(series)).setSelected(true);
-        updateChartAfterDataChange();
+        applyDataAndUpdate();
     }
 
 
@@ -563,7 +560,17 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     // Data
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected abstract void applyData();
+    protected abstract CompletableFuture<Boolean> applyData();
+
+    private void applyDataAndUpdate() {
+        long ts = System.currentTimeMillis();
+        applyData().whenComplete((r, t) -> {
+            log.debug("applyData took {}", System.currentTimeMillis() - ts);
+            long ts2 = System.currentTimeMillis();
+            updateChartAfterDataChange();
+            log.debug("updateChartAfterDataChange took {}", System.currentTimeMillis() - ts2);
+        });
+    }
 
     /**
      * Implementations define which series will be used for setBoundsForTimelineNavigation
@@ -589,16 +596,14 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         TemporalAdjusterModel.Interval interval = (TemporalAdjusterModel.Interval) newValue.getUserData();
         applyTemporalAdjuster(interval.getAdjuster());
         model.invalidateCache();
-        applyData();
-        updateChartAfterDataChange();
+        applyDataAndUpdate();
     }
 
     private void onTimelineChanged() {
         updateTimeLinePositions();
 
         model.invalidateCache();
-        applyData();
-        updateChartAfterDataChange();
+        applyDataAndUpdate(); //3
     }
 
     private void updateTimeLinePositions() {
@@ -636,8 +641,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         if (isSelected) {
             chart.getData().add(series);
             activeSeries.add(series);
-            //model.invalidateCache();
-            applyData();
+            applyDataAndUpdate();
 
             if (isRadioButtonBehaviour) {
                 // We support different y-axis formats only if isRadioButtonBehaviour is set, otherwise we would get
@@ -647,9 +651,8 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         } else if (!isRadioButtonBehaviour) { // if isRadioButtonBehaviour we have removed it already via the code above
             chart.getData().remove(series);
             activeSeries.remove(series);
-
+            updateChartAfterDataChange();
         }
-        updateChartAfterDataChange();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -770,5 +773,24 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     // We use the name as id as there is no other suitable data inside series
     protected String getSeriesId(XYChart.Series<Number, Number> series) {
         return series.getName();
+    }
+
+    protected void mapToUserThread(Runnable command) {
+        UserThread.execute(() -> {
+            command.run();
+            onDataApplied();
+        });
+    }
+
+    // For the async handling we need to wait until we get the data applied and then still delay a bit otherwise
+    // the UI does not get rendered at first start
+    protected void onDataApplied() {
+        if (!dataApplied) {
+            dataApplied = true;
+            UserThread.execute(() -> {
+                applyTimeLineNavigationLabels();
+                updateTimeLinePositions();
+            });
+        }
     }
 }
