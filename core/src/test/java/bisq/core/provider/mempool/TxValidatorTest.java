@@ -19,14 +19,16 @@ package bisq.core.provider.mempool;
 
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.trade.DelayedPayoutAddressProvider;
+import bisq.core.util.FeeReceiverSelector;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.BsqFormatter;
+
+import org.bitcoinj.core.Coin;
 
 import com.google.gson.Gson;
 
 import org.apache.commons.io.IOUtils;
-
-import org.bitcoinj.core.Coin;
 
 import java.io.IOException;
 
@@ -43,8 +45,8 @@ import org.slf4j.LoggerFactory;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
-import org.junit.Test;
 import org.junit.Assert;
+import org.junit.Test;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -61,11 +63,11 @@ public class TxValidatorTest {
         btcFeeReceivers.add("13sxMq8mTw7CTSqgGiMPfwo6ZDsVYrHLmR");
         btcFeeReceivers.add("19qA2BVPoyXDfHKVMovKG7SoxGY7xrBV8c");
         btcFeeReceivers.add("19BNi5EpZhgBBWAt5ka7xWpJpX2ZWJEYyq");
-        btcFeeReceivers.add("38bZBj5peYS3Husdz7AH3gEUiUbYRD951t");
-        btcFeeReceivers.add("3EtUWqsGThPtjwUczw27YCo6EWvQdaPUyp");
+        btcFeeReceivers.add(FeeReceiverSelector.BTC_FEE_RECEIVER_ADDRESS);
+        btcFeeReceivers.add(DelayedPayoutAddressProvider.BM2019_ADDRESS);
         btcFeeReceivers.add("1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7");
         btcFeeReceivers.add("3A8Zc1XioE2HRzYfbb5P8iemCS72M6vRJV");
-        btcFeeReceivers.add("34VLFgtFKAtwTdZ5rengTT2g2zC99sWQLC");
+        btcFeeReceivers.add(DelayedPayoutAddressProvider.BM3_ADDRESS);
         log.warn("Known BTC fee receivers: {}", btcFeeReceivers.toString());
     }
 

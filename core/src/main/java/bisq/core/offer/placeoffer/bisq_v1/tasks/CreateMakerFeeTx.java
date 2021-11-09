@@ -66,7 +66,7 @@ public class CreateMakerFeeTx extends Task<PlaceOfferModel> {
 
             TradeWalletService tradeWalletService = model.getTradeWalletService();
 
-            String feeReceiver = FeeReceiverSelector.getAddress(model.getDaoFacade(), model.getFilterManager());
+            String feeReceiver = FeeReceiverSelector.getAddress(model.getFilterManager());
 
             if (offer.isCurrencyForMakerFeeBtc()) {
                 tradeWalletService.createBtcTradingFeeTx(

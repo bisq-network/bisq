@@ -65,7 +65,7 @@ public class CreateTakerFeeTx extends TradeTask {
             TradeWalletService tradeWalletService = processModel.getTradeWalletService();
             Transaction transaction;
 
-            String feeReceiver = FeeReceiverSelector.getAddress(processModel.getDaoFacade(), processModel.getFilterManager());
+            String feeReceiver = FeeReceiverSelector.getAddress(processModel.getFilterManager());
 
             if (trade.isCurrencyForTakerFeeBtc()) {
                 transaction = tradeWalletService.createBtcTradingFeeTx(

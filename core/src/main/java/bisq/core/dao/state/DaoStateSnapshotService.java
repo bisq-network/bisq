@@ -18,11 +18,13 @@
 package bisq.core.dao.state;
 
 import bisq.core.dao.DaoSetupService;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.monitoring.model.DaoStateHash;
 import bisq.core.dao.state.model.DaoState;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.storage.DaoStateStorageService;
+import bisq.core.trade.DelayedPayoutAddressProvider;
 import bisq.core.user.Preferences;
 
 import bisq.common.config.Config;
@@ -62,6 +64,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     private final DaoStateStorageService daoStateStorageService;
     private final DaoStateMonitoringService daoStateMonitoringService;
     private final Preferences preferences;
+    private final Config config;
     private final File storageDir;
 
     private protobuf.DaoState daoStateCandidate;
@@ -86,12 +89,14 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                                    DaoStateStorageService daoStateStorageService,
                                    DaoStateMonitoringService daoStateMonitoringService,
                                    Preferences preferences,
+                                   Config config,
                                    @Named(Config.STORAGE_DIR) File storageDir) {
         this.daoStateService = daoStateService;
         this.genesisTxInfo = genesisTxInfo;
         this.daoStateStorageService = daoStateStorageService;
         this.daoStateMonitoringService = daoStateMonitoringService;
         this.preferences = preferences;
+        this.config = config;
         this.storageDir = storageDir;
     }
 
@@ -113,6 +118,20 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
+        if (config.baseCurrencyNetwork.isMainnet()) {
+            // In case the DAO state is invalid we might get an outdated RECIPIENT_BTC_ADDRESS. In that case we trigger
+            // a dao resync from resources.
+            String address = daoStateService.getParamValue(Param.RECIPIENT_BTC_ADDRESS, daoStateService.getChainHeight());
+            if (DelayedPayoutAddressProvider.isOutdatedAddress(address)) {
+                log.warn("The RECIPIENT_BTC_ADDRESS is not as expected. The DAO state is probably out of " +
+                        "sync and a resync should fix that issue.");
+                resyncDaoStateFromResources();
+            }
+        }
+    }
 
     // We listen onDaoStateChanged to ensure the dao state has been processed from listener clients after parsing.
     // We need to listen during batch processing as well to write snapshots during that process.
