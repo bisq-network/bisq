@@ -27,6 +27,7 @@ import bisq.network.p2p.storage.persistence.StoreService;
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
 import bisq.common.persistence.PersistenceManager;
+import bisq.common.util.GcUtil;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -92,13 +93,18 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         new Thread(() -> {
             Thread.currentThread().setName("Serialize and write DaoState");
             persistenceManager.persistNow(() -> {
-                // After we have written to disk we remove the the daoState in the store to avoid that it stays in
+                // After we have written to disk we remove the daoState in the store to avoid that it stays in
                 // memory there until the next persist call.
-                store.setDaoState(null);
-
+                pruneStore();
                 completeHandler.run();
             });
         }).start();
+    }
+
+    public void pruneStore() {
+        store.setDaoState(null);
+        store.setDaoStateHashChain(null);
+        GcUtil.maybeReleaseMemory();
     }
 
     public DaoState getPersistedBsqState() {

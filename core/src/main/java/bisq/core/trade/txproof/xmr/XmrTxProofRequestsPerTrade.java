@@ -138,7 +138,7 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
 
         // We set serviceAddresses at request time. If user changes AutoConfirmSettings after request has started
         // it will have no impact on serviceAddresses and numRequiredSuccessResults.
-        // Thought numRequiredConfirmations can be changed during request process and will be read from
+        // Though numRequiredConfirmations can be changed during request process and will be read from
         // autoConfirmSettings at result parsing.
         List<String> serviceAddresses = autoConfirmSettings.getServiceAddresses();
         numRequiredSuccessResults = serviceAddresses.size();

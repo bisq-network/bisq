@@ -37,8 +37,6 @@ import bisq.core.util.validation.InputValidator;
 
 import bisq.common.util.Tuple2;
 
-import org.apache.commons.lang3.StringUtils;
-
 import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
@@ -172,11 +170,7 @@ public class MoneyGramForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
-            accountNameTextField.setText(Res.get(paymentAccount.getPaymentMethod().getId())
-                    .concat(": ")
-                    .concat(StringUtils.abbreviate(holderNameInputTextField.getText(), 9)));
-        }
+        setAccountNameWithString(holderNameInputTextField.getText());
     }
 
     @Override

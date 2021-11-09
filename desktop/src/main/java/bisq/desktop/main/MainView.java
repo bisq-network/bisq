@@ -416,7 +416,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onChangeAfterBatchProcessing() {
+    public void onDaoStateHashesChanged() {
     }
 
     @Override

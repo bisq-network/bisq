@@ -20,13 +20,16 @@ package bisq.desktop.main.offer.offerbook;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.model.ActivatableViewModel;
 import bisq.desktop.main.MainView;
+import bisq.desktop.main.offer.OfferView;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.api.CoreApi;
 import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CryptoCurrency;
@@ -111,6 +114,8 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final BsqFormatter bsqFormatter;
 
     private final FilteredList<OfferBookListItem> filteredItems;
+    private final BsqWalletService bsqWalletService;
+    private final CoreApi coreApi;
     private final SortedList<OfferBookListItem> sortedItems;
     private final ListChangeListener<TradeCurrency> tradeCurrencyListChangeListener;
     private final ListChangeListener<OfferBookListItem> filterItemsListener;
@@ -120,6 +125,8 @@ class OfferBookViewModel extends ActivatableViewModel {
     private OfferDirection direction;
 
     final StringProperty tradeCurrencyCode = new SimpleStringProperty();
+
+    private OfferView.OfferActionHandler offerActionHandler;
 
     // If id is empty string we ignore filter (display all methods)
 
@@ -154,7 +161,9 @@ class OfferBookViewModel extends ActivatableViewModel {
                               PriceUtil priceUtil,
                               OfferFilterService offerFilterService,
                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
-                              BsqFormatter bsqFormatter) {
+                              BsqFormatter bsqFormatter,
+                              BsqWalletService bsqWalletService,
+                              CoreApi coreApi) {
         super();
 
         this.openOfferManager = openOfferManager;
@@ -173,6 +182,8 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.bsqFormatter = bsqFormatter;
 
         this.filteredItems = new FilteredList<>(offerBook.getOfferBookListItems());
+        this.bsqWalletService = bsqWalletService;
+        this.coreApi = coreApi;
         this.sortedItems = new SortedList<>(filteredItems);
 
         tradeCurrencyListChangeListener = c -> fillAllTradeCurrencies();
@@ -207,7 +218,7 @@ class OfferBookViewModel extends ActivatableViewModel {
                     .filter(o -> o.getOffer().isUseMarketBasedPrice())
                     .max(Comparator.comparing(o -> new DecimalFormat("#0.00").format(o.getOffer().getMarketPriceMargin() * 100).length()));
 
-            highestMarketPriceMarginOffer.ifPresent(offerBookListItem -> maxPlacesForMarketPriceMargin.set(formatMarketPriceMargin(offerBookListItem.getOffer(), false).length()));
+            highestMarketPriceMarginOffer.ifPresent(offerBookListItem -> maxPlacesForMarketPriceMargin.set(formatMarketPriceMargin(offerBookListItem.getOffer()).length()));
         };
     }
 
@@ -215,16 +226,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     protected void activate() {
         filteredItems.addListener(filterItemsListener);
 
-        String code = direction == OfferDirection.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
-        if (code != null && !code.isEmpty() && !isShowAllEntry(code) &&
-                CurrencyUtil.getTradeCurrency(code).isPresent()) {
-            showAllTradeCurrenciesProperty.set(false);
-            selectedTradeCurrency = CurrencyUtil.getTradeCurrency(code).get();
-        } else {
-            showAllTradeCurrenciesProperty.set(true);
-            selectedTradeCurrency = GlobalSettings.getDefaultTradeCurrency();
-        }
-        tradeCurrencyCode.set(selectedTradeCurrency.getCode());
+        updateSelectedTradeCurrency();
 
         if (user != null) {
             disableMatchToggle.set(user.getPaymentAccounts() == null || user.getPaymentAccounts().isEmpty());
@@ -258,6 +260,11 @@ class OfferBookViewModel extends ActivatableViewModel {
     void onTabSelected(boolean isSelected) {
         this.isTabSelected = isSelected;
         setMarketPriceFeedCurrency();
+
+        if (isTabSelected) {
+            updateSelectedTradeCurrency();
+            filterOffers();
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -413,14 +420,10 @@ class OfferBookViewModel extends ActivatableViewModel {
         return priceUtil.getMarketBasedPrice(offer, direction);
     }
 
-    String formatMarketPriceMargin(Offer offer, boolean decimalAligned) {
+    String formatMarketPriceMargin(Offer offer) {
         String postFix = "";
         if (offer.isUseMarketBasedPrice()) {
             postFix = " (" + FormattingUtils.formatPercentagePrice(offer.getMarketPriceMargin()) + ")";
-        }
-
-        if (decimalAligned) {
-            postFix = FormattingUtils.fillUpPlacesWithEmptyStrings(postFix, maxPlacesForMarketPriceMargin.get());
         }
 
         return postFix;
@@ -669,5 +672,44 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     PaymentMethod getShowAllEntryForPaymentMethod() {
         return PaymentMethod.getDummyPaymentMethod(GUIUtil.SHOW_ALL_FLAG);
+    }
+
+    public boolean isInstantPaymentMethod(Offer offer) {
+        return offer.getPaymentMethod().equals(PaymentMethod.BLOCK_CHAINS_INSTANT);
+    }
+
+    public PaymentAccount createBsqAccount(Offer offer) {
+        var unusedBsqAddressAsString = bsqWalletService.getUnusedBsqAddressAsString();
+
+        return coreApi.createCryptoCurrencyPaymentAccount(DisplayUtils.createAssetsAccountName("BSQ", unusedBsqAddressAsString),
+                "BSQ",
+                unusedBsqAddressAsString,
+                isInstantPaymentMethod(offer),
+                false);
+    }
+
+    public void setOfferActionHandler(OfferView.OfferActionHandler offerActionHandler) {
+        this.offerActionHandler = offerActionHandler;
+    }
+
+    public void onCreateOffer() {
+        offerActionHandler.onCreateOffer(getSelectedTradeCurrency(), selectedPaymentMethod);
+    }
+
+    public void onTakeOffer(Offer offer) {
+        offerActionHandler.onTakeOffer(offer);
+    }
+
+    private void updateSelectedTradeCurrency() {
+        String code = direction == OfferDirection.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
+        if (code != null && !code.isEmpty() && !isShowAllEntry(code) &&
+                CurrencyUtil.getTradeCurrency(code).isPresent()) {
+            showAllTradeCurrenciesProperty.set(false);
+            selectedTradeCurrency = CurrencyUtil.getTradeCurrency(code).get();
+        } else {
+            showAllTradeCurrenciesProperty.set(true);
+            selectedTradeCurrency = GlobalSettings.getDefaultTradeCurrency();
+        }
+        tradeCurrencyCode.set(selectedTradeCurrency.getCode());
     }
 }

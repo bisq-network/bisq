@@ -99,6 +99,7 @@ public abstract class StateMonitorView<StH extends StateHash,
     private Subscription selectedItemSubscription;
     protected final BooleanProperty isInConflictWithNonSeedNode = new SimpleBooleanProperty();
     protected final BooleanProperty isInConflictWithSeedNode = new SimpleBooleanProperty();
+    protected final BooleanProperty isDaoStateBlockChainNotConnecting = new SimpleBooleanProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -134,8 +135,10 @@ public abstract class StateMonitorView<StH extends StateHash,
 
         daoStateService.addDaoStateListener(this);
 
-        resyncButton.visibleProperty().bind(isInConflictWithSeedNode);
-        resyncButton.managedProperty().bind(isInConflictWithSeedNode);
+        resyncButton.visibleProperty().bind(isInConflictWithSeedNode
+                .or(isDaoStateBlockChainNotConnecting));
+        resyncButton.managedProperty().bind(isInConflictWithSeedNode
+                .or(isDaoStateBlockChainNotConnecting));
 
         resyncButton.setOnAction(ev -> resyncDaoState());
 
@@ -176,8 +179,6 @@ public abstract class StateMonitorView<StH extends StateHash,
     protected abstract String getConflictsTableHeader();
 
     protected abstract String getPeersTableHeader();
-
-    protected abstract String getPrevHashTableHeader();
 
     protected abstract String getHashTableHeader();
 
@@ -272,6 +273,9 @@ public abstract class StateMonitorView<StH extends StateHash,
         } else if (isInConflictWithNonSeedNode.get()) {
             statusTextField.setText(Res.get("dao.monitor.isInConflictWithNonSeedNode"));
             statusTextField.getStyleClass().remove("dao-inConflict");
+        } else if (isDaoStateBlockChainNotConnecting.get()) {
+            statusTextField.setText(Res.get("dao.monitor.isDaoStateBlockChainNotConnecting"));
+            statusTextField.getStyleClass().add("dao-inConflict");
         } else {
             statusTextField.setText(Res.get("dao.monitor.daoStateInSync"));
             statusTextField.getStyleClass().remove("dao-inConflict");
@@ -328,7 +332,6 @@ public abstract class StateMonitorView<StH extends StateHash,
         tableView.getSortOrder().add(column);
         tableView.getColumns().add(column);
 
-
         column = new AutoTooltipTableColumn<>(getHashTableHeader());
         column.setMinWidth(120);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -350,31 +353,6 @@ public abstract class StateMonitorView<StH extends StateHash,
                     }
                 });
         column.setComparator(Comparator.comparing(BLI::getHash));
-        tableView.getColumns().add(column);
-
-
-        column = new AutoTooltipTableColumn<>(getPrevHashTableHeader());
-        column.setMinWidth(120);
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(
-                new Callback<>() {
-
-                    @Override
-                    public TableCell<BLI, BLI> call(TableColumn<BLI,
-                            BLI> column) {
-                        return new TableCell<>() {
-                            @Override
-                            public void updateItem(final BLI item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null)
-                                    setText(item.getPrevHash());
-                                else
-                                    setText("");
-                            }
-                        };
-                    }
-                });
-        column.setComparator(Comparator.comparing(BLI::getPrevHash));
         tableView.getColumns().add(column);
 
 
@@ -540,30 +518,6 @@ public abstract class StateMonitorView<StH extends StateHash,
                     }
                 });
         column.setComparator(Comparator.comparing(CLI::getHash));
-        conflictTableView.getColumns().add(column);
-
-
-        column = new AutoTooltipTableColumn<>(getPrevHashTableHeader());
-        column.setMinWidth(120);
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(
-                new Callback<>() {
-                    @Override
-                    public TableCell<CLI, CLI> call(
-                            TableColumn<CLI, CLI> column) {
-                        return new TableCell<>() {
-                            @Override
-                            public void updateItem(final CLI item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null)
-                                    setText(item.getPrevHash());
-                                else
-                                    setText("");
-                            }
-                        };
-                    }
-                });
-        column.setComparator(Comparator.comparing(CLI::getPrevHash));
         conflictTableView.getColumns().add(column);
 
 

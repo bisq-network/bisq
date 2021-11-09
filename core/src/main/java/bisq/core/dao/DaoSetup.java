@@ -39,6 +39,7 @@ import bisq.core.dao.node.BsqNode;
 import bisq.core.dao.node.BsqNodeProvider;
 import bisq.core.dao.node.explorer.ExportJsonFilesService;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.DaoStateSnapshotService;
 
 import com.google.inject.Inject;
 
@@ -78,16 +79,11 @@ public class DaoSetup {
                     DaoStateMonitoringService daoStateMonitoringService,
                     ProposalStateMonitoringService proposalStateMonitoringService,
                     BlindVoteStateMonitoringService blindVoteStateMonitoringService,
-                    DaoEventCoordinator daoEventCoordinator) {
+                    DaoStateSnapshotService daoStateSnapshotService) {
 
         bsqNode = bsqNodeProvider.getBsqNode();
 
         // We need to take care of order of execution.
-
-        // For order critical event flow we use the daoEventCoordinator to delegate the calls from anonymous listeners
-        // to concrete clients.
-        daoSetupServices.add(daoEventCoordinator);
-
         daoSetupServices.add(daoStateService);
         daoSetupServices.add(cycleService);
         daoSetupServices.add(ballotListService);
@@ -110,6 +106,7 @@ public class DaoSetup {
         daoSetupServices.add(daoStateMonitoringService);
         daoSetupServices.add(proposalStateMonitoringService);
         daoSetupServices.add(blindVoteStateMonitoringService);
+        daoSetupServices.add(daoStateSnapshotService);
 
         daoSetupServices.add(bsqNodeProvider.getBsqNode());
     }

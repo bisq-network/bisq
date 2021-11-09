@@ -28,6 +28,7 @@ import bisq.core.dao.governance.proofofburn.MyProofOfBurnListService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.filter.FilterManager;
 import bisq.core.trade.statistics.TradeStatisticsManager;
+import bisq.core.user.Preferences;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.peers.PeerManager;
@@ -42,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
     private final DaoSetup daoSetup;
+    private final Preferences preferences;
 
     @Inject
     public AppSetupWithP2PAndDAO(P2PService p2PService,
@@ -58,6 +60,7 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
                                  MyProposalListService myProposalListService,
                                  MyReputationListService myReputationListService,
                                  MyProofOfBurnListService myProofOfBurnListService,
+                                 Preferences preferences,
                                  Config config) {
         super(p2PService,
                 p2PDataStorage,
@@ -69,6 +72,7 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
                 config);
 
         this.daoSetup = daoSetup;
+        this.preferences = preferences;
 
         // TODO Should be refactored/removed. In the meantime keep in sync with CorePersistedDataHost
         if (config.daoActivated) {
@@ -86,5 +90,8 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
         super.onBasicServicesInitialized();
 
         daoSetup.onAllServicesInitialized(log::error, log::warn);
+
+        // For seed nodes we need to set default value to true
+        preferences.setUseFullModeDaoMonitor(true);
     }
 }

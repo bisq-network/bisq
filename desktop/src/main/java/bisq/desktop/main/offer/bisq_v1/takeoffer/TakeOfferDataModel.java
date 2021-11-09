@@ -712,4 +712,10 @@ class TakeOfferDataModel extends OfferDataModel {
     public boolean isBsqForFeeAvailable() {
         return offerUtil.isBsqForTakerFeeAvailable(amount.get());
     }
+
+    public boolean isAttemptToBuyBsq() {
+        // When you buy an asset you actually sell BTC.
+        // This is why an offer to buy BSQ is actually an offer to sell BTC for BSQ.
+        return !isBuyOffer() && getOffer().getCurrencyCode().equals("BSQ");
+    }
 }

@@ -17,10 +17,15 @@
 
 package bisq.desktop.main.portfolio.pendingtrades.steps.seller;
 
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
+import bisq.desktop.main.MainView;
+import bisq.desktop.main.dao.DaoView;
+import bisq.desktop.main.dao.wallet.BsqWalletView;
+import bisq.desktop.main.dao.wallet.tx.BsqTxView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
@@ -82,6 +87,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class SellerStep3View extends TradeStepView {
 
     private Button confirmButton;
+    private AutoTooltipButton showBsqWallet;
     private Label statusLabel;
     private BusyAnimation busyAnimation;
     private Subscription tradeStatePropertySubscription;
@@ -296,11 +302,21 @@ public class SellerStep3View extends TradeStepView {
         Tuple4<Button, BusyAnimation, Label, HBox> tuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow,
                 Res.get("portfolio.pending.step3_seller.confirmReceipt"));
 
+        HBox hBox = tuple.fourth;
         GridPane.setColumnSpan(tuple.fourth, 2);
         confirmButton = tuple.first;
         confirmButton.setOnAction(e -> onPaymentReceived());
         busyAnimation = tuple.second;
         statusLabel = tuple.third;
+
+        if (trade.getOffer().getCurrencyCode().equals("BSQ")) {
+            showBsqWallet = new AutoTooltipButton(Res.get("portfolio.pending.step3_seller.showBsqWallet"));
+            hBox.getChildren().add(1, showBsqWallet);
+            showBsqWallet.setOnAction(e -> {
+                model.getNavigation().navigateTo(MainView.class, DaoView.class, BsqWalletView.class,
+                        BsqTxView.class);
+            });
+        }
     }
 
 

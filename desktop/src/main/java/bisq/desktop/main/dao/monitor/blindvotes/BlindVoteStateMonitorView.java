@@ -150,11 +150,6 @@ public class BlindVoteStateMonitorView extends StateMonitorView<BlindVoteStateHa
     }
 
     @Override
-    protected String getPrevHashTableHeader() {
-        return Res.get("dao.monitor.blindVote.table.prev");
-    }
-
-    @Override
     protected String getHashTableHeader() {
         return Res.get("dao.monitor.blindVote.table.hash");
     }
@@ -220,7 +215,6 @@ public class BlindVoteStateMonitorView extends StateMonitorView<BlindVoteStateHa
         column.setComparator(Comparator.comparing(e -> e.getStateBlock().getMyStateHash().getNumBlindVotes()));
         tableView.getColumns().add(1, column);
     }
-
 
     protected void createConflictColumns() {
         super.createConflictColumns();

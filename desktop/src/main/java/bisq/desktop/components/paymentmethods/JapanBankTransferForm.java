@@ -25,7 +25,6 @@ import bisq.desktop.util.validation.JapanBankAccountNameValidator;
 import bisq.desktop.util.validation.JapanBankAccountNumberValidator;
 import bisq.desktop.util.validation.JapanBankBranchCodeValidator;
 import bisq.desktop.util.validation.JapanBankBranchNameValidator;
-import bisq.desktop.util.validation.JapanBankTransferValidator;
 import bisq.desktop.util.validation.LengthValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -57,24 +56,17 @@ import javafx.util.StringConverter;
 import static bisq.desktop.util.FormBuilder.*;
 import static bisq.desktop.util.GUIUtil.getComboBoxButtonCell;
 
-public class JapanBankTransferForm extends PaymentMethodForm
-{
+public class JapanBankTransferForm extends PaymentMethodForm {
     private final JapanBankAccount japanBankAccount;
-    protected ComboBox<String> bankComboBox, bankAccountTypeComboBox;
-    private InputTextField bankAccountNumberInputTextField;
+    protected ComboBox<String> bankComboBox;
 
-    private JapanBankTransferValidator japanBankTransferValidator;
-    private JapanBankBranchNameValidator japanBankBranchNameValidator;
-    private JapanBankBranchCodeValidator japanBankBranchCodeValidator;
-    private JapanBankAccountNameValidator japanBankAccountNameValidator;
-    private JapanBankAccountNumberValidator japanBankAccountNumberValidator;
+    private final JapanBankBranchNameValidator japanBankBranchNameValidator;
+    private final JapanBankBranchCodeValidator japanBankBranchCodeValidator;
+    private final JapanBankAccountNameValidator japanBankAccountNameValidator;
+    private final JapanBankAccountNumberValidator japanBankAccountNumberValidator;
 
-    private LengthValidator lengthValidator;
-    private RegexValidator regexValidator;
-
-    public static int addFormForBuyer(GridPane gridPane, int gridRow, // {{{
-                                      PaymentAccountPayload paymentAccountPayload)
-    {
+    public static int addFormForBuyer(GridPane gridPane, int gridRow,
+                                      PaymentAccountPayload paymentAccountPayload) {
         JapanBankAccountPayload japanBankAccount = ((JapanBankAccountPayload) paymentAccountPayload);
 
         String bankText = japanBankAccount.getBankCode() + " " + japanBankAccount.getBankName();
@@ -90,30 +82,26 @@ public class JapanBankTransferForm extends PaymentMethodForm
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.japan.recipient"), accountNameText);
 
         return gridRow;
-    } // }}}
+    }
 
     public JapanBankTransferForm(PaymentAccount paymentAccount,
-                                  AccountAgeWitnessService accountAgeWitnessService,
-                                  JapanBankTransferValidator japanBankTransferValidator,
-                                  InputValidator inputValidator, GridPane gridPane,
-                                  int gridRow, CoinFormatter formatter)
-    {
+                                 AccountAgeWitnessService accountAgeWitnessService,
+                                 InputValidator inputValidator, GridPane gridPane,
+                                 int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.japanBankAccount = (JapanBankAccount) paymentAccount;
 
-        this.japanBankTransferValidator = japanBankTransferValidator;
         this.japanBankBranchCodeValidator = new JapanBankBranchCodeValidator();
         this.japanBankAccountNumberValidator = new JapanBankAccountNumberValidator();
 
-        this.lengthValidator = new LengthValidator();
-        this.regexValidator = new RegexValidator();
+        LengthValidator lengthValidator = new LengthValidator();
+        RegexValidator regexValidator = new RegexValidator();
         this.japanBankBranchNameValidator = new JapanBankBranchNameValidator(lengthValidator, regexValidator);
         this.japanBankAccountNameValidator = new JapanBankAccountNameValidator(lengthValidator, regexValidator);
     }
 
     @Override
-    public void addFormForDisplayAccount() // {{{
-    {
+    public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
 
         addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.name"),
@@ -128,37 +116,36 @@ public class JapanBankTransferForm extends PaymentMethodForm
         addBankAccountTypeDisplay();
 
         addLimitations(true);
-    } // }}}
-    private void addBankDisplay() // {{{
-    {
+    }
+
+    private void addBankDisplay() {
         String bankText = japanBankAccount.getBankCode() + " " + japanBankAccount.getBankName();
         TextField bankTextField = addCompactTopLabelTextField(gridPane, ++gridRow, JapanBankData.getString("bank"), bankText).second;
         bankTextField.setEditable(false);
-    } // }}}
-    private void addBankBranchDisplay() // {{{
-    {
+    }
+
+    private void addBankBranchDisplay() {
         String branchText = japanBankAccount.getBankBranchCode() + " " + japanBankAccount.getBankBranchName();
         TextField branchTextField = addCompactTopLabelTextField(gridPane, ++gridRow, JapanBankData.getString("branch"), branchText).second;
         branchTextField.setEditable(false);
-    } // }}}
-    private void addBankAccountDisplay() // {{{
-    {
+    }
+
+    private void addBankAccountDisplay() {
         String accountText = japanBankAccount.getBankAccountNumber() + " " + japanBankAccount.getBankAccountName();
         TextField accountTextField = addCompactTopLabelTextField(gridPane, ++gridRow, JapanBankData.getString("account"), accountText).second;
         accountTextField.setEditable(false);
-    } // }}}
-    private void addBankAccountTypeDisplay() // {{{
-    {
+    }
+
+    private void addBankAccountTypeDisplay() {
         TradeCurrency singleTradeCurrency = japanBankAccount.getSingleTradeCurrency();
         String currency = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
         String accountTypeText = currency + " " + japanBankAccount.getBankAccountType();
         TextField accountTypeTextField = addCompactTopLabelTextField(gridPane, ++gridRow, JapanBankData.getString("account.type"), accountTypeText).second;
         accountTypeTextField.setEditable(false);
-    } // }}}
+    }
 
     @Override
-    public void addFormForAddAccount() // {{{
-    {
+    public void addFormForAddAccount() {
         gridRowFrom = gridRow;
 
         addBankInput();
@@ -168,9 +155,9 @@ public class JapanBankTransferForm extends PaymentMethodForm
 
         addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
-    } // }}}
-    private void addBankInput() // {{{
-    {
+    }
+
+    private void addBankInput() {
         gridRow++;
 
         Tuple4<Label, TextField, Label, ComboBox<String>> tuple4 = addTopLabelTextFieldAutocompleteComboBox(gridPane, gridRow, JapanBankData.getString("bank.code"), JapanBankData.getString("bank.name"), 10);
@@ -185,14 +172,13 @@ public class JapanBankTransferForm extends PaymentMethodForm
         bankComboBox = tuple4.fourth;
         bankComboBox.setPromptText(JapanBankData.getString("bank.select"));
         bankComboBox.setButtonCell(getComboBoxButtonCell(JapanBankData.getString("bank.name"), bankComboBox));
-        bankComboBox.getEditor().focusedProperty().addListener(observable -> {
-            bankComboBox.setPromptText("");
-        });
-        bankComboBox.setConverter(new StringConverter<String>() {
+        bankComboBox.getEditor().focusedProperty().addListener(observable -> bankComboBox.setPromptText(""));
+        bankComboBox.setConverter(new StringConverter<>() {
             @Override
             public String toString(String bank) {
                 return bank != null ? bank : "";
             }
+
             public String fromString(String s) {
                 return s != null ? s : "";
             }
@@ -208,8 +194,7 @@ public class JapanBankTransferForm extends PaymentMethodForm
 
             // parse first 4 characters as bank code
             String bankCode = StringUtils.substring(bank, 0, 4);
-            if (bankCode != null)
-            {
+            if (bankCode != null) {
                 // set bank code field to this value
                 bankCodeField.setText(bankCode);
                 // save to payload
@@ -217,26 +202,20 @@ public class JapanBankTransferForm extends PaymentMethodForm
 
                 // parse remainder as bank name
                 String bankNameFull = StringUtils.substringAfter(bank, JapanBankData.SPACE);
-                if (bankNameFull != null)
-                {
-                    // parse beginning as Japanese bank name
-                    String bankNameJa = StringUtils.substringBefore(bankNameFull, JapanBankData.SPACE);
-                    if (bankNameJa != null)
-                    {
-                        // set bank name field to this value
-                        bankComboBox.getEditor().setText(bankNameJa);
-                        // save to payload
-                        japanBankAccount.setBankName(bankNameJa);
-                    }
-                }
+                // parse beginning as Japanese bank name
+                String bankNameJa = StringUtils.substringBefore(bankNameFull, JapanBankData.SPACE);
+                // set bank name field to this value
+                bankComboBox.getEditor().setText(bankNameJa);
+                // save to payload
+                japanBankAccount.setBankName(bankNameJa);
             }
 
 
             updateFromInputs();
         });
-    } // }}}
-    private void addBankBranchInput() // {{{
-    {
+    }
+
+    private void addBankBranchInput() {
         gridRow++;
         Tuple2<InputTextField, InputTextField> tuple2 = addInputTextFieldInputTextField(gridPane, gridRow, JapanBankData.getString("branch.code"), JapanBankData.getString("branch.name"));
 
@@ -259,14 +238,14 @@ public class JapanBankTransferForm extends PaymentMethodForm
             japanBankAccount.setBankBranchName(newValue);
             updateFromInputs();
         });
-    } // }}}
-    private void addBankAccountInput() // {{{
-    {
+    }
+
+    private void addBankAccountInput() {
         gridRow++;
         Tuple2<InputTextField, InputTextField> tuple2 = addInputTextFieldInputTextField(gridPane, gridRow, JapanBankData.getString("account.number"), JapanBankData.getString("account.name"));
 
         // account number
-        bankAccountNumberInputTextField = tuple2.first;
+        InputTextField bankAccountNumberInputTextField = tuple2.first;
         bankAccountNumberInputTextField.setValidator(japanBankAccountNumberValidator);
         bankAccountNumberInputTextField.setPrefWidth(200);
         bankAccountNumberInputTextField.setMaxWidth(200);
@@ -284,9 +263,9 @@ public class JapanBankTransferForm extends PaymentMethodForm
             japanBankAccount.setBankAccountName(newValue);
             updateFromInputs();
         });
-    } // }}}
-    private void addBankAccountTypeInput() // {{{
-    {
+    }
+
+    private void addBankAccountTypeInput() {
         // account currency
         gridRow++;
 
@@ -299,13 +278,13 @@ public class JapanBankTransferForm extends PaymentMethodForm
 
         ToggleGroup toggleGroup = new ToggleGroup();
         Tuple3<Label, RadioButton, RadioButton> tuple3 =
-            addTopLabelRadioButtonRadioButton(
-                gridPane, gridRow, toggleGroup,
-                JapanBankData.getString("account.type.select"),
-                JapanBankData.getString("account.type.futsu"),
-                JapanBankData.getString("account.type.touza"),
-                0
-            );
+                addTopLabelRadioButtonRadioButton(
+                        gridPane, gridRow, toggleGroup,
+                        JapanBankData.getString("account.type.select"),
+                        JapanBankData.getString("account.type.futsu"),
+                        JapanBankData.getString("account.type.touza"),
+                        0
+                );
 
         toggleGroup.getToggles().get(0).setSelected(true);
         japanBankAccount.setBankAccountType(JapanBankData.getString("account.type.futsu.ja"));
@@ -314,66 +293,60 @@ public class JapanBankTransferForm extends PaymentMethodForm
         RadioButton touza = tuple3.third;
 
         toggleGroup.selectedToggleProperty().addListener
-        (
-            (ov, oldValue, newValue) ->
-            {
-                if (futsu.isSelected())
-                    japanBankAccount.setBankAccountType(JapanBankData.getString("account.type.futsu.ja"));
-                if (touza.isSelected())
-                    japanBankAccount.setBankAccountType(JapanBankData.getString("account.type.touza.ja"));
-            }
-        );
-    } // }}}
+                (
+                        (ov, oldValue, newValue) ->
+                        {
+                            if (futsu.isSelected())
+                                japanBankAccount.setBankAccountType(JapanBankData.getString("account.type.futsu.ja"));
+                            if (touza.isSelected())
+                                japanBankAccount.setBankAccountType(JapanBankData.getString("account.type.touza.ja"));
+                        }
+                );
+    }
 
     @Override
-    public void updateFromInputs() // {{{
-    {
+    public void updateFromInputs() {
         System.out.println("JapanBankTransferForm: updateFromInputs()");
-        System.out.println("bankName: "+japanBankAccount.getBankName());
-        System.out.println("bankCode: "+japanBankAccount.getBankCode());
-        System.out.println("bankBranchName: "+japanBankAccount.getBankBranchName());
-        System.out.println("bankBranchCode: "+japanBankAccount.getBankBranchCode());
-        System.out.println("bankAccountType: "+japanBankAccount.getBankAccountType());
-        System.out.println("bankAccountName: "+japanBankAccount.getBankAccountName());
-        System.out.println("bankAccountNumber: "+japanBankAccount.getBankAccountNumber());
+        System.out.println("bankName: " + japanBankAccount.getBankName());
+        System.out.println("bankCode: " + japanBankAccount.getBankCode());
+        System.out.println("bankBranchName: " + japanBankAccount.getBankBranchName());
+        System.out.println("bankBranchCode: " + japanBankAccount.getBankBranchCode());
+        System.out.println("bankAccountType: " + japanBankAccount.getBankAccountType());
+        System.out.println("bankAccountName: " + japanBankAccount.getBankAccountName());
+        System.out.println("bankAccountNumber: " + japanBankAccount.getBankAccountNumber());
         super.updateFromInputs();
-    } // }}}
+    }
 
     @Override
-    protected void autoFillNameTextField() // {{{
-    {
-        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected())
-        {
+    protected void autoFillNameTextField() {
+        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
             accountNameTextField.setText(
                     Res.get(paymentAccount.getPaymentMethod().getId())
-                    .concat(": ")
-                    .concat(japanBankAccount.getBankName())
-                    .concat(" ")
-                    .concat(japanBankAccount.getBankBranchName())
-                    .concat(" ")
-                    .concat(japanBankAccount.getBankAccountNumber())
-                    .concat(" ")
-                    .concat(japanBankAccount.getBankAccountName())
+                            .concat(": ")
+                            .concat(japanBankAccount.getBankName())
+                            .concat(" ")
+                            .concat(japanBankAccount.getBankBranchName())
+                            .concat(" ")
+                            .concat(japanBankAccount.getBankAccountNumber())
+                            .concat(" ")
+                            .concat(japanBankAccount.getBankAccountName())
             );
         }
-    } // }}}
+    }
 
     @Override
-    public void updateAllInputsValid() // {{{
-    {
+    public void updateAllInputsValid() {
         boolean result =
-            (
-                isAccountNameValid() &&
-                inputValidator.validate(japanBankAccount.getBankCode()).isValid &&
-                inputValidator.validate(japanBankAccount.getBankName()).isValid &&
-                japanBankBranchCodeValidator.validate(japanBankAccount.getBankBranchCode()).isValid &&
-                japanBankBranchNameValidator.validate(japanBankAccount.getBankBranchName()).isValid &&
-                japanBankAccountNumberValidator.validate(japanBankAccount.getBankAccountNumber()).isValid &&
-                japanBankAccountNameValidator.validate(japanBankAccount.getBankAccountName()).isValid &&
-                inputValidator.validate(japanBankAccount.getBankAccountType()).isValid
-            );
+                (
+                        isAccountNameValid() &&
+                                inputValidator.validate(japanBankAccount.getBankCode()).isValid &&
+                                inputValidator.validate(japanBankAccount.getBankName()).isValid &&
+                                japanBankBranchCodeValidator.validate(japanBankAccount.getBankBranchCode()).isValid &&
+                                japanBankBranchNameValidator.validate(japanBankAccount.getBankBranchName()).isValid &&
+                                japanBankAccountNumberValidator.validate(japanBankAccount.getBankAccountNumber()).isValid &&
+                                japanBankAccountNameValidator.validate(japanBankAccount.getBankAccountName()).isValid &&
+                                inputValidator.validate(japanBankAccount.getBankAccountType()).isValid
+                );
         allInputsValid.set(result);
-    } // }}}
+    }
 }
-
-// vim:ts=4:sw=4:expandtab:foldmethod=marker:nowrap:

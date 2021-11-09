@@ -29,8 +29,8 @@ public final class ProposalStateHash extends StateHash {
     @Getter
     private final int numProposals;
 
-    public ProposalStateHash(int cycleStartBlockHeight, byte[] hash, byte[] prevHash, int numProposals) {
-        super(cycleStartBlockHeight, hash, prevHash);
+    public ProposalStateHash(int cycleStartBlockHeight, byte[] hash, int numProposals) {
+        super(cycleStartBlockHeight, hash);
         this.numProposals = numProposals;
     }
 
@@ -43,14 +43,12 @@ public final class ProposalStateHash extends StateHash {
         return protobuf.ProposalStateHash.newBuilder()
                 .setHeight(height)
                 .setHash(ByteString.copyFrom(hash))
-                .setPrevHash(ByteString.copyFrom(prevHash))
                 .setNumProposals(numProposals).build();
     }
 
     public static ProposalStateHash fromProto(protobuf.ProposalStateHash proto) {
         return new ProposalStateHash(proto.getHeight(),
                 proto.getHash().toByteArray(),
-                proto.getPrevHash().toByteArray(),
                 proto.getNumProposals());
     }
 

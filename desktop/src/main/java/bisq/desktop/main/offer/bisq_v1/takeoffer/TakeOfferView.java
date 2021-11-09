@@ -90,7 +90,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -118,6 +117,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
 
+import static bisq.desktop.main.offer.bisq_v1.OfferViewUtil.addPayInfoEntry;
 import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
@@ -135,7 +135,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private VBox priceAsPercentageInputBox, amountRangeBox;
     private HBox fundingHBox, amountValueCurrencyBox, priceValueCurrencyBox, volumeValueCurrencyBox,
             priceAsPercentageValueCurrencyBox, minAmountValueCurrencyBox, advancedOptionsBox,
-            takeOfferBox, buttonBox, firstRowHBox;
+            takeOfferBox, buttonBox, firstRowHBox, buyBsqBox;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
     private Label amountDescriptionLabel,
             paymentMethodLabel,
@@ -247,6 +247,10 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             if (DevEnv.isDaoActivated()) {
                 tradeFeeInBtcToggle.setVisible(newValue);
                 tradeFeeInBsqToggle.setVisible(newValue);
+                if (model.isShowBuyBsqHint()) {
+                    buyBsqBox.setVisible(newValue);
+                    buyBsqBox.setManaged(newValue);
+                }
             }
         };
 
@@ -330,6 +334,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             tradeFeeInBtcToggle.setManaged(false);
             tradeFeeInBsqToggle.setVisible(false);
             tradeFeeInBsqToggle.setManaged(false);
+            buyBsqBox.setVisible(false);
+            buyBsqBox.setManaged(false);
+        }
+
+        if (!model.isShowBuyBsqHint()) {
+            buyBsqBox.setVisible(false);
+            buyBsqBox.setManaged(false);
         }
     }
 
@@ -470,6 +481,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         tradeFeeInBtcToggle.setMouseTransparent(true);
         tradeFeeInBsqToggle.setMouseTransparent(true);
+        buyBsqBox.setVisible(false);
+        buyBsqBox.setManaged(false);
 
         int delay = 500;
         int diff = 100;
@@ -672,7 +685,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                     offerDetailsWindow.hide();
 
                 UserThread.runAfter(() -> new Popup().warning(newValue + "\n\n" +
-                        Res.get("takeOffer.alreadyPaidInFunds"))
+                                Res.get("takeOffer.alreadyPaidInFunds"))
                         .actionButtonTextWithGoTo("navigation.funds.availableForWithdrawal")
                         .onAction(() -> {
                             errorPopupDisplayed.set(true);
@@ -787,15 +800,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void addScrollPane() {
-        scrollPane = new ScrollPane();
-        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setFitToHeight(true);
-        AnchorPane.setLeftAnchor(scrollPane, 0d);
-        AnchorPane.setTopAnchor(scrollPane, 0d);
-        AnchorPane.setRightAnchor(scrollPane, 0d);
-        AnchorPane.setBottomAnchor(scrollPane, 0d);
+        scrollPane = GUIUtil.createScrollPane();
         root.getChildren().add(scrollPane);
     }
 
@@ -805,13 +810,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         gridPane.setPadding(new Insets(15, 15, -1, 15));
         gridPane.setHgap(5);
         gridPane.setVgap(5);
-        ColumnConstraints columnConstraints1 = new ColumnConstraints();
-        columnConstraints1.setHalignment(HPos.RIGHT);
-        columnConstraints1.setHgrow(Priority.NEVER);
-        columnConstraints1.setMinWidth(200);
-        ColumnConstraints columnConstraints2 = new ColumnConstraints();
-        columnConstraints2.setHgrow(Priority.ALWAYS);
-        gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
+        GUIUtil.setDefaultTwoColumnConstraintsForGridPane(gridPane);
         scrollPane.setContent(gridPane);
     }
 
@@ -879,12 +878,21 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         advancedOptionsBox.setSpacing(40);
 
         GridPane.setRowIndex(advancedOptionsBox, gridRow);
+        GridPane.setColumnSpan(advancedOptionsBox, GridPane.REMAINING);
         GridPane.setColumnIndex(advancedOptionsBox, 0);
         GridPane.setHalignment(advancedOptionsBox, HPos.LEFT);
         GridPane.setMargin(advancedOptionsBox, new Insets(Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(advancedOptionsBox);
 
-        advancedOptionsBox.getChildren().addAll(getTradeFeeFieldsBox());
+        Tuple2<AutoTooltipButton, HBox> buyBsqButtonBox = OfferViewUtil.createBuyBsqButtonBox(
+                navigation, model.dataModel.preferences);
+        buyBsqBox = buyBsqButtonBox.second;
+        buyBsqBox.setManaged(false);
+        buyBsqBox.setVisible(false);
+
+        VBox tradeFeeFieldsBox = getTradeFeeFieldsBox();
+        tradeFeeFieldsBox.setMinWidth(240);
+        advancedOptionsBox.getChildren().addAll(tradeFeeFieldsBox, buyBsqBox);
     }
 
     private void addButtons() {
@@ -1279,17 +1287,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private void maybeShowAccountWarning(PaymentAccount paymentAccount, boolean isBuyer) {
         String msgKey = paymentAccount.getPreTradeMessage(!isBuyer);
-        if (msgKey == null || paymentAccountWarningDisplayed.getOrDefault(msgKey, false)) {
-            return;
-        }
-        paymentAccountWarningDisplayed.put(msgKey, true);
-        UserThread.runAfter(() -> {
-            new Popup().information(Res.get(msgKey))
-                    .width(900)
-                    .closeButtonText(Res.get("shared.iConfirm"))
-                    .dontShowAgainId(msgKey)
-                    .show();
-        }, 500, TimeUnit.MILLISECONDS);
+        OfferViewUtil.showPaymentAccountWarning(msgKey, paymentAccountWarningDisplayed);
     }
 
     private void maybeShowCashByMailWarning(PaymentAccount paymentAccount, Offer offer) {
@@ -1329,8 +1327,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         infoGridPane.setPadding(new Insets(10, 10, 10, 10));
 
         int i = 0;
-        if (model.isSeller())
+        if (model.isSeller()) {
             addPayInfoEntry(infoGridPane, i++, Res.get("takeOffer.fundsBox.tradeAmount"), model.getTradeAmount());
+        }
 
         addPayInfoEntry(infoGridPane, i++, Res.getWithCol("shared.yourSecurityDeposit"), model.getSecurityDepositInfo());
         addPayInfoEntry(infoGridPane, i++, Res.get("takeOffer.fundsBox.offerFee"), model.getTradeFee());
@@ -1344,18 +1343,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 model.getTotalToPayInfo());
 
         return infoGridPane;
-    }
-
-    private void addPayInfoEntry(GridPane infoGridPane, int row, String labelText, String value) {
-        Label label = new AutoTooltipLabel(labelText);
-        TextField textField = new TextField(value);
-        textField.setMinWidth(500);
-        textField.setEditable(false);
-        textField.setFocusTraversable(false);
-        textField.setId("payment-info");
-        GridPane.setConstraints(label, 0, row, 1, 1, HPos.RIGHT, VPos.CENTER);
-        GridPane.setConstraints(textField, 1, row);
-        infoGridPane.getChildren().addAll(label, textField);
     }
 }
 

@@ -222,7 +222,7 @@ public class LiteNode extends BsqNode {
 
         runDelayedBatchProcessing(new ArrayList<>(blockList),
                 () -> {
-                    log.info("runDelayedBatchProcessing Parsing {} blocks took {} seconds.", blockList.size(),
+                    log.info("Parsing {} blocks took {} seconds.", blockList.size(),
                             (System.currentTimeMillis() - ts) / 1000d);
                     // We only request again if wallet is synced, otherwise we would get repeated calls we want to avoid.
                     // We deal with that case at the setupWalletBestBlockListener method above.

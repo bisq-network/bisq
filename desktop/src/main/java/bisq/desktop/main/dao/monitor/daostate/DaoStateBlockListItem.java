@@ -21,6 +21,7 @@ import bisq.desktop.main.dao.monitor.StateBlockListItem;
 
 import bisq.core.dao.monitoring.model.DaoStateBlock;
 import bisq.core.dao.monitoring.model.DaoStateHash;
+import bisq.core.locale.Res;
 
 import java.util.function.IntSupplier;
 
@@ -34,5 +35,11 @@ import lombok.extern.slf4j.Slf4j;
 class DaoStateBlockListItem extends StateBlockListItem<DaoStateHash, DaoStateBlock> {
     DaoStateBlockListItem(DaoStateBlock stateBlock, IntSupplier cycleIndexSupplier) {
         super(stateBlock, cycleIndexSupplier);
+    }
+
+    String hashCreator() {
+        return ((DaoStateBlock) stateBlock).isSelfCreated() ?
+                Res.get("dao.monitor.table.hashCreator.self") :
+                Res.get("dao.monitor.table.hashCreator.peer");
     }
 }

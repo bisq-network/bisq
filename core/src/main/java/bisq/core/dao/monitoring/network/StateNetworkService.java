@@ -102,7 +102,8 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage,
 
     protected abstract Msg getNewStateHashMessage(StH myStateHash);
 
-    protected abstract Han getRequestStateHashesHandler(NodeAddress nodeAddress, RequestStateHashesHandler.Listener<Res> listener);
+    protected abstract Han getRequestStateHashesHandler(NodeAddress nodeAddress,
+                                                        RequestStateHashesHandler.Listener<Res> listener);
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -155,8 +156,7 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage,
     }
 
     public void broadcastMyStateHash(StH myStateHash) {
-        NewStateHashMessage newStateHashMessage = getNewStateHashMessage(myStateHash);
-        broadcaster.broadcast(newStateHashMessage, networkNode.getNodeAddress());
+        broadcaster.broadcast(getNewStateHashMessage(myStateHash), networkNode.getNodeAddress());
     }
 
     public void requestHashes(int fromHeight, String peersAddress) {
@@ -165,6 +165,10 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage,
 
     public void reset() {
         requestStateHashHandlerMap.clear();
+    }
+
+    public boolean isSeedNode(NodeAddress nodeAddress) {
+        return peerManager.isSeedNode(nodeAddress);
     }
 
 

@@ -520,7 +520,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
             case PaymentMethod.SPECIFIC_BANKS_ID:
                 return new SpecificBankForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.JAPAN_BANK_ID:
-                return new JapanBankTransferForm(paymentAccount, accountAgeWitnessService, japanBankTransferValidator, inputValidator, root, gridRow, formatter);
+                return new JapanBankTransferForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.AUSTRALIA_PAYID_ID:
                 return new AustraliaPayidForm(paymentAccount, accountAgeWitnessService, australiapayidValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.ALI_PAY_ID:
