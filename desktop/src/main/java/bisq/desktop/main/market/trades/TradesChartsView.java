@@ -103,11 +103,12 @@ import java.text.DecimalFormat;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
 
+import static bisq.desktop.main.market.trades.TradesChartsViewModel.MAX_TICKS;
 import static bisq.desktop.util.FormBuilder.addTopLabelAutocompleteComboBox;
 import static bisq.desktop.util.FormBuilder.getTopLabelWithVBox;
 
@@ -161,8 +162,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private SingleSelectionModel<Tab> tabPaneSelectionModel;
 
     private TableColumn<TradeStatistics3ListItem, TradeStatistics3ListItem> priceColumn, volumeColumn, marketColumn;
-    private final ObservableList<TradeStatistics3ListItem> listItems = FXCollections.observableArrayList();
-    private final SortedList<TradeStatistics3ListItem> sortedList = new SortedList<>(listItems);
+    private SortedList<TradeStatistics3ListItem> sortedList = new SortedList<>(FXCollections.observableArrayList());
 
     private ChangeListener<Toggle> timeUnitChangeListener;
     private ChangeListener<Number> priceAxisYWidthListener;
@@ -242,7 +242,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             layoutChart();
         };
         tradeStatisticsByCurrencyListener = c -> {
-            nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades", model.selectedTradeStatistics.size()));
+            nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades", model.tradeStatisticsByCurrency.size()));
             fillList();
         };
         parentHeightListener = (observable, oldValue, newValue) -> layout();
@@ -282,12 +282,10 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                     layout();
                     return null;
                 });
-
     }
 
     @Override
     protected void activate() {
-        // root.getParent() is null at initialize
         tabPaneSelectionModel = GUIUtil.getParentOfType(root, JFXTabPane.class).getSelectionModel();
         selectedTabIndexListener = (observable, oldValue, newValue) -> model.setSelectedTabIndex((int) newValue);
         model.setSelectedTabIndex(tabPaneSelectionModel.getSelectedIndex());
@@ -320,14 +318,12 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         toggleGroup.selectedToggleProperty().addListener(timeUnitChangeListener);
         priceAxisY.widthProperty().addListener(priceAxisYWidthListener);
         volumeAxisY.widthProperty().addListener(volumeAxisYWidthListener);
-        model.selectedTradeStatistics.addListener(tradeStatisticsByCurrencyListener);
+        model.tradeStatisticsByCurrency.addListener(tradeStatisticsByCurrencyListener);
 
         priceAxisY.labelProperty().bind(priceColumnLabel);
         priceColumnLabel.addListener(priceColumnLabelListener);
         currencySelectionSubscriber = currencySelectionBinding.subscribe((observable, oldValue, newValue) -> {
         });
-
-        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
 
         boolean useAnimations = model.preferences.isUseAnimations();
         priceChart.setAnimated(useAnimations);
@@ -337,10 +333,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         volumeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
         volumeInUsdAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
 
-        nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades", model.selectedTradeStatistics.size()));
+        nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades", model.tradeStatisticsByCurrency.size()));
 
         exportLink.setOnAction(e -> exportToCsv());
-        UserThread.runAfter(this::updateChartData, 100, TimeUnit.MILLISECONDS);
 
         if (root.getParent() instanceof Pane) {
             rootParent = (Pane) root.getParent();
@@ -358,8 +353,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
             user.requestPersistence();
         });
 
-        fillList();
-        tableView.setItems(sortedList);
         layout();
     }
 
@@ -370,7 +363,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         toggleGroup.selectedToggleProperty().removeListener(timeUnitChangeListener);
         priceAxisY.widthProperty().removeListener(priceAxisYWidthListener);
         volumeAxisY.widthProperty().removeListener(volumeAxisYWidthListener);
-        model.selectedTradeStatistics.removeListener(tradeStatisticsByCurrencyListener);
+        model.tradeStatisticsByCurrency.removeListener(tradeStatisticsByCurrencyListener);
 
         priceAxisY.labelProperty().unbind();
         priceColumnLabel.removeListener(priceColumnLabelListener);
@@ -398,12 +391,27 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     }
 
     private void fillList() {
-        List<TradeStatistics3ListItem> tradeStatistics3ListItems = model.selectedTradeStatistics.stream()
-                .map(tradeStatistics -> new TradeStatistics3ListItem(tradeStatistics,
-                        coinFormatter,
-                        model.showAllTradeCurrenciesProperty.get()))
-                .collect(Collectors.toList());
-        listItems.setAll(tradeStatistics3ListItems);
+        long ts = System.currentTimeMillis();
+        CompletableFuture.supplyAsync(() -> {
+            return model.tradeStatisticsByCurrency.stream()
+                    .map(tradeStatistics -> new TradeStatistics3ListItem(tradeStatistics,
+                            coinFormatter,
+                            model.showAllTradeCurrenciesProperty.get()))
+                    .collect(Collectors.toCollection(FXCollections::observableArrayList));
+        }).whenComplete((listItems, throwable) -> {
+            log.debug("Creating listItems took {} ms", System.currentTimeMillis() - ts);
+
+            long ts2 = System.currentTimeMillis();
+            sortedList.comparatorProperty().unbind();
+            // Sorting is slow as we have > 100k items. So we prefer to do it on the non UI thread.
+            sortedList = new SortedList<>(listItems);
+            sortedList.comparatorProperty().bind(tableView.comparatorProperty());
+            log.debug("Created sorted list took {} ms", System.currentTimeMillis() - ts2);
+            UserThread.execute(() -> {
+                // When we attach the list to the table we need to be on the UI thread.
+                tableView.setItems(sortedList);
+            });
+        });
     }
 
     private void exportToCsv() {
@@ -460,7 +468,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
     private void createCharts() {
         priceSeries = new XYChart.Series<>();
 
-        priceAxisX = new NumberAxis(0, model.maxTicks + 1, 1);
+        priceAxisX = new NumberAxis(0, MAX_TICKS + 1, 1);
         priceAxisX.setTickUnit(4);
         priceAxisX.setMinorTickCount(4);
         priceAxisX.setMinorTickVisible(true);
@@ -526,11 +534,11 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
         priceChartPane.getChildren().add(priceChart);
 
-        volumeAxisX = new NumberAxis(0, model.maxTicks + 1, 1);
+        volumeAxisX = new NumberAxis(0, MAX_TICKS + 1, 1);
         volumeAxisY = new NumberAxis();
         volumeChart = getVolumeChart(volumeAxisX, volumeAxisY, volumeSeries, "BTC");
 
-        volumeInUsdAxisX = new NumberAxis(0, model.maxTicks + 1, 1);
+        volumeInUsdAxisX = new NumberAxis(0, MAX_TICKS + 1, 1);
         NumberAxis volumeInUsdAxisY = new NumberAxis();
         volumeInUsdChart = getVolumeChart(volumeInUsdAxisX, volumeInUsdAxisY, volumeInUsdSeries, "USD");
         volumeInUsdChart.setVisible(false);
@@ -637,7 +645,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 long index = MathUtils.doubleToLong((double) object);
                 // The last tick is on the chart edge, it is not well spaced with
                 // the previous tick and interferes with its label.
-                if (model.maxTicks + 1 == index) return "";
+                if (MAX_TICKS + 1 == index) return "";
 
                 long time = model.getTimeFromTickIndex(index);
                 String fmt = "";
