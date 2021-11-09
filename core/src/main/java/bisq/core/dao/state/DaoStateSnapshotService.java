@@ -274,7 +274,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                         "After a restart resource files will be applied if available.");
                 resyncDaoStateFromResources();
             } else {
-                log.info("No Bsq blocks in DaoState. Expected if not data are provided yet from resources or persisted data.");
+                log.info("No Bsq blocks in DaoState. Expected if no data are provided yet from resources or persisted data.");
             }
         } else {
             log.info("Try to apply snapshot but no stored snapshot available. That is expected at first blocks.");
