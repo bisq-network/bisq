@@ -19,6 +19,8 @@ package bisq.core.util;
 
 import bisq.core.filter.FilterManager;
 
+import bisq.common.config.Config;
+
 import org.bitcoinj.core.Coin;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -35,7 +37,9 @@ public class FeeReceiverSelector {
     public static final String BTC_FEE_RECEIVER_ADDRESS = "38bZBj5peYS3Husdz7AH3gEUiUbYRD951t";
 
     public static String getMostRecentAddress() {
-        return BTC_FEE_RECEIVER_ADDRESS;
+        return Config.baseCurrencyNetwork().isMainnet() ? BTC_FEE_RECEIVER_ADDRESS :
+                Config.baseCurrencyNetwork().isTestnet() ? "2N4mVTpUZAnhm9phnxB7VrHB4aBhnWrcUrV" :
+                        "2MzBNTJDjjXgViKBGnatDU3yWkJ8pJkEg9w";
     }
 
     public static String getAddress(FilterManager filterManager) {
