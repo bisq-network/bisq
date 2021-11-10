@@ -29,17 +29,29 @@ public class GrinTest extends AbstractAssetTest {
 
     @Test
     public void testValidAddresses() {
-        // grinbox
-        assertValidAddress("gVvk7rLBg3r3qoWYL3VsREnBbooT7nynxx5HtDvUWCJUaNCnddvY");
-        assertValidAddress("grinbox://gVtWzX5NTLCBkyNV19QVdnLXue13heAVRD36sfkGD6xpqy7k7e4a");
-        assertValidAddress("gVw9TWimGFXRjoDXWhWxeNQbu84ZpLkvnenkKvA5aJeDo31eM5tC@somerelay.com");
-        assertValidAddress("gVw9TWimGFXRjoDXWhWxeNQbu84ZpLkvnenkKvA5aJeDo31eM5tC@somerelay.com:1220");
-        assertValidAddress("grinbox://gVwjSsYW5vvHpK4AunJ5piKhhQTV6V3Jb818Uqs6PdC3SsB36AsA@somerelay.com");
-        assertValidAddress("grinbox://gVwjSsYW5vvHpK4AunJ5piKhhQTV6V3Jb818Uqs6PdC3SsB36AsA@somerelay.com:1220");
+        // valid slatepack addresses
+        assertValidAddress("grin1ephxt0u33rz9zpl7exer2awfr9s9ae28qsx7908q2zq03uv3sj7suqdule");
+        assertValidAddress("grin1wwg5k80qje0lw32ldttgl52lew0ucmv64zux27pzanl0a2ku85ps5gxafa");
+        assertValidAddress("grin1mdxxaz8g5zc4fhqcvcu79c0sp3md9j2f6tt5cxde78scjatkh3zqzrgl9r");
+        assertValidAddress("grin17whxsfzj3su0rtpd3hkcjt3hlatvc89dpc9syvrmq2shhnhc9f6sehqe3x");
+        assertValidAddress("grin1cq636ment795xn68knzu0ewp73f3zdlgv6dsqv8x7vf2v0j4ek5sk6nmk3");
+        assertValidAddress("grin1wm78wjsf2ws507hea4zqrcywxltjwhtgfrwzhdrr9l80l7tpz5fsj58lk0");
+        assertValidAddress("grin1jezf3lkcexvj3ydjwanan6khs42fr4036guh0c4vkc04fyxarl6svjzuuh");
     }
 
     @Test
     public void testInvalidAddresses() {
+        // invalid slatepack address (bech32 format invalid)
+        assertInvalidAddress("grin1p4fuklglxqsgg602hu4c4jl4aunu5tynyf4lkg96ezh3jefzpy6swshp5x");  // from 0015-slatepack.md#slatepackaddress
+
+        // grinbox
+        assertInvalidAddress("gVvk7rLBg3r3qoWYL3VsREnBbooT7nynxx5HtDvUWCJUaNCnddvY");
+        assertInvalidAddress("grinbox://gVtWzX5NTLCBkyNV19QVdnLXue13heAVRD36sfkGD6xpqy7k7e4a");
+        assertInvalidAddress("gVw9TWimGFXRjoDXWhWxeNQbu84ZpLkvnenkKvA5aJeDo31eM5tC@somerelay.com");
+        assertInvalidAddress("gVw9TWimGFXRjoDXWhWxeNQbu84ZpLkvnenkKvA5aJeDo31eM5tC@somerelay.com:1220");
+        assertInvalidAddress("grinbox://gVwjSsYW5vvHpK4AunJ5piKhhQTV6V3Jb818Uqs6PdC3SsB36AsA@somerelay.com");
+        assertInvalidAddress("grinbox://gVwjSsYW5vvHpK4AunJ5piKhhQTV6V3Jb818Uqs6PdC3SsB36AsA@somerelay.com:1220");
+
         // valid IP:port addresses but not supported in Bisq
         assertInvalidAddress("0.0.0.0:8080");
         assertInvalidAddress("173.194.34.134:8080");
