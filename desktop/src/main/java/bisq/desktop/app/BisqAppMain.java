@@ -73,8 +73,8 @@ public class BisqAppMain extends BisqExecutable {
     protected void launchApplication() {
         BisqApp.setAppLaunchedHandler(application -> {
             BisqAppMain.this.application = (BisqApp) application;
-            // Map to user thread!
-            UserThread.execute(this::onApplicationLaunched);
+
+            onApplicationLaunched();
         });
 
         Application.launch(BisqApp.class);

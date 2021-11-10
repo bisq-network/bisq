@@ -79,7 +79,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         UserThread.execute(() -> {
             try {
                 seedNode = new SeedNode();
-                UserThread.execute(this::onApplicationLaunched);
+                onApplicationLaunched();
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -130,8 +130,13 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // Headless versions can call inside launchApplication the onApplicationLaunched() manually
+    // Desktop gets called from JavaFx thread
     protected void onApplicationLaunched() {
         configUserThread();
+
+        // Now we can use the user thread start periodic tasks
+        CommonSetup.startPeriodicTasks();
+
         // As the handler method might be overwritten by subclasses and they use the application as handler
         // we need to setup the handler after the application is created.
         CommonSetup.setupUncaughtExceptionHandler(this);
