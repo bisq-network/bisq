@@ -243,7 +243,7 @@ public class LiteNode extends BsqNode {
                 doParseBlock(block);
                 runDelayedBatchProcessing(blocks, resultHandler);
             } catch (RequiredReorgFromSnapshotException e) {
-                resultHandler.run();
+                log.warn("Interrupt batch processing because if a blockchain reorg. {}", e.toString());
             }
         });
     }
