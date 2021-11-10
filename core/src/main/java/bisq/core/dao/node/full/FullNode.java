@@ -111,15 +111,6 @@ public class FullNode extends BsqNode {
     }
 
     @Override
-    protected void startReOrgFromLastSnapshot() {
-        super.startReOrgFromLastSnapshot();
-
-        int startBlockHeight = getStartBlockHeight();
-        rpcService.requestChainHeadHeight(chainHeight -> parseBlocksOnHeadHeight(startBlockHeight, chainHeight),
-                this::handleError);
-    }
-
-    @Override
     protected void onP2PNetworkReady() {
         super.onP2PNetworkReady();
 

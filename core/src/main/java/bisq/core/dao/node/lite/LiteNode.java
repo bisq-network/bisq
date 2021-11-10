@@ -185,15 +185,6 @@ public class LiteNode extends BsqNode {
         liteNodeNetworkService.requestBlocks(getStartBlockHeight());
     }
 
-    @Override
-    protected void startReOrgFromLastSnapshot() {
-        super.startReOrgFromLastSnapshot();
-
-        int startBlockHeight = getStartBlockHeight();
-        liteNodeNetworkService.reset();
-        liteNodeNetworkService.requestBlocks(startBlockHeight);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
