@@ -107,7 +107,18 @@ public class FullNode extends BsqNode {
 
     @Override
     protected void startParseBlocks() {
-        requestChainHeadHeightAndParseBlocks(getStartBlockHeight());
+        int startBlockHeight = getStartBlockHeight();
+
+        log.info("startParseBlocks: startBlockHeight={}", startBlockHeight);
+        rpcService.requestChainHeadHeight(chainHeight -> {
+                    // If our persisted block is equal to the chain height we have startBlockHeight 1 block higher,
+                    // so we do not call parseBlocksOnHeadHeight
+                    log.info("startParseBlocks: chainHeight={}", chainHeight);
+                    if (startBlockHeight <= chainHeight) {
+                        parseBlocksOnHeadHeight(startBlockHeight, chainHeight);
+                    }
+                },
+                this::handleError);
     }
 
     @Override
@@ -185,12 +196,6 @@ public class FullNode extends BsqNode {
                 this::handleError);
     }
 
-    private void requestChainHeadHeightAndParseBlocks(int startBlockHeight) {
-        log.info("requestChainHeadHeightAndParseBlocks with startBlockHeight={}", startBlockHeight);
-        rpcService.requestChainHeadHeight(chainHeight -> parseBlocksOnHeadHeight(startBlockHeight, chainHeight),
-                this::handleError);
-    }
-
     private void parseBlocksOnHeadHeight(int startBlockHeight, int chainHeight) {
         if (startBlockHeight <= chainHeight) {
             blocksToParseInBatch = chainHeight - startBlockHeight;
@@ -212,7 +217,9 @@ public class FullNode extends BsqNode {
             log.warn("We are trying to start with a block which is above the chain height of Bitcoin Core. " +
                     "We need probably wait longer until Bitcoin Core has fully synced. " +
                     "We try again after a delay of 1 min.");
-            UserThread.runAfter(() -> requestChainHeadHeightAndParseBlocks(startBlockHeight), 60);
+            UserThread.runAfter(() -> rpcService.requestChainHeadHeight(chainHeight1 ->
+                            parseBlocksOnHeadHeight(startBlockHeight, chainHeight1),
+                    this::handleError), 60);
         }
     }
 
