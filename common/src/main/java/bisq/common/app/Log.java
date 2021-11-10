@@ -18,18 +18,22 @@
 package bisq.common.app;
 
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.turbo.TurboFilter;
 import ch.qos.logback.core.rolling.FixedWindowRollingPolicy;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
+import ch.qos.logback.core.spi.FilterReply;
 import ch.qos.logback.core.util.FileSize;
 
 public class Log {
+    public static final String JAVA_FX_THREAD_NAME = "JavaFX Application Thread";
     private static Logger logbackLogger;
     public static final Level DEFAULT_LOG_LEVEL = Level.INFO;
 
@@ -73,5 +77,20 @@ public class Log {
 
     public static void setCustomLogLevel(String pattern, Level logLevel) {
         ((Logger) LoggerFactory.getLogger(pattern)).setLevel(logLevel);
+    }
+
+    public static void filterByThreadName(String threadName) {
+        logbackLogger.getLoggerContext().addTurboFilter(new TurboFilter() {
+            @Override
+            public FilterReply decide(Marker marker, Logger logger, Level level, String format,
+                                      Object[] params, Throwable t) {
+                return threadName.equals(Thread.currentThread().getName()) ?
+                        FilterReply.ACCEPT : FilterReply.DENY;
+            }
+        });
+    }
+
+    public static void clearFilters() {
+        logbackLogger.getLoggerContext().resetTurboFilterList();
     }
 }

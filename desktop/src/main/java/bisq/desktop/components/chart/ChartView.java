@@ -603,7 +603,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         updateTimeLinePositions();
 
         model.invalidateCache();
-        applyDataAndUpdate(); //3
+        applyDataAndUpdate();
     }
 
     private void updateTimeLinePositions() {

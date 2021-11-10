@@ -64,10 +64,11 @@ public class GcUtil {
             long postGcMemory = Runtime.getRuntime().totalMemory();
             long duration = System.currentTimeMillis() - ts;
             totalGCTime += duration;
-            log.info("GC reduced memory by {}. Total memory before/after: {}/{}. Took {} ms. Total GC invocations: {} / Total GC time {} sec",
+            log.info("GC reduced memory by {}. Total memory before/after: {}/{}. Free memory: {}. Took {} ms. Total GC invocations: {} / Total GC time {} sec",
                     Utilities.readableFileSize(preGcMemory - postGcMemory),
                     Utilities.readableFileSize(preGcMemory),
                     Utilities.readableFileSize(postGcMemory),
+                    Utilities.readableFileSize(Runtime.getRuntime().freeMemory()),
                     duration,
                     totalInvocations,
                     totalGCTime / 1000d);
