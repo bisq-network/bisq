@@ -78,9 +78,10 @@ class GrpcTradesService extends TradesImplBase {
                                 StreamObserver<GetBsqSwapTradeReply> responseObserver) {
         try {
             var bsqSwapTrade = coreApi.getBsqSwapTrade(req.getTradeId());
-            // String role = coreApi.getBsqSwapTradeRole(req.getTradeId());
+            boolean wasMyOffer = coreApi.isMyOffer(bsqSwapTrade.getOffer().getId());
+            String role = coreApi.getBsqSwapTradeRole(req.getTradeId());
             var reply = GetBsqSwapTradeReply.newBuilder()
-                    .setBsqSwapTrade(toBsqSwapTradeInfo(bsqSwapTrade).toProtoMessage())
+                    .setBsqSwapTrade(toBsqSwapTradeInfo(bsqSwapTrade, role, wasMyOffer).toProtoMessage())
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
@@ -97,7 +98,7 @@ class GrpcTradesService extends TradesImplBase {
     public void takeBsqSwapOffer(TakeBsqSwapOfferRequest req,
                                  StreamObserver<TakeBsqSwapOfferReply> responseObserver) {
         GrpcErrorMessageHandler errorMessageHandler =
-                new GrpcErrorMessageHandler(getTakeOfferMethod().getFullMethodName(),
+                new GrpcErrorMessageHandler(getTakeBsqSwapOfferMethod().getFullMethodName(),
                         responseObserver,
                         exceptionHandler,
                         log);
@@ -105,7 +106,10 @@ class GrpcTradesService extends TradesImplBase {
                 req.getPaymentAccountId(),
                 req.getTakerFeeCurrencyCode(),
                 bsqSwapTrade -> {
-                    BsqSwapTradeInfo bsqSwapTradeInfo = toBsqSwapTradeInfo(bsqSwapTrade);
+                    String role = coreApi.getBsqSwapTradeRole(bsqSwapTrade);
+                    BsqSwapTradeInfo bsqSwapTradeInfo = toBsqSwapTradeInfo(bsqSwapTrade,
+                            role,
+                            false);
                     var reply = TakeBsqSwapOfferReply.newBuilder()
                             .setBsqSwapTrade(bsqSwapTradeInfo.toProtoMessage())
                             .build();
@@ -123,10 +127,10 @@ class GrpcTradesService extends TradesImplBase {
                          StreamObserver<GetTradeReply> responseObserver) {
         try {
             Trade trade = coreApi.getTrade(req.getTradeId());
-            boolean isMyOffer = coreApi.isMyOffer(trade.getOffer().getId());
+            boolean wasMyOffer = coreApi.isMyOffer(trade.getOffer().getId());
             String role = coreApi.getTradeRole(req.getTradeId());
             var reply = GetTradeReply.newBuilder()
-                    .setTrade(toTradeInfo(trade, role, isMyOffer).toProtoMessage())
+                    .setTrade(toTradeInfo(trade, role, wasMyOffer).toProtoMessage())
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
@@ -227,7 +231,9 @@ class GrpcTradesService extends TradesImplBase {
                 .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
                         new HashMap<>() {{
                             put(getGetTradeMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getGetBsqSwapTradeMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getTakeOfferMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
+                            put(getTakeBsqSwapOfferMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
                             put(getConfirmPaymentStartedMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
                             put(getConfirmPaymentReceivedMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
                             put(getKeepFundsMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
