@@ -25,24 +25,21 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import static bisq.core.api.model.BsqSwapOfferInfo.toBsqSwapOfferInfo;
+import static bisq.core.api.model.OfferInfo.toMyOfferInfo;
+import static bisq.core.api.model.OfferInfo.toOfferInfo;
 
 @EqualsAndHashCode
 @ToString
 @Getter
 public class BsqSwapTradeInfo implements Payload {
 
-    private final BsqSwapOfferInfo bsqSwapOffer;
+    private final OfferInfo bsqSwapOffer;
     private final String tradeId;
     private final String tempTradingPeerNodeAddress;
     private final String peerNodeAddress;
     private final String txId;
     private final long bsqTradeAmount;
-    private final long bsqMaxTradeAmount;
-    private final long bsqMinTradeAmount;
     private final long btcTradeAmount;
-    private final long btcMaxTradeAmount;
-    private final long btcMinTradeAmount;
     private final long tradePrice;
     private final long bsqMakerTradeFee;
     private final long bsqTakerTradeFee;
@@ -53,21 +50,18 @@ public class BsqSwapTradeInfo implements Payload {
     private final String takerBsqAddress;
     private final String takerBtcAddress;
     private final long takeOfferDate;
+    private final String role;
     private final String state;
     private final String errorMessage;
 
-    public BsqSwapTradeInfo(BsqSwapTradeInfoBuilder builder) {
-        this.bsqSwapOffer = builder.bsqSwapOfferInfo;
+    public BsqSwapTradeInfo(Builder builder) {
+        this.bsqSwapOffer = builder.bsqSwapOffer;
         this.tradeId = builder.tradeId;
         this.tempTradingPeerNodeAddress = builder.tempTradingPeerNodeAddress;
         this.peerNodeAddress = builder.peerNodeAddress;
         this.txId = builder.txId;
         this.bsqTradeAmount = builder.bsqTradeAmount;
-        this.bsqMaxTradeAmount = builder.bsqMaxTradeAmount;
-        this.bsqMinTradeAmount = builder.bsqMinTradeAmount;
         this.btcTradeAmount = builder.btcTradeAmount;
-        this.btcMaxTradeAmount = builder.btcMaxTradeAmount;
-        this.btcMinTradeAmount = builder.btcMinTradeAmount;
         this.tradePrice = builder.tradePrice;
         this.bsqMakerTradeFee = builder.bsqMakerTradeFee;
         this.bsqTakerTradeFee = builder.bsqTakerTradeFee;
@@ -78,38 +72,38 @@ public class BsqSwapTradeInfo implements Payload {
         this.takerBsqAddress = builder.takerBsqAddress;
         this.takerBtcAddress = builder.takerBtcAddress;
         this.takeOfferDate = builder.takeOfferDate;
+        this.role = builder.role;
         this.state = builder.state;
         this.errorMessage = builder.errorMessage;
     }
 
-    public static BsqSwapTradeInfo toBsqSwapTradeInfo(BsqSwapTrade trade) {
-        return toBsqSwapTradeInfo(trade, null);
-    }
-
-    //TODO
-    public static BsqSwapTradeInfo toBsqSwapTradeInfo(BsqSwapTrade trade, String role) {
-        return new BsqSwapTradeInfoBuilder()
-                .withBsqSwapOffer(toBsqSwapOfferInfo(trade.getOffer()))
+    public static BsqSwapTradeInfo toBsqSwapTradeInfo(BsqSwapTrade trade, String role, boolean wasMyOffer) {
+        var protocolModel = trade.getBsqSwapProtocolModel();
+        var swapPeer = protocolModel.getTradePeer();
+        var makerBsqAddress = wasMyOffer ? protocolModel.getBsqAddress() : swapPeer.getBsqAddress();
+        var makerBtcAddress = wasMyOffer ? protocolModel.getBtcAddress() : swapPeer.getBtcAddress();
+        var takerBsqAddress = wasMyOffer ? swapPeer.getBsqAddress() : protocolModel.getBsqAddress();
+        var takerBtcAddress = wasMyOffer ? swapPeer.getBtcAddress() : protocolModel.getBtcAddress();
+        var offerInfo = wasMyOffer ? toMyOfferInfo(trade.getOffer()) : toOfferInfo(trade.getOffer());
+        return new Builder()
+                .withBsqSwapOffer(offerInfo)
                 .withTradeId(trade.getId())
                 .withTempTradingPeerNodeAddress(trade.getBsqSwapProtocolModel().getTempTradingPeerNodeAddress().getFullAddress())
                 .withPeerNodeAddress(trade.getTradingPeerNodeAddress().getFullAddress())
                 .withTxId(trade.getTxId())
-                /*   .withBsqTradeAmount(trade.getBsqSwapProtocolModel().getBsqTradeAmount())
-                   .withBsqMaxTradeAmount(trade.getBsqSwapProtocolModel().getBsqMaxTradeAmount())
-                   .withBsqMinTradeAmount(trade.getBsqSwapProtocolModel().getBsqMinTradeAmount())
-                   .withBtcTradeAmount(trade.getBsqSwapProtocolModel().getBtcTradeAmount())
-                   .withBtcMaxTradeAmount(trade.getBsqSwapProtocolModel().getBtcMaxTradeAmount())
-                   .withBtcMinTradeAmount(trade.getBsqSwapProtocolModel().getBtcMinTradeAmount())
-                   .withTradePrice(trade.getBsqSwapProtocolModel().getTradePrice())
-                   .withBsqMakerTradeFee(trade.getBsqSwapProtocolModel().getBsqMakerTradeFee())
-                   .withBsqTakerTradeFee(trade.getBsqSwapProtocolModel().getBsqTakerTradeFee())
-                   .withTxFeePerVbyte(trade.getBsqSwapProtocolModel().getTxFeePerVbyte())
-                   .withTxFee(trade.getBsqSwapProtocolModel().getTxFee())
-                   .withMakerBsqAddress(trade.getBsqSwapProtocolModel().getMakerBsqAddress())
-                   .withMakerBtcAddress(trade.getBsqSwapProtocolModel().getMakerBtcAddress())
-                   .withTakerBsqAddress(trade.getBsqSwapProtocolModel().getTakerBsqAddress())
-                   .withTakerBtcAddress(trade.getBsqSwapProtocolModel().getTakerBtcAddress())*/
+                .withBsqTradeAmount(trade.getBsqTradeAmount())
+                .withBtcTradeAmount(trade.getAmountAsLong())
+                .withTradePrice(trade.getPrice().getValue())
+                .withBsqMakerTradeFee(trade.getMakerFeeAsLong())
+                .withBsqTakerTradeFee(trade.getTakerFeeAsLong())
+                .withTxFeePerVbyte(trade.getTxFeePerVbyte())
+                .withTxFee(trade.getTxFee().value)
+                .withMakerBsqAddress(makerBsqAddress)
+                .withMakerBtcAddress(makerBtcAddress)
+                .withTakerBsqAddress(takerBsqAddress)
+                .withTakerBtcAddress(takerBtcAddress)
                 .withTakeOfferDate(trade.getTakeOfferDate())
+                .withRole(role == null ? "" : role)
                 .withState(trade.getTradeState().name())
                 .withErrorMessage(trade.getErrorMessage())
                 .build();
@@ -122,17 +116,13 @@ public class BsqSwapTradeInfo implements Payload {
     @Override
     public bisq.proto.grpc.BsqSwapTradeInfo toProtoMessage() {
         return bisq.proto.grpc.BsqSwapTradeInfo.newBuilder()
-                .setBsqSwapOfferInfo(bsqSwapOffer.toProtoMessage())
+                .setOffer(bsqSwapOffer.toProtoMessage())
                 .setTradeId(tradeId)
                 .setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress != null ? tempTradingPeerNodeAddress : "")
                 .setPeerNodeAddress(peerNodeAddress != null ? peerNodeAddress : "")
                 .setTxId(txId != null ? txId : "")
                 .setBsqTradeAmount(bsqTradeAmount)
-                .setBsqMaxTradeAmount(bsqMaxTradeAmount)
-                .setBsqMinTradeAmount(bsqMinTradeAmount)
                 .setBtcTradeAmount(btcTradeAmount)
-                .setBtcMaxTradeAmount(btcMaxTradeAmount)
-                .setBtcMinTradeAmount(btcMinTradeAmount)
                 .setTradePrice(tradePrice)
                 .setBsqMakerTradeFee(bsqMakerTradeFee)
                 .setBsqTakerTradeFee(bsqTakerTradeFee)
@@ -143,24 +133,21 @@ public class BsqSwapTradeInfo implements Payload {
                 .setMakerBtcAddress(makerBtcAddress != null ? makerBtcAddress : "")
                 .setTakerBtcAddress(takerBtcAddress != null ? takerBtcAddress : "")
                 .setTakeOfferDate(takeOfferDate)
+                .setRole(role)
                 .setState(state)
                 .setErrorMessage(errorMessage != null ? errorMessage : "")
                 .build();
     }
 
     public static BsqSwapTradeInfo fromProto(bisq.proto.grpc.BsqSwapTradeInfo proto) {
-        return new BsqSwapTradeInfoBuilder()
-                .withBsqSwapOffer(BsqSwapOfferInfo.fromProto(proto.getBsqSwapOfferInfo()))
+        return new Builder()
+                .withBsqSwapOffer(OfferInfo.fromProto(proto.getOffer()))
                 .withTradeId(proto.getTradeId())
                 .withTempTradingPeerNodeAddress(proto.getTempTradingPeerNodeAddress())
                 .withPeerNodeAddress(proto.getPeerNodeAddress())
                 .withTxId(proto.getTxId())
                 .withBsqTradeAmount(proto.getBsqTradeAmount())
-                .withBsqMaxTradeAmount(proto.getBsqMaxTradeAmount())
-                .withBsqMinTradeAmount(proto.getBsqMinTradeAmount())
                 .withBtcTradeAmount(proto.getBtcTradeAmount())
-                .withBtcMaxTradeAmount(proto.getBtcMaxTradeAmount())
-                .withBtcMinTradeAmount(proto.getBtcMinTradeAmount())
                 .withTradePrice(proto.getTradePrice())
                 .withBsqMakerTradeFee(proto.getBsqMakerTradeFee())
                 .withBsqTakerTradeFee(proto.getBsqTakerTradeFee())
@@ -171,23 +158,20 @@ public class BsqSwapTradeInfo implements Payload {
                 .withTakerBsqAddress(proto.getTakerBsqAddress())
                 .withTakerBtcAddress(proto.getTakerBtcAddress())
                 .withTakeOfferDate(proto.getTakeOfferDate())
+                .withRole(proto.getRole())
                 .withState(proto.getState())
                 .withErrorMessage(proto.getErrorMessage())
                 .build();
     }
 
-    public static class BsqSwapTradeInfoBuilder {
-        private BsqSwapOfferInfo bsqSwapOfferInfo;
+    private static class Builder {
+        private OfferInfo bsqSwapOffer;
         private String tradeId;
         private String tempTradingPeerNodeAddress;
         private String peerNodeAddress;
         private String txId;
         private long bsqTradeAmount;
-        private long bsqMaxTradeAmount;
-        private long bsqMinTradeAmount;
         private long btcTradeAmount;
-        private long btcMaxTradeAmount;
-        private long btcMinTradeAmount;
         private long tradePrice;
         private long bsqMakerTradeFee;
         private long bsqTakerTradeFee;
@@ -198,120 +182,106 @@ public class BsqSwapTradeInfo implements Payload {
         private String takerBsqAddress;
         private String takerBtcAddress;
         private long takeOfferDate;
+        private String role;
         private String state;
         private String errorMessage;
 
-        public BsqSwapTradeInfoBuilder withBsqSwapOffer(BsqSwapOfferInfo bsqSwapOfferInfo) {
-            this.bsqSwapOfferInfo = bsqSwapOfferInfo;
+        public Builder withBsqSwapOffer(OfferInfo bsqSwapOffer) {
+            this.bsqSwapOffer = bsqSwapOffer;
             return this;
         }
 
-        public BsqSwapTradeInfoBuilder withTradeId(String tradeId) {
+        public Builder withTradeId(String tradeId) {
             this.tradeId = tradeId;
             return this;
         }
 
-        public BsqSwapTradeInfoBuilder withTempTradingPeerNodeAddress(String tempTradingPeerNodeAddress) {
+        public Builder withTempTradingPeerNodeAddress(String tempTradingPeerNodeAddress) {
             this.tempTradingPeerNodeAddress = tempTradingPeerNodeAddress;
             return this;
         }
 
-        public BsqSwapTradeInfoBuilder withPeerNodeAddress(String peerNodeAddress) {
+        public Builder withPeerNodeAddress(String peerNodeAddress) {
             this.peerNodeAddress = peerNodeAddress;
             return this;
         }
 
-        public BsqSwapTradeInfoBuilder withTxId(String txId) {
+        public Builder withTxId(String txId) {
             this.txId = txId;
             return this;
         }
 
-        public BsqSwapTradeInfoBuilder withBsqTradeAmount(long bsqTradeAmount) {
+        public Builder withBsqTradeAmount(long bsqTradeAmount) {
             this.bsqTradeAmount = bsqTradeAmount;
             return this;
         }
 
-        public BsqSwapTradeInfoBuilder withBsqMaxTradeAmount(long bsqMaxTradeAmount) {
-            this.bsqMaxTradeAmount = bsqMaxTradeAmount;
-            return this;
-        }
-
-        public BsqSwapTradeInfoBuilder withBsqMinTradeAmount(long bsqMinTradeAmount) {
-            this.bsqMinTradeAmount = bsqMinTradeAmount;
-            return this;
-        }
-
-        public BsqSwapTradeInfoBuilder withBtcTradeAmount(long btcTradeAmount) {
+        public Builder withBtcTradeAmount(long btcTradeAmount) {
             this.btcTradeAmount = btcTradeAmount;
             return this;
         }
 
-        public BsqSwapTradeInfoBuilder withBtcMaxTradeAmount(long btcMaxTradeAmount) {
-            this.btcMaxTradeAmount = btcMaxTradeAmount;
-            return this;
-        }
-
-        public BsqSwapTradeInfoBuilder withBtcMinTradeAmount(long btcMinTradeAmount) {
-            this.btcMinTradeAmount = btcMinTradeAmount;
-            return this;
-        }
-
-        public BsqSwapTradeInfoBuilder withTradePrice(long tradePrice) {
+        public Builder withTradePrice(long tradePrice) {
             this.tradePrice = tradePrice;
             return this;
         }
 
-        public BsqSwapTradeInfoBuilder withBsqMakerTradeFee(long bsqMakerTradeFee) {
+        public Builder withBsqMakerTradeFee(long bsqMakerTradeFee) {
             this.bsqMakerTradeFee = bsqMakerTradeFee;
             return this;
         }
 
-        public BsqSwapTradeInfoBuilder withBsqTakerTradeFee(long bsqTakerTradeFee) {
+        public Builder withBsqTakerTradeFee(long bsqTakerTradeFee) {
             this.bsqTakerTradeFee = bsqTakerTradeFee;
             return this;
         }
 
-        public BsqSwapTradeInfoBuilder withTxFeePerVbyte(long txFeePerVbyte) {
+        public Builder withTxFeePerVbyte(long txFeePerVbyte) {
             this.txFeePerVbyte = txFeePerVbyte;
             return this;
         }
 
-        public BsqSwapTradeInfoBuilder withTxFee(long txFee) {
+        public Builder withTxFee(long txFee) {
             this.txFee = txFee;
             return this;
         }
 
-        public BsqSwapTradeInfoBuilder withMakerBsqAddress(String makerBsqAddress) {
+        public Builder withMakerBsqAddress(String makerBsqAddress) {
             this.makerBsqAddress = makerBsqAddress;
             return this;
         }
 
-        public BsqSwapTradeInfoBuilder withMakerBtcAddress(String makerBtcAddress) {
+        public Builder withMakerBtcAddress(String makerBtcAddress) {
             this.makerBtcAddress = makerBtcAddress;
             return this;
         }
 
-        public BsqSwapTradeInfoBuilder withTakerBsqAddress(String takerBsqAddress) {
+        public Builder withTakerBsqAddress(String takerBsqAddress) {
             this.takerBsqAddress = takerBsqAddress;
             return this;
         }
 
-        public BsqSwapTradeInfoBuilder withTakerBtcAddress(String takerBtcAddress) {
+        public Builder withTakerBtcAddress(String takerBtcAddress) {
             this.takerBtcAddress = takerBtcAddress;
             return this;
         }
 
-        public BsqSwapTradeInfoBuilder withTakeOfferDate(long takeOfferDate) {
+        public Builder withTakeOfferDate(long takeOfferDate) {
             this.takeOfferDate = takeOfferDate;
             return this;
         }
 
-        public BsqSwapTradeInfoBuilder withState(String state) {
+        public Builder withRole(String role) {
+            this.role = role;
+            return this;
+        }
+
+        public Builder withState(String state) {
             this.state = state;
             return this;
         }
 
-        public BsqSwapTradeInfoBuilder withErrorMessage(String errorMessage) {
+        public Builder withErrorMessage(String errorMessage) {
             this.errorMessage = errorMessage;
             return this;
         }

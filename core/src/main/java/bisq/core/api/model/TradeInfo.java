@@ -27,6 +27,7 @@ import java.util.Objects;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import static bisq.core.api.model.OfferInfo.toMyOfferInfo;
 import static bisq.core.api.model.OfferInfo.toOfferInfo;
 import static bisq.core.api.model.PaymentAccountPayloadInfo.toPaymentAccountPayloadInfo;
 
@@ -65,7 +66,7 @@ public class TradeInfo implements Payload {
     private final String contractAsJson;
     private final ContractInfo contract;
 
-    public TradeInfo(TradeInfoBuilder builder) {
+    public TradeInfo(Builder builder) {
         this.offer = builder.offer;
         this.tradeId = builder.tradeId;
         this.shortId = builder.shortId;
@@ -118,9 +119,8 @@ public class TradeInfo implements Payload {
             contractInfo = ContractInfo.emptyContract.get();
         }
 
-        OfferInfo offerInfo = toOfferInfo(trade.getOffer());
-        offerInfo.setIsMyOffer(isMyOffer);
-        return new TradeInfoBuilder()
+        OfferInfo offerInfo = isMyOffer ? toMyOfferInfo(trade.getOffer()) : toOfferInfo(trade.getOffer());
+        return new Builder()
                 .withOffer(offerInfo)
                 .withTradeId(trade.getId())
                 .withShortId(trade.getShortId())
@@ -189,7 +189,7 @@ public class TradeInfo implements Payload {
     }
 
     public static TradeInfo fromProto(bisq.proto.grpc.TradeInfo proto) {
-        return new TradeInfoBuilder()
+        return new Builder()
                 .withOffer(OfferInfo.fromProto(proto.getOffer()))
                 .withTradeId(proto.getTradeId())
                 .withShortId(proto.getShortId())
@@ -220,12 +220,12 @@ public class TradeInfo implements Payload {
     }
 
     /*
-     * TradeInfoBuilder helps avoid bungling use of a large TradeInfo constructor
+     * Builder helps avoid bungling use of a large TradeInfo constructor
      * argument list.  If consecutive argument values of the same type are not
      * ordered correctly, the compiler won't complain but the resulting bugs could
      * be hard to find and fix.
      */
-    public static class TradeInfoBuilder {
+    private static class Builder {
         private OfferInfo offer;
         private String tradeId;
         private String shortId;
@@ -253,132 +253,132 @@ public class TradeInfo implements Payload {
         private String contractAsJson;
         private ContractInfo contract;
 
-        public TradeInfoBuilder withOffer(OfferInfo offer) {
+        public Builder withOffer(OfferInfo offer) {
             this.offer = offer;
             return this;
         }
 
-        public TradeInfoBuilder withTradeId(String tradeId) {
+        public Builder withTradeId(String tradeId) {
             this.tradeId = tradeId;
             return this;
         }
 
-        public TradeInfoBuilder withShortId(String shortId) {
+        public Builder withShortId(String shortId) {
             this.shortId = shortId;
             return this;
         }
 
-        public TradeInfoBuilder withDate(long date) {
+        public Builder withDate(long date) {
             this.date = date;
             return this;
         }
 
-        public TradeInfoBuilder withRole(String role) {
+        public Builder withRole(String role) {
             this.role = role;
             return this;
         }
 
-        public TradeInfoBuilder withIsCurrencyForTakerFeeBtc(boolean isCurrencyForTakerFeeBtc) {
+        public Builder withIsCurrencyForTakerFeeBtc(boolean isCurrencyForTakerFeeBtc) {
             this.isCurrencyForTakerFeeBtc = isCurrencyForTakerFeeBtc;
             return this;
         }
 
-        public TradeInfoBuilder withTxFeeAsLong(long txFeeAsLong) {
+        public Builder withTxFeeAsLong(long txFeeAsLong) {
             this.txFeeAsLong = txFeeAsLong;
             return this;
         }
 
-        public TradeInfoBuilder withTakerFeeAsLong(long takerFeeAsLong) {
+        public Builder withTakerFeeAsLong(long takerFeeAsLong) {
             this.takerFeeAsLong = takerFeeAsLong;
             return this;
         }
 
-        public TradeInfoBuilder withTakerFeeTxId(String takerFeeTxId) {
+        public Builder withTakerFeeTxId(String takerFeeTxId) {
             this.takerFeeTxId = takerFeeTxId;
             return this;
         }
 
-        public TradeInfoBuilder withDepositTxId(String depositTxId) {
+        public Builder withDepositTxId(String depositTxId) {
             this.depositTxId = depositTxId;
             return this;
         }
 
-        public TradeInfoBuilder withPayoutTxId(String payoutTxId) {
+        public Builder withPayoutTxId(String payoutTxId) {
             this.payoutTxId = payoutTxId;
             return this;
         }
 
-        public TradeInfoBuilder withTradeAmountAsLong(long tradeAmountAsLong) {
+        public Builder withTradeAmountAsLong(long tradeAmountAsLong) {
             this.tradeAmountAsLong = tradeAmountAsLong;
             return this;
         }
 
-        public TradeInfoBuilder withTradePrice(long tradePrice) {
+        public Builder withTradePrice(long tradePrice) {
             this.tradePrice = tradePrice;
             return this;
         }
 
-        public TradeInfoBuilder withTradeVolume(long tradeVolume) {
+        public Builder withTradeVolume(long tradeVolume) {
             this.tradeVolume = tradeVolume;
             return this;
         }
 
-        public TradeInfoBuilder withTradePeriodState(String tradePeriodState) {
+        public Builder withTradePeriodState(String tradePeriodState) {
             this.tradePeriodState = tradePeriodState;
             return this;
         }
 
-        public TradeInfoBuilder withState(String state) {
+        public Builder withState(String state) {
             this.state = state;
             return this;
         }
 
-        public TradeInfoBuilder withPhase(String phase) {
+        public Builder withPhase(String phase) {
             this.phase = phase;
             return this;
         }
 
-        public TradeInfoBuilder withTradingPeerNodeAddress(String tradingPeerNodeAddress) {
+        public Builder withTradingPeerNodeAddress(String tradingPeerNodeAddress) {
             this.tradingPeerNodeAddress = tradingPeerNodeAddress;
             return this;
         }
 
-        public TradeInfoBuilder withIsDepositPublished(boolean isDepositPublished) {
+        public Builder withIsDepositPublished(boolean isDepositPublished) {
             this.isDepositPublished = isDepositPublished;
             return this;
         }
 
-        public TradeInfoBuilder withIsDepositConfirmed(boolean isDepositConfirmed) {
+        public Builder withIsDepositConfirmed(boolean isDepositConfirmed) {
             this.isDepositConfirmed = isDepositConfirmed;
             return this;
         }
 
-        public TradeInfoBuilder withIsFiatSent(boolean isFiatSent) {
+        public Builder withIsFiatSent(boolean isFiatSent) {
             this.isFiatSent = isFiatSent;
             return this;
         }
 
-        public TradeInfoBuilder withIsFiatReceived(boolean isFiatReceived) {
+        public Builder withIsFiatReceived(boolean isFiatReceived) {
             this.isFiatReceived = isFiatReceived;
             return this;
         }
 
-        public TradeInfoBuilder withIsPayoutPublished(boolean isPayoutPublished) {
+        public Builder withIsPayoutPublished(boolean isPayoutPublished) {
             this.isPayoutPublished = isPayoutPublished;
             return this;
         }
 
-        public TradeInfoBuilder withIsWithdrawn(boolean isWithdrawn) {
+        public Builder withIsWithdrawn(boolean isWithdrawn) {
             this.isWithdrawn = isWithdrawn;
             return this;
         }
 
-        public TradeInfoBuilder withContractAsJson(String contractAsJson) {
+        public Builder withContractAsJson(String contractAsJson) {
             this.contractAsJson = contractAsJson;
             return this;
         }
 
-        public TradeInfoBuilder withContract(ContractInfo contract) {
+        public Builder withContract(ContractInfo contract) {
             this.contract = contract;
             return this;
         }
