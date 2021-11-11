@@ -17,7 +17,6 @@
 
 package bisq.apitest.method.offer;
 
-import bisq.proto.grpc.BsqSwapOfferInfo;
 import bisq.proto.grpc.OfferInfo;
 
 import protobuf.PaymentAccount;
@@ -111,11 +110,6 @@ public abstract class AbstractOfferTest extends MethodTest {
 
     protected final Function<List<OfferInfo>, String> toOffersTable = (offers) ->
             new TableBuilder(OFFER_TBL, offers).build().toString();
-
-    // TODO
-    protected final Function<BsqSwapOfferInfo, String> toBsqSwapOfferTable = (offer) ->
-            new TableBuilder(OFFER_TBL, offer).build().toString();
-
 
     public static void initSwapPaymentAccounts() {
         // A bot may not know what the default 'BSQ Swap' account name is,

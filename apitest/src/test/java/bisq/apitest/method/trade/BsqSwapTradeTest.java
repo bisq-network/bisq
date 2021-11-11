@@ -17,8 +17,8 @@
 
 package bisq.apitest.method.trade;
 
-import bisq.proto.grpc.BsqSwapOfferInfo;
 import bisq.proto.grpc.BsqSwapTradeInfo;
+import bisq.proto.grpc.OfferInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -81,54 +81,59 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
     @Test
     @Order(2)
     public void testAliceCreateBsqSwapBuyOffer() {
-        var bsqSwapOffer = aliceClient.createBsqSwapOffer(BUY.name(),
-                1_000_000L,
+        var mySwapOffer = aliceClient.createBsqSwapOffer(BUY.name(),
+                1_000_000L,     // 0.01 BTC
                 1_000_000L,
                 "0.00005",
                 alicesBsqSwapAcct.getId());
-        log.debug("BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", bsqSwapOffer);
-        var newOfferId = bsqSwapOffer.getId();
+        log.debug("Pending BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", toOfferTable.apply(mySwapOffer));
+        var newOfferId = mySwapOffer.getId();
         assertNotEquals("", newOfferId);
-        assertEquals(BUY.name(), bsqSwapOffer.getDirection());
-        assertEquals(5_000, bsqSwapOffer.getPrice());
-        assertEquals(1_000_000L, bsqSwapOffer.getAmount());
-        assertEquals(1_000_000L, bsqSwapOffer.getMinAmount());
-        // assertEquals(alicesBsqAcct.getId(), atomicOffer.getMakerPaymentAccountId());
-        assertEquals(BSQ, bsqSwapOffer.getBaseCurrencyCode());
-        assertEquals(BTC, bsqSwapOffer.getCounterCurrencyCode());
+        assertEquals(BUY.name(), mySwapOffer.getDirection());
+        assertEquals(5_000, mySwapOffer.getPrice());
+        assertEquals(1_000_000L, mySwapOffer.getAmount());
+        assertEquals(1_000_000L, mySwapOffer.getMinAmount());
+        assertEquals(BSQ, mySwapOffer.getBaseCurrencyCode());
+        assertEquals(BTC, mySwapOffer.getCounterCurrencyCode());
+
+        genBtcBlocksThenWait(1, 2_500);
+
+        mySwapOffer = aliceClient.getMyOffer(newOfferId);
+        log.debug("My fetched BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", toOfferTable.apply(mySwapOffer));
+        assertNotEquals(0, mySwapOffer.getMakerFee());
     }
 
     @Test
     @Order(3)
     public void testBobTakesBsqSwapOffer() {
-        var bsqSwapOffer = getAvailableBsqSwapOffer();
-        var bsqSwapTradeInfo = bobClient.takeBsqSwapOffer(bsqSwapOffer.getId(),
+        var availableSwapOffer = getAvailableBsqSwapOffer();
+        var swapTrade = bobClient.takeBsqSwapOffer(availableSwapOffer.getId(),
                 bobsBsqSwapAcct.getId(),
                 BISQ_FEE_CURRENCY_CODE);
-        log.debug("Trade at t1: {}", bsqSwapTradeInfo);
-        assertEquals(PREPARATION.name(), bsqSwapTradeInfo.getState());
+        log.debug("BsqSwap Trade at PREPARATION: {}", swapTrade);
+        assertEquals(PREPARATION.name(), swapTrade.getState());
         genBtcBlocksThenWait(1, 3_000);
 
-        bsqSwapTradeInfo = getBsqSwapTrade(bsqSwapTradeInfo.getTradeId());
-        log.debug("Trade at t2: {}", bsqSwapTradeInfo);
-        assertEquals(COMPLETED.name(), bsqSwapTradeInfo.getState());
+        swapTrade = getBsqSwapTrade(swapTrade.getTradeId());
+        log.debug("BsqSwap Trade at COMPLETION: {}", swapTrade);
+        assertEquals(COMPLETED.name(), swapTrade.getState());
     }
 
     @Test
     @Order(4)
     public void testGetBalancesAfterTrade() {
-        sleep(2_500); // Give wallet time to finish processing TX.
+        genBtcBlocksThenWait(1, 5_000);
         var alicesBalances = aliceClient.getBalances();
         log.debug("Alice's After Trade Balance:\n{}", formatBalancesTbls(alicesBalances));
         var bobsBalances = bobClient.getBalances();
         log.debug("Bob's After Trade Balance:\n{}", formatBalancesTbls(bobsBalances));
     }
 
-    private BsqSwapOfferInfo getAvailableBsqSwapOffer() {
-        List<BsqSwapOfferInfo> bsqSwapOffers = new ArrayList<>();
+    private OfferInfo getAvailableBsqSwapOffer() {
+        List<OfferInfo> bsqSwapOffers = new ArrayList<>();
         int numFetchAttempts = 0;
         while (bsqSwapOffers.size() == 0) {
-            bsqSwapOffers.addAll(bobClient.getBsqSwapOffers(BUY.name(), BSQ));
+            bsqSwapOffers.addAll(bobClient.getBsqSwapOffers(BUY.name()));
             numFetchAttempts++;
             if (bsqSwapOffers.size() == 0) {
                 log.warn("No available bsq swap offers found after {} fetch attempts.", numFetchAttempts);
