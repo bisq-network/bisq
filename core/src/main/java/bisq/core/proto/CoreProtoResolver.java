@@ -67,7 +67,9 @@ import bisq.core.payment.payload.SpecificBanksAccountPayload;
 import bisq.core.payment.payload.StrikeAccountPayload;
 import bisq.core.payment.payload.SwiftAccountPayload;
 import bisq.core.payment.payload.SwishAccountPayload;
+import bisq.core.payment.payload.TikkieAccountPayload;
 import bisq.core.payment.payload.TransferwiseAccountPayload;
+import bisq.core.payment.payload.TransferwiseUsdAccountPayload;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.UpholdAccountPayload;
 import bisq.core.payment.payload.UpiAccountPayload;
@@ -144,8 +146,12 @@ public class CoreProtoResolver implements ProtoResolver {
                             return PixAccountPayload.fromProto(proto);
                         case SATISPAY_ACCOUNT_PAYLOAD:
                             return SatispayAccountPayload.fromProto(proto);
+                        case TIKKIE_ACCOUNT_PAYLOAD:
+                            return TikkieAccountPayload.fromProto(proto);
                         case STRIKE_ACCOUNT_PAYLOAD:
                             return StrikeAccountPayload.fromProto(proto);
+                        case TRANSFERWISE_USD_ACCOUNT_PAYLOAD:
+                            return TransferwiseUsdAccountPayload.fromProto(proto);
                         case IFSC_BASED_ACCOUNT_PAYLOAD:
                             final protobuf.IfscBasedAccountPayload.MessageCase messageCaseIfsc = proto.getCountryBasedPaymentAccountPayload().getIfscBasedAccountPayload().getMessageCase();
                             switch (messageCaseIfsc) {

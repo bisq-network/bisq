@@ -184,7 +184,9 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         MONESE,
         SATISPAY,
         VERSE,
-        STRIKE
+        STRIKE,
+        TIKKIE,
+        TRANSFERWISE_USD
     }
 
     @Getter

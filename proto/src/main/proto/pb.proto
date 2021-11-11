@@ -1133,6 +1133,8 @@ message CountryBasedPaymentAccountPayload {
         PixAccountPayload pix_account_payload = 14;
         SatispayAccountPayload satispay_account_payload = 15;
         StrikeAccountPayload strike_account_payload = 16;
+        TikkieAccountPayload tikkie_account_payload = 17;
+        TransferwiseUsdAccountPayload transferwise_usd_account_payload = 18;
     }
 }
 
@@ -1354,6 +1356,12 @@ message TransferwiseAccountPayload {
     string email = 1;
 }
 
+message TransferwiseUsdAccountPayload {
+    string email = 1;
+    string holder_name = 2;
+    string beneficiary_address = 3;
+}
+
 message PayseraAccountPayload {
     string email = 1;
 }
@@ -1394,6 +1402,10 @@ message SatispayAccountPayload {
 
 message StrikeAccountPayload {
     string holder_name = 1;
+}
+
+message TikkieAccountPayload {
+    string iban = 1;
 }
 
 message VerseAccountPayload {
