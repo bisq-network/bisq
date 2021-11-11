@@ -60,6 +60,9 @@ import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
 import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static bisq.core.offer.Offer.State;
 import static bisq.core.offer.OfferDirection.BUY;
+import static bisq.core.offer.OfferUtil.getRandomOfferId;
+import static bisq.core.offer.OfferUtil.isAltcoinOffer;
+import static bisq.core.offer.OfferUtil.isFiatOffer;
 import static bisq.core.offer.OpenOffer.State.AVAILABLE;
 import static bisq.core.offer.OpenOffer.State.DEACTIVATED;
 import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
@@ -118,6 +121,19 @@ class CoreOffersService {
         this.user = user;
     }
 
+    boolean isAvailableFiatOffer(String id) {
+        return isFiatOffer(getOffer(id));
+    }
+
+    boolean isAvailableAltcoinOffer(String id) {
+        return isAltcoinOffer(getOffer(id));
+    }
+
+    boolean isAvailableBsqSwapOffer(String id) {
+        var offer = getOffer(id);
+        return offer.isBsqSwapOffer();
+    }
+
     Offer getBsqSwapOffer(String id) {
         return offerBookService.getOffers().stream()
                 .filter(o -> o.getId().equals(id))
@@ -153,7 +169,6 @@ class CoreOffersService {
                 .findAny().orElseThrow(() ->
                         new IllegalStateException(format("offer with id '%s' not found", id)));
     }
-
 
     List<Offer> getBsqSwapOffers(String direction) {
         var offers = offerBookService.getOffers().stream()
@@ -208,9 +223,12 @@ class CoreOffersService {
     }
 
     boolean isMyOffer(String id) {
-        return openOfferManager.getOpenOfferById(id)
+        boolean isMyOpenOffer = openOfferManager.getOpenOfferById(id)
                 .filter(open -> open.getOffer().isMyOffer(keyRing))
                 .isPresent();
+        boolean wasMyOffer = offerBookService.getOffers().stream()
+                .anyMatch(o -> o.getId().equals(id) && o.isMyOffer(keyRing));
+        return isMyOpenOffer || wasMyOffer;
     }
 
     void createAndPlaceBsqSwapOffer(String directionAsString,
@@ -222,7 +240,7 @@ class CoreOffersService {
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
 
         String currencyCode = "BSQ";
-        String offerId = OfferUtil.getRandomOfferId();
+        String offerId = getRandomOfferId();
         OfferDirection direction = OfferDirection.valueOf(directionAsString.toUpperCase());
         Coin amount = Coin.valueOf(amountAsLong);
         Coin minAmount = Coin.valueOf(minAmountAsLong);
@@ -256,7 +274,7 @@ class CoreOffersService {
             throw new IllegalArgumentException(format("payment account with id %s not found", paymentAccountId));
 
         String upperCaseCurrencyCode = currencyCode.toUpperCase();
-        String offerId = OfferUtil.getRandomOfferId();
+        String offerId = getRandomOfferId();
         OfferDirection direction = OfferDirection.valueOf(directionAsString.toUpperCase());
         Price price = Price.valueOf(upperCaseCurrencyCode, priceStringToLong(priceAsString, upperCaseCurrencyCode));
         Coin amount = Coin.valueOf(amountAsLong);
@@ -427,10 +445,9 @@ class CoreOffersService {
     private boolean offerMatchesDirectionAndCurrency(Offer offer,
                                                      String direction,
                                                      String currencyCode) {
-        var offerOfWantedDirection = offer.getDirection().name().equalsIgnoreCase(direction);
-        var offerInWantedCurrency = offer.getCounterCurrencyCode()
-                .equalsIgnoreCase(currencyCode);
-        return offerOfWantedDirection && offerInWantedCurrency;
+        var isDirectionMatch = offer.getDirection().name().equalsIgnoreCase(direction);
+        var isCurrencyMatch = offer.getCounterCurrencyCode().equalsIgnoreCase(currencyCode);
+        return isDirectionMatch && isCurrencyMatch;
     }
 
     private Comparator<OpenOffer> openOfferPriceComparator(String direction) {

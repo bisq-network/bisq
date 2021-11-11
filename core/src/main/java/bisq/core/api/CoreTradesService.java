@@ -108,8 +108,10 @@ class CoreTradesService {
         log.info("Initiating take {} offer, {}",
                 offer.isBuyOffer() ? "buy" : "sell",
                 bsqSwapTakeOfferModel);
-
-        bsqSwapTakeOfferModel.onTakeOffer(tradeResultHandler, log::warn, errorMessageHandler, coreContext.isApiUser());
+        bsqSwapTakeOfferModel.onTakeOffer(tradeResultHandler,
+                log::warn,
+                errorMessageHandler,
+                coreContext.isApiUser());
     }
 
     void takeOffer(Offer offer,
@@ -237,6 +239,16 @@ class CoreTradesService {
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
         return tradeManager.findBsqSwapTradeById(tradeId).orElseThrow(() ->
                 new IllegalArgumentException(format("trade with id '%s' not found", tradeId)));
+    }
+
+    String getBsqSwapTradeRole(String tradeId) {
+        return getBsqSwapTradeRole(getBsqSwapTrade(tradeId));
+    }
+
+    String getBsqSwapTradeRole(BsqSwapTrade bsqSwapTrade) {
+        coreWalletsService.verifyWalletsAreAvailable();
+        coreWalletsService.verifyEncryptedWalletIsUnlocked();
+        return tradeUtil.getRole(bsqSwapTrade);
     }
 
     String getTradeRole(String tradeId) {

@@ -119,6 +119,18 @@ public class CoreApi {
     // Offers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public boolean isAvailableFiatOffer(String id) {
+        return coreOffersService.isAvailableFiatOffer(id);
+    }
+
+    public boolean isAvailableAltcoinOffer(String id) {
+        return coreOffersService.isAvailableAltcoinOffer(id);
+    }
+
+    public boolean isAvailableBsqSwapOffer(String id) {
+        return coreOffersService.isAvailableBsqSwapOffer(id);
+    }
+
     public Offer getBsqSwapOffer(String id) {
         return coreOffersService.getBsqSwapOffer(id);
     }
@@ -315,6 +327,14 @@ public class CoreApi {
 
     public String getTradeRole(String tradeId) {
         return coreTradesService.getTradeRole(tradeId);
+    }
+
+    public String getBsqSwapTradeRole(String tradeId) {
+        return coreTradesService.getBsqSwapTradeRole(tradeId);
+    }
+
+    public String getBsqSwapTradeRole(BsqSwapTrade bsqSwapTrade) {
+        return coreTradesService.getBsqSwapTradeRole(bsqSwapTrade);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
