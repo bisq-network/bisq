@@ -22,6 +22,8 @@ import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
 import bisq.proto.grpc.ConfirmPaymentStartedRequest;
 import bisq.proto.grpc.GetTradeRequest;
 import bisq.proto.grpc.KeepFundsRequest;
+import bisq.proto.grpc.TakeBsqSwapOfferReply;
+import bisq.proto.grpc.TakeBsqSwapOfferRequest;
 import bisq.proto.grpc.TakeOfferReply;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.TradeInfo;
@@ -37,6 +39,17 @@ public class TradesServiceRequest {
 
     public TradesServiceRequest(GrpcStubs grpcStubs) {
         this.grpcStubs = grpcStubs;
+    }
+
+    public TakeBsqSwapOfferReply getTakeBsqSwapOfferReply(String offerId,
+                                                          String paymentAccountId,
+                                                          String takerFeeCurrencyCode) {
+        var request = TakeBsqSwapOfferRequest.newBuilder()
+                .setOfferId(offerId)
+                .setPaymentAccountId(paymentAccountId)
+                .setTakerFeeCurrencyCode(takerFeeCurrencyCode)
+                .build();
+        return grpcStubs.tradesService.takeBsqSwapOffer(request);
     }
 
     public TakeOfferReply getTakeOfferReply(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
