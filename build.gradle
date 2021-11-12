@@ -5,12 +5,12 @@ buildscript {
         maven { url "https://plugins.gradle.org/m2/" }
     }
     dependencies {
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.10'
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.17'
         classpath 'com.google.gradle:osdetector-gradle-plugin:1.6.0'
         classpath 'com.github.jengelman.gradle.plugins:shadow:5.2.0'
         classpath 'org.openjfx:javafx-plugin:0.0.10'
         classpath files('gradle/witness/gradle-witness.jar')
-        classpath 'org.springframework.boot:spring-boot-gradle-plugin:1.5.10.RELEASE'
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.5.6'
     }
 }
 
@@ -42,7 +42,7 @@ configure(subprojects) {
         fontawesomefxVersion = '8.0.0'
         fontawesomefxCommonsVersion = '9.1.2'
         fontawesomefxMaterialdesignfontVersion = '2.0.26-9.1.2'
-        grpcVersion = '1.25.0'
+        grpcVersion = '1.42.1'
         gsonVersion = '2.8.5'
         guavaVersion = '28.2-jre'
         guiceVersion = '5.0.1'
@@ -69,13 +69,13 @@ configure(subprojects) {
         lombokVersion = '1.18.12'
         mockitoVersion = '3.5.15'
         netlayerVersion = '0.7.2' // Tag from https://github.com/bisq-network/netlayer/tags based on externaltor branch
-        protobufVersion = '3.10.0'
+        protobufVersion = '3.19.1'
         protocVersion = protobufVersion
         pushyVersion = '0.13.2'
         qrgenVersion = '1.3'
         slf4jVersion = '1.7.30'
         sparkVersion = '2.5.2'
-        springBootVersion = '1.5.10.RELEASE'
+        springBootVersion = '2.5.6'
 
         os = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
     }
@@ -86,7 +86,7 @@ configure(subprojects) {
     }
 
     dependencies {
-        testCompile "junit:junit:$junitVersion"
+        testImplementation "junit:junit:$junitVersion"
     }
 
     tasks.withType(JavaCompile) {
@@ -218,7 +218,7 @@ configure(project(':proto')) {
 
 configure(project(':assets')) {
     dependencies {
-        compile("com.github.bisq-network:bitcoinj:$bitcoinjVersion") {
+        implementation("com.github.bisq-network:bitcoinj:$bitcoinjVersion") {
             exclude(module: 'jsr305')
             exclude(module: 'slf4j-api')
             exclude(module: 'guava')
@@ -227,9 +227,9 @@ configure(project(':assets')) {
             exclude(module: 'okhttp')
             exclude(module: 'okio')
         }
-        compile "com.google.guava:guava:$guavaVersion"
-        compile "org.slf4j:slf4j-api:$slf4jVersion"
-        compile "org.apache.commons:commons-lang3:$langVersion"
+        implementation "com.google.guava:guava:$guavaVersion"
+        implementation "org.slf4j:slf4j-api:$slf4jVersion"
+        implementation "org.apache.commons:commons-lang3:$langVersion"
     }
 }
 
@@ -243,20 +243,21 @@ configure(project(':common')) {
     }
 
     dependencies {
-        compile project(':proto')
+        implementation project(':proto')
+        compileOnly "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
         implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
-        compile "com.google.protobuf:protobuf-java:$protobufVersion"
-        compile "com.google.code.gson:gson:$gsonVersion"
-        compile "net.sf.jopt-simple:jopt-simple:$joptVersion"
-        compile "org.slf4j:slf4j-api:$slf4jVersion"
-        compile "ch.qos.logback:logback-core:$logbackVersion"
-        compile "ch.qos.logback:logback-classic:$logbackVersion"
-        compile "com.google.code.findbugs:jsr305:$findbugsVersion"
-        compile "com.google.guava:guava:$guavaVersion"
-        compile("com.google.inject:guice:$guiceVersion") {
+        implementation "com.google.protobuf:protobuf-java:$protobufVersion"
+        implementation "com.google.code.gson:gson:$gsonVersion"
+        implementation "net.sf.jopt-simple:jopt-simple:$joptVersion"
+        implementation "org.slf4j:slf4j-api:$slf4jVersion"
+        implementation "ch.qos.logback:logback-core:$logbackVersion"
+        implementation "ch.qos.logback:logback-classic:$logbackVersion"
+        implementation "com.google.code.findbugs:jsr305:$findbugsVersion"
+        implementation "com.google.guava:guava:$guavaVersion"
+        implementation("com.google.inject:guice:$guiceVersion") {
             exclude(module: 'guava')
         }
-        compile("com.github.bisq-network:bitcoinj:$bitcoinjVersion") {
+        implementation("com.github.bisq-network:bitcoinj:$bitcoinjVersion") {
             exclude(module: 'jsr305')
             exclude(module: 'slf4j-api')
             exclude(module: 'guava')
@@ -269,13 +270,13 @@ configure(project(':common')) {
             exclude(module: 'guava')
             exclude(module: 'animal-sniffer-annotations')
         }
-        compile "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
-        compile "org.bouncycastle:bcpg-jdk15on:$bcVersion"
-        compile "commons-io:commons-io:$ioVersion"
-        compile "org.apache.commons:commons-lang3:$langVersion"
+        implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
+        implementation "org.bouncycastle:bcpg-jdk15on:$bcVersion"
+        implementation "commons-io:commons-io:$ioVersion"
+        implementation "org.apache.commons:commons-lang3:$langVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        testCompile "org.hamcrest:hamcrest-all:$hamcrestVersion"
+        testImplementation "org.hamcrest:hamcrest-all:$hamcrestVersion"
     }
 }
 
@@ -289,22 +290,41 @@ configure(project(':p2p')) {
     }
 
     dependencies {
-        compile project(':common')
-        compile("com.github.bisq-network.netlayer:tor.native:$netlayerVersion") {
+        implementation project(':proto')
+        implementation project(':common')
+        implementation("com.github.bisq-network:bitcoinj:$bitcoinjVersion") {
+            exclude(module: 'jsr305')
+            exclude(module: 'slf4j-api')
+            exclude(module: 'guava')
+            exclude(module: 'protobuf-java')
+            exclude(module: 'bcprov-jdk15on')
+            exclude(module: 'okhttp')
+            exclude(module: 'okio')
+        }
+        implementation "org.slf4j:slf4j-api:$slf4jVersion"
+        implementation("com.google.inject:guice:$guiceVersion") {
+            exclude(module: 'guava')
+        }
+        implementation "com.google.guava:guava:$guavaVersion"
+        implementation "com.google.protobuf:protobuf-java:$protobufVersion"
+        implementation("com.github.bisq-network.netlayer:tor.native:$netlayerVersion") {
             exclude(module: 'slf4j-api')
         }
-        compile("com.github.bisq-network.netlayer:tor.external:$netlayerVersion") {
+        implementation("com.github.bisq-network.netlayer:tor.external:$netlayerVersion") {
             exclude(module: 'slf4j-api')
         }
         implementation("org.apache.httpcomponents:httpclient:$httpclientVersion") {
             exclude(module: 'commons-codec')
         }
-        compile "org.fxmisc.easybind:easybind:$easybindVersion"
+        implementation "org.fxmisc.easybind:easybind:$easybindVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        testImplementation "ch.qos.logback:logback-core:$logbackVersion"
+        testImplementation "ch.qos.logback:logback-classic:$logbackVersion"
+        testImplementation "org.apache.commons:commons-lang3:$langVersion"
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        testCompile("org.mockito:mockito-core:$mockitoVersion")
+        testImplementation("org.mockito:mockito-core:$mockitoVersion")
     }
 
     processResources.doFirst {
@@ -329,32 +349,61 @@ configure(project(':core')) {
     }
 
     dependencies {
-        compile project(':proto')
-        compile project(':assets')
-        compile project(':p2p')
+        implementation project(':proto')
+        implementation project(':assets')
+        implementation project(':common')
+        implementation project(':p2p')
+        compileOnly "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
+        implementation "net.sf.jopt-simple:jopt-simple:$joptVersion"
+        implementation "ch.qos.logback:logback-core:$logbackVersion"
+        implementation "ch.qos.logback:logback-classic:$logbackVersion"
+        implementation "org.slf4j:slf4j-api:$slf4jVersion"
+        implementation "org.fxmisc.easybind:easybind:$easybindVersion"
+        implementation "commons-io:commons-io:$ioVersion"
+        implementation("com.github.bisq-network.netlayer:tor.native:$netlayerVersion") {
+            exclude(module: 'slf4j-api')
+        }
+        implementation("com.github.bisq-network.netlayer:tor.external:$netlayerVersion") {
+            exclude(module: 'slf4j-api')
+        }
+        implementation("com.github.bisq-network:bitcoinj:$bitcoinjVersion") {
+            exclude(module: 'jsr305')
+            exclude(module: 'slf4j-api')
+            exclude(module: 'guava')
+            exclude(module: 'protobuf-java')
+            exclude(module: 'bcprov-jdk15on')
+            exclude(module: 'okhttp')
+            exclude(module: 'okio')
+        }
+        implementation "org.apache.commons:commons-lang3:$langVersion"
+        implementation "com.google.code.findbugs:jsr305:$findbugsVersion"
+        implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
         implementation "commons-codec:commons-codec:$codecVersion"
         implementation "com.google.code.gson:gson:$gsonVersion"
         implementation "org.apache.httpcomponents:httpcore:$httpcoreVersion"
         implementation("org.apache.httpcomponents:httpclient:$httpclientVersion") {
             exclude(module: 'commons-codec')
         }
-        compile "com.google.guava:guava:$guavaVersion"
-        compile("com.github.bisq-network:jsonrpc4j:$jsonrpc4jVersion") {
+        implementation("com.google.inject:guice:$guiceVersion") {
+            exclude(module: 'guava')
+        }
+        implementation "com.google.guava:guava:$guavaVersion"
+        implementation("com.github.bisq-network:jsonrpc4j:$jsonrpc4jVersion") {
             exclude(module: 'base64')
             exclude(module: 'httpcore-nio')
         }
-        compile "com.fasterxml.jackson.core:jackson-core:$jacksonVersion"
-        compile "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
-        compile("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion") {
+        implementation "com.fasterxml.jackson.core:jackson-core:$jacksonVersion"
+        implementation "com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion"
+        implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion") {
             exclude(module: 'jackson-annotations')
         }
         implementation "com.google.protobuf:protobuf-java:$protobufVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-        testCompile "org.hamcrest:hamcrest-all:$hamcrestVersion"
-        testCompile "org.mockito:mockito-core:$mockitoVersion"
-        testCompile "com.natpryce:make-it-easy:$easyVersion"
+        testImplementation "org.hamcrest:hamcrest-all:$hamcrestVersion"
+        testImplementation "org.mockito:mockito-core:$mockitoVersion"
+        testImplementation "com.natpryce:make-it-easy:$easyVersion"
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
@@ -368,7 +417,7 @@ configure(project(':cli')) {
     mainClassName = 'bisq.cli.CliMain'
 
     dependencies {
-        compile project(':proto')
+        implementation project(':proto')
         implementation "net.sf.jopt-simple:jopt-simple:$joptVersion"
         implementation "com.google.guava:guava:$guavaVersion"
         implementation "com.google.protobuf:protobuf-java:$protobufVersion"
@@ -395,7 +444,7 @@ configure(project(':cli')) {
         testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
-        testRuntime "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
+        testRuntimeOnly "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
         testImplementation "org.bitbucket.cowwoc:diff-match-patch:$cowwocVersion"
     }
 
@@ -407,8 +456,8 @@ configure(project(':cli')) {
 configure(project(':desktop')) {
     apply plugin: 'com.github.johnrengelman.shadow'
     apply plugin: 'org.openjfx.javafxplugin'
-    apply plugin: 'witness'
-    apply from: '../gradle/witness/gradle-witness.gradle'
+    //apply plugin: 'witness'
+    //apply from: '../gradle/witness/gradle-witness.gradle'
     apply from: 'package/package.gradle'
 
     javafx {
@@ -424,7 +473,7 @@ configure(project(':desktop')) {
 
     mainClassName = 'bisq.desktop.app.BisqAppMain'
 
-    tasks.withType(AbstractArchiveTask) {
+    jar {
         preserveFileTimestamps = false
         reproducibleFileOrder = true
     }
@@ -432,20 +481,46 @@ configure(project(':desktop')) {
     sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy fxml and css files
 
     dependencies {
-        compile project(':core')
-        compile "net.glxn:qrgen:$qrgenVersion"
-        compile "de.jensd:fontawesomefx:$fontawesomefxVersion"
-        compile "de.jensd:fontawesomefx-commons:$fontawesomefxCommonsVersion"
-        compile "de.jensd:fontawesomefx-materialdesignfont:$fontawesomefxMaterialdesignfontVersion"
-        compile "com.google.guava:guava:$guavaVersion"
-        compile "com.googlecode.jcsv:jcsv:$jcsvVersion"
-        compile "com.jfoenix:jfoenix:$jfoenixVersion"
+        implementation project(':assets')
+        implementation project(':common')
+        implementation project(':proto')
+        implementation project(':p2p')
+        implementation project(':core')
+        implementation "ch.qos.logback:logback-core:$logbackVersion"
+        implementation "ch.qos.logback:logback-classic:$logbackVersion"
+        implementation "com.google.protobuf:protobuf-java:$protobufVersion"
+        implementation "commons-io:commons-io:$ioVersion"
+        implementation "org.bouncycastle:bcpg-jdk15on:$bcVersion"
+        implementation "org.fxmisc.easybind:easybind:$easybindVersion"
+        implementation "org.slf4j:slf4j-api:$slf4jVersion"
+        implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
+        implementation "com.google.code.gson:gson:$gsonVersion"
+        implementation "org.apache.commons:commons-lang3:$langVersion"
+        implementation "net.glxn:qrgen:$qrgenVersion"
+        implementation("com.google.inject:guice:$guiceVersion") {
+            exclude(module: 'guava')
+        }
+        implementation "de.jensd:fontawesomefx:$fontawesomefxVersion"
+        implementation "de.jensd:fontawesomefx-commons:$fontawesomefxCommonsVersion"
+        implementation "de.jensd:fontawesomefx-materialdesignfont:$fontawesomefxMaterialdesignfontVersion"
+        implementation "com.google.guava:guava:$guavaVersion"
+        implementation "com.googlecode.jcsv:jcsv:$jcsvVersion"
+        implementation "com.jfoenix:jfoenix:$jfoenixVersion"
+        implementation("com.github.bisq-network:bitcoinj:$bitcoinjVersion") {
+            exclude(module: 'jsr305')
+            exclude(module: 'slf4j-api')
+            exclude(module: 'guava')
+            exclude(module: 'protobuf-java')
+            exclude(module: 'bcprov-jdk15on')
+            exclude(module: 'okhttp')
+            exclude(module: 'okio')
+        }
 
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-        testCompile "org.mockito:mockito-core:$mockitoVersion"
-        testCompile "com.natpryce:make-it-easy:$easyVersion"
+        testImplementation "org.mockito:mockito-core:$mockitoVersion"
+        testImplementation "com.natpryce:make-it-easy:$easyVersion"
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
@@ -474,20 +549,32 @@ configure(project(':monitor')) {
     }
 
     dependencies {
-        compile project(':core')
-        compile "org.slf4j:slf4j-api:$slf4jVersion"
-        compile "ch.qos.logback:logback-core:$logbackVersion"
-        compile "ch.qos.logback:logback-classic:$logbackVersion"
-        compile "com.google.guava:guava:$guavaVersion"
+        implementation project(':assets')
+        implementation project(':common')
+        implementation project(':core')
+        implementation project(':p2p')
+        implementation("com.google.inject:guice:$guiceVersion") {
+            exclude(module: 'guava')
+        }
+        implementation("com.github.bisq-network.netlayer:tor.native:$netlayerVersion") {
+            exclude(module: 'slf4j-api')
+        }
+        implementation("com.github.bisq-network.netlayer:tor.external:$netlayerVersion") {
+            exclude(module: 'slf4j-api')
+        }
+        implementation "org.slf4j:slf4j-api:$slf4jVersion"
+        implementation "ch.qos.logback:logback-core:$logbackVersion"
+        implementation "ch.qos.logback:logback-classic:$logbackVersion"
+        implementation "com.google.guava:guava:$guavaVersion"
 
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-        testCompile "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"
-        testCompile "org.junit.jupiter:junit-jupiter-params:$jupiterVersion"
+        testImplementation "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"
+        testImplementation "org.junit.jupiter:junit-jupiter-params:$jupiterVersion"
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        testRuntime("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
+        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
     }
 }
 
@@ -502,45 +589,46 @@ configure(project(':pricenode')) {
         "Implementation-Version": version)
 
     dependencies {
-        compile project(":core")
+        implementation project(":common")
+        implementation project(":core")
 
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
+        implementation "com.google.guava:guava:$guavaVersion"
         implementation "com.google.code.gson:gson:$gsonVersion"
         implementation "commons-codec:commons-codec:$codecVersion"
         implementation "org.apache.httpcomponents:httpcore:$httpcoreVersion"
         implementation("org.apache.httpcomponents:httpclient:$httpclientVersion") {
             exclude(module: 'commons-codec')
         }
-        compile("org.knowm.xchange:xchange-bitbay:$knowmXchangeVersion")
-        compile("org.knowm.xchange:xchange-btcmarkets:$knowmXchangeVersion")
-        compile("org.knowm.xchange:xchange-binance:$knowmXchangeVersion")
-        compile("org.knowm.xchange:xchange-bitfinex:$knowmXchangeVersion")
-        compile("org.knowm.xchange:xchange-bitflyer:$knowmXchangeVersion")
-        compile("org.knowm.xchange:xchange-bitstamp:$knowmXchangeVersion")
-        compile("org.knowm.xchange:xchange-cexio:$knowmXchangeVersion")
-        compile("org.knowm.xchange:xchange-coinmate:$knowmXchangeVersion")
-        compile("org.knowm.xchange:xchange-coinmarketcap:$knowmXchangeVersion")
-        compile("org.knowm.xchange:xchange-coinone:$knowmXchangeVersion")
-        compile("org.knowm.xchange:xchange-exmo:$knowmXchangeVersion")
-        compile("org.knowm.xchange:xchange-hitbtc:$knowmXchangeVersion")
-        compile("org.knowm.xchange:xchange-huobi:$knowmXchangeVersion")
-        compile("org.knowm.xchange:xchange-independentreserve:$knowmXchangeVersion")
-        compile("org.knowm.xchange:xchange-kraken:$knowmXchangeVersion")
-        compile("org.knowm.xchange:xchange-luno:$knowmXchangeVersion")
-        compile("org.knowm.xchange:xchange-mercadobitcoin:$knowmXchangeVersion")
-        compile("org.knowm.xchange:xchange-paribu:$knowmXchangeVersion")
-        compile("org.knowm.xchange:xchange-poloniex:$knowmXchangeVersion")
-        compile("org.knowm.xchange:xchange-quoine:$knowmXchangeVersion")
-        compile("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
-        compile("org.springframework.boot:spring-boot-starter-actuator")
-        testCompile "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"
-        testCompile "org.junit.jupiter:junit-jupiter-params:$jupiterVersion"
-        testRuntime("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
+        implementation("org.knowm.xchange:xchange-bitbay:$knowmXchangeVersion")
+        implementation("org.knowm.xchange:xchange-btcmarkets:$knowmXchangeVersion")
+        implementation("org.knowm.xchange:xchange-binance:$knowmXchangeVersion")
+        implementation("org.knowm.xchange:xchange-bitfinex:$knowmXchangeVersion")
+        implementation("org.knowm.xchange:xchange-bitflyer:$knowmXchangeVersion")
+        implementation("org.knowm.xchange:xchange-bitstamp:$knowmXchangeVersion")
+        implementation("org.knowm.xchange:xchange-cexio:$knowmXchangeVersion")
+        implementation("org.knowm.xchange:xchange-coinmate:$knowmXchangeVersion")
+        implementation("org.knowm.xchange:xchange-coinmarketcap:$knowmXchangeVersion")
+        implementation("org.knowm.xchange:xchange-coinone:$knowmXchangeVersion")
+        implementation("org.knowm.xchange:xchange-exmo:$knowmXchangeVersion")
+        implementation("org.knowm.xchange:xchange-hitbtc:$knowmXchangeVersion")
+        implementation("org.knowm.xchange:xchange-huobi:$knowmXchangeVersion")
+        implementation("org.knowm.xchange:xchange-independentreserve:$knowmXchangeVersion")
+        implementation("org.knowm.xchange:xchange-kraken:$knowmXchangeVersion")
+        implementation("org.knowm.xchange:xchange-luno:$knowmXchangeVersion")
+        implementation("org.knowm.xchange:xchange-mercadobitcoin:$knowmXchangeVersion")
+        implementation("org.knowm.xchange:xchange-paribu:$knowmXchangeVersion")
+        implementation("org.knowm.xchange:xchange-poloniex:$knowmXchangeVersion")
+        implementation("org.knowm.xchange:xchange-quoine:$knowmXchangeVersion")
+        implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
+        testImplementation "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"
+        testImplementation "org.junit.jupiter:junit-jupiter-params:$jupiterVersion"
+        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        testCompile "org.mockito:mockito-core:$mockitoVersion"
+        testImplementation "org.mockito:mockito-core:$mockitoVersion"
     }
 
     test {
@@ -565,17 +653,19 @@ configure(project(':relay')) {
     mainClassName = 'bisq.relay.RelayMain'
 
     dependencies {
-        compile project(':common')
+        implementation project(':common')
+        implementation "ch.qos.logback:logback-core:$logbackVersion"
+        implementation "ch.qos.logback:logback-classic:$logbackVersion"
         implementation "io.grpc:grpc-auth:$grpcVersion"
-        compile "com.sparkjava:spark-core:$sparkVersion"
-        compile "com.turo:pushy:$pushyVersion"
+        implementation "com.sparkjava:spark-core:$sparkVersion"
+        implementation "com.turo:pushy:$pushyVersion"
         implementation("com.google.firebase:firebase-admin:$firebaseVersion") {
             exclude(module: 'commons-logging')
             exclude(module: 'httpclient')
             exclude(module: 'httpcore')
             exclude(module: 'grpc-auth')
         }
-        compile "commons-codec:commons-codec:$codecVersion"
+        implementation "commons-codec:commons-codec:$codecVersion"
     }
 }
 
@@ -586,11 +676,17 @@ configure(project(':seednode')) {
     mainClassName = 'bisq.seednode.SeedNodeMain'
 
     dependencies {
-        compile project(':core')
+        implementation project(':common')
+        implementation project(':p2p')
+        implementation project(':core')
+        implementation "org.slf4j:slf4j-api:$slf4jVersion"
+        implementation("com.google.inject:guice:$guiceVersion") {
+            exclude(module: 'guava')
+        }
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         implementation "com.google.guava:guava:$guavaVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        testCompile "org.mockito:mockito-core:$mockitoVersion"
+        testImplementation "org.mockito:mockito-core:$mockitoVersion"
     }
 }
 
@@ -599,8 +695,14 @@ configure(project(':statsnode')) {
     mainClassName = 'bisq.statistics.StatisticsMain'
 
     dependencies {
-        compile project(':core')
+        implementation project(':common')
+        implementation project(':p2p')
+        implementation project(':core')
+        implementation "org.slf4j:slf4j-api:$slf4jVersion"
         compileOnly "org.projectlombok:lombok:$lombokVersion"
+        implementation("com.google.inject:guice:$guiceVersion") {
+            exclude(module: 'guava')
+        }
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
     }
 }
@@ -609,9 +711,18 @@ configure(project(':daemon')) {
     mainClassName = 'bisq.daemon.app.BisqDaemonMain'
 
     dependencies {
-        compile project(':core')
+        implementation project(':proto')
+        implementation project(':common')
+        implementation project(':p2p')
+        implementation project(':core')
+        implementation "com.google.code.gson:gson:$gsonVersion"
+        implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
+        implementation "org.apache.commons:commons-lang3:$langVersion"
         implementation "com.google.guava:guava:$guavaVersion"
         implementation "com.google.protobuf:protobuf-java:$protobufVersion"
+        implementation("com.google.inject:guice:$guiceVersion") {
+            exclude(module: 'guava')
+        }
         implementation("io.grpc:grpc-protobuf:$grpcVersion") {
             exclude(module: 'guava')
             exclude(module: 'animal-sniffer-annotations')
@@ -624,6 +735,15 @@ configure(project(':daemon')) {
             exclude(module: 'guava')
             exclude(module: 'animal-sniffer-annotations')
         }
+        implementation("com.github.bisq-network:bitcoinj:$bitcoinjVersion") {
+            exclude(module: 'jsr305')
+            exclude(module: 'slf4j-api')
+            exclude(module: 'guava')
+            exclude(module: 'protobuf-java')
+            exclude(module: 'bcprov-jdk15on')
+            exclude(module: 'okhttp')
+            exclude(module: 'okio')
+        }
         implementation "org.slf4j:slf4j-api:$slf4jVersion"
         implementation "ch.qos.logback:logback-core:$logbackVersion"
         implementation "ch.qos.logback:logback-classic:$logbackVersion"
@@ -631,11 +751,11 @@ configure(project(':daemon')) {
         compileOnly "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-        testCompile "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"
-        testCompile "org.junit.jupiter:junit-jupiter-params:$jupiterVersion"
+        testImplementation "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"
+        testImplementation "org.junit.jupiter:junit-jupiter-params:$jupiterVersion"
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        testRuntime("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
+        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
     }
 }
 
@@ -645,9 +765,17 @@ configure(project(':inventory')) {
     mainClassName = 'bisq.inventory.InventoryMonitorMain'
 
     dependencies {
-        compile project(':core')
-        compile "com.google.guava:guava:$guavaVersion"
-        compile "com.sparkjava:spark-core:$sparkVersion"
+        implementation project(':common')
+        implementation project(':p2p')
+        implementation project(':core')
+        implementation("com.google.inject:guice:$guiceVersion") {
+            exclude(module: 'guava')
+        }
+        implementation "ch.qos.logback:logback-core:$logbackVersion"
+        implementation "ch.qos.logback:logback-classic:$logbackVersion"
+        implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
+        implementation "com.google.guava:guava:$guavaVersion"
+        implementation "com.sparkjava:spark-core:$sparkVersion"
 
         compileOnly "org.projectlombok:lombok:$lombokVersion"
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
@@ -716,12 +844,24 @@ configure(project(':apitest')) {
     }
 
     dependencies {
-        compile project(':proto')
-        compile project(':common')
-        compile project(':seednode')
-        compile project(':desktop')
-        compile project(':daemon')
-        compile project(':cli')
+        implementation project(':proto')
+        implementation project(':common')
+        implementation project(':core')
+        implementation project(':seednode')
+        implementation project(':desktop')
+        implementation project(':daemon')
+        implementation project(':cli')
+        implementation "org.apache.commons:commons-lang3:$langVersion"
+        implementation "com.google.code.gson:gson:$gsonVersion"
+        implementation("com.github.bisq-network:bitcoinj:$bitcoinjVersion") {
+            exclude(module: 'jsr305')
+            exclude(module: 'slf4j-api')
+            exclude(module: 'guava')
+            exclude(module: 'protobuf-java')
+            exclude(module: 'bcprov-jdk15on')
+            exclude(module: 'okhttp')
+            exclude(module: 'okio')
+        }
         implementation "net.sf.jopt-simple:jopt-simple:$joptVersion"
         implementation "com.google.guava:guava:$guavaVersion"
         implementation "com.google.protobuf:protobuf-java:$protobufVersion"
@@ -746,7 +886,7 @@ configure(project(':apitest')) {
         testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
         testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
         testCompileOnly "org.projectlombok:lombok:$lombokVersion"
-        testRuntime "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
+        testRuntimeOnly "javax.annotation:javax.annotation-api:$javaxAnnotationVersion"
     }
 }
 
