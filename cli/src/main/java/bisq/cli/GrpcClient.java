@@ -20,7 +20,6 @@ package bisq.cli;
 import bisq.proto.grpc.AddressBalanceInfo;
 import bisq.proto.grpc.BalancesInfo;
 import bisq.proto.grpc.BsqBalanceInfo;
-import bisq.proto.grpc.BsqSwapTradeInfo;
 import bisq.proto.grpc.BtcBalanceInfo;
 import bisq.proto.grpc.GetMethodHelpRequest;
 import bisq.proto.grpc.GetOfferCategoryReply;
@@ -362,7 +361,7 @@ public final class GrpcClient {
         return tradesServiceRequest.getTakeOfferReply(offerId, paymentAccountId, takerFeeCurrencyCode);
     }
 
-    public BsqSwapTradeInfo takeBsqSwapOffer(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
+    public TradeInfo takeBsqSwapOffer(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
         var reply = getTakeBsqSwapOfferReply(offerId, paymentAccountId, takerFeeCurrencyCode);
         if (reply.hasBsqSwapTrade())
             return reply.getBsqSwapTrade();
@@ -374,7 +373,7 @@ public final class GrpcClient {
         return tradesServiceRequest.takeOffer(offerId, paymentAccountId, takerFeeCurrencyCode);
     }
 
-    public BsqSwapTradeInfo getBsqSwapTrade(String tradeId) {
+    public TradeInfo getBsqSwapTrade(String tradeId) {
         return tradesServiceRequest.getBsqSwapTrade(tradeId);
     }
 

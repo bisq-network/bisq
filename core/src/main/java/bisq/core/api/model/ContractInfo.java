@@ -73,6 +73,7 @@ public class ContractInfo implements Payload {
 
 
     // For transmitting TradeInfo messages when no contract is available.
+    // TODO Is this necessary as protobuf will send a DEFAULT_INSTANCE.
     public static Supplier<ContractInfo> emptyContract = () ->
             new ContractInfo("",
                     "",

@@ -408,7 +408,7 @@ message TakeBsqSwapOfferRequest {
 }
 
 message TakeBsqSwapOfferReply {
-    BsqSwapTradeInfo bsqSwapTrade = 1;
+    TradeInfo bsqSwapTrade = 1;
     AvailabilityResultWithDescription failureReason = 2;
 }
 
@@ -438,7 +438,7 @@ message ConfirmPaymentReceivedReply {
 }
 
 message GetBsqSwapTradeReply {
-    BsqSwapTradeInfo bsqSwapTrade = 1;
+    TradeInfo bsqSwapTrade = 1;
 }
 
 message GetTradeRequest {
@@ -465,34 +465,8 @@ message WithdrawFundsRequest {
 message WithdrawFundsReply {
 }
 
-message BsqSwapTradeInfo {
-    OfferInfo offer = 1;
-    string tradeId = 2;
-    string tempTradingPeerNodeAddress = 3;
-    string peerNodeAddress = 4;
-    string txId = 5;
-    uint64 bsqTradeAmount = 6;
-    uint64 btcTradeAmount = 7;
-    uint64 tradePrice = 8;
-    bool isCurrencyForMakerFeeBtc = 9;
-    bool isCurrencyForTakerFeeBtc = 10;
-    uint64 bsqMakerTradeFee = 11;
-    uint64 btcMakerTradeFee = 12;
-    uint64 bsqTakerTradeFee = 13;
-    uint64 btcTakerTradeFee = 14;
-    uint64 txFeePerVbyte = 15;
-    uint64 txFee = 16;
-    string makerBsqAddress = 17;
-    string makerBtcAddress = 18;
-    string takerBsqAddress = 19;
-    string takerBtcAddress = 20;
-    uint64 takeOfferDate = 21;
-    string role = 22;
-    string state = 23;
-    string errorMessage = 24;
-}
-
 message TradeInfo {
+    // Bisq v1 trade protocol fields.
     OfferInfo offer = 1;
     string tradeId = 2;
     string shortId = 3;
@@ -519,8 +493,8 @@ message TradeInfo {
     string contractAsJson = 24;
     ContractInfo contract = 25;
     uint64 tradeVolume = 26;
-    // TODO See if a sub-message BsqSwapTradeInfo field could be added here.
-    //  Use the existing BsqSwapTradeInfo message, without the redundant fields.
+    // Optional Bisq v2+ trade protocol fields.
+    BsqSwapTradeInfo bsqSwapTradeInfo = 28;
 }
 
 message ContractInfo {
@@ -536,6 +510,21 @@ message ContractInfo {
     string makerPayoutAddressString = 10;
     string takerPayoutAddressString = 11;
     uint64 lockTime = 12;
+}
+
+message BsqSwapTradeInfo {
+    // BSQ Swap protocol specific fields not common to Bisq v1 trade protocol fields.
+    string txId = 1;
+    uint64 bsqTradeAmount = 2;
+    uint64 btcTradeAmount = 3;
+    uint64 bsqMakerTradeFee = 4;
+    uint64 bsqTakerTradeFee = 5;
+    uint64 txFeePerVbyte = 6;
+    string makerBsqAddress = 7;
+    string makerBtcAddress = 8;
+    string takerBsqAddress = 9;
+    string takerBtcAddress = 10;
+    string errorMessage = 11;
 }
 
 message PaymentAccountPayloadInfo {

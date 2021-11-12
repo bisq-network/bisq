@@ -37,7 +37,9 @@ public class AbstractTradeTest extends AbstractOfferTest {
     protected static String tradeId;
 
     protected final Supplier<Integer> maxTradeStateAndPhaseChecks = () -> isLongRunningTest ? 10 : 2;
-    private final Function<GrpcClient, String> toUserName = (client) -> client.equals(aliceClient) ? "Alice" : "Bob";
+    protected final Function<TradeInfo, String> toTradeDetailTable = (trade) ->
+            new TableBuilder(TRADE_DETAIL_TBL, trade).build().toString();
+    protected final Function<GrpcClient, String> toUserName = (client) -> client.equals(aliceClient) ? "Alice" : "Bob";
 
     @BeforeAll
     public static void initStaticFixtures() {

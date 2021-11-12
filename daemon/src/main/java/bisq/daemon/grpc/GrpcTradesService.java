@@ -18,7 +18,6 @@
 package bisq.daemon.grpc;
 
 import bisq.core.api.CoreApi;
-import bisq.core.api.model.BsqSwapTradeInfo;
 import bisq.core.api.model.TradeInfo;
 import bisq.core.trade.model.bisq_v1.Trade;
 
@@ -48,7 +47,6 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.api.model.BsqSwapTradeInfo.toBsqSwapTradeInfo;
 import static bisq.core.api.model.TradeInfo.toNewTradeInfo;
 import static bisq.core.api.model.TradeInfo.toTradeInfo;
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
@@ -80,8 +78,9 @@ class GrpcTradesService extends TradesImplBase {
             var bsqSwapTrade = coreApi.getBsqSwapTrade(req.getTradeId());
             boolean wasMyOffer = coreApi.isMyOffer(bsqSwapTrade.getOffer().getId());
             String role = coreApi.getBsqSwapTradeRole(req.getTradeId());
+            var tradeInfo = toTradeInfo(bsqSwapTrade, role, wasMyOffer);
             var reply = GetBsqSwapTradeReply.newBuilder()
-                    .setBsqSwapTrade(toBsqSwapTradeInfo(bsqSwapTrade, role, wasMyOffer).toProtoMessage())
+                    .setBsqSwapTrade(tradeInfo.toProtoMessage())
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
@@ -107,11 +106,9 @@ class GrpcTradesService extends TradesImplBase {
                 req.getTakerFeeCurrencyCode(),
                 bsqSwapTrade -> {
                     String role = coreApi.getBsqSwapTradeRole(bsqSwapTrade);
-                    BsqSwapTradeInfo bsqSwapTradeInfo = toBsqSwapTradeInfo(bsqSwapTrade,
-                            role,
-                            false);
+                    var tradeInfo = toNewTradeInfo(bsqSwapTrade, role);
                     var reply = TakeBsqSwapOfferReply.newBuilder()
-                            .setBsqSwapTrade(bsqSwapTradeInfo.toProtoMessage())
+                            .setBsqSwapTrade(tradeInfo.toProtoMessage())
                             .build();
                     responseObserver.onNext(reply);
                     responseObserver.onCompleted();

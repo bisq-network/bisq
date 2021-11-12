@@ -17,8 +17,8 @@
 
 package bisq.apitest.method.trade;
 
-import bisq.proto.grpc.BsqSwapTradeInfo;
 import bisq.proto.grpc.OfferInfo;
+import bisq.proto.grpc.TradeInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,11 +47,12 @@ import static protobuf.OfferDirection.BUY;
 
 
 import bisq.apitest.method.offer.AbstractOfferTest;
+import bisq.cli.GrpcClient;
 
 @Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class BsqSwapTradeTest extends AbstractOfferTest {
+public class BsqSwapTradeTest extends AbstractTradeTest {
 
     private static final String BISQ_FEE_CURRENCY_CODE = BSQ;
 
@@ -106,16 +107,18 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
     @Test
     @Order(3)
     public void testBobTakesBsqSwapOffer() {
-        var availableSwapOffer = getAvailableBsqSwapOffer();
+        var availableSwapOffer = getAvailableBsqSwapOffer(bobClient);
         var swapTrade = bobClient.takeBsqSwapOffer(availableSwapOffer.getId(),
                 bobsBsqSwapAcct.getId(),
                 BISQ_FEE_CURRENCY_CODE);
         log.debug("BsqSwap Trade at PREPARATION: {}", swapTrade);
+        log.debug("BsqSwap Trade at PREPARATION:\n{}", toTradeDetailTable.apply(swapTrade));
         assertEquals(PREPARATION.name(), swapTrade.getState());
         genBtcBlocksThenWait(1, 3_000);
 
-        swapTrade = getBsqSwapTrade(swapTrade.getTradeId());
+        swapTrade = getBsqSwapTrade(bobClient, swapTrade.getTradeId());
         log.debug("BsqSwap Trade at COMPLETION: {}", swapTrade);
+        log.debug("BsqSwap Trade at COMPLETION:\n{}", toTradeDetailTable.apply(swapTrade));
         assertEquals(COMPLETED.name(), swapTrade.getState());
     }
 
@@ -129,11 +132,11 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
         log.debug("Bob's After Trade Balance:\n{}", formatBalancesTbls(bobsBalances));
     }
 
-    private OfferInfo getAvailableBsqSwapOffer() {
+    private OfferInfo getAvailableBsqSwapOffer(GrpcClient client) {
         List<OfferInfo> bsqSwapOffers = new ArrayList<>();
         int numFetchAttempts = 0;
         while (bsqSwapOffers.size() == 0) {
-            bsqSwapOffers.addAll(bobClient.getBsqSwapOffers(BUY.name()));
+            bsqSwapOffers.addAll(client.getBsqSwapOffers(BUY.name()));
             numFetchAttempts++;
             if (bsqSwapOffers.size() == 0) {
                 log.warn("No available bsq swap offers found after {} fetch attempts.", numFetchAttempts);
@@ -155,12 +158,12 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
         return bsqSwapOffer;
     }
 
-    private BsqSwapTradeInfo getBsqSwapTrade(String tradeId) {
+    private TradeInfo getBsqSwapTrade(GrpcClient client, String tradeId) {
         int numFetchAttempts = 0;
         while (true) {
             try {
                 numFetchAttempts++;
-                return bobClient.getBsqSwapTrade(tradeId);
+                return client.getBsqSwapTrade(tradeId);
             } catch (Exception ex) {
                 log.warn(ex.getMessage());
                 if (numFetchAttempts > 9) {

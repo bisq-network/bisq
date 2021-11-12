@@ -17,6 +17,7 @@
 
 package bisq.core.api.model;
 
+import bisq.core.api.model.builder.OfferInfoBuilder;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.util.coin.CoinUtil;
@@ -74,38 +75,38 @@ public class OfferInfo implements Payload {
     private final String versionNumber;
     private final int protocolVersion;
 
-    public OfferInfo(Builder builder) {
-        this.id = builder.id;
-        this.direction = builder.direction;
-        this.price = builder.price;
-        this.useMarketBasedPrice = builder.useMarketBasedPrice;
-        this.marketPriceMargin = builder.marketPriceMargin;
-        this.amount = builder.amount;
-        this.minAmount = builder.minAmount;
-        this.volume = builder.volume;
-        this.minVolume = builder.minVolume;
-        this.txFee = builder.txFee;
-        this.makerFee = builder.makerFee;
-        this.offerFeePaymentTxId = builder.offerFeePaymentTxId;
-        this.buyerSecurityDeposit = builder.buyerSecurityDeposit;
-        this.sellerSecurityDeposit = builder.sellerSecurityDeposit;
-        this.triggerPrice = builder.triggerPrice;
-        this.isCurrencyForMakerFeeBtc = builder.isCurrencyForMakerFeeBtc;
-        this.paymentAccountId = builder.paymentAccountId;
-        this.paymentMethodId = builder.paymentMethodId;
-        this.paymentMethodShortName = builder.paymentMethodShortName;
-        this.baseCurrencyCode = builder.baseCurrencyCode;
-        this.counterCurrencyCode = builder.counterCurrencyCode;
-        this.date = builder.date;
-        this.state = builder.state;
-        this.isActivated = builder.isActivated;
-        this.isMyOffer = builder.isMyOffer;
-        this.isMyPendingOffer = builder.isMyPendingOffer;
-        this.isBsqSwapOffer = builder.isBsqSwapOffer;
-        this.ownerNodeAddress = builder.ownerNodeAddress;
-        this.pubKeyRing = builder.pubKeyRing;
-        this.versionNumber = builder.versionNumber;
-        this.protocolVersion = builder.protocolVersion;
+    public OfferInfo(OfferInfoBuilder builder) {
+        this.id = builder.getId();
+        this.direction = builder.getDirection();
+        this.price = builder.getPrice();
+        this.useMarketBasedPrice = builder.isUseMarketBasedPrice();
+        this.marketPriceMargin = builder.getMarketPriceMargin();
+        this.amount = builder.getAmount();
+        this.minAmount = builder.getMinAmount();
+        this.volume = builder.getVolume();
+        this.minVolume = builder.getMinVolume();
+        this.txFee = builder.getTxFee();
+        this.makerFee = builder.getMakerFee();
+        this.offerFeePaymentTxId = builder.getOfferFeePaymentTxId();
+        this.buyerSecurityDeposit = builder.getBuyerSecurityDeposit();
+        this.sellerSecurityDeposit = builder.getSellerSecurityDeposit();
+        this.triggerPrice = builder.getTriggerPrice();
+        this.isCurrencyForMakerFeeBtc = builder.isCurrencyForMakerFeeBtc();
+        this.paymentAccountId = builder.getPaymentAccountId();
+        this.paymentMethodId = builder.getPaymentMethodId();
+        this.paymentMethodShortName = builder.getPaymentMethodShortName();
+        this.baseCurrencyCode = builder.getBaseCurrencyCode();
+        this.counterCurrencyCode = builder.getCounterCurrencyCode();
+        this.date = builder.getDate();
+        this.state = builder.getState();
+        this.isActivated = builder.isActivated();
+        this.isMyOffer = builder.isMyOffer();
+        this.isMyPendingOffer = builder.isMyPendingOffer();
+        this.isBsqSwapOffer = builder.isBsqSwapOffer();
+        this.ownerNodeAddress = builder.getOwnerNodeAddress();
+        this.pubKeyRing = builder.getPubKeyRing();
+        this.versionNumber = builder.getVersionNumber();
+        this.protocolVersion = builder.getProtocolVersion();
     }
 
     public static OfferInfo toMyOfferInfo(Offer offer) {
@@ -136,8 +137,8 @@ public class OfferInfo implements Payload {
                 .build();
     }
 
-    private static Builder getBuilder(Offer offer, boolean isMyOffer) {
-        return new Builder()
+    private static OfferInfoBuilder getBuilder(Offer offer, boolean isMyOffer) {
+        return new OfferInfoBuilder()
                 .withId(offer.getId())
                 .withDirection(offer.getDirection().name())
                 .withPrice(Objects.requireNonNull(offer.getPrice()).getValue())
@@ -217,7 +218,7 @@ public class OfferInfo implements Payload {
 
     @SuppressWarnings("unused")
     public static OfferInfo fromProto(bisq.proto.grpc.OfferInfo proto) {
-        return new Builder()
+        return new OfferInfoBuilder()
                 .withId(proto.getId())
                 .withDirection(proto.getDirection())
                 .withPrice(proto.getPrice())
@@ -250,204 +251,5 @@ public class OfferInfo implements Payload {
                 .withVersionNumber(proto.getVersionNr())
                 .withProtocolVersion(proto.getProtocolVersion())
                 .build();
-    }
-
-    /*
-     * Builder helps avoid bungling use of a large OfferInfo constructor
-     * argument list.  If consecutive argument values of the same type are not
-     * ordered correctly, the compiler won't complain but the resulting bugs could
-     * be hard to find and fix.
-     */
-    private static class Builder {
-        private String id;
-        private String direction;
-        private long price;
-        private boolean useMarketBasedPrice;
-        private double marketPriceMargin;
-        private long amount;
-        private long minAmount;
-        private long volume;
-        private long minVolume;
-        private long txFee;
-        private long makerFee;
-        private String offerFeePaymentTxId;
-        private long buyerSecurityDeposit;
-        private long sellerSecurityDeposit;
-        private long triggerPrice;
-        private boolean isCurrencyForMakerFeeBtc;
-        private String paymentAccountId;
-        private String paymentMethodId;
-        private String paymentMethodShortName;
-        private String baseCurrencyCode;
-        private String counterCurrencyCode;
-        private long date;
-        private String state;
-        private boolean isActivated;
-        private boolean isMyOffer;
-        private boolean isMyPendingOffer;
-        private boolean isBsqSwapOffer;
-        private String ownerNodeAddress;
-        private String pubKeyRing;
-        private String versionNumber;
-        private int protocolVersion;
-
-        public Builder withId(String id) {
-            this.id = id;
-            return this;
-        }
-
-        public Builder withDirection(String direction) {
-            this.direction = direction;
-            return this;
-        }
-
-        public Builder withPrice(long price) {
-            this.price = price;
-            return this;
-        }
-
-        public Builder withUseMarketBasedPrice(boolean useMarketBasedPrice) {
-            this.useMarketBasedPrice = useMarketBasedPrice;
-            return this;
-        }
-
-        public Builder withMarketPriceMargin(double useMarketBasedPrice) {
-            this.marketPriceMargin = useMarketBasedPrice;
-            return this;
-        }
-
-        public Builder withAmount(long amount) {
-            this.amount = amount;
-            return this;
-        }
-
-        public Builder withMinAmount(long minAmount) {
-            this.minAmount = minAmount;
-            return this;
-        }
-
-        public Builder withVolume(long volume) {
-            this.volume = volume;
-            return this;
-        }
-
-        public Builder withMinVolume(long minVolume) {
-            this.minVolume = minVolume;
-            return this;
-        }
-
-        public Builder withTxFee(long txFee) {
-            this.txFee = txFee;
-            return this;
-        }
-
-        public Builder withMakerFee(long makerFee) {
-            this.makerFee = makerFee;
-            return this;
-        }
-
-        public Builder withOfferFeePaymentTxId(String offerFeePaymentTxId) {
-            this.offerFeePaymentTxId = offerFeePaymentTxId;
-            return this;
-        }
-
-        public Builder withBuyerSecurityDeposit(long buyerSecurityDeposit) {
-            this.buyerSecurityDeposit = buyerSecurityDeposit;
-            return this;
-        }
-
-        public Builder withSellerSecurityDeposit(long sellerSecurityDeposit) {
-            this.sellerSecurityDeposit = sellerSecurityDeposit;
-            return this;
-        }
-
-        public Builder withTriggerPrice(long triggerPrice) {
-            this.triggerPrice = triggerPrice;
-            return this;
-        }
-
-        public Builder withIsCurrencyForMakerFeeBtc(boolean isCurrencyForMakerFeeBtc) {
-            this.isCurrencyForMakerFeeBtc = isCurrencyForMakerFeeBtc;
-            return this;
-        }
-
-        public Builder withPaymentAccountId(String paymentAccountId) {
-            this.paymentAccountId = paymentAccountId;
-            return this;
-        }
-
-        public Builder withPaymentMethodId(String paymentMethodId) {
-            this.paymentMethodId = paymentMethodId;
-            return this;
-        }
-
-        public Builder withPaymentMethodShortName(String paymentMethodShortName) {
-            this.paymentMethodShortName = paymentMethodShortName;
-            return this;
-        }
-
-        public Builder withBaseCurrencyCode(String baseCurrencyCode) {
-            this.baseCurrencyCode = baseCurrencyCode;
-            return this;
-        }
-
-        public Builder withCounterCurrencyCode(String counterCurrencyCode) {
-            this.counterCurrencyCode = counterCurrencyCode;
-            return this;
-        }
-
-        public Builder withDate(long date) {
-            this.date = date;
-            return this;
-        }
-
-        public Builder withState(String state) {
-            this.state = state;
-            return this;
-        }
-
-        public Builder withIsActivated(boolean isActivated) {
-            this.isActivated = isActivated;
-            return this;
-        }
-
-        public Builder withIsMyOffer(boolean isMyOffer) {
-            this.isMyOffer = isMyOffer;
-            return this;
-        }
-
-        public Builder withIsMyPendingOffer(boolean isMyPendingOffer) {
-            this.isMyPendingOffer = isMyPendingOffer;
-            return this;
-        }
-
-        public Builder withIsBsqSwapOffer(boolean isBsqSwapOffer) {
-            this.isBsqSwapOffer = isBsqSwapOffer;
-            return this;
-        }
-
-        public Builder withOwnerNodeAddress(String ownerNodeAddress) {
-            this.ownerNodeAddress = ownerNodeAddress;
-            return this;
-        }
-
-        public Builder withPubKeyRing(String pubKeyRing) {
-            this.pubKeyRing = pubKeyRing;
-            return this;
-        }
-
-        public Builder withVersionNumber(String versionNumber) {
-            this.versionNumber = versionNumber;
-            return this;
-        }
-
-        public Builder withProtocolVersion(int protocolVersion) {
-            this.protocolVersion = protocolVersion;
-            return this;
-        }
-
-        public OfferInfo build() {
-            return new OfferInfo(this);
-        }
     }
 }
