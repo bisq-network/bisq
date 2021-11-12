@@ -25,9 +25,11 @@ import bisq.core.user.Cookie;
 import bisq.core.user.CookieKey;
 import bisq.core.user.User;
 
+import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.P2PServiceListener;
 import bisq.network.p2p.peers.PeerManager;
+import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -41,6 +43,9 @@ import bisq.common.handlers.ResultHandler;
 
 import com.google.inject.Key;
 import com.google.inject.name.Names;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -79,7 +84,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         UserThread.execute(() -> {
             try {
                 seedNode = new SeedNode();
-                UserThread.execute(this::onApplicationLaunched);
+                onApplicationLaunched();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -108,9 +113,26 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         seedNode.setInjector(injector);
 
         if (DevEnv.isDaoActivated()) {
-            injector.getInstance(DaoStateSnapshotService.class).setDaoRequiresRestartHandler(() -> gracefulShutDown(() -> {
-            }));
+            injector.getInstance(DaoStateSnapshotService.class).setDaoRequiresRestartHandler(
+                    // We shut down with a deterministic delay per seed to avoid that all seeds shut down at the
+                    // same time in case of a reorg. We use 30 sec. as distance delay between the seeds to be on the
+                    // safe side. We have 12 seeds so that's 6 minutes.
+                    () -> UserThread.runAfter(this::gracefulShutDown, 1 + (getMyIndex() * 30L))
+            );
         }
+    }
+
+    private int getMyIndex() {
+        P2PService p2PService = injector.getInstance(P2PService.class);
+        SeedNodeRepository seedNodeRepository = injector.getInstance(SeedNodeRepository.class);
+        List<NodeAddress> seedNodes = new ArrayList<>(seedNodeRepository.getSeedNodeAddresses());
+        NodeAddress myAddress = p2PService.getAddress();
+        for (int i = 0; i < seedNodes.size(); i++) {
+            if (seedNodes.get(i).equals(myAddress)) {
+                return i;
+            }
+        }
+        return 0;
     }
 
     @Override
@@ -195,6 +217,11 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
             }
         }, CHECK_CONNECTION_LOSS_SEC);
 
+    }
+
+    private void gracefulShutDown() {
+        gracefulShutDown(() -> {
+        });
     }
 
     @Override

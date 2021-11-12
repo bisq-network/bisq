@@ -21,6 +21,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.components.paymentmethods.AchTransferForm;
 import bisq.desktop.components.paymentmethods.AdvancedCashForm;
 import bisq.desktop.components.paymentmethods.AliPayForm;
 import bisq.desktop.components.paymentmethods.AmazonGiftCardForm;
@@ -32,6 +33,7 @@ import bisq.desktop.components.paymentmethods.CashDepositForm;
 import bisq.desktop.components.paymentmethods.CelPayForm;
 import bisq.desktop.components.paymentmethods.ChaseQuickPayForm;
 import bisq.desktop.components.paymentmethods.ClearXchangeForm;
+import bisq.desktop.components.paymentmethods.DomesticWireTransferForm;
 import bisq.desktop.components.paymentmethods.F2FForm;
 import bisq.desktop.components.paymentmethods.FasterPaymentsForm;
 import bisq.desktop.components.paymentmethods.HalCashForm;
@@ -61,7 +63,9 @@ import bisq.desktop.components.paymentmethods.SpecificBankForm;
 import bisq.desktop.components.paymentmethods.StrikeForm;
 import bisq.desktop.components.paymentmethods.SwiftForm;
 import bisq.desktop.components.paymentmethods.SwishForm;
+import bisq.desktop.components.paymentmethods.TikkieForm;
 import bisq.desktop.components.paymentmethods.TransferwiseForm;
+import bisq.desktop.components.paymentmethods.TransferwiseUsdForm;
 import bisq.desktop.components.paymentmethods.USPostalMoneyOrderForm;
 import bisq.desktop.components.paymentmethods.UpholdForm;
 import bisq.desktop.components.paymentmethods.UpiForm;
@@ -338,6 +342,9 @@ public class BuyerStep2View extends TradeStepView {
             case PaymentMethod.TRANSFERWISE_ID:
                 gridRow = TransferwiseForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
+            case PaymentMethod.TRANSFERWISE_USD_ID:
+                gridRow = TransferwiseUsdForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
             case PaymentMethod.PAYSERA_ID:
                 gridRow = PayseraForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
@@ -383,6 +390,9 @@ public class BuyerStep2View extends TradeStepView {
             case PaymentMethod.SATISPAY_ID:
                 gridRow = SatispayForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
+            case PaymentMethod.TIKKIE_ID:
+                gridRow = TikkieForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
             case PaymentMethod.VERSE_ID:
                 gridRow = VerseForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
@@ -391,6 +401,12 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.SWIFT_ID:
                 gridRow = SwiftForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, trade);
+                break;
+            case PaymentMethod.ACH_TRANSFER_ID:
+                gridRow = AchTransferForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.DOMESTIC_WIRE_TRANSFER_ID:
+                gridRow = DomesticWireTransferForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethodId);

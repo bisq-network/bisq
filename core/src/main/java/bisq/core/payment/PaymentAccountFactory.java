@@ -82,6 +82,8 @@ public class PaymentAccountFactory {
                 return new AdvancedCashAccount();
             case PaymentMethod.TRANSFERWISE_ID:
                 return new TransferwiseAccount();
+            case PaymentMethod.TRANSFERWISE_USD_ID:
+                return new TransferwiseUsdAccount();
             case PaymentMethod.PAYSERA_ID:
                 return new PayseraAccount();
             case PaymentMethod.PAXUM_ID:
@@ -114,12 +116,18 @@ public class PaymentAccountFactory {
                 return new MoneseAccount();
             case PaymentMethod.SATISPAY_ID:
                 return new SatispayAccount();
+            case PaymentMethod.TIKKIE_ID:
+                return new TikkieAccount();
             case PaymentMethod.VERSE_ID:
                 return new VerseAccount();
             case PaymentMethod.STRIKE_ID:
                 return new StrikeAccount();
             case PaymentMethod.SWIFT_ID:
                 return new SwiftAccount();
+            case PaymentMethod.ACH_TRANSFER_ID:
+                return new AchTransferAccount();
+            case PaymentMethod.DOMESTIC_WIRE_TRANSFER_ID:
+                return new DomesticWireTransferAccount();
             case PaymentMethod.BSQ_SWAP_ID:
                 return new BsqSwapAccount();
 

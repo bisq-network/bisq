@@ -185,15 +185,6 @@ public class LiteNode extends BsqNode {
         liteNodeNetworkService.requestBlocks(getStartBlockHeight());
     }
 
-    @Override
-    protected void startReOrgFromLastSnapshot() {
-        super.startReOrgFromLastSnapshot();
-
-        int startBlockHeight = getStartBlockHeight();
-        liteNodeNetworkService.reset();
-        liteNodeNetworkService.requestBlocks(startBlockHeight);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -252,7 +243,7 @@ public class LiteNode extends BsqNode {
                 doParseBlock(block);
                 runDelayedBatchProcessing(blocks, resultHandler);
             } catch (RequiredReorgFromSnapshotException e) {
-                resultHandler.run();
+                log.warn("Interrupt batch processing because if a blockchain reorg. {}", e.toString());
             }
         });
     }

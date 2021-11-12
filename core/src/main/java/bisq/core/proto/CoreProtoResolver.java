@@ -21,6 +21,7 @@ import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.dao.governance.blindvote.storage.BlindVotePayload;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
+import bisq.core.payment.payload.AchTransferAccountPayload;
 import bisq.core.payment.payload.AdvancedCashAccountPayload;
 import bisq.core.payment.payload.AliPayAccountPayload;
 import bisq.core.payment.payload.AmazonGiftCardAccountPayload;
@@ -35,6 +36,7 @@ import bisq.core.payment.payload.CelPayAccountPayload;
 import bisq.core.payment.payload.ChaseQuickPayAccountPayload;
 import bisq.core.payment.payload.ClearXchangeAccountPayload;
 import bisq.core.payment.payload.CryptoCurrencyAccountPayload;
+import bisq.core.payment.payload.DomesticWireTransferAccountPayload;
 import bisq.core.payment.payload.F2FAccountPayload;
 import bisq.core.payment.payload.FasterPaymentsAccountPayload;
 import bisq.core.payment.payload.HalCashAccountPayload;
@@ -67,7 +69,9 @@ import bisq.core.payment.payload.SpecificBanksAccountPayload;
 import bisq.core.payment.payload.StrikeAccountPayload;
 import bisq.core.payment.payload.SwiftAccountPayload;
 import bisq.core.payment.payload.SwishAccountPayload;
+import bisq.core.payment.payload.TikkieAccountPayload;
 import bisq.core.payment.payload.TransferwiseAccountPayload;
+import bisq.core.payment.payload.TransferwiseUsdAccountPayload;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.UpholdAccountPayload;
 import bisq.core.payment.payload.UpiAccountPayload;
@@ -117,6 +121,10 @@ public class CoreProtoResolver implements ProtoResolver {
                                     return SameBankAccountPayload.fromProto(proto);
                                 case SPECIFIC_BANKS_ACCOUNT_PAYLOAD:
                                     return SpecificBanksAccountPayload.fromProto(proto);
+                                case ACH_TRANSFER_ACCOUNT_PAYLOAD:
+                                    return AchTransferAccountPayload.fromProto(proto);
+                                case DOMESTIC_WIRE_TRANSFER_ACCOUNT_PAYLOAD:
+                                    return DomesticWireTransferAccountPayload.fromProto(proto);
                                 default:
                                     throw new ProtobufferRuntimeException("Unknown proto message case" +
                                             "(PB.PaymentAccountPayload.CountryBasedPaymentAccountPayload.BankAccountPayload). " +
@@ -144,8 +152,12 @@ public class CoreProtoResolver implements ProtoResolver {
                             return PixAccountPayload.fromProto(proto);
                         case SATISPAY_ACCOUNT_PAYLOAD:
                             return SatispayAccountPayload.fromProto(proto);
+                        case TIKKIE_ACCOUNT_PAYLOAD:
+                            return TikkieAccountPayload.fromProto(proto);
                         case STRIKE_ACCOUNT_PAYLOAD:
                             return StrikeAccountPayload.fromProto(proto);
+                        case TRANSFERWISE_USD_ACCOUNT_PAYLOAD:
+                            return TransferwiseUsdAccountPayload.fromProto(proto);
                         case IFSC_BASED_ACCOUNT_PAYLOAD:
                             final protobuf.IfscBasedAccountPayload.MessageCase messageCaseIfsc = proto.getCountryBasedPaymentAccountPayload().getIfscBasedAccountPayload().getMessageCase();
                             switch (messageCaseIfsc) {

@@ -17,14 +17,39 @@
 
 package bisq.asset.coins;
 
+import bisq.asset.AddressValidationResult;
+import bisq.asset.AddressValidator;
 import bisq.asset.AltCoinAccountDisclaimer;
 import bisq.asset.Coin;
-import bisq.asset.GrinAddressValidator;
+
+import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.Bech32;
 
 @AltCoinAccountDisclaimer("account.altcoin.popup.grin.msg")
 public class Grin extends Coin {
 
+    static String coinName = "Grin";
+
     public Grin() {
-        super("Grin", "GRIN", new GrinAddressValidator());
+        super(coinName, coinName.toUpperCase(), new GrinAddressValidator());
+    }
+
+    public static class GrinAddressValidator implements AddressValidator {
+
+        @Override
+        public AddressValidationResult validate(String address) {
+            try {
+                Bech32.Bech32Data bechData = Bech32.decode(address);
+                if (!bechData.hrp.equals(coinName.toLowerCase())) {
+                    return AddressValidationResult.invalidAddress(String.format("invalid address prefix %x", bechData.hrp));
+                }
+                if (bechData.data.length != 52) {
+                    return AddressValidationResult.invalidAddress(String.format("invalid address length %x", bechData.data.length));
+                }
+                return AddressValidationResult.validAddress();
+            } catch (AddressFormatException e) {
+                return AddressValidationResult.invalidStructure();
+            }
+        }
     }
 }
