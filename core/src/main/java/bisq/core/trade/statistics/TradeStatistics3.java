@@ -186,7 +186,9 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         VERSE,
         STRIKE,
         TIKKIE,
-        TRANSFERWISE_USD
+        TRANSFERWISE_USD,
+        ACH_TRANSFER,
+        DOMESTIC_WIRE_TRANSFER
     }
 
     @Getter

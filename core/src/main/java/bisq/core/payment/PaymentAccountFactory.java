@@ -124,6 +124,10 @@ public class PaymentAccountFactory {
                 return new StrikeAccount();
             case PaymentMethod.SWIFT_ID:
                 return new SwiftAccount();
+            case PaymentMethod.ACH_TRANSFER_ID:
+                return new AchTransferAccount();
+            case PaymentMethod.DOMESTIC_WIRE_TRANSFER_ID:
+                return new DomesticWireTransferAccount();
             case PaymentMethod.BSQ_SWAP_ID:
                 return new BsqSwapAccount();
 

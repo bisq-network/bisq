@@ -118,6 +118,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static final String VERSE_ID = "VERSE";
     public static final String STRIKE_ID = "STRIKE";
     public static final String SWIFT_ID = "SWIFT";
+    public static final String ACH_TRANSFER_ID = "ACH_TRANSFER";
+    public static final String DOMESTIC_WIRE_TRANSFER_ID = "DOMESTIC_WIRE_TRANSFER";
     public static final String BSQ_SWAP_ID = "BSQ_SWAP";
 
     // Cannot be deleted as it would break old trade history entries
@@ -179,6 +181,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static PaymentMethod VERSE;
     public static PaymentMethod STRIKE;
     public static PaymentMethod SWIFT;
+    public static PaymentMethod ACH_TRANSFER;
+    public static PaymentMethod DOMESTIC_WIRE_TRANSFER;
     public static PaymentMethod BSQ_SWAP;
 
     // Cannot be deleted as it would break old trade history entries
@@ -250,6 +254,8 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
             VERSE = new PaymentMethod(VERSE_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             STRIKE = new PaymentMethod(STRIKE_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             SWIFT = new PaymentMethod(SWIFT_ID, 7 * DAY, DEFAULT_TRADE_LIMIT_MID_RISK),
+            ACH_TRANSFER = new PaymentMethod(ACH_TRANSFER_ID, 5 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
+            DOMESTIC_WIRE_TRANSFER = new PaymentMethod(DOMESTIC_WIRE_TRANSFER_ID, 3 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
 
             // Japan
             JAPAN_BANK = new PaymentMethod(JAPAN_BANK_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
