@@ -1151,8 +1151,18 @@ message BankAccountPayload {
         NationalBankAccountPayload national_bank_account_payload = 9;
         SameBankAccountPayload same_bank_accont_payload = 10;
         SpecificBanksAccountPayload specific_banks_account_payload = 11;
+        AchTransferAccountPayload ach_transfer_account_payload = 13;
+        DomesticWireTransferAccountPayload domestic_wire_transfer_account_payload = 14;
     }
     string national_account_id = 12;
+}
+
+message AchTransferAccountPayload {
+    string holder_address = 1;
+}
+
+message DomesticWireTransferAccountPayload {
+    string holder_address = 1;
 }
 
 message NationalBankAccountPayload {

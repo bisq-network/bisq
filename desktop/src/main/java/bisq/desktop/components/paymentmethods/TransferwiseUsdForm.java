@@ -94,7 +94,8 @@ public class TransferwiseUsdForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        TextArea addressTextArea = addTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.transferwiseUsd.address"), Res.get("payment.transferwiseUsd.address")).second;
+        String addressLabel = Res.get("payment.account.owner.address") + Res.get("payment.transferwiseUsd.address");
+        TextArea addressTextArea = addTopLabelTextArea(gridPane, ++gridRow, addressLabel, addressLabel).second;
         addressTextArea.setMinHeight(70);
         addressTextArea.textProperty().addListener((ov, oldValue, newValue) -> {
             account.setBeneficiaryAddress(newValue.trim());
