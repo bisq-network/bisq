@@ -65,7 +65,7 @@ configure(subprojects) {
         langVersion = '3.11'
         logbackVersion = '1.1.11'
         loggingVersion = '1.2'
-        lombokVersion = '1.18.12'
+        lombokVersion = '1.18.22'
         mockitoVersion = '3.5.15'
         netlayerVersion = '0.7.2' // Tag from https://github.com/bisq-network/netlayer/tags based on externaltor branch
         protobufVersion = '3.19.1'
