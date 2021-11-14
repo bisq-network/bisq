@@ -39,6 +39,7 @@ public class BsqSwapTradeInfo implements Payload {
     private final String makerBtcAddress;
     private final String takerBsqAddress;
     private final String takerBtcAddress;
+    private final long numConfirmations;
     private final String errorMessage;
 
     public BsqSwapTradeInfo(BsqSwapTradeInfoBuilder builder) {
@@ -52,10 +53,13 @@ public class BsqSwapTradeInfo implements Payload {
         this.makerBtcAddress = builder.getMakerBtcAddress();
         this.takerBsqAddress = builder.getTakerBsqAddress();
         this.takerBtcAddress = builder.getTakerBtcAddress();
+        this.numConfirmations = builder.getNumConfirmations();
         this.errorMessage = builder.getErrorMessage();
     }
 
-    public static BsqSwapTradeInfo toBsqSwapTradeInfo(BsqSwapTrade trade, boolean wasMyOffer) {
+    public static BsqSwapTradeInfo toBsqSwapTradeInfo(BsqSwapTrade trade,
+                                                      boolean wasMyOffer,
+                                                      int numConfirmations) {
         var protocolModel = trade.getBsqSwapProtocolModel();
         var swapPeer = protocolModel.getTradePeer();
         var makerBsqAddress = wasMyOffer ? protocolModel.getBsqAddress() : swapPeer.getBsqAddress();
@@ -73,6 +77,7 @@ public class BsqSwapTradeInfo implements Payload {
                 .withMakerBtcAddress(makerBtcAddress)
                 .withTakerBsqAddress(takerBsqAddress)
                 .withTakerBtcAddress(takerBtcAddress)
+                .withNumConfirmations(numConfirmations)
                 .withErrorMessage(trade.getErrorMessage())
                 .build();
     }
@@ -94,7 +99,8 @@ public class BsqSwapTradeInfo implements Payload {
                 .setTakerBsqAddress(takerBsqAddress != null ? takerBsqAddress : "")
                 .setMakerBtcAddress(makerBtcAddress != null ? makerBtcAddress : "")
                 .setTakerBtcAddress(takerBtcAddress != null ? takerBtcAddress : "")
-                .setErrorMessage(errorMessage != null ? errorMessage : "")
+                .setTakerBtcAddress(takerBtcAddress != null ? takerBtcAddress : "")
+                .setNumConfirmations(numConfirmations)
                 .build();
     }
 
@@ -110,6 +116,7 @@ public class BsqSwapTradeInfo implements Payload {
                 .withMakerBtcAddress(proto.getMakerBtcAddress())
                 .withTakerBsqAddress(proto.getTakerBsqAddress())
                 .withTakerBtcAddress(proto.getTakerBtcAddress())
+                .withNumConfirmations(proto.getNumConfirmations())
                 .withErrorMessage(proto.getErrorMessage())
                 .build();
     }
@@ -127,6 +134,7 @@ public class BsqSwapTradeInfo implements Payload {
                 ", makerBtcAddress='" + makerBtcAddress + '\'' +
                 ", takerBsqAddress='" + takerBsqAddress + '\'' +
                 ", takerBtcAddress='" + takerBtcAddress + '\'' +
+                ", numConfirmations='" + numConfirmations + '\'' +
                 ", errorMessage='" + errorMessage + '\'' +
                 '}';
     }

@@ -43,6 +43,7 @@ public final class BsqSwapTradeInfoBuilder {
     private String makerBtcAddress;
     private String takerBsqAddress;
     private String takerBtcAddress;
+    private long numConfirmations;
     private String errorMessage;
 
     public BsqSwapTradeInfoBuilder withTxId(String txId) {
@@ -92,6 +93,11 @@ public final class BsqSwapTradeInfoBuilder {
 
     public BsqSwapTradeInfoBuilder withTakerBtcAddress(String takerBtcAddress) {
         this.takerBtcAddress = takerBtcAddress;
+        return this;
+    }
+
+    public BsqSwapTradeInfoBuilder withNumConfirmations(long numConfirmations) {
+        this.numConfirmations = numConfirmations;
         return this;
     }
 

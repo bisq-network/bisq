@@ -78,7 +78,11 @@ class GrpcTradesService extends TradesImplBase {
             var bsqSwapTrade = coreApi.getBsqSwapTrade(req.getTradeId());
             boolean wasMyOffer = coreApi.isMyOffer(bsqSwapTrade.getOffer().getId());
             String role = coreApi.getBsqSwapTradeRole(req.getTradeId());
-            var tradeInfo = toTradeInfo(bsqSwapTrade, role, wasMyOffer);
+            var numConfirmations = coreApi.getTransactionConfirmations(bsqSwapTrade.getTxId());
+            var tradeInfo = toTradeInfo(bsqSwapTrade,
+                    role,
+                    wasMyOffer,
+                    numConfirmations);
             var reply = GetBsqSwapTradeReply.newBuilder()
                     .setBsqSwapTrade(tradeInfo.toProtoMessage())
                     .build();

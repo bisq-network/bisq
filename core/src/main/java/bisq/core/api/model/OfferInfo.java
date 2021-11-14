@@ -24,8 +24,6 @@ import bisq.core.util.coin.CoinUtil;
 
 import bisq.common.Payload;
 
-import java.util.Objects;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -141,13 +139,13 @@ public class OfferInfo implements Payload {
         return new OfferInfoBuilder()
                 .withId(offer.getId())
                 .withDirection(offer.getDirection().name())
-                .withPrice(Objects.requireNonNull(offer.getPrice()).getValue())
+                .withPrice(requireNonNull(offer.getPrice()).getValue())
                 .withUseMarketBasedPrice(offer.isUseMarketBasedPrice())
                 .withMarketPriceMargin(offer.getMarketPriceMargin())
                 .withAmount(offer.getAmount().value)
                 .withMinAmount(offer.getMinAmount().value)
-                .withVolume(Objects.requireNonNull(offer.getVolume()).getValue())
-                .withMinVolume(Objects.requireNonNull(offer.getMinVolume()).getValue())
+                .withVolume(requireNonNull(offer.getVolume()).getValue())
+                .withMinVolume(requireNonNull(offer.getMinVolume()).getValue())
                 .withMakerFee(getMakerFee(offer, isMyOffer))
                 .withTxFee(offer.getTxFee().value)
                 .withOfferFeePaymentTxId(offer.getOfferFeePaymentTxId())

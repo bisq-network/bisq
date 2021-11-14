@@ -401,6 +401,10 @@ public class CoreApi {
         return walletsService.getTransaction(txId);
     }
 
+    public int getTransactionConfirmations(String txId) {
+        return walletsService.getTransactionConfirmations(txId);
+    }
+
     public void setWalletPassword(String password, String newPassword) {
         walletsService.setWalletPassword(password, newPassword);
     }

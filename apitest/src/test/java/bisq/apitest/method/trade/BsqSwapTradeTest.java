@@ -111,21 +111,39 @@ public class BsqSwapTradeTest extends AbstractTradeTest {
         var swapTrade = bobClient.takeBsqSwapOffer(availableSwapOffer.getId(),
                 bobsBsqSwapAcct.getId(),
                 BISQ_FEE_CURRENCY_CODE);
-        log.debug("BsqSwap Trade at PREPARATION: {}", swapTrade);
+        tradeId = swapTrade.getTradeId(); // Cache the tradeId for following test case(s).
         log.debug("BsqSwap Trade at PREPARATION:\n{}", toTradeDetailTable.apply(swapTrade));
         assertEquals(PREPARATION.name(), swapTrade.getState());
         genBtcBlocksThenWait(1, 3_000);
 
         swapTrade = getBsqSwapTrade(bobClient, swapTrade.getTradeId());
-        log.debug("BsqSwap Trade at COMPLETION: {}", swapTrade);
         log.debug("BsqSwap Trade at COMPLETION:\n{}", toTradeDetailTable.apply(swapTrade));
         assertEquals(COMPLETED.name(), swapTrade.getState());
     }
 
     @Test
     @Order(4)
+    public void testCompletedSwapTxConfirmations() {
+        sleep(2_000); // Wait for TX confirmation to happen on node.
+
+        var alicesTrade = getBsqSwapTrade(aliceClient, tradeId);
+        log.debug("Alice's BsqSwap Trade at COMPLETION:\n{}", toTradeDetailTable.apply(alicesTrade));
+        assertEquals(1, alicesTrade.getBsqSwapTradeInfo().getNumConfirmations());
+
+        var bobsTrade = getBsqSwapTrade(bobClient, tradeId);
+        log.debug("Bob's BsqSwap Trade at COMPLETION:\n{}", toTradeDetailTable.apply(bobsTrade));
+        assertEquals(1, bobsTrade.getBsqSwapTradeInfo().getNumConfirmations());
+
+        genBtcBlocksThenWait(1, 2_000);
+
+        bobsTrade = getBsqSwapTrade(bobClient, tradeId);
+        log.debug("Bob's BsqSwap Trade at COMPLETION:\n{}", toTradeDetailTable.apply(bobsTrade));
+        assertEquals(2, bobsTrade.getBsqSwapTradeInfo().getNumConfirmations());
+    }
+
+    @Test
+    @Order(5)
     public void testGetBalancesAfterTrade() {
-        genBtcBlocksThenWait(1, 5_000);
         var alicesBalances = aliceClient.getBalances();
         log.debug("Alice's After Trade Balance:\n{}", formatBalancesTbls(alicesBalances));
         var bobsBalances = bobClient.getBalances();

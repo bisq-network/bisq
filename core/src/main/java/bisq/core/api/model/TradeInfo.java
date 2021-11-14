@@ -104,7 +104,7 @@ public class TradeInfo implements Payload {
 
     public static TradeInfo toNewTradeInfo(BsqSwapTrade trade, String role) {
         // Always called by the taker, isMyOffer=false.
-        return toTradeInfo(trade, role, false);
+        return toTradeInfo(trade, role, false, 0);
     }
 
     public static TradeInfo toNewTradeInfo(Trade trade) {
@@ -116,12 +116,15 @@ public class TradeInfo implements Payload {
         if (tradeModel instanceof Trade)
             return toTradeInfo((Trade) tradeModel, role, isMyOffer);
         else if (tradeModel instanceof BsqSwapTrade)
-            return toTradeInfo((BsqSwapTrade) tradeModel, role, isMyOffer);
+            return toTradeInfo(tradeModel, role, isMyOffer);
         else
             throw new IllegalStateException("unsupported trade type: " + tradeModel.getClass().getSimpleName());
     }
 
-    public static TradeInfo toTradeInfo(BsqSwapTrade bsqSwapTrade, String role, boolean isMyOffer) {
+    public static TradeInfo toTradeInfo(BsqSwapTrade bsqSwapTrade,
+                                        String role,
+                                        boolean isMyOffer,
+                                        int numConfirmations) {
         OfferInfo offerInfo = isMyOffer ? toMyOfferInfo(bsqSwapTrade.getOffer()) : toOfferInfo(bsqSwapTrade.getOffer());
         TradeInfo tradeInfo = new TradeInfoV1Builder()
                 .withOffer(offerInfo)
@@ -143,7 +146,7 @@ public class TradeInfo implements Payload {
                 // N/A: .withIsFiatSent(false), .withIsFiatReceived(false), .withIsPayoutPublished(false)
                 // N/A: .withIsWithdrawn(false), .withContractAsJson(""), .withContract(null)
                 .build();
-        tradeInfo.bsqSwapTradeInfo = toBsqSwapTradeInfo(bsqSwapTrade, isMyOffer);
+        tradeInfo.bsqSwapTradeInfo = toBsqSwapTradeInfo(bsqSwapTrade, isMyOffer, numConfirmations);
         return tradeInfo;
     }
 

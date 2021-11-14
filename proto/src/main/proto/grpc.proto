@@ -524,7 +524,8 @@ message BsqSwapTradeInfo {
     string makerBtcAddress = 8;
     string takerBsqAddress = 9;
     string takerBtcAddress = 10;
-    string errorMessage = 11;
+    uint64 numConfirmations = 11;
+    string errorMessage = 12;
 }
 
 message PaymentAccountPayloadInfo {
