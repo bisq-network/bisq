@@ -11,6 +11,7 @@ import static java.lang.System.out;
 
  This can be run on mainnet.
  */
+@SuppressWarnings({"CommentedOutCode", "unused"})
 public class GetOffersSmokeTest {
 
     public static void main(String[] args) {
