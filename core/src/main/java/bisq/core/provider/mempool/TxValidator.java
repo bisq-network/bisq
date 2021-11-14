@@ -19,6 +19,7 @@ package bisq.core.provider.mempool;
 
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.filter.FilterManager;
 
 import bisq.common.util.Tuple2;
 
@@ -49,6 +50,7 @@ public class TxValidator {
     private final static long BLOCK_TOLERANCE = 599999L;  // allow really old offers with weird fee addresses
 
     private final DaoStateService daoStateService;
+    private final FilterManager filterManager;
     private final List<String> errorList;
     private final String txId;
     private Coin amount;
@@ -59,20 +61,25 @@ public class TxValidator {
     @Setter
     private String jsonTxt;
 
-
-    public TxValidator(DaoStateService daoStateService, String txId, Coin amount, @Nullable Boolean isFeeCurrencyBtc) {
+    public TxValidator(DaoStateService daoStateService,
+                       String txId,
+                       Coin amount,
+                       @Nullable Boolean isFeeCurrencyBtc,
+                       FilterManager filterManager) {
         this.daoStateService = daoStateService;
         this.txId = txId;
         this.amount = amount;
         this.isFeeCurrencyBtc = isFeeCurrencyBtc;
+        this.filterManager = filterManager;
         this.errorList = new ArrayList<>();
         this.jsonTxt = "";
     }
 
-    public TxValidator(DaoStateService daoStateService, String txId) {
+    public TxValidator(DaoStateService daoStateService, String txId, FilterManager filterManager) {
         this.daoStateService = daoStateService;
         this.txId = txId;
         this.chainHeight = (long) daoStateService.getChainHeight();
+        this.filterManager = filterManager;
         this.errorList = new ArrayList<>();
         this.jsonTxt = "";
     }

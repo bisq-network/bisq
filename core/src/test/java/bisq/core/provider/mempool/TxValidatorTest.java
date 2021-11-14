@@ -19,6 +19,7 @@ package bisq.core.provider.mempool;
 
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.filter.FilterManager;
 import bisq.core.trade.DelayedPayoutAddressProvider;
 import bisq.core.util.FeeReceiverSelector;
 import bisq.core.util.ParsingUtils;
@@ -204,7 +205,8 @@ public class TxValidatorTest {
             when(mockedDaoStateService.getParamValueAsCoin(Mockito.any(Param.class), Mockito.anyInt())).thenAnswer(mockGetFeeRate);
             when(mockedDaoStateService.getParamValueAsCoin(Mockito.any(Param.class), Mockito.anyString())).thenAnswer(mockGetParamValueAsCoin);
             when(mockedDaoStateService.getParamChangeList(Mockito.any())).thenAnswer(mockGetParamChangeList);
-            TxValidator txValidator = new TxValidator(mockedDaoStateService, txId, Coin.valueOf(amount), isCurrencyForMakerFeeBtc);
+            FilterManager filterManager = mock(FilterManager.class);
+            TxValidator txValidator = new TxValidator(mockedDaoStateService, txId, Coin.valueOf(amount), isCurrencyForMakerFeeBtc, filterManager);
             return txValidator;
         } catch (RuntimeException ignore) {
             // If input format is not as expected we ignore entry
