@@ -202,7 +202,7 @@ public class TxValidator {
         log.debug("BTC fee: {}", feeValue);
 
         Param minFeeParam = isMaker ? Param.MIN_MAKER_FEE_BTC : Param.MIN_TAKER_FEE_BTC;
-        Coin expectedFee = getFeeHistorical(tradeAmount,
+        Coin expectedFee = calculateFee(tradeAmount,
                 isMaker ? getMakerFeeRateBtc(blockHeight) : getTakerFeeRateBtc(blockHeight),
                 minFeeParam);
 
@@ -264,7 +264,7 @@ public class TxValidator {
             throw new JsonSyntaxException("vin/vout missing data");
         }
         Param minFeeParam = isMaker ? Param.MIN_MAKER_FEE_BSQ : Param.MIN_TAKER_FEE_BSQ;
-        Coin expectedFee = getFeeHistorical(tradeAmount,
+        Coin expectedFee = calculateFee(tradeAmount,
                 isMaker ? getMakerFeeRateBsq(blockHeight) : getTakerFeeRateBsq(blockHeight),
                 minFeeParam);
         long feeValue = jsonVIn0Value.getAsLong() - jsonFeeValue.getAsLong();
@@ -405,7 +405,7 @@ public class TxValidator {
         return 0L;  // in mempool, not confirmed yet
     }
 
-    private Coin getFeeHistorical(Coin amount, Coin feeRatePerBtc, Param minFeeParam) {
+    private Coin calculateFee(Coin amount, Coin feeRatePerBtc, Param minFeeParam) {
         double feePerBtcAsDouble = (double) feeRatePerBtc.value;
         double amountAsDouble = amount != null ? (double) amount.value : 0;
         double btcAsDouble = (double) Coin.COIN.value;
@@ -473,7 +473,7 @@ public class TxValidator {
                                           Coin feeFromFilter,
                                           Param minFeeParam) {
         long actualFeeAsLong = actualFeeValue.value;
-        long feeFromFilterAsLong = getFeeHistorical(tradeAmount, feeFromFilter, minFeeParam).value;
+        long feeFromFilterAsLong = calculateFee(tradeAmount, feeFromFilter, minFeeParam).value;
         double deviation = actualFeeAsLong / (double) feeFromFilterAsLong;
         // It can be that the filter has not been updated immediately after DAO param change, so we need a tolerance
         // Common change rate is 15-20%
@@ -487,13 +487,13 @@ public class TxValidator {
                                                     Param defaultFeeParam,
                                                     Param minFeeParam) {
         for (Coin daoHistoricalRate : daoStateService.getParamChangeList(defaultFeeParam)) {
-            if (actualFeeValue.equals(getFeeHistorical(tradeAmount, daoHistoricalRate, minFeeParam))) {
+            if (actualFeeValue.equals(calculateFee(tradeAmount, daoHistoricalRate, minFeeParam))) {
                 return true;
             }
         }
         // Finally, check the default rate used when we ask for the fee rate at genesis block height (it is hard coded in the Param enum)
         Coin defaultRate = daoStateService.getParamValueAsCoin(defaultFeeParam, daoStateService.getGenesisBlockHeight());
-        return actualFeeValue.equals(getFeeHistorical(tradeAmount, defaultRate, minFeeParam));
+        return actualFeeValue.equals(calculateFee(tradeAmount, defaultRate, minFeeParam));
     }
 
     public TxValidator endResult(String title, boolean status) {
