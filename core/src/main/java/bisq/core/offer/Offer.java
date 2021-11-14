@@ -227,6 +227,11 @@ public class Offer implements NetworkPayload, PersistablePayload {
 
     public void checkTradePriceTolerance(long takersTradePrice) throws TradePriceOutOfToleranceException,
             MarketPriceNotAvailableException, IllegalArgumentException {
+        if (!isUseMarketBasedPrice()) {
+            checkArgument(takersTradePrice == getFixedPrice(),
+                    "Takers price does not match offer price");
+        }
+
         Price tradePrice = Price.valueOf(getCurrencyCode(), takersTradePrice);
         Price offerPrice = getPrice();
         if (offerPrice == null)
