@@ -132,6 +132,10 @@ public class FeeReceiverSelectorTest {
                 false,
                 false,
                 false,
+                0,
+                0,
+                0,
+                0,
                 0);
     }
 }

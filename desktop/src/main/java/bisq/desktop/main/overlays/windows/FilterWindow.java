@@ -26,10 +26,16 @@ import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
 import bisq.core.filter.PaymentAccountFilter;
 import bisq.core.locale.Res;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.ParsingUtils;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
+
+import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
 
@@ -63,13 +69,19 @@ import static bisq.desktop.util.FormBuilder.addTopLabelInputTextField;
 
 public class FilterWindow extends Overlay<FilterWindow> {
     private final FilterManager filterManager;
+    private final BsqFormatter bsqFormatter;
+    private final CoinFormatter btcFormatter;
     private final boolean useDevPrivilegeKeys;
     private ScrollPane scrollPane;
 
     @Inject
     public FilterWindow(FilterManager filterManager,
+                        BsqFormatter bsqFormatter,
+                        @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                         @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.filterManager = filterManager;
+        this.bsqFormatter = bsqFormatter;
+        this.btcFormatter = btcFormatter;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
         type = Type.Attention;
     }
@@ -178,6 +190,14 @@ public class FilterWindow extends Overlay<FilterWindow> {
         InputTextField powDifficultyTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.powDifficulty"));
         powDifficultyTF.setText("0");
+        InputTextField makerFeeBtcTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.makerFeeBtc"));
+        InputTextField takerFeeBtcTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.takerFeeBtc"));
+        InputTextField makerFeeBsqTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.makerFeeBsq"));
+        InputTextField takerFeeBsqTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.takerFeeBsq"));
 
         Filter filter = filterManager.getDevFilter();
         if (filter != null) {
@@ -207,6 +227,11 @@ public class FilterWindow extends Overlay<FilterWindow> {
             disableApiCheckBox.setSelected(filter.isDisableApi());
             disablePowMessage.setSelected(filter.isDisablePowMessage());
             powDifficultyTF.setText(String.valueOf(filter.getPowDifficulty()));
+
+            makerFeeBtcTF.setText(btcFormatter.formatCoin(Coin.valueOf(filter.getMakerFeeBtc())));
+            takerFeeBtcTF.setText(btcFormatter.formatCoin(Coin.valueOf(filter.getTakerFeeBtc())));
+            makerFeeBsqTF.setText(bsqFormatter.formatBSQSatoshis(filter.getMakerFeeBsq()));
+            takerFeeBsqTF.setText(bsqFormatter.formatBSQSatoshis(filter.getTakerFeeBsq()));
         }
 
         Button removeFilterMessageButton = new AutoTooltipButton(Res.get("filterWindow.remove"));
@@ -244,7 +269,11 @@ public class FilterWindow extends Overlay<FilterWindow> {
                         disableMempoolValidationCheckBox.isSelected(),
                         disableApiCheckBox.isSelected(),
                         disablePowMessage.isSelected(),
-                        Integer.parseInt(powDifficultyTF.getText())
+                        Integer.parseInt(powDifficultyTF.getText()),
+                        ParsingUtils.parseToCoin(makerFeeBtcTF.getText(), btcFormatter).value,
+                        ParsingUtils.parseToCoin(takerFeeBtcTF.getText(), btcFormatter).value,
+                        ParsingUtils.parseToCoin(makerFeeBsqTF.getText(), bsqFormatter).value,
+                        ParsingUtils.parseToCoin(takerFeeBsqTF.getText(), bsqFormatter).value
                 );
 
                 // We remove first the old filter
