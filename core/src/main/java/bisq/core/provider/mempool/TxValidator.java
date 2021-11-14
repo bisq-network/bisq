@@ -51,6 +51,7 @@ public class TxValidator {
 
     private final DaoStateService daoStateService;
     private final FilterManager filterManager;
+    private long blockHeightAtOfferCreation; // Only set for maker.
     private final List<String> errorList;
     private final String txId;
     private Coin amount;
@@ -70,6 +71,22 @@ public class TxValidator {
         this.txId = txId;
         this.amount = amount;
         this.isFeeCurrencyBtc = isFeeCurrencyBtc;
+        this.filterManager = filterManager;
+        this.errorList = new ArrayList<>();
+        this.jsonTxt = "";
+    }
+
+    public TxValidator(DaoStateService daoStateService,
+                       String txId,
+                       Coin amount,
+                       @Nullable Boolean isFeeCurrencyBtc,
+                       long blockHeightAtOfferCreation,
+                       FilterManager filterManager) {
+        this.daoStateService = daoStateService;
+        this.txId = txId;
+        this.amount = amount;
+        this.isFeeCurrencyBtc = isFeeCurrencyBtc;
+        this.blockHeightAtOfferCreation = blockHeightAtOfferCreation;
         this.filterManager = filterManager;
         this.errorList = new ArrayList<>();
         this.jsonTxt = "";
@@ -306,10 +323,16 @@ public class TxValidator {
     // we want the block height applicable for calculating the appropriate expected trading fees
     // if the tx is not yet confirmed, use current block tip, if tx is confirmed use the block it was confirmed at.
     private long getBlockHeightForFeeCalculation(String jsonTxt) {
+        // For the maker we set the blockHeightAtOfferCreation from the offer
+        if (blockHeightAtOfferCreation > 0) {
+            return blockHeightAtOfferCreation;
+        }
+
         long txBlockHeight = getTxBlockHeight(jsonTxt);
         if (txBlockHeight > 0) {
             return txBlockHeight;
         }
+
         return daoStateService.getChainHeight();
     }
 
