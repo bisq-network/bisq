@@ -491,8 +491,8 @@ public class TxValidator {
                 return true;
             }
         }
-        // finally check the default rate used when we ask for the fee rate at block height 0 (it is hard coded in the Param enum)
-        Coin defaultRate = daoStateService.getParamValueAsCoin(defaultFeeParam, 0);
+        // Finally, check the default rate used when we ask for the fee rate at genesis block height (it is hard coded in the Param enum)
+        Coin defaultRate = daoStateService.getParamValueAsCoin(defaultFeeParam, daoStateService.getGenesisBlockHeight());
         return actualFeeValue.equals(getFeeHistorical(tradeAmount, defaultRate, minFeeParam));
     }
 
