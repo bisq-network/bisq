@@ -200,26 +200,27 @@ public class TxValidator {
         Coin expectedFee = getFeeHistorical(tradeAmount,
                 isMaker ? getMakerFeeRateBtc(blockHeight) : getTakerFeeRateBtc(blockHeight),
                 minFeeParam);
-        double leniencyCalc = feeValue / (double) expectedFee.getValue();
         String description = "Expected BTC fee: " + expectedFee.toString() + " sats , actual fee paid: " + Coin.valueOf(feeValue).toString() + " sats";
-        if (expectedFee.getValue() == feeValue) {
+
+        long expectedFeeAsLong = expectedFee.getValue();
+        if (expectedFeeAsLong == feeValue) {
             log.debug("The fee matched what we expected");
             return true;
         }
 
-        if (expectedFee.getValue() < feeValue) {
+        if (expectedFeeAsLong < feeValue) {
             log.info("The fee was more than what we expected: " + description);
             return true;
         }
 
+        double leniencyCalc = feeValue / (double) expectedFeeAsLong;
         if (leniencyCalc > FEE_TOLERANCE) {
             log.info("Leniency rule: the fee was low, but above {} of what was expected {} {}", FEE_TOLERANCE, leniencyCalc, description);
             return true;
         }
 
-        if (feeExistsUsingDifferentDaoParam(tradeAmount, Coin.valueOf(feeValue),
-                isMaker ? Param.DEFAULT_MAKER_FEE_BTC : Param.DEFAULT_TAKER_FEE_BTC,
-                minFeeParam)) {
+        Param defaultFeeParam = isMaker ? Param.DEFAULT_MAKER_FEE_BTC : Param.DEFAULT_TAKER_FEE_BTC;
+        if (feeExistsUsingDifferentDaoParam(tradeAmount, Coin.valueOf(feeValue), defaultFeeParam, minFeeParam)) {
             log.info("Leniency rule: the fee matches a different DAO parameter {}", description);
             return true;
         }
@@ -258,27 +259,28 @@ public class TxValidator {
             feeValue += jsonVIn1Value.getAsLong();
         }
         log.debug("BURNT BSQ maker fee: {} BSQ ({} sats)", (double) feeValue / 100.0, feeValue);
-        double leniencyCalc = feeValue / (double) expectedFee.getValue();
+        long expectedFeeAsLong = expectedFee.getValue();
         String description = String.format("Expected fee: %.2f BSQ, actual fee paid: %.2f BSQ",
-                (double) expectedFee.getValue() / 100.0, (double) feeValue / 100.0);
-        if (expectedFee.getValue() == feeValue) {
+                (double) expectedFeeAsLong / 100.0, (double) feeValue / 100.0);
+
+        if (expectedFeeAsLong == feeValue) {
             log.debug("The fee matched what we expected");
             return true;
         }
 
-        if (expectedFee.getValue() < feeValue) {
+        if (expectedFeeAsLong < feeValue) {
             log.info("The fee was more than what we expected. " + description);
             return true;
         }
 
+        double leniencyCalc = feeValue / (double) expectedFeeAsLong;
         if (leniencyCalc > FEE_TOLERANCE) {
             log.info("Leniency rule: the fee was low, but above {} of what was expected {} {}", FEE_TOLERANCE, leniencyCalc, description);
             return true;
         }
 
-        if (feeExistsUsingDifferentDaoParam(tradeAmount, Coin.valueOf(feeValue),
-                isMaker ? Param.DEFAULT_MAKER_FEE_BSQ : Param.DEFAULT_TAKER_FEE_BSQ,
-                isMaker ? Param.MIN_MAKER_FEE_BSQ : Param.MIN_TAKER_FEE_BSQ)) {
+        Param defaultFeeParam = isMaker ? Param.DEFAULT_MAKER_FEE_BSQ : Param.DEFAULT_TAKER_FEE_BSQ;
+        if (feeExistsUsingDifferentDaoParam(tradeAmount, Coin.valueOf(feeValue), defaultFeeParam, minFeeParam)) {
             log.info("Leniency rule: the fee matches a different DAO parameter {}", description);
             return true;
         }
