@@ -3,12 +3,13 @@ buildscript {
         mavenCentral()
         maven { url "https://jitpack.io" }
         maven { url "https://plugins.gradle.org/m2/" }
+        mavenLocal()
     }
     dependencies {
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.17'
         classpath 'com.google.gradle:osdetector-gradle-plugin:1.6.0'
         classpath 'com.github.jengelman.gradle.plugins:shadow:5.2.0'
-        classpath 'org.openjfx:javafx-plugin:0.0.10'
+        classpath 'org.openjfx:javafx-plugin:0.0.11-SNAPSHOT'
         classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.5.6'
     }
 }
@@ -27,7 +28,7 @@ configure(subprojects) {
     apply plugin: 'java'
     apply plugin: 'com.google.osdetector'
 
-    sourceCompatibility = 1.10
+    sourceCompatibility = 1.11
 
     ext { // in alphabetical order
         bcVersion = '1.63'
@@ -50,7 +51,7 @@ configure(subprojects) {
         httpcoreVersion = '4.4.13'
         ioVersion = '2.6'
         jacksonVersion = '2.12.1'
-        javafxVersion = '16'
+        javafxVersion = '17.0.1'
         javaxAnnotationVersion = '1.2'
         jcsvVersion = '1.4.0'
         jetbrainsAnnotationsVersion = '13.0'
@@ -489,7 +490,8 @@ configure(project(':desktop')) {
         implementation "com.google.guava:guava:$guavaVersion"
         implementation "com.google.protobuf:protobuf-java:$protobufVersion"
         implementation "com.googlecode.jcsv:jcsv:$jcsvVersion"
-        implementation "com.jfoenix:jfoenix:$jfoenixVersion"
+        //implementation "com.jfoenix:jfoenix:$jfoenixVersion"               // until sshahine/JFoenix#1187
+        implementation("org.rationalityfrontline.workaround:jfoenix:17.0.1") // is fixed
         implementation "commons-io:commons-io:$ioVersion"
         implementation "de.jensd:fontawesomefx-commons:$fontawesomefxCommonsVersion"
         implementation "de.jensd:fontawesomefx-materialdesignfont:$fontawesomefxMaterialdesignfontVersion"
