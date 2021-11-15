@@ -573,6 +573,8 @@ configure(project(':monitor')) {
 configure(project(':pricenode')) {
     apply plugin: "org.springframework.boot"
 
+    mainClassName = 'bisq.price.Main'
+
     version = file("src/main/resources/version.txt").text.trim()
 
     jar.manifest.attributes(
