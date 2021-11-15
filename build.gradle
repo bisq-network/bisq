@@ -140,7 +140,7 @@ configure([project(':cli'),
 
             def unixScriptFile = file("${rootProject.projectDir}/bisq-$applicationName")
             unixScriptFile.text = unixScriptFile.text.replace(
-                'cd "`dirname \\"$PRG\\"`/.." >/dev/null', 'cd "`dirname \\"$PRG\\"`" >/dev/null')
+                'APP_HOME=$( cd "${APP_HOME:-./}.." && pwd -P ) || exit', 'APP_HOME=$( cd "${APP_HOME:-./}" && pwd -P ) || exit')
 
             if (applicationName == 'desktop') {
                 def script = file("${rootProject.projectDir}/bisq-$applicationName")
