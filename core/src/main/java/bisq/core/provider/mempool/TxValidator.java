@@ -227,14 +227,14 @@ public class TxValidator {
             return true;
         }
 
-        Optional<Boolean> maybeTestFeeFromFilter = maybeTestFeeFromFilter(tradeAmount,
+        Optional<Boolean> result = maybeCheckAgainstFeeFromFilter(tradeAmount,
                 isMaker,
                 feeValueAsCoin,
                 minFeeParam,
                 true,
                 description);
-        if (maybeTestFeeFromFilter.isPresent()) {
-            return maybeTestFeeFromFilter.get();
+        if (result.isPresent()) {
+            return result.get();
         }
 
         Param defaultFeeParam = isMaker ? Param.DEFAULT_MAKER_FEE_BTC : Param.DEFAULT_TAKER_FEE_BTC;
@@ -298,7 +298,7 @@ public class TxValidator {
         }
         Coin feeValueAsCoin = Coin.valueOf(feeValue);
 
-        Optional<Boolean> maybeTestFeeFromFilter = maybeTestFeeFromFilter(tradeAmount,
+        Optional<Boolean> maybeTestFeeFromFilter = maybeCheckAgainstFeeFromFilter(tradeAmount,
                 isMaker,
                 feeValueAsCoin,
                 minFeeParam,
@@ -431,12 +431,12 @@ public class TxValidator {
         return daoStateService.getParamValueAsCoin(Param.DEFAULT_TAKER_FEE_BTC, (int) blockHeight);
     }
 
-    private Optional<Boolean> maybeTestFeeFromFilter(Coin tradeAmount,
-                                                     boolean isMaker,
-                                                     Coin feeValueAsCoin,
-                                                     Param minFeeParam,
-                                                     boolean isBtcFee,
-                                                     String description) {
+    private Optional<Boolean> maybeCheckAgainstFeeFromFilter(Coin tradeAmount,
+                                                             boolean isMaker,
+                                                             Coin feeValueAsCoin,
+                                                             Param minFeeParam,
+                                                             boolean isBtcFee,
+                                                             String description) {
         if (new Date().before(USE_FEE_FROM_FILTER_ACTIVATION_DATE)) {
             return Optional.empty();
         }
