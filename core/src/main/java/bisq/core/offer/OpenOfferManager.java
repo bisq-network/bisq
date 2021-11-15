@@ -685,7 +685,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                                 // Check also tradePrice to avoid failures after taker fee is paid caused by a too big difference
                                 // in trade price between the peers. Also here poor connectivity might cause market price API connection
                                 // losses and therefore an outdated market price.
-                                offer.checkTradePriceTolerance(request.getTakersTradePrice());
+                                offer.verifyTakersTradePrice(request.getTakersTradePrice());
                                 availabilityResult = AvailabilityResult.AVAILABLE;
                             } catch (TradePriceOutOfToleranceException e) {
                                 log.warn("Trade price check failed because takers price is outside out tolerance.");
