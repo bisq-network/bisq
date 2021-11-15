@@ -72,6 +72,7 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
     private boolean editOpenOfferViewOpen;
     private OpenOffer openOffer;
     private OpenOffersView openOffersView;
+    private int initialTabCount = 0;
 
     @Inject
     public PortfolioView(CachingViewLoader viewLoader, Navigation navigation, FailedTradesManager failedTradesManager) {
@@ -82,6 +83,7 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
 
     @Override
     public void initialize() {
+        initialTabCount = root.getTabs().size();
         root.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
         failedTradesTab.setClosable(false);
 
@@ -151,10 +153,10 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
     @Override
     protected void activate() {
         failedTradesManager.getObservableList().addListener((ListChangeListener<Trade>) c -> {
-            if (failedTradesManager.getObservableList().size() > 0 && root.getTabs().size() == 3)
+            if (failedTradesManager.getObservableList().size() > 0 && root.getTabs().size() == initialTabCount)
                 root.getTabs().add(failedTradesTab);
         });
-        if (failedTradesManager.getObservableList().size() > 0 && root.getTabs().size() == 3)
+        if (failedTradesManager.getObservableList().size() > 0 && root.getTabs().size() == initialTabCount)
             root.getTabs().add(failedTradesTab);
 
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
