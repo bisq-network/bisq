@@ -7,8 +7,8 @@ task jpackageSanityChecks {
     description 'Interactive sanity checks on the version of the code that will be packaged'
 
     doLast {
-        // Enforce JDK 11 for compiling and building
-        assert JavaVersion.current().isJava11(): "JDK 11 is required"
+        // Enforce JDK 15 for compiling and building
+        assert JavaVersion.current() == JavaVersion.VERSION_15: "JDK 15 is required"
 
         executeCmd("git --no-pager log -5 --oneline")
         ant.input(message: "Above you see the current HEAD and its recent history.\n" +
