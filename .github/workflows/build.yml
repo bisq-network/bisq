@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
         matrix:
-            os: [ubuntu-18.04, macOS-latest, windows-2016]
+            os: [ubuntu-latest, macOS-latest, windows-latest]
             java: [ '11', '11.0.3', '15', '15.0.5']
     name: Test Java ${{ matrix.Java }}, ${{ matrix.os }}
     steps:
@@ -35,3 +35,8 @@ jobs:
 
     - name: Build with Gradle
       run: ./gradlew build
+
+    - name: Print Dependency Verification Report
+      if: ${{ failure() }}
+      run: cat build/reports/dependency-verification/*/*.html
+      shell: bash
