@@ -19,8 +19,10 @@ package bisq.core.provider.mempool;
 
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.filter.FilterManager;
 
 import bisq.common.util.Tuple2;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
@@ -31,7 +33,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -45,10 +50,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 @Getter
 public class TxValidator {
+    private static final Date USE_FEE_FROM_FILTER_ACTIVATION_DATE = Utilities.getUTCDate(2022, GregorianCalendar.JANUARY, 1);
     private final static double FEE_TOLERANCE = 0.95;     // we expect fees to be at least 95% of target
-    private final static long BLOCK_TOLERANCE = 599999L;  // allow really old offers with weird fee addresses
+    private final static long BLOCK_TOLERANCE = 599999;  // allow really old offers with weird fee addresses
 
     private final DaoStateService daoStateService;
+    private final FilterManager filterManager;
+    private long blockHeightAtOfferCreation; // Only set for maker.
     private final List<String> errorList;
     private final String txId;
     private Coin amount;
@@ -59,20 +67,41 @@ public class TxValidator {
     @Setter
     private String jsonTxt;
 
-
-    public TxValidator(DaoStateService daoStateService, String txId, Coin amount, @Nullable Boolean isFeeCurrencyBtc) {
+    public TxValidator(DaoStateService daoStateService,
+                       String txId,
+                       Coin amount,
+                       @Nullable Boolean isFeeCurrencyBtc,
+                       FilterManager filterManager) {
         this.daoStateService = daoStateService;
         this.txId = txId;
         this.amount = amount;
         this.isFeeCurrencyBtc = isFeeCurrencyBtc;
+        this.filterManager = filterManager;
         this.errorList = new ArrayList<>();
         this.jsonTxt = "";
     }
 
-    public TxValidator(DaoStateService daoStateService, String txId) {
+    public TxValidator(DaoStateService daoStateService,
+                       String txId,
+                       Coin amount,
+                       @Nullable Boolean isFeeCurrencyBtc,
+                       long blockHeightAtOfferCreation,
+                       FilterManager filterManager) {
+        this.daoStateService = daoStateService;
+        this.txId = txId;
+        this.amount = amount;
+        this.isFeeCurrencyBtc = isFeeCurrencyBtc;
+        this.blockHeightAtOfferCreation = blockHeightAtOfferCreation;
+        this.filterManager = filterManager;
+        this.errorList = new ArrayList<>();
+        this.jsonTxt = "";
+    }
+
+    public TxValidator(DaoStateService daoStateService, String txId, FilterManager filterManager) {
         this.daoStateService = daoStateService;
         this.txId = txId;
         this.chainHeight = (long) daoStateService.getChainHeight();
+        this.filterManager = filterManager;
         this.errorList = new ArrayList<>();
         this.jsonTxt = "";
     }
@@ -171,30 +200,52 @@ public class TxValidator {
         }
         long feeValue = jsonFeeValue.getAsLong();
         log.debug("BTC fee: {}", feeValue);
-        Coin expectedFee = getFeeHistorical(tradeAmount,
+
+        Param minFeeParam = isMaker ? Param.MIN_MAKER_FEE_BTC : Param.MIN_TAKER_FEE_BTC;
+        Coin expectedFee = calculateFee(tradeAmount,
                 isMaker ? getMakerFeeRateBtc(blockHeight) : getTakerFeeRateBtc(blockHeight),
-                isMaker ? Param.MIN_MAKER_FEE_BTC : Param.MIN_TAKER_FEE_BTC);
-        double leniencyCalc = feeValue / (double) expectedFee.getValue();
-        String description = "Expected BTC fee: " + expectedFee.toString() + " sats , actual fee paid: " + Coin.valueOf(feeValue).toString() + " sats";
-        if (expectedFee.getValue() == feeValue) {
+                minFeeParam);
+
+        Coin feeValueAsCoin = Coin.valueOf(feeValue);
+        long expectedFeeAsLong = expectedFee.getValue();
+        String description = "Expected BTC fee: " + expectedFee + " sats , actual fee paid: " +
+                feeValueAsCoin + " sats";
+        if (expectedFeeAsLong == feeValue) {
             log.debug("The fee matched what we expected");
             return true;
-        } else if (expectedFee.getValue() < feeValue) {
+        }
+
+        if (expectedFeeAsLong < feeValue) {
             log.info("The fee was more than what we expected: " + description);
             return true;
-        } else if (leniencyCalc > FEE_TOLERANCE) {
-            log.info("Leniency rule: the fee was low, but above {} of what was expected {} {}", FEE_TOLERANCE, leniencyCalc, description);
+        }
+
+        double leniencyCalc = feeValue / (double) expectedFeeAsLong;
+        if (leniencyCalc > FEE_TOLERANCE) {
+            log.info("Leniency rule: the fee was low, but above {} of what was expected {} {}",
+                    FEE_TOLERANCE, leniencyCalc, description);
             return true;
-        } else if (feeExistsUsingDifferentDaoParam(tradeAmount, Coin.valueOf(feeValue),
-                isMaker ? Param.DEFAULT_MAKER_FEE_BTC : Param.DEFAULT_TAKER_FEE_BTC,
-                isMaker ? Param.MIN_MAKER_FEE_BTC : Param.MIN_TAKER_FEE_BTC)) {
+        }
+
+        Optional<Boolean> result = maybeCheckAgainstFeeFromFilter(tradeAmount,
+                isMaker,
+                feeValueAsCoin,
+                minFeeParam,
+                true,
+                description);
+        if (result.isPresent()) {
+            return result.get();
+        }
+
+        Param defaultFeeParam = isMaker ? Param.DEFAULT_MAKER_FEE_BTC : Param.DEFAULT_TAKER_FEE_BTC;
+        if (feeExistsUsingDifferentDaoParam(tradeAmount, feeValueAsCoin, defaultFeeParam, minFeeParam)) {
             log.info("Leniency rule: the fee matches a different DAO parameter {}", description);
             return true;
-        } else {
-            String feeUnderpaidMessage = "UNDERPAID. " + description;
-            errorList.add(feeUnderpaidMessage);
-            log.info(feeUnderpaidMessage);
         }
+
+        String feeUnderpaidMessage = "UNDERPAID. " + description;
+        errorList.add(feeUnderpaidMessage);
+        log.info(feeUnderpaidMessage);
         return false;
     }
 
@@ -212,9 +263,10 @@ public class TxValidator {
         if (jsonVIn0Value == null || jsonFeeValue == null) {
             throw new JsonSyntaxException("vin/vout missing data");
         }
-        Coin expectedFee = getFeeHistorical(tradeAmount,
+        Param minFeeParam = isMaker ? Param.MIN_MAKER_FEE_BSQ : Param.MIN_TAKER_FEE_BSQ;
+        Coin expectedFee = calculateFee(tradeAmount,
                 isMaker ? getMakerFeeRateBsq(blockHeight) : getTakerFeeRateBsq(blockHeight),
-                isMaker ? Param.MIN_MAKER_FEE_BSQ : Param.MIN_TAKER_FEE_BSQ);
+                minFeeParam);
         long feeValue = jsonVIn0Value.getAsLong() - jsonFeeValue.getAsLong();
         // if the first output (BSQ) is greater than the first input (BSQ) include the second input (presumably BSQ)
         if (jsonFeeValue.getAsLong() > jsonVIn0Value.getAsLong()) {
@@ -225,27 +277,45 @@ public class TxValidator {
             feeValue += jsonVIn1Value.getAsLong();
         }
         log.debug("BURNT BSQ maker fee: {} BSQ ({} sats)", (double) feeValue / 100.0, feeValue);
-        double leniencyCalc = feeValue / (double) expectedFee.getValue();
+        long expectedFeeAsLong = expectedFee.getValue();
         String description = String.format("Expected fee: %.2f BSQ, actual fee paid: %.2f BSQ",
-                (double) expectedFee.getValue() / 100.0, (double) feeValue / 100.0);
-        if (expectedFee.getValue() == feeValue) {
+                (double) expectedFeeAsLong / 100.0, (double) feeValue / 100.0);
+
+        if (expectedFeeAsLong == feeValue) {
             log.debug("The fee matched what we expected");
             return true;
-        } else if (expectedFee.getValue() < feeValue) {
+        }
+
+        if (expectedFeeAsLong < feeValue) {
             log.info("The fee was more than what we expected. " + description);
             return true;
-        } else if (leniencyCalc > FEE_TOLERANCE) {
+        }
+
+        double leniencyCalc = feeValue / (double) expectedFeeAsLong;
+        if (leniencyCalc > FEE_TOLERANCE) {
             log.info("Leniency rule: the fee was low, but above {} of what was expected {} {}", FEE_TOLERANCE, leniencyCalc, description);
             return true;
-        } else if (feeExistsUsingDifferentDaoParam(tradeAmount, Coin.valueOf(feeValue),
-                isMaker ? Param.DEFAULT_MAKER_FEE_BSQ : Param.DEFAULT_TAKER_FEE_BSQ,
-                isMaker ? Param.MIN_MAKER_FEE_BSQ : Param.MIN_TAKER_FEE_BSQ)) {
+        }
+        Coin feeValueAsCoin = Coin.valueOf(feeValue);
+
+        Optional<Boolean> maybeTestFeeFromFilter = maybeCheckAgainstFeeFromFilter(tradeAmount,
+                isMaker,
+                feeValueAsCoin,
+                minFeeParam,
+                false,
+                description);
+        if (maybeTestFeeFromFilter.isPresent()) {
+            return maybeTestFeeFromFilter.get();
+        }
+
+        Param defaultFeeParam = isMaker ? Param.DEFAULT_MAKER_FEE_BSQ : Param.DEFAULT_TAKER_FEE_BSQ;
+        if (feeExistsUsingDifferentDaoParam(tradeAmount, Coin.valueOf(feeValue), defaultFeeParam, minFeeParam)) {
             log.info("Leniency rule: the fee matches a different DAO parameter {}", description);
             return true;
-        } else {
-            errorList.add(description);
-            log.info(description);
         }
+
+        errorList.add(description);
+        log.info(description);
         return false;
     }
 
@@ -299,10 +369,16 @@ public class TxValidator {
     // we want the block height applicable for calculating the appropriate expected trading fees
     // if the tx is not yet confirmed, use current block tip, if tx is confirmed use the block it was confirmed at.
     private long getBlockHeightForFeeCalculation(String jsonTxt) {
+        // For the maker we set the blockHeightAtOfferCreation from the offer
+        if (blockHeightAtOfferCreation > 0) {
+            return blockHeightAtOfferCreation;
+        }
+
         long txBlockHeight = getTxBlockHeight(jsonTxt);
         if (txBlockHeight > 0) {
             return txBlockHeight;
         }
+
         return daoStateService.getChainHeight();
     }
 
@@ -329,7 +405,7 @@ public class TxValidator {
         return 0L;  // in mempool, not confirmed yet
     }
 
-    private Coin getFeeHistorical(Coin amount, Coin feeRatePerBtc, Param minFeeParam) {
+    private Coin calculateFee(Coin amount, Coin feeRatePerBtc, Param minFeeParam) {
         double feePerBtcAsDouble = (double) feeRatePerBtc.value;
         double amountAsDouble = amount != null ? (double) amount.value : 0;
         double btcAsDouble = (double) Coin.COIN.value;
@@ -355,17 +431,69 @@ public class TxValidator {
         return daoStateService.getParamValueAsCoin(Param.DEFAULT_TAKER_FEE_BTC, (int) blockHeight);
     }
 
+    private Optional<Boolean> maybeCheckAgainstFeeFromFilter(Coin tradeAmount,
+                                                             boolean isMaker,
+                                                             Coin feeValueAsCoin,
+                                                             Param minFeeParam,
+                                                             boolean isBtcFee,
+                                                             String description) {
+        if (new Date().before(USE_FEE_FROM_FILTER_ACTIVATION_DATE)) {
+            return Optional.empty();
+        }
+        return getFeeFromFilter(isMaker, isBtcFee)
+                .map(feeFromFilter -> {
+                    boolean isValid = testWithFeeFromFilter(tradeAmount, feeValueAsCoin, feeFromFilter, minFeeParam);
+                    if (!isValid) {
+                        log.warn("Fee does not match fee from filter. Fee from filter={}. {}", feeFromFilter, description);
+                    }
+                    return isValid;
+                });
+    }
+
+    private Optional<Coin> getFeeFromFilter(boolean isMaker, boolean isBtcFee) {
+        return Optional.ofNullable(filterManager.getFilter())
+                .map(filter -> {
+                    Coin value;
+                    if (isMaker) {
+                        value = isBtcFee ?
+                                Coin.valueOf(filter.getMakerFeeBtc()) :
+                                Coin.valueOf(filter.getMakerFeeBsq());
+                    } else {
+                        value = isBtcFee ?
+                                Coin.valueOf(filter.getTakerFeeBtc()) :
+                                Coin.valueOf(filter.getTakerFeeBsq());
+                    }
+                    return value;
+                })
+                .filter(Coin::isPositive);
+    }
+
+    private boolean testWithFeeFromFilter(Coin tradeAmount,
+                                          Coin actualFeeValue,
+                                          Coin feeFromFilter,
+                                          Param minFeeParam) {
+        long actualFeeAsLong = actualFeeValue.value;
+        long feeFromFilterAsLong = calculateFee(tradeAmount, feeFromFilter, minFeeParam).value;
+        double deviation = actualFeeAsLong / (double) feeFromFilterAsLong;
+        // It can be that the filter has not been updated immediately after DAO param change, so we need a tolerance
+        // Common change rate is 15-20%
+        return deviation > 0.7;
+    }
+
     // implements leniency rule of accepting old DAO rate parameters: https://github.com/bisq-network/bisq/issues/5329#issuecomment-803223859
     // We iterate over all past dao param values and if one of those matches we consider it valid. That covers the non-in-sync cases.
-    private boolean feeExistsUsingDifferentDaoParam(Coin tradeAmount, Coin actualFeeValue, Param defaultFeeParam, Param minFeeParam) {
+    private boolean feeExistsUsingDifferentDaoParam(Coin tradeAmount,
+                                                    Coin actualFeeValue,
+                                                    Param defaultFeeParam,
+                                                    Param minFeeParam) {
         for (Coin daoHistoricalRate : daoStateService.getParamChangeList(defaultFeeParam)) {
-            if (actualFeeValue.equals(getFeeHistorical(tradeAmount, daoHistoricalRate, minFeeParam))) {
+            if (actualFeeValue.equals(calculateFee(tradeAmount, daoHistoricalRate, minFeeParam))) {
                 return true;
             }
         }
-        // finally check the default rate used when we ask for the fee rate at block height 0 (it is hard coded in the Param enum)
-        Coin defaultRate = daoStateService.getParamValueAsCoin(defaultFeeParam, 0);
-        return actualFeeValue.equals(getFeeHistorical(tradeAmount, defaultRate, minFeeParam));
+        // Finally, check the default rate used when we ask for the fee rate at genesis block height (it is hard coded in the Param enum)
+        Coin defaultRate = daoStateService.getParamValueAsCoin(defaultFeeParam, daoStateService.getGenesisBlockHeight());
+        return actualFeeValue.equals(calculateFee(tradeAmount, defaultRate, minFeeParam));
     }
 
     public TxValidator endResult(String title, boolean status) {

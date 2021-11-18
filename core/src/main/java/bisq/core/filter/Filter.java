@@ -109,6 +109,13 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     // See ProofOfWorkTest for more info.
     private final int powDifficulty;
 
+    // Added at v 1.8.0
+    // BSQ fee gets updated in proposals repo (e.g. https://github.com/bisq-network/proposals/issues/345)
+    private final long makerFeeBtc;
+    private final long takerFeeBtc;
+    private final long makerFeeBsq;
+    private final long takerFeeBsq;
+
     // After we have created the signature from the filter data we clone it and apply the signature
     static Filter cloneWithSig(Filter filter, String signatureAsBase64) {
         return new Filter(filter.getBannedOfferIds(),
@@ -140,7 +147,11 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 filter.isDisableMempoolValidation(),
                 filter.isDisableApi(),
                 filter.isDisablePowMessage(),
-                filter.getPowDifficulty());
+                filter.getPowDifficulty(),
+                filter.getMakerFeeBtc(),
+                filter.getTakerFeeBtc(),
+                filter.getMakerFeeBsq(),
+                filter.getTakerFeeBsq());
     }
 
     // Used for signature verification as we created the sig without the signatureAsBase64 field we set it to null again
@@ -174,7 +185,11 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 filter.isDisableMempoolValidation(),
                 filter.isDisableApi(),
                 filter.isDisablePowMessage(),
-                filter.getPowDifficulty());
+                filter.getPowDifficulty(),
+                filter.getMakerFeeBtc(),
+                filter.getTakerFeeBtc(),
+                filter.getMakerFeeBsq(),
+                filter.getTakerFeeBsq());
     }
 
     public Filter(List<String> bannedOfferIds,
@@ -203,7 +218,11 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   boolean disableMempoolValidation,
                   boolean disableApi,
                   boolean disablePowMessage,
-                  int powDifficulty) {
+                  int powDifficulty,
+                  long makerFeeBtc,
+                  long takerFeeBtc,
+                  long makerFeeBsq,
+                  long takerFeeBsq) {
         this(bannedOfferIds,
                 nodeAddressesBannedFromTrading,
                 bannedPaymentAccounts,
@@ -233,7 +252,11 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 disableMempoolValidation,
                 disableApi,
                 disablePowMessage,
-                powDifficulty);
+                powDifficulty,
+                makerFeeBtc,
+                takerFeeBtc,
+                makerFeeBsq,
+                takerFeeBsq);
     }
 
 
@@ -271,7 +294,11 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   boolean disableMempoolValidation,
                   boolean disableApi,
                   boolean disablePowMessage,
-                  int powDifficulty) {
+                  int powDifficulty,
+                  long makerFeeBtc,
+                  long takerFeeBtc,
+                  long makerFeeBsq,
+                  long takerFeeBsq) {
         this.bannedOfferIds = bannedOfferIds;
         this.nodeAddressesBannedFromTrading = nodeAddressesBannedFromTrading;
         this.bannedPaymentAccounts = bannedPaymentAccounts;
@@ -302,6 +329,10 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         this.disableApi = disableApi;
         this.disablePowMessage = disablePowMessage;
         this.powDifficulty = powDifficulty;
+        this.makerFeeBtc = makerFeeBtc;
+        this.takerFeeBtc = takerFeeBtc;
+        this.makerFeeBsq = makerFeeBsq;
+        this.takerFeeBsq = takerFeeBsq;
 
         // ownerPubKeyBytes can be null when called from tests
         if (ownerPubKeyBytes != null) {
@@ -344,7 +375,11 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 .setDisableMempoolValidation(disableMempoolValidation)
                 .setDisableApi(disableApi)
                 .setDisablePowMessage(disablePowMessage)
-                .setPowDifficulty(powDifficulty);
+                .setPowDifficulty(powDifficulty)
+                .setMakerFeeBtc(makerFeeBtc)
+                .setTakerFeeBtc(takerFeeBtc)
+                .setMakerFeeBsq(makerFeeBsq)
+                .setTakerFeeBsq(takerFeeBsq);
 
         Optional.ofNullable(signatureAsBase64).ifPresent(builder::setSignatureAsBase64);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
@@ -356,7 +391,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         List<PaymentAccountFilter> bannedPaymentAccountsList = proto.getBannedPaymentAccountsList().stream()
                 .map(PaymentAccountFilter::fromProto)
                 .collect(Collectors.toList());
-
 
         return new Filter(ProtoUtil.protocolStringListToList(proto.getBannedOfferIdsList()),
                 ProtoUtil.protocolStringListToList(proto.getNodeAddressesBannedFromTradingList()),
@@ -387,7 +421,11 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 proto.getDisableMempoolValidation(),
                 proto.getDisableApi(),
                 proto.getDisablePowMessage(),
-                proto.getPowDifficulty()
+                proto.getPowDifficulty(),
+                proto.getMakerFeeBtc(),
+                proto.getTakerFeeBtc(),
+                proto.getMakerFeeBsq(),
+                proto.getTakerFeeBsq()
         );
     }
 
@@ -435,6 +473,10 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 ",\n     disableApi=" + disableApi +
                 ",\n     disablePowMessage=" + disablePowMessage +
                 ",\n     powDifficulty=" + powDifficulty +
+                ",\n     makerFeeBtc=" + makerFeeBtc +
+                ",\n     takerFeeBtc=" + takerFeeBtc +
+                ",\n     makerFeeBsq=" + makerFeeBsq +
+                ",\n     takerFeeBsq=" + takerFeeBsq +
                 "\n}";
     }
 }

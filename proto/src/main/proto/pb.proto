@@ -770,6 +770,10 @@ message Filter {
     bool disable_mempool_validation = 28;
     bool disable_pow_message = 29;
     int32 pow_difficulty = 30;
+    int64 maker_fee_btc = 31;
+    int64 taker_fee_btc = 32;
+    int64 maker_fee_bsq = 33;
+    int64 taker_fee_bsq = 34;
 }
 
 // Deprecated
