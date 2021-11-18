@@ -66,6 +66,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import static bisq.core.payment.payload.PaymentMethod.getPaymentMethodById;
+import static bisq.core.support.dispute.DisputeResult.PayoutSuggestion.UNKNOWN;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -213,7 +214,7 @@ public class AccountAgeWitnessServiceTest {
                 0,
                 null,
                 now - 1,
-                false));
+                false, "", UNKNOWN));
 
         // Filtermanager says nothing is filtered
         when(filterManager.isNodeAddressBanned(any())).thenReturn(false);
