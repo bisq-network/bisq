@@ -91,7 +91,7 @@ public class DtoNetworkInfo {
 
     @RequiredArgsConstructor
     public enum NetworkType {
-        IPV4("ipv4"), IPV6("ipv6"), ONION("onion");
+        IPV4("ipv4"), IPV6("ipv6"), ONION("onion"), I2P("i2p");
 
         @Getter(onMethod_ = @JsonValue)
         private final String name;
