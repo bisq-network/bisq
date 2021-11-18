@@ -46,7 +46,7 @@ public class ReceiptValidatorTest {
 
     @After
     public void tearDown() {
-        verifyZeroInteractions(offer);
+        verifyNoMoreInteractions(offer);
     }
 
     @Test
