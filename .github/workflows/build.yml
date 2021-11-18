@@ -26,7 +26,6 @@ jobs:
       with:
         java-version: ${{ matrix.java }}
         distribution: 'zulu'
-        cache: 'gradle'
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
