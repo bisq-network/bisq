@@ -1,5 +1,6 @@
 package bisq.desktop.util;
 
+import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
@@ -32,7 +33,8 @@ public class DisplayUtilsTest {
 
     @Before
     public void setUp() {
-        Locale.setDefault(new Locale("en", "US"));
+        Locale.setDefault(Locale.US);
+        GlobalSettings.setLocale(Locale.US);
         Res.setBaseCurrencyCode("BTC");
         Res.setBaseCurrencyName("Bitcoin");
     }
