@@ -65,7 +65,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
 import java.lang.reflect.Method;
@@ -87,9 +87,9 @@ public class FilterManager {
     private static final String BANNED_SEED_NODES = "bannedSeedNodes";
     private static final String BANNED_BTC_NODES = "bannedBtcNodes";
 
-    private final BiFunction<byte[], byte[], Boolean> challengeValidation = Arrays::equals;
+    private final BiPredicate<byte[], byte[]> challengeValidation = Arrays::equals;
     // We only require a new pow if difficulty has increased
-    private final BiFunction<Integer, Integer, Boolean> difficultyValidation =
+    private final BiPredicate<Integer, Integer> difficultyValidation =
             (value, controlValue) -> value - controlValue >= 0;
 
 
@@ -144,7 +144,7 @@ public class FilterManager {
                         "029340c3e7d4bb0f9e651b5f590b434fecb6175aeaa57145c7804ff05d210e534f",
                         "034dc7530bf66ffd9580aa98031ea9a18ac2d269f7c56c0e71eca06105b9ed69f9");
 
-        networkFilter.setBannedNodeFunction(this::isNodeAddressBannedFromNetwork);
+        networkFilter.setBannedNodePredicate(this::isNodeAddressBannedFromNetwork);
     }
 
 

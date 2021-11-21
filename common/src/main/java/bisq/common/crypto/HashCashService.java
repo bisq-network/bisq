@@ -24,7 +24,7 @@ import java.nio.charset.StandardCharsets;
 
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,8 +37,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class HashCashService {
     // Default validations. Custom implementations might use tolerance.
-    private static final BiFunction<byte[], byte[], Boolean> isChallengeValid = Arrays::equals;
-    private static final BiFunction<Integer, Integer, Boolean> isDifficultyValid = Integer::equals;
+    private static final BiPredicate<byte[], byte[]> isChallengeValid = Arrays::equals;
+    private static final BiPredicate<Integer, Integer> isDifficultyValid = Integer::equals;
 
     public static CompletableFuture<ProofOfWork> mint(byte[] payload,
                                                       byte[] challenge,
@@ -67,8 +67,8 @@ public class HashCashService {
     public static boolean verify(ProofOfWork proofOfWork,
                                  byte[] controlChallenge,
                                  int controlDifficulty,
-                                 BiFunction<byte[], byte[], Boolean> challengeValidation,
-                                 BiFunction<Integer, Integer, Boolean> difficultyValidation) {
+                                 BiPredicate<byte[], byte[]> challengeValidation,
+                                 BiPredicate<Integer, Integer> difficultyValidation) {
         return HashCashService.verify(proofOfWork,
                 controlChallenge,
                 controlDifficulty,
@@ -89,7 +89,7 @@ public class HashCashService {
     static CompletableFuture<ProofOfWork> mint(byte[] payload,
                                                byte[] challenge,
                                                int difficulty,
-                                               BiFunction<byte[], Integer, Boolean> testDifficulty) {
+                                               BiPredicate<byte[], Integer> testDifficulty) {
         return CompletableFuture.supplyAsync(() -> {
             long ts = System.currentTimeMillis();
             byte[] result;
@@ -97,7 +97,7 @@ public class HashCashService {
             do {
                 result = toSha256Hash(payload, challenge, ++counter);
             }
-            while (!testDifficulty.apply(result, difficulty));
+            while (!testDifficulty.test(result, difficulty));
             ProofOfWork proofOfWork = new ProofOfWork(payload, counter, challenge, difficulty, System.currentTimeMillis() - ts);
             log.info("Completed minting proofOfWork: {}", proofOfWork);
             return proofOfWork;
@@ -107,7 +107,7 @@ public class HashCashService {
     static boolean verify(ProofOfWork proofOfWork,
                           byte[] controlChallenge,
                           int controlDifficulty,
-                          BiFunction<byte[], Integer, Boolean> testDifficulty) {
+                          BiPredicate<byte[], Integer> testDifficulty) {
         return verify(proofOfWork,
                 controlChallenge,
                 controlDifficulty,
@@ -119,19 +119,19 @@ public class HashCashService {
     static boolean verify(ProofOfWork proofOfWork,
                           byte[] controlChallenge,
                           int controlDifficulty,
-                          BiFunction<byte[], byte[], Boolean> challengeValidation,
-                          BiFunction<Integer, Integer, Boolean> difficultyValidation,
-                          BiFunction<byte[], Integer, Boolean> testDifficulty) {
-        return challengeValidation.apply(proofOfWork.getChallenge(), controlChallenge) &&
-                difficultyValidation.apply(proofOfWork.getNumLeadingZeros(), controlDifficulty) &&
+                          BiPredicate<byte[], byte[]> challengeValidation,
+                          BiPredicate<Integer, Integer> difficultyValidation,
+                          BiPredicate<byte[], Integer> testDifficulty) {
+        return challengeValidation.test(proofOfWork.getChallenge(), controlChallenge) &&
+                difficultyValidation.test(proofOfWork.getNumLeadingZeros(), controlDifficulty) &&
                 verify(proofOfWork, testDifficulty);
     }
 
-    private static boolean verify(ProofOfWork proofOfWork, BiFunction<byte[], Integer, Boolean> testDifficulty) {
+    private static boolean verify(ProofOfWork proofOfWork, BiPredicate<byte[], Integer> testDifficulty) {
         byte[] hash = HashCashService.toSha256Hash(proofOfWork.getPayload(),
                 proofOfWork.getChallenge(),
                 proofOfWork.getCounter());
-        return testDifficulty.apply(hash, proofOfWork.getNumLeadingZeros());
+        return testDifficulty.test(hash, proofOfWork.getNumLeadingZeros());
     }
 
 
