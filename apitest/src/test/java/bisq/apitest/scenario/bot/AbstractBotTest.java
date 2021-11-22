@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.locale.CountryUtil.findCountryByCode;
 import static bisq.core.payment.payload.PaymentMethod.CLEAR_X_CHANGE_ID;
-import static bisq.core.payment.payload.PaymentMethod.getPaymentMethodById;
+import static bisq.core.payment.payload.PaymentMethod.getPaymentMethod;
 import static java.lang.String.format;
 import static java.lang.System.getProperty;
 import static java.nio.file.Files.readAllBytes;
@@ -74,7 +74,7 @@ public abstract class AbstractBotTest extends MethodTest {
             } else {
                 throw new UnsupportedOperationException(
                         format("This test harness bot does not work with %s payment accounts yet.",
-                                getPaymentMethodById(paymentMethodId).getDisplayString()));
+                                getPaymentMethod(paymentMethodId).getDisplayString()));
             }
         } else {
             String countryCode = botScript.getCountryCode();

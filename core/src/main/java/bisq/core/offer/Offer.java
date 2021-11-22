@@ -347,7 +347,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     }
 
     public PaymentMethod getPaymentMethod() {
-        return PaymentMethod.getPaymentMethodById(offerPayloadBase.getPaymentMethodId());
+        return PaymentMethod.getPaymentMethod(offerPayloadBase.getPaymentMethodId());
     }
 
     // utils
