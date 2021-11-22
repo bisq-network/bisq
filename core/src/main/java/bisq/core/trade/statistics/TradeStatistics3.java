@@ -438,10 +438,10 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         long maxTradeLimit = Coin.COIN.multiply(2).value;
         try {
             // We cover only active payment methods. Retired ones will not be found by getActivePaymentMethodById.
-            String paymentMethod = getPaymentMethod();
-            Optional<PaymentMethod> optionalPaymentMethodById = PaymentMethod.getActivePaymentMethodById(paymentMethod);
-            if (optionalPaymentMethodById.isPresent()) {
-                maxTradeLimit = optionalPaymentMethodById.get().getMaxTradeLimitAsCoin(currency).value;
+            String paymentMethodId = getPaymentMethod();
+            Optional<PaymentMethod> optionalPaymentMethod = PaymentMethod.getActivePaymentMethod(paymentMethodId);
+            if (optionalPaymentMethod.isPresent()) {
+                maxTradeLimit = optionalPaymentMethod.get().getMaxTradeLimitAsCoin(currency).value;
             }
         } catch (Exception e) {
             log.warn("Error at isValid(). " + e.toString(), e);
