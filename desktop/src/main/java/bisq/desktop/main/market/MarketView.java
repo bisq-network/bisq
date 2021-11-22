@@ -200,7 +200,7 @@ public class MarketView extends ActivatableView<TabPane, Void> {
                             .append("Price: ").append(FormattingUtils.formatPrice(tradeStatistics3.getTradePrice())).append("\n")
                             .append("Amount: ").append(formatter.formatCoin(tradeStatistics3.getTradeAmount())).append("\n")
                             .append("Volume: ").append(VolumeUtil.formatVolume(tradeStatistics3.getTradeVolume())).append("\n")
-                            .append("Payment method: ").append(Res.get(tradeStatistics3.getPaymentMethod())).append("\n")
+                            .append("Payment method: ").append(Res.get(tradeStatistics3.getPaymentMethodId())).append("\n")
                             .append("ReferralID: ").append(tradeStatistics3.getExtraDataMap().get(OfferPayload.REFERRAL_ID));
                     return sb.toString();
                 })
