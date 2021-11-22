@@ -365,12 +365,12 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static PaymentMethod getPaymentMethodById(String id) {
-        return getActivePaymentMethodById(id)
+        return getActivePaymentMethod(id)
                 .orElseGet(() -> new PaymentMethod(Res.get("shared.na")));
     }
 
     // We look up only our active payment methods not retired ones.
-    public static Optional<PaymentMethod> getActivePaymentMethodById(String id) {
+    public static Optional<PaymentMethod> getActivePaymentMethod(String id) {
         return paymentMethods.stream()
                 .filter(e -> e.getId().equals(id))
                 .findFirst();
