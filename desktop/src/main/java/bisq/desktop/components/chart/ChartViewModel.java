@@ -247,8 +247,9 @@ public abstract class ChartViewModel<T extends ChartDataModel> extends Activatab
     private Tuple2<Double, Double> getMinMax(List<XYChart.Data<Number, Number>> chartData) {
         long min = Long.MAX_VALUE, max = 0;
         for (XYChart.Data<Number, ?> data : chartData) {
-            min = Math.min(data.getXValue().longValue(), min);
-            max = Math.max(data.getXValue().longValue(), max);
+            long value = data.getXValue().longValue();
+            min = Math.min(value, min);
+            max = Math.max(value, max);
         }
         return new Tuple2<>((double) min, (double) max);
     }
