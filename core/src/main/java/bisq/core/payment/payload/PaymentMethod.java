@@ -364,7 +364,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static PaymentMethod getPaymentMethodById(String id) {
+    public static PaymentMethod getPaymentMethod(String id) {
         return getActivePaymentMethod(id)
                 .orElseGet(() -> new PaymentMethod(Res.get("shared.na")));
     }
