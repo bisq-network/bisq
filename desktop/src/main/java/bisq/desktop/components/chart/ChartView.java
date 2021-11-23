@@ -110,7 +110,6 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     private EventHandler<MouseEvent> dividerMouseDraggedEventHandler;
     private final StringProperty fromProperty = new SimpleStringProperty();
     private final StringProperty toProperty = new SimpleStringProperty();
-    private boolean dataApplied;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -569,6 +568,8 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
             long ts2 = System.currentTimeMillis();
             updateChartAfterDataChange();
             log.debug("updateChartAfterDataChange took {}", System.currentTimeMillis() - ts2);
+
+            onDataApplied();
         });
     }
 
@@ -776,21 +777,13 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     }
 
     protected void mapToUserThread(Runnable command) {
-        UserThread.execute(() -> {
-            command.run();
-            onDataApplied();
-        });
+        UserThread.execute(command);
     }
 
-    // For the async handling we need to wait until we get the data applied and then still delay a bit otherwise
-    // the UI does not get rendered at first start
     protected void onDataApplied() {
-        if (!dataApplied) {
-            dataApplied = true;
-            UserThread.execute(() -> {
-                applyTimeLineNavigationLabels();
-                updateTimeLinePositions();
-            });
+        // Once we have data applied we need to call initBoundsForTimelineNavigation again
+        if (model.upperBound.longValue() == 0) {
+            initBoundsForTimelineNavigation();
         }
     }
 }
