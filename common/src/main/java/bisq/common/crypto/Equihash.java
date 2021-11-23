@@ -39,6 +39,7 @@ import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 import lombok.ToString;
 
@@ -303,6 +304,37 @@ public class Equihash {
         }
     }
 
+    private static class IntListMultimap {
+        final int[] shortLists;
+        final ListMultimap<Integer, Integer> overspillMultimap;
+
+        IntListMultimap(int keyUpperBound) {
+            shortLists = new int[keyUpperBound * 4];
+            overspillMultimap = MultimapBuilder.hashKeys().arrayListValues().build();
+        }
+
+        IntStream get(int key) {
+            if (shortLists[key * 4 + 3] == 0) {
+                return IntStream.range(0, 4).map(i -> ~shortLists[key * 4 + i]).takeWhile(i -> i >= 0);
+            }
+            return IntStream.concat(
+                    IntStream.range(0, 4).map(i -> ~shortLists[key * 4 + i]),
+                    overspillMultimap.get(key).stream().mapToInt(i -> i)
+            );
+        }
+
+        // assumes non-negative values only:
+        void put(int key, int value) {
+            for (int i = 0; i < 4; i++) {
+                if (shortLists[key * 4 + i] == 0) {
+                    shortLists[key * 4 + i] = ~value;
+                    return;
+                }
+            }
+            overspillMultimap.put(key, value);
+        }
+    }
+
     // Apply a single iteration of Wagner's Algorithm.
     private XorTable findCollisions(XorTable table, boolean isPartial) {
         int newHashWidth = isPartial ? table.hashWidth - 1 : 0;
@@ -311,7 +343,7 @@ public class Equihash {
         var newTableValues = ImmutableIntArray.builder(
                 newRowWidth * (isPartial ? tableCapacity : 10));
 
-        ListMultimap<Integer, Integer> indexMultimap = MultimapBuilder.hashKeys().arrayListValues().build();
+        var indexMultimap = new IntListMultimap(N / 2);
         for (int i = 0; i < table.numRows; i++) {
             var row = table.getRow(i);
             var collisionIndices = indexMultimap.get(row.get(0));
