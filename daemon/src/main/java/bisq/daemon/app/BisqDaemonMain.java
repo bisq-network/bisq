@@ -91,13 +91,6 @@ public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.Bis
     @Override
     protected void startApplication() {
         super.startApplication();
-
-        // We need to be in user thread! We mapped at launchApplication already...
-        headlessApp.startApplication();
-
-        // In headless mode we don't have an async behaviour so we trigger the setup by
-        // calling onApplicationStarted.
-        onApplicationStarted();
     }
 
     @Override
