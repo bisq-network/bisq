@@ -42,6 +42,7 @@ import java.text.DecimalFormat;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 
 import java.io.File;
@@ -523,6 +524,26 @@ public class Utilities {
             result = result << 8 | aByte & 0xff;
         }
         return result;
+    }
+
+    public static byte[] copyRightAligned(byte[] src, int newLength) {
+        byte[] dest = new byte[newLength];
+        int srcPos = Math.max(src.length - newLength, 0);
+        int destPos = Math.max(newLength - src.length, 0);
+        System.arraycopy(src, srcPos, dest, destPos, newLength - destPos);
+        return dest;
+    }
+
+    public static byte[] intsToBytesBE(int[] ints) {
+        byte[] bytes = new byte[ints.length * 4];
+        ByteBuffer.wrap(bytes).asIntBuffer().put(ints);
+        return bytes;
+    }
+
+    public static int[] bytesToIntsBE(byte[] bytes) {
+        int[] ints = new int[bytes.length / 4];
+        ByteBuffer.wrap(bytes).asIntBuffer().get(ints);
+        return ints;
     }
 
     // Helper to filter unique elements by key
