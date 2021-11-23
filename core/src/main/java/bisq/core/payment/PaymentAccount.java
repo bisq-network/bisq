@@ -42,7 +42,6 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 import static bisq.core.payment.payload.PaymentMethod.TRANSFERWISE_ID;
-import static bisq.core.payment.payload.PaymentMethod.getPaymentMethodById;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode
@@ -113,7 +112,7 @@ public abstract class PaymentAccount implements PersistablePayload {
         ngnTwOptional.ifPresent(tradeCurrencies::remove);
 
         try {
-            PaymentAccount account = PaymentAccountFactory.getPaymentAccount(getPaymentMethodById(paymentMethodId));
+            PaymentAccount account = PaymentAccountFactory.getPaymentAccount(PaymentMethod.getPaymentMethod(paymentMethodId));
             account.getTradeCurrencies().clear();
             account.setId(proto.getId());
             account.setCreationDate(proto.getCreationDate());

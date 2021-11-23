@@ -47,7 +47,7 @@ import java.lang.reflect.Type;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.payment.payload.PaymentMethod.getPaymentMethodById;
+import static bisq.core.payment.payload.PaymentMethod.getPaymentMethod;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.lang.System.getProperty;
@@ -148,7 +148,7 @@ public class PaymentAccountForm {
      * @return A uniquely named tmp file used to define new payment account details.
      */
     public File getPaymentAccountForm(String paymentMethodId) {
-        PaymentMethod paymentMethod = getPaymentMethodById(paymentMethodId);
+        PaymentMethod paymentMethod = getPaymentMethod(paymentMethodId);
         File file = getTmpJsonFile(paymentMethodId);
         try (OutputStreamWriter outputStreamWriter = new OutputStreamWriter(new FileOutputStream(checkNotNull(file), false), UTF_8)) {
             PaymentAccount paymentAccount = PaymentAccountFactory.getPaymentAccount(paymentMethod);
@@ -244,7 +244,7 @@ public class PaymentAccountForm {
     }
 
     private Class<? extends PaymentAccount> getPaymentAccountClass(String paymentMethodId) {
-        PaymentMethod paymentMethod = getPaymentMethodById(paymentMethodId);
+        PaymentMethod paymentMethod = getPaymentMethod(paymentMethodId);
         return PaymentAccountFactory.getPaymentAccount(paymentMethod).getClass();
     }
 }

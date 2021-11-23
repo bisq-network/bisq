@@ -47,7 +47,6 @@ To manually test endpoints, run each of the following:
 curl http://localhost:8080/getAllMarketPrices
 curl http://localhost:8080/getFees
 curl http://localhost:8080/getParams
-curl http://localhost:8080/getVersion
 curl http://localhost:8080/info
 ```
 

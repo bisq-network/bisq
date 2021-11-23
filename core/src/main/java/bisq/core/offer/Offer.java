@@ -225,8 +225,15 @@ public class Offer implements NetworkPayload, PersistablePayload {
         return offerPayloadBase.getPrice();
     }
 
-    public void checkTradePriceTolerance(long takersTradePrice) throws TradePriceOutOfToleranceException,
+    public void verifyTakersTradePrice(long takersTradePrice) throws TradePriceOutOfToleranceException,
             MarketPriceNotAvailableException, IllegalArgumentException {
+        if (!isUseMarketBasedPrice()) {
+            checkArgument(takersTradePrice == getFixedPrice(),
+                    "Takers price does not match offer price. " +
+                            "Takers price=" + takersTradePrice + "; offer price=" + getFixedPrice());
+            return;
+        }
+
         Price tradePrice = Price.valueOf(getCurrencyCode(), takersTradePrice);
         Price offerPrice = getPrice();
         if (offerPrice == null)
@@ -340,7 +347,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     }
 
     public PaymentMethod getPaymentMethod() {
-        return PaymentMethod.getPaymentMethodById(offerPayloadBase.getPaymentMethodId());
+        return PaymentMethod.getPaymentMethod(offerPayloadBase.getPaymentMethodId());
     }
 
     // utils

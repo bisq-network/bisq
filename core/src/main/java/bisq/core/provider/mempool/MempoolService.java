@@ -93,7 +93,7 @@ public class MempoolService {
 
     public void validateOfferMakerTx(OfferPayload offerPayload, Consumer<TxValidator> resultHandler) {
         validateOfferMakerTx(new TxValidator(daoStateService, offerPayload.getOfferFeePaymentTxId(), Coin.valueOf(offerPayload.getAmount()),
-                offerPayload.isCurrencyForMakerFeeBtc()), resultHandler);
+                offerPayload.isCurrencyForMakerFeeBtc(), offerPayload.getBlockHeightAtOfferCreation(), filterManager), resultHandler);
     }
 
     public void validateOfferMakerTx(TxValidator txValidator, Consumer<TxValidator> resultHandler) {
@@ -107,7 +107,7 @@ public class MempoolService {
 
     public void validateOfferTakerTx(Trade trade, Consumer<TxValidator> resultHandler) {
         validateOfferTakerTx(new TxValidator(daoStateService, trade.getTakerFeeTxId(), trade.getAmount(),
-                trade.isCurrencyForTakerFeeBtc()), resultHandler);
+                trade.isCurrencyForTakerFeeBtc(), filterManager), resultHandler);
     }
 
     public void validateOfferTakerTx(TxValidator txValidator, Consumer<TxValidator> resultHandler) {
@@ -120,7 +120,7 @@ public class MempoolService {
     }
 
     public void checkTxIsConfirmed(String txId, Consumer<TxValidator> resultHandler) {
-        TxValidator txValidator = new TxValidator(daoStateService, txId);
+        TxValidator txValidator = new TxValidator(daoStateService, txId, filterManager);
         if (!isServiceSupported()) {
             UserThread.runAfter(() -> resultHandler.accept(txValidator.endResult("mempool request not supported, bypassing", true)), 1);
             return;

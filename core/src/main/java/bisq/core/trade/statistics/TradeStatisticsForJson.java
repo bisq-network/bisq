@@ -52,7 +52,7 @@ public final class TradeStatisticsForJson {
 
     public TradeStatisticsForJson(TradeStatistics3 tradeStatistics) {
         this.currency = tradeStatistics.getCurrency();
-        this.paymentMethod = tradeStatistics.getPaymentMethod();
+        this.paymentMethod = tradeStatistics.getPaymentMethodId();
         this.tradePrice = tradeStatistics.getPrice();
         this.tradeAmount = tradeStatistics.getAmount();
         this.tradeDate = tradeStatistics.getDateAsLong();

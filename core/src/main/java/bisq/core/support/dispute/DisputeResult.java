@@ -67,6 +67,17 @@ public final class DisputeResult implements NetworkPayload {
         PEER_WAS_LATE
     }
 
+    public enum PayoutSuggestion {
+        UNKNOWN,
+        BUYER_GETS_TRADE_AMOUNT,
+        BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION,
+        BUYER_GETS_TRADE_AMOUNT_MINUS_PENALTY,
+        SELLER_GETS_TRADE_AMOUNT,
+        SELLER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION,
+        SELLER_GETS_TRADE_AMOUNT_MINUS_PENALTY,
+        CUSTOM_PAYOUT
+    }
+
     private final String tradeId;
     private final int traderId;
     @Setter
@@ -91,6 +102,10 @@ public final class DisputeResult implements NetworkPayload {
     private long closeDate;
     @Setter
     private boolean isLoserPublisher;
+    @Setter
+    private String payoutAdjustmentPercent = "";
+    @Setter
+    private PayoutSuggestion payoutSuggestion;
 
     public DisputeResult(String tradeId, int traderId) {
         this.tradeId = tradeId;
@@ -111,7 +126,9 @@ public final class DisputeResult implements NetworkPayload {
                          long sellerPayoutAmount,
                          @Nullable byte[] arbitratorPubKey,
                          long closeDate,
-                         boolean isLoserPublisher) {
+                         boolean isLoserPublisher,
+                         String payoutAdjustmentPercent,
+                         PayoutSuggestion payoutSuggestion) {
         this.tradeId = tradeId;
         this.traderId = traderId;
         this.winner = winner;
@@ -127,6 +144,8 @@ public final class DisputeResult implements NetworkPayload {
         this.arbitratorPubKey = arbitratorPubKey;
         this.closeDate = closeDate;
         this.isLoserPublisher = isLoserPublisher;
+        this.payoutAdjustmentPercent = payoutAdjustmentPercent;
+        this.payoutSuggestion = payoutSuggestion;
     }
 
 
@@ -149,7 +168,9 @@ public final class DisputeResult implements NetworkPayload {
                 proto.getSellerPayoutAmount(),
                 proto.getArbitratorPubKey().toByteArray(),
                 proto.getCloseDate(),
-                proto.getIsLoserPublisher());
+                proto.getIsLoserPublisher(),
+                proto.getPayoutAdjustmentPercent(),
+                ProtoUtil.enumFromProto(DisputeResult.PayoutSuggestion.class, proto.getPayoutSuggestion().name()));
     }
 
     @Override
@@ -165,13 +186,15 @@ public final class DisputeResult implements NetworkPayload {
                 .setBuyerPayoutAmount(buyerPayoutAmount)
                 .setSellerPayoutAmount(sellerPayoutAmount)
                 .setCloseDate(closeDate)
-                .setIsLoserPublisher(isLoserPublisher);
+                .setIsLoserPublisher(isLoserPublisher)
+                .setPayoutAdjustmentPercent(payoutAdjustmentPercent);
 
         Optional.ofNullable(arbitratorSignature).ifPresent(arbitratorSignature -> builder.setArbitratorSignature(ByteString.copyFrom(arbitratorSignature)));
         Optional.ofNullable(arbitratorPubKey).ifPresent(arbitratorPubKey -> builder.setArbitratorPubKey(ByteString.copyFrom(arbitratorPubKey)));
         Optional.ofNullable(winner).ifPresent(result -> builder.setWinner(protobuf.DisputeResult.Winner.valueOf(winner.name())));
         Optional.ofNullable(chatMessage).ifPresent(chatMessage ->
                 builder.setChatMessage(chatMessage.toProtoNetworkEnvelope().getChatMessage()));
+        Optional.ofNullable(payoutSuggestion).ifPresent(result -> builder.setPayoutSuggestion(protobuf.DisputeResult.PayoutSuggestion.valueOf(payoutSuggestion.name())));
 
         return builder.build();
     }
@@ -254,6 +277,8 @@ public final class DisputeResult implements NetworkPayload {
                 ",\n     arbitratorPubKey=" + Utilities.bytesAsHexString(arbitratorPubKey) +
                 ",\n     closeDate=" + closeDate +
                 ",\n     isLoserPublisher=" + isLoserPublisher +
+                ",\n     payoutAdjustmentPercent=" + payoutAdjustmentPercent +
+                ",\n     payoutSuggestion=" + payoutSuggestion +
                 "\n}";
     }
 }

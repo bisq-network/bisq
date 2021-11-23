@@ -17,12 +17,14 @@
 
 package bisq.core.trade.statistics;
 
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.AltcoinExchangeRate;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.util.JsonUtil;
@@ -396,7 +398,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         refundAgent = null;
     }
 
-    public String getPaymentMethod() {
+    public String getPaymentMethodId() {
         try {
             return PaymentMethodMapper.values()[Integer.parseInt(paymentMethod)].name();
         } catch (Throwable ignore) {
@@ -430,13 +432,29 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     }
 
     public boolean isValid() {
+        if (currency == null) {
+            return false;
+        }
+        long maxTradeLimit = Coin.COIN.multiply(2).value;
+        try {
+            // We cover only active payment methods. Retired ones will not be found by getActivePaymentMethodById.
+            String paymentMethodId = getPaymentMethodId();
+            Optional<PaymentMethod> optionalPaymentMethod = PaymentMethod.getActivePaymentMethod(paymentMethodId);
+            if (optionalPaymentMethod.isPresent()) {
+                maxTradeLimit = optionalPaymentMethod.get().getMaxTradeLimitAsCoin(currency).value;
+            }
+        } catch (Exception e) {
+            log.warn("Error at isValid().", e);
+        }
         return amount > 0 &&
+                amount <= maxTradeLimit &&
                 price > 0 &&
                 date > 0 &&
                 paymentMethod != null &&
                 !paymentMethod.isEmpty() &&
-                currency != null &&
-                !currency.isEmpty();
+                !currency.isEmpty() &&
+                (CurrencyUtil.getCryptoCurrency(currency).isPresent() ||
+                        CurrencyUtil.getFiatCurrency(currency).isPresent());
     }
 
     @Override

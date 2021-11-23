@@ -770,6 +770,10 @@ message Filter {
     bool disable_mempool_validation = 28;
     bool disable_pow_message = 29;
     int32 pow_difficulty = 30;
+    int64 maker_fee_btc = 31;
+    int64 taker_fee_btc = 32;
+    int64 maker_fee_bsq = 33;
+    int64 taker_fee_bsq = 34;
 }
 
 // Deprecated
@@ -975,6 +979,16 @@ message DisputeResult {
         PEER_WAS_LATE = 12;
     }
 
+    enum PayoutSuggestion {
+        CUSTOM_PAYOUT = 0;
+        BUYER_GETS_TRADE_AMOUNT = 1;
+        BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION = 2;
+        BUYER_GETS_TRADE_AMOUNT_MINUS_PENALTY = 3;
+        SELLER_GETS_TRADE_AMOUNT = 4;
+        SELLER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION = 5;
+        SELLER_GETS_TRADE_AMOUNT_MINUS_PENALTY = 6;
+    }
+
     string trade_id = 1;
     int32 trader_id = 2;
     Winner winner = 3;
@@ -990,6 +1004,8 @@ message DisputeResult {
     bytes arbitrator_pub_key = 13;
     int64 close_date = 14;
     bool is_loser_publisher = 15;
+    string payout_adjustment_percent = 16;
+    PayoutSuggestion payout_suggestion = 17;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
