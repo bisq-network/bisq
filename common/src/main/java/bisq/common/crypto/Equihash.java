@@ -42,6 +42,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.PrimitiveIterator;
+import java.util.stream.IntStream;
 
 import lombok.ToString;
 
@@ -244,15 +245,11 @@ public class Equihash {
         }
 
         private XorTable computeAllHashes() {
-            var tableValues = ImmutableIntArray.builder((k + 2) * N);
-            for (int i = 0; i < N; i++) {
+            var tableValues = IntStream.range(0, N).flatMap(i -> {
                 int[] hash = hashInputs(i);
-                for (int j = 0; j <= k; j++) {
-                    tableValues.add(hash[j] & (N / 2 - 1));
-                }
-                tableValues.add(i);
-            }
-            return new XorTable(k + 1, 1, tableValues.build());
+                return IntStream.range(0, k + 2).map(j -> j <= k ? hash[j] & (N / 2 - 1) : i);
+            });
+            return new XorTable(k + 1, 1, ImmutableIntArray.copyOf(tableValues.parallel()));
         }
 
         private boolean testDifficultyCondition(int[] inputs) {

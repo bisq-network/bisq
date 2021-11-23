@@ -20,6 +20,7 @@ package bisq.common.util;
 import org.bitcoinj.core.Utils;
 
 import com.google.common.base.Splitter;
+import com.google.common.primitives.Ints;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -42,7 +43,6 @@ import java.text.DecimalFormat;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 
 import java.io.File;
@@ -536,13 +536,21 @@ public class Utilities {
 
     public static byte[] intsToBytesBE(int[] ints) {
         byte[] bytes = new byte[ints.length * 4];
-        ByteBuffer.wrap(bytes).asIntBuffer().put(ints);
+        int i = 0;
+        for (int v : ints) {
+            bytes[i++] = (byte) (v >> 24);
+            bytes[i++] = (byte) (v >> 16);
+            bytes[i++] = (byte) (v >> 8);
+            bytes[i++] = (byte) v;
+        }
         return bytes;
     }
 
     public static int[] bytesToIntsBE(byte[] bytes) {
         int[] ints = new int[bytes.length / 4];
-        ByteBuffer.wrap(bytes).asIntBuffer().get(ints);
+        for (int i = 0, j = 0; i < bytes.length / 4; i++) {
+            ints[i] = Ints.fromBytes(bytes[j++], bytes[j++], bytes[j++], bytes[j++]);
+        }
         return ints;
     }
 
