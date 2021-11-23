@@ -398,7 +398,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         refundAgent = null;
     }
 
-    public String getPaymentMethod() {
+    public String getPaymentMethodId() {
         try {
             return PaymentMethodMapper.values()[Integer.parseInt(paymentMethod)].name();
         } catch (Throwable ignore) {
@@ -437,8 +437,14 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         }
         long maxTradeLimit = Coin.COIN.multiply(2).value;
         try {
-            maxTradeLimit = PaymentMethod.getPaymentMethodById(getPaymentMethod()).getMaxTradeLimitAsCoin(currency).value;
-        } catch (Exception ignore) {
+            // We cover only active payment methods. Retired ones will not be found by getActivePaymentMethodById.
+            String paymentMethodId = getPaymentMethodId();
+            Optional<PaymentMethod> optionalPaymentMethod = PaymentMethod.getActivePaymentMethod(paymentMethodId);
+            if (optionalPaymentMethod.isPresent()) {
+                maxTradeLimit = optionalPaymentMethod.get().getMaxTradeLimitAsCoin(currency).value;
+            }
+        } catch (Exception e) {
+            log.warn("Error at isValid().", e);
         }
         return amount > 0 &&
                 amount <= maxTradeLimit &&

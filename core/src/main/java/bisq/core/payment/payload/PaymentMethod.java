@@ -29,6 +29,7 @@ import org.bitcoinj.core.Coin;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import lombok.EqualsAndHashCode;
@@ -363,11 +364,16 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static PaymentMethod getPaymentMethodById(String id) {
+    public static PaymentMethod getPaymentMethod(String id) {
+        return getActivePaymentMethod(id)
+                .orElseGet(() -> new PaymentMethod(Res.get("shared.na")));
+    }
+
+    // We look up only our active payment methods not retired ones.
+    public static Optional<PaymentMethod> getActivePaymentMethod(String id) {
         return paymentMethods.stream()
                 .filter(e -> e.getId().equals(id))
-                .findFirst()
-                .orElseGet(() -> new PaymentMethod(Res.get("shared.na")));
+                .findFirst();
     }
 
     public Coin getMaxTradeLimitAsCoin(String currencyCode) {
@@ -391,7 +397,9 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
             riskFactor = 8;
         else {
             riskFactor = 8;
-            log.error("maxTradeLimit is not matching one of our default values. maxTradeLimit=" + Coin.valueOf(maxTradeLimit).toFriendlyString());
+            log.warn("maxTradeLimit is not matching one of our default values. We use highest risk factor. " +
+                            "maxTradeLimit={}. PaymentMethod={}",
+                    Coin.valueOf(maxTradeLimit).toFriendlyString(), this);
         }
 
         TradeLimits tradeLimits = TradeLimits.getINSTANCE();

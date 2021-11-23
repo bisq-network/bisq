@@ -83,7 +83,7 @@ public class TradeStatistics3ListItem {
 
     public String getPaymentMethodString() {
         if (paymentMethodString == null) {
-            paymentMethodString = tradeStatistics3 != null ? Res.get(tradeStatistics3.getPaymentMethod()) : "";
+            paymentMethodString = tradeStatistics3 != null ? Res.get(tradeStatistics3.getPaymentMethodId()) : "";
         }
         return paymentMethodString;
     }
