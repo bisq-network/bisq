@@ -25,6 +25,7 @@ import bisq.core.dao.DaoSetup;
 import bisq.core.dao.node.full.RpcService;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.bsq_swap.OpenBsqSwapOfferService;
+import bisq.core.payment.TradeLimits;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 
 import bisq.network.p2p.NodeAddress;
@@ -62,6 +63,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
     private static final long SHUTDOWN_INTERVAL = TimeUnit.HOURS.toMillis(24);
     private volatile boolean stopped;
     private final long startTime = System.currentTimeMillis();
+    private TradeLimits tradeLimits;
 
     public ExecutableForAppWithP2p(String fullName, String scriptName, String appName, String version) {
         super(fullName, scriptName, appName, version);
@@ -74,6 +76,12 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
                 .setDaemon(true)
                 .build();
         UserThread.setExecutor(Executors.newSingleThreadExecutor(threadFactory));
+    }
+
+    @Override
+    protected void startApplication() {
+        // Pin that as it is used in PaymentMethods and verification in TradeStatistics
+        tradeLimits = injector.getInstance(TradeLimits.class);
     }
 
     @Override

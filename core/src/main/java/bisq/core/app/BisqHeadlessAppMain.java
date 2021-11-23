@@ -17,6 +17,8 @@
 
 package bisq.core.app;
 
+import bisq.core.payment.TradeLimits;
+
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Version;
@@ -31,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BisqHeadlessAppMain extends BisqExecutable {
     protected HeadlessApp headlessApp;
+    private TradeLimits tradeLimits;
 
     public BisqHeadlessAppMain() {
         super("Bisq Daemon", "bisqd", "Bisq", Version.VERSION);
@@ -108,6 +111,9 @@ public class BisqHeadlessAppMain extends BisqExecutable {
 
     @Override
     protected void startApplication() {
+        // Pin that as it is used in PaymentMethods and verification in TradeStatistics
+        tradeLimits = injector.getInstance(TradeLimits.class);
+
         // We need to be in user thread! We mapped at launchApplication already...
         headlessApp.startApplication();
 

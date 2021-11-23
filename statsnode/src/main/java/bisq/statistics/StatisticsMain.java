@@ -88,6 +88,8 @@ public class StatisticsMain extends ExecutableForAppWithP2p {
 
     @Override
     protected void startApplication() {
+        super.startApplication();
+
         statistics.startApplication();
     }
 }
