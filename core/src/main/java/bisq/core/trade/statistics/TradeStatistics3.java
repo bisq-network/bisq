@@ -444,7 +444,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                 maxTradeLimit = optionalPaymentMethod.get().getMaxTradeLimitAsCoin(currency).value;
             }
         } catch (Exception e) {
-            log.warn("Error at isValid(). " + e.toString(), e);
+            log.warn("Error at isValid().", e);
         }
         return amount > 0 &&
                 amount <= maxTradeLimit &&
