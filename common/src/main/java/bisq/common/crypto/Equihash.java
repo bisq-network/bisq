@@ -38,8 +38,10 @@ import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Deque;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.stream.IntStream;
+import java.util.PrimitiveIterator;
 
 import lombok.ToString;
 
@@ -313,14 +315,31 @@ public class Equihash {
             overspillMultimap = MultimapBuilder.hashKeys().arrayListValues().build();
         }
 
-        IntStream get(int key) {
-            if (shortLists[key * 4 + 3] == 0) {
-                return IntStream.range(0, 4).map(i -> ~shortLists[key * 4 + i]).takeWhile(i -> i >= 0);
-            }
-            return IntStream.concat(
-                    IntStream.range(0, 4).map(i -> ~shortLists[key * 4 + i]),
-                    overspillMultimap.get(key).stream().mapToInt(i -> i)
-            );
+        PrimitiveIterator.OfInt get(int key) {
+            return new PrimitiveIterator.OfInt() {
+                int i;
+                Iterator<Integer> overspillIterator;
+
+                private Iterator<Integer> overspillIterator() {
+                    if (overspillIterator == null) {
+                        overspillIterator = overspillMultimap.get(i).iterator();
+                    }
+                    return overspillIterator;
+                }
+
+                @Override
+                public int nextInt() {
+                    if (!hasNext()) {
+                        throw new NoSuchElementException();
+                    }
+                    return i < 4 ? ~shortLists[key * 4 + i++] : overspillIterator().next();
+                }
+
+                @Override
+                public boolean hasNext() {
+                    return i < 4 && shortLists[key * 4 + i] < 0 || i == 4 && overspillIterator().hasNext();
+                }
+            };
         }
 
         // assumes non-negative values only:
@@ -347,18 +366,18 @@ public class Equihash {
         for (int i = 0; i < table.numRows; i++) {
             var row = table.getRow(i);
             var collisionIndices = indexMultimap.get(row.get(0));
-            collisionIndices.forEach(ii -> {
-                var collidingRow = table.getRow(ii);
+            while (collisionIndices.hasNext()) {
+                var collidingRow = table.getRow(collisionIndices.nextInt());
                 if (isPartial) {
                     for (int j = 1; j < table.hashWidth; j++) {
                         newTableValues.add(collidingRow.get(j) ^ row.get(j));
                     }
                 } else if (!collidingRow.subArray(1, table.hashWidth).equals(row.subArray(1, table.hashWidth))) {
-                    return;
+                    continue;
                 }
                 newTableValues.addAll(collidingRow.subArray(table.hashWidth, collidingRow.length()));
                 newTableValues.addAll(row.subArray(table.hashWidth, row.length()));
-            });
+            }
             indexMultimap.put(row.get(0), i);
         }
         return new XorTable(newHashWidth, newIndexTupleWidth, newTableValues.build());
