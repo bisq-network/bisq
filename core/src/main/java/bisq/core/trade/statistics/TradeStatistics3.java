@@ -58,7 +58,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -80,6 +82,8 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
 
     @JsonExclude
     private transient static final ZoneId ZONE_ID = ZoneId.systemDefault();
+    @JsonExclude
+    private transient static final long STRICT_FILTER_DATE = new GregorianCalendar(2021, Calendar.NOVEMBER, 1).getTime().getTime();
 
     public static TradeStatistics3 from(Trade trade,
                                         @Nullable String referralId,
@@ -435,26 +439,37 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         if (currency == null) {
             return false;
         }
-        long maxTradeLimit = Coin.COIN.multiply(2).value;
-        try {
-            // We cover only active payment methods. Retired ones will not be found by getActivePaymentMethodById.
-            String paymentMethodId = getPaymentMethodId();
-            Optional<PaymentMethod> optionalPaymentMethod = PaymentMethod.getActivePaymentMethod(paymentMethodId);
-            if (optionalPaymentMethod.isPresent()) {
-                maxTradeLimit = optionalPaymentMethod.get().getMaxTradeLimitAsCoin(currency).value;
+
+        boolean validMaxTradeLimit = true;
+        boolean currencyFound = true;
+        // We had historically higher trade limits and assets which are not in the currency list anymore, so we apply
+        // the filter only for data after STRICT_FILTER_DATE.
+        if (date > STRICT_FILTER_DATE) {
+            long maxTradeLimit = Coin.COIN.multiply(2).value;
+            try {
+                // We cover only active payment methods. Retired ones will not be found by getActivePaymentMethodById.
+                String paymentMethodId = getPaymentMethodId();
+                Optional<PaymentMethod> optionalPaymentMethod = PaymentMethod.getActivePaymentMethod(paymentMethodId);
+                if (optionalPaymentMethod.isPresent()) {
+                    maxTradeLimit = optionalPaymentMethod.get().getMaxTradeLimitAsCoin(currency).value;
+                }
+            } catch (Exception e) {
+                log.warn("Error at isValid().", e);
             }
-        } catch (Exception e) {
-            log.warn("Error at isValid().", e);
+            validMaxTradeLimit = amount <= maxTradeLimit;
+
+            currencyFound = CurrencyUtil.getCryptoCurrency(currency).isPresent() ||
+                    CurrencyUtil.getFiatCurrency(currency).isPresent();
         }
+
         return amount > 0 &&
-                amount <= maxTradeLimit &&
+                validMaxTradeLimit &&
                 price > 0 &&
                 date > 0 &&
                 paymentMethod != null &&
                 !paymentMethod.isEmpty() &&
                 !currency.isEmpty() &&
-                (CurrencyUtil.getCryptoCurrency(currency).isPresent() ||
-                        CurrencyUtil.getFiatCurrency(currency).isPresent());
+                currencyFound;
     }
 
     @Override
