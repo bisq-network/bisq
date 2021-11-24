@@ -108,6 +108,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     // Number of leading zeros for pow for BSQ swap offers. Difficulty of 8 requires 0.856 ms in average, 15 about 100 ms.
     // See ProofOfWorkTest for more info.
     private final int powDifficulty;
+    // Enabled PoW version numbers in reverse order of preference, starting with 0 for Hashcash.
+    private final List<Integer> enabledPowVersions;
 
     // Added at v 1.8.0
     // BSQ fee gets updated in proposals repo (e.g. https://github.com/bisq-network/proposals/issues/345)
@@ -148,6 +150,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 filter.isDisableApi(),
                 filter.isDisablePowMessage(),
                 filter.getPowDifficulty(),
+                filter.getEnabledPowVersions(),
                 filter.getMakerFeeBtc(),
                 filter.getTakerFeeBtc(),
                 filter.getMakerFeeBsq(),
@@ -186,6 +189,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 filter.isDisableApi(),
                 filter.isDisablePowMessage(),
                 filter.getPowDifficulty(),
+                filter.getEnabledPowVersions(),
                 filter.getMakerFeeBtc(),
                 filter.getTakerFeeBtc(),
                 filter.getMakerFeeBsq(),
@@ -219,6 +223,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   boolean disableApi,
                   boolean disablePowMessage,
                   int powDifficulty,
+                  List<Integer> enabledPowVersions,
                   long makerFeeBtc,
                   long takerFeeBtc,
                   long makerFeeBsq,
@@ -253,6 +258,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 disableApi,
                 disablePowMessage,
                 powDifficulty,
+                enabledPowVersions,
                 makerFeeBtc,
                 takerFeeBtc,
                 makerFeeBsq,
@@ -295,6 +301,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   boolean disableApi,
                   boolean disablePowMessage,
                   int powDifficulty,
+                  List<Integer> enabledPowVersions,
                   long makerFeeBtc,
                   long takerFeeBtc,
                   long makerFeeBsq,
@@ -329,6 +336,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         this.disableApi = disableApi;
         this.disablePowMessage = disablePowMessage;
         this.powDifficulty = powDifficulty;
+        this.enabledPowVersions = enabledPowVersions;
         this.makerFeeBtc = makerFeeBtc;
         this.takerFeeBtc = takerFeeBtc;
         this.makerFeeBsq = makerFeeBsq;
@@ -376,6 +384,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 .setDisableApi(disableApi)
                 .setDisablePowMessage(disablePowMessage)
                 .setPowDifficulty(powDifficulty)
+                .addAllEnabledPowVersions(enabledPowVersions)
                 .setMakerFeeBtc(makerFeeBtc)
                 .setTakerFeeBtc(takerFeeBtc)
                 .setMakerFeeBsq(makerFeeBsq)
@@ -422,6 +431,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 proto.getDisableApi(),
                 proto.getDisablePowMessage(),
                 proto.getPowDifficulty(),
+                proto.getEnabledPowVersionsList(),
                 proto.getMakerFeeBtc(),
                 proto.getTakerFeeBtc(),
                 proto.getMakerFeeBsq(),
@@ -473,6 +483,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 ",\n     disableApi=" + disableApi +
                 ",\n     disablePowMessage=" + disablePowMessage +
                 ",\n     powDifficulty=" + powDifficulty +
+                ",\n     enabledPowVersions=" + enabledPowVersions +
                 ",\n     makerFeeBtc=" + makerFeeBtc +
                 ",\n     takerFeeBtc=" + takerFeeBtc +
                 ",\n     makerFeeBsq=" + makerFeeBsq +

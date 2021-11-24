@@ -98,7 +98,7 @@ public class HashCashService {
                 result = toSha256Hash(payload, challenge, ++counter);
             }
             while (!testDifficulty.test(result, difficulty));
-            ProofOfWork proofOfWork = new ProofOfWork(payload, counter, challenge, difficulty, System.currentTimeMillis() - ts);
+            ProofOfWork proofOfWork = new ProofOfWork(payload, counter, challenge, difficulty, System.currentTimeMillis() - ts, 0);
             log.info("Completed minting proofOfWork: {}", proofOfWork);
             return proofOfWork;
         });

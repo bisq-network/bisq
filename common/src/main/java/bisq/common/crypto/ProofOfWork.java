@@ -38,49 +38,53 @@ public final class ProofOfWork implements NetworkPayload {
     private final byte[] difficulty;
     @Getter
     private final long duration;
+    @Getter
+    private final int version;
 
     public ProofOfWork(byte[] payload,
                        long counter,
                        byte[] challenge,
                        int difficulty,
-                       long duration) {
+                       long duration,
+                       int version) {
         this(payload,
                 counter,
                 challenge,
                 BigInteger.valueOf(difficulty).toByteArray(),
-                duration);
+                duration,
+                version);
     }
 
     public ProofOfWork(byte[] payload,
                        long counter,
                        byte[] challenge,
                        BigInteger difficulty,
-                       long duration) {
+                       long duration,
+                       int version) {
         this(payload,
                 counter,
                 challenge,
                 difficulty.toByteArray(),
-                duration);
+                duration,
+                version);
     }
 
-    public ProofOfWork(byte[] payload,
-                       long counter,
-                       byte[] challenge,
-                       byte[] difficulty,
-                       long duration) {
+    private ProofOfWork(byte[] payload,
+                        long counter,
+                        byte[] challenge,
+                        byte[] difficulty,
+                        long duration,
+                        int version) {
         this.payload = payload;
         this.counter = counter;
         this.challenge = challenge;
         this.difficulty = difficulty;
         this.duration = duration;
+        this.version = version;
     }
 
     public int getNumLeadingZeros() {
         return new BigInteger(difficulty).intValue();
-    }
-
-    public BigInteger getTarget() {
-        return new BigInteger(difficulty);
     }
 
 
@@ -96,6 +100,7 @@ public final class ProofOfWork implements NetworkPayload {
                 .setChallenge(ByteString.copyFrom(challenge))
                 .setDifficulty(ByteString.copyFrom(difficulty))
                 .setDuration(duration)
+                .setVersion(version)
                 .build();
     }
 
@@ -105,7 +110,8 @@ public final class ProofOfWork implements NetworkPayload {
                 proto.getCounter(),
                 proto.getChallenge().toByteArray(),
                 proto.getDifficulty().toByteArray(),
-                proto.getDuration()
+                proto.getDuration(),
+                proto.getVersion()
         );
     }
 
@@ -115,8 +121,8 @@ public final class ProofOfWork implements NetworkPayload {
         return "ProofOfWork{" +
                 ",\r\n     counter=" + counter +
                 ",\r\n     numLeadingZeros=" + getNumLeadingZeros() +
-                ",\r\n     target=" + getTarget() +
                 ",\r\n     duration=" + duration +
+                ",\r\n     version=" + version +
                 "\r\n}";
     }
 }
