@@ -19,19 +19,18 @@ package bisq.daemon.grpc;
 
 import bisq.core.api.CoreApi;
 import bisq.core.api.model.TradeInfo;
+import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 
 import bisq.proto.grpc.ConfirmPaymentReceivedReply;
 import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
 import bisq.proto.grpc.ConfirmPaymentStartedReply;
 import bisq.proto.grpc.ConfirmPaymentStartedRequest;
-import bisq.proto.grpc.GetBsqSwapTradeReply;
 import bisq.proto.grpc.GetTradeReply;
 import bisq.proto.grpc.GetTradeRequest;
 import bisq.proto.grpc.KeepFundsReply;
 import bisq.proto.grpc.KeepFundsRequest;
-import bisq.proto.grpc.TakeBsqSwapOfferReply;
-import bisq.proto.grpc.TakeBsqSwapOfferRequest;
 import bisq.proto.grpc.TakeOfferReply;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.WithdrawFundsReply;
@@ -72,67 +71,49 @@ class GrpcTradesService extends TradesImplBase {
     }
 
     @Override
-    public void getBsqSwapTrade(GetTradeRequest req,
-                                StreamObserver<GetBsqSwapTradeReply> responseObserver) {
-        try {
-            var bsqSwapTrade = coreApi.getBsqSwapTrade(req.getTradeId());
-            boolean wasMyOffer = coreApi.isMyOffer(bsqSwapTrade.getOffer().getId());
-            String role = coreApi.getBsqSwapTradeRole(req.getTradeId());
-            var numConfirmations = coreApi.getTransactionConfirmations(bsqSwapTrade.getTxId());
-            var tradeInfo = toTradeInfo(bsqSwapTrade,
-                    role,
-                    wasMyOffer,
-                    numConfirmations);
-            var reply = GetBsqSwapTradeReply.newBuilder()
-                    .setBsqSwapTrade(tradeInfo.toProtoMessage())
-                    .build();
-            responseObserver.onNext(reply);
-            responseObserver.onCompleted();
-        } catch (IllegalArgumentException cause) {
-            // Offer makers may call 'gettrade' many times before a trade exists.
-            // Log a 'trade not found' warning instead of a full stack trace.
-            exceptionHandler.handleExceptionAsWarning(log, "getBsqSwapTrade", cause, responseObserver);
-        } catch (Throwable cause) {
-            exceptionHandler.handleException(log, cause, responseObserver);
-        }
-    }
-
-    @Override
-    public void takeBsqSwapOffer(TakeBsqSwapOfferRequest req,
-                                 StreamObserver<TakeBsqSwapOfferReply> responseObserver) {
+    public void takeOffer(TakeOfferRequest req,
+                          StreamObserver<TakeOfferReply> responseObserver) {
         GrpcErrorMessageHandler errorMessageHandler =
-                new GrpcErrorMessageHandler(getTakeBsqSwapOfferMethod().getFullMethodName(),
+                new GrpcErrorMessageHandler(getTakeOfferMethod().getFullMethodName(),
                         responseObserver,
                         exceptionHandler,
                         log);
-        coreApi.takeBsqSwapOffer(req.getOfferId(),
-                req.getPaymentAccountId(),
-                req.getTakerFeeCurrencyCode(),
-                bsqSwapTrade -> {
-                    String role = coreApi.getBsqSwapTradeRole(bsqSwapTrade);
-                    var tradeInfo = toNewTradeInfo(bsqSwapTrade, role);
-                    var reply = TakeBsqSwapOfferReply.newBuilder()
-                            .setBsqSwapTrade(tradeInfo.toProtoMessage())
-                            .build();
-                    responseObserver.onNext(reply);
-                    responseObserver.onCompleted();
-                },
-                errorMessage -> {
-                    if (!errorMessageHandler.isErrorHandled())
-                        errorMessageHandler.handleErrorMessage(errorMessage);
-                });
+
+        if (coreApi.isAvailableBsqSwapOffer(req.getOfferId())) {
+            coreApi.takeBsqSwapOffer(req.getOfferId(),
+                    bsqSwapTrade -> {
+                        var reply = buildTakeOfferReply(bsqSwapTrade);
+                        responseObserver.onNext(reply);
+                        responseObserver.onCompleted();
+                    },
+                    errorMessage -> {
+                        if (!errorMessageHandler.isErrorHandled())
+                            errorMessageHandler.handleErrorMessage(errorMessage);
+                    });
+        } else {
+            coreApi.takeOffer(req.getOfferId(),
+                    req.getPaymentAccountId(),
+                    req.getTakerFeeCurrencyCode(),
+                    trade -> {
+                        var reply = buildTakeOfferReply(trade);
+                        responseObserver.onNext(reply);
+                        responseObserver.onCompleted();
+                    },
+                    errorMessage -> {
+                        if (!errorMessageHandler.isErrorHandled())
+                            errorMessageHandler.handleErrorMessage(errorMessage);
+                    });
+        }
     }
 
     @Override
     public void getTrade(GetTradeRequest req,
                          StreamObserver<GetTradeReply> responseObserver) {
         try {
-            Trade trade = coreApi.getTrade(req.getTradeId());
-            boolean wasMyOffer = coreApi.isMyOffer(trade.getOffer().getId());
-            String role = coreApi.getTradeRole(req.getTradeId());
-            var reply = GetTradeReply.newBuilder()
-                    .setTrade(toTradeInfo(trade, role, wasMyOffer).toProtoMessage())
-                    .build();
+            var tradeModel = coreApi.getTradeModel(req.getTradeId());
+            var reply = tradeModel.getOffer().isBsqSwapOffer()
+                    ? buildGetTradeReply((BsqSwapTrade) tradeModel)
+                    : buildGetTradeReply((Trade) tradeModel);
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (IllegalArgumentException cause) {
@@ -142,31 +123,6 @@ class GrpcTradesService extends TradesImplBase {
         } catch (Throwable cause) {
             exceptionHandler.handleException(log, cause, responseObserver);
         }
-    }
-
-    @Override
-    public void takeOffer(TakeOfferRequest req,
-                          StreamObserver<TakeOfferReply> responseObserver) {
-        GrpcErrorMessageHandler errorMessageHandler =
-                new GrpcErrorMessageHandler(getTakeOfferMethod().getFullMethodName(),
-                        responseObserver,
-                        exceptionHandler,
-                        log);
-        coreApi.takeOffer(req.getOfferId(),
-                req.getPaymentAccountId(),
-                req.getTakerFeeCurrencyCode(),
-                trade -> {
-                    TradeInfo tradeInfo = toNewTradeInfo(trade);
-                    var reply = TakeOfferReply.newBuilder()
-                            .setTrade(tradeInfo.toProtoMessage())
-                            .build();
-                    responseObserver.onNext(reply);
-                    responseObserver.onCompleted();
-                },
-                errorMessage -> {
-                    if (!errorMessageHandler.isErrorHandled())
-                        errorMessageHandler.handleErrorMessage(errorMessage);
-                });
     }
 
     @Override
@@ -232,14 +188,58 @@ class GrpcTradesService extends TradesImplBase {
                 .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
                         new HashMap<>() {{
                             put(getGetTradeMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
-                            put(getGetBsqSwapTradeMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getTakeOfferMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
-                            put(getTakeBsqSwapOfferMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
+                            // put(getTakeBsqSwapOfferMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
                             put(getConfirmPaymentStartedMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
                             put(getConfirmPaymentReceivedMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
                             put(getKeepFundsMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
                             put(getWithdrawFundsMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
                         }}
                 )));
+    }
+
+    private TakeOfferReply buildTakeOfferReply(TradeModel tradeModel) {
+        TradeInfo tradeInfo;
+        if (tradeModel.getOffer().isBsqSwapOffer()) {
+            BsqSwapTrade bsqSwapTrade = (BsqSwapTrade) tradeModel;
+            String role = getMyRole(bsqSwapTrade);
+            tradeInfo = toNewTradeInfo(bsqSwapTrade, role);
+        } else {
+            tradeInfo = toNewTradeInfo((Trade) tradeModel);
+        }
+        return TakeOfferReply.newBuilder()
+                .setTrade(tradeInfo.toProtoMessage())
+                .build();
+    }
+
+    private GetTradeReply buildGetTradeReply(BsqSwapTrade bsqSwapTrade) {
+        boolean wasMyOffer = wasMyOffer(bsqSwapTrade);
+        String role = getMyRole(bsqSwapTrade);
+        var numConfirmations = coreApi.getTransactionConfirmations(bsqSwapTrade.getTxId());
+        var tradeInfo = toTradeInfo(bsqSwapTrade,
+                role,
+                wasMyOffer,
+                numConfirmations);
+        return GetTradeReply.newBuilder()
+                .setTrade(tradeInfo.toProtoMessage())
+                .build();
+    }
+
+    private GetTradeReply buildGetTradeReply(Trade trade) {
+        boolean wasMyOffer = wasMyOffer(trade);
+        String role = getMyRole(trade);
+        return GetTradeReply.newBuilder()
+                .setTrade(toTradeInfo(trade, role, wasMyOffer).toProtoMessage())
+                .build();
+    }
+
+    private boolean wasMyOffer(TradeModel tradeModel) {
+        return coreApi.isMyOffer(tradeModel.getOffer().getId());
+    }
+
+    private String getMyRole(TradeModel tradeModel) {
+        return tradeModel.getOffer().isBsqSwapOffer()
+                ? coreApi.getBsqSwapTradeRole((BsqSwapTrade) tradeModel)
+                : coreApi.getTradeRole(tradeModel.getId());
     }
 }
