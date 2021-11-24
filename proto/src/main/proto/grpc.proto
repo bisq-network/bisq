@@ -383,11 +383,7 @@ message StopReply {
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 service Trades {
-    rpc GetBsqSwapTrade (GetTradeRequest) returns (GetBsqSwapTradeReply) {
-    }
     rpc GetTrade (GetTradeRequest) returns (GetTradeReply) {
-    }
-    rpc TakeBsqSwapOffer (TakeBsqSwapOfferRequest) returns (TakeBsqSwapOfferReply) {
     }
     rpc TakeOffer (TakeOfferRequest) returns (TakeOfferReply) {
     }
@@ -399,17 +395,6 @@ service Trades {
     }
     rpc WithdrawFunds (WithdrawFundsRequest) returns (WithdrawFundsReply) {
     }
-}
-
-message TakeBsqSwapOfferRequest {
-    string offerId = 1;
-    string paymentAccountId = 2;
-    string takerFeeCurrencyCode = 3;
-}
-
-message TakeBsqSwapOfferReply {
-    TradeInfo bsqSwapTrade = 1;
-    AvailabilityResultWithDescription failureReason = 2;
 }
 
 message TakeOfferRequest {
@@ -435,10 +420,6 @@ message ConfirmPaymentReceivedRequest {
 }
 
 message ConfirmPaymentReceivedReply {
-}
-
-message GetBsqSwapTradeReply {
-    TradeInfo bsqSwapTrade = 1;
 }
 
 message GetTradeRequest {
