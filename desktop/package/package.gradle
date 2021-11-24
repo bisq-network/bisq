@@ -7,8 +7,13 @@ task jpackageSanityChecks {
     description 'Interactive sanity checks on the version of the code that will be packaged'
 
     doLast {
-        // Enforce JDK 15 for compiling and building
-        assert JavaVersion.current() == JavaVersion.VERSION_15: "JDK 15 is required"
+        // Enforce JDK 15 for packaging. This will ensure:
+        // - Java 15 is used to compile the jars
+        // - jpackager from JDK 15 is used to package the binaries
+        // - JRE 15 is bundled in the released binaries
+        // TODO Use jpackage flag "--runtime-image jdk-11" to include another version of JRE in generated binaries
+        //  (But buggy in jpackager v15? Flag didn't work in last v15 test)
+        assert JavaVersion.current() == JavaVersion.VERSION_15: "JDK 15 is required when packaging"
 
         executeCmd("git --no-pager log -5 --oneline")
         ant.input(message: "Above you see the current HEAD and its recent history.\n" +
@@ -31,8 +36,8 @@ task jpackageSanityChecks {
     }
 }
 
-task getJavaBinariesDownloadURLs {
-    description 'Find out which JDK will be used for jpackage and prepare to download it'
+task createNewTempFolder {
+    description 'Create new temp folder where the packaging files will be placed'
     dependsOn 'jpackageSanityChecks'
 
     doLast {
@@ -48,128 +53,20 @@ task getJavaBinariesDownloadURLs {
         File binariesFolderPath = new File(tempRootDir, "binaries")
         binariesFolderPath.mkdirs()
         ext.binariesFolderPath = binariesFolderPath
-
-        // TODO Extend script logic to alternatively allow a local (separate, v14+) JDK for jpackage
-        // TODO Another option is to use the local JDK for everything: build jars and use jpackage (but then it has to be v14+)
-
-        // Define the download URLs (and associated binary hashes) for the JDK used to package the installers
-        // These JDKs are independent of what is installed on the building system
-        //
-        // If these specific versions are not hosted by AdoptOpenJDK anymore, or if different versions are desired,
-        // simply update the links and associated hashes below
-        //
-        // See https://adoptopenjdk.net/releases.html?variant=openjdk15&jvmVariant=hotspot for latest download URLs
-        // On the download page linked above, filter as follows to get the binary URL + associated SHA256:
-        // - architecture: x64
-        // - operating system:
-        // -- linux   ( -> use the tar.gz JDK link)
-        // -- macOS   ( -> use the tar.gz JDK link)
-        // -- windows ( -> use the .zip JDK link)
-        Map jdk15Binaries = [
-                'linux'         : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.2%2B7/OpenJDK15U-jdk_x64_linux_hotspot_15.0.2_7.tar.gz',
-                'linux-sha256'  : '94f20ca8ea97773571492e622563883b8869438a015d02df6028180dd9acc24d',
-                'mac'           : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.2%2B7/OpenJDK15U-jdk_x64_mac_hotspot_15.0.2_7.tar.gz',
-                'mac-sha256'    : 'd358a7ff03905282348c6c80562a4da2e04eb377b60ad2152be4c90f8d580b7f',
-                'windows'       : 'https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.2%2B7/OpenJDK15U-jdk_x64_windows_hotspot_15.0.2_7.zip',
-                'windows-sha256': 'b80dde2b7f8374eff0f1726c1cbdb48fb095fdde21489046d92f7144baff5741'
-
-                // TODO For some reason, using "--runtime-image jdk-11" does NOT work with a v15 jpackage, but works with v14
-        ]
-
-        String osKey
-        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            osKey = 'windows'
-        } else if (Os.isFamily(Os.FAMILY_MAC)) {
-            osKey = 'mac'
-        } else {
-            osKey = 'linux'
-        }
-
-        ext.jdk15Binary_DownloadURL = jdk15Binaries[osKey]
-        ext.jdk15Binary_SHA256Hash = jdk15Binaries[osKey + '-sha256']
-    }
-}
-
-task retrieveAndExtractJavaBinaries {
-    description 'Retrieve necessary Java binaries and extract them'
-    dependsOn 'getJavaBinariesDownloadURLs'
-
-    doLast {
-        File tempRootDir = getJavaBinariesDownloadURLs.property("tempRootDir") as File
-
-        // Folder where the jpackage JDK archive will be downloaded and extracted
-        String jdkForJpackageDirName = "jdk-jpackage"
-        File jdkForJpackageDir = new File(tempRootDir, jdkForJpackageDirName)
-        jdkForJpackageDir.mkdirs()
-
-        String jdkForJpackageArchiveURL = getJavaBinariesDownloadURLs.property('jdk15Binary_DownloadURL')
-        String jdkForJpackageArchiveHash = getJavaBinariesDownloadURLs.property('jdk15Binary_SHA256Hash')
-        String jdkForJpackageArchiveFileName = jdkForJpackageArchiveURL.tokenize('/').last()
-        File jdkForJpackageFile = new File(jdkForJpackageDir, jdkForJpackageArchiveFileName)
-
-        // Download necessary JDK binaries + verify hash
-        ext.downloadAndVerifyArchive(jdkForJpackageArchiveURL, jdkForJpackageArchiveHash, jdkForJpackageFile)
-
-        // Extract them
-        String jpackageBinaryFileName
-        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-            ext.extractArchiveZip(jdkForJpackageFile, jdkForJpackageDir)
-            jpackageBinaryFileName = 'jpackage.exe'
-        } else {
-            ext.extractArchiveTarGz(jdkForJpackageFile, jdkForJpackageDir)
-            jpackageBinaryFileName = 'jpackage'
-        }
-
-        // Find jpackage in the newly extracted JDK
-        // Don't rely on hardcoded paths to reach it, because the path depends on the version and platform
-        jdkForJpackageDir.traverse(type: FILES, nameFilter: jpackageBinaryFileName) {
-            println 'Using jpackage binary from ' + it
-            ext.jpackageFilePath = it.path
-        }
-    }
-
-    ext.downloadAndVerifyArchive = { String archiveURL, String archiveSHA256, File destinationArchiveFile ->
-        println "Downloading ${archiveURL}"
-        ant.get(src: archiveURL, dest: destinationArchiveFile)
-        println 'Download saved to ' + destinationArchiveFile
-
-        println 'Verifying checksum for downloaded binary ...'
-        ant.jdkHash = archiveSHA256
-        ant.checksum(file: destinationArchiveFile, algorithm: 'SHA-256', property: '${jdkHash}', verifyProperty: 'hashMatches')
-        if (ant.properties['hashMatches'] != 'true') {
-            ant.fail('Checksum mismatch: Downloaded JDK binary has a different checksum than expected')
-        }
-        println 'Checksum verified'
-    }
-
-    ext.extractArchiveTarGz = { File tarGzFile, File destinationDir ->
-        println "Extracting tar.gz ${tarGzFile}"
-        // Gradle's tar extraction preserves permissions (crucial for jpackage to function correctly)
-        copy {
-            from tarTree(resources.gzip(tarGzFile))
-            into destinationDir
-        }
-        println "Extracted to ${destinationDir}"
-    }
-
-    ext.extractArchiveZip = { File zipFile, File destinationDir ->
-        println "Extracting zip ${zipFile}..."
-        ant.unzip(src: zipFile, dest: destinationDir)
-        println "Extracted to ${destinationDir}"
     }
 }
 
 task packageInstallers {
     description 'Call jpackage to prepare platform-specific binaries for this platform'
-    dependsOn 'retrieveAndExtractJavaBinaries'
+    dependsOn 'createNewTempFolder'
     dependsOn rootProject.clean
     dependsOn ':desktop:build' // Full build needed for "desktop/build/app/lib", used for raspi package
 
     doLast {
-        String jPackageFilePath = retrieveAndExtractJavaBinaries.property('jpackageFilePath')
-        File binariesFolderPath = file(getJavaBinariesDownloadURLs.property('binariesFolderPath'))
+        String jPackageFilePath = "jpackage" // Binary is in the PATH because we're running JDK v15
+        File binariesFolderPath = file(createNewTempFolder.property('binariesFolderPath'))
 
-        File tempRootDir = getJavaBinariesDownloadURLs.property("tempRootDir") as File
+        File tempRootDir = createNewTempFolder.property("tempRootDir") as File
         // The jpackageTempDir stores temp files used by jpackage for building the installers
         // It can be inspected in order to troubleshoot the packaging process
         File jpackageTempDir = new File(tempRootDir, "jpackage-temp")
@@ -321,7 +218,7 @@ task packageInstallers {
                         macOpts +
                         " --type app-image")
 
-                // macOS step 3: Sign app (hardended runtime)
+                // macOS step 3: Sign app (hardened runtime)
                 File bisqAppImageFullPath = new File(binariesFolderPath, "Bisq.app")
                 executeCmd("codesign" +
                         " --sign \"${envVariableSigningID}\"" +
