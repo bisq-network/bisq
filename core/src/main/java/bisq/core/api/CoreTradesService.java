@@ -28,6 +28,7 @@ import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.TradeResultHandler;
 import bisq.core.trade.bisq_v1.TradeUtil;
 import bisq.core.trade.model.Tradable;
+import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.trade.protocol.bisq_v1.BuyerProtocol;
@@ -91,18 +92,14 @@ class CoreTradesService {
         this.user = user;
     }
 
-    // todo we need to pass the intended trade amount
+    // TODO We need to pass the intended trade amount, not default to the maximum.
     void takeBsqSwapOffer(Offer offer,
-                          String paymentAccountId,
-                          String takerFeeCurrencyCode,
                           TradeResultHandler<BsqSwapTrade> tradeResultHandler,
                           ErrorMessageHandler errorMessageHandler) {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
 
         bsqSwapTakeOfferModel.initWithData(offer);
-
-        //todo use the intended trade amount
         bsqSwapTakeOfferModel.applyAmount(offer.getAmount());
 
         log.info("Initiating take {} offer, {}",
@@ -114,6 +111,7 @@ class CoreTradesService {
                 coreContext.isApiUser());
     }
 
+    // TODO We need to pass the intended trade amount, not default to the maximum.
     void takeOffer(Offer offer,
                    String paymentAccountId,
                    String takerFeeCurrencyCode,
@@ -234,15 +232,20 @@ class CoreTradesService {
                 });
     }
 
-    BsqSwapTrade getBsqSwapTrade(String tradeId) {
+    TradeModel getTradeModel(String tradeId) {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
+
+        Optional<Trade> openTrade = getOpenTrade(tradeId);
+        if (openTrade.isPresent())
+            return openTrade.get();
+
+        Optional<Trade> closedTrade = getClosedTrade(tradeId);
+        if (closedTrade.isPresent())
+            return closedTrade.get();
+
         return tradeManager.findBsqSwapTradeById(tradeId).orElseThrow(() ->
                 new IllegalArgumentException(format("trade with id '%s' not found", tradeId)));
-    }
-
-    String getBsqSwapTradeRole(String tradeId) {
-        return getBsqSwapTradeRole(getBsqSwapTrade(tradeId));
     }
 
     String getBsqSwapTradeRole(BsqSwapTrade bsqSwapTrade) {
