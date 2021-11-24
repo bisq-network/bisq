@@ -137,6 +137,8 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
     @Override
     protected void startApplication() {
+        super.startApplication();
+
         Cookie cookie = injector.getInstance(User.class).getCookie();
         cookie.getAsOptionalBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART).ifPresent(wasCleanTorDirSet -> {
             if (wasCleanTorDirSet) {
