@@ -21,11 +21,13 @@ import static bisq.core.trade.model.bisq_v1.Trade.State.BUYER_SAW_ARRIVED_FIAT_P
 import static bisq.core.trade.model.bisq_v1.Trade.State.DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN;
 import static bisq.core.trade.model.bisq_v1.Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG;
 import static java.lang.String.format;
+import static java.lang.System.out;
 import static org.junit.jupiter.api.Assertions.*;
 
 
 
 import bisq.apitest.method.offer.AbstractOfferTest;
+import bisq.cli.CliMain;
 import bisq.cli.GrpcClient;
 import bisq.cli.table.builder.TableBuilder;
 
@@ -242,5 +244,12 @@ public class AbstractTradeTest extends AbstractOfferTest {
                     description.toUpperCase(),
                     new TableBuilder(TRADE_DETAIL_TBL, trade).build()));
         }
+    }
+
+    protected static void runCliGetTrade(String tradeId) {
+        out.println("Alice's CLI 'gettrade' response:");
+        CliMain.main(new String[]{"--password=xyz", "--port=9998", "gettrade", "--trade-id=" + tradeId});
+        out.println("Bob's CLI 'gettrade' response:");
+        CliMain.main(new String[]{"--password=xyz", "--port=9999", "gettrade", "--trade-id=" + tradeId});
     }
 }

@@ -28,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -36,9 +35,11 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.ApiTestConfig.BTC;
+import static bisq.proto.grpc.GetOfferCategoryReply.OfferCategory.BSQ_SWAP;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static protobuf.BsqSwapTrade.State.COMPLETED;
 import static protobuf.BsqSwapTrade.State.PREPARATION;
@@ -49,12 +50,10 @@ import static protobuf.OfferDirection.BUY;
 import bisq.apitest.method.offer.AbstractOfferTest;
 import bisq.cli.GrpcClient;
 
-@Disabled
+// @Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class BsqSwapTradeTest extends AbstractTradeTest {
-
-    private static final String BISQ_FEE_CURRENCY_CODE = BSQ;
 
     // Long-running swap trade tests might want to check node logs for exceptions.
     @Setter
@@ -67,7 +66,7 @@ public class BsqSwapTradeTest extends AbstractTradeTest {
 
     @BeforeEach
     public void generateBtcBlock() {
-        genBtcBlocksThenWait(1, 2000);
+        genBtcBlocksThenWait(1, 2_000);
     }
 
     @Test
@@ -102,23 +101,36 @@ public class BsqSwapTradeTest extends AbstractTradeTest {
         mySwapOffer = aliceClient.getMyOffer(newOfferId);
         log.debug("My fetched BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", toOfferTable.apply(mySwapOffer));
         assertNotEquals(0, mySwapOffer.getMakerFee());
+
+        runCliGetOffer(newOfferId);
     }
 
     @Test
     @Order(3)
     public void testBobTakesBsqSwapOffer() {
         var availableSwapOffer = getAvailableBsqSwapOffer(bobClient);
-        var swapTrade = bobClient.takeBsqSwapOffer(availableSwapOffer.getId(),
-                bobsBsqSwapAcct.getId(),
-                BISQ_FEE_CURRENCY_CODE);
+
+        // Before sending a TakeOfferRequest, the CLI needs to know what kind of Offer
+        // it is taking (v1 or BsqSwap).  Only BSQ swap offers can be taken with a
+        // single offerId parameter.  Taking v1 offers requires an additional
+        // paymentAccountId param.  The test case knows what kind of offer is being taken,
+        // but we test the gRPC GetOfferCategory service here.
+        var availableOfferCategory = bobClient.getAvailableOfferCategory(availableSwapOffer.getId());
+        assertTrue(availableOfferCategory.equals(BSQ_SWAP));
+
+        sleep(30_000);
+
+        var swapTrade = bobClient.takeBsqSwapOffer(availableSwapOffer.getId());
         tradeId = swapTrade.getTradeId(); // Cache the tradeId for following test case(s).
         log.debug("BsqSwap Trade at PREPARATION:\n{}", toTradeDetailTable.apply(swapTrade));
         assertEquals(PREPARATION.name(), swapTrade.getState());
         genBtcBlocksThenWait(1, 3_000);
 
-        swapTrade = getBsqSwapTrade(bobClient, swapTrade.getTradeId());
+        swapTrade = getBsqSwapTrade(bobClient, tradeId);
         log.debug("BsqSwap Trade at COMPLETION:\n{}", toTradeDetailTable.apply(swapTrade));
         assertEquals(COMPLETED.name(), swapTrade.getState());
+
+        runCliGetTrade(tradeId);
     }
 
     @Test
@@ -164,7 +176,7 @@ public class BsqSwapTradeTest extends AbstractTradeTest {
                     }
                     fail(format("Bob gave up on fetching available bsq swap offers after %d attempts.", numFetchAttempts));
                 }
-                sleep(1000);
+                sleep(1_000);
             } else {
                 assertEquals(1, bsqSwapOffers.size());
                 log.debug("Bob found new available bsq swap offer on attempt # {}.", numFetchAttempts);
@@ -181,7 +193,7 @@ public class BsqSwapTradeTest extends AbstractTradeTest {
         while (true) {
             try {
                 numFetchAttempts++;
-                return client.getBsqSwapTrade(tradeId);
+                return client.getTrade(tradeId);
             } catch (Exception ex) {
                 log.warn(ex.getMessage());
                 if (numFetchAttempts > 9) {
@@ -190,7 +202,7 @@ public class BsqSwapTradeTest extends AbstractTradeTest {
                     }
                     fail(format("Could not find new bsq swap trade after %d attempts.", numFetchAttempts));
                 } else {
-                    sleep(1000);
+                    sleep(1_000);
                 }
             }
         }
