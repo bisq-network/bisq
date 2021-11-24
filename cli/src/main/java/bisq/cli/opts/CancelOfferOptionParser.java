@@ -18,14 +18,7 @@
 package bisq.cli.opts;
 
 
-import joptsimple.OptionSpec;
-
-import static bisq.cli.opts.OptLabel.OPT_OFFER_ID;
-
-public class CancelOfferOptionParser extends AbstractMethodOptionParser implements MethodOpts {
-
-    final OptionSpec<String> offerIdOpt = parser.accepts(OPT_OFFER_ID, "id of offer to cancel")
-            .withRequiredArg();
+public class CancelOfferOptionParser extends OfferIdOptionParser implements MethodOpts {
 
     public CancelOfferOptionParser(String[] args) {
         super(args);
@@ -34,12 +27,7 @@ public class CancelOfferOptionParser extends AbstractMethodOptionParser implemen
     public CancelOfferOptionParser parse() {
         super.parse();
 
-        // Short circuit opt validation if user just wants help.
-        if (options.has(helpOpt))
-            return this;
-
-        if (!options.has(offerIdOpt) || options.valueOf(offerIdOpt).isEmpty())
-            throw new IllegalArgumentException("no offer id specified");
+        // Super class will short-circuit parsing if help option is present.
 
         return this;
     }

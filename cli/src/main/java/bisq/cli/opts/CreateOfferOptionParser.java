@@ -28,7 +28,7 @@ import static joptsimple.internal.Strings.EMPTY;
 public class CreateOfferOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> paymentAccountIdOpt = parser.accepts(OPT_PAYMENT_ACCOUNT,
-            "id of payment account used for offer")
+                    "id of payment account used for offer")
             .withRequiredArg()
             .defaultsTo(EMPTY);
 

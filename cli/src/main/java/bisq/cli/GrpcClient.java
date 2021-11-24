@@ -27,7 +27,6 @@ import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.StopRequest;
-import bisq.proto.grpc.TakeBsqSwapOfferReply;
 import bisq.proto.grpc.TakeOfferReply;
 import bisq.proto.grpc.TradeInfo;
 import bisq.proto.grpc.TxFeeRateInfo;
@@ -349,32 +348,16 @@ public final class GrpcClient {
         return offersServiceRequest.sortOffersByDate(offers);
     }
 
-    public TakeBsqSwapOfferReply getTakeBsqSwapOfferReply(String offerId,
-                                                          String paymentAccountId,
-                                                          String takerFeeCurrencyCode) {
-        return tradesServiceRequest.getTakeBsqSwapOfferReply(offerId,
-                paymentAccountId,
-                takerFeeCurrencyCode);
-    }
-
     public TakeOfferReply getTakeOfferReply(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
         return tradesServiceRequest.getTakeOfferReply(offerId, paymentAccountId, takerFeeCurrencyCode);
     }
 
-    public TradeInfo takeBsqSwapOffer(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
-        var reply = getTakeBsqSwapOfferReply(offerId, paymentAccountId, takerFeeCurrencyCode);
-        if (reply.hasBsqSwapTrade())
-            return reply.getBsqSwapTrade();
-        else
-            throw new IllegalStateException(reply.getFailureReason().getDescription());
+    public TradeInfo takeBsqSwapOffer(String offerId) {
+        return tradesServiceRequest.takeBsqSwapOffer(offerId);
     }
 
     public TradeInfo takeOffer(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
         return tradesServiceRequest.takeOffer(offerId, paymentAccountId, takerFeeCurrencyCode);
-    }
-
-    public TradeInfo getBsqSwapTrade(String tradeId) {
-        return tradesServiceRequest.getBsqSwapTrade(tradeId);
     }
 
     public TradeInfo getTrade(String tradeId) {

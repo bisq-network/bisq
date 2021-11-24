@@ -29,7 +29,7 @@ import static java.lang.String.format;
 public class CreatePaymentAcctOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> paymentAcctFormPathOpt = parser.accepts(OPT_PAYMENT_ACCOUNT_FORM,
-            "path to json payment account form")
+                    "path to json payment account form")
             .withRequiredArg();
 
     public CreatePaymentAcctOptionParser(String[] args) {

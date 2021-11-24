@@ -18,6 +18,7 @@
 package bisq.cli;
 
 import bisq.proto.grpc.OfferInfo;
+import bisq.proto.grpc.TradeInfo;
 
 import io.grpc.StatusRuntimeException;
 
@@ -45,6 +46,7 @@ import static bisq.cli.CurrencyFormat.*;
 import static bisq.cli.Method.*;
 import static bisq.cli.opts.OptLabel.*;
 import static bisq.cli.table.builder.TableType.*;
+import static bisq.proto.grpc.GetOfferCategoryReply.OfferCategory.BSQ_SWAP;
 import static java.lang.String.format;
 import static java.lang.System.err;
 import static java.lang.System.exit;
@@ -62,11 +64,11 @@ import bisq.cli.opts.EditOfferOptionParser;
 import bisq.cli.opts.GetAddressBalanceOptionParser;
 import bisq.cli.opts.GetBTCMarketPriceOptionParser;
 import bisq.cli.opts.GetBalanceOptionParser;
-import bisq.cli.opts.GetOfferOptionParser;
 import bisq.cli.opts.GetOffersOptionParser;
 import bisq.cli.opts.GetPaymentAcctFormOptionParser;
 import bisq.cli.opts.GetTradeOptionParser;
 import bisq.cli.opts.GetTransactionOptionParser;
+import bisq.cli.opts.OfferIdOptionParser;
 import bisq.cli.opts.RegisterDisputeAgentOptionParser;
 import bisq.cli.opts.RemoveWalletPasswordOptionParser;
 import bisq.cli.opts.SendBsqOptionParser;
@@ -392,7 +394,7 @@ public class CliMain {
                     return;
                 }
                 case getoffer: {
-                    var opts = new GetOfferOptionParser(args).parse();
+                    var opts = new OfferIdOptionParser(args).parse();
                     if (opts.isForHelp()) {
                         out.println(client.getMethodHelp(method));
                         return;
@@ -403,7 +405,7 @@ public class CliMain {
                     return;
                 }
                 case getmyoffer: {
-                    var opts = new GetOfferOptionParser(args).parse();
+                    var opts = new OfferIdOptionParser(args).parse();
                     if (opts.isForHelp()) {
                         out.println(client.getMethodHelp(method));
                         return;
@@ -446,15 +448,25 @@ public class CliMain {
                     return;
                 }
                 case takeoffer: {
-                    var opts = new TakeOfferOptionParser(args).parse();
-                    if (opts.isForHelp()) {
+                    var offerIdOpt = new OfferIdOptionParser(args).parse();
+                    if (offerIdOpt.isForHelp()) {
                         out.println(client.getMethodHelp(method));
                         return;
                     }
-                    var offerId = opts.getOfferId();
-                    var paymentAccountId = opts.getPaymentAccountId();
-                    var takerFeeCurrencyCode = opts.getTakerFeeCurrencyCode();
-                    var trade = client.takeOffer(offerId, paymentAccountId, takerFeeCurrencyCode);
+                    var offerId = offerIdOpt.getOfferId();
+                    TradeInfo trade;
+                    // We only send an 'offer-id' param when taking a BsqSwapOffer.
+                    // Find out what kind of offer is being taken before sending a
+                    // 'takeoffer' request.
+                    var offerCategory = client.getAvailableOfferCategory(offerId);
+                    if (offerCategory.equals(BSQ_SWAP)) {
+                        trade = client.takeBsqSwapOffer(offerId);
+                    } else {
+                        var opts = new TakeOfferOptionParser(args).parse();
+                        var paymentAccountId = opts.getPaymentAccountId();
+                        var takerFeeCurrencyCode = opts.getTakerFeeCurrencyCode();
+                        trade = client.takeOffer(offerId, paymentAccountId, takerFeeCurrencyCode);
+                    }
                     out.printf("trade %s successfully taken%n", trade.getTradeId());
                     return;
                 }
@@ -825,7 +837,7 @@ public class CliMain {
             stream.format(rowFormat, "", "--currency-code=<currency-code>", "");
             stream.println();
             stream.format(rowFormat, takeoffer.name(), "--offer-id=<offer-id> \\", "Take offer with id");
-            stream.format(rowFormat, "", "--payment-account=<payment-account-id>", "");
+            stream.format(rowFormat, "", "[--payment-account=<payment-account-id>]", "");
             stream.format(rowFormat, "", "[--fee-currency=<btc|bsq>]", "");
             stream.println();
             stream.format(rowFormat, gettrade.name(), "--trade-id=<trade-id> \\", "Get trade summary or full contract");
