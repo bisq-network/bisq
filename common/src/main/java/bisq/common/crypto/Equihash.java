@@ -43,6 +43,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.PrimitiveIterator;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import lombok.ToString;
 
@@ -80,6 +81,10 @@ import static java.math.BigInteger.ONE;
 @SuppressWarnings("UnstableApiUsage")
 public class Equihash {
     private static final int HASH_BIT_LENGTH = 256;
+    /** Observed mean solution count per nonce for Equihash-n-4 puzzles with unit difficulty. */
+    public static final double EQUIHASH_n_4_MEAN_SOLUTION_COUNT_PER_NONCE = 1.63;
+    /** Observed mean solution count per nonce for Equihash-n-5 puzzles with unit difficulty. */
+    public static final double EQUIHASH_n_5_MEAN_SOLUTION_COUNT_PER_NONCE = 1.34;
 
     private final int k, N;
     private final int tableCapacity;
@@ -117,6 +122,13 @@ public class Equihash {
         var mantissa = BigInteger.valueOf((long) Math.scalb(difficulty, -exponent));
         var inverse = ONE.shiftLeft(HASH_BIT_LENGTH - exponent).add(mantissa).subtract(ONE).divide(mantissa);
         return inverse.subtract(ONE).max(BigInteger.ZERO);
+    }
+
+    /** Adjust the provided difficulty to take the variable number of puzzle solutions per
+     * nonce into account, so that the expected number of attempts needed to solve a given
+     * puzzle equals the reciprocal of the provided difficulty. */
+    public static double adjustDifficulty(double realDifficulty, double meanSolutionCountPerNonce) {
+        return Math.max(-meanSolutionCountPerNonce / Math.log1p(-1.0 / Math.max(realDifficulty, 1.0)), 1.0);
     }
 
     public Puzzle puzzle(byte[] seed) {
@@ -205,6 +217,14 @@ public class Equihash {
                 }
             }
         }
+
+        @VisibleForTesting
+        int countAllSolutionsForNonce(long nonce) {
+            return (int) withHashPrefix(seed, nonce).streamInputsHits()
+                    .map(ImmutableIntArray::copyOf)
+                    .distinct()
+                    .count();
+        }
     }
 
     private WithHashPrefix withHashPrefix(byte[] seed, long nonce) {
@@ -228,20 +248,20 @@ public class Equihash {
             return Utilities.bytesToIntsBE(outputBytes);
         }
 
-        Optional<int[]> findInputs() {
+        Stream<int[]> streamInputsHits() {
             var table = computeAllHashes();
             for (int i = 0; i < k; i++) {
                 table = findCollisions(table, i + 1 < k);
             }
-            for (int i = 0; i < table.numRows; i++) {
-                if (table.getRow(i).stream().distinct().count() == inputNum) {
-                    int[] inputs = sortInputs(table.getRow(i).toArray());
-                    if (testDifficultyCondition(inputs)) {
-                        return Optional.of(inputs);
-                    }
-                }
-            }
-            return Optional.empty();
+            return IntStream.range(0, table.numRows)
+                    .mapToObj(table::getRow)
+                    .filter(row -> row.stream().distinct().count() == inputNum)
+                    .map(row -> sortInputs(row.toArray()))
+                    .filter(this::testDifficultyCondition);
+        }
+
+        Optional<int[]> findInputs() {
+            return streamInputsHits().findFirst();
         }
 
         private XorTable computeAllHashes() {
