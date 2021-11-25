@@ -23,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -37,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static protobuf.OfferDirection.BUY;
 
-@Disabled
+// @Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class BsqSwapOfferTest extends AbstractOfferTest {
@@ -112,8 +111,7 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
         var bsqSwapOffer = aliceClient.createBsqSwapOffer(BUY.name(),
                 1_000_000L,
                 1_000_000L,
-                "0.00005",
-                alicesBsqSwapAcct.getId());
+                "0.00005");
         log.debug("BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", bsqSwapOffer);
         var newOfferId = bsqSwapOffer.getId();
         assertNotEquals("", newOfferId);

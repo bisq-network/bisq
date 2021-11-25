@@ -73,14 +73,12 @@ public class OffersServiceRequest {
     public OfferInfo createBsqSwapOffer(String direction,
                                         long amount,
                                         long minAmount,
-                                        String fixedPrice,
-                                        String paymentAcctId) {
+                                        String fixedPrice) {
         var request = CreateBsqSwapOfferRequest.newBuilder()
                 .setDirection(direction)
                 .setAmount(amount)
                 .setMinAmount(minAmount)
                 .setPrice(fixedPrice)
-                .setPaymentAccountId(paymentAcctId)
                 .build();
         return grpcStubs.offersService.createBsqSwapOffer(request).getBsqSwapOffer();
     }

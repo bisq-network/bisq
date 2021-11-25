@@ -163,7 +163,6 @@ message CreateBsqSwapOfferRequest {
     uint64 amount = 2;
     uint64 minAmount = 3;
     string price = 4;
-    string paymentAccountId = 5;
 }
 
 message CreateBsqSwapOfferReply {

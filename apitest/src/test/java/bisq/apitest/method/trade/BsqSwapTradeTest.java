@@ -84,8 +84,7 @@ public class BsqSwapTradeTest extends AbstractTradeTest {
         var mySwapOffer = aliceClient.createBsqSwapOffer(BUY.name(),
                 1_000_000L,     // 0.01 BTC
                 1_000_000L,
-                "0.00005",
-                alicesBsqSwapAcct.getId());
+                "0.00005");
         log.debug("Pending BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", toOfferTable.apply(mySwapOffer));
         var newOfferId = mySwapOffer.getId();
         assertNotEquals("", newOfferId);

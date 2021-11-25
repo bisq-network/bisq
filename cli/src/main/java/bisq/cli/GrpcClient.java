@@ -145,13 +145,11 @@ public final class GrpcClient {
     public OfferInfo createBsqSwapOffer(String direction,
                                         long amount,
                                         long minAmount,
-                                        String fixedPrice,
-                                        String paymentAcctId) {
+                                        String fixedPrice) {
         return offersServiceRequest.createBsqSwapOffer(direction,
                 amount,
                 minAmount,
-                fixedPrice,
-                paymentAcctId);
+                fixedPrice);
     }
 
     public OfferInfo createFixedPricedOffer(String direction,
