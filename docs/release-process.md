@@ -68,11 +68,12 @@ Use VirtualBox > 6.1 with following configuration:
 
 #### For every OS
 
-* Install latest security updates
-* Install/Upgrade to latest Java 15 SDK
-  * macOS (brew option): `brew upgrade zulu15`
-  * Ubuntu (brew option): `brew upgrade zulu15`
-  * Windows: Download latest version from https://www.oracle.com/java/technologies/javase/jdk15-archive-downloads.html
+* Install the latest security updates
+* Install/Upgrade to the latest Java 15 SDK
+    * macOS (brew option): `brew upgrade zulu15`
+    * Ubuntu (brew option): `sudo apt-get install zulu15-jdk`
+    * Windows: Download the latest version
+      from https://www.azul.com/downloads/?version=java-15-mts&os=windows&architecture=x86-64-bit&package=jdk
 
 #### For Windows
 
