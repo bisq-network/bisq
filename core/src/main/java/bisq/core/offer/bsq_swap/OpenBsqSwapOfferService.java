@@ -43,7 +43,7 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
 import bisq.common.app.Version;
-import bisq.common.crypto.HashCashService;
+import bisq.common.crypto.ProofOfWorkService;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
@@ -61,6 +61,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -195,13 +196,11 @@ public class OpenBsqSwapOfferService {
                 amount.value,
                 minAmount.value);
 
-        NodeAddress makerAddress = p2PService.getAddress();
+        NodeAddress makerAddress = Objects.requireNonNull(p2PService.getAddress());
         offerUtil.validateBasicOfferData(PaymentMethod.BSQ_SWAP, "BSQ");
 
-        byte[] payload = HashCashService.getBytes(offerId);
-        byte[] challenge = HashCashService.getBytes(offerId + Objects.requireNonNull(makerAddress));
-        int difficulty = getPowDifficulty();
-        HashCashService.mint(payload, challenge, difficulty)
+        int log2Difficulty = getPowDifficulty();
+        getPowService().mint(offerId, makerAddress.getFullAddress(), log2Difficulty)
                 .whenComplete((proofOfWork, throwable) -> {
                     // We got called from a non user thread...
                     UserThread.execute(() -> {
@@ -347,11 +346,9 @@ public class OpenBsqSwapOfferService {
         openOfferManager.removeOpenOffer(openOffer);
 
         String newOfferId = OfferUtil.getOfferIdWithMutationCounter(openOffer.getId());
-        byte[] payload = HashCashService.getBytes(newOfferId);
         NodeAddress nodeAddress = Objects.requireNonNull(openOffer.getOffer().getMakerNodeAddress());
-        byte[] challenge = HashCashService.getBytes(newOfferId + nodeAddress);
-        int difficulty = getPowDifficulty();
-        HashCashService.mint(payload, challenge, difficulty)
+        int log2Difficulty = getPowDifficulty();
+        getPowService().mint(newOfferId, nodeAddress.getFullAddress(), log2Difficulty)
                 .whenComplete((proofOfWork, throwable) -> {
                     // We got called from a non user thread...
                     UserThread.execute(() -> {
@@ -392,5 +389,17 @@ public class OpenBsqSwapOfferService {
 
     private int getPowDifficulty() {
         return filterManager.getFilter() != null ? filterManager.getFilter().getPowDifficulty() : 0;
+    }
+
+    private ProofOfWorkService getPowService() {
+        var service = filterManager.getEnabledPowVersions().stream()
+                .flatMap(v -> ProofOfWorkService.forVersion(v).stream())
+                .findFirst();
+        if (!service.isPresent()) {
+            // We cannot exit normally, else we get caught in an infinite loop generating invalid PoWs.
+            throw new NoSuchElementException("Could not find a suitable PoW version to use.");
+        }
+        log.info("Selected PoW version {}, service instance {}", service.get().getVersion(), service.get());
+        return service.get();
     }
 }

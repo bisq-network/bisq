@@ -37,8 +37,9 @@ import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
 import bisq.common.config.Config;
 import bisq.common.config.ConfigFileEditor;
-import bisq.common.crypto.HashCashService;
+import bisq.common.crypto.ProofOfWorkService;
 import bisq.common.crypto.KeyRing;
+import bisq.common.crypto.ProofOfWork;
 
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Sha256Hash;
@@ -493,11 +494,21 @@ public class FilterManager {
         }
         checkArgument(offer.getBsqSwapOfferPayload().isPresent(),
                 "Offer payload must be BsqSwapOfferPayload");
-        return HashCashService.verify(offer.getBsqSwapOfferPayload().get().getProofOfWork(),
-                HashCashService.getBytes(offer.getId() + offer.getOwnerNodeAddress().toString()),
+        ProofOfWork pow = offer.getBsqSwapOfferPayload().get().getProofOfWork();
+        var service = ProofOfWorkService.forVersion(pow.getVersion());
+        if (!service.isPresent() || !getEnabledPowVersions().contains(pow.getVersion())) {
+            return false;
+        }
+        return service.get().verify(offer.getBsqSwapOfferPayload().get().getProofOfWork(),
+                offer.getId(), offer.getOwnerNodeAddress().toString(),
                 filter.getPowDifficulty(),
                 challengeValidation,
                 difficultyValidation);
+    }
+
+    public List<Integer> getEnabledPowVersions() {
+        Filter filter = getFilter();
+        return filter != null && !filter.getEnabledPowVersions().isEmpty() ? filter.getEnabledPowVersions() : List.of(0);
     }
 
 

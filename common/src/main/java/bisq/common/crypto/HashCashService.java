@@ -35,40 +35,56 @@ import lombok.extern.slf4j.Slf4j;
  * See https://www.hashcash.org/papers/hashcash.pdf
  */
 @Slf4j
-public class HashCashService {
+public class HashCashService extends ProofOfWorkService {
     // Default validations. Custom implementations might use tolerance.
     private static final BiPredicate<byte[], byte[]> isChallengeValid = Arrays::equals;
     private static final BiPredicate<Integer, Integer> isDifficultyValid = Integer::equals;
 
-    public static CompletableFuture<ProofOfWork> mint(byte[] payload,
-                                                      byte[] challenge,
-                                                      int difficulty) {
+    HashCashService() {
+        super(0);
+    }
+
+    @Override
+    public CompletableFuture<ProofOfWork> mint(String itemId, byte[] challenge, int log2Difficulty) {
+        byte[] payload = getBytes(itemId);
+        return mint(payload, challenge, log2Difficulty);
+    }
+
+    @Override
+    public byte[] getChallenge(String itemId, String ownerId) {
+        return getBytes(itemId + ownerId);
+    }
+
+    static CompletableFuture<ProofOfWork> mint(byte[] payload,
+                                               byte[] challenge,
+                                               int difficulty) {
         return HashCashService.mint(payload,
                 challenge,
                 difficulty,
                 HashCashService::testDifficulty);
     }
 
-    public static boolean verify(ProofOfWork proofOfWork) {
+    @Override
+    boolean verify(ProofOfWork proofOfWork) {
         return verify(proofOfWork,
                 proofOfWork.getChallenge(),
                 proofOfWork.getNumLeadingZeros());
     }
 
-    public static boolean verify(ProofOfWork proofOfWork,
-                                 byte[] controlChallenge,
-                                 int controlDifficulty) {
+    static boolean verify(ProofOfWork proofOfWork,
+                          byte[] controlChallenge,
+                          int controlDifficulty) {
         return HashCashService.verify(proofOfWork,
                 controlChallenge,
                 controlDifficulty,
                 HashCashService::testDifficulty);
     }
 
-    public static boolean verify(ProofOfWork proofOfWork,
-                                 byte[] controlChallenge,
-                                 int controlDifficulty,
-                                 BiPredicate<byte[], byte[]> challengeValidation,
-                                 BiPredicate<Integer, Integer> difficultyValidation) {
+    static boolean verify(ProofOfWork proofOfWork,
+                          byte[] controlChallenge,
+                          int controlDifficulty,
+                          BiPredicate<byte[], byte[]> challengeValidation,
+                          BiPredicate<Integer, Integer> difficultyValidation) {
         return HashCashService.verify(proofOfWork,
                 controlChallenge,
                 controlDifficulty,
@@ -139,7 +155,7 @@ public class HashCashService {
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static byte[] getBytes(String value) {
+    private static byte[] getBytes(String value) {
         return value.getBytes(StandardCharsets.UTF_8);
     }
 

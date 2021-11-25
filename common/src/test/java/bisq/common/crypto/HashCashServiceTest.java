@@ -36,7 +36,7 @@ public class HashCashServiceTest {
     @Test
     public void testDiffIncrease() throws ExecutionException, InterruptedException {
         StringBuilder stringBuilder = new StringBuilder();
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < 9; i++) {
             run(i, stringBuilder);
         }
         log.info(stringBuilder.toString());
@@ -70,7 +70,7 @@ public class HashCashServiceTest {
         double size = tokens.size();
         long ts2 = System.currentTimeMillis();
         long averageCounter = Math.round(tokens.stream().mapToLong(ProofOfWork::getCounter).average().orElse(0));
-        boolean allValid = tokens.stream().allMatch(HashCashService::verify);
+        boolean allValid = tokens.stream().allMatch(new HashCashService()::verify);
         assertTrue(allValid);
         double time1 = (System.currentTimeMillis() - ts) / size;
         double time2 = (System.currentTimeMillis() - ts2) / size;
