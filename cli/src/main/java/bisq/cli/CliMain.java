@@ -334,6 +334,7 @@ public class CliMain {
                         out.println(client.getMethodHelp(method));
                         return;
                     }
+                    var isSwap = opts.getIsSwap();
                     var paymentAcctId = opts.getPaymentAccountId();
                     var direction = opts.getDirection();
                     var currencyCode = opts.getCurrencyCode();
@@ -342,20 +343,28 @@ public class CliMain {
                     var useMarketBasedPrice = opts.isUsingMktPriceMargin();
                     var fixedPrice = opts.getFixedPrice();
                     var marketPriceMargin = opts.getMktPriceMarginAsBigDecimal();
-                    var securityDeposit = toSecurityDepositAsPct(opts.getSecurityDeposit());
+                    var securityDeposit = isSwap ? 0.00 : toSecurityDepositAsPct(opts.getSecurityDeposit());
                     var makerFeeCurrencyCode = opts.getMakerFeeCurrencyCode();
                     var triggerPrice = 0; // Cannot be defined until offer is in book.
-                    var offer = client.createOffer(direction,
-                            currencyCode,
-                            amount,
-                            minAmount,
-                            useMarketBasedPrice,
-                            fixedPrice,
-                            marketPriceMargin.doubleValue(),
-                            securityDeposit,
-                            paymentAcctId,
-                            makerFeeCurrencyCode,
-                            triggerPrice);
+                    OfferInfo offer;
+                    if (isSwap) {
+                        offer = client.createBsqSwapOffer(direction,
+                                amount,
+                                minAmount,
+                                fixedPrice);
+                    } else {
+                        offer = client.createOffer(direction,
+                                currencyCode,
+                                amount,
+                                minAmount,
+                                useMarketBasedPrice,
+                                fixedPrice,
+                                marketPriceMargin.doubleValue(),
+                                securityDeposit,
+                                paymentAcctId,
+                                makerFeeCurrencyCode,
+                                triggerPrice);
+                    }
                     new TableBuilder(OFFER_TBL, offer).build().print(out);
                     return;
                 }
@@ -817,6 +826,7 @@ public class CliMain {
             stream.format(rowFormat, "", "--security-deposit=<percent> \\", "");
             stream.format(rowFormat, "", "[--fee-currency=<bsq|btc>]", "");
             stream.format(rowFormat, "", "[--trigger-price=<price>]", "");
+            stream.format(rowFormat, "", "[--swap=<true|false>]", "");
             stream.println();
             stream.format(rowFormat, editoffer.name(), "--offer-id=<offer-id> \\", "Edit offer with id");
             stream.format(rowFormat, "", "[--fixed-price=<price>] \\", "");
