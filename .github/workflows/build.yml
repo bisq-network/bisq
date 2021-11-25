@@ -8,8 +8,12 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-18.04
-
+    runs-on: ${{ matrix.os }}
+    strategy:
+        matrix:
+            os: [ubuntu-latest, macOS-latest, windows-latest]
+            java: [ '11', '11.0.3', '15', '15.0.5']
+    name: Test Java ${{ matrix.Java }}, ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v2
       with:
@@ -20,9 +24,8 @@ jobs:
     - name: Set up JDK
       uses: actions/setup-java@v2
       with:
-        java-version: '11'
+        java-version: ${{ matrix.java }}
         distribution: 'zulu'
-        cache: 'gradle'
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
@@ -32,3 +35,8 @@ jobs:
 
     - name: Build with Gradle
       run: ./gradlew build
+
+    - name: Print Dependency Verification Report
+      if: ${{ failure() }}
+      run: cat build/reports/dependency-verification/*/*.html
+      shell: bash
