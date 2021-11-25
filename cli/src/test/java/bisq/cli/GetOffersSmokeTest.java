@@ -12,7 +12,9 @@ import static java.lang.System.out;
  This can be run on mainnet.
  */
 @SuppressWarnings({"CommentedOutCode", "unused"})
-public class GetOffersSmokeTest {
+public class GetOffersSmokeTest extends AbstractCliTest {
+
+    // TODO use the static password and port opt definitions in superclass
 
     public static void main(String[] args) {
         getMyBsqOffers();
