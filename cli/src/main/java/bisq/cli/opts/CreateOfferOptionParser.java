@@ -86,6 +86,9 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
             throw new IllegalArgumentException("no btc amount specified");
 
         if (getIsSwap()) {
+            if (!options.valueOf(currencyCodeOpt).equalsIgnoreCase("bsq"))
+                throw new IllegalArgumentException("only bsq swaps are currently supported");
+
             if (options.has(paymentAccountIdOpt))
                 throw new IllegalArgumentException("cannot use a payment account id in bsq swap offer");
 
@@ -97,7 +100,7 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
 
             if (!options.has(fixedPriceOpt) || options.valueOf(fixedPriceOpt).isEmpty())
                 throw new IllegalArgumentException("no fixed price specified");
-            
+
         } else {
             if (!options.has(paymentAccountIdOpt) || options.valueOf(paymentAccountIdOpt).isEmpty())
                 throw new IllegalArgumentException("no payment account id specified");

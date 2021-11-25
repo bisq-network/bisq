@@ -205,6 +205,23 @@ public class OptionParsersTest {
     }
 
     @Test
+    public void testCreateBsqSwapOfferWithIncorrectCurrencyCodeOptShouldThrowException() {
+        String[] args = new String[]{
+                PASSWORD_OPT,
+                createoffer.name(),
+                "--" + OPT_SWAP + "=" + "true",
+                "--" + OPT_DIRECTION + "=" + "sell",
+                "--" + OPT_CURRENCY_CODE + "=" + "xmr",
+                "--" + OPT_MIN_AMOUNT + "=" + "0.075",
+                "--" + OPT_AMOUNT + "=" + "0.125",
+                "--" + OPT_FIXED_PRICE + "=" + "0.00005555"
+        };
+        Throwable exception = assertThrows(RuntimeException.class, () ->
+                new CreateOfferOptionParser(args).parse());
+        assertEquals("only bsq swaps are currently supported", exception.getMessage());
+    }
+
+    @Test
     public void testValidCreateBsqSwapOfferOpts() {
         String[] args = new String[]{
                 PASSWORD_OPT,
