@@ -88,6 +88,7 @@ public class Balances {
                 updateBalance();
             }
         });
+        btcWalletService.addNewBestBlockListener(storedBlock -> updateBalance());
 
         updateBalance();
     }
