@@ -23,6 +23,7 @@ import joptsimple.OptionSpec;
 import java.math.BigDecimal;
 
 import static bisq.cli.opts.OptLabel.*;
+import static java.lang.Boolean.FALSE;
 import static joptsimple.internal.Strings.EMPTY;
 
 public class CreateOfferOptionParser extends AbstractMethodOptionParser implements MethodOpts {
@@ -59,6 +60,11 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
             .withOptionalArg()
             .defaultsTo("btc");
 
+    final OptionSpec<Boolean> isSwapOpt = parser.accepts(OPT_SWAP, "create bsq swap offer")
+            .withOptionalArg()
+            .ofType(boolean.class)
+            .defaultsTo(FALSE);
+
     public CreateOfferOptionParser(String[] args) {
         super(args);
     }
@@ -70,9 +76,6 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
         if (options.has(helpOpt))
             return this;
 
-        if (!options.has(paymentAccountIdOpt) || options.valueOf(paymentAccountIdOpt).isEmpty())
-            throw new IllegalArgumentException("no payment account id specified");
-
         if (!options.has(directionOpt) || options.valueOf(directionOpt).isEmpty())
             throw new IllegalArgumentException("no direction (buy|sell) specified");
 
@@ -82,17 +85,35 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
         if (!options.has(amountOpt) || options.valueOf(amountOpt).isEmpty())
             throw new IllegalArgumentException("no btc amount specified");
 
-        if (!options.has(mktPriceMarginOpt) && !options.has(fixedPriceOpt))
-            throw new IllegalArgumentException("no market price margin or fixed price specified");
+        if (getIsSwap()) {
+            if (options.has(paymentAccountIdOpt))
+                throw new IllegalArgumentException("cannot use a payment account id in bsq swap offer");
 
-        if (options.has(mktPriceMarginOpt) && options.valueOf(mktPriceMarginOpt).isEmpty())
-            throw new IllegalArgumentException("no market price margin specified");
+            if (options.has(mktPriceMarginOpt))
+                throw new IllegalArgumentException("cannot use a market price margin in bsq swap offer");
 
-        if (options.has(fixedPriceOpt) && options.valueOf(fixedPriceOpt).isEmpty())
-            throw new IllegalArgumentException("no fixed price specified");
+            if (options.has(securityDepositOpt))
+                throw new IllegalArgumentException("cannot use a security deposit in bsq swap offer");
 
-        if (!options.has(securityDepositOpt) || options.valueOf(securityDepositOpt).isEmpty())
-            throw new IllegalArgumentException("no security deposit specified");
+            if (!options.has(fixedPriceOpt) || options.valueOf(fixedPriceOpt).isEmpty())
+                throw new IllegalArgumentException("no fixed price specified");
+            
+        } else {
+            if (!options.has(paymentAccountIdOpt) || options.valueOf(paymentAccountIdOpt).isEmpty())
+                throw new IllegalArgumentException("no payment account id specified");
+
+            if (!options.has(mktPriceMarginOpt) && !options.has(fixedPriceOpt))
+                throw new IllegalArgumentException("no market price margin or fixed price specified");
+
+            if (options.has(mktPriceMarginOpt) && options.valueOf(mktPriceMarginOpt).isEmpty())
+                throw new IllegalArgumentException("no market price margin specified");
+
+            if (options.has(fixedPriceOpt) && options.valueOf(fixedPriceOpt).isEmpty())
+                throw new IllegalArgumentException("no fixed price specified");
+
+            if (!options.has(securityDepositOpt) || options.valueOf(securityDepositOpt).isEmpty())
+                throw new IllegalArgumentException("no security deposit specified");
+        }
 
         return this;
     }
@@ -140,5 +161,9 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
 
     public String getMakerFeeCurrencyCode() {
         return options.has(makerFeeCurrencyCodeOpt) ? options.valueOf(makerFeeCurrencyCodeOpt) : "btc";
+    }
+
+    public boolean getIsSwap() {
+        return options.valueOf(isSwapOpt);
     }
 }
