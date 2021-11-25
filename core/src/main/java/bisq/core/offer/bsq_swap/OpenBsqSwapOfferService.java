@@ -247,7 +247,7 @@ public class OpenBsqSwapOfferService {
                                   ResultHandler resultHandler,
                                   ErrorMessageHandler errorMessageHandler) {
         if (isProofOfWorkInvalid(openOffer.getOffer())) {
-            redoProofOrWorkAndRepublish(openOffer);
+            redoProofOfWorkAndRepublish(openOffer);
             return;
         }
 
@@ -265,7 +265,7 @@ public class OpenBsqSwapOfferService {
 
     void enableBsqSwapOffer(OpenOffer openOffer) {
         if (isProofOfWorkInvalid(openOffer.getOffer())) {
-            redoProofOrWorkAndRepublish(openOffer);
+            redoProofOfWorkAndRepublish(openOffer);
             return;
         }
 
@@ -297,7 +297,7 @@ public class OpenBsqSwapOfferService {
                 .forEach(openOffer -> {
                     if (isProofOfWorkInvalid(openOffer.getOffer())) {
                         // Avoiding ConcurrentModificationException
-                        UserThread.execute(() -> redoProofOrWorkAndRepublish(openOffer));
+                        UserThread.execute(() -> redoProofOfWorkAndRepublish(openOffer));
                     } else {
                         OpenBsqSwapOffer openBsqSwapOffer = new OpenBsqSwapOffer(openOffer,
                                 this,
@@ -333,7 +333,7 @@ public class OpenBsqSwapOfferService {
                 .filter(openBsqSwapOffer -> isProofOfWorkInvalid(openBsqSwapOffer.getOffer()))
                 .forEach(openBsqSwapOffer -> {
                     // Avoiding ConcurrentModificationException
-                    UserThread.execute(() -> redoProofOrWorkAndRepublish(openBsqSwapOffer.getOpenOffer()));
+                    UserThread.execute(() -> redoProofOfWorkAndRepublish(openBsqSwapOffer.getOpenOffer()));
                 });
     }
 
@@ -342,8 +342,8 @@ public class OpenBsqSwapOfferService {
     // Proof of work
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void redoProofOrWorkAndRepublish(OpenOffer openOffer) {
-        // This triggers our onOpenOffersRemoved handler so we dont handle removal here
+    private void redoProofOfWorkAndRepublish(OpenOffer openOffer) {
+        // This triggers our onOpenOffersRemoved handler so we don't handle removal here
         openOfferManager.removeOpenOffer(openOffer);
 
         String newOfferId = OfferUtil.getOfferIdWithMutationCounter(openOffer.getId());
@@ -374,7 +374,7 @@ public class OpenBsqSwapOfferService {
                         if (!newOpenOffer.isDeactivated()) {
                             openOfferManager.maybeRepublishOffer(newOpenOffer);
                         }
-                        // This triggers our onOpenOffersAdded handler so we dont handle adding to our list here
+                        // This triggers our onOpenOffersAdded handler so we don't handle adding to our list here
                         openOfferManager.addOpenBsqSwapOffer(newOpenOffer);
                     });
                 });
