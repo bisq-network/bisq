@@ -215,8 +215,13 @@ public class ClosedTradableManager implements PersistedDataHost {
             return !tradable.getOffer().isCurrencyForMakerFeeBtc();
         }
 
-        String feeTxId = castToTrade(tradable).getTakerFeeTxId();
-        return bsqWalletService.getTransaction(feeTxId) != null;
+        try {
+            String feeTxId = castToTrade(tradable).getTakerFeeTxId();
+            return bsqWalletService.getTransaction(feeTxId) != null;
+        } catch (ClassCastException ex) {
+            // this can happen when we have canceled offers in history, made using an old onion address
+            return !tradable.getOffer().isCurrencyForMakerFeeBtc();
+        }
     }
 
     public boolean isMaker(Tradable tradable) {
