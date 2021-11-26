@@ -769,7 +769,7 @@ message Filter {
     bool disable_api = 27;
     bool disable_mempool_validation = 28;
     bool disable_pow_message = 29;
-    int32 pow_difficulty = 30;
+    double pow_difficulty = 30;
     repeated int32 enabled_pow_versions = 35;
     int64 maker_fee_btc = 31;
     int64 taker_fee_btc = 32;
@@ -882,7 +882,7 @@ message ProofOfWork {
     bytes payload = 1;
     int64 counter = 2;
     bytes challenge = 3;
-    bytes difficulty = 4;
+    double difficulty = 4;
     int64 duration = 5;
     int32 version = 6;
 }

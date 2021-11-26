@@ -199,8 +199,8 @@ public class OpenBsqSwapOfferService {
         NodeAddress makerAddress = Objects.requireNonNull(p2PService.getAddress());
         offerUtil.validateBasicOfferData(PaymentMethod.BSQ_SWAP, "BSQ");
 
-        int log2Difficulty = getPowDifficulty();
-        getPowService().mint(offerId, makerAddress.getFullAddress(), log2Difficulty)
+        double difficulty = getPowDifficulty();
+        getPowService().mint(offerId, makerAddress.getFullAddress(), difficulty)
                 .whenComplete((proofOfWork, throwable) -> {
                     // We got called from a non user thread...
                     UserThread.execute(() -> {
@@ -347,8 +347,8 @@ public class OpenBsqSwapOfferService {
 
         String newOfferId = OfferUtil.getOfferIdWithMutationCounter(openOffer.getId());
         NodeAddress nodeAddress = Objects.requireNonNull(openOffer.getOffer().getMakerNodeAddress());
-        int log2Difficulty = getPowDifficulty();
-        getPowService().mint(newOfferId, nodeAddress.getFullAddress(), log2Difficulty)
+        double difficulty = getPowDifficulty();
+        getPowService().mint(newOfferId, nodeAddress.getFullAddress(), difficulty)
                 .whenComplete((proofOfWork, throwable) -> {
                     // We got called from a non user thread...
                     UserThread.execute(() -> {
@@ -387,8 +387,8 @@ public class OpenBsqSwapOfferService {
     }
 
 
-    private int getPowDifficulty() {
-        return filterManager.getFilter() != null ? filterManager.getFilter().getPowDifficulty() : 0;
+    private double getPowDifficulty() {
+        return filterManager.getFilter() != null ? filterManager.getFilter().getPowDifficulty() : 0.0;
     }
 
     private ProofOfWorkService getPowService() {

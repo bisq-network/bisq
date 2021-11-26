@@ -31,7 +31,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class EquihashProofOfWorkService extends ProofOfWorkService {
-    /** Rough cost of one Hashcash iteration compared to solving an Equihash-90-5 puzzle of unit difficulty. */
+    /** Rough cost of two Hashcash iterations compared to solving an Equihash-90-5 puzzle of unit difficulty. */
     private static final double DIFFICULTY_SCALE_FACTOR = 3.0e-5;
 
     EquihashProofOfWorkService(int version) {
@@ -39,15 +39,15 @@ public class EquihashProofOfWorkService extends ProofOfWorkService {
     }
 
     @Override
-    public CompletableFuture<ProofOfWork> mint(String itemId, byte[] challenge, int log2Difficulty) {
-        double difficulty = adjustedDifficulty(log2Difficulty);
-        log.info("Got adjusted difficulty: {}", difficulty);
+    public CompletableFuture<ProofOfWork> mint(String itemId, byte[] challenge, double difficulty) {
+        double scaledDifficulty = scaledDifficulty(difficulty);
+        log.info("Got scaled & adjusted difficulty: {}", scaledDifficulty);
 
         return CompletableFuture.supplyAsync(() -> {
             long ts = System.currentTimeMillis();
-            byte[] solution = new Equihash(90, 5, difficulty).puzzle(challenge).findSolution().serialize();
+            byte[] solution = new Equihash(90, 5, scaledDifficulty).puzzle(challenge).findSolution().serialize();
             long counter = Longs.fromByteArray(Arrays.copyOf(solution, 8));
-            var proofOfWork = new ProofOfWork(solution, counter, challenge, log2Difficulty,
+            var proofOfWork = new ProofOfWork(solution, counter, challenge, difficulty,
                     System.currentTimeMillis() - ts, getVersion());
             log.info("Completed minting proofOfWork: {}", proofOfWork);
             return proofOfWork;
@@ -63,14 +63,14 @@ public class EquihashProofOfWorkService extends ProofOfWorkService {
 
     @Override
     boolean verify(ProofOfWork proofOfWork) {
-        double difficulty = adjustedDifficulty(proofOfWork.getNumLeadingZeros());
+        double scaledDifficulty = scaledDifficulty(proofOfWork.getDifficulty());
 
-        var puzzle = new Equihash(90, 5, difficulty).puzzle(proofOfWork.getChallenge());
+        var puzzle = new Equihash(90, 5, scaledDifficulty).puzzle(proofOfWork.getChallenge());
         return puzzle.deserializeSolution(proofOfWork.getPayload()).verify();
     }
 
-    private static double adjustedDifficulty(int log2Difficulty) {
-        return Equihash.adjustDifficulty(Math.scalb(DIFFICULTY_SCALE_FACTOR, log2Difficulty),
+    private static double scaledDifficulty(double difficulty) {
+        return Equihash.adjustDifficulty(DIFFICULTY_SCALE_FACTOR * difficulty,
                 Equihash.EQUIHASH_n_5_MEAN_SOLUTION_COUNT_PER_NONCE);
     }
 }

@@ -45,9 +45,9 @@ public class HashCashService extends ProofOfWorkService {
     }
 
     @Override
-    public CompletableFuture<ProofOfWork> mint(String itemId, byte[] challenge, int log2Difficulty) {
+    public CompletableFuture<ProofOfWork> mint(String itemId, byte[] challenge, double difficulty) {
         byte[] payload = getBytes(itemId);
-        return mint(payload, challenge, log2Difficulty);
+        return mint(payload, challenge, difficulty);
     }
 
     @Override
@@ -57,7 +57,7 @@ public class HashCashService extends ProofOfWorkService {
 
     static CompletableFuture<ProofOfWork> mint(byte[] payload,
                                                byte[] challenge,
-                                               int difficulty) {
+                                               double difficulty) {
         return HashCashService.mint(payload,
                 challenge,
                 difficulty,
@@ -68,33 +68,33 @@ public class HashCashService extends ProofOfWorkService {
     boolean verify(ProofOfWork proofOfWork) {
         return verify(proofOfWork,
                 proofOfWork.getChallenge(),
-                proofOfWork.getNumLeadingZeros());
+                toNumLeadingZeros(proofOfWork.getDifficulty()));
     }
 
     static boolean verify(ProofOfWork proofOfWork,
                           byte[] controlChallenge,
-                          int controlDifficulty) {
+                          int controlLog2Difficulty) {
         return HashCashService.verify(proofOfWork,
                 controlChallenge,
-                controlDifficulty,
+                controlLog2Difficulty,
                 HashCashService::testDifficulty);
     }
 
     static boolean verify(ProofOfWork proofOfWork,
                           byte[] controlChallenge,
-                          int controlDifficulty,
+                          int controlLog2Difficulty,
                           BiPredicate<byte[], byte[]> challengeValidation,
                           BiPredicate<Integer, Integer> difficultyValidation) {
         return HashCashService.verify(proofOfWork,
                 controlChallenge,
-                controlDifficulty,
+                controlLog2Difficulty,
                 challengeValidation,
                 difficultyValidation,
                 HashCashService::testDifficulty);
     }
 
-    private static boolean testDifficulty(byte[] result, long difficulty) {
-        return HashCashService.numberOfLeadingZeros(result) > difficulty;
+    private static boolean testDifficulty(byte[] result, int log2Difficulty) {
+        return HashCashService.numberOfLeadingZeros(result) > log2Difficulty;
     }
 
 
@@ -104,16 +104,17 @@ public class HashCashService extends ProofOfWorkService {
 
     static CompletableFuture<ProofOfWork> mint(byte[] payload,
                                                byte[] challenge,
-                                               int difficulty,
+                                               double difficulty,
                                                BiPredicate<byte[], Integer> testDifficulty) {
         return CompletableFuture.supplyAsync(() -> {
             long ts = System.currentTimeMillis();
+            int log2Difficulty = toNumLeadingZeros(difficulty);
             byte[] result;
             long counter = 0;
             do {
                 result = toSha256Hash(payload, challenge, ++counter);
             }
-            while (!testDifficulty.test(result, difficulty));
+            while (!testDifficulty.test(result, log2Difficulty));
             ProofOfWork proofOfWork = new ProofOfWork(payload, counter, challenge, difficulty, System.currentTimeMillis() - ts, 0);
             log.info("Completed minting proofOfWork: {}", proofOfWork);
             return proofOfWork;
@@ -122,11 +123,11 @@ public class HashCashService extends ProofOfWorkService {
 
     static boolean verify(ProofOfWork proofOfWork,
                           byte[] controlChallenge,
-                          int controlDifficulty,
+                          int controlLog2Difficulty,
                           BiPredicate<byte[], Integer> testDifficulty) {
         return verify(proofOfWork,
                 controlChallenge,
-                controlDifficulty,
+                controlLog2Difficulty,
                 HashCashService.isChallengeValid,
                 HashCashService.isDifficultyValid,
                 testDifficulty);
@@ -134,12 +135,12 @@ public class HashCashService extends ProofOfWorkService {
 
     static boolean verify(ProofOfWork proofOfWork,
                           byte[] controlChallenge,
-                          int controlDifficulty,
+                          int controlLog2Difficulty,
                           BiPredicate<byte[], byte[]> challengeValidation,
                           BiPredicate<Integer, Integer> difficultyValidation,
                           BiPredicate<byte[], Integer> testDifficulty) {
         return challengeValidation.test(proofOfWork.getChallenge(), controlChallenge) &&
-                difficultyValidation.test(proofOfWork.getNumLeadingZeros(), controlDifficulty) &&
+                difficultyValidation.test(toNumLeadingZeros(proofOfWork.getDifficulty()), controlLog2Difficulty) &&
                 verify(proofOfWork, testDifficulty);
     }
 
@@ -147,7 +148,7 @@ public class HashCashService extends ProofOfWorkService {
         byte[] hash = HashCashService.toSha256Hash(proofOfWork.getPayload(),
                 proofOfWork.getChallenge(),
                 proofOfWork.getCounter());
-        return testDifficulty.test(hash, proofOfWork.getNumLeadingZeros());
+        return testDifficulty.test(hash, toNumLeadingZeros(proofOfWork.getDifficulty()));
     }
 
 
@@ -193,5 +194,11 @@ public class HashCashService extends ProofOfWorkService {
             i >>>= 2;
         }
         return n - (i >>> 1);
+    }
+
+    // round up to nearest power-of-two and take the base-2 log
+    @VisibleForTesting
+    static int toNumLeadingZeros(double difficulty) {
+        return Math.getExponent(Math.max(Math.nextDown(difficulty), 0.5)) + 1;
     }
 }

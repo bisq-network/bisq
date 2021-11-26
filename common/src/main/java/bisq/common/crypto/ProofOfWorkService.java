@@ -45,28 +45,28 @@ public abstract class ProofOfWorkService {
         this.version = version;
     }
 
-    public abstract CompletableFuture<ProofOfWork> mint(String itemId, byte[] challenge, int log2Difficulty);
+    public abstract CompletableFuture<ProofOfWork> mint(String itemId, byte[] challenge, double difficulty);
 
     public abstract byte[] getChallenge(String itemId, String ownerId);
 
     abstract boolean verify(ProofOfWork proofOfWork);
 
-    public CompletableFuture<ProofOfWork> mint(String itemId, String ownerId, int log2Difficulty) {
-        return mint(itemId, getChallenge(itemId, ownerId), log2Difficulty);
+    public CompletableFuture<ProofOfWork> mint(String itemId, String ownerId, double difficulty) {
+        return mint(itemId, getChallenge(itemId, ownerId), difficulty);
     }
 
     public boolean verify(ProofOfWork proofOfWork,
                           String itemId,
                           String ownerId,
-                          int controlLog2Difficulty,
+                          double controlDifficulty,
                           BiPredicate<byte[], byte[]> challengeValidation,
-                          BiPredicate<Integer, Integer> difficultyValidation) {
+                          BiPredicate<Double, Double> difficultyValidation) {
 
         Preconditions.checkArgument(proofOfWork.getVersion() == version);
 
         byte[] controlChallenge = getChallenge(itemId, ownerId);
         return challengeValidation.test(proofOfWork.getChallenge(), controlChallenge) &&
-                difficultyValidation.test(proofOfWork.getNumLeadingZeros(), controlLog2Difficulty) &&
+                difficultyValidation.test(proofOfWork.getDifficulty(), controlDifficulty) &&
                 verify(proofOfWork);
     }
 }
