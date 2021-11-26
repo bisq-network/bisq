@@ -822,7 +822,7 @@ public class CliMain {
             stream.format(rowFormat, "", "--currency-code=<currency-code> \\", "");
             stream.format(rowFormat, "", "--amount=<btc-amount> \\", "");
             stream.format(rowFormat, "", "[--min-amount=<min-btc-amount>] \\", "");
-            stream.format(rowFormat, "", "--fixed-price=<price> | --market-price=margin=<percent> \\", "");
+            stream.format(rowFormat, "", "--fixed-price=<price> | --market-price-margin=<percent> \\", "");
             stream.format(rowFormat, "", "--security-deposit=<percent> \\", "");
             stream.format(rowFormat, "", "[--fee-currency=<bsq|btc>]", "");
             stream.format(rowFormat, "", "[--trigger-price=<price>]", "");
