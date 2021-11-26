@@ -9,10 +9,11 @@
    ```
 
    If this returns an error like:
-   ```git: 'lfs' is not a git command. See 'git --help'.
+   ```
+    git: 'lfs' is not a git command. See 'git --help'.
     The most similar command is
 	log
-    ```
+   ```
     
    you should first run:
      `sudo apt install git-lfs`
