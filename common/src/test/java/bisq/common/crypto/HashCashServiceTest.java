@@ -32,6 +32,17 @@ public class HashCashServiceTest {
         assertEquals(9, HashCashService.numberOfLeadingZeros(new byte[]{Byte.parseByte("00000000", 2), Byte.parseByte("01010000", 2)}));
     }
 
+    @Test
+    public void testToNumLeadingZeros() {
+        assertEquals(0, HashCashService.toNumLeadingZeros(-1.0));
+        assertEquals(0, HashCashService.toNumLeadingZeros(0.0));
+        assertEquals(0, HashCashService.toNumLeadingZeros(1.0));
+        assertEquals(1, HashCashService.toNumLeadingZeros(1.1));
+        assertEquals(1, HashCashService.toNumLeadingZeros(2.0));
+        assertEquals(8, HashCashService.toNumLeadingZeros(256.0));
+        assertEquals(1024, HashCashService.toNumLeadingZeros(Double.POSITIVE_INFINITY));
+    }
+
     // @Ignore
     @Test
     public void testDiffIncrease() throws ExecutionException, InterruptedException {
@@ -58,7 +69,8 @@ public class HashCashServiceTest {
         //Minting 1000 tokens with 13 leading zeros  took 25.276 ms per token and 16786 iterations in average. Verification took 0.002 ms per token.
     }
 
-    private void run(int difficulty, StringBuilder stringBuilder) throws ExecutionException, InterruptedException {
+    private void run(int log2Difficulty, StringBuilder stringBuilder) throws ExecutionException, InterruptedException {
+        double difficulty = Math.scalb(1.0, log2Difficulty);
         int numTokens = 1000;
         byte[] payload = RandomStringUtils.random(50, true, true).getBytes(StandardCharsets.UTF_8);
         long ts = System.currentTimeMillis();
@@ -75,7 +87,7 @@ public class HashCashServiceTest {
         double time1 = (System.currentTimeMillis() - ts) / size;
         double time2 = (System.currentTimeMillis() - ts2) / size;
         stringBuilder.append("\nMinting ").append(numTokens)
-                .append(" tokens with ").append(difficulty)
+                .append(" tokens with > ").append(log2Difficulty)
                 .append(" leading zeros  took ").append(time1)
                 .append(" ms per token and ").append(averageCounter)
                 .append(" iterations in average. Verification took ").append(time2)

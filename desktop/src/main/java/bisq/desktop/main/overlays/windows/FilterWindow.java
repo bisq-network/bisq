@@ -187,7 +187,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 Res.get("filterWindow.disablePowMessage"));
         InputTextField powDifficultyTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.powDifficulty"));
-        powDifficultyTF.setText("0");
+        powDifficultyTF.setText("0.0");
         InputTextField enabledPowVersionsTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.enabledPowVersions"));
         InputTextField makerFeeBtcTF = addInputTextField(gridPane, ++rowIndex,
@@ -270,7 +270,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
                         disableMempoolValidationCheckBox.isSelected(),
                         disableApiCheckBox.isSelected(),
                         disablePowMessage.isSelected(),
-                        Integer.parseInt(powDifficultyTF.getText()),
+                        Double.parseDouble(powDifficultyTF.getText()),
                         readAsList(enabledPowVersionsTF).stream().map(Integer::parseInt).collect(Collectors.toList()),
                         ParsingUtils.parseToCoin(makerFeeBtcTF.getText(), btcFormatter).value,
                         ParsingUtils.parseToCoin(takerFeeBtcTF.getText(), btcFormatter).value,

@@ -90,7 +90,7 @@ public class FilterManager {
 
     private final BiPredicate<byte[], byte[]> challengeValidation = Arrays::equals;
     // We only require a new pow if difficulty has increased
-    private final BiPredicate<Integer, Integer> difficultyValidation =
+    private final BiPredicate<Double, Double> difficultyValidation =
             (value, controlValue) -> value - controlValue >= 0;
 
 

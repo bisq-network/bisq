@@ -105,9 +105,10 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
 
     // added at BsqSwap release
     private final boolean disablePowMessage;
-    // Number of leading zeros for pow for BSQ swap offers. Difficulty of 8 requires 0.856 ms in average, 15 about 100 ms.
-    // See ProofOfWorkTest for more info.
-    private final int powDifficulty;
+    // 2 ** effective-number-of-leading-zeros for pow for BSQ swap offers, when using Hashcash (= version 0), and
+    // a similar difficulty for Equihash (= versions 1) or later schemes. Difficulty of 2 ** 8 (= 256) requires
+    // 0.856 ms in average, 2 ** 15 (= 32768) about 100 ms. See HashCashServiceTest for more info.
+    private final double powDifficulty;
     // Enabled PoW version numbers in reverse order of preference, starting with 0 for Hashcash.
     private final List<Integer> enabledPowVersions;
 
@@ -222,7 +223,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   boolean disableMempoolValidation,
                   boolean disableApi,
                   boolean disablePowMessage,
-                  int powDifficulty,
+                  double powDifficulty,
                   List<Integer> enabledPowVersions,
                   long makerFeeBtc,
                   long takerFeeBtc,
@@ -300,7 +301,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   boolean disableMempoolValidation,
                   boolean disableApi,
                   boolean disablePowMessage,
-                  int powDifficulty,
+                  double powDifficulty,
                   List<Integer> enabledPowVersions,
                   long makerFeeBtc,
                   long takerFeeBtc,
