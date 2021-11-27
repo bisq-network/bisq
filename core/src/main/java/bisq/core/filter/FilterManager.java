@@ -37,9 +37,9 @@ import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
 import bisq.common.config.Config;
 import bisq.common.config.ConfigFileEditor;
-import bisq.common.crypto.ProofOfWorkService;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.ProofOfWork;
+import bisq.common.crypto.ProofOfWorkService;
 
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Sha256Hash;
@@ -58,7 +58,6 @@ import java.nio.charset.StandardCharsets;
 
 import java.math.BigInteger;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -66,7 +65,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
 import java.lang.reflect.Method;
@@ -87,12 +85,6 @@ public class FilterManager {
     private static final String BANNED_PRICE_RELAY_NODES = "bannedPriceRelayNodes";
     private static final String BANNED_SEED_NODES = "bannedSeedNodes";
     private static final String BANNED_BTC_NODES = "bannedBtcNodes";
-
-    private final BiPredicate<byte[], byte[]> challengeValidation = Arrays::equals;
-    // We only require a new pow if difficulty has increased
-    private final BiPredicate<Double, Double> difficultyValidation =
-            (value, controlValue) -> value - controlValue >= 0;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
@@ -506,9 +498,7 @@ public class FilterManager {
         }
         return service.get().verify(offer.getBsqSwapOfferPayload().get().getProofOfWork(),
                 offer.getId(), offer.getOwnerNodeAddress().toString(),
-                filter.getPowDifficulty(),
-                challengeValidation,
-                difficultyValidation);
+                filter.getPowDifficulty());
     }
 
     public List<Integer> getEnabledPowVersions() {

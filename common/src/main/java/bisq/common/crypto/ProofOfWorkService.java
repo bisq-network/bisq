@@ -19,9 +19,9 @@ package bisq.common.crypto;
 
 import com.google.common.base.Preconditions;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiPredicate;
 
 import lombok.Getter;
 
@@ -58,15 +58,13 @@ public abstract class ProofOfWorkService {
     public boolean verify(ProofOfWork proofOfWork,
                           String itemId,
                           String ownerId,
-                          double controlDifficulty,
-                          BiPredicate<byte[], byte[]> challengeValidation,
-                          BiPredicate<Double, Double> difficultyValidation) {
+                          double controlDifficulty) {
 
         Preconditions.checkArgument(proofOfWork.getVersion() == version);
 
         byte[] controlChallenge = getChallenge(itemId, ownerId);
-        return challengeValidation.test(proofOfWork.getChallenge(), controlChallenge) &&
-                difficultyValidation.test(proofOfWork.getDifficulty(), controlDifficulty) &&
+        return Arrays.equals(proofOfWork.getChallenge(), controlChallenge) &&
+                proofOfWork.getDifficulty() >= controlDifficulty &&
                 verify(proofOfWork);
     }
 }
