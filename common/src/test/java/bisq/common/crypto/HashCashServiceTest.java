@@ -77,7 +77,7 @@ public class HashCashServiceTest {
         List<ProofOfWork> tokens = new ArrayList<>();
         for (int i = 0; i < numTokens; i++) {
             byte[] challenge = UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8);
-            tokens.add(HashCashService.mint(payload, challenge, difficulty).get());
+            tokens.add(new HashCashService().mint(payload, challenge, difficulty).get());
         }
         double size = tokens.size();
         long ts2 = System.currentTimeMillis();
