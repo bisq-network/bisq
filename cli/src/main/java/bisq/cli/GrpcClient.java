@@ -22,7 +22,6 @@ import bisq.proto.grpc.BalancesInfo;
 import bisq.proto.grpc.BsqBalanceInfo;
 import bisq.proto.grpc.BtcBalanceInfo;
 import bisq.proto.grpc.GetMethodHelpRequest;
-import bisq.proto.grpc.GetOfferCategoryReply;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
@@ -40,6 +39,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.proto.grpc.EditOfferRequest.EditType;
+import static bisq.proto.grpc.GetOfferCategoryReply.OfferCategory;
 
 
 
@@ -138,8 +138,12 @@ public final class GrpcClient {
         return walletsServiceRequest.getTransaction(txId);
     }
 
-    public GetOfferCategoryReply.OfferCategory getAvailableOfferCategory(String offerId) {
+    public OfferCategory getAvailableOfferCategory(String offerId) {
         return offersServiceRequest.getAvailableOfferCategory(offerId);
+    }
+
+    public OfferCategory getMyOfferCategory(String offerId) {
+        return offersServiceRequest.getMyOfferCategory(offerId);
     }
 
     public OfferInfo createBsqSwapOffer(String direction,

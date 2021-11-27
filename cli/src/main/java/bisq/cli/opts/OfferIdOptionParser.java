@@ -32,7 +32,13 @@ public class OfferIdOptionParser extends AbstractMethodOptionParser implements M
             .withRequiredArg();
 
     public OfferIdOptionParser(String[] args) {
+        this(args, false);
+    }
+
+    public OfferIdOptionParser(String[] args, boolean allowsUnrecognizedOptions) {
         super(args);
+        if (allowsUnrecognizedOptions)
+            this.parser.allowsUnrecognizedOptions();
     }
 
     public OfferIdOptionParser parse() {

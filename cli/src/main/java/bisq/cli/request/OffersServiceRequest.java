@@ -24,7 +24,6 @@ import bisq.proto.grpc.EditOfferRequest;
 import bisq.proto.grpc.GetBsqSwapOffersRequest;
 import bisq.proto.grpc.GetMyOfferRequest;
 import bisq.proto.grpc.GetMyOffersRequest;
-import bisq.proto.grpc.GetOfferCategoryReply;
 import bisq.proto.grpc.GetOfferCategoryRequest;
 import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetOffersRequest;
@@ -40,6 +39,7 @@ import static bisq.proto.grpc.EditOfferRequest.EditType.ACTIVATION_STATE_ONLY;
 import static bisq.proto.grpc.EditOfferRequest.EditType.FIXED_PRICE_ONLY;
 import static bisq.proto.grpc.EditOfferRequest.EditType.MKT_PRICE_MARGIN_ONLY;
 import static bisq.proto.grpc.EditOfferRequest.EditType.TRIGGER_PRICE_ONLY;
+import static bisq.proto.grpc.GetOfferCategoryReply.OfferCategory;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static protobuf.OfferDirection.BUY;
@@ -63,11 +63,12 @@ public class OffersServiceRequest {
         this.grpcStubs = grpcStubs;
     }
 
-    public GetOfferCategoryReply.OfferCategory getAvailableOfferCategory(String offerId) {
-        var request = GetOfferCategoryRequest.newBuilder()
-                .setId(offerId)
-                .build();
-        return grpcStubs.offersService.getOfferCategory(request).getOfferCategory();
+    public OfferCategory getAvailableOfferCategory(String offerId) {
+        return getOfferCategory(offerId, false);
+    }
+
+    public OfferCategory getMyOfferCategory(String offerId) {
+        return getOfferCategory(offerId, true);
     }
 
     public OfferInfo createBsqSwapOffer(String direction,
@@ -381,6 +382,14 @@ public class OffersServiceRequest {
         return offerInfoList.stream()
                 .sorted(comparing(OfferInfo::getDate))
                 .collect(toList());
+    }
+
+    private OfferCategory getOfferCategory(String offerId, boolean isMyOffer) {
+        var request = GetOfferCategoryRequest.newBuilder()
+                .setId(offerId)
+                .setIsMyOffer(isMyOffer)
+                .build();
+        return grpcStubs.offersService.getOfferCategory(request).getOfferCategory();
     }
 
     private static boolean isSupportedCryptoCurrency(String currencyCode) {

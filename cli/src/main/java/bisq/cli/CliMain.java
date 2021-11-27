@@ -369,12 +369,18 @@ public class CliMain {
                     return;
                 }
                 case editoffer: {
-                    var opts = new EditOfferOptionParser(args).parse();
-                    if (opts.isForHelp()) {
+                    var offerIdOpt = new OfferIdOptionParser(args, true).parse();
+                    if (offerIdOpt.isForHelp()) {
                         out.println(client.getMethodHelp(method));
                         return;
                     }
-                    var offerId = opts.getOfferId();
+                    // What kind of offer is being edited? BSQ swaps cannot be edited.
+                    var offerId = offerIdOpt.getOfferId();
+                    var offerCategory = client.getMyOfferCategory(offerId);
+                    if (offerCategory.equals(BSQ_SWAP))
+                        throw new IllegalStateException("cannot edit swap bsq offers");
+
+                    var opts = new EditOfferOptionParser(args).parse();
                     var fixedPrice = opts.getFixedPrice();
                     var isUsingMktPriceMargin = opts.isUsingMktPriceMargin();
                     var marketPriceMargin = opts.getMktPriceMarginAsBigDecimal();
