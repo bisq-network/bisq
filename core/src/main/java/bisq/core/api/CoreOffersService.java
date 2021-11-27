@@ -48,6 +48,8 @@ import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -61,8 +63,6 @@ import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static bisq.core.offer.Offer.State;
 import static bisq.core.offer.OfferDirection.BUY;
 import static bisq.core.offer.OfferUtil.getRandomOfferId;
-import static bisq.core.offer.OfferUtil.isAltcoinOffer;
-import static bisq.core.offer.OfferUtil.isFiatOffer;
 import static bisq.core.offer.OpenOffer.State.AVAILABLE;
 import static bisq.core.offer.OpenOffer.State.DEACTIVATED;
 import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
@@ -80,6 +80,9 @@ class CoreOffersService {
 
     private final Supplier<Comparator<OpenOffer>> openOfferPriceComparator = () ->
             comparing(openOffer -> openOffer.getOffer().getPrice());
+
+    private final BiFunction<String, Boolean, Offer> toOfferWithId = (id, isMyOffer) ->
+            isMyOffer ? getMyOffer(id).getOffer() : getOffer(id);
 
     private final CoreContext coreContext;
     private final KeyRing keyRing;
@@ -121,63 +124,48 @@ class CoreOffersService {
         this.user = user;
     }
 
-    boolean isAvailableFiatOffer(String id) {
-        return isFiatOffer(getOffer(id));
+    boolean isFiatOffer(String id, boolean isMyOffer) {
+        var offer = toOfferWithId.apply(id, isMyOffer);
+        return OfferUtil.isFiatOffer(offer);
     }
 
-    boolean isAvailableAltcoinOffer(String id) {
-        return isAltcoinOffer(getOffer(id));
+    boolean isAltcoinOffer(String id, boolean isMyOffer) {
+        var offer = toOfferWithId.apply(id, isMyOffer);
+        return OfferUtil.isAltcoinOffer(offer);
     }
 
-    boolean isAvailableBsqSwapOffer(String id) {
-        var offer = getOffer(id);
+    boolean isBsqSwapOffer(String id, boolean isMyOffer) {
+        var offer = toOfferWithId.apply(id, isMyOffer);
         return offer.isBsqSwapOffer();
     }
 
-    Offer getBsqSwapOffer(String id) {
-        return offerBookService.getOffers().stream()
-                .filter(o -> o.getId().equals(id))
-                .filter(o -> !o.isMyOffer(keyRing))
-                .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
-                .filter(o -> o.isBsqSwapOffer())
-                .findAny().orElseThrow(() ->
-                        new IllegalStateException(format("offer with id '%s' not found", id)));
-    }
-
     Offer getOffer(String id) {
-        return offerBookService.getOffers().stream()
-                .filter(o -> o.getId().equals(id))
-                .filter(o -> !o.isMyOffer(keyRing))
-                .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
-                .findAny().orElseThrow(() ->
-                        new IllegalStateException(format("offer with id '%s' not found", id)));
+        return findAvailableOffer(id).orElseThrow(() ->
+                new IllegalStateException(format("offer with id '%s' not found", id)));
     }
 
     OpenOffer getMyOffer(String id) {
-        return openOfferManager.getObservableList().stream()
-                .filter(o -> o.getId().equals(id))
-                .filter(o -> o.getOffer().isMyOffer(keyRing))
-                .findAny().orElseThrow(() ->
-                        new IllegalStateException(format("offer with id '%s' not found", id)));
+        return findMyOpenOffer(id).orElseThrow(() ->
+                new IllegalStateException(format("offer with id '%s' not found", id)));
+    }
+
+    Offer getBsqSwapOffer(String id) {
+        return findAvailableBsqSwapOffer(id).orElseThrow(() ->
+                new IllegalStateException(format("offer with id '%s' not found", id)));
     }
 
     Offer getMyBsqSwapOffer(String id) {
-        return offerBookService.getOffers().stream()
-                .filter(o -> o.getId().equals(id))
-                .filter(o -> o.isMyOffer(keyRing))
-                .filter(o -> o.isBsqSwapOffer())
-                .findAny().orElseThrow(() ->
-                        new IllegalStateException(format("offer with id '%s' not found", id)));
+        return findMyBsqSwapOffer(id).orElseThrow(() ->
+                new IllegalStateException(format("offer with id '%s' not found", id)));
     }
 
     List<Offer> getBsqSwapOffers(String direction) {
-        var offers = offerBookService.getOffers().stream()
+        return offerBookService.getOffers().stream()
                 .filter(o -> !o.isMyOffer(keyRing))
                 .filter(o -> o.getDirection().name().equalsIgnoreCase(direction))
-                .filter(o -> o.isBsqSwapOffer())
+                .filter(Offer::isBsqSwapOffer)
                 .sorted(priceComparator(direction))
                 .collect(Collectors.toList());
-        return offers;
     }
 
     List<Offer> getOffers(String direction, String currencyCode) {
@@ -198,13 +186,12 @@ class CoreOffersService {
     }
 
     List<Offer> getMyBsqSwapOffers(String direction) {
-        var offers = offerBookService.getOffers().stream()
+        return offerBookService.getOffers().stream()
                 .filter(o -> o.isMyOffer(keyRing))
                 .filter(o -> o.getDirection().name().equalsIgnoreCase(direction))
                 .filter(Offer::isBsqSwapOffer)
                 .sorted(priceComparator(direction))
                 .collect(Collectors.toList());
-        return offers;
     }
 
     OpenOffer getMyOpenBsqSwapOffer(String id) {
@@ -391,6 +378,38 @@ class CoreOffersService {
 
         if (offer.getErrorMessage() != null)
             throw new IllegalStateException(offer.getErrorMessage());
+    }
+
+    private Optional<Offer> findAvailableBsqSwapOffer(String id) {
+        return offerBookService.getOffers().stream()
+                .filter(o -> o.getId().equals(id))
+                .filter(o -> !o.isMyOffer(keyRing))
+                .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
+                .filter(Offer::isBsqSwapOffer)
+                .findAny();
+    }
+
+    private Optional<Offer> findMyBsqSwapOffer(String id) {
+        return offerBookService.getOffers().stream()
+                .filter(o -> o.getId().equals(id))
+                .filter(o -> o.isMyOffer(keyRing))
+                .filter(Offer::isBsqSwapOffer)
+                .findAny();
+    }
+
+    private Optional<Offer> findAvailableOffer(String id) {
+        return offerBookService.getOffers().stream()
+                .filter(o -> o.getId().equals(id))
+                .filter(o -> !o.isMyOffer(keyRing))
+                .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
+                .findAny();
+    }
+
+    private Optional<OpenOffer> findMyOpenOffer(String id) {
+        return openOfferManager.getObservableList().stream()
+                .filter(o -> o.getId().equals(id))
+                .filter(o -> o.getOffer().isMyOffer(keyRing))
+                .findAny();
     }
 
     private OfferPayload getMergedOfferPayload(OpenOffer openOffer,

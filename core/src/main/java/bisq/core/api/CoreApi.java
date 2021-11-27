@@ -120,16 +120,16 @@ public class CoreApi {
     // Offers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean isAvailableFiatOffer(String id) {
-        return coreOffersService.isAvailableFiatOffer(id);
+    public boolean isFiatOffer(String id, boolean isMyOffer) {
+        return coreOffersService.isFiatOffer(id, isMyOffer);
     }
 
-    public boolean isAvailableAltcoinOffer(String id) {
-        return coreOffersService.isAvailableAltcoinOffer(id);
+    public boolean isAltcoinOffer(String id, boolean isMyOffer) {
+        return coreOffersService.isAltcoinOffer(id, isMyOffer);
     }
 
-    public boolean isAvailableBsqSwapOffer(String id) {
-        return coreOffersService.isAvailableBsqSwapOffer(id);
+    public boolean isBsqSwapOffer(String id, boolean isMyOffer) {
+        return coreOffersService.isBsqSwapOffer(id, isMyOffer);
     }
 
     public Offer getBsqSwapOffer(String id) {

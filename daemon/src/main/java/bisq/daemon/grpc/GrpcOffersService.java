@@ -92,7 +92,7 @@ class GrpcOffersService extends OffersImplBase {
     public void getOfferCategory(GetOfferCategoryRequest req,
                                  StreamObserver<GetOfferCategoryReply> responseObserver) {
         try {
-            OfferCategory category = getAvailableOfferCategory(req.getId());
+            OfferCategory category = getOfferCategory(req.getId(), req.getIsMyOffer());
             var reply = newBuilder()
                     .setOfferCategory(category)
                     .build();
@@ -335,6 +335,7 @@ class GrpcOffersService extends OffersImplBase {
         return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
                 .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
                         new HashMap<>() {{
+                            put(getGetOfferCategoryMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getGetOfferMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getGetMyOfferMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getGetOffersMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
@@ -346,12 +347,12 @@ class GrpcOffersService extends OffersImplBase {
                 )));
     }
 
-    private OfferCategory getAvailableOfferCategory(String offerId) {
-        if (coreApi.isAvailableAltcoinOffer(offerId))
+    private OfferCategory getOfferCategory(String offerId, boolean isMyOffer) {
+        if (coreApi.isAltcoinOffer(offerId, isMyOffer))
             return ALTCOIN;
-        else if (coreApi.isAvailableFiatOffer(offerId))
+        else if (coreApi.isFiatOffer(offerId, isMyOffer))
             return FIAT;
-        else if (coreApi.isAvailableBsqSwapOffer(offerId))
+        else if (coreApi.isBsqSwapOffer(offerId, isMyOffer))
             return BSQ_SWAP;
         else
             return UNKNOWN;

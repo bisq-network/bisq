@@ -45,7 +45,8 @@ class EditOfferValidator {
     }
 
     void validate() {
-        log.info("Verifying 'editoffer' params OK for editType {}", editType);
+        log.info("Verifying 'editoffer' params for editType {}", editType);
+        checkNotBsqSwapOffer();
         switch (editType) {
             case ACTIVATION_STATE_ONLY: {
                 validateEditedActivationState();
@@ -136,6 +137,13 @@ class EditOfferValidator {
             throw new IllegalStateException(
                     format("cannot set mkt price margin or trigger price on fixed price altcoin offer with id '%s'",
                             currentlyOpenOffer.getId()));
+        }
+    }
+
+    private void checkNotBsqSwapOffer() {
+        if (currentlyOpenOffer.getOffer().isBsqSwapOffer()) {
+            throw new IllegalStateException(
+                    format("cannot edit bsq swap offer with id '%s'", currentlyOpenOffer.getId()));
         }
     }
 }

@@ -79,7 +79,7 @@ class GrpcTradesService extends TradesImplBase {
                         exceptionHandler,
                         log);
 
-        if (coreApi.isAvailableBsqSwapOffer(req.getOfferId())) {
+        if (coreApi.isBsqSwapOffer(req.getOfferId(), false)) {
             coreApi.takeBsqSwapOffer(req.getOfferId(),
                     bsqSwapTrade -> {
                         var reply = buildTakeOfferReply(bsqSwapTrade);

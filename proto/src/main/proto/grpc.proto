@@ -92,6 +92,7 @@ service Offers {
 
 message GetOfferCategoryRequest {
     string id = 1;
+    bool isMyOffer = 2;
 }
 
 message GetOfferCategoryReply {
