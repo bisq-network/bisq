@@ -702,7 +702,9 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     public void closeDisputedTrade(String tradeId, Trade.DisputeState disputeState) {
         getTradeById(tradeId).ifPresent(trade -> {
             trade.setDisputeState(disputeState);
-            onTradeCompleted(trade);
+            trade.setState(trade.getContract().isMyRoleBuyer(keyRing.getPubKeyRing()) ?
+                Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG :        // buyer to trade step 4
+                Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG);    // seller to trade step 4
             btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
             requestPersistence();
         });
