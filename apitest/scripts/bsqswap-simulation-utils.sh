@@ -67,8 +67,6 @@ executebsqswap() {
     exitoncommandalert $?
     echo "$GETTRADE_CMD_OUTPUT"
     printbreak
-    TRADE_DETAIL=$(gettradedetail "$GETTRADE_CMD_OUTPUT")
-    exitoncommandalert $?
 
     printdate "Bob looking at his trade with id $OFFER_ID."
     CMD="$CLI_BASE --port=$BOB_PORT gettrade --trade-id=$OFFER_ID"
@@ -77,7 +75,5 @@ executebsqswap() {
     exitoncommandalert $?
     echo "$GETTRADE_CMD_OUTPUT"
     printbreak
-    TRADE_DETAIL=$(gettradedetail "$GETTRADE_CMD_OUTPUT")
-    exitoncommandalert $?
 }
 
