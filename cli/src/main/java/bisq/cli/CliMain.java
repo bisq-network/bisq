@@ -832,6 +832,7 @@ public class CliMain {
             stream.format(rowFormat, "", "--security-deposit=<percent> \\", "");
             stream.format(rowFormat, "", "[--fee-currency=<bsq|btc>]", "");
             stream.format(rowFormat, "", "[--trigger-price=<price>]", "");
+            stream.format(rowFormat, "", "[--swap=<true|false>]", "");
             stream.println();
             stream.format(rowFormat, editoffer.name(), "--offer-id=<offer-id> \\", "Edit offer with id");
             stream.format(rowFormat, "", "[--fixed-price=<price>] \\", "");
