@@ -17,9 +17,9 @@ option adjustments to compensate.
 
 **Shell**:  Bash
 
-**Java SDK**:  Version 10, 11, 12 or 15
+**Java SDK**:  Version 11 - 15 (src and class generation version 11)
 
-**Bitcoin-Core**:  Version 0.19, 0.20, or 0.21
+**Bitcoin-Core**:  Version 0.19 - 22
 
 **Git Client**
 
