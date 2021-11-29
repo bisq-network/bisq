@@ -66,7 +66,7 @@ public class EditOfferOptionParser extends OfferIdOptionParser implements Method
     private EditOfferRequest.EditType offerEditType;
 
     public EditOfferOptionParser(String[] args) {
-        super(args);
+        super(args, true);
     }
 
     public EditOfferOptionParser parse() {

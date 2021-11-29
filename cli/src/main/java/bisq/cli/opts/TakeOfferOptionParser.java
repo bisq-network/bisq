@@ -33,7 +33,7 @@ public class TakeOfferOptionParser extends OfferIdOptionParser implements Method
             .defaultsTo("btc");
 
     public TakeOfferOptionParser(String[] args) {
-        super(args);
+        super(args, true);
     }
 
     public TakeOfferOptionParser parse() {

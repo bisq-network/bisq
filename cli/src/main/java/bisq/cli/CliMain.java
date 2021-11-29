@@ -463,7 +463,7 @@ public class CliMain {
                     return;
                 }
                 case takeoffer: {
-                    var offerIdOpt = new OfferIdOptionParser(args).parse();
+                    var offerIdOpt = new OfferIdOptionParser(args, true).parse();
                     if (offerIdOpt.isForHelp()) {
                         out.println(client.getMethodHelp(method));
                         return;
