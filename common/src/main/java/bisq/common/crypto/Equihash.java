@@ -81,10 +81,8 @@ import static java.math.BigInteger.ONE;
 @SuppressWarnings("UnstableApiUsage")
 public class Equihash {
     private static final int HASH_BIT_LENGTH = 256;
-    /** Observed mean solution count per nonce for Equihash-n-4 puzzles with unit difficulty. */
-    public static final double EQUIHASH_n_4_MEAN_SOLUTION_COUNT_PER_NONCE = 1.63;
-    /** Observed mean solution count per nonce for Equihash-n-5 puzzles with unit difficulty. */
-    public static final double EQUIHASH_n_5_MEAN_SOLUTION_COUNT_PER_NONCE = 1.34;
+    /** Mean solution count per nonce for Equihash puzzles with unit difficulty. */
+    private static final double MEAN_SOLUTION_COUNT_PER_NONCE = 2.0;
 
     private final int k, N;
     private final int tableCapacity;
@@ -127,8 +125,8 @@ public class Equihash {
     /** Adjust the provided difficulty to take the variable number of puzzle solutions per
      * nonce into account, so that the expected number of attempts needed to solve a given
      * puzzle equals the reciprocal of the provided difficulty. */
-    public static double adjustDifficulty(double realDifficulty, double meanSolutionCountPerNonce) {
-        return Math.max(-meanSolutionCountPerNonce / Math.log1p(-1.0 / Math.max(realDifficulty, 1.0)), 1.0);
+    public static double adjustDifficulty(double realDifficulty) {
+        return Math.max(-MEAN_SOLUTION_COUNT_PER_NONCE / Math.log1p(-1.0 / Math.max(realDifficulty, 1.0)), 1.0);
     }
 
     public Puzzle puzzle(byte[] seed) {
@@ -339,7 +337,7 @@ public class Equihash {
 
                 private Iterator<Integer> overspillIterator() {
                     if (overspillIterator == null) {
-                        overspillIterator = overspillMultimap.get(i).iterator();
+                        overspillIterator = overspillMultimap.get(key).iterator();
                     }
                     return overspillIterator;
                 }
