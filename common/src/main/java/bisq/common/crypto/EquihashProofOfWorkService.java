@@ -70,7 +70,6 @@ public class EquihashProofOfWorkService extends ProofOfWorkService {
     }
 
     private static double scaledDifficulty(double difficulty) {
-        return Equihash.adjustDifficulty(DIFFICULTY_SCALE_FACTOR * difficulty,
-                Equihash.EQUIHASH_n_5_MEAN_SOLUTION_COUNT_PER_NONCE);
+        return Equihash.adjustDifficulty(DIFFICULTY_SCALE_FACTOR * difficulty);
     }
 }

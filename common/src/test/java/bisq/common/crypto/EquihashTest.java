@@ -33,7 +33,6 @@ import java.util.stream.IntStream;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import static bisq.common.crypto.Equihash.EQUIHASH_n_5_MEAN_SOLUTION_COUNT_PER_NONCE;
 import static java.lang.Double.POSITIVE_INFINITY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -56,16 +55,17 @@ public class EquihashTest {
 
     @Test
     public void testAdjustDifficulty() {
-        assertEquals(1.0, Equihash.adjustDifficulty(0.0, 1.34), 0.0001);
-        assertEquals(1.0, Equihash.adjustDifficulty(0.5, 1.34), 0.0001);
-        assertEquals(1.0, Equihash.adjustDifficulty(1.0, 1.34), 0.0001);
-        assertEquals(1.0, Equihash.adjustDifficulty(1.2, 1.34), 0.0001);
-        assertEquals(1.22, Equihash.adjustDifficulty(1.5, 1.34), 0.01);
-        assertEquals(1.93, Equihash.adjustDifficulty(2.0, 1.34), 0.01);
-        assertEquals(2.62, Equihash.adjustDifficulty(2.5, 1.34), 0.01);
-        assertEquals(3.30, Equihash.adjustDifficulty(3.0, 1.34), 0.01);
-        assertEquals(134.0, Equihash.adjustDifficulty(100.0, 1.34), 1.0);
-        assertEquals(Equihash.adjustDifficulty(POSITIVE_INFINITY, 1.34), POSITIVE_INFINITY, 1.0);
+        assertEquals(1.0, Equihash.adjustDifficulty(0.0), 0.0001);
+        assertEquals(1.0, Equihash.adjustDifficulty(0.5), 0.0001);
+        assertEquals(1.0, Equihash.adjustDifficulty(1.0), 0.0001);
+        assertEquals(1.0, Equihash.adjustDifficulty(1.1), 0.0001);
+        assertEquals(1.12, Equihash.adjustDifficulty(1.2), 0.01);
+        assertEquals(1.83, Equihash.adjustDifficulty(1.5), 0.01);
+        assertEquals(2.89, Equihash.adjustDifficulty(2.0), 0.01);
+        assertEquals(3.92, Equihash.adjustDifficulty(2.5), 0.01);
+        assertEquals(4.93, Equihash.adjustDifficulty(3.0), 0.01);
+        assertEquals(200.0, Equihash.adjustDifficulty(100.0), 1.5);
+        assertEquals(Equihash.adjustDifficulty(POSITIVE_INFINITY), POSITIVE_INFINITY, 1.0);
     }
 
     @Test
@@ -87,12 +87,12 @@ public class EquihashTest {
     public void benchmarkFindSolution() {
         // On Intel Core i3 CPU M 330 @ 2.13GHz ...
         //
-        // For Equihash-90-5 with real difficulty 2.0, adjusted difficulty 1.933211354791211 ...
-        // Total elapsed solution time: 292789 ms
-        // Mean time to solve one puzzle: 292 ms
-        // Puzzle solution time per unit difficulty: 146 ms
+        // For Equihash-90-5 with real difficulty 2.0, adjusted difficulty 2.8853900817779268 ...
+        // Total elapsed solution time: 279583 ms
+        // Mean time to solve one puzzle: 279 ms
+        // Puzzle solution time per unit difficulty: 139 ms
         //
-        double adjustedDifficulty = Equihash.adjustDifficulty(2.0, EQUIHASH_n_5_MEAN_SOLUTION_COUNT_PER_NONCE);
+        double adjustedDifficulty = Equihash.adjustDifficulty(2.0);
         Equihash equihash = new Equihash(90, 5, adjustedDifficulty);
 
         Stopwatch stopwatch = Stopwatch.createStarted();
@@ -140,24 +140,24 @@ public class EquihashTest {
     @Ignore
     public void solutionCountPerNonceStats() {
         // For Equihash-60-4...
-        // Got puzzle solution count mean: 1.6161
-        // Got expected count stats: [0 x 1987, 1 x 3210, 2 x 2595, 3 x 1398, 4 x 564, 5 x 183, 6 x 49, 7 x 11, 8 x 3]
-        // Got actual count stats:   [0 x 2014, 1 x 3230, 2 x 2546, 3 x 1395, 4 x 543, 5 x 191, 6 x 50, 7 x 24, 8 x 4, 9 x 3]
+        // Got puzzle solution count mean: 1.9797
+        // Got expected count stats: [0 x 1381, 1 x 2734, 2 x 2707, 3 x 1786, 4 x 884, 5 x 350, 6 x 115, 7 x 33, 8 x 8, 9 x 2]
+        // Got actual count stats:   [0 x 1413, 1 x 2704, 2 x 2699, 3 x 1813, 4 x 866, 5 x 330, 6 x 115, 7 x 35, 8 x 19, 9 x 5, 10]
         //
         // For Equihash-70-4...
-        // Got puzzle solution count mean: 1.6473
-        // Got expected count stats: [0 x 1926, 1 x 3172, 2 x 2613, 3 x 1434, 4 x 591, 5 x 195, 6 x 53, 7 x 13, 8 x 2, 9]
-        // Got actual count stats:   [0 x 1958, 1 x 3172, 2 x 2584, 3 x 1413, 4 x 585, 5 x 204, 6 x 61, 7 x 17, 8 x 5, 9]
+        // Got puzzle solution count mean: 1.9988
+        // Got expected count stats: [0 x 1355, 1 x 2708, 2 x 2707, 3 x 1803, 4 x 902, 5 x 360, 6 x 120, 7 x 34, 8 x 9, 9 x 2]
+        // Got actual count stats:   [0 x 1362, 1 x 2690, 2 x 2720, 3 x 1826, 4 x 870, 5 x 353, 6 x 129, 7 x 41, 8 x 7, 9 x 2]
         //
         // For Equihash-90-5...
-        // Got puzzle solution count mean: 1.3419
-        // Got expected count stats: [0 x 2613, 1 x 3508, 2 x 2353, 3 x 1052, 4 x 353, 5 x 95, 6 x 21, 7 x 4, 8]
-        // Got actual count stats:   [0 x 2698, 1 x 3446, 2 x 2311, 3 x 1045, 4 x 352, 5 x 104, 6 x 33, 7 x 5, 8 x 3, 9, 10, 12]
+        // Got puzzle solution count mean: 1.9921
+        // Got expected count stats: [0 x 1364, 1 x 2717, 2 x 2707, 3 x 1797, 4 x 896, 5 x 356, 6 x 119, 7 x 33, 8 x 9, 9 x 2]
+        // Got actual count stats:   [0 x 1379, 1 x 2709, 2 x 2729, 3 x 1750, 4 x 900, 5 x 362, 6 x 119, 7 x 39, 8 x 11, 9, 10]
         //
         // For Equihash-96-5...
-        // Got puzzle solution count mean: 1.3363
-        // Got expected count stats: [0 x 2628, 1 x 3512, 2 x 2347, 3 x 1045, 4 x 349, 5 x 93, 6 x 21, 7 x 4, 8]
-        // Got actual count stats:   [0 x 2708, 1 x 3409, 2 x 2344, 3 x 1048, 4 x 368, 5 x 94, 6 x 23, 7 x 6]
+        // Got puzzle solution count mean: 1.9997
+        // Got expected count stats: [0 x 1354, 1 x 2707, 2 x 2707, 3 x 1804, 4 x 902, 5 x 360, 6 x 121, 7 x 34, 8 x 9, 9 x 2]
+        // Got actual count stats:   [0 x 1405, 1 x 2621, 2 x 2733, 3 x 1802, 4 x 928, 5 x 342, 6 x 123, 7 x 29, 8 x 13, 9 x 3, 10]
         //
         Equihash equihash = new Equihash(90, 5, 1.0);
         byte[] seed = new byte[32];
