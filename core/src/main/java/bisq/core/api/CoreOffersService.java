@@ -209,13 +209,8 @@ class CoreOffersService {
                         new IllegalStateException(format("offer with id '%s' not found", id)));
     }
 
-    boolean isMyOffer(String id) {
-        boolean isMyOpenOffer = openOfferManager.getOpenOfferById(id)
-                .filter(open -> open.getOffer().isMyOffer(keyRing))
-                .isPresent();
-        boolean wasMyOffer = offerBookService.getOffers().stream()
-                .anyMatch(o -> o.getId().equals(id) && o.isMyOffer(keyRing));
-        return isMyOpenOffer || wasMyOffer;
+    boolean isMyOffer(Offer offer) {
+        return offer.isMyOffer(keyRing);
     }
 
     void createAndPlaceBsqSwapOffer(String directionAsString,
