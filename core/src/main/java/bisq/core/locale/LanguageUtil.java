@@ -43,7 +43,8 @@ public class LanguageUtil {
             "ja", // Japanese
             "fa", // Persian
             "it", // Italian
-            "cs" // Czech
+            "cs", // Czech
+            "pl" // Polish
             /*
             // not translated yet
             "el", // Greek
@@ -54,7 +55,6 @@ public class LanguageUtil {
             "iw", // Hebrew
             "hi", // Hindi
             "ko", // Korean
-            "pl", // Polish
             "sv", // Swedish
             "no", // Norwegian
             "nl", // Dutch
