@@ -20,7 +20,6 @@ package bisq.core.api.model;
 import bisq.core.api.model.builder.OfferInfoBuilder;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
-import bisq.core.util.coin.CoinUtil;
 
 import bisq.common.Payload;
 
@@ -168,9 +167,7 @@ public class OfferInfo implements Payload {
     }
 
     private static long getMakerFee(Offer offer, boolean isMyOffer) {
-        return isMyOffer
-                ? requireNonNull(CoinUtil.getMakerFee(false, offer.getAmount())).value
-                : 0;
+        return isMyOffer ? offer.getMakerFee().value : 0;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
