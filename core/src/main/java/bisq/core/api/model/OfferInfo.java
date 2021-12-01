@@ -20,6 +20,7 @@ package bisq.core.api.model;
 import bisq.core.api.model.builder.OfferInfoBuilder;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
+import bisq.core.util.coin.CoinUtil;
 
 import bisq.common.Payload;
 
@@ -167,7 +168,14 @@ public class OfferInfo implements Payload {
     }
 
     private static long getMakerFee(Offer offer, boolean isMyOffer) {
-        return isMyOffer ? offer.getMakerFee().value : 0;
+        // TODO Find out why offer.makerFee is always set to 0 when offer is bsq-swap.
+        if (isMyOffer) {
+            return offer.isBsqSwapOffer()
+                    ? requireNonNull(CoinUtil.getMakerFee(false, offer.getAmount())).value
+                    : offer.getMakerFee().value;
+        } else {
+            return 0;
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
