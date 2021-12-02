@@ -327,12 +327,12 @@ public class OptionParsersTest {
         String[] args = new String[]{
                 PASSWORD_OPT,
                 createcryptopaymentacct.name(),
-                "--" + OPT_ACCOUNT_NAME + "=" + "bsq payment account",
-                "--" + OPT_CURRENCY_CODE + "=" + "xmr"
+                "--" + OPT_ACCOUNT_NAME + "=" + "bch payment account",
+                "--" + OPT_CURRENCY_CODE + "=" + "bch"
         };
         Throwable exception = assertThrows(RuntimeException.class, () ->
                 new CreateCryptoCurrencyPaymentAcctOptionParser(args).parse());
-        assertEquals("api only supports bsq crypto currency payment accounts", exception.getMessage());
+        assertEquals("api does not support bch payment accounts", exception.getMessage());
     }
 
     @Test
@@ -349,10 +349,28 @@ public class OptionParsersTest {
     }
 
     @Test
-    public void testCreateCryptoCurrencyPaymentAcct() {
+    public void testCreateV1BsqPaymentAcct() {
         var acctName = "bsq payment account";
         var currencyCode = "bsq";
         var address = "B1nXyZ"; // address is validated on server
+        String[] args = new String[]{
+                PASSWORD_OPT,
+                createcryptopaymentacct.name(),
+                "--" + OPT_ACCOUNT_NAME + "=" + acctName,
+                "--" + OPT_CURRENCY_CODE + "=" + currencyCode,
+                "--" + OPT_ADDRESS + "=" + address
+        };
+        var parser = new CreateCryptoCurrencyPaymentAcctOptionParser(args).parse();
+        assertEquals(acctName, parser.getAccountName());
+        assertEquals(currencyCode, parser.getCurrencyCode());
+        assertEquals(address, parser.getAddress());
+    }
+
+    @Test
+    public void testCreateV1XmrPaymentAcct() {
+        var acctName = "xmr payment account";
+        var currencyCode = "xmr";
+        var address = "B1nXyZ46XXX"; // address is validated on server
         String[] args = new String[]{
                 PASSWORD_OPT,
                 createcryptopaymentacct.name(),
