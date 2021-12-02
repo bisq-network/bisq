@@ -19,6 +19,7 @@ package bisq.core.trade.protocol.bsq_swap.tasks.buyer;
 
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.wallet.Restrictions;
+import bisq.core.btc.wallet.WalletService;
 import bisq.core.trade.bsq_swap.BsqSwapCalculation;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapFinalizeTxRequest;
@@ -66,11 +67,13 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
             checkNotNull(request);
             Validator.checkTradeId(protocolModel.getOfferId(), request);
 
-            // We will use only the sellers buyersBsqInputs from the tx so we do not verify anything else
+            // We will use only the seller's BTC inputs from the tx, so we do not verify anything else.
             byte[] tx = request.getTx();
-            Transaction sellersTransaction = protocolModel.getBtcWalletService().getTxFromSerializedTx(tx);
+            WalletService btcWalletService = protocolModel.getBtcWalletService();
+            Transaction sellersTransaction = btcWalletService.getTxFromSerializedTx(tx);
             List<RawTransactionInput> sellersRawBtcInputs = request.getBtcInputs();
-            checkArgument(!sellersRawBtcInputs.isEmpty(), "Sellers BTC buyersBsqInputs must not be empty");
+            checkArgument(!sellersRawBtcInputs.isEmpty(), "SellersRawBtcInputs must not be empty");
+            sellersRawBtcInputs.forEach(input -> input.validate(btcWalletService));
 
             List<RawTransactionInput> buyersBsqInputs = protocolModel.getInputs();
             int buyersInputSize = Objects.requireNonNull(buyersBsqInputs).size();
@@ -78,7 +81,13 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
                     .filter(input -> input.getIndex() >= buyersInputSize)
                     .collect(Collectors.toList());
             checkArgument(sellersBtcInputs.size() == sellersRawBtcInputs.size(),
-                    "Number of buyersBsqInputs in tx must match the number of sellersRawBtcInputs");
+                    "Number of sellersBtcInputs in tx must match the number of sellersRawBtcInputs");
+            for (int i = 0; i < sellersBtcInputs.size(); i++) {
+                String parentTxId = sellersBtcInputs.get(i).getOutpoint().getHash().toString();
+                String rawParentTxId = sellersRawBtcInputs.get(i).getParentTxId(btcWalletService);
+                checkArgument(parentTxId.equals(rawParentTxId),
+                        "Spending tx mismatch between sellersBtcInputs and sellersRawBtcInputs at index %s", i);
+            }
 
             boolean hasUnSignedInputs = sellersBtcInputs.stream()
                     .anyMatch(input -> input.getScriptSig() == null && !input.hasWitness());
@@ -113,7 +122,7 @@ public abstract class ProcessBsqSwapFinalizeTxRequest extends BsqSwapTask {
             checkArgument(change <= expectedChange,
                     "Change must be smaller or equal to expectedChange");
 
-            NetworkParameters params = protocolModel.getBtcWalletService().getParams();
+            NetworkParameters params = btcWalletService.getParams();
             String sellersBsqPayoutAddress = request.getBsqPayoutAddress();
             checkNotNull(sellersBsqPayoutAddress, "sellersBsqPayoutAddress must not be null");
             checkArgument(!sellersBsqPayoutAddress.isEmpty(), "sellersBsqPayoutAddress must not be empty");
