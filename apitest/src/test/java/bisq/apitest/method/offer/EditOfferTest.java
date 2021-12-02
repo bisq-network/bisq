@@ -75,12 +75,14 @@ public class EditOfferTest extends AbstractOfferTest {
         OfferInfo editedOffer = aliceClient.getMyOffer(originalOffer.getId());
         log.debug("Edited EUR offer:\n{}", toOfferTable.apply(editedOffer));
         assertFalse(editedOffer.getIsActivated());
+        assertTrue(editedOffer.getUseMarketBasedPrice());
         // Re-enable offer
         aliceClient.editOfferActivationState(editedOffer.getId(), ACTIVATE_OFFER);
         genBtcBlocksThenWait(1, 1500); // Wait for offer book re-entry.
         editedOffer = aliceClient.getMyOffer(originalOffer.getId());
         log.debug("Edited EUR offer:\n{}", toOfferTable.apply(editedOffer));
         assertTrue(editedOffer.getIsActivated());
+        assertTrue(editedOffer.getUseMarketBasedPrice());
 
         doSanityCheck(originalOffer, editedOffer);
     }
@@ -153,6 +155,7 @@ public class EditOfferTest extends AbstractOfferTest {
         OfferInfo editedOffer = aliceClient.getMyOffer(originalOffer.getId());
         log.debug("Edited USD offer:\n{}", toOfferTable.apply(editedOffer));
         assertEquals(scaledDownMktPriceMargin.apply(newMktPriceMargin), editedOffer.getMarketPriceMargin());
+        assertTrue(editedOffer.getUseMarketBasedPrice());
 
         doSanityCheck(originalOffer, editedOffer);
     }
@@ -211,6 +214,7 @@ public class EditOfferTest extends AbstractOfferTest {
         var expectedNewFixedPrice = scaledUpFiatOfferPrice.apply(new BigDecimal(editedFixedPriceAsString));
         assertEquals(expectedNewFixedPrice, editedOffer.getPrice());
         assertFalse(editedOffer.getIsActivated());
+        assertFalse(editedOffer.getUseMarketBasedPrice());
 
         doSanityCheck(originalOffer, editedOffer);
     }
@@ -247,6 +251,7 @@ public class EditOfferTest extends AbstractOfferTest {
         assertEquals(scaledDownMktPriceMargin.apply(newMktPriceMargin), editedOffer.getMarketPriceMargin());
         assertEquals(0, editedOffer.getTriggerPrice());
         assertFalse(editedOffer.getIsActivated());
+        assertTrue(editedOffer.getUseMarketBasedPrice());
 
         doSanityCheck(originalOffer, editedOffer);
     }
