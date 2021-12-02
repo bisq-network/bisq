@@ -23,7 +23,7 @@ import bisq.desktop.main.offer.bisq_v1.MutableOfferView;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 
 import bisq.core.locale.CurrencyUtil;
-import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.OfferPayloadBase;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
@@ -61,7 +61,7 @@ public class DuplicateOfferView extends MutableOfferView<DuplicateOfferViewModel
         onPaymentAccountsComboBoxSelected();
     }
 
-    public void initWithData(OfferPayload offerPayload) {
+    public void initWithData(OfferPayloadBase offerPayload) {
         initWithData(offerPayload.getDirection(),
                 CurrencyUtil.getTradeCurrency(offerPayload.getCurrencyCode()).get(),
                 null);

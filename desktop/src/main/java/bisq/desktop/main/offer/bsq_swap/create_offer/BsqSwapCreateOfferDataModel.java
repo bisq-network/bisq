@@ -28,6 +28,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.bsq_swap.BsqSwapOfferModel;
+import bisq.core.offer.bsq_swap.BsqSwapOfferPayload;
 import bisq.core.offer.bsq_swap.OpenBsqSwapOfferService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.user.User;
@@ -91,8 +92,8 @@ class BsqSwapCreateOfferDataModel extends BsqSwapOfferDataModel {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void initWithData(OfferDirection direction) {
-        bsqSwapOfferModel.init(direction, true);
+    void initWithData(OfferDirection direction, BsqSwapOfferPayload offerPayload) {
+        bsqSwapOfferModel.init(direction, true, offerPayload != null ? new Offer(offerPayload) : null);
 
         fillPaymentAccounts();
         applyPaymentAccount();

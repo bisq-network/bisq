@@ -25,6 +25,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
+import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferUtil;
 import bisq.core.payment.payload.PaymentMethod;
@@ -124,9 +125,19 @@ public class BsqSwapOfferModel {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void init(OfferDirection direction, boolean isMaker) {
+    public void init(OfferDirection direction, boolean isMaker, Offer offer) {
         this.direction = direction;
         this.isMaker = isMaker;
+
+        if (offer != null) {
+            setPrice(offer.getPrice());
+
+            setBtcAmount(Coin.valueOf(Math.min(offer.getAmount().value, getMaxTradeLimit())));
+            calculateVolumeForAmount(getBtcAmount());
+
+            setMinAmount(offer.getMinAmount());
+            calculateMinVolume();
+        }
 
         createListeners();
         applyTxFeePerVbyte();

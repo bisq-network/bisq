@@ -23,6 +23,9 @@ import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
 import bisq.desktop.main.MainView;
+import bisq.desktop.main.offer.BuyOfferView;
+import bisq.desktop.main.offer.SellOfferView;
+import bisq.desktop.main.offer.bsq_swap.create_offer.BsqSwapCreateOfferView;
 import bisq.desktop.main.portfolio.bsqswaps.UnconfirmedBsqSwapsView;
 import bisq.desktop.main.portfolio.closedtrades.ClosedTradesView;
 import bisq.desktop.main.portfolio.duplicateoffer.DuplicateOfferView;
@@ -32,8 +35,10 @@ import bisq.desktop.main.portfolio.openoffer.OpenOffersView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
 
 import bisq.core.locale.Res;
+import bisq.core.offer.OfferDirection;
+import bisq.core.offer.OfferPayloadBase;
 import bisq.core.offer.OpenOffer;
-import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.offer.bsq_swap.BsqSwapOfferPayload;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.model.bisq_v1.Trade;
 
@@ -228,11 +233,18 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
                 selectOpenOffersView((OpenOffersView) view);
             }
         } else if (view instanceof DuplicateOfferView) {
-            if (duplicateOfferView == null && data instanceof OfferPayload) {
+            if (duplicateOfferView == null && data instanceof OfferPayloadBase) {
+                // Switch to create BSQ swap offer
+                if (data instanceof BsqSwapOfferPayload) {
+                    var offerViewClass = ((BsqSwapOfferPayload) data).getDirection() == OfferDirection.BUY ? BuyOfferView.class : SellOfferView.class;
+                    navigation.navigateToWithData(data, MainView.class, offerViewClass, BsqSwapCreateOfferView.class);
+                    return;
+                }
+
                 viewLoader.removeFromCache(viewClass);  // remove cached dialog
                 view = viewLoader.load(viewClass);      // and load a fresh one
                 duplicateOfferView = (DuplicateOfferView) view;
-                duplicateOfferView.initWithData((OfferPayload) data);
+                duplicateOfferView.initWithData((OfferPayloadBase) data);
                 duplicateOfferTab = new Tab(Res.get("portfolio.tab.duplicateOffer").toUpperCase());
                 duplicateOfferView.setCloseHandler(() -> {
                     root.getTabs().remove(duplicateOfferTab);
