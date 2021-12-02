@@ -144,6 +144,11 @@ public final class RawTransactionInput implements NetworkPayload, PersistablePay
         long outputValue = tx.getOutput(index).getValue().value;
         checkArgument(value == outputValue,
                 "Input value (%s) mismatches connected tx output value (%s).", value, outputValue);
+        var scriptPubKey = tx.getOutput(index).getScriptPubKey();
+        var scriptType = scriptPubKey != null ? scriptPubKey.getScriptType() : null;
+        checkArgument(scriptTypeId <= 0 || scriptType != null && scriptType.id == scriptTypeId,
+                "Input scriptTypeId (%s) mismatches connected tx output scriptTypeId (%s.id = %s).",
+                scriptTypeId, scriptType, scriptType != null ? scriptType.id : 0);
     }
 
     @Override
