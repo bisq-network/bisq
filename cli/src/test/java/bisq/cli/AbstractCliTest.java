@@ -51,11 +51,11 @@ public abstract class AbstractCliTest {
             IntStream.range(min, max).asDoubleStream()
                     .boxed()
                     .map(d -> d / 100)
-                    .map(d -> d.toString())
+                    .map(Object::toString)
                     .collect(Collectors.toList());
 
     protected final BiFunction<Double, Double, String> randomFixedAltcoinPrice = (min, max) -> {
-        double random = ThreadLocalRandom.current().nextDouble(min, max);
+        String random = Double.valueOf(ThreadLocalRandom.current().nextDouble(min, max)).toString();
         BigDecimal bd = new BigDecimal(random).setScale(8, HALF_UP);
         return bd.toPlainString();
     };
