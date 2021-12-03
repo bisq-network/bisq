@@ -98,7 +98,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     @FXML
     TableColumn<OpenOfferListItem, OpenOfferListItem> priceColumn, deviationColumn, amountColumn, volumeColumn,
             marketColumn, directionColumn, dateColumn, offerIdColumn, deactivateItemColumn,
-            removeItemColumn, editItemColumn, triggerPriceColumn, triggerIconColumn, paymentMethodColumn;
+            removeItemColumn, editItemColumn, triggerPriceColumn, triggerIconColumn, paymentMethodColumn, duplicateItemColumn;
     @FXML
     HBox searchBox;
     @FXML
@@ -152,6 +152,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         triggerPriceColumn.setGraphic(new AutoTooltipLabel(Res.get("openOffer.header.triggerPrice")));
         deactivateItemColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.enabled")));
         editItemColumn.setGraphic(new AutoTooltipLabel(""));
+        duplicateItemColumn.setGraphic(new AutoTooltipLabel(""));
         removeItemColumn.setGraphic(new AutoTooltipLabel(""));
 
         setOfferIdColumnCellFactory();
@@ -167,6 +168,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         setEditColumnCellFactory();
         setTriggerIconColumnCellFactory();
         setTriggerPriceColumnCellFactory();
+        setDuplicateColumnCellFactory();
         setRemoveColumnCellFactory();
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -192,15 +194,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     final TableRow<OpenOfferListItem> row = new TableRow<>();
                     final ContextMenu rowMenu = new ContextMenu();
                     MenuItem editItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
-                    editItem.setOnAction((event) -> {
-                        try {
-                            OfferPayloadBase offerPayloadBase = row.getItem().getOffer().getOfferPayloadBase();
-                            navigation.navigateToWithData(offerPayloadBase, MainView.class, PortfolioView.class,
-                                    DuplicateOfferView.class);
-                        } catch (NullPointerException e) {
-                            log.warn("Unable to get offerPayload - {}", e.toString());
-                        }
-                    });
+                    editItem.setOnAction((event) -> onDuplicateOffer(row.getItem().getOffer()));
                     rowMenu.getItems().add(editItem);
                     row.contextMenuProperty().bind(
                             Bindings.when(Bindings.isNotNull(row.itemProperty()))
@@ -356,11 +350,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             if (model.getDirectionLabel(item).contains(filterString)) {
                 return true;
             }
-            if (offer.getOfferFeePaymentTxId() != null &&
-                    offer.getOfferFeePaymentTxId().contains(filterString)) {
-                return true;
-            }
-            return false;
+            return offer.getOfferFeePaymentTxId() != null &&
+                    offer.getOfferFeePaymentTxId().contains(filterString);
         });
     }
 
@@ -434,6 +425,16 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     private void onEditOpenOffer(OpenOffer openOffer) {
         if (model.isBootstrappedOrShowPopup()) {
             openOfferActionHandler.onEditOpenOffer(openOffer);
+        }
+    }
+
+    private void onDuplicateOffer(Offer offer) {
+        try {
+            OfferPayloadBase offerPayloadBase = offer.getOfferPayloadBase();
+            navigation.navigateToWithData(offerPayloadBase, MainView.class, PortfolioView.class,
+                    DuplicateOfferView.class);
+        } catch (NullPointerException e) {
+            log.warn("Unable to get offerPayload - {}", e.toString());
         }
     }
 
@@ -771,6 +772,40 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                         setGraphic(button);
                                     }
                                     button.setOnAction(event -> onRemoveOpenOffer(item.getOpenOffer()));
+                                } else {
+                                    setGraphic(null);
+                                    if (button != null) {
+                                        button.setOnAction(null);
+                                        button = null;
+                                    }
+                                }
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void setDuplicateColumnCellFactory() {
+        duplicateItemColumn.getStyleClass().add("avatar-column");
+        duplicateItemColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
+        duplicateItemColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<OpenOfferListItem, OpenOfferListItem> call(TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
+                        return new TableCell<>() {
+                            Button button;
+
+                            @Override
+                            public void updateItem(final OpenOfferListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    if (button == null) {
+                                        button = getRegularIconButton(MaterialDesignIcon.CONTENT_COPY);
+                                        button.setTooltip(new Tooltip(Res.get("shared.duplicateOffer")));
+                                        setGraphic(button);
+                                    }
+                                    button.setOnAction(event -> onDuplicateOffer(item.getOffer()));
                                 } else {
                                     setGraphic(null);
                                     if (button != null) {
