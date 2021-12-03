@@ -39,8 +39,8 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayloadBase;
 import bisq.core.offer.OpenOffer;
-import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Contract;
@@ -265,9 +265,9 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                     MenuItem editItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
                     editItem.setOnAction((event) -> {
                         try {
-                            OfferPayload offerPayload = row.getItem().getOffer().getOfferPayload().orElseThrow();
-                            if (offerPayload.getPubKeyRing().equals(keyRing.getPubKeyRing())) {
-                                navigation.navigateToWithData(offerPayload, MainView.class, PortfolioView.class, DuplicateOfferView.class);
+                            OfferPayloadBase offerPayloadBase = row.getItem().getOffer().getOfferPayloadBase();
+                            if (offerPayloadBase.getPubKeyRing().equals(keyRing.getPubKeyRing())) {
+                                navigation.navigateToWithData(offerPayloadBase, MainView.class, PortfolioView.class, DuplicateOfferView.class);
                             } else {
                                 new Popup().warning(Res.get("portfolio.context.notYourOffer")).show();
                             }
