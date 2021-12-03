@@ -379,6 +379,7 @@ $ ./bisq-cli --password=xyz --port=9998 createoffer \
     --swap=true \
     --direction=BUY \
     --amount=0.5 \
+    --currency-code=BSQ \
     --fixed-price=0.00005
 ```
 

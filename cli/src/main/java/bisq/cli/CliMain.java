@@ -378,7 +378,8 @@ public class CliMain {
                     var offerId = offerIdOpt.getOfferId();
                     var offerCategory = client.getMyOfferCategory(offerId);
                     if (offerCategory.equals(BSQ_SWAP))
-                        throw new IllegalStateException("cannot edit swap bsq offers");
+                        throw new IllegalStateException("bsq swap offers cannot be edited,"
+                                + " but you may cancel them without forfeiting any funds");
 
                     var opts = new EditOfferOptionParser(args).parse();
                     var fixedPrice = opts.getFixedPrice();
