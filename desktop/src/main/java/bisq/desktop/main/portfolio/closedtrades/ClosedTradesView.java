@@ -442,7 +442,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 if (bsqSwapTrade.getTxId() != null && bsqSwapTrade.getTxId().contains(filterString)) {
                     return true;
                 }
-                if (bsqSwapTrade.getTradeProtocolModel().getTempTradingPeerNodeAddress().getFullAddress().contains(filterString)) {
+                if (bsqSwapTrade.getTradingPeerNodeAddress().getFullAddress().contains(filterString)) {
                     return true;
                 }
             }
