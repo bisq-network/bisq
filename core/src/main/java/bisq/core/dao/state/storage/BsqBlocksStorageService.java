@@ -21,6 +21,7 @@ import bisq.core.dao.state.GenesisTxInfo;
 import bisq.core.dao.state.model.blockchain.Block;
 
 import bisq.common.config.Config;
+import bisq.common.file.FileUtil;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 
 import protobuf.BaseBlock;
@@ -33,8 +34,14 @@ import org.apache.commons.io.FileUtils;
 
 import java.net.URL;
 
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import java.io.File;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -121,22 +128,21 @@ public class BsqBlocksStorageService {
                 log.info("Directory {} in resources does not exist.", resourceDir);
                 return;
             }
-            File dir = new File(dirUrl.toURI());
-            String[] fileNames = dir.list();
-            if (fileNames == null) {
-                log.info("No files in directory. {}", dir.getAbsolutePath());
+            FileSystem fileSystem = FileSystems.newFileSystem(dirUrl.toURI(), Collections.emptyMap());
+            List<Path> filePaths = Files.walk(fileSystem.getPath(resourceDir), 1).collect(Collectors.toList());
+            if (filePaths.size() <= 1) {
+                log.info("No files in directory. {}", dirUrl.toString());
                 return;
             }
             if (!storageDir.exists()) {
                 storageDir.mkdir();
             }
-            for (String fileName : fileNames) {
-                URL url = getClass().getClassLoader().getResource(resourceDir + File.separator + fileName);
-                File resourceFile = new File(url.toURI());
-                File destinationFile = new File(storageDir, fileName);
-                FileUtils.copyFile(resourceFile, destinationFile);
+            filePaths.remove(0);        // first item is the directory name
+            for (Path filePath : filePaths) {
+                File destinationFile = new File(storageDir, filePath.getFileName().toString());
+                FileUtil.resourceToFile(filePath.toString().substring(1), destinationFile);
             }
-            log.info("Copying {} resource files took {} ms", fileNames.length, System.currentTimeMillis() - ts);
+            log.info("Copying {} resource files took {} ms", filePaths.size(), System.currentTimeMillis() - ts);
         } catch (Throwable e) {
             e.printStackTrace();
         }
