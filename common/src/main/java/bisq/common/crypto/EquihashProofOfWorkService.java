@@ -19,15 +19,10 @@ package bisq.common.crypto;
 
 import com.google.common.primitives.Longs;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
 import lombok.extern.slf4j.Slf4j;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class EquihashProofOfWorkService extends ProofOfWorkService {
@@ -56,9 +51,9 @@ public class EquihashProofOfWorkService extends ProofOfWorkService {
 
     @Override
     public byte[] getChallenge(String itemId, String ownerId) {
-        checkArgument(!StringUtils.contains(itemId, '\0'));
-        checkArgument(!StringUtils.contains(ownerId, '\0'));
-        return Hash.getSha256Hash(checkNotNull(itemId) + "\0" + checkNotNull(ownerId));
+        String escapedItemId = itemId.replace(" ", "  ");
+        String escapedOwnerId = ownerId.replace(" ", "  ");
+        return Hash.getSha256Hash(escapedItemId + ", " + escapedOwnerId);
     }
 
     @Override
