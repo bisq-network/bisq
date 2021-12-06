@@ -75,6 +75,8 @@ import java.util.concurrent.TimeUnit;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static bisq.core.offer.bsq_swap.BsqSwapOfferModel.BSQ;
 import static bisq.desktop.util.FormBuilder.*;
 
@@ -162,7 +164,7 @@ public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferV
 
     public void initWithData(OfferDirection direction,
                              OfferView.OfferActionHandler offerActionHandler,
-                             BsqSwapOfferPayload offerPayload) {
+                             @Nullable BsqSwapOfferPayload offerPayload) {
         this.offerActionHandler = offerActionHandler;
 
         model.initWithData(offerPayload != null ? offerPayload.getDirection() : direction, offerPayload);

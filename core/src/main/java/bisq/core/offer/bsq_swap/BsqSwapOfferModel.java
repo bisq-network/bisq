@@ -125,7 +125,7 @@ public class BsqSwapOfferModel {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void init(OfferDirection direction, boolean isMaker, Offer offer) {
+    public void init(OfferDirection direction, boolean isMaker, @Nullable Offer offer) {
         this.direction = direction;
         this.isMaker = isMaker;
 
