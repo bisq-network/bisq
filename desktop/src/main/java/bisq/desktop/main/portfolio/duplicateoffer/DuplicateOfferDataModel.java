@@ -116,18 +116,16 @@ class DuplicateOfferDataModel extends MutableOfferDataModel {
         // If trade currency is BSQ don't use the BSQ swap payment account as it will automatically
         // close the duplicate offer view
         Optional<TradeCurrency> bsqOptional = CurrencyUtil.getTradeCurrency("BSQ");
-        if (bsqOptional.isPresent() && tradeCurrency.equals(bsqOptional.get())) {
-            if (user.getPaymentAccounts() != null) {
-                Optional<PaymentAccount> firstBsqPaymentAccount = user.getPaymentAccounts().stream().filter(paymentAccount1 -> {
-                    Optional<TradeCurrency> tradeCurrency = paymentAccount1.getTradeCurrency();
-                    return tradeCurrency.isPresent() &&
-                            tradeCurrency.get().equals(bsqOptional.get()) &&
-                            !paymentAccount1.getId().equals(BsqSwapAccount.ID);
-                }).findFirst();
+        if (bsqOptional.isPresent() && tradeCurrency.equals(bsqOptional.get()) && user.getPaymentAccounts() != null) {
+            Optional<PaymentAccount> firstBsqPaymentAccount = user.getPaymentAccounts().stream().filter(paymentAccount1 -> {
+                Optional<TradeCurrency> tradeCurrency = paymentAccount1.getTradeCurrency();
+                return tradeCurrency.isPresent() &&
+                        tradeCurrency.get().equals(bsqOptional.get()) &&
+                        !paymentAccount1.getId().equals(BsqSwapAccount.ID);
+            }).findFirst();
 
-                if (firstBsqPaymentAccount.isPresent()) {
-                    return firstBsqPaymentAccount.get();
-                }
+            if (firstBsqPaymentAccount.isPresent()) {
+                return firstBsqPaymentAccount.get();
             }
         }
 
