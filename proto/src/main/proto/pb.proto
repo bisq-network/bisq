@@ -85,8 +85,8 @@ message NetworkEnvelope {
         ShareBuyerPaymentAccountMessage share_buyer_payment_account_message = 54; // Added at 1.7.0
 
         SellersBsqSwapRequest sellers_bsq_swap_request = 55;
-        BuyersBsqSwapRequest buyers_bsq_swap_request= 56;
-        BsqSwapTxInputsMessage bsq_swap_tx_inputs_message= 57;
+        BuyersBsqSwapRequest buyers_bsq_swap_request = 56;
+        BsqSwapTxInputsMessage bsq_swap_tx_inputs_message = 57;
         BsqSwapFinalizeTxRequest bsq_swap_finalize_tx_request = 58;
         BsqSwapFinalizedTxMessage bsq_swap_finalized_tx_message = 59;
     }
@@ -770,11 +770,11 @@ message Filter {
     bool disable_mempool_validation = 28;
     bool disable_pow_message = 29;
     double pow_difficulty = 30;
-    repeated int32 enabled_pow_versions = 35;
     int64 maker_fee_btc = 31;
     int64 taker_fee_btc = 32;
     int64 maker_fee_bsq = 33;
     int64 taker_fee_bsq = 34;
+    repeated int32 enabled_pow_versions = 35;
 }
 
 // Deprecated
@@ -2038,7 +2038,7 @@ message BaseBlock {
 }
 
 message BsqBlockStore {
-   repeated BaseBlock blocks = 1;
+    repeated BaseBlock blocks = 1;
 }
 
 message RawBlock {

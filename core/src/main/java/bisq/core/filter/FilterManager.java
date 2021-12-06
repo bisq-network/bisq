@@ -484,16 +484,11 @@ public class FilterManager {
         if (filter == null) {
             return true;
         }
-        checkArgument(offer.getBsqSwapOfferPayload().isPresent(),
-                "Offer payload must be BsqSwapOfferPayload");
+        checkArgument(offer.getBsqSwapOfferPayload().isPresent(), "Offer payload must be BsqSwapOfferPayload");
         ProofOfWork pow = offer.getBsqSwapOfferPayload().get().getProofOfWork();
         var service = ProofOfWorkService.forVersion(pow.getVersion());
-        if (!service.isPresent() || !getEnabledPowVersions().contains(pow.getVersion())) {
-            return false;
-        }
-        return service.get().verify(offer.getBsqSwapOfferPayload().get().getProofOfWork(),
-                offer.getId(), offer.getOwnerNodeAddress().toString(),
-                filter.getPowDifficulty());
+        return service.isPresent() && getEnabledPowVersions().contains(pow.getVersion()) &&
+                service.get().verify(pow, offer.getId(), offer.getOwnerNodeAddress().toString(), filter.getPowDifficulty());
     }
 
     public List<Integer> getEnabledPowVersions() {
