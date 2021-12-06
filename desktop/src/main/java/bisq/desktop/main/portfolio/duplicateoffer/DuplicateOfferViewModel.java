@@ -26,8 +26,8 @@ import bisq.desktop.util.validation.SecurityDepositValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayloadBase;
 import bisq.core.offer.OfferUtil;
+import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
@@ -77,7 +77,7 @@ class DuplicateOfferViewModel extends MutableOfferViewModel<DuplicateOfferDataMo
         syncMinAmountWithAmount = false;
     }
 
-    public void initWithData(OfferPayloadBase offerPayload) {
+    public void initWithData(OfferPayload offerPayload) {
         this.offer = new Offer(offerPayload);
         offer.setPriceFeedService(priceFeedService);
     }

@@ -61,6 +61,8 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static bisq.core.offer.bsq_swap.BsqSwapOfferModel.BSQ;
 
 @Slf4j
@@ -162,7 +164,7 @@ class BsqSwapCreateOfferViewModel extends BsqSwapOfferViewModel<BsqSwapCreateOff
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void initWithData(OfferDirection direction, BsqSwapOfferPayload offerPayload) {
+    void initWithData(OfferDirection direction, @Nullable BsqSwapOfferPayload offerPayload) {
         dataModel.initWithData(direction, offerPayload);
 
         btcValidator.setMaxValue(PaymentMethod.BSQ_SWAP.getMaxTradeLimitAsCoin(BSQ));
@@ -583,7 +585,7 @@ class BsqSwapCreateOfferViewModel extends BsqSwapOfferViewModel<BsqSwapCreateOff
 
         ObjectProperty<Coin> btcAmount = dataModel.getBtcAmount();
 
-        if (btcAmount.get() != null && btcAmount.get() != null) {
+        if (btcAmount.get() != null && btcMinAmount.get() != null) {
             syncMinAmountWithAmount = btcMinAmount.get().equals(dataModel.getBtcAmount().get());
         }
 

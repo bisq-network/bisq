@@ -33,12 +33,11 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.BsqSwapOfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.portfolio.PortfolioView;
-import bisq.desktop.main.portfolio.duplicateoffer.DuplicateOfferView;
+import bisq.desktop.main.portfolio.presentation.PortfolioUtil;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferPayloadBase;
 import bisq.core.offer.OpenOffer;
 import bisq.core.user.DontShowAgainLookup;
 
@@ -193,9 +192,9 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                 tableView -> {
                     final TableRow<OpenOfferListItem> row = new TableRow<>();
                     final ContextMenu rowMenu = new ContextMenu();
-                    MenuItem editItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
-                    editItem.setOnAction((event) -> onDuplicateOffer(row.getItem().getOffer()));
-                    rowMenu.getItems().add(editItem);
+                    MenuItem duplicateItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
+                    duplicateItem.setOnAction((event) -> onDuplicateOffer(row.getItem().getOffer()));
+                    rowMenu.getItems().add(duplicateItem);
                     row.contextMenuProperty().bind(
                             Bindings.when(Bindings.isNotNull(row.itemProperty()))
                                     .then(rowMenu)
@@ -209,7 +208,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         searchBox.setSpacing(5);
         HBox.setHgrow(searchBoxSpacer, Priority.ALWAYS);
 
-        selectToggleButton.setPadding(new Insets(0, 60, -20, 0));
+        selectToggleButton.setPadding(new Insets(0, 90, -20, 0));
         selectToggleButton.setText(Res.get("shared.enabled"));
         selectToggleButton.setDisable(true);
 
@@ -430,9 +429,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
     private void onDuplicateOffer(Offer offer) {
         try {
-            OfferPayloadBase offerPayloadBase = offer.getOfferPayloadBase();
-            navigation.navigateToWithData(offerPayloadBase, MainView.class, PortfolioView.class,
-                    DuplicateOfferView.class);
+            PortfolioUtil.duplicateOffer(navigation, offer.getOfferPayloadBase());
         } catch (NullPointerException e) {
             log.warn("Unable to get offerPayload - {}", e.toString());
         }

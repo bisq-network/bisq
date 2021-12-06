@@ -26,14 +26,12 @@ import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PeerInfoIconTrading;
-import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.BsqTradeDetailsWindow;
 import bisq.desktop.main.overlays.windows.ClosedTradesSummaryWindow;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
-import bisq.desktop.main.portfolio.PortfolioView;
-import bisq.desktop.main.portfolio.duplicateoffer.DuplicateOfferView;
+import bisq.desktop.main.portfolio.presentation.PortfolioUtil;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.alert.PrivateNotificationManager;
@@ -272,9 +270,9 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 tableView -> {
                     TableRow<Tradable> row = new TableRow<>();
                     ContextMenu rowMenu = new ContextMenu();
-                    MenuItem editItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
-                    editItem.setOnAction((ActionEvent event) -> onDuplicateOffer(row.getItem().getOffer()));
-                    rowMenu.getItems().add(editItem);
+                    MenuItem duplicateItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
+                    duplicateItem.setOnAction((ActionEvent event) -> onDuplicateOffer(row.getItem().getOffer()));
+                    rowMenu.getItems().add(duplicateItem);
                     row.contextMenuProperty().bind(
                             Bindings.when(Bindings.isNotNull(row.itemProperty()))
                                     .then(rowMenu)
@@ -592,7 +590,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             public void updateItem(final Tradable item, boolean empty) {
                                 super.updateItem(item, empty);
 
-                                if (item != null && !empty) {
+                                if (item != null && !empty && isMyOfferAsMaker(item.getOffer().getOfferPayloadBase())) {
                                     if (button == null) {
                                         button = getRegularIconButton(MaterialDesignIcon.CONTENT_COPY);
                                         button.setTooltip(new Tooltip(Res.get("shared.duplicateOffer")));
@@ -819,14 +817,18 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     private void onDuplicateOffer(Offer offer) {
         try {
             OfferPayloadBase offerPayloadBase = offer.getOfferPayloadBase();
-            if (offerPayloadBase.getPubKeyRing().equals(keyRing.getPubKeyRing())) {
-                navigation.navigateToWithData(offerPayloadBase, MainView.class, PortfolioView.class, DuplicateOfferView.class);
+            if (isMyOfferAsMaker(offerPayloadBase)) {
+                PortfolioUtil.duplicateOffer(navigation, offerPayloadBase);
             } else {
                 new Popup().warning(Res.get("portfolio.context.notYourOffer")).show();
             }
         } catch (NullPointerException e) {
             log.warn("Unable to get offerPayload - {}", e.toString());
         }
+    }
+
+    private boolean isMyOfferAsMaker(OfferPayloadBase offerPayloadBase) {
+        return offerPayloadBase.getPubKeyRing().equals(keyRing.getPubKeyRing());
     }
 
     private Tradable getDummyTradable() {
