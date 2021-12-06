@@ -38,6 +38,8 @@ import bisq.network.p2p.P2PService;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
+import org.bitcoinj.core.Coin;
+
 import com.google.inject.Inject;
 
 import javax.inject.Named;
@@ -179,6 +181,11 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
 
     boolean isBootstrappedOrShowPopup() {
         return GUIUtil.isBootstrappedOrShowPopup(p2PService);
+    }
+
+    public boolean hasMakerFee(OpenOffer openOffer) {
+        Coin makerFee = openOffer.getOffer().getMakerFee();
+        return makerFee.isPositive();
     }
 
     public String getMakerFeeAsString(OpenOffer openOffer) {
