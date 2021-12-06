@@ -183,9 +183,9 @@ class OpenOffersViewModel extends ActivatableWithDataModel<OpenOffersDataModel> 
         return GUIUtil.isBootstrappedOrShowPopup(p2PService);
     }
 
-    public boolean isMakerFee(OpenOffer openOffer) {
+    public boolean hasMakerFee(OpenOffer openOffer) {
         Coin makerFee = openOffer.getOffer().getMakerFee();
-        return makerFee != null && makerFee.isPositive();
+        return makerFee.isPositive();
     }
 
     public String getMakerFeeAsString(OpenOffer openOffer) {
