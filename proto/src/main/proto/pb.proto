@@ -884,7 +884,8 @@ message ProofOfWork {
     bytes challenge = 3;
     double difficulty = 4;
     int64 duration = 5;
-    int32 version = 6;
+    bytes solution = 6;
+    int32 version = 7;
 }
 
 message AccountAgeWitness {

@@ -19,6 +19,8 @@ package bisq.common.crypto;
 
 import com.google.common.base.Preconditions;
 
+import java.nio.charset.StandardCharsets;
+
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -45,14 +47,18 @@ public abstract class ProofOfWorkService {
         this.version = version;
     }
 
-    public abstract CompletableFuture<ProofOfWork> mint(String itemId, byte[] challenge, double difficulty);
-
-    public abstract byte[] getChallenge(String itemId, String ownerId);
+    public abstract CompletableFuture<ProofOfWork> mint(byte[] payload, byte[] challenge, double difficulty);
 
     abstract boolean verify(ProofOfWork proofOfWork);
 
+    public byte[] getPayload(String itemId) {
+        return itemId.getBytes(StandardCharsets.UTF_8);
+    }
+
+    public abstract byte[] getChallenge(String itemId, String ownerId);
+
     public CompletableFuture<ProofOfWork> mint(String itemId, String ownerId, double difficulty) {
-        return mint(itemId, getChallenge(itemId, ownerId), difficulty);
+        return mint(getPayload(itemId), getChallenge(itemId, ownerId), difficulty);
     }
 
     public boolean verify(ProofOfWork proofOfWork,

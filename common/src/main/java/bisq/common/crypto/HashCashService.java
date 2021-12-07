@@ -39,11 +39,6 @@ public class HashCashService extends ProofOfWorkService {
     }
 
     @Override
-    public CompletableFuture<ProofOfWork> mint(String itemId, byte[] challenge, double difficulty) {
-        byte[] payload = getBytes(itemId);
-        return mint(payload, challenge, difficulty);
-    }
-
     public CompletableFuture<ProofOfWork> mint(byte[] payload,
                                                byte[] challenge,
                                                double difficulty) {
@@ -56,7 +51,9 @@ public class HashCashService extends ProofOfWorkService {
                 hash = toSha256Hash(payload, challenge, ++counter);
             }
             while (numberOfLeadingZeros(hash) <= log2Difficulty);
-            ProofOfWork proofOfWork = new ProofOfWork(payload, counter, challenge, difficulty, System.currentTimeMillis() - ts, 0);
+            byte[] solution = Longs.toByteArray(counter);
+            ProofOfWork proofOfWork = new ProofOfWork(payload, counter, challenge, difficulty,
+                    System.currentTimeMillis() - ts, solution, 0);
             log.info("Completed minting proofOfWork: {}", proofOfWork);
             return proofOfWork;
         });
