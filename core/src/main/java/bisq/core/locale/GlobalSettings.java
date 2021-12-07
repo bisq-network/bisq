@@ -39,6 +39,7 @@ public class GlobalSettings {
     }
 
     public static void setLocale(Locale locale) {
+        Locale.setDefault(locale);
         GlobalSettings.locale = locale;
         localeProperty.set(locale);
     }

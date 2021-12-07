@@ -30,11 +30,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ImmutableCoinFormatter implements CoinFormatter {
 
-    // We don't support localized formatting. Format is always using "." as decimal mark and no grouping separator.
-    // Input of "," as decimal mark (like in german locale) will be replaced with ".".
-    // Input of a group separator (1,123,45) lead to an validation error.
-    // Note: BtcFormat was intended to be used, but it lead to many problems (automatic format to mBit,
-    // no way to remove grouping separator). It seems to be not optimal for user input formatting.
     @Getter
     private MonetaryFormat monetaryFormat;
 

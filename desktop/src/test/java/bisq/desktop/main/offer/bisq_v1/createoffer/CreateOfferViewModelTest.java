@@ -56,6 +56,8 @@ import javafx.collections.FXCollections;
 
 import java.time.Instant;
 
+import java.util.Locale;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -76,6 +78,8 @@ public class CreateOfferViewModelTest {
 
     @Before
     public void setUp() {
+        GlobalSettings.setLocale(Locale.US);
+
         final CryptoCurrency btc = new CryptoCurrency("BTC", "bitcoin");
         GlobalSettings.setDefaultTradeCurrency(btc);
         Res.setup();

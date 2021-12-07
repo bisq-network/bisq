@@ -18,6 +18,8 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
 import java.util.Date;
@@ -35,9 +37,26 @@ public class FormattingUtils {
 
     public final static String RANGE_SEPARATOR = " - ";
 
-    private static final MonetaryFormat fiatPriceFormat = new MonetaryFormat().shift(0).minDecimals(4).repeatOptionalDecimals(0, 0);
-    private static final MonetaryFormat altcoinFormat = new MonetaryFormat().shift(0).minDecimals(8).repeatOptionalDecimals(0, 0);
+    private static MonetaryFormat fiatPriceFormat =
+            monetaryFormatWithLocale(
+                    new MonetaryFormat().shift(0).minDecimals(4).repeatOptionalDecimals(0, 0)
+            );
+    private static MonetaryFormat altcoinFormat =
+            monetaryFormatWithLocale(
+                    new MonetaryFormat().shift(0).minDecimals(8).repeatOptionalDecimals(0, 0)
+            );
     private static final DecimalFormat decimalFormat = new DecimalFormat("#.#");
+
+    static {
+        GlobalSettings.localeProperty().addListener((observable, oldValue, newValue) -> {
+            fiatPriceFormat = monetaryFormatWithLocale(
+                    new MonetaryFormat().shift(0).minDecimals(4).repeatOptionalDecimals(0, 0)
+            );
+            altcoinFormat = monetaryFormatWithLocale(
+                    new MonetaryFormat().shift(0).minDecimals(8).repeatOptionalDecimals(0, 0)
+            );
+        });
+    }
 
     public static String formatCoinWithCode(long value, MonetaryFormat coinFormat) {
         return formatCoinWithCode(Coin.valueOf(value), coinFormat);
@@ -48,7 +67,7 @@ public class FormattingUtils {
             try {
                 // we don't use the code feature from coinFormat as it does automatic switching between mBTC and BTC and
                 // pre and post fixing
-                return coinFormat.postfixCode().format(coin).toString();
+                return monetaryFormatWithLocale(coinFormat).postfixCode().format(coin).toString();
             } catch (Throwable t) {
                 log.warn("Exception at formatCoinWithCode: " + t.toString());
                 return "";
@@ -71,6 +90,8 @@ public class FormattingUtils {
 
         if (coin != null) {
             try {
+                coinFormat = monetaryFormatWithLocale(coinFormat);
+
                 if (decimalPlaces < 0 || decimalPlaces > 4) {
                     formattedCoin = coinFormat.noCode().format(coin).toString();
                 } else {
@@ -91,7 +112,9 @@ public class FormattingUtils {
     public static String formatFiat(Fiat fiat, MonetaryFormat format, boolean appendCurrencyCode) {
         if (fiat != null) {
             try {
+                format = monetaryFormatWithLocale(format);
                 final String res = format.noCode().format(fiat).toString();
+
                 if (appendCurrencyCode)
                     return res + " " + fiat.getCurrencyCode();
                 else
@@ -103,6 +126,11 @@ public class FormattingUtils {
         } else {
             return Res.get("shared.na");
         }
+    }
+
+    private static MonetaryFormat monetaryFormatWithLocale(MonetaryFormat monetaryFormat) {
+        Locale currentLocale = GlobalSettings.getLocale();
+        return monetaryFormat.withLocale(currentLocale);
     }
 
     private static String formatAltcoin(Altcoin altcoin, boolean appendCurrencyCode) {
@@ -172,7 +200,25 @@ public class FormattingUtils {
     }
 
     public static String formatMarketPrice(double price, int precision) {
-        return formatRoundedDoubleWithPrecision(price, precision);
+        String formattedNumber = formatRoundedDoubleWithPrecision(price, precision);
+        return formatNumberRespectingLocale(formattedNumber, precision);
+    }
+
+    private static String formatNumberRespectingLocale(String formattedNumber, int precision) {
+        try {
+            Number number = NumberFormat.getInstance(Locale.US).parse(formattedNumber);
+
+            Locale currentLocale = GlobalSettings.getLocale();
+            NumberFormat numberFormatForLocale = NumberFormat.getInstance(currentLocale);
+
+            numberFormatForLocale.setMinimumFractionDigits(precision);
+            numberFormatForLocale.setMaximumFractionDigits(precision);
+            return numberFormatForLocale.format(number);
+
+        } catch (ParseException e) {
+            // Fallback to old value
+            return formattedNumber;
+        }
     }
 
     public static String formatRoundedDoubleWithPrecision(double value, int precision) {
@@ -228,7 +274,8 @@ public class FormattingUtils {
     }
 
     public static String formatToPercent(double value, DecimalFormat decimalFormat) {
-        return decimalFormat.format(MathUtils.roundDouble(value * 100.0, 2)).replace(",", ".");
+        String formatted =  decimalFormat.format(MathUtils.roundDouble(value * 100.0, 2)).replace(",", ".");
+        return formatNumberRespectingLocale(formatted, 2);
     }
 
     public static String formatDurationAsWords(long durationMillis) {

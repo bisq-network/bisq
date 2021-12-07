@@ -59,6 +59,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Locale;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,6 +89,7 @@ public class OfferBookViewModelTest {
 
     @Before
     public void setUp() {
+        GlobalSettings.setLocale(Locale.US);
         GlobalSettings.setDefaultTradeCurrency(usd);
         Res.setBaseCurrencyCode(usd.getCode());
         Res.setBaseCurrencyName(usd.getName());

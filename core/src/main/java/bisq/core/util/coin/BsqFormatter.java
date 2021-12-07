@@ -52,11 +52,6 @@ import lombok.extern.slf4j.Slf4j;
 public class BsqFormatter implements CoinFormatter {
     private final ImmutableCoinFormatter immutableCoinFormatter;
 
-    // We don't support localized formatting. Format is always using "." as decimal mark and no grouping separator.
-    // Input of "," as decimal mark (like in German locale) will be replaced with ".".
-    // Input of a group separator (1,123,45) leads to a validation error.
-    // Note: BtcFormat was intended to be used, but it leads to many problems (automatic format to mBit,
-    // no way to remove grouping separator). It seems to be not optimal for user input formatting.
     @Getter
     private MonetaryFormat monetaryFormat;
 
