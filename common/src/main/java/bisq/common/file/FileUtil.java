@@ -24,6 +24,11 @@ import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLDecoder;
+
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -32,10 +37,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -166,6 +175,42 @@ public class FileUtil {
                 IOUtils.copy(inputStream, fileOutputStream);
             }
         }
+    }
+
+    // adapted from https://stackoverflow.com/questions/3923129/get-a-list-of-resources-from-classpath-directory/48190582#48190582
+    public static List<String> listResourceDirectory(String directoryName) throws IOException, ResourceNotFoundException {
+        URL url = Thread.currentThread().getContextClassLoader().getResource(directoryName);
+        if (url == null) {
+            throw new ResourceNotFoundException(directoryName);
+        }
+        if (url.getProtocol().equals("file")) {
+            try {
+                File dir = new File(url.toURI());
+                String[] filenames = dir.list();
+                if (filenames != null) {
+                    return List.of(filenames);
+                }
+            } catch (URISyntaxException e) {
+                throw new IOException(e);
+            }
+        } else if (url.getProtocol().equals("jar")) {
+            List<String> filenames = new ArrayList<>();
+            String dirname = directoryName + "/";
+            String path = url.getPath();
+            String jarPath = path.substring(5, path.indexOf("!"));
+            try (JarFile jar = new JarFile(URLDecoder.decode(jarPath, StandardCharsets.UTF_8.name()))) {
+                Enumeration<JarEntry> entries = jar.entries();
+                while (entries.hasMoreElements()) {
+                    JarEntry entry = entries.nextElement();
+                    String name = entry.getName();
+                    if (name.startsWith(dirname) && !dirname.equals(name)) {
+                        filenames.add(name.substring(dirname.length()));
+                    }
+                }
+            }
+            return filenames;
+        }
+        throw new IOException("Failed to list resource directory: " + directoryName);
     }
 
     public static void renameFile(File oldFile, File newFile) throws IOException {
