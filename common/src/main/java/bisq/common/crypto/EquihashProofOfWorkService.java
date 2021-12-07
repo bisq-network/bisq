@@ -17,6 +17,7 @@
 
 package bisq.common.crypto;
 
+import com.google.common.primitives.Bytes;
 import com.google.common.primitives.Longs;
 
 import java.util.Arrays;
@@ -34,19 +35,24 @@ public class EquihashProofOfWorkService extends ProofOfWorkService {
     }
 
     @Override
-    public CompletableFuture<ProofOfWork> mint(String itemId, byte[] challenge, double difficulty) {
+    public CompletableFuture<ProofOfWork> mint(byte[] payload, byte[] challenge, double difficulty) {
         double scaledDifficulty = scaledDifficulty(difficulty);
         log.info("Got scaled & adjusted difficulty: {}", scaledDifficulty);
 
         return CompletableFuture.supplyAsync(() -> {
             long ts = System.currentTimeMillis();
-            byte[] solution = new Equihash(90, 5, scaledDifficulty).puzzle(challenge).findSolution().serialize();
+            byte[] seed = getSeed(payload, challenge);
+            byte[] solution = new Equihash(90, 5, scaledDifficulty).puzzle(seed).findSolution().serialize();
             long counter = Longs.fromByteArray(Arrays.copyOf(solution, 8));
-            var proofOfWork = new ProofOfWork(solution, counter, challenge, difficulty,
-                    System.currentTimeMillis() - ts, getVersion());
+            var proofOfWork = new ProofOfWork(payload, counter, challenge, difficulty,
+                    System.currentTimeMillis() - ts, solution, getVersion());
             log.info("Completed minting proofOfWork: {}", proofOfWork);
             return proofOfWork;
         });
+    }
+
+    private byte[] getSeed(byte[] payload, byte[] challenge) {
+        return Hash.getSha256Hash(Bytes.concat(payload, challenge));
     }
 
     @Override
@@ -60,8 +66,9 @@ public class EquihashProofOfWorkService extends ProofOfWorkService {
     boolean verify(ProofOfWork proofOfWork) {
         double scaledDifficulty = scaledDifficulty(proofOfWork.getDifficulty());
 
-        var puzzle = new Equihash(90, 5, scaledDifficulty).puzzle(proofOfWork.getChallenge());
-        return puzzle.deserializeSolution(proofOfWork.getPayload()).verify();
+        byte[] seed = getSeed(proofOfWork.getPayload(), proofOfWork.getChallenge());
+        var puzzle = new Equihash(90, 5, scaledDifficulty).puzzle(seed);
+        return puzzle.deserializeSolution(proofOfWork.getSolution()).verify();
     }
 
     private static double scaledDifficulty(double difficulty) {

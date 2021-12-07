@@ -37,6 +37,8 @@ public final class ProofOfWork implements NetworkPayload {
     @Getter
     private final long duration;
     @Getter
+    private final byte[] solution;
+    @Getter
     private final int version;
 
     public ProofOfWork(byte[] payload,
@@ -44,12 +46,14 @@ public final class ProofOfWork implements NetworkPayload {
                        byte[] challenge,
                        double difficulty,
                        long duration,
+                       byte[] solution,
                        int version) {
         this.payload = payload;
         this.counter = counter;
         this.challenge = challenge;
         this.difficulty = difficulty;
         this.duration = duration;
+        this.solution = solution;
         this.version = version;
     }
 
@@ -66,6 +70,7 @@ public final class ProofOfWork implements NetworkPayload {
                 .setChallenge(ByteString.copyFrom(challenge))
                 .setDifficulty(difficulty)
                 .setDuration(duration)
+                .setSolution(ByteString.copyFrom(solution))
                 .setVersion(version)
                 .build();
     }
@@ -77,6 +82,7 @@ public final class ProofOfWork implements NetworkPayload {
                 proto.getChallenge().toByteArray(),
                 proto.getDifficulty(),
                 proto.getDuration(),
+                proto.getSolution().toByteArray(),
                 proto.getVersion()
         );
     }
