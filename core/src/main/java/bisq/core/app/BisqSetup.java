@@ -147,6 +147,7 @@ public class BisqSetup {
     private final MediationManager mediationManager;
     private final RefundManager refundManager;
     private final ArbitrationManager arbitrationManager;
+    private final TorSetup torSetup;
 
     @Setter
     @Nullable
@@ -234,7 +235,8 @@ public class BisqSetup {
                      Socks5ProxyProvider socks5ProxyProvider,
                      MediationManager mediationManager,
                      RefundManager refundManager,
-                     ArbitrationManager arbitrationManager) {
+                     ArbitrationManager arbitrationManager,
+                     TorSetup torSetup) {
         this.domainInitialisation = domainInitialisation;
         this.p2PNetworkSetup = p2PNetworkSetup;
         this.walletAppSetup = walletAppSetup;
@@ -257,6 +259,7 @@ public class BisqSetup {
         this.mediationManager = mediationManager;
         this.refundManager = refundManager;
         this.arbitrationManager = arbitrationManager;
+        this.torSetup = torSetup;
 
         MemPoolSpaceTxBroadcaster.init(socks5ProxyProvider, preferences, localBitcoinNode);
     }
@@ -314,7 +317,7 @@ public class BisqSetup {
     }
 
     private void step3() {
-        startP2pNetworkAndWallet(this::step4);
+        cleanupTorFiles(() -> startP2pNetworkAndWallet(this::step4));
     }
 
     private void step4() {
@@ -367,6 +370,13 @@ public class BisqSetup {
     private void readMapsFromResources(Runnable completeHandler) {
         String postFix = "_" + config.baseCurrencyNetwork.name();
         p2PService.getP2PDataStorage().readFromResources(postFix, completeHandler);
+    }
+
+    // 6,7 sec
+    // Tor started after 28671 ms
+    private void cleanupTorFiles(Runnable nextStep) {
+        torSetup.cleanupTorFiles(nextStep, null);
+        // nextStep.run();
     }
 
     private void startP2pNetworkAndWallet(Runnable nextStep) {
