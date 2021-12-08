@@ -328,6 +328,7 @@ public abstract class NetworkNode implements MessageListener {
 
 
     public void shutDown(Runnable shutDownCompleteHandler) {
+        log.info("NetworkNode shutdown started");
         if (!shutDownInProgress) {
             shutDownInProgress = true;
             if (server != null) {
@@ -354,7 +355,7 @@ public abstract class NetworkNode implements MessageListener {
                     log.info("Shutdown completed due timeout");
                     shutDownCompleteHandler.run();
                 }
-            }, 3);
+            }, 1500, TimeUnit.MILLISECONDS);
 
             allConnections.forEach(c -> c.shutDown(CloseConnectionReason.APP_SHUT_DOWN,
                     () -> {
