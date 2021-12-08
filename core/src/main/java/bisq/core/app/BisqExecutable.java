@@ -286,7 +286,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
             // If user tried to downgrade we do not write the persistable data to avoid data corruption
             log.info("PersistenceManager flushAllDataToDiskAtShutdown started");
             PersistenceManager.flushAllDataToDiskAtShutdown(() -> {
-                log.info("Graceful shutdown resulted in an error. Exiting now.");
+                log.info("Graceful shutdown completed. Exiting now.");
                 resultHandler.handleResult();
                 UserThread.runAfter(() -> System.exit(status), 100, TimeUnit.MILLISECONDS);
             });

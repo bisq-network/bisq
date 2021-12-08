@@ -156,7 +156,6 @@ public class TorNetworkNode extends NetworkNode {
             try {
                 tor = Tor.getDefault();
                 if (tor != null) {
-                    log.info("Tor has been created already so we can shut it down.");
                     tor.shutdown();
                     tor = null;
                     log.info("Tor shutdown completed");

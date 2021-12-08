@@ -727,6 +727,9 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     }
 
                     if (proto == null) {
+                        if (stopped) {
+                            return;
+                        }
                         if (protoInputStream.read() == -1) {
                             log.warn("proto is null because protoInputStream.read()=-1 (EOF). That is expected if client got stopped without proper shutdown.");
                         } else {
