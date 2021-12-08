@@ -62,6 +62,7 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     }
 
     public void shutDown(Runnable resultHandler) {
+        log.info("Broadcaster shutdown started");
         shutDownRequested = true;
         shutDownResultHandler = resultHandler;
         if (broadcastRequests.isEmpty()) {
@@ -78,6 +79,7 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     }
 
     private void doShutDown() {
+        log.info("Broadcaster doShutDown started");
         broadcastHandlers.forEach(BroadcastHandler::cancel);
         if (timer != null) {
             timer.stop();
@@ -120,6 +122,9 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
             broadcastHandler.broadcast(new ArrayList<>(broadcastRequests), shutDownRequested);
             broadcastRequests.clear();
 
+            if (timer != null) {
+                timer.stop();
+            }
             timer = null;
         }
     }

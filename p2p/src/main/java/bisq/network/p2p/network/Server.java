@@ -101,10 +101,11 @@ class Server implements Runnable {
     }
 
     public void shutDown() {
+        log.info("Server shutdown started");
         if (!stopped) {
             stopped = true;
 
-            connections.stream().forEach(c -> c.shutDown(CloseConnectionReason.APP_SHUT_DOWN));
+            connections.forEach(connection -> connection.shutDown(CloseConnectionReason.APP_SHUT_DOWN));
 
             try {
                 if (!serverSocket.isClosed())
