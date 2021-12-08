@@ -36,12 +36,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import org.fxmisc.easybind.EasyBind;
-import org.fxmisc.easybind.monadic.MonadicBinding;
-
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-
 import java.security.SecureRandom;
 
 import java.net.Socket;
@@ -59,28 +53,22 @@ import org.jetbrains.annotations.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-// Run in UserThread
 public class TorNetworkNode extends NetworkNode {
-
     private static final Logger log = LoggerFactory.getLogger(TorNetworkNode.class);
 
     private static final int MAX_RESTART_ATTEMPTS = 5;
-    private static final long SHUT_DOWN_TIMEOUT = 5;
-
+    private static final long SHUT_DOWN_TIMEOUT = 2;
 
     private HiddenServiceSocket hiddenServiceSocket;
     private Timer shutDownTimeoutTimer;
     private int restartCounter;
-    @SuppressWarnings("FieldCanBeLocal")
-    private MonadicBinding<Boolean> allShutDown;
     private Tor tor;
-
     private TorMode torMode;
-
     private boolean streamIsolation;
-
     private Socks5Proxy socksProxy;
     private ListenableFuture<Void> torStartupFuture;
+    private boolean shutDownInProgress;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -117,7 +105,7 @@ public class TorNetworkNode extends NetworkNode {
     protected Socket createSocket(NodeAddress peerNodeAddress) throws IOException {
         checkArgument(peerNodeAddress.getHostName().endsWith(".onion"), "PeerAddress is not an onion address");
         // If streamId is null stream isolation gets deactivated.
-        // Hidden services use stream isolation by default so we pass null.
+        // Hidden services use stream isolation by default, so we pass null.
         return new TorSocket(peerNodeAddress.getHostName(), peerNodeAddress.getPort(), null);
     }
 
@@ -150,77 +138,44 @@ public class TorNetworkNode extends NetworkNode {
     }
 
     public void shutDown(@Nullable Runnable shutDownCompleteHandler) {
-        if (allShutDown != null) {
-            log.warn("We got called shutDown again and ignore it.");
+        log.info("TorNetworkNode shutdown started");
+        if (shutDownInProgress) {
+            log.warn("We got shutDown already called");
             return;
         }
-        // this one is executed synchronously
-        BooleanProperty networkNodeShutDown = networkNodeShutDown();
-        // this one is committed as a thread to the executor
-        BooleanProperty torNetworkNodeShutDown = torNetworkNodeShutDown();
-        BooleanProperty shutDownTimerTriggered = shutDownTimerTriggered();
-        // Need to store allShutDown to not get garbage collected
-        allShutDown = EasyBind.combine(torNetworkNodeShutDown, networkNodeShutDown, shutDownTimerTriggered,
-                (a, b, c) -> (a && b) || c);
-        allShutDown.subscribe((observable, oldValue, newValue) -> {
-            if (newValue) {
-                shutDownTimeoutTimer.stop();
-                long ts = System.currentTimeMillis();
-                try {
-                    MoreExecutors.shutdownAndAwaitTermination(executorService, 500, TimeUnit.MILLISECONDS);
-                    log.debug("Shutdown executorService done after {} ms.", System.currentTimeMillis() - ts);
-                } catch (Throwable t) {
-                    log.error("Shutdown executorService failed with exception: {}", t.getMessage());
-                    t.printStackTrace();
-                } finally {
-                    if (shutDownCompleteHandler != null)
-                        shutDownCompleteHandler.run();
-                }
-            }
-        });
-    }
+        shutDownInProgress = true;
 
-    private BooleanProperty torNetworkNodeShutDown() {
-        BooleanProperty done = new SimpleBooleanProperty();
-        try {
-            tor = Tor.getDefault();
-            if (tor != null) {
-                log.info("Tor has been created already so we can shut it down.");
-                tor.shutdown();
-                tor = null;
-                log.info("Tor shut down completed");
-            } else {
-                log.info("Tor has not been created yet. We cancel the torStartupFuture.");
-                if (torStartupFuture != null) {
-                    torStartupFuture.cancel(true);
-                }
-                log.info("torStartupFuture cancelled");
-            }
-        } catch (Throwable e) {
-            log.error("Shutdown torNetworkNode failed with exception: {}", e.getMessage());
-            e.printStackTrace();
-
-        } finally {
-            // We need to delay as otherwise our listener would not get called if shutdown completes in synchronous manner
-            UserThread.execute(() -> done.set(true));
-        }
-        return done;
-    }
-
-    private BooleanProperty networkNodeShutDown() {
-        BooleanProperty done = new SimpleBooleanProperty();
-        // We need to delay as otherwise our listener would not get called if shutdown completes in synchronous manner
-        UserThread.execute(() -> super.shutDown(() -> done.set(true)));
-        return done;
-    }
-
-    private BooleanProperty shutDownTimerTriggered() {
-        BooleanProperty done = new SimpleBooleanProperty();
         shutDownTimeoutTimer = UserThread.runAfter(() -> {
             log.error("A timeout occurred at shutDown");
-            done.set(true);
+            if (shutDownCompleteHandler != null)
+                shutDownCompleteHandler.run();
         }, SHUT_DOWN_TIMEOUT);
-        return done;
+
+        // Shutdown networkNode first
+        super.shutDown(() -> {
+            try {
+                tor = Tor.getDefault();
+                if (tor != null) {
+                    log.info("Tor has been created already so we can shut it down.");
+                    tor.shutdown();
+                    tor = null;
+                    log.info("Tor shutdown completed");
+                } else {
+                    log.info("Tor has not been created yet. We cancel the torStartupFuture.");
+                    if (torStartupFuture != null) {
+                        torStartupFuture.cancel(true);
+                    }
+                    log.info("torStartupFuture cancelled");
+                }
+                MoreExecutors.shutdownAndAwaitTermination(executorService, 100, TimeUnit.MILLISECONDS);
+            } catch (Throwable e) {
+                log.error("Shutdown torNetworkNode failed with exception", e);
+            } finally {
+                shutDownTimeoutTimer.stop();
+                if (shutDownCompleteHandler != null)
+                    shutDownCompleteHandler.run();
+            }
+        });
     }
 
 
