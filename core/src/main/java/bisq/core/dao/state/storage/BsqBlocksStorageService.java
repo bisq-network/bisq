@@ -21,6 +21,7 @@ import bisq.core.dao.state.GenesisTxInfo;
 import bisq.core.dao.state.model.blockchain.Block;
 
 import bisq.common.config.Config;
+import bisq.common.file.FileUtil;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 
 import protobuf.BaseBlock;
@@ -28,10 +29,6 @@ import protobuf.BaseBlock;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-
-import org.apache.commons.io.FileUtils;
-
-import java.net.URL;
 
 import java.io.File;
 
@@ -116,27 +113,19 @@ public class BsqBlocksStorageService {
                 return;
             }
 
-            URL dirUrl = getClass().getClassLoader().getResource(resourceDir);
-            if (dirUrl == null) {
-                log.info("Directory {} in resources does not exist.", resourceDir);
-                return;
-            }
-            File dir = new File(dirUrl.toURI());
-            String[] fileNames = dir.list();
-            if (fileNames == null) {
-                log.info("No files in directory. {}", dir.getAbsolutePath());
+            List<String> fileNames = FileUtil.listResourceDirectory(resourceDir);
+            if (fileNames.isEmpty()) {
+                log.info("No files in directory. {}", resourceDir);
                 return;
             }
             if (!storageDir.exists()) {
                 storageDir.mkdir();
             }
             for (String fileName : fileNames) {
-                URL url = getClass().getClassLoader().getResource(resourceDir + File.separator + fileName);
-                File resourceFile = new File(url.toURI());
                 File destinationFile = new File(storageDir, fileName);
-                FileUtils.copyFile(resourceFile, destinationFile);
+                FileUtil.resourceToFile(resourceDir + "/" + fileName, destinationFile);
             }
-            log.info("Copying {} resource files took {} ms", fileNames.length, System.currentTimeMillis() - ts);
+            log.info("Copying {} resource files took {} ms", fileNames.size(), System.currentTimeMillis() - ts);
         } catch (Throwable e) {
             e.printStackTrace();
         }
