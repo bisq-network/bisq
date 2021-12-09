@@ -123,7 +123,9 @@ public class BsqBlocksStorageService {
             }
             for (String fileName : fileNames) {
                 File destinationFile = new File(storageDir, fileName);
-                FileUtil.resourceToFile(resourceDir + File.separator + fileName, destinationFile);
+                //  File.separator doesn't appear to work on Windows. It has to be "/", not "\".
+                // See: https://github.com/bisq-network/bisq/pull/5909#pullrequestreview-827992563
+                FileUtil.resourceToFile(resourceDir + "/" + fileName, destinationFile);
             }
             log.info("Copying {} resource files took {} ms", fileNames.size(), System.currentTimeMillis() - ts);
         } catch (ResourceNotFoundException ignore) {
