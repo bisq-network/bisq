@@ -22,6 +22,7 @@ import bisq.core.dao.state.model.blockchain.Block;
 
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
+import bisq.common.file.ResourceNotFoundException;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
 
 import protobuf.BaseBlock;
@@ -104,10 +105,9 @@ public class BsqBlocksStorageService {
 
     void copyFromResources(String postFix) {
         long ts = System.currentTimeMillis();
+        String dirName = BsqBlocksStorageService.NAME;
+        String resourceDir = dirName + postFix;
         try {
-            String dirName = BsqBlocksStorageService.NAME;
-            String resourceDir = dirName + postFix;
-
             if (storageDir.exists()) {
                 log.info("No resource directory was copied. {} exists already.", dirName);
                 return;
@@ -123,9 +123,13 @@ public class BsqBlocksStorageService {
             }
             for (String fileName : fileNames) {
                 File destinationFile = new File(storageDir, fileName);
+                //  File.separator doesn't appear to work on Windows. It has to be "/", not "\".
+                // See: https://github.com/bisq-network/bisq/pull/5909#pullrequestreview-827992563
                 FileUtil.resourceToFile(resourceDir + "/" + fileName, destinationFile);
             }
             log.info("Copying {} resource files took {} ms", fileNames.size(), System.currentTimeMillis() - ts);
+        } catch (ResourceNotFoundException ignore) {
+            log.info("Directory {} in resources does not exist.", resourceDir);
         } catch (Throwable e) {
             e.printStackTrace();
         }
