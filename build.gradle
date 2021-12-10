@@ -584,6 +584,8 @@ configure(project(':pricenode')) {
         "Implementation-Title": project.name,
         "Implementation-Version": version)
 
+    ext['log4j2.version'] = '2.15.0'
+
     dependencies {
         implementation project(":common")
         implementation project(":core")
