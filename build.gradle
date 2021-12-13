@@ -27,7 +27,8 @@ configure(subprojects) {
     apply plugin: 'java'
     apply plugin: 'com.google.osdetector'
 
-    sourceCompatibility = 1.10
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
 
     ext { // in alphabetical order
         bcVersion = '1.63'

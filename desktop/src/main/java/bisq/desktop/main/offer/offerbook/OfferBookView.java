@@ -1087,7 +1087,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                             {
                                 button.setGraphic(iconView);
                                 button.setMinWidth(200);
-                                button.setMaxWidth(200);
+                                button.setMaxWidth(Double.MAX_VALUE);
                                 button.setGraphicTextGap(10);
                             }
 
