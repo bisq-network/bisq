@@ -101,7 +101,9 @@ public class TradeTest extends AbstractTradeTest {
     @Order(6)
     public void testBsqSwapTradeTest(final TestInfo testInfo) {
         BsqSwapTradeTest test = new BsqSwapTradeTest();
+        test.testGetBalancesBeforeTrade();
         test.testAliceCreateBsqSwapBuyOffer();
         test.testBobTakesBsqSwapOffer();
+        test.testGetBalancesAfterTrade();
     }
 }

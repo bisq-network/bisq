@@ -69,6 +69,7 @@ public class BsqSwapProtocolModel implements ProtocolModel<BsqSwapTradePeer> {
     transient private Offer offer;
     @Setter
     transient private TradeMessage tradeMessage;
+    // TODO rename tradingPeerNodeAddress ?
     @Nullable
     @Setter
     transient private NodeAddress tempTradingPeerNodeAddress;

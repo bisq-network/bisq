@@ -25,6 +25,7 @@ import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -56,6 +57,8 @@ import static java.lang.String.format;
 @Slf4j
 @Singleton
 public class TradeUtil {
+
+    // TODO change non-state dependent instance methods to static methods.
 
     private final BtcWalletService btcWalletService;
     private final KeyRing keyRing;
@@ -199,6 +202,24 @@ public class TradeUtil {
                     trade.getShortId()));
 
         return getRole(contract.isBuyerMakerAndSellerTaker(),
+                offer.isMyOffer(keyRing),
+                offer.getCurrencyCode());
+    }
+
+    /**
+     * Returns a string describing a trader's role for a given bsq swap.
+     * @param trade BsqSwapTrade
+     * @return String describing a trader's role for a given bsq swap
+     */
+    public String getRole(BsqSwapTrade trade) {
+        Offer offer = trade.getOffer();
+        if (offer == null)
+            throw new IllegalStateException(
+                    format("could not get role because no offer was found for bsq swap '%s'",
+                            trade.getShortId()));
+
+        KeyRing keyRing = trade.getBsqSwapProtocolModel().getKeyRing();
+        return getRole(offer.isBuyOffer(),
                 offer.isMyOffer(keyRing),
                 offer.getCurrencyCode());
     }

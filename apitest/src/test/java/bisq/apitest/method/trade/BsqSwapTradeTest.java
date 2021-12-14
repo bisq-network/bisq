@@ -17,8 +17,8 @@
 
 package bisq.apitest.method.trade;
 
-import bisq.proto.grpc.BsqSwapOfferInfo;
-import bisq.proto.grpc.BsqSwapTradeInfo;
+import bisq.proto.grpc.OfferInfo;
+import bisq.proto.grpc.TradeInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,9 +36,11 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.ApiTestConfig.BTC;
+import static bisq.proto.grpc.GetOfferCategoryReply.OfferCategory.BSQ_SWAP;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static protobuf.BsqSwapTrade.State.COMPLETED;
 import static protobuf.BsqSwapTrade.State.PREPARATION;
@@ -47,13 +49,12 @@ import static protobuf.OfferDirection.BUY;
 
 
 import bisq.apitest.method.offer.AbstractOfferTest;
+import bisq.cli.GrpcClient;
 
 @Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class BsqSwapTradeTest extends AbstractOfferTest {
-
-    private static final String BISQ_FEE_CURRENCY_CODE = BSQ;
+public class BsqSwapTradeTest extends AbstractTradeTest {
 
     // Long-running swap trade tests might want to check node logs for exceptions.
     @Setter
@@ -66,7 +67,7 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
 
     @BeforeEach
     public void generateBtcBlock() {
-        genBtcBlocksThenWait(1, 2000);
+        genBtcBlocksThenWait(1, 2_000);
     }
 
     @Test
@@ -81,54 +82,91 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
     @Test
     @Order(2)
     public void testAliceCreateBsqSwapBuyOffer() {
-        var bsqSwapOffer = aliceClient.createBsqSwapOffer(BUY.name(),
+        var mySwapOffer = aliceClient.createBsqSwapOffer(BUY.name(),
+                1_000_000L,     // 0.01 BTC
                 1_000_000L,
-                1_000_000L,
-                "0.00005",
-                alicesBsqSwapAcct.getId());
-        log.debug("BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", bsqSwapOffer);
-        var newOfferId = bsqSwapOffer.getId();
+                "0.00005");
+        log.debug("Pending BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", toOfferTable.apply(mySwapOffer));
+        var newOfferId = mySwapOffer.getId();
         assertNotEquals("", newOfferId);
-        assertEquals(BUY.name(), bsqSwapOffer.getDirection());
-        assertEquals(5_000, bsqSwapOffer.getPrice());
-        assertEquals(1_000_000L, bsqSwapOffer.getAmount());
-        assertEquals(1_000_000L, bsqSwapOffer.getMinAmount());
-        // assertEquals(alicesBsqAcct.getId(), atomicOffer.getMakerPaymentAccountId());
-        assertEquals(BSQ, bsqSwapOffer.getBaseCurrencyCode());
-        assertEquals(BTC, bsqSwapOffer.getCounterCurrencyCode());
+        assertEquals(BUY.name(), mySwapOffer.getDirection());
+        assertEquals(5_000, mySwapOffer.getPrice());
+        assertEquals(1_000_000L, mySwapOffer.getAmount());
+        assertEquals(1_000_000L, mySwapOffer.getMinAmount());
+        assertEquals(BSQ, mySwapOffer.getBaseCurrencyCode());
+        assertEquals(BTC, mySwapOffer.getCounterCurrencyCode());
+
+        genBtcBlocksThenWait(1, 2_500);
+
+        mySwapOffer = aliceClient.getMyOffer(newOfferId);
+        log.debug("My fetched BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", toOfferTable.apply(mySwapOffer));
+        assertNotEquals(0, mySwapOffer.getMakerFee());
+
+        runCliGetOffer(newOfferId);
     }
 
     @Test
     @Order(3)
     public void testBobTakesBsqSwapOffer() {
-        var bsqSwapOffer = getAvailableBsqSwapOffer();
-        var bsqSwapTradeInfo = bobClient.takeBsqSwapOffer(bsqSwapOffer.getId(),
-                bobsBsqSwapAcct.getId(),
-                BISQ_FEE_CURRENCY_CODE);
-        log.debug("Trade at t1: {}", bsqSwapTradeInfo);
-        assertEquals(PREPARATION.name(), bsqSwapTradeInfo.getState());
+        var availableSwapOffer = getAvailableBsqSwapOffer(bobClient);
+
+        // Before sending a TakeOfferRequest, the CLI needs to know what kind of Offer
+        // it is taking (v1 or BsqSwap).  Only BSQ swap offers can be taken with a
+        // single offerId parameter.  Taking v1 offers requires an additional
+        // paymentAccountId param.  The test case knows what kind of offer is being taken,
+        // but we test the gRPC GetOfferCategory service here.
+        var availableOfferCategory = bobClient.getAvailableOfferCategory(availableSwapOffer.getId());
+        assertTrue(availableOfferCategory.equals(BSQ_SWAP));
+
+        sleep(30_000);
+
+        var swapTrade = bobClient.takeBsqSwapOffer(availableSwapOffer.getId());
+        tradeId = swapTrade.getTradeId(); // Cache the tradeId for following test case(s).
+        log.debug("BsqSwap Trade at PREPARATION:\n{}", toTradeDetailTable.apply(swapTrade));
+        assertEquals(PREPARATION.name(), swapTrade.getState());
         genBtcBlocksThenWait(1, 3_000);
 
-        bsqSwapTradeInfo = getBsqSwapTrade(bsqSwapTradeInfo.getTradeId());
-        log.debug("Trade at t2: {}", bsqSwapTradeInfo);
-        assertEquals(COMPLETED.name(), bsqSwapTradeInfo.getState());
+        swapTrade = getBsqSwapTrade(bobClient, tradeId);
+        log.debug("BsqSwap Trade at COMPLETION:\n{}", toTradeDetailTable.apply(swapTrade));
+        assertEquals(COMPLETED.name(), swapTrade.getState());
+
+        runCliGetTrade(tradeId);
     }
 
     @Test
     @Order(4)
+    public void testCompletedSwapTxConfirmations() {
+        sleep(2_000); // Wait for TX confirmation to happen on node.
+
+        var alicesTrade = getBsqSwapTrade(aliceClient, tradeId);
+        log.debug("Alice's BsqSwap Trade at COMPLETION:\n{}", toTradeDetailTable.apply(alicesTrade));
+        assertEquals(1, alicesTrade.getBsqSwapTradeInfo().getNumConfirmations());
+
+        var bobsTrade = getBsqSwapTrade(bobClient, tradeId);
+        log.debug("Bob's BsqSwap Trade at COMPLETION:\n{}", toTradeDetailTable.apply(bobsTrade));
+        assertEquals(1, bobsTrade.getBsqSwapTradeInfo().getNumConfirmations());
+
+        genBtcBlocksThenWait(1, 2_000);
+
+        bobsTrade = getBsqSwapTrade(bobClient, tradeId);
+        log.debug("Bob's BsqSwap Trade at COMPLETION:\n{}", toTradeDetailTable.apply(bobsTrade));
+        assertEquals(2, bobsTrade.getBsqSwapTradeInfo().getNumConfirmations());
+    }
+
+    @Test
+    @Order(5)
     public void testGetBalancesAfterTrade() {
-        sleep(2_500); // Give wallet time to finish processing TX.
         var alicesBalances = aliceClient.getBalances();
         log.debug("Alice's After Trade Balance:\n{}", formatBalancesTbls(alicesBalances));
         var bobsBalances = bobClient.getBalances();
         log.debug("Bob's After Trade Balance:\n{}", formatBalancesTbls(bobsBalances));
     }
 
-    private BsqSwapOfferInfo getAvailableBsqSwapOffer() {
-        List<BsqSwapOfferInfo> bsqSwapOffers = new ArrayList<>();
+    private OfferInfo getAvailableBsqSwapOffer(GrpcClient client) {
+        List<OfferInfo> bsqSwapOffers = new ArrayList<>();
         int numFetchAttempts = 0;
         while (bsqSwapOffers.size() == 0) {
-            bsqSwapOffers.addAll(bobClient.getBsqSwapOffers(BUY.name(), BSQ));
+            bsqSwapOffers.addAll(client.getBsqSwapOffers(BUY.name()));
             numFetchAttempts++;
             if (bsqSwapOffers.size() == 0) {
                 log.warn("No available bsq swap offers found after {} fetch attempts.", numFetchAttempts);
@@ -138,7 +176,7 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
                     }
                     fail(format("Bob gave up on fetching available bsq swap offers after %d attempts.", numFetchAttempts));
                 }
-                sleep(1000);
+                sleep(1_000);
             } else {
                 assertEquals(1, bsqSwapOffers.size());
                 log.debug("Bob found new available bsq swap offer on attempt # {}.", numFetchAttempts);
@@ -150,12 +188,12 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
         return bsqSwapOffer;
     }
 
-    private BsqSwapTradeInfo getBsqSwapTrade(String tradeId) {
+    private TradeInfo getBsqSwapTrade(GrpcClient client, String tradeId) {
         int numFetchAttempts = 0;
         while (true) {
             try {
                 numFetchAttempts++;
-                return bobClient.getBsqSwapTrade(tradeId);
+                return client.getTrade(tradeId);
             } catch (Exception ex) {
                 log.warn(ex.getMessage());
                 if (numFetchAttempts > 9) {
@@ -164,7 +202,7 @@ public class BsqSwapTradeTest extends AbstractOfferTest {
                     }
                     fail(format("Could not find new bsq swap trade after %d attempts.", numFetchAttempts));
                 } else {
-                    sleep(1000);
+                    sleep(1_000);
                 }
             }
         }

@@ -17,9 +17,9 @@ option adjustments to compensate.
 
 **Shell**:  Bash
 
-**Java SDK**:  Version 10, 11, 12 or 15
+**Java SDK**:  Version 11 - 15 (src and class generation version 11)
 
-**Bitcoin-Core**:  Version 0.19, 0.20, or 0.21
+**Bitcoin-Core**:  Version 0.19 - 22
 
 **Git Client**
 
@@ -372,6 +372,22 @@ The `trade-simulation.sh` script options that would generate the previous `creat
 $ apitest/scripts/trade-simulation.sh -d sell -c jp -m 0.5  -a 0.125
 ```
 
+The `createoffer` command can also be used to create BSQ swap offers, where trade execution is performed immediately
+after a BSQ swap offer is taken.  To swap 0.5 BTC for BSQ at a price of 0.00005 BSQ per 1 BTC:
+```
+$ ./bisq-cli --password=xyz --port=9998 createoffer \
+    --swap=true \
+    --direction=BUY \
+    --amount=0.5 \
+    --currency-code=BSQ \
+    --fixed-price=0.00005
+```
+
+The `bsqswap-simulation.sh` script options that would generate the previous `createoffer` example is:
+```
+$ apitest/scripts/bsqswap-simulation.sh -d buy -a 0.5 -f 0.00005
+```
+
 ### Browsing Your Own Offers
 
 There are different commands to browse available offers you can take, and offers you created.
@@ -530,7 +546,7 @@ A CLI user browses available offers with the getoffers command.  For example, th
 $ ./bisq-cli --password=xyz --port=9998  getoffers --direction=SELL --currency-code=EUR
 ```
 
-And takes one of the available offers with an EUR payment account ( id `fe20cdbd-22be-4b8a-a4b6-d2608ff09d6e`)
+Then takes one of the available offers with an EUR payment account ( id `fe20cdbd-22be-4b8a-a4b6-d2608ff09d6e`)
 with the `takeoffer` command:
 ```
 $ ./bisq-cli --password=xyz --port=9998 takeoffer \
@@ -538,8 +554,10 @@ $ ./bisq-cli --password=xyz --port=9998 takeoffer \
     --payment-account=fe20cdbd-22be-4b8a-a4b6-d2608ff09d6e \
     --fee-currency=btc
 ```
-The taken offer will be used to create a trade contract.  The next section describes how to use the Api to execute
-the trade.
+Depending on the offer type, the taken offer will be used to (1) create a trade contract, or (2) execute a BSQ swap.
+
+The next section describes how to use the Api to execute a trade.  The following <b>Completing a BSQ Swap Trade</b>
+section explains how to use the `takeoffer` command to complete a BSQ swap.
 
 ### Completing Trade Protocol
 
@@ -596,6 +614,14 @@ $ ./bisq-cli --password=xyz --port=9998 confirmpaymentstarted --trade-id=<trade-
 $ ./bisq-cli --password=xyz --port=9999 confirmpaymentreceived --trade-id=<trade-id>
 $ ./bisq-cli --password=xyz --port=9998 keepfunds --trade-id=<trade-id>
 $ ./bisq-cli --password=xyz --port=9999 withdrawfunds --trade-id=<trade-id> --address=<btc-address> [--memo=<"memo">]
+```
+
+### Completing a BSQ Swap Trade
+
+The `takeoffer` command will immediately perform the BSQ swap, assuming both sides' wallets have sufficient BTC and
+BSQ to cover the trade amount, and maker or taker fee.  It takes one argument:  `--offer-id=<offer-id>`:
+```
+$ ./bisq-cli --password=xyz --port=9998 takeoffer --offer-id=Xge8b2e2-51b6-3TOOB-z748-3ebd29c2kj99
 ```
 
 ## Shutting Down Test Harness

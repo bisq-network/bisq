@@ -18,7 +18,6 @@
 package bisq.daemon.grpc;
 
 import bisq.core.api.CoreApi;
-import bisq.core.api.model.BsqSwapOfferInfo;
 import bisq.core.api.model.OfferInfo;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
@@ -33,12 +32,15 @@ import bisq.proto.grpc.EditOfferReply;
 import bisq.proto.grpc.EditOfferRequest;
 import bisq.proto.grpc.GetBsqSwapOfferReply;
 import bisq.proto.grpc.GetBsqSwapOffersReply;
+import bisq.proto.grpc.GetBsqSwapOffersRequest;
 import bisq.proto.grpc.GetMyBsqSwapOfferReply;
 import bisq.proto.grpc.GetMyBsqSwapOffersReply;
 import bisq.proto.grpc.GetMyOfferReply;
 import bisq.proto.grpc.GetMyOfferRequest;
 import bisq.proto.grpc.GetMyOffersReply;
 import bisq.proto.grpc.GetMyOffersRequest;
+import bisq.proto.grpc.GetOfferCategoryReply;
+import bisq.proto.grpc.GetOfferCategoryRequest;
 import bisq.proto.grpc.GetOfferReply;
 import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetOffersReply;
@@ -56,10 +58,15 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.api.model.BsqSwapOfferInfo.toBsqSwapOfferInfo;
+import static bisq.core.api.model.OfferInfo.toMyPendingOfferInfo;
 import static bisq.core.api.model.OfferInfo.toOfferInfo;
-import static bisq.core.api.model.OfferInfo.toPendingOfferInfo;
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
+import static bisq.proto.grpc.GetOfferCategoryReply.OfferCategory;
+import static bisq.proto.grpc.GetOfferCategoryReply.OfferCategory.ALTCOIN;
+import static bisq.proto.grpc.GetOfferCategoryReply.OfferCategory.BSQ_SWAP;
+import static bisq.proto.grpc.GetOfferCategoryReply.OfferCategory.FIAT;
+import static bisq.proto.grpc.GetOfferCategoryReply.OfferCategory.UNKNOWN;
+import static bisq.proto.grpc.GetOfferCategoryReply.newBuilder;
 import static bisq.proto.grpc.OffersGrpc.*;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -82,12 +89,27 @@ class GrpcOffersService extends OffersImplBase {
     }
 
     @Override
+    public void getOfferCategory(GetOfferCategoryRequest req,
+                                 StreamObserver<GetOfferCategoryReply> responseObserver) {
+        try {
+            OfferCategory category = getOfferCategory(req.getId(), req.getIsMyOffer());
+            var reply = newBuilder()
+                    .setOfferCategory(category)
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(log, cause, responseObserver);
+        }
+    }
+
+    @Override
     public void getBsqSwapOffer(GetOfferRequest req,
                                 StreamObserver<GetBsqSwapOfferReply> responseObserver) {
         try {
             Offer offer = coreApi.getOffer(req.getId());
             var reply = GetBsqSwapOfferReply.newBuilder()
-                    .setBsqSwapOffer(toBsqSwapOfferInfo(offer).toProtoMessage())
+                    .setBsqSwapOffer(toOfferInfo(offer).toProtoMessage())
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
@@ -117,7 +139,7 @@ class GrpcOffersService extends OffersImplBase {
         try {
             Offer offer = coreApi.getMyBsqSwapOffer(req.getId());
             var reply = GetMyBsqSwapOfferReply.newBuilder()
-                    .setBsqSwapOffer(toBsqSwapOfferInfo(offer /* TODO support triggerPrice */).toProtoMessage())
+                    .setBsqSwapOffer(toOfferInfo(offer /* TODO support triggerPrice */).toProtoMessage())
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
@@ -132,7 +154,7 @@ class GrpcOffersService extends OffersImplBase {
         try {
             OpenOffer openOffer = coreApi.getMyOffer(req.getId());
             var reply = GetMyOfferReply.newBuilder()
-                    .setOffer(toOfferInfo(openOffer).toProtoMessage())
+                    .setOffer(OfferInfo.toMyOfferInfo(openOffer).toProtoMessage())
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
@@ -142,15 +164,15 @@ class GrpcOffersService extends OffersImplBase {
     }
 
     @Override
-    public void getBsqSwapOffers(GetOffersRequest req,
+    public void getBsqSwapOffers(GetBsqSwapOffersRequest req,
                                  StreamObserver<GetBsqSwapOffersReply> responseObserver) {
         try {
-            List<BsqSwapOfferInfo> result = coreApi.getBsqSwapOffers(req.getDirection())
-                    .stream().map(BsqSwapOfferInfo::toBsqSwapOfferInfo)
+            List<OfferInfo> result = coreApi.getBsqSwapOffers(req.getDirection())
+                    .stream().map(OfferInfo::toOfferInfo)
                     .collect(Collectors.toList());
             var reply = GetBsqSwapOffersReply.newBuilder()
                     .addAllBsqSwapOffers(result.stream()
-                            .map(BsqSwapOfferInfo::toProtoMessage)
+                            .map(OfferInfo::toProtoMessage)
                             .collect(Collectors.toList()))
                     .build();
             responseObserver.onNext(reply);
@@ -180,15 +202,15 @@ class GrpcOffersService extends OffersImplBase {
     }
 
     @Override
-    public void getMyBsqSwapOffers(GetMyOffersRequest req,
+    public void getMyBsqSwapOffers(GetBsqSwapOffersRequest req,
                                    StreamObserver<GetMyBsqSwapOffersReply> responseObserver) {
         try {
-            List<BsqSwapOfferInfo> result = coreApi.getMyBsqSwapOffers(req.getDirection())
-                    .stream().map(BsqSwapOfferInfo::toBsqSwapOfferInfo)
+            List<OfferInfo> result = coreApi.getMyBsqSwapOffers(req.getDirection())
+                    .stream().map(OfferInfo::toOfferInfo)
                     .collect(Collectors.toList());
             var reply = GetMyBsqSwapOffersReply.newBuilder()
                     .addAllBsqSwapOffers(result.stream()
-                            .map(BsqSwapOfferInfo::toProtoMessage)
+                            .map(OfferInfo::toProtoMessage)
                             .collect(Collectors.toList()))
                     .build();
             responseObserver.onNext(reply);
@@ -204,7 +226,7 @@ class GrpcOffersService extends OffersImplBase {
         try {
             List<OfferInfo> result = coreApi.getMyOffers(req.getDirection(), req.getCurrencyCode())
                     .stream()
-                    .map(OfferInfo::toOfferInfo)
+                    .map(OfferInfo::toMyOfferInfo)
                     .collect(Collectors.toList());
             var reply = GetMyOffersReply.newBuilder()
                     .addAllOffers(result.stream()
@@ -222,17 +244,15 @@ class GrpcOffersService extends OffersImplBase {
     public void createBsqSwapOffer(CreateBsqSwapOfferRequest req,
                                    StreamObserver<CreateBsqSwapOfferReply> responseObserver) {
         try {
-            //todo PaymentAccount for bsq swap not needed as its just a dummy account
             coreApi.createAndPlaceBsqSwapOffer(
                     req.getDirection(),
                     req.getAmount(),
                     req.getMinAmount(),
                     req.getPrice(),
-                    /* req.getPaymentAccountId(),*/
                     offer -> {
-                        BsqSwapOfferInfo bsqSwapOfferInfo = toBsqSwapOfferInfo(offer);
+                        OfferInfo offerInfo = toMyPendingOfferInfo(offer);
                         CreateBsqSwapOfferReply reply = CreateBsqSwapOfferReply.newBuilder()
-                                .setBsqSwapOffer(bsqSwapOfferInfo.toProtoMessage())
+                                .setBsqSwapOffer(offerInfo.toProtoMessage())
                                 .build();
                         responseObserver.onNext(reply);
                         responseObserver.onCompleted();
@@ -261,7 +281,7 @@ class GrpcOffersService extends OffersImplBase {
                     offer -> {
                         // This result handling consumer's accept operation will return
                         // the new offer to the gRPC client after async placement is done.
-                        OfferInfo offerInfo = toPendingOfferInfo(offer);
+                        OfferInfo offerInfo = toMyPendingOfferInfo(offer);
                         CreateOfferReply reply = CreateOfferReply.newBuilder()
                                 .setOffer(offerInfo.toProtoMessage())
                                 .build();
@@ -315,6 +335,7 @@ class GrpcOffersService extends OffersImplBase {
         return getCustomRateMeteringInterceptor(coreApi.getConfig().appDataDir, this.getClass())
                 .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
                         new HashMap<>() {{
+                            put(getGetOfferCategoryMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getGetOfferMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getGetMyOfferMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getGetOffersMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
@@ -324,5 +345,16 @@ class GrpcOffersService extends OffersImplBase {
                             put(getCancelOfferMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
                         }}
                 )));
+    }
+
+    private OfferCategory getOfferCategory(String offerId, boolean isMyOffer) {
+        if (coreApi.isAltcoinOffer(offerId, isMyOffer))
+            return ALTCOIN;
+        else if (coreApi.isFiatOffer(offerId, isMyOffer))
+            return FIAT;
+        else if (coreApi.isBsqSwapOffer(offerId, isMyOffer))
+            return BSQ_SWAP;
+        else
+            return UNKNOWN;
     }
 }

@@ -25,7 +25,7 @@ import static bisq.cli.opts.OptLabel.OPT_TX_FEE_RATE;
 public class SetTxFeeRateOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> feeRateOpt = parser.accepts(OPT_TX_FEE_RATE,
-            "tx fee rate preference (sats/byte)")
+                    "tx fee rate preference (sats/byte)")
             .withRequiredArg();
 
     public SetTxFeeRateOptionParser(String[] args) {

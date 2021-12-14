@@ -46,7 +46,7 @@ public class TxInfo implements Payload {
     private final boolean isPending;
     private final String memo;
 
-    public TxInfo(TxInfoBuilder builder) {
+    public TxInfo(Builder builder) {
         this.txId = builder.txId;
         this.inputSum = builder.inputSum;
         this.outputSum = builder.outputSum;
@@ -61,7 +61,7 @@ public class TxInfo implements Payload {
             throw new IllegalStateException("server created a null transaction");
 
         if (transaction.getFee() != null)
-            return new TxInfoBuilder()
+            return new Builder()
                     .withTxId(transaction.getTxId().toString())
                     .withInputSum(transaction.getInputSum().value)
                     .withOutputSum(transaction.getOutputSum().value)
@@ -71,7 +71,7 @@ public class TxInfo implements Payload {
                     .withMemo(transaction.getMemo())
                     .build();
         else
-            return new TxInfoBuilder()
+            return new Builder()
                     .withTxId(transaction.getTxId().toString())
                     .withInputSum(transaction.getInputSum().value)
                     .withOutputSum(transaction.getOutputSum().value)
@@ -101,7 +101,7 @@ public class TxInfo implements Payload {
 
     @SuppressWarnings("unused")
     public static TxInfo fromProto(bisq.proto.grpc.TxInfo proto) {
-        return new TxInfoBuilder()
+        return new Builder()
                 .withTxId(proto.getTxId())
                 .withInputSum(proto.getInputSum())
                 .withOutputSum(proto.getOutputSum())
@@ -112,7 +112,7 @@ public class TxInfo implements Payload {
                 .build();
     }
 
-    public static class TxInfoBuilder {
+    private static class Builder {
         private String txId;
         private long inputSum;
         private long outputSum;
@@ -121,37 +121,37 @@ public class TxInfo implements Payload {
         private boolean isPending;
         private String memo;
 
-        public TxInfoBuilder withTxId(String txId) {
+        public Builder withTxId(String txId) {
             this.txId = txId;
             return this;
         }
 
-        public TxInfoBuilder withInputSum(long inputSum) {
+        public Builder withInputSum(long inputSum) {
             this.inputSum = inputSum;
             return this;
         }
 
-        public TxInfoBuilder withOutputSum(long outputSum) {
+        public Builder withOutputSum(long outputSum) {
             this.outputSum = outputSum;
             return this;
         }
 
-        public TxInfoBuilder withFee(long fee) {
+        public Builder withFee(long fee) {
             this.fee = fee;
             return this;
         }
 
-        public TxInfoBuilder withSize(int size) {
+        public Builder withSize(int size) {
             this.size = size;
             return this;
         }
 
-        public TxInfoBuilder withIsPending(boolean isPending) {
+        public Builder withIsPending(boolean isPending) {
             this.isPending = isPending;
             return this;
         }
 
-        public TxInfoBuilder withMemo(String memo) {
+        public Builder withMemo(String memo) {
             this.memo = memo;
             return this;
         }

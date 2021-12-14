@@ -1,13 +1,13 @@
 #! /bin/bash
 
-# Runs fiat <-> btc trading scenarios using the API CLI with a local regtest bitcoin node.
+# Demonstrates a fiat <-> btc trade using the API CLI with a local regtest bitcoin node.
 #
 # A country code argument is used to create a country based face to face payment account for the simulated
 # trade, and the maker's face to face payment account's currency code is used when creating the offer.
 #
 # Prerequisites:
 #
-#  - Linux or OSX with bash, Java 10, or Java 11-12 (JDK language compatibility 10), and bitcoin-core (v0.19, v0.20, or v0.21).
+#  - Linux or OSX with bash, Java 11-15 (JDK language compatibility 11), and bitcoin-core (v0.19 -  v22).
 #
 #  - Bisq must be fully built with apitest dao setup files installed.
 #    Build command:  `./gradlew clean build :apitest:installDaoSetup`
@@ -26,15 +26,16 @@
 #
 #     `$ apitest/scripts/trade-simulation.sh -d buy -c fr -m 3.00 -a 0.125`
 #
-#  Script options:  -d <direction> -c <country-code> -m <mkt-price-margin(%)> - f <fixed-price> -a <amount(btc)>
+#  Script options:  -d <direction> -c <country-code> -m <mkt-price-margin(%)> -f <fixed-price> -a <amount(btc)>
 #
 # Examples:
 #
-#    Create a buy/eur offer to buy 0.125 btc at a mkt-price-margin of 0%, using an Italy face to face payment account:
+#    Create and take a buy/eur offer to buy 0.125 btc at a mkt-price-margin of 0%, using an Italy face to face
+#    payment account:
 #
 #       `$ apitest/scripts/trade-simulation.sh -d buy -c it -m 0.00 -a 0.125`
 #
-#    Create a sell/eur offer to sell 0.125 btc at a fixed-price of 38,000 euros, using a France face to face
+#    Create and take a sell/eur offer to sell 0.125 btc at a fixed-price of 38,000 euros, using a France face to face
 #    payment account:
 #
 #       `$ apitest/scripts/trade-simulation.sh -d sell -c fr -f 38000 -a 0.125`
@@ -52,8 +53,6 @@ parseopts "$@"
 printdate "Started $APP_BASE_NAME with parameters:"
 printscriptparams
 printbreak
-
-registerdisputeagents
 
 # Demonstrate how to create a country based, face to face account.
 showcreatepaymentacctsteps "Alice" "$ALICE_PORT"

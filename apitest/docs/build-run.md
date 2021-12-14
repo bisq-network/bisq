@@ -4,7 +4,7 @@ The Java based API runs on Linux and OSX.
 
 ## Mainnet
 
-To build from the source, clone the github repository found at `https://github.com/bisq-network/bisq`,
+To build from the source, clone the GitHub repository found at `https://github.com/bisq-network/bisq`,
 and build with gradle:
 
     $ ./gradlew clean build

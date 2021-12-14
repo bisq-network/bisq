@@ -9,6 +9,7 @@ import static bisq.cli.Method.createpaymentacct;
 import static bisq.cli.opts.OptLabel.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class OptionParsersTest {
@@ -62,13 +63,16 @@ public class OptionParsersTest {
         new CancelOfferOptionParser(args).parse();
     }
 
-    // createoffer opt parser tests
+    // createoffer (v1) opt parser tests
 
     @Test
-    public void testCreateOfferOptParserWithMissingPaymentAccountIdOptShouldThrowException() {
+    public void testCreateOfferWithMissingPaymentAccountIdOptShouldThrowException() {
         String[] args = new String[]{
                 PASSWORD_OPT,
-                createoffer.name()
+                createoffer.name(),
+                "--" + OPT_DIRECTION + "=" + "SELL",
+                "--" + OPT_CURRENCY_CODE + "=" + "JPY",
+                "--" + OPT_AMOUNT + "=" + "0.1"
         };
         Throwable exception = assertThrows(RuntimeException.class, () ->
                 new CreateOfferOptionParser(args).parse());
@@ -76,7 +80,7 @@ public class OptionParsersTest {
     }
 
     @Test
-    public void testCreateOfferOptParserWithEmptyPaymentAccountIdOptShouldThrowException() {
+    public void testCreateOfferWithEmptyPaymentAccountIdOptShouldThrowException() {
         String[] args = new String[]{
                 PASSWORD_OPT,
                 createoffer.name(),
@@ -88,7 +92,7 @@ public class OptionParsersTest {
     }
 
     @Test
-    public void testCreateOfferOptParserWithMissingDirectionOptShouldThrowException() {
+    public void testCreateOfferWithMissingDirectionOptShouldThrowException() {
         String[] args = new String[]{
                 PASSWORD_OPT,
                 createoffer.name(),
@@ -101,7 +105,7 @@ public class OptionParsersTest {
 
 
     @Test
-    public void testCreateOfferOptParserWithMissingDirectionOptValueShouldThrowException() {
+    public void testCreateOfferWithMissingDirectionOptValueShouldThrowException() {
         String[] args = new String[]{
                 PASSWORD_OPT,
                 createoffer.name(),
@@ -134,10 +138,114 @@ public class OptionParsersTest {
         assertEquals("25.0", parser.getSecurityDeposit());
     }
 
+    // createoffer (bsq swap) opt parser tests
+
+    @Test
+    public void testCreateBsqSwapOfferWithPaymentAcctIdOptShouldThrowException() {
+        String[] args = new String[]{
+                PASSWORD_OPT,
+                createoffer.name(),
+                "--" + OPT_SWAP + "=" + "true",
+                "--" + OPT_PAYMENT_ACCOUNT + "=" + "abc",
+                "--" + OPT_DIRECTION + "=" + "buy",
+                "--" + OPT_CURRENCY_CODE + "=" + "bsq",
+                "--" + OPT_AMOUNT + "=" + "0.125"
+        };
+        Throwable exception = assertThrows(RuntimeException.class, () ->
+                new CreateOfferOptionParser(args).parse());
+        assertEquals("cannot use a payment account id in bsq swap offer", exception.getMessage());
+    }
+
+    @Test
+    public void testCreateBsqSwapOfferWithMktMarginPriceOptShouldThrowException() {
+        String[] args = new String[]{
+                PASSWORD_OPT,
+                createoffer.name(),
+                "--" + OPT_SWAP + "=" + "true",
+                "--" + OPT_DIRECTION + "=" + "buy",
+                "--" + OPT_CURRENCY_CODE + "=" + "bsq",
+                "--" + OPT_AMOUNT + "=" + "0.125",
+                "--" + OPT_MKT_PRICE_MARGIN + "=" + "0.0"
+        };
+        Throwable exception = assertThrows(RuntimeException.class, () ->
+                new CreateOfferOptionParser(args).parse());
+        assertEquals("cannot use a market price margin in bsq swap offer", exception.getMessage());
+    }
+
+    @Test
+    public void testCreateBsqSwapOfferWithSecurityDepositOptShouldThrowException() {
+        String[] args = new String[]{
+                PASSWORD_OPT,
+                createoffer.name(),
+                "--" + OPT_SWAP + "=" + "true",
+                "--" + OPT_DIRECTION + "=" + "buy",
+                "--" + OPT_CURRENCY_CODE + "=" + "bsq",
+                "--" + OPT_AMOUNT + "=" + "0.125",
+                "--" + OPT_SECURITY_DEPOSIT + "=" + "25.0"
+        };
+        Throwable exception = assertThrows(RuntimeException.class, () ->
+                new CreateOfferOptionParser(args).parse());
+        assertEquals("cannot use a security deposit in bsq swap offer", exception.getMessage());
+    }
+
+    @Test
+    public void testCreateBsqSwapOfferWithMissingFixedPriceOptShouldThrowException() {
+        String[] args = new String[]{
+                PASSWORD_OPT,
+                createoffer.name(),
+                "--" + OPT_SWAP + "=" + "true",
+                "--" + OPT_DIRECTION + "=" + "sell",
+                "--" + OPT_CURRENCY_CODE + "=" + "bsq",
+                "--" + OPT_MIN_AMOUNT + "=" + "0.075",
+                "--" + OPT_AMOUNT + "=" + "0.125"
+        };
+        Throwable exception = assertThrows(RuntimeException.class, () ->
+                new CreateOfferOptionParser(args).parse());
+        assertEquals("no fixed price specified", exception.getMessage());
+    }
+
+    @Test
+    public void testCreateBsqSwapOfferWithIncorrectCurrencyCodeOptShouldThrowException() {
+        String[] args = new String[]{
+                PASSWORD_OPT,
+                createoffer.name(),
+                "--" + OPT_SWAP + "=" + "true",
+                "--" + OPT_DIRECTION + "=" + "sell",
+                "--" + OPT_CURRENCY_CODE + "=" + "xmr",
+                "--" + OPT_MIN_AMOUNT + "=" + "0.075",
+                "--" + OPT_AMOUNT + "=" + "0.125",
+                "--" + OPT_FIXED_PRICE + "=" + "0.00005555"
+        };
+        Throwable exception = assertThrows(RuntimeException.class, () ->
+                new CreateOfferOptionParser(args).parse());
+        assertEquals("only bsq swaps are currently supported", exception.getMessage());
+    }
+
+    @Test
+    public void testValidCreateBsqSwapOfferOpts() {
+        String[] args = new String[]{
+                PASSWORD_OPT,
+                createoffer.name(),
+                "--" + OPT_SWAP + "=" + "true",
+                "--" + OPT_DIRECTION + "=" + "sell",
+                "--" + OPT_CURRENCY_CODE + "=" + "bsq",
+                "--" + OPT_MIN_AMOUNT + "=" + "0.075",
+                "--" + OPT_AMOUNT + "=" + "0.125",
+                "--" + OPT_FIXED_PRICE + "=" + "0.00005555"
+        };
+        CreateOfferOptionParser parser = new CreateOfferOptionParser(args).parse();
+        assertTrue(parser.getIsSwap());
+        assertEquals("sell", parser.getDirection());
+        assertEquals("bsq", parser.getCurrencyCode());
+        assertEquals("0.075", parser.getMinAmount());
+        assertEquals("0.125", parser.getAmount());
+        assertEquals("0.00005555", parser.getFixedPrice());
+    }
+
     // createpaymentacct opt parser tests
 
     @Test
-    public void testCreatePaymentAcctOptParserWithMissingPaymentFormOptShouldThrowException() {
+    public void testCreatePaymentAcctWithMissingPaymentFormOptShouldThrowException() {
         String[] args = new String[]{
                 PASSWORD_OPT,
                 createpaymentacct.name()
@@ -149,7 +257,7 @@ public class OptionParsersTest {
     }
 
     @Test
-    public void testCreatePaymentAcctOptParserWithMissingPaymentFormOptValueShouldThrowException() {
+    public void testCreatePaymentAcctWithMissingPaymentFormOptValueShouldThrowException() {
         String[] args = new String[]{
                 PASSWORD_OPT,
                 createpaymentacct.name(),
@@ -161,7 +269,7 @@ public class OptionParsersTest {
     }
 
     @Test
-    public void testCreatePaymentAcctOptParserWithInvalidPaymentFormOptValueShouldThrowException() {
+    public void testCreatePaymentAcctWithInvalidPaymentFormOptValueShouldThrowException() {
         String[] args = new String[]{
                 PASSWORD_OPT,
                 createpaymentacct.name(),
@@ -180,7 +288,7 @@ public class OptionParsersTest {
     // createcryptopaymentacct parser tests
 
     @Test
-    public void testCreateCryptoCurrencyPaymentAcctOptionParserWithMissingAcctNameOptShouldThrowException() {
+    public void testCreateCryptoCurrencyPaymentAcctWithMissingAcctNameOptShouldThrowException() {
         String[] args = new String[]{
                 PASSWORD_OPT,
                 createcryptopaymentacct.name()
@@ -191,7 +299,7 @@ public class OptionParsersTest {
     }
 
     @Test
-    public void testCreateCryptoCurrencyPaymentAcctOptionParserWithEmptyAcctNameOptShouldThrowException() {
+    public void testCreateCryptoCurrencyPaymentAcctWithEmptyAcctNameOptShouldThrowException() {
         String[] args = new String[]{
                 PASSWORD_OPT,
                 createcryptopaymentacct.name(),
@@ -203,7 +311,7 @@ public class OptionParsersTest {
     }
 
     @Test
-    public void testCreateCryptoCurrencyPaymentAcctOptionParserWithMissingCurrencyCodeOptShouldThrowException() {
+    public void testCreateCryptoCurrencyPaymentAcctWithMissingCurrencyCodeOptShouldThrowException() {
         String[] args = new String[]{
                 PASSWORD_OPT,
                 createcryptopaymentacct.name(),
@@ -215,7 +323,7 @@ public class OptionParsersTest {
     }
 
     @Test
-    public void testCreateCryptoCurrencyPaymentAcctOptionParserWithInvalidCurrencyCodeOptShouldThrowException() {
+    public void testCreateCryptoCurrencyPaymentAcctWithInvalidCurrencyCodeOptShouldThrowException() {
         String[] args = new String[]{
                 PASSWORD_OPT,
                 createcryptopaymentacct.name(),
@@ -228,7 +336,7 @@ public class OptionParsersTest {
     }
 
     @Test
-    public void testCreateCryptoCurrencyPaymentAcctOptionParserWithMissingAddressOptShouldThrowException() {
+    public void testCreateCryptoCurrencyPaymentAcctWithMissingAddressOptShouldThrowException() {
         String[] args = new String[]{
                 PASSWORD_OPT,
                 createcryptopaymentacct.name(),
@@ -241,7 +349,7 @@ public class OptionParsersTest {
     }
 
     @Test
-    public void testCreateCryptoCurrencyPaymentAcctOptionParser() {
+    public void testCreateCryptoCurrencyPaymentAcct() {
         var acctName = "bsq payment account";
         var currencyCode = "bsq";
         var address = "B1nXyZ"; // address is validated on server

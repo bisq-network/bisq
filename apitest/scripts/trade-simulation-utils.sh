@@ -457,11 +457,10 @@ delayconfirmpaymentreceived() {
     printbreak
 }
 
-# This is a large function that should be broken up if it ever makes sense to not treat a trade
-# execution simulation as an bsq swap operation.  But we are not testing api methods here, just
-# demonstrating how to use them to get through the trade protocol.  It should work for any trade
-# between Bob & Alice, as long as Alice is maker, Bob is taker, and the offer to be taken is the
-# first displayed in Bob's getoffers command output.
+# This is a large function that might be split into smaller functions.  But we are not testing
+# api methods here, just demonstrating how to use them to get through the V1 trade protocol with
+# the CLI.  It should work for any trade between Bob & Alice, as long as Alice is maker, Bob is
+# taker, and the offer to be taken is the first displayed in Bob's getoffers command output.
 executetrade() {
     # Bob list available offers.
     printdate "BOB $BOB_ROLE:  Looking at $DIRECTION $CURRENCY_CODE offers."
@@ -477,7 +476,7 @@ executetrade() {
     printdate "First offer found: $OFFER_ID"
 
     # Take Alice's offer.
-    CMD="$CLI_BASE --port=$BOB_PORT takeoffer --offer-id=$OFFER_ID --payment-account=$BOB_ACCT_ID --fee-currency=bsq"
+    CMD="$CLI_BASE --port=$BOB_PORT takeoffer --offer-id=$OFFER_ID --payment-account=$BOB_ACCT_ID --fee-currency=BSQ"
     printdate "BOB CLI: $CMD"
     TRADE=$($CMD)
     commandalert $? "Could not take offer."

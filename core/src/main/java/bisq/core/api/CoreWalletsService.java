@@ -85,6 +85,7 @@ import javax.annotation.Nullable;
 import static bisq.core.btc.wallet.Restrictions.getMinNonDustOutput;
 import static bisq.core.util.ParsingUtils.parseToCoin;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Singleton
@@ -209,10 +210,10 @@ class CoreWalletsService {
         }
 
         return addressStrings.stream().map(address ->
-                new AddressBalanceInfo(address,
-                        balances.getUnchecked(address),
-                        getNumConfirmationsForMostRecentTransaction(address),
-                        btcWalletService.isAddressUnused(getAddressEntry(address).getAddress())))
+                        new AddressBalanceInfo(address,
+                                balances.getUnchecked(address),
+                                getNumConfirmationsForMostRecentTransaction(address),
+                                btcWalletService.isAddressUnused(getAddressEntry(address).getAddress())))
                 .collect(Collectors.toList());
     }
 
@@ -324,7 +325,7 @@ class CoreWalletsService {
         for (TransactionOutput txOut : spendableBsqTxOutputs) {
             if (isTxOutputAddressMatch.test(txOut) && isTxOutputValueMatch.test(txOut)) {
                 log.info("\t\tTx {} output has matching address {} and value {}.",
-                        txOut.getParentTransaction().getTxId(),
+                        requireNonNull(txOut.getParentTransaction()).getTxId(),
                         address,
                         txOut.getValue().toPlainString());
                 numMatches++;
@@ -346,6 +347,7 @@ class CoreWalletsService {
             @SuppressWarnings({"unchecked", "Convert2MethodRef"})
             ListenableFuture<Void> future =
                     (ListenableFuture<Void>) executor.submit(() -> feeService.requestFees());
+            //noinspection NullableProblems
             Futures.addCallback(future, new FutureCallback<>() {
                 @Override
                 public void onSuccess(@Nullable Void ignored) {
@@ -393,23 +395,11 @@ class CoreWalletsService {
     }
 
     Transaction getTransaction(String txId) {
-        if (txId.length() != 64)
-            throw new IllegalArgumentException(format("%s is not a transaction id", txId));
+        return getTransactionWithId(txId);
+    }
 
-        try {
-            Transaction tx = btcWalletService.getTransaction(txId);
-            if (tx == null)
-                throw new IllegalArgumentException(format("tx with id %s not found", txId));
-            else
-                return tx;
-
-        } catch (IllegalArgumentException ex) {
-            log.error("", ex);
-            throw new IllegalArgumentException(
-                    format("could not get transaction with id %s%ncause: %s",
-                            txId,
-                            ex.getMessage().toLowerCase()));
-        }
+    int getTransactionConfirmations(String txId) {
+        return getTransactionWithId(txId).getConfidence().getDepthInBlocks();
     }
 
     int getNumConfirmationsForMostRecentTransaction(String addressString) {
@@ -654,12 +644,32 @@ class CoreWalletsService {
         return addressEntry.get();
     }
 
+    private Transaction getTransactionWithId(String txId) {
+        if (txId.length() != 64)
+            throw new IllegalArgumentException(format("%s is not a transaction id", txId));
+
+        try {
+            Transaction tx = btcWalletService.getTransaction(txId);
+            if (tx == null)
+                throw new IllegalArgumentException(format("tx with id %s not found", txId));
+            else
+                return tx;
+
+        } catch (IllegalArgumentException ex) {
+            log.error("", ex);
+            throw new IllegalArgumentException(
+                    format("could not get transaction with id %s%ncause: %s",
+                            txId,
+                            ex.getMessage().toLowerCase()));
+        }
+    }
+
     /**
      * Memoization stores the results of expensive function calls and returns
      * the cached result when the same input occurs again.
      *
      * Resulting LoadingCache is used by calling `.get(input I)` or
-     * `.getUnchecked(input I)`, depending on whether or not `f` can return null.
+     * `.getUnchecked(input I)`, depending on whether `f` can return null.
      * That's because CacheLoader throws an exception on null output from `f`.
      */
     private static <I, O> LoadingCache<I, O> memoize(Function<I, O> f) {
