@@ -17,7 +17,7 @@
 
 package bisq.core.btc.model;
 
-import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.WalletService;
 
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
@@ -35,6 +35,10 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import javax.annotation.concurrent.Immutable;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkElementIndex;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode
 @Immutable
@@ -56,7 +60,7 @@ public final class RawTransactionInput implements NetworkPayload, PersistablePay
                 input.getConnectedOutput() != null &&
                         input.getConnectedOutput().getScriptPubKey() != null &&
                         input.getConnectedOutput().getScriptPubKey().getScriptType() != null ?
-                        input.getConnectedOutput().getScriptPubKey().getScriptType().id : -1);
+                        input.getConnectedOutput().getScriptPubKey().getScriptType().id : 0);
     }
 
     // Does not set the scriptTypeId. Use RawTransactionInput(TransactionInput input) for any new code.
@@ -129,8 +133,22 @@ public final class RawTransactionInput implements NetworkPayload, PersistablePay
         return scriptTypeId == Script.ScriptType.P2WSH.id;
     }
 
-    public String getParentTxId(BtcWalletService btcWalletService) {
-        return btcWalletService.getTxFromSerializedTx(parentTransaction).getTxId().toString();
+    public String getParentTxId(WalletService walletService) {
+        return walletService.getTxFromSerializedTx(parentTransaction).getTxId().toString();
+    }
+
+    public void validate(WalletService walletService) {
+        Transaction tx = walletService.getTxFromSerializedTx(checkNotNull(parentTransaction));
+        checkArgument(index == (int) index, "Input index out of range.");
+        checkElementIndex((int) index, tx.getOutputs().size(), "Input index");
+        long outputValue = tx.getOutput(index).getValue().value;
+        checkArgument(value == outputValue,
+                "Input value (%s) mismatches connected tx output value (%s).", value, outputValue);
+        var scriptPubKey = tx.getOutput(index).getScriptPubKey();
+        var scriptType = scriptPubKey != null ? scriptPubKey.getScriptType() : null;
+        checkArgument(scriptTypeId <= 0 || scriptType != null && scriptType.id == scriptTypeId,
+                "Input scriptTypeId (%s) mismatches connected tx output scriptTypeId (%s.id = %s).",
+                scriptTypeId, scriptType, scriptType != null ? scriptType.id : 0);
     }
 
     @Override

@@ -55,6 +55,7 @@
             <TableColumn fx:id="deactivateItemColumn" minWidth="60" maxWidth="60" sortable="false"/>
             <TableColumn fx:id="editItemColumn" minWidth="30" maxWidth="30" sortable="false"/>
             <TableColumn fx:id="triggerIconColumn" minWidth="30" maxWidth="30" sortable="false"/>
+            <TableColumn fx:id="duplicateItemColumn" minWidth="30" maxWidth="30" sortable="false"/>
             <TableColumn fx:id="removeItemColumn" minWidth="30" maxWidth="30" sortable="false"/>
         </columns>
     </TableView>

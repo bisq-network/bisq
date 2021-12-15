@@ -25,7 +25,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -38,14 +38,14 @@ class PaymentAccounts {
 
     private final Set<PaymentAccount> accounts;
     private final AccountAgeWitnessService accountAgeWitnessService;
-    private final BiFunction<Offer, PaymentAccount, Boolean> validator;
+    private final BiPredicate<Offer, PaymentAccount> validator;
 
     PaymentAccounts(Set<PaymentAccount> accounts, AccountAgeWitnessService accountAgeWitnessService) {
         this(accounts, accountAgeWitnessService, PaymentAccountUtil::isPaymentAccountValidForOffer);
     }
 
     PaymentAccounts(Set<PaymentAccount> accounts, AccountAgeWitnessService accountAgeWitnessService,
-                    BiFunction<Offer, PaymentAccount, Boolean> validator) {
+                    BiPredicate<Offer, PaymentAccount> validator) {
         this.accounts = accounts;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.validator = validator;
@@ -63,7 +63,7 @@ class PaymentAccounts {
     private List<PaymentAccount> sortValidAccounts(Offer offer) {
         Comparator<PaymentAccount> comparator = this::compareByTradeLimit;
         return accounts.stream()
-                .filter(account -> validator.apply(offer, account))
+                .filter(account -> validator.test(offer, account))
                 .sorted(comparator.reversed())
                 .collect(Collectors.toList());
     }

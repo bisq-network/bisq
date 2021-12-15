@@ -17,6 +17,8 @@
 
 package bisq.core.dao.state;
 
+import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
@@ -63,6 +65,8 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     private final GenesisTxInfo genesisTxInfo;
     private final DaoStateStorageService daoStateStorageService;
     private final DaoStateMonitoringService daoStateMonitoringService;
+    private final WalletsSetup walletsSetup;
+    private final BsqWalletService bsqWalletService;
     private final Preferences preferences;
     private final Config config;
     private final File storageDir;
@@ -88,6 +92,8 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                                    GenesisTxInfo genesisTxInfo,
                                    DaoStateStorageService daoStateStorageService,
                                    DaoStateMonitoringService daoStateMonitoringService,
+                                   WalletsSetup walletsSetup,
+                                   BsqWalletService bsqWalletService,
                                    Preferences preferences,
                                    Config config,
                                    @Named(Config.STORAGE_DIR) File storageDir) {
@@ -95,6 +101,8 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         this.genesisTxInfo = genesisTxInfo;
         this.daoStateStorageService = daoStateStorageService;
         this.daoStateMonitoringService = daoStateMonitoringService;
+        this.walletsSetup = walletsSetup;
+        this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
         this.config = config;
         this.storageDir = storageDir;
@@ -121,7 +129,9 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
 
     @Override
     public void onParseBlockCompleteAfterBatchProcessing(Block block) {
-        if (config.baseCurrencyNetwork.isMainnet()) {
+        if (config.baseCurrencyNetwork.isMainnet() &&
+                walletsSetup.isDownloadComplete() &&
+                daoStateService.getChainHeight() == bsqWalletService.getBestChainHeight()) {
             // In case the DAO state is invalid we might get an outdated RECIPIENT_BTC_ADDRESS. In that case we trigger
             // a dao resync from resources.
             String address = daoStateService.getParamValue(Param.RECIPIENT_BTC_ADDRESS, daoStateService.getChainHeight());

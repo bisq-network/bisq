@@ -644,7 +644,8 @@ public class BtcWalletService extends WalletService {
                     .filter(e -> isAddressUnused(e.getAddress()))
                     .filter(e -> Script.ScriptType.P2WPKH.equals(e.getAddress().getOutputScriptType()))
                     .findAny();
-            if (emptyAvailableAddressEntry.isPresent()) {
+            if (emptyAvailableAddressEntry.isPresent() &&
+                    context != AddressEntry.Context.MULTI_SIG) {    // always use fresh address for MULTI_SIG GH#5880
                 return addressEntryList.swapAvailableToAddressEntryWithOfferId(emptyAvailableAddressEntry.get(), context, offerId);
             } else {
                 DeterministicKey key = (DeterministicKey) wallet.findKeyFromAddress(wallet.freshReceiveAddress(Script.ScriptType.P2WPKH));

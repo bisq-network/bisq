@@ -33,7 +33,7 @@ import com.google.inject.Inject;
 import javafx.collections.ObservableList;
 
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -52,7 +52,7 @@ public class FailedTradesManager implements PersistedDataHost {
     private final TradeUtil tradeUtil;
     private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
     @Setter
-    private Function<Trade, Boolean> unFailTradeCallback;
+    private Predicate<Trade> unFailTradeCallback;
 
     @Inject
     public FailedTradesManager(KeyRing keyRing,
@@ -123,7 +123,7 @@ public class FailedTradesManager implements PersistedDataHost {
         if (unFailTradeCallback == null)
             return;
 
-        if (unFailTradeCallback.apply(trade)) {
+        if (unFailTradeCallback.test(trade)) {
             log.info("Unfailing trade {}", trade.getId());
             if (failedTrades.remove(trade)) {
                 requestPersistence();

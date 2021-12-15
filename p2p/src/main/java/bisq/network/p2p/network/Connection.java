@@ -459,8 +459,9 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     }
 
     public void shutDown(CloseConnectionReason closeConnectionReason, @Nullable Runnable shutDownCompleteHandler) {
-        log.debug("shutDown: nodeAddressOpt={}, closeConnectionReason={}",
-                this.peersNodeAddressOptional.orElse(null), closeConnectionReason);
+        log.info("Connection shutdown started");
+        log.debug("shutDown: peersNodeAddressOptional={}, closeConnectionReason={}",
+                peersNodeAddressOptional, closeConnectionReason);
 
         connectionState.shutDown();
 
@@ -503,7 +504,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     }
 
     private void doShutDown(CloseConnectionReason closeConnectionReason, @Nullable Runnable shutDownCompleteHandler) {
-        // Use UserThread.execute as its not clear if that is called from a non-UserThread
+        log.info("Connection doShutDown started");
+        // Use UserThread.execute as it's not clear if that is called from a non-UserThread
         UserThread.execute(() -> connectionListener.onDisconnect(closeConnectionReason, this));
         try {
             socket.close();
@@ -525,10 +527,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             }
 
             //noinspection UnstableApiUsage
-            MoreExecutors.shutdownAndAwaitTermination(singleThreadExecutor, 500, TimeUnit.MILLISECONDS);
+            MoreExecutors.shutdownAndAwaitTermination(singleThreadExecutor, 100, TimeUnit.MILLISECONDS);
 
             log.debug("Connection shutdown complete {}", this);
-            // Use UserThread.execute as its not clear if that is called from a non-UserThread
+            // Use UserThread.execute as it's not clear if that is called from a non-UserThread
             if (shutDownCompleteHandler != null)
                 UserThread.execute(shutDownCompleteHandler);
         }
@@ -725,6 +727,9 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     }
 
                     if (proto == null) {
+                        if (stopped) {
+                            return;
+                        }
                         if (protoInputStream.read() == -1) {
                             log.warn("proto is null because protoInputStream.read()=-1 (EOF). That is expected if client got stopped without proper shutdown.");
                         } else {

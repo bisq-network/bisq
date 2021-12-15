@@ -97,7 +97,7 @@ public abstract class SellerProtocol extends DisputeProtocol {
                         VerifyPeersAccountAgeWitness.class))
                 .run(() -> {
                     // We stop timeout here and don't start a new one as the
-                    // SellerSendsDepositTxAndDelayedPayoutTxMessage repeats the send the message and has it's own
+                    // SellerSendsDepositTxAndDelayedPayoutTxMessage repeats to send the message and has it's own
                     // timeout if it never succeeds.
                     stopTimeout();
                 })

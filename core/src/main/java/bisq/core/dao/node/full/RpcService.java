@@ -56,6 +56,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 
 import java.util.List;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -86,9 +87,10 @@ public class RpcService {
     private BitcoindClient client;
     private BitcoindDaemon daemon;
 
-    // We could use multiple threads but then we need to support ordering of results in a queue
+    // We could use multiple threads, but then we need to support ordering of results in a queue
     // Keep that for optimization after measuring performance differences
     private final ListeningExecutorService executor = Utilities.getSingleThreadListeningExecutor("RpcService");
+    private volatile boolean isShutDown;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -127,54 +129,63 @@ public class RpcService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void shutDown() {
+        isShutDown = true;
         if (daemon != null) {
             daemon.shutdown();
             log.info("daemon shut down");
         }
 
+        // A hard shutdown is justified for the RPC service.
         executor.shutdown();
     }
 
     void setup(ResultHandler resultHandler, Consumer<Throwable> errorHandler) {
-        ListenableFuture<Void> future = executor.submit(() -> {
-            try {
-                log.info("Starting RpcService on {}:{} with user {}, listening for blocknotify on port {} from {}",
-                        this.rpcHost, this.rpcPort, this.rpcUser, this.rpcBlockPort, this.rpcBlockHost);
+        try {
+            ListenableFuture<Void> future = executor.submit(() -> {
+                try {
+                    log.info("Starting RpcService on {}:{} with user {}, listening for blocknotify on port {} from {}",
+                            this.rpcHost, this.rpcPort, this.rpcUser, this.rpcBlockPort, this.rpcBlockHost);
 
-                long startTs = System.currentTimeMillis();
+                    long startTs = System.currentTimeMillis();
 
-                client = BitcoindClient.builder()
-                        .rpcHost(rpcHost)
-                        .rpcPort(rpcPort)
-                        .rpcUser(rpcUser)
-                        .rpcPassword(rpcPassword)
-                        .build();
-                checkNodeVersionAndHealth();
+                    client = BitcoindClient.builder()
+                            .rpcHost(rpcHost)
+                            .rpcPort(rpcPort)
+                            .rpcUser(rpcUser)
+                            .rpcPassword(rpcPassword)
+                            .build();
+                    checkNodeVersionAndHealth();
 
-                daemon = new BitcoindDaemon(rpcBlockHost, rpcBlockPort, throwable -> {
-                    log.error(throwable.toString());
-                    throwable.printStackTrace();
-                    UserThread.execute(() -> errorHandler.accept(new RpcException(throwable)));
-                });
+                    daemon = new BitcoindDaemon(rpcBlockHost, rpcBlockPort, throwable -> {
+                        log.error(throwable.toString());
+                        throwable.printStackTrace();
+                        UserThread.execute(() -> errorHandler.accept(new RpcException(throwable)));
+                    });
 
-                log.info("Setup took {} ms", System.currentTimeMillis() - startTs);
-            } catch (Throwable e) {
-                log.error(e.toString());
-                e.printStackTrace();
-                throw new RpcException(e.toString(), e);
+                    log.info("Setup took {} ms", System.currentTimeMillis() - startTs);
+                } catch (Throwable e) {
+                    log.error(e.toString());
+                    e.printStackTrace();
+                    throw new RpcException(e.toString(), e);
+                }
+                return null;
+            });
+
+            Futures.addCallback(future, new FutureCallback<>() {
+                public void onSuccess(Void ignore) {
+                    UserThread.execute(resultHandler::handleResult);
+                }
+
+                public void onFailure(@NotNull Throwable throwable) {
+                    UserThread.execute(() -> errorHandler.accept(throwable));
+                }
+            }, MoreExecutors.directExecutor());
+        } catch (Exception e) {
+            if (!isShutDown || !(e instanceof RejectedExecutionException)) {
+                log.warn(e.toString(), e);
+                throw e;
             }
-            return null;
-        });
-
-        Futures.addCallback(future, new FutureCallback<>() {
-            public void onSuccess(Void ignore) {
-                UserThread.execute(resultHandler::handleResult);
-            }
-
-            public void onFailure(@NotNull Throwable throwable) {
-                UserThread.execute(() -> errorHandler.accept(throwable));
-            }
-        }, MoreExecutors.directExecutor());
+        }
     }
 
     private String decodeNodeVersion(Integer encodedVersion) {
@@ -222,43 +233,57 @@ public class RpcService {
     }
 
     void requestChainHeadHeight(Consumer<Integer> resultHandler, Consumer<Throwable> errorHandler) {
-        ListenableFuture<Integer> future = executor.submit(client::getBlockCount);
-        Futures.addCallback(future, new FutureCallback<>() {
-            public void onSuccess(Integer chainHeight) {
-                UserThread.execute(() -> resultHandler.accept(chainHeight));
-            }
+        try {
+            ListenableFuture<Integer> future = executor.submit(client::getBlockCount);
+            Futures.addCallback(future, new FutureCallback<>() {
+                public void onSuccess(Integer chainHeight) {
+                    UserThread.execute(() -> resultHandler.accept(chainHeight));
+                }
 
-            public void onFailure(@NotNull Throwable throwable) {
-                UserThread.execute(() -> errorHandler.accept(throwable));
+                public void onFailure(@NotNull Throwable throwable) {
+                    UserThread.execute(() -> errorHandler.accept(throwable));
+                }
+            }, MoreExecutors.directExecutor());
+        } catch (Exception e) {
+            if (!isShutDown || !(e instanceof RejectedExecutionException)) {
+                log.warn(e.toString(), e);
+                throw e;
             }
-        }, MoreExecutors.directExecutor());
+        }
     }
 
     void requestDtoBlock(int blockHeight,
                          Consumer<RawBlock> resultHandler,
                          Consumer<Throwable> errorHandler) {
-        ListenableFuture<RawBlock> future = executor.submit(() -> {
-            long startTs = System.currentTimeMillis();
-            String blockHash = client.getBlockHash(blockHeight);
-            var rawDtoBlock = client.getBlock(blockHash, 2);
-            var block = getBlockFromRawDtoBlock(rawDtoBlock);
-            log.info("requestDtoBlock from bitcoind at blockHeight {} with {} txs took {} ms",
-                    blockHeight, block.getRawTxs().size(), System.currentTimeMillis() - startTs);
-            return block;
-        });
+        try {
+            ListenableFuture<RawBlock> future = executor.submit(() -> {
+                long startTs = System.currentTimeMillis();
+                String blockHash = client.getBlockHash(blockHeight);
+                var rawDtoBlock = client.getBlock(blockHash, 2);
+                var block = getBlockFromRawDtoBlock(rawDtoBlock);
+                log.info("requestDtoBlock from bitcoind at blockHeight {} with {} txs took {} ms",
+                        blockHeight, block.getRawTxs().size(), System.currentTimeMillis() - startTs);
+                return block;
+            });
 
-        Futures.addCallback(future, new FutureCallback<>() {
-            @Override
-            public void onSuccess(RawBlock block) {
-                UserThread.execute(() -> resultHandler.accept(block));
-            }
+            Futures.addCallback(future, new FutureCallback<>() {
+                @Override
+                public void onSuccess(RawBlock block) {
+                    UserThread.execute(() -> resultHandler.accept(block));
+                }
 
-            @Override
-            public void onFailure(@NotNull Throwable throwable) {
-                log.error("Error at requestDtoBlock: blockHeight={}", blockHeight);
-                UserThread.execute(() -> errorHandler.accept(throwable));
+                @Override
+                public void onFailure(@NotNull Throwable throwable) {
+                    log.error("Error at requestDtoBlock: blockHeight={}", blockHeight);
+                    UserThread.execute(() -> errorHandler.accept(throwable));
+                }
+            }, MoreExecutors.directExecutor());
+        } catch (Exception e) {
+            if (!isShutDown || !(e instanceof RejectedExecutionException)) {
+                log.warn(e.toString(), e);
+                throw e;
             }
-        }, MoreExecutors.directExecutor());
+        }
     }
 
 

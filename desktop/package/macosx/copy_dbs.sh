@@ -2,7 +2,7 @@
 
 cd $(dirname $0)/../../../
 
-version="1.7.5"
+version="1.8.0"
 
 # Set BISQ_DIR as environment var to the path of your locally synced Bisq data directory e.g. BISQ_DIR=~/Library/Application\ Support/Bisq
 
@@ -15,6 +15,7 @@ cp "$dbDir/TradeStatistics3Store" "$resDir/TradeStatistics3Store_${version}_BTC_
 cp "$dbDir/AccountAgeWitnessStore" "$resDir/AccountAgeWitnessStore_${version}_BTC_MAINNET"
 cp "$dbDir/DaoStateStore" "$resDir/DaoStateStore_BTC_MAINNET"
 cp "$dbDir/SignedWitnessStore" "$resDir/SignedWitnessStore_BTC_MAINNET"
+cp -a "$dbDir/BsqBlocks/." "$resDir/BsqBlocks_BTC_MAINNET/"
 
 # Only to be updated when required
 # cp "$dbDir/ProposalStore" "$resDir/ProposalStore_BTC_MAINNET"

@@ -182,7 +182,20 @@ public class LiteNode extends BsqNode {
     // First we request the blocks from a full node
     @Override
     protected void startParseBlocks() {
-        liteNodeNetworkService.requestBlocks(getStartBlockHeight());
+        int chainHeight = daoStateService.getChainHeight();
+        if (walletsSetup.isDownloadComplete() && chainHeight == bsqWalletService.getBestChainHeight()) {
+            log.info("No block request needed as we have already the most recent block. " +
+                            "daoStateService.getChainHeight()={}, bsqWalletService.getBestChainHeight()={}",
+                    chainHeight, bsqWalletService.getBestChainHeight());
+            onParseBlockChainComplete();
+            return;
+        }
+
+        if (chainHeight == daoStateService.getGenesisBlockHeight()) {
+            liteNodeNetworkService.requestBlocks(chainHeight);
+        } else {
+            liteNodeNetworkService.requestBlocks(chainHeight + 1);
+        }
     }
 
 
@@ -221,9 +234,8 @@ public class LiteNode extends BsqNode {
                             MathUtils.roundDouble(duration / blockList.size(), 2));
                     // We only request again if wallet is synced, otherwise we would get repeated calls we want to avoid.
                     // We deal with that case at the setupWalletBestBlockListener method above.
-                    if (walletsSetup.isDownloadComplete() &&
-                            daoStateService.getChainHeight() < bsqWalletService.getBestChainHeight()) {
-                        liteNodeNetworkService.requestBlocks(getStartBlockHeight());
+                    if (walletsSetup.isDownloadComplete() && daoStateService.getChainHeight() < bsqWalletService.getBestChainHeight()) {
+                        liteNodeNetworkService.requestBlocks(daoStateService.getChainHeight() + 1);
                     } else {
                         onParsingComplete.run();
                         onParseBlockChainComplete();

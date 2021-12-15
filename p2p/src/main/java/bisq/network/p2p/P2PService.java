@@ -186,6 +186,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     public void shutDown(Runnable shutDownCompleteHandler) {
+        log.info("P2PService shutdown started");
         shutDownResultHandlers.add(shutDownCompleteHandler);
 
         // We need to make sure queued up messages are flushed out before we continue shut down other network
@@ -198,6 +199,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
     }
 
     private void doShutDown() {
+        log.info("P2PService doShutDown started");
         if (p2PDataStorage != null) {
             p2PDataStorage.shutDown();
         }
@@ -223,9 +225,7 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         }
 
         if (networkNode != null) {
-            networkNode.shutDown(() -> {
-                shutDownResultHandlers.forEach(Runnable::run);
-            });
+            networkNode.shutDown(() -> shutDownResultHandlers.forEach(Runnable::run));
         } else {
             shutDownResultHandlers.forEach(Runnable::run);
         }

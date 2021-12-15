@@ -26,8 +26,7 @@ import bisq.desktop.components.PeerInfoIconTrading;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
-import bisq.desktop.main.portfolio.PortfolioView;
-import bisq.desktop.main.portfolio.duplicateoffer.DuplicateOfferView;
+import bisq.desktop.main.portfolio.presentation.PortfolioUtil;
 import bisq.desktop.main.shared.ChatView;
 import bisq.desktop.util.CssTheme;
 import bisq.desktop.util.DisplayUtils;
@@ -232,12 +231,12 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 tableView -> {
                     final TableRow<PendingTradesListItem> row = new TableRow<>();
                     final ContextMenu rowMenu = new ContextMenu();
-                    MenuItem editItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
-                    editItem.setOnAction((event) -> {
+                    MenuItem duplicateItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
+                    duplicateItem.setOnAction((event) -> {
                         try {
                             OfferPayload offerPayload = row.getItem().getTrade().getOffer().getOfferPayload().orElseThrow();
                             if (offerPayload.getPubKeyRing().equals(keyRing.getPubKeyRing())) {
-                                navigation.navigateToWithData(offerPayload, MainView.class, PortfolioView.class, DuplicateOfferView.class);
+                                PortfolioUtil.duplicateOffer(navigation, offerPayload);
                             } else {
                                 new Popup().warning(Res.get("portfolio.context.notYourOffer")).show();
                             }
@@ -245,7 +244,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             log.warn("Unable to get offerPayload - {}", e.toString());
                         }
                     });
-                    rowMenu.getItems().add(editItem);
+                    rowMenu.getItems().add(duplicateItem);
                     row.contextMenuProperty().bind(
                             Bindings.when(Bindings.isNotNull(row.itemProperty()))
                                     .then(rowMenu)
