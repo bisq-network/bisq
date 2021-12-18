@@ -74,7 +74,7 @@ public class BtcNodes {
                         new BtcNode("node140.hnl.wiz.biz", "jto2jfbsxhb6yvhcrrjddrgbakte6tgsy3c3z3prss64gndgvovvosyd.onion", "103.99.168.140", BtcNode.DEFAULT_PORT, "@wiz"),
                         new BtcNode("node210.fmt.wiz.biz", "rfqmn3qe36uaptkxhdvi74p4hyrzhir6vhmzb2hqryxodig4gue2zbyd.onion", "103.99.170.210", BtcNode.DEFAULT_PORT, "@wiz"),
                         new BtcNode("node220.fmt.wiz.biz", "azbpsh4arqlm6442wfimy7qr65bmha2zhgjg7wbaji6vvaug53hur2qd.onion", "103.99.170.220", BtcNode.DEFAULT_PORT, "@wiz"),
-            
+
                         // KanoczTomas
                         new BtcNode("btc.ispol.sk", "25q4s3c3eifxfxgsbs56lo2xikyb2vidwkpwb7oi6qzlsysir7qdfsqd.onion", "193.58.196.212", BtcNode.DEFAULT_PORT, "@KanoczTomas")
                 ) :
