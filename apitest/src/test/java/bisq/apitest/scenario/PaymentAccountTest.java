@@ -70,7 +70,7 @@ public class PaymentAccountTest extends AbstractPaymentAccountTest {
         test.testCreateSepaInstantAccount(testInfo);
         test.testCreateSepaAccount(testInfo);
         test.testCreateSpecificBanksAccount(testInfo);
-        // test.testCreateSwiftAccount(testInfo);
+        test.testCreateSwiftAccount(testInfo);
         test.testCreateSwishAccount(testInfo);
 
         test.testCreateTransferwiseAccountWith1TradeCurrency(testInfo);
