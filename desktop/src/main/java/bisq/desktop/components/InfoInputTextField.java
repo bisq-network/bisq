@@ -98,6 +98,7 @@ public class InfoInputTextField extends AnchorPane {
     public void setContentForPopOver(Node node, AwesomeIcon awesomeIcon, @Nullable String style) {
         this.node = node;
         AwesomeDude.setIcon(icon, awesomeIcon);
+        icon.getStyleClass().removeAll("icon", "info", "warning", style);
         icon.getStyleClass().addAll("icon", style == null ? "info" : style);
         icon.setManaged(true);
         icon.setVisible(true);
