@@ -839,8 +839,8 @@ public class GUIUtil {
         return true;
     }
 
-    public static boolean canCreateOrTakeOfferOrShowPopup(User user, Navigation navigation, TradeCurrency currency) {
-        if (currency.getCode().equals("BSQ")) {
+    public static boolean canCreateOrTakeOfferOrShowPopup(User user, Navigation navigation, @Nullable TradeCurrency currency) {
+        if (currency != null && currency.getCode().equals("BSQ")) {
             return true;
         }
 
