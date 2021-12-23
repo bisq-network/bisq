@@ -157,6 +157,7 @@ public abstract class BsqNode implements DaoSetupService {
 
     public void shutDown() {
         exportJsonFilesService.shutDown();
+        daoStateSnapshotService.shutDown();
     }
 
 
