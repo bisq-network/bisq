@@ -81,15 +81,13 @@ public class Statistic {
                             "Number of sent messages per sec: {};" + ls +
                             "Bytes received: {}" + ls +
                             "Number of received messages/Received messages: {} / {};" + ls +
-                            "Number of received messages per sec: {};" + ls +
-                            "Number of threads: {}" + ls,
+                            "Number of received messages per sec: {}" + ls,
                     Utilities.readableFileSize(totalSentBytes.get()),
                     numTotalSentMessages.get(), totalSentMessages,
                     numTotalSentMessagesPerSec.get(),
                     Utilities.readableFileSize(totalReceivedBytes.get()),
                     numTotalReceivedMessages.get(), totalReceivedMessages,
-                    numTotalReceivedMessagesPerSec.get(),
-                    Thread.getAllStackTraces().keySet().size());
+                    numTotalReceivedMessagesPerSec.get());
         }, TimeUnit.MINUTES.toSeconds(60));
     }
 
