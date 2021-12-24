@@ -37,8 +37,9 @@ import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
 import bisq.common.config.Config;
 import bisq.common.config.ConfigFileEditor;
-import bisq.common.crypto.HashCashService;
 import bisq.common.crypto.KeyRing;
+import bisq.common.crypto.ProofOfWork;
+import bisq.common.crypto.ProofOfWorkService;
 
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.Sha256Hash;
@@ -65,7 +66,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import java.lang.reflect.Method;
@@ -86,12 +86,6 @@ public class FilterManager {
     private static final String BANNED_PRICE_RELAY_NODES = "bannedPriceRelayNodes";
     private static final String BANNED_SEED_NODES = "bannedSeedNodes";
     private static final String BANNED_BTC_NODES = "bannedBtcNodes";
-
-    private final BiFunction<byte[], byte[], Boolean> challengeValidation = Arrays::equals;
-    // We only require a new pow if difficulty has increased
-    private final BiFunction<Integer, Integer, Boolean> difficultyValidation =
-            (value, controlValue) -> value - controlValue >= 0;
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
@@ -144,7 +138,7 @@ public class FilterManager {
                         "029340c3e7d4bb0f9e651b5f590b434fecb6175aeaa57145c7804ff05d210e534f",
                         "034dc7530bf66ffd9580aa98031ea9a18ac2d269f7c56c0e71eca06105b9ed69f9");
 
-        networkFilter.setBannedNodeFunction(this::isNodeAddressBannedFromNetwork);
+        networkFilter.setBannedNodePredicate(this::isNodeAddressBannedFromNetwork);
     }
 
 
@@ -496,13 +490,16 @@ public class FilterManager {
         if (filter == null) {
             return true;
         }
-        checkArgument(offer.getBsqSwapOfferPayload().isPresent(),
-                "Offer payload must be BsqSwapOfferPayload");
-        return HashCashService.verify(offer.getBsqSwapOfferPayload().get().getProofOfWork(),
-                HashCashService.getBytes(offer.getId() + offer.getOwnerNodeAddress().toString()),
-                filter.getPowDifficulty(),
-                challengeValidation,
-                difficultyValidation);
+        checkArgument(offer.getBsqSwapOfferPayload().isPresent(), "Offer payload must be BsqSwapOfferPayload");
+        ProofOfWork pow = offer.getBsqSwapOfferPayload().get().getProofOfWork();
+        var service = ProofOfWorkService.forVersion(pow.getVersion());
+        return service.isPresent() && getEnabledPowVersions().contains(pow.getVersion()) &&
+                service.get().verify(pow, offer.getId(), offer.getOwnerNodeAddress().toString(), filter.getPowDifficulty());
+    }
+
+    public List<Integer> getEnabledPowVersions() {
+        Filter filter = getFilter();
+        return filter != null && !filter.getEnabledPowVersions().isEmpty() ? filter.getEnabledPowVersions() : List.of(0);
     }
 
 

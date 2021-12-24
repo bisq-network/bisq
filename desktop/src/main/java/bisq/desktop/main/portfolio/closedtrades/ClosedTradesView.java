@@ -26,21 +26,19 @@ import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PeerInfoIconTrading;
-import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.BsqTradeDetailsWindow;
 import bisq.desktop.main.overlays.windows.ClosedTradesSummaryWindow;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
-import bisq.desktop.main.portfolio.PortfolioView;
-import bisq.desktop.main.portfolio.duplicateoffer.DuplicateOfferView;
+import bisq.desktop.main.portfolio.presentation.PortfolioUtil;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OfferPayloadBase;
 import bisq.core.offer.OpenOffer;
-import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Contract;
@@ -60,11 +58,14 @@ import com.googlecode.jcsv.writer.CSVEntryConverter;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
+
 import javafx.fxml.FXML;
 
 import javafx.stage.Stage;
 
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -85,6 +86,8 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 
+import javafx.event.ActionEvent;
+
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
@@ -93,6 +96,8 @@ import javafx.util.Callback;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.function.Function;
+
+import static bisq.desktop.util.FormBuilder.getRegularIconButton;
 
 @FxmlView
 public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTradesViewModel> {
@@ -132,7 +137,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     @FXML
     TableColumn<Tradable, Tradable> priceColumn, deviationColumn, amountColumn, volumeColumn,
             txFeeColumn, tradeFeeColumn, buyerSecurityDepositColumn, sellerSecurityDepositColumn,
-            marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn, avatarColumn;
+            marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn,
+            duplicateColumn, avatarColumn;
     @FXML
     HBox searchBox;
     @FXML
@@ -198,6 +204,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         dateColumn.setGraphic(new AutoTooltipLabel(ColumnNames.DATE.toString()));
         tradeIdColumn.setGraphic(new AutoTooltipLabel(ColumnNames.TRADE_ID.toString()));
         stateColumn.setGraphic(new AutoTooltipLabel(ColumnNames.STATUS.toString()));
+        duplicateColumn.setGraphic(new AutoTooltipLabel(""));
         avatarColumn.setText("");
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -216,10 +223,11 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         setDateColumnCellFactory();
         setMarketColumnCellFactory();
         setStateColumnCellFactory();
+        setDuplicateColumnCellFactory();
         setAvatarColumnCellFactory();
 
-        tradeIdColumn.setComparator(Comparator.comparing(o -> o.getId()));
-        dateColumn.setComparator(Comparator.comparing(o -> o.getDate()));
+        tradeIdColumn.setComparator(Comparator.comparing(Tradable::getId));
+        dateColumn.setComparator(Comparator.comparing(Tradable::getDate));
         directionColumn.setComparator(Comparator.comparing(o -> o.getOffer().getDirection()));
         marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
         priceColumn.setComparator(Comparator.comparing(model::getPrice, Comparator.nullsFirst(Comparator.naturalOrder())));
@@ -229,7 +237,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         volumeColumn.setComparator(nullsFirstComparingAsTrade(TradeModel::getVolume));
         amountColumn.setComparator(Comparator.comparing(model::getAmount, Comparator.nullsFirst(Comparator.naturalOrder())));
         avatarColumn.setComparator(Comparator.comparing(
-                o -> model.dataModel.getNumPastTrades(o),
+                model.dataModel::getNumPastTrades,
                 Comparator.nullsFirst(Comparator.naturalOrder())
         ));
         txFeeColumn.setComparator(nullsFirstComparing(o ->
@@ -262,20 +270,9 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 tableView -> {
                     TableRow<Tradable> row = new TableRow<>();
                     ContextMenu rowMenu = new ContextMenu();
-                    MenuItem editItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
-                    editItem.setOnAction((event) -> {
-                        try {
-                            OfferPayload offerPayload = row.getItem().getOffer().getOfferPayload().orElseThrow();
-                            if (offerPayload.getPubKeyRing().equals(keyRing.getPubKeyRing())) {
-                                navigation.navigateToWithData(offerPayload, MainView.class, PortfolioView.class, DuplicateOfferView.class);
-                            } else {
-                                new Popup().warning(Res.get("portfolio.context.notYourOffer")).show();
-                            }
-                        } catch (NullPointerException e) {
-                            log.warn("Unable to get offerPayload - {}", e.toString());
-                        }
-                    });
-                    rowMenu.getItems().add(editItem);
+                    MenuItem duplicateItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
+                    duplicateItem.setOnAction((ActionEvent event) -> onDuplicateOffer(row.getItem().getOffer()));
+                    rowMenu.getItems().add(duplicateItem);
                     row.contextMenuProperty().bind(
                             Bindings.when(Bindings.isNotNull(row.itemProperty()))
                                     .then(rowMenu)
@@ -442,7 +439,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 if (bsqSwapTrade.getTxId() != null && bsqSwapTrade.getTxId().contains(filterString)) {
                     return true;
                 }
-                if (bsqSwapTrade.getTradeProtocolModel().getTempTradingPeerNodeAddress().getFullAddress().contains(filterString)) {
+                if (bsqSwapTrade.getTradingPeerNodeAddress().getFullAddress().contains(filterString)) {
                     return true;
                 }
             }
@@ -579,6 +576,40 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 });
     }
 
+    private void setDuplicateColumnCellFactory() {
+        duplicateColumn.getStyleClass().add("avatar-column");
+        duplicateColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
+        duplicateColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<Tradable, Tradable> call(TableColumn<Tradable, Tradable> column) {
+                        return new TableCell<>() {
+                            Button button;
+
+                            @Override
+                            public void updateItem(final Tradable item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty && isMyOfferAsMaker(item.getOffer().getOfferPayloadBase())) {
+                                    if (button == null) {
+                                        button = getRegularIconButton(MaterialDesignIcon.CONTENT_COPY);
+                                        button.setTooltip(new Tooltip(Res.get("shared.duplicateOffer")));
+                                        setGraphic(button);
+                                    }
+                                    button.setOnAction(event -> onDuplicateOffer(item.getOffer()));
+                                } else {
+                                    setGraphic(null);
+                                    if (button != null) {
+                                        button.setOnAction(null);
+                                        button = null;
+                                    }
+                                }
+                            }
+                        };
+                    }
+                });
+    }
+
     @SuppressWarnings("UnusedReturnValue")
     private TableColumn<Tradable, Tradable> setAvatarColumnCellFactory() {
         avatarColumn.getStyleClass().addAll("last-column", "avatar-column");
@@ -593,7 +624,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             public void updateItem(final Tradable item, boolean empty) {
                                 super.updateItem(item, empty);
 
-                                if (item != null && !empty && item instanceof TradeModel) {
+                                if (!empty && item instanceof TradeModel) {
                                     TradeModel tradeModel = (TradeModel) item;
                                     int numPastTrades = model.dataModel.getNumPastTrades(tradeModel);
                                     NodeAddress tradingPeerNodeAddress = tradeModel.getTradingPeerNodeAddress();
@@ -781,6 +812,23 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                         };
                     }
                 });
+    }
+
+    private void onDuplicateOffer(Offer offer) {
+        try {
+            OfferPayloadBase offerPayloadBase = offer.getOfferPayloadBase();
+            if (isMyOfferAsMaker(offerPayloadBase)) {
+                PortfolioUtil.duplicateOffer(navigation, offerPayloadBase);
+            } else {
+                new Popup().warning(Res.get("portfolio.context.notYourOffer")).show();
+            }
+        } catch (NullPointerException e) {
+            log.warn("Unable to get offerPayload - {}", e.toString());
+        }
+    }
+
+    private boolean isMyOfferAsMaker(OfferPayloadBase offerPayloadBase) {
+        return offerPayloadBase.getPubKeyRing().equals(keyRing.getPubKeyRing());
     }
 
     private Tradable getDummyTradable() {

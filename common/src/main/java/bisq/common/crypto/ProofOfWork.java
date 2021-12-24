@@ -21,8 +21,6 @@ import bisq.common.proto.network.NetworkPayload;
 
 import com.google.protobuf.ByteString;
 
-import java.math.BigInteger;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -34,53 +32,29 @@ public final class ProofOfWork implements NetworkPayload {
     private final long counter;
     @Getter
     private final byte[] challenge;
-    // We want to support BigInteger value for difficulty as well so we store it as byte array
-    private final byte[] difficulty;
+    @Getter
+    private final double difficulty;
     @Getter
     private final long duration;
+    @Getter
+    private final byte[] solution;
+    @Getter
+    private final int version;
 
     public ProofOfWork(byte[] payload,
                        long counter,
                        byte[] challenge,
-                       int difficulty,
-                       long duration) {
-        this(payload,
-                counter,
-                challenge,
-                BigInteger.valueOf(difficulty).toByteArray(),
-                duration);
-    }
-
-    public ProofOfWork(byte[] payload,
-                       long counter,
-                       byte[] challenge,
-                       BigInteger difficulty,
-                       long duration) {
-        this(payload,
-                counter,
-                challenge,
-                difficulty.toByteArray(),
-                duration);
-    }
-
-    public ProofOfWork(byte[] payload,
-                       long counter,
-                       byte[] challenge,
-                       byte[] difficulty,
-                       long duration) {
+                       double difficulty,
+                       long duration,
+                       byte[] solution,
+                       int version) {
         this.payload = payload;
         this.counter = counter;
         this.challenge = challenge;
         this.difficulty = difficulty;
         this.duration = duration;
-    }
-
-    public int getNumLeadingZeros() {
-        return new BigInteger(difficulty).intValue();
-    }
-
-    public BigInteger getTarget() {
-        return new BigInteger(difficulty);
+        this.solution = solution;
+        this.version = version;
     }
 
 
@@ -94,8 +68,10 @@ public final class ProofOfWork implements NetworkPayload {
                 .setPayload(ByteString.copyFrom(payload))
                 .setCounter(counter)
                 .setChallenge(ByteString.copyFrom(challenge))
-                .setDifficulty(ByteString.copyFrom(difficulty))
+                .setDifficulty(difficulty)
                 .setDuration(duration)
+                .setSolution(ByteString.copyFrom(solution))
+                .setVersion(version)
                 .build();
     }
 
@@ -104,8 +80,10 @@ public final class ProofOfWork implements NetworkPayload {
                 proto.getPayload().toByteArray(),
                 proto.getCounter(),
                 proto.getChallenge().toByteArray(),
-                proto.getDifficulty().toByteArray(),
-                proto.getDuration()
+                proto.getDifficulty(),
+                proto.getDuration(),
+                proto.getSolution().toByteArray(),
+                proto.getVersion()
         );
     }
 
@@ -114,9 +92,9 @@ public final class ProofOfWork implements NetworkPayload {
     public String toString() {
         return "ProofOfWork{" +
                 ",\r\n     counter=" + counter +
-                ",\r\n     numLeadingZeros=" + getNumLeadingZeros() +
-                ",\r\n     target=" + getTarget() +
+                ",\r\n     difficulty=" + difficulty +
                 ",\r\n     duration=" + duration +
+                ",\r\n     version=" + version +
                 "\r\n}";
     }
 }

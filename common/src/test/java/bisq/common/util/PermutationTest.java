@@ -21,8 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.BiFunction;
-
+import java.util.function.BiPredicate;
 
 import org.junit.Test;
 
@@ -108,7 +107,7 @@ public class PermutationTest {
         List<String> result;
         List<String> list;
         List<String> expected;
-        BiFunction<String, List<String>, Boolean> predicate = (target, variationList) -> variationList.toString().equals(target);
+        BiPredicate<String, List<String>> predicate = (target, variationList) -> variationList.toString().equals(target);
 
         list = Arrays.asList(a, b, c, d, e);
 
@@ -124,11 +123,11 @@ public class PermutationTest {
 
     @Test
     public void testBreakAtLimit() {
-        BiFunction<String, List<String>, Boolean> predicate =
+        BiPredicate<String, List<String>> predicate =
                 (target, variationList) -> variationList.toString().equals(target);
         var list = Arrays.asList("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o");
         var expected = Arrays.asList("b", "g", "m");
-        
+
         // Takes around 32508 tries starting from longer strings
         var limit = 100000;
         var result = PermutationUtil.findMatchingPermutation(expected.toString(), list, predicate, limit);

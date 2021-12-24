@@ -37,6 +37,7 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
+import bisq.core.offer.bsq_swap.BsqSwapOfferPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.user.Preferences;
@@ -55,6 +56,8 @@ import javafx.collections.ListChangeListener;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
 
 public abstract class OfferView extends ActivatableView<TabPane, Void> {
 
@@ -102,7 +105,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     protected void initialize() {
         navigationListener = (viewPath, data) -> {
             if (viewPath.size() == 3 && viewPath.indexOf(this.getClass()) == 1)
-                loadView(viewPath.tip());
+                loadView(viewPath.tip(), data);
         };
         tabChangeListener = (observableValue, oldValue, newValue) -> {
             if (newValue != null) {
@@ -198,7 +201,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         return Res.get("offerbook.takeOffer").toUpperCase();
     }
 
-    private void loadView(Class<? extends View> viewClass) {
+    private void loadView(Class<? extends View> viewClass, @Nullable Object data) {
         TabPane tabPane = root;
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
         View view;
@@ -237,7 +240,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         } else if (viewClass == BsqSwapCreateOfferView.class && bsqSwapCreateOfferView == null) {
             view = viewLoader.load(viewClass);
             bsqSwapCreateOfferView = (BsqSwapCreateOfferView) view;
-            bsqSwapCreateOfferView.initWithData(direction, offerActionHandler);
+            bsqSwapCreateOfferView.initWithData(direction, offerActionHandler, (BsqSwapOfferPayload) data);
             createOfferPane = bsqSwapCreateOfferView.getRoot();
             createOfferTab = new Tab(getCreateOfferTabName(viewClass));
             createOfferTab.setClosable(true);

@@ -24,6 +24,7 @@ import static bisq.cli.opts.OptLabel.OPT_ACCOUNT_NAME;
 import static bisq.cli.opts.OptLabel.OPT_ADDRESS;
 import static bisq.cli.opts.OptLabel.OPT_CURRENCY_CODE;
 import static bisq.cli.opts.OptLabel.OPT_TRADE_INSTANT;
+import static java.lang.Boolean.FALSE;
 
 public class CreateCryptoCurrencyPaymentAcctOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
@@ -39,7 +40,7 @@ public class CreateCryptoCurrencyPaymentAcctOptionParser extends AbstractMethodO
     final OptionSpec<Boolean> tradeInstantOpt = parser.accepts(OPT_TRADE_INSTANT, "create trade instant account")
             .withOptionalArg()
             .ofType(boolean.class)
-            .defaultsTo(Boolean.FALSE);
+            .defaultsTo(FALSE);
 
     public CreateCryptoCurrencyPaymentAcctOptionParser(String[] args) {
         super(args);

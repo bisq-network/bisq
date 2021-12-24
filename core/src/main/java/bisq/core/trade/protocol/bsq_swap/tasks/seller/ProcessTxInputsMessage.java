@@ -62,8 +62,11 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
             TxInputsMessage message = checkNotNull((TxInputsMessage) protocolModel.getTradeMessage());
             checkNotNull(message);
 
+            BtcWalletService btcWalletService = protocolModel.getBtcWalletService();
+
             List<RawTransactionInput> inputs = message.getBsqInputs();
             checkArgument(!inputs.isEmpty(), "Buyers BSQ inputs must not be empty");
+            inputs.forEach(input -> input.validate(btcWalletService));
 
             long sumInputs = inputs.stream().mapToLong(rawTransactionInput -> rawTransactionInput.value).sum();
             long buyersBsqInputAmount = BsqSwapCalculation.getBuyersBsqInputValue(trade, getBuyersTradeFee()).getValue();
@@ -71,7 +74,6 @@ public abstract class ProcessTxInputsMessage extends BsqSwapTask {
                     "Buyers BSQ input amount do not match our calculated required BSQ input amount");
 
             DaoFacade daoFacade = protocolModel.getDaoFacade();
-            BtcWalletService btcWalletService = protocolModel.getBtcWalletService();
 
             long sumValidBsqInputValue = inputs.stream()
                     .mapToLong(input -> daoFacade.getUnspentTxOutputValue(

@@ -77,7 +77,7 @@ public class BsqSwapTakeOfferRequestVerification {
             checkArgument(isDateInTolerance(request), "Trade date is out of tolerance");
             checkArgument(isTxFeeInTolerance(request, feeService), "Miner fee from taker not in tolerance");
             checkArgument(request.getMakerFee() == Objects.requireNonNull(CoinUtil.getMakerFee(false, amountAsCoin)).value);
-            checkArgument(request.getTakerFee() == CoinUtil.getTakerFee(false, amountAsCoin).value);
+            checkArgument(request.getTakerFee() == Objects.requireNonNull(CoinUtil.getTakerFee(false, amountAsCoin)).value);
         } catch (Exception e) {
             log.error("BsqSwapTakeOfferRequestVerification failed. Request={}, peer={}, error={}", request, peer, e.toString());
             return false;
@@ -93,9 +93,9 @@ public class BsqSwapTakeOfferRequestVerification {
     private static boolean isTxFeeInTolerance(BsqSwapRequest request, FeeService feeService) {
         double myFee = (double) feeService.getTxFeePerVbyte().getValue();
         double peersFee = (double) Coin.valueOf(request.getTxFeePerVbyte()).getValue();
-        // Allow for 10% diff in mining fee, ie, maker will accept taker fee that's 10%
-        // off their own fee from service. Both parties will use the same fee while
-        // creating the bsq swap tx
+        // Allow for 50% diff in mining fee, ie, maker will accept taker fee that's less
+        // than 50% off their own fee from service (that is, 100% higher or 50% lower).
+        // Both parties will use the same fee while creating the bsq swap tx.
         double diff = abs(1 - myFee / peersFee);
         boolean isInTolerance = diff < 0.5;
         if (!isInTolerance) {

@@ -39,7 +39,7 @@ abstract class AbstractMethodOptionParser implements MethodOpts {
 
     protected final OptionParser parser = new OptionParser();
 
-    // The help option for a specific api method, e.g., takeoffer -help.
+    // The help option for a specific api method, e.g., takeoffer --help.
     protected final OptionSpec<Void> helpOpt = parser.accepts(OPT_HELP, "Print method help").forHelp();
 
     @Getter

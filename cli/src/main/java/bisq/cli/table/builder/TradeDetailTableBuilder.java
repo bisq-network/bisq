@@ -17,10 +17,16 @@
 
 package bisq.cli.table.builder;
 
+import bisq.proto.grpc.TradeInfo;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import static bisq.cli.table.builder.TableType.TRADE_DETAIL_TBL;
+import static java.lang.String.format;
+import static protobuf.BsqSwapTrade.State.COMPLETED;
+import static protobuf.BsqSwapTrade.State.PREPARATION;
 
 
 
@@ -30,7 +36,11 @@ import bisq.cli.table.column.Column;
 /**
  * Builds a {@code bisq.cli.table.Table} from a {@code bisq.proto.grpc.TradeInfo} object.
  */
+@SuppressWarnings("ConstantConditions")
 class TradeDetailTableBuilder extends AbstractTradeListBuilder {
+
+    private final Predicate<TradeInfo> isPendingBsqSwap = (t) -> t.getState().equals(PREPARATION.name());
+    private final Predicate<TradeInfo> isCompletedBsqSwap = (t) -> t.getState().equals(COMPLETED.name());
 
     TradeDetailTableBuilder(List<?> protos) {
         super(TRADE_DETAIL_TBL, protos);
@@ -41,33 +51,70 @@ class TradeDetailTableBuilder extends AbstractTradeListBuilder {
      * @return Table containing one row
      */
     public Table build() {
-        populateColumns();
-        List<Column<?>> columns = defineColumnList();
+        // A trade detail table only has one row.
+        var trade = trades.get(0);
+        populateColumns(trade);
+        List<Column<?>> columns = defineColumnList(trade);
         return new Table(columns.toArray(new Column<?>[0]));
     }
 
-    private void populateColumns() {
-        trades.stream().forEachOrdered(t -> {
-            colTradeId.addRow(t.getShortId());
-            colRole.addRow(t.getRole());
-            colPrice.addRow(t.getTradePrice());
-            colAmountInBtc.addRow(toAmount.apply(t));
-            colMinerTxFee.addRow(toMyMinerTxFee.apply(t));
-            colBisqTradeFee.addRow(toMyMakerOrTakerFee.apply(t));
-            colIsDepositPublished.addRow(t.getIsDepositPublished());
-            colIsDepositConfirmed.addRow(t.getIsDepositConfirmed());
-            colTradeCost.addRow(toTradeVolume.apply(t));
-            colIsPaymentSent.addRow(t.getIsFiatSent());
-            colIsPaymentReceived.addRow(t.getIsFiatReceived());
-            colIsPayoutPublished.addRow(t.getIsPayoutPublished());
-            colIsFundsWithdrawn.addRow(t.getIsWithdrawn());
-
-            if (colAltcoinReceiveAddressColumn != null)
-                colAltcoinReceiveAddressColumn.addRow(toAltcoinReceiveAddress.apply(t));
-        });
+    private void populateColumns(TradeInfo trade) {
+        if (isBsqSwapTrade.test(trade)) {
+            var isPending = isPendingBsqSwap.test(trade);
+            var isCompleted = isCompletedBsqSwap.test(trade);
+            if (isPending == isCompleted)
+                throw new IllegalStateException(
+                        format("programmer error: trade must be either pending or completed, is pending=%s and completed=%s",
+                                isPending,
+                                isCompleted));
+            populateBsqSwapTradeColumns(trade);
+        } else {
+            populateBisqV1TradeColumns(trade);
+        }
     }
 
-    private List<Column<?>> defineColumnList() {
+    private void populateBisqV1TradeColumns(TradeInfo trade) {
+        colTradeId.addRow(trade.getShortId());
+        colRole.addRow(trade.getRole());
+        colPrice.addRow(trade.getTradePrice());
+        colAmountInBtc.addRow(toAmount.apply(trade));
+        colMinerTxFee.addRow(toMyMinerTxFee.apply(trade));
+        colBisqTradeFee.addRow(toMyMakerOrTakerFee.apply(trade));
+        colIsDepositPublished.addRow(trade.getIsDepositPublished());
+        colIsDepositConfirmed.addRow(trade.getIsDepositConfirmed());
+        colTradeCost.addRow(toTradeVolume.apply(trade));
+        colIsPaymentSent.addRow(trade.getIsFiatSent());
+        colIsPaymentReceived.addRow(trade.getIsFiatReceived());
+        colIsPayoutPublished.addRow(trade.getIsPayoutPublished());
+        colIsFundsWithdrawn.addRow(trade.getIsWithdrawn());
+        if (colAltcoinReceiveAddressColumn != null)
+            colAltcoinReceiveAddressColumn.addRow(toAltcoinReceiveAddress.apply(trade));
+    }
+
+    private void populateBsqSwapTradeColumns(TradeInfo trade) {
+        colTradeId.addRow(trade.getShortId());
+        colRole.addRow(trade.getRole());
+        colPrice.addRow(trade.getTradePrice());
+        colAmountInBtc.addRow(toAmount.apply(trade));
+        colMinerTxFee.addRow(toMyMinerTxFee.apply(trade));
+        colBisqTradeFee.addRow(toMyMakerOrTakerFee.apply(trade));
+        colTradeCost.addRow(toTradeVolume.apply(trade));
+
+        var isCompleted = isCompletedBsqSwap.test(trade);
+        status.addRow(isCompleted ? "COMPLETED" : "PENDING");
+        if (isCompleted) {
+            colTxId.addRow(trade.getBsqSwapTradeInfo().getTxId());
+            colNumConfirmations.addRow(trade.getBsqSwapTradeInfo().getNumConfirmations());
+        }
+    }
+
+    private List<Column<?>> defineColumnList(TradeInfo trade) {
+        return isBsqSwapTrade.test(trade)
+                ? getBsqSwapTradeColumnList(isCompletedBsqSwap.test(trade))
+                : getBisqV1TradeColumnList();
+    }
+
+    private List<Column<?>> getBisqV1TradeColumnList() {
         List<Column<?>> columns = new ArrayList<>() {{
             add(colTradeId);
             add(colRole);
@@ -86,6 +133,27 @@ class TradeDetailTableBuilder extends AbstractTradeListBuilder {
 
         if (colAltcoinReceiveAddressColumn != null)
             columns.add(colAltcoinReceiveAddressColumn);
+
+        return columns;
+    }
+
+    private List<Column<?>> getBsqSwapTradeColumnList(boolean isCompleted) {
+        List<Column<?>> columns = new ArrayList<>() {{
+            add(colTradeId);
+            add(colRole);
+            add(colPrice.asStringColumn());
+            add(colAmountInBtc.asStringColumn());
+            add(colMinerTxFee.asStringColumn());
+            add(colBisqTradeFee.asStringColumn());
+            add(colTradeCost.asStringColumn());
+            add(status);
+        }};
+
+        if (isCompleted)
+            columns.add(colTxId);
+
+        if (!colNumConfirmations.isEmpty())
+            columns.add(colNumConfirmations.asStringColumn());
 
         return columns;
     }

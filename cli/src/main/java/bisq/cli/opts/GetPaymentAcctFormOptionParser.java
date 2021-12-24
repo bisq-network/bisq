@@ -25,7 +25,7 @@ import static bisq.cli.opts.OptLabel.OPT_PAYMENT_METHOD_ID;
 public class GetPaymentAcctFormOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
     final OptionSpec<String> paymentMethodIdOpt = parser.accepts(OPT_PAYMENT_METHOD_ID,
-            "id of payment method type used by a payment account")
+                    "id of payment method type used by a payment account")
             .withRequiredArg();
 
     public GetPaymentAcctFormOptionParser(String[] args) {

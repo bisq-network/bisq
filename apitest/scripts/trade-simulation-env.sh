@@ -179,6 +179,41 @@ parselimitorderopts() {
     fi
 }
 
+parsebsqswaporderopts() {
+    usage() {
+        echo "Usage: $0 [-d buy|sell] [-f <fixed-price>] [-a <amount in btc>]" 1>&2
+        exit 1;
+    }
+
+    local OPTIND o d f a
+    while getopts "d:f:a:" o; do
+        case "${o}" in
+            d) d=$(echo "${OPTARG}" | tr '[:lower:]' '[:upper:]')
+                ((d == "BUY" || d == "SELL")) || usage
+                export DIRECTION=${d}
+                ;;
+            f) f=${OPTARG}
+               export FIXED_PRICE=${f}
+               ;;
+            a) a=${OPTARG}
+               export AMOUNT=${a}
+               ;;
+            *) usage ;;
+        esac
+    done
+    shift $((OPTIND-1))
+
+    if [ -z "${d}" ] || [ -z "${a}" ]; then
+        usage
+    fi
+
+    if [ -z "${f}" ] ; then
+        usage
+    fi
+
+    export CURRENCY_CODE="BSQ"
+}
+
 checkbitcoindrunning() {
     # There may be a '+' char in the path and we have to escape it for pgrep.
     if [[ $APP_HOME == *"+"* ]]; then
@@ -309,4 +344,10 @@ printscriptparams() {
     if [ -n "${WAIT+1}" ]; then
         echo "	WAIT = $WAIT"
     fi
+}
+
+printbsqswapscriptparams() {
+    echo "	DIRECTION = $DIRECTION"
+    echo "	FIXED_PRICE = $FIXED_PRICE"
+    echo "	AMOUNT = $AMOUNT"
 }

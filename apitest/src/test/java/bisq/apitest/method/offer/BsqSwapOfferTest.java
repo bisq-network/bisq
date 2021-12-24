@@ -17,7 +17,7 @@
 
 package bisq.apitest.method.offer;
 
-import bisq.proto.grpc.BsqSwapOfferInfo;
+import bisq.proto.grpc.OfferInfo;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -112,8 +112,7 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
         var bsqSwapOffer = aliceClient.createBsqSwapOffer(BUY.name(),
                 1_000_000L,
                 1_000_000L,
-                "0.00005",
-                alicesBsqSwapAcct.getId());
+                "0.00005");
         log.debug("BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", bsqSwapOffer);
         var newOfferId = bsqSwapOffer.getId();
         assertNotEquals("", newOfferId);
@@ -121,7 +120,6 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
         assertEquals(5_000, bsqSwapOffer.getPrice());
         assertEquals(1_000_000L, bsqSwapOffer.getAmount());
         assertEquals(1_000_000L, bsqSwapOffer.getMinAmount());
-        // assertEquals(alicesBsqAcct.getId(), atomicOffer.getMakerPaymentAccountId());
         assertEquals(BSQ, bsqSwapOffer.getBaseCurrencyCode());
         assertEquals(BTC, bsqSwapOffer.getCounterCurrencyCode());
 
@@ -129,13 +127,13 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
         testGetBsqSwapOffer(bsqSwapOffer);
     }
 
-    private void testGetMyBsqSwapOffer(BsqSwapOfferInfo bsqSwapOfferInfo) {
+    private void testGetMyBsqSwapOffer(OfferInfo bsqSwapOffer) {
         int numFetchAttempts = 0;
         while (true) {
             try {
                 numFetchAttempts++;
-                var fetchedBsqSwapOffer = aliceClient.getMyBsqSwapOffer(bsqSwapOfferInfo.getId());
-                assertEquals(bsqSwapOfferInfo.getId(), fetchedBsqSwapOffer.getId());
+                var fetchedBsqSwapOffer = aliceClient.getMyOffer(bsqSwapOffer.getId());
+                assertEquals(bsqSwapOffer.getId(), fetchedBsqSwapOffer.getId());
                 log.debug("Alice found her (my) new bsq swap offer on attempt # {}.", numFetchAttempts);
                 break;
             } catch (Exception ex) {
@@ -149,13 +147,13 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
         }
     }
 
-    private void testGetBsqSwapOffer(BsqSwapOfferInfo bsqSwapOfferInfo) {
+    private void testGetBsqSwapOffer(OfferInfo bsqSwapOffer) {
         int numFetchAttempts = 0;
         while (true) {
             try {
                 numFetchAttempts++;
-                var fetchedBsqSwapOffer = bobClient.getBsqSwapOffer(bsqSwapOfferInfo.getId());
-                assertEquals(bsqSwapOfferInfo.getId(), fetchedBsqSwapOffer.getId());
+                var fetchedBsqSwapOffer = bobClient.getOffer(bsqSwapOffer.getId());
+                assertEquals(bsqSwapOffer.getId(), fetchedBsqSwapOffer.getId());
                 log.debug("Bob found new available bsq swap offer on attempt # {}.", numFetchAttempts);
                 break;
             } catch (Exception ex) {

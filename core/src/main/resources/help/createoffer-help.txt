@@ -7,38 +7,34 @@ createoffer - create offer to buy or sell BTC
 SYNOPSIS
 --------
 createoffer
-		--payment-account=<payment-acct-id>
-		--direction=<buy|sell>
-		--currency-code=<eur|usd>
-		--market-price-margin=<percent> | --fixed-price=<btc-price>
 		--amount=<btc-amount>
 		--min-amount=<btc-amount>
+		--currency-code=<bsq|eur|usd|...>
+		--direction=<buy|sell>
+		--fixed-price=<btc-price> | --market-price-margin=<percent>
+		--payment-account=<payment-acct-id>
 		--security-deposit=<percent>
+		--swap=<true|false>
 		[--fee-currency=<bsq|btc>]
 
 DESCRIPTION
 -----------
-Create and place an offer to buy or sell BTC using a fiat account.
+Create and place an offer to buy or sell BTC.  There are two types of offers.
+
+    BSQ swap offers
+
+        The createoffer command requires the swap, amount [, optional min-amount], direction,
+        and fixed-price parameters, where --swap=true and the user's wallet contains sufficient
+        BTC and/or BSQ to cover the trade amount and maker fee.
+
+    Version 1 protocol fiat and BSQ offers
+
+        The createoffer command requires the payment-account, amount [,optional min-amount],
+        currency-code, direction, fixed-price or market-price-margin, and security-deposit parameters.
+        The fee-currency parameter can be optionally used to pay the taker fee in BSQ.
 
 OPTIONS
 -------
---payment-account
-		The ID of the fiat payment account used to send or receive funds during the trade.
-
---direction
-		The direction of the trade (BUY or SELL).
-
---currency-code
-		The three letter code for the fiat used to buy or sell BTC, e.g., EUR, USD, BRL, ...
-
---market-price-margin
-		The % above or below market BTC price, e.g., 1.00 (1%).
-		If --market-price-margin is not present, --fixed-price must be.
-
---fixed-price
-		The fixed BTC price in fiat used to buy or sell BTC, e.g., 34000 (USD).
-		If --fixed-price is not present, --market-price-margin must be.
-
 --amount
 		The amount of BTC to buy or sell, e.g., 0.125.
 
@@ -46,14 +42,40 @@ OPTIONS
 		The minimum amount of BTC to buy or sell, e.g., 0.006.
 		If --min-amount is not present, it defaults to the --amount value.
 
---security-deposit
-		The percentage of the BTC amount being traded for the security deposit, e.g., 60.0 (60%).
+--currency-code
+		The three-letter code for the currency used to buy or sell BTC, e.g., BSQ, EUR, USD, BRL, ...
+
+--direction
+		The direction of the trade (BUY or SELL).
 
 --fee-currency
 		The wallet currency used to pay the Bisq trade maker fee (BSQ|BTC).  Default is BTC
 
+--fixed-price
+		The fixed BTC price in fiat used to buy or sell BTC, e.g., 34000 (USD).
+		If --fixed-price is not present, --market-price-margin must be.
+
+--market-price-margin
+		The % above or below market BTC price, e.g., 1.00 (1%).
+		If --market-price-margin is not present, --fixed-price must be.
+
+--payment-account
+		The ID of the fiat payment account used to send or receive funds during the trade.
+
+--security-deposit
+		The percentage of the BTC amount being traded for the security deposit, e.g., 60.0 (60%).
+
+--swap
+        Flag determining whether the offer is a BSQ swap or version 1 protocol offer.  Default is false.
+
 EXAMPLES
 --------
+
+To create a BUY 0.25 BTC with BSQ swap offer at a fixed BSQ price of 0.00005 BSQ per 1 BTC:
+$ ./bisq-cli --password=xyz --port=9998 createoffer --swap=true \
+    --direction=buy \
+    --amount=0.25 \
+    --fixed-price=0.00005
 
 To create a BUY 0.125 BTC with EUR offer
 	at the current market price,

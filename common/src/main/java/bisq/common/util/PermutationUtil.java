@@ -22,7 +22,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -58,9 +58,9 @@ public class PermutationUtil {
 
     public static <T, R> List<T> findMatchingPermutation(R targetValue,
                                                          List<T> list,
-                                                         BiFunction<R, List<T>, Boolean> predicate,
+                                                         BiPredicate<R, List<T>> predicate,
                                                          int maxIterations) {
-        if (predicate.apply(targetValue, list)) {
+        if (predicate.test(targetValue, list)) {
             return list;
         } else {
             return findMatchingPermutation(targetValue,
@@ -74,7 +74,7 @@ public class PermutationUtil {
     private static <T, R> List<T> findMatchingPermutation(R targetValue,
                                                           List<T> list,
                                                           List<List<T>> lists,
-                                                          BiFunction<R, List<T>, Boolean> predicate,
+                                                          BiPredicate<R, List<T>> predicate,
                                                           AtomicInteger maxIterations) {
         for (int level = 0; level < list.size(); level++) {
             // Test one level at a time
@@ -90,7 +90,7 @@ public class PermutationUtil {
     @NonNull
     private static <T, R> List<T> checkLevel(R targetValue,
                                              List<T> previousLevel,
-                                             BiFunction<R, List<T>, Boolean> predicate,
+                                             BiPredicate<R, List<T>> predicate,
                                              int level,
                                              int permutationIndex,
                                              AtomicInteger maxIterations) {
@@ -106,7 +106,7 @@ public class PermutationUtil {
             if (level == 0) {
                 maxIterations.decrementAndGet();
                 // Check all permutations on this level
-                if (predicate.apply(targetValue, newList)) {
+                if (predicate.test(targetValue, newList)) {
                     return newList;
                 }
             } else {

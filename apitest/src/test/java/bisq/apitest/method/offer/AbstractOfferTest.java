@@ -17,7 +17,6 @@
 
 package bisq.apitest.method.offer;
 
-import bisq.proto.grpc.BsqSwapOfferInfo;
 import bisq.proto.grpc.OfferInfo;
 
 import protobuf.PaymentAccount;
@@ -42,10 +41,12 @@ import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
 import static bisq.cli.table.builder.TableType.OFFER_TBL;
 import static bisq.common.util.MathUtils.exactMultiply;
+import static java.lang.System.out;
 
 
 
 import bisq.apitest.method.MethodTest;
+import bisq.cli.CliMain;
 import bisq.cli.table.builder.TableBuilder;
 
 @Slf4j
@@ -112,11 +113,6 @@ public abstract class AbstractOfferTest extends MethodTest {
     protected final Function<List<OfferInfo>, String> toOffersTable = (offers) ->
             new TableBuilder(OFFER_TBL, offers).build().toString();
 
-    // TODO
-    protected final Function<BsqSwapOfferInfo, String> toBsqSwapOfferTable = (offer) ->
-            new TableBuilder(OFFER_TBL, offer).build().toString();
-
-
     public static void initSwapPaymentAccounts() {
         // A bot may not know what the default 'BSQ Swap' account name is,
         // but API test cases do:  the value of the i18n property 'BSQ_SWAP'.
@@ -139,5 +135,12 @@ public abstract class AbstractOfferTest extends MethodTest {
     @AfterAll
     public static void tearDown() {
         tearDownScaffold();
+    }
+
+    protected static void runCliGetOffer(String offerId) {
+        out.println("Alice's CLI 'getmyoffer' response:");
+        CliMain.main(new String[]{"--password=xyz", "--port=9998", "getmyoffer", "--offer-id=" + offerId});
+        out.println("Bob's CLI 'getoffer' response:");
+        CliMain.main(new String[]{"--password=xyz", "--port=9999", "getoffer", "--offer-id=" + offerId});
     }
 }

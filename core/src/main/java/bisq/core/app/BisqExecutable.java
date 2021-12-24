@@ -51,6 +51,9 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.extern.slf4j.Slf4j;
@@ -233,6 +236,16 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
             System.exit(EXIT_SUCCESS);
         }
 
+        // We do not use the UserThread to avoid that the timeout would not get triggered in case the UserThread
+        // would get blocked by a shutdown routine.
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                log.warn("Graceful shutdown not completed in 10 sec. We trigger our timeout handler.");
+                flushAndExit(resultHandler, EXIT_SUCCESS);
+            }
+        }, 10000);
+
         try {
             injector.getInstance(ClockWatcher.class).shutDown();
             injector.getInstance(OpenBsqSwapOfferService.class).shutDown();
@@ -250,58 +263,35 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
                 injector.getInstance(BtcWalletService.class).shutDown();
                 injector.getInstance(BsqWalletService.class).shutDown();
 
-                // We need to shutdown BitcoinJ before the P2PService as it uses Tor.
+                // We need to shut down BitcoinJ before the P2PService as it uses Tor.
                 WalletsSetup walletsSetup = injector.getInstance(WalletsSetup.class);
                 walletsSetup.shutDownComplete.addListener((ov, o, n) -> {
                     log.info("WalletsSetup shutdown completed");
-
                     injector.getInstance(P2PService.class).shutDown(() -> {
                         log.info("P2PService shutdown completed");
                         module.close(injector);
-                        if (!hasDowngraded) {
-                            // If user tried to downgrade we do not write the persistable data to avoid data corruption
-                            PersistenceManager.flushAllDataToDiskAtShutdown(() -> {
-                                log.info("Graceful shutdown completed. Exiting now.");
-                                resultHandler.handleResult();
-                                UserThread.runAfter(() -> System.exit(EXIT_SUCCESS), 1);
-                            });
-                        } else {
-                            UserThread.runAfter(() -> System.exit(EXIT_SUCCESS), 1);
-                        }
+                        flushAndExit(resultHandler, EXIT_SUCCESS);
                     });
                 });
                 walletsSetup.shutDown();
-
             });
-
-            // Wait max 20 sec.
-            UserThread.runAfter(() -> {
-                log.warn("Graceful shut down not completed in 20 sec. We trigger our timeout handler.");
-                if (!hasDowngraded) {
-                    // If user tried to downgrade we do not write the persistable data to avoid data corruption
-                    PersistenceManager.flushAllDataToDiskAtShutdown(() -> {
-                        log.info("Graceful shutdown resulted in a timeout. Exiting now.");
-                        resultHandler.handleResult();
-                        UserThread.runAfter(() -> System.exit(EXIT_SUCCESS), 1);
-                    });
-                } else {
-                    UserThread.runAfter(() -> System.exit(EXIT_SUCCESS), 1);
-                }
-
-            }, 20);
         } catch (Throwable t) {
-            log.error("App shutdown failed with exception {}", t.toString());
-            t.printStackTrace();
-            if (!hasDowngraded) {
-                // If user tried to downgrade we do not write the persistable data to avoid data corruption
-                PersistenceManager.flushAllDataToDiskAtShutdown(() -> {
-                    log.info("Graceful shutdown resulted in an error. Exiting now.");
-                    resultHandler.handleResult();
-                    UserThread.runAfter(() -> System.exit(EXIT_FAILURE), 1);
-                });
-            } else {
-                UserThread.runAfter(() -> System.exit(EXIT_FAILURE), 1);
-            }
+            log.error("App shutdown failed with an exception", t);
+            flushAndExit(resultHandler, EXIT_FAILURE);
+        }
+    }
+
+    private void flushAndExit(ResultHandler resultHandler, int status) {
+        if (!hasDowngraded) {
+            // If user tried to downgrade we do not write the persistable data to avoid data corruption
+            log.info("PersistenceManager flushAllDataToDiskAtShutdown started");
+            PersistenceManager.flushAllDataToDiskAtShutdown(() -> {
+                log.info("Graceful shutdown completed. Exiting now.");
+                resultHandler.handleResult();
+                UserThread.runAfter(() -> System.exit(status), 100, TimeUnit.MILLISECONDS);
+            });
+        } else {
+            UserThread.runAfter(() -> System.exit(status), 100, TimeUnit.MILLISECONDS);
         }
     }
 

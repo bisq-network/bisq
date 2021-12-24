@@ -18,6 +18,7 @@
 package bisq.cli;
 
 import bisq.proto.grpc.OfferInfo;
+import bisq.proto.grpc.TradeInfo;
 
 import io.grpc.StatusRuntimeException;
 
@@ -45,6 +46,7 @@ import static bisq.cli.CurrencyFormat.*;
 import static bisq.cli.Method.*;
 import static bisq.cli.opts.OptLabel.*;
 import static bisq.cli.table.builder.TableType.*;
+import static bisq.proto.grpc.GetOfferCategoryReply.OfferCategory.BSQ_SWAP;
 import static java.lang.String.format;
 import static java.lang.System.err;
 import static java.lang.System.exit;
@@ -62,11 +64,11 @@ import bisq.cli.opts.EditOfferOptionParser;
 import bisq.cli.opts.GetAddressBalanceOptionParser;
 import bisq.cli.opts.GetBTCMarketPriceOptionParser;
 import bisq.cli.opts.GetBalanceOptionParser;
-import bisq.cli.opts.GetOfferOptionParser;
 import bisq.cli.opts.GetOffersOptionParser;
 import bisq.cli.opts.GetPaymentAcctFormOptionParser;
 import bisq.cli.opts.GetTradeOptionParser;
 import bisq.cli.opts.GetTransactionOptionParser;
+import bisq.cli.opts.OfferIdOptionParser;
 import bisq.cli.opts.RegisterDisputeAgentOptionParser;
 import bisq.cli.opts.RemoveWalletPasswordOptionParser;
 import bisq.cli.opts.SendBsqOptionParser;
@@ -332,6 +334,7 @@ public class CliMain {
                         out.println(client.getMethodHelp(method));
                         return;
                     }
+                    var isSwap = opts.getIsSwap();
                     var paymentAcctId = opts.getPaymentAccountId();
                     var direction = opts.getDirection();
                     var currencyCode = opts.getCurrencyCode();
@@ -340,30 +343,45 @@ public class CliMain {
                     var useMarketBasedPrice = opts.isUsingMktPriceMargin();
                     var fixedPrice = opts.getFixedPrice();
                     var marketPriceMargin = opts.getMktPriceMarginAsBigDecimal();
-                    var securityDeposit = toSecurityDepositAsPct(opts.getSecurityDeposit());
+                    var securityDeposit = isSwap ? 0.00 : toSecurityDepositAsPct(opts.getSecurityDeposit());
                     var makerFeeCurrencyCode = opts.getMakerFeeCurrencyCode();
                     var triggerPrice = 0; // Cannot be defined until offer is in book.
-                    var offer = client.createOffer(direction,
-                            currencyCode,
-                            amount,
-                            minAmount,
-                            useMarketBasedPrice,
-                            fixedPrice,
-                            marketPriceMargin.doubleValue(),
-                            securityDeposit,
-                            paymentAcctId,
-                            makerFeeCurrencyCode,
-                            triggerPrice);
+                    OfferInfo offer;
+                    if (isSwap) {
+                        offer = client.createBsqSwapOffer(direction,
+                                amount,
+                                minAmount,
+                                fixedPrice);
+                    } else {
+                        offer = client.createOffer(direction,
+                                currencyCode,
+                                amount,
+                                minAmount,
+                                useMarketBasedPrice,
+                                fixedPrice,
+                                marketPriceMargin.doubleValue(),
+                                securityDeposit,
+                                paymentAcctId,
+                                makerFeeCurrencyCode,
+                                triggerPrice);
+                    }
                     new TableBuilder(OFFER_TBL, offer).build().print(out);
                     return;
                 }
                 case editoffer: {
-                    var opts = new EditOfferOptionParser(args).parse();
-                    if (opts.isForHelp()) {
+                    var offerIdOpt = new OfferIdOptionParser(args, true).parse();
+                    if (offerIdOpt.isForHelp()) {
                         out.println(client.getMethodHelp(method));
                         return;
                     }
-                    var offerId = opts.getOfferId();
+                    // What kind of offer is being edited? BSQ swaps cannot be edited.
+                    var offerId = offerIdOpt.getOfferId();
+                    var offerCategory = client.getMyOfferCategory(offerId);
+                    if (offerCategory.equals(BSQ_SWAP))
+                        throw new IllegalStateException("bsq swap offers cannot be edited,"
+                                + " but you may cancel them without forfeiting any funds");
+
+                    var opts = new EditOfferOptionParser(args).parse();
                     var fixedPrice = opts.getFixedPrice();
                     var isUsingMktPriceMargin = opts.isUsingMktPriceMargin();
                     var marketPriceMargin = opts.getMktPriceMarginAsBigDecimal();
@@ -392,7 +410,7 @@ public class CliMain {
                     return;
                 }
                 case getoffer: {
-                    var opts = new GetOfferOptionParser(args).parse();
+                    var opts = new OfferIdOptionParser(args).parse();
                     if (opts.isForHelp()) {
                         out.println(client.getMethodHelp(method));
                         return;
@@ -403,7 +421,7 @@ public class CliMain {
                     return;
                 }
                 case getmyoffer: {
-                    var opts = new GetOfferOptionParser(args).parse();
+                    var opts = new OfferIdOptionParser(args).parse();
                     if (opts.isForHelp()) {
                         out.println(client.getMethodHelp(method));
                         return;
@@ -446,15 +464,25 @@ public class CliMain {
                     return;
                 }
                 case takeoffer: {
-                    var opts = new TakeOfferOptionParser(args).parse();
-                    if (opts.isForHelp()) {
+                    var offerIdOpt = new OfferIdOptionParser(args, true).parse();
+                    if (offerIdOpt.isForHelp()) {
                         out.println(client.getMethodHelp(method));
                         return;
                     }
-                    var offerId = opts.getOfferId();
-                    var paymentAccountId = opts.getPaymentAccountId();
-                    var takerFeeCurrencyCode = opts.getTakerFeeCurrencyCode();
-                    var trade = client.takeOffer(offerId, paymentAccountId, takerFeeCurrencyCode);
+                    var offerId = offerIdOpt.getOfferId();
+                    TradeInfo trade;
+                    // We only send an 'offer-id' param when taking a BsqSwapOffer.
+                    // Find out what kind of offer is being taken before sending a
+                    // 'takeoffer' request.
+                    var offerCategory = client.getAvailableOfferCategory(offerId);
+                    if (offerCategory.equals(BSQ_SWAP)) {
+                        trade = client.takeBsqSwapOffer(offerId);
+                    } else {
+                        var opts = new TakeOfferOptionParser(args).parse();
+                        var paymentAccountId = opts.getPaymentAccountId();
+                        var takerFeeCurrencyCode = opts.getTakerFeeCurrencyCode();
+                        trade = client.takeOffer(offerId, paymentAccountId, takerFeeCurrencyCode);
+                    }
                     out.printf("trade %s successfully taken%n", trade.getTradeId());
                     return;
                 }
@@ -801,10 +829,11 @@ public class CliMain {
             stream.format(rowFormat, "", "--currency-code=<currency-code> \\", "");
             stream.format(rowFormat, "", "--amount=<btc-amount> \\", "");
             stream.format(rowFormat, "", "[--min-amount=<min-btc-amount>] \\", "");
-            stream.format(rowFormat, "", "--fixed-price=<price> | --market-price=margin=<percent> \\", "");
+            stream.format(rowFormat, "", "--fixed-price=<price> | --market-price-margin=<percent> \\", "");
             stream.format(rowFormat, "", "--security-deposit=<percent> \\", "");
             stream.format(rowFormat, "", "[--fee-currency=<bsq|btc>]", "");
             stream.format(rowFormat, "", "[--trigger-price=<price>]", "");
+            stream.format(rowFormat, "", "[--swap=<true|false>]", "");
             stream.println();
             stream.format(rowFormat, editoffer.name(), "--offer-id=<offer-id> \\", "Edit offer with id");
             stream.format(rowFormat, "", "[--fixed-price=<price>] \\", "");
@@ -825,7 +854,7 @@ public class CliMain {
             stream.format(rowFormat, "", "--currency-code=<currency-code>", "");
             stream.println();
             stream.format(rowFormat, takeoffer.name(), "--offer-id=<offer-id> \\", "Take offer with id");
-            stream.format(rowFormat, "", "--payment-account=<payment-account-id>", "");
+            stream.format(rowFormat, "", "[--payment-account=<payment-account-id>]", "");
             stream.format(rowFormat, "", "[--fee-currency=<btc|bsq>]", "");
             stream.println();
             stream.format(rowFormat, gettrade.name(), "--trade-id=<trade-id> \\", "Get trade summary or full contract");

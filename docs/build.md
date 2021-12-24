@@ -21,7 +21,7 @@
      
    You should see the version of Git LFS you installed, for example:
 
-   ```sh
+   ```
    git-lfs/2.10.0 (GitHub; darwin amd64; go 1.13.6)
    ```
 

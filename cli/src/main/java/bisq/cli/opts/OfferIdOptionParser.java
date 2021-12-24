@@ -22,16 +22,26 @@ import joptsimple.OptionSpec;
 
 import static bisq.cli.opts.OptLabel.OPT_OFFER_ID;
 
-public class GetOfferOptionParser extends AbstractMethodOptionParser implements MethodOpts {
+/**
+ * Superclass for option parsers requiring an offer-id.  Avoids a small amount of
+ * duplicated boilerplate.
+ */
+public class OfferIdOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
-    final OptionSpec<String> offerIdOpt = parser.accepts(OPT_OFFER_ID, "id of offer to get")
+    final OptionSpec<String> offerIdOpt = parser.accepts(OPT_OFFER_ID, "id of offer")
             .withRequiredArg();
 
-    public GetOfferOptionParser(String[] args) {
-        super(args);
+    public OfferIdOptionParser(String[] args) {
+        this(args, false);
     }
 
-    public GetOfferOptionParser parse() {
+    public OfferIdOptionParser(String[] args, boolean allowsUnrecognizedOptions) {
+        super(args);
+        if (allowsUnrecognizedOptions)
+            this.parser.allowsUnrecognizedOptions();
+    }
+
+    public OfferIdOptionParser parse() {
         super.parse();
 
         // Short circuit opt validation if user just wants help.

@@ -67,17 +67,9 @@ public class BsqSwapTakeOfferModel extends BsqSwapOfferModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void initWithData(Offer offer) {
-        super.init(offer.getDirection(), false);
+        super.init(offer.getDirection(), false, offer);
 
         this.offer = offer;
-        setPrice(offer.getPrice());
-
-        setBtcAmount(Coin.valueOf(Math.min(offer.getAmount().value, getMaxTradeLimit())));
-        calculateVolumeForAmount(getBtcAmount());
-
-        setMinAmount(offer.getMinAmount());
-        calculateMinVolume();
-
         offer.resetState();
     }
 

@@ -17,7 +17,6 @@
 
 package bisq.cli.request;
 
-import bisq.proto.grpc.BsqSwapTradeInfo;
 import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
 import bisq.proto.grpc.ConfirmPaymentStartedRequest;
 import bisq.proto.grpc.GetTradeRequest;
@@ -48,19 +47,20 @@ public class TradesServiceRequest {
         return grpcStubs.tradesService.takeOffer(request);
     }
 
-    public TradeInfo takeOffer(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
-        var reply = getTakeOfferReply(offerId, paymentAccountId, takerFeeCurrencyCode);
+    public TradeInfo takeBsqSwapOffer(String offerId) {
+        var reply = getTakeOfferReply(offerId, "", "");
         if (reply.hasTrade())
             return reply.getTrade();
         else
             throw new IllegalStateException(reply.getFailureReason().getDescription());
     }
 
-    public BsqSwapTradeInfo getBsqSwapTrade(String tradeId) {
-        var request = GetTradeRequest.newBuilder()
-                .setTradeId(tradeId)
-                .build();
-        return grpcStubs.tradesService.getBsqSwapTrade(request).getBsqSwapTrade();
+    public TradeInfo takeOffer(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
+        var reply = getTakeOfferReply(offerId, paymentAccountId, takerFeeCurrencyCode);
+        if (reply.hasTrade())
+            return reply.getTrade();
+        else
+            throw new IllegalStateException(reply.getFailureReason().getDescription());
     }
 
     public TradeInfo getTrade(String tradeId) {

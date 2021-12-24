@@ -488,6 +488,14 @@ public class OfferUtil {
         }
     }
 
+    public static boolean isFiatOffer(Offer offer) {
+        return offer.getBaseCurrencyCode().equals("BTC") && !offer.isBsqSwapOffer();
+    }
+
+    public static boolean isAltcoinOffer(Offer offer) {
+        return offer.getCounterCurrencyCode().equals("BTC") && !offer.isBsqSwapOffer();
+    }
+
     public static Optional<String> getInvalidMakerFeeTxErrorMessage(Offer offer, BtcWalletService btcWalletService) {
         String offerFeePaymentTxId = offer.getOfferFeePaymentTxId();
         if (offerFeePaymentTxId == null) {

@@ -22,116 +22,54 @@ import com.google.common.primitives.Longs;
 
 import java.nio.charset.StandardCharsets;
 
-import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiFunction;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * HashCash implementation for proof of work
- * It doubles required work by difficulty increase (adding one leading zero).
+ * It doubles required work by log2Difficulty increase (adding one leading zero).
  *
  * See https://www.hashcash.org/papers/hashcash.pdf
  */
 @Slf4j
-public class HashCashService {
-    // Default validations. Custom implementations might use tolerance.
-    private static final BiFunction<byte[], byte[], Boolean> isChallengeValid = Arrays::equals;
-    private static final BiFunction<Integer, Integer, Boolean> isDifficultyValid = Integer::equals;
-
-    public static CompletableFuture<ProofOfWork> mint(byte[] payload,
-                                                      byte[] challenge,
-                                                      int difficulty) {
-        return HashCashService.mint(payload,
-                challenge,
-                difficulty,
-                HashCashService::testDifficulty);
+public class HashCashService extends ProofOfWorkService {
+    HashCashService() {
+        super(0);
     }
 
-    public static boolean verify(ProofOfWork proofOfWork) {
-        return verify(proofOfWork,
-                proofOfWork.getChallenge(),
-                proofOfWork.getNumLeadingZeros());
-    }
-
-    public static boolean verify(ProofOfWork proofOfWork,
-                                 byte[] controlChallenge,
-                                 int controlDifficulty) {
-        return HashCashService.verify(proofOfWork,
-                controlChallenge,
-                controlDifficulty,
-                HashCashService::testDifficulty);
-    }
-
-    public static boolean verify(ProofOfWork proofOfWork,
-                                 byte[] controlChallenge,
-                                 int controlDifficulty,
-                                 BiFunction<byte[], byte[], Boolean> challengeValidation,
-                                 BiFunction<Integer, Integer, Boolean> difficultyValidation) {
-        return HashCashService.verify(proofOfWork,
-                controlChallenge,
-                controlDifficulty,
-                challengeValidation,
-                difficultyValidation,
-                HashCashService::testDifficulty);
-    }
-
-    private static boolean testDifficulty(byte[] result, long difficulty) {
-        return HashCashService.numberOfLeadingZeros(result) > difficulty;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Generic
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    static CompletableFuture<ProofOfWork> mint(byte[] payload,
+    @Override
+    public CompletableFuture<ProofOfWork> mint(byte[] payload,
                                                byte[] challenge,
-                                               int difficulty,
-                                               BiFunction<byte[], Integer, Boolean> testDifficulty) {
+                                               double difficulty) {
         return CompletableFuture.supplyAsync(() -> {
             long ts = System.currentTimeMillis();
-            byte[] result;
+            int log2Difficulty = toNumLeadingZeros(difficulty);
+            byte[] hash;
             long counter = 0;
             do {
-                result = toSha256Hash(payload, challenge, ++counter);
+                hash = toSha256Hash(payload, challenge, ++counter);
             }
-            while (!testDifficulty.apply(result, difficulty));
-            ProofOfWork proofOfWork = new ProofOfWork(payload, counter, challenge, difficulty, System.currentTimeMillis() - ts);
+            while (numberOfLeadingZeros(hash) <= log2Difficulty);
+            byte[] solution = Longs.toByteArray(counter);
+            ProofOfWork proofOfWork = new ProofOfWork(payload, counter, challenge, difficulty,
+                    System.currentTimeMillis() - ts, solution, 0);
             log.info("Completed minting proofOfWork: {}", proofOfWork);
             return proofOfWork;
         });
     }
 
-    static boolean verify(ProofOfWork proofOfWork,
-                          byte[] controlChallenge,
-                          int controlDifficulty,
-                          BiFunction<byte[], Integer, Boolean> testDifficulty) {
-        return verify(proofOfWork,
-                controlChallenge,
-                controlDifficulty,
-                HashCashService.isChallengeValid,
-                HashCashService.isDifficultyValid,
-                testDifficulty);
-    }
-
-    static boolean verify(ProofOfWork proofOfWork,
-                          byte[] controlChallenge,
-                          int controlDifficulty,
-                          BiFunction<byte[], byte[], Boolean> challengeValidation,
-                          BiFunction<Integer, Integer, Boolean> difficultyValidation,
-                          BiFunction<byte[], Integer, Boolean> testDifficulty) {
-        return challengeValidation.apply(proofOfWork.getChallenge(), controlChallenge) &&
-                difficultyValidation.apply(proofOfWork.getNumLeadingZeros(), controlDifficulty) &&
-                verify(proofOfWork, testDifficulty);
-    }
-
-    private static boolean verify(ProofOfWork proofOfWork, BiFunction<byte[], Integer, Boolean> testDifficulty) {
-        byte[] hash = HashCashService.toSha256Hash(proofOfWork.getPayload(),
+    @Override
+    boolean verify(ProofOfWork proofOfWork) {
+        byte[] hash = toSha256Hash(proofOfWork.getPayload(),
                 proofOfWork.getChallenge(),
                 proofOfWork.getCounter());
-        return testDifficulty.apply(hash, proofOfWork.getNumLeadingZeros());
+        return numberOfLeadingZeros(hash) > toNumLeadingZeros(proofOfWork.getDifficulty());
+    }
+
+    @Override
+    public byte[] getChallenge(String itemId, String ownerId) {
+        return getBytes(itemId + ownerId);
     }
 
 
@@ -139,7 +77,7 @@ public class HashCashService {
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static byte[] getBytes(String value) {
+    private static byte[] getBytes(String value) {
         return value.getBytes(StandardCharsets.UTF_8);
     }
 
@@ -177,5 +115,11 @@ public class HashCashService {
             i >>>= 2;
         }
         return n - (i >>> 1);
+    }
+
+    // round up to nearest power-of-two and take the base-2 log
+    @VisibleForTesting
+    static int toNumLeadingZeros(double difficulty) {
+        return Math.getExponent(Math.max(Math.nextDown(difficulty), 0.5)) + 1;
     }
 }

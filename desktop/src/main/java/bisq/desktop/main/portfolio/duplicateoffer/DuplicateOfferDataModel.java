@@ -25,10 +25,14 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.bisq_v1.CreateOfferService;
+import bisq.core.payment.BsqSwapAccount;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -46,23 +50,25 @@ import com.google.inject.Inject;
 
 import javax.inject.Named;
 
+import java.util.Optional;
+
 class DuplicateOfferDataModel extends MutableOfferDataModel {
 
     @Inject
     DuplicateOfferDataModel(CreateOfferService createOfferService,
-                       OpenOfferManager openOfferManager,
-                       OfferUtil offerUtil,
-                       BtcWalletService btcWalletService,
-                       BsqWalletService bsqWalletService,
-                       Preferences preferences,
-                       User user,
-                       P2PService p2PService,
-                       PriceFeedService priceFeedService,
-                       AccountAgeWitnessService accountAgeWitnessService,
-                       FeeService feeService,
-                       @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
-                       TradeStatisticsManager tradeStatisticsManager,
-                       Navigation navigation) {
+                            OpenOfferManager openOfferManager,
+                            OfferUtil offerUtil,
+                            BtcWalletService btcWalletService,
+                            BsqWalletService bsqWalletService,
+                            Preferences preferences,
+                            User user,
+                            P2PService p2PService,
+                            PriceFeedService priceFeedService,
+                            AccountAgeWitnessService accountAgeWitnessService,
+                            FeeService feeService,
+                            @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
+                            TradeStatisticsManager tradeStatisticsManager,
+                            Navigation navigation) {
 
         super(createOfferService,
                 openOfferManager,
@@ -103,5 +109,26 @@ class DuplicateOfferDataModel extends MutableOfferDataModel {
                 offer.getAmount());
         return Math.min(offerBuyerSecurityDepositAsPercent,
                 Restrictions.getMaxBuyerSecurityDepositAsPercent());
+    }
+
+    @Override
+    protected PaymentAccount getPreselectedPaymentAccount() {
+        // If trade currency is BSQ don't use the BSQ swap payment account as it will automatically
+        // close the duplicate offer view
+        Optional<TradeCurrency> bsqOptional = CurrencyUtil.getTradeCurrency("BSQ");
+        if (bsqOptional.isPresent() && tradeCurrency.equals(bsqOptional.get()) && user.getPaymentAccounts() != null) {
+            Optional<PaymentAccount> firstBsqPaymentAccount = user.getPaymentAccounts().stream().filter(paymentAccount1 -> {
+                Optional<TradeCurrency> tradeCurrency = paymentAccount1.getTradeCurrency();
+                return tradeCurrency.isPresent() &&
+                        tradeCurrency.get().equals(bsqOptional.get()) &&
+                        !paymentAccount1.getId().equals(BsqSwapAccount.ID);
+            }).findFirst();
+
+            if (firstBsqPaymentAccount.isPresent()) {
+                return firstBsqPaymentAccount.get();
+            }
+        }
+
+        return super.getPreselectedPaymentAccount();
     }
 }

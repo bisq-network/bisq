@@ -461,7 +461,7 @@ configure(project(':desktop')) {
         modules = ['javafx.controls', 'javafx.fxml']
     }
 
-    version = '1.7.5-SNAPSHOT'
+    version = '1.8.0-SNAPSHOT'
 
     jar.manifest.attributes(
         "Implementation-Title": project.name,
@@ -574,6 +574,8 @@ configure(project(':monitor')) {
 configure(project(':pricenode')) {
     apply plugin: "org.springframework.boot"
 
+    apply plugin: 'io.spring.dependency-management'
+
     mainClassName = 'bisq.price.Main'
 
     version = file("src/main/resources/version.txt").text.trim()
@@ -581,6 +583,8 @@ configure(project(':pricenode')) {
     jar.manifest.attributes(
         "Implementation-Title": project.name,
         "Implementation-Version": version)
+
+    ext['log4j2.version'] = '2.17.0'
 
     dependencies {
         implementation project(":common")

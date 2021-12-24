@@ -35,6 +35,8 @@ import javax.inject.Singleton;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
+import java.util.Comparator;
+import java.util.Optional;
 import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
@@ -119,10 +121,12 @@ public class DisputeMsgEvents {
         // We check at every new message if it might be a message sent after the dispute had been closed. If that is the
         // case we revert the isClosed flag so that the UI can reopen the dispute and indicate that a new dispute
         // message arrived.
-        ObservableList<ChatMessage> chatMessages = dispute.getChatMessages();
+        Optional<ChatMessage> newestChatMessage = dispute.getChatMessages().stream().
+                sorted(Comparator.comparingLong(ChatMessage::getDate).reversed()).findFirst();
         // If last message is not a result message we re-open as we might have received a new message from the
         // trader/mediator/arbitrator who has reopened the case
-        if (dispute.isClosed() && !chatMessages.isEmpty() && !chatMessages.get(chatMessages.size() - 1).isResultMessage(dispute)) {
+        if (dispute.isClosed() && newestChatMessage.isPresent() && !newestChatMessage.get().isResultMessage(dispute)) {
+            log.info("Reopening dispute {} due to new chat message received {}", dispute.getTradeId(), newestChatMessage.get().getUid());
             dispute.reOpen();
             if (dispute.getSupportType() == SupportType.MEDIATION) {
                 mediationManager.requestPersistence();

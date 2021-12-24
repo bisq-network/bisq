@@ -40,6 +40,7 @@ import static bisq.cli.table.column.AltcoinColumn.DISPLAY_MODE.ALTCOIN_OFFER_VOL
 import static bisq.cli.table.column.Column.JUSTIFICATION.LEFT;
 import static bisq.cli.table.column.Column.JUSTIFICATION.RIGHT;
 import static bisq.cli.table.column.FiatColumn.DISPLAY_MODE.VOLUME;
+import static java.lang.String.format;
 
 
 
@@ -49,6 +50,7 @@ import bisq.cli.table.column.BtcColumn;
 import bisq.cli.table.column.Column;
 import bisq.cli.table.column.FiatColumn;
 import bisq.cli.table.column.Iso8601DateTimeColumn;
+import bisq.cli.table.column.LongColumn;
 import bisq.cli.table.column.MixedPriceColumn;
 import bisq.cli.table.column.MixedTradeFeeColumn;
 import bisq.cli.table.column.MixedVolumeColumn;
@@ -79,7 +81,10 @@ class TradeTableColumnSupplier {
     private final Supplier<TradeInfo> firstRow = () -> getTrades().get(0);
     private final Predicate<OfferInfo> isFiatOffer = (o) -> o.getBaseCurrencyCode().equals("BTC");
     private final Predicate<TradeInfo> isFiatTrade = (t) -> isFiatOffer.test(t.getOffer());
+    private final Predicate<TradeInfo> isBsqSwapTrade = (t) -> t.getOffer().getIsBsqSwapOffer();
     private final Predicate<TradeInfo> isTaker = (t) -> t.getRole().toLowerCase().contains("taker");
+    private final Supplier<Boolean> isSwapTradeDetail = () ->
+            isTradeDetailTblBuilder.get() && isBsqSwapTrade.test(firstRow.get());
 
     final Supplier<StringColumn> tradeIdColumn = () -> isTradeDetailTblBuilder.get()
             ? new StringColumn(COL_HEADER_TRADE_SHORT_ID)
@@ -95,8 +100,8 @@ class TradeTableColumnSupplier {
 
     private final Function<TradeInfo, Column<Long>> toDetailedPriceColumn = (t) -> {
         String colHeader = isFiatTrade.test(t)
-                ? String.format(COL_HEADER_DETAILED_PRICE, t.getOffer().getCounterCurrencyCode())
-                : String.format(COL_HEADER_DETAILED_PRICE_OF_ALTCOIN, t.getOffer().getBaseCurrencyCode());
+                ? format(COL_HEADER_DETAILED_PRICE, t.getOffer().getCounterCurrencyCode())
+                : format(COL_HEADER_DETAILED_PRICE_OF_ALTCOIN, t.getOffer().getBaseCurrencyCode());
         return isFiatTrade.test(t)
                 ? new FiatColumn(colHeader)
                 : new AltcoinColumn(colHeader);
@@ -116,7 +121,7 @@ class TradeTableColumnSupplier {
 
     private final Function<TradeInfo, Column<Long>> toDetailedAmountColumn = (t) -> {
         String headerCurrencyCode = t.getOffer().getBaseCurrencyCode();
-        String colHeader = String.format(COL_HEADER_DETAILED_AMOUNT, headerCurrencyCode);
+        String colHeader = format(COL_HEADER_DETAILED_AMOUNT, headerCurrencyCode);
         return isFiatTrade.test(t)
                 ? new SatoshiColumn(colHeader)
                 : new AltcoinColumn(colHeader, ALTCOIN_OFFER_VOLUME);
@@ -142,10 +147,14 @@ class TradeTableColumnSupplier {
             ? null
             : new StringColumn(COL_HEADER_PAYMENT_METHOD, LEFT);
 
-    final Supplier<StringColumn> roleColumn = () ->
-            isTradeDetailTblBuilder.get() || isOpenTradeTblBuilder.get() || isFailedTradeTblBuilder.get()
+    final Supplier<StringColumn> roleColumn = () -> {
+        if (isSwapTradeDetail.get())
+            return new StringColumn(COL_HEADER_BSQ_SWAP_TRADE_ROLE);
+        else
+            return isTradeDetailTblBuilder.get() || isOpenTradeTblBuilder.get() || isFailedTradeTblBuilder.get()
                     ? new StringColumn(COL_HEADER_TRADE_ROLE)
                     : null;
+    };
 
     final Function<String, Column<Long>> toSecurityDepositColumn = (name) -> isClosedTradeTblBuilder.get()
             ? new SatoshiColumn(name)
@@ -161,21 +170,42 @@ class TradeTableColumnSupplier {
 
     private final Function<String, Column<Boolean>> toBooleanColumn = BooleanColumn::new;
 
-    final Supplier<Column<Boolean>> depositPublishedColumn = () -> isTradeDetailTblBuilder.get()
-            ? toBooleanColumn.apply(COL_HEADER_TRADE_DEPOSIT_PUBLISHED)
-            : null;
+    final Supplier<Column<Boolean>> depositPublishedColumn = () -> {
+        if (isSwapTradeDetail.get())
+            return null;
+        else
+            return isTradeDetailTblBuilder.get()
+                    ? toBooleanColumn.apply(COL_HEADER_TRADE_DEPOSIT_PUBLISHED)
+                    : null;
+    };
 
-    final Supplier<Column<Boolean>> depositConfirmedColumn = () -> isTradeDetailTblBuilder.get()
-            ? toBooleanColumn.apply(COL_HEADER_TRADE_DEPOSIT_CONFIRMED)
-            : null;
+    final Supplier<Column<Boolean>> depositConfirmedColumn = () -> {
+        if (isSwapTradeDetail.get())
+            return null;
+        else
+            return isTradeDetailTblBuilder.get()
+                    ? toBooleanColumn.apply(COL_HEADER_TRADE_DEPOSIT_CONFIRMED)
+                    : null;
 
-    final Supplier<Column<Boolean>> payoutPublishedColumn = () -> isTradeDetailTblBuilder.get()
-            ? toBooleanColumn.apply(COL_HEADER_TRADE_PAYOUT_PUBLISHED)
-            : null;
+    };
 
-    final Supplier<Column<Boolean>> fundsWithdrawnColumn = () -> isTradeDetailTblBuilder.get()
-            ? toBooleanColumn.apply(COL_HEADER_TRADE_WITHDRAWN)
-            : null;
+    final Supplier<Column<Boolean>> payoutPublishedColumn = () -> {
+        if (isSwapTradeDetail.get())
+            return null;
+        else
+            return isTradeDetailTblBuilder.get()
+                    ? toBooleanColumn.apply(COL_HEADER_TRADE_PAYOUT_PUBLISHED)
+                    : null;
+    };
+
+    final Supplier<Column<Boolean>> fundsWithdrawnColumn = () -> {
+        if (isSwapTradeDetail.get())
+            return null;
+        else
+            return isTradeDetailTblBuilder.get()
+                    ? toBooleanColumn.apply(COL_HEADER_TRADE_WITHDRAWN)
+                    : null;
+    };
 
     final Supplier<Column<Long>> bisqTradeDetailFeeColumn = () -> {
         if (isTradeDetailTblBuilder.get()) {
@@ -184,8 +214,8 @@ class TradeTableColumnSupplier {
                     ? t.getIsCurrencyForTakerFeeBtc() ? "BTC" : "BSQ"
                     : t.getOffer().getIsCurrencyForMakerFeeBtc() ? "BTC" : "BSQ";
             String colHeader = isTaker.test(t)
-                    ? String.format(COL_HEADER_TRADE_TAKER_FEE, headerCurrencyCode)
-                    : String.format(COL_HEADER_TRADE_MAKER_FEE, headerCurrencyCode);
+                    ? format(COL_HEADER_TRADE_TAKER_FEE, headerCurrencyCode)
+                    : format(COL_HEADER_TRADE_MAKER_FEE, headerCurrencyCode);
             boolean isBsqSatoshis = headerCurrencyCode.equals("BSQ");
             return new SatoshiColumn(colHeader, isBsqSatoshis);
         } else {
@@ -201,7 +231,7 @@ class TradeTableColumnSupplier {
     final Supplier<Column<Boolean>> paymentSentColumn = () -> {
         if (isTradeDetailTblBuilder.get()) {
             String headerCurrencyCode = toPaymentCurrencyCode.apply(firstRow.get());
-            String colHeader = String.format(COL_HEADER_TRADE_PAYMENT_SENT, headerCurrencyCode);
+            String colHeader = format(COL_HEADER_TRADE_PAYMENT_SENT, headerCurrencyCode);
             return new BooleanColumn(colHeader);
         } else {
             return null;
@@ -211,7 +241,7 @@ class TradeTableColumnSupplier {
     final Supplier<Column<Boolean>> paymentReceivedColumn = () -> {
         if (isTradeDetailTblBuilder.get()) {
             String headerCurrencyCode = toPaymentCurrencyCode.apply(firstRow.get());
-            String colHeader = String.format(COL_HEADER_TRADE_PAYMENT_RECEIVED, headerCurrencyCode);
+            String colHeader = format(COL_HEADER_TRADE_PAYMENT_RECEIVED, headerCurrencyCode);
             return new BooleanColumn(colHeader);
         } else {
             return null;
@@ -222,7 +252,7 @@ class TradeTableColumnSupplier {
         if (isTradeDetailTblBuilder.get()) {
             TradeInfo t = firstRow.get();
             String headerCurrencyCode = t.getOffer().getCounterCurrencyCode();
-            String colHeader = String.format(COL_HEADER_TRADE_BUYER_COST, headerCurrencyCode);
+            String colHeader = format(COL_HEADER_TRADE_BUYER_COST, headerCurrencyCode);
             return isFiatTrade.test(t)
                     ? new FiatColumn(colHeader, VOLUME)
                     : new SatoshiColumn(colHeader);
@@ -230,6 +260,18 @@ class TradeTableColumnSupplier {
             return null;
         }
     };
+
+    final Supplier<Column<String>> bsqSwapTxIdColumn = () -> isSwapTradeDetail.get()
+            ? new StringColumn(COL_HEADER_TX_ID)
+            : null;
+
+    final Supplier<Column<String>> bsqSwapStatusColumn = () -> isSwapTradeDetail.get()
+            ? new StringColumn(COL_HEADER_STATUS)
+            : null;
+
+    final Supplier<Column<Long>> numConfirmationsColumn = () -> isSwapTradeDetail.get()
+            ? new LongColumn(COL_HEADER_CONFIRMATIONS)
+            : null;
 
     final Predicate<TradeInfo> showAltCoinBuyerAddress = (t) -> {
         if (isFiatTrade.test(t)) {
@@ -251,7 +293,7 @@ class TradeTableColumnSupplier {
             TradeInfo t = firstRow.get();
             if (showAltCoinBuyerAddress.test(t)) {
                 String headerCurrencyCode = toPaymentCurrencyCode.apply(t);
-                String colHeader = String.format(COL_HEADER_TRADE_ALTCOIN_BUYER_ADDRESS, headerCurrencyCode);
+                String colHeader = format(COL_HEADER_TRADE_ALTCOIN_BUYER_ADDRESS, headerCurrencyCode);
                 return new StringColumn(colHeader);
             } else {
                 return null;

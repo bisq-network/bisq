@@ -334,9 +334,9 @@ public class WalletsSetup {
     }
 
     public void shutDown() {
+        log.info("walletsSetup shutDown started");
         if (walletConfig != null) {
             try {
-                log.info("walletConfig shutDown started");
                 walletConfig.stopAsync();
                 walletConfig.awaitTerminated(1, TimeUnit.SECONDS);
                 log.info("walletConfig shutDown completed");

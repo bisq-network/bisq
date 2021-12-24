@@ -41,7 +41,8 @@ import com.google.inject.Inject;
 
 import javax.inject.Named;
 
-import org.apache.commons.lang3.StringUtils;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -55,9 +56,6 @@ import javafx.scene.layout.Region;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 
-import javafx.collections.FXCollections;
-
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -189,7 +187,9 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 Res.get("filterWindow.disablePowMessage"));
         InputTextField powDifficultyTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.powDifficulty"));
-        powDifficultyTF.setText("0");
+        powDifficultyTF.setText("0.0");
+        InputTextField enabledPowVersionsTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.enabledPowVersions"));
         InputTextField makerFeeBtcTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.makerFeeBtc"));
         InputTextField takerFeeBtcTF = addInputTextField(gridPane, ++rowIndex,
@@ -217,6 +217,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
             setupFieldFromList(btcNodesTF, filter.getBtcNodes());
             setupFieldFromList(bannedPrivilegedDevPubKeysTF, filter.getBannedPrivilegedDevPubKeys());
             setupFieldFromList(autoConfExplorersTF, filter.getBannedAutoConfExplorers());
+            setupFieldFromList(enabledPowVersionsTF, filter.getEnabledPowVersions());
 
             preventPublicBtcNetworkCheckBox.setSelected(filter.isPreventPublicBtcNetwork());
             disableDaoCheckBox.setSelected(filter.isDisableDao());
@@ -269,7 +270,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                         disableMempoolValidationCheckBox.isSelected(),
                         disableApiCheckBox.isSelected(),
                         disablePowMessage.isSelected(),
-                        Integer.parseInt(powDifficultyTF.getText()),
+                        Double.parseDouble(powDifficultyTF.getText()),
+                        readAsList(enabledPowVersionsTF).stream().map(Integer::parseInt).collect(Collectors.toList()),
                         ParsingUtils.parseToCoin(makerFeeBtcTF.getText(), btcFormatter).value,
                         ParsingUtils.parseToCoin(takerFeeBtcTF.getText(), btcFormatter).value,
                         ParsingUtils.parseToCoin(makerFeeBsqTF.getText(), bsqFormatter).value,
@@ -325,9 +327,10 @@ public class FilterWindow extends Overlay<FilterWindow> {
         hide();
     }
 
-    private void setupFieldFromList(InputTextField field, Collection<String> values) {
-        if (values != null)
-            field.setText(String.join(", ", values));
+    private void setupFieldFromList(InputTextField field, Collection<?> values) {
+        if (values != null) {
+            field.setText(Joiner.on(", ").join(values));
+        }
     }
 
     private void setupFieldFromPaymentAccountFiltersList(InputTextField field, List<PaymentAccountFilter> values) {
@@ -349,11 +352,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
     }
 
     private List<String> readAsList(InputTextField field) {
-        if (field.getText().isEmpty()) {
-            return FXCollections.emptyObservableList();
-        } else {
-            return Arrays.asList(StringUtils.deleteWhitespace(field.getText()).split(","));
-        }
+        return Splitter.on(',').trimResults().omitEmptyStrings().splitToList(field.getText());
     }
 
     private List<PaymentAccountFilter> readAsPaymentAccountFiltersList(InputTextField field) {

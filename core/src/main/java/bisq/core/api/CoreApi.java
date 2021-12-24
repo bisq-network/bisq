@@ -26,6 +26,7 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.bisq_v1.TradeResultHandler;
+import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.trade.statistics.TradeStatistics3;
@@ -118,6 +119,18 @@ public class CoreApi {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Offers
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public boolean isFiatOffer(String id, boolean isMyOffer) {
+        return coreOffersService.isFiatOffer(id, isMyOffer);
+    }
+
+    public boolean isAltcoinOffer(String id, boolean isMyOffer) {
+        return coreOffersService.isAltcoinOffer(id, isMyOffer);
+    }
+
+    public boolean isBsqSwapOffer(String id, boolean isMyOffer) {
+        return coreOffersService.isBsqSwapOffer(id, isMyOffer);
+    }
 
     public Offer getBsqSwapOffer(String id) {
         return coreOffersService.getBsqSwapOffer(id);
@@ -264,14 +277,10 @@ public class CoreApi {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void takeBsqSwapOffer(String offerId,
-                                 String paymentAccountId,
-                                 String takerFeeCurrencyCode,
                                  TradeResultHandler<BsqSwapTrade> tradeResultHandler,
                                  ErrorMessageHandler errorMessageHandler) {
         Offer bsqSwapOffer = coreOffersService.getBsqSwapOffer(offerId);
         coreTradesService.takeBsqSwapOffer(bsqSwapOffer,
-                paymentAccountId,
-                takerFeeCurrencyCode,
                 tradeResultHandler,
                 errorMessageHandler);
     }
@@ -305,16 +314,16 @@ public class CoreApi {
         coreTradesService.withdrawFunds(tradeId, address, memo);
     }
 
-    public BsqSwapTrade getBsqSwapTrade(String tradeId) {
-        return coreTradesService.getBsqSwapTrade(tradeId);
-    }
-
-    public Trade getTrade(String tradeId) {
-        return coreTradesService.getTrade(tradeId);
+    public TradeModel getTradeModel(String tradeId) {
+        return coreTradesService.getTradeModel(tradeId);
     }
 
     public String getTradeRole(String tradeId) {
         return coreTradesService.getTradeRole(tradeId);
+    }
+
+    public String getBsqSwapTradeRole(BsqSwapTrade bsqSwapTrade) {
+        return coreTradesService.getBsqSwapTradeRole(bsqSwapTrade);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -379,6 +388,10 @@ public class CoreApi {
 
     public Transaction getTransaction(String txId) {
         return walletsService.getTransaction(txId);
+    }
+
+    public int getTransactionConfirmations(String txId) {
+        return walletsService.getTransactionConfirmations(txId);
     }
 
     public void setWalletPassword(String password, String newPassword) {
