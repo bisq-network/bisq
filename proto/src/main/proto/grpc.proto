@@ -70,6 +70,7 @@ service Offers {
     }
     rpc GetMyBsqSwapOffer (GetMyOfferRequest) returns (GetMyBsqSwapOfferReply) {
     }
+    // @Deprecated since 27-Dec-2021 (v1.8.0)
     rpc GetMyOffer (GetMyOfferRequest) returns (GetMyOfferReply) {
     }
     rpc GetBsqSwapOffers (GetBsqSwapOffersRequest) returns (GetBsqSwapOffersReply) {
@@ -121,10 +122,12 @@ message GetMyBsqSwapOfferReply {
     OfferInfo bsqSwapOffer = 1;
 }
 
+// @Deprecated since 27-Dec-2021 (v1.8.0)
 message GetMyOfferRequest {
     string id = 1;
 }
 
+// @Deprecated since 27-Dec-2021 (v1.8.0)
 message GetMyOfferReply {
     OfferInfo offer = 1;
 }

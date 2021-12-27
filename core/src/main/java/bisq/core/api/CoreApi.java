@@ -46,6 +46,7 @@ import com.google.common.util.concurrent.FutureCallback;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -140,8 +141,16 @@ public class CoreApi {
         return coreOffersService.getOffer(id);
     }
 
+    public Optional<Offer> findAvailableOffer(String id) {
+        return coreOffersService.findAvailableOffer(id);
+    }
+
     public OpenOffer getMyOffer(String id) {
         return coreOffersService.getMyOffer(id);
+    }
+
+    public Optional<OpenOffer> findMyOpenOffer(String id) {
+        return coreOffersService.findMyOpenOffer(id);
     }
 
     public Offer getMyBsqSwapOffer(String id) {

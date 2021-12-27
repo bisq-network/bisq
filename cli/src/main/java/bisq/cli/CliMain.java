@@ -753,7 +753,7 @@ public class CliMain {
             // how to scale the trigger-price (for a fiat or altcoin offer) param sent
             // to the server in its 'editoffer' request.  That means a preliminary round
             // trip to the server:  a 'getmyoffer' request.
-            var offer = client.getMyOffer(offerId);
+            var offer = client.getOffer(offerId);
             if (offer.getCounterCurrencyCode().equals("BTC"))
                 return toInternalCryptoCurrencyPrice(unscaledTriggerPrice);
             else

@@ -85,7 +85,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
 
         genBtcBlockAndWaitForOfferPreparation();
 
-        newOffer = aliceClient.getMyOffer(newOfferId);
+        newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
@@ -132,7 +132,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
 
         genBtcBlockAndWaitForOfferPreparation();
 
-        newOffer = aliceClient.getMyOffer(newOfferId);
+        newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
@@ -179,7 +179,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
 
         genBtcBlockAndWaitForOfferPreparation();
 
-        newOffer = aliceClient.getMyOffer(newOfferId);
+        newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
@@ -226,7 +226,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
 
         genBtcBlockAndWaitForOfferPreparation();
 
-        newOffer = aliceClient.getMyOffer(newOfferId);
+        newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());

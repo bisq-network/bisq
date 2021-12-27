@@ -399,7 +399,7 @@ $ ./bisq-cli --password=xyz --port=9998 getmyoffers --direction=<BUY|SELL> --cur
 
 To look at a specific offer you created:
 ```
-$ ./bisq-cli --password=xyz --port=9998 getmyoffer --offer-id=<offer-id>
+$ ./bisq-cli --password=xyz --port=9998 getoffer --offer-id=<offer-id>
 ```
 
 ### Browsing Available Offers

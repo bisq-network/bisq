@@ -75,13 +75,13 @@ public class LongRunningOfferDeactivationTest extends AbstractOfferTest {
                 formatPrice(offer.getPrice()));
         genBtcBlocksThenWait(1, 2500);  // Wait for offer book entry.
 
-        offer = aliceClient.getMyOffer(offer.getId()); // Offer has trigger price now.
+        offer = aliceClient.getOffer(offer.getId()); // Offer has trigger price now.
         log.info("SELL offer should be automatically disabled when mkt price falls below {}.",
                 formatPrice(offer.getTriggerPrice()));
 
         int numIterations = 0;
         while (++numIterations < MAX_ITERATIONS) {
-            offer = aliceClient.getMyOffer(offer.getId());
+            offer = aliceClient.getOffer(offer.getId());
 
             var mktPrice = aliceClient.getBtcPrice("USD");
             if (offer.getIsActivated()) {
@@ -123,13 +123,13 @@ public class LongRunningOfferDeactivationTest extends AbstractOfferTest {
                 formatPrice(offer.getPrice()));
         genBtcBlocksThenWait(1, 2500);  // Wait for offer book entry.
 
-        offer = aliceClient.getMyOffer(offer.getId()); // Offer has trigger price now.
+        offer = aliceClient.getOffer(offer.getId()); // Offer has trigger price now.
         log.info("BUY offer should be automatically disabled when mkt price rises above {}.",
                 formatPrice(offer.getTriggerPrice()));
 
         int numIterations = 0;
         while (++numIterations < MAX_ITERATIONS) {
-            offer = aliceClient.getMyOffer(offer.getId());
+            offer = aliceClient.getOffer(offer.getId());
 
             var mktPrice = aliceClient.getBtcPrice("USD");
             if (offer.getIsActivated()) {

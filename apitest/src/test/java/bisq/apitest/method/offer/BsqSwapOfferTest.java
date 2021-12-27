@@ -132,7 +132,7 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
         while (true) {
             try {
                 numFetchAttempts++;
-                var fetchedBsqSwapOffer = aliceClient.getMyOffer(bsqSwapOffer.getId());
+                var fetchedBsqSwapOffer = aliceClient.getOffer(bsqSwapOffer.getId());
                 assertEquals(bsqSwapOffer.getId(), fetchedBsqSwapOffer.getId());
                 log.debug("Alice found her (my) new bsq swap offer on attempt # {}.", numFetchAttempts);
                 break;
