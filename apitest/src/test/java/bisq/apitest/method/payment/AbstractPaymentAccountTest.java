@@ -146,8 +146,7 @@ public class AbstractPaymentAccountTest extends MethodTest {
                 Object.class);
         assertNotNull(emptyForm);
 
-        // TODO remove 'false' condition to enable creation of SWIFT accounts in future PR.
-        if (false && paymentMethodId.equals("SWIFT_ID")) {
+        if (paymentMethodId.equals("SWIFT_ID")) {
             assertEquals(getSwiftFormComments(), emptyForm.get(PROPERTY_NAME_JSON_COMMENTS));
         } else {
             assertEquals(PROPERTY_VALUE_JSON_COMMENTS, emptyForm.get(PROPERTY_NAME_JSON_COMMENTS));
@@ -216,24 +215,16 @@ public class AbstractPaymentAccountTest extends MethodTest {
 
     protected final String getCommaDelimitedFiatCurrencyCodes(Collection<FiatCurrency> fiatCurrencies) {
         return fiatCurrencies.stream()
-                .sorted(TradeCurrency::compareTo) // note: sorted by ccy name, not ccy code
+                .sorted(Comparator.comparing(TradeCurrency::getCode))
                 .map(c -> c.getCurrency().getCurrencyCode())
-                .collect(Collectors.joining(","));
-    }
-
-    protected final String getCommaDelimitedTradeCurrencyCodes(List<TradeCurrency> tradeCurrencies) {
-        return tradeCurrencies.stream()
-                .sorted(Comparator.comparing(TradeCurrency::getCode)) // sorted by code
-                .map(c -> c.getCode())
                 .collect(Collectors.joining(","));
     }
 
     protected final List<String> getSwiftFormComments() {
         List<String> comments = new ArrayList<>();
         comments.addAll(PROPERTY_VALUE_JSON_COMMENTS);
-        // List<String> wrappedSwiftComments = Res.getWrappedAsList("payment.swift.info", 110);
-        // comments.addAll(wrappedSwiftComments);
-        // comments.add("See https://bisq.wiki/SWIFT");
+        List<String> wrappedSwiftComments = Res.getWrappedAsList("payment.swift.info.account", 110);
+        comments.addAll(wrappedSwiftComments);
         return comments;
     }
 

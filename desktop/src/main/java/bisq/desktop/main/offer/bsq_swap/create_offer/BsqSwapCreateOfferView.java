@@ -37,6 +37,7 @@ import bisq.desktop.util.Layout;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferDirection;
+import bisq.core.offer.bsq_swap.BsqSwapOfferPayload;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.user.DontShowAgainLookup;
 
@@ -73,6 +74,8 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 import static bisq.core.offer.bsq_swap.BsqSwapOfferModel.BSQ;
 import static bisq.desktop.util.FormBuilder.*;
@@ -159,9 +162,12 @@ public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferV
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void initWithData(OfferDirection direction, OfferView.OfferActionHandler offerActionHandler) {
+    public void initWithData(OfferDirection direction,
+                             OfferView.OfferActionHandler offerActionHandler,
+                             @Nullable BsqSwapOfferPayload offerPayload) {
         this.offerActionHandler = offerActionHandler;
-        model.initWithData(direction);
+
+        model.initWithData(offerPayload != null ? offerPayload.getDirection() : direction, offerPayload);
 
         if (model.dataModel.isBuyOffer()) {
             actionButton.setId("buy-button-big");

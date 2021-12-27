@@ -31,6 +31,7 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferRestrictions;
+import bisq.core.offer.bsq_swap.BsqSwapOfferPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.VolumeUtil;
@@ -59,6 +60,8 @@ import javafx.beans.value.ChangeListener;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 import static bisq.core.offer.bsq_swap.BsqSwapOfferModel.BSQ;
 
@@ -144,6 +147,8 @@ class BsqSwapCreateOfferViewModel extends BsqSwapOfferViewModel<BsqSwapCreateOff
         addBindings();
         addListeners();
 
+        maybeInitializeWithData();
+
         updateButtonDisableState();
     }
 
@@ -159,8 +164,8 @@ class BsqSwapCreateOfferViewModel extends BsqSwapOfferViewModel<BsqSwapCreateOff
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void initWithData(OfferDirection direction) {
-        dataModel.initWithData(direction);
+    void initWithData(OfferDirection direction, @Nullable BsqSwapOfferPayload offerPayload) {
+        dataModel.initWithData(direction, offerPayload);
 
         btcValidator.setMaxValue(PaymentMethod.BSQ_SWAP.getMaxTradeLimitAsCoin(BSQ));
         btcValidator.setMaxTradeLimit(Coin.valueOf(dataModel.getMaxTradeLimit()));
@@ -570,6 +575,33 @@ class BsqSwapCreateOfferViewModel extends BsqSwapOfferViewModel<BsqSwapCreateOff
         isNextButtonDisabled.set(!inputDataValid);
         cancelButtonDisabled.set(createOfferRequested);
         isPlaceOfferButtonDisabled.set(createOfferRequested || !inputDataValid || miningPoW.get());
+    }
+
+    private void maybeInitializeWithData() {
+        ObjectProperty<Coin> btcMinAmount = dataModel.getMinAmount();
+        if (btcMinAmount.get() != null) {
+            minAmountAsCoinListener.changed(btcMinAmount, null, btcMinAmount.get());
+        }
+
+        ObjectProperty<Coin> btcAmount = dataModel.getBtcAmount();
+
+        if (btcAmount.get() != null && btcMinAmount.get() != null) {
+            syncMinAmountWithAmount = btcMinAmount.get().equals(dataModel.getBtcAmount().get());
+        }
+
+        if (btcAmount.get() != null) {
+            amountAsCoinListener.changed(btcAmount, null, btcAmount.get());
+        }
+
+        ObjectProperty<Price> price = dataModel.getPrice();
+        if (price.get() != null) {
+            priceListener.changed(price, null, price.get());
+        }
+
+        ObjectProperty<Volume> volume = dataModel.getVolume();
+        if (volume.get() != null) {
+            volumeListener.changed(volume, null, volume.get());
+        }
     }
 
     private void stopTimeoutTimer() {

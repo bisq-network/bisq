@@ -17,140 +17,60 @@
 
 package bisq.common.crypto;
 
-import com.google.common.primitives.Longs;
+import com.google.common.base.Preconditions;
 
-import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiFunction;
 
-import lombok.extern.slf4j.Slf4j;
+import lombok.Getter;
 
-/**
- * Bitcoin-like proof of work implementation. Differs from original hashcash by using BigInteger for comparing
- * the hash result with the target difficulty to gain more fine grained control for difficulty adjustment.
- * This class provides a convenience method getDifficultyAsBigInteger(numLeadingZeros) to get values which are
- * equivalent to the hashcash difficulty values.
- *
- * See https://en.wikipedia.org/wiki/Hashcash"
- * "Unlike hashcash, Bitcoin's difficulty target does not specify a minimum number of leading zeros in the hash.
- * Instead, the hash is interpreted as a (very large) integer, and this integer must be less than the target integer."
- */
-@Slf4j
-public class ProofOfWorkService {
-    // Default validations. Custom implementations might use tolerance.
-    private static final BiFunction<byte[], byte[], Boolean> isChallengeValid = Arrays::equals;
-    private static final BiFunction<BigInteger, BigInteger, Boolean> isTargetValid = BigInteger::equals;
-
-    public static CompletableFuture<ProofOfWork> mint(byte[] payload,
-                                                      byte[] challenge,
-                                                      BigInteger target) {
-        return mint(payload,
-                challenge,
-                target,
-                ProofOfWorkService::testTarget);
+public abstract class ProofOfWorkService {
+    private static class InstanceHolder {
+        private static final ProofOfWorkService[] INSTANCES = {
+                new HashCashService(),
+                new EquihashProofOfWorkService(1)
+        };
     }
 
-    public static boolean verify(ProofOfWork proofOfWork) {
-        return verify(proofOfWork,
-                proofOfWork.getChallenge(),
-                proofOfWork.getTarget());
+    public static Optional<ProofOfWorkService> forVersion(int version) {
+        return version >= 0 && version < InstanceHolder.INSTANCES.length ?
+                Optional.of(InstanceHolder.INSTANCES[version]) : Optional.empty();
     }
 
-    public static boolean verify(ProofOfWork proofOfWork,
-                                 byte[] controlChallenge,
-                                 BigInteger controlTarget) {
-        return verify(proofOfWork,
-                controlChallenge,
-                controlTarget,
-                ProofOfWorkService::testTarget);
+    @Getter
+    private final int version;
+
+    ProofOfWorkService(int version) {
+        this.version = version;
     }
 
-    public static boolean verify(ProofOfWork proofOfWork,
-                                 byte[] controlChallenge,
-                                 BigInteger controlTarget,
-                                 BiFunction<byte[], byte[], Boolean> challengeValidation,
-                                 BiFunction<BigInteger, BigInteger, Boolean> targetValidation) {
-        return verify(proofOfWork,
-                controlChallenge,
-                controlTarget,
-                challengeValidation,
-                targetValidation,
-                ProofOfWorkService::testTarget);
+    public abstract CompletableFuture<ProofOfWork> mint(byte[] payload, byte[] challenge, double difficulty);
 
+    abstract boolean verify(ProofOfWork proofOfWork);
+
+    public byte[] getPayload(String itemId) {
+        return itemId.getBytes(StandardCharsets.UTF_8);
     }
 
-    public static BigInteger getTarget(int numLeadingZeros) {
-        return BigInteger.TWO.pow(255 - numLeadingZeros).subtract(BigInteger.ONE);
+    public abstract byte[] getChallenge(String itemId, String ownerId);
+
+    public CompletableFuture<ProofOfWork> mint(String itemId, String ownerId, double difficulty) {
+        return mint(getPayload(itemId), getChallenge(itemId, ownerId), difficulty);
     }
 
-    private static boolean testTarget(byte[] result, BigInteger target) {
-        return getUnsignedBigInteger(result).compareTo(target) < 0;
-    }
+    public boolean verify(ProofOfWork proofOfWork,
+                          String itemId,
+                          String ownerId,
+                          double controlDifficulty) {
 
+        Preconditions.checkArgument(proofOfWork.getVersion() == version);
 
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Generic
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    static CompletableFuture<ProofOfWork> mint(byte[] payload,
-                                               byte[] challenge,
-                                               BigInteger target,
-                                               BiFunction<byte[], BigInteger, Boolean> testTarget) {
-        return CompletableFuture.supplyAsync(() -> {
-            long ts = System.currentTimeMillis();
-            byte[] result;
-            long counter = 0;
-            do {
-                result = toSha256Hash(payload, challenge, ++counter);
-            }
-            while (!testTarget.apply(result, target));
-            return new ProofOfWork(payload, counter, challenge, target, System.currentTimeMillis() - ts);
-        });
-    }
-
-    static boolean verify(ProofOfWork proofOfWork,
-                          byte[] controlChallenge,
-                          BigInteger controlTarget,
-                          BiFunction<byte[], BigInteger, Boolean> testTarget) {
-        return verify(proofOfWork,
-                controlChallenge,
-                controlTarget,
-                ProofOfWorkService.isChallengeValid,
-                ProofOfWorkService.isTargetValid,
-                testTarget);
-    }
-
-    static boolean verify(ProofOfWork proofOfWork,
-                          byte[] controlChallenge,
-                          BigInteger controlTarget,
-                          BiFunction<byte[], byte[], Boolean> challengeValidation,
-                          BiFunction<BigInteger, BigInteger, Boolean> targetValidation,
-                          BiFunction<byte[], BigInteger, Boolean> testTarget) {
-        return challengeValidation.apply(proofOfWork.getChallenge(), controlChallenge) &&
-                targetValidation.apply(proofOfWork.getTarget(), controlTarget) &&
-                verify(proofOfWork, testTarget);
-    }
-
-    private static boolean verify(ProofOfWork proofOfWork, BiFunction<byte[], BigInteger, Boolean> testTarget) {
-        byte[] hash = toSha256Hash(proofOfWork.getPayload(), proofOfWork.getChallenge(), proofOfWork.getCounter());
-        return testTarget.apply(hash, proofOfWork.getTarget());
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Utils
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private static BigInteger getUnsignedBigInteger(byte[] result) {
-        return new BigInteger(1, result);
-    }
-
-    private static byte[] toSha256Hash(byte[] payload, byte[] challenge, long counter) {
-        byte[] preImage = org.bouncycastle.util.Arrays.concatenate(payload,
-                challenge,
-                Longs.toByteArray(counter));
-        return Hash.getSha256Hash(preImage);
+        byte[] controlChallenge = getChallenge(itemId, ownerId);
+        return Arrays.equals(proofOfWork.getChallenge(), controlChallenge) &&
+                proofOfWork.getDifficulty() >= controlDifficulty &&
+                verify(proofOfWork);
     }
 }

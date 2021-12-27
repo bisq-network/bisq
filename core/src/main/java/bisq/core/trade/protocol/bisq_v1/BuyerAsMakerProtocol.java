@@ -85,7 +85,7 @@ public class BuyerAsMakerProtocol extends BuyerProtocol implements MakerProtocol
                                     errorMessageHandler.handleErrorMessage(errorMessage);
                                     handleTaskRunnerFault(message, errorMessage);
                                 }))
-                        .withTimeout(60))
+                        .withTimeout(120))
                 .executeTasks();
     }
 
@@ -105,7 +105,7 @@ public class BuyerAsMakerProtocol extends BuyerProtocol implements MakerProtocol
                         BuyerSignsDelayedPayoutTx.class,
                         BuyerFinalizesDelayedPayoutTx.class,
                         BuyerSendsDelayedPayoutTxSignatureResponse.class)
-                        .withTimeout(60))
+                        .withTimeout(120))
                 .executeTasks();
     }
 

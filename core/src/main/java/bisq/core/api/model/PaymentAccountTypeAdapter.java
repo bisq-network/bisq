@@ -20,6 +20,7 @@ package bisq.core.api.model;
 
 import bisq.core.locale.Country;
 import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.MoneyGramAccount;
@@ -30,8 +31,6 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
-
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 
@@ -62,6 +61,7 @@ import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.capitalize;
 
 @Slf4j
 class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
@@ -130,16 +130,13 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
         for (String s : JSON_COMMENTS) {
             out.value(s);
         }
-        /*
-        if (account.isSwiftAccount()) {
+        if (account.hasPaymentMethodWithId("SWIFT_ID")) {
             // Add extra comments for more complex swift account form.
-            List<String> wrappedSwiftComments = Res.getWrappedAsList("payment.swift.info", 110);
+            List<String> wrappedSwiftComments = Res.getWrappedAsList("payment.swift.info.account", 110);
             for (String line : wrappedSwiftComments) {
                 out.value(line);
             }
-            out.value("See https://bisq.wiki/SWIFT");
         }
-         */
         out.endArray();
     }
 
@@ -170,7 +167,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
             } catch (Exception ex) {
                 String errMsg = format("cannot create a new %s json form",
                         account.getClass().getSimpleName());
-                log.error(StringUtils.capitalize(errMsg) + ".", ex);
+                log.error(capitalize(errMsg) + ".", ex);
                 throw new IllegalStateException("programmer error: " + errMsg);
             }
         });
@@ -189,7 +186,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
         } catch (Exception ex) {
             String errMsg = format("cannot create a new %s json form",
                     account.getClass().getSimpleName());
-            log.error(StringUtils.capitalize(errMsg) + ".", ex);
+            log.error(capitalize(errMsg) + ".", ex);
             throw new IllegalStateException("programmer error: " + errMsg);
         }
     }
@@ -206,7 +203,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
         } catch (Exception ex) {
             String errMsg = format("cannot create a new %s json form",
                     account.getClass().getSimpleName());
-            log.error(StringUtils.capitalize(errMsg) + ".", ex);
+            log.error(capitalize(errMsg) + ".", ex);
             throw new IllegalStateException("programmer error: " + errMsg);
         }
     }
@@ -319,7 +316,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
             }
         } catch (IOException ex) {
             String errMsg = "cannot see next string in json reader";
-            log.error(StringUtils.capitalize(errMsg) + ".", ex);
+            log.error(capitalize(errMsg) + ".", ex);
             throw new IllegalStateException("programmer error: " + errMsg);
         }
     }
@@ -335,7 +332,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
             }
         } catch (IOException ex) {
             String errMsg = "cannot see next long in json reader";
-            log.error(StringUtils.capitalize(errMsg) + ".", ex);
+            log.error(capitalize(errMsg) + ".", ex);
             throw new IllegalStateException("programmer error: " + errMsg);
         }
     }
@@ -394,8 +391,10 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
             return getTradeCurrenciesInList(currencyCodes, getAllPayseraCurrencies());
         else if (account.hasPaymentMethodWithId(REVOLUT_ID))
             return getTradeCurrenciesInList(currencyCodes, getAllRevolutCurrencies());
-        /*else if (account.hasPaymentMethodWithId(SWIFT_ID))
-            return getTradeCurrenciesInList(currencyCodes, new ArrayList<>(getAllSortedFiatCurrencies()));*/
+        else if (account.hasPaymentMethodWithId(SWIFT_ID))
+            return getTradeCurrenciesInList(currencyCodes,
+                    new ArrayList<>(getAllSortedFiatCurrencies(
+                            comparing(TradeCurrency::getCode))));
         else if (account.hasPaymentMethodWithId(TRANSFERWISE_ID))
             return getTradeCurrenciesInList(currencyCodes, getAllTransferwiseCurrencies());
         else if (account.hasPaymentMethodWithId(UPHOLD_ID))
@@ -468,7 +467,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
             } else {
                 String errMsg = format("cannot set the country on a %s",
                         paymentAccountType.getSimpleName());
-                log.error(StringUtils.capitalize(errMsg) + ".");
+                log.error(capitalize(errMsg) + ".");
                 throw new IllegalStateException("programmer error: " + errMsg);
             }
 
@@ -489,7 +488,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
         } catch (Exception ex) {
             String errMsg = format("cannot get the payload class for %s",
                     paymentAccountType.getSimpleName());
-            log.error(StringUtils.capitalize(errMsg) + ".", ex);
+            log.error(capitalize(errMsg) + ".", ex);
             throw new IllegalStateException("programmer error: " + errMsg);
         }
     }
@@ -506,7 +505,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
                 | InvocationTargetException ex) {
             String errMsg = format("cannot instantiate a new %s",
                     paymentAccountType.getSimpleName());
-            log.error(StringUtils.capitalize(errMsg) + ".", ex);
+            log.error(capitalize(errMsg) + ".", ex);
             throw new IllegalStateException("programmer error: " + errMsg);
         }
     }

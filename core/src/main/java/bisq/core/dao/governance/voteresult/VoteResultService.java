@@ -77,7 +77,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -488,7 +488,7 @@ public class VoteResultService implements DaoStateListener, DaoSetupService {
         List<BlindVote> list = BlindVoteConsensus.getSortedBlindVoteListOfCycle(blindVoteListService);
         long ts = System.currentTimeMillis();
 
-        BiFunction<byte[], List<BlindVote>, Boolean> predicate = (hash, variation) ->
+        BiPredicate<byte[], List<BlindVote>> predicate = (hash, variation) ->
                 isListMatchingMajority(hash, variation, false);
 
         List<BlindVote> result = PermutationUtil.findMatchingPermutation(majorityVoteListHash, list, predicate, 1000000);

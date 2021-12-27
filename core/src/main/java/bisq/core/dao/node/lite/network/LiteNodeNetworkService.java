@@ -62,7 +62,7 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
 
     private static final long RETRY_DELAY_SEC = 10;
     private static final long CLEANUP_TIMER = 120;
-    private static final int MAX_RETRY = 3;
+    private static final int MAX_RETRY = 12;
 
     private int retryCounter = 0;
     private int lastRequestedBlockHeight;

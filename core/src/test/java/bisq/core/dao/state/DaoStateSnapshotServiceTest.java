@@ -40,6 +40,8 @@ public class DaoStateSnapshotServiceTest {
                 mock(DaoStateMonitoringService.class),
                 null,
                 null,
+                null,
+                null,
                 null);
     }
 

@@ -8,9 +8,20 @@
    git lfs version
    ```
 
+   On some distributions (happens with Xubuntu x64 on VM) this might return an error like:
+   ```
+    git: 'lfs' is not a git command. See 'git --help'.
+    The most similar command is
+	log
+   ```
+    
+   if the above happens, you should first run:
+     `sudo apt install git-lfs`
+   in order to properly install the `lfs` package.
+     
    You should see the version of Git LFS you installed, for example:
 
-   ```sh
+   ```
    git-lfs/2.10.0 (GitHub; darwin amd64; go 1.13.6)
    ```
 

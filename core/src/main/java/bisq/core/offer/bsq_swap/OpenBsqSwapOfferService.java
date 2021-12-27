@@ -43,7 +43,7 @@ import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
 import bisq.common.app.Version;
-import bisq.common.crypto.HashCashService;
+import bisq.common.crypto.ProofOfWorkService;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
@@ -61,6 +61,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -195,13 +196,11 @@ public class OpenBsqSwapOfferService {
                 amount.value,
                 minAmount.value);
 
-        NodeAddress makerAddress = p2PService.getAddress();
+        NodeAddress makerAddress = Objects.requireNonNull(p2PService.getAddress());
         offerUtil.validateBasicOfferData(PaymentMethod.BSQ_SWAP, "BSQ");
 
-        byte[] payload = HashCashService.getBytes(offerId);
-        byte[] challenge = HashCashService.getBytes(offerId + Objects.requireNonNull(makerAddress));
-        int difficulty = getPowDifficulty();
-        HashCashService.mint(payload, challenge, difficulty)
+        double difficulty = getPowDifficulty();
+        getPowService().mint(offerId, makerAddress.getFullAddress(), difficulty)
                 .whenComplete((proofOfWork, throwable) -> {
                     // We got called from a non user thread...
                     UserThread.execute(() -> {
@@ -247,7 +246,7 @@ public class OpenBsqSwapOfferService {
                                   ResultHandler resultHandler,
                                   ErrorMessageHandler errorMessageHandler) {
         if (isProofOfWorkInvalid(openOffer.getOffer())) {
-            redoProofOrWorkAndRepublish(openOffer);
+            redoProofOfWorkAndRepublish(openOffer);
             return;
         }
 
@@ -265,7 +264,7 @@ public class OpenBsqSwapOfferService {
 
     void enableBsqSwapOffer(OpenOffer openOffer) {
         if (isProofOfWorkInvalid(openOffer.getOffer())) {
-            redoProofOrWorkAndRepublish(openOffer);
+            redoProofOfWorkAndRepublish(openOffer);
             return;
         }
 
@@ -297,7 +296,7 @@ public class OpenBsqSwapOfferService {
                 .forEach(openOffer -> {
                     if (isProofOfWorkInvalid(openOffer.getOffer())) {
                         // Avoiding ConcurrentModificationException
-                        UserThread.execute(() -> redoProofOrWorkAndRepublish(openOffer));
+                        UserThread.execute(() -> redoProofOfWorkAndRepublish(openOffer));
                     } else {
                         OpenBsqSwapOffer openBsqSwapOffer = new OpenBsqSwapOffer(openOffer,
                                 this,
@@ -333,7 +332,7 @@ public class OpenBsqSwapOfferService {
                 .filter(openBsqSwapOffer -> isProofOfWorkInvalid(openBsqSwapOffer.getOffer()))
                 .forEach(openBsqSwapOffer -> {
                     // Avoiding ConcurrentModificationException
-                    UserThread.execute(() -> redoProofOrWorkAndRepublish(openBsqSwapOffer.getOpenOffer()));
+                    UserThread.execute(() -> redoProofOfWorkAndRepublish(openBsqSwapOffer.getOpenOffer()));
                 });
     }
 
@@ -342,16 +341,14 @@ public class OpenBsqSwapOfferService {
     // Proof of work
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void redoProofOrWorkAndRepublish(OpenOffer openOffer) {
-        // This triggers our onOpenOffersRemoved handler so we dont handle removal here
+    private void redoProofOfWorkAndRepublish(OpenOffer openOffer) {
+        // This triggers our onOpenOffersRemoved handler so we don't handle removal here
         openOfferManager.removeOpenOffer(openOffer);
 
         String newOfferId = OfferUtil.getOfferIdWithMutationCounter(openOffer.getId());
-        byte[] payload = HashCashService.getBytes(newOfferId);
         NodeAddress nodeAddress = Objects.requireNonNull(openOffer.getOffer().getMakerNodeAddress());
-        byte[] challenge = HashCashService.getBytes(newOfferId + nodeAddress);
-        int difficulty = getPowDifficulty();
-        HashCashService.mint(payload, challenge, difficulty)
+        double difficulty = getPowDifficulty();
+        getPowService().mint(newOfferId, nodeAddress.getFullAddress(), difficulty)
                 .whenComplete((proofOfWork, throwable) -> {
                     // We got called from a non user thread...
                     UserThread.execute(() -> {
@@ -374,7 +371,7 @@ public class OpenBsqSwapOfferService {
                         if (!newOpenOffer.isDeactivated()) {
                             openOfferManager.maybeRepublishOffer(newOpenOffer);
                         }
-                        // This triggers our onOpenOffersAdded handler so we dont handle adding to our list here
+                        // This triggers our onOpenOffersAdded handler so we don't handle adding to our list here
                         openOfferManager.addOpenBsqSwapOffer(newOpenOffer);
                     });
                 });
@@ -390,7 +387,19 @@ public class OpenBsqSwapOfferService {
     }
 
 
-    private int getPowDifficulty() {
-        return filterManager.getFilter() != null ? filterManager.getFilter().getPowDifficulty() : 0;
+    private double getPowDifficulty() {
+        return filterManager.getFilter() != null ? filterManager.getFilter().getPowDifficulty() : 0.0;
+    }
+
+    private ProofOfWorkService getPowService() {
+        var service = filterManager.getEnabledPowVersions().stream()
+                .flatMap(v -> ProofOfWorkService.forVersion(v).stream())
+                .findFirst();
+        if (!service.isPresent()) {
+            // We cannot exit normally, else we get caught in an infinite loop generating invalid PoWs.
+            throw new NoSuchElementException("Could not find a suitable PoW version to use.");
+        }
+        log.info("Selected PoW version {}, service instance {}", service.get().getVersion(), service.get());
+        return service.get();
     }
 }

@@ -107,8 +107,7 @@ public class FullNode extends BsqNode {
 
     @Override
     protected void startParseBlocks() {
-        int startBlockHeight = getStartBlockHeight();
-
+        int startBlockHeight = daoStateService.getChainHeight();
         log.info("startParseBlocks: startBlockHeight={}", startBlockHeight);
         rpcService.requestChainHeadHeight(chainHeight -> {
                     // If our persisted block is equal to the chain height we have startBlockHeight 1 block higher,

@@ -82,7 +82,13 @@ public class CurrencyUtil {
     }
 
     public static Collection<FiatCurrency> getAllSortedFiatCurrencies() {
-        return fiatCurrencyMapSupplier.get().values();
+        return fiatCurrencyMapSupplier.get().values();  // sorted by currency name
+    }
+
+    public static Collection<FiatCurrency> getAllSortedFiatCurrencies(Comparator comparator) {
+        return (List<FiatCurrency>) getAllSortedFiatCurrencies().stream()
+                .sorted(comparator)                     // sorted by comparator param
+                .collect(Collectors.toList());
     }
 
     private static Map<String, FiatCurrency> createFiatCurrencyMap() {
