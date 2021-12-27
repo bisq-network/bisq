@@ -345,7 +345,7 @@ and pay the Bisq maker fee in BSQ.  Alice had already created an EUR face-to-fac
 `f3c1ec8b-9761-458d-b13d-9039c6892413`, and used this `createoffer` command:
 ```
 $ ./bisq-cli --password=xyz --port=9998 createoffer \
-    --payment-account=f3c1ec8b-9761-458d-b13d-9039c6892413 \
+    --payment-account-id=f3c1ec8b-9761-458d-b13d-9039c6892413 \
     --direction=BUY \
     --currency-code=EUR \
     --amount=0.125 \
@@ -358,7 +358,7 @@ If Alice was in Japan, and wanted to create an offer to sell 0.125 BTC at 0.5% a
 putting up a 15% security deposit, the `createoffer` command to do that would be:
 ```
 $ ./bisq-cli --password=xyz --port=9998 createoffer \
-    --payment-account=f3c1ec8b-9761-458d-b13d-9039c6892413 \
+    --payment-account-id=f3c1ec8b-9761-458d-b13d-9039c6892413 \
     --direction=SELL \
     --currency-code=JPY \
     --amount=0.125 \
@@ -466,7 +466,7 @@ and vice-versa.
 Suppose you used `createoffer` to create a market price margin based offer as follows:
 ```
 $ ./bisq-cli --password=xyz --port=9998 createoffer \
-    --payment-account=f3c1ec8b-9761-458d-b13d-9039c6892413 \
+    --payment-account-id=f3c1ec8b-9761-458d-b13d-9039c6892413 \
     --direction=SELL \
     --currency-code=JPY \
     --amount=0.125 \
@@ -485,7 +485,7 @@ To change the market price margin based offer to a fixed price offer:
 Suppose you used `createoffer` to create a fixed price offer as follows:
 ```
 $ ./bisq-cli --password=xyz --port=9998 createoffer \
-    --payment-account=f3c1ec8b-9761-458d-b13d-9039c6892413 \
+    --payment-account-id=f3c1ec8b-9761-458d-b13d-9039c6892413 \
     --direction=SELL \
     --currency-code=JPY \
     --amount=0.125 \
@@ -551,7 +551,7 @@ with the `takeoffer` command:
 ```
 $ ./bisq-cli --password=xyz --port=9998 takeoffer \
     --offer-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea \
-    --payment-account=fe20cdbd-22be-4b8a-a4b6-d2608ff09d6e \
+    --payment-account-id=fe20cdbd-22be-4b8a-a4b6-d2608ff09d6e \
     --fee-currency=btc
 ```
 Depending on the offer type, the taken offer will be used to (1) create a trade contract, or (2) execute a BSQ swap.
