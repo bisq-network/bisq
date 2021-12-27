@@ -295,9 +295,9 @@ To remove a custom withdrawal transaction fee rate preference, and revert to the
 $ ./bisq-cli --password=xyz unsettxfeerate
 ```
 
-### Creating Test Payment Accounts
+### Creating Test Fiat Payment Accounts
 
-Creating a payment account using the Api involves three steps:
+Creating a fiat payment account using the Api involves three steps:
 
 1.  Find the payment-method-id  for the payment account type you wish to create.  For example, if you want to
     create a face-to-face type payment account, find the face-to-face  payment-method-id (`F2F`):
@@ -328,6 +328,43 @@ Creating a payment account using the Api involves three steps:
     ```
     $ ./bisq-cli --password=xyz --port=9998 getpaymentaccts
     ```
+
+### Creating Test Altcoin Payment Accounts
+
+Unlike more complex fiat payment account setups, the `createcryptopaymentacct` command does not require a json form.
+
+#### BSQ Altcoin Payment Accounts
+
+A default BSQ Swap Altcoin payment account was created for you when the BSQ Swap protocol was introduced, and you do
+not need to create BSQ Altcoin payment accounts to execute BSQ Swaps.  But if you do want to trade BSQ using the
+version 1 trade protocol, you will need to create a BSQ Altcoin payment accounts as show below.
+```
+$ ./bisq-cli --password=xyz --port=9998 createcryptopaymentacct --account-name="My BSQ Account" \
+    --currency-code=BSQ \
+    --address=Bn3PCQgRwhkrGnaMp1RYwt9tFwL51YELqne \
+    --trade-instant=false
+```
+To create a BSQ Altcoin _Instant_ payment account, use the `--trade-instant=true` parameter:
+```
+$ ./bisq-cli --password=xyz --port=9998 createcryptopaymentacct --account-name="My Instant BSQ Account" \
+    --currency-code=BSQ \
+    --address=Bn3PCQgRwhkrGnaMp1RYwt9tFwL51YELqne \
+    --trade-instant=true
+```
+
+_Note: Use your own BSQ recipient address, not the `Bn3PCQgRwhkrGnaMp1RYwt9tFwL51YELqne` address used in the
+example above._
+
+#### XMR Altcoin Payment Accounts
+
+To create an XMR Altcoin payment account associated with example XMR address
+`44G4jWmSvTEfifSUZzTDnJVLPvYATmq9XhhtDqUof1BGCLceG82EQsVYG9Q9GN4bJcjbAJEc1JD1m5G7iK4UPZqACubV4Mq`:
+```
+$ ./bisq-cli --password=xyz --port=9999 createcryptopaymentacct --account-name=XMR-Account \
+        --currency-code=XMR
+        --address=44G4jWmSvTEfifSUZzTDnJVLPvYATmq9XhhtDqUof1BGCLceG82EQsVYG9Q9GN4bJcjbAJEc1JD1m5G7iK4UPZqACubV4Mq
+```
+
 
 ### Creating Offers
 
