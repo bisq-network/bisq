@@ -28,7 +28,7 @@ public class GetOffersOptionParser extends AbstractMethodOptionParser implements
     final OptionSpec<String> directionOpt = parser.accepts(OPT_DIRECTION, "offer direction (buy|sell)")
             .withRequiredArg();
 
-    final OptionSpec<String> currencyCodeOpt = parser.accepts(OPT_CURRENCY_CODE, "currency code (eur|usd|...)")
+    final OptionSpec<String> currencyCodeOpt = parser.accepts(OPT_CURRENCY_CODE, "currency code (bsq|xmr|eur|usd|...)")
             .withRequiredArg();
 
     public GetOffersOptionParser(String[] args) {

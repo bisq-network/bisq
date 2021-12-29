@@ -50,6 +50,15 @@ public class AbstractTradeTest extends AbstractOfferTest {
 
     protected final TradeInfo takeAlicesOffer(String offerId,
                                               String paymentAccountId,
+                                              String takerFeeCurrencyCode) {
+        return takeAlicesOffer(offerId,
+                paymentAccountId,
+                takerFeeCurrencyCode,
+                true);
+    }
+
+    protected final TradeInfo takeAlicesOffer(String offerId,
+                                              String paymentAccountId,
                                               String takerFeeCurrencyCode,
                                               boolean generateBtcBlock) {
         @SuppressWarnings("ConstantConditions")
@@ -241,7 +250,7 @@ public class AbstractTradeTest extends AbstractOfferTest {
         if (log.isDebugEnabled()) {
             log.debug(format("%s %s%n%s",
                     testName(testInfo),
-                    description.toUpperCase(),
+                    description,
                     new TableBuilder(TRADE_DETAIL_TBL, trade).build()));
         }
     }

@@ -226,8 +226,8 @@ public class CoreApi {
         coreOffersService.cancelOffer(id);
     }
 
-    public boolean isMyOffer(String id) {
-        return coreOffersService.isMyOffer(id);
+    public boolean isMyOffer(Offer offer) {
+        return coreOffersService.isMyOffer(offer);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

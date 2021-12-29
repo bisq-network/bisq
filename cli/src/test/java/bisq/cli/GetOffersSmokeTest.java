@@ -39,7 +39,6 @@ public class GetOffersSmokeTest extends AbstractCliTest {
         CliMain.main(new String[]{"--password=xyz", "--port=9998", "getoffers", "--direction=sell", "--currency-code=bsq"});
     }
 
-
     private static void getMyUsdOffers() {
         out.println(">>> getmyoffers buy usd");
         CliMain.main(new String[]{"--password=xyz", "--port=9998", "getmyoffers", "--direction=buy", "--currency-code=usd"});

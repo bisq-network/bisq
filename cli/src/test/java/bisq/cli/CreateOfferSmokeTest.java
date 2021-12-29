@@ -19,11 +19,12 @@ import static java.util.Arrays.stream;
 public class CreateOfferSmokeTest extends AbstractCliTest {
 
     public static void main(String[] args) {
-        createBsqSwapOffer("buy");
-        createBsqSwapOffer("sell");
+        CreateOfferSmokeTest test = new CreateOfferSmokeTest();
+        test.createBsqSwapOffer("buy");
+        test.createBsqSwapOffer("sell");
     }
 
-    private static void createBsqSwapOffer(String direction) {
+    private void createBsqSwapOffer(String direction) {
         String[] args = createBsqSwapOfferCommand(direction, "0.01", "0.005", "0.00005");
         out.print(">>>>> bisq-cli ");
         stream(args).forEach(a -> out.print(a + " "));
@@ -31,14 +32,14 @@ public class CreateOfferSmokeTest extends AbstractCliTest {
         CliMain.main(args);
         out.println("<<<<<");
 
-        args = getMyOffersCommand(direction);
+        args = getMyOffersCommand(direction, "bsq");
         out.print(">>>>> bisq-cli ");
         stream(args).forEach(a -> out.print(a + " "));
         out.println();
         CliMain.main(args);
         out.println("<<<<<");
 
-        args = getAvailableOffersCommand(direction);
+        args = getAvailableOffersCommand(direction, "bsq");
         out.print(">>>>> bisq-cli ");
         stream(args).forEach(a -> out.print(a + " "));
         out.println();
@@ -46,10 +47,10 @@ public class CreateOfferSmokeTest extends AbstractCliTest {
         out.println("<<<<<");
     }
 
-    private static String[] createBsqSwapOfferCommand(String direction,
-                                                      String amount,
-                                                      String minAmount,
-                                                      String fixedPrice) {
+    private String[] createBsqSwapOfferCommand(String direction,
+                                               String amount,
+                                               String minAmount,
+                                               String fixedPrice) {
         return new String[]{
                 PASSWORD_OPT,
                 ALICE_PORT_OPT,
@@ -60,26 +61,6 @@ public class CreateOfferSmokeTest extends AbstractCliTest {
                 "--amount=" + amount,
                 "--min-amount=" + minAmount,
                 "--fixed-price=" + fixedPrice
-        };
-    }
-
-    private static String[] getMyOffersCommand(String direction) {
-        return new String[]{
-                PASSWORD_OPT,
-                ALICE_PORT_OPT,
-                "getmyoffers",
-                "--direction=" + direction,
-                "--currency-code=bsq"
-        };
-    }
-
-    private static String[] getAvailableOffersCommand(String direction) {
-        return new String[]{
-                PASSWORD_OPT,
-                BOB_PORT_OPT,
-                "getoffers",
-                "--direction=" + direction,
-                "--currency-code=bsq"
         };
     }
 }

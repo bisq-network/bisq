@@ -234,7 +234,7 @@ class GrpcTradesService extends TradesImplBase {
     }
 
     private boolean wasMyOffer(TradeModel tradeModel) {
-        return coreApi.isMyOffer(tradeModel.getOffer().getId());
+        return coreApi.isMyOffer(tradeModel.getOffer());
     }
 
     private String getMyRole(TradeModel tradeModel) {
