@@ -1,4 +1,7 @@
 {
+  "ef1ea38b46402deb7df08c13a6dc379a65542a6940ac9d4ba436641ffd4bcb6e": "FQ0A7G,ef1ea38b46402deb7df08c13a6dc379a65542a6940ac9d4ba436641ffd4bcb6e,15970000,92,0,640438, underpaid but accepted due to use of different DAO parameter",
+  "4cdea8872a7d96210f378e0221dc1aae8ee9abb282582afa7546890fb39b7189": "am7DzIv,4cdea8872a7d96210f378e0221dc1aae8ee9abb282582afa7546890fb39b7189,6100000,35,0,668195, underpaid but accepted due to use of different DAO parameter",
+  "051770f8d7f43a9b6ca10fefa6cdf4cb124a81eed26dc8af2e40f57d2589107b": "046698,051770f8d7f43a9b6ca10fefa6cdf4cb124a81eed26dc8af2e40f57d2589107b,15970000,92,0,667927, bsq fee underpaid using 5.75 rate for some weird reason",
   "37fba8bf119c289481eef031c0a35e126376f71d13d7cce35eb0d5e05799b5da": "hUWPf,37fba8bf119c289481eef031c0a35e126376f71d13d7cce35eb0d5e05799b5da,19910000,200,0,668994, tx_missing_from_blockchain_for_4_days",
   "b3bc726aa2aa6533cb1e61901ce351eecde234378fe650aee267388886aa6e4b": "ebdttmzh,b3bc726aa2aa6533cb1e61901ce351eecde234378fe650aee267388886aa6e4b,4000000,5000,1,669137, tx_missing_from_blockchain_for_2_days",
   "10f32fe53081466f003185a9ef0324d6cbe3f59334ee9ccb2f7155cbfad9c1de": "kmbyoexc,10f32fe53081466f003185a9ef0324d6cbe3f59334ee9ccb2f7155cbfad9c1de,33000000,332,0,668954, tx_not_found",
