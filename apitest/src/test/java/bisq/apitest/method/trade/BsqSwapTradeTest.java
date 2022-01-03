@@ -98,7 +98,7 @@ public class BsqSwapTradeTest extends AbstractTradeTest {
 
         genBtcBlocksThenWait(1, 2_500);
 
-        mySwapOffer = aliceClient.getMyOffer(newOfferId);
+        mySwapOffer = aliceClient.getOffer(newOfferId);
         log.debug("My fetched BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", toOfferTable.apply(mySwapOffer));
         assertNotEquals(0, mySwapOffer.getMakerFee());
 

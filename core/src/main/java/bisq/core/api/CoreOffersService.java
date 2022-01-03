@@ -145,9 +145,24 @@ class CoreOffersService {
                 new IllegalStateException(format("offer with id '%s' not found", id)));
     }
 
+    Optional<Offer> findAvailableOffer(String id) {
+        return offerBookService.getOffers().stream()
+                .filter(o -> o.getId().equals(id))
+                .filter(o -> !o.isMyOffer(keyRing))
+                .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
+                .findAny();
+    }
+
     OpenOffer getMyOffer(String id) {
         return findMyOpenOffer(id).orElseThrow(() ->
                 new IllegalStateException(format("offer with id '%s' not found", id)));
+    }
+
+    Optional<OpenOffer> findMyOpenOffer(String id) {
+        return openOfferManager.getObservableList().stream()
+                .filter(o -> o.getId().equals(id))
+                .filter(o -> o.getOffer().isMyOffer(keyRing))
+                .findAny();
     }
 
     Offer getBsqSwapOffer(String id) {
@@ -155,9 +170,26 @@ class CoreOffersService {
                 new IllegalStateException(format("offer with id '%s' not found", id)));
     }
 
+    Optional<Offer> findAvailableBsqSwapOffer(String id) {
+        return offerBookService.getOffers().stream()
+                .filter(o -> o.getId().equals(id))
+                .filter(o -> !o.isMyOffer(keyRing))
+                .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
+                .filter(Offer::isBsqSwapOffer)
+                .findAny();
+    }
+
     Offer getMyBsqSwapOffer(String id) {
         return findMyBsqSwapOffer(id).orElseThrow(() ->
                 new IllegalStateException(format("offer with id '%s' not found", id)));
+    }
+
+    Optional<Offer> findMyBsqSwapOffer(String id) {
+        return offerBookService.getOffers().stream()
+                .filter(o -> o.getId().equals(id))
+                .filter(o -> o.isMyOffer(keyRing))
+                .filter(Offer::isBsqSwapOffer)
+                .findAny();
     }
 
     List<Offer> getBsqSwapOffers(String direction) {
@@ -362,38 +394,6 @@ class CoreOffersService {
 
         if (offer.getErrorMessage() != null)
             throw new IllegalStateException(offer.getErrorMessage());
-    }
-
-    private Optional<Offer> findAvailableBsqSwapOffer(String id) {
-        return offerBookService.getOffers().stream()
-                .filter(o -> o.getId().equals(id))
-                .filter(o -> !o.isMyOffer(keyRing))
-                .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
-                .filter(Offer::isBsqSwapOffer)
-                .findAny();
-    }
-
-    private Optional<Offer> findMyBsqSwapOffer(String id) {
-        return offerBookService.getOffers().stream()
-                .filter(o -> o.getId().equals(id))
-                .filter(o -> o.isMyOffer(keyRing))
-                .filter(Offer::isBsqSwapOffer)
-                .findAny();
-    }
-
-    private Optional<Offer> findAvailableOffer(String id) {
-        return offerBookService.getOffers().stream()
-                .filter(o -> o.getId().equals(id))
-                .filter(o -> !o.isMyOffer(keyRing))
-                .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
-                .findAny();
-    }
-
-    private Optional<OpenOffer> findMyOpenOffer(String id) {
-        return openOfferManager.getObservableList().stream()
-                .filter(o -> o.getId().equals(id))
-                .filter(o -> o.getOffer().isMyOffer(keyRing))
-                .findAny();
     }
 
     private OfferPayload getMergedOfferPayload(EditOfferValidator editOfferValidator,

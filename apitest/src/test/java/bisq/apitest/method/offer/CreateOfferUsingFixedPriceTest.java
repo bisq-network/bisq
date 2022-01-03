@@ -75,7 +75,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertEquals("AUD", newOffer.getCounterCurrencyCode());
         assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
 
-        newOffer = aliceClient.getMyOffer(newOfferId);
+        newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
@@ -120,7 +120,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertEquals(USD, newOffer.getCounterCurrencyCode());
         assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
 
-        newOffer = aliceClient.getMyOffer(newOfferId);
+        newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
@@ -165,7 +165,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertEquals(EUR, newOffer.getCounterCurrencyCode());
         assertFalse(newOffer.getIsCurrencyForMakerFeeBtc());
 
-        newOffer = aliceClient.getMyOffer(newOfferId);
+        newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());

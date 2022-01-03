@@ -58,6 +58,7 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.api.model.OfferInfo.toMyOfferInfo;
 import static bisq.core.api.model.OfferInfo.toMyPendingOfferInfo;
 import static bisq.core.api.model.OfferInfo.toOfferInfo;
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
@@ -122,9 +123,13 @@ class GrpcOffersService extends OffersImplBase {
     public void getOffer(GetOfferRequest req,
                          StreamObserver<GetOfferReply> responseObserver) {
         try {
-            Offer offer = coreApi.getOffer(req.getId());
+            String offerId = req.getId();
+            Optional<OpenOffer> myOpenOffer = coreApi.findMyOpenOffer(offerId);
+            OfferInfo offerInfo = myOpenOffer.isPresent()
+                    ? toMyOfferInfo(myOpenOffer.get())
+                    : toOfferInfo(coreApi.getOffer(offerId));
             var reply = GetOfferReply.newBuilder()
-                    .setOffer(toOfferInfo(offer).toProtoMessage())
+                    .setOffer(offerInfo.toProtoMessage())
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
@@ -148,13 +153,15 @@ class GrpcOffersService extends OffersImplBase {
         }
     }
 
+    @Deprecated // Since 27-Dec-2021.
+    // Endpoint to be removed from future version.  Use getOffer service method instead.
     @Override
     public void getMyOffer(GetMyOfferRequest req,
                            StreamObserver<GetMyOfferReply> responseObserver) {
         try {
             OpenOffer openOffer = coreApi.getMyOffer(req.getId());
             var reply = GetMyOfferReply.newBuilder()
-                    .setOffer(OfferInfo.toMyOfferInfo(openOffer).toProtoMessage())
+                    .setOffer(toMyOfferInfo(openOffer).toProtoMessage())
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();

@@ -295,9 +295,9 @@ To remove a custom withdrawal transaction fee rate preference, and revert to the
 $ ./bisq-cli --password=xyz unsettxfeerate
 ```
 
-### Creating Test Payment Accounts
+### Creating Test Fiat Payment Accounts
 
-Creating a payment account using the Api involves three steps:
+Creating a fiat payment account using the Api involves three steps:
 
 1.  Find the payment-method-id  for the payment account type you wish to create.  For example, if you want to
     create a face-to-face type payment account, find the face-to-face  payment-method-id (`F2F`):
@@ -329,6 +329,43 @@ Creating a payment account using the Api involves three steps:
     $ ./bisq-cli --password=xyz --port=9998 getpaymentaccts
     ```
 
+### Creating Test Altcoin Payment Accounts
+
+Unlike more complex fiat payment account setups, the `createcryptopaymentacct` command does not require a json form.
+
+#### BSQ Altcoin Payment Accounts
+
+A default BSQ Swap Altcoin payment account was created for you when the BSQ Swap protocol was introduced, and you do
+not need to create BSQ Altcoin payment accounts to execute BSQ Swaps.  But if you do want to trade BSQ using the
+version 1 trade protocol, you will need to create a BSQ Altcoin payment accounts as show below.
+```
+$ ./bisq-cli --password=xyz --port=9998 createcryptopaymentacct --account-name="My BSQ Account" \
+    --currency-code=BSQ \
+    --address=Bn3PCQgRwhkrGnaMp1RYwt9tFwL51YELqne \
+    --trade-instant=false
+```
+To create a BSQ Altcoin _Instant_ payment account, use the `--trade-instant=true` parameter:
+```
+$ ./bisq-cli --password=xyz --port=9998 createcryptopaymentacct --account-name="My Instant BSQ Account" \
+    --currency-code=BSQ \
+    --address=Bn3PCQgRwhkrGnaMp1RYwt9tFwL51YELqne \
+    --trade-instant=true
+```
+
+_Note: Use your own BSQ recipient address, not the `Bn3PCQgRwhkrGnaMp1RYwt9tFwL51YELqne` address used in the
+example above._
+
+#### XMR Altcoin Payment Accounts
+
+To create an XMR Altcoin payment account associated with example XMR address
+`44G4jWmSvTEfifSUZzTDnJVLPvYATmq9XhhtDqUof1BGCLceG82EQsVYG9Q9GN4bJcjbAJEc1JD1m5G7iK4UPZqACubV4Mq`:
+```
+$ ./bisq-cli --password=xyz --port=9999 createcryptopaymentacct --account-name=XMR-Account \
+        --currency-code=XMR
+        --address=44G4jWmSvTEfifSUZzTDnJVLPvYATmq9XhhtDqUof1BGCLceG82EQsVYG9Q9GN4bJcjbAJEc1JD1m5G7iK4UPZqACubV4Mq
+```
+
+
 ### Creating Offers
 
 The createoffer command is the Api's most complex command (so far), but CLI posix-style options are self-explanatory,
@@ -345,7 +382,7 @@ and pay the Bisq maker fee in BSQ.  Alice had already created an EUR face-to-fac
 `f3c1ec8b-9761-458d-b13d-9039c6892413`, and used this `createoffer` command:
 ```
 $ ./bisq-cli --password=xyz --port=9998 createoffer \
-    --payment-account=f3c1ec8b-9761-458d-b13d-9039c6892413 \
+    --payment-account-id=f3c1ec8b-9761-458d-b13d-9039c6892413 \
     --direction=BUY \
     --currency-code=EUR \
     --amount=0.125 \
@@ -358,7 +395,7 @@ If Alice was in Japan, and wanted to create an offer to sell 0.125 BTC at 0.5% a
 putting up a 15% security deposit, the `createoffer` command to do that would be:
 ```
 $ ./bisq-cli --password=xyz --port=9998 createoffer \
-    --payment-account=f3c1ec8b-9761-458d-b13d-9039c6892413 \
+    --payment-account-id=f3c1ec8b-9761-458d-b13d-9039c6892413 \
     --direction=SELL \
     --currency-code=JPY \
     --amount=0.125 \
@@ -399,7 +436,7 @@ $ ./bisq-cli --password=xyz --port=9998 getmyoffers --direction=<BUY|SELL> --cur
 
 To look at a specific offer you created:
 ```
-$ ./bisq-cli --password=xyz --port=9998 getmyoffer --offer-id=<offer-id>
+$ ./bisq-cli --password=xyz --port=9998 getoffer --offer-id=<offer-id>
 ```
 
 ### Browsing Available Offers
@@ -466,7 +503,7 @@ and vice-versa.
 Suppose you used `createoffer` to create a market price margin based offer as follows:
 ```
 $ ./bisq-cli --password=xyz --port=9998 createoffer \
-    --payment-account=f3c1ec8b-9761-458d-b13d-9039c6892413 \
+    --payment-account-id=f3c1ec8b-9761-458d-b13d-9039c6892413 \
     --direction=SELL \
     --currency-code=JPY \
     --amount=0.125 \
@@ -485,7 +522,7 @@ To change the market price margin based offer to a fixed price offer:
 Suppose you used `createoffer` to create a fixed price offer as follows:
 ```
 $ ./bisq-cli --password=xyz --port=9998 createoffer \
-    --payment-account=f3c1ec8b-9761-458d-b13d-9039c6892413 \
+    --payment-account-id=f3c1ec8b-9761-458d-b13d-9039c6892413 \
     --direction=SELL \
     --currency-code=JPY \
     --amount=0.125 \
@@ -551,7 +588,7 @@ with the `takeoffer` command:
 ```
 $ ./bisq-cli --password=xyz --port=9998 takeoffer \
     --offer-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea \
-    --payment-account=fe20cdbd-22be-4b8a-a4b6-d2608ff09d6e \
+    --payment-account-id=fe20cdbd-22be-4b8a-a4b6-d2608ff09d6e \
     --fee-currency=btc
 ```
 Depending on the offer type, the taken offer will be used to (1) create a trade contract, or (2) execute a BSQ swap.

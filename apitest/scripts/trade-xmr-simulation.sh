@@ -92,7 +92,7 @@ sleeptraced 3
 
 # Show Alice's new offer.
 printdate "ALICE $ALICE_ROLE:  Looking at her new $DIRECTION $CURRENCY_CODE offer."
-CMD="$CLI_BASE --port=$ALICE_PORT getmyoffer --offer-id=$OFFER_ID"
+CMD="$CLI_BASE --port=$ALICE_PORT getoffer --offer-id=$OFFER_ID"
 printdate "ALICE CLI: $CMD"
 OFFER=$($CMD)
 exitoncommandalert $?

@@ -84,11 +84,11 @@ public class OptionParsersTest {
         String[] args = new String[]{
                 PASSWORD_OPT,
                 createoffer.name(),
-                "--" + OPT_PAYMENT_ACCOUNT
+                "--" + OPT_PAYMENT_ACCOUNT_ID
         };
         Throwable exception = assertThrows(RuntimeException.class, () ->
                 new CreateOfferOptionParser(args).parse());
-        assertEquals("payment-account requires an argument", exception.getMessage());
+        assertEquals("payment-account-id requires an argument", exception.getMessage());
     }
 
     @Test
@@ -96,7 +96,7 @@ public class OptionParsersTest {
         String[] args = new String[]{
                 PASSWORD_OPT,
                 createoffer.name(),
-                "--" + OPT_PAYMENT_ACCOUNT + "=" + "abc-payment-acct-id-123"
+                "--" + OPT_PAYMENT_ACCOUNT_ID + "=" + "abc-payment-acct-id-123"
         };
         Throwable exception = assertThrows(RuntimeException.class, () ->
                 new CreateOfferOptionParser(args).parse());
@@ -109,7 +109,7 @@ public class OptionParsersTest {
         String[] args = new String[]{
                 PASSWORD_OPT,
                 createoffer.name(),
-                "--" + OPT_PAYMENT_ACCOUNT + "=" + "abc-payment-acct-id-123",
+                "--" + OPT_PAYMENT_ACCOUNT_ID + "=" + "abc-payment-acct-id-123",
                 "--" + OPT_DIRECTION + "=" + ""
         };
         Throwable exception = assertThrows(RuntimeException.class, () ->
@@ -122,7 +122,7 @@ public class OptionParsersTest {
         String[] args = new String[]{
                 PASSWORD_OPT,
                 createoffer.name(),
-                "--" + OPT_PAYMENT_ACCOUNT + "=" + "abc-payment-acct-id-123",
+                "--" + OPT_PAYMENT_ACCOUNT_ID + "=" + "abc-payment-acct-id-123",
                 "--" + OPT_DIRECTION + "=" + "BUY",
                 "--" + OPT_CURRENCY_CODE + "=" + "EUR",
                 "--" + OPT_AMOUNT + "=" + "0.125",
@@ -146,7 +146,7 @@ public class OptionParsersTest {
                 PASSWORD_OPT,
                 createoffer.name(),
                 "--" + OPT_SWAP + "=" + "true",
-                "--" + OPT_PAYMENT_ACCOUNT + "=" + "abc",
+                "--" + OPT_PAYMENT_ACCOUNT_ID + "=" + "abc",
                 "--" + OPT_DIRECTION + "=" + "buy",
                 "--" + OPT_CURRENCY_CODE + "=" + "bsq",
                 "--" + OPT_AMOUNT + "=" + "0.125"

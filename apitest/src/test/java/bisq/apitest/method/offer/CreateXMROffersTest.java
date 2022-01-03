@@ -88,7 +88,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
 
         genBtcBlockAndWaitForOfferPreparation();
 
-        newOffer = aliceClient.getMyOffer(newOfferId);
+        newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
@@ -135,7 +135,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
 
         genBtcBlockAndWaitForOfferPreparation();
 
-        newOffer = aliceClient.getMyOffer(newOfferId);
+        newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
@@ -188,7 +188,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
 
         genBtcBlockAndWaitForOfferPreparation();
 
-        newOffer = aliceClient.getMyOffer(newOfferId);
+        newOffer = aliceClient.getOffer(newOfferId);
         log.debug("Available Sell XMR (Buy BTC) offer:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
@@ -240,7 +240,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
 
         genBtcBlockAndWaitForOfferPreparation();
 
-        newOffer = aliceClient.getMyOffer(newOfferId);
+        newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
