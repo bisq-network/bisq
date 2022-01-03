@@ -15,14 +15,14 @@ jobs:
             java: [ '11', '11.0.3', '15', '15.0.5']
     name: Test Java ${{ matrix.Java }}, ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@1e204e9a9253d643386038d443f96446fa156a97
       with:
         fetch-depth: 0
         ref: ${{ github.event.pull_request.head.sha }}
         lfs: true
 
     - name: Set up JDK
-      uses: actions/setup-java@v2
+      uses: actions/setup-java@5f00602cd1b2819185d88dc7a1b1985f598c6705
       with:
         java-version: ${{ matrix.java }}
         distribution: 'zulu'
@@ -31,7 +31,7 @@ jobs:
       run: chmod +x gradlew
 
     - name: Validate Gradle Wrapper JAR files
-      uses: gradle/wrapper-validation-action@v1
+      uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
 
     - name: Build with Gradle
       run: ./gradlew build
