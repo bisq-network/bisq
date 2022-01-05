@@ -525,15 +525,15 @@ public class CliMain {
                     out.printf("trade %s payment received message sent%n", tradeId);
                     return;
                 }
-                case keepfunds: {
+                case closetrade: {
                     var opts = new GetTradeOptionParser(args).parse();
                     if (opts.isForHelp()) {
                         out.println(client.getMethodHelp(method));
                         return;
                     }
                     var tradeId = opts.getTradeId();
-                    client.keepFunds(tradeId);
-                    out.printf("funds from trade %s saved in bisq wallet%n", tradeId);
+                    client.closeTrade(tradeId);
+                    out.printf("trade %s is closed%n", tradeId);
                     return;
                 }
                 case withdrawfunds: {
@@ -864,10 +864,10 @@ public class CliMain {
             stream.println();
             stream.format(rowFormat, confirmpaymentreceived.name(), "--trade-id=<trade-id>", "Confirm payment received");
             stream.println();
-            stream.format(rowFormat, keepfunds.name(), "--trade-id=<trade-id>", "Keep received funds in Bisq wallet");
+            stream.format(rowFormat, closetrade.name(), "--trade-id=<trade-id>", "Close completed trade");
             stream.println();
             stream.format(rowFormat, withdrawfunds.name(), "--trade-id=<trade-id> --address=<btc-address> \\",
-                    "Withdraw received funds to external wallet address");
+                    "Withdraw received trade funds to external wallet address");
             stream.format(rowFormat, "", "[--memo=<\"memo\">]", "");
             stream.println();
             stream.format(rowFormat, getpaymentmethods.name(), "", "Get list of supported payment account method ids");

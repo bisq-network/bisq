@@ -165,7 +165,7 @@ public class TakeSellXMROfferTest extends AbstractTradeTest {
 
             String toAddress = bitcoinCli.getNewBtcAddress();
             aliceClient.withdrawFunds(tradeId, toAddress, WITHDRAWAL_TX_MEMO);
-            bobClient.keepFunds(tradeId);
+            bobClient.closeTrade(tradeId);
             genBtcBlocksThenWait(1, 1_000);
 
             trade = aliceClient.getTrade(tradeId);

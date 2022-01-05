@@ -23,14 +23,14 @@ import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 
+import bisq.proto.grpc.CloseTradeReply;
+import bisq.proto.grpc.CloseTradeRequest;
 import bisq.proto.grpc.ConfirmPaymentReceivedReply;
 import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
 import bisq.proto.grpc.ConfirmPaymentStartedReply;
 import bisq.proto.grpc.ConfirmPaymentStartedRequest;
 import bisq.proto.grpc.GetTradeReply;
 import bisq.proto.grpc.GetTradeRequest;
-import bisq.proto.grpc.KeepFundsReply;
-import bisq.proto.grpc.KeepFundsRequest;
 import bisq.proto.grpc.TakeOfferReply;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.WithdrawFundsReply;
@@ -152,11 +152,11 @@ class GrpcTradesService extends TradesImplBase {
     }
 
     @Override
-    public void keepFunds(KeepFundsRequest req,
-                          StreamObserver<KeepFundsReply> responseObserver) {
+    public void closeTrade(CloseTradeRequest req,
+                           StreamObserver<CloseTradeReply> responseObserver) {
         try {
-            coreApi.keepFunds(req.getTradeId());
-            var reply = KeepFundsReply.newBuilder().build();
+            coreApi.closeTrade(req.getTradeId());
+            var reply = CloseTradeReply.newBuilder().build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
@@ -189,10 +189,9 @@ class GrpcTradesService extends TradesImplBase {
                         new HashMap<>() {{
                             put(getGetTradeMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getTakeOfferMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
-                            // put(getTakeBsqSwapOfferMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
                             put(getConfirmPaymentStartedMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
                             put(getConfirmPaymentReceivedMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
-                            put(getKeepFundsMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
+                            put(getCloseTradeMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
                             put(getWithdrawFundsMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
                         }}
                 )));

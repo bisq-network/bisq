@@ -1,0 +1,29 @@
+closetrade
+
+NAME
+----
+closetrade - close open trade
+
+SYNOPSIS
+--------
+closetrade
+		--trade-id=<trade-id>
+
+DESCRIPTION
+-----------
+This final step in the trade protocol moves a completed trade from the open trades list
+to the closed trade list, where it becomes part of the user's trade history.
+The step is necessary for correct transition of a trade's state to CLOSED.
+
+The alternative way to close a trade is to send the received BTC to an external
+BTC wallet, using the withdrawfunds command.
+
+OPTIONS
+-------
+--trade-id
+		The ID of the completed trade (the full offer-id).
+
+EXAMPLES
+--------
+The BTC buyer or seller closes out trade 83e8b2e2-51b6-4f39-a748-3ebd29c22aea:
+$ ./bisq-cli --password=xyz --port=9998 closetrade --trade-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea

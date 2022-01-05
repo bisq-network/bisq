@@ -56,7 +56,7 @@ public class MakerBotProtocol extends BotProtocol {
                 : waitForPaymentStartedMessage.andThen(sendPaymentReceivedMessage);
         completeFiatTransaction.apply(trade);
 
-        Function<TradeInfo, TradeInfo> closeTrade = waitForPayoutTx.andThen(keepFundsFromTrade);
+        Function<TradeInfo, TradeInfo> closeTrade = waitForPayoutTx.andThen(this.closeTrade);
         closeTrade.apply(trade);
 
         currentProtocolStep = DONE;

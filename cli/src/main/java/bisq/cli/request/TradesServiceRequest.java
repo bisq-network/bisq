@@ -17,10 +17,10 @@
 
 package bisq.cli.request;
 
+import bisq.proto.grpc.CloseTradeRequest;
 import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
 import bisq.proto.grpc.ConfirmPaymentStartedRequest;
 import bisq.proto.grpc.GetTradeRequest;
-import bisq.proto.grpc.KeepFundsRequest;
 import bisq.proto.grpc.TakeOfferReply;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.TradeInfo;
@@ -86,12 +86,12 @@ public class TradesServiceRequest {
         grpcStubs.tradesService.confirmPaymentReceived(request);
     }
 
-    public void keepFunds(String tradeId) {
-        var request = KeepFundsRequest.newBuilder()
+    public void closeTrade(String tradeId) {
+        var request = CloseTradeRequest.newBuilder()
                 .setTradeId(tradeId)
                 .build();
         //noinspection ResultOfMethodCallIgnored
-        grpcStubs.tradesService.keepFunds(request);
+        grpcStubs.tradesService.closeTrade(request);
     }
 
     public void withdrawFunds(String tradeId, String address, String memo) {

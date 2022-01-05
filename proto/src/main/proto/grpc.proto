@@ -394,7 +394,7 @@ service Trades {
     }
     rpc ConfirmPaymentReceived (ConfirmPaymentReceivedRequest) returns (ConfirmPaymentReceivedReply) {
     }
-    rpc KeepFunds (KeepFundsRequest) returns (KeepFundsReply) {
+    rpc CloseTrade (CloseTradeRequest) returns (CloseTradeReply) {
     }
     rpc WithdrawFunds (WithdrawFundsRequest) returns (WithdrawFundsReply) {
     }
@@ -433,11 +433,11 @@ message GetTradeReply {
     TradeInfo trade = 1;
 }
 
-message KeepFundsRequest {
+message CloseTradeRequest {
     string tradeId = 1;
 }
 
-message KeepFundsReply {
+message CloseTradeReply {
 }
 
 message WithdrawFundsRequest {

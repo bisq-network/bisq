@@ -180,14 +180,14 @@ class CoreTradesService {
         }
     }
 
-    void keepFunds(String tradeId) {
+    void closeTrade(String tradeId) {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
 
         verifyTradeIsNotClosed(tradeId);
         var trade = getOpenTrade(tradeId).orElseThrow(() ->
                 new IllegalArgumentException(format("trade with id '%s' not found", tradeId)));
-        log.info("Keeping funds received from trade {}", tradeId);
+        log.info("Closing trade {}", tradeId);
         tradeManager.onTradeCompleted(trade);
     }
 

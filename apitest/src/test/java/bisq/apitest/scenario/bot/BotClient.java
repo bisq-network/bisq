@@ -282,12 +282,12 @@ public class BotClient {
     }
 
     /**
-     * Sends a 'keep funds in wallet message' for a trade with the given tradeId,
+     * Sends a 'closetrade' for a trade with the given tradeId,
      * or throws an exception.
      * @param tradeId
      */
-    public void sendKeepFundsMessage(String tradeId) {
-        grpcClient.keepFunds(tradeId);
+    public void sendCloseTradeMessage(String tradeId) {
+        grpcClient.closeTrade(tradeId);
     }
 
     /**
