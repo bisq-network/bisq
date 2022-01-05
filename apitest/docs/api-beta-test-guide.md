@@ -637,19 +637,19 @@ protocol completed.  There are three CLI commands that must be performed in coor
 ```
 confirmpaymentstarted       Buyer sends seller a message confirming payment has been sent.
 confirmpaymentreceived      Seller sends buyer a message confirming payment has been received.
-keepfunds                   Keep trade proceeds in their Bisq wallets.
+closetrade                  Set trade state to CLOSED, and keep trade proceeds in user's Bisq wallet.
     OR
-withdrawfunds               Send trade proceeds to an external wallet.
+withdrawfunds               Set trade state to CLOSED, and send trade proceeds to an external wallet.
 ```
-The last two mutually exclusive commands (`keepfunds` or `withdrawfunds`) may seem unnecessary, but they are critical
-because they inform the Bisq node that a trade’s state can be set to `CLOSED`.  Please close out your trades with one
+The last two mutually exclusive commands (`closetrade` or `withdrawfunds`) may seem unnecessary, but they are critical
+because they tell the Bisq node to set a completed trade’s state `CLOSED`.  Please close out your trades with one
 or the other command.
 
 Each of the CLI commands above takes one argument:  `--trade-id=<trade-id>`:
 ```
 $ ./bisq-cli --password=xyz --port=9998 confirmpaymentstarted --trade-id=<trade-id>
 $ ./bisq-cli --password=xyz --port=9999 confirmpaymentreceived --trade-id=<trade-id>
-$ ./bisq-cli --password=xyz --port=9998 keepfunds --trade-id=<trade-id>
+$ ./bisq-cli --password=xyz --port=9998 closetrade --trade-id=<trade-id>
 $ ./bisq-cli --password=xyz --port=9999 withdrawfunds --trade-id=<trade-id> --address=<btc-address> [--memo=<"memo">]
 ```
 
