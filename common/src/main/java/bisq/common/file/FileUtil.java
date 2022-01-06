@@ -34,6 +34,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,6 +44,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Scanner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -258,5 +260,15 @@ public class FileUtil {
         if (storageFile.exists()) {
             renameFile(storageFile, corruptedFile);
         }
+    }
+
+    public static boolean doesFileContainKeyword(File file, String keyword) throws FileNotFoundException {
+        Scanner s = new Scanner(file);
+        while (s.hasNextLine()) {
+            if (s.nextLine().contains(keyword)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

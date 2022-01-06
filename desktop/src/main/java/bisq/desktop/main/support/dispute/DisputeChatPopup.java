@@ -51,6 +51,7 @@ import lombok.Getter;
 public class DisputeChatPopup {
     public interface ChatCallback {
         void onCloseDisputeFromChatWindow(Dispute dispute);
+        void onSendLogsFromChatWindow(Dispute dispute);
     }
 
     private Stage chatPopupStage;
@@ -102,12 +103,19 @@ public class DisputeChatPopup {
         AnchorPane.setTopAnchor(chatView, -20d);
         AnchorPane.setBottomAnchor(chatView, 10d);
         pane.getStyleClass().add("dispute-chat-border");
-        Button closeDisputeButton = null;
-        if (!selectedDispute.isClosed() && !disputeManager.isTrader(selectedDispute)) {
-            closeDisputeButton = new AutoTooltipButton(Res.get("support.closeTicket"));
-            closeDisputeButton.setOnAction(e -> chatCallback.onCloseDisputeFromChatWindow(selectedDispute));
+        if (selectedDispute.isClosed()) {
+            chatView.display(concreteDisputeSession, null, pane.widthProperty());
+        } else {
+            if (disputeManager.isAgent(selectedDispute)) {
+                Button closeDisputeButton = new AutoTooltipButton(Res.get("support.closeTicket"));
+                closeDisputeButton.setOnAction(e -> chatCallback.onCloseDisputeFromChatWindow(selectedDispute));
+                chatView.display(concreteDisputeSession, closeDisputeButton, pane.widthProperty());
+            } else {
+                Button sendLogsButton = new AutoTooltipButton("Send Logs");
+                sendLogsButton.setOnAction(e -> chatCallback.onSendLogsFromChatWindow(selectedDispute));
+                chatView.display(concreteDisputeSession, sendLogsButton, pane.widthProperty());
+            }
         }
-        chatView.display(concreteDisputeSession, closeDisputeButton, pane.widthProperty());
         chatView.activate();
         chatView.scrollToBottom();
         chatPopupStage = new Stage();

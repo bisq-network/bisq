@@ -72,6 +72,7 @@ import bisq.core.trade.protocol.bsq_swap.messages.SellersBsqSwapRequest;
 import bisq.network.p2p.AckMessage;
 import bisq.network.p2p.BundleOfEnvelopes;
 import bisq.network.p2p.CloseConnectionMessage;
+import bisq.network.p2p.FileTransferPart;
 import bisq.network.p2p.PrefixedSealedAndSignedMessage;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
@@ -131,6 +132,8 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return Ping.fromProto(proto.getPing(), messageVersion);
                 case PONG:
                     return Pong.fromProto(proto.getPong(), messageVersion);
+                case FILE_TRANSFER_PART:
+                    return FileTransferPart.fromProto(proto.getFileTransferPart(), messageVersion);
 
                 case OFFER_AVAILABILITY_REQUEST:
                     return OfferAvailabilityRequest.fromProto(proto.getOfferAvailabilityRequest(), messageVersion);
