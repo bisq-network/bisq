@@ -380,6 +380,14 @@ public final class GrpcClient {
         tradesServiceRequest.withdrawFunds(tradeId, address, memo);
     }
 
+    public void failTrade(String tradeId) {
+        tradesServiceRequest.failTrade(tradeId);
+    }
+
+    public void unFailTrade(String tradeId) {
+        tradesServiceRequest.unFailTrade(tradeId);
+    }
+
     public List<PaymentMethod> getPaymentMethods() {
         return paymentAccountsServiceRequest.getPaymentMethods();
     }

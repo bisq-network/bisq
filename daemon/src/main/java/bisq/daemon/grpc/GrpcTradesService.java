@@ -29,10 +29,14 @@ import bisq.proto.grpc.ConfirmPaymentReceivedReply;
 import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
 import bisq.proto.grpc.ConfirmPaymentStartedReply;
 import bisq.proto.grpc.ConfirmPaymentStartedRequest;
+import bisq.proto.grpc.FailTradeReply;
+import bisq.proto.grpc.FailTradeRequest;
 import bisq.proto.grpc.GetTradeReply;
 import bisq.proto.grpc.GetTradeRequest;
 import bisq.proto.grpc.TakeOfferReply;
 import bisq.proto.grpc.TakeOfferRequest;
+import bisq.proto.grpc.UnFailTradeReply;
+import bisq.proto.grpc.UnFailTradeRequest;
 import bisq.proto.grpc.WithdrawFundsReply;
 import bisq.proto.grpc.WithdrawFundsRequest;
 
@@ -170,6 +174,32 @@ class GrpcTradesService extends TradesImplBase {
         try {
             coreApi.withdrawFunds(req.getTradeId(), req.getAddress(), req.getMemo());
             var reply = WithdrawFundsReply.newBuilder().build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(log, cause, responseObserver);
+        }
+    }
+
+    @Override
+    public void failTrade(FailTradeRequest req,
+                          StreamObserver<FailTradeReply> responseObserver) {
+        try {
+            coreApi.failTrade(req.getTradeId());
+            var reply = FailTradeReply.newBuilder().build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(log, cause, responseObserver);
+        }
+    }
+
+    @Override
+    public void unFailTrade(UnFailTradeRequest req,
+                            StreamObserver<UnFailTradeReply> responseObserver) {
+        try {
+            coreApi.unFailTrade(req.getTradeId());
+            var reply = UnFailTradeReply.newBuilder().build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {

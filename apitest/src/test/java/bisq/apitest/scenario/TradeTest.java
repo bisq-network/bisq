@@ -30,6 +30,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import bisq.apitest.method.trade.AbstractTradeTest;
 import bisq.apitest.method.trade.BsqSwapTradeTest;
+import bisq.apitest.method.trade.FailUnfailTradeTest;
 import bisq.apitest.method.trade.TakeBuyBSQOfferTest;
 import bisq.apitest.method.trade.TakeBuyBTCOfferTest;
 import bisq.apitest.method.trade.TakeBuyBTCOfferWithNationalBankAcctTest;
@@ -129,5 +130,15 @@ public class TradeTest extends AbstractTradeTest {
         test.testAliceCreateBsqSwapBuyOffer();
         test.testBobTakesBsqSwapOffer();
         test.testGetBalancesAfterTrade();
+    }
+
+    @Test
+    @Order(9)
+    public void testFailUnfailTrade(final TestInfo testInfo) {
+        FailUnfailTradeTest test = new FailUnfailTradeTest();
+        test.testFailAndUnFailBuyBTCTrade(testInfo);
+        test.testFailAndUnFailSellBTCTrade(testInfo);
+        test.testFailAndUnFailBuyXmrTrade(testInfo);
+        test.testFailAndUnFailTakeSellXMRTrade(testInfo);
     }
 }
