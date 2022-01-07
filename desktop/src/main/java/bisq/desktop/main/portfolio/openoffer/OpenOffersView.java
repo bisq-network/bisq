@@ -409,6 +409,9 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
                     tableView.refresh();
 
+                    if (openOffer.getOffer().isBsqSwapOffer()) {
+                        return; // nothing to withdraw when Bsq swap is canceled (issue #5956)
+                    }
                     String key = "WithdrawFundsAfterRemoveOfferInfo";
                     if (DontShowAgainLookup.showAgain(key)) {
                         new Popup().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
