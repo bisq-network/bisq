@@ -49,7 +49,7 @@ public class FileTransferSender extends FileTransferSession {
         try {
             Map<String, String> env = new HashMap<>();
             env.put("create", "true");
-            FileSystem zipfs = FileSystems.newFileSystem(URI.create("jar:file:" + zipFilePath), env);
+            FileSystem zipfs = FileSystems.newFileSystem(URI.create("jar:file:///" + (zipFilePath.replace('\\', '/'))), env);
             Files.createDirectory(zipfs.getPath(zipId));    // store logfiles in a usefully-named subdir
             Stream<Path> paths = Files.walk(Paths.get(Config.appDataDir().toString()), 1);
             paths.filter(Files::isRegularFile).forEach(externalTxtFile -> {
@@ -79,6 +79,7 @@ public class FileTransferSender extends FileTransferSession {
         networkNode.addMessageListener(this);
         RandomAccessFile file = new RandomAccessFile(zipFilePath, "r");
         expectedFileLength = file.length();
+        file.close();
         // an empty block is sent as request to initiate file transfer, peer must ACK for transfer to continue
         dataAwaitingAck = Optional.of(new FileTransferPart(networkNode.getNodeAddress(), fullTradeId, traderId, UUID.randomUUID().toString(), expectedFileLength, ByteString.EMPTY));
         uploadData();
@@ -93,6 +94,7 @@ public class FileTransferSender extends FileTransferSession {
         file.seek(fileOffsetBytes);
         byte[] buff = new byte[FILE_BLOCK_SIZE];
         int nBytesRead = file.read(buff, 0, FILE_BLOCK_SIZE);
+        file.close();
         if (nBytesRead < 0) {
             log.info("Success!  We have reached the EOF, {} bytes sent.  Removing zip file {}", fileOffsetBytes, zipFilePath);
             Files.delete(Paths.get(zipFilePath));

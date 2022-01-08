@@ -6,6 +6,7 @@ import bisq.network.p2p.network.NetworkNode;
 
 import bisq.common.config.Config;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
@@ -39,6 +40,17 @@ public class FileTransferSessionTest implements FileTransferSession.FtpCallback 
         new FileTransferSender(networkNode, counterpartyNodeAddress, testTradeId, testTraderId, testClientId, this);
         Assert.assertEquals(0.0, notedProgressPct, 0.0);
         Assert.assertEquals(1, progressInvocations);
+    }
+
+    @Test
+    public void testCreateZip() {
+        FileTransferSender sender = new FileTransferSender(networkNode, counterpartyNodeAddress, testTradeId, testTraderId, testClientId, this);
+        Assert.assertEquals(0.0, notedProgressPct, 0.0);
+        Assert.assertEquals(1, progressInvocations);
+        sender.createZipFileToSend();
+        File file = new File(sender.zipFilePath);
+        Assert.assertTrue(file.exists());
+        Assert.assertTrue(file.length() > 0);
     }
 
     @Test
