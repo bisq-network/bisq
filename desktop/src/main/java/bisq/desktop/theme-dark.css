@@ -27,6 +27,7 @@
 
     /* fifty shades of gray */
     -bs-color-gray-13: #bbb;
+    -bs-color-gray-12: #eaeaea;
     -bs-color-gray-11: #dadada;
     -bs-color-gray-10: #cfcecf;
     -bs-color-gray-6: #afaeb0;
@@ -133,7 +134,7 @@
     -bs-chart-tick: rgba(255, 255, 255, 0.7);
     -bs-chart-lines: rgba(0, 0, 0, 0.3);
     -bs-white: white;
-    -bs-prompt-text: -bs-color-gray-3;
+    -bs-prompt-text: -bs-color-gray-6;
     -bs-decimals: #db6300;
     -bs-soft-red: #aa4c3b;
     -bs-turquoise-light: #11eeee;
@@ -212,9 +213,9 @@
 /* text field */
 .jfx-text-field, .jfx-text-area,
 .jfx-combo-box, .jfx-combo-box > .list-cell {
-    -fx-background-color: derive(-bs-background-color, 8%);
-    -fx-prompt-text-fill: -bs-color-gray-3;
-    -fx-text-fill: -bs-color-gray-11;
+    -fx-background-color: derive(-bs-background-color, 15%);
+    -fx-prompt-text-fill: -bs-color-gray-6;
+    -fx-text-fill: -bs-color-gray-12;
 }
 
 .jfx-text-area:readonly, .jfx-text-field:readonly,
@@ -380,7 +381,7 @@
 .jfx-combo-box:focused > .arrow-button,
 .jfx-combo-box:focused > .text-input,
 .jfx-text-field:focused{
-    -fx-background-color: derive(-bs-background-color, 8%);
+    -fx-background-color: derive(-bs-background-color, 15%);
 }
 .jfx-combo-box:error,
 .jfx-text-field:error{
