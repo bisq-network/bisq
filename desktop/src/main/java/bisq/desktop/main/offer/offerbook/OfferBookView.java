@@ -720,7 +720,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         if (model.isBootstrappedOrShowPopup()) {
             String key = "RemoveOfferWarning";
             if (DontShowAgainLookup.showAgain(key)) {
-                new Popup().warning(Res.get("popup.warning.removeOffer", model.getMakerFeeAsString(offer)))
+                String message = offer.getMakerFee().isPositive() ?
+                        Res.get("popup.warning.removeOffer", model.getMakerFeeAsString(offer)) :
+                        Res.get("popup.warning.removeNoFeeOffer");
+                new Popup().warning(message)
                         .actionButtonText(Res.get("shared.removeOffer"))
                         .onAction(() -> doRemoveOffer(offer))
                         .closeButtonText(Res.get("shared.dontRemoveOffer"))
@@ -736,6 +739,9 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         String key = "WithdrawFundsAfterRemoveOfferInfo";
         model.onRemoveOpenOffer(offer,
                 () -> {
+                    if (offer.isBsqSwapOffer()) {
+                        return; // nothing to withdraw when Bsq swap is canceled (issue #5956)
+                    }
                     log.debug(Res.get("offerbook.removeOffer.success"));
                     if (DontShowAgainLookup.showAgain(key))
                         new Popup().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
