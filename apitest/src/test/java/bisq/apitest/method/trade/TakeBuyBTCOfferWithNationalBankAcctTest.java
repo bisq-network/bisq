@@ -213,9 +213,9 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
             genBtcBlocksThenWait(1, 1_000);
 
             var trade = aliceClient.getTrade(tradeId);
-            logTrade(log, testInfo, "Alice's view before keeping funds", trade);
-            aliceClient.keepFunds(tradeId);
-            bobClient.keepFunds(tradeId);
+            logTrade(log, testInfo, "Alice's view before closing trade and keeping funds", trade);
+            aliceClient.closeTrade(tradeId);
+            bobClient.closeTrade(tradeId);
             genBtcBlocksThenWait(1, 1_000);
             trade = aliceClient.getTrade(tradeId);
             EXPECTED_PROTOCOL_STATUS.setState(BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG)

@@ -536,22 +536,22 @@ executetrade() {
     printbreak
 
     # Complete the trade on both sides
-    printdate "BOB $BOB_ROLE:  Closing trade by keeping funds in Bisq wallet."
-    CMD="$CLI_BASE --port=$BOB_PORT keepfunds --trade-id=$OFFER_ID"
+    printdate "BOB $BOB_ROLE:  Closing trade and keeping funds in Bisq wallet."
+    CMD="$CLI_BASE --port=$BOB_PORT closetrade --trade-id=$OFFER_ID"
     printdate "BOB CLI: $CMD"
     KEEP_FUNDS_MSG=$($CMD)
-    commandalert $? "Could close trade with keepfunds command."
-    # Print the keepfunds command's console output.
+    commandalert $? "Closed trade with closetrade command."
+    # Print the closetrade command's console output.
     printdate "$KEEP_FUNDS_MSG"
     sleeptraced 3
     printbreak
 
-    printdate "ALICE (taker):  Closing trade by keeping funds in Bisq wallet."
-    CMD="$CLI_BASE --port=$ALICE_PORT keepfunds --trade-id=$OFFER_ID"
+    printdate "ALICE (taker):  Closing trade and keeping funds in Bisq wallet."
+    CMD="$CLI_BASE --port=$ALICE_PORT closetrade --trade-id=$OFFER_ID"
     printdate "ALICE CLI: $CMD"
     KEEP_FUNDS_MSG=$($CMD)
-    commandalert $? "Could close trade with keepfunds command."
-    # Print the keepfunds command's console output.
+    commandalert $? "Closed trade with closetrade command."
+    # Print the closetrade command's console output.
     printdate "$KEEP_FUNDS_MSG"
     sleeptraced 3
     printbreak

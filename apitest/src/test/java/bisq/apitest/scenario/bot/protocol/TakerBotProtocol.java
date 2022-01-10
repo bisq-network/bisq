@@ -55,7 +55,7 @@ public class TakerBotProtocol extends BotProtocol {
                 : sendPaymentStartedMessage.andThen(waitForPaymentReceivedConfirmation);
         completeFiatTransaction.apply(trade);
 
-        Function<TradeInfo, TradeInfo> closeTrade = waitForPayoutTx.andThen(keepFundsFromTrade);
+        Function<TradeInfo, TradeInfo> closeTrade = waitForPayoutTx.andThen(this.closeTrade);
         closeTrade.apply(trade);
 
         currentProtocolStep = DONE;

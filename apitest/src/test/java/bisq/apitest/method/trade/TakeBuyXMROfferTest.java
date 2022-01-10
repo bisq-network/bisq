@@ -156,9 +156,9 @@ public class TakeBuyXMROfferTest extends AbstractTradeTest {
         try {
             genBtcBlocksThenWait(1, 1_000);
             var trade = bobClient.getTrade(tradeId);
-            logTrade(log, testInfo, "Alice's view before keeping funds", trade);
-            aliceClient.keepFunds(tradeId);
-            bobClient.keepFunds(tradeId);
+            logTrade(log, testInfo, "Alice's view before closing trade and keeping funds", trade);
+            aliceClient.closeTrade(tradeId);
+            bobClient.closeTrade(tradeId);
             genBtcBlocksThenWait(1, 1_000);
 
             trade = bobClient.getTrade(tradeId);

@@ -22,6 +22,7 @@ package bisq.cli;
  */
 public enum Method {
     canceloffer,
+    closetrade,
     confirmpaymentreceived,
     confirmpaymentstarted,
     createoffer,
@@ -45,7 +46,6 @@ public enum Method {
     gettxfeerate,
     getunusedbsqaddress,
     getversion,
-    keepfunds,
     lockwallet,
     registerdisputeagent,
     removewalletpassword,

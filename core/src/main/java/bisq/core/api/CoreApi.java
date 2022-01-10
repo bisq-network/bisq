@@ -315,8 +315,8 @@ public class CoreApi {
         coreTradesService.confirmPaymentReceived(tradeId);
     }
 
-    public void keepFunds(String tradeId) {
-        coreTradesService.keepFunds(tradeId);
+    public void closeTrade(String tradeId) {
+        coreTradesService.closeTrade(tradeId);
     }
 
     public void withdrawFunds(String tradeId, String address, String memo) {

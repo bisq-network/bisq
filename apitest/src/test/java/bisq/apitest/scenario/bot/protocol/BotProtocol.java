@@ -219,8 +219,8 @@ public abstract class BotProtocol {
         }
     };
 
-    protected final Function<TradeInfo, TradeInfo> keepFundsFromTrade = (trade) -> {
-        initProtocolStep.accept(KEEP_FUNDS);
+    protected final Function<TradeInfo, TradeInfo> closeTrade = (trade) -> {
+        initProtocolStep.accept(CLOSE_TRADE);
         var isBuy = trade.getOffer().getDirection().equalsIgnoreCase(BUY);
         var isSell = trade.getOffer().getDirection().equalsIgnoreCase(SELL);
         var cliUserIsSeller = (this instanceof MakerBotProtocol && isBuy) || (this instanceof TakerBotProtocol && isSell);
@@ -229,8 +229,8 @@ public abstract class BotProtocol {
         } else {
             createGetBalanceScript();
         }
-        checkIfShutdownCalled("Interrupted before closing trade with 'keep funds' command.");
-        this.getBotClient().sendKeepFundsMessage(trade.getTradeId());
+        checkIfShutdownCalled("Interrupted before closing trade with 'closetrade' command.");
+        this.getBotClient().sendCloseTradeMessage(trade.getTradeId());
         return trade;
     };
 

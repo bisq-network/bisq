@@ -372,8 +372,8 @@ public final class GrpcClient {
         tradesServiceRequest.confirmPaymentReceived(tradeId);
     }
 
-    public void keepFunds(String tradeId) {
-        tradesServiceRequest.keepFunds(tradeId);
+    public void closeTrade(String tradeId) {
+        tradesServiceRequest.closeTrade(tradeId);
     }
 
     public void withdrawFunds(String tradeId, String address, String memo) {
