@@ -963,7 +963,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
         Coin penalizedPortionOfTradeAmount = Coin.ZERO;
         try {
-            disputeResult.setPayoutAdjustmentPercent(compensationOrPenalty.getText().replaceAll("[^0-9]", ""));
+            disputeResult.setPayoutAdjustmentPercent(compensationOrPenalty.getText().replaceAll("[^0-9,.]", ""));
             double percentPenalty = ParsingUtils.parsePercentStringToDouble(disputeResult.getPayoutAdjustmentPercent());
             penalizedPortionOfTradeAmount = Coin.valueOf((long) (contract.getTradeAmount().getValue() * percentPenalty));
         } catch (NumberFormatException | NullPointerException e) {
