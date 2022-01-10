@@ -125,6 +125,7 @@ class FiatAccountsDataModel extends ActivatableDataModel {
     }
 
     public void onUpdateAccount(PaymentAccount paymentAccount) {
+        paymentAccount.onPersistChanges();
         user.requestPersistence();
     }
 

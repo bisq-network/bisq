@@ -140,6 +140,11 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
         acceptedCountryCodes.remove(countryCode);
     }
 
+    public void onPersistChanges() {
+        persistedAcceptedCountryCodes.clear();
+        persistedAcceptedCountryCodes.addAll(acceptedCountryCodes);
+    }
+
     public void revertChanges() {
         acceptedCountryCodes.clear();
         acceptedCountryCodes.addAll(persistedAcceptedCountryCodes);

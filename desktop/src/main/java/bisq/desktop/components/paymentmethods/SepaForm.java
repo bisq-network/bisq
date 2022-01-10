@@ -90,7 +90,7 @@ public class SepaForm extends GeneralSepaForm {
             updateFromInputs();
         });
 
-        ibanInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, IBAN);
+        InputTextField ibanInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, IBAN);
         ibanInputTextField.setTextFormatter(new TextFormatter<>(new IBANNormalizer()));
         ibanInputTextField.setValidator(ibanValidator);
         ibanInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -139,7 +139,7 @@ public class SepaForm extends GeneralSepaForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), sepaAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(sepaAccount.getPaymentMethod().getId()));
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"), sepaAccount.getHolderName());
@@ -169,5 +169,10 @@ public class SepaForm extends GeneralSepaForm {
     @Override
     boolean isCountryAccepted(String countryCode) {
         return sepaAccount.getAcceptedCountryCodes().contains(countryCode);
+    }
+
+    @Override
+    protected String getIban() {
+        return sepaAccount.getIban();
     }
 }

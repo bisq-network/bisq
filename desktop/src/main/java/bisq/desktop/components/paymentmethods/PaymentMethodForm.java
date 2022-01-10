@@ -124,19 +124,21 @@ public abstract class PaymentMethodForm {
     }
 
     protected void addAccountNameTextFieldWithAutoFillToggleButton() {
+        boolean isEditMode = paymentAccount.getPersistedAccountName() != null;
         Tuple3<Label, InputTextField, ToggleButton> tuple = addTopLabelInputTextFieldSlideToggleButton(gridPane, ++gridRow,
                 Res.get("payment.account.name"), Res.get("payment.useCustomAccountName"));
         accountNameTextField = tuple.second;
         accountNameTextField.setPrefWidth(300);
-        accountNameTextField.setEditable(false);
+        accountNameTextField.setEditable(isEditMode);
         accountNameTextField.setValidator(inputValidator);
         accountNameTextField.setFocusTraversable(false);
+        accountNameTextField.setText(paymentAccount.getAccountName());
         accountNameTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             paymentAccount.setAccountName(newValue);
             updateAllInputsValid();
         });
         useCustomAccountNameToggleButton = tuple.third;
-        useCustomAccountNameToggleButton.setSelected(false);
+        useCustomAccountNameToggleButton.setSelected(isEditMode);
         useCustomAccountNameToggleButton.setOnAction(e -> {
             boolean selected = useCustomAccountNameToggleButton.isSelected();
             accountNameTextField.setEditable(selected);

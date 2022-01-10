@@ -91,7 +91,7 @@ public class SepaInstantForm extends GeneralSepaForm {
             updateFromInputs();
         });
 
-        ibanInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, IBAN);
+        InputTextField ibanInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, IBAN);
         ibanInputTextField.setTextFormatter(new TextFormatter<>(new IBANNormalizer()));
         ibanInputTextField.setValidator(ibanValidator);
         ibanInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -140,7 +140,7 @@ public class SepaInstantForm extends GeneralSepaForm {
     @Override
     public void addFormForDisplayAccount() {
         gridRowFrom = gridRow;
-        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), sepaInstantAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(sepaInstantAccount.getPaymentMethod().getId()));
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"), sepaInstantAccount.getHolderName());
@@ -170,5 +170,10 @@ public class SepaInstantForm extends GeneralSepaForm {
     @Override
     boolean isCountryAccepted(String countryCode) {
         return sepaInstantAccount.getAcceptedCountryCodes().contains(countryCode);
+    }
+
+    @Override
+    protected String getIban() {
+        return sepaInstantAccount.getIban();
     }
 }

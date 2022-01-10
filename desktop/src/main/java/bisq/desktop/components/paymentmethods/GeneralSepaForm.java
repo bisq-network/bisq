@@ -40,7 +40,6 @@ public abstract class GeneralSepaForm extends PaymentMethodForm {
     static final String IBAN = "IBAN";
 
     private TextField currencyTextField;
-    InputTextField ibanInputTextField;
 
     private FiatCurrency euroCurrency = CurrencyUtil.getFiatCurrency("EUR").get();
 
@@ -55,7 +54,7 @@ public abstract class GeneralSepaForm extends PaymentMethodForm {
             TradeCurrency singleTradeCurrency = this.paymentAccount.getSingleTradeCurrency();
             String currency = singleTradeCurrency != null ? singleTradeCurrency.getCode() : null;
             if (currency != null) {
-                String iban = ibanInputTextField.getText();
+                String iban = getIban();
                 if (iban.length() > 9)
                     iban = StringUtils.abbreviate(iban, 9);
                 String method = Res.get(paymentAccount.getPaymentMethod().getId());
@@ -139,4 +138,6 @@ public abstract class GeneralSepaForm extends PaymentMethodForm {
     }
 
     abstract boolean isCountryAccepted(String countryCode);
+
+    protected abstract String getIban();
 }

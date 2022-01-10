@@ -80,7 +80,14 @@ public final class SepaAccount extends CountryBasedPaymentAccount implements Ban
     }
 
     @Override
+    public void onPersistChanges() {
+        super.onPersistChanges();
+        ((SepaAccountPayload) paymentAccountPayload).onPersistChanges();
+    }
+
+    @Override
     public void revertChanges() {
+        super.revertChanges();
         ((SepaAccountPayload) paymentAccountPayload).revertChanges();
     }
 }

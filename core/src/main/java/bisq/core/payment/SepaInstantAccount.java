@@ -80,7 +80,14 @@ public final class SepaInstantAccount extends CountryBasedPaymentAccount impleme
     }
 
     @Override
+    public void onPersistChanges() {
+        super.onPersistChanges();
+        ((SepaInstantAccountPayload) paymentAccountPayload).onPersistChanges();
+    }
+
+    @Override
     public void revertChanges() {
+        super.revertChanges();
         ((SepaInstantAccountPayload) paymentAccountPayload).revertChanges();
     }
 }
