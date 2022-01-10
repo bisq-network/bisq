@@ -396,6 +396,10 @@ service Trades {
     }
     rpc CloseTrade (CloseTradeRequest) returns (CloseTradeReply) {
     }
+    rpc FailTrade (FailTradeRequest) returns (FailTradeReply) {
+    }
+    rpc UnFailTrade (UnFailTradeRequest) returns (UnFailTradeReply) {
+    }
     rpc WithdrawFunds (WithdrawFundsRequest) returns (WithdrawFundsReply) {
     }
 }
@@ -438,6 +442,20 @@ message CloseTradeRequest {
 }
 
 message CloseTradeReply {
+}
+
+message FailTradeRequest {
+    string tradeId = 1;
+}
+
+message FailTradeReply {
+}
+
+message UnFailTradeRequest {
+    string tradeId = 1;
+}
+
+message UnFailTradeReply {
 }
 
 message WithdrawFundsRequest {

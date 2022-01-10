@@ -8,6 +8,8 @@ import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 
+import lombok.Getter;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInfo;
 
@@ -36,6 +38,7 @@ public class AbstractTradeTest extends AbstractOfferTest {
     public static final ExpectedProtocolStatus EXPECTED_PROTOCOL_STATUS = new ExpectedProtocolStatus();
 
     // A Trade ID cache for use in @Test sequences.
+    @Getter
     protected static String tradeId;
 
     protected final Supplier<Integer> maxTradeStateAndPhaseChecks = () -> isLongRunningTest ? 10 : 2;

@@ -335,6 +335,14 @@ public class CoreApi {
         return coreTradesService.getBsqSwapTradeRole(bsqSwapTrade);
     }
 
+    public void failTrade(String tradeId) {
+        coreTradesService.failTrade(tradeId);
+    }
+
+    public void unFailTrade(String tradeId) {
+        coreTradesService.unFailTrade(tradeId);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Wallets
     ///////////////////////////////////////////////////////////////////////////////////////////
