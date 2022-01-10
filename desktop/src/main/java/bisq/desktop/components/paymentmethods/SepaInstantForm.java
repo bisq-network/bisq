@@ -27,7 +27,6 @@ import bisq.desktop.util.normalization.IBANNormalizer;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.PaymentAccount;
@@ -37,16 +36,12 @@ import bisq.core.payment.payload.SepaInstantAccountPayload;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 
 import javafx.collections.FXCollections;
 
-import java.util.List;
 
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
@@ -116,8 +111,8 @@ public class SepaInstantForm extends GeneralSepaForm {
 
         setCountryComboBoxAction(countryComboBox, sepaInstantAccount);
 
-        addEuroCountriesGrid();
-        addNonEuroCountriesGrid();
+        addCountriesGrid(Res.get("payment.accept.euro"), CountryUtil.getAllSepaEuroCountries());
+        addCountriesGrid(Res.get("payment.accept.nonEuro"), CountryUtil.getAllSepaNonEuroCountries());
         addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
 
@@ -129,38 +124,6 @@ public class SepaInstantForm extends GeneralSepaForm {
         }
 
         updateFromInputs();
-    }
-
-    private void addEuroCountriesGrid() {
-        addCountriesGrid(Res.get("payment.accept.euro"), euroCountryCheckBoxes,
-                CountryUtil.getAllSepaInstantEuroCountries());
-    }
-
-    private void addNonEuroCountriesGrid() {
-        addCountriesGrid(Res.get("payment.accept.nonEuro"), nonEuroCountryCheckBoxes,
-                CountryUtil.getAllSepaInstantNonEuroCountries());
-    }
-
-    @Override
-    void updateCountriesSelection(List<CheckBox> checkBoxList) {
-        checkBoxList.forEach(checkBox -> {
-            String countryCode = (String) checkBox.getUserData();
-            TradeCurrency selectedCurrency = sepaInstantAccount.getSelectedTradeCurrency();
-            if (selectedCurrency == null) {
-                Country country = CountryUtil.getDefaultCountry();
-                if (CountryUtil.getAllSepaInstantCountries().contains(country))
-                    selectedCurrency = CurrencyUtil.getCurrencyByCountryCode(country.code);
-            }
-
-            boolean selected;
-            if (selectedCurrency != null) {
-                selected = true;
-                sepaInstantAccount.addAcceptedCountry(countryCode);
-            } else {
-                selected = sepaInstantAccount.getAcceptedCountryCodes().contains(countryCode);
-            }
-            checkBox.setSelected(selected);
-        });
     }
 
     @Override
@@ -188,19 +151,9 @@ public class SepaInstantForm extends GeneralSepaForm {
         TradeCurrency singleTradeCurrency = sepaInstantAccount.getSingleTradeCurrency();
         String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "null";
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
-        String countries;
-        Tooltip tooltip = null;
-        if (CountryUtil.containsAllSepaInstantEuroCountries(sepaInstantAccount.getAcceptedCountryCodes())) {
-            countries = Res.get("shared.allEuroCountries");
-        } else {
-            countries = CountryUtil.getCodesString(sepaInstantAccount.getAcceptedCountryCodes());
-            tooltip = new Tooltip(CountryUtil.getNamesByCodesString(sepaInstantAccount.getAcceptedCountryCodes()));
-        }
-        TextField acceptedCountries = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accepted.countries"), countries).second;
-        if (tooltip != null) {
-            acceptedCountries.setMouseTransparent(false);
-            acceptedCountries.setTooltip(tooltip);
-        }
+
+        addCountriesGrid(Res.get("payment.accept.euro"), CountryUtil.getAllSepaEuroCountries());
+        addCountriesGrid(Res.get("payment.accept.nonEuro"), CountryUtil.getAllSepaNonEuroCountries());
         addLimitations(true);
     }
 
@@ -212,5 +165,10 @@ public class SepaInstantForm extends GeneralSepaForm {
     @Override
     void addAcceptedCountry(String countryCode) {
         sepaInstantAccount.addAcceptedCountry(countryCode);
+    }
+
+    @Override
+    boolean isCountryAccepted(String countryCode) {
+        return sepaInstantAccount.getAcceptedCountryCodes().contains(countryCode);
     }
 }

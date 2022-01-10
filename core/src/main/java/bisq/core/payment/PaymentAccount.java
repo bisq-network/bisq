@@ -247,4 +247,8 @@ public abstract class PaymentAccount implements PersistablePayload {
     public String getMessageForAccountCreation() {
         return null;
     }
+
+    public void revertChanges() {
+
+    }
 }

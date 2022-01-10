@@ -312,27 +312,6 @@ public abstract class PaymentMethodForm {
         flowPane.getChildren().add(checkBox);
     }
 
-    void fillUpFlowPaneWithCountries(List<CheckBox> checkBoxList, FlowPane flowPane, Country country) {
-        final String countryCode = country.code;
-        CheckBox checkBox = new AutoTooltipCheckBox(countryCode);
-        checkBox.setUserData(countryCode);
-        checkBoxList.add(checkBox);
-        checkBox.setMouseTransparent(false);
-        checkBox.setMinWidth(45);
-        checkBox.setMaxWidth(45);
-        checkBox.setTooltip(new Tooltip(country.name));
-        checkBox.setOnAction(event -> {
-            if (checkBox.isSelected()) {
-                addAcceptedCountry(countryCode);
-            } else {
-                removeAcceptedCountry(countryCode);
-            }
-
-            updateAllInputsValid();
-        });
-        flowPane.getChildren().add(checkBox);
-    }
-
     protected abstract void autoFillNameTextField();
 
     public abstract void addFormForAddAccount();

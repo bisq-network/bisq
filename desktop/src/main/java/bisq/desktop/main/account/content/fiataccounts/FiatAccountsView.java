@@ -386,6 +386,16 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         removeNewAccountForm();
     }
 
+    private void onUpdateAccount(PaymentAccount paymentAccount) {
+        model.onUpdateAccount(paymentAccount);
+        removeSelectAccountForm();
+    }
+
+    private void onCancelSelectedAccount(PaymentAccount paymentAccount) {
+        paymentAccount.revertChanges();
+        removeSelectAccountForm();
+    }
+
     protected boolean deleteAccountFromModel(PaymentAccount paymentAccount) {
         return model.onDeleteAccount(paymentAccount);
     }
@@ -474,11 +484,19 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         if (paymentMethodForm != null) {
             paymentMethodForm.addFormForDisplayAccount();
             gridRow = paymentMethodForm.getGridRow();
-            Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(root, ++gridRow, Res.get("shared.deleteAccount"), Res.get("shared.cancel"));
-            Button deleteAccountButton = tuple.first;
+            Tuple3<Button, Button, Button> tuple = add3ButtonsAfterGroup(
+                    root,
+                    ++gridRow,
+                    Res.get("shared.save"),
+                    Res.get("shared.deleteAccount"),
+                    Res.get("shared.cancel")
+            );
+            Button updateButton = tuple.first;
+            updateButton.setOnAction(event -> onUpdateAccount(paymentMethodForm.getPaymentAccount()));
+            Button deleteAccountButton = tuple.second;
             deleteAccountButton.setOnAction(event -> onDeleteAccount(paymentMethodForm.getPaymentAccount()));
-            Button cancelButton = tuple.second;
-            cancelButton.setOnAction(event -> removeSelectAccountForm());
+            Button cancelButton = tuple.third;
+            cancelButton.setOnAction(event -> onCancelSelectedAccount(paymentMethodForm.getPaymentAccount()));
             GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan());
             model.onSelectAccount(paymentAccount);
         }
@@ -636,6 +654,15 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
             return;
         }
         Utilities.copyToClipboard(accountAgeWitnessService.getSignInfoFromAccount(selectedAccount));
+    }
+
+    @Override
+    protected void deactivate() {
+        super.deactivate();
+        var selectedAccount = paymentAccountsListView.getSelectionModel().getSelectedItem();
+        if (selectedAccount != null) {
+            onCancelSelectedAccount(selectedAccount);
+        }
     }
 
 }
