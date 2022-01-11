@@ -66,7 +66,10 @@ public class FileTransferSender extends FileTransferSession {
         try {
             Map<String, String> env = new HashMap<>();
             env.put("create", "true");
-            FileSystem zipfs = FileSystems.newFileSystem(URI.create("jar:file:///" + (zipFilePath.replace('\\', '/'))), env);
+            URI uri = URI.create("jar:file:///" + zipFilePath
+                    .replace('\\', '/')
+                    .replaceAll(" ", "%20"));
+            FileSystem zipfs = FileSystems.newFileSystem(uri, env);
             Files.createDirectory(zipfs.getPath(zipId));    // store logfiles in a usefully-named subdir
             Stream<Path> paths = Files.walk(Paths.get(Config.appDataDir().toString()), 1);
             paths.filter(Files::isRegularFile).forEach(externalTxtFile -> {
@@ -85,7 +88,7 @@ public class FileTransferSender extends FileTransferSession {
                 }
             });
             zipfs.close();
-        } catch (IOException ex) {
+        } catch (IOException | IllegalArgumentException ex) {
             log.error(ex.toString());
             ex.printStackTrace();
         }
