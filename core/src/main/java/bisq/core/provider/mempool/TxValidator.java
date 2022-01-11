@@ -211,7 +211,7 @@ public class TxValidator {
         String description = "Expected BTC fee: " + expectedFee + " sats , actual fee paid: " +
                 feeValueAsCoin + " sats";
         if (expectedFeeAsLong == feeValue) {
-            log.debug("The fee matched what we expected");
+            log.debug("The fee matched. " + description);
             return true;
         }
 
@@ -269,9 +269,9 @@ public class TxValidator {
                 minFeeParam);
         long feeValue = jsonVIn0Value.getAsLong() - jsonFeeValue.getAsLong();
         // if the first output (BSQ) is greater than the first input (BSQ) include the second input (presumably BSQ)
-        if (jsonFeeValue.getAsLong() > jsonVIn0Value.getAsLong()) {
+        if ((jsonFeeValue.getAsLong() > jsonVIn0Value.getAsLong() ||
+                expectedFee.getValue() > jsonVIn0Value.getAsLong()) && jsonVin.size() > 2) {
             // in this case 2 or more UTXOs were spent to pay the fee:
-            //TODO missing handling of > 2 BSQ inputs
             JsonObject jsonVin1 = jsonVin.get(1).getAsJsonObject();
             JsonElement jsonVIn1Value = jsonVin1.getAsJsonObject("prevout").get("value");
             feeValue += jsonVIn1Value.getAsLong();
@@ -282,7 +282,7 @@ public class TxValidator {
                 (double) expectedFeeAsLong / 100.0, (double) feeValue / 100.0);
 
         if (expectedFeeAsLong == feeValue) {
-            log.debug("The fee matched what we expected");
+            log.debug("The fee matched. " + description);
             return true;
         }
 
