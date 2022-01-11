@@ -146,12 +146,10 @@ public class BuyerStep4View extends TradeStepView {
     private void openTradeFeedbackWindow() {
         String key = "feedbackPopupAfterTrade";
         if (!DevEnv.isDevMode() && preferences.showAgain(key)) {
-            UserThread.runAfter(() -> {
-                new TradeFeedbackWindow()
-                        .dontShowAgainId(key)
-                        .onAction(this::showNavigateToClosedTradesViewPopup)
-                        .show();
-            }, 500, TimeUnit.MILLISECONDS);
+            UserThread.runAfter(() -> new TradeFeedbackWindow()
+                    .dontShowAgainId(key)
+                    .onAction(this::showNavigateToClosedTradesViewPopup)
+                    .show(), 500, TimeUnit.MILLISECONDS);
         } else {
             showNavigateToClosedTradesViewPopup();
         }
@@ -159,14 +157,12 @@ public class BuyerStep4View extends TradeStepView {
 
     private void showNavigateToClosedTradesViewPopup() {
         if (!DevEnv.isDevMode()) {
-            UserThread.runAfter(() -> {
-                new Popup().headLine(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.headline"))
-                        .feedback(Res.get("portfolio.pending.step5_buyer.withdrawalCompleted.msg"))
-                        .actionButtonTextWithGoTo("navigation.portfolio.closedTrades")
-                        .onAction(() -> model.dataModel.navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class))
-                        .dontShowAgainId("tradeCompleteWithdrawCompletedInfo")
-                        .show();
-            }, 500, TimeUnit.MILLISECONDS);
+            UserThread.runAfter(() -> new Popup().headLine(Res.get("portfolio.pending.step5_buyer.tradeCompleted.headline"))
+                    .feedback(Res.get("portfolio.pending.step5_buyer.tradeCompleted.msg"))
+                    .actionButtonTextWithGoTo("navigation.portfolio.closedTrades")
+                    .onAction(() -> model.dataModel.navigation.navigateTo(MainView.class, PortfolioView.class, ClosedTradesView.class))
+                    .dontShowAgainId("tradeCompleteWithdrawCompletedInfo")
+                    .show(), 500, TimeUnit.MILLISECONDS);
         }
     }
 
