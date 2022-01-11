@@ -130,7 +130,7 @@ public class FileUtil {
             try {
                 deleteFileIfExists(file, ignoreLockedFiles);
             } catch (Throwable t) {
-                log.error("Could not delete file. Error=" + t.toString());
+                log.error("Could not delete file. Error=" + t);
                 throw new IOException(t);
             }
         }

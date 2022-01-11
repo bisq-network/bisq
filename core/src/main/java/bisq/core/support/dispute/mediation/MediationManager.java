@@ -141,19 +141,17 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
 
     @Override
     public void cleanupDisputes() {
-        disputeListService.cleanupDisputes(tradeId -> {
-            tradeManager.getTradeById(tradeId).filter(trade -> trade.getPayoutTx() != null)
-                    .ifPresent(trade -> {
-                        tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.MEDIATION_CLOSED);
-                    });
-        });
+        disputeListService.cleanupDisputes(tradeId -> tradeManager.getTradeById(tradeId).filter(trade -> trade.getPayoutTx() != null)
+                .ifPresent(trade -> tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.MEDIATION_CLOSED)));
     }
 
     @Override
     protected String getDisputeInfo(Dispute dispute) {
         String role = Res.get("shared.mediator").toLowerCase();
+        NodeAddress agentNodeAddress = getAgentNodeAddress(dispute);
+        checkNotNull(agentNodeAddress, "Agent node address must not be null");
         String roleContextMsg = Res.get("support.initialMediatorMsg",
-                DisputeAgentLookupMap.getKeybaseLinkForAgent(getAgentNodeAddress(dispute).getFullAddress()));
+                DisputeAgentLookupMap.getKeybaseLinkForAgent(agentNodeAddress.getFullAddress()));
         String link = "https://bisq.wiki/Dispute_resolution#Level_2:_Mediation";
         return Res.get("support.initialInfo", role, roleContextMsg, role, link);
     }
@@ -181,7 +179,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         checkNotNull(chatMessage, "chatMessage must not be null");
         Optional<Dispute> disputeOptional = findDispute(disputeResult);
         String uid = disputeResultMessage.getUid();
-        if (!disputeOptional.isPresent()) {
+        if (disputeOptional.isEmpty()) {
             log.warn("We got a dispute result msg but we don't have a matching dispute. " +
                     "That might happen when we get the disputeResultMessage before the dispute was created. " +
                     "We try again after 2 sec. to apply the disputeResultMessage. TradeId = " + tradeId);
@@ -293,7 +291,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         }
         // we create a new session which is related to an open dispute from our list
         Optional<Dispute> dispute = findDispute(ftp.getTradeId(), ftp.getTraderId());
-        if (!dispute.isPresent()) {
+        if (dispute.isEmpty()) {
             log.error("Received log upload request for unknown TradeId/TraderId {}/{}", ftp.getTradeId(), ftp.getTraderId());
             return;
         }

@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.core.support.dispute.mediation;
 
 import bisq.network.p2p.FileTransferPart;
@@ -39,7 +56,7 @@ public class FileTransferSender extends FileTransferSession {
     protected final String zipFilePath;
 
     public FileTransferSender(NetworkNode networkNode, NodeAddress peerNodeAddress,
-                               String tradeId, int traderId, String traderRole, @Nullable FileTransferSession.FtpCallback callback) {
+                              String tradeId, int traderId, String traderRole, @Nullable FileTransferSession.FtpCallback callback) {
         super(networkNode, peerNodeAddress, tradeId, traderId, traderRole, callback);
         zipFilePath = Config.appDataDir() + FileSystems.getDefault().getSeparator() + zipId + ".zip";
         updateProgress();
@@ -54,10 +71,10 @@ public class FileTransferSender extends FileTransferSession {
             Stream<Path> paths = Files.walk(Paths.get(Config.appDataDir().toString()), 1);
             paths.filter(Files::isRegularFile).forEach(externalTxtFile -> {
                 try {
-                // always include bisq.log; and other .log files if they contain the TradeId
-                if (externalTxtFile.getFileName().toString().equals("bisq.log") ||
-                        (externalTxtFile.getFileName().toString().matches(".*.log") &&
-                                doesFileContainKeyword(externalTxtFile.toFile(), fullTradeId))) {
+                    // always include bisq.log; and other .log files if they contain the TradeId
+                    if (externalTxtFile.getFileName().toString().equals("bisq.log") ||
+                            (externalTxtFile.getFileName().toString().matches(".*.log") &&
+                                    doesFileContainKeyword(externalTxtFile.toFile(), fullTradeId))) {
                         Path pathInZipfile = zipfs.getPath(zipId + "/" + externalTxtFile.getFileName().toString());
                         log.info("adding {} to zip file {}", pathInZipfile, zipfs);
                         Files.copy(externalTxtFile, pathInZipfile, StandardCopyOption.REPLACE_EXISTING);
@@ -117,7 +134,7 @@ public class FileTransferSender extends FileTransferSession {
     }
 
     protected void uploadData() {
-        if (!dataAwaitingAck.isPresent()) {
+        if (dataAwaitingAck.isEmpty()) {
             return;
         }
         FileTransferPart ftp = dataAwaitingAck.get();
@@ -127,7 +144,7 @@ public class FileTransferSender extends FileTransferSession {
     }
 
     public boolean processAckForFilePart(String ackUid) {
-        if (!dataAwaitingAck.isPresent()) {
+        if (dataAwaitingAck.isEmpty()) {
             log.warn("We received an ACK we were not expecting. {}", ackUid);
             return false;
         }

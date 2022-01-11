@@ -2032,7 +2032,7 @@ textfield */
 }
 
 .dispute-chat-border {
-    -fx-background-color: -bs-color-blue-5;
+    -fx-background-color: -bs-support-chat-background;
 }
 
 /********************************************************************************************************************

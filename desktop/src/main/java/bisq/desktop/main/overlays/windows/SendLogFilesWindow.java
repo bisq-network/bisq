@@ -23,6 +23,7 @@ import bisq.desktop.main.portfolio.pendingtrades.steps.TradeWizardItem;
 import bisq.desktop.main.portfolio.pendingtrades.steps.buyer.BuyerStep1View;
 import bisq.desktop.main.portfolio.pendingtrades.steps.buyer.BuyerStep2View;
 import bisq.desktop.main.portfolio.pendingtrades.steps.buyer.BuyerStep3View;
+import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.mediation.FileTransferSender;
@@ -31,20 +32,22 @@ import bisq.core.support.dispute.mediation.MediationManager;
 
 import bisq.common.UserThread;
 
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
+import com.jfoenix.controls.JFXProgressBar;
+
 import javafx.scene.control.Button;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
-import javafx.beans.property.SimpleDoubleProperty;
+
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 
 import java.io.IOException;
 
@@ -58,7 +61,6 @@ public class SendLogFilesWindow extends Overlay<SendLogFilesWindow> implements F
     private final String tradeId;
     private final int traderId;
     private final MediationManager mediationManager;
-    private ProgressBar progressBar;
     private Label statusLabel;
     private Button sendButton, stopButton;
     private final DoubleProperty ftpProgress = new SimpleDoubleProperty(-1);
@@ -136,21 +138,25 @@ public class SendLogFilesWindow extends Overlay<SendLogFilesWindow> implements F
         addWizardsToGridPane(step3);
         addRegionToGridPane();
 
-        progressBar = new ProgressBar();
+        JFXProgressBar progressBar = new JFXProgressBar();
         progressBar.setMinHeight(19);
         progressBar.setMaxHeight(19);
         progressBar.setPrefWidth(9305);
+        progressBar.setVisible(false);
         progressBar.progressProperty().bind(ftpProgress);
         gridPane.add(progressBar, 0, ++rowIndex);
 
-        statusLabel = addMultilineLabel(gridPane, ++rowIndex, Res.get("support.sendLogs.waiting"));
+        statusLabel = addMultilineLabel(gridPane, ++rowIndex, "", -Layout.FLOATING_LABEL_DISTANCE);
+        statusLabel.getStyleClass().add("sub-info");
         addRegionToGridPane();
 
         sendButton = new AutoTooltipButton(Res.get("support.sendLogs.send"));
-        stopButton = new AutoTooltipButton(Res.get("support.sendLogs.stop"));
+        stopButton = new AutoTooltipButton(Res.get("support.sendLogs.cancel"));
+        stopButton.setDisable(true);
         closeButton = new AutoTooltipButton(Res.get("shared.close"));
         sendButton.setOnAction(e -> {
             try {
+                progressBar.setVisible(true);
                 if (fileTransferSender == null) {
                     setActiveStep(1);
                     statusLabel.setText(Res.get("support.sendLogs.init"));

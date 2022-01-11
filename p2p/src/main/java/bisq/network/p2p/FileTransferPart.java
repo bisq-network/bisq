@@ -27,8 +27,8 @@ import lombok.Value;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
-public final class FileTransferPart extends NetworkEnvelope implements ExtendedDataSizePermission, SendersNodeAddressMessage {
-    private final NodeAddress senderNodeAddress;
+public class FileTransferPart extends NetworkEnvelope implements ExtendedDataSizePermission, SendersNodeAddressMessage {
+    NodeAddress senderNodeAddress;
     public String uid;
     public String tradeId;
     public int traderId;
