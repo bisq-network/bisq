@@ -32,7 +32,6 @@ import bisq.desktop.main.portfolio.openoffer.OpenOffersView;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesView;
 
 import bisq.core.locale.Res;
-import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.bisq_v1.OfferPayload;
@@ -143,7 +142,6 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
             editOfferView = null;
         }
 
-        // navigation.navigateToPreviousVisitedView();
         navigation.navigateTo(MainView.class, this.getClass(), OpenOffersView.class);
     }
 
@@ -215,9 +213,8 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
         } else if (view instanceof FailedTradesView) {
             currentTab = failedTradesTab;
         } else if (view instanceof EditOfferView) {
-            if (data instanceof Offer) {
-                Offer offer = (Offer) data;
-                openOffer = openOfferManager.getOpenOfferById(offer.getId()).orElse(null);
+            if (data instanceof OpenOffer) {
+                openOffer = (OpenOffer) data;
             }
             if (openOffer != null) {
                 if (editOfferView == null) {

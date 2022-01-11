@@ -60,6 +60,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferFilterService;
 import bisq.core.offer.OfferRestrictions;
+import bisq.core.offer.OpenOffer;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.DontShowAgainLookup;
@@ -735,7 +736,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     }
 
     private void onEditOpenOffer(Offer offer) {
-        navigation.navigateToWithData(offer, MainView.class, PortfolioView.class, EditOfferView.class);
+        OpenOffer openOffer = model.getOpenOffer(offer);
+        if (openOffer != null) {
+            navigation.navigateToWithData(openOffer, MainView.class, PortfolioView.class, EditOfferView.class);
+        }
     }
 
     private void doRemoveOffer(Offer offer) {
