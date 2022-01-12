@@ -78,4 +78,16 @@ public final class SepaAccount extends CountryBasedPaymentAccount implements Ban
     public void removeAcceptedCountry(String countryCode) {
         ((SepaAccountPayload) paymentAccountPayload).removeAcceptedCountry(countryCode);
     }
+
+    @Override
+    public void onPersistChanges() {
+        super.onPersistChanges();
+        ((SepaAccountPayload) paymentAccountPayload).onPersistChanges();
+    }
+
+    @Override
+    public void revertChanges() {
+        super.revertChanges();
+        ((SepaAccountPayload) paymentAccountPayload).revertChanges();
+    }
 }

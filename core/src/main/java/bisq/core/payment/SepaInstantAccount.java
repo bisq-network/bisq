@@ -78,4 +78,16 @@ public final class SepaInstantAccount extends CountryBasedPaymentAccount impleme
     public void removeAcceptedCountry(String countryCode) {
         ((SepaInstantAccountPayload) paymentAccountPayload).removeAcceptedCountry(countryCode);
     }
+
+    @Override
+    public void onPersistChanges() {
+        super.onPersistChanges();
+        ((SepaInstantAccountPayload) paymentAccountPayload).onPersistChanges();
+    }
+
+    @Override
+    public void revertChanges() {
+        super.revertChanges();
+        ((SepaInstantAccountPayload) paymentAccountPayload).revertChanges();
+    }
 }

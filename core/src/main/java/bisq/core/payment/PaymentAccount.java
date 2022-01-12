@@ -58,6 +58,9 @@ public abstract class PaymentAccount implements PersistablePayload {
     public PaymentAccountPayload paymentAccountPayload;
     @Setter
     protected String accountName;
+    @Setter
+    protected String persistedAccountName;
+
     protected final List<TradeCurrency> tradeCurrencies = new ArrayList<>();
     @Setter
     @Nullable
@@ -117,6 +120,7 @@ public abstract class PaymentAccount implements PersistablePayload {
             account.setId(proto.getId());
             account.setCreationDate(proto.getCreationDate());
             account.setAccountName(proto.getAccountName());
+            account.setPersistedAccountName(proto.getAccountName());
             account.getTradeCurrencies().addAll(tradeCurrencies);
             account.setPaymentAccountPayload(coreProtoResolver.fromProto(proto.getPaymentAccountPayload()));
 
@@ -246,5 +250,13 @@ public abstract class PaymentAccount implements PersistablePayload {
     // will be overridden by specific account when necessary
     public String getMessageForAccountCreation() {
         return null;
+    }
+
+    public void onPersistChanges() {
+        setPersistedAccountName(getAccountName());
+    }
+
+    public void revertChanges() {
+        setAccountName(getPersistedAccountName());
     }
 }
