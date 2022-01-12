@@ -42,8 +42,11 @@ import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 
 import bisq.network.p2p.AckMessageSourceType;
+import bisq.network.p2p.FileTransferPart;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.network.Connection;
+import bisq.network.p2p.network.MessageListener;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -52,11 +55,14 @@ import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.proto.network.NetworkEnvelope;
 
 import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
+import java.io.IOException;
 
 import java.util.Optional;
 
@@ -69,7 +75,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @Singleton
-public final class MediationManager extends DisputeManager<MediationDisputeList> {
+public final class MediationManager extends DisputeManager<MediationDisputeList> implements MessageListener, FileTransferSession.FtpCallback {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -90,6 +96,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
                             PriceFeedService priceFeedService) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
                 openOfferManager, daoFacade, keyRing, mediationDisputeListService, config, priceFeedService);
+        p2PService.getNetworkNode().addMessageListener(this);   // listening for FileTransferPart message
     }
 
 
@@ -134,19 +141,17 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
 
     @Override
     public void cleanupDisputes() {
-        disputeListService.cleanupDisputes(tradeId -> {
-            tradeManager.getTradeById(tradeId).filter(trade -> trade.getPayoutTx() != null)
-                    .ifPresent(trade -> {
-                        tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.MEDIATION_CLOSED);
-                    });
-        });
+        disputeListService.cleanupDisputes(tradeId -> tradeManager.getTradeById(tradeId).filter(trade -> trade.getPayoutTx() != null)
+                .ifPresent(trade -> tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.MEDIATION_CLOSED)));
     }
 
     @Override
     protected String getDisputeInfo(Dispute dispute) {
         String role = Res.get("shared.mediator").toLowerCase();
+        NodeAddress agentNodeAddress = getAgentNodeAddress(dispute);
+        checkNotNull(agentNodeAddress, "Agent node address must not be null");
         String roleContextMsg = Res.get("support.initialMediatorMsg",
-                DisputeAgentLookupMap.getKeybaseLinkForAgent(getAgentNodeAddress(dispute).getFullAddress()));
+                DisputeAgentLookupMap.getKeybaseLinkForAgent(agentNodeAddress.getFullAddress()));
         String link = "https://bisq.wiki/Dispute_resolution#Level_2:_Mediation";
         return Res.get("support.initialInfo", role, roleContextMsg, role, link);
     }
@@ -174,7 +179,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         checkNotNull(chatMessage, "chatMessage must not be null");
         Optional<Dispute> disputeOptional = findDispute(disputeResult);
         String uid = disputeResultMessage.getUid();
-        if (!disputeOptional.isPresent()) {
+        if (disputeOptional.isEmpty()) {
             log.warn("We got a dispute result msg but we don't have a matching dispute. " +
                     "That might happen when we get the disputeResultMessage before the dispute was created. " +
                     "We try again after 2 sec. to apply the disputeResultMessage. TradeId = " + tradeId);
@@ -271,5 +276,57 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
     public void rejectMediationResult(Trade trade) {
         trade.setMediationResultState(MediationResultState.MEDIATION_RESULT_REJECTED);
         tradeManager.requestPersistence();
+    }
+
+    public FileTransferSender initLogUpload(FileTransferSession.FtpCallback callback, String tradeId, int traderId) throws IOException {
+        Dispute dispute = findDispute(tradeId, traderId)
+                .orElseThrow(() -> new IOException("could not locate Dispute for tradeId/traderId"));
+        return dispute.createFileTransferSender(p2PService.getNetworkNode(),
+            dispute.getContract().getMediatorNodeAddress(), callback);
+    }
+
+    private void processFilePartReceived(FileTransferPart ftp) {
+        if (!ftp.isInitialRequest()) {
+            return; // existing sessions are processed by FileTransferSession object directly
+        }
+        // we create a new session which is related to an open dispute from our list
+        Optional<Dispute> dispute = findDispute(ftp.getTradeId(), ftp.getTraderId());
+        if (dispute.isEmpty()) {
+            log.error("Received log upload request for unknown TradeId/TraderId {}/{}", ftp.getTradeId(), ftp.getTraderId());
+            return;
+        }
+        if (dispute.get().isClosed()) {
+            log.error("Received a file transfer request for closed dispute {}", ftp.getTradeId());
+            return;
+        }
+        try {
+            FileTransferReceiver session = dispute.get().createOrGetFileTransferReceiver(
+                    p2PService.getNetworkNode(), ftp.getSenderNodeAddress(), this);
+            session.processFilePartReceived(ftp);
+        } catch (IOException e) {
+            log.error("Unable to process a received file message" + e);
+        }
+    }
+
+    @Override
+    public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
+        if (networkEnvelope instanceof FileTransferPart) {              // mediator receiving log file data
+            FileTransferPart ftp = (FileTransferPart) networkEnvelope;
+            processFilePartReceived(ftp);
+        }
+    }
+
+    @Override
+    public void onFtpProgress(double progressPct) {
+        log.trace("ftp progress: {}", progressPct);
+    }
+    @Override
+    public void onFtpComplete(FileTransferSession session) {
+        Optional<Dispute> dispute = findDispute(session.getFullTradeId(), session.getTraderId());
+        dispute.ifPresent(d -> addMediationLogsReceivedMessage(d, session.getZipId()));
+    }
+    @Override
+    public void onFtpTimeout(String statusMsg, FileTransferSession session) {
+        session.resetSession();
     }
 }

@@ -28,6 +28,7 @@ import bisq.desktop.components.PeerInfoIconDispute;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
+import bisq.desktop.main.overlays.windows.SendLogFilesWindow;
 import bisq.desktop.main.overlays.windows.SendPrivateNotificationWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.main.overlays.windows.VerifyDisputeResultSignatureWindow;
@@ -125,7 +126,7 @@ import javax.annotation.Nullable;
 import static bisq.desktop.util.FormBuilder.getIconForLabel;
 import static bisq.desktop.util.FormBuilder.getRegularIconButton;
 
-public abstract class DisputeView extends ActivatableView<VBox, Void> implements PeerInfoIcon.notify {
+public abstract class DisputeView extends ActivatableView<VBox, Void> implements PeerInfoIcon.notify, DisputeChatPopup.ChatCallback {
     public enum FilterResult {
         NO_MATCH("No Match"),
         NO_FILTER("No filter text"),
@@ -228,8 +229,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
         this.refundAgentManager = refundAgentManager;
         this.daoFacade = daoFacade;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
-        DisputeChatPopup.ChatCallback chatCallback = this::handleOnProcessDispute;
-        chatPopup = new DisputeChatPopup(disputeManager, formatter, preferences, chatCallback);
+        chatPopup = new DisputeChatPopup(disputeManager, formatter, preferences, this);
     }
 
     @Override
@@ -1499,4 +1499,16 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
         });
     }
 
+    @Override
+    public void onCloseDisputeFromChatWindow(Dispute dispute) {
+        handleOnProcessDispute(dispute);
+    }
+
+    @Override
+    public void onSendLogsFromChatWindow(Dispute dispute) {
+        if (!(disputeManager instanceof MediationManager))
+            return;
+        MediationManager mediationManager = (MediationManager) disputeManager;
+        new SendLogFilesWindow(dispute.getTradeId(), dispute.getTraderId(), mediationManager).show();
+    }
 }
