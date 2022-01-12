@@ -41,6 +41,8 @@ import bisq.desktop.main.offer.OfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.BsqSwapOfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
+import bisq.desktop.main.portfolio.PortfolioView;
+import bisq.desktop.main.portfolio.editoffer.EditOfferView;
 import bisq.desktop.util.CssTheme;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
@@ -58,6 +60,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferFilterService;
 import bisq.core.offer.OfferRestrictions;
+import bisq.core.offer.OpenOffer;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.DontShowAgainLookup;
@@ -735,6 +738,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         }
     }
 
+    private void onEditOpenOffer(Offer offer) {
+        OpenOffer openOffer = model.getOpenOffer(offer);
+        if (openOffer != null) {
+            navigation.navigateToWithData(openOffer, MainView.class, PortfolioView.class, EditOfferView.class);
+        }
+    }
+
     private void doRemoveOffer(Offer offer) {
         String key = "WithdrawFundsAfterRemoveOfferInfo";
         model.onRemoveOpenOffer(offer,
@@ -1086,15 +1096,32 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     @Override
                     public TableCell<OfferBookListItem, OfferBookListItem> call(TableColumn<OfferBookListItem, OfferBookListItem> column) {
                         return new TableCell<>() {
-                            final ImageView iconView = new ImageView();
-                            final AutoTooltipButton button = new AutoTooltipButton();
                             OfferFilterService.Result canTakeOfferResult = null;
 
+                            final ImageView iconView = new ImageView();
+                            final AutoTooltipButton button = new AutoTooltipButton();
                             {
                                 button.setGraphic(iconView);
-                                button.setMinWidth(200);
-                                button.setMaxWidth(Double.MAX_VALUE);
                                 button.setGraphicTextGap(10);
+                                button.setPrefWidth(10000);
+                            }
+
+                            final ImageView iconView2 = new ImageView();
+                            final AutoTooltipButton button2 = new AutoTooltipButton();
+                            {
+                                button2.setGraphic(iconView2);
+                                button2.setGraphicTextGap(10);
+                                button2.setPrefWidth(10000);
+                            }
+
+                            final HBox hbox = new HBox();
+                            {
+                                hbox.setSpacing(8);
+                                hbox.setAlignment(Pos.CENTER);
+                                hbox.getChildren().add(button);
+                                hbox.getChildren().add(button2);
+                                HBox.setHgrow(button, Priority.ALWAYS);
+                                HBox.setHgrow(button2, Priority.ALWAYS);
                             }
 
                             @Override
@@ -1106,6 +1133,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     Offer offer = item.getOffer();
                                     boolean myOffer = model.isMyOffer(offer);
 
+                                    // https://github.com/bisq-network/bisq/issues/4986
                                     if (tableRow != null) {
                                         canTakeOfferResult = model.offerFilterService.canTakeOffer(offer, false);
                                         tableRow.setOpacity(canTakeOfferResult.isValid() || myOffer ? 1 : 0.4);
@@ -1134,6 +1162,13 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         button.setId(null);
                                         button.setStyle(CssTheme.isDarkTheme() ? "-fx-text-fill: white" : "-fx-text-fill: #444444");
                                         button.setOnAction(e -> onRemoveOpenOffer(offer));
+
+                                        iconView2.setId("image-edit");
+                                        button2.updateText(Res.get("shared.edit"));
+                                        button2.setId(null);
+                                        button2.setStyle(CssTheme.isDarkTheme() ? "-fx-text-fill: white" : "-fx-text-fill: #444444");
+                                        button2.setOnAction(e -> onEditOpenOffer(offer));
+                                        button2.setManaged(true);
                                     } else {
                                         boolean isSellOffer = offer.getDirection() == OfferDirection.SELL;
                                         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
@@ -1150,6 +1185,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         }
                                         button.setTooltip(new Tooltip(Res.get("offerbook.takeOfferButton.tooltip", model.getDirectionLabelTooltip(offer))));
                                         button.setOnAction(e -> onTakeOffer(offer));
+                                        button2.setManaged(false);
                                     }
 
                                     if (!myOffer) {
@@ -1164,7 +1200,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
                                     button.updateText(title);
                                     setPadding(new Insets(0, 15, 0, 0));
-                                    setGraphic(button);
+                                    setGraphic(hbox);
                                 } else {
                                     setGraphic(null);
                                     button.setOnAction(null);
