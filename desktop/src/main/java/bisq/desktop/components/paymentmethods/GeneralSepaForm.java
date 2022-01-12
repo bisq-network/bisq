@@ -1,7 +1,6 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.AutoTooltipCheckBox;
-import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.FormBuilder;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -31,6 +30,7 @@ import javafx.scene.layout.HBox;
 import javafx.util.StringConverter;
 
 import java.util.List;
+import java.util.Optional;
 
 import static bisq.desktop.util.FormBuilder.addTopLabelWithVBox;
 
@@ -39,13 +39,17 @@ public abstract class GeneralSepaForm extends PaymentMethodForm {
     static final String BIC = "BIC";
     static final String IBAN = "IBAN";
 
-    private TextField currencyTextField;
-
-    private FiatCurrency euroCurrency = CurrencyUtil.getFiatCurrency("EUR").get();
+    private FiatCurrency euroCurrency = null;
 
     GeneralSepaForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator, GridPane gridPane, int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
-        paymentAccount.setSingleTradeCurrency(euroCurrency);
+
+        Optional<FiatCurrency> euroCurrencyOptional = CurrencyUtil.getFiatCurrency("EUR");
+
+        if (euroCurrencyOptional.isPresent()) {
+            this.euroCurrency = euroCurrencyOptional.get();
+            paymentAccount.setSingleTradeCurrency(euroCurrency);
+        }
     }
 
     @Override
@@ -108,7 +112,7 @@ public abstract class GeneralSepaForm extends PaymentMethodForm {
 
         hBox.setSpacing(10);
         ComboBox<Country> countryComboBox = new JFXComboBox<>();
-        currencyTextField = new JFXTextField("");
+        TextField currencyTextField = new JFXTextField("");
         currencyTextField.setEditable(false);
         currencyTextField.setMouseTransparent(true);
         currencyTextField.setFocusTraversable(false);
