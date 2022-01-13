@@ -33,10 +33,10 @@
     <padding>
         <Insets bottom="15.0" left="15.0" right="15.0" top="15.0"/>
     </padding>
-    <HBox fx:id="searchBox">
+    <HBox spacing="5.0">
         <AutoTooltipLabel fx:id="filterLabel"/>
         <InputTextField fx:id="filterTextField" minWidth="500"/>
-        <Pane fx:id="searchBoxSpacer"/>
+        <Pane HBox.hgrow="ALWAYS"/>
     </HBox>
     <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
         <columns>

@@ -22,6 +22,7 @@ import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PeerInfoIconTrading;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -102,6 +103,7 @@ import javafx.event.EventHandler;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
@@ -125,10 +127,15 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private final boolean useDevModeHeader;
     private final Preferences preferences;
     @FXML
+    AutoTooltipLabel filterLabel;
+    @FXML
+    InputTextField filterTextField;
+    @FXML
     TableView<PendingTradesListItem> tableView;
     @FXML
     TableColumn<PendingTradesListItem, PendingTradesListItem> priceColumn, volumeColumn, amountColumn, avatarColumn,
             marketColumn, roleColumn, paymentMethodColumn, tradeIdColumn, dateColumn, chatColumn, moveTradeToFailedColumn;
+    private FilteredList<PendingTradesListItem> filteredList;
     private SortedList<PendingTradesListItem> sortedList;
     private TradeSubView selectedSubView;
     private EventHandler<KeyEvent> keyEventEventHandler;
@@ -150,6 +157,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private ChangeListener<Trade.DisputeState> disputeStateListener;
     private ChangeListener<MediationResultState> mediationResultStateListener;
     private ChangeListener<Number> getMempoolStatusListener;
+    private ChangeListener<String> filterTextFieldListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -179,6 +187,12 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     @Override
     public void initialize() {
+        filterTextFieldListener = (observable, oldValue, newValue) -> {
+            tableView.getSelectionModel().clearSelection();
+            applyFilteredListPredicate(filterTextField.getText());
+        };
+        filterLabel.setText(Res.get("shared.filter"));
+
         priceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.price")));
         amountColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountWithCur", Res.getBaseCurrencyCode())));
         volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amount")));
@@ -281,9 +295,13 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     @Override
     protected void activate() {
         ObservableList<PendingTradesListItem> list = model.dataModel.list;
-        sortedList = new SortedList<>(list);
+        filteredList = new FilteredList<>(list);
+        sortedList = new SortedList<>(filteredList);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
+
+        filterTextField.textProperty().addListener(filterTextFieldListener);
+        applyFilteredListPredicate(filterTextField.getText());
 
         updateMoveTradeToFailedColumnState();
 
@@ -303,10 +321,10 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
                     selectedSubView.setMinHeight(440);
                     VBox.setVgrow(selectedSubView, Priority.ALWAYS);
-                    if (root.getChildren().size() == 1)
+                    if (root.getChildren().size() == 2)
                         root.getChildren().add(selectedSubView);
-                    else if (root.getChildren().size() == 2)
-                        root.getChildren().set(1, selectedSubView);
+                    else if (root.getChildren().size() == 3)
+                        root.getChildren().set(2, selectedSubView);
 
                     // create and register a callback so we can be notified when the subview
                     // wants to open the chat window
@@ -340,6 +358,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     @Override
     protected void deactivate() {
+        filterTextField.textProperty().removeListener(filterTextFieldListener);
         sortedList.comparatorProperty().unbind();
         selectedItemSubscription.unsubscribe();
         selectedTableItemSubscription.unsubscribe();
@@ -351,6 +370,31 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         if (scene != null)
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+    }
+
+    private void applyFilteredListPredicate(String filterString) {
+        filteredList.setPredicate(item -> {
+            if (filterString.isEmpty())
+                return true;
+
+            if (item.getTrade().getId().contains(filterString)) {
+                return true;
+            }
+
+            if (formatter.formatCoin(item.getTrade().getAmount()).contains(filterString)) {
+                return true;
+            }
+
+            if (model.getPaymentMethod(item).contains(filterString)) {
+                return true;
+            }
+
+            if (model.getMarketLabel(item).contains(filterString)) {
+                return true;
+            }
+
+            return FormattingUtils.formatPrice(item.getPrice()).contains(filterString);
+        });
     }
 
     private void removeSelectedSubView() {

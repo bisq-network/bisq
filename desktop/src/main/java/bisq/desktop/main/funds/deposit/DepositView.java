@@ -80,6 +80,7 @@ import javafx.beans.value.ChangeListener;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
@@ -91,13 +92,20 @@ import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
 
-import static bisq.desktop.util.FormBuilder.*;
+import static bisq.desktop.util.FormBuilder.addAddressTextField;
+import static bisq.desktop.util.FormBuilder.addButtonCheckBoxWithBox;
+import static bisq.desktop.util.FormBuilder.addInputTextField;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
 public class DepositView extends ActivatableView<VBox, Void> {
 
     @FXML
     GridPane gridPane;
+    @FXML
+    AutoTooltipLabel filterLabel;
+    @FXML
+    InputTextField filterTextField;
     @FXML
     TableView<DepositListItem> tableView;
     @FXML
@@ -114,11 +122,13 @@ public class DepositView extends ActivatableView<VBox, Void> {
     private final CoinFormatter formatter;
     private String paymentLabelString;
     private final ObservableList<DepositListItem> observableList = FXCollections.observableArrayList();
-    private final SortedList<DepositListItem> sortedList = new SortedList<>(observableList);
+    private final FilteredList<DepositListItem> filteredList = new FilteredList<>(observableList);
+    private final SortedList<DepositListItem> sortedList = new SortedList<>(filteredList);
     private BalanceListener balanceListener;
     private Subscription amountTextFieldSubscription;
     private ChangeListener<DepositListItem> tableViewSelectionListener;
     private int gridRow = 0;
+    private ChangeListener<String> filterTextFieldListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -135,6 +145,11 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
+        filterTextFieldListener = (observable, oldValue, newValue) -> {
+            tableView.getSelectionModel().clearSelection();
+            applyFilteredListPredicate(filterTextField.getText());
+        };
+        filterLabel.setText(Res.get("shared.filter"));
 
         paymentLabelString = Res.get("funds.deposit.fundBisqWallet");
         addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
@@ -238,6 +253,9 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
+        filterTextField.textProperty().addListener(filterTextFieldListener);
+        applyFilteredListPredicate(filterTextField.getText());
+
         tableView.getSelectionModel().selectedItemProperty().addListener(tableViewSelectionListener);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
 
@@ -255,6 +273,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void deactivate() {
+        filterTextField.textProperty().removeListener(filterTextFieldListener);
         tableView.getSelectionModel().selectedItemProperty().removeListener(tableViewSelectionListener);
         sortedList.comparatorProperty().unbind();
         observableList.forEach(DepositListItem::cleanup);
@@ -267,6 +286,22 @@ public class DepositView extends ActivatableView<VBox, Void> {
     // UI handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void applyFilteredListPredicate(String filterString) {
+        filteredList.setPredicate(item -> {
+            if (filterString.isEmpty())
+                return true;
+
+            if (item.getAddressString().contains(filterString)) {
+                return true;
+            }
+
+            if (item.getUsage().contains(filterString)) {
+                return true;
+            }
+
+            return item.getBalance().contains(filterString);
+        });
+    }
 
     private void fillForm(String address) {
         titledGroupBg.setVisible(true);

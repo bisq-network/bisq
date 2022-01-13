@@ -24,6 +24,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.BsqTradeDetailsWindow;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
@@ -31,16 +32,24 @@ import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
+import bisq.core.support.dispute.arbitration.ArbitrationManager;
+import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.model.Tradable;
+import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.user.Preferences;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.P2PService;
 
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.TransactionConfidence;
@@ -49,6 +58,7 @@ import org.bitcoinj.wallet.listeners.WalletChangeEventListener;
 import com.googlecode.jcsv.writer.CSVEntryConverter;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
@@ -73,20 +83,30 @@ import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ChangeListener;
 
 import javafx.event.EventHandler;
 
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
 import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
 @FxmlView
 public class TransactionsView extends ActivatableView<VBox, Void> {
+    @FXML
+    AutoTooltipLabel filterLabel;
+    @FXML
+    InputTextField filterTextField;
     @FXML
     TableView<TransactionsListItem> tableView;
     @FXML
@@ -98,13 +118,21 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     @FXML
     AutoTooltipButton exportButton;
 
-    private final DisplayedTransactions displayedTransactions;
-    private final SortedList<TransactionsListItem> sortedDisplayedTransactions;
+    private final ObservableList<TransactionsListItem> observableList = FXCollections.observableArrayList();
+    private final FilteredList<TransactionsListItem> filteredList = new FilteredList<>(observableList);
+    private final SortedList<TransactionsListItem> sortedList = new SortedList<>(filteredList);
 
     private final BtcWalletService btcWalletService;
+    private final BsqWalletService bsqWalletService;
+    private final CoinFormatter formatter;
+    private final DaoFacade daoFacade;
     private final P2PService p2PService;
     private final WalletsSetup walletsSetup;
     private final Preferences preferences;
+    private final TradableRepository tradableRepository;
+    private final ArbitrationManager arbitrationManager;
+    private final RefundManager refundManager;
+    private final PubKeyRing pubKeyRing;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final BsqTradeDetailsWindow bsqTradeDetailsWindow;
     private final OfferDetailsWindow offerDetailsWindow;
@@ -113,6 +141,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     private EventHandler<KeyEvent> keyEventEventHandler;
     private Scene scene;
+    private ChangeListener<String> filterTextFieldListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -120,26 +149,42 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     @Inject
     private TransactionsView(BtcWalletService btcWalletService,
+                             BsqWalletService bsqWalletService,
+                             DaoFacade daoFacade,
+                             @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                              P2PService p2PService,
                              WalletsSetup walletsSetup,
                              Preferences preferences,
+                             TradableRepository tradableRepository,
+                             ArbitrationManager arbitrationManager,
+                             RefundManager refundManager,
+                             PubKeyRing pubKeyRing,
                              TradeDetailsWindow tradeDetailsWindow,
                              BsqTradeDetailsWindow bsqTradeDetailsWindow,
-                             OfferDetailsWindow offerDetailsWindow,
-                             DisplayedTransactionsFactory displayedTransactionsFactory) {
+                             OfferDetailsWindow offerDetailsWindow) {
         this.btcWalletService = btcWalletService;
+        this.bsqWalletService = bsqWalletService;
+        this.daoFacade = daoFacade;
+        this.formatter = formatter;
         this.p2PService = p2PService;
         this.walletsSetup = walletsSetup;
         this.preferences = preferences;
+        this.tradableRepository = tradableRepository;
+        this.arbitrationManager = arbitrationManager;
+        this.refundManager = refundManager;
+        this.pubKeyRing = pubKeyRing;
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.bsqTradeDetailsWindow = bsqTradeDetailsWindow;
         this.offerDetailsWindow = offerDetailsWindow;
-        this.displayedTransactions = displayedTransactionsFactory.create();
-        this.sortedDisplayedTransactions = displayedTransactions.asSortedList();
     }
 
     @Override
     public void initialize() {
+        filterTextFieldListener = (observable, oldValue, newValue) -> {
+            tableView.getSelectionModel().clearSelection();
+            applyFilteredListPredicate(filterTextField.getText());
+        };
+        filterLabel.setText(Res.get("shared.filter"));
         dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
         detailsColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.details")));
         addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
@@ -179,7 +224,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         tableView.getSortOrder().add(dateColumn);
 
         walletChangeEventListener = wallet -> {
-            displayedTransactions.update();
+            updateList();
         };
 
         keyEventEventHandler = event -> {
@@ -202,9 +247,11 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
-        sortedDisplayedTransactions.comparatorProperty().bind(tableView.comparatorProperty());
-        tableView.setItems(sortedDisplayedTransactions);
-        displayedTransactions.update();
+        filterTextField.textProperty().addListener(filterTextFieldListener);
+        applyFilteredListPredicate(filterTextField.getText());
+        sortedList.comparatorProperty().bind(tableView.comparatorProperty());
+        tableView.setItems(sortedList);
+        updateList();
 
         btcWalletService.addChangeEventListener(walletChangeEventListener);
 
@@ -212,7 +259,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         if (scene != null)
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
 
-        numItems.setText(Res.get("shared.numItemsLabel", sortedDisplayedTransactions.size()));
+        numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
         exportButton.setOnAction(event -> {
             final ObservableList<TableColumn<TransactionsListItem, ?>> tableColumns = tableView.getColumns();
             final int reportColumns = tableColumns.size() - 1;    // CSV report excludes the last column (an icon)
@@ -235,20 +282,96 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
             };
 
             GUIUtil.exportCSV("transactions.csv", headerConverter, contentConverter,
-                    new TransactionsListItem(), sortedDisplayedTransactions, (Stage) root.getScene().getWindow());
+                    new TransactionsListItem(), sortedList, (Stage) root.getScene().getWindow());
         });
     }
 
     @Override
     protected void deactivate() {
-        sortedDisplayedTransactions.comparatorProperty().unbind();
-        displayedTransactions.forEach(TransactionsListItem::cleanup);
+        filterTextField.textProperty().removeListener(filterTextFieldListener);
+        sortedList.comparatorProperty().unbind();
+        observableList.forEach(TransactionsListItem::cleanup);
         btcWalletService.removeChangeEventListener(walletChangeEventListener);
 
         if (scene != null)
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
 
         exportButton.setOnAction(null);
+    }
+
+    private void updateList() {
+        List<TransactionsListItem> transactionsListItems = btcWalletService.getTransactions(false)
+                .stream()
+                .map(transaction -> {
+                    Set<Tradable> tradables = tradableRepository.getAll();
+
+                    TransactionAwareTradable maybeTradable = tradables.stream()
+                            .map(tradable -> {
+                                if (tradable instanceof OpenOffer) {
+                                    return new TransactionAwareOpenOffer((OpenOffer) tradable);
+                                } else if (tradable instanceof TradeModel) {
+                                    return new TransactionAwareTrade(
+                                            (TradeModel) tradable,
+                                            arbitrationManager,
+                                            refundManager,
+                                            btcWalletService,
+                                            pubKeyRing
+                                    );
+                                } else {
+                                    return new DummyTransactionAwareTradable(tradable);
+                                }
+                            })
+                            .filter(tradable -> tradable.isRelatedToTransaction(transaction))
+                            .findAny()
+                            .orElse(null);
+
+                    return new TransactionsListItem(
+                            transaction,
+                            btcWalletService,
+                            bsqWalletService,
+                            maybeTradable,
+                            daoFacade,
+                            formatter,
+                            preferences.getIgnoreDustThreshold()
+                    );
+                })
+                .collect(Collectors.toList());
+        // are sorted by getRecentTransactions
+        transactionsListItems.forEach(TransactionsListItem::cleanup);
+        observableList.setAll(transactionsListItems);
+    }
+
+    private void applyFilteredListPredicate(String filterString) {
+        filteredList.setPredicate(item -> {
+            if (filterString.isEmpty())
+                return true;
+
+            if (item.getTxId().contains(filterString)) {
+                return true;
+            }
+
+            if (item.getDetails().contains(filterString)) {
+                return true;
+            }
+
+            if (item.getMemo() != null && item.getMemo().contains(filterString)) {
+                return true;
+            }
+
+            if (item.getDirection().contains(filterString)) {
+                return true;
+            }
+
+            if (item.getDateString().contains(filterString)) {
+                return true;
+            }
+
+            if (item.getAmount().contains(filterString)) {
+                return true;
+            }
+
+            return item.getAddressString().contains(filterString);
+        });
     }
 
     private void openTxInBlockExplorer(TransactionsListItem item) {

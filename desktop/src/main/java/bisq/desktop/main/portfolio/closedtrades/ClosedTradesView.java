@@ -140,13 +140,9 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
             marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn,
             duplicateColumn, avatarColumn;
     @FXML
-    HBox searchBox;
-    @FXML
     AutoTooltipLabel filterLabel;
     @FXML
     InputTextField filterTextField;
-    @FXML
-    Pane searchBoxSpacer;
     @FXML
     AutoTooltipButton exportButton, summaryButton;
     @FXML
@@ -283,8 +279,6 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         filterLabel.setText(Res.get("shared.filter"));
         HBox.setMargin(filterLabel, new Insets(5, 0, 0, 10));
         filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
-        searchBox.setSpacing(5);
-        HBox.setHgrow(searchBoxSpacer, Priority.ALWAYS);
 
         numItems.setId("num-offers");
         numItems.setPadding(new Insets(-5, 0, 0, 10));

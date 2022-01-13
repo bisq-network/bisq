@@ -121,13 +121,9 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             marketColumn, directionColumn, dateColumn, offerIdColumn, deactivateItemColumn,
             removeItemColumn, editItemColumn, triggerPriceColumn, triggerIconColumn, paymentMethodColumn, duplicateItemColumn;
     @FXML
-    HBox searchBox;
-    @FXML
     AutoTooltipLabel filterLabel;
     @FXML
     InputTextField filterTextField;
-    @FXML
-    Pane searchBoxSpacer;
     @FXML
     Label numItems;
     @FXML
@@ -227,8 +223,6 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         filterLabel.setText(Res.get("shared.filter"));
         HBox.setMargin(filterLabel, new Insets(5, 0, 0, 10));
         filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
-        searchBox.setSpacing(5);
-        HBox.setHgrow(searchBoxSpacer, Priority.ALWAYS);
 
         selectToggleButton.setPadding(new Insets(0, 90, -20, 0));
         selectToggleButton.setText(Res.get("shared.enabled"));

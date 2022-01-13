@@ -96,6 +96,7 @@ import javafx.beans.value.ChangeListener;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
@@ -121,6 +122,10 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     @FXML
     GridPane gridPane;
     @FXML
+    AutoTooltipLabel filterLabel;
+    @FXML
+    InputTextField filterTextField;
+    @FXML
     TableView<WithdrawalListItem> tableView;
     @FXML
     TableColumn<WithdrawalListItem, WithdrawalListItem> addressColumn, balanceColumn, selectColumn;
@@ -138,7 +143,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private final BtcAddressValidator btcAddressValidator;
     private final WalletPasswordWindow walletPasswordWindow;
     private final ObservableList<WithdrawalListItem> observableList = FXCollections.observableArrayList();
-    private final SortedList<WithdrawalListItem> sortedList = new SortedList<>(observableList);
+    private final FilteredList<WithdrawalListItem> filteredList = new FilteredList<>(observableList);
+    private final SortedList<WithdrawalListItem> sortedList = new SortedList<>(filteredList);
     private final Set<WithdrawalListItem> selectedItems = new HashSet<>();
     private BalanceListener balanceListener;
     private Set<String> fromAddresses = new HashSet<>();
@@ -154,6 +160,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private boolean feeExcluded;
     private int rowIndex = 0;
     private final FeeService feeService;
+    private ChangeListener<String> filterTextFieldListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -183,7 +190,11 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-
+        filterTextFieldListener = (observable, oldValue, newValue) -> {
+            tableView.getSelectionModel().clearSelection();
+            applyFilteredListPredicate(filterTextField.getText());
+        };
+        filterLabel.setText(Res.get("shared.filter"));
         final TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, rowIndex, 4, Res.get("funds.deposit.withdrawFromWallet"));
         titledGroupBg.getStyleClass().add("last");
 
@@ -343,6 +354,9 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
+        filterTextField.textProperty().addListener(filterTextFieldListener);
+        applyFilteredListPredicate(filterTextField.getText());
+
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
         updateList();
@@ -374,6 +388,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void deactivate() {
+        filterTextField.textProperty().removeListener(filterTextFieldListener);
         sortedList.comparatorProperty().unbind();
         observableList.forEach(WithdrawalListItem::cleanup);
         btcWalletService.removeBalanceListener(balanceListener);
@@ -391,6 +406,19 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void applyFilteredListPredicate(String filterString) {
+        filteredList.setPredicate(item -> {
+            if (filterString.isEmpty())
+                return true;
+
+            if (item.getBalance().toString().contains(filterString)) {
+                return true;
+            }
+
+            return item.getAddressString().contains(filterString);
+        });
+    }
 
     private void onWithdraw() {
         if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {

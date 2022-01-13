@@ -23,6 +23,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.util.GUIUtil;
@@ -31,6 +32,7 @@ import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
+import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.trade.TradeManager;
@@ -67,10 +69,12 @@ import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ChangeListener;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
@@ -83,6 +87,10 @@ import java.util.stream.Collectors;
 
 @FxmlView
 public class ReservedView extends ActivatableView<VBox, Void> {
+    @FXML
+    AutoTooltipLabel filterLabel;
+    @FXML
+    InputTextField filterTextField;
     @FXML
     TableView<ReservedListItem> tableView;
     @FXML
@@ -102,10 +110,12 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     private final OfferDetailsWindow offerDetailsWindow;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final ObservableList<ReservedListItem> observableList = FXCollections.observableArrayList();
-    private final SortedList<ReservedListItem> sortedList = new SortedList<>(observableList);
+    private final FilteredList<ReservedListItem> filteredList = new FilteredList<>(observableList);
+    private final SortedList<ReservedListItem> sortedList = new SortedList<>(filteredList);
     private BalanceListener balanceListener;
     private ListChangeListener<OpenOffer> openOfferListChangeListener;
     private ListChangeListener<Trade> tradeListChangeListener;
+    private ChangeListener<String> filterTextFieldListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -131,6 +141,11 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
+        filterTextFieldListener = (observable, oldValue, newValue) -> {
+            tableView.getSelectionModel().clearSelection();
+            applyFilteredListPredicate(filterTextField.getText());
+        };
+        filterLabel.setText(Res.get("shared.filter"));
         dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
         detailsColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.details")));
         addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
@@ -168,6 +183,8 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
+        filterTextField.textProperty().addListener(filterTextFieldListener);
+        applyFilteredListPredicate(filterTextField.getText());
         openOfferManager.getObservableList().addListener(openOfferListChangeListener);
         tradeManager.getObservableList().addListener(tradeListChangeListener);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
@@ -206,6 +223,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void deactivate() {
+        filterTextField.textProperty().removeListener(filterTextFieldListener);
         openOfferManager.getObservableList().removeListener(openOfferListChangeListener);
         tradeManager.getObservableList().removeListener(tradeListChangeListener);
         sortedList.comparatorProperty().unbind();
@@ -218,6 +236,37 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void applyFilteredListPredicate(String filterString) {
+        filteredList.setPredicate(item -> {
+            if (filterString.isEmpty())
+                return true;
+
+            if (item.getDetails().contains(filterString)) {
+                return true;
+            }
+
+            if (item.getAddressString().contains(filterString)) {
+                return true;
+            }
+
+            if (item.getDateAsString().contains(filterString)) {
+                return true;
+            }
+
+            if (item.getBalanceString().contains(filterString)) {
+                return true;
+            }
+
+            Offer offer = item.getOpenOffer().getOffer();
+            if (offer.getId().contains(filterString)) {
+                return true;
+            }
+
+            return offer.getOfferFeePaymentTxId() != null &&
+                    offer.getOfferFeePaymentTxId().contains(filterString);
+        });
+    }
 
     private void updateList() {
         observableList.forEach(ReservedListItem::cleanup);
