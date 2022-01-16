@@ -57,6 +57,8 @@ public class TradeInfo implements Payload {
     private final long tradeAmountAsLong;
     private final long tradePrice;
     private final long tradeVolume;
+    private final long buyerDeposit;
+    private final long sellerDeposit;
     private final String tradingPeerNodeAddress;
     private final String state;
     private final String phase;
@@ -71,6 +73,7 @@ public class TradeInfo implements Payload {
     private final ContractInfo contract;
     // Optional BSQ swap trade protocol details (post v1).
     private BsqSwapTradeInfo bsqSwapTradeInfo;
+    private final String statusDescription;
 
     public TradeInfo(TradeInfoV1Builder builder) {
         this.offer = builder.getOffer();
@@ -87,6 +90,8 @@ public class TradeInfo implements Payload {
         this.tradeAmountAsLong = builder.getTradeAmountAsLong();
         this.tradePrice = builder.getTradePrice();
         this.tradeVolume = builder.getTradeVolume();
+        this.buyerDeposit = builder.getBuyerDeposit();
+        this.sellerDeposit = builder.getSellerDeposit();
         this.tradingPeerNodeAddress = builder.getTradingPeerNodeAddress();
         this.state = builder.getState();
         this.phase = builder.getPhase();
@@ -100,6 +105,7 @@ public class TradeInfo implements Payload {
         this.contractAsJson = builder.getContractAsJson();
         this.contract = builder.getContract();
         this.bsqSwapTradeInfo = null;
+        this.statusDescription = builder.getStatusDescription();
     }
 
     public static TradeInfo toNewTradeInfo(BsqSwapTrade trade, String role) {
@@ -135,16 +141,16 @@ public class TradeInfo implements Payload {
                 .withIsCurrencyForTakerFeeBtc(false) // BSQ Swap fees always paid in BSQ.
                 .withTxFeeAsLong(bsqSwapTrade.getTxFee().value)
                 .withTakerFeeAsLong(bsqSwapTrade.getTakerFeeAsLong())
-                // N/A: .withTakerFeeTxId(""), .withDepositTxId(""), .withPayoutTxId("")
+                // N/A for bsq-swaps: .withTakerFeeTxId(""), .withDepositTxId(""), .withPayoutTxId("")
                 .withTradeAmountAsLong(bsqSwapTrade.getAmountAsLong())
                 .withTradePrice(bsqSwapTrade.getPrice().getValue())
                 .withTradeVolume(bsqSwapTrade.getVolume() == null ? 0 : bsqSwapTrade.getVolume().getValue())
                 .withTradingPeerNodeAddress(requireNonNull(bsqSwapTrade.getTradingPeerNodeAddress().getFullAddress()))
                 .withState(bsqSwapTrade.getTradeState().name())
                 .withPhase(bsqSwapTrade.getTradePhase().name())
-                // N/A: .withTradePeriodState(""), .withIsDepositPublished(false), .withIsDepositConfirmed(false)
-                // N/A: .withIsFiatSent(false), .withIsFiatReceived(false), .withIsPayoutPublished(false)
-                // N/A: .withIsWithdrawn(false), .withContractAsJson(""), .withContract(null)
+                // N/A for bsq-swaps: .withTradePeriodState(""), .withIsDepositPublished(false), .withIsDepositConfirmed(false)
+                // N/A for bsq-swaps: .withIsFiatSent(false), .withIsFiatReceived(false), .withIsPayoutPublished(false)
+                // N/A for bsq-swaps: .withIsWithdrawn(false), .withContractAsJson(""), .withContract(null)
                 .build();
         tradeInfo.bsqSwapTradeInfo = toBsqSwapTradeInfo(bsqSwapTrade, isMyOffer, numConfirmations);
         return tradeInfo;
@@ -296,6 +302,8 @@ public class TradeInfo implements Payload {
                 ", tradeAmountAsLong='" + tradeAmountAsLong + '\'' + "\n" +
                 ", tradePrice='" + tradePrice + '\'' + "\n" +
                 ", tradeVolume='" + tradeVolume + '\'' + "\n" +
+                ", buyerDeposit='" + buyerDeposit + '\'' + "\n" +
+                ", sellerDeposit='" + sellerDeposit + '\'' + "\n" +
                 ", tradingPeerNodeAddress='" + tradingPeerNodeAddress + '\'' + "\n" +
                 ", state='" + state + '\'' + "\n" +
                 ", phase='" + phase + '\'' + "\n" +
@@ -310,6 +318,7 @@ public class TradeInfo implements Payload {
                 ", contractAsJson=" + contractAsJson + "\n" +
                 ", contract=" + contract + "\n" +
                 ", bsqSwapTradeInfo=" + bsqSwapTradeInfo + "\n" +
+                ", statusDescription=" + statusDescription + "\n" +
                 '}';
     }
 }
