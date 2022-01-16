@@ -18,7 +18,9 @@
 package bisq.daemon.grpc;
 
 import bisq.core.api.CoreApi;
+import bisq.core.api.model.CanceledTradeInfo;
 import bisq.core.api.model.TradeInfo;
+import bisq.core.offer.OpenOffer;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
@@ -33,6 +35,8 @@ import bisq.proto.grpc.FailTradeReply;
 import bisq.proto.grpc.FailTradeRequest;
 import bisq.proto.grpc.GetTradeReply;
 import bisq.proto.grpc.GetTradeRequest;
+import bisq.proto.grpc.GetTradesReply;
+import bisq.proto.grpc.GetTradesRequest;
 import bisq.proto.grpc.TakeOfferReply;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.UnFailTradeReply;
@@ -45,14 +49,19 @@ import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.api.model.TradeInfo.toNewTradeInfo;
 import static bisq.core.api.model.TradeInfo.toTradeInfo;
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
+import static bisq.proto.grpc.GetTradesRequest.Category.CLOSED;
+import static bisq.proto.grpc.GetTradesRequest.Category.OPEN;
 import static bisq.proto.grpc.TradesGrpc.*;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -124,6 +133,22 @@ class GrpcTradesService extends TradesImplBase {
             // Offer makers may call 'gettrade' many times before a trade exists.
             // Log a 'trade not found' warning instead of a full stack trace.
             exceptionHandler.handleExceptionAsWarning(log, "getTrade", cause, responseObserver);
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(log, cause, responseObserver);
+        }
+    }
+
+    @Override
+    public void getTrades(GetTradesRequest req,
+                          StreamObserver<GetTradesReply> responseObserver) {
+        try {
+            var category = req.getCategory();
+            var trades = category.equals(OPEN)
+                    ? coreApi.getOpenTrades()
+                    : coreApi.getTradeHistory(category);
+            var reply = buildGetTradesReply(trades, category);
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
         } catch (Throwable cause) {
             exceptionHandler.handleException(log, cause, responseObserver);
         }
@@ -262,13 +287,50 @@ class GrpcTradesService extends TradesImplBase {
                 .build();
     }
 
+
+    private GetTradesReply buildGetTradesReply(List<TradeModel> trades, GetTradesRequest.Category category) {
+        List<TradeInfo> result = trades.stream()
+                .map(tradeModel -> {
+
+                    var role = coreApi.getTradeRole(tradeModel);
+                    var isMyOffer = coreApi.isMyOffer(tradeModel.getOffer());
+
+                    var isBsqSwapTrade = tradeModel instanceof BsqSwapTrade;
+                    var numConfirmations = isBsqSwapTrade
+                            ? coreApi.getTransactionConfirmations(((BsqSwapTrade) tradeModel).getTxId())
+                            : 0;
+                    return isBsqSwapTrade
+                            ? toTradeInfo((BsqSwapTrade) tradeModel, role, isMyOffer, numConfirmations)
+                            : toTradeInfo(tradeModel, role, isMyOffer);
+                })
+                .collect(Collectors.toList());
+
+        // Add canceled OpenOffers to returned closed trades list.
+        Optional<List<OpenOffer>> canceledOpenOffers = category.equals(CLOSED)
+                ? Optional.of(coreApi.getCanceledOpenOffers())
+                : Optional.empty();
+        List<TradeInfo> canceledTrades = new ArrayList<>();
+        canceledOpenOffers.ifPresent(openOffers -> canceledTrades.addAll(
+                openOffers.stream()
+                        .map(CanceledTradeInfo::toCanceledTradeInfo)
+                        .collect(Collectors.toList())
+        ));
+
+        return GetTradesReply.newBuilder()
+                .addAllTrades(result.stream()
+                        .map(TradeInfo::toProtoMessage)
+                        .collect(Collectors.toList()))
+                .addAllTrades(canceledTrades.stream()
+                        .map(TradeInfo::toProtoMessage)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
     private boolean wasMyOffer(TradeModel tradeModel) {
         return coreApi.isMyOffer(tradeModel.getOffer());
     }
 
     private String getMyRole(TradeModel tradeModel) {
-        return tradeModel.getOffer().isBsqSwapOffer()
-                ? coreApi.getBsqSwapTradeRole((BsqSwapTrade) tradeModel)
-                : coreApi.getTradeRole(tradeModel.getId());
+        return coreApi.getTradeRole(tradeModel);
     }
 }
