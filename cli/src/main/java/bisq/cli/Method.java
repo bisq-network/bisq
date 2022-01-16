@@ -42,6 +42,7 @@ public enum Method {
     getpaymentaccts,
     getpaymentmethods,
     gettrade,
+    gettrades,
     failtrade,
     unfailtrade,
     gettransaction,

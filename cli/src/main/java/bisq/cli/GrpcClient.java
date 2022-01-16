@@ -22,6 +22,7 @@ import bisq.proto.grpc.BalancesInfo;
 import bisq.proto.grpc.BsqBalanceInfo;
 import bisq.proto.grpc.BtcBalanceInfo;
 import bisq.proto.grpc.GetMethodHelpRequest;
+import bisq.proto.grpc.GetTradesRequest;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
@@ -362,6 +363,14 @@ public final class GrpcClient {
 
     public TradeInfo getTrade(String tradeId) {
         return tradesServiceRequest.getTrade(tradeId);
+    }
+
+    public List<TradeInfo> getOpenTrades() {
+        return tradesServiceRequest.getOpenTrades();
+    }
+
+    public List<TradeInfo> getTradeHistory(GetTradesRequest.Category category) {
+        return tradesServiceRequest.getTradeHistory(category);
     }
 
     public void confirmPaymentStarted(String tradeId) {

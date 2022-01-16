@@ -22,11 +22,17 @@ import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
 import bisq.proto.grpc.ConfirmPaymentStartedRequest;
 import bisq.proto.grpc.FailTradeRequest;
 import bisq.proto.grpc.GetTradeRequest;
+import bisq.proto.grpc.GetTradesRequest;
 import bisq.proto.grpc.TakeOfferReply;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.TradeInfo;
 import bisq.proto.grpc.UnFailTradeRequest;
 import bisq.proto.grpc.WithdrawFundsRequest;
+
+import java.util.List;
+
+import static bisq.proto.grpc.GetTradesRequest.Category.CLOSED;
+import static bisq.proto.grpc.GetTradesRequest.Category.FAILED;
 
 
 
@@ -70,6 +76,22 @@ public class TradesServiceRequest {
                 .setTradeId(tradeId)
                 .build();
         return grpcStubs.tradesService.getTrade(request).getTrade();
+    }
+
+    public List<TradeInfo> getOpenTrades() {
+        var request = GetTradesRequest.newBuilder()
+                .build();
+        return grpcStubs.tradesService.getTrades(request).getTradesList();
+    }
+
+    public List<TradeInfo> getTradeHistory(GetTradesRequest.Category category) {
+        if (!category.equals(CLOSED) && !category.equals(FAILED))
+            throw new IllegalStateException("unrecognized gettrades category parameter " + category.name());
+
+        var request = GetTradesRequest.newBuilder()
+                .setCategory(category)
+                .build();
+        return grpcStubs.tradesService.getTrades(request).getTradesList();
     }
 
     public void confirmPaymentStarted(String tradeId) {
