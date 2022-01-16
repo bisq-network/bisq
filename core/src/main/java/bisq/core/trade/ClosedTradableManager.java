@@ -21,6 +21,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OpenOffer;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.bisq_v1.CleanupMailboxMessagesService;
 import bisq.core.trade.bisq_v1.DumpDelayedPayoutTx;
@@ -57,6 +58,7 @@ import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.offer.OpenOffer.State.CANCELED;
 import static bisq.core.trade.ClosedTradableUtil.castToTrade;
 import static bisq.core.trade.ClosedTradableUtil.castToTradeModel;
 import static bisq.core.trade.ClosedTradableUtil.isBsqSwapTrade;
@@ -146,6 +148,13 @@ public class ClosedTradableManager implements PersistedDataHost {
         return ImmutableList.copyOf(getObservableList().stream()
                 .filter(e -> e instanceof Trade)
                 .map(e -> (Trade) e)
+                .collect(Collectors.toList()));
+    }
+
+    public List<OpenOffer> getCanceledOpenOffers() {
+        return ImmutableList.copyOf(getObservableList().stream()
+                .filter(e -> (e instanceof OpenOffer) && ((OpenOffer) e).getState().equals(CANCELED))
+                .map(e -> (OpenOffer) e)
                 .collect(Collectors.toList()));
     }
 
