@@ -46,6 +46,8 @@ public final class TradeInfoV1Builder {
     private long tradeAmountAsLong;
     private long tradePrice;
     private long tradeVolume;
+    private long buyerDeposit;
+    private long sellerDeposit;
     private String tradingPeerNodeAddress;
     private String state;
     private String phase;
@@ -58,6 +60,7 @@ public final class TradeInfoV1Builder {
     private boolean isWithdrawn;
     private String contractAsJson;
     private ContractInfo contract;
+    private String statusDescription;
 
     public TradeInfoV1Builder withOffer(OfferInfo offer) {
         this.offer = offer;
@@ -129,6 +132,16 @@ public final class TradeInfoV1Builder {
         return this;
     }
 
+    public TradeInfoV1Builder withBuyerDeposit(long buyerDeposit) {
+        this.buyerDeposit = buyerDeposit;
+        return this;
+    }
+
+    public TradeInfoV1Builder withSellerDeposit(long sellerDeposit) {
+        this.sellerDeposit = sellerDeposit;
+        return this;
+    }
+
     public TradeInfoV1Builder withTradePeriodState(String tradePeriodState) {
         this.tradePeriodState = tradePeriodState;
         return this;
@@ -186,6 +199,12 @@ public final class TradeInfoV1Builder {
 
     public TradeInfoV1Builder withContract(ContractInfo contract) {
         this.contract = contract;
+        return this;
+    }
+
+
+    public TradeInfoV1Builder withStatusDescription(String statusDescription) {
+        this.statusDescription = statusDescription;
         return this;
     }
 
