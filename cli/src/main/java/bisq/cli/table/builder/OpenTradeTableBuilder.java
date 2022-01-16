@@ -2,7 +2,7 @@ package bisq.cli.table.builder;
 
 import java.util.List;
 
-import static bisq.cli.table.builder.TableType.OPEN_TRADE_TBL;
+import static bisq.cli.table.builder.TableType.OPEN_TRADES_TBL;
 
 
 
@@ -15,7 +15,7 @@ import bisq.cli.table.column.MixedPriceColumn;
 class OpenTradeTableBuilder extends AbstractTradeListBuilder {
 
     OpenTradeTableBuilder(List<?> protos) {
-        super(OPEN_TRADE_TBL, protos);
+        super(OPEN_TRADES_TBL, protos);
     }
 
     public Table build() {
