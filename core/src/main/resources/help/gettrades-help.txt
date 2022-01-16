@@ -1,0 +1,27 @@
+gettrades
+
+NAME
+----
+gettrades - get trade history
+
+SYNOPSIS
+--------
+gettrades
+		--currency-code=<usd|eur|bsq|xmr>
+
+DESCRIPTION
+-----------
+TODO
+
+OPTIONS
+-------
+--currency-code
+		TODO
+
+EXAMPLES
+--------
+To see ... :
+$ ./bisq-cli --password=xyz --port=9998 gettrades --currency-code
+
+To see ... :
+$ ./bisq-cli --password=xyz --port=9998 gettrades ---currency-code
