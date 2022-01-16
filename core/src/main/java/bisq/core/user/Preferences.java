@@ -679,7 +679,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     public void setBridgeAddresses(List<String> bridgeAddresses) {
         prefPayload.setBridgeAddresses(bridgeAddresses);
         // We call that before shutdown so we dont want a delay here
-        requestPersistence();
+        persistenceManager.forcePersistNow();
     }
 
     // Only used from PB but keep it explicit as it may be used from the client and then we want to persist
@@ -690,17 +690,17 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setBridgeOptionOrdinal(int bridgeOptionOrdinal) {
         prefPayload.setBridgeOptionOrdinal(bridgeOptionOrdinal);
-        requestPersistence();
+        persistenceManager.forcePersistNow();
     }
 
     public void setTorTransportOrdinal(int torTransportOrdinal) {
         prefPayload.setTorTransportOrdinal(torTransportOrdinal);
-        requestPersistence();
+        persistenceManager.forcePersistNow();
     }
 
     public void setCustomBridges(String customBridges) {
         prefPayload.setCustomBridges(customBridges);
-        requestPersistence();
+        persistenceManager.forcePersistNow();
     }
 
     public void setBitcoinNodesOptionOrdinal(int bitcoinNodesOptionOrdinal) {
