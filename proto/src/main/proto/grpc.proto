@@ -388,6 +388,8 @@ message StopReply {
 service Trades {
     rpc GetTrade (GetTradeRequest) returns (GetTradeReply) {
     }
+    rpc GetTrades (GetTradesRequest) returns (GetTradesReply) {
+    }
     rpc TakeOffer (TakeOfferRequest) returns (TakeOfferReply) {
     }
     rpc ConfirmPaymentStarted (ConfirmPaymentStartedRequest) returns (ConfirmPaymentStartedReply) {
@@ -435,6 +437,19 @@ message GetTradeRequest {
 
 message GetTradeReply {
     TradeInfo trade = 1;
+}
+
+message GetTradesRequest {
+    enum Category {
+        OPEN = 0;
+        CLOSED = 1;
+        FAILED = 2;
+    }
+    Category category = 1;
+}
+
+message GetTradesReply {
+    repeated TradeInfo trades = 1;
 }
 
 message CloseTradeRequest {
@@ -495,8 +510,16 @@ message TradeInfo {
     string contractAsJson = 24;
     ContractInfo contract = 25;
     uint64 tradeVolume = 26;
+
     // Optional Bisq v2+ trade protocol fields.
     BsqSwapTradeInfo bsqSwapTradeInfo = 28;
+
+    // Needed by open/closed/failed trade list items.
+    uint64 buyerDeposit = 29;
+    uint64 sellerDeposit = 30;
+    string statusDescription = 31;
+
+    // TODO?  Field for displaying correct precision per coin type, e.g., int32 coinPrecision = 32;
 }
 
 message ContractInfo {
