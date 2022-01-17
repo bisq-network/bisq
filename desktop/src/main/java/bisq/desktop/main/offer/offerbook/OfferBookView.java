@@ -1169,6 +1169,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         button2.setStyle(CssTheme.isDarkTheme() ? "-fx-text-fill: white" : "-fx-text-fill: #444444");
                                         button2.setOnAction(e -> onEditOpenOffer(offer));
                                         button2.setManaged(true);
+                                        button2.setVisible(true);
                                     } else {
                                         boolean isSellOffer = offer.getDirection() == OfferDirection.SELL;
                                         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
@@ -1186,6 +1187,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         button.setTooltip(new Tooltip(Res.get("offerbook.takeOfferButton.tooltip", model.getDirectionLabelTooltip(offer))));
                                         button.setOnAction(e -> onTakeOffer(offer));
                                         button2.setManaged(false);
+                                        button2.setVisible(false);
                                     }
 
                                     if (!myOffer) {
@@ -1204,6 +1206,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 } else {
                                     setGraphic(null);
                                     button.setOnAction(null);
+                                    button2.setOnAction(null);
                                     if (tableRow != null) {
                                         tableRow.setOpacity(1);
                                         tableRow.setOnMousePressed(null);
