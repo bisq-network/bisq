@@ -1206,6 +1206,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                 } else {
                                     setGraphic(null);
                                     button.setOnAction(null);
+                                    button2.setOnAction(null);
                                     if (tableRow != null) {
                                         tableRow.setOpacity(1);
                                         tableRow.setOnMousePressed(null);
