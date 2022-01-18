@@ -26,6 +26,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.AssetAccount;
+import bisq.core.payment.BsqSwapAccount;
 import bisq.core.payment.ChargeBackRisk;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
@@ -228,7 +229,7 @@ public class AccountAgeWitnessService {
     private void republishAllFiatAccounts() {
         if (user.getPaymentAccounts() != null)
             user.getPaymentAccounts().stream()
-                    .filter(account -> !(account instanceof AssetAccount))
+                    .filter(account -> !(account instanceof AssetAccount) && !(account instanceof BsqSwapAccount))
                     .forEach(account -> {
                         AccountAgeWitness myWitness = getMyWitness(account.getPaymentAccountPayload());
                         // We only publish if the date of our witness is inside the date tolerance.
