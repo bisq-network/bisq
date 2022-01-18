@@ -73,7 +73,7 @@ public class TradeInfo implements Payload {
     private final ContractInfo contract;
     // Optional BSQ swap trade protocol details (post v1).
     private BsqSwapTradeInfo bsqSwapTradeInfo;
-    private final String statusDescription;
+    private final String closingStatus;
 
     public TradeInfo(TradeInfoV1Builder builder) {
         this.offer = builder.getOffer();
@@ -105,24 +105,27 @@ public class TradeInfo implements Payload {
         this.contractAsJson = builder.getContractAsJson();
         this.contract = builder.getContract();
         this.bsqSwapTradeInfo = null;
-        this.statusDescription = builder.getStatusDescription();
+        this.closingStatus = builder.getClosingStatus();
     }
 
     public static TradeInfo toNewTradeInfo(BsqSwapTrade trade, String role) {
         // Always called by the taker, isMyOffer=false.
-        return toTradeInfo(trade, role, false, 0);
+        return toTradeInfo(trade, role, false, 0, "Pending");
     }
 
     public static TradeInfo toNewTradeInfo(Trade trade) {
         // Always called by the taker, isMyOffer=false.
-        return toTradeInfo(trade, null, false);
+        return toTradeInfo(trade, null, false, "Pending");
     }
 
-    public static TradeInfo toTradeInfo(TradeModel tradeModel, String role, boolean isMyOffer) {
+    public static TradeInfo toTradeInfo(TradeModel tradeModel,
+                                        String role,
+                                        boolean isMyOffer,
+                                        String closingStatus) {
         if (tradeModel instanceof Trade)
-            return toTradeInfo((Trade) tradeModel, role, isMyOffer);
+            return toTradeInfo((Trade) tradeModel, role, isMyOffer, closingStatus);
         else if (tradeModel instanceof BsqSwapTrade)
-            return toTradeInfo(tradeModel, role, isMyOffer);
+            return toTradeInfo(tradeModel, role, isMyOffer, closingStatus);
         else
             throw new IllegalStateException("unsupported trade type: " + tradeModel.getClass().getSimpleName());
     }
@@ -130,7 +133,8 @@ public class TradeInfo implements Payload {
     public static TradeInfo toTradeInfo(BsqSwapTrade bsqSwapTrade,
                                         String role,
                                         boolean isMyOffer,
-                                        int numConfirmations) {
+                                        int numConfirmations,
+                                        String closingStatus) {
         OfferInfo offerInfo = isMyOffer ? toMyOfferInfo(bsqSwapTrade.getOffer()) : toOfferInfo(bsqSwapTrade.getOffer());
         TradeInfo tradeInfo = new TradeInfoV1Builder()
                 .withOffer(offerInfo)
@@ -151,12 +155,16 @@ public class TradeInfo implements Payload {
                 // N/A for bsq-swaps: .withTradePeriodState(""), .withIsDepositPublished(false), .withIsDepositConfirmed(false)
                 // N/A for bsq-swaps: .withIsFiatSent(false), .withIsFiatReceived(false), .withIsPayoutPublished(false)
                 // N/A for bsq-swaps: .withIsWithdrawn(false), .withContractAsJson(""), .withContract(null)
+                .withClosingStatus(closingStatus)
                 .build();
         tradeInfo.bsqSwapTradeInfo = toBsqSwapTradeInfo(bsqSwapTrade, isMyOffer, numConfirmations);
         return tradeInfo;
     }
 
-    private static TradeInfo toTradeInfo(Trade trade, String role, boolean isMyOffer) {
+    private static TradeInfo toTradeInfo(Trade trade,
+                                         String role,
+                                         boolean isMyOffer,
+                                         String closingStatus) {
         ContractInfo contractInfo;
         if (trade.getContract() != null) {
             Contract contract = trade.getContract();
@@ -204,6 +212,7 @@ public class TradeInfo implements Payload {
                 .withIsWithdrawn(trade.isWithdrawn())
                 .withContractAsJson(trade.getContractAsJson())
                 .withContract(contractInfo)
+                .withClosingStatus(closingStatus)
                 .build();
     }
 
@@ -238,8 +247,8 @@ public class TradeInfo implements Payload {
                         .setIsFiatSent(isFiatSent)
                         .setIsFiatReceived(isFiatReceived)
                         .setIsPayoutPublished(isPayoutPublished)
-                        .setIsWithdrawn(isWithdrawn);
-
+                        .setIsWithdrawn(isWithdrawn)
+                        .setClosingStatus(closingStatus);
         if (offer.isBsqSwapOffer()) {
             protoBuilder.setBsqSwapTradeInfo(bsqSwapTradeInfo.toProtoMessage());
         } else {
@@ -278,6 +287,7 @@ public class TradeInfo implements Payload {
                 .withIsWithdrawn(proto.getIsWithdrawn())
                 .withContractAsJson(proto.getContractAsJson())
                 .withContract((ContractInfo.fromProto(proto.getContract())))
+                .withClosingStatus(proto.getClosingStatus())
                 .build();
 
         if (proto.getOffer().getIsBsqSwapOffer())
@@ -318,7 +328,7 @@ public class TradeInfo implements Payload {
                 ", contractAsJson=" + contractAsJson + "\n" +
                 ", contract=" + contract + "\n" +
                 ", bsqSwapTradeInfo=" + bsqSwapTradeInfo + "\n" +
-                ", statusDescription=" + statusDescription + "\n" +
+                ", closingStatus=" + closingStatus + "\n" +
                 '}';
     }
 }

@@ -56,7 +56,7 @@ public class TradeTest extends AbstractTradeTest {
         test.testTakeAlicesBuyOffer(testInfo);
         test.testAlicesConfirmPaymentStarted(testInfo);
         test.testBobsConfirmPaymentReceived(testInfo);
-        test.testKeepFunds(testInfo);
+        test.testCloseTrade(testInfo);
     }
 
     @Test

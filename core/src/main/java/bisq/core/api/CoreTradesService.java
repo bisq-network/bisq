@@ -24,6 +24,7 @@ import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.bisq_v1.TakeOfferModel;
 import bisq.core.offer.bsq_swap.BsqSwapTakeOfferModel;
+import bisq.core.trade.ClosedTradableFormatter;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
@@ -72,6 +73,7 @@ class CoreTradesService {
     private final OfferUtil offerUtil;
     private final BsqSwapTradeManager bsqSwapTradeManager;
     private final ClosedTradableManager closedTradableManager;
+    private final ClosedTradableFormatter closedTradableFormatter;
     private final FailedTradesManager failedTradesManager;
     private final TakeOfferModel takeOfferModel;
     private final BsqSwapTakeOfferModel bsqSwapTakeOfferModel;
@@ -86,6 +88,7 @@ class CoreTradesService {
                              OfferUtil offerUtil,
                              BsqSwapTradeManager bsqSwapTradeManager,
                              ClosedTradableManager closedTradableManager,
+                             ClosedTradableFormatter closedTradableFormatter,
                              FailedTradesManager failedTradesManager,
                              TakeOfferModel takeOfferModel,
                              BsqSwapTakeOfferModel bsqSwapTakeOfferModel,
@@ -98,6 +101,7 @@ class CoreTradesService {
         this.offerUtil = offerUtil;
         this.bsqSwapTradeManager = bsqSwapTradeManager;
         this.closedTradableManager = closedTradableManager;
+        this.closedTradableFormatter = closedTradableFormatter;
         this.failedTradesManager = failedTradesManager;
         this.takeOfferModel = takeOfferModel;
         this.bsqSwapTakeOfferModel = bsqSwapTakeOfferModel;
@@ -337,11 +341,9 @@ class CoreTradesService {
         return closedTradableManager.getCanceledOpenOffers();
     }
 
-    /*
     String getClosedTradeStateAsString(Tradable tradable) {
-        return closedTradeUtil.getStateAsString(tradable);
+        return closedTradableFormatter.getStateAsString(tradable);
     }
-    */
 
     private Optional<Trade> getOpenTrade(String tradeId) {
         return tradeManager.getTradeById(tradeId);

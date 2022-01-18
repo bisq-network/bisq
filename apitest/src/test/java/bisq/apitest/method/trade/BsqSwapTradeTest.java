@@ -28,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -51,7 +50,7 @@ import static protobuf.OfferDirection.BUY;
 import bisq.apitest.method.offer.AbstractOfferTest;
 import bisq.cli.GrpcClient;
 
-@Disabled
+// @Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class BsqSwapTradeTest extends AbstractTradeTest {
@@ -118,7 +117,7 @@ public class BsqSwapTradeTest extends AbstractTradeTest {
         var availableOfferCategory = bobClient.getAvailableOfferCategory(availableSwapOffer.getId());
         assertTrue(availableOfferCategory.equals(BSQ_SWAP));
 
-        sleep(30_000);
+        sleep(3_000);
 
         var swapTrade = bobClient.takeBsqSwapOffer(availableSwapOffer.getId());
         tradeId = swapTrade.getTradeId(); // Cache the tradeId for following test case(s).
@@ -130,7 +129,7 @@ public class BsqSwapTradeTest extends AbstractTradeTest {
         log.debug("BsqSwap Trade at COMPLETION:\n{}", toTradeDetailTable.apply(swapTrade));
         assertEquals(COMPLETED.name(), swapTrade.getState());
 
-        runCliGetTrade(tradeId);
+        runCliGetClosedTrades();
     }
 
     @Test
@@ -151,6 +150,8 @@ public class BsqSwapTradeTest extends AbstractTradeTest {
         bobsTrade = getBsqSwapTrade(bobClient, tradeId);
         log.debug("Bob's BsqSwap Trade at COMPLETION:\n{}", toTradeDetailTable.apply(bobsTrade));
         assertEquals(2, bobsTrade.getBsqSwapTradeInfo().getNumConfirmations());
+
+        runCliGetClosedTrades();
     }
 
     @Test

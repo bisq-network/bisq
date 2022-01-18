@@ -30,7 +30,7 @@ class ClosedTradeTableBuilder extends AbstractTradeListBuilder {
                 colBuyerDeposit.asStringColumn(),
                 colSellerDeposit.asStringColumn(),
                 colOfferType,
-                colStatusDescription);
+                colClosingStatus);
     }
 
     private void populateColumns() {
@@ -55,7 +55,7 @@ class ClosedTradeTableBuilder extends AbstractTradeListBuilder {
             colBuyerDeposit.addRow(t.getBuyerDeposit());
             colSellerDeposit.addRow(t.getSellerDeposit());
             colOfferType.addRow(toOfferType.apply(t));
-            colStatusDescription.addRow(t.getStatusDescription());
+            colClosingStatus.addRow(t.getClosingStatus());
         });
     }
 }

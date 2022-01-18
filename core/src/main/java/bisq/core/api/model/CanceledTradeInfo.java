@@ -51,7 +51,7 @@ public class CanceledTradeInfo {
                 .withIsWithdrawn(false)             // Ignored
                 .withContractAsJson("")             // Ignored
                 .withContract(emptyContract.get())  // Ignored
-                .withStatusDescription(capitalize(CANCELED.name().toLowerCase()))
+                .withClosingStatus(capitalize(CANCELED.name().toLowerCase()))
                 .build();
     }
 }

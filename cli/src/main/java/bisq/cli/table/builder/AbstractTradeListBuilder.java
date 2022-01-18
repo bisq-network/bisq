@@ -79,7 +79,7 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
     @Nullable
     protected final Column<String> colOfferType;
     @Nullable
-    protected final Column<String> colStatusDescription;
+    protected final Column<String> colClosingStatus;
 
     // Trade detail tbl specific columns
 
@@ -133,7 +133,7 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
         this.colPaymentMethod = colSupplier.paymentMethodColumn.get();
         this.colRole = colSupplier.roleColumn.get();
         this.colOfferType = colSupplier.offerTypeColumn.get();
-        this.colStatusDescription = colSupplier.statusDescriptionColumn.get();
+        this.colClosingStatus = colSupplier.statusDescriptionColumn.get();
 
         // Trade detail specific columns, some in common with BSQ swap trades detail.
 

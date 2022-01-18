@@ -264,4 +264,18 @@ public class AbstractTradeTest extends AbstractOfferTest {
         out.println("Bob's CLI 'gettrade' response:");
         CliMain.main(new String[]{"--password=xyz", "--port=9999", "gettrade", "--trade-id=" + tradeId});
     }
+
+    protected static void runCliGetOpenTrades() {
+        out.println("Alice's CLI 'gettrades --category=open' response:");
+        CliMain.main(new String[]{"--password=xyz", "--port=9998", "gettrades", "--category=open"});
+        out.println("Bob's CLI 'gettrades --category=open' response:");
+        CliMain.main(new String[]{"--password=xyz", "--port=9999", "gettrades", "--category=open"});
+    }
+
+    protected static void runCliGetClosedTrades() {
+        out.println("Alice's CLI 'gettrades --category=closed' response:");
+        CliMain.main(new String[]{"--password=xyz", "--port=9998", "gettrades", "--category=closed"});
+        out.println("Bob's CLI 'gettrades --category=closed' response:");
+        CliMain.main(new String[]{"--password=xyz", "--port=9999", "gettrades", "--category=closed"});
+    }
 }

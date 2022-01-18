@@ -59,6 +59,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.api.model.TradeInfo.toNewTradeInfo;
 import static bisq.core.api.model.TradeInfo.toTradeInfo;
+import static bisq.core.trade.model.bsq_swap.BsqSwapTrade.State.COMPLETED;
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
 import static bisq.proto.grpc.GetTradesRequest.Category.CLOSED;
 import static bisq.proto.grpc.GetTradesRequest.Category.OPEN;
@@ -149,6 +150,8 @@ class GrpcTradesService extends TradesImplBase {
             var reply = buildGetTradesReply(trades, category);
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
+        } catch (IllegalArgumentException cause) {
+            exceptionHandler.handleExceptionAsWarning(log, "getTrades", cause, responseObserver);
         } catch (Throwable cause) {
             exceptionHandler.handleException(log, cause, responseObserver);
         }
@@ -243,6 +246,7 @@ class GrpcTradesService extends TradesImplBase {
                 .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
                         new HashMap<>() {{
                             put(getGetTradeMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getGetTradesMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getTakeOfferMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
                             put(getConfirmPaymentStartedMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
                             put(getConfirmPaymentReceivedMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
@@ -270,10 +274,14 @@ class GrpcTradesService extends TradesImplBase {
         boolean wasMyOffer = wasMyOffer(bsqSwapTrade);
         String role = getMyRole(bsqSwapTrade);
         var numConfirmations = coreApi.getTransactionConfirmations(bsqSwapTrade.getTxId());
+        var closingStatus = bsqSwapTrade.getTradeState().equals(COMPLETED)
+                ? coreApi.getClosedTradeStateAsString(bsqSwapTrade)
+                : "Pending";
         var tradeInfo = toTradeInfo(bsqSwapTrade,
                 role,
                 wasMyOffer,
-                numConfirmations);
+                numConfirmations,
+                closingStatus);
         return GetTradeReply.newBuilder()
                 .setTrade(tradeInfo.toProtoMessage())
                 .build();
@@ -282,26 +290,34 @@ class GrpcTradesService extends TradesImplBase {
     private GetTradeReply buildGetTradeReply(Trade trade) {
         boolean wasMyOffer = wasMyOffer(trade);
         String role = getMyRole(trade);
+        var closingStatus = trade.isCompleted()
+                ? coreApi.getClosedTradeStateAsString(trade)
+                : "Pending";
         return GetTradeReply.newBuilder()
-                .setTrade(toTradeInfo(trade, role, wasMyOffer).toProtoMessage())
+                .setTrade(toTradeInfo(trade,
+                        role,
+                        wasMyOffer,
+                        closingStatus).toProtoMessage())
                 .build();
     }
 
 
     private GetTradesReply buildGetTradesReply(List<TradeModel> trades, GetTradesRequest.Category category) {
+        // Build trade history list, starting with closed BsqSwap and v1 trades.
         List<TradeInfo> result = trades.stream()
                 .map(tradeModel -> {
-
                     var role = coreApi.getTradeRole(tradeModel);
                     var isMyOffer = coreApi.isMyOffer(tradeModel.getOffer());
-
                     var isBsqSwapTrade = tradeModel instanceof BsqSwapTrade;
                     var numConfirmations = isBsqSwapTrade
                             ? coreApi.getTransactionConfirmations(((BsqSwapTrade) tradeModel).getTxId())
                             : 0;
+                    var closingStatus = category.equals(OPEN)
+                            ? "Pending"
+                            : coreApi.getClosedTradeStateAsString(tradeModel);
                     return isBsqSwapTrade
-                            ? toTradeInfo((BsqSwapTrade) tradeModel, role, isMyOffer, numConfirmations)
-                            : toTradeInfo(tradeModel, role, isMyOffer);
+                            ? toTradeInfo((BsqSwapTrade) tradeModel, role, isMyOffer, numConfirmations, closingStatus)
+                            : toTradeInfo(tradeModel, role, isMyOffer, closingStatus);
                 })
                 .collect(Collectors.toList());
 

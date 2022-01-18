@@ -26,6 +26,7 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.bisq_v1.TradeResultHandler;
+import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
@@ -352,6 +353,10 @@ public class CoreApi {
 
     public List<OpenOffer> getCanceledOpenOffers() {
         return coreTradesService.getCanceledOpenOffers();
+    }
+
+    public String getClosedTradeStateAsString(Tradable tradable) {
+        return coreTradesService.getClosedTradeStateAsString(tradable);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

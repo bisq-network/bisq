@@ -29,7 +29,7 @@ class FailedTradeTableBuilder extends AbstractTradeListBuilder {
                 colCurrency,
                 colOfferType,
                 colRole,
-                colStatusDescription);
+                colClosingStatus);
     }
 
     private void populateColumns() {
@@ -43,7 +43,7 @@ class FailedTradeTableBuilder extends AbstractTradeListBuilder {
             colCurrency.addRow(toPaymentCurrencyCode.apply(t));
             colOfferType.addRow(toOfferType.apply(t));
             colRole.addRow(t.getRole());
-            colStatusDescription.addRow("Failed");
+            colClosingStatus.addRow("Failed");
         });
     }
 }
