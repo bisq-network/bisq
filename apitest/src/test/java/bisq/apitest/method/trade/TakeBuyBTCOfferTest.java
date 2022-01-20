@@ -149,7 +149,7 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
             logBalances(log, testInfo);
 
             runCliGetClosedTrades();
-            
+
         } catch (StatusRuntimeException e) {
             fail(e);
         }
