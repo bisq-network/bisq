@@ -206,10 +206,15 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
                     ? formatToPercent(t.getOffer().getMarketPriceMargin())
                     : "N/A";
 
-    protected final Function<TradeInfo, Long> toMyMinerTxFee = (t) ->
-            isTaker.test(t)
+    protected final Function<TradeInfo, Long> toMyMinerTxFee = (t) -> {
+        if (isBsqSwapTrade.test(t)) {
+            return t.getTxFeeAsLong(); // TODO What is trader's 'share' of tx-fee?
+        } else {
+            return isTaker.test(t)
                     ? t.getTxFeeAsLong()
                     : t.getOffer().getTxFee();
+        }
+    };
 
     protected final BiFunction<TradeInfo, Boolean, Long> toTradeFeeBsq = (t, isMyOffer) -> {
         if (isMyOffer) {
