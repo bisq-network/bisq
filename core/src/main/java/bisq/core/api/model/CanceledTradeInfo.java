@@ -37,8 +37,6 @@ public class CanceledTradeInfo {
                 .withTradeAmountAsLong(0)           // Ignored
                 .withTradePrice(offer.getPrice().getValue())
                 .withTradeVolume(0)                 // Ignored
-                .withBuyerDeposit(offer.getBuyerSecurityDeposit().value)
-                .withSellerDeposit(offer.getSellerSecurityDeposit().value)
                 .withTradingPeerNodeAddress("")     // Ignored
                 .withState("")                      // Ignored
                 .withPhase("")                      // Ignored

@@ -515,9 +515,7 @@ message TradeInfo {
     BsqSwapTradeInfo bsqSwapTradeInfo = 28;
 
     // Needed by open/closed/failed trade list items.
-    uint64 buyerDeposit = 29;
-    uint64 sellerDeposit = 30;
-    string closingStatus = 31;
+    string closingStatus = 29;
 
     // TODO?  Field for displaying correct precision per coin type, e.g., int32 coinPrecision = 32;
 }

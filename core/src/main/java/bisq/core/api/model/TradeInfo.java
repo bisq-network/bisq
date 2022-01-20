@@ -57,8 +57,6 @@ public class TradeInfo implements Payload {
     private final long tradeAmountAsLong;
     private final long tradePrice;
     private final long tradeVolume;
-    private final long buyerDeposit;
-    private final long sellerDeposit;
     private final String tradingPeerNodeAddress;
     private final String state;
     private final String phase;
@@ -90,8 +88,6 @@ public class TradeInfo implements Payload {
         this.tradeAmountAsLong = builder.getTradeAmountAsLong();
         this.tradePrice = builder.getTradePrice();
         this.tradeVolume = builder.getTradeVolume();
-        this.buyerDeposit = builder.getBuyerDeposit();
-        this.sellerDeposit = builder.getSellerDeposit();
         this.tradingPeerNodeAddress = builder.getTradingPeerNodeAddress();
         this.state = builder.getState();
         this.phase = builder.getPhase();
@@ -312,8 +308,6 @@ public class TradeInfo implements Payload {
                 ", tradeAmountAsLong='" + tradeAmountAsLong + '\'' + "\n" +
                 ", tradePrice='" + tradePrice + '\'' + "\n" +
                 ", tradeVolume='" + tradeVolume + '\'' + "\n" +
-                ", buyerDeposit='" + buyerDeposit + '\'' + "\n" +
-                ", sellerDeposit='" + sellerDeposit + '\'' + "\n" +
                 ", tradingPeerNodeAddress='" + tradingPeerNodeAddress + '\'' + "\n" +
                 ", state='" + state + '\'' + "\n" +
                 ", phase='" + phase + '\'' + "\n" +
