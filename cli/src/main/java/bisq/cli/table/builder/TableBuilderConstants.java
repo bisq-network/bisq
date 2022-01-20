@@ -36,8 +36,8 @@ class TableBuilderConstants {
     static final String COL_HEADER_UNLOCKING_BONDS_BALANCE = "Unlocking Bonds Balance";
     static final String COL_HEADER_UNVERIFIED_BALANCE = "Unverified Balance";
     static final String COL_HEADER_BSQ_SWAP_TRADE_ROLE = "My BSQ Swap Role";
-    static final String COL_HEADER_BUYER_DEPOSIT = "Buyer Deposit";
-    static final String COL_HEADER_SELLER_DEPOSIT = "Seller Deposit";
+    static final String COL_HEADER_BUYER_DEPOSIT = "Buyer Deposit (BTC)";
+    static final String COL_HEADER_SELLER_DEPOSIT = "Seller Deposit (BTC)";
     static final String COL_HEADER_CONFIRMATIONS = "Confirmations";
     static final String COL_HEADER_DEVIATION = "Deviation";
     static final String COL_HEADER_IS_USED_ADDRESS = "Is Used";

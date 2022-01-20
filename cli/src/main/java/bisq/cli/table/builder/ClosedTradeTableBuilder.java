@@ -45,15 +45,15 @@ class ClosedTradeTableBuilder extends AbstractTradeListBuilder {
             colCurrency.addRow(toPaymentCurrencyCode.apply(t));
             colMinerTxFee.addRow(toMyMinerTxFee.apply(t));
 
-            long tradeFeeBsq = toTradeFeeBsq.apply(t, true);
-            long tradeFeeBtc = toTradeFeeBtc.apply(t, true);
+            long tradeFeeBsq = toTradeFeeBsq.apply(t);
+            long tradeFeeBtc = toTradeFeeBtc.apply(t);
             if (tradeFeeBsq > 0)
                 colMixedTradeFee.addRow(tradeFeeBsq, true);
             else
                 colMixedTradeFee.addRow(tradeFeeBtc, false);
 
-            colBuyerDeposit.addRow(t.getBuyerDeposit());
-            colSellerDeposit.addRow(t.getSellerDeposit());
+            colBuyerDeposit.addRow(t.getOffer().getBuyerSecurityDeposit());
+            colSellerDeposit.addRow(t.getOffer().getSellerSecurityDeposit());
             colOfferType.addRow(toOfferType.apply(t));
             colClosingStatus.addRow(t.getClosingStatus());
         });

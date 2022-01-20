@@ -26,7 +26,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -216,7 +215,8 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
         }
     };
 
-    protected final BiFunction<TradeInfo, Boolean, Long> toTradeFeeBsq = (t, isMyOffer) -> {
+    protected final Function<TradeInfo, Long> toTradeFeeBsq = (t) -> {
+        var isMyOffer = t.getOffer().getIsMyOffer();
         if (isMyOffer) {
             return t.getOffer().getIsCurrencyForMakerFeeBtc()
                     ? 0L // Maker paid BTC fee, return 0.
@@ -228,7 +228,8 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
         }
     };
 
-    protected final BiFunction<TradeInfo, Boolean, Long> toTradeFeeBtc = (t, isMyOffer) -> {
+    protected final Function<TradeInfo, Long> toTradeFeeBtc = (t) -> {
+        var isMyOffer = t.getOffer().getIsMyOffer();
         if (isMyOffer) {
             return t.getOffer().getIsCurrencyForMakerFeeBtc()
                     ? t.getOffer().getMakerFee()
