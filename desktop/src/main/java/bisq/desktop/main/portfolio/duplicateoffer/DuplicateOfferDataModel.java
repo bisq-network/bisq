@@ -50,7 +50,10 @@ import com.google.inject.Inject;
 
 import javax.inject.Named;
 
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 class DuplicateOfferDataModel extends MutableOfferDataModel {
 
@@ -109,6 +112,13 @@ class DuplicateOfferDataModel extends MutableOfferDataModel {
                 offer.getAmount());
         return Math.min(offerBuyerSecurityDepositAsPercent,
                 Restrictions.getMaxBuyerSecurityDepositAsPercent());
+    }
+
+    @Override
+    protected Set<PaymentAccount> getUserPaymentAccounts() {
+        return Objects.requireNonNull(user.getPaymentAccounts()).stream()
+                .filter(account -> !account.getPaymentMethod().isBsqSwap())
+                .collect(Collectors.toSet());
     }
 
     @Override
