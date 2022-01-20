@@ -298,7 +298,7 @@ class CoreTradesService {
                     .map(t -> (TradeModel) t)
                     .collect(Collectors.toList());
             closedTrades.addAll(bsqSwapTradeManager.getBsqSwapTrades());
-            // TODO Sort closedTrades by date.
+            // TODO Sort closedTrades by date?
             return closedTrades;
         } else {
             var failedV1Trades = failedTradesManager.getTrades();
@@ -311,10 +311,6 @@ class CoreTradesService {
         //  the API lacks methods for diagnosing trade problems, and does not support
         //  interaction with mediators.  Users may accidentally fail valid trades,
         //  although they can easily be un-failed with the 'unfailtrade' method.
-        //  The 'failtrade' and 'unfailtrade' methods are implemented at this early
-        //  stage of API development to help efficiently test a new
-        //      'gettrades --category=<open|closed|failed>'
-        //  method currently in development.
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
 
