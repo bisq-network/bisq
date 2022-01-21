@@ -323,15 +323,11 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
                 return true;
             }
 
-            BsqSwapTrade bsqSwapTrade = item.getBsqSwapTrade();
-            if (bsqSwapTrade.getTxId() != null && bsqSwapTrade.getTxId().contains(filterString)) {
-                return true;
-            }
-            if (bsqSwapTrade.getTradingPeerNodeAddress().getFullAddress().contains(filterString)) {
+            if (FilteringUtils.match(item.getBsqSwapTrade(), filterString)) {
                 return true;
             }
 
-            return FilteringUtils.match(bsqSwapTrade.getOffer(), filterString);
+            return FilteringUtils.match(item.getBsqSwapTrade().getOffer(), filterString);
         });
     }
 

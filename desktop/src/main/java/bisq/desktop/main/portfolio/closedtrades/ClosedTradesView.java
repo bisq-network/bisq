@@ -421,14 +421,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 return true;
             }
 
-            if (tradable instanceof BsqSwapTrade) {
-                BsqSwapTrade bsqSwapTrade = (BsqSwapTrade) tradable;
-                if (bsqSwapTrade.getTxId() != null && bsqSwapTrade.getTxId().contains(filterString)) {
-                    return true;
-                }
-                if (bsqSwapTrade.getTradingPeerNodeAddress().getFullAddress().contains(filterString)) {
-                    return true;
-                }
+            if (tradable instanceof BsqSwapTrade && FilteringUtils.match((BsqSwapTrade) tradable, filterString)) {
+                return true;
             }
 
             if (tradable instanceof Trade) {

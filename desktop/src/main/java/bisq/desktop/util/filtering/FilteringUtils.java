@@ -2,6 +2,7 @@ package bisq.desktop.util.filtering;
 
 import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 
 public class FilteringUtils {
     public static boolean match(Contract contract, String filterString) {
@@ -28,7 +29,19 @@ public class FilteringUtils {
         if (offer.getPaymentMethod().getDisplayString().contains(filterString)) {
             return true;
         }
-        return offer.getOfferFeePaymentTxId() != null &&
-                offer.getOfferFeePaymentTxId().contains(filterString);
+        if (offer.getOfferFeePaymentTxId() != null && offer.getOfferFeePaymentTxId().contains(filterString)) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean match(BsqSwapTrade bsqSwapTrade, String filterString) {
+        if (bsqSwapTrade.getTxId() != null && bsqSwapTrade.getTxId().contains(filterString)) {
+            return true;
+        }
+        if (bsqSwapTrade.getTradingPeerNodeAddress().getFullAddress().contains(filterString)) {
+            return true;
+        }
+        return false;
     }
 }
