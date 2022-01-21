@@ -318,10 +318,10 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                             pubKeyRing
                                     );
                                 } else {
-                                    return new DummyTransactionAwareTradable(tradable);
+                                    return null;
                                 }
                             })
-                            .filter(tradable -> tradable.isRelatedToTransaction(transaction))
+                            .filter(tradable -> tradable != null && tradable.isRelatedToTransaction(transaction))
                             .findAny()
                             .orElse(null);
 
