@@ -408,16 +408,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void applyFilteredListPredicate(String filterString) {
-        filteredList.setPredicate(item -> {
-            if (filterString.isEmpty())
-                return true;
-
-            if (item.getBalanceAsString().contains(filterString)) {
-                return true;
-            }
-
-            return item.getAddressString().contains(filterString);
-        });
+        filteredList.setPredicate(item -> item.match(filterString));
     }
 
     private void onWithdraw() {

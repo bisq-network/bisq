@@ -239,28 +239,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void applyFilteredListPredicate(String filterString) {
-        filteredList.setPredicate(item -> {
-            if (filterString.isEmpty())
-                return true;
-
-            if (item.getDetails().contains(filterString)) {
-                return true;
-            }
-
-            if (item.getDateString().contains(filterString)) {
-                return true;
-            }
-
-            if (item.getAddressString().contains(filterString)) {
-                return true;
-            }
-
-            if (item.getBalanceString().contains(filterString)) {
-                return true;
-            }
-
-            return FilteringUtils.match(item.getTrade(), filterString);
-        });
+        filteredList.setPredicate(item -> item.match(filterString));
     }
 
     private void updateList() {

@@ -287,20 +287,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void applyFilteredListPredicate(String filterString) {
-        filteredList.setPredicate(item -> {
-            if (filterString.isEmpty())
-                return true;
-
-            if (item.getAddressString().contains(filterString)) {
-                return true;
-            }
-
-            if (item.getUsage().contains(filterString)) {
-                return true;
-            }
-
-            return item.getBalance().contains(filterString);
-        });
+        filteredList.setPredicate(item -> item.match(filterString));
     }
 
     private void fillForm(String address) {

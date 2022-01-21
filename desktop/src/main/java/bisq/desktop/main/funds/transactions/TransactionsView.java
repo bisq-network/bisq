@@ -342,36 +342,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     }
 
     private void applyFilteredListPredicate(String filterString) {
-        filteredList.setPredicate(item -> {
-            if (filterString.isEmpty())
-                return true;
-
-            if (item.getTxId().contains(filterString)) {
-                return true;
-            }
-
-            if (item.getDetails().contains(filterString)) {
-                return true;
-            }
-
-            if (item.getMemo() != null && item.getMemo().contains(filterString)) {
-                return true;
-            }
-
-            if (item.getDirection().contains(filterString)) {
-                return true;
-            }
-
-            if (item.getDateString().contains(filterString)) {
-                return true;
-            }
-
-            if (item.getAmount().contains(filterString)) {
-                return true;
-            }
-
-            return item.getAddressString().contains(filterString);
-        });
+        filteredList.setPredicate(item -> item.match(filterString));
     }
 
     private void openTxInBlockExplorer(TransactionsListItem item) {

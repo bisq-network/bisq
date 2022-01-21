@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.funds.withdrawal;
 
+import bisq.desktop.util.filtering.FilterableListItem;
 import bisq.desktop.components.AutoTooltipLabel;
 
 import bisq.core.btc.listeners.BalanceListener;
@@ -34,7 +35,7 @@ import javafx.scene.control.Label;
 import lombok.Getter;
 import lombok.Setter;
 
-class WithdrawalListItem {
+class WithdrawalListItem implements FilterableListItem {
     private final BalanceListener balanceListener;
     private final Label balanceLabel;
     private final AddressEntry addressEntry;
@@ -124,5 +125,17 @@ class WithdrawalListItem {
 
     public String getAddressString() {
         return addressString;
+    }
+
+    @Override
+    public boolean match(String filterString) {
+        if (filterString.isEmpty()) {
+            return true;
+        }
+        if (getBalanceAsString().contains(filterString)) {
+            return true;
+        }
+        return getAddressString().contains(filterString);
+
     }
 }

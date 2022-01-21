@@ -239,28 +239,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void applyFilteredListPredicate(String filterString) {
-        filteredList.setPredicate(item -> {
-            if (filterString.isEmpty())
-                return true;
-
-            if (item.getDetails().contains(filterString)) {
-                return true;
-            }
-
-            if (item.getAddressString().contains(filterString)) {
-                return true;
-            }
-
-            if (item.getDateAsString().contains(filterString)) {
-                return true;
-            }
-
-            if (item.getBalanceString().contains(filterString)) {
-                return true;
-            }
-
-            return FilteringUtils.match(item.getOpenOffer().getOffer(), filterString);
-        });
+        filteredList.setPredicate(item -> item.match(filterString));
     }
 
     private void updateList() {

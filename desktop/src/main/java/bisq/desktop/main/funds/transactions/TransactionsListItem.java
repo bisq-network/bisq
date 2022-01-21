@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.funds.transactions;
 
+import bisq.desktop.util.filtering.FilterableListItem;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
@@ -55,7 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
-class TransactionsListItem {
+class TransactionsListItem implements FilterableListItem {
     private final BtcWalletService btcWalletService;
     private final CoinFormatter formatter;
     private String dateString;
@@ -376,5 +377,31 @@ class TransactionsListItem {
 
     public String getMemo() {
         return memo;
+    }
+
+    @Override
+    public boolean match(String filterString) {
+        if (filterString.isEmpty()) {
+            return true;
+        }
+        if (getTxId().contains(filterString)) {
+            return true;
+        }
+        if (getDetails().contains(filterString)) {
+            return true;
+        }
+        if (getMemo() != null && getMemo().contains(filterString)) {
+            return true;
+        }
+        if (getDirection().contains(filterString)) {
+            return true;
+        }
+        if (getDateString().contains(filterString)) {
+            return true;
+        }
+        if (getAmount().contains(filterString)) {
+            return true;
+        }
+        return getAddressString().contains(filterString);
     }
 }

@@ -17,8 +17,10 @@
 
 package bisq.desktop.main.funds.locked;
 
+import bisq.desktop.util.filtering.FilterableListItem;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.util.DisplayUtils;
+import bisq.desktop.util.filtering.FilteringUtils;
 
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.model.AddressEntry;
@@ -38,7 +40,7 @@ import lombok.Getter;
 
 import javax.annotation.Nullable;
 
-class LockedListItem {
+class LockedListItem implements FilterableListItem {
     private final BalanceListener balanceListener;
     private final BtcWalletService btcWalletService;
     private final CoinFormatter formatter;
@@ -116,5 +118,29 @@ class LockedListItem {
         return trade != null ?
                 DisplayUtils.formatDateTime(trade.getDate()) :
                 Res.get("shared.noDateAvailable");
+    }
+
+    @Override
+    public boolean match(String filterString) {
+        if (filterString.isEmpty())
+            return true;
+
+        if (getDetails().contains(filterString)) {
+            return true;
+        }
+
+        if (getDateString().contains(filterString)) {
+            return true;
+        }
+
+        if (getAddressString().contains(filterString)) {
+            return true;
+        }
+
+        if (getBalanceString().contains(filterString)) {
+            return true;
+        }
+
+        return FilteringUtils.match(getTrade(), filterString);
     }
 }

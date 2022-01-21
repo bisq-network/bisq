@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.funds.deposit;
 
+import bisq.desktop.util.filtering.FilterableListItem;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.desktop.util.GUIUtil;
 
@@ -44,7 +45,7 @@ import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-class DepositListItem {
+class DepositListItem implements FilterableListItem {
     private final StringProperty balance = new SimpleStringProperty();
     private final BtcWalletService walletService;
     private Coin balanceAsCoin;
@@ -148,5 +149,19 @@ class DepositListItem {
 
     public int getNumTxOutputs() {
         return numTxOutputs;
+    }
+
+    @Override
+    public boolean match(String filterString) {
+        if (filterString.isEmpty()) {
+            return true;
+        }
+        if (getAddressString().contains(filterString)) {
+            return true;
+        }
+        if (getUsage().contains(filterString)) {
+            return true;
+        }
+        return getBalance().contains(filterString);
     }
 }
