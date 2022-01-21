@@ -412,7 +412,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             if (filterString.isEmpty())
                 return true;
 
-            if (item.getBalance().toString().contains(filterString)) {
+            if (item.getBalanceAsString().contains(filterString)) {
                 return true;
             }
 

@@ -118,6 +118,10 @@ class WithdrawalListItem {
         return balance;
     }
 
+    public String getBalanceAsString() {
+        return formatter.formatCoin(balance);
+    }
+
     public String getAddressString() {
         return addressString;
     }
