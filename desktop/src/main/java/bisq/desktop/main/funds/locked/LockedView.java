@@ -259,21 +259,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
                 return true;
             }
 
-            Trade trade = item.getTrade();
-            if (trade != null) {
-                if (trade.getTakerFeeTxId() != null && trade.getTakerFeeTxId().contains(filterString)) {
-                    return true;
-                }
-                if (trade.getDepositTxId() != null && trade.getDepositTxId().contains(filterString)) {
-                    return true;
-                }
-                if (trade.getPayoutTxId() != null && trade.getPayoutTxId().contains(filterString)) {
-                    return true;
-                }
-                return FilteringUtils.match(trade.getContract(), filterString);
-            } else {
-                return false;
-            }
+            return FilteringUtils.match(item.getTrade(), filterString);
         });
     }
 

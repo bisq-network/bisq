@@ -2,10 +2,11 @@ package bisq.desktop.util.filtering;
 
 import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 
 public class FilteringUtils {
-    public static boolean match(Contract contract, String filterString) {
+    private static boolean match(Contract contract, String filterString) {
         boolean isBuyerOnion = false;
         boolean isSellerOnion = false;
         boolean matchesBuyersPaymentAccountData = false;
@@ -40,6 +41,25 @@ public class FilteringUtils {
             return true;
         }
         if (bsqSwapTrade.getTradingPeerNodeAddress().getFullAddress().contains(filterString)) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean match(Trade trade, String filterString) {
+        if (trade == null) {
+            return false;
+        }
+        if (trade.getTakerFeeTxId() != null && trade.getTakerFeeTxId().contains(filterString)) {
+            return true;
+        }
+        if (trade.getDepositTxId() != null && trade.getDepositTxId().contains(filterString)) {
+            return true;
+        }
+        if (trade.getPayoutTxId() != null && trade.getPayoutTxId().contains(filterString)) {
+            return true;
+        }
+        if (match(trade.getContract(), filterString)) {
             return true;
         }
         return false;

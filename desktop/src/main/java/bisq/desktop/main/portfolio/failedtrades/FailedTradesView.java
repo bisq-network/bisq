@@ -244,7 +244,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
         filteredList.setPredicate(item -> {
             if (filterString.isEmpty())
                 return true;
-            
+
             if (model.getDate(item).contains(filterString)) {
                 return true;
             }
@@ -266,19 +266,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
             if (FilteringUtils.match(item.getTrade().getOffer(), filterString)) {
                 return true;
             }
-
-            Trade trade = item.getTrade();
-
-            if (trade.getTakerFeeTxId() != null && trade.getTakerFeeTxId().contains(filterString)) {
-                return true;
-            }
-            if (trade.getDepositTxId() != null && trade.getDepositTxId().contains(filterString)) {
-                return true;
-            }
-            if (trade.getPayoutTxId() != null && trade.getPayoutTxId().contains(filterString)) {
-                return true;
-            }
-            return FilteringUtils.match(trade.getContract(), filterString);
+            return FilteringUtils.match(item.getTrade(), filterString);
         });
     }
 

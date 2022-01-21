@@ -420,26 +420,13 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
             if (FilteringUtils.match(tradable.getOffer(), filterString)) {
                 return true;
             }
-
             if (tradable instanceof BsqSwapTrade && FilteringUtils.match((BsqSwapTrade) tradable, filterString)) {
                 return true;
             }
-
-            if (tradable instanceof Trade) {
-                Trade trade = (Trade) tradable;
-                if (trade.getTakerFeeTxId() != null && trade.getTakerFeeTxId().contains(filterString)) {
-                    return true;
-                }
-                if (trade.getDepositTxId() != null && trade.getDepositTxId().contains(filterString)) {
-                    return true;
-                }
-                if (trade.getPayoutTxId() != null && trade.getPayoutTxId().contains(filterString)) {
-                    return true;
-                }
-                return FilteringUtils.match(trade.getContract(), filterString);
-            } else {
-                return false;
+            if (tradable instanceof Trade && FilteringUtils.match((Trade) tradable, filterString)) {
+                return true;
             }
+            return false;
         });
     }
 
