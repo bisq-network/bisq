@@ -33,6 +33,7 @@ import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.main.portfolio.presentation.PortfolioUtil;
 import bisq.desktop.util.GUIUtil;
+import bisq.desktop.util.filtering.FilteringUtils;
 
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.Res;
@@ -449,22 +450,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 if (trade.getPayoutTxId() != null && trade.getPayoutTxId().contains(filterString)) {
                     return true;
                 }
-
-                Contract contract = trade.getContract();
-                boolean isBuyerOnion = false;
-                boolean isSellerOnion = false;
-                boolean matchesBuyersPaymentAccountData = false;
-                boolean matchesSellersPaymentAccountData = false;
-                if (contract != null) {
-                    isBuyerOnion = contract.getBuyerNodeAddress().getFullAddress().contains(filterString);
-                    isSellerOnion = contract.getSellerNodeAddress().getFullAddress().contains(filterString);
-                    matchesBuyersPaymentAccountData = contract.getBuyerPaymentAccountPayload() != null &&
-                            contract.getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString);
-                    matchesSellersPaymentAccountData = contract.getSellerPaymentAccountPayload() != null &&
-                            contract.getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString);
-                }
-                return isBuyerOnion || isSellerOnion ||
-                        matchesBuyersPaymentAccountData || matchesSellersPaymentAccountData;
+                return FilteringUtils.match(trade.getContract(), filterString);
             } else {
                 return false;
             }

@@ -27,6 +27,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
+import bisq.desktop.util.filtering.FilteringUtils;
 
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
@@ -283,23 +284,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
             if (trade.getPayoutTxId() != null && trade.getPayoutTxId().contains(filterString)) {
                 return true;
             }
-
-            Contract contract = trade.getContract();
-
-            boolean isBuyerOnion = false;
-            boolean isSellerOnion = false;
-            boolean matchesBuyersPaymentAccountData = false;
-            boolean matchesSellersPaymentAccountData = false;
-            if (contract != null) {
-                isBuyerOnion = contract.getBuyerNodeAddress().getFullAddress().contains(filterString);
-                isSellerOnion = contract.getSellerNodeAddress().getFullAddress().contains(filterString);
-                matchesBuyersPaymentAccountData = contract.getBuyerPaymentAccountPayload() != null &&
-                        contract.getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString);
-                matchesSellersPaymentAccountData = contract.getSellerPaymentAccountPayload() != null &&
-                        contract.getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString);
-            }
-            return isBuyerOnion || isSellerOnion ||
-                    matchesBuyersPaymentAccountData || matchesSellersPaymentAccountData;
+            return FilteringUtils.match(trade.getContract(), filterString);
         });
     }
 
