@@ -27,6 +27,7 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.util.GUIUtil;
+import bisq.desktop.util.filtering.FilteringUtils;
 
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.model.AddressEntry;
@@ -258,13 +259,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
                 return true;
             }
 
-            Offer offer = item.getOpenOffer().getOffer();
-            if (offer.getId().contains(filterString)) {
-                return true;
-            }
-
-            return offer.getOfferFeePaymentTxId() != null &&
-                    offer.getOfferFeePaymentTxId().contains(filterString);
+            return FilteringUtils.match(item.getOpenOffer().getOffer(), filterString);
         });
     }
 

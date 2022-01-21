@@ -380,10 +380,6 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
             if (filterString.isEmpty())
                 return true;
 
-            Offer offer = tradable.getOffer();
-            if (offer.getId().contains(filterString)) {
-                return true;
-            }
             if (model.getDate(tradable).contains(filterString)) {
                 return true;
             }
@@ -421,11 +417,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
             if (model.getDirectionLabel(tradable).contains(filterString)) {
                 return true;
             }
-            if (offer.getPaymentMethod().getDisplayString().contains(filterString)) {
-                return true;
-            }
-            if (offer.getOfferFeePaymentTxId() != null &&
-                    offer.getOfferFeePaymentTxId().contains(filterString)) {
+            if (FilteringUtils.match(tradable.getOffer(), filterString)) {
                 return true;
             }
 

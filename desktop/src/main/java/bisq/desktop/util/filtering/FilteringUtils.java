@@ -1,5 +1,6 @@
 package bisq.desktop.util.filtering;
 
+import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.Contract;
 
 public class FilteringUtils {
@@ -18,5 +19,16 @@ public class FilteringUtils {
         }
         return isBuyerOnion || isSellerOnion ||
                 matchesBuyersPaymentAccountData || matchesSellersPaymentAccountData;
+    }
+
+    public static boolean match(Offer offer, String filterString) {
+        if (offer.getId().contains(filterString)) {
+            return true;
+        }
+        if (offer.getPaymentMethod().getDisplayString().contains(filterString)) {
+            return true;
+        }
+        return offer.getOfferFeePaymentTxId() != null &&
+                offer.getOfferFeePaymentTxId().contains(filterString);
     }
 }

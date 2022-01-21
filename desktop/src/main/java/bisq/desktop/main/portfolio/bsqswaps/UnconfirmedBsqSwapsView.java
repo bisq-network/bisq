@@ -26,6 +26,7 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PeerInfoIconTrading;
 import bisq.desktop.main.overlays.windows.BsqTradeDetailsWindow;
 import bisq.desktop.util.GUIUtil;
+import bisq.desktop.util.filtering.FilteringUtils;
 
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.Res;
@@ -294,11 +295,6 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
             if (filterString.isEmpty())
                 return true;
 
-            BsqSwapTrade bsqSwapTrade = item.getBsqSwapTrade();
-            Offer offer = bsqSwapTrade.getOffer();
-            if (offer.getId().contains(filterString)) {
-                return true;
-            }
             if (model.getDate(item).contains(filterString)) {
                 return true;
             }
@@ -326,9 +322,8 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
             if (model.getDirectionLabel(item).contains(filterString)) {
                 return true;
             }
-            if (offer.getPaymentMethod().getDisplayString().contains(filterString)) {
-                return true;
-            }
+
+            BsqSwapTrade bsqSwapTrade = item.getBsqSwapTrade();
             if (bsqSwapTrade.getTxId() != null && bsqSwapTrade.getTxId().contains(filterString)) {
                 return true;
             }
@@ -336,7 +331,7 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
                 return true;
             }
 
-            return false;
+            return FilteringUtils.match(bsqSwapTrade.getOffer(), filterString);
         });
     }
 

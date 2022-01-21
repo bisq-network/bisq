@@ -35,6 +35,7 @@ import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.presentation.PortfolioUtil;
 import bisq.desktop.util.GUIUtil;
+import bisq.desktop.util.filtering.FilteringUtils;
 
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
@@ -326,10 +327,6 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             if (filterString.isEmpty())
                 return true;
 
-            Offer offer = item.getOpenOffer().getOffer();
-            if (offer.getId().contains(filterString)) {
-                return true;
-            }
             if (model.getDate(item).contains(filterString)) {
                 return true;
             }
@@ -354,8 +351,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             if (model.getDirectionLabel(item).contains(filterString)) {
                 return true;
             }
-            return offer.getOfferFeePaymentTxId() != null &&
-                    offer.getOfferFeePaymentTxId().contains(filterString);
+            return FilteringUtils.match(item.getOpenOffer().getOffer(), filterString);
         });
     }
 
