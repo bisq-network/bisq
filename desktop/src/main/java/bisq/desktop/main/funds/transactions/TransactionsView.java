@@ -24,7 +24,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
-import bisq.desktop.components.InputTextField;
+import bisq.desktop.components.list.FilterBox;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.BsqTradeDetailsWindow;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
@@ -83,7 +83,6 @@ import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.value.ChangeListener;
 
 import javafx.event.EventHandler;
 
@@ -104,9 +103,7 @@ import javax.annotation.Nullable;
 @FxmlView
 public class TransactionsView extends ActivatableView<VBox, Void> {
     @FXML
-    AutoTooltipLabel filterLabel;
-    @FXML
-    InputTextField filterTextField;
+    FilterBox filterBox;
     @FXML
     TableView<TransactionsListItem> tableView;
     @FXML
@@ -141,7 +138,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     private EventHandler<KeyEvent> keyEventEventHandler;
     private Scene scene;
-    private ChangeListener<String> filterTextFieldListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -180,11 +176,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-        filterTextFieldListener = (observable, oldValue, newValue) -> {
-            tableView.getSelectionModel().clearSelection();
-            applyFilteredListPredicate(filterTextField.getText());
-        };
-        filterLabel.setText(Res.get("shared.filter"));
+        filterBox.initialize(filteredList, tableView);
         dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
         detailsColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.details")));
         addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
@@ -247,8 +239,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
-        filterTextField.textProperty().addListener(filterTextFieldListener);
-        applyFilteredListPredicate(filterTextField.getText());
+        filterBox.activate();
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
         updateList();
@@ -288,7 +279,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void deactivate() {
-        filterTextField.textProperty().removeListener(filterTextFieldListener);
+        filterBox.deactivate();
         sortedList.comparatorProperty().unbind();
         observableList.forEach(TransactionsListItem::cleanup);
         btcWalletService.removeChangeEventListener(walletChangeEventListener);
@@ -339,10 +330,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         // are sorted by getRecentTransactions
         transactionsListItems.forEach(TransactionsListItem::cleanup);
         observableList.setAll(transactionsListItems);
-    }
-
-    private void applyFilteredListPredicate(String filterString) {
-        filteredList.setPredicate(item -> item.match(filterString));
     }
 
     private void openTxInBlockExplorer(TransactionsListItem item) {

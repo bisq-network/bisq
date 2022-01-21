@@ -25,6 +25,7 @@ import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.components.list.FilterBox;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TxDetails;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
@@ -118,13 +119,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @FxmlView
 public class WithdrawalView extends ActivatableView<VBox, Void> {
-
     @FXML
     GridPane gridPane;
     @FXML
-    AutoTooltipLabel filterLabel;
-    @FXML
-    InputTextField filterTextField;
+    FilterBox filterBox;
     @FXML
     TableView<WithdrawalListItem> tableView;
     @FXML
@@ -160,7 +158,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private boolean feeExcluded;
     private int rowIndex = 0;
     private final FeeService feeService;
-    private ChangeListener<String> filterTextFieldListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -190,11 +187,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-        filterTextFieldListener = (observable, oldValue, newValue) -> {
-            tableView.getSelectionModel().clearSelection();
-            applyFilteredListPredicate(filterTextField.getText());
-        };
-        filterLabel.setText(Res.get("shared.filter"));
+        filterBox.initialize(filteredList, tableView);
         final TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, rowIndex, 4, Res.get("funds.deposit.withdrawFromWallet"));
         titledGroupBg.getStyleClass().add("last");
 
@@ -354,9 +347,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
-        filterTextField.textProperty().addListener(filterTextFieldListener);
-        applyFilteredListPredicate(filterTextField.getText());
-
+        filterBox.activate();
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
         updateList();
@@ -388,7 +379,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void deactivate() {
-        filterTextField.textProperty().removeListener(filterTextFieldListener);
+        filterBox.deactivate();
         sortedList.comparatorProperty().unbind();
         observableList.forEach(WithdrawalListItem::cleanup);
         btcWalletService.removeBalanceListener(balanceListener);
@@ -406,10 +397,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void applyFilteredListPredicate(String filterString) {
-        filteredList.setPredicate(item -> item.match(filterString));
-    }
 
     private void onWithdraw() {
         if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {

@@ -25,6 +25,7 @@ import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.components.list.FilterBox;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.QRCodeWindow;
 import bisq.desktop.util.GUIUtil;
@@ -103,9 +104,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     @FXML
     GridPane gridPane;
     @FXML
-    AutoTooltipLabel filterLabel;
-    @FXML
-    InputTextField filterTextField;
+    FilterBox filterBox;
     @FXML
     TableView<DepositListItem> tableView;
     @FXML
@@ -128,7 +127,6 @@ public class DepositView extends ActivatableView<VBox, Void> {
     private Subscription amountTextFieldSubscription;
     private ChangeListener<DepositListItem> tableViewSelectionListener;
     private int gridRow = 0;
-    private ChangeListener<String> filterTextFieldListener;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -145,12 +143,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-        filterTextFieldListener = (observable, oldValue, newValue) -> {
-            tableView.getSelectionModel().clearSelection();
-            applyFilteredListPredicate(filterTextField.getText());
-        };
-        filterLabel.setText(Res.get("shared.filter"));
-
+        filterBox.initialize(filteredList, tableView);
         paymentLabelString = Res.get("funds.deposit.fundBisqWallet");
         addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
         balanceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode())));
@@ -253,8 +246,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
-        filterTextField.textProperty().addListener(filterTextFieldListener);
-        applyFilteredListPredicate(filterTextField.getText());
+        filterBox.activate();
 
         tableView.getSelectionModel().selectedItemProperty().addListener(tableViewSelectionListener);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
@@ -273,7 +265,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void deactivate() {
-        filterTextField.textProperty().removeListener(filterTextFieldListener);
+        filterBox.deactivate();
         tableView.getSelectionModel().selectedItemProperty().removeListener(tableViewSelectionListener);
         sortedList.comparatorProperty().unbind();
         observableList.forEach(DepositListItem::cleanup);
@@ -285,10 +277,6 @@ public class DepositView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void applyFilteredListPredicate(String filterString) {
-        filteredList.setPredicate(item -> item.match(filterString));
-    }
 
     private void fillForm(String address) {
         titledGroupBg.setVisible(true);

@@ -23,7 +23,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
-import bisq.desktop.components.InputTextField;
+import bisq.desktop.components.list.FilterBox;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.util.GUIUtil;
@@ -68,7 +68,6 @@ import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.value.ChangeListener;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -87,9 +86,7 @@ import java.util.stream.Collectors;
 @FxmlView
 public class LockedView extends ActivatableView<VBox, Void> {
     @FXML
-    AutoTooltipLabel filterLabel;
-    @FXML
-    InputTextField filterTextField;
+    FilterBox filterBox;
     @FXML
     TableView<LockedListItem> tableView;
     @FXML
@@ -114,7 +111,6 @@ public class LockedView extends ActivatableView<VBox, Void> {
     private BalanceListener balanceListener;
     private ListChangeListener<OpenOffer> openOfferListChangeListener;
     private ListChangeListener<Trade> tradeListChangeListener;
-    private ChangeListener<String> filterTextFieldListener;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -140,11 +136,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-        filterTextFieldListener = (observable, oldValue, newValue) -> {
-            tableView.getSelectionModel().clearSelection();
-            applyFilteredListPredicate(filterTextField.getText());
-        };
-        filterLabel.setText(Res.get("shared.filter"));
+        filterBox.initialize(filteredList, tableView);
         dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
         detailsColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.details")));
         addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
@@ -182,8 +174,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
-        filterTextField.textProperty().addListener(filterTextFieldListener);
-        applyFilteredListPredicate(filterTextField.getText());
+        filterBox.activate();
         openOfferManager.getObservableList().addListener(openOfferListChangeListener);
         tradeManager.getObservableList().addListener(tradeListChangeListener);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
@@ -222,7 +213,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void deactivate() {
-        filterTextField.textProperty().removeListener(filterTextFieldListener);
+        filterBox.deactivate();
         openOfferManager.getObservableList().removeListener(openOfferListChangeListener);
         tradeManager.getObservableList().removeListener(tradeListChangeListener);
         sortedList.comparatorProperty().unbind();
@@ -235,10 +226,6 @@ public class LockedView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void applyFilteredListPredicate(String filterString) {
-        filteredList.setPredicate(item -> item.match(filterString));
-    }
 
     private void updateList() {
         observableList.forEach(LockedListItem::cleanup);
