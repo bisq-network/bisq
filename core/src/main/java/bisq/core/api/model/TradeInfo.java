@@ -139,7 +139,7 @@ public class TradeInfo implements Payload {
                 .withDate(bsqSwapTrade.getDate().getTime())
                 .withRole(role == null ? "" : role)
                 .withIsCurrencyForTakerFeeBtc(false) // BSQ Swap fees always paid in BSQ.
-                .withTxFeeAsLong(bsqSwapTrade.getTxFee().value)
+                .withTxFeeAsLong(bsqSwapTrade.getBsqSwapProtocolModel().getTxFee())
                 .withTakerFeeAsLong(bsqSwapTrade.getTakerFeeAsLong())
                 // N/A for bsq-swaps: .withTakerFeeTxId(""), .withDepositTxId(""), .withPayoutTxId("")
                 .withTradeAmountAsLong(bsqSwapTrade.getAmountAsLong())
