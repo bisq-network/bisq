@@ -22,16 +22,13 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
-import bisq.desktop.components.InputTextField;
+import bisq.desktop.components.list.FilterBox;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
-import bisq.desktop.util.filtering.FilteringUtils;
 
 import bisq.core.locale.Res;
-import bisq.core.offer.Offer;
-import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.common.config.Config;
@@ -59,7 +56,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -67,7 +63,6 @@ import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
 
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.value.ChangeListener;
 
 import javafx.event.EventHandler;
 
@@ -88,9 +83,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     TableColumn<FailedTradesListItem, FailedTradesListItem> priceColumn, amountColumn, volumeColumn,
             marketColumn, directionColumn, dateColumn, tradeIdColumn, stateColumn, removeTradeColumn;
     @FXML
-    AutoTooltipLabel filterLabel;
-    @FXML
-    InputTextField filterTextField;
+    FilterBox filterBox;
     @FXML
     Label numItems;
     @FXML
@@ -102,7 +95,6 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
     private SortedList<FailedTradesListItem> sortedList;
     private FilteredList<FailedTradesListItem> filteredList;
     private EventHandler<KeyEvent> keyEventEventHandler;
-    private ChangeListener<String> filterTextFieldListener;
     private Scene scene;
     private final boolean allowFaultyDelayedTxs;
 
@@ -144,8 +136,8 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
         priceColumn.setComparator(Comparator.comparing(o -> o.getTrade().getPrice()));
         volumeColumn.setComparator(Comparator.comparing(o -> o.getTrade().getVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
         amountColumn.setComparator(Comparator.comparing(o -> o.getTrade().getAmount(), Comparator.nullsFirst(Comparator.naturalOrder())));
-        stateColumn.setComparator(Comparator.comparing(model::getState));
-        marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
+        stateColumn.setComparator(Comparator.comparing(FailedTradesListItem::getState));
+        marketColumn.setComparator(Comparator.comparing(FailedTradesListItem::getMarketLabel));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
@@ -170,10 +162,6 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
             }
         };
 
-        filterLabel.setText(Res.get("shared.filter"));
-        HBox.setMargin(filterLabel, new Insets(5, 0, 0, 10));
-        filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
-
         numItems.setId("num-offers");
         numItems.setPadding(new Insets(-5, 0, 0, 10));
         HBox.setHgrow(footerSpacer, Priority.ALWAYS);
@@ -188,10 +176,13 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
         }
 
-        filteredList = new FilteredList<>(model.getList());
+        filteredList = new FilteredList<>(model.dataModel.getList());
         sortedList = new SortedList<>(filteredList);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
+
+        filterBox.initialize(filteredList, tableView); // here because filteredList is instantiated here
+        filterBox.activate();
 
         numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
         exportButton.setOnAction(event -> {
@@ -205,27 +196,24 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
             };
             CSVEntryConverter<FailedTradesListItem> contentConverter = item -> {
                 String[] columns = new String[reportColumns];
-                columns[0] = model.getTradeId(item);
-                columns[1] = model.getDate(item);
-                columns[2] = model.getMarketLabel(item);
-                columns[3] = model.getPrice(item);
-                columns[4] = model.getAmount(item);
-                columns[5] = model.getVolume(item);
-                columns[6] = model.getDirectionLabel(item);
-                columns[7] = model.getState(item);
+                columns[0] = item.getTrade().getShortId();
+                columns[1] = item.getDateAsString();
+                columns[2] = item.getMarketLabel();
+                columns[3] = item.getPriceAsString();
+                columns[4] = item.getAmountAsString();
+                columns[5] = item.getVolumeAsString();
+                columns[6] = item.getDirectionLabel();
+                columns[7] = item.getState();
                 return columns;
             };
 
             GUIUtil.exportCSV("failedTrades.csv",
                     headerConverter,
                     contentConverter,
-                    new FailedTradesListItem(),
+                    null,
                     sortedList,
                     (Stage) root.getScene().getWindow());
         });
-
-        filterTextField.textProperty().addListener(filterTextFieldListener);
-        applyFilteredListPredicate(filterTextField.getText());
     }
 
     @Override
@@ -236,38 +224,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
 
         sortedList.comparatorProperty().unbind();
         exportButton.setOnAction(null);
-
-        filterTextField.textProperty().removeListener(filterTextFieldListener);
-    }
-
-    private void applyFilteredListPredicate(String filterString) {
-        filteredList.setPredicate(item -> {
-            if (filterString.isEmpty())
-                return true;
-
-            if (model.getDate(item).contains(filterString)) {
-                return true;
-            }
-            if (model.getMarketLabel(item).contains(filterString)) {
-                return true;
-            }
-            if (model.getPrice(item).contains(filterString)) {
-                return true;
-            }
-            if (model.getVolume(item).contains(filterString)) {
-                return true;
-            }
-            if (model.getAmount(item).contains(filterString)) {
-                return true;
-            }
-            if (model.getDirectionLabel(item).contains(filterString)) {
-                return true;
-            }
-            if (FilteringUtils.match(item.getTrade().getOffer(), filterString)) {
-                return true;
-            }
-            return FilteringUtils.match(item.getTrade(), filterString);
-        });
+        filterBox.deactivate();
     }
 
     private void onUnfail() {
@@ -328,7 +285,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    field = new HyperlinkWithIcon(model.getTradeId(item));
+                                    field = new HyperlinkWithIcon(item.getTrade().getId());
                                     field.setOnAction(event -> tradeDetailsWindow.show(item.getTrade()));
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                     setGraphic(field);
@@ -355,7 +312,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setGraphic(new AutoTooltipLabel(model.getDate(item)));
+                                    setGraphic(new AutoTooltipLabel(item.getDateAsString()));
                                 else
                                     setGraphic(null);
                             }
@@ -375,7 +332,11 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                             @Override
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setGraphic(new AutoTooltipLabel(model.getMarketLabel(item)));
+                                if (!empty && item != null) {
+                                    setGraphic(new AutoTooltipLabel(item.getMarketLabel()));
+                                } else {
+                                    setGraphic(null);
+                                }
                             }
                         };
                     }
@@ -395,7 +356,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setGraphic(new AutoTooltipLabel(model.getState(item)));
+                                    setGraphic(new AutoTooltipLabel(item.getState()));
                                 else
                                     setGraphic(null);
                             }
@@ -416,7 +377,11 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                             @Override
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setGraphic(new AutoTooltipLabel(model.getAmount(item)));
+                                if (!empty && item != null) {
+                                    setGraphic(new AutoTooltipLabel(item.getAmountAsString()));
+                                } else {
+                                    setGraphic(null);
+                                }
                             }
                         };
                     }
@@ -434,7 +399,11 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                             @Override
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setGraphic(new AutoTooltipLabel(model.getPrice(item)));
+                                if (!empty && item != null) {
+                                    setGraphic(new AutoTooltipLabel(item.getPriceAsString()));
+                                } else {
+                                    setGraphic(null);
+                                }
                             }
                         };
                     }
@@ -453,7 +422,7 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null)
-                                    setGraphic(new AutoTooltipLabel(model.getVolume(item)));
+                                    setGraphic(new AutoTooltipLabel(item.getVolumeAsString()));
                                 else
                                     setGraphic(null);
                             }
@@ -473,7 +442,11 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
                             @Override
                             public void updateItem(final FailedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setGraphic(new AutoTooltipLabel(model.getDirectionLabel(item)));
+                                if (!empty && item != null) {
+                                    setGraphic(new AutoTooltipLabel(item.getDirectionLabel()));
+                                } else {
+                                    setGraphic(null);
+                                }
                             }
                         };
                     }
