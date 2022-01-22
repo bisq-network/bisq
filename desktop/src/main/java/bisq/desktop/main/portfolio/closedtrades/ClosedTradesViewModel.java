@@ -19,13 +19,9 @@ package bisq.desktop.main.portfolio.closedtrades;
 
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
-import bisq.desktop.util.DisplayUtils;
 
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Volume;
-import bisq.core.offer.OfferDirection;
 import bisq.core.trade.ClosedTradableFormatter;
-import bisq.core.trade.model.Tradable;
 
 import org.bitcoinj.core.Coin;
 
@@ -43,69 +39,6 @@ public class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTrades
         this.closedTradableFormatter = closedTradableFormatter;
     }
 
-    String getTradeId(Tradable item) {
-        return item.getShortId();
-    }
-
-    String getAmount(Tradable item) {
-        return item != null ? closedTradableFormatter.getAmountAsString(item) : "";
-    }
-
-    String getPrice(Tradable item) {
-        return item != null ? closedTradableFormatter.getPriceAsString(item) : "";
-    }
-
-    String getPriceDeviation(Tradable item) {
-        return item != null ? closedTradableFormatter.getPriceDeviationAsString(item) : "";
-    }
-
-    String getVolume(Tradable item, boolean appendCode) {
-        return item != null ? closedTradableFormatter.getVolumeAsString(item, appendCode) : "";
-    }
-
-    String getVolumeCurrency(Tradable item) {
-        return item != null ? closedTradableFormatter.getVolumeCurrencyAsString(item) : "";
-    }
-
-    String getTxFee(Tradable item) {
-        return item != null ? closedTradableFormatter.getTxFeeAsString(item) : "";
-    }
-
-    String getTradeFee(Tradable item, boolean appendCode) {
-        return item != null ? closedTradableFormatter.getTradeFeeAsString(item, appendCode) : "";
-    }
-
-    String getBuyerSecurityDeposit(Tradable item) {
-        return item != null ? closedTradableFormatter.getBuyerSecurityDepositAsString(item) : "";
-    }
-
-    String getSellerSecurityDeposit(Tradable item) {
-        return item != null ? closedTradableFormatter.getSellerSecurityDepositAsString(item) : "";
-    }
-
-    String getDirectionLabel(Tradable item) {
-        if ((item != null)) {
-            OfferDirection direction = dataModel.getDirection(item.getOffer());
-            String currencyCode = item.getOffer().getCurrencyCode();
-            return DisplayUtils.getDirectionWithCode(direction, currencyCode);
-        } else {
-            return "";
-        }
-    }
-
-    String getDate(Tradable item) {
-        return DisplayUtils.formatDateTime(item.getDate());
-    }
-
-    String getMarketLabel(Tradable item) {
-        return item != null ? CurrencyUtil.getCurrencyPair(item.getOffer().getCurrencyCode()) : "";
-    }
-
-    String getState(Tradable item) {
-        return item != null ? closedTradableFormatter.getStateAsString(item) : "";
-    }
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Used in ClosedTradesSummaryWindow
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -121,7 +54,7 @@ public class ClosedTradesViewModel extends ActivatableWithDataModel<ClosedTrades
     }
 
     public Map<String, String> getTotalVolumeByCurrency() {
-        return closedTradableFormatter.getTotalVolumeByCurrencyAsString(dataModel.getList());
+        return closedTradableFormatter.getTotalVolumeByCurrencyAsString(dataModel.getListAsTradables());
     }
 
     public String getTotalTxFee(Coin totalTradeAmount) {
