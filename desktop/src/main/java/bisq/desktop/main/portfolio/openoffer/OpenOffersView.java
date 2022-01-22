@@ -242,7 +242,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
         exportButton.setOnAction(event -> {
             ObservableList<TableColumn<OpenOfferListItem, ?>> tableColumns = tableView.getColumns();
-            int reportColumns = tableColumns.size() - 3;    // CSV report excludes the last columns (icons)
+            int reportColumns = tableColumns.size() - 4;    // CSV report excludes the last columns (icons)
             CSVEntryConverter<OpenOfferListItem> headerConverter = item -> {
                 String[] columns = new String[reportColumns];
                 for (int i = 0; i < columns.length; i++) {
