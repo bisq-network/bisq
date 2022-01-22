@@ -21,22 +21,13 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.layout.HBox?>
-<?import bisq.desktop.components.AutoTooltipLabel?>
-<?import bisq.desktop.components.InputTextField?>
+<?import bisq.desktop.components.list.FilterBox?>
 <VBox fx:id="root" fx:controller="bisq.desktop.main.portfolio.pendingtrades.PendingTradesView"
       spacing="20" xmlns:fx="http://javafx.com/fxml">
     <padding>
         <Insets bottom="15.0" left="15.0" right="15.0" top="15.0"/>
     </padding>
-    <HBox spacing="5.0">
-        <AutoTooltipLabel fx:id="filterLabel">
-            <HBox.margin>
-                <Insets top="5.0" left="10.0" />
-            </HBox.margin>
-        </AutoTooltipLabel>
-        <InputTextField fx:id="filterTextField" minWidth="500"/>
-    </HBox>
+    <FilterBox fx:id="filterBox" />
     <TableView fx:id="tableView" VBox.vgrow="SOMETIMES">
         <columns>
             <TableColumn fx:id="tradeIdColumn" minWidth="100"/>

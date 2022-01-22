@@ -17,39 +17,67 @@
 
 package bisq.desktop.main.portfolio.pendingtrades;
 
-import bisq.core.monetary.Price;
-import bisq.core.monetary.Volume;
+import bisq.desktop.util.filtering.FilterableListItem;
+
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
-import org.bitcoinj.core.Coin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javafx.beans.property.ReadOnlyObjectProperty;
+import static bisq.core.locale.CurrencyUtil.getCurrencyPair;
 
 /**
  * We could remove that wrapper if it is not needed for additional UI only fields.
  */
-public class PendingTradesListItem {
-
+public class PendingTradesListItem implements FilterableListItem {
+    public static final Logger log = LoggerFactory.getLogger(PendingTradesListItem.class);
+    private final CoinFormatter btcFormatter;
     private final Trade trade;
 
-    public PendingTradesListItem(Trade trade) {
+    public PendingTradesListItem(Trade trade, CoinFormatter btcFormatter) {
         this.trade = trade;
+        this.btcFormatter = btcFormatter;
     }
 
     public Trade getTrade() {
         return trade;
     }
 
-    public ReadOnlyObjectProperty<Coin> tradeAmountProperty() {
-        return trade.amountProperty();
+    public String getPriceAsString() {
+        return FormattingUtils.formatPrice(trade.getPrice());
     }
 
-    public ReadOnlyObjectProperty<Volume> tradeVolumeProperty() {
-        return trade.volumeProperty();
+    public String getAmountAsString() {
+        return btcFormatter.formatCoin(trade.getAmount());
     }
 
-    public Price getPrice() {
-        return trade.getPrice();
+    public String getPaymentMethod() {
+        return trade.getOffer().getPaymentMethodNameWithCountryCode();
     }
 
+    public String getMarketDescription() {
+        return getCurrencyPair(trade.getOffer().getCurrencyCode());
+    }
+
+    @Override
+    public boolean match(String filterString) {
+        if (filterString.isEmpty()) {
+            return true;
+        }
+        if (getTrade().getId().contains(filterString)) {
+            return true;
+        }
+        if (getAmountAsString().contains(filterString)) {
+            return true;
+        }
+        if (getPaymentMethod().contains(filterString)) {
+            return true;
+        }
+        if (getMarketDescription().contains(filterString)) {
+            return true;
+        }
+        return getPriceAsString().contains(filterString);
+    }
 }
