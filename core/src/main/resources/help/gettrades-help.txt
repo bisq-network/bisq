@@ -2,26 +2,32 @@ gettrades
 
 NAME
 ----
-gettrades - get trade history
+gettrades - get open, closed, or failed trades
 
 SYNOPSIS
 --------
 gettrades
-		--currency-code=<usd|eur|bsq|xmr>
+		--category=<open|closed|failed>
 
 DESCRIPTION
 -----------
-TODO
+Displays list of all currently open, closed, or failed trades.
 
 OPTIONS
 -------
---currency-code
-		TODO
+--category
+        The category of trade summaries:  open (pending), closed (historical), and failed.
+        The default category option value is open.
 
 EXAMPLES
 --------
-To see ... :
-$ ./bisq-cli --password=xyz --port=9998 gettrades --currency-code
+To see summaries of all open (pending) trades:
+$ ./bisq-cli --password=xyz --port=9998 gettrades
+OR
+$ ./bisq-cli --password=xyz --port=9998 gettrades --category=open
 
-To see ... :
-$ ./bisq-cli --password=xyz --port=9998 gettrades ---currency-code
+To see summaries of all closed (historical) trades:
+$ ./bisq-cli --password=xyz --port=9998 gettrades ---category=closed
+
+To see summaries of all failed trades:
+$ ./bisq-cli --password=xyz --port=9998 gettrades ---category=failed
