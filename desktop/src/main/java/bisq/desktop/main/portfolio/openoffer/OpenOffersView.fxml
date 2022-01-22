@@ -18,9 +18,8 @@
   -->
 
 <?import bisq.desktop.components.AutoTooltipButton?>
-<?import bisq.desktop.components.AutoTooltipLabel?>
 <?import bisq.desktop.components.AutoTooltipSlideToggleButton?>
-<?import bisq.desktop.components.InputTextField?>
+<?import bisq.desktop.components.list.FilterBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -34,9 +33,8 @@
     <padding>
         <Insets bottom="15.0" left="15.0" right="15.0" top="15.0"/>
     </padding>
-    <HBox spacing="5.0">
-        <AutoTooltipLabel fx:id="filterLabel"/>
-        <InputTextField fx:id="filterTextField" minWidth="500"/>
+    <HBox>
+        <FilterBox fx:id="filterBox" />
         <Pane HBox.hgrow="ALWAYS"/>
         <AutoTooltipSlideToggleButton fx:id="selectToggleButton"/>
     </HBox>

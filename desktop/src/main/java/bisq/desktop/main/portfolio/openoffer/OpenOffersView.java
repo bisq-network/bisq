@@ -25,7 +25,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipSlideToggleButton;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
-import bisq.desktop.components.InputTextField;
+import bisq.desktop.components.list.FilterBox;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.withdrawal.WithdrawalView;
@@ -35,7 +35,6 @@ import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.presentation.PortfolioUtil;
 import bisq.desktop.util.GUIUtil;
-import bisq.desktop.util.filtering.FilteringUtils;
 
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
@@ -63,7 +62,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -122,9 +120,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             marketColumn, directionColumn, dateColumn, offerIdColumn, deactivateItemColumn,
             removeItemColumn, editItemColumn, triggerPriceColumn, triggerIconColumn, paymentMethodColumn, duplicateItemColumn;
     @FXML
-    AutoTooltipLabel filterLabel;
-    @FXML
-    InputTextField filterTextField;
+    FilterBox filterBox;
     @FXML
     Label numItems;
     @FXML
@@ -138,8 +134,6 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     private final OfferDetailsWindow offerDetailsWindow;
     private final BsqSwapOfferDetailsWindow bsqSwapOfferDetailsWindow;
     private SortedList<OpenOfferListItem> sortedList;
-    private FilteredList<OpenOfferListItem> filteredList;
-    private ChangeListener<String> filterTextFieldListener;
     private PortfolioView.OpenOfferActionHandler openOfferActionHandler;
     private ChangeListener<Number> widthListener;
 
@@ -194,10 +188,10 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
         offerIdColumn.setComparator(Comparator.comparing(o -> o.getOffer().getId()));
         directionColumn.setComparator(Comparator.comparing(o -> o.getOffer().getDirection()));
-        marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
+        marketColumn.setComparator(Comparator.comparing(OpenOfferListItem::getMarketDescription));
         amountColumn.setComparator(Comparator.comparing(o -> o.getOffer().getAmount()));
         priceColumn.setComparator(Comparator.comparing(o -> o.getOffer().getPrice(), Comparator.nullsFirst(Comparator.naturalOrder())));
-        deviationColumn.setComparator(Comparator.comparing(model::getPriceDeviationAsDouble, Comparator.nullsFirst(Comparator.naturalOrder())));
+        deviationColumn.setComparator(Comparator.comparing(OpenOfferListItem::getPriceDeviationAsDouble, Comparator.nullsFirst(Comparator.naturalOrder())));
         triggerPriceColumn.setComparator(Comparator.comparing(o -> o.getOpenOffer().getTriggerPrice(),
                 Comparator.nullsFirst(Comparator.naturalOrder())));
         volumeColumn.setComparator(Comparator.comparing(o -> o.getOffer().getVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
@@ -221,10 +215,6 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     return row;
                 });
 
-        filterLabel.setText(Res.get("shared.filter"));
-        HBox.setMargin(filterLabel, new Insets(5, 0, 0, 10));
-        filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
-
         selectToggleButton.setPadding(new Insets(0, 90, -20, 0));
         selectToggleButton.setText(Res.get("shared.enabled"));
         selectToggleButton.setDisable(true);
@@ -238,10 +228,13 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
     @Override
     protected void activate() {
-        filteredList = new FilteredList<>(model.getList());
+        FilteredList<OpenOfferListItem> filteredList = new FilteredList<>(model.dataModel.getList());
         sortedList = new SortedList<>(filteredList);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
+
+        filterBox.initialize(filteredList, tableView); // here because filteredList is instantiated here
+        filterBox.activate();
 
         updateSelectToggleButtonState();
 
@@ -267,16 +260,16 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             };
             CSVEntryConverter<OpenOfferListItem> contentConverter = item -> {
                 String[] columns = new String[ColumnNames.values().length];
-                columns[ColumnNames.OFFER_ID.ordinal()] = model.getOfferId(item);
-                columns[ColumnNames.DATE.ordinal()] = model.getDate(item);
-                columns[ColumnNames.MARKET.ordinal()] = model.getMarketLabel(item);
-                columns[ColumnNames.PRICE.ordinal()] = model.getPrice(item);
-                columns[ColumnNames.DEVIATION.ordinal()] = model.getPriceDeviation(item);
-                columns[ColumnNames.TRIGGER_PRICE.ordinal()] = model.getTriggerPrice(item);
-                columns[ColumnNames.AMOUNT.ordinal()] = model.getAmount(item);
-                columns[ColumnNames.VOLUME.ordinal()] = model.getVolume(item);
-                columns[ColumnNames.PAYMENT_METHOD.ordinal()] = model.getPaymentMethod(item);
-                columns[ColumnNames.DIRECTION.ordinal()] = model.getDirectionLabel(item);
+                columns[ColumnNames.OFFER_ID.ordinal()] = item.getOffer().getShortId();
+                columns[ColumnNames.DATE.ordinal()] = item.getDateAsString();
+                columns[ColumnNames.MARKET.ordinal()] = item.getMarketDescription();
+                columns[ColumnNames.PRICE.ordinal()] = item.getPriceAsString();
+                columns[ColumnNames.DEVIATION.ordinal()] = item.getPriceDeviationAsString();
+                columns[ColumnNames.TRIGGER_PRICE.ordinal()] = item.getTriggerPriceAsString();
+                columns[ColumnNames.AMOUNT.ordinal()] = item.getAmountAsString();
+                columns[ColumnNames.VOLUME.ordinal()] = item.getVolumeAsString();
+                columns[ColumnNames.PAYMENT_METHOD.ordinal()] = item.getPaymentMethodAsString();
+                columns[ColumnNames.DIRECTION.ordinal()] = item.getDirectionLabel();
                 columns[ColumnNames.STATUS.ordinal()] = String.valueOf(!item.getOpenOffer().isDeactivated());
                 return columns;
             };
@@ -284,13 +277,10 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             GUIUtil.exportCSV("openOffers.csv",
                     headerConverter,
                     contentConverter,
-                    new OpenOfferListItem(),
+                    new OpenOfferListItem(null, null, null, null, null),
                     sortedList,
                     (Stage) root.getScene().getWindow());
         });
-
-        filterTextField.textProperty().addListener(filterTextFieldListener);
-        applyFilteredListPredicate(filterTextField.getText());
 
         root.widthProperty().addListener(widthListener);
         onWidthChange(root.getWidth());
@@ -301,7 +291,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         sortedList.comparatorProperty().unbind();
         exportButton.setOnAction(null);
 
-        filterTextField.textProperty().removeListener(filterTextFieldListener);
+        filterBox.deactivate();
         root.widthProperty().removeListener(widthListener);
     }
 
@@ -320,39 +310,6 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                 selectToggleButton.setSelected(true);
             }
         }
-    }
-
-    private void applyFilteredListPredicate(String filterString) {
-        filteredList.setPredicate(item -> {
-            if (filterString.isEmpty())
-                return true;
-
-            if (model.getDate(item).contains(filterString)) {
-                return true;
-            }
-            if (model.getMarketLabel(item).contains(filterString)) {
-                return true;
-            }
-            if (model.getPrice(item).contains(filterString)) {
-                return true;
-            }
-            if (model.getPriceDeviation(item).contains(filterString)) {
-                return true;
-            }
-            if (model.getPaymentMethod(item).contains(filterString)) {
-                return true;
-            }
-            if (model.getVolume(item).contains(filterString)) {
-                return true;
-            }
-            if (model.getAmount(item).contains(filterString)) {
-                return true;
-            }
-            if (model.getDirectionLabel(item).contains(filterString)) {
-                return true;
-            }
-            return FilteringUtils.match(item.getOpenOffer().getOffer(), filterString);
-        });
     }
 
     private void onWidthChange(double width) {
@@ -383,12 +340,13 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         }
     }
 
-    private void onRemoveOpenOffer(OpenOffer openOffer) {
+    private void onRemoveOpenOffer(OpenOfferListItem item) {
+        OpenOffer openOffer = item.getOpenOffer();
         if (model.isBootstrappedOrShowPopup()) {
             String key = "RemoveOfferWarning";
             if (DontShowAgainLookup.showAgain(key)) {
-                String message = model.hasMakerFee(openOffer) ?
-                        Res.get("popup.warning.removeOffer", model.getMakerFeeAsString(openOffer)) :
+                String message = item.hasMakerFee() ?
+                        Res.get("popup.warning.removeOffer", item.getMakerFeeAsString()) :
                         Res.get("popup.warning.removeNoFeeOffer");
                 new Popup().warning(message)
                         .actionButtonText(Res.get("shared.removeOffer"))
@@ -458,7 +416,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    field = new HyperlinkWithIcon(model.getOfferId(item));
+                                    field = new HyperlinkWithIcon(item.getOffer().getShortId());
                                     field.setOnAction(event -> {
                                         if (item.getOffer().isBsqSwapOffer()) {
                                             bsqSwapOfferDetailsWindow.show(item.getOffer());
@@ -493,8 +451,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 super.updateItem(item, empty);
                                 getStyleClass().removeAll("offer-disabled");
                                 if (item != null) {
-                                    if (model.isNotPublished(item)) getStyleClass().add("offer-disabled");
-                                    setGraphic(new AutoTooltipLabel(model.getDate(item)));
+                                    if (item.isNotPublished()) getStyleClass().add("offer-disabled");
+                                    setGraphic(new AutoTooltipLabel(item.getDateAsString()));
                                 } else {
                                     setGraphic(null);
                                 }
@@ -518,8 +476,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 getStyleClass().removeAll("offer-disabled");
 
                                 if (item != null) {
-                                    if (model.isNotPublished(item)) getStyleClass().add("offer-disabled");
-                                    setGraphic(new AutoTooltipLabel(model.getAmount(item)));
+                                    if (item.isNotPublished()) getStyleClass().add("offer-disabled");
+                                    setGraphic(new AutoTooltipLabel(item.getAmountAsString()));
                                 } else {
                                     setGraphic(null);
                                 }
@@ -543,8 +501,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 getStyleClass().removeAll("offer-disabled");
 
                                 if (item != null) {
-                                    if (model.isNotPublished(item)) getStyleClass().add("offer-disabled");
-                                    setGraphic(new AutoTooltipLabel(model.getPrice(item)));
+                                    if (item.isNotPublished()) getStyleClass().add("offer-disabled");
+                                    setGraphic(new AutoTooltipLabel(item.getPriceAsString()));
                                 } else {
                                     setGraphic(null);
                                 }
@@ -568,8 +526,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 getStyleClass().removeAll("offer-disabled");
 
                                 if (item != null) {
-                                    if (model.isNotPublished(item)) getStyleClass().add("offer-disabled");
-                                    AutoTooltipLabel autoTooltipLabel = new AutoTooltipLabel(model.getPriceDeviation(item));
+                                    if (item.isNotPublished()) getStyleClass().add("offer-disabled");
+                                    AutoTooltipLabel autoTooltipLabel = new AutoTooltipLabel(item.getPriceDeviationAsString());
                                     autoTooltipLabel.setOpacity(item.getOffer().isUseMarketBasedPrice() ? 1 : 0.4);
                                     setGraphic(autoTooltipLabel);
                                 } else {
@@ -594,8 +552,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 super.updateItem(item, empty);
                                 getStyleClass().removeAll("offer-disabled");
                                 if (item != null) {
-                                    if (model.isNotPublished(item)) getStyleClass().add("offer-disabled");
-                                    setGraphic(new AutoTooltipLabel(model.getTriggerPrice(item)));
+                                    if (item.isNotPublished()) getStyleClass().add("offer-disabled");
+                                    setGraphic(new AutoTooltipLabel(item.getTriggerPriceAsString()));
                                 } else {
                                     setGraphic(null);
                                 }
@@ -619,8 +577,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 getStyleClass().removeAll("offer-disabled");
 
                                 if (item != null) {
-                                    if (model.isNotPublished(item)) getStyleClass().add("offer-disabled");
-                                    setGraphic(new AutoTooltipLabel(model.getVolume(item)));
+                                    if (item.isNotPublished()) getStyleClass().add("offer-disabled");
+                                    setGraphic(new AutoTooltipLabel(item.getVolumeAsString()));
                                 } else {
                                     setGraphic(null);
                                 }
@@ -644,8 +602,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 getStyleClass().removeAll("offer-disabled");
 
                                 if (item != null) {
-                                    if (model.isNotPublished(item)) getStyleClass().add("offer-disabled");
-                                    setGraphic(new AutoTooltipLabel(model.getPaymentMethod(item)));
+                                    if (item.isNotPublished()) getStyleClass().add("offer-disabled");
+                                    setGraphic(new AutoTooltipLabel(item.getPaymentMethodAsString()));
                                 } else {
                                     setGraphic(null);
                                 }
@@ -669,8 +627,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 getStyleClass().removeAll("offer-disabled");
 
                                 if (item != null) {
-                                    if (model.isNotPublished(item)) getStyleClass().add("offer-disabled");
-                                    setGraphic(new AutoTooltipLabel(model.getDirectionLabel(item)));
+                                    if (item.isNotPublished()) getStyleClass().add("offer-disabled");
+                                    setGraphic(new AutoTooltipLabel(item.getDirectionLabel()));
                                 } else {
                                     setGraphic(null);
                                 }
@@ -694,8 +652,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 getStyleClass().removeAll("offer-disabled");
 
                                 if (item != null) {
-                                    if (model.isNotPublished(item)) getStyleClass().add("offer-disabled");
-                                    setGraphic(new AutoTooltipLabel(model.getMarketLabel(item)));
+                                    if (item.isNotPublished()) getStyleClass().add("offer-disabled");
+                                    setGraphic(new AutoTooltipLabel(item.getMarketDescription()));
                                 } else {
                                     setGraphic(null);
                                 }
@@ -775,7 +733,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                         button.setTooltip(new Tooltip(Res.get("shared.removeOffer")));
                                         setGraphic(button);
                                     }
-                                    button.setOnAction(event -> onRemoveOpenOffer(item.getOpenOffer()));
+                                    button.setOnAction(event -> onRemoveOpenOffer(item));
                                 } else {
                                     setGraphic(null);
                                     if (button != null) {
@@ -847,7 +805,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                             button.setTooltip(new Tooltip(Res.get("openOffer.triggered")));
                                         } else {
                                             button.getGraphic().getStyleClass().remove("warning");
-                                            button.setTooltip(new Tooltip(Res.get("openOffer.triggerPrice", model.getTriggerPrice(item))));
+                                            button.setTooltip(new Tooltip(Res.get("openOffer.triggerPrice", item.getTriggerPriceAsString())));
                                         }
                                         setGraphic(button);
                                     }
