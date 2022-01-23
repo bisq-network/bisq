@@ -45,12 +45,16 @@ class ClosedTradeTableBuilder extends AbstractTradeListBuilder {
             colCurrency.addRow(toPaymentCurrencyCode.apply(t));
             colMinerTxFee.addRow(toMyMinerTxFee.apply(t));
 
-            long tradeFeeBsq = toTradeFeeBsq.apply(t);
-            long tradeFeeBtc = toTradeFeeBtc.apply(t);
-            if (tradeFeeBsq > 0)
-                colMixedTradeFee.addRow(tradeFeeBsq, true);
-            else
-                colMixedTradeFee.addRow(tradeFeeBtc, false);
+            if (t.getOffer().getIsBsqSwapOffer()) {
+                // For BSQ Swaps, BTC buyer pays the BSQ trade fee for both sides (BTC seller pays no fee).
+                var optionalTradeFeeBsq = isBtcSeller.test(t) ? 0L : toTradeFeeBsq.apply(t);
+                colMixedTradeFee.addRow(optionalTradeFeeBsq, true);
+            } else if (isTradeFeeBtc.test(t)) {
+                colMixedTradeFee.addRow(toTradeFeeBsq.apply(t), false);
+            } else {
+                // V1 trade fee paid in BSQ.
+                colMixedTradeFee.addRow(toTradeFeeBsq.apply(t), true);
+            }
 
             colBuyerDeposit.addRow(t.getOffer().getBuyerSecurityDeposit());
             colSellerDeposit.addRow(t.getOffer().getSellerSecurityDeposit());

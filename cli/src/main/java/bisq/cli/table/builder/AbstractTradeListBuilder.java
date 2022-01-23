@@ -36,6 +36,7 @@ import javax.annotation.Nullable;
 import static bisq.cli.table.builder.TableBuilderConstants.COL_HEADER_BUYER_DEPOSIT;
 import static bisq.cli.table.builder.TableBuilderConstants.COL_HEADER_SELLER_DEPOSIT;
 import static bisq.cli.table.builder.TableType.TRADE_DETAIL_TBL;
+import static protobuf.OfferDirection.SELL;
 
 
 
@@ -167,7 +168,15 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
     private final Supplier<Boolean> isTradeDetailTblBuilder = () -> tableType.equals(TRADE_DETAIL_TBL);
     protected final Predicate<TradeInfo> isFiatTrade = (t) -> isFiatOffer.test(t.getOffer());
     protected final Predicate<TradeInfo> isBsqSwapTrade = (t) -> t.getOffer().getIsBsqSwapOffer();
+    protected final Predicate<TradeInfo> isMyOffer = (t) -> t.getOffer().getIsMyOffer();
     protected final Predicate<TradeInfo> isTaker = (t) -> t.getRole().toLowerCase().contains("taker");
+    protected final Predicate<TradeInfo> isSellOffer = (t) -> t.getOffer().getDirection().equals(SELL.name());
+    protected final Predicate<TradeInfo> isBtcSeller = (t) -> (isMyOffer.test(t) && isSellOffer.test(t))
+            || (!isMyOffer.test(t) && !isSellOffer.test(t));
+    protected final Predicate<TradeInfo> isTradeFeeBtc = (t) -> isMyOffer.test(t)
+            ? t.getOffer().getIsCurrencyForMakerFeeBtc()
+            : t.getIsCurrencyForTakerFeeBtc();
+
 
     // Column Value Functions
 
@@ -207,7 +216,8 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
 
     protected final Function<TradeInfo, Long> toMyMinerTxFee = (t) -> {
         if (isBsqSwapTrade.test(t)) {
-            return t.getTxFeeAsLong(); // TODO What is trader's 'share' of tx-fee?
+            // The BTC seller pays the miner fee for both sides.
+            return isBtcSeller.test(t) ? t.getTxFeeAsLong() : 0L;
         } else {
             return isTaker.test(t)
                     ? t.getTxFeeAsLong()
