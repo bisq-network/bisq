@@ -144,7 +144,7 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
             logTrade(log, testInfo, "Bob's view before withdrawing funds to external wallet", trade);
             String toAddress = bitcoinCli.getNewBtcAddress();
             bobClient.withdrawFunds(tradeId, toAddress, WITHDRAWAL_TX_MEMO);
-            aliceClient.keepFunds(tradeId);
+            aliceClient.closeTrade(tradeId);
             genBtcBlocksThenWait(1, 1_000);
             trade = bobClient.getTrade(tradeId);
             EXPECTED_PROTOCOL_STATUS.setState(WITHDRAW_COMPLETED)

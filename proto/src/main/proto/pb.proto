@@ -89,6 +89,8 @@ message NetworkEnvelope {
         BsqSwapTxInputsMessage bsq_swap_tx_inputs_message = 57;
         BsqSwapFinalizeTxRequest bsq_swap_finalize_tx_request = 58;
         BsqSwapFinalizedTxMessage bsq_swap_finalized_tx_message = 59;
+
+        FileTransferPart file_transfer_part = 60;
     }
 }
 
@@ -122,6 +124,15 @@ message GetUpdatedDataRequest {
     int32 nonce = 2;
     repeated bytes excluded_keys = 3;
     string version = 4;
+}
+
+message FileTransferPart {
+    NodeAddress sender_node_address = 1;
+    string uid = 2;
+    string trade_id = 3;
+    int32 trader_id = 4;
+    int64 seq_num_or_file_length = 5;
+    bytes message_data = 6;
 }
 
 // peers

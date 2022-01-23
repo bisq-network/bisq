@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+import static bisq.cli.CryptoCurrencyUtil.apiDoesSupportCryptoCurrency;
 import static bisq.proto.grpc.EditOfferRequest.EditType.ACTIVATION_STATE_ONLY;
 import static bisq.proto.grpc.EditOfferRequest.EditType.FIXED_PRICE_ONLY;
 import static bisq.proto.grpc.EditOfferRequest.EditType.MKT_PRICE_MARGIN_ONLY;
@@ -253,7 +254,6 @@ public class OffersServiceRequest {
                 .setId(offerId)
                 .build();
         return grpcStubs.offersService.getMyBsqSwapOffer(request).getBsqSwapOffer();
-
     }
 
     public OfferInfo getMyOffer(String offerId) {
@@ -272,7 +272,7 @@ public class OffersServiceRequest {
     }
 
     public List<OfferInfo> getOffers(String direction, String currencyCode) {
-        if (isSupportedCryptoCurrency(currencyCode)) {
+        if (apiDoesSupportCryptoCurrency(currencyCode)) {
             return getCryptoCurrencyOffers(direction, currencyCode);
         } else {
             var request = GetOffersRequest.newBuilder()
@@ -301,17 +301,17 @@ public class OffersServiceRequest {
         return offers.isEmpty() ? offers : sortOffersByDate(offers);
     }
 
+    public List<OfferInfo> getCryptoCurrencyOffersSortedByDate(String currencyCode) {
+        ArrayList<OfferInfo> offers = new ArrayList<>();
+        offers.addAll(getCryptoCurrencyOffers(BUY.name(), currencyCode));
+        offers.addAll(getCryptoCurrencyOffers(SELL.name(), currencyCode));
+        return sortOffersByDate(offers);
+    }
+
     public List<OfferInfo> getBsqSwapOffersSortedByDate() {
         ArrayList<OfferInfo> offers = new ArrayList<>();
         offers.addAll(getBsqSwapOffers(BUY.name()));
         offers.addAll(getBsqSwapOffers(SELL.name()));
-        return sortOffersByDate(offers);
-    }
-
-    public List<OfferInfo> getBsqOffersSortedByDate() {
-        ArrayList<OfferInfo> offers = new ArrayList<>();
-        offers.addAll(getCryptoCurrencyOffers(BUY.name(), "BSQ"));
-        offers.addAll(getCryptoCurrencyOffers(SELL.name(), "BSQ"));
         return sortOffersByDate(offers);
     }
 
@@ -323,7 +323,7 @@ public class OffersServiceRequest {
     }
 
     public List<OfferInfo> getMyOffers(String direction, String currencyCode) {
-        if (isSupportedCryptoCurrency(currencyCode)) {
+        if (apiDoesSupportCryptoCurrency(currencyCode)) {
             return getMyCryptoCurrencyOffers(direction, currencyCode);
         } else {
             var request = GetMyOffersRequest.newBuilder()
@@ -359,13 +359,6 @@ public class OffersServiceRequest {
         return sortOffersByDate(offers);
     }
 
-    public List<OfferInfo> getMyBsqOffersSortedByDate() {
-        ArrayList<OfferInfo> offers = new ArrayList<>();
-        offers.addAll(getMyCryptoCurrencyOffers(BUY.name(), "BSQ"));
-        offers.addAll(getMyCryptoCurrencyOffers(SELL.name(), "BSQ"));
-        return sortOffersByDate(offers);
-    }
-
     public List<OfferInfo> getMyBsqSwapOffersSortedByDate() {
         ArrayList<OfferInfo> offers = new ArrayList<>();
         offers.addAll(getMyBsqSwapOffers(BUY.name()));
@@ -390,16 +383,5 @@ public class OffersServiceRequest {
                 .setIsMyOffer(isMyOffer)
                 .build();
         return grpcStubs.offersService.getOfferCategory(request).getOfferCategory();
-    }
-
-    private static boolean isSupportedCryptoCurrency(String currencyCode) {
-        return getSupportedCryptoCurrencies().contains(currencyCode.toUpperCase());
-    }
-
-    private static List<String> getSupportedCryptoCurrencies() {
-        final List<String> result = new ArrayList<>();
-        result.add("BSQ");
-        result.sort(String::compareTo);
-        return result;
     }
 }

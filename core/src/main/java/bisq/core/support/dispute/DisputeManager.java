@@ -145,7 +145,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     @Override
     public NodeAddress getPeerNodeAddress(ChatMessage message) {
         Optional<Dispute> disputeOptional = findDispute(message);
-        if (!disputeOptional.isPresent()) {
+        if (disputeOptional.isEmpty()) {
             log.warn("Could not find dispute for tradeId = {} traderId = {}",
                     message.getTradeId(), message.getTraderId());
             return null;
@@ -156,7 +156,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     @Override
     public PubKeyRing getPeerPubKeyRing(ChatMessage message) {
         Optional<Dispute> disputeOptional = findDispute(message);
-        if (!disputeOptional.isPresent()) {
+        if (disputeOptional.isEmpty()) {
             log.warn("Could not find dispute for tradeId = {} traderId = {}",
                     message.getTradeId(), message.getTraderId());
             return null;
@@ -325,7 +325,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         if (isAgent(dispute)) {
             if (!disputeList.contains(dispute)) {
                 Optional<Dispute> storedDisputeOptional = findDispute(dispute);
-                if (!storedDisputeOptional.isPresent()) {
+                if (storedDisputeOptional.isEmpty()) {
                     disputeList.add(dispute);
                     sendPeerOpenedDisputeMessage(dispute, contract, peersPubKeyRing);
                 } else {
@@ -378,7 +378,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         Dispute dispute = peerOpenedDisputeMessage.getDispute();
 
         Optional<Trade> optionalTrade = tradeManager.getTradeById(dispute.getTradeId());
-        if (!optionalTrade.isPresent()) {
+        if (optionalTrade.isEmpty()) {
             return;
         }
 
@@ -399,11 +399,10 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         if (!isAgent(dispute)) {
             if (!disputeList.contains(dispute)) {
                 Optional<Dispute> storedDisputeOptional = findDispute(dispute);
-                if (!storedDisputeOptional.isPresent()) {
+                if (storedDisputeOptional.isEmpty()) {
                     disputeList.add(dispute);
                     trade.setDisputeState(getDisputeStateStartedByPeer());
                     tradeManager.requestPersistence();
-                    errorMessage = null;
                 } else {
                     // valid case if both have opened a dispute and agent was not online.
                     log.debug("We got a dispute already open for that trade and trading peer. TradeId = {}",
@@ -452,7 +451,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         }
 
         Optional<Dispute> storedDisputeOptional = findDispute(dispute);
-        if (!storedDisputeOptional.isPresent() || reOpen) {
+        if (storedDisputeOptional.isEmpty() || reOpen) {
             String disputeInfo = getDisputeInfo(dispute);
             String disputeMessage = getDisputeIntroForDisputeCreator(disputeInfo);
             String sysMsg = dispute.isSupportTicket() ?
@@ -794,7 +793,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         return new Tuple2<>(peerNodeAddress, receiverPubKeyRing);
     }
 
-    private boolean isAgent(Dispute dispute) {
+    public boolean isAgent(Dispute dispute) {
         return pubKeyRing.equals(dispute.getAgentPubKeyRing());
     }
 
@@ -812,7 +811,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         return findDispute(message.getTradeId(), message.getTraderId());
     }
 
-    private Optional<Dispute> findDispute(String tradeId, int traderId) {
+    protected Optional<Dispute> findDispute(String tradeId, int traderId) {
         T disputeList = getDisputeList();
         if (disputeList == null) {
             log.warn("disputes is null");
@@ -836,7 +835,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
 
     public Optional<Trade> findTrade(Dispute dispute) {
         Optional<Trade> retVal = tradeManager.getTradeById(dispute.getTradeId());
-        if (!retVal.isPresent()) {
+        if (retVal.isEmpty()) {
             retVal = closedTradableManager.getClosedTrades().stream().filter(e -> e.getId().equals(dispute.getTradeId())).findFirst();
         }
         return retVal;
@@ -870,6 +869,20 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         chatMessage.setSystemMessage(false);
         dispute.addAndPersistChatMessage(chatMessage);
         this.sendChatMessage(chatMessage);
+        requestPersistence();
+    }
+
+    protected void addMediationLogsReceivedMessage(Dispute dispute, String logsIdentifier) {
+        String logsReceivedMessage = Res.get("support.mediatorReceivedLogs", logsIdentifier);
+        ChatMessage chatMessage = new ChatMessage(
+                getSupportType(),
+                dispute.getTradeId(),
+                pubKeyRing.hashCode(),
+                false,
+                logsReceivedMessage,
+                p2PService.getAddress());
+        chatMessage.setSystemMessage(true);
+        dispute.addAndPersistChatMessage(chatMessage);
         requestPersistence();
     }
 
@@ -958,7 +971,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                 long roundedToLong = MathUtils.roundDoubleToLong(scaled);
                 return Price.valueOf(currencyCode, roundedToLong);
             } catch (Exception e) {
-                log.error("Exception at getPrice / parseToFiat: " + e.toString());
+                log.error("Exception at getPrice / parseToFiat: " + e);
                 return null;
             }
         } else {

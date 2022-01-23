@@ -122,6 +122,9 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     public void start() {
     }
 
+    public void shutDown() {
+        daoStateStorageService.shutDown();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DaoStateListener

@@ -35,6 +35,7 @@ import org.junit.jupiter.api.BeforeAll;
 
 import static bisq.apitest.Scaffold.BitcoinCoreApp.bitcoind;
 import static bisq.apitest.config.ApiTestConfig.BSQ;
+import static bisq.apitest.config.ApiTestConfig.XMR;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
@@ -64,6 +65,9 @@ public abstract class AbstractOfferTest extends MethodTest {
     // TODO Deprecate legacy BSQ accounts when no longer in use.
     protected static PaymentAccount alicesLegacyBsqAcct;
     protected static PaymentAccount bobsLegacyBsqAcct;
+
+    protected static PaymentAccount alicesXmrAcct;
+    protected static PaymentAccount bobsXmrAcct;
 
     @BeforeAll
     public static void setUp() {
@@ -96,9 +100,14 @@ public abstract class AbstractOfferTest extends MethodTest {
         return priceAsBigDecimal.multiply(factor).longValue();
     };
 
-    protected final BiFunction<Double, Double, Long> calcPriceAsLong = (base, delta) -> {
+    protected final BiFunction<Double, Double, Long> calcFiatTriggerPriceAsLong = (base, delta) -> {
         var priceAsDouble = new BigDecimal(base).add(new BigDecimal(delta)).doubleValue();
         return Double.valueOf(exactMultiply(priceAsDouble, 10_000)).longValue();
+    };
+
+    protected final BiFunction<Double, Double, Long> calcAltcoinTriggerPriceAsLong = (base, delta) -> {
+        var priceAsDouble = new BigDecimal(base).add(new BigDecimal(delta)).doubleValue();
+        return Double.valueOf(exactMultiply(priceAsDouble, 100_000_000)).longValue();
     };
 
     protected final BiFunction<Double, Double, String> calcPriceAsString = (base, delta) -> {
@@ -113,6 +122,7 @@ public abstract class AbstractOfferTest extends MethodTest {
     protected final Function<List<OfferInfo>, String> toOffersTable = (offers) ->
             new TableBuilder(OFFER_TBL, offers).build().toString();
 
+    @SuppressWarnings("ConstantConditions")
     public static void initSwapPaymentAccounts() {
         // A bot may not know what the default 'BSQ Swap' account name is,
         // but API test cases do:  the value of the i18n property 'BSQ_SWAP'.
@@ -130,6 +140,20 @@ public abstract class AbstractOfferTest extends MethodTest {
                 BSQ,
                 bobClient.getUnusedBsqAddress(),
                 false);
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    public static void createXmrPaymentAccounts() {
+        alicesXmrAcct = aliceClient.createCryptoCurrencyPaymentAccount("Alice's XMR Account",
+                XMR,
+                "44G4jWmSvTEfifSUZzTDnJVLPvYATmq9XhhtDqUof1BGCLceG82EQsVYG9Q9GN4bJcjbAJEc1JD1m5G7iK4UPZqACubV4Mq",
+                false);
+        log.debug("Alices XMR Account: {}", alicesXmrAcct);
+        bobsXmrAcct = bobClient.createCryptoCurrencyPaymentAccount("Bob's XMR Account",
+                XMR,
+                "4BDRhdSBKZqAXs3PuNTbMtaXBNqFj5idC2yMVnQj8Rm61AyKY8AxLTt9vGRJ8pwcG4EtpyD8YpGqdZWCZ2VZj6yVBN2RVKs",
+                false);
+        log.debug("Bob's XMR Account: {}", bobsXmrAcct);
     }
 
     @AfterAll

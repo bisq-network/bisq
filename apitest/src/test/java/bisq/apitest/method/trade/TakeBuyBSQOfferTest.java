@@ -98,7 +98,7 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
             tradeId = trade.getTradeId();
 
             genBtcBlocksThenWait(1, 2_500);
-            alicesBsqOffers = aliceClient.getMyBsqOffersSortedByDate();
+            alicesBsqOffers = aliceClient.getMyCryptoCurrencyOffersSortedByDate(BSQ);
             assertEquals(0, alicesBsqOffers.size());
 
             waitForDepositConfirmation(log, testInfo, bobClient, trade.getTradeId());
@@ -162,10 +162,10 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
             genBtcBlocksThenWait(1, 1_000);
 
             var trade = bobClient.getTrade(tradeId);
-            logTrade(log, testInfo, "Alice's view before keeping funds", trade);
+            logTrade(log, testInfo, "Alice's view before closing trade", trade);
 
-            aliceClient.keepFunds(tradeId);
-            bobClient.keepFunds(tradeId);
+            aliceClient.closeTrade(tradeId);
+            bobClient.closeTrade(tradeId);
             genBtcBlocksThenWait(1, 1_000);
 
             trade = bobClient.getTrade(tradeId);

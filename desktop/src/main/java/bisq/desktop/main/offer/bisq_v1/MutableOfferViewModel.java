@@ -812,6 +812,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     }
 
     void onFixPriceToggleChange(boolean fixedPriceSelected) {
+        inputIsMarketBasedPrice = !fixedPriceSelected;
         updateButtonDisableState();
         if (!fixedPriceSelected) {
             onTriggerPriceTextFieldChanged();

@@ -96,7 +96,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         assertEquals(USD, newOffer.getCounterCurrencyCode());
         assertTrue(newOffer.getIsCurrencyForMakerFeeBtc());
 
-        newOffer = aliceClient.getMyOffer(newOfferId);
+        newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
@@ -143,7 +143,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         assertEquals("NZD", newOffer.getCounterCurrencyCode());
         assertTrue(newOffer.getIsCurrencyForMakerFeeBtc());
 
-        newOffer = aliceClient.getMyOffer(newOfferId);
+        newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
@@ -190,7 +190,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         assertEquals("GBP", newOffer.getCounterCurrencyCode());
         assertTrue(newOffer.getIsCurrencyForMakerFeeBtc());
 
-        newOffer = aliceClient.getMyOffer(newOfferId);
+        newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
@@ -237,7 +237,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         assertEquals("BRL", newOffer.getCounterCurrencyCode());
         assertTrue(newOffer.getIsCurrencyForMakerFeeBtc());
 
-        newOffer = aliceClient.getMyOffer(newOfferId);
+        newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
@@ -276,7 +276,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         assertTrue(newOffer.getIsMyPendingOffer());
 
         genBtcBlocksThenWait(1, 4000); // give time to add to offer book
-        newOffer = aliceClient.getMyOffer(newOffer.getId());
+        newOffer = aliceClient.getOffer(newOffer.getId());
         log.debug("OFFER #5:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());

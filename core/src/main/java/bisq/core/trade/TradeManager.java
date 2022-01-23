@@ -261,12 +261,12 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         try {
             Validator.nonEmptyStringOf(inputsForDepositTxRequest.getTradeId());
         } catch (Throwable t) {
-            log.warn("Invalid inputsForDepositTxRequest " + inputsForDepositTxRequest.toString());
+            log.warn("Invalid inputsForDepositTxRequest " + inputsForDepositTxRequest);
             return;
         }
 
         Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(inputsForDepositTxRequest.getTradeId());
-        if (!openOfferOptional.isPresent()) {
+        if (openOfferOptional.isEmpty()) {
             return;
         }
 
@@ -702,7 +702,10 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     public void closeDisputedTrade(String tradeId, Trade.DisputeState disputeState) {
         getTradeById(tradeId).ifPresent(trade -> {
             trade.setDisputeState(disputeState);
-            onTradeCompleted(trade);
+            checkNotNull(trade.getContract(), "Trade contract must not be null");
+            trade.setState(trade.getContract().isMyRoleBuyer(keyRing.getPubKeyRing()) ?
+                    Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG :        // buyer to trade step 4
+                    Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG);    // seller to trade step 4
             btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
             requestPersistence();
         });

@@ -33,11 +33,18 @@ import bisq.common.util.GcUtil;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import com.google.common.util.concurrent.MoreExecutors;
+
 import java.io.File;
 import java.io.IOException;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -53,6 +60,8 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     private final BsqBlocksStorageService bsqBlocksStorageService;
     private final File storageDir;
     private final LinkedList<Block> blocks = new LinkedList<>();
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private Optional<Future<?>> future = Optional.empty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -94,22 +103,36 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
             return;
         }
 
-        new Thread(() -> {
-            Thread.currentThread().setName("Write-blocks-and-DaoState");
-            bsqBlocksStorageService.persistBlocks(blocks);
+        if (future.isPresent() && !future.get().isDone()) {
+            UserThread.runAfter(() -> requestPersistence(daoStateAsProto, blocks, daoStateHashChain, completeHandler), 2);
+            return;
+        }
 
-            store.setDaoStateAsProto(daoStateAsProto);
-            store.setDaoStateHashChain(daoStateHashChain);
-            long ts = System.currentTimeMillis();
-            persistenceManager.persistNow(() -> {
-                // After we have written to disk we remove the daoStateAsProto in the store to avoid that it stays in
-                // memory there until the next persist call.
-                log.info("Persist daoState took {} ms", System.currentTimeMillis() - ts);
-                store.releaseMemory();
-                GcUtil.maybeReleaseMemory();
-                UserThread.execute(completeHandler);
-            });
-        }).start();
+        future = Optional.of(executorService.submit(() -> {
+           try {
+               Thread.currentThread().setName("Write-blocks-and-DaoState");
+               bsqBlocksStorageService.persistBlocks(blocks);
+               store.setDaoStateAsProto(daoStateAsProto);
+               store.setDaoStateHashChain(daoStateHashChain);
+               long ts = System.currentTimeMillis();
+               persistenceManager.persistNow(() -> {
+                   // After we have written to disk we remove the daoStateAsProto in the store to avoid that it stays in
+                   // memory there until the next persist call.
+                   log.info("Persist daoState took {} ms", System.currentTimeMillis() - ts);
+                   store.releaseMemory();
+                   GcUtil.maybeReleaseMemory();
+                   UserThread.execute(completeHandler);
+               });
+           } catch (Exception e) {
+               log.error("Exception at persisting BSQ blocks and DaoState", e);
+           }
+        }));
+    }
+
+    public void shutDown() {
+        executorService.shutdown();
+        // noinspection UnstableApiUsage
+        MoreExecutors.shutdownAndAwaitTermination(executorService, 10, TimeUnit.SECONDS);
     }
 
     @Override

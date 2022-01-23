@@ -30,11 +30,14 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import bisq.apitest.method.trade.AbstractTradeTest;
 import bisq.apitest.method.trade.BsqSwapTradeTest;
+import bisq.apitest.method.trade.FailUnfailTradeTest;
 import bisq.apitest.method.trade.TakeBuyBSQOfferTest;
 import bisq.apitest.method.trade.TakeBuyBTCOfferTest;
 import bisq.apitest.method.trade.TakeBuyBTCOfferWithNationalBankAcctTest;
+import bisq.apitest.method.trade.TakeBuyXMROfferTest;
 import bisq.apitest.method.trade.TakeSellBSQOfferTest;
 import bisq.apitest.method.trade.TakeSellBTCOfferTest;
+import bisq.apitest.method.trade.TakeSellXMROfferTest;
 
 
 @Slf4j
@@ -99,11 +102,43 @@ public class TradeTest extends AbstractTradeTest {
 
     @Test
     @Order(6)
+    public void testTakeBuyXMROffer(final TestInfo testInfo) {
+        TakeBuyXMROfferTest test = new TakeBuyXMROfferTest();
+        TakeBuyXMROfferTest.createXmrPaymentAccounts();
+        test.testTakeAlicesSellBTCForXMROffer(testInfo);
+        test.testBobsConfirmPaymentStarted(testInfo);
+        test.testAlicesConfirmPaymentReceived(testInfo);
+        test.testKeepFunds(testInfo);
+    }
+
+    @Test
+    @Order(7)
+    public void testTakeSellXMROffer(final TestInfo testInfo) {
+        TakeSellXMROfferTest test = new TakeSellXMROfferTest();
+        TakeBuyXMROfferTest.createXmrPaymentAccounts();
+        test.testTakeAlicesBuyBTCForXMROffer(testInfo);
+        test.testAlicesConfirmPaymentStarted(testInfo);
+        test.testBobsConfirmPaymentReceived(testInfo);
+        test.testAlicesBtcWithdrawalToExternalAddress(testInfo);
+    }
+
+    @Test
+    @Order(8)
     public void testBsqSwapTradeTest(final TestInfo testInfo) {
         BsqSwapTradeTest test = new BsqSwapTradeTest();
         test.testGetBalancesBeforeTrade();
         test.testAliceCreateBsqSwapBuyOffer();
         test.testBobTakesBsqSwapOffer();
         test.testGetBalancesAfterTrade();
+    }
+
+    @Test
+    @Order(9)
+    public void testFailUnfailTrade(final TestInfo testInfo) {
+        FailUnfailTradeTest test = new FailUnfailTradeTest();
+        test.testFailAndUnFailBuyBTCTrade(testInfo);
+        test.testFailAndUnFailSellBTCTrade(testInfo);
+        test.testFailAndUnFailBuyXmrTrade(testInfo);
+        test.testFailAndUnFailTakeSellXMRTrade(testInfo);
     }
 }

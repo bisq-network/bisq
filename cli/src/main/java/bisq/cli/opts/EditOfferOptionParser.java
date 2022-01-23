@@ -235,6 +235,9 @@ public class EditOfferOptionParser extends OfferIdOptionParser implements Method
     }
 
     public boolean isUsingMktPriceMargin() {
+        // We do not have the offer, so we do not really know if isUsingMktPriceMargin
+        // should be true or false if editType = ACTIVATION_STATE_ONLY.  Take care to
+        // override this value in the daemon in the ACTIVATION_STATE_ONLY case.
         return !offerEditType.equals(FIXED_PRICE_ONLY)
                 && !offerEditType.equals(FIXED_PRICE_AND_ACTIVATION_STATE);
     }

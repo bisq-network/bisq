@@ -168,9 +168,14 @@ public class OfferInfo implements Payload {
     }
 
     private static long getMakerFee(Offer offer, boolean isMyOffer) {
-        return isMyOffer
-                ? requireNonNull(CoinUtil.getMakerFee(false, offer.getAmount())).value
-                : 0;
+        // TODO Find out why offer.makerFee is always set to 0 when offer is bsq-swap.
+        if (isMyOffer) {
+            return offer.isBsqSwapOffer()
+                    ? requireNonNull(CoinUtil.getMakerFee(false, offer.getAmount())).value
+                    : offer.getMakerFee().value;
+        } else {
+            return 0;
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

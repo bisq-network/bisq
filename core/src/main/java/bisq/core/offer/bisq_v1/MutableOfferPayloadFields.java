@@ -22,7 +22,6 @@ import java.util.Map;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 import javax.annotation.Nullable;
 
@@ -31,7 +30,6 @@ import javax.annotation.Nullable;
  */
 @Getter
 @Setter
-@ToString
 public final class MutableOfferPayloadFields {
 
     private final long price;
@@ -91,5 +89,23 @@ public final class MutableOfferPayloadFields {
         this.bankId = bankId;
         this.acceptedBankIds = acceptedBankIds;
         this.extraDataMap = extraDataMap;
+    }
+
+    @Override
+    public String toString() {
+        return "MutableOfferPayloadFields{" + "\n" +
+                "  price=" + price + "\n" +
+                ", marketPriceMargin=" + marketPriceMargin + "\n" +
+                ", useMarketBasedPrice=" + useMarketBasedPrice + "\n" +
+                ", baseCurrencyCode='" + baseCurrencyCode + '\'' + "\n" +
+                ", counterCurrencyCode='" + counterCurrencyCode + '\'' + "\n" +
+                ", paymentMethodId='" + paymentMethodId + '\'' + "\n" +
+                ", makerPaymentAccountId='" + makerPaymentAccountId + '\'' + "\n" +
+                ", countryCode='" + countryCode + '\'' + "\n" +
+                ", acceptedCountryCodes=" + acceptedCountryCodes + "\n" +
+                ", bankId='" + bankId + '\'' + "\n" +
+                ", acceptedBankIds=" + acceptedBankIds + "\n" +
+                ", extraDataMap=" + extraDataMap + "\n" +
+                '}';
     }
 }

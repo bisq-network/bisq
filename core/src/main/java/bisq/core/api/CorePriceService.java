@@ -23,16 +23,20 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.common.util.MathUtils.roundDouble;
+import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static bisq.core.locale.CurrencyUtil.isFiatCurrency;
 import static java.lang.String.format;
 
 @Singleton
 @Slf4j
 class CorePriceService {
+
+    private final Predicate<String> isCurrencyCode = (c) -> isFiatCurrency(c) || isCryptoCurrency(c);
 
     private final PriceFeedService priceFeedService;
 
@@ -44,7 +48,7 @@ class CorePriceService {
     public void getMarketPrice(String currencyCode, Consumer<Double> resultHandler) {
         String upperCaseCurrencyCode = currencyCode.toUpperCase();
 
-        if (!isFiatCurrency(upperCaseCurrencyCode))
+        if (!isCurrencyCode.test(upperCaseCurrencyCode))
             throw new IllegalStateException(format("%s is not a valid currency code", upperCaseCurrencyCode));
 
         if (!priceFeedService.hasPrices())
@@ -59,11 +63,18 @@ class CorePriceService {
         priceFeedService.requestPriceFeed(price -> {
                     if (price > 0) {
                         log.info("{} price feed request returned {}", upperCaseCurrencyCode, price);
-                        resultHandler.accept(roundDouble(price, 4));
+                        if (isFiatCurrency(upperCaseCurrencyCode))
+                            resultHandler.accept(roundDouble(price, 4));
+                        else if (isCryptoCurrency(upperCaseCurrencyCode))
+                            resultHandler.accept(roundDouble(price, 8));
+                        else // should not happen, throw error if it does
+                            throw new IllegalStateException(
+                                    format("%s price feed request should not return data for unsupported currency code",
+                                            upperCaseCurrencyCode));
                     } else {
                         throw new IllegalStateException(format("%s price is not available", upperCaseCurrencyCode));
                     }
                 },
-                (errorMessage, throwable) -> log.warn(errorMessage, throwable));
+                log::warn);
     }
 }

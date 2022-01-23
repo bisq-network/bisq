@@ -21,11 +21,11 @@ package bisq.cli.opts;
 import joptsimple.OptionSpec;
 
 import static bisq.cli.opts.OptLabel.OPT_FEE_CURRENCY;
-import static bisq.cli.opts.OptLabel.OPT_PAYMENT_ACCOUNT;
+import static bisq.cli.opts.OptLabel.OPT_PAYMENT_ACCOUNT_ID;
 
 public class TakeOfferOptionParser extends OfferIdOptionParser implements MethodOpts {
 
-    final OptionSpec<String> paymentAccountIdOpt = parser.accepts(OPT_PAYMENT_ACCOUNT, "id of payment account used for trade")
+    final OptionSpec<String> paymentAccountIdOpt = parser.accepts(OPT_PAYMENT_ACCOUNT_ID, "id of payment account used for trade")
             .withRequiredArg();
 
     final OptionSpec<String> takerFeeCurrencyCodeOpt = parser.accepts(OPT_FEE_CURRENCY, "taker fee currency code (bsq|btc)")

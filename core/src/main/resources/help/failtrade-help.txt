@@ -1,0 +1,28 @@
+failtrade
+
+NAME
+----
+failtrade - change an open trade to a failed trade
+
+SYNOPSIS
+--------
+failtrade
+		--trade-id=<trade-id>
+
+DESCRIPTION
+-----------
+If there are problems with an existing trade, and it cannot be completed, it can be moved
+from the open trades list to the failed trades list.
+
+You cannot open mediation or arbitration for a failed trade, but you can change a failed
+trade back to an open trade with the 'unfailtrade' command.
+
+OPTIONS
+-------
+--trade-id
+		The ID of the trade (the full offer-id).
+
+EXAMPLES
+--------
+Change the status of an active, open trade to failed:
+$ ./bisq-cli --password=xyz --port=9998 failtrade --trade-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea

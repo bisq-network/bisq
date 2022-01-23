@@ -53,6 +53,7 @@ public final class SepaInstantAccountPayload extends CountryBasedPaymentAccountP
 
     // Don't use a set here as we need a deterministic ordering, otherwise the contract hash does not match
     private final List<String> acceptedCountryCodes;
+    private final List<String> persistedAcceptedCountryCodes = new ArrayList<>();
 
     public SepaInstantAccountPayload(String paymentMethod, String id, List<Country> acceptedCountries) {
         super(paymentMethod, id);
@@ -87,6 +88,7 @@ public final class SepaInstantAccountPayload extends CountryBasedPaymentAccountP
         this.iban = iban;
         this.bic = bic;
         this.acceptedCountryCodes = acceptedCountryCodes;
+        persistedAcceptedCountryCodes.addAll(acceptedCountryCodes);
     }
 
     @Override
@@ -131,6 +133,16 @@ public final class SepaInstantAccountPayload extends CountryBasedPaymentAccountP
 
     public void removeAcceptedCountry(String countryCode) {
         acceptedCountryCodes.remove(countryCode);
+    }
+
+    public void onPersistChanges() {
+        persistedAcceptedCountryCodes.clear();
+        persistedAcceptedCountryCodes.addAll(acceptedCountryCodes);
+    }
+
+    public void revertChanges() {
+        acceptedCountryCodes.clear();
+        acceptedCountryCodes.addAll(persistedAcceptedCountryCodes);
     }
 
     @Override

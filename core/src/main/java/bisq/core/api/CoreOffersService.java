@@ -67,7 +67,8 @@ import static bisq.core.offer.OpenOffer.State.AVAILABLE;
 import static bisq.core.offer.OpenOffer.State.DEACTIVATED;
 import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
 import static bisq.proto.grpc.EditOfferRequest.EditType;
-import static bisq.proto.grpc.EditOfferRequest.EditType.*;
+import static bisq.proto.grpc.EditOfferRequest.EditType.FIXED_PRICE_AND_ACTIVATION_STATE;
+import static bisq.proto.grpc.EditOfferRequest.EditType.FIXED_PRICE_ONLY;
 import static java.lang.String.format;
 import static java.util.Comparator.comparing;
 
@@ -144,9 +145,24 @@ class CoreOffersService {
                 new IllegalStateException(format("offer with id '%s' not found", id)));
     }
 
+    Optional<Offer> findAvailableOffer(String id) {
+        return offerBookService.getOffers().stream()
+                .filter(o -> o.getId().equals(id))
+                .filter(o -> !o.isMyOffer(keyRing))
+                .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
+                .findAny();
+    }
+
     OpenOffer getMyOffer(String id) {
         return findMyOpenOffer(id).orElseThrow(() ->
                 new IllegalStateException(format("offer with id '%s' not found", id)));
+    }
+
+    Optional<OpenOffer> findMyOpenOffer(String id) {
+        return openOfferManager.getObservableList().stream()
+                .filter(o -> o.getId().equals(id))
+                .filter(o -> o.getOffer().isMyOffer(keyRing))
+                .findAny();
     }
 
     Offer getBsqSwapOffer(String id) {
@@ -154,9 +170,26 @@ class CoreOffersService {
                 new IllegalStateException(format("offer with id '%s' not found", id)));
     }
 
+    Optional<Offer> findAvailableBsqSwapOffer(String id) {
+        return offerBookService.getOffers().stream()
+                .filter(o -> o.getId().equals(id))
+                .filter(o -> !o.isMyOffer(keyRing))
+                .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
+                .filter(Offer::isBsqSwapOffer)
+                .findAny();
+    }
+
     Offer getMyBsqSwapOffer(String id) {
         return findMyBsqSwapOffer(id).orElseThrow(() ->
                 new IllegalStateException(format("offer with id '%s' not found", id)));
+    }
+
+    Optional<Offer> findMyBsqSwapOffer(String id) {
+        return offerBookService.getOffers().stream()
+                .filter(o -> o.getId().equals(id))
+                .filter(o -> o.isMyOffer(keyRing))
+                .filter(Offer::isBsqSwapOffer)
+                .findAny();
     }
 
     List<Offer> getBsqSwapOffers(String direction) {
@@ -209,13 +242,8 @@ class CoreOffersService {
                         new IllegalStateException(format("offer with id '%s' not found", id)));
     }
 
-    boolean isMyOffer(String id) {
-        boolean isMyOpenOffer = openOfferManager.getOpenOfferById(id)
-                .filter(open -> open.getOffer().isMyOffer(keyRing))
-                .isPresent();
-        boolean wasMyOffer = offerBookService.getOffers().stream()
-                .anyMatch(o -> o.getId().equals(id) && o.isMyOffer(keyRing));
-        return isMyOpenOffer || wasMyOffer;
+    boolean isMyOffer(Offer offer) {
+        return offer.isMyOffer(keyRing);
     }
 
     void createAndPlaceBsqSwapOffer(String directionAsString,
@@ -300,27 +328,14 @@ class CoreOffersService {
                    int editedEnable,
                    EditType editType) {
         OpenOffer openOffer = getMyOpenOffer(offerId);
-        new EditOfferValidator(openOffer,
+        var validator = new EditOfferValidator(openOffer,
                 editedPriceAsString,
                 editedUseMarketBasedPrice,
                 editedMarketPriceMargin,
                 editedTriggerPrice,
                 editedEnable,
                 editType).validate();
-        log.info("Validated 'editoffer' params offerId={}"
-                        + "\n\teditedPriceAsString={}"
-                        + "\n\teditedUseMarketBasedPrice={}"
-                        + "\n\teditedMarketPriceMargin={}"
-                        + "\n\teditedTriggerPrice={}"
-                        + "\n\teditedEnable={}"
-                        + "\n\teditType={}",
-                offerId,
-                editedPriceAsString,
-                editedUseMarketBasedPrice,
-                editedMarketPriceMargin,
-                editedTriggerPrice,
-                editedEnable,
-                editType);
+        log.info(validator.toString());
         OpenOffer.State currentOfferState = openOffer.getState();
         // Client sent (sint32) editedEnable, not a bool (with default=false).
         // If editedEnable = -1, do not change current state
@@ -329,7 +344,8 @@ class CoreOffersService {
         OpenOffer.State newOfferState = editedEnable < 0
                 ? currentOfferState
                 : editedEnable > 0 ? AVAILABLE : DEACTIVATED;
-        OfferPayload editedPayload = getMergedOfferPayload(openOffer,
+        OfferPayload editedPayload = getMergedOfferPayload(validator,
+                openOffer,
                 editedPriceAsString,
                 editedMarketPriceMargin,
                 editType);
@@ -380,39 +396,8 @@ class CoreOffersService {
             throw new IllegalStateException(offer.getErrorMessage());
     }
 
-    private Optional<Offer> findAvailableBsqSwapOffer(String id) {
-        return offerBookService.getOffers().stream()
-                .filter(o -> o.getId().equals(id))
-                .filter(o -> !o.isMyOffer(keyRing))
-                .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
-                .filter(Offer::isBsqSwapOffer)
-                .findAny();
-    }
-
-    private Optional<Offer> findMyBsqSwapOffer(String id) {
-        return offerBookService.getOffers().stream()
-                .filter(o -> o.getId().equals(id))
-                .filter(o -> o.isMyOffer(keyRing))
-                .filter(Offer::isBsqSwapOffer)
-                .findAny();
-    }
-
-    private Optional<Offer> findAvailableOffer(String id) {
-        return offerBookService.getOffers().stream()
-                .filter(o -> o.getId().equals(id))
-                .filter(o -> !o.isMyOffer(keyRing))
-                .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
-                .findAny();
-    }
-
-    private Optional<OpenOffer> findMyOpenOffer(String id) {
-        return openOfferManager.getObservableList().stream()
-                .filter(o -> o.getId().equals(id))
-                .filter(o -> o.getOffer().isMyOffer(keyRing))
-                .findAny();
-    }
-
-    private OfferPayload getMergedOfferPayload(OpenOffer openOffer,
+    private OfferPayload getMergedOfferPayload(EditOfferValidator editOfferValidator,
+                                               OpenOffer openOffer,
                                                String editedPriceAsString,
                                                double editedMarketPriceMargin,
                                                EditType editType) {
@@ -429,15 +414,16 @@ class CoreOffersService {
         } else {
             editedPrice = offer.getPrice();
         }
-        boolean isUsingMktPriceMargin = editType.equals(MKT_PRICE_MARGIN_ONLY)
-                || editType.equals(MKT_PRICE_MARGIN_AND_ACTIVATION_STATE)
-                || editType.equals(TRIGGER_PRICE_ONLY)
-                || editType.equals(TRIGGER_PRICE_AND_ACTIVATION_STATE)
-                || editType.equals(MKT_PRICE_MARGIN_AND_TRIGGER_PRICE)
-                || editType.equals(MKT_PRICE_MARGIN_AND_TRIGGER_PRICE_AND_ACTIVATION_STATE);
+
+        boolean isUsingMktPriceMargin = editOfferValidator.isEditingUseMktPriceMarginFlag.test(offer, editType);
+        boolean isEditingMktPriceMargin = editOfferValidator.isEditingMktPriceMargin.test(editType);
+        double newMarketPriceMargin = isEditingMktPriceMargin
+                ? exactMultiply(editedMarketPriceMargin, 0.01)
+                : offer.getMarketPriceMargin();
+
         MutableOfferPayloadFields mutableOfferPayloadFields = new MutableOfferPayloadFields(
                 Objects.requireNonNull(editedPrice).getValue(),
-                isUsingMktPriceMargin ? exactMultiply(editedMarketPriceMargin, 0.01) : 0.00,
+                isUsingMktPriceMargin ? newMarketPriceMargin : 0.00,
                 isUsingMktPriceMargin,
                 offer.getBaseCurrencyCode(),
                 offer.getCounterCurrencyCode(),

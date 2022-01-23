@@ -70,6 +70,7 @@ service Offers {
     }
     rpc GetMyBsqSwapOffer (GetMyOfferRequest) returns (GetMyBsqSwapOfferReply) {
     }
+    // @Deprecated since 27-Dec-2021 (v1.8.0)
     rpc GetMyOffer (GetMyOfferRequest) returns (GetMyOfferReply) {
     }
     rpc GetBsqSwapOffers (GetBsqSwapOffersRequest) returns (GetBsqSwapOffersReply) {
@@ -121,10 +122,12 @@ message GetMyBsqSwapOfferReply {
     OfferInfo bsqSwapOffer = 1;
 }
 
+// @Deprecated since 27-Dec-2021 (v1.8.0)
 message GetMyOfferRequest {
     string id = 1;
 }
 
+// @Deprecated since 27-Dec-2021 (v1.8.0)
 message GetMyOfferReply {
     OfferInfo offer = 1;
 }
@@ -391,7 +394,11 @@ service Trades {
     }
     rpc ConfirmPaymentReceived (ConfirmPaymentReceivedRequest) returns (ConfirmPaymentReceivedReply) {
     }
-    rpc KeepFunds (KeepFundsRequest) returns (KeepFundsReply) {
+    rpc CloseTrade (CloseTradeRequest) returns (CloseTradeReply) {
+    }
+    rpc FailTrade (FailTradeRequest) returns (FailTradeReply) {
+    }
+    rpc UnFailTrade (UnFailTradeRequest) returns (UnFailTradeReply) {
     }
     rpc WithdrawFunds (WithdrawFundsRequest) returns (WithdrawFundsReply) {
     }
@@ -430,11 +437,25 @@ message GetTradeReply {
     TradeInfo trade = 1;
 }
 
-message KeepFundsRequest {
+message CloseTradeRequest {
     string tradeId = 1;
 }
 
-message KeepFundsReply {
+message CloseTradeReply {
+}
+
+message FailTradeRequest {
+    string tradeId = 1;
+}
+
+message FailTradeReply {
+}
+
+message UnFailTradeRequest {
+    string tradeId = 1;
+}
+
+message UnFailTradeReply {
 }
 
 message WithdrawFundsRequest {

@@ -46,6 +46,7 @@ import com.google.common.util.concurrent.FutureCallback;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -140,8 +141,16 @@ public class CoreApi {
         return coreOffersService.getOffer(id);
     }
 
+    public Optional<Offer> findAvailableOffer(String id) {
+        return coreOffersService.findAvailableOffer(id);
+    }
+
     public OpenOffer getMyOffer(String id) {
         return coreOffersService.getMyOffer(id);
+    }
+
+    public Optional<OpenOffer> findMyOpenOffer(String id) {
+        return coreOffersService.findMyOpenOffer(id);
     }
 
     public Offer getMyBsqSwapOffer(String id) {
@@ -226,8 +235,8 @@ public class CoreApi {
         coreOffersService.cancelOffer(id);
     }
 
-    public boolean isMyOffer(String id) {
-        return coreOffersService.isMyOffer(id);
+    public boolean isMyOffer(Offer offer) {
+        return coreOffersService.isMyOffer(offer);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -306,8 +315,8 @@ public class CoreApi {
         coreTradesService.confirmPaymentReceived(tradeId);
     }
 
-    public void keepFunds(String tradeId) {
-        coreTradesService.keepFunds(tradeId);
+    public void closeTrade(String tradeId) {
+        coreTradesService.closeTrade(tradeId);
     }
 
     public void withdrawFunds(String tradeId, String address, String memo) {
@@ -324,6 +333,14 @@ public class CoreApi {
 
     public String getBsqSwapTradeRole(BsqSwapTrade bsqSwapTrade) {
         return coreTradesService.getBsqSwapTradeRole(bsqSwapTrade);
+    }
+
+    public void failTrade(String tradeId) {
+        coreTradesService.failTrade(tradeId);
+    }
+
+    public void unFailTrade(String tradeId) {
+        coreTradesService.unFailTrade(tradeId);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

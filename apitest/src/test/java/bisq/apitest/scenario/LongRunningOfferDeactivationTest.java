@@ -59,7 +59,7 @@ public class LongRunningOfferDeactivationTest extends AbstractOfferTest {
     public void testSellOfferAutoDisable(final TestInfo testInfo) {
         PaymentAccount paymentAcct = createDummyF2FAccount(aliceClient, "US");
         double mktPriceAsDouble = aliceClient.getBtcPrice("USD");
-        long triggerPrice = calcPriceAsLong.apply(mktPriceAsDouble, -50.0000);
+        long triggerPrice = calcFiatTriggerPriceAsLong.apply(mktPriceAsDouble, -50.0000);
         log.info("Current USD mkt price = {}  Trigger Price = {}", mktPriceAsDouble, formatPrice(triggerPrice));
         OfferInfo offer = aliceClient.createMarketBasedPricedOffer(SELL.name(),
                 "USD",
@@ -75,13 +75,13 @@ public class LongRunningOfferDeactivationTest extends AbstractOfferTest {
                 formatPrice(offer.getPrice()));
         genBtcBlocksThenWait(1, 2500);  // Wait for offer book entry.
 
-        offer = aliceClient.getMyOffer(offer.getId()); // Offer has trigger price now.
+        offer = aliceClient.getOffer(offer.getId()); // Offer has trigger price now.
         log.info("SELL offer should be automatically disabled when mkt price falls below {}.",
                 formatPrice(offer.getTriggerPrice()));
 
         int numIterations = 0;
         while (++numIterations < MAX_ITERATIONS) {
-            offer = aliceClient.getMyOffer(offer.getId());
+            offer = aliceClient.getOffer(offer.getId());
 
             var mktPrice = aliceClient.getBtcPrice("USD");
             if (offer.getIsActivated()) {
@@ -107,7 +107,7 @@ public class LongRunningOfferDeactivationTest extends AbstractOfferTest {
     public void testBuyOfferAutoDisable(final TestInfo testInfo) {
         PaymentAccount paymentAcct = createDummyF2FAccount(aliceClient, "US");
         double mktPriceAsDouble = aliceClient.getBtcPrice("USD");
-        long triggerPrice = calcPriceAsLong.apply(mktPriceAsDouble, 50.0000);
+        long triggerPrice = calcFiatTriggerPriceAsLong.apply(mktPriceAsDouble, 50.0000);
         log.info("Current USD mkt price = {}  Trigger Price = {}", mktPriceAsDouble, formatPrice(triggerPrice));
         OfferInfo offer = aliceClient.createMarketBasedPricedOffer(BUY.name(),
                 "USD",
@@ -123,13 +123,13 @@ public class LongRunningOfferDeactivationTest extends AbstractOfferTest {
                 formatPrice(offer.getPrice()));
         genBtcBlocksThenWait(1, 2500);  // Wait for offer book entry.
 
-        offer = aliceClient.getMyOffer(offer.getId()); // Offer has trigger price now.
+        offer = aliceClient.getOffer(offer.getId()); // Offer has trigger price now.
         log.info("BUY offer should be automatically disabled when mkt price rises above {}.",
                 formatPrice(offer.getTriggerPrice()));
 
         int numIterations = 0;
         while (++numIterations < MAX_ITERATIONS) {
-            offer = aliceClient.getMyOffer(offer.getId());
+            offer = aliceClient.getOffer(offer.getId());
 
             var mktPrice = aliceClient.getBtcPrice("USD");
             if (offer.getIsActivated()) {

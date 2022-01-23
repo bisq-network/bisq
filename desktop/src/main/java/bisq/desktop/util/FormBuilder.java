@@ -348,19 +348,19 @@ public class FormBuilder {
         textField.setPrefWidth(Layout.INITIAL_WINDOW_WIDTH);
 
         Button button = new AutoTooltipButton("...");
-        button.setStyle("-fx-min-width: 35px; -fx-pref-height: 20; -fx-padding: 3 3 3 3; -fx-border-insets: 5px;");
+        button.setStyle("-fx-min-width: 26; -fx-pref-height: 26; -fx-padding: 0 0 10 0; -fx-background-color: -fx-background;");
         button.managedProperty().bind(button.visibleProperty());
-        VBox vBoxButton = new VBox(button);
-        vBoxButton.setAlignment(Pos.CENTER);
-        HBox hBox2 = new HBox(textField, vBoxButton);
 
-        Label label = getTopLabel(title);
-        VBox textFieldVbox = getTopLabelVBox(0);
-        textFieldVbox.getChildren().addAll(label, hBox2);
+        HBox hbox = new HBox(textField, button);
+        hbox.setAlignment(Pos.CENTER_LEFT);
+        hbox.setSpacing(8);
 
-        gridPane.getChildren().add(textFieldVbox);
-        GridPane.setRowIndex(textFieldVbox, rowIndex);
-        GridPane.setMargin(textFieldVbox, new Insets(Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
+        VBox vbox = getTopLabelVBox(0);
+        vbox.getChildren().addAll(getTopLabel(title), hbox);
+
+        gridPane.getChildren().add(vbox);
+        GridPane.setRowIndex(vbox, rowIndex);
+        GridPane.setMargin(vbox, new Insets(Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
 
         return new Tuple2<>(textField, button);
     }

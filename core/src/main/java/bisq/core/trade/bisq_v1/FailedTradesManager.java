@@ -24,14 +24,20 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.model.TradableList;
 import bisq.core.trade.model.bisq_v1.Trade;
 
+import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
 
 import com.google.inject.Inject;
 
+import javax.inject.Named;
+
 import javafx.collections.ObservableList;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -40,6 +46,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import lombok.Setter;
+
+import static bisq.core.btc.model.AddressEntry.Context.AVAILABLE;
 
 public class FailedTradesManager implements PersistedDataHost {
     private static final Logger log = LoggerFactory.getLogger(FailedTradesManager.class);
@@ -51,6 +59,8 @@ public class FailedTradesManager implements PersistedDataHost {
     private final PersistenceManager<TradableList<Trade>> persistenceManager;
     private final TradeUtil tradeUtil;
     private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
+    private final boolean allowFaultyDelayedTxs;
+
     @Setter
     private Predicate<Trade> unFailTradeCallback;
 
@@ -61,7 +71,8 @@ public class FailedTradesManager implements PersistedDataHost {
                                PersistenceManager<TradableList<Trade>> persistenceManager,
                                TradeUtil tradeUtil,
                                CleanupMailboxMessagesService cleanupMailboxMessagesService,
-                               DumpDelayedPayoutTx dumpDelayedPayoutTx) {
+                               DumpDelayedPayoutTx dumpDelayedPayoutTx,
+                               @Named(Config.ALLOW_FAULTY_DELAYED_TXS) boolean allowFaultyDelayedTxs) {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
         this.btcWalletService = btcWalletService;
@@ -69,6 +80,7 @@ public class FailedTradesManager implements PersistedDataHost {
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
         this.persistenceManager = persistenceManager;
         this.tradeUtil = tradeUtil;
+        this.allowFaultyDelayedTxs = allowFaultyDelayedTxs;
 
         this.persistenceManager.initialize(failedTrades, "FailedTrades", PersistenceManager.Source.PRIVATE);
     }
@@ -136,17 +148,59 @@ public class FailedTradesManager implements PersistedDataHost {
         if (addresses == null) {
             return "Addresses not found";
         }
-        StringBuilder blockingTrades = new StringBuilder();
-        for (var entry : btcWalletService.getAddressEntryListAsImmutableList()) {
-            if (entry.getContext() == AddressEntry.Context.AVAILABLE)
-                continue;
-            if (entry.getAddressString() != null &&
-                    (entry.getAddressString().equals(addresses.first) ||
-                            entry.getAddressString().equals(addresses.second))) {
-                blockingTrades.append(entry.getOfferId()).append(", ");
+        Optional<List<String>> blockingTradeIds = getBlockingTradeIds(trade);
+        return blockingTradeIds.map(strings -> String.join(",", strings)).orElse("");
+    }
+
+    public Optional<List<String>> getBlockingTradeIds(Trade trade) {
+        var tradeAddresses = tradeUtil.getTradeAddresses(trade);
+        if (tradeAddresses == null) {
+            return Optional.empty();
+        }
+
+        Predicate<AddressEntry> isBeingUsedForOtherTrade = (addressEntry) -> {
+            if (addressEntry.getContext() == AVAILABLE) {
+                return false;
+            }
+            String address = addressEntry.getAddressString();
+            return address != null
+                    && (address.equals(tradeAddresses.first) || address.equals(tradeAddresses.second));
+        };
+
+        List<String> blockingTradeIds = new ArrayList<>();
+        for (var addressEntry : btcWalletService.getAddressEntryListAsImmutableList()) {
+            if (isBeingUsedForOtherTrade.test(addressEntry)) {
+                var offerId = addressEntry.getOfferId();
+                // TODO Be certain 'List<String> blockingTrades' should NOT be populated
+                //  with the trade parameter's tradeId.  The 'var addressEntry' will
+                //  always be found in the 'var tradeAddresses' tuple, so check
+                //  offerId != trade.getId() to avoid the bug being fixed by the next if
+                //  statement (if it was a bug).
+                if (!Objects.equals(offerId, trade.getId()) && !blockingTradeIds.contains(offerId))
+                    blockingTradeIds.add(offerId);
             }
         }
-        return blockingTrades.toString();
+        return blockingTradeIds.isEmpty()
+                ? Optional.empty()
+                : Optional.of(blockingTradeIds);
+    }
+
+    public boolean hasDepositTx(Trade failedTrade) {
+        if (failedTrade.getDepositTx() == null) {
+            log.warn("Failed trade {} has no deposit tx.", failedTrade.getId());
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public boolean hasDelayedPayoutTxBytes(Trade failedTrade) {
+        if (failedTrade.getDelayedPayoutTxBytes() != null) {
+            return true;
+        } else {
+            log.warn("Failed trade {} has no delayedPayoutTxBytes.", failedTrade.getId());
+            return allowFaultyDelayedTxs;
+        }
     }
 
     private void requestPersistence() {

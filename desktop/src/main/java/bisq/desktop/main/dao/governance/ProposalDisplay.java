@@ -21,6 +21,7 @@ import bisq.desktop.Navigation;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.bonding.BondingView;
@@ -130,7 +131,7 @@ public class ProposalDisplay {
     @Getter
     private int gridRow;
     private HyperlinkWithIcon linkHyperlinkWithIcon;
-    private HyperlinkWithIcon txHyperlinkWithIcon;
+    private TxIdTextField txIdTextField;
     private int gridRowStartIndex;
     private final List<Runnable> inputChangedListeners = new ArrayList<>();
     @Getter
@@ -258,11 +259,9 @@ public class ProposalDisplay {
         linkWithIconContainer.setManaged(false);
 
         if (!isMakeProposalScreen) {
-            Tuple3<Label, HyperlinkWithIcon, VBox> uidTuple = addTopLabelHyperlinkWithIcon(gridPane, ++gridRow,
-                    Res.get("dao.proposal.display.txId"), "", "", 0);
-            txHyperlinkWithIcon = uidTuple.second;
-            // TODO HyperlinkWithIcon does not scale automatically (button base, -> make anchorPane as base)
-            txHyperlinkWithIcon.prefWidthProperty().bind(nameTextField.widthProperty());
+            final Tuple3<Label, TxIdTextField, VBox> labelTxIdTextFieldVBoxTuple3 =
+                    addTopLabelTxIdTextField(gridPane, ++gridRow, Res.get("dao.proposal.display.txId"), -10d);
+            txIdTextField = labelTxIdTextFieldVBoxTuple3.second;
         }
 
         int comboBoxValueTextFieldIndex = -1;
@@ -527,10 +526,8 @@ public class ProposalDisplay {
             linkHyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage(proposal.getLink()));
         }
 
-        if (txHyperlinkWithIcon != null) {
-            txHyperlinkWithIcon.setText(proposal.getTxId());
-            txHyperlinkWithIcon.setOnAction(e ->
-                    GUIUtil.openTxInBsqBlockExplorer(proposal.getTxId(), preferences));
+        if (txIdTextField != null) {
+            txIdTextField.setup(proposal.getTxId());
         }
 
         if (proposal instanceof CompensationProposal) {
