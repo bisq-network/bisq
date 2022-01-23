@@ -31,7 +31,7 @@ import static java.lang.System.getenv;
 
 
 import bisq.apitest.method.offer.AbstractOfferTest;
-import bisq.apitest.method.trade.BsqSwapTradeTest;
+import bisq.apitest.method.trade.BsqSwapBuyBtcTradeTest;
 
 @EnabledIf("envLongRunningTestEnabled")
 @Slf4j
@@ -49,7 +49,7 @@ public class LongRunningBsqSwapTest extends AbstractOfferTest {
     @Order(1)
     public void testBsqSwaps() {
         // TODO Fix wallet inconsistency bugs after N(?) trades.
-        BsqSwapTradeTest test = new BsqSwapTradeTest();
+        BsqSwapBuyBtcTradeTest test = new BsqSwapBuyBtcTradeTest();
         test.setCheckForLoggedExceptions(true);
 
         for (int swapCount = 1; swapCount <= MAX_SWAPS; swapCount++) {
@@ -57,7 +57,7 @@ public class LongRunningBsqSwapTest extends AbstractOfferTest {
 
             test.testGetBalancesBeforeTrade();
 
-            test.testAliceCreateBsqSwapBuyOffer();
+            test.testAliceCreateBsqSwapBuyBtcOffer();
             genBtcBlocksThenWait(1, 8_000);
 
             test.testBobTakesBsqSwapOffer();
