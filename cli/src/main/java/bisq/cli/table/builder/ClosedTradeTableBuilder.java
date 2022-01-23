@@ -50,7 +50,7 @@ class ClosedTradeTableBuilder extends AbstractTradeListBuilder {
                 var optionalTradeFeeBsq = isBtcSeller.test(t) ? 0L : toTradeFeeBsq.apply(t);
                 colMixedTradeFee.addRow(optionalTradeFeeBsq, true);
             } else if (isTradeFeeBtc.test(t)) {
-                colMixedTradeFee.addRow(toTradeFeeBsq.apply(t), false);
+                colMixedTradeFee.addRow(toTradeFeeBtc.apply(t), false);
             } else {
                 // V1 trade fee paid in BSQ.
                 colMixedTradeFee.addRow(toTradeFeeBsq.apply(t), true);
