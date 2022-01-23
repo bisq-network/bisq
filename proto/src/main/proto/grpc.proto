@@ -549,6 +549,8 @@ message BsqSwapTradeInfo {
     string takerBtcAddress = 10;
     uint64 numConfirmations = 11;
     string errorMessage = 12;
+    uint64 payout = 13;
+    uint64 swapPeerPayout = 14;
 }
 
 message PaymentAccountPayloadInfo {

@@ -32,6 +32,8 @@ import static bisq.core.api.model.BsqSwapTradeInfo.toBsqSwapTradeInfo;
 import static bisq.core.api.model.OfferInfo.toMyOfferInfo;
 import static bisq.core.api.model.OfferInfo.toOfferInfo;
 import static bisq.core.api.model.PaymentAccountPayloadInfo.toPaymentAccountPayloadInfo;
+import static bisq.core.offer.OfferDirection.BUY;
+import static bisq.core.offer.OfferDirection.SELL;
 import static java.util.Objects.requireNonNull;
 
 @EqualsAndHashCode
@@ -132,6 +134,18 @@ public class TradeInfo implements Payload {
                                         int numConfirmations,
                                         String closingStatus) {
         OfferInfo offerInfo = isMyOffer ? toMyOfferInfo(bsqSwapTrade.getOffer()) : toOfferInfo(bsqSwapTrade.getOffer());
+        // A BSQ Swap miner tx fee is paid in full by the BTC seller (buying BSQ).
+        // The BTC buyer's payout = tradeamount minus his share of miner fee.
+        var iAmBtcSeller = (isMyOffer && bsqSwapTrade.getOffer().getDirection().equals(SELL))
+                || (!isMyOffer && bsqSwapTrade.getOffer().getDirection().equals(BUY));
+        var txFeeInBtc = iAmBtcSeller
+                ? bsqSwapTrade.getTxFee().value
+                : 0L;
+        // A BSQ Swap trade fee is paid in full by the BTC buyer (selling BSQ).
+        // The transferred BSQ (payout) is reduced by the peer's trade fee.
+        var takerFeeInBsq = !isMyOffer && bsqSwapTrade.getOffer().getDirection().equals(SELL)
+                ? bsqSwapTrade.getTakerFeeAsLong()
+                : 0L;
         TradeInfo tradeInfo = new TradeInfoV1Builder()
                 .withOffer(offerInfo)
                 .withTradeId(bsqSwapTrade.getId())
@@ -139,8 +153,8 @@ public class TradeInfo implements Payload {
                 .withDate(bsqSwapTrade.getDate().getTime())
                 .withRole(role == null ? "" : role)
                 .withIsCurrencyForTakerFeeBtc(false) // BSQ Swap fees always paid in BSQ.
-                .withTxFeeAsLong(bsqSwapTrade.getBsqSwapProtocolModel().getTxFee())
-                .withTakerFeeAsLong(bsqSwapTrade.getTakerFeeAsLong())
+                .withTxFeeAsLong(txFeeInBtc)
+                .withTakerFeeAsLong(takerFeeInBsq)
                 // N/A for bsq-swaps: .withTakerFeeTxId(""), .withDepositTxId(""), .withPayoutTxId("")
                 .withTradeAmountAsLong(bsqSwapTrade.getAmountAsLong())
                 .withTradePrice(bsqSwapTrade.getPrice().getValue())
