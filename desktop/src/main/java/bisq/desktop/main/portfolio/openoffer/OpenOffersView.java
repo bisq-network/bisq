@@ -51,8 +51,6 @@ import javafx.fxml.FXML;
 
 import javafx.stage.Stage;
 
-import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -76,7 +74,6 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 
-import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
@@ -91,6 +88,31 @@ import static bisq.desktop.util.FormBuilder.getRegularIconForLabel;
 
 @FxmlView
 public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersViewModel> {
+
+    private enum ColumnNames {
+        OFFER_ID(Res.get("shared.offerId")),
+        DATE(Res.get("shared.dateTime")),
+        MARKET(Res.get("shared.market")),
+        PRICE(Res.get("shared.price")),
+        DEVIATION(Res.get("shared.deviation")),
+        TRIGGER_PRICE(Res.get("openOffer.header.triggerPrice")),
+        AMOUNT(Res.get("shared.BTCMinMax")),
+        VOLUME(Res.get("shared.amountMinMax")),
+        PAYMENT_METHOD(Res.get("shared.paymentMethod")),
+        DIRECTION(Res.get("shared.offerType")),
+        STATUS(Res.get("shared.state"));
+
+        private final String text;
+
+        ColumnNames(String text) {
+            this.text = text;
+        }
+
+        @Override
+        public String toString() {
+            return text;
+        }
+    }
 
     @FXML
     TableView<OpenOfferListItem> tableView;
@@ -138,21 +160,21 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     @Override
     public void initialize() {
         widthListener = (observable, oldValue, newValue) -> onWidthChange((double) newValue);
-        paymentMethodColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.paymentMethod")));
-        priceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.price")));
-        deviationColumn.setGraphic(new AutoTooltipTableColumn<>(Res.get("shared.deviation"),
+        paymentMethodColumn.setGraphic(new AutoTooltipLabel(ColumnNames.PAYMENT_METHOD.toString()));
+        priceColumn.setGraphic(new AutoTooltipLabel(ColumnNames.PRICE.toString()));
+        deviationColumn.setGraphic(new AutoTooltipTableColumn<>(ColumnNames.DEVIATION.toString(),
                 Res.get("portfolio.closedTrades.deviation.help")).getGraphic());
-        amountColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.BTCMinMax")));
-        volumeColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.amountMinMax")));
-        marketColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.market")));
-        directionColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerType")));
-        dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
-        offerIdColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerId")));
-        triggerPriceColumn.setGraphic(new AutoTooltipLabel(Res.get("openOffer.header.triggerPrice")));
-        deactivateItemColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.enabled")));
-        editItemColumn.setGraphic(new AutoTooltipLabel(""));
-        duplicateItemColumn.setGraphic(new AutoTooltipLabel(""));
-        removeItemColumn.setGraphic(new AutoTooltipLabel(""));
+        triggerPriceColumn.setGraphic(new AutoTooltipLabel(ColumnNames.TRIGGER_PRICE.toString()));
+        amountColumn.setGraphic(new AutoTooltipLabel(ColumnNames.AMOUNT.toString()));
+        volumeColumn.setGraphic(new AutoTooltipLabel(ColumnNames.VOLUME.toString()));
+        marketColumn.setGraphic(new AutoTooltipLabel(ColumnNames.MARKET.toString()));
+        directionColumn.setGraphic(new AutoTooltipLabel(ColumnNames.DIRECTION.toString()));
+        dateColumn.setGraphic(new AutoTooltipLabel(ColumnNames.DATE.toString()));
+        offerIdColumn.setGraphic(new AutoTooltipLabel(ColumnNames.OFFER_ID.toString()));
+        deactivateItemColumn.setGraphic(new AutoTooltipLabel(ColumnNames.STATUS.toString()));
+        editItemColumn.setText("");
+        duplicateItemColumn.setText("");
+        removeItemColumn.setText("");
 
         setOfferIdColumnCellFactory();
         setDirectionColumnCellFactory();
@@ -241,37 +263,26 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
         numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
         exportButton.setOnAction(event -> {
-            ObservableList<TableColumn<OpenOfferListItem, ?>> tableColumns = tableView.getColumns();
-            int reportColumns = tableColumns.size() - 4;    // CSV report excludes the last columns (icons)
             CSVEntryConverter<OpenOfferListItem> headerConverter = item -> {
-                String[] columns = new String[reportColumns];
-                for (int i = 0; i < columns.length; i++) {
-                    Node graphic = tableColumns.get(i).getGraphic();
-                    if (graphic instanceof AutoTooltipLabel) {
-                        columns[i] = ((AutoTooltipLabel) graphic).getText();
-                    } else if (graphic instanceof HBox) {
-                        // Deviation has a Hbox with AutoTooltipLabel as first child in header
-                        columns[i] = ((AutoTooltipLabel) ((Parent) graphic).getChildrenUnmodifiable().get(0)).getText();
-                    } else {
-                        // Not expected
-                        columns[i] = "N/A";
-                    }
+                String[] columns = new String[ColumnNames.values().length];
+                for (ColumnNames m : ColumnNames.values()) {
+                    columns[m.ordinal()] = m.toString();
                 }
                 return columns;
             };
             CSVEntryConverter<OpenOfferListItem> contentConverter = item -> {
-                String[] columns = new String[reportColumns];
-                columns[0] = model.getOfferId(item);
-                columns[1] = model.getDate(item);
-                columns[2] = model.getMarketLabel(item);
-                columns[3] = model.getPrice(item);
-                columns[4] = model.getPriceDeviation(item);
-                columns[5] = model.getTriggerPrice(item);
-                columns[6] = model.getAmount(item);
-                columns[7] = model.getVolume(item);
-                columns[8] = model.getPaymentMethod(item);
-                columns[9] = model.getDirectionLabel(item);
-                columns[10] = String.valueOf(!item.getOpenOffer().isDeactivated());
+                String[] columns = new String[ColumnNames.values().length];
+                columns[ColumnNames.OFFER_ID.ordinal()] = model.getOfferId(item);
+                columns[ColumnNames.DATE.ordinal()] = model.getDate(item);
+                columns[ColumnNames.MARKET.ordinal()] = model.getMarketLabel(item);
+                columns[ColumnNames.PRICE.ordinal()] = model.getPrice(item);
+                columns[ColumnNames.DEVIATION.ordinal()] = model.getPriceDeviation(item);
+                columns[ColumnNames.TRIGGER_PRICE.ordinal()] = model.getTriggerPrice(item);
+                columns[ColumnNames.AMOUNT.ordinal()] = model.getAmount(item);
+                columns[ColumnNames.VOLUME.ordinal()] = model.getVolume(item);
+                columns[ColumnNames.PAYMENT_METHOD.ordinal()] = model.getPaymentMethod(item);
+                columns[ColumnNames.DIRECTION.ordinal()] = model.getDirectionLabel(item);
+                columns[ColumnNames.STATUS.ordinal()] = String.valueOf(!item.getOpenOffer().isDeactivated());
                 return columns;
             };
 
