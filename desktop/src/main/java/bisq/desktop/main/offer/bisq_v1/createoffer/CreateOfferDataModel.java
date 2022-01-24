@@ -30,6 +30,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.bisq_v1.CreateOfferService;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -40,9 +41,15 @@ import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.P2PService;
 
+import bisq.common.app.DevEnv;
+
 import com.google.inject.Inject;
 
 import javax.inject.Named;
+
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Domain for that UI element.
@@ -80,5 +87,12 @@ class CreateOfferDataModel extends MutableOfferDataModel {
                 btcFormatter,
                 tradeStatisticsManager,
                 navigation);
+    }
+
+    @Override
+    protected Set<PaymentAccount> getUserPaymentAccounts() {
+        return Objects.requireNonNull(user.getPaymentAccounts()).stream()
+                .filter(account -> !account.getPaymentMethod().isBsqSwap() || DevEnv.isDaoActivated())
+                .collect(Collectors.toSet());
     }
 }
