@@ -152,7 +152,7 @@ public class TakeBuyXMROfferTest extends AbstractTradeTest {
 
     @Test
     @Order(4)
-    public void testKeepFunds(final TestInfo testInfo) {
+    public void testCloseTrade(final TestInfo testInfo) {
         try {
             genBtcBlocksThenWait(1, 1_000);
             var trade = bobClient.getTrade(tradeId);

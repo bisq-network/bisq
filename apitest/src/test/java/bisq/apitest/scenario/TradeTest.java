@@ -109,7 +109,7 @@ public class TradeTest extends AbstractTradeTest {
         test.testTakeAlicesSellBTCForXMROffer(testInfo);
         test.testBobsConfirmPaymentStarted(testInfo);
         test.testAlicesConfirmPaymentReceived(testInfo);
-        test.testKeepFunds(testInfo);
+        test.testCloseTrade(testInfo);
     }
 
     @Test
