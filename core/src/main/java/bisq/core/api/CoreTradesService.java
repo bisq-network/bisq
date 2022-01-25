@@ -289,10 +289,10 @@ class CoreTradesService {
                 ));
     }
 
-    List<Trade> getOpenTrades() {
+    List<TradeModel> getOpenTrades() {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
-        return tradeManager.getTrades();
+        return tradeManager.getTrades().stream().map(t -> (TradeModel) t).collect(Collectors.toList());
     }
 
     List<TradeModel> getTradeHistory(GetTradesRequest.Category category) {

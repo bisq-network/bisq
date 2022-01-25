@@ -52,7 +52,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -332,7 +331,7 @@ public class CoreApi {
     }
 
     public List<TradeModel> getOpenTrades() {
-        return coreTradesService.getOpenTrades().stream().map(t -> (TradeModel) t).collect(Collectors.toList());
+        return coreTradesService.getOpenTrades();
     }
 
     public List<TradeModel> getTradeHistory(GetTradesRequest.Category category) {
