@@ -270,9 +270,14 @@ class CoreTradesService {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
         var isBsqSwapTrade = tradeModel instanceof BsqSwapTrade;
-        return isBsqSwapTrade
-                ? tradeUtil.getRole((BsqSwapTrade) tradeModel)
-                : tradeUtil.getRole((Trade) tradeModel);
+        try {
+            return isBsqSwapTrade
+                    ? tradeUtil.getRole((BsqSwapTrade) tradeModel)
+                    : tradeUtil.getRole((Trade) tradeModel);
+        } catch (Exception ex) {
+            log.error("Role not found for trade with Id {}.", tradeModel.getId(), ex);
+            return "Not Available";
+        }
     }
 
     Trade getTrade(String tradeId) {
