@@ -30,6 +30,8 @@ import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 
+import org.apache.commons.lang3.StringUtils;
+
 import lombok.Getter;
 
 public class ClosedTradesListItem implements FilterableListItem {
@@ -118,40 +120,40 @@ public class ClosedTradesListItem implements FilterableListItem {
         if (filterString.isEmpty()) {
             return true;
         }
-        if (getDateAsString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getDateAsString(), filterString)) {
             return true;
         }
-        if (getMarketLabel().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getMarketLabel(), filterString)) {
             return true;
         }
-        if (getPriceAsString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getPriceAsString(), filterString)) {
             return true;
         }
-        if (getPriceDeviationAsString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getPriceDeviationAsString(), filterString)) {
             return true;
         }
-        if (getVolumeAsString(true).contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getVolumeAsString(true), filterString)) {
             return true;
         }
-        if (getAmountAsString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getAmountAsString(), filterString)) {
             return true;
         }
-        if (getTradeFeeAsString(true).contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getTradeFeeAsString(true), filterString)) {
             return true;
         }
-        if (getTxFeeAsString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getTxFeeAsString(), filterString)) {
             return true;
         }
-        if (getBuyerSecurityDepositAsString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getBuyerSecurityDepositAsString(), filterString)) {
             return true;
         }
-        if (getSellerSecurityDepositAsString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getSellerSecurityDepositAsString(), filterString)) {
             return true;
         }
-        if (getState().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getState(), filterString)) {
             return true;
         }
-        if (getDirectionLabel().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getDirectionLabel(), filterString)) {
             return true;
         }
         if (FilteringUtils.match(getTradable().getOffer(), filterString)) {

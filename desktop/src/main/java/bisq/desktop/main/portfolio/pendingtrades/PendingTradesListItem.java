@@ -23,6 +23,8 @@ import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
+import org.apache.commons.lang3.StringUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,18 +68,18 @@ public class PendingTradesListItem implements FilterableListItem {
         if (filterString.isEmpty()) {
             return true;
         }
-        if (getTrade().getId().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getTrade().getId(), filterString)) {
             return true;
         }
-        if (getAmountAsString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getAmountAsString(), filterString)) {
             return true;
         }
-        if (getPaymentMethod().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getPaymentMethod(), filterString)) {
             return true;
         }
-        if (getMarketDescription().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getMarketDescription(), filterString)) {
             return true;
         }
-        return getPriceAsString().contains(filterString);
+        return StringUtils.containsIgnoreCase(getPriceAsString(), filterString);
     }
 }

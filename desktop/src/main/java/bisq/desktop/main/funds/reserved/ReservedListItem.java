@@ -33,6 +33,8 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
+import org.apache.commons.lang3.StringUtils;
+
 import javafx.scene.control.Label;
 
 import java.util.Optional;
@@ -122,16 +124,16 @@ class ReservedListItem implements FilterableListItem {
         if (filterString.isEmpty()) {
             return true;
         }
-        if (getDetails().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getDetails(), filterString)) {
             return true;
         }
-        if (getAddressString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getAddressString(), filterString)) {
             return true;
         }
-        if (getDateAsString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getDateAsString(), filterString)) {
             return true;
         }
-        if (getBalanceString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getBalanceString(), filterString)) {
             return true;
         }
         return FilteringUtils.match(getOpenOffer().getOffer(), filterString);

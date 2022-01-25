@@ -44,6 +44,8 @@ import org.bitcoinj.core.TransactionOutput;
 
 import com.google.common.base.Suppliers;
 
+import org.apache.commons.lang3.StringUtils;
+
 import javafx.scene.control.Tooltip;
 
 import java.util.Date;
@@ -384,24 +386,24 @@ class TransactionsListItem implements FilterableListItem {
         if (filterString.isEmpty()) {
             return true;
         }
-        if (getTxId().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getTxId(), filterString)) {
             return true;
         }
-        if (getDetails().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getDetails(), filterString)) {
             return true;
         }
-        if (getMemo() != null && getMemo().contains(filterString)) {
+        if (getMemo() != null && StringUtils.containsIgnoreCase(getMemo(), filterString)) {
             return true;
         }
-        if (getDirection().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getDirection(), filterString)) {
             return true;
         }
-        if (getDateString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getDateString(), filterString)) {
             return true;
         }
-        if (getAmount().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getAmount(), filterString)) {
             return true;
         }
-        return getAddressString().contains(filterString);
+        return StringUtils.containsIgnoreCase(getAddressString(), filterString);
     }
 }

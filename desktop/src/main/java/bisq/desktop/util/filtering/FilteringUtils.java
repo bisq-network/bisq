@@ -22,35 +22,37 @@ import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class FilteringUtils {
     public static boolean match(Offer offer, String filterString) {
-        if (offer.getId().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(offer.getId(), filterString)) {
             return true;
         }
-        if (offer.getPaymentMethod().getDisplayString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(offer.getPaymentMethod().getDisplayString(), filterString)) {
             return true;
         }
-        return offer.getOfferFeePaymentTxId() != null && offer.getOfferFeePaymentTxId().contains(filterString);
+        return offer.getOfferFeePaymentTxId() != null && StringUtils.containsIgnoreCase(offer.getOfferFeePaymentTxId(), filterString);
     }
 
     public static boolean match(BsqSwapTrade bsqSwapTrade, String filterString) {
-        if (bsqSwapTrade.getTxId() != null && bsqSwapTrade.getTxId().contains(filterString)) {
+        if (bsqSwapTrade.getTxId() != null && StringUtils.containsIgnoreCase(bsqSwapTrade.getTxId(), filterString)) {
             return true;
         }
-        return bsqSwapTrade.getTradingPeerNodeAddress().getFullAddress().contains(filterString);
+        return StringUtils.containsIgnoreCase(bsqSwapTrade.getTradingPeerNodeAddress().getFullAddress(), filterString);
     }
 
     public static boolean match(Trade trade, String filterString) {
         if (trade == null) {
             return false;
         }
-        if (trade.getTakerFeeTxId() != null && trade.getTakerFeeTxId().contains(filterString)) {
+        if (trade.getTakerFeeTxId() != null && StringUtils.containsIgnoreCase(trade.getTakerFeeTxId(), filterString)) {
             return true;
         }
-        if (trade.getDepositTxId() != null && trade.getDepositTxId().contains(filterString)) {
+        if (trade.getDepositTxId() != null && StringUtils.containsIgnoreCase(trade.getDepositTxId(), filterString)) {
             return true;
         }
-        if (trade.getPayoutTxId() != null && trade.getPayoutTxId().contains(filterString)) {
+        if (trade.getPayoutTxId() != null && StringUtils.containsIgnoreCase(trade.getPayoutTxId(), filterString)) {
             return true;
         }
         return match(trade.getContract(), filterString);
@@ -62,12 +64,12 @@ public class FilteringUtils {
         boolean matchesBuyersPaymentAccountData = false;
         boolean matchesSellersPaymentAccountData = false;
         if (contract != null) {
-            isBuyerOnion = contract.getBuyerNodeAddress().getFullAddress().contains(filterString);
-            isSellerOnion = contract.getSellerNodeAddress().getFullAddress().contains(filterString);
+            isBuyerOnion = StringUtils.containsIgnoreCase(contract.getBuyerNodeAddress().getFullAddress(), filterString);
+            isSellerOnion = StringUtils.containsIgnoreCase(contract.getSellerNodeAddress().getFullAddress(), filterString);
             matchesBuyersPaymentAccountData = contract.getBuyerPaymentAccountPayload() != null &&
-                    contract.getBuyerPaymentAccountPayload().getPaymentDetails().contains(filterString);
+                    StringUtils.containsIgnoreCase(contract.getBuyerPaymentAccountPayload().getPaymentDetails(), filterString);
             matchesSellersPaymentAccountData = contract.getSellerPaymentAccountPayload() != null &&
-                    contract.getSellerPaymentAccountPayload().getPaymentDetails().contains(filterString);
+                    StringUtils.containsIgnoreCase(contract.getSellerPaymentAccountPayload().getPaymentDetails(), filterString);
         }
         return isBuyerOnion || isSellerOnion ||
                 matchesBuyersPaymentAccountData || matchesSellersPaymentAccountData;

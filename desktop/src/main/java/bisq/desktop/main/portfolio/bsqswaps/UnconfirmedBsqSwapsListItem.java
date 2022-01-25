@@ -39,6 +39,8 @@ import bisq.core.util.coin.CoinFormatter;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.TransactionConfidence;
 
+import org.apache.commons.lang3.StringUtils;
+
 import javafx.scene.control.Tooltip;
 
 import lombok.Getter;
@@ -158,31 +160,31 @@ class UnconfirmedBsqSwapsListItem implements FilterableListItem {
         if (filterString.isEmpty()) {
             return true;
         }
-        if (getDateAsString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getDateAsString(), filterString)) {
             return true;
         }
-        if (getMarketLabel().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getMarketLabel(), filterString)) {
             return true;
         }
-        if (getPriceAsString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getPriceAsString(), filterString)) {
             return true;
         }
-        if (getVolumeAsString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getVolumeAsString(), filterString)) {
             return true;
         }
-        if (getAmountAsString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getAmountAsString(), filterString)) {
             return true;
         }
-        if (getTradeFeeAsString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getTradeFeeAsString(), filterString)) {
             return true;
         }
-        if (getTxFeeAsString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getTxFeeAsString(), filterString)) {
             return true;
         }
-        if (String.valueOf(getConfidence()).contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(String.valueOf(getConfidence()), filterString)) {
             return true;
         }
-        if (getDirectionLabel().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getDirectionLabel(), filterString)) {
             return true;
         }
         if (FilteringUtils.match(getBsqSwapTrade(), filterString)) {

@@ -34,6 +34,8 @@ import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
+import org.apache.commons.lang3.StringUtils;
+
 import lombok.Getter;
 
 /**
@@ -137,28 +139,28 @@ class OpenOfferListItem implements FilterableListItem {
         if (filterString.isEmpty()) {
             return true;
         }
-        if (getDateAsString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getDateAsString(), filterString)) {
             return true;
         }
-        if (getMarketDescription().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getMarketDescription(), filterString)) {
             return true;
         }
-        if (getPriceAsString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getPriceAsString(), filterString)) {
             return true;
         }
-        if (getPriceDeviationAsString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getPriceDeviationAsString(), filterString)) {
             return true;
         }
-        if (getPaymentMethodAsString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getPaymentMethodAsString(), filterString)) {
             return true;
         }
-        if (getVolumeAsString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getVolumeAsString(), filterString)) {
             return true;
         }
-        if (getAmountAsString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getAmountAsString(), filterString)) {
             return true;
         }
-        if (getDirectionLabel().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getDirectionLabel(), filterString)) {
             return true;
         }
         return FilteringUtils.match(getOffer(), filterString);

@@ -34,6 +34,8 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
+import org.apache.commons.lang3.StringUtils;
+
 import javafx.scene.control.Label;
 
 import lombok.Getter;
@@ -125,19 +127,19 @@ class LockedListItem implements FilterableListItem {
         if (filterString.isEmpty())
             return true;
 
-        if (getDetails().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getDetails(), filterString)) {
             return true;
         }
 
-        if (getDateString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getDateString(), filterString)) {
             return true;
         }
 
-        if (getAddressString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getAddressString(), filterString)) {
             return true;
         }
 
-        if (getBalanceString().contains(filterString)) {
+        if (StringUtils.containsIgnoreCase(getBalanceString(), filterString)) {
             return true;
         }
 
