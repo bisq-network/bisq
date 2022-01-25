@@ -2162,7 +2162,7 @@ textfield */
     -fx-text-fill: -bs-rd-font-dark;
 }
 
-.dao-news-content, .dao-news-section-link, .dao-news-section-link .hyperlink, .dao-launch-version {
+.dao-news-content, .dao-news-section-link, .dao-news-section-link .hyperlink {
     -fx-text-fill: -bs-rd-font-light;
     -fx-fill: -bs-rd-font-light;
 }
