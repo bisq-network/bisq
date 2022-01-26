@@ -37,6 +37,7 @@ import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PasswordTextField;
+import bisq.desktop.components.SimpleMarkdownLabel;
 import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.TextFieldWithIcon;
 import bisq.desktop.components.TitledGroupBg;
@@ -185,6 +186,23 @@ public class FormBuilder {
         return new Tuple3<>(label, subText, vBox);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Simple Markdown Label
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    public static SimpleMarkdownLabel addSimpleMarkdownLabel(GridPane gridPane, int rowIndex) {
+        return addSimpleMarkdownLabel(gridPane, rowIndex, null, 0);
+    }
+
+    public static SimpleMarkdownLabel addSimpleMarkdownLabel(GridPane gridPane, int rowIndex, String markdown, double top) {
+        SimpleMarkdownLabel label = new SimpleMarkdownLabel(markdown);
+
+        GridPane.setRowIndex(label, rowIndex);
+        GridPane.setMargin(label, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(label);
+
+        return label;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Multiline Label
