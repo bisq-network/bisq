@@ -49,9 +49,11 @@ import org.bitcoinj.core.Coin;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -59,10 +61,14 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.core.btc.model.AddressEntry.Context.TRADE_PAYOUT;
 import static bisq.proto.grpc.GetTradesRequest.Category.CLOSED;
 import static java.lang.String.format;
+import static java.util.Comparator.comparing;
 
 @Singleton
 @Slf4j
 class CoreTradesService {
+
+    private final Supplier<Comparator<TradeModel>> dateComparator = () ->
+            comparing(TradeModel::getDate);
 
     private final CoreContext coreContext;
     // Dependencies on core api services in this package must be kept to an absolute
@@ -292,7 +298,10 @@ class CoreTradesService {
     List<TradeModel> getOpenTrades() {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
-        return tradeManager.getTrades().stream().map(t -> (TradeModel) t).collect(Collectors.toList());
+        return tradeManager.getTrades().stream()
+                .map(t -> (TradeModel) t)
+                .sorted(dateComparator.get())
+                .collect(Collectors.toList());
     }
 
     List<TradeModel> getTradeHistory(GetTradesRequest.Category category) {
@@ -303,16 +312,18 @@ class CoreTradesService {
                     .map(t -> (TradeModel) t)
                     .collect(Collectors.toList());
             closedTrades.addAll(bsqSwapTradeManager.getBsqSwapTrades());
-            // TODO Sort closedTrades by date?
-            return closedTrades;
+            return closedTrades.stream().sorted(dateComparator.get()).collect(Collectors.toList());
         } else {
             var failedV1Trades = failedTradesManager.getTrades();
-            return failedV1Trades.stream().map(t -> (TradeModel) t).collect(Collectors.toList());
+            return failedV1Trades.stream()
+                    .map(t -> (TradeModel) t)
+                    .sorted(dateComparator.get())
+                    .collect(Collectors.toList());
         }
     }
 
     void failTrade(String tradeId) {
-        // TODO Recommend that API users should use this method with extra care because
+        // TODO Recommend API users call this method with extra care because
         //  the API lacks methods for diagnosing trade problems, and does not support
         //  interaction with mediators.  Users may accidentally fail valid trades,
         //  although they can easily be un-failed with the 'unfailtrade' method.
