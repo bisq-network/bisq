@@ -329,10 +329,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     void onPaymentAccountSelected(PaymentAccount paymentAccount) {
         if (paymentAccount != null && !this.paymentAccount.equals(paymentAccount)) {
-            volume.set(null);
-            minVolume.set(null);
-            price.set(null);
-            marketPriceMargin = 0;
             preferences.setSelectedPaymentAccountForCreateOffer(paymentAccount);
             this.paymentAccount = paymentAccount;
 
