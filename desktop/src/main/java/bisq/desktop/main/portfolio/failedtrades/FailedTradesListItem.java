@@ -17,19 +17,92 @@
 
 package bisq.desktop.main.portfolio.failedtrades;
 
+import bisq.desktop.util.DisplayUtils;
+import bisq.desktop.util.filtering.FilterableListItem;
+import bisq.desktop.util.filtering.FilteringUtils;
+
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferDirection;
+import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.VolumeUtil;
+import bisq.core.util.coin.CoinFormatter;
+
+import org.apache.commons.lang3.StringUtils;
 
 import lombok.Getter;
 
-class FailedTradesListItem {
+class FailedTradesListItem implements FilterableListItem {
     @Getter
     private final Trade trade;
+    private final CoinFormatter btcFormatter;
+    private final FailedTradesManager failedTradesManager;
 
-    FailedTradesListItem(Trade trade) {
+    FailedTradesListItem(Trade trade, CoinFormatter btcFormatter, FailedTradesManager failedTradesManager) {
         this.trade = trade;
+        this.btcFormatter = btcFormatter;
+        this.failedTradesManager = failedTradesManager;
     }
 
-    FailedTradesListItem() {
-        this.trade = null;
+    public String getDateAsString() {
+        return DisplayUtils.formatDateTime(trade.getDate());
+    }
+
+    public String getMarketLabel() {
+        return CurrencyUtil.getCurrencyPair(trade.getOffer().getCurrencyCode());
+    }
+
+    public String getAmountAsString() {
+        return btcFormatter.formatCoin(trade.getAmount());
+    }
+
+    public String getPriceAsString() {
+        return FormattingUtils.formatPrice(trade.getPrice());
+    }
+
+    public String getVolumeAsString() {
+        return VolumeUtil.formatVolumeWithCode(trade.getVolume());
+    }
+
+    public String getDirectionLabel() {
+        Offer offer = trade.getOffer();
+        OfferDirection direction = failedTradesManager.wasMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
+        return DisplayUtils.getDirectionWithCode(direction, trade.getOffer().getCurrencyCode());
+    }
+
+    public String getState() {
+        return Res.get("portfolio.failed.Failed");
+    }
+
+    @Override
+    public boolean match(String filterString) {
+        if (filterString.isEmpty()) {
+            return true;
+        }
+        if (StringUtils.containsIgnoreCase(getDateAsString(), filterString)) {
+            return true;
+        }
+        if (StringUtils.containsIgnoreCase(getMarketLabel(), filterString)) {
+            return true;
+        }
+        if (StringUtils.containsIgnoreCase(getPriceAsString(), filterString)) {
+            return true;
+        }
+        if (StringUtils.containsIgnoreCase(getVolumeAsString(), filterString)) {
+            return true;
+        }
+        if (StringUtils.containsIgnoreCase(getAmountAsString(), filterString)) {
+            return true;
+        }
+        if (StringUtils.containsIgnoreCase(getDirectionLabel(), filterString)) {
+            return true;
+        }
+        if (FilteringUtils.match(getTrade().getOffer(), filterString)) {
+            return true;
+        }
+        return FilteringUtils.match(getTrade(), filterString);
     }
 }

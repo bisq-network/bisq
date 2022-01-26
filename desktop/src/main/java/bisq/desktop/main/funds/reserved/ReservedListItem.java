@@ -17,8 +17,10 @@
 
 package bisq.desktop.main.funds.reserved;
 
+import bisq.desktop.util.filtering.FilterableListItem;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.util.DisplayUtils;
+import bisq.desktop.util.filtering.FilteringUtils;
 
 import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.model.AddressEntry;
@@ -31,13 +33,15 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
+import org.apache.commons.lang3.StringUtils;
+
 import javafx.scene.control.Label;
 
 import java.util.Optional;
 
 import lombok.Getter;
 
-class ReservedListItem {
+class ReservedListItem implements FilterableListItem {
     private final BalanceListener balanceListener;
     private final BtcWalletService btcWalletService;
     private final CoinFormatter formatter;
@@ -113,5 +117,25 @@ class ReservedListItem {
         return openOffer != null ?
                 Res.get("funds.reserved.reserved", openOffer.getShortId()) :
                 Res.get("shared.noDetailsAvailable");
+    }
+
+    @Override
+    public boolean match(String filterString) {
+        if (filterString.isEmpty()) {
+            return true;
+        }
+        if (StringUtils.containsIgnoreCase(getDetails(), filterString)) {
+            return true;
+        }
+        if (StringUtils.containsIgnoreCase(getAddressString(), filterString)) {
+            return true;
+        }
+        if (StringUtils.containsIgnoreCase(getDateAsString(), filterString)) {
+            return true;
+        }
+        if (StringUtils.containsIgnoreCase(getBalanceString(), filterString)) {
+            return true;
+        }
+        return FilteringUtils.match(getOpenOffer().getOffer(), filterString);
     }
 }

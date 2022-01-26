@@ -21,12 +21,16 @@ import bisq.desktop.common.model.ActivatableDataModel;
 
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.offer.Offer;
-import bisq.core.offer.OfferDirection;
+import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.bsq_swap.BsqSwapTradeManager;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.coin.CoinFormatter;
 
 import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -36,17 +40,26 @@ import java.util.stream.Collectors;
 
 class UnconfirmedBsqSwapsDataModel extends ActivatableDataModel {
 
-    final BsqSwapTradeManager bsqSwapTradeManager;
+    private final BsqSwapTradeManager bsqSwapTradeManager;
     private final BsqWalletService bsqWalletService;
     private final ObservableList<UnconfirmedBsqSwapsListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<BsqSwapTrade> tradesListChangeListener;
     private final BsqBalanceListener bsqBalanceListener;
+    private final BsqFormatter bsqFormatter;
+    private final CoinFormatter btcFormatter;
+    private final ClosedTradableManager closedTradableManager;
 
     @Inject
     public UnconfirmedBsqSwapsDataModel(BsqSwapTradeManager bsqSwapTradeManager,
-                                        BsqWalletService bsqWalletService) {
+                                        BsqWalletService bsqWalletService,
+                                        BsqFormatter bsqFormatter,
+                                        @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
+                                        ClosedTradableManager closedTradableManager) {
         this.bsqSwapTradeManager = bsqSwapTradeManager;
         this.bsqWalletService = bsqWalletService;
+        this.bsqFormatter = bsqFormatter;
+        this.btcFormatter = btcFormatter;
+        this.closedTradableManager = closedTradableManager;
 
         tradesListChangeListener = change -> applyList();
         bsqBalanceListener = (availableBalance, availableNonBsqBalance, unverifiedBalance,
@@ -71,15 +84,18 @@ class UnconfirmedBsqSwapsDataModel extends ActivatableDataModel {
         return list;
     }
 
-    public OfferDirection getDirection(Offer offer) {
-        return bsqSwapTradeManager.wasMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
-    }
-
     private void applyList() {
         list.clear();
 
         list.addAll(bsqSwapTradeManager.getUnconfirmedBsqSwapTrades()
-                .map(bsqSwapTrade -> new UnconfirmedBsqSwapsListItem(bsqWalletService, bsqSwapTrade))
+                .map(bsqSwapTrade -> new UnconfirmedBsqSwapsListItem(
+                        bsqSwapTrade,
+                        bsqWalletService,
+                        btcFormatter,
+                        bsqFormatter,
+                        bsqSwapTradeManager,
+                        closedTradableManager
+                ))
                 .collect(Collectors.toList()));
 
         // we sort by date, the earliest first

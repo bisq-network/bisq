@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.funds.withdrawal;
 
+import bisq.desktop.util.filtering.FilterableListItem;
 import bisq.desktop.components.AutoTooltipLabel;
 
 import bisq.core.btc.listeners.BalanceListener;
@@ -29,12 +30,14 @@ import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
+import org.apache.commons.lang3.StringUtils;
+
 import javafx.scene.control.Label;
 
 import lombok.Getter;
 import lombok.Setter;
 
-class WithdrawalListItem {
+class WithdrawalListItem implements FilterableListItem {
     private final BalanceListener balanceListener;
     private final Label balanceLabel;
     private final AddressEntry addressEntry;
@@ -118,7 +121,23 @@ class WithdrawalListItem {
         return balance;
     }
 
+    public String getBalanceAsString() {
+        return formatter.formatCoin(balance);
+    }
+
     public String getAddressString() {
         return addressString;
+    }
+
+    @Override
+    public boolean match(String filterString) {
+        if (filterString.isEmpty()) {
+            return true;
+        }
+        if (StringUtils.containsIgnoreCase(getBalanceAsString(), filterString)) {
+            return true;
+        }
+        return StringUtils.containsIgnoreCase(getAddressString(), filterString);
+
     }
 }

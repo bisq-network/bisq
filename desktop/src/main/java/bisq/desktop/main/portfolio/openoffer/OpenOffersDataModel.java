@@ -26,11 +26,17 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.bisq_v1.TriggerPriceService;
 import bisq.core.offer.bsq_swap.OpenBsqSwapOfferService;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.PriceUtil;
+import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
 import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 import javafx.beans.value.ChangeListener;
 
@@ -44,6 +50,9 @@ class OpenOffersDataModel extends ActivatableDataModel {
     private final OpenOfferManager openOfferManager;
     private final OpenBsqSwapOfferService openBsqSwapOfferService;
     private final PriceFeedService priceFeedService;
+    private final PriceUtil priceUtil;
+    private final CoinFormatter btcFormatter;
+    private final BsqFormatter bsqFormatter;
 
     private final ObservableList<OpenOfferListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<OpenOffer> tradesListChangeListener;
@@ -52,10 +61,16 @@ class OpenOffersDataModel extends ActivatableDataModel {
     @Inject
     public OpenOffersDataModel(OpenOfferManager openOfferManager,
                                OpenBsqSwapOfferService openBsqSwapOfferService,
-                               PriceFeedService priceFeedService) {
+                               PriceFeedService priceFeedService,
+                               PriceUtil priceUtil,
+                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
+                               BsqFormatter bsqFormatter) {
         this.openOfferManager = openOfferManager;
         this.openBsqSwapOfferService = openBsqSwapOfferService;
         this.priceFeedService = priceFeedService;
+        this.priceUtil = priceUtil;
+        this.btcFormatter = btcFormatter;
+        this.bsqFormatter = bsqFormatter;
 
         tradesListChangeListener = change -> applyList();
         currenciesUpdateFlagPropertyListener = (observable, oldValue, newValue) -> applyList();
@@ -106,7 +121,11 @@ class OpenOffersDataModel extends ActivatableDataModel {
     private void applyList() {
         list.clear();
 
-        list.addAll(openOfferManager.getObservableList().stream().map(OpenOfferListItem::new).collect(Collectors.toList()));
+        list.addAll(
+                openOfferManager.getObservableList().stream()
+                        .map(item -> new OpenOfferListItem(item, priceUtil, btcFormatter, bsqFormatter, openOfferManager))
+                        .collect(Collectors.toList())
+        );
 
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getOffer().getDate().compareTo(o1.getOffer().getDate()));
