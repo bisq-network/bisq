@@ -64,6 +64,7 @@ import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCust
 import static bisq.proto.grpc.GetTradesRequest.Category.CLOSED;
 import static bisq.proto.grpc.GetTradesRequest.Category.OPEN;
 import static bisq.proto.grpc.TradesGrpc.*;
+import static java.util.Comparator.comparing;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -303,8 +304,9 @@ class GrpcTradesService extends TradesImplBase {
 
 
     private GetTradesReply buildGetTradesReply(List<TradeModel> trades, GetTradesRequest.Category category) {
-        // Build trade history list, starting with closed BsqSwap and v1 trades.
-        List<TradeInfo> result = trades.stream()
+        // Build an unsorted List<TradeInfo>, starting with
+        // all pending, or all completed BsqSwap and v1 trades.
+        List<TradeInfo> unsortedTrades = trades.stream()
                 .map(tradeModel -> {
                     var role = coreApi.getTradeRole(tradeModel);
                     var isMyOffer = coreApi.isMyOffer(tradeModel.getOffer());
@@ -321,7 +323,8 @@ class GrpcTradesService extends TradesImplBase {
                 })
                 .collect(Collectors.toList());
 
-        // Add canceled OpenOffers to returned closed trades list.
+        // If closed trades were requested, add any canceled
+        // OpenOffers (canceled trades) to the unsorted List<TradeInfo>.
         Optional<List<OpenOffer>> canceledOpenOffers = category.equals(CLOSED)
                 ? Optional.of(coreApi.getCanceledOpenOffers())
                 : Optional.empty();
@@ -331,12 +334,15 @@ class GrpcTradesService extends TradesImplBase {
                         .map(CanceledTradeInfo::toCanceledTradeInfo)
                         .collect(Collectors.toList())
         ));
+        unsortedTrades.addAll(canceledTrades);
+
+        // Sort the cumulative List<TradeInfo> by date before sending it to the client.
+        List<TradeInfo> sortedTrades = unsortedTrades.stream()
+                .sorted(comparing(TradeInfo::getDate))
+                .collect(Collectors.toList());
 
         return GetTradesReply.newBuilder()
-                .addAllTrades(result.stream()
-                        .map(TradeInfo::toProtoMessage)
-                        .collect(Collectors.toList()))
-                .addAllTrades(canceledTrades.stream()
+                .addAllTrades(sortedTrades.stream()
                         .map(TradeInfo::toProtoMessage)
                         .collect(Collectors.toList()))
                 .build();
