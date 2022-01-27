@@ -412,17 +412,17 @@ public class FormBuilder {
     }
 
     public static Tuple2<Label, TextField> addConfirmationLabelTextField(GridPane gridPane,
-                                                     int rowIndex,
-                                                     String title1,
-                                                     String title2) {
+                                                                         int rowIndex,
+                                                                         String title1,
+                                                                         String title2) {
         return addConfirmationLabelTextField(gridPane, rowIndex, title1, title2, 0);
     }
 
     public static Tuple2<Label, TextField> addConfirmationLabelTextField(GridPane gridPane,
-                                                     int rowIndex,
-                                                     String title1,
-                                                     String title2,
-                                                     double top) {
+                                                                         int rowIndex,
+                                                                         String title1,
+                                                                         String title2,
+                                                                         double top) {
         Label label1 = addLabel(gridPane, rowIndex, title1);
         label1.getStyleClass().add("confirmation-label");
         TextField label2 = new BisqTextField(title2);
@@ -439,9 +439,9 @@ public class FormBuilder {
     }
 
     public static Tuple2<Label, TextFieldWithCopyIcon> addConfirmationLabelLabelWithCopyIcon(GridPane gridPane,
-                                                                 int rowIndex,
-                                                                 String title1,
-                                                                 String title2) {
+                                                                                             int rowIndex,
+                                                                                             String title1,
+                                                                                             String title2) {
         Label label1 = addLabel(gridPane, rowIndex, title1);
         label1.getStyleClass().add("confirmation-label");
         TextFieldWithCopyIcon label2 = new TextFieldWithCopyIcon("confirmation-value");
@@ -885,9 +885,9 @@ public class FormBuilder {
 
 
     public static Tuple3<Label, InputTextField, ToggleButton> addTopLabelInputTextFieldSlideToggleButtonRight(GridPane gridPane,
-                                                                                                         int rowIndex,
-                                                                                                         String title,
-                                                                                                         String toggleButtonTitle) {
+                                                                                                              int rowIndex,
+                                                                                                              String title,
+                                                                                                              String toggleButtonTitle) {
 
         InputTextField inputTextField = new InputTextField();
         Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, inputTextField, 0);
@@ -2399,3 +2399,4 @@ public class FormBuilder {
         return tableView;
     }
 }
+

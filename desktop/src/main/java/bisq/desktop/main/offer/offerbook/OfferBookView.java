@@ -78,6 +78,7 @@ import org.bitcoinj.core.Coin;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
@@ -136,6 +137,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final SignedWitnessService signedWitnessService;
 
+    private TitledGroupBg titledGroupBg;
     private AutocompleteComboBox<TradeCurrency> currencyComboBox;
     private AutocompleteComboBox<PaymentMethod> paymentMethodComboBox;
     private AutoTooltipButton createOfferButton;
@@ -187,7 +189,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     public void initialize() {
         root.setPadding(new Insets(15, 15, 5, 15));
 
-        final TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 2, Res.get("offerbook.availableOffers"));
+        titledGroupBg = addTitledGroupBg(
+                root,
+                gridRow,
+                2,
+                Res.get("offerbook.availableOffers")
+        );
         titledGroupBg.getStyleClass().add("last");
 
         HBox offerToolsBox = new HBox();
@@ -336,6 +343,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     @Override
     protected void activate() {
+        titledGroupBg.setupHelpUrl(model.getDirection() == OfferDirection.SELL
+                ? "https://docs.bisq.network/intro.html#in-a-nutshell"
+                : "https://docs.bisq.network/getting-started.html#take-an-offer");
+
         currencyComboBox.setCellFactory(GUIUtil.getTradeCurrencyCellFactory(Res.get("shared.oneOffer"),
                 Res.get("shared.multipleOffers"),
                 (model.getDirection() == OfferDirection.BUY ? model.getSellOfferCounts() : model.getBuyOfferCounts())));

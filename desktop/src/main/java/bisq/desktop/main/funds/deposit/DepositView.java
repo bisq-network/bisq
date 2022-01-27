@@ -174,8 +174,14 @@ public class DepositView extends ActivatableView<VBox, Void> {
         tableView.getSortOrder().add(usageColumn);
         tableView.setItems(sortedList);
 
-        titledGroupBg = addTitledGroupBg(gridPane, gridRow, 4, Res.get("funds.deposit.fundWallet"));
+        titledGroupBg = addTitledGroupBg(
+                gridPane,
+                gridRow,
+                4,
+                Res.get("funds.deposit.fundWallet")
+        );
         titledGroupBg.getStyleClass().add("last");
+        titledGroupBg.setupHelpUrl("https://docs.bisq.network/getting-started.html#fund-your-bisq-wallet");
 
         qrCodeImageView = new ImageView();
         qrCodeImageView.getStyleClass().add("qr-code");
