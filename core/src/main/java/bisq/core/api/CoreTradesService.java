@@ -292,7 +292,7 @@ class CoreTradesService {
     List<TradeModel> getOpenTrades() {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
-        return tradeManager.getTrades().stream().map(t -> (TradeModel) t).collect(Collectors.toList());
+        return tradeManager.getTrades().stream().collect(Collectors.toList());
     }
 
     List<TradeModel> getTradeHistory(GetTradesRequest.Category category) {
@@ -303,16 +303,15 @@ class CoreTradesService {
                     .map(t -> (TradeModel) t)
                     .collect(Collectors.toList());
             closedTrades.addAll(bsqSwapTradeManager.getBsqSwapTrades());
-            // TODO Sort closedTrades by date?
             return closedTrades;
         } else {
             var failedV1Trades = failedTradesManager.getTrades();
-            return failedV1Trades.stream().map(t -> (TradeModel) t).collect(Collectors.toList());
+            return failedV1Trades.stream().collect(Collectors.toList());
         }
     }
 
     void failTrade(String tradeId) {
-        // TODO Recommend that API users should use this method with extra care because
+        // TODO Recommend API users call this method with extra care because
         //  the API lacks methods for diagnosing trade problems, and does not support
         //  interaction with mediators.  Users may accidentally fail valid trades,
         //  although they can easily be un-failed with the 'unfailtrade' method.
