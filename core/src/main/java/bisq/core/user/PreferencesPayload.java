@@ -121,6 +121,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private String takeOfferSelectedPaymentAccountId;
     private double buyerSecurityDepositAsPercent = getDefaultBuyerSecurityDepositAsPercent();
     private int ignoreDustThreshold = 600;
+    private int clearDataAfterDays = Preferences.CLEAR_DATA_AFTER_DAYS_INITIAL;
     private double buyerSecurityDepositAsPercentForCrypto = getDefaultBuyerSecurityDepositAsPercent();
     private int blockNotifyPort;
     private boolean tacAcceptedV120;
@@ -192,6 +193,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setIsDaoFullNode(isDaoFullNode)
                 .setBuyerSecurityDepositAsPercent(buyerSecurityDepositAsPercent)
                 .setIgnoreDustThreshold(ignoreDustThreshold)
+                .setClearDataAfterDays(clearDataAfterDays)
                 .setBuyerSecurityDepositAsPercentForCrypto(buyerSecurityDepositAsPercentForCrypto)
                 .setBlockNotifyPort(blockNotifyPort)
                 .setTacAcceptedV120(tacAcceptedV120)
@@ -290,6 +292,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getTakeOfferSelectedPaymentAccountId().isEmpty() ? null : proto.getTakeOfferSelectedPaymentAccountId(),
                 proto.getBuyerSecurityDepositAsPercent(),
                 proto.getIgnoreDustThreshold(),
+                proto.getClearDataAfterDays(),
                 proto.getBuyerSecurityDepositAsPercentForCrypto(),
                 proto.getBlockNotifyPort(),
                 proto.getTacAcceptedV120(),

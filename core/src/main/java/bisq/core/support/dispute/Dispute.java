@@ -100,7 +100,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     private final PubKeyRing traderPubKeyRing;
     private final long tradeDate;
     private final long tradePeriodEnd;
-    private final Contract contract;
+    private Contract contract;
     @Nullable
     private final byte[] contractHash;
     @Nullable
@@ -111,7 +111,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     private final String depositTxId;
     @Nullable
     private final String payoutTxId;
-    private final String contractAsJson;
+    private String contractAsJson;
     @Nullable
     private final String makerContractSignature;
     @Nullable
@@ -351,6 +351,31 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
         }
     }
 
+    public boolean removeAllChatMessages() {
+        if (chatMessages.size() > 0) {
+            chatMessages.clear();
+            return true;
+        }
+        return false;
+    }
+
+    public void maybeClearSensitiveData() {
+        String change = "";
+        if (contract.maybeClearSensitiveData()) {
+            change += "contract;";
+        }
+        String edited = contract.sanitizeContractAsJson(contractAsJson);
+        if (!edited.equals(contractAsJson)) {
+            contractAsJson = edited;
+            change += "contractAsJson;";
+        }
+        if (removeAllChatMessages()) {
+            change += "chat messages;";
+        }
+        if (change.length() > 0) {
+            log.info("cleared sensitive data from {} of dispute for trade {}", change, Utilities.getShortId(getTradeId()));
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters

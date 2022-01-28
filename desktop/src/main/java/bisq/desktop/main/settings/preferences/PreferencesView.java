@@ -127,7 +127,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private int gridRow = 0;
     private int displayCurrenciesGridRowIndex = 0;
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, ignoreDustThresholdInputTextField,
-            autoConfRequiredConfirmationsTf, autoConfServiceAddressTf, autoConfTradeLimitTf,
+            autoConfRequiredConfirmationsTf, autoConfServiceAddressTf, autoConfTradeLimitTf, clearDataAfterDaysInputTextField,
             rpcUserTextField, blockNotifyPortTextField;
     private PasswordTextField rpcPwTextField;
     private TitledGroupBg daoOptionsTitledGroupBg;
@@ -156,7 +156,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ObservableList<TradeCurrency> tradeCurrencies;
     private InputTextField deviationInputTextField, bsqAverageTrimThresholdTextField;
     private ChangeListener<String> deviationListener, bsqAverageTrimThresholdListener, ignoreTradersListListener, ignoreDustThresholdListener,
-            rpcUserListener, rpcPwListener, blockNotifyPortListener,
+            rpcUserListener, rpcPwListener, blockNotifyPortListener, clearDataAfterDaysListener,
             autoConfTradeLimitListener, autoConfServiceAddressListener;
     private ChangeListener<Boolean> deviationFocusedListener, bsqAverageTrimThresholdFocusedListener;
     private ChangeListener<Boolean> useCustomFeeCheckboxListener;
@@ -225,6 +225,22 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     @Override
     protected void activate() {
+        String key = "sensitiveDataRemovalInfo";
+        if (DontShowAgainLookup.showAgain(key)) {
+            new Popup()
+                    .headLine(Res.get("setting.info.headline"))
+                    .backgroundInfo(Res.get("settings.preferences.sensitiveDataRemoval.msg"))
+                    .actionButtonText(Res.get("shared.iUnderstand"))
+                    .onAction(() -> {
+                        DontShowAgainLookup.dontShowAgain(key, true);
+                        // user has acknowledged, enable the feature with a reasonable default value
+                        preferences.setClearDataAfterDays(preferences.CLEAR_DATA_AFTER_DAYS_DEFAULT);
+                        clearDataAfterDaysInputTextField.setText(String.valueOf(preferences.getClearDataAfterDays()));
+                    })
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .show();
+        }
+
         // We want to have it updated in case an asset got removed
         allCryptoCurrencies = FXCollections.observableArrayList(CurrencyUtil.getActiveSortedCryptoCurrencies(assetService, filterManager));
         allCryptoCurrencies.removeAll(cryptoCurrencies);
@@ -250,7 +266,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initializeGeneralOptions() {
-        int titledGroupBgRowSpan = displayStandbyModeFeature ? 9 : 8;
+        int titledGroupBgRowSpan = displayStandbyModeFeature ? 10 : 9;
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, titledGroupBgRowSpan, Res.get("setting.preferences.general"));
         GridPane.setColumnSpan(titledGroupBg, 1);
 
@@ -377,6 +393,22 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                         "Input must not be higher than 2000 Satoshis");
                 if (!newValue.equals(oldValue)) {
                     preferences.setIgnoreDustThreshold(value);
+                }
+            } catch (Throwable ignore) {
+            }
+        };
+
+        // clearDataAfterDays
+        clearDataAfterDaysInputTextField = addInputTextField(root, ++gridRow, Res.get("setting.preferences.clearDataAfterDays"));
+        IntegerValidator clearDataAfterDaysValidator = new IntegerValidator();
+        clearDataAfterDaysValidator.setMinValue(1);
+        clearDataAfterDaysValidator.setMaxValue(Preferences.CLEAR_DATA_AFTER_DAYS_INITIAL);
+        clearDataAfterDaysInputTextField.setValidator(clearDataAfterDaysValidator);
+        clearDataAfterDaysListener = (observable, oldValue, newValue) -> {
+            try {
+                int value = Integer.parseInt(newValue);
+                if (!newValue.equals(oldValue)) {
+                    preferences.setClearDataAfterDays(value);
                 }
             } catch (Throwable ignore) {
             }
@@ -825,6 +857,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         /* referralIdService.getOptionalReferralId().ifPresent(referralId -> referralIdInputTextField.setText(referralId));
         referralIdInputTextField.setPromptText(Res.get("setting.preferences.refererId.prompt"));*/
         ignoreDustThresholdInputTextField.setText(String.valueOf(preferences.getIgnoreDustThreshold()));
+        clearDataAfterDaysInputTextField.setText(String.valueOf(preferences.getClearDataAfterDays()));
         userLanguageComboBox.setItems(languageCodes);
         userLanguageComboBox.getSelectionModel().select(preferences.getUserLanguage());
         userLanguageComboBox.setConverter(new StringConverter<>() {
@@ -889,6 +922,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         useCustomFee.selectedProperty().addListener(useCustomFeeCheckboxListener);
         //referralIdInputTextField.textProperty().addListener(referralIdListener);
         ignoreDustThresholdInputTextField.textProperty().addListener(ignoreDustThresholdListener);
+        clearDataAfterDaysInputTextField.textProperty().addListener(clearDataAfterDaysListener);
     }
 
     private Coin getTxFeeForWithdrawalPerVbyte() {
@@ -1165,6 +1199,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         useCustomFee.selectedProperty().removeListener(useCustomFeeCheckboxListener);
         //referralIdInputTextField.textProperty().removeListener(referralIdListener);
         ignoreDustThresholdInputTextField.textProperty().removeListener(ignoreDustThresholdListener);
+        clearDataAfterDaysInputTextField.textProperty().removeListener(clearDataAfterDaysListener);
     }
 
     private void deactivateDisplayCurrencies() {

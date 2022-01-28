@@ -66,6 +66,8 @@ import javafx.collections.ObservableList;
 
 import java.security.KeyPair;
 
+import java.time.Instant;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -282,6 +284,8 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                     log.error(disputeReplayException.toString());
                     validationExceptions.add(disputeReplayException);
                 });
+
+        maybeClearSensitiveData();
     }
 
     public boolean isTrader(Dispute dispute) {
@@ -298,6 +302,15 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         return disputeList.stream().filter(e -> e.getTradeId().equals(tradeId)).findAny();
     }
 
+    public void maybeClearSensitiveData() {
+        log.info("{} checking closed disputes eligibility for having sensitive data cleared", super.getClass().getSimpleName());
+        Instant safeDate = closedTradableManager.getSafeDateForSensitiveDataClearing();
+        getDisputeList().getList().stream()
+                .filter(e -> e.isClosed())
+                .filter(e -> e.getTradeDate().toInstant().isBefore(safeDate))
+                .forEach(Dispute::maybeClearSensitiveData);
+        requestPersistence();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Message handler
