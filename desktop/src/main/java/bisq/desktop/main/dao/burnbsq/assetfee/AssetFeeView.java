@@ -207,7 +207,6 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
         });
 
 
-        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 100);
         updateButtonState();
 
         feeAmountInputTextField.resetValidation();
@@ -301,7 +300,6 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
         observableList.setAll(statefulAssets.stream()
                 .map(statefulAsset -> new AssetListItem(statefulAsset, bsqFormatter))
                 .collect(Collectors.toList()));
-        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 100);
     }
 
     private void updateButtonState() {

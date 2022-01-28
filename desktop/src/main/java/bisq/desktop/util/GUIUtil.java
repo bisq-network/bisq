@@ -1030,30 +1030,6 @@ public class GUIUtil {
         showBsqFeeInfoPopup(fee, miningFee, null, txVsize, bsqFormatter, btcFormatter, type, actionHandler);
     }
 
-    public static void setFitToRowsForTableView(TableView<?> tableView,
-                                                int rowHeight,
-                                                int headerHeight,
-                                                int minNumRows,
-                                                int maxNumRows) {
-        int size = tableView.getItems().size();
-        int minHeight = rowHeight * minNumRows + headerHeight;
-        int maxHeight = rowHeight * maxNumRows + headerHeight;
-        checkArgument(maxHeight >= minHeight, "maxHeight cannot be smaller as minHeight");
-        int height = Math.min(maxHeight, Math.max(minHeight, size * rowHeight + headerHeight));
-
-        tableView.setPrefHeight(-1);
-        tableView.setVisible(false);
-        // We need to delay the setter to the next render frame as otherwise views don' get updated in some cases
-        // Not 100% clear what causes that issue, but seems the requestLayout method is not called otherwise.
-        // We still need to set the height immediately, otherwise some views render an incorrect layout.
-        tableView.setPrefHeight(height);
-
-        UserThread.execute(() -> {
-            tableView.setPrefHeight(height);
-            tableView.setVisible(true);
-        });
-    }
-
     public static Tuple2<ComboBox<TradeCurrency>, Integer> addRegionCountryTradeCurrencyComboBoxes(GridPane gridPane,
                                                                                                    int gridRow,
                                                                                                    Consumer<Country> onCountrySelectedHandler,

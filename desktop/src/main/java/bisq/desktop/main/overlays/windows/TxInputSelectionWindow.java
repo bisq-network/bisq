@@ -124,7 +124,6 @@ public class TxInputSelectionWindow extends Overlay<TxInputSelectionWindow> {
                 .map(transactionOutput -> new TransactionOutputItem(transactionOutput, candidates.contains(transactionOutput)))
                 .collect(Collectors.toList()));
         tableView.setItems(new SortedList<>(items));
-        GUIUtil.setFitToRowsForTableView(tableView, 26, 28, 0, items.size());
 
         balanceTextField = FormBuilder.addBalanceTextField(gridPane, rowIndex++, Res.get("inputControlWindow.balanceLabel"), Layout.FIRST_ROW_DISTANCE);
         balanceTextField.setFormatter(formatter);

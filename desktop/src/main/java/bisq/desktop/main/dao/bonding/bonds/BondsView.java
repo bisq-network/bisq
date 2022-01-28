@@ -112,7 +112,6 @@ public class BondsView extends ActivatableView<GridPane, Void> {
         bondedReputationRepository.getBonds().addListener(bondedReputationListener);
         bondedRolesRepository.getBonds().addListener(bondedRolesListener);
         updateList();
-        GUIUtil.setFitToRowsForTableView(tableView, 37, 28, 2, 30);
     }
 
     @Override
@@ -150,7 +149,6 @@ public class BondsView extends ActivatableView<GridPane, Void> {
                 .map(bond -> new BondListItem(bond, bsqFormatter))
                 .sorted(Comparator.comparing(BondListItem::getLockupDateString).reversed())
                 .collect(Collectors.toList()));
-        GUIUtil.setFitToRowsForTableView(tableView, 37, 28, 2, 30);
         if (selectedBond != null) {
             Bond bond = selectedBond;
             selectedBond = null;

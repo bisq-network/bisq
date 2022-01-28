@@ -190,7 +190,6 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
         setNewRandomSalt();
 
         updateList();
-        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 30);
     }
 
     @Override
@@ -261,7 +260,6 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
                 .map(myBondedReputation -> new MyReputationListItem(myBondedReputation, bsqFormatter))
                 .sorted(Comparator.comparing(MyReputationListItem::getLockupDateString).reversed())
                 .collect(Collectors.toList()));
-        GUIUtil.setFitToRowsForTableView(tableView, 41, 28, 2, 30);
     }
 
     private void setNewRandomSalt() {

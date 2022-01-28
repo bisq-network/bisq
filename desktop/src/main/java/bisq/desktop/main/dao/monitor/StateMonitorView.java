@@ -145,9 +145,6 @@ public abstract class StateMonitorView<StH extends StateHash,
         if (daoStateService.isParseBlockChainComplete()) {
             onDataUpdate();
         }
-
-        GUIUtil.setFitToRowsForTableView(tableView, 25, 28, 2, 5);
-        GUIUtil.setFitToRowsForTableView(conflictTableView, 38, 28, 2, 4);
     }
 
     @Override
@@ -255,7 +252,6 @@ public abstract class StateMonitorView<StH extends StateHash,
         if (item != null) {
             conflictListItems.setAll(item.getStateBlock().getInConflictMap().entrySet().stream()
                     .map(this::getStateInConflictListItem).collect(Collectors.toList()));
-            GUIUtil.setFitToRowsForTableView(conflictTableView, 38, 28, 2, 4);
         }
     }
 
@@ -280,8 +276,6 @@ public abstract class StateMonitorView<StH extends StateHash,
             statusTextField.setText(Res.get("dao.monitor.daoStateInSync"));
             statusTextField.getStyleClass().remove("dao-inConflict");
         }
-
-        GUIUtil.setFitToRowsForTableView(tableView, 25, 28, 2, 5);
     }
 
     private void resyncDaoState() {

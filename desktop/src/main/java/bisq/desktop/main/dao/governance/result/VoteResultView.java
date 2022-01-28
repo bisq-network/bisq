@@ -213,12 +213,9 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
             GUIUtil.exportJSON("voteResultsHistory.json", cyclesJsonArray, (Stage) root.getScene().getWindow());
         });
         if (proposalsTableView != null) {
-            GUIUtil.setFitToRowsForTableView(proposalsTableView, 25, 28, 6, 6);
-
             selectedProposalSubscription = EasyBind.subscribe(proposalsTableView.getSelectionModel().selectedItemProperty(),
                     this::onSelectProposalResultListItem);
         }
-        GUIUtil.setFitToRowsForTableView(cyclesTableView, 25, 28, 6, 6);
     }
 
     @Override
@@ -434,8 +431,6 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                     cyclesAdded.add(resultsOfCycle.getCycle());
                 });
         cycleListItemList.sort(Comparator.comparing(e -> ((CycleListItem) e).getResultsOfCycle().getCycleIndex()).reversed());
-
-        GUIUtil.setFitToRowsForTableView(cyclesTableView, 25, 28, 6, 6);
     }
 
 
@@ -516,7 +511,6 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                         isVoteIncludedInResult,
                         bsqFormatter))
                 .collect(Collectors.toList()));
-        GUIUtil.setFitToRowsForTableView(proposalsTableView, 25, 28, 6, 100);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
