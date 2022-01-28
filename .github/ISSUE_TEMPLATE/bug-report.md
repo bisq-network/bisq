@@ -7,7 +7,7 @@ about: Report a bug or a technical issue
 <!--
    SUPPORT REQUESTS: This is for reporting bugs in the Bisq app.
    If you have a support request, please join #support on Bisq's
-   Keybase team over at https://keybase.io/team/Bisq
+   Matrix Space over at https://bisq.chat
 -->
 
 ### Description

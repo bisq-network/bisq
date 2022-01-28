@@ -5,9 +5,7 @@ Anyone is welcome to contribute to Bisq. This document provides an overview of h
 
 ## Communication Channels
 
-Most communication about Bisq happens on [Keybase](https://keybase.io).
-
-Install Keybase and enter "bisq" from the teams tab. This is an "open" team, which means the admins will auto-accept any request to join, and you can get in fast.
+Most communication about Bisq happens on [Matrix](https://bisq.chat), follow [instructions in the wiki](https://bisq.wiki/Matrix_bisq.chat) to join the Bisq space; there is also a [forum](https://bisq.community/) and a [subreddit](https://www.reddit.com/r/bisq/).
 
 Discussion about code changes happens in GitHub issues and pull requests.
 

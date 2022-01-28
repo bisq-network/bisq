@@ -236,7 +236,7 @@ If all was successful:
 
 * Forum
 
-* Keybase (#general channel)
+* Matrix space (_General_ room)
 
 * Twitter
 
