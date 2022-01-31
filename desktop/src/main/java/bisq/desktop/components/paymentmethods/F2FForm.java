@@ -147,7 +147,7 @@ public class F2FForm extends PaymentMethodForm {
     }
 
     @Override
-    public void addFormForDisplayAccount() {
+    public void addFormForEditAccount() {
         gridRowFrom = gridRow;
 
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),

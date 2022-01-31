@@ -82,7 +82,7 @@ public abstract class GeneralUsBankForm extends GeneralBankForm {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
     }
 
-    protected void addFormForDisplayAccount(BankAccountPayload bankAccountPayload, String holderAddress) {
+    protected void addFormForEditAccount(BankAccountPayload bankAccountPayload, String holderAddress) {
         Country country = ((CountryBasedPaymentAccount) paymentAccount).getCountry();
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);

@@ -482,7 +482,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("shared.selectedAccount"), Layout.GROUP_DISTANCE);
         paymentMethodForm = getPaymentMethodForm(paymentAccount);
         if (paymentMethodForm != null) {
-            paymentMethodForm.addFormForDisplayAccount();
+            paymentMethodForm.addFormForEditAccount();
             gridRow = paymentMethodForm.getGridRow();
             Tuple3<Button, Button, Button> tuple = add3ButtonsAfterGroup(
                     root,

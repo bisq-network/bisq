@@ -55,7 +55,7 @@ public abstract class GeneralAccountNumberForm extends PaymentMethodForm {
     }
 
     @Override
-    public void addFormForDisplayAccount() {
+    public void addFormForEditAccount() {
         addFormForAccountNumberDisplayAccount(paymentAccount.getAccountName(), paymentAccount.getPaymentMethod(), getAccountNr(),
                 paymentAccount.getSingleTradeCurrency());
     }

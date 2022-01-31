@@ -173,7 +173,7 @@ abstract class BankForm extends GeneralBankForm {
     }
 
     @Override
-    public void addFormForDisplayAccount() {
+    public void addFormForEditAccount() {
         gridRowFrom = gridRow;
         String countryCode = bankAccountPayload.getCountryCode();
 

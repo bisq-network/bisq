@@ -127,7 +127,7 @@ public class AmazonGiftCardForm extends PaymentMethodForm {
     }
 
     @Override
-    public void addFormForDisplayAccount() {
+    public void addFormForEditAccount() {
         addFormForAccountNumberDisplayAccount(paymentAccount.getAccountName(), paymentAccount.getPaymentMethod(),
                 amazonGiftCardAccount.getEmailOrMobileNr(),
                 paymentAccount.getSingleTradeCurrency());

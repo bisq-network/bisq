@@ -82,7 +82,7 @@ public class HalCashForm extends PaymentMethodForm {
     }
 
     @Override
-    public void addFormForDisplayAccount() {
+    public void addFormForEditAccount() {
         gridRowFrom = gridRow;
         addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
                 halCashAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);

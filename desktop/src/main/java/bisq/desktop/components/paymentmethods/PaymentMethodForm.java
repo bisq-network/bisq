@@ -318,7 +318,7 @@ public abstract class PaymentMethodForm {
 
     public abstract void addFormForAddAccount();
 
-    public abstract void addFormForDisplayAccount();
+    public abstract void addFormForEditAccount();
 
     protected abstract void updateAllInputsValid();
 

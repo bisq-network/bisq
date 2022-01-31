@@ -190,7 +190,7 @@ public class CashDepositForm extends GeneralBankForm {
     }
 
     @Override
-    public void addFormForDisplayAccount() {
+    public void addFormForEditAccount() {
         gridRowFrom = gridRow;
         String countryCode = cashDepositAccountPayload.getCountryCode();
 

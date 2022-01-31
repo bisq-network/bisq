@@ -53,8 +53,8 @@ public class AchTransferForm extends GeneralUsBankForm {
     }
 
     @Override
-    public void addFormForDisplayAccount() {
-        addFormForDisplayAccount(achTransferAccount.getPayload(), achTransferAccount.getPayload().getHolderAddress());
+    public void addFormForEditAccount() {
+        addFormForEditAccount(achTransferAccount.getPayload(), achTransferAccount.getPayload().getHolderAddress());
     }
 
     @Override
