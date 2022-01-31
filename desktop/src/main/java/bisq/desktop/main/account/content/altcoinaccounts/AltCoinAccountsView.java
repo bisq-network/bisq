@@ -168,6 +168,16 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
         preferences.dontShowAgain(INSTANT_TRADE_NEWS, true);
     }
 
+    private void onUpdateAccount(PaymentAccount paymentAccount) {
+        model.onUpdateAccount(paymentAccount);
+        removeSelectAccountForm();
+    }
+
+    private void onCancelSelectedAccount(PaymentAccount paymentAccount) {
+        paymentAccount.revertChanges();
+        removeSelectAccountForm();
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Base form
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -220,11 +230,20 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
         paymentMethodForm = getPaymentMethodForm(paymentAccount);
         paymentMethodForm.addFormForEditAccount();
         gridRow = paymentMethodForm.getGridRow();
-        Tuple2<Button, Button> tuple = add2ButtonsAfterGroup(root, ++gridRow, Res.get("shared.deleteAccount"), Res.get("shared.cancel"));
-        Button deleteAccountButton = tuple.first;
+        Tuple3<Button, Button, Button> tuple = add3ButtonsAfterGroup(
+                root,
+                ++gridRow,
+                Res.get("shared.save"),
+                Res.get("shared.deleteAccount"),
+                Res.get("shared.cancel")
+        );
+
+        Button saveAccountButton = tuple.first;
+        saveAccountButton.setOnAction(event -> onUpdateAccount(paymentAccount));
+        Button deleteAccountButton = tuple.second;
         deleteAccountButton.setOnAction(event -> onDeleteAccount(paymentAccount));
-        Button cancelButton = tuple.second;
-        cancelButton.setOnAction(event -> removeSelectAccountForm());
+        Button cancelButton = tuple.third;
+        cancelButton.setOnAction(event -> onCancelSelectedAccount(paymentAccount));
         GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan());
         model.onSelectAccount(paymentAccount);
     }

@@ -50,6 +50,10 @@ class AltCoinAccountsViewModel extends ActivatableWithDataModel<AltCoinAccountsD
         dataModel.onSaveNewAccount(paymentAccount);
     }
 
+    public void onUpdateAccount(PaymentAccount paymentAccount) {
+        dataModel.onUpdateAccount(paymentAccount);
+    }
+
     public boolean onDeleteAccount(PaymentAccount paymentAccount) {
         return dataModel.onDeleteAccount(paymentAccount);
     }

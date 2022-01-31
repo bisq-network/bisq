@@ -101,6 +101,12 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
         TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
         preferences.addCryptoCurrency((CryptoCurrency) singleTradeCurrency);
         user.addPaymentAccount(paymentAccount);
+        paymentAccount.onPersistChanges();
+    }
+
+    public void onUpdateAccount(PaymentAccount paymentAccount) {
+        paymentAccount.onPersistChanges();
+        user.requestPersistence();
     }
 
     public boolean onDeleteAccount(PaymentAccount paymentAccount) {
