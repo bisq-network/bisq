@@ -42,8 +42,7 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 public class TransferwiseForm extends PaymentMethodForm {
     private final TransferwiseAccount account;
-    private TransferwiseValidator validator;
-    private InputTextField emailInputTextField;
+    private final TransferwiseValidator validator;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
@@ -64,7 +63,7 @@ public class TransferwiseForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        emailInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.email"));
+        InputTextField emailInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.email"));
         emailInputTextField.setValidator(validator);
         emailInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             account.setEmail(newValue.trim());
@@ -92,14 +91,13 @@ public class TransferwiseForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        setAccountNameWithString(emailInputTextField.getText());
+        setAccountNameWithString(account.getEmail());
     }
 
     @Override
     public void addFormForEditAccount() {
         gridRowFrom = gridRow;
-        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
-                account.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(account.getPaymentMethod().getId()));
         TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),

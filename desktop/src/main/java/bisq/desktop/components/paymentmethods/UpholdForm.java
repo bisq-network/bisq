@@ -42,8 +42,7 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 public class UpholdForm extends PaymentMethodForm {
     private final UpholdAccount upholdAccount;
-    private UpholdValidator upholdValidator;
-    private InputTextField accountIdInputTextField;
+    private final UpholdValidator upholdValidator;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
@@ -80,7 +79,7 @@ public class UpholdForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.uphold.accountId"));
+        InputTextField accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.uphold.accountId"));
         accountIdInputTextField.setValidator(upholdValidator);
         accountIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             upholdAccount.setAccountId(newValue.trim());
@@ -108,14 +107,13 @@ public class UpholdForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        setAccountNameWithString(accountIdInputTextField.getText());
+        setAccountNameWithString(upholdAccount.getAccountId());
     }
 
     @Override
     public void addFormForEditAccount() {
         gridRowFrom = gridRow;
-        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
-                upholdAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(upholdAccount.getPaymentMethod().getId()));
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),

@@ -40,8 +40,6 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 public class MoneseForm extends PaymentMethodForm {
     private final MoneseAccount account;
-    private InputTextField holderNameInputTextField;
-    private InputTextField mobileNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
@@ -63,14 +61,14 @@ public class MoneseForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.account.owner"));
+        InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.account.owner"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             account.setHolderName(newValue.trim());
             updateFromInputs();
         });
 
-        mobileNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.mobile"));
+        InputTextField mobileNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.mobile"));
         mobileNrInputTextField.setValidator(inputValidator);
         mobileNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             account.setMobileNr(newValue.trim());
@@ -98,14 +96,13 @@ public class MoneseForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        setAccountNameWithString(mobileNrInputTextField.getText());
+        setAccountNameWithString(account.getMobileNr());
     }
 
     @Override
     public void addFormForEditAccount() {
         gridRowFrom = gridRow;
-        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
-                account.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(account.getPaymentMethod().getId()));
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"), account.getHolderName())

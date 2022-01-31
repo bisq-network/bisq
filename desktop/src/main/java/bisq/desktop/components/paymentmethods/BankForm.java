@@ -177,8 +177,7 @@ abstract class BankForm extends GeneralBankForm {
         gridRowFrom = gridRow;
         String countryCode = bankAccountPayload.getCountryCode();
 
-        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
-                paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(paymentAccount.getPaymentMethod().getId()));
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),

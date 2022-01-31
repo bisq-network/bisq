@@ -41,7 +41,6 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 public class VerseForm extends PaymentMethodForm {
     private final VerseAccount account;
-    private InputTextField holderNameInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
@@ -61,7 +60,7 @@ public class VerseForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.account.userName"));
+        InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.account.userName"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             account.setHolderName(newValue.trim());
@@ -89,14 +88,13 @@ public class VerseForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        setAccountNameWithString(holderNameInputTextField.getText());
+        setAccountNameWithString(account.getHolderName());
     }
 
     @Override
     public void addFormForEditAccount() {
         gridRowFrom = gridRow;
-        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
-                account.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(account.getPaymentMethod().getId()));
         TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.userName"),

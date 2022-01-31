@@ -104,8 +104,7 @@ public class JapanBankTransferForm extends PaymentMethodForm {
     public void addFormForEditAccount() {
         gridRowFrom = gridRow;
 
-        addTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.name"),
-                japanBankAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addAccountNameTextFieldWithAutoFillToggleButton();
 
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(japanBankAccount.getPaymentMethod().getId()));

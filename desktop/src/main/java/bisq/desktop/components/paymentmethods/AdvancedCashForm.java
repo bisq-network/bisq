@@ -47,11 +47,8 @@ import static bisq.desktop.util.FormBuilder.addTopLabelFlowPane;
 
 @Deprecated
 public class AdvancedCashForm extends PaymentMethodForm {
-    private static final Logger log = LoggerFactory.getLogger(AdvancedCashForm.class);
-
     private final AdvancedCashAccount advancedCashAccount;
     private final AdvancedCashValidator advancedCashValidator;
-    private InputTextField accountNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
@@ -76,7 +73,7 @@ public class AdvancedCashForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        accountNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.wallet"));
+        InputTextField accountNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.wallet"));
         accountNrInputTextField.setValidator(advancedCashValidator);
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             advancedCashAccount.setAccountNr(newValue);
@@ -104,14 +101,13 @@ public class AdvancedCashForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        setAccountNameWithString(accountNrInputTextField.getText());
+        setAccountNameWithString(advancedCashAccount.getAccountNr());
     }
 
     @Override
     public void addFormForEditAccount() {
         gridRowFrom = gridRow;
-        addCompactTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
-                advancedCashAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(advancedCashAccount.getPaymentMethod().getId()));
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.wallet"),

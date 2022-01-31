@@ -69,7 +69,6 @@ public class WesternUnionForm extends PaymentMethodForm {
     }
 
     private final WesternUnionAccountPayload westernUnionAccountPayload;
-    private InputTextField holderNameInputTextField;
     private InputTextField cityInputTextField;
     private InputTextField stateInputTextField;
     private final EmailValidator emailValidator;
@@ -87,7 +86,7 @@ public class WesternUnionForm extends PaymentMethodForm {
     public void addFormForEditAccount() {
         gridRowFrom = gridRow;
 
-        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(paymentAccount.getPaymentMethod().getId()));
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),
@@ -137,7 +136,7 @@ public class WesternUnionForm extends PaymentMethodForm {
         currencyComboBox = tuple.first;
         gridRow = tuple.second;
 
-        holderNameInputTextField = FormBuilder.addInputTextField(gridPane,
+        InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane,
                 ++gridRow, Res.get("payment.account.fullName"));
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             westernUnionAccountPayload.setHolderName(newValue);
@@ -185,11 +184,7 @@ public class WesternUnionForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
-            accountNameTextField.setText(Res.get(paymentAccount.getPaymentMethod().getId())
-                    .concat(": ")
-                    .concat(StringUtils.abbreviate(holderNameInputTextField.getText(), 9)));
-        }
+        setAccountNameWithString(westernUnionAccountPayload.getHolderName());
     }
 
     @Override

@@ -41,7 +41,6 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 public class PromptPayForm extends PaymentMethodForm {
     private final PromptPayAccount promptPayAccount;
     private final PromptPayValidator promptPayValidator;
-    private InputTextField promptPayIdInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
@@ -61,7 +60,7 @@ public class PromptPayForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        promptPayIdInputTextField = addInputTextField(gridPane, ++gridRow,
+        InputTextField promptPayIdInputTextField = addInputTextField(gridPane, ++gridRow,
                 Res.get("payment.promptPay.promptPayId"));
         promptPayIdInputTextField.setValidator(promptPayValidator);
         promptPayIdInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -78,14 +77,13 @@ public class PromptPayForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        setAccountNameWithString(promptPayIdInputTextField.getText());
+        setAccountNameWithString(promptPayAccount.getPromptPayId());
     }
 
     @Override
     public void addFormForEditAccount() {
         gridRowFrom = gridRow;
-        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
-                promptPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(promptPayAccount.getPaymentMethod().getId()));
         TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.promptPay.promptPayId"),
