@@ -58,6 +58,7 @@ public final class TradeInfoV1Builder {
     private boolean isWithdrawn;
     private String contractAsJson;
     private ContractInfo contract;
+    private String closingStatus;
 
     public TradeInfoV1Builder withOffer(OfferInfo offer) {
         this.offer = offer;
@@ -186,6 +187,12 @@ public final class TradeInfoV1Builder {
 
     public TradeInfoV1Builder withContract(ContractInfo contract) {
         this.contract = contract;
+        return this;
+    }
+
+
+    public TradeInfoV1Builder withClosingStatus(String closingStatus) {
+        this.closingStatus = closingStatus;
         return this;
     }
 

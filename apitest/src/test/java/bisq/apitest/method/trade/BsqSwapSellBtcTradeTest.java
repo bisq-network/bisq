@@ -17,11 +17,7 @@
 
 package bisq.apitest.method.trade;
 
-import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.TradeInfo;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +32,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.ApiTestConfig.BTC;
+import static bisq.core.offer.OfferDirection.SELL;
 import static bisq.proto.grpc.GetOfferCategoryReply.OfferCategory.BSQ_SWAP;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,7 +41,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static protobuf.BsqSwapTrade.State.COMPLETED;
 import static protobuf.BsqSwapTrade.State.PREPARATION;
-import static protobuf.OfferDirection.BUY;
 
 
 
@@ -54,7 +50,7 @@ import bisq.cli.GrpcClient;
 @Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class BsqSwapTradeTest extends AbstractTradeTest {
+public class BsqSwapSellBtcTradeTest extends AbstractTradeTest {
 
     // Long-running swap trade tests might want to check node logs for exceptions.
     @Setter
@@ -81,15 +77,16 @@ public class BsqSwapTradeTest extends AbstractTradeTest {
 
     @Test
     @Order(2)
-    public void testAliceCreateBsqSwapBuyOffer() {
-        var mySwapOffer = aliceClient.createBsqSwapOffer(BUY.name(),
+    public void testAliceCreateBsqSwapSellBtcOffer() {
+        // Alice sells BTC, pays miner tx fee.  Bob (BTC buyer) pays trade fee.
+        var mySwapOffer = aliceClient.createBsqSwapOffer(SELL.name(),
                 1_000_000L,     // 0.01 BTC
                 1_000_000L,
                 "0.00005");
-        log.debug("Pending BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", toOfferTable.apply(mySwapOffer));
+        log.debug("Pending BsqSwap Buy BSQ (Sell BTC) OFFER:\n{}", toOfferTable.apply(mySwapOffer));
         var newOfferId = mySwapOffer.getId();
         assertNotEquals("", newOfferId);
-        assertEquals(BUY.name(), mySwapOffer.getDirection());
+        assertEquals(SELL.name(), mySwapOffer.getDirection());
         assertEquals(5_000, mySwapOffer.getPrice());
         assertEquals(1_000_000L, mySwapOffer.getAmount());
         assertEquals(1_000_000L, mySwapOffer.getMinAmount());
@@ -99,7 +96,7 @@ public class BsqSwapTradeTest extends AbstractTradeTest {
         genBtcBlocksThenWait(1, 2_500);
 
         mySwapOffer = aliceClient.getOffer(newOfferId);
-        log.debug("My fetched BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", toOfferTable.apply(mySwapOffer));
+        log.debug("My fetched BsqSwap Buy BSQ (Sell BTC) OFFER:\n{}", toOfferTable.apply(mySwapOffer));
         assertNotEquals(0, mySwapOffer.getMakerFee());
 
         runCliGetOffer(newOfferId);
@@ -108,7 +105,7 @@ public class BsqSwapTradeTest extends AbstractTradeTest {
     @Test
     @Order(3)
     public void testBobTakesBsqSwapOffer() {
-        var availableSwapOffer = getAvailableBsqSwapOffer(bobClient);
+        var availableSwapOffer = getAvailableBsqSwapOffer(bobClient, SELL, true);
 
         // Before sending a TakeOfferRequest, the CLI needs to know what kind of Offer
         // it is taking (v1 or BsqSwap).  Only BSQ swap offers can be taken with a
@@ -118,7 +115,7 @@ public class BsqSwapTradeTest extends AbstractTradeTest {
         var availableOfferCategory = bobClient.getAvailableOfferCategory(availableSwapOffer.getId());
         assertTrue(availableOfferCategory.equals(BSQ_SWAP));
 
-        sleep(30_000);
+        sleep(10_000);
 
         var swapTrade = bobClient.takeBsqSwapOffer(availableSwapOffer.getId());
         tradeId = swapTrade.getTradeId(); // Cache the tradeId for following test case(s).
@@ -130,7 +127,7 @@ public class BsqSwapTradeTest extends AbstractTradeTest {
         log.debug("BsqSwap Trade at COMPLETION:\n{}", toTradeDetailTable.apply(swapTrade));
         assertEquals(COMPLETED.name(), swapTrade.getState());
 
-        runCliGetTrade(tradeId);
+        runCliGetClosedTrades();
     }
 
     @Test
@@ -151,6 +148,8 @@ public class BsqSwapTradeTest extends AbstractTradeTest {
         bobsTrade = getBsqSwapTrade(bobClient, tradeId);
         log.debug("Bob's BsqSwap Trade at COMPLETION:\n{}", toTradeDetailTable.apply(bobsTrade));
         assertEquals(2, bobsTrade.getBsqSwapTradeInfo().getNumConfirmations());
+
+        runCliGetClosedTrades();
     }
 
     @Test
@@ -160,32 +159,6 @@ public class BsqSwapTradeTest extends AbstractTradeTest {
         log.debug("Alice's After Trade Balance:\n{}", formatBalancesTbls(alicesBalances));
         var bobsBalances = bobClient.getBalances();
         log.debug("Bob's After Trade Balance:\n{}", formatBalancesTbls(bobsBalances));
-    }
-
-    private OfferInfo getAvailableBsqSwapOffer(GrpcClient client) {
-        List<OfferInfo> bsqSwapOffers = new ArrayList<>();
-        int numFetchAttempts = 0;
-        while (bsqSwapOffers.size() == 0) {
-            bsqSwapOffers.addAll(client.getBsqSwapOffers(BUY.name()));
-            numFetchAttempts++;
-            if (bsqSwapOffers.size() == 0) {
-                log.warn("No available bsq swap offers found after {} fetch attempts.", numFetchAttempts);
-                if (numFetchAttempts > 9) {
-                    if (checkForLoggedExceptions) {
-                        printNodeExceptionMessages(log);
-                    }
-                    fail(format("Bob gave up on fetching available bsq swap offers after %d attempts.", numFetchAttempts));
-                }
-                sleep(1_000);
-            } else {
-                assertEquals(1, bsqSwapOffers.size());
-                log.debug("Bob found new available bsq swap offer on attempt # {}.", numFetchAttempts);
-                break;
-            }
-        }
-        var bsqSwapOffer = bobClient.getBsqSwapOffer(bsqSwapOffers.get(0).getId());
-        assertEquals(bsqSwapOffers.get(0).getId(), bsqSwapOffer.getId());
-        return bsqSwapOffer;
     }
 
     private TradeInfo getBsqSwapTrade(GrpcClient client, String tradeId) {

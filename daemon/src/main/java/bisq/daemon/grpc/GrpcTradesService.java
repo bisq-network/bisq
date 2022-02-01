@@ -18,7 +18,9 @@
 package bisq.daemon.grpc;
 
 import bisq.core.api.CoreApi;
+import bisq.core.api.model.CanceledTradeInfo;
 import bisq.core.api.model.TradeInfo;
+import bisq.core.offer.OpenOffer;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
@@ -33,6 +35,8 @@ import bisq.proto.grpc.FailTradeReply;
 import bisq.proto.grpc.FailTradeRequest;
 import bisq.proto.grpc.GetTradeReply;
 import bisq.proto.grpc.GetTradeRequest;
+import bisq.proto.grpc.GetTradesReply;
+import bisq.proto.grpc.GetTradesRequest;
 import bisq.proto.grpc.TakeOfferReply;
 import bisq.proto.grpc.TakeOfferRequest;
 import bisq.proto.grpc.UnFailTradeReply;
@@ -45,15 +49,22 @@ import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.api.model.TradeInfo.toNewTradeInfo;
 import static bisq.core.api.model.TradeInfo.toTradeInfo;
+import static bisq.core.trade.model.bsq_swap.BsqSwapTrade.State.COMPLETED;
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
+import static bisq.proto.grpc.GetTradesRequest.Category.CLOSED;
+import static bisq.proto.grpc.GetTradesRequest.Category.OPEN;
 import static bisq.proto.grpc.TradesGrpc.*;
+import static java.util.Comparator.comparing;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -124,6 +135,24 @@ class GrpcTradesService extends TradesImplBase {
             // Offer makers may call 'gettrade' many times before a trade exists.
             // Log a 'trade not found' warning instead of a full stack trace.
             exceptionHandler.handleExceptionAsWarning(log, "getTrade", cause, responseObserver);
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(log, cause, responseObserver);
+        }
+    }
+
+    @Override
+    public void getTrades(GetTradesRequest req,
+                          StreamObserver<GetTradesReply> responseObserver) {
+        try {
+            var category = req.getCategory();
+            var trades = category.equals(OPEN)
+                    ? coreApi.getOpenTrades()
+                    : coreApi.getTradeHistory(category);
+            var reply = buildGetTradesReply(trades, category);
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (IllegalArgumentException cause) {
+            exceptionHandler.handleExceptionAsWarning(log, "getTrades", cause, responseObserver);
         } catch (Throwable cause) {
             exceptionHandler.handleException(log, cause, responseObserver);
         }
@@ -218,6 +247,7 @@ class GrpcTradesService extends TradesImplBase {
                 .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
                         new HashMap<>() {{
                             put(getGetTradeMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getGetTradesMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getTakeOfferMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
                             put(getConfirmPaymentStartedMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
                             put(getConfirmPaymentReceivedMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));
@@ -245,10 +275,14 @@ class GrpcTradesService extends TradesImplBase {
         boolean wasMyOffer = wasMyOffer(bsqSwapTrade);
         String role = getMyRole(bsqSwapTrade);
         var numConfirmations = coreApi.getTransactionConfirmations(bsqSwapTrade.getTxId());
+        var closingStatus = bsqSwapTrade.getTradeState().equals(COMPLETED)
+                ? coreApi.getClosedTradeStateAsString(bsqSwapTrade)
+                : "Pending";
         var tradeInfo = toTradeInfo(bsqSwapTrade,
                 role,
                 wasMyOffer,
-                numConfirmations);
+                numConfirmations,
+                closingStatus);
         return GetTradeReply.newBuilder()
                 .setTrade(tradeInfo.toProtoMessage())
                 .build();
@@ -257,8 +291,60 @@ class GrpcTradesService extends TradesImplBase {
     private GetTradeReply buildGetTradeReply(Trade trade) {
         boolean wasMyOffer = wasMyOffer(trade);
         String role = getMyRole(trade);
+        var closingStatus = trade.isCompleted()
+                ? coreApi.getClosedTradeStateAsString(trade)
+                : "Pending";
         return GetTradeReply.newBuilder()
-                .setTrade(toTradeInfo(trade, role, wasMyOffer).toProtoMessage())
+                .setTrade(toTradeInfo(trade,
+                        role,
+                        wasMyOffer,
+                        closingStatus).toProtoMessage())
+                .build();
+    }
+
+
+    private GetTradesReply buildGetTradesReply(List<TradeModel> trades, GetTradesRequest.Category category) {
+        // Build an unsorted List<TradeInfo>, starting with
+        // all pending, or all completed BsqSwap and v1 trades.
+        List<TradeInfo> unsortedTrades = trades.stream()
+                .map(tradeModel -> {
+                    var role = coreApi.getTradeRole(tradeModel);
+                    var isMyOffer = coreApi.isMyOffer(tradeModel.getOffer());
+                    var isBsqSwapTrade = tradeModel instanceof BsqSwapTrade;
+                    var numConfirmations = isBsqSwapTrade
+                            ? coreApi.getTransactionConfirmations(((BsqSwapTrade) tradeModel).getTxId())
+                            : 0;
+                    var closingStatus = category.equals(OPEN)
+                            ? "Pending"
+                            : coreApi.getClosedTradeStateAsString(tradeModel);
+                    return isBsqSwapTrade
+                            ? toTradeInfo((BsqSwapTrade) tradeModel, role, isMyOffer, numConfirmations, closingStatus)
+                            : toTradeInfo(tradeModel, role, isMyOffer, closingStatus);
+                })
+                .collect(Collectors.toList());
+
+        // If closed trades were requested, add any canceled
+        // OpenOffers (canceled trades) to the unsorted List<TradeInfo>.
+        Optional<List<OpenOffer>> canceledOpenOffers = category.equals(CLOSED)
+                ? Optional.of(coreApi.getCanceledOpenOffers())
+                : Optional.empty();
+        List<TradeInfo> canceledTrades = new ArrayList<>();
+        canceledOpenOffers.ifPresent(openOffers -> canceledTrades.addAll(
+                openOffers.stream()
+                        .map(CanceledTradeInfo::toCanceledTradeInfo)
+                        .collect(Collectors.toList())
+        ));
+        unsortedTrades.addAll(canceledTrades);
+
+        // Sort the cumulative List<TradeInfo> by date before sending it to the client.
+        List<TradeInfo> sortedTrades = unsortedTrades.stream()
+                .sorted(comparing(TradeInfo::getDate))
+                .collect(Collectors.toList());
+
+        return GetTradesReply.newBuilder()
+                .addAllTrades(sortedTrades.stream()
+                        .map(TradeInfo::toProtoMessage)
+                        .collect(Collectors.toList()))
                 .build();
     }
 
@@ -267,8 +353,6 @@ class GrpcTradesService extends TradesImplBase {
     }
 
     private String getMyRole(TradeModel tradeModel) {
-        return tradeModel.getOffer().isBsqSwapOffer()
-                ? coreApi.getBsqSwapTradeRole((BsqSwapTrade) tradeModel)
-                : coreApi.getTradeRole(tradeModel.getId());
+        return coreApi.getTradeRole(tradeModel);
     }
 }

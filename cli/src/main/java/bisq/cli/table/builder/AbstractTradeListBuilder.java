@@ -26,7 +26,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -37,6 +36,7 @@ import javax.annotation.Nullable;
 import static bisq.cli.table.builder.TableBuilderConstants.COL_HEADER_BUYER_DEPOSIT;
 import static bisq.cli.table.builder.TableBuilderConstants.COL_HEADER_SELLER_DEPOSIT;
 import static bisq.cli.table.builder.TableType.TRADE_DETAIL_TBL;
+import static protobuf.OfferDirection.SELL;
 
 
 
@@ -79,7 +79,7 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
     @Nullable
     protected final Column<String> colOfferType;
     @Nullable
-    protected final Column<String> colStatusDescription;
+    protected final Column<String> colClosingStatus;
 
     // Trade detail tbl specific columns
 
@@ -133,7 +133,7 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
         this.colPaymentMethod = colSupplier.paymentMethodColumn.get();
         this.colRole = colSupplier.roleColumn.get();
         this.colOfferType = colSupplier.offerTypeColumn.get();
-        this.colStatusDescription = colSupplier.statusDescriptionColumn.get();
+        this.colClosingStatus = colSupplier.statusDescriptionColumn.get();
 
         // Trade detail specific columns, some in common with BSQ swap trades detail.
 
@@ -168,7 +168,15 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
     private final Supplier<Boolean> isTradeDetailTblBuilder = () -> tableType.equals(TRADE_DETAIL_TBL);
     protected final Predicate<TradeInfo> isFiatTrade = (t) -> isFiatOffer.test(t.getOffer());
     protected final Predicate<TradeInfo> isBsqSwapTrade = (t) -> t.getOffer().getIsBsqSwapOffer();
+    protected final Predicate<TradeInfo> isMyOffer = (t) -> t.getOffer().getIsMyOffer();
     protected final Predicate<TradeInfo> isTaker = (t) -> t.getRole().toLowerCase().contains("taker");
+    protected final Predicate<TradeInfo> isSellOffer = (t) -> t.getOffer().getDirection().equals(SELL.name());
+    protected final Predicate<TradeInfo> isBtcSeller = (t) -> (isMyOffer.test(t) && isSellOffer.test(t))
+            || (!isMyOffer.test(t) && !isSellOffer.test(t));
+    protected final Predicate<TradeInfo> isTradeFeeBtc = (t) -> isMyOffer.test(t)
+            ? t.getOffer().getIsCurrencyForMakerFeeBtc()
+            : t.getIsCurrencyForTakerFeeBtc();
+
 
     // Column Value Functions
 
@@ -206,12 +214,19 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
                     ? formatToPercent(t.getOffer().getMarketPriceMargin())
                     : "N/A";
 
-    protected final Function<TradeInfo, Long> toMyMinerTxFee = (t) ->
-            isTaker.test(t)
+    protected final Function<TradeInfo, Long> toMyMinerTxFee = (t) -> {
+        if (isBsqSwapTrade.test(t)) {
+            // The BTC seller pays the miner fee for both sides.
+            return isBtcSeller.test(t) ? t.getTxFeeAsLong() : 0L;
+        } else {
+            return isTaker.test(t)
                     ? t.getTxFeeAsLong()
                     : t.getOffer().getTxFee();
+        }
+    };
 
-    protected final BiFunction<TradeInfo, Boolean, Long> toTradeFeeBsq = (t, isMyOffer) -> {
+    protected final Function<TradeInfo, Long> toTradeFeeBsq = (t) -> {
+        var isMyOffer = t.getOffer().getIsMyOffer();
         if (isMyOffer) {
             return t.getOffer().getIsCurrencyForMakerFeeBtc()
                     ? 0L // Maker paid BTC fee, return 0.
@@ -223,7 +238,8 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
         }
     };
 
-    protected final BiFunction<TradeInfo, Boolean, Long> toTradeFeeBtc = (t, isMyOffer) -> {
+    protected final Function<TradeInfo, Long> toTradeFeeBtc = (t) -> {
+        var isMyOffer = t.getOffer().getIsMyOffer();
         if (isMyOffer) {
             return t.getOffer().getIsCurrencyForMakerFeeBtc()
                     ? t.getOffer().getMakerFee()

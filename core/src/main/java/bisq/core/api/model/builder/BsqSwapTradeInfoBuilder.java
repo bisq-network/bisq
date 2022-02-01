@@ -45,6 +45,8 @@ public final class BsqSwapTradeInfoBuilder {
     private String takerBtcAddress;
     private long numConfirmations;
     private String errorMessage;
+    private long payout;
+    private long swapPeerPayout;
 
     public BsqSwapTradeInfoBuilder withTxId(String txId) {
         this.txId = txId;
@@ -103,6 +105,16 @@ public final class BsqSwapTradeInfoBuilder {
 
     public BsqSwapTradeInfoBuilder withErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
+        return this;
+    }
+
+    public BsqSwapTradeInfoBuilder withPayout(long payout) {
+        this.payout = payout;
+        return this;
+    }
+
+    public BsqSwapTradeInfoBuilder withSwapPeerPayout(long swapPeerPayout) {
+        this.swapPeerPayout = swapPeerPayout;
         return this;
     }
 

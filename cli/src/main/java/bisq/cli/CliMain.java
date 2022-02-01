@@ -47,6 +47,8 @@ import static bisq.cli.Method.*;
 import static bisq.cli.opts.OptLabel.*;
 import static bisq.cli.table.builder.TableType.*;
 import static bisq.proto.grpc.GetOfferCategoryReply.OfferCategory.BSQ_SWAP;
+import static bisq.proto.grpc.GetTradesRequest.Category.CLOSED;
+import static bisq.proto.grpc.GetTradesRequest.Category.OPEN;
 import static java.lang.String.format;
 import static java.lang.System.err;
 import static java.lang.System.exit;
@@ -67,6 +69,7 @@ import bisq.cli.opts.GetBalanceOptionParser;
 import bisq.cli.opts.GetOffersOptionParser;
 import bisq.cli.opts.GetPaymentAcctFormOptionParser;
 import bisq.cli.opts.GetTradeOptionParser;
+import bisq.cli.opts.GetTradesOptionParser;
 import bisq.cli.opts.GetTransactionOptionParser;
 import bisq.cli.opts.OfferIdOptionParser;
 import bisq.cli.opts.RegisterDisputeAgentOptionParser;
@@ -503,6 +506,26 @@ public class CliMain {
 
                     return;
                 }
+                case gettrades: {
+                    var opts = new GetTradesOptionParser(args).parse();
+                    if (opts.isForHelp()) {
+                        out.println(client.getMethodHelp(method));
+                        return;
+                    }
+                    var category = opts.getCategory();
+                    var trades = category.equals(OPEN)
+                            ? client.getOpenTrades()
+                            : client.getTradeHistory(category);
+                    if (trades.isEmpty()) {
+                        out.println(format("no %s trades found", category.name().toLowerCase()));
+                    } else {
+                        var tableType = category.equals(OPEN)
+                                ? OPEN_TRADES_TBL
+                                : category.equals(CLOSED) ? CLOSED_TRADES_TBL : FAILED_TRADES_TBL;
+                        new TableBuilder(tableType, trades).build().print(out);
+                    }
+                    return;
+                }
                 case confirmpaymentstarted: {
                     var opts = new GetTradeOptionParser(args).parse();
                     if (opts.isForHelp()) {
@@ -881,6 +904,8 @@ public class CliMain {
             stream.println();
             stream.format(rowFormat, gettrade.name(), "--trade-id=<trade-id> \\", "Get trade summary or full contract");
             stream.format(rowFormat, "", "[--show-contract=<true|false>]", "");
+            stream.println();
+            stream.format(rowFormat, gettrades.name(), "[--category=<open|closed|failed>]", "Get open (default), closed, or failed trades");
             stream.println();
             stream.format(rowFormat, confirmpaymentstarted.name(), "--trade-id=<trade-id>", "Confirm payment started");
             stream.println();

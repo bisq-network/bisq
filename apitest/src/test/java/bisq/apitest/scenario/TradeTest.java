@@ -29,7 +29,8 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 
 import bisq.apitest.method.trade.AbstractTradeTest;
-import bisq.apitest.method.trade.BsqSwapTradeTest;
+import bisq.apitest.method.trade.BsqSwapBuyBtcTradeTest;
+import bisq.apitest.method.trade.BsqSwapSellBtcTradeTest;
 import bisq.apitest.method.trade.FailUnfailTradeTest;
 import bisq.apitest.method.trade.TakeBuyBSQOfferTest;
 import bisq.apitest.method.trade.TakeBuyBTCOfferTest;
@@ -56,7 +57,7 @@ public class TradeTest extends AbstractTradeTest {
         test.testTakeAlicesBuyOffer(testInfo);
         test.testAlicesConfirmPaymentStarted(testInfo);
         test.testBobsConfirmPaymentReceived(testInfo);
-        test.testKeepFunds(testInfo);
+        test.testCloseTrade(testInfo);
     }
 
     @Test
@@ -108,7 +109,7 @@ public class TradeTest extends AbstractTradeTest {
         test.testTakeAlicesSellBTCForXMROffer(testInfo);
         test.testBobsConfirmPaymentStarted(testInfo);
         test.testAlicesConfirmPaymentReceived(testInfo);
-        test.testKeepFunds(testInfo);
+        test.testCloseTrade(testInfo);
     }
 
     @Test
@@ -124,16 +125,26 @@ public class TradeTest extends AbstractTradeTest {
 
     @Test
     @Order(8)
-    public void testBsqSwapTradeTest(final TestInfo testInfo) {
-        BsqSwapTradeTest test = new BsqSwapTradeTest();
+    public void testBsqSwapBuyBtcTrade(final TestInfo testInfo) {
+        BsqSwapBuyBtcTradeTest test = new BsqSwapBuyBtcTradeTest();
         test.testGetBalancesBeforeTrade();
-        test.testAliceCreateBsqSwapBuyOffer();
+        test.testAliceCreateBsqSwapBuyBtcOffer();
         test.testBobTakesBsqSwapOffer();
         test.testGetBalancesAfterTrade();
     }
 
     @Test
     @Order(9)
+    public void testBsqSwapSellBtcTrade(final TestInfo testInfo) {
+        BsqSwapSellBtcTradeTest test = new BsqSwapSellBtcTradeTest();
+        test.testGetBalancesBeforeTrade();
+        test.testAliceCreateBsqSwapSellBtcOffer();
+        test.testBobTakesBsqSwapOffer();
+        test.testGetBalancesAfterTrade();
+    }
+
+    @Test
+    @Order(10)
     public void testFailUnfailTrade(final TestInfo testInfo) {
         FailUnfailTradeTest test = new FailUnfailTradeTest();
         test.testFailAndUnFailBuyBTCTrade(testInfo);

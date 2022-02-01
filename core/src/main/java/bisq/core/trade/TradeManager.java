@@ -108,6 +108,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -868,6 +869,12 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         return getTradeModelById(tradeId)
                 .filter(tradeModel -> tradeModel instanceof Trade)
                 .map(tradeModel -> (Trade) tradeModel);
+    }
+
+    public List<Trade> getTrades() {
+        return getObservableList().stream()
+                .filter(t -> !t.hasFailed())
+                .collect(Collectors.toList());
     }
 
     private void removeTrade(Trade trade) {

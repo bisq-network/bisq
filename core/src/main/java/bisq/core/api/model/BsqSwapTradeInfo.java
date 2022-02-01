@@ -25,6 +25,9 @@ import bisq.common.Payload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import static bisq.core.offer.OfferDirection.BUY;
+import static bisq.core.offer.OfferDirection.SELL;
+
 @EqualsAndHashCode
 @Getter
 public class BsqSwapTradeInfo implements Payload {
@@ -41,6 +44,8 @@ public class BsqSwapTradeInfo implements Payload {
     private final String takerBtcAddress;
     private final long numConfirmations;
     private final String errorMessage;
+    private final long payout;
+    private final long swapPeerPayout;
 
     public BsqSwapTradeInfo(BsqSwapTradeInfoBuilder builder) {
         this.txId = builder.getTxId();
@@ -55,6 +60,8 @@ public class BsqSwapTradeInfo implements Payload {
         this.takerBtcAddress = builder.getTakerBtcAddress();
         this.numConfirmations = builder.getNumConfirmations();
         this.errorMessage = builder.getErrorMessage();
+        this.payout = builder.getPayout();
+        this.swapPeerPayout = builder.getSwapPeerPayout();
     }
 
     public static BsqSwapTradeInfo toBsqSwapTradeInfo(BsqSwapTrade trade,
@@ -66,12 +73,20 @@ public class BsqSwapTradeInfo implements Payload {
         var makerBtcAddress = wasMyOffer ? protocolModel.getBtcAddress() : swapPeer.getBtcAddress();
         var takerBsqAddress = wasMyOffer ? swapPeer.getBsqAddress() : protocolModel.getBsqAddress();
         var takerBtcAddress = wasMyOffer ? swapPeer.getBtcAddress() : protocolModel.getBtcAddress();
+        // A BSQ Swap trade fee is paid in full by the BTC buyer (selling BSQ).
+        // The transferred BSQ (payout) is reduced by the fee of the peer.
+        var makerTradeFee = wasMyOffer && trade.getOffer().getDirection().equals(BUY)
+                ? trade.getMakerFeeAsLong()
+                : 0L;
+        var takerTradeFee = !wasMyOffer && trade.getOffer().getDirection().equals(SELL)
+                ? trade.getTakerFeeAsLong()
+                : 0L;
         return new BsqSwapTradeInfoBuilder()
                 .withTxId(trade.getTxId())
                 .withBsqTradeAmount(trade.getBsqTradeAmount())
                 .withBtcTradeAmount(trade.getAmountAsLong())
-                .withBsqMakerTradeFee(trade.getMakerFeeAsLong())
-                .withBsqTakerTradeFee(trade.getTakerFeeAsLong())
+                .withBsqMakerTradeFee(makerTradeFee)
+                .withBsqTakerTradeFee(takerTradeFee)
                 .withTxFeePerVbyte(trade.getTxFeePerVbyte())
                 .withMakerBsqAddress(makerBsqAddress)
                 .withMakerBtcAddress(makerBtcAddress)
@@ -79,6 +94,8 @@ public class BsqSwapTradeInfo implements Payload {
                 .withTakerBtcAddress(takerBtcAddress)
                 .withNumConfirmations(numConfirmations)
                 .withErrorMessage(trade.getErrorMessage())
+                .withPayout(protocolModel.getPayout())
+                .withSwapPeerPayout(protocolModel.getTradePeer().getPayout())
                 .build();
     }
 
@@ -101,6 +118,9 @@ public class BsqSwapTradeInfo implements Payload {
                 .setTakerBtcAddress(takerBtcAddress != null ? takerBtcAddress : "")
                 .setTakerBtcAddress(takerBtcAddress != null ? takerBtcAddress : "")
                 .setNumConfirmations(numConfirmations)
+                .setErrorMessage(errorMessage != null ? errorMessage : "")
+                .setPayout(payout)
+                .setSwapPeerPayout(swapPeerPayout)
                 .build();
     }
 
@@ -118,6 +138,8 @@ public class BsqSwapTradeInfo implements Payload {
                 .withTakerBtcAddress(proto.getTakerBtcAddress())
                 .withNumConfirmations(proto.getNumConfirmations())
                 .withErrorMessage(proto.getErrorMessage())
+                .withPayout(proto.getPayout())
+                .withSwapPeerPayout(proto.getSwapPeerPayout())
                 .build();
     }
 
@@ -136,6 +158,8 @@ public class BsqSwapTradeInfo implements Payload {
                 ", takerBtcAddress='" + takerBtcAddress + '\'' +
                 ", numConfirmations='" + numConfirmations + '\'' +
                 ", errorMessage='" + errorMessage + '\'' +
+                ", payout=" + payout +
+                ", swapPeerPayout=" + swapPeerPayout +
                 '}';
     }
 }

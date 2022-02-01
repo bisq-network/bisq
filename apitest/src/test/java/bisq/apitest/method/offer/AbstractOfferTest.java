@@ -17,12 +17,15 @@
 
 package bisq.apitest.method.offer;
 
+import bisq.core.offer.OfferDirection;
+
 import bisq.proto.grpc.OfferInfo;
 
 import protobuf.PaymentAccount;
 
 import java.math.BigDecimal;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -42,12 +45,16 @@ import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
 import static bisq.cli.table.builder.TableType.OFFER_TBL;
 import static bisq.common.util.MathUtils.exactMultiply;
+import static java.lang.String.format;
 import static java.lang.System.out;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 
 
 import bisq.apitest.method.MethodTest;
 import bisq.cli.CliMain;
+import bisq.cli.GrpcClient;
 import bisq.cli.table.builder.TableBuilder;
 
 @Slf4j
@@ -121,6 +128,34 @@ public abstract class AbstractOfferTest extends MethodTest {
 
     protected final Function<List<OfferInfo>, String> toOffersTable = (offers) ->
             new TableBuilder(OFFER_TBL, offers).build().toString();
+
+    protected OfferInfo getAvailableBsqSwapOffer(GrpcClient client,
+                                                 OfferDirection direction,
+                                                 boolean checkForLoggedExceptions) {
+        List<OfferInfo> bsqSwapOffers = new ArrayList<>();
+        int numFetchAttempts = 0;
+        while (bsqSwapOffers.size() == 0) {
+            bsqSwapOffers.addAll(client.getBsqSwapOffers(direction.name()));
+            numFetchAttempts++;
+            if (bsqSwapOffers.size() == 0) {
+                log.warn("No available bsq swap offers found after {} fetch attempts.", numFetchAttempts);
+                if (numFetchAttempts > 9) {
+                    if (checkForLoggedExceptions) {
+                        printNodeExceptionMessages(log);
+                    }
+                    fail(format("Bob gave up on fetching available bsq swap offers after %d attempts.", numFetchAttempts));
+                }
+                sleep(1_000);
+            } else {
+                assertEquals(1, bsqSwapOffers.size());
+                log.debug("Bob found new available bsq swap offer on attempt # {}.", numFetchAttempts);
+                break;
+            }
+        }
+        var bsqSwapOffer = bobClient.getBsqSwapOffer(bsqSwapOffers.get(0).getId());
+        assertEquals(bsqSwapOffers.get(0).getId(), bsqSwapOffer.getId());
+        return bsqSwapOffer;
+    }
 
     @SuppressWarnings("ConstantConditions")
     public static void initSwapPaymentAccounts() {

@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -120,6 +121,10 @@ public class FailedTradesManager implements PersistedDataHost {
 
     public ObservableList<Trade> getObservableList() {
         return failedTrades.getObservableList();
+    }
+
+    public List<Trade> getTrades() {
+        return getObservableList().stream().collect(Collectors.toList());
     }
 
     public Optional<Trade> getTradeById(String id) {

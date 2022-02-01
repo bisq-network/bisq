@@ -32,6 +32,8 @@ import static bisq.core.api.model.BsqSwapTradeInfo.toBsqSwapTradeInfo;
 import static bisq.core.api.model.OfferInfo.toMyOfferInfo;
 import static bisq.core.api.model.OfferInfo.toOfferInfo;
 import static bisq.core.api.model.PaymentAccountPayloadInfo.toPaymentAccountPayloadInfo;
+import static bisq.core.offer.OfferDirection.BUY;
+import static bisq.core.offer.OfferDirection.SELL;
 import static java.util.Objects.requireNonNull;
 
 @EqualsAndHashCode
@@ -71,6 +73,7 @@ public class TradeInfo implements Payload {
     private final ContractInfo contract;
     // Optional BSQ swap trade protocol details (post v1).
     private BsqSwapTradeInfo bsqSwapTradeInfo;
+    private final String closingStatus;
 
     public TradeInfo(TradeInfoV1Builder builder) {
         this.offer = builder.getOffer();
@@ -100,23 +103,27 @@ public class TradeInfo implements Payload {
         this.contractAsJson = builder.getContractAsJson();
         this.contract = builder.getContract();
         this.bsqSwapTradeInfo = null;
+        this.closingStatus = builder.getClosingStatus();
     }
 
     public static TradeInfo toNewTradeInfo(BsqSwapTrade trade, String role) {
         // Always called by the taker, isMyOffer=false.
-        return toTradeInfo(trade, role, false, 0);
+        return toTradeInfo(trade, role, false, 0, "Pending");
     }
 
     public static TradeInfo toNewTradeInfo(Trade trade) {
         // Always called by the taker, isMyOffer=false.
-        return toTradeInfo(trade, null, false);
+        return toTradeInfo(trade, null, false, "Pending");
     }
 
-    public static TradeInfo toTradeInfo(TradeModel tradeModel, String role, boolean isMyOffer) {
+    public static TradeInfo toTradeInfo(TradeModel tradeModel,
+                                        String role,
+                                        boolean isMyOffer,
+                                        String closingStatus) {
         if (tradeModel instanceof Trade)
-            return toTradeInfo((Trade) tradeModel, role, isMyOffer);
+            return toTradeInfo((Trade) tradeModel, role, isMyOffer, closingStatus);
         else if (tradeModel instanceof BsqSwapTrade)
-            return toTradeInfo(tradeModel, role, isMyOffer);
+            return toTradeInfo(tradeModel, role, isMyOffer, closingStatus);
         else
             throw new IllegalStateException("unsupported trade type: " + tradeModel.getClass().getSimpleName());
     }
@@ -124,8 +131,21 @@ public class TradeInfo implements Payload {
     public static TradeInfo toTradeInfo(BsqSwapTrade bsqSwapTrade,
                                         String role,
                                         boolean isMyOffer,
-                                        int numConfirmations) {
+                                        int numConfirmations,
+                                        String closingStatus) {
         OfferInfo offerInfo = isMyOffer ? toMyOfferInfo(bsqSwapTrade.getOffer()) : toOfferInfo(bsqSwapTrade.getOffer());
+        // A BSQ Swap miner tx fee is paid in full by the BTC seller (buying BSQ).
+        // The BTC buyer's payout = tradeamount minus his share of miner fee.
+        var isBtcSeller = (isMyOffer && bsqSwapTrade.getOffer().getDirection().equals(SELL))
+                || (!isMyOffer && bsqSwapTrade.getOffer().getDirection().equals(BUY));
+        var txFeeInBtc = isBtcSeller
+                ? bsqSwapTrade.getTxFee().value
+                : 0L;
+        // A BSQ Swap trade fee is paid in full by the BTC buyer (selling BSQ).
+        // The transferred BSQ (payout) is reduced by the peer's trade fee.
+        var takerFeeInBsq = !isMyOffer && bsqSwapTrade.getOffer().getDirection().equals(SELL)
+                ? bsqSwapTrade.getTakerFeeAsLong()
+                : 0L;
         TradeInfo tradeInfo = new TradeInfoV1Builder()
                 .withOffer(offerInfo)
                 .withTradeId(bsqSwapTrade.getId())
@@ -133,24 +153,28 @@ public class TradeInfo implements Payload {
                 .withDate(bsqSwapTrade.getDate().getTime())
                 .withRole(role == null ? "" : role)
                 .withIsCurrencyForTakerFeeBtc(false) // BSQ Swap fees always paid in BSQ.
-                .withTxFeeAsLong(bsqSwapTrade.getTxFee().value)
-                .withTakerFeeAsLong(bsqSwapTrade.getTakerFeeAsLong())
-                // N/A: .withTakerFeeTxId(""), .withDepositTxId(""), .withPayoutTxId("")
+                .withTxFeeAsLong(txFeeInBtc)
+                .withTakerFeeAsLong(takerFeeInBsq)
+                // N/A for bsq-swaps: .withTakerFeeTxId(""), .withDepositTxId(""), .withPayoutTxId("")
                 .withTradeAmountAsLong(bsqSwapTrade.getAmountAsLong())
                 .withTradePrice(bsqSwapTrade.getPrice().getValue())
                 .withTradeVolume(bsqSwapTrade.getVolume() == null ? 0 : bsqSwapTrade.getVolume().getValue())
                 .withTradingPeerNodeAddress(requireNonNull(bsqSwapTrade.getTradingPeerNodeAddress().getFullAddress()))
                 .withState(bsqSwapTrade.getTradeState().name())
                 .withPhase(bsqSwapTrade.getTradePhase().name())
-                // N/A: .withTradePeriodState(""), .withIsDepositPublished(false), .withIsDepositConfirmed(false)
-                // N/A: .withIsFiatSent(false), .withIsFiatReceived(false), .withIsPayoutPublished(false)
-                // N/A: .withIsWithdrawn(false), .withContractAsJson(""), .withContract(null)
+                // N/A for bsq-swaps: .withTradePeriodState(""), .withIsDepositPublished(false), .withIsDepositConfirmed(false)
+                // N/A for bsq-swaps: .withIsFiatSent(false), .withIsFiatReceived(false), .withIsPayoutPublished(false)
+                // N/A for bsq-swaps: .withIsWithdrawn(false), .withContractAsJson(""), .withContract(null)
+                .withClosingStatus(closingStatus)
                 .build();
         tradeInfo.bsqSwapTradeInfo = toBsqSwapTradeInfo(bsqSwapTrade, isMyOffer, numConfirmations);
         return tradeInfo;
     }
 
-    private static TradeInfo toTradeInfo(Trade trade, String role, boolean isMyOffer) {
+    private static TradeInfo toTradeInfo(Trade trade,
+                                         String role,
+                                         boolean isMyOffer,
+                                         String closingStatus) {
         ContractInfo contractInfo;
         if (trade.getContract() != null) {
             Contract contract = trade.getContract();
@@ -198,6 +222,7 @@ public class TradeInfo implements Payload {
                 .withIsWithdrawn(trade.isWithdrawn())
                 .withContractAsJson(trade.getContractAsJson())
                 .withContract(contractInfo)
+                .withClosingStatus(closingStatus)
                 .build();
     }
 
@@ -232,8 +257,8 @@ public class TradeInfo implements Payload {
                         .setIsFiatSent(isFiatSent)
                         .setIsFiatReceived(isFiatReceived)
                         .setIsPayoutPublished(isPayoutPublished)
-                        .setIsWithdrawn(isWithdrawn);
-
+                        .setIsWithdrawn(isWithdrawn)
+                        .setClosingStatus(closingStatus);
         if (offer.isBsqSwapOffer()) {
             protoBuilder.setBsqSwapTradeInfo(bsqSwapTradeInfo.toProtoMessage());
         } else {
@@ -272,6 +297,7 @@ public class TradeInfo implements Payload {
                 .withIsWithdrawn(proto.getIsWithdrawn())
                 .withContractAsJson(proto.getContractAsJson())
                 .withContract((ContractInfo.fromProto(proto.getContract())))
+                .withClosingStatus(proto.getClosingStatus())
                 .build();
 
         if (proto.getOffer().getIsBsqSwapOffer())
@@ -310,6 +336,7 @@ public class TradeInfo implements Payload {
                 ", contractAsJson=" + contractAsJson + "\n" +
                 ", contract=" + contract + "\n" +
                 ", bsqSwapTradeInfo=" + bsqSwapTradeInfo + "\n" +
+                ", closingStatus=" + closingStatus + "\n" +
                 '}';
     }
 }

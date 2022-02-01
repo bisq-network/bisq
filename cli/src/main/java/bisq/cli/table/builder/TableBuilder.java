@@ -49,14 +49,14 @@ public class TableBuilder extends AbstractTableBuilder {
                 return new BsqBalanceTableBuilder(protos).build();
             case BTC_BALANCE_TBL:
                 return new BtcBalanceTableBuilder(protos).build();
-            case CLOSED_TRADE_TBL:
-                throw new UnsupportedOperationException("TODO return new ClosedTradeTableBuilder(protos).build()");
-            case FAILED_TRADE_TBL:
-                throw new UnsupportedOperationException("TODO return new FailedTradeTableBuilder(protos).build()");
+            case CLOSED_TRADES_TBL:
+                return new ClosedTradeTableBuilder(protos).build();
+            case FAILED_TRADES_TBL:
+                return new FailedTradeTableBuilder(protos).build();
             case OFFER_TBL:
                 return new OfferTableBuilder(protos).build();
-            case OPEN_TRADE_TBL:
-                throw new UnsupportedOperationException("TODO return new OpenTradeTableBuilder(protos).build()");
+            case OPEN_TRADES_TBL:
+                return new OpenTradeTableBuilder(protos).build();
             case PAYMENT_ACCOUNT_TBL:
                 return new PaymentAccountTableBuilder(protos).build();
             case TRADE_DETAIL_TBL:
