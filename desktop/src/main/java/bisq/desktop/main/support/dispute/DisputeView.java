@@ -399,7 +399,9 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                 ObservableList<ChatMessage> chatMessages = dispute.getChatMessages();
                 // If last message is not a result message we re-open as we might have received a new message from the
                 // trader/mediator/arbitrator who has reopened the case
-                if (!chatMessages.isEmpty() && !chatMessages.get(chatMessages.size() - 1).isResultMessage(dispute)) {
+                if (!chatMessages.isEmpty() &&
+                        !chatMessages.get(chatMessages.size() - 1).isResultMessage(dispute) &&
+                        dispute.unreadMessageCount(senderFlag()) > 0) {
                     onSelectDispute(dispute);
                     reOpenDispute();
                 }
@@ -516,14 +518,16 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     // only allow them to close the dispute if the trade is paid out
     // the reason for having this is that sometimes traders end up with closed disputes that are not "closed" @pazza
     protected void closeDisputeFromButton() {
-        Optional<Trade> tradeOptional = disputeManager.findTrade(selectedDispute);
-        if (tradeOptional.isPresent() && tradeOptional.get().getPayoutTxId() != null && tradeOptional.get().getPayoutTxId().length() > 0) {
-            selectedDispute.setIsClosed();
-            disputeManager.requestPersistence();
-            onSelectDispute(selectedDispute);
-        } else {
-            new Popup().warning(Res.get("support.warning.traderCloseOwnDisputeWarning")).show();
-        }
+        disputeManager.findTrade(selectedDispute).ifPresent(
+                (trade) -> {
+                    if (trade.isFundsLockedIn()) {
+                        new Popup().warning(Res.get("support.warning.traderCloseOwnDisputeWarning")).show();
+                    } else {
+                        selectedDispute.setIsClosed();
+                        disputeManager.requestPersistence();
+                        onSelectDispute(selectedDispute);
+                    }
+                });
     }
 
     protected void handleOnProcessDispute(Dispute dispute) {
