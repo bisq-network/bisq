@@ -545,6 +545,6 @@
 
 .markdown-label,
 .markdown-label * {
-    -fx-text-fill: #dadada;
-    -fx-fill: #dadada;
+    -fx-text-fill: -bs-text-color;
+    -fx-fill: -bs-text-color;
 }
