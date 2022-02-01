@@ -223,6 +223,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         }
         sendAckMessage(chatMessage, dispute.getAgentPubKeyRing(), true, null);
 
+        maybeClearSensitiveData();
         requestPersistence();
     }
 

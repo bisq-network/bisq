@@ -58,5 +58,6 @@ public class SettingsPresentation {
     }
 
     public void setup() {
+        showNotification.set(preferences.showAgain(SETTINGS_NEWS));
     }
 }

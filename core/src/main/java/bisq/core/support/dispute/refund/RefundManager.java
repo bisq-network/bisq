@@ -224,6 +224,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
             openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
         }
 
+        maybeClearSensitiveData();
         requestPersistence();
     }
 

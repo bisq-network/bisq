@@ -338,6 +338,7 @@ public final class ArbitrationManager extends DisputeManager<ArbitrationDisputeL
             sendAckMessage(chatMessage, dispute.getAgentPubKeyRing(), success, errorMessage);
         }
 
+        maybeClearSensitiveData();
         requestPersistence();
     }
 
