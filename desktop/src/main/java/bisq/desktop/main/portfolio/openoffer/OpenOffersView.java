@@ -451,7 +451,9 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 super.updateItem(item, empty);
                                 getStyleClass().removeAll("offer-disabled");
                                 if (item != null) {
-                                    if (item.isNotPublished()) getStyleClass().add("offer-disabled");
+                                    if (item.isNotPublished()) {
+                                        getStyleClass().add("offer-disabled");
+                                    }
                                     setGraphic(new AutoTooltipLabel(item.getDateAsString()));
                                 } else {
                                     setGraphic(null);
@@ -844,7 +846,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                         }
                                         if (item.getOpenOffer().isBsqSwapOfferHasMissingFunds()) {
                                             Label label = new Label();
-                                            Text icon = getRegularIconForLabel(MaterialDesignIcon.EYE_OFF, label);
+                                            Text icon = getRegularIconForLabel(MaterialDesignIcon.EYE_OFF, label, "opaque-icon");
                                             Tooltip.install(icon, new Tooltip(Res.get("openOffer.bsqSwap.missingFunds")));
                                             setGraphic(icon);
                                         } else {
