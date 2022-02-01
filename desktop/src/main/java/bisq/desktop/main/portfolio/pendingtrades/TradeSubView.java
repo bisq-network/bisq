@@ -108,7 +108,6 @@ public abstract class TradeSubView extends HBox {
         SimpleMarkdownLabel label = addSimpleMarkdownLabel(leftGridPane, ++leftGridPaneRowIndex);
         AutoTooltipButton button = (AutoTooltipButton) addButtonAfterGroup(leftGridPane, ++leftGridPaneRowIndex, "");
         SimpleMarkdownLabel footerLabel = addSimpleMarkdownLabel(leftGridPane, ++leftGridPaneRowIndex, Res.get("portfolio.pending.stillNotResolved"), 10);
-        footerLabel.getStyleClass().add("small-text");
         tradeStepInfo = new TradeStepInfo(titledGroupBg, label, button, footerLabel);
     }
 
