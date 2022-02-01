@@ -18,8 +18,8 @@
 package bisq.desktop.components;
 
 import bisq.desktop.components.controlsfx.control.PopOver;
+import bisq.desktop.util.FormBuilder;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.Node;
@@ -48,8 +48,7 @@ public class AutoTooltipTableColumn<S, T> extends TableColumn<S, T> {
     }
 
     public void setTitleWithHelpText(String title, String help) {
-        helpIcon = new Label();
-        AwesomeDude.setIcon(helpIcon, AwesomeIcon.QUESTION_SIGN, "1em");
+        helpIcon = FormBuilder.getSmallIcon(AwesomeIcon.QUESTION_SIGN);
         helpIcon.setOpacity(0.4);
         helpIcon.setOnMouseEntered(e -> popoverWrapper.showPopOver(() -> createInfoPopOver(help)));
         helpIcon.setOnMouseExited(e -> popoverWrapper.hidePopOver());

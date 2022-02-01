@@ -2330,6 +2330,14 @@ public class FormBuilder {
         return label;
     }
 
+    public static Label getIcon(AwesomeIcon icon, String fontSize) {
+        return getIconForLabel(icon, new Label(), fontSize);
+    }
+
+    public static Label getSmallIcon(AwesomeIcon icon) {
+        return getIcon(icon, "1em");
+    }
+
     public static Label getIconForLabel(AwesomeIcon icon, Label label, String fontSize) {
         AwesomeDude.setIcon(label, icon, fontSize);
         return label;

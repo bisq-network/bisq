@@ -17,9 +17,9 @@
 
 package bisq.desktop.components;
 
+import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.control.Label;
@@ -89,8 +89,8 @@ public class TitledGroupBg extends Pane {
 
     public void setupHelpUrl(String helpUrl) {
         if (helpIcon == null) {
-            helpIcon = new Label();
-            AwesomeDude.setIcon(helpIcon, AwesomeIcon.QUESTION_SIGN, "1.2em");
+            helpIcon = FormBuilder.getSmallIcon(AwesomeIcon.QUESTION_SIGN);
+            helpIcon.setOpacity(0.4);
             helpIcon.getStyleClass().add("show-hand");
             box.getChildren().add(helpIcon);
         }
