@@ -29,6 +29,7 @@ import bisq.core.dao.state.storage.DaoStateStorageService;
 import bisq.core.trade.DelayedPayoutAddressProvider;
 import bisq.core.user.Preferences;
 
+import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.util.GcUtil;
 
@@ -47,8 +48,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Manages periodical snapshots of the DaoState.
@@ -79,6 +78,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     @Setter
     @Nullable
     private Runnable daoRequiresRestartHandler;
+    private int daoRequiresRestartHandlerAttempts = 0;
     private boolean readyForPersisting = true;
     private boolean isParseBlockChainComplete;
 
@@ -281,8 +281,11 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
             int chainHeightOfPersisted = persistedBsqState.getChainHeight();
             if (!persistedBsqState.getBlocks().isEmpty()) {
                 int heightOfLastBlock = persistedBsqState.getLastBlock().getHeight();
-                checkArgument(heightOfLastBlock == chainHeightOfPersisted,
-                        "chainHeightOfPersisted must be same as heightOfLastBlock");
+                if (heightOfLastBlock != chainHeightOfPersisted) {
+                    log.warn("chainHeightOfPersisted must be same as heightOfLastBlock");
+                    resyncDaoStateFromResources();
+                    return;
+                }
                 if (isValidHeight(heightOfLastBlock)) {
                     if (chainHeightOfLastApplySnapshot != chainHeightOfPersisted) {
                         chainHeightOfLastApplySnapshot = chainHeightOfPersisted;
@@ -324,10 +327,18 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
 
     private void resyncDaoStateFromResources() {
         log.info("resyncDaoStateFromResources called");
+        if (daoRequiresRestartHandler == null && ++daoRequiresRestartHandlerAttempts <= 3) {
+            log.warn("daoRequiresRestartHandler has not been initialized yet, will try again in 10 seconds");
+            UserThread.runAfter(this::resyncDaoStateFromResources, 10);  // a delay for the app to init
+            return;
+        }
         try {
             daoStateStorageService.resyncDaoStateFromResources(storageDir);
-
-            if (daoRequiresRestartHandler != null) {
+            // the restart handler informs the user of the need to restart bisq (in desktop mode)
+            if (daoRequiresRestartHandler == null) {
+                log.error("daoRequiresRestartHandler COULD NOT be called as it has not been initialized yet");
+            } else {
+                log.info("calling daoRequiresRestartHandler...");
                 daoRequiresRestartHandler.run();
             }
         } catch (IOException e) {
