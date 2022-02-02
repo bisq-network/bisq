@@ -255,8 +255,8 @@ public class Scaffold {
 
             // Copy the blocknotify script from the src resources dir to the build
             // resources dir.  Users may want to edit comment out some lines when all
-            // the default block notifcation ports being will not be used (to avoid
-            // seeing rpc notifcation warnings in log files).
+            // the default block notification ports being will not be used (to avoid
+            // seeing rpc notification warnings in log files).
             installBitcoinBlocknotify();
 
         } catch (IOException | InterruptedException ex) {

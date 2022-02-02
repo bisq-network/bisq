@@ -1092,7 +1092,7 @@ public class BtcWalletService extends WalletService {
                 fee = txFeeForWithdrawalPerVbyte.multiply(txVsize);
                 // We use a dummy address for the output
                 // We don't know here whether the output is segwit or not but we don't care too much because the size of
-                // a segwit ouput is just 3 byte smaller than the size of a legacy ouput.
+                // a segwit output is just 3 byte smaller than the size of a legacy output.
                 final String dummyReceiver = SegwitAddress.fromKey(params, new ECKey()).toString();
                 SendRequest sendRequest = getSendRequestForMultipleAddresses(fromAddresses, dummyReceiver, amount, fee, null, aesKey);
                 wallet.completeTx(sendRequest);
@@ -1126,8 +1126,8 @@ public class BtcWalletService extends WalletService {
     public int getEstimatedFeeTxVsize(List<Coin> outputValues, Coin txFee)
             throws InsufficientMoneyException, AddressFormatException {
         Transaction transaction = new Transaction(params);
-        // In reality txs have a mix of segwit/legacy ouputs, but we don't care too much because the size of
-        // a segwit ouput is just 3 byte smaller than the size of a legacy ouput.
+        // In reality txs have a mix of segwit/legacy outputs, but we don't care too much because the size of
+        // a segwit output is just 3 byte smaller than the size of a legacy output.
         Address dummyAddress = SegwitAddress.fromKey(params, new ECKey());
         outputValues.forEach(outputValue -> transaction.addOutput(outputValue, dummyAddress));
 

@@ -250,7 +250,7 @@ public class BisqInstaller {
      * The files containing the gpg keys of the bisq signers.
      * Currently these are 2 hard-coded keys, one included with bisq and the same key online for maximum security.
      *
-     * @return list of keys to check agains corresponding sigs.
+     * @return list of keys to check against corresponding sigs.
      */
     private List<FileDescriptor> getKeyFileDescriptors() {
         List<FileDescriptor> list = new ArrayList<>();

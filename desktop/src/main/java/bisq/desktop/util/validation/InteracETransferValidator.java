@@ -82,7 +82,7 @@ public final class InteracETransferValidator extends InputValidator {
 
             String inputAreaCode = input.substring(1, 4);
             for (String s : NPAS) {
-                // check area code agains list and return if valid
+                // check area code against list and return if valid
                 if (inputAreaCode.compareTo(s) == 0)
                     return new ValidationResult(true);
             }

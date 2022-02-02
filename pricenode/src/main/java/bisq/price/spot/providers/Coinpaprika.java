@@ -44,8 +44,8 @@ class Coinpaprika extends ExchangeRateProvider {
 
     /**
      * Used to determine the currencies in which the BTC price can be quoted. There seems
-     * to be no programatic way to retrieve it, so we get the value from the API
-     * documentation (see "quotes" param decsribed at
+     * to be no programmatic way to retrieve it, so we get the value from the API
+     * documentation (see "quotes" param described at
      * https://api.coinpaprika.com/#operation/getTickersById ). The hardcoded value below
      * is the list of allowed values as per the API documentation, but without BTC and ETH
      * as it makes no sense to quote the BTC price in them.

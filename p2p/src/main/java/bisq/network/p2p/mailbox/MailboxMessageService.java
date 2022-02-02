@@ -224,7 +224,7 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
         }
     }
 
-    // second stage starup for MailboxMessageService ... apply existing messages to their modules
+    // second stage startup for MailboxMessageService ... apply existing messages to their modules
     public void initAfterBootstrapped() {
         // Only now we start listening and processing. The p2PDataStorage is our cache for data we have received
         // after the hidden service was ready.
@@ -480,7 +480,7 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
         if (isBootstrapped) {
             // After we notified our listeners we remove the data immediately from the network.
             // In case the client has not been ready it need to take it via getMailBoxMessages.
-            // We do not remove the data from our local map at that moment. This has to be called explicitely from the
+            // We do not remove the data from our local map at that moment. This has to be called explicitly from the
             // client after processing. In case processing fails for some reason we still have the local data which can
             // be applied after restart, but the network got cleaned from pending mailbox messages.
             removeMailboxEntryFromNetwork(mailboxItem.getProtectedMailboxStorageEntry());

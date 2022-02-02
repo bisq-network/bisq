@@ -120,7 +120,7 @@ public class P2PDataStoreDisconnectTest {
         verifyStateAfterDisconnect(this.testState, beforeState, false);
     }
 
-    // TESTCASE: Unintended disconnects reduce the TTL for entrys that match disconnected peer
+    // TESTCASE: Unintended disconnects reduce the TTL for entries that match disconnected peer
     @Test
     public void connectionClosedReduceTTL() throws NoSuchAlgorithmException, CryptoException {
         when(this.mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(getTestNodeAddress()));
@@ -134,7 +134,7 @@ public class P2PDataStoreDisconnectTest {
         verifyStateAfterDisconnect(this.testState, beforeState, true);
     }
 
-    // TESTCASE: Unintended disconnects don't reduce TTL for entrys that are not from disconnected peer
+    // TESTCASE: Unintended disconnects don't reduce TTL for entries that are not from disconnected peer
     @Test
     public void connectionClosedSkipsItemsNotFromPeer() throws NoSuchAlgorithmException, CryptoException {
         when(this.mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(new NodeAddress("notTestNode", 2020)));

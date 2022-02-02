@@ -74,7 +74,7 @@ class ExchangeRateService {
 
         LinkedHashMap<String, Object> result = new LinkedHashMap<>();
         result.putAll(metadata);
-        // Use a sorted list by currency code to make comparision of json data between
+        // Use a sorted list by currency code to make comparison of json data between
         // different price nodes easier
         List<ExchangeRate> values = new ArrayList<>(aggregateExchangeRates.values());
         values.sort(Comparator.comparing(ExchangeRate::getCurrency));

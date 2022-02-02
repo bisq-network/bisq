@@ -84,7 +84,7 @@ public class PhasesView implements DaoStateListener {
         phaseBarsItems.forEach(item -> {
             DaoPhase.Phase phase = item.getPhase();
             // Last block is considered for the break as we must not publish a tx there (would get confirmed in next
-            // block which would be a break). Only at result phase we don't have that situation ans show the last block
+            // block which would be a break). Only at result phase we don't have that situation and show the last block
             // as valid block in the phase.
             if (periodService.isInPhaseButNotLastBlock(phase) ||
                     (phase == DaoPhase.Phase.RESULT && periodService.isInPhase(block.getHeight(), phase))) {

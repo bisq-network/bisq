@@ -55,7 +55,7 @@ sudo_exec () {
     then
         sudo "$@"
     else
-        echo "Can't execute with elevated priviliges: $*" >&2
+        echo "Can't execute with elevated privileges: $*" >&2
         exit 1
     fi
 }

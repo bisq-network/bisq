@@ -58,7 +58,7 @@ public class VerifyTask extends Task<List<BisqInstaller.VerifyDescriptor>> {
      * Starts the task and therefore the actual download.
      *
      * @return A reference to the created file or {@code null} if no file could be found at the provided URL
-     * @throws IOException Forwarded exceotions from HttpURLConnection and file handling methods
+     * @throws IOException Forwarded exceptions from HttpURLConnection and file handling methods
      */
     @Override
     protected List<BisqInstaller.VerifyDescriptor> call() {

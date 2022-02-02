@@ -44,7 +44,7 @@ import static bisq.network.p2p.storage.TestState.SavedTestState;
 import static bisq.network.p2p.storage.TestState.getTestNodeAddress;
 
 /**
- * Tests of the P2PDataStore behavior that expires old Entrys periodically.
+ * Tests of the P2PDataStore behavior that expires old Entries periodically.
  */
 public class P2PDataStorageRemoveExpiredTest {
     private TestState testState;

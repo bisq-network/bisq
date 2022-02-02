@@ -364,7 +364,7 @@ public final class OfferPayload extends OfferPayloadBase {
     }
 
     // For backward compatibility we need to ensure same order for json fields as with 1.7.5. and earlier versions.
-    // The json is used for the hash in the contract and change of oder would cause a different hash and
+    // The json is used for the hash in the contract and change of order would cause a different hash and
     // therefore a failure during trade.
     public static class JsonSerializer implements com.google.gson.JsonSerializer<OfferPayload> {
         @Override

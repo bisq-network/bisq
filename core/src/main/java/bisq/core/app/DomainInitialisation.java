@@ -74,7 +74,7 @@ import java.util.stream.Collectors;
 /**
  * Handles the initialisation of domain classes. We should refactor to the model that the domain classes listen on the
  * relevant start up state from AppStartupState instead to get called. Only for initialisation which has a required
- * order we will still need this class. For now it helps to keep BisqSetup more focussed on the process and not getting
+ * order we will still need this class. For now it helps to keep BisqSetup more focused on the process and not getting
  * overloaded with domain initialisation code.
  */
 public class DomainInitialisation {

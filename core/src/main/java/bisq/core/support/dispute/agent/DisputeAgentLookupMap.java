@@ -54,7 +54,7 @@ public class DisputeAgentLookupMap {
     public static String getKeybaseLinkForAgent(String onion) {
         // when a new mediator starts or an onion address changes, mediator name won't be known until
         // the table above is updated in the software.
-        // as a stopgap measure, replace unknonwn ones with a link to the bisq team
+        // as a stopgap measure, replace unknown ones with a link to the bisq team
         String agentName = getKeyBaseUserName(onion).replaceAll(Res.get("shared.na"), "bisq");
         return "https://keybase.io/" + agentName;
     }

@@ -148,7 +148,7 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     }
 
     /*
-     * Returns true if the Entry is valid for an add operation. For non-mailbox Entrys, the entry owner must
+     * Returns true if the Entry is valid for an add operation. For non-mailbox Entries, the entry owner must
      * match the payload owner.
      */
     public boolean isValidForAddOperation() {
@@ -178,7 +178,7 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     }
 
     /*
-     * Returns true if the Entry is valid for a remove operation. For non-mailbox Entrys, the entry owner must
+     * Returns true if the Entry is valid for a remove operation. For non-mailbox Entries, the entry owner must
      * match the payload owner.
      */
     public boolean isValidForRemoveOperation() {

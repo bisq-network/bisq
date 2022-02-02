@@ -85,7 +85,7 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
     }
 
     /*
-     * Returns true if this Entry is valid for an add operation. For mailbox Entrys, the entry owner must
+     * Returns true if this Entry is valid for an add operation. For mailbox Entries, the entry owner must
      * match the valid sender Public Key specified in the payload. (Only sender can add)
      */
     @Override
@@ -118,7 +118,7 @@ public class ProtectedMailboxStorageEntry extends ProtectedStorageEntry {
     }
 
     /*
-     * Returns true if the Entry is valid for a remove operation. For mailbox Entrys, the entry owner must
+     * Returns true if the Entry is valid for a remove operation. For mailbox Entries, the entry owner must
      * match the payload owner. (Only receiver can remove)
      */
     @Override

@@ -18,7 +18,7 @@
 package bisq.core.dao.governance.asset;
 
 /**
- * Maintain translation stings ("dao.assetState.*")
+ * Maintain translation strings ("dao.assetState.*")
  */
 public enum AssetState {
     UNDEFINED,
