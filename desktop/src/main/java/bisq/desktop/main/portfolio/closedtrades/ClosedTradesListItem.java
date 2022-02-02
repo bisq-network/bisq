@@ -22,6 +22,7 @@ import bisq.desktop.util.filtering.FilterableListItem;
 import bisq.desktop.util.filtering.FilteringUtils;
 
 import bisq.core.locale.CurrencyUtil;
+import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
 import bisq.core.trade.ClosedTradableFormatter;
@@ -30,7 +31,11 @@ import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 
+import org.bitcoinj.core.Coin;
+
 import org.apache.commons.lang3.StringUtils;
+
+import java.util.Date;
 
 import lombok.Getter;
 
@@ -54,8 +59,16 @@ public class ClosedTradesListItem implements FilterableListItem {
         return tradable.getShortId();
     }
 
+    public Coin getAmount() {
+        return tradable.getOptionalAmount().orElse(null);
+    }
+
     public String getAmountAsString() {
         return closedTradableFormatter.getAmountAsString(tradable);
+    }
+
+    public Price getPrice() {
+        return tradable.getOptionalPrice().orElse(null);
     }
 
     public String getPriceAsString() {
@@ -97,6 +110,10 @@ public class ClosedTradesListItem implements FilterableListItem {
                 : offer.getMirroredDirection();
         String currencyCode = tradable.getOffer().getCurrencyCode();
         return DisplayUtils.getDirectionWithCode(direction, currencyCode);
+    }
+
+    public Date getDate() {
+        return tradable.getDate();
     }
 
     public String getDateAsString() {
