@@ -21,6 +21,7 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.ShowWalletDataWindow;
+import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.util.Layout;
 
 import bisq.core.btc.listeners.BalanceListener;
@@ -59,6 +60,7 @@ public class WalletInfoView extends ActivatableView<GridPane, Void> {
     private final WalletsManager walletsManager;
     private final BtcWalletService btcWalletService;
     private final BsqWalletService bsqWalletService;
+    private final WalletPasswordWindow walletPasswordWindow;
     private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
     private int gridRow = 0;
@@ -76,11 +78,13 @@ public class WalletInfoView extends ActivatableView<GridPane, Void> {
     private WalletInfoView(WalletsManager walletsManager,
                            BtcWalletService btcWalletService,
                            BsqWalletService bsqWalletService,
+                           WalletPasswordWindow walletPasswordWindow,
                            @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                            BsqFormatter bsqFormatter) {
         this.walletsManager = walletsManager;
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
+        this.walletPasswordWindow = walletPasswordWindow;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
     }
@@ -130,7 +134,7 @@ public class WalletInfoView extends ActivatableView<GridPane, Void> {
 
         openDetailsButton.setOnAction(e -> {
             if (walletsManager.areWalletsAvailable()) {
-                new ShowWalletDataWindow(walletsManager).width(root.getWidth()).show();
+                new ShowWalletDataWindow(walletsManager, btcWalletService, walletPasswordWindow).width(root.getWidth()).show();
             } else {
                 new Popup().warning(Res.get("popup.warning.walletNotInitialized")).show();
             }
