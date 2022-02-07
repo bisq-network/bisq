@@ -277,8 +277,13 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         prefPayload.setUserLanguage(GlobalSettings.getLocale().getLanguage());
         prefPayload.setUserCountry(CountryUtil.getDefaultCountry());
         GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
-        TradeCurrency preferredTradeCurrency = checkNotNull(CurrencyUtil.getCurrencyByCountryCode(prefPayload.getUserCountry().code),
-                "preferredTradeCurrency must not be null");
+
+        TradeCurrency preferredTradeCurrency = CurrencyUtil.getCurrencyByCountryCode("US"); // default fallback option
+        try {
+            preferredTradeCurrency = CurrencyUtil.getCurrencyByCountryCode(prefPayload.getUserCountry().code);
+        } catch (IllegalArgumentException ia) {
+            log.warn("Could not determine currency for country {} [{}]", prefPayload.getUserCountry().code, ia.toString());
+        }
         prefPayload.setPreferredTradeCurrency(preferredTradeCurrency);
         setFiatCurrencies(CurrencyUtil.getMainFiatCurrencies());
         setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
