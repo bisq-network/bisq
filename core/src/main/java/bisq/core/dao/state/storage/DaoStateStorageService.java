@@ -48,8 +48,6 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 /**
  * Manages persistence of the daoState.
  */
@@ -154,8 +152,10 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
                             list = bsqBlocksStorageService.readBlocks(chainHeight);
                             if (!list.isEmpty()) {
                                 int heightOfLastBlock = list.getLast().getHeight();
-                                checkArgument(heightOfLastBlock == chainHeight,
-                                        "heightOfLastBlock must match chainHeight");
+                                if (heightOfLastBlock != chainHeight) {
+                                    log.warn("heightOfLastBlock {} must match chainHeight {}", heightOfLastBlock, chainHeight);
+                                    // this error scenario is handled by DaoStateSnapshotService, it will resync from resources & reboot
+                                }
                             }
                         } else {
                             list = bsqBlocksStorageService.migrateBlocks(daoStateAsProto.getBlocksList());
