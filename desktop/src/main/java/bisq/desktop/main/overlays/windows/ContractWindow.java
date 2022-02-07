@@ -211,20 +211,20 @@ public class ContractWindow extends Overlay<ContractWindow> {
                         : "NA");
 
         String title = "";
-        String agentKeyBaseUserName = "";
+        String agentMatrixUserName = "";
         if (dispute.getSupportType() != null) {
             switch (dispute.getSupportType()) {
                 case ARBITRATION:
                     title = Res.get("shared.selectedArbitrator");
                     break;
                 case MEDIATION:
-                    agentKeyBaseUserName = DisputeAgentLookupMap.getKeyBaseUserName(contract.getMediatorNodeAddress().getFullAddress());
+                    agentMatrixUserName = DisputeAgentLookupMap.getMatrixUserName(contract.getMediatorNodeAddress().getFullAddress());
                     title = Res.get("shared.selectedMediator");
                     break;
                 case TRADE:
                     break;
                 case REFUND:
-                    agentKeyBaseUserName = DisputeAgentLookupMap.getKeyBaseUserName(contract.getRefundAgentNodeAddress().getFullAddress());
+                    agentMatrixUserName = DisputeAgentLookupMap.getMatrixUserName(contract.getRefundAgentNodeAddress().getFullAddress());
                     title = Res.get("shared.selectedRefundAgent");
                     break;
             }
@@ -233,7 +233,7 @@ public class ContractWindow extends Overlay<ContractWindow> {
         if (disputeManager != null) {
             NodeAddress agentNodeAddress = disputeManager.getAgentNodeAddress(dispute);
             if (agentNodeAddress != null) {
-                String value = agentKeyBaseUserName + " (" + agentNodeAddress.getFullAddress() + ")";
+                String value = agentMatrixUserName + " (" + agentNodeAddress.getFullAddress() + ")";
                 addConfirmationLabelTextField(gridPane, ++rowIndex, title, value);
             }
         }

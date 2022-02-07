@@ -12,7 +12,7 @@ In order to take part in the testing process, you will need to do the following:
 
 ## Communication Channels
 
-If you would like to discuss and/or contribute to Bisq's testing effort, join us in the #testing channel within the [Bisq Keybase team](https://keybase.io/team/bisq).
+If you would like to discuss and/or contribute to Bisq's testing effort, join us in the #testing channel within the [Bisq Matrix Space](https://bisq.chat).
 Here you could also request access to TestPad (https://bisq.ontestpad.com).
 
 ## Compensation

@@ -151,7 +151,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         NodeAddress agentNodeAddress = getAgentNodeAddress(dispute);
         checkNotNull(agentNodeAddress, "Agent node address must not be null");
         String roleContextMsg = Res.get("support.initialMediatorMsg",
-                DisputeAgentLookupMap.getKeybaseLinkForAgent(agentNodeAddress.getFullAddress()));
+                DisputeAgentLookupMap.getMatrixLinkForAgent(agentNodeAddress.getFullAddress()));
         String link = "https://bisq.wiki/Dispute_resolution#Level_2:_Mediation";
         return Res.get("support.initialInfo", role, roleContextMsg, role, link);
     }

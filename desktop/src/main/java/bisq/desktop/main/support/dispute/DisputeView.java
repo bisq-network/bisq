@@ -1373,8 +1373,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                                         return;
                                     }
 
-                                    String keyBaseUserName = DisputeAgentLookupMap.getKeyBaseUserName(agentNodeAddress.getFullAddress());
-                                    setText(keyBaseUserName);
+                                    String MatrixUserName = DisputeAgentLookupMap.getMatrixUserName(agentNodeAddress.getFullAddress());
+                                    setText(MatrixUserName);
                                 } else {
                                     setText("");
                                 }

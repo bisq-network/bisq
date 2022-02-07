@@ -467,7 +467,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     private void doOpenDispute(boolean isSupportTicket, Transaction depositTx) {
-        // We do not support opening a dispute if the deposit tx is null. Traders have to use the support channel at keybase
+        // We do not support opening a dispute if the deposit tx is null. Traders have to use the support channel at Matrix
         // in such cases. The mediators or arbitrators could not help anyway with a payout in such cases.
         if (depositTx == null) {
             log.error("Deposit tx must not be null");

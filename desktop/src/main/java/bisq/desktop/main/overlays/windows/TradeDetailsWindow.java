@@ -358,8 +358,8 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                     data += "\n\nRaw deposit transaction as hex:\n" + depositTxAsHex;
                 }
 
-                data += "\n\nSelected mediator: " + DisputeAgentLookupMap.getKeyBaseUserName(contract.getMediatorNodeAddress().getFullAddress());
-                data += "\nSelected arbitrator (refund agent): " + DisputeAgentLookupMap.getKeyBaseUserName(contract.getRefundAgentNodeAddress().getFullAddress());
+                data += "\n\nSelected mediator: " + DisputeAgentLookupMap.getMatrixUserName(contract.getMediatorNodeAddress().getFullAddress());
+                data += "\nSelected arbitrator (refund agent): " + DisputeAgentLookupMap.getMatrixUserName(contract.getRefundAgentNodeAddress().getFullAddress());
 
                 textArea.setText(data);
                 textArea.setPrefHeight(50);
