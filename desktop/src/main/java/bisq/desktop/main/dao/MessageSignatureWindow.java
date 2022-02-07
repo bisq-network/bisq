@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.burnbsq.proofofburn;
+package bisq.desktop.main.dao;
 
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.FormBuilder;
 
-import bisq.core.dao.governance.proofofburn.ProofOfBurnService;
+import bisq.core.dao.SignVerifyService;
 import bisq.core.locale.Res;
 
 import bisq.common.util.Tuple3;
@@ -40,18 +40,18 @@ import java.util.Optional;
 
 import static bisq.desktop.util.FormBuilder.addInputTextField;
 
-class ProofOfBurnSignatureWindow extends Overlay<ProofOfBurnSignatureWindow> {
-    private final ProofOfBurnService proofOfBurnService;
-    private final String proofOfBurnTxId;
+public class MessageSignatureWindow extends Overlay<MessageSignatureWindow> {
+    private final SignVerifyService signVerifyService;
+    private final String txId;
     private final String pubKey;
 
     private TextField sigTextField;
     private VBox sigTextFieldBox;
 
-    ProofOfBurnSignatureWindow(ProofOfBurnService proofOfBurnService, String proofOfBurnTxId) {
-        this.proofOfBurnService = proofOfBurnService;
-        this.proofOfBurnTxId = proofOfBurnTxId;
-        this.pubKey = proofOfBurnService.getPubKeyAsHex(proofOfBurnTxId);
+    public MessageSignatureWindow(SignVerifyService signVerifyService, String txId) {
+        this.signVerifyService = signVerifyService;
+        this.txId = txId;
+        this.pubKey = signVerifyService.getPubKeyAsHex(txId);
         type = Type.Attention;
     }
 
@@ -89,7 +89,7 @@ class ProofOfBurnSignatureWindow extends Overlay<ProofOfBurnSignatureWindow> {
 
         Button signButton = FormBuilder.addButton(gridPane, ++rowIndex, Res.get("dao.proofOfBurn.sign"), 10);
         signButton.setOnAction(e -> {
-            proofOfBurnService.sign(proofOfBurnTxId, messageInputTextField.getText()).ifPresent(sig -> {
+            signVerifyService.sign(txId, messageInputTextField.getText()).ifPresent(sig -> {
                 sigTextFieldBox.setVisible(true);
                 sigTextField.setText(sig);
             });
