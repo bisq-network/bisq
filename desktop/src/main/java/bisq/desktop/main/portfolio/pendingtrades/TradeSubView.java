@@ -18,6 +18,7 @@
 package bisq.desktop.main.portfolio.pendingtrades;
 
 import bisq.desktop.components.AutoTooltipButton;
+import bisq.desktop.components.SimpleMarkdownLabel;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeWizardItem;
@@ -26,7 +27,6 @@ import bisq.desktop.util.Layout;
 import bisq.core.locale.Res;
 import bisq.core.trade.model.bisq_v1.Trade;
 
-import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
@@ -43,7 +43,7 @@ import org.fxmisc.easybind.Subscription;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
-import static bisq.desktop.util.FormBuilder.addMultilineLabel;
+import static bisq.desktop.util.FormBuilder.addSimpleMarkdownLabel;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @Slf4j
@@ -102,11 +102,14 @@ public abstract class TradeSubView extends HBox {
 
         addWizards();
 
-        TitledGroupBg titledGroupBg = addTitledGroupBg(leftGridPane, leftGridPaneRowIndex, 1, "", 30);
+        TitledGroupBg titledGroupBg = addTitledGroupBg(leftGridPane, ++leftGridPaneRowIndex, 1, "", 10);
         titledGroupBg.getStyleClass().add("last");
-        Label label = addMultilineLabel(leftGridPane, leftGridPaneRowIndex, "", 30);
+
+        SimpleMarkdownLabel label = addSimpleMarkdownLabel(leftGridPane, ++leftGridPaneRowIndex);
         AutoTooltipButton button = (AutoTooltipButton) addButtonAfterGroup(leftGridPane, ++leftGridPaneRowIndex, "");
-        tradeStepInfo = new TradeStepInfo(titledGroupBg, label, button);
+        SimpleMarkdownLabel footerLabel = addSimpleMarkdownLabel(leftGridPane, ++leftGridPaneRowIndex, Res.get("portfolio.pending.stillNotResolved"), 10);
+        footerLabel.getStyleClass().add("medium-text");
+        tradeStepInfo = new TradeStepInfo(titledGroupBg, label, button, footerLabel);
     }
 
     void showItem(TradeWizardItem item) {
@@ -132,7 +135,7 @@ public abstract class TradeSubView extends HBox {
 
     void addLineSeparatorToGridPane() {
         final Separator separator = new Separator(Orientation.VERTICAL);
-        separator.setMinHeight(22);
+        separator.setMinHeight(10);
         GridPane.setMargin(separator, new Insets(0, 0, 0, 13));
         GridPane.setHalignment(separator, HPos.LEFT);
         GridPane.setRowIndex(separator, leftGridPaneRowIndex++);

@@ -609,6 +609,10 @@ tree-table-view:focused {
     -fx-font-size: 0.769em;
 }
 
+.medium-text {
+    -fx-font-size: 0.846em;
+}
+
 .normal-text {
     -fx-font-size: 0.923em;
 }

@@ -542,3 +542,9 @@
 .offer-disabled .label {
     -bs-text-color: -bs-color-gray-bbb;
 }
+
+.markdown-label,
+.markdown-label * {
+    -fx-text-fill: -bs-text-color;
+    -fx-fill: -bs-text-color;
+}

@@ -136,6 +136,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final SignedWitnessService signedWitnessService;
 
+    private TitledGroupBg titledGroupBg;
     private AutocompleteComboBox<TradeCurrency> currencyComboBox;
     private AutocompleteComboBox<PaymentMethod> paymentMethodComboBox;
     private AutoTooltipButton createOfferButton;
@@ -187,7 +188,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     public void initialize() {
         root.setPadding(new Insets(15, 15, 5, 15));
 
-        final TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 2, Res.get("offerbook.availableOffers"));
+        titledGroupBg = addTitledGroupBg(
+                root,
+                gridRow,
+                2,
+                Res.get("offerbook.availableOffers")
+        );
         titledGroupBg.getStyleClass().add("last");
 
         HBox offerToolsBox = new HBox();
@@ -336,6 +342,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     @Override
     protected void activate() {
+        titledGroupBg.setHelpUrl(model.getDirection() == OfferDirection.SELL
+                ? "https://bisq.wiki/Introduction#In_a_nutshell"
+                : "https://bisq.wiki/Taking_an_offer");
+
         currencyComboBox.setCellFactory(GUIUtil.getTradeCurrencyCellFactory(Res.get("shared.oneOffer"),
                 Res.get("shared.multipleOffers"),
                 (model.getDirection() == OfferDirection.BUY ? model.getSellOfferCounts() : model.getBuyOfferCounts())));
