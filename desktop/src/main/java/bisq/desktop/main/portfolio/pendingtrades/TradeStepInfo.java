@@ -108,7 +108,7 @@ public class TradeStepInfo {
             case SHOW_GET_HELP_BUTTON:
                 // grey button
                 titledGroupBg.setText(Res.get("portfolio.pending.support.headline.getHelp"));
-                label.updateContent(Res.get("portfolio.pending.support.text.getHelp"));
+                label.updateContent("");
                 button.setText(Res.get("portfolio.pending.support.button.getHelp").toUpperCase());
                 button.setId(null);
                 button.getStyleClass().remove("action-button");
