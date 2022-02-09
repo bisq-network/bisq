@@ -78,7 +78,6 @@ import org.bitcoinj.core.Coin;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
@@ -344,8 +343,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     @Override
     protected void activate() {
         titledGroupBg.setupHelpUrl(model.getDirection() == OfferDirection.SELL
-                ? "https://docs.bisq.network/intro.html#in-a-nutshell"
-                : "https://docs.bisq.network/getting-started.html#take-an-offer");
+                ? "https://bisq.wiki/Introduction#In_a_nutshell"
+                : "https://bisq.wiki/Taking_an_offer");
 
         currencyComboBox.setCellFactory(GUIUtil.getTradeCurrencyCellFactory(Res.get("shared.oneOffer"),
                 Res.get("shared.multipleOffers"),
