@@ -342,7 +342,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     @Override
     protected void activate() {
-        titledGroupBg.setupHelpUrl(model.getDirection() == OfferDirection.SELL
+        titledGroupBg.setHelpUrl(model.getDirection() == OfferDirection.SELL
                 ? "https://bisq.wiki/Introduction#In_a_nutshell"
                 : "https://bisq.wiki/Taking_an_offer");
 

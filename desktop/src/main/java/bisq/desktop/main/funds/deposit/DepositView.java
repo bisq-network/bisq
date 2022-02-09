@@ -181,7 +181,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
                 Res.get("funds.deposit.fundWallet")
         );
         titledGroupBg.getStyleClass().add("last");
-        titledGroupBg.setupHelpUrl("https://bisq.wiki/Funding_your_wallet");
+        titledGroupBg.setHelpUrl("https://bisq.wiki/Funding_your_wallet");
 
         qrCodeImageView = new ImageView();
         qrCodeImageView.getStyleClass().add("qr-code");

@@ -87,7 +87,7 @@ public class TitledGroupBg extends Pane {
         this.text.set(text);
     }
 
-    public void setupHelpUrl(String helpUrl) {
+    public void setHelpUrl(String helpUrl) {
         if (helpIcon == null) {
             helpIcon = FormBuilder.getSmallIcon(AwesomeIcon.QUESTION_SIGN);
             helpIcon.setOpacity(0.4);
