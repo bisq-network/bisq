@@ -179,12 +179,12 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
         dateColumn.setComparator(Comparator.comparing(o -> o.getBsqSwapTrade().getDate()));
         directionColumn.setComparator(Comparator.comparing(o -> o.getBsqSwapTrade().getOffer().getDirection()));
         marketColumn.setComparator(Comparator.comparing(UnconfirmedBsqSwapsListItem::getMarketLabel));
-        priceColumn.setComparator(Comparator.comparing(UnconfirmedBsqSwapsListItem::getPriceAsString, Comparator.nullsFirst(Comparator.naturalOrder())));
+        priceColumn.setComparator(Comparator.comparing(UnconfirmedBsqSwapsListItem::getPrice, Comparator.nullsFirst(Comparator.naturalOrder())));
         volumeColumn.setComparator(nullsFirstComparingAsTrade(BsqSwapTrade::getVolume));
-        amountColumn.setComparator(Comparator.comparing(UnconfirmedBsqSwapsListItem::getAmountAsString, Comparator.nullsFirst(Comparator.naturalOrder())));
+        amountColumn.setComparator(Comparator.comparing(UnconfirmedBsqSwapsListItem::getAmount, Comparator.nullsFirst(Comparator.naturalOrder())));
         avatarColumn.setComparator(Comparator.comparing(UnconfirmedBsqSwapsListItem::getNumPastTrades, Comparator.nullsFirst(Comparator.naturalOrder())));
         txFeeColumn.setComparator(nullsFirstComparing(BsqSwapTrade::getTxFeePerVbyte));
-        txFeeColumn.setComparator(Comparator.comparing(UnconfirmedBsqSwapsListItem::getTxFeeAsString, Comparator.nullsFirst(Comparator.naturalOrder())));
+        txFeeColumn.setComparator(Comparator.comparing(UnconfirmedBsqSwapsListItem::getTxFee, Comparator.nullsFirst(Comparator.naturalOrder())));
 
         //
         tradeFeeColumn.setComparator(Comparator.comparing(item -> {

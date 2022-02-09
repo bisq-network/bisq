@@ -19,6 +19,7 @@ package bisq.desktop.main.portfolio.pendingtrades;
 
 import bisq.desktop.util.filtering.FilterableListItem;
 
+import bisq.core.monetary.Price;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
@@ -45,6 +46,10 @@ public class PendingTradesListItem implements FilterableListItem {
 
     public Trade getTrade() {
         return trade;
+    }
+
+    public Price getPrice() {
+        return trade.getPrice();
     }
 
     public String getPriceAsString() {

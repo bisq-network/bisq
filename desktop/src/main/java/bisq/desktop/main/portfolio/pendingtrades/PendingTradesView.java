@@ -211,7 +211,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         dateColumn.setComparator(Comparator.comparing(o -> o.getTrade().getDate()));
         volumeColumn.setComparator(Comparator.comparing(o -> o.getTrade().getVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
         amountColumn.setComparator(Comparator.comparing(o -> o.getTrade().getAmount(), Comparator.nullsFirst(Comparator.naturalOrder())));
-        priceColumn.setComparator(Comparator.comparing(PendingTradesListItem::getPriceAsString));
+        priceColumn.setComparator(Comparator.comparing(PendingTradesListItem::getPrice));
         paymentMethodColumn.setComparator(Comparator.comparing(
                 item -> item.getTrade().getOffer() != null ?
                         Res.get(item.getTrade().getOffer().getPaymentMethod().getId()) :

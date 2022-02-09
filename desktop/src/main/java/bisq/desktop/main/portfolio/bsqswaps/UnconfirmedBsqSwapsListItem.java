@@ -26,6 +26,7 @@ import bisq.desktop.util.filtering.FilteringUtils;
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.locale.CurrencyUtil;
+import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
 import bisq.core.trade.ClosedTradableManager;
@@ -109,8 +110,16 @@ class UnconfirmedBsqSwapsListItem implements FilterableListItem {
         return bsqSwapTrade.getShortId();
     }
 
+    public Coin getAmount() {
+        return bsqSwapTrade.getAmount();
+    }
+
     public String getAmountAsString() {
         return btcFormatter.formatCoin(bsqSwapTrade.getAmount());
+    }
+
+    public Price getPrice() {
+        return bsqSwapTrade.getPrice();
     }
 
     public String getPriceAsString() {
@@ -119,6 +128,10 @@ class UnconfirmedBsqSwapsListItem implements FilterableListItem {
 
     public String getVolumeAsString() {
         return VolumeUtil.formatVolumeWithCode(bsqSwapTrade.getVolume());
+    }
+
+    public Coin getTxFee() {
+        return Coin.valueOf(bsqSwapTrade.getBsqSwapProtocolModel().getTxFee());
     }
 
     public String getTxFeeAsString() {

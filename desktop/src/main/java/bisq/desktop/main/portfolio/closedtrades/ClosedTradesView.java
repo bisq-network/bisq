@@ -215,15 +215,15 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         setAvatarColumnCellFactory();
 
         tradeIdColumn.setComparator(Comparator.comparing(ClosedTradesListItem::getTradeId));
-        dateColumn.setComparator(Comparator.comparing(ClosedTradesListItem::getDateAsString));
+        dateColumn.setComparator(Comparator.comparing(ClosedTradesListItem::getDate));
         directionColumn.setComparator(Comparator.comparing(o -> o.getTradable().getOffer().getDirection()));
         marketColumn.setComparator(Comparator.comparing(ClosedTradesListItem::getMarketLabel));
-        priceColumn.setComparator(Comparator.comparing(ClosedTradesListItem::getPriceAsString, Comparator.nullsFirst(Comparator.naturalOrder())));
+        priceColumn.setComparator(Comparator.comparing(ClosedTradesListItem::getPrice, Comparator.nullsFirst(Comparator.naturalOrder())));
         deviationColumn.setComparator(Comparator.comparing(o ->
                         o.getTradable().getOffer().isUseMarketBasedPrice() ? o.getTradable().getOffer().getMarketPriceMargin() : 1,
                 Comparator.nullsFirst(Comparator.naturalOrder())));
         volumeColumn.setComparator(nullsFirstComparingAsTrade(TradeModel::getVolume));
-        amountColumn.setComparator(Comparator.comparing(ClosedTradesListItem::getAmountAsString, Comparator.nullsFirst(Comparator.naturalOrder())));
+        amountColumn.setComparator(Comparator.comparing(ClosedTradesListItem::getAmount, Comparator.nullsFirst(Comparator.naturalOrder())));
         avatarColumn.setComparator(Comparator.comparing(ClosedTradesListItem::getNumPastTrades, Comparator.nullsFirst(Comparator.naturalOrder())));
         txFeeColumn.setComparator(nullsFirstComparing(o ->
                 o.getTradable() instanceof TradeModel ? ((TradeModel) o.getTradable()).getTxFee() : o.getTradable().getOffer().getTxFee()
