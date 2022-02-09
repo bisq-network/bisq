@@ -89,9 +89,8 @@ public class TitledGroupBg extends Pane {
 
     public void setHelpUrl(String helpUrl) {
         if (helpIcon == null) {
-            helpIcon = FormBuilder.getSmallIcon(AwesomeIcon.QUESTION_SIGN);
-            helpIcon.setOpacity(0.4);
-            helpIcon.getStyleClass().add("show-hand");
+            helpIcon = FormBuilder.getSmallIcon(AwesomeIcon.QUESTION);
+            helpIcon.getStyleClass().addAll("show-hand", "highlight");
             box.getChildren().add(helpIcon);
         }
 
