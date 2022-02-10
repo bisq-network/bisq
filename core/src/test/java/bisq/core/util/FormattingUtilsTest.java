@@ -1,7 +1,6 @@
 package bisq.core.util;
 
 import bisq.core.locale.Res;
-import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 
 import org.bitcoinj.utils.Fiat;
@@ -9,7 +8,6 @@ import org.bitcoinj.utils.Fiat;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-import com.natpryce.makeiteasy.Instantiator;
 import com.natpryce.makeiteasy.Maker;
 import com.natpryce.makeiteasy.Property;
 

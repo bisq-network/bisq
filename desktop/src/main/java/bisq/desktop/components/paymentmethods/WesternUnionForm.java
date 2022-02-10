@@ -20,7 +20,6 @@ package bisq.desktop.components.paymentmethods;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
-import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.EmailValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -39,8 +38,6 @@ import bisq.core.util.validation.InputValidator;
 
 import bisq.common.util.Tuple2;
 
-import org.apache.commons.lang3.StringUtils;
-
 import javafx.scene.control.ComboBox;
 import javafx.scene.layout.GridPane;
 
@@ -48,7 +45,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 @Slf4j
 public class WesternUnionForm extends PaymentMethodForm {

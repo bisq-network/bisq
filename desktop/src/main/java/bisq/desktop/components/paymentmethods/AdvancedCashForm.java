@@ -19,7 +19,6 @@ package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.FormBuilder;
-import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.AdvancedCashValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -37,9 +36,6 @@ import bisq.common.util.Tuple2;
 import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;

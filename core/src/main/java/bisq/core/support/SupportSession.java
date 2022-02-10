@@ -19,8 +19,6 @@ package bisq.core.support;
 
 import bisq.core.support.messages.ChatMessage;
 
-import bisq.common.crypto.PubKeyRing;
-
 import javafx.collections.ObservableList;
 
 /**

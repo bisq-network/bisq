@@ -18,7 +18,6 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.PromptPayValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;

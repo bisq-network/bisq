@@ -33,7 +33,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 
 import java.util.Comparator;
 import java.util.Optional;

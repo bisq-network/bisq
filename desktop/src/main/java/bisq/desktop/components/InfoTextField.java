@@ -19,8 +19,6 @@ package bisq.desktop.components;
 
 import bisq.desktop.components.controlsfx.control.PopOver;
 
-import bisq.common.UserThread;
-
 import de.jensd.fx.fontawesome.AwesomeIcon;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 

@@ -30,7 +30,6 @@ import bisq.core.payment.AmazonGiftCardAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.AmazonGiftCardAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 

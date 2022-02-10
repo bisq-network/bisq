@@ -55,7 +55,6 @@ import static bisq.desktop.util.DisplayUtils.createAssetsAccountName;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addLabelCheckBox;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 import static bisq.desktop.util.GUIUtil.getComboBoxButtonCell;
 
 public class AssetsForm extends PaymentMethodForm {

@@ -19,7 +19,6 @@ package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.FormBuilder;
-import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.UpholdValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -38,7 +37,6 @@ import javafx.scene.layout.GridPane;
 
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 public class UpholdForm extends PaymentMethodForm {
     private final UpholdAccount upholdAccount;

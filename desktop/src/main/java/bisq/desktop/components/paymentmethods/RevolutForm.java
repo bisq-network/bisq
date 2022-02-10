@@ -43,7 +43,6 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addTopLabelFlowPane;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 @Slf4j
 public class RevolutForm extends PaymentMethodForm {

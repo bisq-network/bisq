@@ -54,7 +54,6 @@ import static bisq.core.payment.payload.SwiftAccountPayload.*;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextArea;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 public class SwiftForm extends PaymentMethodForm {
     private final SwiftAccountPayload formData;
