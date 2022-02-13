@@ -38,9 +38,6 @@ message RegisterDisputeAgentRequest {
     string registrationKey = 2;
 }
 
-/*
-* This response has no parameters.  (TODO automate generation of "This response has no parameters" comment.)
-*/
 message RegisterDisputeAgentReply {
 }
 
@@ -58,9 +55,6 @@ message GetMethodHelpRequest {
     string methodName = 1;
 }
 
-/*
-* This response has no parameters. (TODO automate generation of "This response has no parameters" comment.)
-*/
 message GetMethodHelpReply {
     string methodHelp = 1;
 }
@@ -400,9 +394,6 @@ service ShutdownServer {
     }
 }
 
-/*
-* This request has no parameters. (TODO automate generation of "This response has no parameters" comment.)
-*/
 message StopRequest {
 }
 
@@ -716,9 +707,6 @@ message VerifyBsqSentToAddressReply {
     bool isAmountReceived = 1;
 }
 
-/*
-* This request has no parameters. (TODO automate generation of "This response has no parameters" comment.)
-*/
 message GetTxFeeRateRequest {
 }
 
