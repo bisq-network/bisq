@@ -555,20 +555,21 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             maybeShowFasterPaymentsWarning(paymentAccount);
             maybeShowAccountWarning(paymentAccount, model.getDataModel().isBuyOffer());
 
-            currencySelection.setVisible(paymentAccount.hasMultipleCurrencies());
-            currencySelection.setManaged(paymentAccount.hasMultipleCurrencies());
-            currencyTextFieldBox.setVisible(!paymentAccount.hasMultipleCurrencies());
             if (paymentAccount.hasMultipleCurrencies()) {
-                final List<TradeCurrency> tradeCurrencies = paymentAccount.getTradeCurrencies();
-                currencyComboBox.setItems(FXCollections.observableArrayList(tradeCurrencies));
-                model.onPaymentAccountSelected(paymentAccount);
+                currencySelection.setVisible(true);
+                currencySelection.setManaged(true);
+                currencyTextFieldBox.setVisible(false);
+                currencyComboBox.setItems(FXCollections.observableArrayList(paymentAccount.getTradeCurrencies()));
             } else {
-                TradeCurrency singleTradeCurrency = paymentAccount.getSingleTradeCurrency();
-                if (singleTradeCurrency != null)
-                    currencyTextField.setText(singleTradeCurrency.getNameAndCode());
-                model.onPaymentAccountSelected(paymentAccount);
-                model.onCurrencySelected(model.getDataModel().getTradeCurrency());
+                currencySelection.setVisible(false);
+                currencySelection.setManaged(false);
+                currencyTextFieldBox.setVisible(true);
+                if (paymentAccount.getSingleTradeCurrency() != null)
+                    currencyTextField.setText(paymentAccount.getSingleTradeCurrency().getNameAndCode());
             }
+            model.onPaymentAccountSelected(paymentAccount);
+            model.onCurrencySelected(model.getTradeCurrency());
+            currencyComboBox.getSelectionModel().select(model.getTradeCurrency());
         } else {
             currencySelection.setVisible(false);
             currencySelection.setManaged(false);
@@ -580,10 +581,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         currencyComboBox.setOnAction(currencyComboBoxSelectionHandler);
 
         updatePriceToggle();
-    }
-
-    private void onCurrencyComboBoxSelected() {
-        model.onCurrencySelected(currencyComboBox.getSelectionModel().getSelectedItem());
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -764,7 +761,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         };
 
         paymentAccountsComboBoxSelectionHandler = e -> onPaymentAccountsComboBoxSelected();
-        currencyComboBoxSelectionHandler = e -> onCurrencyComboBoxSelected();
+        currencyComboBoxSelectionHandler = e -> model.onCurrencySelected(currencyComboBox.getSelectionModel().getSelectedItem());
 
         tradeCurrencyCodeListener = (observable, oldValue, newValue) -> {
             fixedPriceTextField.clear();

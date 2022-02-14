@@ -53,7 +53,6 @@ import bisq.core.util.coin.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
-import bisq.common.app.DevEnv;
 import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
@@ -82,8 +81,6 @@ import javafx.collections.SetChangeListener;
 
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -230,8 +227,10 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     // called before activate()
     public boolean initWithData(OfferDirection direction, TradeCurrency tradeCurrency) {
+        checkNotNull(tradeCurrency, "tradeCurrency must not be null");
         this.direction = direction;
         this.tradeCurrency = tradeCurrency;
+        tradeCurrencyCode.set(this.tradeCurrency.getCode());
 
         fillPaymentAccounts();
 
@@ -259,9 +258,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
                 return false;
             }
         }
-
-        setTradeCurrencyFromPaymentAccount(paymentAccount);
-        tradeCurrencyCode.set(this.tradeCurrency.getCode());
 
         priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
 
@@ -332,7 +328,9 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
             preferences.setSelectedPaymentAccountForCreateOffer(paymentAccount);
             this.paymentAccount = paymentAccount;
 
-            setTradeCurrencyFromPaymentAccount(paymentAccount);
+            tradeCurrency = paymentAccount.getTradeCurrency().orElse(tradeCurrency);
+            tradeCurrencyCode.set(tradeCurrency.getCode());
+
             setSuggestedSecurityDeposit(getPaymentAccount());
 
             if (amount.get() != null && this.allowAmountUpdate)
@@ -378,14 +376,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
             log.error(t.toString());
             buyerSecurityDeposit.set(minSecurityDeposit);
         }
-    }
-
-    private void setTradeCurrencyFromPaymentAccount(PaymentAccount paymentAccount) {
-        if (!paymentAccount.getTradeCurrencies().contains(tradeCurrency))
-            tradeCurrency = paymentAccount.getTradeCurrency().orElse(tradeCurrency);
-
-        checkNotNull(tradeCurrency, "tradeCurrency must not be null");
-        tradeCurrencyCode.set(tradeCurrency.getCode());
     }
 
     void onCurrencySelected(TradeCurrency tradeCurrency) {
