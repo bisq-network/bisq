@@ -1,18 +1,25 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 syntax = "proto3";
 package io.bisq.protobuffer;
-
-//
-// Protobuffer v3 definitions of network messages and persisted objects.
-//
-
-
 option java_package = "protobuf";
 option java_multiple_files = true;
-///////////////////////////////////////////////////////////////////////////////////////////
-// Network messages
-///////////////////////////////////////////////////////////////////////////////////////////
 
-// Those are messages sent over wire
 message NetworkEnvelope {
     int32 message_version = 1;
     oneof message {
@@ -94,15 +101,9 @@ message NetworkEnvelope {
     }
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-// Implementations of NetworkEnvelope
-///////////////////////////////////////////////////////////////////////////////////////////
-
 message BundleOfEnvelopes {
     repeated NetworkEnvelope envelopes = 1;
 }
-
-// get data
 
 message PreliminaryGetDataRequest {
     int32 nonce = 21; // This was set to 21 instead of 1 in some old commit so we cannot change it.
@@ -135,8 +136,6 @@ message FileTransferPart {
     bytes message_data = 6;
 }
 
-// peers
-
 message GetPeersRequest {
     NodeAddress sender_node_address = 1;
     int32 nonce = 2;
@@ -159,8 +158,6 @@ message Pong {
     int32 request_nonce = 1;
 }
 
-// Inventory
-
 message GetInventoryRequest {
     string version = 1;
 }
@@ -168,8 +165,6 @@ message GetInventoryRequest {
 message GetInventoryResponse {
     map<string, string> inventory = 1;
 }
-
-// offer
 
 message OfferAvailabilityRequest {
     string offer_id = 1;
@@ -197,8 +192,6 @@ message RefreshOfferMessage {
     int32 sequence_number = 4;
 }
 
-// storage
-
 message AddDataMessage {
     StorageEntryWrapper entry = 1;
 }
@@ -214,8 +207,6 @@ message RemoveMailboxDataMessage {
 message AddPersistableNetworkPayloadMessage {
     PersistableNetworkPayload payload = 1;
 }
-
-// misc
 
 message CloseConnectionMessage {
     string reason = 1;
@@ -239,8 +230,6 @@ message PrefixedSealedAndSignedMessage {
     string uid = 4;
 }
 
-// trade
-
 message InputsForDepositTxRequest {
     string trade_id = 1;
     NodeAddress sender_node_address = 2;
@@ -255,7 +244,8 @@ message InputsForDepositTxRequest {
     bytes taker_multi_sig_pub_key = 11;
     string taker_payout_address_string = 12;
     PubKeyRing taker_pub_key_ring = 13;
-    PaymentAccountPayload taker_payment_account_payload = 14; // Not used anymore from 1.7.0 but kept for backward compatibility
+    // Not used anymore from 1.7.0 but kept for backward compatibility.
+    PaymentAccountPayload taker_payment_account_payload = 14;
     string taker_account_id = 15;
     string taker_fee_tx_id = 16;
     repeated NodeAddress accepted_arbitrator_node_addresses = 17;
@@ -273,7 +263,8 @@ message InputsForDepositTxRequest {
 
 message InputsForDepositTxResponse {
     string trade_id = 1;
-    PaymentAccountPayload maker_payment_account_payload = 2; // Not used anymore from 1.7.0 but kept for backward compatibility
+    // Not used anymore from 1.7.0 but kept for backward compatibility.
+    PaymentAccountPayload maker_payment_account_payload = 2;
     string maker_account_id = 3;
     string maker_contract_as_json = 4;
     string maker_contract_signature = 5;
@@ -375,14 +366,14 @@ message MediatedPayoutTxSignatureMessage {
     NodeAddress sender_node_address = 4;
 }
 
-// Deprecated since 1.4.0
+/* Deprecated since 1.4.0. */
 message RefreshTradeStateRequest {
     string uid = 1 [deprecated = true];
     string trade_id = 2 [deprecated = true];
     NodeAddress sender_node_address = 3 [deprecated = true];
 }
 
-// Deprecated since 1.4.0
+/* Deprecated since 1.4.0. */
 message TraderSignedWitnessMessage {
     string uid = 1 [deprecated = true];
     string trade_id = 2 [deprecated = true];
@@ -390,7 +381,6 @@ message TraderSignedWitnessMessage {
     SignedWitness signed_witness = 4 [deprecated = true];
 }
 
-// BsqSwap
 message SellersBsqSwapRequest {
     string uid = 1;
     string trade_id = 2;
@@ -447,8 +437,7 @@ message BsqSwapFinalizedTxMessage {
     bytes tx = 4;
 }
 
-// dispute
-
+/* Dispute support types. */
 enum SupportType {
     ARBITRATION = 0;
     MEDIATION = 1;
@@ -510,8 +499,7 @@ message PrivateNotificationMessage {
     PrivateNotificationPayload private_notification_payload = 3;
 }
 
-// DAO
-
+/* DAO blocks request. */
 message GetBlocksRequest {
     int32 from_block_height = 1;
     int32 nonce = 2;
@@ -519,14 +507,15 @@ message GetBlocksRequest {
     repeated int32 supported_capabilities = 4;
 }
 
+/* DAO blocks response. */
 message GetBlocksResponse {
-    // Because of the way how PB implements inheritance we need to use the super class as type
+    // Because of the way how PB implements inheritance we need to use the super class as type.
     repeated BaseBlock raw_blocks = 1;
     int32 request_nonce = 2;
 }
 
 message NewBlockBroadcastMessage {
-    // Because of the way how PB implements inheritance we need to use the super class as type
+    // Because of the way how PB implements inheritance we need to use the super class as type.
     BaseBlock raw_block = 1;
 }
 
@@ -575,12 +564,6 @@ message GetBlindVoteStateHashesResponse {
     int32 request_nonce = 2;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-// Payload
-///////////////////////////////////////////////////////////////////////////////////////////
-
-// core
-
 message NodeAddress {
     string host_name = 1;
     int32 port = 2;
@@ -595,7 +578,7 @@ message Peer {
 message PubKeyRing {
     bytes signature_pub_key_bytes = 1;
     bytes encryption_pub_key_bytes = 2;
-    reserved 3; // WAS: string pgp_pub_key_as_pem = 3;
+    reserved 3;  // Formerly: string pgp_pub_key_as_pem = 3;
 }
 
 message SealedAndSigned {
@@ -604,8 +587,6 @@ message SealedAndSigned {
     bytes signature = 3;
     bytes sig_public_key_bytes = 4;
 }
-
-// storage
 
 message StoragePayload {
     oneof message {
@@ -642,8 +623,6 @@ message ProtectedStorageEntry {
     bytes signature = 4;
     int64 creation_time_stamp = 5;
 }
-
-// mailbox
 
 message StorageEntryWrapper {
     oneof message {
@@ -684,8 +663,6 @@ message DecryptedMessageWithPubKey {
     bytes signature_pub_key_bytes = 2;
 }
 
-// misc
-
 message PrivateNotificationPayload {
     string message = 1;
     string signature_as_base64 = 2;
@@ -697,10 +674,6 @@ message PaymentAccountFilter {
     string get_method_name = 2;
     string value = 3;
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////
-// Storage payload
-///////////////////////////////////////////////////////////////////////////////////////////
 
 message Alert {
     string message = 1;
@@ -788,7 +761,7 @@ message Filter {
     repeated int32 enabled_pow_versions = 35;
 }
 
-// Deprecated
+/* Deprecated */
 message TradeStatistics2 {
     string base_currency = 1 [deprecated = true];
     string counter_currency = 2 [deprecated = true];
@@ -840,8 +813,10 @@ message OfferPayload {
     int64 min_amount = 10;
     string base_currency_code = 11;
     string counter_currency_code = 12;
-    repeated NodeAddress arbitrator_node_addresses = 13 [deprecated = true]; // not used anymore but still required as old clients check for nonNull
-    repeated NodeAddress mediator_node_addresses = 14 [deprecated = true]; // not used anymore but still required as old clients check for nonNull
+    // Not used anymore but still required as old clients check for nonNull.
+    repeated NodeAddress arbitrator_node_addresses = 13 [deprecated = true];
+    // Not used anymore but still required as old clients check for nonNull.
+    repeated NodeAddress mediator_node_addresses = 14 [deprecated = true];
     string payment_method_id = 15;
     string maker_payment_account_id = 16;
     string offer_fee_payment_tx_id = 17;
@@ -919,11 +894,6 @@ message SignedWitness {
     int64 date = 6;
     int64 trade_amount = 7;
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////
-// Dispute payload
-///////////////////////////////////////////////////////////////////////////////////////////
-
 
 message Dispute {
     enum State {
@@ -1022,10 +992,6 @@ message DisputeResult {
     PayoutSuggestion payout_suggestion = 17;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-// Trade payload
-///////////////////////////////////////////////////////////////////////////////////////////
-
 message Contract {
     OfferPayload offer_payload = 1;
     int64 trade_amount = 2;
@@ -1035,8 +1001,10 @@ message Contract {
     bool is_buyer_maker_and_seller_taker = 6;
     string maker_account_id = 7;
     string taker_account_id = 8;
-    PaymentAccountPayload maker_payment_account_payload = 9; // Not used anymore from 1.7.0 but kept for backward compatibility
-    PaymentAccountPayload taker_payment_account_payload = 10; // Not used anymore from 1.7.0 but kept for backward compatibility
+    // Not used anymore from 1.7.0 but kept for backward compatibility.
+    PaymentAccountPayload maker_payment_account_payload = 9;
+    // Not used anymore from 1.7.0 but kept for backward compatibility.
+    PaymentAccountPayload taker_payment_account_payload = 10;
     PubKeyRing maker_pub_key_ring = 11;
     PubKeyRing taker_pub_key_ring = 12;
     NodeAddress buyer_node_address = 13;
@@ -1078,15 +1046,11 @@ enum AvailabilityResult {
     PRICE_CHECK_FAILED = 13;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-// PaymentAccount payload
-///////////////////////////////////////////////////////////////////////////////////////////
-
-
 message PaymentAccountPayload {
     string id = 1;
     string payment_method_id = 2;
-    int64 max_trade_period = 3 [deprecated = true]; // not used anymore but we need to keep it in PB for backward compatibility
+    // Not used anymore but we need to keep it in PB for backward compatibility.
+    int64 max_trade_period = 3 [deprecated = true];
     oneof message {
         AliPayAccountPayload ali_pay_account_payload = 4;
         ChaseQuickPayAccountPayload chase_quick_pay_account_payload = 5;
@@ -1295,7 +1259,7 @@ message InteracETransferAccountPayload {
     string answer = 4;
 }
 
-// Deprecated, not used anymore
+/* Deprecated, not used. */
 message OKPayAccountPayload {
     string account_nr = 1;
 }
@@ -1305,7 +1269,7 @@ message UpholdAccountPayload {
     string account_owner = 2;
 }
 
-// Deprecated, not used anymore
+/* Deprecated, not used. */
 message CashAppAccountPayload {
     string cash_tag = 1;
 }
@@ -1314,7 +1278,7 @@ message MoneyBeamAccountPayload {
     string account_id = 1;
 }
 
-// Deprecated, not used anymore
+/* Deprecated, not used. */
 message VenmoAccountPayload {
     string venmo_user_name = 1;
     string holder_name = 2;
@@ -1473,11 +1437,6 @@ message SwiftAccountPayload {
     string intermediary_address = 16;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-// PersistableEnvelope
-///////////////////////////////////////////////////////////////////////////////////////////
-
-// Those are persisted to disc
 message PersistableEnvelope {
     oneof message {
         SequenceNumberMap sequence_number_map = 1;
@@ -1487,20 +1446,24 @@ message PersistableEnvelope {
         NavigationPath navigation_path = 5;
 
         TradableList tradable_list = 6;
-        // TradeStatisticsList trade_statistics_list = 7; // Was used in pre v0.6.0 version. Not used anymore.
+
+        // TradeStatisticsList trade_statistics_list = 7; Deprecated, Was used in pre v0.6.0 version. Not used anymore.
+
         ArbitrationDisputeList arbitration_dispute_list = 8;
 
         PreferencesPayload preferences_payload = 9;
         UserPayload user_payload = 10;
         PaymentAccountList payment_account_list = 11;
 
-        // deprecated
-        // BsqState bsq_state = 12; // not used but as other non-dao data have a higher index number we leave it to make clear that we cannot change following indexes
+        // Deprecated.
+        // Not used but as other non-dao data have a higher index number we leave it to make clear that we
+        // cannot change following indexes.
+        // BsqState bsq_state = 12;
 
         AccountAgeWitnessStore account_age_witness_store = 13;
         TradeStatistics2Store trade_statistics2_store = 14 [deprecated = true];
 
-        // PersistableNetworkPayloadList persistable_network_payload_list = 15; // long deprecated & migration away from it is already done
+        // PersistableNetworkPayloadList persistable_network_payload_list = 15; // long deprecated & migration away from it is already done.
 
         ProposalStore proposal_store = 16;
         TempProposalStore temp_proposal_store = 17;
@@ -1509,7 +1472,9 @@ message PersistableEnvelope {
         BallotList ballot_list = 20;
         MyVoteList my_vote_list = 21;
         MyBlindVoteList my_blind_vote_list = 22;
-        // MeritList merit_list = 23; // was not used here, but its class used to implement PersistableEnvelope via its super
+
+        // MeritList merit_list = 23; // was not used here, but its class used to implement PersistableEnvelope via its super.
+
         DaoStateStore dao_state_store = 24;
         MyReputationList my_reputation_list = 25;
         MyProofOfBurnList my_proof_of_burn_list = 26;
@@ -1524,10 +1489,6 @@ message PersistableEnvelope {
         BsqBlockStore bsq_block_store = 35;
     }
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////
-// Collections
-///////////////////////////////////////////////////////////////////////////////////////////
 
 message SequenceNumberMap {
     repeated SequenceNumberEntry sequence_number_entries = 1;
@@ -1547,12 +1508,12 @@ message MapValue {
     int64 time_stamp = 2;
 }
 
-// deprecated. Not used anymore.
+/* Deprecated. Not used anymore. */
 message PersistedEntryMap {
     map<string, ProtectedStorageEntry> persisted_entry_map = 1;
 }
 
-// We use a list not a hash map to save disc space. The hash can be calculated from the payload anyway
+/* We use a list not a hash map to save disc space. The hash can be calculated from the payload anyway. */
 message AccountAgeWitnessStore {
     repeated AccountAgeWitness items = 1;
 }
@@ -1561,8 +1522,9 @@ message SignedWitnessStore {
     repeated SignedWitness items = 1;
 }
 
-// We use a list not a hash map to save disc space. The hash can be calculated from the payload anyway
-// Deprecated
+/* Deprecated. Not used anymore.
+* We use a list not a hash map to save disc space. The hash can be calculated from the payload anyway.
+*/
 message TradeStatistics2Store {
     repeated TradeStatistics2 items = 1 [deprecated = true];
 }
@@ -1605,10 +1567,6 @@ message NavigationPath {
 message PaymentAccountList {
     repeated PaymentAccount payment_account = 1;
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////
-// Offer/Trade
-///////////////////////////////////////////////////////////////////////////////////////////
 
 message TradableList {
     repeated Tradable tradable = 1;
@@ -1713,9 +1671,12 @@ message Trade {
     enum DisputeState {
         PB_ERROR_DISPUTE_STATE = 0;
         NO_DISPUTE = 1;
-        DISPUTE_REQUESTED = 2; // arbitration  We use the enum name for resolving enums so it cannot be renamed
-        DISPUTE_STARTED_BY_PEER = 3; // arbitration  We use the enum name for resolving enums so it cannot be renamed
-        DISPUTE_CLOSED = 4; // arbitration  We use the enum name for resolving enums so it cannot be renamed
+        // Arbitration requested.  We use the enum name for resolving enums so it cannot be renamed.
+        DISPUTE_REQUESTED = 2;
+        // Arbitration requested.  We use the enum name for resolving enums so it cannot be renamed.
+        DISPUTE_STARTED_BY_PEER = 3;
+        // Arbitration requested.  We use the enum name for resolving enums so it cannot be renamed
+        DISPUTE_CLOSED = 4;
         MEDIATION_REQUESTED = 5;
         MEDIATION_STARTED_BY_PEER = 6;
         MEDIATION_CLOSED = 7;
@@ -1833,8 +1794,8 @@ message ProcessModel {
     PubKeyRing pub_key_ring = 4;
     string take_offer_fee_tx_id = 5;
     bytes payout_tx_signature = 6;
-    reserved 7; // Not used anymore
-    reserved 8; // Not used anymore
+    reserved 7; // Not used anymore.
+    reserved 8; // Not used anymore.
     bytes prepared_deposit_tx = 9;
     repeated RawTransactionInput raw_transaction_inputs = 10;
     int64 change_output_value = 11;
@@ -1890,11 +1851,6 @@ message BsqSwapTradePeer {
     bytes tx = 7;
 }
 
-
-///////////////////////////////////////////////////////////////////////////////////////////
-// Dispute
-///////////////////////////////////////////////////////////////////////////////////////////
-
 message ArbitrationDisputeList {
     repeated Dispute dispute = 1;
 }
@@ -1926,15 +1882,10 @@ enum MediationResultState {
     PAYOUT_TX_SEEN_IN_NETWORK = 15;
 }
 
-//todo
 enum RefundResultState {
     PB_ERROR_REFUND_RESULT = 0;
     UNDEFINED_REFUND_RESULT = 1;
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////
-// Preferences
-///////////////////////////////////////////////////////////////////////////////////////////
 
 message PreferencesPayload {
     string user_language = 1;
@@ -1966,7 +1917,8 @@ message PreferencesPayload {
     string bitcoin_nodes = 27;
     repeated string ignore_traders_list = 28;
     string directory_chooser_path = 29;
-    int64 buyer_security_deposit_as_long = 30 [deprecated = true]; // Superseded by buyerSecurityDepositAsPercent
+    // Superseded by buyerSecurityDepositAsPercent.
+    int64 buyer_security_deposit_as_long = 30 [deprecated = true];
     bool use_animations = 31;
     PaymentAccount selectedPayment_account_for_createOffer = 32;
     bool pay_fee_in_Btc = 33;
@@ -2010,10 +1962,6 @@ message AutoConfirmSettings {
     string currency_code = 5;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-// UserPayload
-///////////////////////////////////////////////////////////////////////////////////////////
-
 message UserPayload {
     string account_id = 1;
     repeated PaymentAccount payment_accounts = 2;
@@ -2033,12 +1981,6 @@ message UserPayload {
     map<string, string> cookie = 16;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-// DAO
-///////////////////////////////////////////////////////////////////////////////////////////
-
-// blockchain
-
 message BaseBlock {
     int32 height = 1;
     int64 time = 2;
@@ -2055,12 +1997,12 @@ message BsqBlockStore {
 }
 
 message RawBlock {
-    // Because of the way how PB implements inheritance we need to use the super class as type
+    // Because of the way how PB implements inheritance we need to use the super class as type.
     repeated BaseTx raw_txs = 1;
 }
 
 message Block {
-    // Because of the way how PB implements inheritance we need to use the super class as type
+    // Because of the way how PB implements inheritance we need to use the super class as type.
     repeated BaseTx txs = 1;
 }
 
@@ -2078,12 +2020,12 @@ message BaseTx {
 }
 
 message RawTx {
-    // Because of the way how PB implements inheritance we need to use the super class as type
+    // Because of the way how PB implements inheritance we need to use the super class as type.
     repeated BaseTxOutput raw_tx_outputs = 1;
 }
 
 message Tx {
-    // Because of the way how PB implements inheritance we need to use the super class as type
+    // Because of the way how PB implements inheritance we need to use the super class as type.
     repeated BaseTxOutput tx_outputs = 1;
     TxType txType = 2;
     int64 burnt_bsq = 3;
@@ -2195,8 +2137,6 @@ message PubKeyScript {
     string hex = 5;
 }
 
-// dao data
-
 message DaoPhase {
     int32 phase_ordinal = 1;
     int32 duration = 2;
@@ -2209,10 +2149,10 @@ message Cycle {
 
 message DaoState {
     int32 chain_height = 1;
-    // Because of the way how PB implements inheritance we need to use the super class as type
+    // Because of the way how PB implements inheritance we need to use the super class as type.
     repeated BaseBlock blocks = 2;
     repeated Cycle cycles = 3;
-    // Because of the way how PB implements inheritance we need to use the super class as type
+    // Because of the way how PB implements inheritance we need to use the super class as type.
     map<string, BaseTxOutput> unspent_tx_output_map = 4;
     map<string, Issuance> issuance_map = 5;
     repeated string confiscated_lockup_tx_list = 6;
@@ -2245,7 +2185,7 @@ message Proposal {
         GenericProposal generic_proposal = 11;
         RemoveAssetProposal remove_asset_proposal = 12;
     }
-    // We leave some index space here in case we add more subclasses
+    // We leave some index space here in case we add more subclasses.
     map<string, string> extra_data = 20;
 }
 
@@ -2260,7 +2200,7 @@ message ReimbursementProposal {
 }
 
 message ChangeParamProposal {
-    string param = 1; // name of enum
+    string param = 1; // Name of enum.
     string param_value = 2;
 }
 
@@ -2285,7 +2225,7 @@ message Role {
     string uid = 1;
     string name = 2;
     string link = 3;
-    string bonded_role_type = 4; // name of BondedRoleType enum
+    string bonded_role_type = 4; // Name of BondedRoleType enum.
 }
 
 message MyReputation {
@@ -2458,10 +2398,6 @@ message BlindVoteStateHash {
     int32 num_blind_votes = 4;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-// Misc
-///////////////////////////////////////////////////////////////////////////////////////////
-
 message BlockChainExplorer {
     string name = 1;
     string tx_url = 2;
@@ -2483,8 +2419,6 @@ message PaymentMethod {
     int64 max_trade_period = 2;
     int64 max_trade_limit = 3;
 }
-
-// Currency
 
 message Currency {
     string currency_code = 1;
@@ -2518,10 +2452,6 @@ message Region {
     string name = 2;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-// Notifications
-///////////////////////////////////////////////////////////////////////////////////////////
-
 message PriceAlertFilter {
     string currencyCode = 1;
     int64 high = 2;
@@ -2534,10 +2464,6 @@ message MarketAlertFilter {
     bool is_buy_offer = 3;
     repeated string alert_ids = 4;
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////
-// Mock
-///////////////////////////////////////////////////////////////////////////////////////////
 
 message MockMailboxPayload {
     string message = 1;
