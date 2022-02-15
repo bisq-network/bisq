@@ -56,7 +56,7 @@ public abstract class BisqDefaultCoinSelector implements CoinSelector {
     // We reset the value to null just after we have applied it inside the select method.
     @Nullable
     @Setter
-    protected Set<TransactionOutput> utxoCandidates;
+    private Set<TransactionOutput> utxoCandidates;
 
     public CoinSelection select(Coin target, Set<TransactionOutput> candidates) {
         return select(target, new ArrayList<>(candidates));
@@ -78,8 +78,6 @@ public abstract class BisqDefaultCoinSelector implements CoinSelector {
         ArrayList<TransactionOutput> sortedOutputs;
         if (utxoCandidates != null) {
             sortedOutputs = new ArrayList<>(utxoCandidates);
-            // We reuse the selectors. Reset the transactionOutputCandidates field
-            utxoCandidates = null;
         } else {
             sortedOutputs = new ArrayList<>(candidates);
         }

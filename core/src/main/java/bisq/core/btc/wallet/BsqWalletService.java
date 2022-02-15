@@ -588,7 +588,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
             wallet.completeTx(sendRequest);
             checkWalletConsistency(wallet);
             verifyTransaction(tx);
-
+            coinSelector.setUtxoCandidates(null);   // We reuse the selectors. Reset the transactionOutputCandidates field
             return tx;
         } catch (InsufficientMoneyException e) {
             log.error("getPreparedSendTx: tx={}", tx.toString());
