@@ -20,6 +20,7 @@ package bisq.core.provider.fee;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.filter.FilterManager;
 
 import bisq.common.UserThread;
 import bisq.common.config.Config;
@@ -68,9 +69,31 @@ public class FeeService {
     private static final long MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN = 2;
     private static DaoStateService daoStateService;
     private static PeriodService periodService;
+    private static FilterManager filterManager = null;
 
-    private static Coin getFeeFromParamAsCoin(Param parm) {
-        return daoStateService != null && periodService != null ? daoStateService.getParamValueAsCoin(parm, periodService.getChainHeight()) : Coin.ZERO;
+    private static Coin getFeeFromParamAsCoin(Param param) {
+        // if specified, filter values take precedence
+        Coin fromFilter = getFilterFromParamAsCoin(param);
+        if (fromFilter.isGreaterThan(Coin.ZERO)) {
+            return fromFilter;
+        }
+        return daoStateService != null && periodService != null ? daoStateService.getParamValueAsCoin(param, periodService.getChainHeight()) : Coin.ZERO;
+    }
+
+    private static Coin getFilterFromParamAsCoin(Param param) {
+        Coin filterVal = Coin.ZERO;
+        if (filterManager != null) {
+            if (param == Param.DEFAULT_MAKER_FEE_BTC) {
+                filterVal = Coin.valueOf(filterManager.getFilter().getMakerFeeBtc());
+            } else if (param == Param.DEFAULT_TAKER_FEE_BTC) {
+                filterVal = Coin.valueOf(filterManager.getFilter().getTakerFeeBtc());
+            } else if (param == Param.DEFAULT_MAKER_FEE_BSQ) {
+                filterVal = Coin.valueOf(filterManager.getFilter().getMakerFeeBsq());
+            } else if (param == Param.DEFAULT_TAKER_FEE_BSQ) {
+                filterVal = Coin.valueOf(filterManager.getFilter().getTakerFeeBsq());
+            }
+        }
+        return filterVal;
     }
 
     public static Coin getMakerFeePerBtc(boolean currencyForFeeIsBtc) {
@@ -122,7 +145,8 @@ public class FeeService {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onAllServicesInitialized() {
+    public void onAllServicesInitialized(FilterManager providedFilterManager) {
+        filterManager = providedFilterManager;
         minFeePerVByte = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
 
         requestFees();
