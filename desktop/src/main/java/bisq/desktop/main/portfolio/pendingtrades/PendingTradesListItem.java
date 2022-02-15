@@ -17,39 +17,74 @@
 
 package bisq.desktop.main.portfolio.pendingtrades;
 
+import bisq.desktop.util.filtering.FilterableListItem;
+
 import bisq.core.monetary.Price;
-import bisq.core.monetary.Volume;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
-import org.bitcoinj.core.Coin;
+import org.apache.commons.lang3.StringUtils;
 
-import javafx.beans.property.ReadOnlyObjectProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static bisq.core.locale.CurrencyUtil.getCurrencyPair;
 
 /**
  * We could remove that wrapper if it is not needed for additional UI only fields.
  */
-public class PendingTradesListItem {
-
+public class PendingTradesListItem implements FilterableListItem {
+    public static final Logger log = LoggerFactory.getLogger(PendingTradesListItem.class);
+    private final CoinFormatter btcFormatter;
     private final Trade trade;
 
-    public PendingTradesListItem(Trade trade) {
+    public PendingTradesListItem(Trade trade, CoinFormatter btcFormatter) {
         this.trade = trade;
+        this.btcFormatter = btcFormatter;
     }
 
     public Trade getTrade() {
         return trade;
     }
 
-    public ReadOnlyObjectProperty<Coin> tradeAmountProperty() {
-        return trade.amountProperty();
-    }
-
-    public ReadOnlyObjectProperty<Volume> tradeVolumeProperty() {
-        return trade.volumeProperty();
-    }
-
     public Price getPrice() {
         return trade.getPrice();
     }
 
+    public String getPriceAsString() {
+        return FormattingUtils.formatPrice(trade.getPrice());
+    }
+
+    public String getAmountAsString() {
+        return btcFormatter.formatCoin(trade.getAmount());
+    }
+
+    public String getPaymentMethod() {
+        return trade.getOffer().getPaymentMethodNameWithCountryCode();
+    }
+
+    public String getMarketDescription() {
+        return getCurrencyPair(trade.getOffer().getCurrencyCode());
+    }
+
+    @Override
+    public boolean match(String filterString) {
+        if (filterString.isEmpty()) {
+            return true;
+        }
+        if (StringUtils.containsIgnoreCase(getTrade().getId(), filterString)) {
+            return true;
+        }
+        if (StringUtils.containsIgnoreCase(getAmountAsString(), filterString)) {
+            return true;
+        }
+        if (StringUtils.containsIgnoreCase(getPaymentMethod(), filterString)) {
+            return true;
+        }
+        if (StringUtils.containsIgnoreCase(getMarketDescription(), filterString)) {
+            return true;
+        }
+        return StringUtils.containsIgnoreCase(getPriceAsString(), filterString);
+    }
 }

@@ -45,8 +45,6 @@ public class TransactionAwareTradeTest {
     private ArbitrationManager arbitrationManager;
     private Trade delegate;
     private TransactionAwareTradable trade;
-    private RefundManager refundManager;
-    private BtcWalletService btcWalletService;
 
     @Before
     public void setUp() {
@@ -55,8 +53,8 @@ public class TransactionAwareTradeTest {
 
         delegate = mock(Trade.class, RETURNS_DEEP_STUBS);
         arbitrationManager = mock(ArbitrationManager.class, RETURNS_DEEP_STUBS);
-        refundManager = mock(RefundManager.class, RETURNS_DEEP_STUBS);
-        btcWalletService = mock(BtcWalletService.class, RETURNS_DEEP_STUBS);
+        RefundManager refundManager = mock(RefundManager.class, RETURNS_DEEP_STUBS);
+        BtcWalletService btcWalletService = mock(BtcWalletService.class, RETURNS_DEEP_STUBS);
         trade = new TransactionAwareTrade(delegate, arbitrationManager, refundManager, btcWalletService, null);
     }
 

@@ -29,7 +29,7 @@ public class CryptoCurrencyUtil {
     public static List<String> getSupportedCryptoCurrencies() {
         final List<String> result = new ArrayList<>();
         result.add("BSQ");
-        // result.add("XMR"); // TODO Uncomment when XMR support is added.
+        result.add("XMR");
         result.sort(String::compareTo);
         return result;
     }

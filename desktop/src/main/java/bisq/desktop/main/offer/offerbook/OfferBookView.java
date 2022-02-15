@@ -41,6 +41,8 @@ import bisq.desktop.main.offer.OfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.BsqSwapOfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
+import bisq.desktop.main.portfolio.PortfolioView;
+import bisq.desktop.main.portfolio.editoffer.EditOfferView;
 import bisq.desktop.util.CssTheme;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
@@ -58,6 +60,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferFilterService;
 import bisq.core.offer.OfferRestrictions;
+import bisq.core.offer.OpenOffer;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.DontShowAgainLookup;
@@ -133,6 +136,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final SignedWitnessService signedWitnessService;
 
+    private TitledGroupBg titledGroupBg;
     private AutocompleteComboBox<TradeCurrency> currencyComboBox;
     private AutocompleteComboBox<PaymentMethod> paymentMethodComboBox;
     private AutoTooltipButton createOfferButton;
@@ -184,7 +188,12 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
     public void initialize() {
         root.setPadding(new Insets(15, 15, 5, 15));
 
-        final TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, 2, Res.get("offerbook.availableOffers"));
+        titledGroupBg = addTitledGroupBg(
+                root,
+                gridRow,
+                2,
+                Res.get("offerbook.availableOffers")
+        );
         titledGroupBg.getStyleClass().add("last");
 
         HBox offerToolsBox = new HBox();
@@ -333,6 +342,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
     @Override
     protected void activate() {
+        titledGroupBg.setHelpUrl(model.getDirection() == OfferDirection.SELL
+                ? "https://bisq.wiki/Introduction#In_a_nutshell"
+                : "https://bisq.wiki/Taking_an_offer");
+
         currencyComboBox.setCellFactory(GUIUtil.getTradeCurrencyCellFactory(Res.get("shared.oneOffer"),
                 Res.get("shared.multipleOffers"),
                 (model.getDirection() == OfferDirection.BUY ? model.getSellOfferCounts() : model.getBuyOfferCounts())));
@@ -720,7 +733,10 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         if (model.isBootstrappedOrShowPopup()) {
             String key = "RemoveOfferWarning";
             if (DontShowAgainLookup.showAgain(key)) {
-                new Popup().warning(Res.get("popup.warning.removeOffer", model.getMakerFeeAsString(offer)))
+                String message = offer.getMakerFee().isPositive() ?
+                        Res.get("popup.warning.removeOffer", model.getMakerFeeAsString(offer)) :
+                        Res.get("popup.warning.removeNoFeeOffer");
+                new Popup().warning(message)
                         .actionButtonText(Res.get("shared.removeOffer"))
                         .onAction(() -> doRemoveOffer(offer))
                         .closeButtonText(Res.get("shared.dontRemoveOffer"))
@@ -732,10 +748,20 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         }
     }
 
+    private void onEditOpenOffer(Offer offer) {
+        OpenOffer openOffer = model.getOpenOffer(offer);
+        if (openOffer != null) {
+            navigation.navigateToWithData(openOffer, MainView.class, PortfolioView.class, EditOfferView.class);
+        }
+    }
+
     private void doRemoveOffer(Offer offer) {
         String key = "WithdrawFundsAfterRemoveOfferInfo";
         model.onRemoveOpenOffer(offer,
                 () -> {
+                    if (offer.isBsqSwapOffer()) {
+                        return; // nothing to withdraw when Bsq swap is canceled (issue #5956)
+                    }
                     log.debug(Res.get("offerbook.removeOffer.success"));
                     if (DontShowAgainLookup.showAgain(key))
                         new Popup().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
@@ -1080,15 +1106,32 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                     @Override
                     public TableCell<OfferBookListItem, OfferBookListItem> call(TableColumn<OfferBookListItem, OfferBookListItem> column) {
                         return new TableCell<>() {
-                            final ImageView iconView = new ImageView();
-                            final AutoTooltipButton button = new AutoTooltipButton();
                             OfferFilterService.Result canTakeOfferResult = null;
 
+                            final ImageView iconView = new ImageView();
+                            final AutoTooltipButton button = new AutoTooltipButton();
                             {
                                 button.setGraphic(iconView);
-                                button.setMinWidth(200);
-                                button.setMaxWidth(Double.MAX_VALUE);
                                 button.setGraphicTextGap(10);
+                                button.setPrefWidth(10000);
+                            }
+
+                            final ImageView iconView2 = new ImageView();
+                            final AutoTooltipButton button2 = new AutoTooltipButton();
+                            {
+                                button2.setGraphic(iconView2);
+                                button2.setGraphicTextGap(10);
+                                button2.setPrefWidth(10000);
+                            }
+
+                            final HBox hbox = new HBox();
+                            {
+                                hbox.setSpacing(8);
+                                hbox.setAlignment(Pos.CENTER);
+                                hbox.getChildren().add(button);
+                                hbox.getChildren().add(button2);
+                                HBox.setHgrow(button, Priority.ALWAYS);
+                                HBox.setHgrow(button2, Priority.ALWAYS);
                             }
 
                             @Override
@@ -1100,6 +1143,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                     Offer offer = item.getOffer();
                                     boolean myOffer = model.isMyOffer(offer);
 
+                                    // https://github.com/bisq-network/bisq/issues/4986
                                     if (tableRow != null) {
                                         canTakeOfferResult = model.offerFilterService.canTakeOffer(offer, false);
                                         tableRow.setOpacity(canTakeOfferResult.isValid() || myOffer ? 1 : 0.4);
@@ -1128,6 +1172,14 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         button.setId(null);
                                         button.setStyle(CssTheme.isDarkTheme() ? "-fx-text-fill: white" : "-fx-text-fill: #444444");
                                         button.setOnAction(e -> onRemoveOpenOffer(offer));
+
+                                        iconView2.setId("image-edit");
+                                        button2.updateText(Res.get("shared.edit"));
+                                        button2.setId(null);
+                                        button2.setStyle(CssTheme.isDarkTheme() ? "-fx-text-fill: white" : "-fx-text-fill: #444444");
+                                        button2.setOnAction(e -> onEditOpenOffer(offer));
+                                        button2.setManaged(true);
+                                        button2.setVisible(true);
                                     } else {
                                         boolean isSellOffer = offer.getDirection() == OfferDirection.SELL;
                                         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
@@ -1144,6 +1196,8 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
                                         }
                                         button.setTooltip(new Tooltip(Res.get("offerbook.takeOfferButton.tooltip", model.getDirectionLabelTooltip(offer))));
                                         button.setOnAction(e -> onTakeOffer(offer));
+                                        button2.setManaged(false);
+                                        button2.setVisible(false);
                                     }
 
                                     if (!myOffer) {
@@ -1158,10 +1212,11 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
 
                                     button.updateText(title);
                                     setPadding(new Insets(0, 15, 0, 0));
-                                    setGraphic(button);
+                                    setGraphic(hbox);
                                 } else {
                                     setGraphic(null);
                                     button.setOnAction(null);
+                                    button2.setOnAction(null);
                                     if (tableRow != null) {
                                         tableRow.setOpacity(1);
                                         tableRow.setOnMousePressed(null);

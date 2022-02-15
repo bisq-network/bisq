@@ -609,6 +609,10 @@ tree-table-view:focused {
     -fx-font-size: 0.769em;
 }
 
+.medium-text {
+    -fx-font-size: 0.846em;
+}
+
 .normal-text {
     -fx-font-size: 0.923em;
 }
@@ -2032,7 +2036,7 @@ textfield */
 }
 
 .dispute-chat-border {
-    -fx-background-color: -bs-color-blue-5;
+    -fx-background-color: -bs-support-chat-background;
 }
 
 /********************************************************************************************************************
@@ -2162,7 +2166,7 @@ textfield */
     -fx-text-fill: -bs-rd-font-dark;
 }
 
-.dao-news-content, .dao-news-section-link, .dao-news-section-link .hyperlink, .dao-launch-version {
+.dao-news-content, .dao-news-section-link, .dao-news-section-link .hyperlink {
     -fx-text-fill: -bs-rd-font-light;
     -fx-fill: -bs-rd-font-light;
 }

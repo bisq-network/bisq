@@ -80,7 +80,7 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
                                boolean useSafeCookieAuthentication) {
         return controlPort != Config.UNSPECIFIED_PORT ?
                 new RunningTor(torDir, controlPort, password, cookieFile, useSafeCookieAuthentication) :
-                new NewTor(torDir, torrcFile, torrcOptions, bridgeAddressProvider.getBridgeAddresses());
+                new NewTor(torDir, torrcFile, torrcOptions, bridgeAddressProvider);
     }
 
     @Override

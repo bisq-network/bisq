@@ -135,7 +135,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
     protected String getDisputeInfo(Dispute dispute) {
         String role = Res.get("shared.refundAgent").toLowerCase();
         String roleContextMsg = Res.get("support.initialArbitratorMsg",
-                DisputeAgentLookupMap.getKeybaseLinkForAgent(getAgentNodeAddress(dispute).getFullAddress()));
+                DisputeAgentLookupMap.getMatrixLinkForAgent(getAgentNodeAddress(dispute).getFullAddress()));
         String link = "https://bisq.wiki/Dispute_resolution#Level_3:_Arbitration";
         return Res.get("support.initialInfo", role, roleContextMsg, role, link);
     }
@@ -224,6 +224,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
             openOfferOptional.ifPresent(openOffer -> openOfferManager.closeOpenOffer(openOffer.getOffer()));
         }
 
+        maybeClearSensitiveData();
         requestPersistence();
     }
 

@@ -28,6 +28,7 @@ import bisq.desktop.components.PeerInfoIconDispute;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
+import bisq.desktop.main.overlays.windows.SendLogFilesWindow;
 import bisq.desktop.main.overlays.windows.SendPrivateNotificationWindow;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
 import bisq.desktop.main.overlays.windows.VerifyDisputeResultSignatureWindow;
@@ -125,7 +126,7 @@ import javax.annotation.Nullable;
 import static bisq.desktop.util.FormBuilder.getIconForLabel;
 import static bisq.desktop.util.FormBuilder.getRegularIconButton;
 
-public abstract class DisputeView extends ActivatableView<VBox, Void> implements PeerInfoIcon.notify {
+public abstract class DisputeView extends ActivatableView<VBox, Void> implements PeerInfoIcon.notify, DisputeChatPopup.ChatCallback {
     public enum FilterResult {
         NO_MATCH("No Match"),
         NO_FILTER("No filter text"),
@@ -228,8 +229,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
         this.refundAgentManager = refundAgentManager;
         this.daoFacade = daoFacade;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
-        DisputeChatPopup.ChatCallback chatCallback = this::handleOnProcessDispute;
-        chatPopup = new DisputeChatPopup(disputeManager, formatter, preferences, chatCallback);
+        chatPopup = new DisputeChatPopup(disputeManager, formatter, preferences, this);
     }
 
     @Override
@@ -399,7 +399,9 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                 ObservableList<ChatMessage> chatMessages = dispute.getChatMessages();
                 // If last message is not a result message we re-open as we might have received a new message from the
                 // trader/mediator/arbitrator who has reopened the case
-                if (!chatMessages.isEmpty() && !chatMessages.get(chatMessages.size() - 1).isResultMessage(dispute)) {
+                if (!chatMessages.isEmpty() &&
+                        !chatMessages.get(chatMessages.size() - 1).isResultMessage(dispute) &&
+                        dispute.unreadMessageCount(senderFlag()) > 0) {
                     onSelectDispute(dispute);
                     reOpenDispute();
                 }
@@ -516,14 +518,16 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     // only allow them to close the dispute if the trade is paid out
     // the reason for having this is that sometimes traders end up with closed disputes that are not "closed" @pazza
     protected void closeDisputeFromButton() {
-        Optional<Trade> tradeOptional = disputeManager.findTrade(selectedDispute);
-        if (tradeOptional.isPresent() && tradeOptional.get().getPayoutTxId() != null && tradeOptional.get().getPayoutTxId().length() > 0) {
-            selectedDispute.setIsClosed();
-            disputeManager.requestPersistence();
-            onSelectDispute(selectedDispute);
-        } else {
-            new Popup().warning(Res.get("support.warning.traderCloseOwnDisputeWarning")).show();
-        }
+        disputeManager.findTrade(selectedDispute).ifPresent(
+                (trade) -> {
+                    if (trade.isFundsLockedIn()) {
+                        new Popup().warning(Res.get("support.warning.traderCloseOwnDisputeWarning")).show();
+                    } else {
+                        selectedDispute.setIsClosed();
+                        disputeManager.requestPersistence();
+                        onSelectDispute(selectedDispute);
+                    }
+                });
     }
 
     protected void handleOnProcessDispute(Dispute dispute) {
@@ -1369,8 +1373,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                                         return;
                                     }
 
-                                    String keyBaseUserName = DisputeAgentLookupMap.getKeyBaseUserName(agentNodeAddress.getFullAddress());
-                                    setText(keyBaseUserName);
+                                    String MatrixUserName = DisputeAgentLookupMap.getMatrixUserName(agentNodeAddress.getFullAddress());
+                                    setText(MatrixUserName);
                                 } else {
                                     setText("");
                                 }
@@ -1499,4 +1503,16 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
         });
     }
 
+    @Override
+    public void onCloseDisputeFromChatWindow(Dispute dispute) {
+        handleOnProcessDispute(dispute);
+    }
+
+    @Override
+    public void onSendLogsFromChatWindow(Dispute dispute) {
+        if (!(disputeManager instanceof MediationManager))
+            return;
+        MediationManager mediationManager = (MediationManager) disputeManager;
+        new SendLogFilesWindow(dispute.getTradeId(), dispute.getTraderId(), mediationManager).show();
+    }
 }

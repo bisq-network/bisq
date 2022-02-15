@@ -37,6 +37,7 @@ import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PasswordTextField;
+import bisq.desktop.components.SimpleMarkdownLabel;
 import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.TextFieldWithIcon;
 import bisq.desktop.components.TitledGroupBg;
@@ -185,6 +186,23 @@ public class FormBuilder {
         return new Tuple3<>(label, subText, vBox);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Simple Markdown Label
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    public static SimpleMarkdownLabel addSimpleMarkdownLabel(GridPane gridPane, int rowIndex) {
+        return addSimpleMarkdownLabel(gridPane, rowIndex, null, 0);
+    }
+
+    public static SimpleMarkdownLabel addSimpleMarkdownLabel(GridPane gridPane, int rowIndex, String markdown, double top) {
+        SimpleMarkdownLabel label = new SimpleMarkdownLabel(markdown);
+
+        GridPane.setRowIndex(label, rowIndex);
+        GridPane.setMargin(label, new Insets(top, 0, 0, 0));
+        gridPane.getChildren().add(label);
+
+        return label;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Multiline Label
@@ -348,19 +366,19 @@ public class FormBuilder {
         textField.setPrefWidth(Layout.INITIAL_WINDOW_WIDTH);
 
         Button button = new AutoTooltipButton("...");
-        button.setStyle("-fx-min-width: 35px; -fx-pref-height: 20; -fx-padding: 3 3 3 3; -fx-border-insets: 5px;");
+        button.setStyle("-fx-min-width: 26; -fx-pref-height: 26; -fx-padding: 0 0 10 0; -fx-background-color: -fx-background;");
         button.managedProperty().bind(button.visibleProperty());
-        VBox vBoxButton = new VBox(button);
-        vBoxButton.setAlignment(Pos.CENTER);
-        HBox hBox2 = new HBox(textField, vBoxButton);
 
-        Label label = getTopLabel(title);
-        VBox textFieldVbox = getTopLabelVBox(0);
-        textFieldVbox.getChildren().addAll(label, hBox2);
+        HBox hbox = new HBox(textField, button);
+        hbox.setAlignment(Pos.CENTER_LEFT);
+        hbox.setSpacing(8);
 
-        gridPane.getChildren().add(textFieldVbox);
-        GridPane.setRowIndex(textFieldVbox, rowIndex);
-        GridPane.setMargin(textFieldVbox, new Insets(Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
+        VBox vbox = getTopLabelVBox(0);
+        vbox.getChildren().addAll(getTopLabel(title), hbox);
+
+        gridPane.getChildren().add(vbox);
+        GridPane.setRowIndex(vbox, rowIndex);
+        GridPane.setMargin(vbox, new Insets(Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
 
         return new Tuple2<>(textField, button);
     }
@@ -394,17 +412,17 @@ public class FormBuilder {
     }
 
     public static Tuple2<Label, TextField> addConfirmationLabelTextField(GridPane gridPane,
-                                                     int rowIndex,
-                                                     String title1,
-                                                     String title2) {
+                                                                         int rowIndex,
+                                                                         String title1,
+                                                                         String title2) {
         return addConfirmationLabelTextField(gridPane, rowIndex, title1, title2, 0);
     }
 
     public static Tuple2<Label, TextField> addConfirmationLabelTextField(GridPane gridPane,
-                                                     int rowIndex,
-                                                     String title1,
-                                                     String title2,
-                                                     double top) {
+                                                                         int rowIndex,
+                                                                         String title1,
+                                                                         String title2,
+                                                                         double top) {
         Label label1 = addLabel(gridPane, rowIndex, title1);
         label1.getStyleClass().add("confirmation-label");
         TextField label2 = new BisqTextField(title2);
@@ -421,9 +439,9 @@ public class FormBuilder {
     }
 
     public static Tuple2<Label, TextFieldWithCopyIcon> addConfirmationLabelLabelWithCopyIcon(GridPane gridPane,
-                                                                 int rowIndex,
-                                                                 String title1,
-                                                                 String title2) {
+                                                                                             int rowIndex,
+                                                                                             String title1,
+                                                                                             String title2) {
         Label label1 = addLabel(gridPane, rowIndex, title1);
         label1.getStyleClass().add("confirmation-label");
         TextFieldWithCopyIcon label2 = new TextFieldWithCopyIcon("confirmation-value");
@@ -867,9 +885,9 @@ public class FormBuilder {
 
 
     public static Tuple3<Label, InputTextField, ToggleButton> addTopLabelInputTextFieldSlideToggleButtonRight(GridPane gridPane,
-                                                                                                         int rowIndex,
-                                                                                                         String title,
-                                                                                                         String toggleButtonTitle) {
+                                                                                                              int rowIndex,
+                                                                                                              String title,
+                                                                                                              String toggleButtonTitle) {
 
         InputTextField inputTextField = new InputTextField();
         Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, title, inputTextField, 0);
@@ -2274,7 +2292,11 @@ public class FormBuilder {
     }
 
     public static Text getRegularIconForLabel(GlyphIcons icon, Label label) {
-        return getIconForLabel(icon, "1.231em", label);
+        return getRegularIconForLabel(icon, label, null);
+    }
+
+    public static Text getRegularIconForLabel(GlyphIcons icon, Label label, String style) {
+        return getIconForLabel(icon, "1.231em", label, style);
     }
 
     public static Text getIcon(GlyphIcons icon) {
@@ -2306,6 +2328,14 @@ public class FormBuilder {
         final Label label = new Label();
         AwesomeDude.setIcon(label, icon);
         return label;
+    }
+
+    public static Label getIcon(AwesomeIcon icon, String fontSize) {
+        return getIconForLabel(icon, new Label(), fontSize);
+    }
+
+    public static Label getSmallIcon(AwesomeIcon icon) {
+        return getIcon(icon, "1em");
     }
 
     public static Label getIconForLabel(AwesomeIcon icon, Label label, String fontSize) {
@@ -2377,3 +2407,4 @@ public class FormBuilder {
         return tableView;
     }
 }
+

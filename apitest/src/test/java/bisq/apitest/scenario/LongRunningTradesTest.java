@@ -71,7 +71,7 @@ public class LongRunningTradesTest extends AbstractTradeTest {
         test.testTakeAlicesBuyOffer(testInfo);
         test.testAlicesConfirmPaymentStarted(testInfo);
         test.testBobsConfirmPaymentReceived(testInfo);
-        test.testKeepFunds(testInfo);
+        test.testCloseTrade(testInfo);
     }
 
     public void testTakeSellBTCOffer(final TestInfo testInfo) {

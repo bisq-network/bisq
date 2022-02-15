@@ -329,10 +329,6 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
     void onPaymentAccountSelected(PaymentAccount paymentAccount) {
         if (paymentAccount != null && !this.paymentAccount.equals(paymentAccount)) {
-            volume.set(null);
-            minVolume.set(null);
-            price.set(null);
-            marketPriceMargin = 0;
             preferences.setSelectedPaymentAccountForCreateOffer(paymentAccount);
             this.paymentAccount = paymentAccount;
 
@@ -627,19 +623,11 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     private void fillPaymentAccounts() {
-        paymentAccounts.setAll(new HashSet<>(getUserPaymentAccounts()));
+        paymentAccounts.setAll(getUserPaymentAccounts());
         paymentAccounts.sort(comparing(PaymentAccount::getAccountName));
     }
 
-    private Set<PaymentAccount> getUserPaymentAccounts() {
-        return Objects.requireNonNull(user.getPaymentAccounts()).stream()
-                .filter(this::isNotBsqSwapOrDaoActivated)
-                .collect(Collectors.toSet());
-    }
-
-    private boolean isNotBsqSwapOrDaoActivated(PaymentAccount paymentAccount) {
-        return !paymentAccount.getPaymentMethod().isBsqSwap() || DevEnv.isDaoActivated();
-    }
+    protected abstract Set<PaymentAccount> getUserPaymentAccounts();
 
     protected void setAmount(Coin amount) {
         this.amount.set(amount);

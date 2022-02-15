@@ -19,11 +19,11 @@ package bisq.desktop.main.portfolio.failedtrades;
 
 import bisq.desktop.common.model.ActivatableDataModel;
 
-import bisq.core.offer.Offer;
-import bisq.core.offer.OfferDirection;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
@@ -31,6 +31,8 @@ import bisq.network.p2p.P2PService;
 import bisq.common.crypto.KeyRing;
 
 import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -45,6 +47,7 @@ class FailedTradesDataModel extends ActivatableDataModel {
     private final TradeManager tradeManager;
     private final P2PService p2PService;
     private final KeyRing keyRing;
+    private final CoinFormatter btcFormatter;
 
     private final ObservableList<FailedTradesListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<Trade> tradesListChangeListener;
@@ -53,11 +56,13 @@ class FailedTradesDataModel extends ActivatableDataModel {
     public FailedTradesDataModel(FailedTradesManager failedTradesManager,
                                  TradeManager tradeManager,
                                  P2PService p2PService,
-                                 KeyRing keyRing) {
+                                 KeyRing keyRing,
+                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
         this.failedTradesManager = failedTradesManager;
         this.tradeManager = tradeManager;
         this.p2PService = p2PService;
         this.keyRing = keyRing;
+        this.btcFormatter = btcFormatter;
 
         tradesListChangeListener = change -> applyList();
     }
@@ -77,14 +82,15 @@ class FailedTradesDataModel extends ActivatableDataModel {
         return list;
     }
 
-    public OfferDirection getDirection(Offer offer) {
-        return failedTradesManager.wasMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
-    }
 
     private void applyList() {
         list.clear();
 
-        list.addAll(failedTradesManager.getObservableList().stream().map(FailedTradesListItem::new).collect(Collectors.toList()));
+        list.addAll(
+                failedTradesManager.getObservableList().stream()
+                        .map(trade -> new FailedTradesListItem(trade, btcFormatter, failedTradesManager))
+                        .collect(Collectors.toList())
+        );
 
         // we sort by date, earliest first
         list.sort((o1, o2) -> o2.getTrade().getDate().compareTo(o1.getTrade().getDate()));

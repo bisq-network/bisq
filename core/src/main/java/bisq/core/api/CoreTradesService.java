@@ -21,12 +21,16 @@ import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
+import bisq.core.offer.OpenOffer;
 import bisq.core.offer.bisq_v1.TakeOfferModel;
 import bisq.core.offer.bsq_swap.BsqSwapTakeOfferModel;
+import bisq.core.trade.ClosedTradableFormatter;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.bisq_v1.TradeResultHandler;
 import bisq.core.trade.bisq_v1.TradeUtil;
+import bisq.core.trade.bsq_swap.BsqSwapTradeManager;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
@@ -38,17 +42,22 @@ import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.common.handlers.ErrorMessageHandler;
 
+import bisq.proto.grpc.GetTradesRequest;
+
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.btc.model.AddressEntry.Context.TRADE_PAYOUT;
+import static bisq.proto.grpc.GetTradesRequest.Category.CLOSED;
 import static java.lang.String.format;
 
 @Singleton
@@ -62,7 +71,10 @@ class CoreTradesService {
     private final CoreWalletsService coreWalletsService;
     private final BtcWalletService btcWalletService;
     private final OfferUtil offerUtil;
+    private final BsqSwapTradeManager bsqSwapTradeManager;
     private final ClosedTradableManager closedTradableManager;
+    private final ClosedTradableFormatter closedTradableFormatter;
+    private final FailedTradesManager failedTradesManager;
     private final TakeOfferModel takeOfferModel;
     private final BsqSwapTakeOfferModel bsqSwapTakeOfferModel;
     private final TradeManager tradeManager;
@@ -74,7 +86,10 @@ class CoreTradesService {
                              CoreWalletsService coreWalletsService,
                              BtcWalletService btcWalletService,
                              OfferUtil offerUtil,
+                             BsqSwapTradeManager bsqSwapTradeManager,
                              ClosedTradableManager closedTradableManager,
+                             ClosedTradableFormatter closedTradableFormatter,
+                             FailedTradesManager failedTradesManager,
                              TakeOfferModel takeOfferModel,
                              BsqSwapTakeOfferModel bsqSwapTakeOfferModel,
                              TradeManager tradeManager,
@@ -84,7 +99,10 @@ class CoreTradesService {
         this.coreWalletsService = coreWalletsService;
         this.btcWalletService = btcWalletService;
         this.offerUtil = offerUtil;
+        this.bsqSwapTradeManager = bsqSwapTradeManager;
         this.closedTradableManager = closedTradableManager;
+        this.closedTradableFormatter = closedTradableFormatter;
+        this.failedTradesManager = failedTradesManager;
         this.takeOfferModel = takeOfferModel;
         this.bsqSwapTakeOfferModel = bsqSwapTakeOfferModel;
         this.tradeManager = tradeManager;
@@ -180,14 +198,14 @@ class CoreTradesService {
         }
     }
 
-    void keepFunds(String tradeId) {
+    void closeTrade(String tradeId) {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
 
         verifyTradeIsNotClosed(tradeId);
         var trade = getOpenTrade(tradeId).orElseThrow(() ->
                 new IllegalArgumentException(format("trade with id '%s' not found", tradeId)));
-        log.info("Keeping funds received from trade {}", tradeId);
+        log.info("Closing trade {}", tradeId);
         tradeManager.onTradeCompleted(trade);
     }
 
@@ -248,16 +266,18 @@ class CoreTradesService {
                 new IllegalArgumentException(format("trade with id '%s' not found", tradeId)));
     }
 
-    String getBsqSwapTradeRole(BsqSwapTrade bsqSwapTrade) {
+    String getTradeRole(TradeModel tradeModel) {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
-        return tradeUtil.getRole(bsqSwapTrade);
-    }
-
-    String getTradeRole(String tradeId) {
-        coreWalletsService.verifyWalletsAreAvailable();
-        coreWalletsService.verifyEncryptedWalletIsUnlocked();
-        return tradeUtil.getRole(getTrade(tradeId));
+        var isBsqSwapTrade = tradeModel instanceof BsqSwapTrade;
+        try {
+            return isBsqSwapTrade
+                    ? tradeUtil.getRole((BsqSwapTrade) tradeModel)
+                    : tradeUtil.getRole((Trade) tradeModel);
+        } catch (Exception ex) {
+            log.error("Role not found for trade with Id {}.", tradeModel.getId(), ex);
+            return "Not Available";
+        }
     }
 
     Trade getTrade(String tradeId) {
@@ -267,6 +287,62 @@ class CoreTradesService {
                 getClosedTrade(tradeId).orElseThrow(() ->
                         new IllegalArgumentException(format("trade with id '%s' not found", tradeId))
                 ));
+    }
+
+    List<TradeModel> getOpenTrades() {
+        coreWalletsService.verifyWalletsAreAvailable();
+        coreWalletsService.verifyEncryptedWalletIsUnlocked();
+        return tradeManager.getTrades().stream().collect(Collectors.toList());
+    }
+
+    List<TradeModel> getTradeHistory(GetTradesRequest.Category category) {
+        coreWalletsService.verifyWalletsAreAvailable();
+        coreWalletsService.verifyEncryptedWalletIsUnlocked();
+        if (category.equals(CLOSED)) {
+            var closedTrades = closedTradableManager.getClosedTrades().stream()
+                    .map(t -> (TradeModel) t)
+                    .collect(Collectors.toList());
+            closedTrades.addAll(bsqSwapTradeManager.getBsqSwapTrades());
+            return closedTrades;
+        } else {
+            var failedV1Trades = failedTradesManager.getTrades();
+            return failedV1Trades.stream().collect(Collectors.toList());
+        }
+    }
+
+    void failTrade(String tradeId) {
+        // TODO Recommend API users call this method with extra care because
+        //  the API lacks methods for diagnosing trade problems, and does not support
+        //  interaction with mediators.  Users may accidentally fail valid trades,
+        //  although they can easily be un-failed with the 'unfailtrade' method.
+        coreWalletsService.verifyWalletsAreAvailable();
+        coreWalletsService.verifyEncryptedWalletIsUnlocked();
+
+        var trade = getTrade(tradeId);
+        tradeManager.onMoveInvalidTradeToFailedTrades(trade);
+        log.info("Trade {} changed to failed trade.", tradeId);
+    }
+
+    void unFailTrade(String tradeId) {
+        coreWalletsService.verifyWalletsAreAvailable();
+        coreWalletsService.verifyEncryptedWalletIsUnlocked();
+
+        failedTradesManager.getTradeById(tradeId).ifPresentOrElse(failedTrade -> {
+            verifyCanUnfailTrade(failedTrade);
+            failedTradesManager.removeTrade(failedTrade);
+            tradeManager.addFailedTradeToPendingTrades(failedTrade);
+            log.info("Failed trade {} changed to open trade.", tradeId);
+        }, () -> {
+            throw new IllegalArgumentException(format("failed trade '%s' not found", tradeId));
+        });
+    }
+
+    List<OpenOffer> getCanceledOpenOffers() {
+        return closedTradableManager.getCanceledOpenOffers();
+    }
+
+    String getClosedTradeStateAsString(Tradable tradable) {
+        return closedTradableFormatter.getStateAsString(tradable);
     }
 
     private Optional<Trade> getOpenTrade(String tradeId) {
@@ -317,5 +393,31 @@ class CoreTradesService {
         if (fromAddressBalance.isZero())
             throw new IllegalStateException(format("funds already withdrawn from address '%s'",
                     fromAddressEntry.getAddressString()));
+    }
+
+    // Throws a RuntimeException if failed trade cannot be changed to OPEN for any reason.
+    private void verifyCanUnfailTrade(Trade failedTrade) {
+        if (tradeUtil.getTradeAddresses(failedTrade) == null)
+            throw new IllegalStateException(
+                    format("cannot change failed trade to open because no trade addresses found for '%s'",
+                            failedTrade.getId()));
+
+        if (!failedTradesManager.hasDepositTx(failedTrade))
+            throw new IllegalStateException(
+                    format("cannot change failed trade to open, no deposit tx found for '%s'",
+                            failedTrade.getId()));
+
+        if (!failedTradesManager.hasDelayedPayoutTxBytes(failedTrade))
+            throw new IllegalStateException(
+                    format("cannot change failed trade to open, no delayed payout tx found for '%s'",
+                            failedTrade.getId()));
+
+        failedTradesManager.getBlockingTradeIds(failedTrade).ifPresent(tradeIds -> {
+            throw new IllegalStateException(
+                    format("cannot change failed trade '%s' to open at this time,"
+                                    + "%ntry again after completing trade(s):%n\t%s",
+                            failedTrade.getId(),
+                            String.join(", ", tradeIds)));
+        });
     }
 }

@@ -29,6 +29,10 @@
     -fx-image: url("../../images/remove.png");
 }
 
+#image-edit {
+    -fx-image: url("../../images/edit.png");
+}
+
 #image-buy-white {
     -fx-image: url("../../images/buy_white.png");
 }

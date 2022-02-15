@@ -26,6 +26,7 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.trade.bisq_v1.TradeResultHandler;
+import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
@@ -37,6 +38,8 @@ import bisq.common.config.Config;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
+import bisq.proto.grpc.GetTradesRequest;
+
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
@@ -46,6 +49,7 @@ import com.google.common.util.concurrent.FutureCallback;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -140,8 +144,16 @@ public class CoreApi {
         return coreOffersService.getOffer(id);
     }
 
+    public Optional<Offer> findAvailableOffer(String id) {
+        return coreOffersService.findAvailableOffer(id);
+    }
+
     public OpenOffer getMyOffer(String id) {
         return coreOffersService.getMyOffer(id);
+    }
+
+    public Optional<OpenOffer> findMyOpenOffer(String id) {
+        return coreOffersService.findMyOpenOffer(id);
     }
 
     public Offer getMyBsqSwapOffer(String id) {
@@ -226,8 +238,8 @@ public class CoreApi {
         coreOffersService.cancelOffer(id);
     }
 
-    public boolean isMyOffer(String id) {
-        return coreOffersService.isMyOffer(id);
+    public boolean isMyOffer(Offer offer) {
+        return coreOffersService.isMyOffer(offer);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -306,8 +318,8 @@ public class CoreApi {
         coreTradesService.confirmPaymentReceived(tradeId);
     }
 
-    public void keepFunds(String tradeId) {
-        coreTradesService.keepFunds(tradeId);
+    public void closeTrade(String tradeId) {
+        coreTradesService.closeTrade(tradeId);
     }
 
     public void withdrawFunds(String tradeId, String address, String memo) {
@@ -318,12 +330,32 @@ public class CoreApi {
         return coreTradesService.getTradeModel(tradeId);
     }
 
-    public String getTradeRole(String tradeId) {
-        return coreTradesService.getTradeRole(tradeId);
+    public List<TradeModel> getOpenTrades() {
+        return coreTradesService.getOpenTrades();
     }
 
-    public String getBsqSwapTradeRole(BsqSwapTrade bsqSwapTrade) {
-        return coreTradesService.getBsqSwapTradeRole(bsqSwapTrade);
+    public List<TradeModel> getTradeHistory(GetTradesRequest.Category category) {
+        return coreTradesService.getTradeHistory(category);
+    }
+
+    public String getTradeRole(TradeModel tradeModel) {
+        return coreTradesService.getTradeRole(tradeModel);
+    }
+
+    public void failTrade(String tradeId) {
+        coreTradesService.failTrade(tradeId);
+    }
+
+    public void unFailTrade(String tradeId) {
+        coreTradesService.unFailTrade(tradeId);
+    }
+
+    public List<OpenOffer> getCanceledOpenOffers() {
+        return coreTradesService.getCanceledOpenOffers();
+    }
+
+    public String getClosedTradeStateAsString(Tradable tradable) {
+        return coreTradesService.getClosedTradeStateAsString(tradable);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

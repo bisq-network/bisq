@@ -350,6 +350,30 @@ public final class Contract implements NetworkPayload {
         return isBuyerMakerAndSellerTaker() == isMyRoleBuyer(myPubKeyRing);
     }
 
+    public boolean maybeClearSensitiveData() {
+        boolean changed = false;
+        if (makerPaymentAccountPayload != null) {
+            makerPaymentAccountPayload = null;
+            changed = true;
+        }
+        if (takerPaymentAccountPayload != null) {
+            takerPaymentAccountPayload = null;
+            changed = true;
+        }
+        return changed;
+    }
+
+    // edits a contract json string, removing the payment account payloads
+    public static String sanitizeContractAsJson(String contractAsJson) {
+        return contractAsJson
+                .replaceAll(
+                        "\"takerPaymentAccountPayload\": \\{[^}]*}",
+                        "\"takerPaymentAccountPayload\": null")
+                .replaceAll(
+                        "\"makerPaymentAccountPayload\": \\{[^}]*}",
+                        "\"makerPaymentAccountPayload\": null");
+    }
+
     public void printDiff(@Nullable String peersContractAsJson) {
         String json = JsonUtil.objectToJson(this);
         String diff = StringUtils.difference(json, peersContractAsJson);

@@ -127,7 +127,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     @Nullable
     private Runnable createSnapshotHandler;
     // Lookup map
-    private Map<Integer, DaoStateBlock> daoStateBlockByHeight = new HashMap<>();
+    private final Map<Integer, DaoStateBlock> daoStateBlockByHeight = new HashMap<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

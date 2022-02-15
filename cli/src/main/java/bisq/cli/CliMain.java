@@ -47,6 +47,8 @@ import static bisq.cli.Method.*;
 import static bisq.cli.opts.OptLabel.*;
 import static bisq.cli.table.builder.TableType.*;
 import static bisq.proto.grpc.GetOfferCategoryReply.OfferCategory.BSQ_SWAP;
+import static bisq.proto.grpc.GetTradesRequest.Category.CLOSED;
+import static bisq.proto.grpc.GetTradesRequest.Category.OPEN;
 import static java.lang.String.format;
 import static java.lang.System.err;
 import static java.lang.System.exit;
@@ -67,6 +69,7 @@ import bisq.cli.opts.GetBalanceOptionParser;
 import bisq.cli.opts.GetOffersOptionParser;
 import bisq.cli.opts.GetPaymentAcctFormOptionParser;
 import bisq.cli.opts.GetTradeOptionParser;
+import bisq.cli.opts.GetTradesOptionParser;
 import bisq.cli.opts.GetTransactionOptionParser;
 import bisq.cli.opts.OfferIdOptionParser;
 import bisq.cli.opts.RegisterDisputeAgentOptionParser;
@@ -503,6 +506,26 @@ public class CliMain {
 
                     return;
                 }
+                case gettrades: {
+                    var opts = new GetTradesOptionParser(args).parse();
+                    if (opts.isForHelp()) {
+                        out.println(client.getMethodHelp(method));
+                        return;
+                    }
+                    var category = opts.getCategory();
+                    var trades = category.equals(OPEN)
+                            ? client.getOpenTrades()
+                            : client.getTradeHistory(category);
+                    if (trades.isEmpty()) {
+                        out.println(format("no %s trades found", category.name().toLowerCase()));
+                    } else {
+                        var tableType = category.equals(OPEN)
+                                ? OPEN_TRADES_TBL
+                                : category.equals(CLOSED) ? CLOSED_TRADES_TBL : FAILED_TRADES_TBL;
+                        new TableBuilder(tableType, trades).build().print(out);
+                    }
+                    return;
+                }
                 case confirmpaymentstarted: {
                     var opts = new GetTradeOptionParser(args).parse();
                     if (opts.isForHelp()) {
@@ -525,15 +548,15 @@ public class CliMain {
                     out.printf("trade %s payment received message sent%n", tradeId);
                     return;
                 }
-                case keepfunds: {
+                case closetrade: {
                     var opts = new GetTradeOptionParser(args).parse();
                     if (opts.isForHelp()) {
                         out.println(client.getMethodHelp(method));
                         return;
                     }
                     var tradeId = opts.getTradeId();
-                    client.keepFunds(tradeId);
-                    out.printf("funds from trade %s saved in bisq wallet%n", tradeId);
+                    client.closeTrade(tradeId);
+                    out.printf("trade %s is closed%n", tradeId);
                     return;
                 }
                 case withdrawfunds: {
@@ -557,6 +580,28 @@ public class CliMain {
                     }
                     var paymentMethods = client.getPaymentMethods();
                     paymentMethods.forEach(p -> out.println(p.getId()));
+                    return;
+                }
+                case failtrade: {
+                    var opts = new GetTradeOptionParser(args).parse();
+                    if (opts.isForHelp()) {
+                        out.println(client.getMethodHelp(method));
+                        return;
+                    }
+                    var tradeId = opts.getTradeId();
+                    client.failTrade(tradeId);
+                    out.printf("open trade %s changed to failed trade%n", tradeId);
+                    return;
+                }
+                case unfailtrade: {
+                    var opts = new GetTradeOptionParser(args).parse();
+                    if (opts.isForHelp()) {
+                        out.println(client.getMethodHelp(method));
+                        return;
+                    }
+                    var tradeId = opts.getTradeId();
+                    client.unFailTrade(tradeId);
+                    out.printf("failed trade %s changed to open trade%n", tradeId);
                     return;
                 }
                 case getpaymentacctform: {
@@ -753,7 +798,7 @@ public class CliMain {
             // how to scale the trigger-price (for a fiat or altcoin offer) param sent
             // to the server in its 'editoffer' request.  That means a preliminary round
             // trip to the server:  a 'getmyoffer' request.
-            var offer = client.getMyOffer(offerId);
+            var offer = client.getOffer(offerId);
             if (offer.getCounterCurrencyCode().equals("BTC"))
                 return toInternalCryptoCurrencyPrice(unscaledTriggerPrice);
             else
@@ -860,15 +905,21 @@ public class CliMain {
             stream.format(rowFormat, gettrade.name(), "--trade-id=<trade-id> \\", "Get trade summary or full contract");
             stream.format(rowFormat, "", "[--show-contract=<true|false>]", "");
             stream.println();
+            stream.format(rowFormat, gettrades.name(), "[--category=<open|closed|failed>]", "Get open (default), closed, or failed trades");
+            stream.println();
             stream.format(rowFormat, confirmpaymentstarted.name(), "--trade-id=<trade-id>", "Confirm payment started");
             stream.println();
             stream.format(rowFormat, confirmpaymentreceived.name(), "--trade-id=<trade-id>", "Confirm payment received");
             stream.println();
-            stream.format(rowFormat, keepfunds.name(), "--trade-id=<trade-id>", "Keep received funds in Bisq wallet");
+            stream.format(rowFormat, closetrade.name(), "--trade-id=<trade-id>", "Close completed trade");
             stream.println();
             stream.format(rowFormat, withdrawfunds.name(), "--trade-id=<trade-id> --address=<btc-address> \\",
-                    "Withdraw received funds to external wallet address");
+                    "Withdraw received trade funds to external wallet address");
             stream.format(rowFormat, "", "[--memo=<\"memo\">]", "");
+            stream.println();
+            stream.format(rowFormat, failtrade.name(), "--trade-id=<trade-id>", "Change open trade to failed trade");
+            stream.println();
+            stream.format(rowFormat, unfailtrade.name(), "--trade-id=<trade-id>", "Change failed trade to open trade");
             stream.println();
             stream.format(rowFormat, getpaymentmethods.name(), "", "Get list of supported payment account method ids");
             stream.println();

@@ -32,9 +32,9 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 import static bisq.cli.table.builder.TableBuilderConstants.*;
-import static bisq.cli.table.builder.TableType.CLOSED_TRADE_TBL;
-import static bisq.cli.table.builder.TableType.FAILED_TRADE_TBL;
-import static bisq.cli.table.builder.TableType.OPEN_TRADE_TBL;
+import static bisq.cli.table.builder.TableType.CLOSED_TRADES_TBL;
+import static bisq.cli.table.builder.TableType.FAILED_TRADES_TBL;
+import static bisq.cli.table.builder.TableType.OPEN_TRADES_TBL;
 import static bisq.cli.table.builder.TableType.TRADE_DETAIL_TBL;
 import static bisq.cli.table.column.AltcoinColumn.DISPLAY_MODE.ALTCOIN_OFFER_VOLUME;
 import static bisq.cli.table.column.Column.JUSTIFICATION.LEFT;
@@ -75,9 +75,9 @@ class TradeTableColumnSupplier {
     }
 
     private final Supplier<Boolean> isTradeDetailTblBuilder = () -> getTableType().equals(TRADE_DETAIL_TBL);
-    private final Supplier<Boolean> isOpenTradeTblBuilder = () -> getTableType().equals(OPEN_TRADE_TBL);
-    private final Supplier<Boolean> isClosedTradeTblBuilder = () -> getTableType().equals(CLOSED_TRADE_TBL);
-    private final Supplier<Boolean> isFailedTradeTblBuilder = () -> getTableType().equals(FAILED_TRADE_TBL);
+    private final Supplier<Boolean> isOpenTradeTblBuilder = () -> getTableType().equals(OPEN_TRADES_TBL);
+    private final Supplier<Boolean> isClosedTradeTblBuilder = () -> getTableType().equals(CLOSED_TRADES_TBL);
+    private final Supplier<Boolean> isFailedTradeTblBuilder = () -> getTableType().equals(FAILED_TRADES_TBL);
     private final Supplier<TradeInfo> firstRow = () -> getTrades().get(0);
     private final Predicate<OfferInfo> isFiatOffer = (o) -> o.getBaseCurrencyCode().equals("BTC");
     private final Predicate<TradeInfo> isFiatTrade = (t) -> isFiatOffer.test(t.getOffer());

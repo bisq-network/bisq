@@ -22,6 +22,7 @@ import bisq.proto.grpc.BalancesInfo;
 import bisq.proto.grpc.BsqBalanceInfo;
 import bisq.proto.grpc.BtcBalanceInfo;
 import bisq.proto.grpc.GetMethodHelpRequest;
+import bisq.proto.grpc.GetTradesRequest;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
@@ -274,6 +275,8 @@ public final class GrpcClient {
         return offersServiceRequest.getMyBsqSwapOffer(offerId);
     }
 
+    @Deprecated // Since 5-Dec-2021.
+    // Endpoint to be removed from future version.  Use getOffer service method instead.
     public OfferInfo getMyOffer(String offerId) {
         return offersServiceRequest.getMyOffer(offerId);
     }
@@ -298,8 +301,8 @@ public final class GrpcClient {
         return offersServiceRequest.getOffersSortedByDate(direction, currencyCode);
     }
 
-    public List<OfferInfo> getBsqOffersSortedByDate() {
-        return offersServiceRequest.getBsqOffersSortedByDate();
+    public List<OfferInfo> getCryptoCurrencyOffersSortedByDate(String currencyCode) {
+        return offersServiceRequest.getCryptoCurrencyOffersSortedByDate(currencyCode);
     }
 
     public List<OfferInfo> getBsqSwapOffersSortedByDate() {
@@ -328,10 +331,6 @@ public final class GrpcClient {
 
     public List<OfferInfo> getMyCryptoCurrencyOffersSortedByDate(String currencyCode) {
         return offersServiceRequest.getMyCryptoCurrencyOffersSortedByDate(currencyCode);
-    }
-
-    public List<OfferInfo> getMyBsqOffersSortedByDate() {
-        return offersServiceRequest.getMyBsqOffersSortedByDate();
     }
 
     public List<OfferInfo> getMyBsqSwapBsqOffersSortedByDate() {
@@ -366,6 +365,14 @@ public final class GrpcClient {
         return tradesServiceRequest.getTrade(tradeId);
     }
 
+    public List<TradeInfo> getOpenTrades() {
+        return tradesServiceRequest.getOpenTrades();
+    }
+
+    public List<TradeInfo> getTradeHistory(GetTradesRequest.Category category) {
+        return tradesServiceRequest.getTradeHistory(category);
+    }
+
     public void confirmPaymentStarted(String tradeId) {
         tradesServiceRequest.confirmPaymentStarted(tradeId);
     }
@@ -374,12 +381,20 @@ public final class GrpcClient {
         tradesServiceRequest.confirmPaymentReceived(tradeId);
     }
 
-    public void keepFunds(String tradeId) {
-        tradesServiceRequest.keepFunds(tradeId);
+    public void closeTrade(String tradeId) {
+        tradesServiceRequest.closeTrade(tradeId);
     }
 
     public void withdrawFunds(String tradeId, String address, String memo) {
         tradesServiceRequest.withdrawFunds(tradeId, address, memo);
+    }
+
+    public void failTrade(String tradeId) {
+        tradesServiceRequest.failTrade(tradeId);
+    }
+
+    public void unFailTrade(String tradeId) {
+        tradesServiceRequest.unFailTrade(tradeId);
     }
 
     public List<PaymentMethod> getPaymentMethods() {

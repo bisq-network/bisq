@@ -15,26 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.funds.transactions;
+package bisq.desktop.util.filtering;
 
-import bisq.core.trade.model.Tradable;
-
-import org.bitcoinj.core.Transaction;
-
-class DummyTransactionAwareTradable implements TransactionAwareTradable {
-    private final Tradable delegate;
-
-    DummyTransactionAwareTradable(Tradable delegate) {
-        this.delegate = delegate;
-    }
-
-    @Override
-    public boolean isRelatedToTransaction(Transaction transaction) {
-        return false;
-    }
-
-    @Override
-    public Tradable asTradable() {
-        return delegate;
-    }
+public interface FilterableListItem {
+    boolean match(String filterString);
 }

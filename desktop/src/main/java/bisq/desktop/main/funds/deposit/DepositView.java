@@ -25,6 +25,7 @@ import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.components.list.FilterBox;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.QRCodeWindow;
 import bisq.desktop.util.GUIUtil;
@@ -80,6 +81,7 @@ import javafx.beans.value.ChangeListener;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
@@ -91,13 +93,18 @@ import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
 
-import static bisq.desktop.util.FormBuilder.*;
+import static bisq.desktop.util.FormBuilder.addAddressTextField;
+import static bisq.desktop.util.FormBuilder.addButtonCheckBoxWithBox;
+import static bisq.desktop.util.FormBuilder.addInputTextField;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
 public class DepositView extends ActivatableView<VBox, Void> {
 
     @FXML
     GridPane gridPane;
+    @FXML
+    FilterBox filterBox;
     @FXML
     TableView<DepositListItem> tableView;
     @FXML
@@ -114,7 +121,8 @@ public class DepositView extends ActivatableView<VBox, Void> {
     private final CoinFormatter formatter;
     private String paymentLabelString;
     private final ObservableList<DepositListItem> observableList = FXCollections.observableArrayList();
-    private final SortedList<DepositListItem> sortedList = new SortedList<>(observableList);
+    private final FilteredList<DepositListItem> filteredList = new FilteredList<>(observableList);
+    private final SortedList<DepositListItem> sortedList = new SortedList<>(filteredList);
     private BalanceListener balanceListener;
     private Subscription amountTextFieldSubscription;
     private ChangeListener<DepositListItem> tableViewSelectionListener;
@@ -135,7 +143,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-
+        filterBox.initialize(filteredList, tableView);
         paymentLabelString = Res.get("funds.deposit.fundBisqWallet");
         addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
         balanceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode())));
@@ -166,8 +174,14 @@ public class DepositView extends ActivatableView<VBox, Void> {
         tableView.getSortOrder().add(usageColumn);
         tableView.setItems(sortedList);
 
-        titledGroupBg = addTitledGroupBg(gridPane, gridRow, 4, Res.get("funds.deposit.fundWallet"));
+        titledGroupBg = addTitledGroupBg(
+                gridPane,
+                gridRow,
+                4,
+                Res.get("funds.deposit.fundWallet")
+        );
         titledGroupBg.getStyleClass().add("last");
+        titledGroupBg.setHelpUrl("https://bisq.wiki/Funding_your_wallet");
 
         qrCodeImageView = new ImageView();
         qrCodeImageView.getStyleClass().add("qr-code");
@@ -238,6 +252,8 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
+        filterBox.activate();
+
         tableView.getSelectionModel().selectedItemProperty().addListener(tableViewSelectionListener);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
 
@@ -255,6 +271,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void deactivate() {
+        filterBox.deactivate();
         tableView.getSelectionModel().selectedItemProperty().removeListener(tableViewSelectionListener);
         sortedList.comparatorProperty().unbind();
         observableList.forEach(DepositListItem::cleanup);
@@ -266,7 +283,6 @@ public class DepositView extends ActivatableView<VBox, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UI handlers
     ///////////////////////////////////////////////////////////////////////////////////////////
-
 
     private void fillForm(String address) {
         titledGroupBg.setVisible(true);

@@ -689,6 +689,14 @@ public abstract class Trade extends TradeModel {
         }
     }
 
+    public boolean removeAllChatMessages() {
+        if (chatMessages.size() > 0) {
+            chatMessages.clear();
+            return true;
+        }
+        return false;
+    }
+
     public boolean mediationResultAppliedPenaltyToSeller() {
         // If mediated payout is same or more then normal payout we enable otherwise a penalty was applied
         // by mediators and we keep the confirm disabled to avoid that the seller can complete the trade
@@ -696,6 +704,26 @@ public abstract class Trade extends TradeModel {
         long payoutAmountFromMediation = processModel.getSellerPayoutAmountFromMediation();
         long normalPayoutAmount = offer.getSellerSecurityDeposit().value;
         return payoutAmountFromMediation < normalPayoutAmount;
+    }
+
+    public void maybeClearSensitiveData() {
+        String change = "";
+        if (contract != null && contract.maybeClearSensitiveData()) {
+            change += "contract;";
+        }
+        if (contractAsJson != null) {
+            String edited = contract.sanitizeContractAsJson(contractAsJson);
+            if (!edited.equals(contractAsJson)) {
+                contractAsJson = edited;
+                change += "contractAsJson;";
+            }
+        }
+        if (removeAllChatMessages()) {
+            change += "chat messages;";
+        }
+        if (change.length() > 0) {
+            log.info("cleared sensitive data from {} of trade {}", change, getShortId());
+        }
     }
 
 

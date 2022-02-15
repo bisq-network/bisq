@@ -22,14 +22,14 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
-import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PeerInfoIconTrading;
+import bisq.desktop.components.list.FilterBox;
 import bisq.desktop.main.overlays.windows.BsqTradeDetailsWindow;
 import bisq.desktop.util.GUIUtil;
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.Res;
-import bisq.core.offer.Offer;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.user.Preferences;
 
@@ -53,7 +53,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
@@ -115,13 +114,7 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
             confidenceColumn,
             avatarColumn;
     @FXML
-    HBox searchBox;
-    @FXML
-    AutoTooltipLabel filterLabel;
-    @FXML
-    InputTextField filterTextField;
-    @FXML
-    Pane searchBoxSpacer;
+    FilterBox filterBox;
     @FXML
     AutoTooltipButton exportButton;
     @FXML
@@ -132,9 +125,9 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
     private final BsqTradeDetailsWindow window;
     private final Preferences preferences;
     private final PrivateNotificationManager privateNotificationManager;
+    private final AccountAgeWitnessService accountAgeWitnessService;
     private SortedList<UnconfirmedBsqSwapsListItem> sortedList;
     private FilteredList<UnconfirmedBsqSwapsListItem> filteredList;
-    private ChangeListener<String> filterTextFieldListener;
     private ChangeListener<Number> widthListener;
 
     @Inject
@@ -142,11 +135,13 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
                                    BsqTradeDetailsWindow bsqTradeDetailsWindow,
                                    Preferences preferences,
                                    PrivateNotificationManager privateNotificationManager,
+                                   AccountAgeWitnessService accountAgeWitnessService,
                                    @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
         this.window = bsqTradeDetailsWindow;
         this.preferences = preferences;
         this.privateNotificationManager = privateNotificationManager;
+        this.accountAgeWitnessService = accountAgeWitnessService;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
 
@@ -183,20 +178,17 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
         tradeIdColumn.setComparator(Comparator.comparing(o -> o.getBsqSwapTrade().getId()));
         dateColumn.setComparator(Comparator.comparing(o -> o.getBsqSwapTrade().getDate()));
         directionColumn.setComparator(Comparator.comparing(o -> o.getBsqSwapTrade().getOffer().getDirection()));
-        marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
-        priceColumn.setComparator(Comparator.comparing(model::getPrice, Comparator.nullsFirst(Comparator.naturalOrder())));
+        marketColumn.setComparator(Comparator.comparing(UnconfirmedBsqSwapsListItem::getMarketLabel));
+        priceColumn.setComparator(Comparator.comparing(UnconfirmedBsqSwapsListItem::getPrice, Comparator.nullsFirst(Comparator.naturalOrder())));
         volumeColumn.setComparator(nullsFirstComparingAsTrade(BsqSwapTrade::getVolume));
-        amountColumn.setComparator(Comparator.comparing(model::getAmount, Comparator.nullsFirst(Comparator.naturalOrder())));
-        avatarColumn.setComparator(Comparator.comparing(
-                o -> model.getNumPastTrades(o.getBsqSwapTrade()),
-                Comparator.nullsFirst(Comparator.naturalOrder())
-        ));
+        amountColumn.setComparator(Comparator.comparing(UnconfirmedBsqSwapsListItem::getAmount, Comparator.nullsFirst(Comparator.naturalOrder())));
+        avatarColumn.setComparator(Comparator.comparing(UnconfirmedBsqSwapsListItem::getNumPastTrades, Comparator.nullsFirst(Comparator.naturalOrder())));
         txFeeColumn.setComparator(nullsFirstComparing(BsqSwapTrade::getTxFeePerVbyte));
-        txFeeColumn.setComparator(Comparator.comparing(model::getTxFee, Comparator.nullsFirst(Comparator.naturalOrder())));
+        txFeeColumn.setComparator(Comparator.comparing(UnconfirmedBsqSwapsListItem::getTxFee, Comparator.nullsFirst(Comparator.naturalOrder())));
 
         //
         tradeFeeColumn.setComparator(Comparator.comparing(item -> {
-            String tradeFee = model.getTradeFee(item);
+            String tradeFee = item.getTradeFeeAsString();
             // We want to separate BSQ and BTC fees so we use a prefix
             if (item.getBsqSwapTrade().getOffer().isCurrencyForMakerFeeBtc()) {
                 return "BTC" + tradeFee;
@@ -204,16 +196,10 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
                 return "BSQ" + tradeFee;
             }
         }, Comparator.nullsFirst(Comparator.naturalOrder())));
-        confidenceColumn.setComparator(Comparator.comparing(model::getConfidence));
+        confidenceColumn.setComparator(Comparator.comparing(UnconfirmedBsqSwapsListItem::getConfidence));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
-
-        filterLabel.setText(Res.get("shared.filter"));
-        HBox.setMargin(filterLabel, new Insets(5, 0, 0, 10));
-        filterTextFieldListener = (observable, oldValue, newValue) -> applyFilteredListPredicate(filterTextField.getText());
-        searchBox.setSpacing(5);
-        HBox.setHgrow(searchBoxSpacer, Priority.ALWAYS);
 
         numItems.setId("num-offers");
         numItems.setPadding(new Insets(-5, 0, 0, 10));
@@ -224,12 +210,15 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
 
     @Override
     protected void activate() {
-        filteredList = new FilteredList<>(model.getList());
+        filteredList = new FilteredList<>(model.dataModel.getList());
 
         sortedList = new SortedList<>(filteredList);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
 
         tableView.setItems(sortedList);
+
+        filterBox.initialize(filteredList, tableView); // here because filteredList is instantiated here
+        filterBox.activate();
 
         numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
         exportButton.setOnAction(event -> {
@@ -242,25 +231,23 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
             };
             CSVEntryConverter<UnconfirmedBsqSwapsListItem> contentConverter = item -> {
                 String[] columns = new String[ColumnNames.values().length];
-                columns[ColumnNames.TRADE_ID.ordinal()] = model.getTradeId(item);
-                columns[ColumnNames.DATE.ordinal()] = model.getDate(item);
-                columns[ColumnNames.MARKET.ordinal()] = model.getMarketLabel(item);
-                columns[ColumnNames.PRICE.ordinal()] = model.getPrice(item);
-                columns[ColumnNames.AMOUNT.ordinal()] = model.getAmount(item);
-                columns[ColumnNames.VOLUME.ordinal()] = model.getVolume(item);
-                columns[ColumnNames.TX_FEE.ordinal()] = model.getTxFee(item);
-                columns[ColumnNames.TRADE_FEE.ordinal()] = model.getTradeFee(item);
-                columns[ColumnNames.OFFER_TYPE.ordinal()] = model.getDirectionLabel(item);
-                columns[ColumnNames.CONF.ordinal()] = String.valueOf(model.getConfidence(item));
+                columns[ColumnNames.TRADE_ID.ordinal()] = item.getTradeId();
+                columns[ColumnNames.DATE.ordinal()] = item.getDateAsString();
+                columns[ColumnNames.MARKET.ordinal()] = item.getMarketLabel();
+                columns[ColumnNames.PRICE.ordinal()] = item.getPriceAsString();
+                columns[ColumnNames.AMOUNT.ordinal()] = item.getAmountAsString();
+                columns[ColumnNames.VOLUME.ordinal()] = item.getVolumeAsString();
+                columns[ColumnNames.TX_FEE.ordinal()] = item.getTxFeeAsString();
+                columns[ColumnNames.TRADE_FEE.ordinal()] = item.getTradeFeeAsString();
+                columns[ColumnNames.OFFER_TYPE.ordinal()] = item.getDirectionLabel();
+                columns[ColumnNames.CONF.ordinal()] = String.valueOf(item.getConfidence());
                 return columns;
             };
 
             GUIUtil.exportCSV("bsqSwapHistory.csv", headerConverter, contentConverter,
-                    new UnconfirmedBsqSwapsListItem(), sortedList, (Stage) root.getScene().getWindow());
+                    null, sortedList, (Stage) root.getScene().getWindow());
         });
 
-        filterTextField.textProperty().addListener(filterTextFieldListener);
-        applyFilteredListPredicate(filterTextField.getText());
         root.widthProperty().addListener(widthListener);
         onWidthChange(root.getWidth());
     }
@@ -270,7 +257,7 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
         sortedList.comparatorProperty().unbind();
         exportButton.setOnAction(null);
 
-        filterTextField.textProperty().removeListener(filterTextFieldListener);
+        filterBox.deactivate();
         root.widthProperty().removeListener(widthListener);
     }
 
@@ -295,57 +282,6 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
         tradeFeeColumn.setVisible(width > 1300);
     }
 
-    private void applyFilteredListPredicate(String filterString) {
-        filteredList.setPredicate(item -> {
-            if (filterString.isEmpty())
-                return true;
-
-            BsqSwapTrade bsqSwapTrade = item.getBsqSwapTrade();
-            Offer offer = bsqSwapTrade.getOffer();
-            if (offer.getId().contains(filterString)) {
-                return true;
-            }
-            if (model.getDate(item).contains(filterString)) {
-                return true;
-            }
-            if (model.getMarketLabel(item).contains(filterString)) {
-                return true;
-            }
-            if (model.getPrice(item).contains(filterString)) {
-                return true;
-            }
-            if (model.getVolume(item).contains(filterString)) {
-                return true;
-            }
-            if (model.getAmount(item).contains(filterString)) {
-                return true;
-            }
-            if (model.getTradeFee(item).contains(filterString)) {
-                return true;
-            }
-            if (model.getTxFee(item).contains(filterString)) {
-                return true;
-            }
-            if (String.valueOf(model.getConfidence(item)).contains(filterString)) {
-                return true;
-            }
-            if (model.getDirectionLabel(item).contains(filterString)) {
-                return true;
-            }
-            if (offer.getPaymentMethod().getDisplayString().contains(filterString)) {
-                return true;
-            }
-            if (bsqSwapTrade.getTxId() != null && bsqSwapTrade.getTxId().contains(filterString)) {
-                return true;
-            }
-            if (bsqSwapTrade.getTradingPeerNodeAddress().getFullAddress().contains(filterString)) {
-                return true;
-            }
-
-            return false;
-        });
-    }
-
     private void setTradeIdColumnCellFactory() {
         tradeIdColumn.getStyleClass().add("first-column");
         tradeIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
@@ -362,7 +298,7 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
                             public void updateItem(final UnconfirmedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    field = new HyperlinkWithIcon(model.getTradeId(item));
+                                    field = new HyperlinkWithIcon(item.getTradeId());
                                     field.setOnAction(event -> {
                                         window.show(item.getBsqSwapTrade());
                                     });
@@ -390,8 +326,8 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
                             @Override
                             public void updateItem(final UnconfirmedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                if (item != null)
-                                    setGraphic(new AutoTooltipLabel(model.getDate(item)));
+                                if (item != null && !empty)
+                                    setGraphic(new AutoTooltipLabel(item.getDateAsString()));
                                 else
                                     setGraphic(null);
                             }
@@ -411,7 +347,11 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
                             @Override
                             public void updateItem(final UnconfirmedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setGraphic(new AutoTooltipLabel(model.getMarketLabel(item)));
+                                if (item != null && !empty) {
+                                    setGraphic(new AutoTooltipLabel(item.getMarketLabel()));
+                                } else {
+                                    setGraphic(null);
+                                }
                             }
                         };
                     }
@@ -457,7 +397,7 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
 
                                 if (newItem != null && !empty/* && newItem.getAtomicTrade() instanceof Trade*/) {
                                     var bsqSwapTrade = newItem.getBsqSwapTrade();
-                                    int numPastTrades = model.getNumPastTrades(bsqSwapTrade);
+                                    int numPastTrades = newItem.getNumPastTrades();
                                     final NodeAddress tradingPeerNodeAddress = bsqSwapTrade.getTradingPeerNodeAddress();
                                     String role = Res.get("peerInfoIcon.tooltip.tradePeer");
                                     Node peerInfoIcon = new PeerInfoIconTrading(tradingPeerNodeAddress,
@@ -466,7 +406,7 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
                                             privateNotificationManager,
                                             bsqSwapTrade.getOffer(),
                                             preferences,
-                                            model.accountAgeWitnessService,
+                                            accountAgeWitnessService,
                                             useDevPrivilegeKeys);
                                     setPadding(new Insets(1, 15, 0, 0));
                                     setGraphic(peerInfoIcon);
@@ -491,7 +431,11 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
                             @Override
                             public void updateItem(final UnconfirmedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setGraphic(new AutoTooltipLabel(model.getAmount(item)));
+                                if (item != null && !empty) {
+                                    setGraphic(new AutoTooltipLabel(item.getAmountAsString()));
+                                } else {
+                                    setGraphic(null);
+                                }
                             }
                         };
                     }
@@ -509,7 +453,11 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
                             @Override
                             public void updateItem(final UnconfirmedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setGraphic(new AutoTooltipLabel(model.getPrice(item)));
+                                if (item != null && !empty) {
+                                    setGraphic(new AutoTooltipLabel(item.getPriceAsString()));
+                                } else {
+                                    setGraphic(null);
+                                }
                             }
                         };
                     }
@@ -527,8 +475,8 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
                             @Override
                             public void updateItem(final UnconfirmedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                if (item != null)
-                                    setGraphic(new AutoTooltipLabel(model.getVolume(item)));
+                                if (item != null && !empty)
+                                    setGraphic(new AutoTooltipLabel(item.getVolumeAsString()));
                                 else
                                     setGraphic(null);
                             }
@@ -548,7 +496,10 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
                             @Override
                             public void updateItem(final UnconfirmedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setGraphic(new AutoTooltipLabel(model.getDirectionLabel(item)));
+                                if (item != null && !empty)
+                                    setGraphic(new AutoTooltipLabel(item.getDirectionLabel()));
+                                else
+                                    setGraphic(null);
                             }
                         };
                     }
@@ -566,7 +517,10 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
                             @Override
                             public void updateItem(final UnconfirmedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setGraphic(new AutoTooltipLabel(model.getTxFee(item)));
+                                if (item != null && !empty)
+                                    setGraphic(new AutoTooltipLabel(item.getTxFeeAsString()));
+                                else
+                                    setGraphic(null);
                             }
                         };
                     }
@@ -584,7 +538,10 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
                             @Override
                             public void updateItem(final UnconfirmedBsqSwapsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setGraphic(new AutoTooltipLabel(model.getTradeFee(item)));
+                                if (item != null && !empty)
+                                    setGraphic(new AutoTooltipLabel(item.getTradeFeeAsString()));
+                                else
+                                    setGraphic(null);
                             }
                         };
                     }

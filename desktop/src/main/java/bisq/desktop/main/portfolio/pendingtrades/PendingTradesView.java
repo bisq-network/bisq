@@ -23,6 +23,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.PeerInfoIconTrading;
+import bisq.desktop.components.list.FilterBox;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TradeDetailsWindow;
@@ -42,9 +43,7 @@ import bisq.core.support.traderchat.TraderChatManager;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.Preferences;
-import bisq.core.util.FormattingUtils;
 import bisq.core.util.VolumeUtil;
-import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -102,6 +101,7 @@ import javafx.event.EventHandler;
 
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
@@ -119,16 +119,18 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private final TradeDetailsWindow tradeDetailsWindow;
     private final Navigation navigation;
     private final KeyRing keyRing;
-    private final CoinFormatter formatter;
     private final PrivateNotificationManager privateNotificationManager;
     private final boolean useDevPrivilegeKeys;
     private final boolean useDevModeHeader;
     private final Preferences preferences;
     @FXML
+    FilterBox filterBox;
+    @FXML
     TableView<PendingTradesListItem> tableView;
     @FXML
     TableColumn<PendingTradesListItem, PendingTradesListItem> priceColumn, volumeColumn, amountColumn, avatarColumn,
             marketColumn, roleColumn, paymentMethodColumn, tradeIdColumn, dateColumn, chatColumn, moveTradeToFailedColumn;
+    private FilteredList<PendingTradesListItem> filteredList;
     private SortedList<PendingTradesListItem> sortedList;
     private TradeSubView selectedSubView;
     private EventHandler<KeyEvent> keyEventEventHandler;
@@ -161,7 +163,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                              TradeDetailsWindow tradeDetailsWindow,
                              Navigation navigation,
                              KeyRing keyRing,
-                             @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                              PrivateNotificationManager privateNotificationManager,
                              Preferences preferences,
                              @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys,
@@ -170,7 +171,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.navigation = navigation;
         this.keyRing = keyRing;
-        this.formatter = formatter;
         this.privateNotificationManager = privateNotificationManager;
         this.preferences = preferences;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
@@ -211,14 +211,14 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         dateColumn.setComparator(Comparator.comparing(o -> o.getTrade().getDate()));
         volumeColumn.setComparator(Comparator.comparing(o -> o.getTrade().getVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
         amountColumn.setComparator(Comparator.comparing(o -> o.getTrade().getAmount(), Comparator.nullsFirst(Comparator.naturalOrder())));
-        priceColumn.setComparator(Comparator.comparing(item -> FormattingUtils.formatPrice(item.getPrice())));
+        priceColumn.setComparator(Comparator.comparing(PendingTradesListItem::getPrice));
         paymentMethodColumn.setComparator(Comparator.comparing(
                 item -> item.getTrade().getOffer() != null ?
                         Res.get(item.getTrade().getOffer().getPaymentMethod().getId()) :
                         null,
                 Comparator.nullsFirst(Comparator.naturalOrder())));
 
-        marketColumn.setComparator(Comparator.comparing(model::getMarketLabel));
+        marketColumn.setComparator(Comparator.comparing(PendingTradesListItem::getMarketDescription));
         roleColumn.setComparator(Comparator.comparing(model::getMyRole));
         avatarColumn.setComparator(Comparator.comparing(
                 o -> model.getNumPastTrades(o.getTrade()),
@@ -281,9 +281,13 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     @Override
     protected void activate() {
         ObservableList<PendingTradesListItem> list = model.dataModel.list;
-        sortedList = new SortedList<>(list);
+        filteredList = new FilteredList<>(list);
+        sortedList = new SortedList<>(filteredList);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
+
+        filterBox.initialize(filteredList, tableView); // here because filteredList is instantiated here
+        filterBox.activate();
 
         updateMoveTradeToFailedColumnState();
 
@@ -301,12 +305,12 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                     selectedSubView = model.dataModel.tradeManager.isBuyer(model.dataModel.getOffer()) ?
                             new BuyerSubView(model) : new SellerSubView(model);
 
-                    selectedSubView.setMinHeight(440);
+                    selectedSubView.setMinHeight(460);
                     VBox.setVgrow(selectedSubView, Priority.ALWAYS);
-                    if (root.getChildren().size() == 1)
+                    if (root.getChildren().size() == 2)
                         root.getChildren().add(selectedSubView);
-                    else if (root.getChildren().size() == 2)
-                        root.getChildren().set(1, selectedSubView);
+                    else if (root.getChildren().size() == 3)
+                        root.getChildren().set(2, selectedSubView);
 
                     // create and register a callback so we can be notified when the subview
                     // wants to open the chat window
@@ -340,6 +344,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     @Override
     protected void deactivate() {
+        filterBox.deactivate();
         sortedList.comparatorProperty().unbind();
         selectedItemSubscription.unsubscribe();
         selectedTableItemSubscription.unsubscribe();
@@ -683,7 +688,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setGraphic(new AutoTooltipLabel(formatter.formatCoin(item.getTrade().getAmount())));
+                                    setGraphic(new AutoTooltipLabel(item.getAmountAsString()));
                                 else
                                     setGraphic(null);
                             }
@@ -704,7 +709,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setGraphic(new AutoTooltipLabel(FormattingUtils.formatPrice(item.getPrice())));
+                                    setGraphic(new AutoTooltipLabel(item.getPriceAsString()));
                                 else
                                     setGraphic(null);
                             }
@@ -751,7 +756,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty)
-                                    setGraphic(new AutoTooltipLabel(model.getPaymentMethod(item)));
+                                    setGraphic(new AutoTooltipLabel(item.getPaymentMethod()));
                                 else
                                     setGraphic(null);
                             }
@@ -771,7 +776,12 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                             @Override
                             public void updateItem(final PendingTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
-                                setGraphic(new AutoTooltipLabel(model.getMarketLabel(item)));
+
+                                if (item != null && !empty) {
+                                    setGraphic(new AutoTooltipLabel(item.getMarketDescription()));
+                                } else {
+                                    setGraphic(null);
+                                }
                             }
                         };
                     }

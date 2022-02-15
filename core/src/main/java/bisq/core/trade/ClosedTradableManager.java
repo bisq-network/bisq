@@ -21,6 +21,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
+import bisq.core.offer.OpenOffer;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.bisq_v1.CleanupMailboxMessagesService;
 import bisq.core.trade.bisq_v1.DumpDelayedPayoutTx;
@@ -49,14 +50,18 @@ import com.google.common.collect.ImmutableList;
 
 import javafx.collections.ObservableList;
 
+import java.time.Instant;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.offer.OpenOffer.State.CANCELED;
 import static bisq.core.trade.ClosedTradableUtil.castToTrade;
 import static bisq.core.trade.ClosedTradableUtil.castToTradeModel;
 import static bisq.core.trade.ClosedTradableUtil.isBsqSwapTrade;
@@ -120,10 +125,12 @@ public class ClosedTradableManager implements PersistedDataHost {
 
     public void onAllServicesInitialized() {
         cleanupMailboxMessagesService.handleTrades(getClosedTrades());
+        maybeClearSensitiveData();
     }
 
     public void add(Tradable tradable) {
         if (closedTradables.add(tradable)) {
+            maybeClearSensitiveData();
             requestPersistence();
         }
     }
@@ -149,8 +156,38 @@ public class ClosedTradableManager implements PersistedDataHost {
                 .collect(Collectors.toList()));
     }
 
+    public List<OpenOffer> getCanceledOpenOffers() {
+        return ImmutableList.copyOf(getObservableList().stream()
+                .filter(e -> (e instanceof OpenOffer) && ((OpenOffer) e).getState().equals(CANCELED))
+                .map(e -> (OpenOffer) e)
+                .collect(Collectors.toList()));
+    }
+
     public Optional<Tradable> getTradableById(String id) {
         return closedTradables.stream().filter(e -> e.getId().equals(id)).findFirst();
+    }
+
+    public void maybeClearSensitiveData() {
+        log.info("checking closed trades eligibility for having sensitive data cleared");
+        closedTradables.stream()
+                .filter(e -> e instanceof Trade)
+                .map(e -> (Trade) e)
+                .filter(e -> canTradeHaveSensitiveDataCleared(e.getId()))
+                .forEach(Trade::maybeClearSensitiveData);
+        requestPersistence();
+    }
+
+    public boolean canTradeHaveSensitiveDataCleared(String tradeId) {
+        Instant safeDate = getSafeDateForSensitiveDataClearing();
+        return closedTradables.stream()
+                .filter(e -> e.getId().equals(tradeId))
+                .filter(e -> e.getDate().toInstant().isBefore(safeDate))
+                .count() > 0;
+    }
+
+    public Instant getSafeDateForSensitiveDataClearing() {
+        return Instant.ofEpochSecond(Instant.now().getEpochSecond()
+                - TimeUnit.DAYS.toSeconds(preferences.getClearDataAfterDays()));
     }
 
     public Stream<Trade> getTradesStreamWithFundsLockedIn() {

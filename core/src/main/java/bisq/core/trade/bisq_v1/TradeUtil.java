@@ -175,16 +175,6 @@ public class TradeUtil {
         return getCurrencyPair(trade.getOffer().getCurrencyCode());
     }
 
-    public String getPaymentMethodNameWithCountryCode(Trade trade) {
-        if (trade == null)
-            return "";
-
-        Offer offer = trade.getOffer();
-        checkNotNull(offer);
-        checkNotNull(offer.getPaymentMethod());
-        return offer.getPaymentMethodNameWithCountryCode();
-    }
-
     /**
      * Returns a string describing a trader's role for a given trade.
      * @param trade Trade

@@ -23,6 +23,9 @@ import javafx.beans.property.SimpleObjectProperty;
 
 import java.util.Locale;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class GlobalSettings {
     private static boolean useAnimations = true;
     private static Locale locale;
@@ -32,6 +35,7 @@ public class GlobalSettings {
 
     static {
         locale = Locale.getDefault();
+        log.info("Locale info: {}", locale);
 
         // On some systems there is no country defined, in that case we use en_US
         if (locale.getCountry() == null || locale.getCountry().isEmpty())

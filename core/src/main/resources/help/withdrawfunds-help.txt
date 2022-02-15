@@ -2,7 +2,7 @@ withdrawfunds
 
 NAME
 ----
-withdrawfunds - send BTC received during a trade to an external BTC wallet
+withdrawfunds - send BTC received during a trade to an external BTC wallet and close trade
 
 SYNOPSIS
 --------
@@ -16,10 +16,10 @@ DESCRIPTION
 A BTC buyer completes the final step in the trade protocol by sending received BTC to
 an external BTC wallet.
 
-The alternative way to close out the trade is to keep the received BTC in the Bisq wallet,
-using the keepfunds command.
+The alternative way to close out the trade is to keep the received BTC in the Bisq wallet
+with the closetrade command.
 
-The buyer needs to complete the trade protocol using the keepfunds or withdrawfunds or command.
+The buyer needs to complete the trade protocol using the closetrade or withdrawfunds command.
 This step may not seem necessary from the buyer's perspective, but it is necessary for correct
 transition of a trade's state to CLOSED, within the Bisq server.
 
@@ -29,11 +29,11 @@ OPTIONS
 		The ID of the trade (the full offer-id).
 
 --address
-		The destination btc address for the send btc transaction.
+		The destination btc address for the btc transaction.
 
 --memo
-		An optional memo to be saved with the send btc transaction.
-		A multi word memo must be enclosed in double quotes.
+		An optional memo to be saved with the btc transaction.
+		A multi-word memo must be enclosed in double quotes.
 
 EXAMPLES
 --------

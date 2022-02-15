@@ -24,6 +24,7 @@ public class OptLabel {
     public final static String OPT_ACCOUNT_NAME = "account-name";
     public final static String OPT_ADDRESS = "address";
     public final static String OPT_AMOUNT = "amount";
+    public final static String OPT_CATEGORY = "category";
     public final static String OPT_CURRENCY_CODE = "currency-code";
     public final static String OPT_DIRECTION = "direction";
     public final static String OPT_DISPUTE_AGENT_TYPE = "dispute-agent-type";
@@ -37,7 +38,7 @@ public class OptLabel {
     public final static String OPT_MIN_AMOUNT = "min-amount";
     public final static String OPT_OFFER_ID = "offer-id";
     public final static String OPT_PASSWORD = "password";
-    public final static String OPT_PAYMENT_ACCOUNT = "payment-account";
+    public final static String OPT_PAYMENT_ACCOUNT_ID = "payment-account-id";
     public final static String OPT_PAYMENT_ACCOUNT_FORM = "payment-account-form";
     public final static String OPT_PAYMENT_METHOD_ID = "payment-method-id";
     public final static String OPT_PORT = "port";

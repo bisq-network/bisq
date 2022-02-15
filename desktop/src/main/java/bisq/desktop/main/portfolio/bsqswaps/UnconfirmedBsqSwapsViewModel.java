@@ -19,121 +19,12 @@ package bisq.desktop.main.portfolio.bsqswaps;
 
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
-import bisq.desktop.util.DisplayUtils;
-
-import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.locale.CurrencyUtil;
-import bisq.core.trade.ClosedTradableManager;
-import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
-import bisq.core.util.FormattingUtils;
-import bisq.core.util.VolumeUtil;
-import bisq.core.util.coin.BsqFormatter;
-import bisq.core.util.coin.CoinFormatter;
-
-import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
 
-import javax.inject.Named;
-
-import javafx.collections.ObservableList;
-
 class UnconfirmedBsqSwapsViewModel extends ActivatableWithDataModel<UnconfirmedBsqSwapsDataModel> implements ViewModel {
-    private final BsqFormatter bsqFormatter;
-    private final CoinFormatter btcFormatter;
-    final AccountAgeWitnessService accountAgeWitnessService;
-    private final ClosedTradableManager closedTradableManager;
-
     @Inject
-    public UnconfirmedBsqSwapsViewModel(UnconfirmedBsqSwapsDataModel dataModel,
-                                        AccountAgeWitnessService accountAgeWitnessService,
-                                        ClosedTradableManager closedTradableManager,
-                                        BsqFormatter bsqFormatter,
-                                        @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
+    public UnconfirmedBsqSwapsViewModel(UnconfirmedBsqSwapsDataModel dataModel) {
         super(dataModel);
-        this.accountAgeWitnessService = accountAgeWitnessService;
-        this.closedTradableManager = closedTradableManager;
-        this.bsqFormatter = bsqFormatter;
-        this.btcFormatter = btcFormatter;
-    }
-
-    public ObservableList<UnconfirmedBsqSwapsListItem> getList() {
-        return dataModel.getList();
-    }
-
-    String getTradeId(UnconfirmedBsqSwapsListItem item) {
-        return item.getBsqSwapTrade().getShortId();
-    }
-
-    String getAmount(UnconfirmedBsqSwapsListItem item) {
-        if (item == null)
-            return "";
-
-        return btcFormatter.formatCoin(item.getBsqSwapTrade().getAmount());
-    }
-
-    String getPrice(UnconfirmedBsqSwapsListItem item) {
-        if (item == null)
-            return "";
-
-        return FormattingUtils.formatPrice(item.getBsqSwapTrade().getPrice());
-    }
-
-    String getVolume(UnconfirmedBsqSwapsListItem item) {
-        if (item == null)
-            return "";
-
-        return VolumeUtil.formatVolumeWithCode(item.getBsqSwapTrade().getVolume());
-    }
-
-    String getTxFee(UnconfirmedBsqSwapsListItem item) {
-        if (item == null)
-            return "";
-
-        return btcFormatter.formatCoinWithCode(Coin.valueOf(item.getBsqSwapTrade().getBsqSwapProtocolModel().getTxFee()));
-    }
-
-    String getTradeFee(UnconfirmedBsqSwapsListItem item) {
-        if (item == null)
-            return "";
-
-        if (wasMyOffer(item.getBsqSwapTrade())) {
-            return bsqFormatter.formatCoinWithCode(item.getBsqSwapTrade().getMakerFeeAsLong());
-        } else {
-            return bsqFormatter.formatCoinWithCode(item.getBsqSwapTrade().getTakerFeeAsLong());
-        }
-    }
-
-    String getDirectionLabel(UnconfirmedBsqSwapsListItem item) {
-        if (item == null)
-            return "";
-
-        return DisplayUtils.getDirectionWithCode(dataModel.getDirection(item.getBsqSwapTrade().getOffer()),
-                item.getBsqSwapTrade().getOffer().getCurrencyCode());
-    }
-
-    String getDate(UnconfirmedBsqSwapsListItem item) {
-        return DisplayUtils.formatDateTime(item.getBsqSwapTrade().getDate());
-    }
-
-    String getMarketLabel(UnconfirmedBsqSwapsListItem item) {
-        if (item == null)
-            return "";
-
-        return CurrencyUtil.getCurrencyPair(item.getBsqSwapTrade().getOffer().getCurrencyCode());
-    }
-
-    int getConfidence(UnconfirmedBsqSwapsListItem item) {
-        if ((item == null))
-            return 0;
-        return item.getConfirmations();
-    }
-
-    int getNumPastTrades(BsqSwapTrade bsqSwapTrade) {
-        return closedTradableManager.getNumPastTrades(bsqSwapTrade);
-    }
-
-    boolean wasMyOffer(BsqSwapTrade bsqSwapTrade) {
-        return dataModel.bsqSwapTradeManager.wasMyOffer(bsqSwapTrade.getOffer());
     }
 }

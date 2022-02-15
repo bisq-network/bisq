@@ -108,7 +108,7 @@ task packageInstallers {
         }
 
         String appDescription = 'A decentralized bitcoin exchange network.'
-        String appCopyright = '© 2021 Bisq'
+        String appCopyright = 'Copyright © 2013-2022 - The Bisq developers'
         String appNameAndVendor = 'Bisq'
 
         String commonOpts = new String(

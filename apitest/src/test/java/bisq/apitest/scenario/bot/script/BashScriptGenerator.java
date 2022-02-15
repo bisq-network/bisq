@@ -167,10 +167,10 @@ public class BashScriptGenerator {
     }
 
     public File createKeepFundsScript(TradeInfo trade) {
-        String paymentStartedCmd = format("%s keepfunds --trade-id=%s", cliBase, trade.getTradeId());
+        String paymentStartedCmd = format("%s closetrade --trade-id=%s", cliBase, trade.getTradeId());
         String getTradeCmd = format("%s gettrade --trade-id=%s", cliBase, trade.getTradeId());
         String getBalanceCmd = format("%s getbalance", cliBase);
-        return createCliScript("keepfunds.sh",
+        return createCliScript("closetrade.sh",
                 paymentStartedCmd,
                 "sleep 2",
                 getTradeCmd,

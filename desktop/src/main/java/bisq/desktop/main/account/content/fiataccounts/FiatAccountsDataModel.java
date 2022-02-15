@@ -124,6 +124,11 @@ class FiatAccountsDataModel extends ActivatableDataModel {
         accountAgeWitnessService.signAndPublishSameNameAccounts();
     }
 
+    public void onUpdateAccount(PaymentAccount paymentAccount) {
+        paymentAccount.onPersistChanges();
+        user.requestPersistence();
+    }
+
     public boolean onDeleteAccount(PaymentAccount paymentAccount) {
         boolean usedInOpenOffers = openOfferManager.getObservableList().stream()
                 .anyMatch(openOffer -> openOffer.getOffer().getMakerPaymentAccountId().equals(paymentAccount.getId()));

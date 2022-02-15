@@ -5,10 +5,7 @@ import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.common.view.guice.InjectorViewFactory;
 import bisq.desktop.main.dao.bonding.BondingViewUtils;
-import bisq.desktop.main.funds.transactions.DisplayedTransactionsFactory;
 import bisq.desktop.main.funds.transactions.TradableRepository;
-import bisq.desktop.main.funds.transactions.TransactionAwareTradableFactory;
-import bisq.desktop.main.funds.transactions.TransactionListItemFactory;
 import bisq.desktop.main.offer.offerbook.OfferBook;
 import bisq.desktop.main.overlays.notifications.NotificationCenter;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
@@ -99,9 +96,6 @@ public class GuiceSetupTest {
         assertSingleton(DaoPresentation.class);
         assertSingleton(Transitions.class);
         assertSingleton(TradableRepository.class);
-        assertSingleton(TransactionListItemFactory.class);
-        assertSingleton(TransactionAwareTradableFactory.class);
-        assertSingleton(DisplayedTransactionsFactory.class);
         assertSingleton(BondingViewUtils.class);
 
         // core module

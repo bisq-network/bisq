@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.funds.transactions;
 
+import bisq.desktop.util.filtering.FilterableListItem;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
@@ -43,6 +44,8 @@ import org.bitcoinj.core.TransactionOutput;
 
 import com.google.common.base.Suppliers;
 
+import org.apache.commons.lang3.StringUtils;
+
 import javafx.scene.control.Tooltip;
 
 import java.util.Date;
@@ -55,7 +58,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
-class TransactionsListItem {
+class TransactionsListItem implements FilterableListItem {
     private final BtcWalletService btcWalletService;
     private final CoinFormatter formatter;
     private String dateString;
@@ -376,5 +379,31 @@ class TransactionsListItem {
 
     public String getMemo() {
         return memo;
+    }
+
+    @Override
+    public boolean match(String filterString) {
+        if (filterString.isEmpty()) {
+            return true;
+        }
+        if (StringUtils.containsIgnoreCase(getTxId(), filterString)) {
+            return true;
+        }
+        if (StringUtils.containsIgnoreCase(getDetails(), filterString)) {
+            return true;
+        }
+        if (getMemo() != null && StringUtils.containsIgnoreCase(getMemo(), filterString)) {
+            return true;
+        }
+        if (StringUtils.containsIgnoreCase(getDirection(), filterString)) {
+            return true;
+        }
+        if (StringUtils.containsIgnoreCase(getDateString(), filterString)) {
+            return true;
+        }
+        if (StringUtils.containsIgnoreCase(getAmount(), filterString)) {
+            return true;
+        }
+        return StringUtils.containsIgnoreCase(getAddressString(), filterString);
     }
 }

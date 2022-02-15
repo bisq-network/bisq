@@ -20,8 +20,14 @@ package bisq.core.support.dispute;
 import bisq.core.locale.Res;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.SupportType;
+import bisq.core.support.dispute.mediation.FileTransferReceiver;
+import bisq.core.support.dispute.mediation.FileTransferSender;
+import bisq.core.support.dispute.mediation.FileTransferSession;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.model.bisq_v1.Contract;
+
+import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.network.NetworkNode;
 
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.proto.ProtoUtil;
@@ -45,6 +51,8 @@ import javafx.beans.property.SimpleObjectProperty;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+
+import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -92,7 +100,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     private final PubKeyRing traderPubKeyRing;
     private final long tradeDate;
     private final long tradePeriodEnd;
-    private final Contract contract;
+    private Contract contract;
     @Nullable
     private final byte[] contractHash;
     @Nullable
@@ -103,7 +111,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     private final String depositTxId;
     @Nullable
     private final String payoutTxId;
-    private final String contractAsJson;
+    private String contractAsJson;
     @Nullable
     private final String makerContractSignature;
     @Nullable
@@ -154,6 +162,20 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     private transient final BooleanProperty isClosedProperty = new SimpleBooleanProperty();
     private transient final IntegerProperty badgeCountProperty = new SimpleIntegerProperty();
 
+    private transient FileTransferReceiver fileTransferSession = null;
+
+    public FileTransferReceiver createOrGetFileTransferReceiver(NetworkNode networkNode, NodeAddress peerNodeAddress, FileTransferSession.FtpCallback callback) throws IOException {
+        // the receiver stores its state temporarily here in the dispute
+        // this method gets called to retrieve the session each time a part of the log files is received
+        if (fileTransferSession == null) {
+            fileTransferSession = new FileTransferReceiver(networkNode, peerNodeAddress, this.tradeId, this.traderId, this.getRoleStringForLogFile(), callback);
+        }
+        return fileTransferSession;
+    }
+
+    public FileTransferSender createFileTransferSender(NetworkNode networkNode, NodeAddress peerNodeAddress, FileTransferSession.FtpCallback callback) {
+        return new FileTransferSender(networkNode, peerNodeAddress, this.tradeId, this.traderId, this.getRoleStringForLogFile(), callback);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -329,6 +351,31 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
         }
     }
 
+    public boolean removeAllChatMessages() {
+        if (chatMessages.size() > 0) {
+            chatMessages.clear();
+            return true;
+        }
+        return false;
+    }
+
+    public void maybeClearSensitiveData() {
+        String change = "";
+        if (contract.maybeClearSensitiveData()) {
+            change += "contract;";
+        }
+        String edited = contract.sanitizeContractAsJson(contractAsJson);
+        if (!edited.equals(contractAsJson)) {
+            contractAsJson = edited;
+            change += "contractAsJson;";
+        }
+        if (removeAllChatMessages()) {
+            change += "chat messages;";
+        }
+        if (change.length() > 0) {
+            log.info("cleared sensitive data from {} of dispute for trade {}", change, Utilities.getShortId(getTradeId()));
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Setters
@@ -439,6 +486,11 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
             else
                 return Res.get("support.sellerTaker");
         }
+    }
+
+    public String getRoleStringForLogFile() {
+        return (disputeOpenerIsBuyer ? "BUYER" : "SELLER") + "_"
+                + (disputeOpenerIsMaker ? "MAKER" : "TAKER");
     }
 
     @Override

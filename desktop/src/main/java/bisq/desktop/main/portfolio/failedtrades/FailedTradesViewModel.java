@@ -19,74 +19,12 @@ package bisq.desktop.main.portfolio.failedtrades;
 
 import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.common.model.ViewModel;
-import bisq.desktop.util.DisplayUtils;
-
-import bisq.core.locale.CurrencyUtil;
-import bisq.core.locale.Res;
-import bisq.core.util.FormattingUtils;
-import bisq.core.util.VolumeUtil;
-import bisq.core.util.coin.CoinFormatter;
 
 import com.google.inject.Inject;
 
-import javax.inject.Named;
-
-import javafx.collections.ObservableList;
-
 class FailedTradesViewModel extends ActivatableWithDataModel<FailedTradesDataModel> implements ViewModel {
-    private final CoinFormatter formatter;
-
-
     @Inject
-    public FailedTradesViewModel(FailedTradesDataModel dataModel,
-                                 @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
+    public FailedTradesViewModel(FailedTradesDataModel dataModel) {
         super(dataModel);
-
-        this.formatter = formatter;
-    }
-
-    public ObservableList<FailedTradesListItem> getList() {
-        return dataModel.getList();
-    }
-
-    String getTradeId(FailedTradesListItem item) {
-        return item.getTrade().getShortId();
-    }
-
-    String getAmount(FailedTradesListItem item) {
-        if (item != null && item.getTrade() != null)
-            return formatter.formatCoin(item.getTrade().getAmount());
-        else
-            return "";
-    }
-
-    String getPrice(FailedTradesListItem item) {
-        return (item != null) ? FormattingUtils.formatPrice(item.getTrade().getPrice()) : "";
-    }
-
-    String getVolume(FailedTradesListItem item) {
-        if (item != null && item.getTrade() != null)
-            return VolumeUtil.formatVolumeWithCode(item.getTrade().getVolume());
-        else
-            return "";
-    }
-
-    String getDirectionLabel(FailedTradesListItem item) {
-        return (item != null) ? DisplayUtils.getDirectionWithCode(dataModel.getDirection(item.getTrade().getOffer()), item.getTrade().getOffer().getCurrencyCode()) : "";
-    }
-
-    String getMarketLabel(FailedTradesListItem item) {
-        if ((item == null))
-            return "";
-
-        return CurrencyUtil.getCurrencyPair(item.getTrade().getOffer().getCurrencyCode());
-    }
-
-    String getDate(FailedTradesListItem item) {
-        return DisplayUtils.formatDateTime(item.getTrade().getDate());
-    }
-
-    String getState(FailedTradesListItem item) {
-        return item != null ? Res.get("portfolio.failed.Failed") : "";
     }
 }

@@ -85,7 +85,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
 
         genBtcBlockAndWaitForOfferPreparation();
 
-        newOffer = aliceClient.getMyOffer(newOfferId);
+        newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
@@ -132,7 +132,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
 
         genBtcBlockAndWaitForOfferPreparation();
 
-        newOffer = aliceClient.getMyOffer(newOfferId);
+        newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
@@ -179,7 +179,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
 
         genBtcBlockAndWaitForOfferPreparation();
 
-        newOffer = aliceClient.getMyOffer(newOfferId);
+        newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
@@ -226,7 +226,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
 
         genBtcBlockAndWaitForOfferPreparation();
 
-        newOffer = aliceClient.getMyOffer(newOfferId);
+        newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
         assertEquals(newOfferId, newOffer.getId());
@@ -245,7 +245,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
     @Test
     @Order(5)
     public void testGetAllMyBsqOffers() {
-        List<OfferInfo> offers = aliceClient.getMyBsqOffersSortedByDate();
+        List<OfferInfo> offers = aliceClient.getMyCryptoCurrencyOffersSortedByDate(BSQ);
         log.debug("ALL ALICE'S BSQ OFFERS:\n{}", toOffersTable.apply(offers));
         assertEquals(4, offers.size());
         log.debug("ALICE'S BALANCES\n{}", formatBalancesTbls(aliceClient.getBalances()));
@@ -254,7 +254,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
     @Test
     @Order(6)
     public void testGetAvailableBsqOffers() {
-        List<OfferInfo> offers = bobClient.getBsqOffersSortedByDate();
+        List<OfferInfo> offers = bobClient.getCryptoCurrencyOffersSortedByDate(BSQ);
         log.debug("ALL BOB'S AVAILABLE BSQ OFFERS:\n{}", toOffersTable.apply(offers));
         assertEquals(4, offers.size());
         log.debug("BOB'S BALANCES\n{}", formatBalancesTbls(bobClient.getBalances()));

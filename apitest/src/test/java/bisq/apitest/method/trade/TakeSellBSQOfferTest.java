@@ -155,11 +155,14 @@ public class TakeSellBSQOfferTest extends AbstractTradeTest {
             genBtcBlocksThenWait(1, 1_000);
 
             var trade = aliceClient.getTrade(tradeId);
-            logTrade(log, testInfo, "Alice's view before withdrawing BTC funds to external wallet", trade);
+            logTrade(log,
+                    testInfo,
+                    "Alice's view before closing trade and withdrawing BTC funds to external wallet",
+                    trade);
             String toAddress = bitcoinCli.getNewBtcAddress();
             aliceClient.withdrawFunds(tradeId, toAddress, WITHDRAWAL_TX_MEMO);
-            // Bob keeps funds.
-            bobClient.keepFunds(tradeId);
+            // Bob closes trade and keeps funds.
+            bobClient.closeTrade(tradeId);
             genBtcBlocksThenWait(1, 1_000);
             trade = aliceClient.getTrade(tradeId);
             EXPECTED_PROTOCOL_STATUS.setState(WITHDRAW_COMPLETED)

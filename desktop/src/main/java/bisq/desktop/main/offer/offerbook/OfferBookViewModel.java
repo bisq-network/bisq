@@ -42,6 +42,7 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferFilterService;
+import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
@@ -710,5 +711,9 @@ class OfferBookViewModel extends ActivatableViewModel {
             selectedTradeCurrency = GlobalSettings.getDefaultTradeCurrency();
         }
         tradeCurrencyCode.set(selectedTradeCurrency.getCode());
+    }
+
+    public OpenOffer getOpenOffer(Offer offer) {
+        return openOfferManager.getOpenOfferById(offer.getId()).orElse(null);
     }
 }

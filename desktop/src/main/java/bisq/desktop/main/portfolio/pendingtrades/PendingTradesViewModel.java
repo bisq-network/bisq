@@ -245,16 +245,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         return sellerState;
     }
 
-    public String getPayoutAmount() {
-        return dataModel.getTrade() != null
-                ? btcFormatter.formatCoinWithCode(dataModel.getTrade().getPayoutAmount())
-                : "";
-    }
-
-    String getMarketLabel(PendingTradesListItem item) {
-        return item == null ? "" : tradeUtil.getMarketDescription(item.getTrade());
-    }
-
     public String getRemainingTradeDurationAsWords() {
         checkNotNull(dataModel.getTrade(), "model's trade must not be null");
         return tradeUtil.getRemainingTradeDurationAsWords(dataModel.getTrade());
@@ -295,10 +285,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
         } else {
             return "";
         }
-    }
-
-    String getPaymentMethod(PendingTradesListItem item) {
-        return item == null ? "" : tradeUtil.getPaymentMethodNameWithCountryCode(item.getTrade());
     }
 
     // summary

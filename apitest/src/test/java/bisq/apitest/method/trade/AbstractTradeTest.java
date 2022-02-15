@@ -8,6 +8,8 @@ import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 
+import lombok.Getter;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInfo;
 
@@ -36,6 +38,7 @@ public class AbstractTradeTest extends AbstractOfferTest {
     public static final ExpectedProtocolStatus EXPECTED_PROTOCOL_STATUS = new ExpectedProtocolStatus();
 
     // A Trade ID cache for use in @Test sequences.
+    @Getter
     protected static String tradeId;
 
     protected final Supplier<Integer> maxTradeStateAndPhaseChecks = () -> isLongRunningTest ? 10 : 2;
@@ -46,6 +49,15 @@ public class AbstractTradeTest extends AbstractOfferTest {
     @BeforeAll
     public static void initStaticFixtures() {
         EXPECTED_PROTOCOL_STATUS.init();
+    }
+
+    protected final TradeInfo takeAlicesOffer(String offerId,
+                                              String paymentAccountId,
+                                              String takerFeeCurrencyCode) {
+        return takeAlicesOffer(offerId,
+                paymentAccountId,
+                takerFeeCurrencyCode,
+                true);
     }
 
     protected final TradeInfo takeAlicesOffer(String offerId,
@@ -241,7 +253,7 @@ public class AbstractTradeTest extends AbstractOfferTest {
         if (log.isDebugEnabled()) {
             log.debug(format("%s %s%n%s",
                     testName(testInfo),
-                    description.toUpperCase(),
+                    description,
                     new TableBuilder(TRADE_DETAIL_TBL, trade).build()));
         }
     }
@@ -251,5 +263,19 @@ public class AbstractTradeTest extends AbstractOfferTest {
         CliMain.main(new String[]{"--password=xyz", "--port=9998", "gettrade", "--trade-id=" + tradeId});
         out.println("Bob's CLI 'gettrade' response:");
         CliMain.main(new String[]{"--password=xyz", "--port=9999", "gettrade", "--trade-id=" + tradeId});
+    }
+
+    protected static void runCliGetOpenTrades() {
+        out.println("Alice's CLI 'gettrades --category=open' response:");
+        CliMain.main(new String[]{"--password=xyz", "--port=9998", "gettrades", "--category=open"});
+        out.println("Bob's CLI 'gettrades --category=open' response:");
+        CliMain.main(new String[]{"--password=xyz", "--port=9999", "gettrades", "--category=open"});
+    }
+
+    protected static void runCliGetClosedTrades() {
+        out.println("Alice's CLI 'gettrades --category=closed' response:");
+        CliMain.main(new String[]{"--password=xyz", "--port=9998", "gettrades", "--category=closed"});
+        out.println("Bob's CLI 'gettrades --category=closed' response:");
+        CliMain.main(new String[]{"--password=xyz", "--port=9999", "gettrades", "--category=closed"});
     }
 }

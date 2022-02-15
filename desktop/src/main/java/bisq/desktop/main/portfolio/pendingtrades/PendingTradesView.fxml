@@ -21,12 +21,13 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.geometry.Insets?>
+<?import bisq.desktop.components.list.FilterBox?>
 <VBox fx:id="root" fx:controller="bisq.desktop.main.portfolio.pendingtrades.PendingTradesView"
       spacing="20" xmlns:fx="http://javafx.com/fxml">
     <padding>
         <Insets bottom="15.0" left="15.0" right="15.0" top="15.0"/>
     </padding>
-
+    <FilterBox fx:id="filterBox" />
     <TableView fx:id="tableView" VBox.vgrow="SOMETIMES">
         <columns>
             <TableColumn fx:id="tradeIdColumn" minWidth="100"/>

@@ -214,6 +214,51 @@ parsebsqswaporderopts() {
     export CURRENCY_CODE="BSQ"
 }
 
+parsexmrscriptopts() {
+    usage() {
+        echo "Usage: $0 [-d buy|sell] [-f <fixed-price> || -m <margin-from-price>] [-a <amount in btc>]" 1>&2
+        exit 1;
+    }
+
+    local OPTIND o d f m a
+    while getopts "d:f:m:a:" o; do
+        case "${o}" in
+            d) d=$(echo "${OPTARG}" | tr '[:lower:]' '[:upper:]')
+                ((d == "BUY" || d == "SELL")) || usage
+                export DIRECTION=${d}
+                ;;
+            f) f=${OPTARG}
+               export FIXED_PRICE=${f}
+               ;;
+             m) m=${OPTARG}
+                export MKT_PRICE_MARGIN=${m}
+                ;;
+            a) a=${OPTARG}
+               export AMOUNT=${a}
+               ;;
+            *) usage ;;
+        esac
+    done
+    shift $((OPTIND-1))
+
+    if [ -z "${d}" ] ||  [ -z "${a}" ]; then
+        usage
+    fi
+
+    if [ -z "${f}" ] && [ -z "${m}" ]; then
+        usage
+    fi
+
+    if [ "$DIRECTION" = "SELL" ]
+    then
+        export BOB_ROLE="(taker/buyer)"
+        export ALICE_ROLE="(maker/seller)"
+    else
+        export BOB_ROLE="(taker/seller)"
+        export ALICE_ROLE="(maker/buyer)"
+    fi
+}
+
 checkbitcoindrunning() {
     # There may be a '+' char in the path and we have to escape it for pgrep.
     if [[ $APP_HOME == *"+"* ]]; then

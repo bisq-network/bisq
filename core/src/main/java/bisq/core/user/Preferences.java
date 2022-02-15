@@ -117,7 +117,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public static final ArrayList<BlockChainExplorer> BSQ_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
             new BlockChainExplorer("mempool.space (@wiz)", "https://mempool.space/bisq/tx/", "https://mempool.space/bisq/address/"),
-            new BlockChainExplorer("mempool.emzy.de (@emzy)", "https://mempool.emzy.de/bisq/tx/", "https://mempool.emzy.de/bisq/address/"),
+            new BlockChainExplorer("bisq.mempool.emzy.de (@emzy)", "https://bisq.mempool.emzy.de/tx/", "https://bisq.mempool.emzy.de/address/"),
             new BlockChainExplorer("mempool.bisq.services (@devinbileck)", "https://mempool.bisq.services/bisq/tx/", "https://mempool.bisq.services/bisq/address/")
     ));
 
@@ -145,7 +145,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     ));
 
     public static final boolean USE_SYMMETRIC_SECURITY_DEPOSIT = true;
-
+    public static final int CLEAR_DATA_AFTER_DAYS_INITIAL = 99999; // feature effectively disabled until user agrees to settings notification
+    public static final int CLEAR_DATA_AFTER_DAYS_DEFAULT = 20; // used when user has agreed to settings notification
 
     // payload is initialized so the default values are available for Property initialization.
     @Setter
@@ -276,8 +277,13 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         prefPayload.setUserLanguage(GlobalSettings.getLocale().getLanguage());
         prefPayload.setUserCountry(CountryUtil.getDefaultCountry());
         GlobalSettings.setLocale(new Locale(prefPayload.getUserLanguage(), prefPayload.getUserCountry().code));
-        TradeCurrency preferredTradeCurrency = checkNotNull(CurrencyUtil.getCurrencyByCountryCode(prefPayload.getUserCountry().code),
-                "preferredTradeCurrency must not be null");
+
+        TradeCurrency preferredTradeCurrency = CurrencyUtil.getCurrencyByCountryCode("US"); // default fallback option
+        try {
+            preferredTradeCurrency = CurrencyUtil.getCurrencyByCountryCode(prefPayload.getUserCountry().code);
+        } catch (IllegalArgumentException ia) {
+            log.warn("Could not determine currency for country {} [{}]", prefPayload.getUserCountry().code, ia.toString());
+        }
         prefPayload.setPreferredTradeCurrency(preferredTradeCurrency);
         setFiatCurrencies(CurrencyUtil.getMainFiatCurrencies());
         setCryptoCurrencies(CurrencyUtil.getMainCryptoCurrencies());
@@ -353,6 +359,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         if (prefPayload.getIgnoreDustThreshold() < Restrictions.getMinNonDustOutput().value) {
             setIgnoreDustThreshold(600);
+        }
+
+        if (prefPayload.getClearDataAfterDays() < 1) {
+            setClearDataAfterDays(Preferences.CLEAR_DATA_AFTER_DAYS_INITIAL);
         }
 
         // For users from old versions the 4 flags a false but we want to have it true by default
@@ -679,7 +689,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     public void setBridgeAddresses(List<String> bridgeAddresses) {
         prefPayload.setBridgeAddresses(bridgeAddresses);
         // We call that before shutdown so we dont want a delay here
-        requestPersistence();
+        persistenceManager.forcePersistNow();
     }
 
     // Only used from PB but keep it explicit as it may be used from the client and then we want to persist
@@ -690,17 +700,17 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setBridgeOptionOrdinal(int bridgeOptionOrdinal) {
         prefPayload.setBridgeOptionOrdinal(bridgeOptionOrdinal);
-        requestPersistence();
+        persistenceManager.forcePersistNow();
     }
 
     public void setTorTransportOrdinal(int torTransportOrdinal) {
         prefPayload.setTorTransportOrdinal(torTransportOrdinal);
-        requestPersistence();
+        persistenceManager.forcePersistNow();
     }
 
     public void setCustomBridges(String customBridges) {
         prefPayload.setCustomBridges(customBridges);
-        requestPersistence();
+        persistenceManager.forcePersistNow();
     }
 
     public void setBitcoinNodesOptionOrdinal(int bitcoinNodesOptionOrdinal) {
@@ -782,6 +792,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setIgnoreDustThreshold(int value) {
         prefPayload.setIgnoreDustThreshold(value);
+        requestPersistence();
+    }
+
+    public void setClearDataAfterDays(int value) {
+        prefPayload.setClearDataAfterDays(value);
         requestPersistence();
     }
 

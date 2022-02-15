@@ -57,6 +57,7 @@ import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
 import bisq.core.trade.protocol.bisq_v1.SellerProtocol;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.P2PService;
 
@@ -70,6 +71,8 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 
 import com.google.inject.Inject;
+
+import javax.inject.Named;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -109,6 +112,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public final WalletPasswordWindow walletPasswordWindow;
     private final NotificationCenter notificationCenter;
     private final OfferUtil offerUtil;
+    private final CoinFormatter btcFormatter;
 
     final ObservableList<PendingTradesListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<Trade> tradesListChangeListener;
@@ -145,7 +149,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                                   Navigation navigation,
                                   WalletPasswordWindow walletPasswordWindow,
                                   NotificationCenter notificationCenter,
-                                  OfferUtil offerUtil) {
+                                  OfferUtil offerUtil,
+                                  @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         this.tradeManager = tradeManager;
         this.btcWalletService = btcWalletService;
         this.pubKeyRing = pubKeyRing;
@@ -161,6 +166,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         this.walletPasswordWindow = walletPasswordWindow;
         this.notificationCenter = notificationCenter;
         this.offerUtil = offerUtil;
+        this.btcFormatter = formatter;
 
         tradesListChangeListener = change -> onListChanged();
         notificationCenter.setSelectItemByTradeIdConsumer(this::selectItemByTradeId);
@@ -381,7 +387,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     private void onListChanged() {
         list.clear();
         list.addAll(tradeManager.getObservableList().stream()
-                .map(PendingTradesListItem::new)
+                .map(trade -> new PendingTradesListItem(trade, btcFormatter))
                 .collect(Collectors.toList()));
 
         // we sort by date, earliest first
@@ -461,7 +467,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     private void doOpenDispute(boolean isSupportTicket, Transaction depositTx) {
-        // We do not support opening a dispute if the deposit tx is null. Traders have to use the support channel at keybase
+        // We do not support opening a dispute if the deposit tx is null. Traders have to use the support channel at Matrix
         // in such cases. The mediators or arbitrators could not help anyway with a payout in such cases.
         if (depositTx == null) {
             log.error("Deposit tx must not be null");

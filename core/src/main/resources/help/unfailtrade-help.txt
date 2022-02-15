@@ -1,0 +1,32 @@
+unfailtrade
+
+NAME
+----
+unfailtrade - change a failed trade to an open trade
+
+SYNOPSIS
+--------
+unfailtrade
+		--trade-id=<trade-id>
+
+DESCRIPTION
+-----------
+This is a possible way to unlock funds stuck in a failed trade.
+
+The operation could fail for any of the following reasons:
+
+    The trade's deposit transaction is missing (null).
+    The trade's delayed payout transaction is missing (null).
+    The trade is using wallet addresses also being used one or more other trades.
+
+Before proceeding, make sure you have a backup of your data directory.
+
+OPTIONS
+-------
+--trade-id
+		The ID of the trade (the full offer-id).
+
+EXAMPLES
+--------
+Change the status of failed trade back to an open trade:
+$ ./bisq-cli --password=xyz --port=9998 unfailtrade --trade-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea

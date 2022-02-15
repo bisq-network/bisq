@@ -53,6 +53,8 @@ import static bisq.core.util.FormattingUtils.formatPercentagePrice;
 import static bisq.core.util.FormattingUtils.formatToPercentWithSymbol;
 import static bisq.core.util.VolumeUtil.formatVolume;
 import static bisq.core.util.VolumeUtil.formatVolumeWithCode;
+import static org.bitcoinj.core.TransactionConfidence.ConfidenceType.BUILDING;
+import static org.bitcoinj.core.TransactionConfidence.ConfidenceType.PENDING;
 
 @Slf4j
 @Singleton
@@ -212,11 +214,13 @@ public class ClosedTradableFormatter {
         } else if (isBsqSwapTrade(tradable)) {
             String txId = castToBsqSwapTrade(tradable).getTxId();
             TransactionConfidence confidence = bsqWalletService.getConfidenceForTxId(txId);
-            if (confidence != null && confidence.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING) {
+            if (confidence != null && confidence.getConfidenceType() == BUILDING) {
                 return Res.get("confidence.confirmed.short");
+            } else if (confidence != null && confidence.getConfidenceType() == PENDING) {
+                return Res.get("confidence.pending");
             } else {
                 log.warn("Unexpected confidence in a BSQ swap trade which has been moved to closed trades. " +
-                                "This could happen at a wallet SPV resycn or a reorg. confidence={} tradeID={}",
+                                "This could happen at a wallet SPV resync or a reorg. confidence={} tradeID={}",
                         confidence, tradable.getId());
             }
         }

@@ -25,6 +25,7 @@ import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.components.list.FilterBox;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TxDetails;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
@@ -96,6 +97,7 @@ import javafx.beans.value.ChangeListener;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
@@ -117,9 +119,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @FxmlView
 public class WithdrawalView extends ActivatableView<VBox, Void> {
-
     @FXML
     GridPane gridPane;
+    @FXML
+    FilterBox filterBox;
     @FXML
     TableView<WithdrawalListItem> tableView;
     @FXML
@@ -138,7 +141,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private final BtcAddressValidator btcAddressValidator;
     private final WalletPasswordWindow walletPasswordWindow;
     private final ObservableList<WithdrawalListItem> observableList = FXCollections.observableArrayList();
-    private final SortedList<WithdrawalListItem> sortedList = new SortedList<>(observableList);
+    private final FilteredList<WithdrawalListItem> filteredList = new FilteredList<>(observableList);
+    private final SortedList<WithdrawalListItem> sortedList = new SortedList<>(filteredList);
     private final Set<WithdrawalListItem> selectedItems = new HashSet<>();
     private BalanceListener balanceListener;
     private Set<String> fromAddresses = new HashSet<>();
@@ -183,7 +187,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-
+        filterBox.initialize(filteredList, tableView);
         final TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, rowIndex, 4, Res.get("funds.deposit.withdrawFromWallet"));
         titledGroupBg.getStyleClass().add("last");
 
@@ -343,6 +347,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
+        filterBox.activate();
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
         updateList();
@@ -374,6 +379,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void deactivate() {
+        filterBox.deactivate();
         sortedList.comparatorProperty().unbind();
         observableList.forEach(WithdrawalListItem::cleanup);
         btcWalletService.removeBalanceListener(balanceListener);

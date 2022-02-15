@@ -18,10 +18,13 @@
 package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.main.overlays.Overlay;
+import bisq.desktop.main.overlays.popups.Popup;
 
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Res;
 
+import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
@@ -39,18 +42,42 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextArea;
 
 public class ShowWalletDataWindow extends Overlay<ShowWalletDataWindow> {
     private final WalletsManager walletsManager;
+    private final BtcWalletService btcWalletService;
+    private final WalletPasswordWindow walletPasswordWindow;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public ShowWalletDataWindow(WalletsManager walletsManager) {
+    public ShowWalletDataWindow(WalletsManager walletsManager,
+                                BtcWalletService btcWalletService,
+                                WalletPasswordWindow walletPasswordWindow) {
         this.walletsManager = walletsManager;
+        this.btcWalletService = btcWalletService;
+        this.walletPasswordWindow = walletPasswordWindow;
         type = Type.Attention;
     }
 
     public void show() {
+        UserThread.execute(() -> {
+            new Popup().warning(Res.get("account.keys.clipboard.warning"))
+                    .actionButtonText(Res.get("shared.continueAnyway"))
+                    .onClose(this::doClose)
+                    .onAction(this::showStep2)
+                    .show();
+        });
+    }
+
+    private void showStep2() {
+        if (btcWalletService.isEncrypted()) {
+            UserThread.execute(() -> walletPasswordWindow.onAesKey(aesKey -> showStep3()).show());
+        } else {
+            showStep3();
+        }
+    }
+
+    private void showStep3() {
         if (headLine == null)
             headLine = Res.get("showWalletDataWindow.walletData");
 

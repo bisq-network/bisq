@@ -20,47 +20,59 @@ package bisq.desktop.main.dao.bonding.roles;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.bond.BondState;
 import bisq.core.dao.governance.bond.role.BondedRole;
+import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.dao.state.model.governance.Role;
 import bisq.core.locale.Res;
 
-import java.util.Date;
-
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Value
 class RolesListItem {
+    private final DaoFacade daoFacade;
     private final BondedRole bondedRole;
-    private final Role role;
-    private final String buttonText;
-    private final boolean isButtonVisible;
-    private final BondState bondState;
-    private final String bondStateString;
-    private final String lockupTxId;
-    private final Date lockupDate;
 
-    RolesListItem(BondedRole bondedRole,
-                  DaoFacade daoFacade) {
+    RolesListItem(BondedRole bondedRole, DaoFacade daoFacade) {
+        this.daoFacade = daoFacade;
         this.bondedRole = bondedRole;
+    }
 
-        role = bondedRole.getBondedAsset();
-        boolean isMyRole = daoFacade.isMyRole(role);
-        bondState = bondedRole.getBondState();
-        lockupTxId = bondedRole.getLockupTxId();
-        lockupDate = new Date(bondedRole.getLockupDate());
-        bondStateString = Res.get("dao.bond.bondState." + bondedRole.getBondState().name());
+    public String getLockupTxId() {
+        return this.bondedRole.getLockupTxId();
+    }
 
-        boolean showLockup = bondedRole.getBondState() == BondState.READY_FOR_LOCKUP;
-        boolean showRevoke = bondedRole.getBondState() == BondState.LOCKUP_TX_CONFIRMED;
-        if (showLockup) {
-            buttonText = Res.get("dao.bond.table.button.lockup");
-        } else if (showRevoke) {
-            buttonText = Res.get("dao.bond.table.button.revoke");
-        } else {
-            buttonText = "";
-        }
+    public Role getRole() {
+        return this.bondedRole.getBondedAsset();
+    }
 
-        isButtonVisible = isMyRole && (showLockup || showRevoke);
+    public String getName() {
+        return this.getRole().getName();
+    }
+
+    public String getLink() {
+        return this.getRole().getLink();
+    }
+
+    public BondedRoleType getType() {
+        return this.getRole().getBondedRoleType();
+    }
+
+    public String getTypeAsString() {
+        return this.getRole().getBondedRoleType().getDisplayString();
+    }
+
+    public long getLockupDate() {
+        return this.bondedRole.getLockupDate();
+    }
+
+    public String getBondStateAsString() {
+        return Res.get("dao.bond.bondState." + bondedRole.getBondState().name());
+    }
+
+    public boolean isLockupButtonVisible() {
+        return this.daoFacade.isMyRole(this.getRole()) && (this.bondedRole.getBondState() == BondState.READY_FOR_LOCKUP);
+    }
+
+    public boolean isRevokeButtonVisible() {
+        return this.daoFacade.isMyRole(this.getRole()) && (this.bondedRole.getBondState() == BondState.LOCKUP_TX_CONFIRMED);
     }
 }

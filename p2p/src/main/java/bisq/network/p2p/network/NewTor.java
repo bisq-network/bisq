@@ -51,19 +51,20 @@ public class NewTor extends TorMode {
 
     private final File torrcFile;
     private final String torrcOptions;
-    private final Collection<String> bridgeEntries;
+    private final BridgeAddressProvider bridgeAddressProvider;
 
-    public NewTor(File torWorkingDirectory, @Nullable File torrcFile, String torrcOptions, Collection<String> bridgeEntries) {
+    public NewTor(File torWorkingDirectory, @Nullable File torrcFile, String torrcOptions, BridgeAddressProvider bridgeAddressProvider) {
         super(torWorkingDirectory);
         this.torrcFile = torrcFile;
         this.torrcOptions = torrcOptions;
-        this.bridgeEntries = bridgeEntries;
+        this.bridgeAddressProvider = bridgeAddressProvider;
     }
 
     @Override
     public Tor getTor() throws IOException, TorCtlException {
         long ts1 = new Date().getTime();
 
+        Collection<String> bridgeEntries = bridgeAddressProvider.getBridgeAddresses();
         if (bridgeEntries != null)
             log.info("Using bridges: {}", bridgeEntries.stream().collect(Collectors.joining(",")));
 
