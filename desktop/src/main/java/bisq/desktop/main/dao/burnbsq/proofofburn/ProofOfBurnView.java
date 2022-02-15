@@ -24,6 +24,8 @@ import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.main.dao.MessageSignatureWindow;
+import bisq.desktop.main.dao.MessageVerificationWindow;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
@@ -32,6 +34,7 @@ import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.SignVerifyService;
 import bisq.core.dao.governance.proofofburn.MyProofOfBurnListService;
 import bisq.core.dao.governance.proofofburn.ProofOfBurnService;
 import bisq.core.dao.governance.proposal.TxException;
@@ -81,6 +84,7 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 @FxmlView
 public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements BsqBalanceListener {
     private final ProofOfBurnService proofOfBurnService;
+    private final SignVerifyService signVerifyService;
     private final MyProofOfBurnListService myProofOfBurnListService;
     private final Preferences preferences;
     private final CoinFormatter btcFormatter;
@@ -116,6 +120,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
                             BsqWalletService bsqWalletService,
                             BsqValidator bsqValidator,
                             ProofOfBurnService proofOfBurnService,
+                            SignVerifyService signVerifyService,
                             MyProofOfBurnListService myProofOfBurnListService,
                             Preferences preferences,
                             @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
@@ -123,6 +128,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
         this.bsqWalletService = bsqWalletService;
         this.bsqValidator = bsqValidator;
         this.proofOfBurnService = proofOfBurnService;
+        this.signVerifyService = signVerifyService;
         this.myProofOfBurnListService = myProofOfBurnListService;
         this.preferences = preferences;
         this.btcFormatter = btcFormatter;
@@ -469,7 +475,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
                                         button = new AutoTooltipButton(Res.get("dao.proofOfBurn.sign"));
                                         setGraphic(button);
                                     }
-                                    button.setOnAction(e -> new ProofOfBurnSignatureWindow(proofOfBurnService, item.getTxId()).show());
+                                    button.setOnAction(e -> new MessageSignatureWindow(signVerifyService, item.getTxId()).show());
                                 } else {
                                     setGraphic(null);
                                     if (button != null) {
@@ -634,7 +640,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
                                         button = new AutoTooltipButton(Res.get("dao.proofOfBurn.verify"));
                                         setGraphic(button);
                                     }
-                                    button.setOnAction(e -> new ProofOfBurnVerificationWindow(proofOfBurnService, item.getTxId()).show());
+                                    button.setOnAction(e -> new MessageVerificationWindow(signVerifyService, item.getTxId()).show());
                                 } else {
                                     setGraphic(null);
                                     if (button != null) {

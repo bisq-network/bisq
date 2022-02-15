@@ -64,15 +64,27 @@ class RolesListItem {
         return this.bondedRole.getLockupDate();
     }
 
+    public boolean iAmOwner() {
+        return this.daoFacade.isMyRole(this.getRole());
+    }
+
     public String getBondStateAsString() {
         return Res.get("dao.bond.bondState." + bondedRole.getBondState().name());
     }
 
     public boolean isLockupButtonVisible() {
-        return this.daoFacade.isMyRole(this.getRole()) && (this.bondedRole.getBondState() == BondState.READY_FOR_LOCKUP);
+        return iAmOwner() && (this.bondedRole.getBondState() == BondState.READY_FOR_LOCKUP);
     }
 
     public boolean isRevokeButtonVisible() {
-        return this.daoFacade.isMyRole(this.getRole()) && (this.bondedRole.getBondState() == BondState.LOCKUP_TX_CONFIRMED);
+        return iAmOwner() && (this.bondedRole.getBondState() == BondState.LOCKUP_TX_CONFIRMED);
+    }
+
+    public boolean isSignButtonVisible() {
+        return iAmOwner() && this.bondedRole.isActive();
+    }
+
+    public boolean isVerifyButtonVisible() {
+        return this.bondedRole.isActive();
     }
 }
