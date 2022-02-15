@@ -240,7 +240,7 @@ public class DomainInitialisation {
 
         p2PService.onAllServicesInitialized();
 
-        feeService.onAllServicesInitialized();
+        feeService.onAllServicesInitialized(filterManager);
 
         if (DevEnv.isDaoActivated()) {
             daoSetup.onAllServicesInitialized(errorMessage -> {
