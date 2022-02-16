@@ -72,6 +72,7 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.desktop.util.DisplayUtils.getAccountWitnessDescription;
 import static bisq.desktop.util.FormBuilder.*;
 
 @Slf4j
@@ -186,9 +187,8 @@ public class ContractWindow extends Overlay<ContractWindow> {
         addConfirmationLabelTextField(gridPane,
                 ++rowIndex,
                 Res.get("contractWindow.accountAge"),
-                getAccountAge(contract.getBuyerPaymentAccountPayload(),
-                        contract.getBuyerPubKeyRing(),
-                        offer.getCurrencyCode()) + " / " + getAccountAge(contract.getSellerPaymentAccountPayload(), contract.getSellerPubKeyRing(), offer.getCurrencyCode()));
+                getAccountWitnessDescription(accountAgeWitnessService, offer.getPaymentMethod(), contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing()) + " / " +
+                        getAccountWitnessDescription(accountAgeWitnessService, offer.getPaymentMethod(), contract.getSellerPaymentAccountPayload(), contract.getSellerPubKeyRing()));
 
         DisputeManager<? extends DisputeList<Dispute>> disputeManager = getDisputeManager(dispute);
         String nrOfDisputesAsBuyer = disputeManager != null ? disputeManager.getNrOfDisputes(true, contract) : "";
@@ -348,15 +348,5 @@ public class ContractWindow extends Overlay<ContractWindow> {
             }
         }
         return null;
-    }
-
-    private String getAccountAge(PaymentAccountPayload paymentAccountPayload,
-                                 PubKeyRing pubKeyRing,
-                                 String currencyCode) {
-        long age = accountAgeWitnessService.getAccountAge(paymentAccountPayload, pubKeyRing);
-        return CurrencyUtil.isFiatCurrency(currencyCode) ?
-                age > -1 ? Res.get("peerInfoIcon.tooltip.age", DisplayUtils.formatAccountAge(age)) :
-                        Res.get("peerInfoIcon.tooltip.unknownAge") :
-                "";
     }
 }

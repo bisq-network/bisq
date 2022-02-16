@@ -1,17 +1,23 @@
 package bisq.desktop.util;
 
+import bisq.core.account.witness.AccountAgeWitness;
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
+import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.util.FormattingUtils;
 import bisq.core.offer.OfferDirection;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.CoinFormatter;
+
+import bisq.common.crypto.PubKeyRing;
 
 import org.bitcoinj.core.Coin;
 
@@ -72,6 +78,30 @@ public class DisplayUtils {
         } else {
             return "";
         }
+    }
+
+    public static String getAccountWitnessDescription(AccountAgeWitnessService accountAgeWitnessService,
+                                               PaymentMethod paymentMethod,
+                                               PaymentAccountPayload paymentAccountPayload,
+                                               PubKeyRing pubKeyRing) {
+        String description = Res.get("peerInfoIcon.tooltip.unknownAge");
+        Optional<AccountAgeWitness> aaw = accountAgeWitnessService.findWitness(paymentAccountPayload, pubKeyRing);
+        if (aaw.isPresent()) {
+            long accountAge = accountAgeWitnessService.getAccountAge(aaw.get(), new Date());
+            long signAge = -1L;
+            if (PaymentMethod.hasChargebackRisk(paymentMethod)) {
+                signAge = accountAgeWitnessService.getWitnessSignAge(aaw.get(), new Date());
+            }
+            if (signAge > -1) {
+                description = Res.get("peerInfo.age.chargeBackRisk") + ": " + formatAccountAge(accountAge);
+            } else if (accountAge > -1) {
+                description = Res.get("peerInfoIcon.tooltip.age", formatAccountAge(accountAge));
+                if (PaymentMethod.hasChargebackRisk(paymentMethod)) {
+                    description += ", " + Res.get("offerbook.timeSinceSigning.notSigned");
+                }
+            }
+        }
+        return description;
     }
 
     public static String formatAccountAge(long durationMillis) {
