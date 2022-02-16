@@ -97,17 +97,11 @@ public class DisplayUtils {
             return (direction == OfferDirection.SELL) ? Res.get("shared.buyCurrency", currencyCode) : Res.get("shared.sellCurrency", currencyCode);
     }
 
-    public static String getDirectionBothSides(OfferDirection direction, String currencyCode) {
-        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
-            currencyCode = Res.getBaseCurrencyCode();
-            return direction == OfferDirection.BUY ?
-                    Res.get("formatter.makerTaker", currencyCode, Res.get("shared.buyer"), currencyCode, Res.get("shared.seller")) :
-                    Res.get("formatter.makerTaker", currencyCode, Res.get("shared.seller"), currencyCode, Res.get("shared.buyer"));
-        } else {
-            return direction == OfferDirection.SELL ?
-                    Res.get("formatter.makerTaker", currencyCode, Res.get("shared.buyer"), currencyCode, Res.get("shared.seller")) :
-                    Res.get("formatter.makerTaker", currencyCode, Res.get("shared.seller"), currencyCode, Res.get("shared.buyer"));
-        }
+    public static String getDirectionBothSides(OfferDirection direction) {
+        String currencyCode = Res.getBaseCurrencyCode();
+        return direction == OfferDirection.BUY ?
+                Res.get("formatter.makerTaker", currencyCode, Res.get("shared.buyer"), currencyCode, Res.get("shared.seller")) :
+                Res.get("formatter.makerTaker", currencyCode, Res.get("shared.seller"), currencyCode, Res.get("shared.buyer"));
     }
 
     public static String getDirectionForBuyer(boolean isMyOffer, String currencyCode) {
