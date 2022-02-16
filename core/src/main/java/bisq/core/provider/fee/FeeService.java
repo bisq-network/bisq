@@ -17,6 +17,7 @@
 
 package bisq.core.provider.fee;
 
+import bisq.core.api.CoreContext;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
@@ -70,14 +71,25 @@ public class FeeService {
     private static DaoStateService daoStateService;
     private static PeriodService periodService;
     private static FilterManager filterManager = null;
+    private static boolean isApiUser;
 
     private static Coin getFeeFromParamAsCoin(Param param) {
-        // if specified, filter values take precedence
-        Coin fromFilter = getFilterFromParamAsCoin(param);
-        if (fromFilter.isGreaterThan(Coin.ZERO)) {
-            return fromFilter;
+        if (isApiUser) {
+            return getFeeFromParamAsCoinFromDAO(param);
+        } else {
+            // If specified, filter values take precedence.
+            Coin fromFilter = getFilterFromParamAsCoin(param);
+            if (fromFilter.isGreaterThan(Coin.ZERO)) {
+                return fromFilter;
+            }
+            return getFeeFromParamAsCoinFromDAO(param);
         }
-        return daoStateService != null && periodService != null ? daoStateService.getParamValueAsCoin(param, periodService.getChainHeight()) : Coin.ZERO;
+    }
+
+    private static Coin getFeeFromParamAsCoinFromDAO(Param param) {
+        return daoStateService != null && periodService != null
+                ? daoStateService.getParamValueAsCoin(param, periodService.getChainHeight())
+                : Coin.ZERO;
     }
 
     private static Coin getFilterFromParamAsCoin(Param param) {
@@ -117,6 +129,7 @@ public class FeeService {
     // Class fields
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private final CoreContext coreContext;
     private final FeeProvider feeProvider;
     private final IntegerProperty feeUpdateCounter = new SimpleIntegerProperty(0);
     private long txFeePerVbyte = BTC_DEFAULT_TX_FEE;
@@ -134,7 +147,11 @@ public class FeeService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public FeeService(FeeProvider feeProvider, DaoStateService daoStateService, PeriodService periodService) {
+    public FeeService(CoreContext coreContext,
+                      FeeProvider feeProvider,
+                      DaoStateService daoStateService,
+                      PeriodService periodService) {
+        this.coreContext = coreContext;
         this.feeProvider = feeProvider;
         FeeService.daoStateService = daoStateService;
         FeeService.periodService = periodService;
@@ -146,7 +163,8 @@ public class FeeService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void onAllServicesInitialized(FilterManager providedFilterManager) {
-        filterManager = providedFilterManager;
+        FeeService.isApiUser = coreContext.isApiUser();
+        FeeService.filterManager = providedFilterManager;
         minFeePerVByte = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
 
         requestFees();
