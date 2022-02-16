@@ -82,7 +82,7 @@ public class FeeService {
 
     private static Coin getFilterFromParamAsCoin(Param param) {
         Coin filterVal = Coin.ZERO;
-        if (filterManager != null) {
+        if (filterManager != null && filterManager.getFilter() != null) {
             if (param == Param.DEFAULT_MAKER_FEE_BTC) {
                 filterVal = Coin.valueOf(filterManager.getFilter().getMakerFeeBtc());
             } else if (param == Param.DEFAULT_TAKER_FEE_BTC) {
