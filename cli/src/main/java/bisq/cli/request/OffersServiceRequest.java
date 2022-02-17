@@ -29,11 +29,8 @@ import bisq.proto.grpc.GetOfferRequest;
 import bisq.proto.grpc.GetOffersRequest;
 import bisq.proto.grpc.OfferInfo;
 
-import java.math.BigDecimal;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 import static bisq.cli.CryptoCurrencyUtil.apiDoesSupportCryptoCurrency;
 import static bisq.proto.grpc.EditOfferRequest.EditType.ACTIVATION_STATE_ONLY;
@@ -51,12 +48,6 @@ import static protobuf.OfferDirection.SELL;
 import bisq.cli.GrpcStubs;
 
 public class OffersServiceRequest {
-
-    private final Function<Long, String> scaledPriceStringRequestFormat = (price) -> {
-        BigDecimal factor = new BigDecimal(10).pow(4);
-        //noinspection BigDecimalMethodWithoutRoundingCalled
-        return new BigDecimal(price).divide(factor).toPlainString();
-    };
 
     private final GrpcStubs grpcStubs;
 
@@ -159,11 +150,11 @@ public class OffersServiceRequest {
 
     public void editOfferActivationState(String offerId, int enable) {
         var offer = getMyOffer(offerId);
-        var scaledPriceString = offer.getUseMarketBasedPrice()
+        var offerPrice = offer.getUseMarketBasedPrice()
                 ? "0.00"
-                : scaledPriceStringRequestFormat.apply(offer.getPrice());
+                : offer.getPrice();
         editOffer(offerId,
-                scaledPriceString,
+                offerPrice,
                 offer.getUseMarketBasedPrice(),
                 offer.getMarketPriceMargin(),
                 offer.getTriggerPrice(),

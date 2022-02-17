@@ -123,6 +123,7 @@ public class CurrencyFormat {
         return FRIENDLY_NUMBER_FORMAT.format(price);
     }
 
+    // TODO Deprecate after triggerPrice field type is changed to string.
     public static String formatPrice(long price) {
         FRIENDLY_NUMBER_FORMAT.setMinimumFractionDigits(4);
         FRIENDLY_NUMBER_FORMAT.setMaximumFractionDigits(4);
