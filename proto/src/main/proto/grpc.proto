@@ -287,7 +287,7 @@ message OfferInfo {
     // The offer's BUY (BTC) or SELL (BTC) direction.
     string direction = 2;
     // For fiat offers:  the fiat price for 1 BTC to 4 decimal places, e.g., 45000 EUR is "45000.0000".
-    // For altcoin offers:  the altcoin price for 1 BTC to 8 decimal places, e.g., 0.5 BTC is "0.00005000".
+    // For altcoin offers:  the altcoin price for 1 BTC to 8 decimal places, e.g., 0.00005 BTC is "0.00005000".
     string price = 3;
     // Whether the offer price is fixed, or market price margin based.
     bool useMarketBasedPrice = 4;
