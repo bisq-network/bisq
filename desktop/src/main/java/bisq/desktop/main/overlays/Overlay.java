@@ -25,6 +25,7 @@ import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.MainView;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
+import bisq.desktop.util.Layout;
 import bisq.desktop.util.Transitions;
 
 import bisq.core.locale.GlobalSettings;
@@ -53,12 +54,14 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 
+import javafx.scene.Node;
 import javafx.scene.PerspectiveCamera;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -96,6 +99,8 @@ import java.util.regex.Pattern;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import static javafx.scene.input.MouseEvent.MOUSE_CLICKED;
 
 @Slf4j
 public abstract class Overlay<T extends Overlay<T>> {
@@ -169,7 +174,7 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     protected boolean useAnimation = true;
 
-    protected Label headlineIcon, headLineLabel, messageLabel;
+    protected Label headlineIcon, copyIcon, headLineLabel, messageLabel;
     protected String headLine, message, closeButtonText, actionButtonText,
             secondaryActionButtonText, dontShowAgainId, dontShowAgainText,
             truncatedMessage;
@@ -751,6 +756,21 @@ public abstract class Overlay<T extends Overlay<T>> {
 
 
         if (headLineLabel != null) {
+            copyIcon.getStyleClass().add("popup-icon-information");
+            copyIcon.setManaged(true);
+            copyIcon.setVisible(true);
+            FormBuilder.getIconForLabel(AwesomeIcon.COPY, copyIcon, "1.5em");
+            copyIcon.addEventHandler(MOUSE_CLICKED, mouseEvent -> {
+                if (message != null) {
+                    String forClipboard = headLineLabel.getText() + System.lineSeparator() + message
+                            + System.lineSeparator() + (messageHyperlinks == null ? "" : messageHyperlinks.toString());
+                    Utilities.copyToClipboard(forClipboard);
+                    Tooltip tp = new Tooltip(Res.get("shared.copiedToClipboard"));
+                    Node node = (Node) mouseEvent.getSource();
+                    UserThread.runAfter(() -> tp.hide(), 1);
+                    tp.show(node, mouseEvent.getScreenX() + Layout.PADDING, mouseEvent.getScreenY() + Layout.PADDING);
+                }
+            });
 
             switch (type) {
                 case Information:
@@ -795,6 +815,14 @@ public abstract class Overlay<T extends Overlay<T>> {
 
             HBox hBox = new HBox();
             hBox.setSpacing(7);
+            copyIcon = new Label();
+            copyIcon.setManaged(false);
+            copyIcon.setVisible(false);
+            copyIcon.setPadding(new Insets(3));
+            copyIcon.setTooltip(new Tooltip(Res.get("shared.copyToClipboard")));
+            final Pane spacer = new Pane();
+            HBox.setHgrow(spacer, Priority.ALWAYS);
+            spacer.setMinSize(Layout.PADDING, 1);
             headLineLabel = new AutoTooltipLabel(headLine);
             headlineIcon = new Label();
             headlineIcon.setManaged(false);
@@ -805,7 +833,7 @@ public abstract class Overlay<T extends Overlay<T>> {
             if (headlineStyle != null)
                 headLineLabel.setStyle(headlineStyle);
 
-            hBox.getChildren().addAll(headlineIcon, headLineLabel);
+            hBox.getChildren().addAll(headlineIcon, headLineLabel, spacer, copyIcon);
 
             GridPane.setHalignment(hBox, HPos.LEFT);
             GridPane.setRowIndex(hBox, rowIndex);
