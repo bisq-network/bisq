@@ -107,6 +107,7 @@ class FailedTradesDataModel extends ActivatableDataModel {
     }
 
     private boolean isTradeWithSameCurrentNodeAddress(Trade trade) {
+        if (trade.getContract() == null) return false;
         NodeAddress tradeNodeAddress = trade.getContract().getMyNodeAddress(keyRing.getPubKeyRing());
         return Objects.equals(p2PService.getNetworkNode().getNodeAddress(), tradeNodeAddress);
     }
