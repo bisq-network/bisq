@@ -122,7 +122,7 @@ public abstract class AbstractOfferTest extends MethodTest {
         var priceAsBigDecimal = new BigDecimal(Double.toString(base), mathContext)
                 .add(new BigDecimal(Double.toString(delta), mathContext))
                 .round(mathContext);
-        return String.format("%." + precision + "f", priceAsBigDecimal.doubleValue());
+        return format("%." + precision + "f", priceAsBigDecimal.doubleValue());
     }
 
     protected OfferInfo getAvailableBsqSwapOffer(GrpcClient client,
