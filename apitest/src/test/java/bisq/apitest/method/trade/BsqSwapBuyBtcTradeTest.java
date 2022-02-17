@@ -89,7 +89,7 @@ public class BsqSwapBuyBtcTradeTest extends AbstractTradeTest {
         var newOfferId = mySwapOffer.getId();
         assertNotEquals("", newOfferId);
         assertEquals(OfferDirection.BUY.name(), mySwapOffer.getDirection());
-        assertEquals(5_000, mySwapOffer.getPrice());
+        assertEquals("0.00005000", mySwapOffer.getPrice());
         assertEquals(1_000_000L, mySwapOffer.getAmount());
         assertEquals(1_000_000L, mySwapOffer.getMinAmount());
         assertEquals(BSQ, mySwapOffer.getBaseCurrencyCode());
