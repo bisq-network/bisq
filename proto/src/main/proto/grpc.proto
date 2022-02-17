@@ -242,8 +242,8 @@ message EditOfferRequest {
     //      0 = disable
     //      1 = enable
     sint32 enable = 6;
-    // The EditType determines and constricts what offer details can
-    // be modified by the request, simplifying param validation.
+    // The EditType determines and constricts what offer details can be modified by the request, simplifying param
+    // validation.  (The CLI need to infer this detail from 'editoffer' command options, other clients do not.)
     enum EditType {
         // Edit only the offer's activation state (enabled or disabled).
         ACTIVATION_STATE_ONLY = 0;
@@ -286,12 +286,9 @@ message OfferInfo {
     string id = 1;
     // The offer's BUY (BTC) or SELL (BTC) direction.
     string direction = 2;
-    // For fiat offers:  a long representing the BTC price of the offer to 4 decimal places.
-    // A USD fiat price of 45000.4321 USD is represented as 450004321.
-    // For altcoin offers:  a long representing the BTC price of the offer in satoshis.
-    // An altcoin price of five hundred thousand satoshis is represented as 500000.
-    // TODO: Change to string type.
-    uint64 price = 3;
+    // For fiat offers:  the fiat price for 1 BTC to 4 decimal places, e.g., 45000 EUR is "45000.0000".
+    // For altcoin offers:  the altcoin price for 1 BTC to 8 decimal places, e.g., 0.5 BTC is "0.00005000".
+    string price = 3;
     // Whether the offer price is fixed, or market price margin based.
     bool useMarketBasedPrice = 4;
     // The offer's market price margin above or below the current market BTC price, represented as a decimal.

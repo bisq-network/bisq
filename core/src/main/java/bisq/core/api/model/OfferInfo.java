@@ -28,6 +28,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import static bisq.core.util.PriceUtil.reformatMarketPrice;
 import static java.util.Objects.requireNonNull;
 
 @EqualsAndHashCode
@@ -41,7 +42,7 @@ public class OfferInfo implements Payload {
 
     private final String id;
     private final String direction;
-    private final long price;
+    private final String price;
     private final boolean useMarketBasedPrice;
     private final double marketPriceMargin;
     private final long amount;
@@ -136,10 +137,13 @@ public class OfferInfo implements Payload {
     }
 
     private static OfferInfoBuilder getBuilder(Offer offer, boolean isMyOffer) {
+        var preciseOfferPrice = reformatMarketPrice(
+                requireNonNull(offer.getPrice()).toPlainString(),
+                offer.getCurrencyCode());
         return new OfferInfoBuilder()
                 .withId(offer.getId())
                 .withDirection(offer.getDirection().name())
-                .withPrice(requireNonNull(offer.getPrice()).getValue())
+                .withPrice(preciseOfferPrice)
                 .withUseMarketBasedPrice(offer.isUseMarketBasedPrice())
                 .withMarketPriceMargin(offer.getMarketPriceMargin())
                 .withAmount(offer.getAmount().value)
