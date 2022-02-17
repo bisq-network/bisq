@@ -286,7 +286,7 @@ public class AccountAgeWitnessService {
         return new AccountAgeWitness(hash, new Date().getTime());
     }
 
-    Optional<AccountAgeWitness> findWitness(PaymentAccountPayload paymentAccountPayload,
+    public Optional<AccountAgeWitness> findWitness(PaymentAccountPayload paymentAccountPayload,
                                             PubKeyRing pubKeyRing) {
         if (paymentAccountPayload == null) {
             return Optional.empty();
