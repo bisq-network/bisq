@@ -2,7 +2,6 @@ package bisq.cli.table;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.cli.TableFormat.formatPaymentAcctTbl;
 import static bisq.cli.table.builder.TableType.PAYMENT_ACCOUNT_TBL;
 
 
@@ -26,11 +25,13 @@ public class PaymentAccountsCliOutputDiffTest extends AbstractCliTest {
     private void getPaymentAccounts() {
         var paymentAccounts = aliceClient.getPaymentAccounts();
         if (paymentAccounts.size() > 0) {
-            var oldTbl = formatPaymentAcctTbl(paymentAccounts);
+            // The formatPaymentAcctTbl method had been deprecated, then deleted on 17-Feb-2022,
+            // but these diff tests can be useful for testing changes to the current tbl formatting api.
+            // var oldTbl = formatPaymentAcctTbl(paymentAccounts);
             var newTbl = new TableBuilder(PAYMENT_ACCOUNT_TBL, paymentAccounts).build().toString();
-            printOldTbl(oldTbl);
+            // printOldTbl(oldTbl);
             printNewTbl(newTbl);
-            checkDiffsIgnoreWhitespace(oldTbl, newTbl);
+            // checkDiffsIgnoreWhitespace(oldTbl, newTbl);
         } else {
             log.warn("no payment accounts found");
         }

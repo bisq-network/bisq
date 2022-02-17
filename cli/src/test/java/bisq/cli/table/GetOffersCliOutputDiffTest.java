@@ -13,7 +13,6 @@ import static protobuf.OfferDirection.SELL;
 
 
 import bisq.cli.AbstractCliTest;
-import bisq.cli.OfferFormat;
 import bisq.cli.table.builder.TableBuilder;
 
 @SuppressWarnings("unused")
@@ -116,11 +115,13 @@ public class GetOffersCliOutputDiffTest extends AbstractCliTest {
             log.warn("No {} {} offers to print.", direction, currencyCode);
         } else {
             log.info("Checking for diffs in {} {} offers.", direction, currencyCode);
-            var oldTbl = OfferFormat.formatOfferTable(offers, currencyCode);
+            // OfferFormat class had been deprecated, then deleted on 17-Feb-2022, but
+            // these diff tests can be useful for testing changes to the current tbl formatting api.
+            // var oldTbl = OfferFormat.formatOfferTable(offers, currencyCode);
             var newTbl = new TableBuilder(OFFER_TBL, offers).build().toString();
-            printOldTbl(oldTbl);
+            // printOldTbl(oldTbl);
             printNewTbl(newTbl);
-            checkDiffsIgnoreWhitespace(oldTbl, newTbl);
+            // checkDiffsIgnoreWhitespace(oldTbl, newTbl);
         }
     }
 }

@@ -22,7 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.apitest.scenario.bot.protocol.ProtocolStep.DONE;
 import static bisq.apitest.scenario.bot.shutdown.ManualShutdown.isShutdownCalled;
-import static bisq.cli.TableFormat.formatBalancesTbls;
+import static bisq.cli.table.builder.TableType.BSQ_BALANCE_TBL;
+import static bisq.cli.table.builder.TableType.BTC_BALANCE_TBL;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 
@@ -34,6 +35,7 @@ import bisq.apitest.scenario.bot.protocol.TakerBotProtocol;
 import bisq.apitest.scenario.bot.script.BashScriptGenerator;
 import bisq.apitest.scenario.bot.script.BotScript;
 import bisq.apitest.scenario.bot.shutdown.ManualBotShutdownException;
+import bisq.cli.table.builder.TableBuilder;
 
 @Slf4j
 public
@@ -74,10 +76,16 @@ class RobotBob extends Bot {
                 throw new IllegalStateException(botProtocol.getClass().getSimpleName() + " failed to complete.");
             }
 
+            StringBuilder balancesBuilder = new StringBuilder();
+            balancesBuilder.append("BTC").append("\n");
+            balancesBuilder.append(new TableBuilder(BTC_BALANCE_TBL, botClient.getBalance().getBtc()).build().toString()).append("\n");
+            balancesBuilder.append("BSQ").append("\n");
+            balancesBuilder.append(new TableBuilder(BSQ_BALANCE_TBL, botClient.getBalance().getBsq()).build().toString());
+
             log.info("Completed {} successful trade{}.  Current Balance:\n{}",
                     ++numTrades,
                     numTrades == 1 ? "" : "s",
-                    formatBalancesTbls(botClient.getBalance()));
+                    balancesBuilder);
 
             if (numTrades < actions.length) {
                 try {
