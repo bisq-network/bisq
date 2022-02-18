@@ -18,11 +18,14 @@
 package bisq.core.api.model;
 
 import bisq.core.api.model.builder.OfferInfoBuilder;
+import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.util.coin.CoinUtil;
 
 import bisq.common.Payload;
+
+import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -54,7 +57,7 @@ public class OfferInfo implements Payload {
     private final String offerFeePaymentTxId;
     private final long buyerSecurityDeposit;
     private final long sellerSecurityDeposit;
-    private final long triggerPrice;
+    private final String triggerPrice;
     private final boolean isCurrencyForMakerFeeBtc;
     private final String paymentAccountId;
     private final String paymentMethodId;
@@ -130,8 +133,15 @@ public class OfferInfo implements Payload {
 
     public static OfferInfo toMyOfferInfo(OpenOffer openOffer) {
         // An OpenOffer is always my offer.
+        var currencyCode = openOffer.getOffer().getCurrencyCode();
+        Optional<Price> optionalTriggerPrice = openOffer.getTriggerPrice() > 0
+                ? Optional.of(Price.valueOf(currencyCode, openOffer.getTriggerPrice()))
+                : Optional.empty();
+        var preciseTriggerPrice = optionalTriggerPrice.isPresent()
+                ? reformatMarketPrice(optionalTriggerPrice.get().toPlainString(), currencyCode)
+                : "0";
         return getBuilder(openOffer.getOffer(), true)
-                .withTriggerPrice(openOffer.getTriggerPrice())
+                .withTriggerPrice(preciseTriggerPrice)
                 .withIsActivated(!openOffer.isDeactivated())
                 .build();
     }
@@ -203,7 +213,7 @@ public class OfferInfo implements Payload {
                 .setOfferFeePaymentTxId(isBsqSwapOffer ? "" : offerFeePaymentTxId)
                 .setBuyerSecurityDeposit(buyerSecurityDeposit)
                 .setSellerSecurityDeposit(sellerSecurityDeposit)
-                .setTriggerPrice(triggerPrice)
+                .setTriggerPrice(triggerPrice == null ? "0" : triggerPrice)
                 .setIsCurrencyForMakerFeeBtc(isCurrencyForMakerFeeBtc)
                 .setPaymentAccountId(paymentAccountId)
                 .setPaymentMethodId(paymentMethodId)

@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.proto.grpc.EditOfferRequest.EditType.*;
 import static java.lang.String.format;
+import static java.math.BigDecimal.ZERO;
 
 @Slf4j
 class EditOfferValidator {
@@ -49,10 +50,10 @@ class EditOfferValidator {
 
 
     private final OpenOffer currentlyOpenOffer;
-    private final String newPriceAsString;
+    private final String newPrice;
     private final boolean newIsUseMarketBasedPrice;
     private final double newMarketPriceMargin;
-    private final long newTriggerPrice;
+    private final String newTriggerPrice;
     private final int newEnable;
     private final EditOfferRequest.EditType editType;
 
@@ -60,14 +61,14 @@ class EditOfferValidator {
     private final boolean isZeroEditedTriggerPrice;
 
     EditOfferValidator(OpenOffer currentlyOpenOffer,
-                       String newPriceAsString,
+                       String newPrice,
                        boolean newIsUseMarketBasedPrice,
                        double newMarketPriceMargin,
-                       long newTriggerPrice,
+                       String newTriggerPrice,
                        int newEnable,
                        EditOfferRequest.EditType editType) {
         this.currentlyOpenOffer = currentlyOpenOffer;
-        this.newPriceAsString = newPriceAsString;
+        this.newPrice = newPrice;
         // The client cannot determine what offer.isUseMarketBasedPrice should be
         // when editType = ACTIVATION_STATE_ONLY.  Override newIsUseMarketBasedPrice
         // param for the ACTIVATION_STATE_ONLY case.
@@ -81,8 +82,8 @@ class EditOfferValidator {
         this.newEnable = newEnable;
         this.editType = editType;
 
-        this.isZeroEditedFixedPriceString = new BigDecimal(newPriceAsString).doubleValue() == 0;
-        this.isZeroEditedTriggerPrice = newTriggerPrice == 0;
+        this.isZeroEditedFixedPriceString = new BigDecimal(newPrice).doubleValue() == 0;
+        this.isZeroEditedTriggerPrice = new BigDecimal(newTriggerPrice).equals(ZERO);
     }
 
     EditOfferValidator validate() {
@@ -123,7 +124,7 @@ class EditOfferValidator {
         return "EditOfferValidator{" + "\n" +
                 "  offer=" + offer.getId() + "\n" +
                 ", offer.payloadBase.price=" + offer.getOfferPayloadBase().getPrice() + "\n" +
-                ", newPriceAsString=" + (isEditingPrice ? newPriceAsString : "N/A") + "\n" +
+                ", newPrice=" + (isEditingPrice ? newPrice : "N/A") + "\n" +
                 ", offer.useMarketBasedPrice=" + offer.isUseMarketBasedPrice() + "\n" +
                 ", newUseMarketBasedPrice=" + newIsUseMarketBasedPrice + "\n" +
                 ", offer.marketPriceMargin=" + offer.getMarketPriceMargin() + "\n" +
@@ -182,7 +183,7 @@ class EditOfferValidator {
             throw new IllegalStateException(
                     format("programmer error: cannot set fixed price (%s)"
                                     + " in mkt price margin based offer with id '%s'",
-                            newPriceAsString,
+                            newPrice,
                             currentlyOpenOffer.getId()));
     }
 
@@ -195,7 +196,7 @@ class EditOfferValidator {
                                     + " in fixed price offer with id '%s'",
                             currentlyOpenOffer.getId()));
 
-        if (newTriggerPrice < 0)
+        if (new BigDecimal(newTriggerPrice).compareTo(ZERO) < 0)
             throw new IllegalStateException(
                     format("programmer error: cannot set trigger price to a negative value"
                                     + " in offer with id '%s'",
