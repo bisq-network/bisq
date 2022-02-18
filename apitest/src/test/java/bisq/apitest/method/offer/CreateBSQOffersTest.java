@@ -66,7 +66,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
                 getDefaultBuyerSecurityDepositAsPercent(),
                 alicesLegacyBsqAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
-        log.debug("Sell BSQ (Buy BTC) OFFER:\n{}", toOfferTable.apply(newOffer));
+        log.debug("Sell BSQ (Buy BTC) Offer:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -77,6 +77,8 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertEquals("0.00005000", newOffer.getPrice());
         assertEquals(100_000_000L, newOffer.getAmount());
         assertEquals(100_000_000L, newOffer.getMinAmount());
+        assertEquals("20000.00", newOffer.getVolume());
+        assertEquals("20000.00", newOffer.getMinVolume());
         assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());
         assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals(BSQ, newOffer.getBaseCurrencyCode());
@@ -94,6 +96,8 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertEquals("0.00005000", newOffer.getPrice());
         assertEquals(100_000_000L, newOffer.getAmount());
         assertEquals(100_000_000L, newOffer.getMinAmount());
+        assertEquals("20000.00", newOffer.getVolume());
+        assertEquals("20000.00", newOffer.getMinVolume());
         assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());
         assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals(BSQ, newOffer.getBaseCurrencyCode());
@@ -113,7 +117,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
                 getDefaultBuyerSecurityDepositAsPercent(),
                 alicesLegacyBsqAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
-        log.debug("SELL 20K BSQ OFFER:\n{}", toOfferTable.apply(newOffer));
+        log.debug("SELL 20K BSQ Offer:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -124,6 +128,8 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertEquals("0.00005000", newOffer.getPrice());
         assertEquals(100_000_000L, newOffer.getAmount());
         assertEquals(100_000_000L, newOffer.getMinAmount());
+        assertEquals("20000.00", newOffer.getVolume());
+        assertEquals("20000.00", newOffer.getMinVolume());
         assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());
         assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals(BSQ, newOffer.getBaseCurrencyCode());
@@ -141,6 +147,8 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertEquals("0.00005000", newOffer.getPrice());
         assertEquals(100_000_000L, newOffer.getAmount());
         assertEquals(100_000_000L, newOffer.getMinAmount());
+        assertEquals("20000.00", newOffer.getVolume());
+        assertEquals("20000.00", newOffer.getMinVolume());
         assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());
         assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals(BSQ, newOffer.getBaseCurrencyCode());
@@ -160,7 +168,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
                 getDefaultBuyerSecurityDepositAsPercent(),
                 alicesLegacyBsqAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
-        log.debug("BUY 1-2K BSQ OFFER:\n{}", toOfferTable.apply(newOffer));
+        log.debug("BUY 1-2K BSQ Offer:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -171,6 +179,8 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertEquals("0.00005000", newOffer.getPrice());
         assertEquals(10_000_000L, newOffer.getAmount());
         assertEquals(5_000_000L, newOffer.getMinAmount());
+        assertEquals("2000.00", newOffer.getVolume());
+        assertEquals("1000.00", newOffer.getMinVolume());
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
         assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals(BSQ, newOffer.getBaseCurrencyCode());
@@ -188,6 +198,8 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertEquals("0.00005000", newOffer.getPrice());
         assertEquals(10_000_000L, newOffer.getAmount());
         assertEquals(5_000_000L, newOffer.getMinAmount());
+        assertEquals("2000.00", newOffer.getVolume());
+        assertEquals("1000.00", newOffer.getMinVolume());
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
         assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals(BSQ, newOffer.getBaseCurrencyCode());
@@ -207,7 +219,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
                 getDefaultBuyerSecurityDepositAsPercent(),
                 alicesLegacyBsqAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
-        log.debug("SELL 5-10K BSQ OFFER:\n{}", toOfferTable.apply(newOffer));
+        log.debug("SELL 5-10K BSQ Offer:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -218,6 +230,8 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertEquals("0.00005000", newOffer.getPrice());
         assertEquals(50_000_000L, newOffer.getAmount());
         assertEquals(25_000_000L, newOffer.getMinAmount());
+        assertEquals("10000.00", newOffer.getVolume());
+        assertEquals("5000.00", newOffer.getMinVolume());
         assertEquals(7_500_000, newOffer.getBuyerSecurityDeposit());
         assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals(BSQ, newOffer.getBaseCurrencyCode());
@@ -235,6 +249,8 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertEquals("0.00005000", newOffer.getPrice());
         assertEquals(50_000_000L, newOffer.getAmount());
         assertEquals(25_000_000L, newOffer.getMinAmount());
+        assertEquals("10000.00", newOffer.getVolume());
+        assertEquals("5000.00", newOffer.getMinVolume());
         assertEquals(7_500_000, newOffer.getBuyerSecurityDeposit());
         assertEquals(alicesLegacyBsqAcct.getId(), newOffer.getPaymentAccountId());
         assertEquals(BSQ, newOffer.getBaseCurrencyCode());
@@ -246,7 +262,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
     @Order(5)
     public void testGetAllMyBsqOffers() {
         List<OfferInfo> offers = aliceClient.getMyCryptoCurrencyOffersSortedByDate(BSQ);
-        log.debug("ALL ALICE'S BSQ OFFERS:\n{}", toOffersTable.apply(offers));
+        log.debug("All Alice's BSQ Offers:\n{}", toOffersTable.apply(offers));
         assertEquals(4, offers.size());
         log.debug("ALICE'S BALANCES\n{}", formatBalancesTbls(aliceClient.getBalances()));
     }
@@ -255,7 +271,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
     @Order(6)
     public void testGetAvailableBsqOffers() {
         List<OfferInfo> offers = bobClient.getCryptoCurrencyOffersSortedByDate(BSQ);
-        log.debug("ALL BOB'S AVAILABLE BSQ OFFERS:\n{}", toOffersTable.apply(offers));
+        log.debug("All Bob's Available BSQ Offers:\n{}", toOffersTable.apply(offers));
         assertEquals(4, offers.size());
         log.debug("BOB'S BALANCES\n{}", formatBalancesTbls(bobClient.getBalances()));
     }
