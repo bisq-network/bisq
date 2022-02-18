@@ -95,30 +95,7 @@ public class OffersServiceRequest {
                 securityDeposit,
                 paymentAcctId,
                 makerFeeCurrencyCode,
-                0 /* no trigger price */);
-    }
-
-    @SuppressWarnings("unused")
-    public OfferInfo createMarketBasedPricedOffer(String direction,
-                                                  String currencyCode,
-                                                  long amount,
-                                                  long minAmount,
-                                                  double marketPriceMargin,
-                                                  double securityDeposit,
-                                                  String paymentAcctId,
-                                                  String makerFeeCurrencyCode,
-                                                  long triggerPrice) {
-        return createOffer(direction,
-                currencyCode,
-                amount,
-                minAmount,
-                true,
-                "0",
-                marketPriceMargin,
-                securityDeposit,
-                paymentAcctId,
-                makerFeeCurrencyCode,
-                triggerPrice);
+                "0" /* no trigger price */);
     }
 
     public OfferInfo createOffer(String direction,
@@ -131,7 +108,7 @@ public class OffersServiceRequest {
                                  double securityDeposit,
                                  String paymentAcctId,
                                  String makerFeeCurrencyCode,
-                                 long triggerPrice) {
+                                 String triggerPrice) {
         var request = CreateOfferRequest.newBuilder()
                 .setDirection(direction)
                 .setCurrencyCode(currencyCode)
@@ -184,7 +161,7 @@ public class OffersServiceRequest {
                 MKT_PRICE_MARGIN_ONLY);
     }
 
-    public void editOfferTriggerPrice(String offerId, long triggerPrice) {
+    public void editOfferTriggerPrice(String offerId, String triggerPrice) {
         var offer = getMyOffer(offerId);
         editOffer(offerId,
                 "0.00",
@@ -199,7 +176,7 @@ public class OffersServiceRequest {
                           String scaledPriceString,
                           boolean useMarketBasedPrice,
                           double marketPriceMargin,
-                          long triggerPrice,
+                          String triggerPrice,
                           int enable,
                           EditOfferRequest.EditType editType) {
         // Take care when using this method directly:

@@ -20,6 +20,7 @@ package bisq.cli.table.builder;
 import bisq.proto.grpc.OfferInfo;
 
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 
@@ -30,6 +31,8 @@ import bisq.cli.table.Table;
  * Abstract superclass for TableBuilder implementations.
  */
 abstract class AbstractTableBuilder {
+
+    protected final Function<String, String> toBlankOrNonZeroValue = (s) -> s.trim().equals("0") ? "" : s;
 
     protected final TableType tableType;
     protected final List<?> protos;

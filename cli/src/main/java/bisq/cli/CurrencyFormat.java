@@ -123,7 +123,7 @@ public class CurrencyFormat {
         return FRIENDLY_NUMBER_FORMAT.format(price);
     }
 
-    // TODO Deprecate after triggerPrice field type is changed to string.
+    @Deprecated
     public static String formatPrice(long price) {
         FRIENDLY_NUMBER_FORMAT.setMinimumFractionDigits(4);
         FRIENDLY_NUMBER_FORMAT.setMaximumFractionDigits(4);
@@ -157,10 +157,12 @@ public class CurrencyFormat {
         return FRIENDLY_NUMBER_FORMAT.format((double) volume / SATOSHI_DIVISOR.doubleValue());
     }
 
+    @Deprecated
     public static long toInternalFiatPrice(BigDecimal fiatPrice) {
         return fiatPrice.multiply(new BigDecimal(10_000)).longValue();
     }
 
+    @Deprecated
     public static long toInternalCryptoCurrencyPrice(BigDecimal altcoinPrice) {
         return altcoinPrice.multiply(new BigDecimal(100_000_000)).longValue();
     }
