@@ -20,7 +20,6 @@ package bisq.cli.table.builder;
 import bisq.proto.grpc.OfferInfo;
 
 import java.util.List;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 
@@ -32,7 +31,7 @@ import bisq.cli.table.Table;
  */
 abstract class AbstractTableBuilder {
 
-    protected final Function<String, String> toBlankOrNonZeroValue = (s) -> s.trim().equals("0") ? "" : s;
+    protected final Predicate<OfferInfo> isFiatOffer = (o) -> o.getBaseCurrencyCode().equals("BTC");
 
     protected final TableType tableType;
     protected final List<?> protos;
@@ -45,6 +44,9 @@ abstract class AbstractTableBuilder {
     }
 
     public abstract Table build();
-
-    protected final Predicate<OfferInfo> isFiatOffer = (o) -> o.getBaseCurrencyCode().equals("BTC");
 }
+
+/*
+            var currencyCode = isFiatOffer.test(o);
+
+ */

@@ -39,8 +39,8 @@ public class CurrencyFormat {
     // Use the US locale for all DecimalFormat objects.
     private static final DecimalFormatSymbols DECIMAL_FORMAT_SYMBOLS = DecimalFormatSymbols.getInstance(Locale.US);
 
-    // Format numbers in US locale for CLI console.
-    private static final NumberFormat FRIENDLY_NUMBER_FORMAT = NumberFormat.getInstance(Locale.US);
+    // Format all numbers displayed in the CLI console with the US locale (no i18n support for CLI).
+    private static final NumberFormat US_LOCALE_NUMBER_FORMAT = NumberFormat.getInstance(Locale.US);
 
     // Formats numbers for internal use, i.e., grpc request parameters.
     private static final DecimalFormat INTERNAL_FIAT_DECIMAL_FORMAT = new DecimalFormat("##############0.0000");
@@ -53,6 +53,9 @@ public class CurrencyFormat {
     static final BigDecimal BSQ_SATOSHI_DIVISOR = new BigDecimal(100);
     static final DecimalFormat BSQ_FORMAT = new DecimalFormat("###,###,###,##0.00", DECIMAL_FORMAT_SYMBOLS);
     static final DecimalFormat SEND_BSQ_FORMAT = new DecimalFormat("###########0.00", DECIMAL_FORMAT_SYMBOLS);
+
+    static final DecimalFormat ALTCOIN_VOLUME_FORMAT = new DecimalFormat("########0.00", DECIMAL_FORMAT_SYMBOLS);
+    static final DecimalFormat FIAT_VOLUME_FORMAT = new DecimalFormat("###########0", DECIMAL_FORMAT_SYMBOLS);
 
     static final BigDecimal SECURITY_DEPOSIT_MULTIPLICAND = new BigDecimal("0.01");
 
@@ -71,11 +74,26 @@ public class CurrencyFormat {
         return BSQ_FORMAT.format(BigDecimal.valueOf(sats).divide(BSQ_SATOSHI_DIVISOR));
     }
 
+    @Deprecated  // TODO delete
     public static String formatBsqAmount(long bsqSats) {
-        FRIENDLY_NUMBER_FORMAT.setMinimumFractionDigits(2);
-        FRIENDLY_NUMBER_FORMAT.setMaximumFractionDigits(2);
-        FRIENDLY_NUMBER_FORMAT.setRoundingMode(HALF_UP);
+        US_LOCALE_NUMBER_FORMAT.setMinimumFractionDigits(2);
+        US_LOCALE_NUMBER_FORMAT.setMaximumFractionDigits(2);
+        US_LOCALE_NUMBER_FORMAT.setRoundingMode(HALF_UP);
         return SEND_BSQ_FORMAT.format((double) bsqSats / SATOSHI_DIVISOR.doubleValue());
+    }
+
+    public static String formatVolumeString(String volumeString, int precision) {
+        if (volumeString == null || volumeString.isBlank())
+            return "";
+
+        US_LOCALE_NUMBER_FORMAT.setMinimumFractionDigits(precision);
+        US_LOCALE_NUMBER_FORMAT.setMaximumFractionDigits(precision);
+        US_LOCALE_NUMBER_FORMAT.setRoundingMode(HALF_UP);
+        var volAsDouble = new BigDecimal(volumeString).doubleValue();
+        if (precision == 0)
+            return FIAT_VOLUME_FORMAT.format(volAsDouble);
+        else
+            return ALTCOIN_VOLUME_FORMAT.format(volAsDouble);
     }
 
     public static String formatTxFeeRateInfo(TxFeeRateInfo txFeeRateInfo) {
@@ -118,31 +136,31 @@ public class CurrencyFormat {
     }
 
     public static String formatInternalFiatPrice(double price) {
-        FRIENDLY_NUMBER_FORMAT.setMinimumFractionDigits(4);
-        FRIENDLY_NUMBER_FORMAT.setMaximumFractionDigits(4);
-        return FRIENDLY_NUMBER_FORMAT.format(price);
+        US_LOCALE_NUMBER_FORMAT.setMinimumFractionDigits(4);
+        US_LOCALE_NUMBER_FORMAT.setMaximumFractionDigits(4);
+        return US_LOCALE_NUMBER_FORMAT.format(price);
     }
 
     @Deprecated
     public static String formatPrice(long price) {
-        FRIENDLY_NUMBER_FORMAT.setMinimumFractionDigits(4);
-        FRIENDLY_NUMBER_FORMAT.setMaximumFractionDigits(4);
-        FRIENDLY_NUMBER_FORMAT.setRoundingMode(UNNECESSARY);
-        return FRIENDLY_NUMBER_FORMAT.format((double) price / 10_000);
+        US_LOCALE_NUMBER_FORMAT.setMinimumFractionDigits(4);
+        US_LOCALE_NUMBER_FORMAT.setMaximumFractionDigits(4);
+        US_LOCALE_NUMBER_FORMAT.setRoundingMode(UNNECESSARY);
+        return US_LOCALE_NUMBER_FORMAT.format((double) price / 10_000);
     }
 
     public static String formatCryptoCurrencyPrice(long price) {
-        FRIENDLY_NUMBER_FORMAT.setMinimumFractionDigits(8);
-        FRIENDLY_NUMBER_FORMAT.setMaximumFractionDigits(8);
-        FRIENDLY_NUMBER_FORMAT.setRoundingMode(UNNECESSARY);
-        return FRIENDLY_NUMBER_FORMAT.format((double) price / SATOSHI_DIVISOR.doubleValue());
+        US_LOCALE_NUMBER_FORMAT.setMinimumFractionDigits(8);
+        US_LOCALE_NUMBER_FORMAT.setMaximumFractionDigits(8);
+        US_LOCALE_NUMBER_FORMAT.setRoundingMode(UNNECESSARY);
+        return US_LOCALE_NUMBER_FORMAT.format((double) price / SATOSHI_DIVISOR.doubleValue());
     }
 
     public static String formatFiatVolume(long volume) {
-        FRIENDLY_NUMBER_FORMAT.setMinimumFractionDigits(0);
-        FRIENDLY_NUMBER_FORMAT.setMaximumFractionDigits(0);
-        FRIENDLY_NUMBER_FORMAT.setRoundingMode(HALF_UP);
-        return FRIENDLY_NUMBER_FORMAT.format((double) volume / 10_000);
+        US_LOCALE_NUMBER_FORMAT.setMinimumFractionDigits(0);
+        US_LOCALE_NUMBER_FORMAT.setMaximumFractionDigits(0);
+        US_LOCALE_NUMBER_FORMAT.setRoundingMode(HALF_UP);
+        return US_LOCALE_NUMBER_FORMAT.format((double) volume / 10_000);
     }
 
     public static String formatCryptoCurrencyVolume(long volume) {
@@ -151,10 +169,10 @@ public class CurrencyFormat {
     }
 
     public static String formatCryptoCurrencyVolume(long volume, int precision) {
-        FRIENDLY_NUMBER_FORMAT.setMinimumFractionDigits(precision);
-        FRIENDLY_NUMBER_FORMAT.setMaximumFractionDigits(precision);
-        FRIENDLY_NUMBER_FORMAT.setRoundingMode(HALF_UP);
-        return FRIENDLY_NUMBER_FORMAT.format((double) volume / SATOSHI_DIVISOR.doubleValue());
+        US_LOCALE_NUMBER_FORMAT.setMinimumFractionDigits(precision);
+        US_LOCALE_NUMBER_FORMAT.setMaximumFractionDigits(precision);
+        US_LOCALE_NUMBER_FORMAT.setRoundingMode(HALF_UP);
+        return US_LOCALE_NUMBER_FORMAT.format((double) volume / SATOSHI_DIVISOR.doubleValue());
     }
 
     @Deprecated
