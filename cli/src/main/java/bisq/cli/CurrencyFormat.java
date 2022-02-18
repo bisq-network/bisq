@@ -52,7 +52,6 @@ public class CurrencyFormat {
 
     static final BigDecimal BSQ_SATOSHI_DIVISOR = new BigDecimal(100);
     static final DecimalFormat BSQ_FORMAT = new DecimalFormat("###,###,###,##0.00", DECIMAL_FORMAT_SYMBOLS);
-    static final DecimalFormat SEND_BSQ_FORMAT = new DecimalFormat("###########0.00", DECIMAL_FORMAT_SYMBOLS);
 
     static final DecimalFormat ALTCOIN_VOLUME_FORMAT = new DecimalFormat("########0.00", DECIMAL_FORMAT_SYMBOLS);
     static final DecimalFormat FIAT_VOLUME_FORMAT = new DecimalFormat("###########0", DECIMAL_FORMAT_SYMBOLS);
@@ -72,14 +71,6 @@ public class CurrencyFormat {
     @SuppressWarnings("BigDecimalMethodWithoutRoundingCalled")
     public static String formatBsq(long sats) {
         return BSQ_FORMAT.format(BigDecimal.valueOf(sats).divide(BSQ_SATOSHI_DIVISOR));
-    }
-
-    @Deprecated  // TODO delete
-    public static String formatBsqAmount(long bsqSats) {
-        US_LOCALE_NUMBER_FORMAT.setMinimumFractionDigits(2);
-        US_LOCALE_NUMBER_FORMAT.setMaximumFractionDigits(2);
-        US_LOCALE_NUMBER_FORMAT.setRoundingMode(HALF_UP);
-        return SEND_BSQ_FORMAT.format((double) bsqSats / SATOSHI_DIVISOR.doubleValue());
     }
 
     public static String formatVolumeString(String volumeString, int precision) {
@@ -106,27 +97,6 @@ public class CurrencyFormat {
             return format("tx fee rate: %s sats/byte, min tx fee rate: %s sats/byte",
                     formatFeeSatoshis(txFeeRateInfo.getFeeServiceRate()),
                     formatFeeSatoshis(txFeeRateInfo.getMinFeeServiceRate()));
-    }
-
-    @Deprecated
-    public static String formatAmountRange(long minAmount, long amount) {
-        return minAmount != amount
-                ? formatSatoshis(minAmount) + " - " + formatSatoshis(amount)
-                : formatSatoshis(amount);
-    }
-
-    @Deprecated
-    public static String formatVolumeRange(long minVolume, long volume) {
-        return minVolume != volume
-                ? formatFiatVolume(minVolume) + " - " + formatFiatVolume(volume)
-                : formatFiatVolume(volume);
-    }
-
-    @Deprecated
-    public static String formatCryptoCurrencyVolumeRange(long minVolume, long volume) {
-        return minVolume != volume
-                ? formatCryptoCurrencyVolume(minVolume) + " - " + formatCryptoCurrencyVolume(volume)
-                : formatCryptoCurrencyVolume(volume);
     }
 
     public static String formatInternalFiatPrice(BigDecimal price) {
