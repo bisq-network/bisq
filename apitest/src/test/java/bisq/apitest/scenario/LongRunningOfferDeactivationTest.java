@@ -31,7 +31,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.condition.EnabledIf;
 
 import static bisq.apitest.config.ApiTestConfig.BTC;
-import static bisq.cli.CurrencyFormat.formatPrice;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static java.lang.System.getenv;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -59,8 +58,8 @@ public class LongRunningOfferDeactivationTest extends AbstractOfferTest {
     public void testSellOfferAutoDisable(final TestInfo testInfo) {
         PaymentAccount paymentAcct = createDummyF2FAccount(aliceClient, "US");
         double mktPriceAsDouble = aliceClient.getBtcPrice("USD");
-        long triggerPrice = calcFiatTriggerPriceAsLong.apply(mktPriceAsDouble, -50.0000);
-        log.info("Current USD mkt price = {}  Trigger Price = {}", mktPriceAsDouble, formatPrice(triggerPrice));
+        String triggerPrice = calcPriceAsString(mktPriceAsDouble, -50.0000, 4);
+        log.info("Current USD mkt price = {}  Trigger Price = {}", mktPriceAsDouble, triggerPrice);
         OfferInfo offer = aliceClient.createMarketBasedPricedOffer(SELL.name(),
                 "USD",
                 1_000_000,
@@ -76,8 +75,7 @@ public class LongRunningOfferDeactivationTest extends AbstractOfferTest {
         genBtcBlocksThenWait(1, 2500);  // Wait for offer book entry.
 
         offer = aliceClient.getOffer(offer.getId()); // Offer has trigger price now.
-        log.info("SELL offer should be automatically disabled when mkt price falls below {}.",
-                formatPrice(offer.getTriggerPrice()));
+        log.info("SELL offer should be automatically disabled when mkt price falls below {}.", offer.getTriggerPrice());
 
         int numIterations = 0;
         while (++numIterations < MAX_ITERATIONS) {
@@ -87,12 +85,12 @@ public class LongRunningOfferDeactivationTest extends AbstractOfferTest {
             if (offer.getIsActivated()) {
                 log.info("Offer still enabled at mkt price {} > {} trigger price",
                         mktPrice,
-                        formatPrice(offer.getTriggerPrice()));
+                        offer.getTriggerPrice());
                 sleep(1000 * 60); // 60s
             } else {
                 log.info("Successful test completion after offer disabled at mkt price {} < {} trigger price.",
                         mktPrice,
-                        formatPrice(offer.getTriggerPrice()));
+                        offer.getTriggerPrice());
                 break;
             }
             if (numIterations == MAX_ITERATIONS)
@@ -107,8 +105,8 @@ public class LongRunningOfferDeactivationTest extends AbstractOfferTest {
     public void testBuyOfferAutoDisable(final TestInfo testInfo) {
         PaymentAccount paymentAcct = createDummyF2FAccount(aliceClient, "US");
         double mktPriceAsDouble = aliceClient.getBtcPrice("USD");
-        long triggerPrice = calcFiatTriggerPriceAsLong.apply(mktPriceAsDouble, 50.0000);
-        log.info("Current USD mkt price = {}  Trigger Price = {}", mktPriceAsDouble, formatPrice(triggerPrice));
+        String triggerPrice = calcPriceAsString(mktPriceAsDouble, 50.0000, 4);
+        log.info("Current USD mkt price = {}  Trigger Price = {}", mktPriceAsDouble, triggerPrice);
         OfferInfo offer = aliceClient.createMarketBasedPricedOffer(BUY.name(),
                 "USD",
                 1_000_000,
@@ -125,7 +123,7 @@ public class LongRunningOfferDeactivationTest extends AbstractOfferTest {
 
         offer = aliceClient.getOffer(offer.getId()); // Offer has trigger price now.
         log.info("BUY offer should be automatically disabled when mkt price rises above {}.",
-                formatPrice(offer.getTriggerPrice()));
+                offer.getTriggerPrice());
 
         int numIterations = 0;
         while (++numIterations < MAX_ITERATIONS) {
@@ -135,12 +133,12 @@ public class LongRunningOfferDeactivationTest extends AbstractOfferTest {
             if (offer.getIsActivated()) {
                 log.info("Offer still enabled at mkt price {} < {} trigger price",
                         mktPrice,
-                        formatPrice(offer.getTriggerPrice()));
+                        offer.getTriggerPrice());
                 sleep(1000 * 60); // 60s
             } else {
                 log.info("Successful test completion after offer disabled at mkt price {} > {} trigger price.",
                         mktPrice,
-                        formatPrice(offer.getTriggerPrice()));
+                        offer.getTriggerPrice());
                 break;
             }
             if (numIterations == MAX_ITERATIONS)

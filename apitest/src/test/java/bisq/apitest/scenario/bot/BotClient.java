@@ -120,6 +120,7 @@ public class BotClient {
      * @param priceMarginAsPercent
      * @param securityDepositAsPercent
      * @param feeCurrency
+     * @param triggerPrice
      * @return OfferInfo
      */
     public OfferInfo createOfferAtMarketBasedPrice(PaymentAccount paymentAccount,
@@ -130,7 +131,7 @@ public class BotClient {
                                                    double priceMarginAsPercent,
                                                    double securityDepositAsPercent,
                                                    String feeCurrency,
-                                                   long triggerPrice) {
+                                                   String triggerPrice) {
         return grpcClient.createMarketBasedPricedOffer(direction,
                 currencyCode,
                 amountInSatoshis,

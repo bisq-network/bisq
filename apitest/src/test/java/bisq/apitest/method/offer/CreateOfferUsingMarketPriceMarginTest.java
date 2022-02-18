@@ -17,7 +17,6 @@
 
 package bisq.apitest.method.offer;
 
-import bisq.core.monetary.Price;
 import bisq.core.payment.PaymentAccount;
 
 import bisq.proto.grpc.OfferInfo;
@@ -255,10 +254,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
     public void testCreateUSDBTCBuyOfferWithTriggerPrice() {
         PaymentAccount usdAccount = createDummyF2FAccount(aliceClient, "US");
         double mktPriceAsDouble = aliceClient.getBtcPrice("usd");
-        BigDecimal mktPrice = new BigDecimal(Double.toString(mktPriceAsDouble));
-        BigDecimal triggerPrice = mktPrice.add(new BigDecimal("1000.9999"));
-        long triggerPriceAsLong = Price.parse(USD, triggerPrice.toString()).getValue();
-
+        String triggerPrice = calcPriceAsString(mktPriceAsDouble, Double.parseDouble("1000.9999"), 4);
         var newOffer = aliceClient.createMarketBasedPricedOffer(BUY.name(),
                 "usd",
                 10_000_000L,
@@ -267,7 +263,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
                 getDefaultBuyerSecurityDepositAsPercent(),
                 usdAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE,
-                triggerPriceAsLong);
+                triggerPrice);
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
 
@@ -276,7 +272,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         log.debug("OFFER #5:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
-        assertEquals(triggerPriceAsLong, newOffer.getTriggerPrice());
+        assertEquals(triggerPrice, newOffer.getTriggerPrice());
     }
 
     private void assertCalculatedPriceIsCorrect(OfferInfo offer, double priceMarginPctInput) {

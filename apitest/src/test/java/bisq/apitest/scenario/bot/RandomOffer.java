@@ -129,7 +129,7 @@ public class RandomOffer {
                         priceMargin,
                         getDefaultBuyerSecurityDepositAsPercent(),
                         feeCurrency,
-                        0 /*no trigger price*/);
+                        "0" /*no trigger price*/);
             } else {
                 this.offer = botClient.createOfferAtFixedPrice(paymentAccount,
                         direction,
