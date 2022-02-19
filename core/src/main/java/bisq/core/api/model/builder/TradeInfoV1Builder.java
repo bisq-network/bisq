@@ -44,8 +44,8 @@ public final class TradeInfoV1Builder {
     private String depositTxId;
     private String payoutTxId;
     private long tradeAmountAsLong;
-    private long tradePrice;
-    private long tradeVolume;
+    private String tradePrice;
+    private String tradeVolume;
     private String tradingPeerNodeAddress;
     private String state;
     private String phase;
@@ -120,12 +120,12 @@ public final class TradeInfoV1Builder {
         return this;
     }
 
-    public TradeInfoV1Builder withTradePrice(long tradePrice) {
+    public TradeInfoV1Builder withTradePrice(String tradePrice) {
         this.tradePrice = tradePrice;
         return this;
     }
 
-    public TradeInfoV1Builder withTradeVolume(long tradeVolume) {
+    public TradeInfoV1Builder withTradeVolume(String tradeVolume) {
         this.tradeVolume = tradeVolume;
         return this;
     }

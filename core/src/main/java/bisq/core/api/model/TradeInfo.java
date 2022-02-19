@@ -25,6 +25,9 @@ import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 
 import bisq.common.Payload;
 
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -34,6 +37,8 @@ import static bisq.core.api.model.OfferInfo.toOfferInfo;
 import static bisq.core.api.model.PaymentAccountPayloadInfo.toPaymentAccountPayloadInfo;
 import static bisq.core.offer.OfferDirection.BUY;
 import static bisq.core.offer.OfferDirection.SELL;
+import static bisq.core.util.PriceUtil.reformatMarketPrice;
+import static bisq.core.util.VolumeUtil.formatVolume;
 import static java.util.Objects.requireNonNull;
 
 @EqualsAndHashCode
@@ -43,6 +48,23 @@ public class TradeInfo implements Payload {
     // The client cannot see Trade or its fromProto method.  We use the
     // lighter weight TradeInfo proto wrapper instead, containing just enough fields to
     // view and interact with trades.
+
+    private static final BiFunction<TradeModel, Boolean, OfferInfo> toOfferInfo = (tradeModel, isMyOffer) ->
+            isMyOffer ? toMyOfferInfo(tradeModel.getOffer()) : toOfferInfo(tradeModel.getOffer());
+
+    private static final Function<TradeModel, String> toPeerNodeAddress = (tradeModel) ->
+            tradeModel.getTradingPeerNodeAddress() == null
+                    ? ""
+                    : tradeModel.getTradingPeerNodeAddress().getFullAddress();
+
+    private static final Function<TradeModel, String> toRoundedVolume = (tradeModel) ->
+            tradeModel.getVolume() == null
+                    ? ""
+                    : formatVolume(requireNonNull(tradeModel.getVolume()));
+
+    private static final Function<TradeModel, String> toPreciseTradePrice = (tradeModel) ->
+            reformatMarketPrice(requireNonNull(tradeModel.getPrice()).toPlainString(),
+                    tradeModel.getOffer().getCurrencyCode());
 
     // Bisq v1 trade protocol fields (some are in common with the BSQ Swap protocol).
     private final OfferInfo offer;
@@ -57,8 +79,8 @@ public class TradeInfo implements Payload {
     private final String depositTxId;
     private final String payoutTxId;
     private final long tradeAmountAsLong;
-    private final long tradePrice;
-    private final long tradeVolume;
+    private final String tradePrice;
+    private final String tradeVolume;
     private final String tradingPeerNodeAddress;
     private final String state;
     private final String phase;
@@ -133,14 +155,12 @@ public class TradeInfo implements Payload {
                                         boolean isMyOffer,
                                         int numConfirmations,
                                         String closingStatus) {
-        OfferInfo offerInfo = isMyOffer ? toMyOfferInfo(bsqSwapTrade.getOffer()) : toOfferInfo(bsqSwapTrade.getOffer());
+        var offerInfo = toOfferInfo.apply(bsqSwapTrade, isMyOffer);
         // A BSQ Swap miner tx fee is paid in full by the BTC seller (buying BSQ).
         // The BTC buyer's payout = tradeamount minus his share of miner fee.
         var isBtcSeller = (isMyOffer && bsqSwapTrade.getOffer().getDirection().equals(SELL))
                 || (!isMyOffer && bsqSwapTrade.getOffer().getDirection().equals(BUY));
-        var txFeeInBtc = isBtcSeller
-                ? bsqSwapTrade.getTxFee().value
-                : 0L;
+        var txFeeInBtc = isBtcSeller ? bsqSwapTrade.getTxFee().value : 0L;
         // A BSQ Swap trade fee is paid in full by the BTC buyer (selling BSQ).
         // The transferred BSQ (payout) is reduced by the peer's trade fee.
         var takerFeeInBsq = !isMyOffer && bsqSwapTrade.getOffer().getDirection().equals(SELL)
@@ -157,9 +177,9 @@ public class TradeInfo implements Payload {
                 .withTakerFeeAsLong(takerFeeInBsq)
                 // N/A for bsq-swaps: .withTakerFeeTxId(""), .withDepositTxId(""), .withPayoutTxId("")
                 .withTradeAmountAsLong(bsqSwapTrade.getAmountAsLong())
-                .withTradePrice(bsqSwapTrade.getPrice().getValue())
-                .withTradeVolume(bsqSwapTrade.getVolume() == null ? 0 : bsqSwapTrade.getVolume().getValue())
-                .withTradingPeerNodeAddress(requireNonNull(bsqSwapTrade.getTradingPeerNodeAddress().getFullAddress()))
+                .withTradePrice(toPreciseTradePrice.apply(bsqSwapTrade))
+                .withTradeVolume(toRoundedVolume.apply(bsqSwapTrade))
+                .withTradingPeerNodeAddress(toPeerNodeAddress.apply(bsqSwapTrade))
                 .withState(bsqSwapTrade.getTradeState().name())
                 .withPhase(bsqSwapTrade.getTradePhase().name())
                 // N/A for bsq-swaps: .withTradePeriodState(""), .withIsDepositPublished(false), .withIsDepositConfirmed(false)
@@ -194,7 +214,7 @@ public class TradeInfo implements Payload {
             contractInfo = ContractInfo.emptyContract.get();
         }
 
-        OfferInfo offerInfo = isMyOffer ? toMyOfferInfo(trade.getOffer()) : toOfferInfo(trade.getOffer());
+        var offerInfo = toOfferInfo.apply(trade, isMyOffer);
         return new TradeInfoV1Builder()
                 .withOffer(offerInfo)
                 .withTradeId(trade.getId())
@@ -208,9 +228,9 @@ public class TradeInfo implements Payload {
                 .withDepositTxId(trade.getDepositTxId())
                 .withPayoutTxId(trade.getPayoutTxId())
                 .withTradeAmountAsLong(trade.getAmountAsLong())
-                .withTradePrice(trade.getPrice().getValue())
-                .withTradeVolume(trade.getVolume() == null ? 0 : trade.getVolume().getValue())
-                .withTradingPeerNodeAddress(requireNonNull(trade.getTradingPeerNodeAddress().getFullAddress()))
+                .withTradePrice(toPreciseTradePrice.apply(trade))
+                .withTradeVolume(toRoundedVolume.apply(trade))
+                .withTradingPeerNodeAddress(toPeerNodeAddress.apply(trade))
                 .withState(trade.getTradeState().name())
                 .withPhase(trade.getTradePhase().name())
                 .withTradePeriodState(trade.getTradePeriodState().name())
@@ -246,8 +266,8 @@ public class TradeInfo implements Payload {
                         .setDepositTxId(depositTxId == null ? "" : depositTxId)
                         .setPayoutTxId(payoutTxId == null ? "" : payoutTxId)
                         .setTradeAmountAsLong(tradeAmountAsLong)
-                        .setTradePrice(tradePrice)
-                        .setTradeVolume(tradeVolume)
+                        .setTradePrice(tradePrice == null ? "" : tradePrice)
+                        .setTradeVolume(tradeVolume == null ? "" : tradeVolume)
                         .setTradingPeerNodeAddress(tradingPeerNodeAddress)
                         .setState(state == null ? "" : state)
                         .setPhase(phase == null ? "" : phase)
