@@ -831,7 +831,7 @@ public class EditOfferTest extends AbstractOfferTest {
                 1_250_000L,
                 750_000L,
                 "0.00005");
-        log.debug("BsqSwap Buy BSQ (Buy BTC) offer:\n{}", originalOffer);
+        log.debug("BsqSwap BUY BSQ (SELL BTC) Offer:\n{}", toOfferTable.apply(originalOffer));
         var newOfferId = originalOffer.getId();
         assertNotEquals("", newOfferId);
         assertEquals(SELL.name(), originalOffer.getDirection());

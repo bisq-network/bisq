@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -49,7 +48,7 @@ import static protobuf.BsqSwapTrade.State.PREPARATION;
 import bisq.apitest.method.offer.AbstractOfferTest;
 import bisq.cli.GrpcClient;
 
-@Disabled
+// @Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class BsqSwapBuyBtcTradeTest extends AbstractTradeTest {
@@ -85,7 +84,7 @@ public class BsqSwapBuyBtcTradeTest extends AbstractTradeTest {
                 1_000_000L,     // 0.01 BTC
                 1_000_000L,
                 "0.00005");
-        log.debug("Pending BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", toOfferTable.apply(mySwapOffer));
+        log.debug("Pending BsqSwap SELL BSQ (BUY BTC) Offer:\n{}", toOfferTable.apply(mySwapOffer));
         var newOfferId = mySwapOffer.getId();
         assertNotEquals("", newOfferId);
         assertEquals(OfferDirection.BUY.name(), mySwapOffer.getDirection());
@@ -98,7 +97,7 @@ public class BsqSwapBuyBtcTradeTest extends AbstractTradeTest {
         genBtcBlocksThenWait(1, 2_500);
 
         mySwapOffer = aliceClient.getOffer(newOfferId);
-        log.debug("My fetched BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", toOfferTable.apply(mySwapOffer));
+        log.debug("My fetched BsqSwap SELL BSQ (BUY BTC) Offer:\n{}", toOfferTable.apply(mySwapOffer));
         assertNotEquals(0, mySwapOffer.getMakerFee());
 
         runCliGetOffer(newOfferId);

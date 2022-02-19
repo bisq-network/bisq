@@ -113,13 +113,15 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
                 1_000_000L,
                 1_000_000L,
                 "0.00005");
-        log.debug("BsqSwap Sell BSQ (Buy BTC) OFFER:\n{}", bsqSwapOffer);
+        log.debug("BsqSwap SELL BSQ (BUY BTC) Offer:\n{}", toOfferTable.apply(bsqSwapOffer));
         var newOfferId = bsqSwapOffer.getId();
         assertNotEquals("", newOfferId);
         assertEquals(BUY.name(), bsqSwapOffer.getDirection());
         assertEquals("0.00005000", bsqSwapOffer.getPrice());
         assertEquals(1_000_000L, bsqSwapOffer.getAmount());
         assertEquals(1_000_000L, bsqSwapOffer.getMinAmount());
+        assertEquals("200.00", bsqSwapOffer.getVolume());
+        assertEquals("200.00", bsqSwapOffer.getMinVolume());
         assertEquals(BSQ, bsqSwapOffer.getBaseCurrencyCode());
         assertEquals(BTC, bsqSwapOffer.getCounterCurrencyCode());
 
@@ -142,7 +144,7 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
                 if (numFetchAttempts >= 9)
                     fail(format("Alice giving up on fetching her (my) bsq swap offer after %d attempts.", numFetchAttempts), ex);
 
-                sleep(1000);
+                sleep(1500);
             }
         }
     }
@@ -162,7 +164,7 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
                 if (numFetchAttempts > 9)
                     fail(format("Bob gave up on fetching available bsq swap offer after %d attempts.", numFetchAttempts), ex);
 
-                sleep(1000);
+                sleep(1500);
             }
         }
     }

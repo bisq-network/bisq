@@ -320,7 +320,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
                     actualDiffPct,
                     mktPrice,
                     scaledOfferPrice);
-            log.warn(offer.toString());
+            log.trace(offer.toString());
         }
 
         return true;

@@ -177,7 +177,7 @@ public class AbstractTradeTest extends AbstractOfferTest {
 
         TradeInfo trade = grpcClient.getTrade(tradeId);
         if (!isTradeInPaymentReceiptConfirmedStateAndPhase.test(trade)) {
-            fail(format("INVALID_PHASE for {}'s trade %s in STATE=%s PHASE=%s, cannot confirm payment received.",
+            fail(format("INVALID_PHASE for %s's trade %s in STATE=%s PHASE=%s, cannot confirm payment received.",
                     userName,
                     trade.getShortId(),
                     trade.getState(),
