@@ -24,8 +24,8 @@ import static bisq.cli.table.builder.TableType.CLOSED_TRADES_TBL;
 
 
 import bisq.cli.table.Table;
-import bisq.cli.table.column.MixedPriceColumn;
 
+@SuppressWarnings("ConstantConditions")
 class ClosedTradeTableBuilder extends AbstractTradeListBuilder {
 
     ClosedTradeTableBuilder(List<?> protos) {
@@ -37,10 +37,10 @@ class ClosedTradeTableBuilder extends AbstractTradeListBuilder {
         return new Table(colTradeId,
                 colCreateDate.asStringColumn(),
                 colMarket,
-                colPrice.asStringColumn(),
+                colPrice.justify(),
                 colPriceDeviation.justify(),
-                colAmountInBtc.asStringColumn(),
-                colMixedAmount.asStringColumn(),
+                colAmount.asStringColumn(),
+                colMixedAmount.justify(),
                 colCurrency,
                 colMinerTxFee.asStringColumn(),
                 colMixedTradeFee.asStringColumn(),
@@ -51,14 +51,14 @@ class ClosedTradeTableBuilder extends AbstractTradeListBuilder {
     }
 
     private void populateColumns() {
-        trades.stream().forEachOrdered(t -> {
+        trades.forEach(t -> {
             colTradeId.addRow(t.getTradeId());
             colCreateDate.addRow(t.getDate());
             colMarket.addRow(toMarket.apply(t));
-            ((MixedPriceColumn) colPrice).addRow(t.getTradePrice(), isFiatTrade.test(t));
+            colPrice.addRow(t.getTradePrice());
             colPriceDeviation.addRow(toPriceDeviation.apply(t));
-            colAmountInBtc.addRow(t.getTradeAmountAsLong());
-            colMixedAmount.addRow(t.getTradeVolume(), toDisplayedVolumePrecision.apply(t));
+            colAmount.addRow(t.getTradeAmountAsLong());
+            colMixedAmount.addRow(t.getTradeVolume());
             colCurrency.addRow(toPaymentCurrencyCode.apply(t));
             colMinerTxFee.addRow(toMyMinerTxFee.apply(t));
 

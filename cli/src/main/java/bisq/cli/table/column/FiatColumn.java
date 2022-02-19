@@ -22,21 +22,16 @@ import java.util.stream.IntStream;
 import static bisq.cli.CurrencyFormat.formatFiatVolume;
 import static bisq.cli.CurrencyFormat.formatPrice;
 import static bisq.cli.table.column.Column.JUSTIFICATION.RIGHT;
-import static bisq.cli.table.column.FiatColumn.DISPLAY_MODE.PRICE;
-import static bisq.cli.table.column.FiatColumn.DISPLAY_MODE.TRIGGER_PRICE;
+import static bisq.cli.table.column.FiatColumn.DISPLAY_MODE.FIAT_PRICE;
 
 /**
- * For displaying fiat values as volume, price, or optional trigger price
- * with appropriate precision.
+ * For displaying fiat volume or price with appropriate precision.
  */
 public class FiatColumn extends LongColumn {
 
     public enum DISPLAY_MODE {
-        PRICE,
-        @Deprecated
-        TRIGGER_PRICE,
-        @Deprecated
-        VOLUME
+        FIAT_PRICE,
+        FIAT_VOLUME
     }
 
     private final DISPLAY_MODE displayMode;
@@ -44,7 +39,7 @@ public class FiatColumn extends LongColumn {
     // The default FiatColumn JUSTIFICATION is RIGHT.
     // The default FiatColumn DISPLAY_MODE is PRICE.
     public FiatColumn(String name) {
-        this(name, RIGHT, PRICE);
+        this(name, RIGHT, FIAT_PRICE);
     }
 
     public FiatColumn(String name, DISPLAY_MODE displayMode) {
@@ -62,11 +57,7 @@ public class FiatColumn extends LongColumn {
     public void addRow(Long value) {
         rows.add(value);
 
-        String s;
-        if (displayMode.equals(TRIGGER_PRICE))
-            s = value > 0 ? formatPrice(value) : "";
-        else
-            s = displayMode.equals(PRICE) ? formatPrice(value) : formatFiatVolume(value);
+        String s = displayMode.equals(FIAT_PRICE) ? formatPrice(value) : formatFiatVolume(value);
 
         stringColumn.addRow(s);
 

@@ -45,8 +45,3 @@ abstract class AbstractTableBuilder {
 
     public abstract Table build();
 }
-
-/*
-            var currencyCode = isFiatOffer.test(o);
-
- */

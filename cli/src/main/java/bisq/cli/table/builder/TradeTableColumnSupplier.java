@@ -36,24 +36,21 @@ import static bisq.cli.table.builder.TableType.CLOSED_TRADES_TBL;
 import static bisq.cli.table.builder.TableType.FAILED_TRADES_TBL;
 import static bisq.cli.table.builder.TableType.OPEN_TRADES_TBL;
 import static bisq.cli.table.builder.TableType.TRADE_DETAIL_TBL;
-import static bisq.cli.table.column.AltcoinColumn.DISPLAY_MODE.ALTCOIN_OFFER_VOLUME;
+import static bisq.cli.table.column.AltcoinVolumeColumn.DISPLAY_MODE.ALTCOIN_VOLUME;
+import static bisq.cli.table.column.AltcoinVolumeColumn.DISPLAY_MODE.BSQ_VOLUME;
 import static bisq.cli.table.column.Column.JUSTIFICATION.LEFT;
 import static bisq.cli.table.column.Column.JUSTIFICATION.RIGHT;
-import static bisq.cli.table.column.FiatColumn.DISPLAY_MODE.VOLUME;
 import static java.lang.String.format;
 
 
 
-import bisq.cli.table.column.AltcoinColumn;
+import bisq.cli.table.column.AltcoinVolumeColumn;
 import bisq.cli.table.column.BooleanColumn;
 import bisq.cli.table.column.BtcColumn;
 import bisq.cli.table.column.Column;
-import bisq.cli.table.column.FiatColumn;
 import bisq.cli.table.column.Iso8601DateTimeColumn;
 import bisq.cli.table.column.LongColumn;
-import bisq.cli.table.column.MixedPriceColumn;
 import bisq.cli.table.column.MixedTradeFeeColumn;
-import bisq.cli.table.column.MixedVolumeColumn;
 import bisq.cli.table.column.SatoshiColumn;
 import bisq.cli.table.column.StringColumn;
 
@@ -98,18 +95,16 @@ class TradeTableColumnSupplier {
             ? null
             : new StringColumn(COL_HEADER_MARKET);
 
-    private final Function<TradeInfo, Column<Long>> toDetailedPriceColumn = (t) -> {
+    private final Function<TradeInfo, Column<String>> toDetailedPriceColumn = (t) -> {
         String colHeader = isFiatTrade.test(t)
                 ? format(COL_HEADER_DETAILED_PRICE, t.getOffer().getCounterCurrencyCode())
                 : format(COL_HEADER_DETAILED_PRICE_OF_ALTCOIN, t.getOffer().getBaseCurrencyCode());
-        return isFiatTrade.test(t)
-                ? new FiatColumn(colHeader)
-                : new AltcoinColumn(colHeader);
+        return new StringColumn(colHeader, RIGHT);
     };
 
-    final Supplier<Column<Long>> priceColumn = () -> isTradeDetailTblBuilder.get()
+    final Supplier<Column<String>> priceColumn = () -> isTradeDetailTblBuilder.get()
             ? toDetailedPriceColumn.apply(firstRow.get())
-            : new MixedPriceColumn(COL_HEADER_PRICE);
+            : new StringColumn(COL_HEADER_PRICE, RIGHT);
 
     final Supplier<Column<String>> priceDeviationColumn = () -> isTradeDetailTblBuilder.get()
             ? null
@@ -122,18 +117,21 @@ class TradeTableColumnSupplier {
     private final Function<TradeInfo, Column<Long>> toDetailedAmountColumn = (t) -> {
         String headerCurrencyCode = t.getOffer().getBaseCurrencyCode();
         String colHeader = format(COL_HEADER_DETAILED_AMOUNT, headerCurrencyCode);
+        AltcoinVolumeColumn.DISPLAY_MODE displayMode = headerCurrencyCode.equals("BSQ") ? BSQ_VOLUME : ALTCOIN_VOLUME;
         return isFiatTrade.test(t)
                 ? new SatoshiColumn(colHeader)
-                : new AltcoinColumn(colHeader, ALTCOIN_OFFER_VOLUME);
+                : new AltcoinVolumeColumn(colHeader, displayMode);
     };
 
-    final Supplier<Column<Long>> amountInBtcColumn = () -> isTradeDetailTblBuilder.get()
+    // Can be fiat, btc or altcoin amount represented as longs.  Placing the decimal
+    // in the displayed string representation is done in the Column implementation.
+    final Supplier<Column<Long>> amountColumn = () -> isTradeDetailTblBuilder.get()
             ? toDetailedAmountColumn.apply(firstRow.get())
             : new BtcColumn(COL_HEADER_AMOUNT_IN_BTC);
 
-    final Supplier<MixedVolumeColumn> mixedAmountColumn = () -> isTradeDetailTblBuilder.get()
+    final Supplier<StringColumn> mixedAmountColumn = () -> isTradeDetailTblBuilder.get()
             ? null
-            : new MixedVolumeColumn(COL_HEADER_AMOUNT);
+            : new StringColumn(COL_HEADER_AMOUNT, RIGHT);
 
     final Supplier<Column<Long>> minerTxFeeColumn = () -> isTradeDetailTblBuilder.get() || isClosedTradeTblBuilder.get()
             ? new SatoshiColumn(COL_HEADER_TX_FEE)
@@ -248,14 +246,12 @@ class TradeTableColumnSupplier {
         }
     };
 
-    final Supplier<Column<Long>> tradeCostColumn = () -> {
+    final Supplier<Column<String>> tradeCostColumn = () -> {
         if (isTradeDetailTblBuilder.get()) {
             TradeInfo t = firstRow.get();
             String headerCurrencyCode = t.getOffer().getCounterCurrencyCode();
             String colHeader = format(COL_HEADER_TRADE_BUYER_COST, headerCurrencyCode);
-            return isFiatTrade.test(t)
-                    ? new FiatColumn(colHeader, VOLUME)
-                    : new SatoshiColumn(colHeader);
+            return new StringColumn(colHeader, RIGHT);
         } else {
             return null;
         }

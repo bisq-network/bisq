@@ -24,11 +24,11 @@ import static bisq.cli.table.builder.TableType.OPEN_TRADES_TBL;
 
 
 import bisq.cli.table.Table;
-import bisq.cli.table.column.MixedPriceColumn;
 
 /**
  * Builds a {@code bisq.cli.table.Table} from a list of {@code bisq.proto.grpc.TradeInfo} objects.
  */
+@SuppressWarnings("ConstantConditions")
 class OpenTradeTableBuilder extends AbstractTradeListBuilder {
 
     OpenTradeTableBuilder(List<?> protos) {
@@ -40,22 +40,22 @@ class OpenTradeTableBuilder extends AbstractTradeListBuilder {
         return new Table(colTradeId,
                 colCreateDate.asStringColumn(),
                 colMarket,
-                colPrice.asStringColumn(),
-                colAmountInBtc.asStringColumn(),
-                colMixedAmount.asStringColumn(),
+                colPrice.justify(),
+                colAmount.asStringColumn(),
+                colMixedAmount.justify(),
                 colCurrency,
                 colPaymentMethod,
                 colRole);
     }
 
     private void populateColumns() {
-        trades.stream().forEachOrdered(t -> {
+        trades.forEach(t -> {
             colTradeId.addRow(t.getTradeId());
             colCreateDate.addRow(t.getDate());
             colMarket.addRow(toMarket.apply(t));
-            ((MixedPriceColumn) colPrice).addRow(t.getTradePrice(), isFiatTrade.test(t));
-            colAmountInBtc.addRow(t.getTradeAmountAsLong());
-            colMixedAmount.addRow(t.getTradeVolume(), toDisplayedVolumePrecision.apply(t));
+            colPrice.addRow(t.getTradePrice());
+            colAmount.addRow(t.getTradeAmountAsLong());
+            colMixedAmount.addRow(t.getTradeVolume());
             colCurrency.addRow(toPaymentCurrencyCode.apply(t));
             colPaymentMethod.addRow(t.getOffer().getPaymentMethodShortName());
             colRole.addRow(t.getRole());
