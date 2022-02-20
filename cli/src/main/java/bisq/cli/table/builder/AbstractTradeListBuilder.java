@@ -21,7 +21,6 @@ import bisq.proto.grpc.ContractInfo;
 import bisq.proto.grpc.TradeInfo;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 import java.util.List;
 import java.util.function.Function;
@@ -305,25 +304,4 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
             return "";
         }
     };
-
-    public static double roundDouble(double value, int precision) {
-        return roundDouble(value, precision, RoundingMode.HALF_UP);
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    public static double roundDouble(double value, int precision, RoundingMode roundingMode) {
-        if (precision < 0)
-            throw new IllegalArgumentException();
-        if (!Double.isFinite(value))
-            throw new IllegalArgumentException("Expected a finite double, but found " + value);
-
-        try {
-            BigDecimal bd = BigDecimal.valueOf(value);
-            bd = bd.setScale(precision, roundingMode);
-            return bd.doubleValue();
-        } catch (Throwable t) {
-            t.printStackTrace(); // TODO throw pretty exception for CLI console
-            return 0;
-        }
-    }
 }
