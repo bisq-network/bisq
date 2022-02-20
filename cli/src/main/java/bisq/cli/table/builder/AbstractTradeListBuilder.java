@@ -35,6 +35,7 @@ import static bisq.cli.CurrencyFormat.formatSatoshis;
 import static bisq.cli.table.builder.TableBuilderConstants.COL_HEADER_BUYER_DEPOSIT;
 import static bisq.cli.table.builder.TableBuilderConstants.COL_HEADER_SELLER_DEPOSIT;
 import static bisq.cli.table.builder.TableType.TRADE_DETAIL_TBL;
+import static java.lang.String.format;
 import static protobuf.OfferDirection.SELL;
 
 
@@ -213,10 +214,9 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
                     ? t.getOffer().getCounterCurrencyCode()
                     : t.getOffer().getBaseCurrencyCode();
 
-
     protected final Function<TradeInfo, String> toPriceDeviation = (t) ->
             t.getOffer().getUseMarketBasedPrice()
-                    ? t.getOffer().getMarketPriceMarginPct() + "%"
+                    ? format("%.2f%s", t.getOffer().getMarketPriceMarginPct(), "%")
                     : "N/A";
 
     protected final Function<TradeInfo, Long> toMyMinerTxFee = (t) -> {
