@@ -276,7 +276,7 @@ class CoreOffersService {
                              double marketPriceMargin,
                              long amountAsLong,
                              long minAmountAsLong,
-                             double buyerSecurityDeposit,
+                             double buyerSecurityDepositPct,
                              String triggerPrice,
                              String paymentAccountId,
                              String makerFeeCurrencyCode,
@@ -296,6 +296,20 @@ class CoreOffersService {
         Coin amount = Coin.valueOf(amountAsLong);
         Coin minAmount = Coin.valueOf(minAmountAsLong);
         Coin useDefaultTxFee = Coin.ZERO;
+
+        // Almost ready to call createOfferService.createAndGetOffer(), but first:
+        //
+        // For the buyer security deposit parameter, API clients pass a double as a
+        // percent literal, e.g., #.## (%), where "1.00 means 1% of the trade amount".
+        // Desktop (UI) clients convert the percent literal string input before passing
+        // a representation of a pct as a decimal, e.g., 0.##.
+        // See bisq.desktop.main.offer.bisq_v1.MutableOfferDataModel, where
+        // "Pct value of buyer security deposit, e.g., 0.01 means 1% of trade amount."
+        //
+        // The API client's percent literal is transformed now, to make sure the double
+        // passed into createOfferService.createAndGetOffer() is correctly scaled.
+        double scaledBuyerSecurityDepositPct = exactMultiply(buyerSecurityDepositPct, 0.01);
+
         Offer offer = createOfferService.createAndGetOffer(offerId,
                 direction,
                 upperCaseCurrencyCode,
@@ -305,7 +319,7 @@ class CoreOffersService {
                 useDefaultTxFee,
                 useMarketBasedPrice,
                 exactMultiply(marketPriceMargin, 0.01),
-                buyerSecurityDeposit,
+                scaledBuyerSecurityDepositPct,
                 paymentAccount);
 
         verifyPaymentAccountIsValidForNewOffer(offer, paymentAccount);
@@ -314,7 +328,7 @@ class CoreOffersService {
         boolean useSavingsWallet = true;
         //noinspection ConstantConditions
         placeOffer(offer,
-                buyerSecurityDeposit,
+                scaledBuyerSecurityDepositPct,
                 triggerPrice,
                 useSavingsWallet,
                 transaction -> resultHandler.accept(offer));
@@ -383,13 +397,13 @@ class CoreOffersService {
     }
 
     private void placeOffer(Offer offer,
-                            double buyerSecurityDeposit,
+                            double buyerSecurityDepositPct,
                             String triggerPrice,
                             boolean useSavingsWallet,
                             Consumer<Transaction> resultHandler) {
         var triggerPriceAsLong = getMarketPriceAsLong(triggerPrice, offer.getCurrencyCode());
         openOfferManager.placeOffer(offer,
-                buyerSecurityDeposit,
+                buyerSecurityDepositPct,
                 useSavingsWallet,
                 triggerPriceAsLong,
                 resultHandler::accept,

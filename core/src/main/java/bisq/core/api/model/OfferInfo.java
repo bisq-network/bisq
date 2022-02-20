@@ -31,6 +31,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import static bisq.common.util.MathUtils.exactMultiply;
 import static bisq.core.util.PriceUtil.reformatMarketPrice;
 import static bisq.core.util.VolumeUtil.formatVolume;
 import static java.util.Objects.requireNonNull;
@@ -48,7 +49,7 @@ public class OfferInfo implements Payload {
     private final String direction;
     private final String price;
     private final boolean useMarketBasedPrice;
-    private final double marketPriceMargin;
+    private final double marketPriceMarginPct;
     private final long amount;
     private final long minAmount;
     private final String volume;
@@ -83,7 +84,7 @@ public class OfferInfo implements Payload {
         this.direction = builder.getDirection();
         this.price = builder.getPrice();
         this.useMarketBasedPrice = builder.isUseMarketBasedPrice();
-        this.marketPriceMargin = builder.getMarketPriceMargin();
+        this.marketPriceMarginPct = builder.getMarketPriceMarginPct();
         this.amount = builder.getAmount();
         this.minAmount = builder.getMinAmount();
         this.volume = builder.getVolume();
@@ -138,9 +139,9 @@ public class OfferInfo implements Payload {
         Optional<Price> optionalTriggerPrice = openOffer.getTriggerPrice() > 0
                 ? Optional.of(Price.valueOf(currencyCode, openOffer.getTriggerPrice()))
                 : Optional.empty();
-        var preciseTriggerPrice = optionalTriggerPrice.isPresent()
-                ? reformatMarketPrice(optionalTriggerPrice.get().toPlainString(), currencyCode)
-                : "0";
+        var preciseTriggerPrice = optionalTriggerPrice
+                .map(value -> reformatMarketPrice(value.toPlainString(), currencyCode))
+                .orElse("0");
         return getBuilder(openOffer.getOffer(), true)
                 .withTriggerPrice(preciseTriggerPrice)
                 .withIsActivated(!openOffer.isDeactivated())
@@ -148,10 +149,13 @@ public class OfferInfo implements Payload {
     }
 
     private static OfferInfoBuilder getBuilder(Offer offer, boolean isMyOffer) {
+        // OfferInfo protos are passed to API client, and some field
+        // values are converted to displayable, unambiguous form.
         var currencyCode = offer.getCurrencyCode();
         var preciseOfferPrice = reformatMarketPrice(
                 requireNonNull(offer.getPrice()).toPlainString(),
                 currencyCode);
+        var marketPriceMarginAsPctLiteral = exactMultiply(offer.getMarketPriceMargin(), 100);
         var roundedVolume = formatVolume(requireNonNull(offer.getVolume()));
         var roundedMinVolume = formatVolume(requireNonNull(offer.getMinVolume()));
         return new OfferInfoBuilder()
@@ -159,7 +163,7 @@ public class OfferInfo implements Payload {
                 .withDirection(offer.getDirection().name())
                 .withPrice(preciseOfferPrice)
                 .withUseMarketBasedPrice(offer.isUseMarketBasedPrice())
-                .withMarketPriceMargin(offer.getMarketPriceMargin())
+                .withMarketPriceMarginPct(marketPriceMarginAsPctLiteral)
                 .withAmount(offer.getAmount().value)
                 .withMinAmount(offer.getMinAmount().value)
                 .withVolume(roundedVolume)
@@ -207,7 +211,7 @@ public class OfferInfo implements Payload {
                 .setDirection(direction)
                 .setPrice(price)
                 .setUseMarketBasedPrice(useMarketBasedPrice)
-                .setMarketPriceMargin(marketPriceMargin)
+                .setMarketPriceMarginPct(marketPriceMarginPct)
                 .setAmount(amount)
                 .setMinAmount(minAmount)
                 .setVolume(volume == null ? "0" : volume)
@@ -244,7 +248,7 @@ public class OfferInfo implements Payload {
                 .withDirection(proto.getDirection())
                 .withPrice(proto.getPrice())
                 .withUseMarketBasedPrice(proto.getUseMarketBasedPrice())
-                .withMarketPriceMargin(proto.getMarketPriceMargin())
+                .withMarketPriceMarginPct(proto.getMarketPriceMarginPct())
                 .withAmount(proto.getAmount())
                 .withMinAmount(proto.getMinAmount())
                 .withVolume(proto.getVolume())
