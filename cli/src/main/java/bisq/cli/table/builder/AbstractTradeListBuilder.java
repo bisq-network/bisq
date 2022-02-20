@@ -20,8 +20,6 @@ package bisq.cli.table.builder;
 import bisq.proto.grpc.ContractInfo;
 import bisq.proto.grpc.TradeInfo;
 
-import java.text.DecimalFormat;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
@@ -215,9 +213,10 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
                     ? t.getOffer().getCounterCurrencyCode()
                     : t.getOffer().getBaseCurrencyCode();
 
+
     protected final Function<TradeInfo, String> toPriceDeviation = (t) ->
             t.getOffer().getUseMarketBasedPrice()
-                    ? formatToPercent(t.getOffer().getMarketPriceMarginPct())
+                    ? t.getOffer().getMarketPriceMarginPct() + "%"
                     : "N/A";
 
     protected final Function<TradeInfo, Long> toMyMinerTxFee = (t) -> {
@@ -306,19 +305,6 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
             return "";
         }
     };
-
-    // TODO Move to bisq/cli/CurrencyFormat.java ?
-
-    public static String formatToPercent(double value) {
-        DecimalFormat decimalFormat = new DecimalFormat("#.##");
-        decimalFormat.setMinimumFractionDigits(2);
-        decimalFormat.setMaximumFractionDigits(2);
-        return formatToPercent(value, decimalFormat);
-    }
-
-    public static String formatToPercent(double value, DecimalFormat decimalFormat) {
-        return decimalFormat.format(roundDouble(value * 100.0, 2)).replace(",", ".") + "%";
-    }
 
     public static double roundDouble(double value, int precision) {
         return roundDouble(value, precision, RoundingMode.HALF_UP);
