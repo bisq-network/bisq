@@ -364,7 +364,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 peer,
                 errorMessage -> {
                     if (takeOfferRequestErrorMessageHandler != null)
-                        takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
+                        takeOfferRequestErrorMessageHandler.handleErrorMessage(
+                                errorMessage + Res.get("notification.bsqSwap.errorHelp"));
                 });
 
         requestPersistence();

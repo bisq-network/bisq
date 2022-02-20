@@ -378,8 +378,8 @@ public class BsqSwapTakeOfferView extends BsqSwapOfferView<BsqSwapTakeOfferViewM
             if (newValue == null) {
                 return;
             }
-            new Popup().error(Res.get("takeOffer.error.message", model.errorMessage.get()) + "\n\n" +
-                            Res.get("popup.error.tryRestart"))
+            new Popup().warning(Res.get("takeOffer.error.message", model.errorMessage.get()) +
+                            Res.get("notification.bsqSwap.errorHelp"))
                     .onClose(() -> {
                         model.resetErrorMessage();
                         model.dataModel.removeOffer();
