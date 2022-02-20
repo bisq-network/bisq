@@ -44,7 +44,6 @@ import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.bobdaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
 import static bisq.cli.table.builder.TableType.OFFER_TBL;
-import static bisq.common.util.MathUtils.exactMultiply;
 import static java.lang.String.format;
 import static java.lang.System.out;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -78,29 +77,28 @@ public abstract class AbstractOfferTest extends MethodTest {
 
     @BeforeAll
     public static void setUp() {
+        setUp(false);
+    }
+
+    public static void setUp(boolean startSupportingAppsInDebugMode) {
         startSupportingApps(true,
-                false,
+                startSupportingAppsInDebugMode,
                 bitcoind,
                 seednode,
                 arbdaemon,
                 alicedaemon,
                 bobdaemon);
-
         initSwapPaymentAccounts();
         createLegacyBsqPaymentAccounts();
     }
 
-    // Mkt Price Margin value of offer returned from server is scaled down by 10^-2.
-    protected final Function<Double, Double> scaledDownMktPriceMargin = (mktPriceMargin) ->
-            exactMultiply(mktPriceMargin, 0.01);
-
-    protected final Function<OfferInfo, String> toOfferTable = (offer) ->
+    protected static final Function<OfferInfo, String> toOfferTable = (offer) ->
             new TableBuilder(OFFER_TBL, offer).build().toString();
 
-    protected final Function<List<OfferInfo>, String> toOffersTable = (offers) ->
+    protected static final Function<List<OfferInfo>, String> toOffersTable = (offers) ->
             new TableBuilder(OFFER_TBL, offers).build().toString();
 
-    protected String calcPriceAsString(double base, double delta, int precision) {
+    protected static String calcPriceAsString(double base, double delta, int precision) {
         var mathContext = new MathContext(precision);
         var priceAsBigDecimal = new BigDecimal(Double.toString(base), mathContext)
                 .add(new BigDecimal(Double.toString(delta), mathContext))

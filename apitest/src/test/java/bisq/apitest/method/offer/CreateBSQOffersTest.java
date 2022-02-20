@@ -32,7 +32,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.ApiTestConfig.BTC;
-import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -63,7 +62,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
                 100_000_000L,
                 100_000_000L,
                 "0.00005",   // FIXED PRICE IN BTC (satoshis) FOR 1 BSQ
-                getDefaultBuyerSecurityDepositAsPercent(),
+                defaultBuyerSecurityDepositPct.get(),
                 alicesLegacyBsqAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
         log.debug("Sell BSQ (Buy BTC) Offer:\n{}", toOfferTable.apply(newOffer));
@@ -114,7 +113,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
                 100_000_000L,
                 100_000_000L,
                 "0.00005",   // FIXED PRICE IN BTC (satoshis) FOR 1 BSQ
-                getDefaultBuyerSecurityDepositAsPercent(),
+                defaultBuyerSecurityDepositPct.get(),
                 alicesLegacyBsqAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
         log.debug("SELL 20K BSQ Offer:\n{}", toOfferTable.apply(newOffer));
@@ -165,7 +164,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
                 10_000_000L,
                 5_000_000L,
                 "0.00005",   // FIXED PRICE IN BTC sats FOR 1 BSQ
-                getDefaultBuyerSecurityDepositAsPercent(),
+                defaultBuyerSecurityDepositPct.get(),
                 alicesLegacyBsqAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
         log.debug("BUY 1-2K BSQ Offer:\n{}", toOfferTable.apply(newOffer));
@@ -216,7 +215,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
                 50_000_000L,
                 25_000_000L,
                 "0.00005",   // FIXED PRICE IN BTC sats FOR 1 BSQ
-                getDefaultBuyerSecurityDepositAsPercent(),
+                defaultBuyerSecurityDepositPct.get(),
                 alicesLegacyBsqAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
         log.debug("SELL 5-10K BSQ Offer:\n{}", toOfferTable.apply(newOffer));
@@ -280,6 +279,6 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         // Extra time is needed for the OfferUtils#isBsqForMakerFeeAvailable, which
         // can sometimes return an incorrect false value if the BsqWallet's
         // available confirmed balance is temporarily = zero during BSQ offer prep.
-        genBtcBlocksThenWait(1, 5000);
+        genBtcBlocksThenWait(1, 5_000);
     }
 }

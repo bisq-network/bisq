@@ -31,7 +31,6 @@ import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.ApiTestConfig.BTC;
 import static bisq.apitest.config.ApiTestConfig.EUR;
 import static bisq.apitest.config.ApiTestConfig.USD;
-import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -55,7 +54,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
                 10_000_000L,
                 10_000_000L,
                 "36000",
-                getDefaultBuyerSecurityDepositAsPercent(),
+                defaultBuyerSecurityDepositPct.get(),
                 audAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE);
         log.debug("Offer #1:\n{}", toOfferTable.apply(newOffer));
@@ -104,7 +103,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
                 10_000_000L,
                 10_000_000L,
                 "30000.1234",
-                getDefaultBuyerSecurityDepositAsPercent(),
+                defaultBuyerSecurityDepositPct.get(),
                 usdAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE);
         log.debug("Offer #2:\n{}", toOfferTable.apply(newOffer));
@@ -153,7 +152,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
                 10_000_000L,
                 5_000_000L,
                 "29500.1234",
-                getDefaultBuyerSecurityDepositAsPercent(),
+                defaultBuyerSecurityDepositPct.get(),
                 eurAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE);
         log.debug("Offer #3:\n{}", toOfferTable.apply(newOffer));

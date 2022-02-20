@@ -49,7 +49,6 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
-import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static bisq.core.trade.model.bisq_v1.Trade.Phase.PAYOUT_PUBLISHED;
 import static bisq.core.trade.model.bisq_v1.Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG;
 import static bisq.core.trade.model.bisq_v1.Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG;
@@ -94,7 +93,7 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
                     1_000_000L,
                     1_000_000L, // min-amount = amount
                     0.00,
-                    getDefaultBuyerSecurityDepositAsPercent(),
+                    defaultBuyerSecurityDepositPct.get(),
                     alicesPaymentAccount.getId(),
                     TRADE_FEE_CURRENCY_CODE,
                     NO_TRIGGER_PRICE);

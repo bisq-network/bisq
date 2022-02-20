@@ -33,7 +33,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.ApiTestConfig.BTC;
 import static bisq.apitest.config.ApiTestConfig.XMR;
-import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -66,7 +65,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
                 100_000_000L,
                 75_000_000L,
                 "0.005",   // FIXED PRICE IN BTC (satoshis) FOR 1 XMR
-                getDefaultBuyerSecurityDepositAsPercent(),
+                defaultBuyerSecurityDepositPct.get(),
                 alicesXmrAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
         log.debug("Sell XMR (Buy BTC) offer:\n{}", toOfferTable.apply(newOffer));
@@ -113,7 +112,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
                 100_000_000L,
                 50_000_000L,
                 "0.005",   // FIXED PRICE IN BTC (satoshis) FOR 1 XMR
-                getDefaultBuyerSecurityDepositAsPercent(),
+                defaultBuyerSecurityDepositPct.get(),
                 alicesXmrAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
         log.debug("Buy XMR (Sell BTC) offer:\n{}", toOfferTable.apply(newOffer));
@@ -162,7 +161,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
                 100_000_000L,
                 75_000_000L,
                 priceMarginPctInput,
-                getDefaultBuyerSecurityDepositAsPercent(),
+                defaultBuyerSecurityDepositPct.get(),
                 alicesXmrAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE,
                 triggerPrice);
@@ -218,7 +217,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
                 100_000_000L,
                 50_000_000L,
                 priceMarginPctInput,
-                getDefaultBuyerSecurityDepositAsPercent(),
+                defaultBuyerSecurityDepositPct.get(),
                 alicesXmrAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE,
                 NO_TRIGGER_PRICE);

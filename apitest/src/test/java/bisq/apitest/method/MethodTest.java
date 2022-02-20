@@ -30,7 +30,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import java.math.BigDecimal;
+
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -42,6 +45,7 @@ import static bisq.apitest.config.ApiTestConfig.BTC;
 import static bisq.apitest.config.ApiTestRateMeterInterceptorConfig.getTestRateMeterInterceptorConfig;
 import static bisq.cli.table.builder.TableType.BSQ_BALANCE_TBL;
 import static bisq.cli.table.builder.TableType.BTC_BALANCE_TBL;
+import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
@@ -161,6 +165,17 @@ public class MethodTest extends ApiTestCase {
         var paymentAccount = grpcClient.createPaymentAccount(jsonString);
         return bisq.core.payment.PaymentAccount.fromProto(paymentAccount, CORE_PROTO_RESOLVER);
     }
+
+    public static final Supplier<Double> defaultBuyerSecurityDepositPct = () -> {
+        var defaultPct = BigDecimal.valueOf(getDefaultBuyerSecurityDepositAsPercent());
+        if (defaultPct.precision() != 2)
+            throw new IllegalStateException(format(
+                    "Unexpected decimal precision, expected 2 but actual is %d%n."
+                            + "Check for changes to Restrictions.getDefaultBuyerSecurityDepositAsPercent()",
+                    defaultPct.precision()));
+
+        return defaultPct.movePointRight(2).doubleValue();
+    };
 
     public static String formatBalancesTbls(BalancesInfo allBalances) {
         StringBuilder balances = new StringBuilder(BTC).append("\n");
