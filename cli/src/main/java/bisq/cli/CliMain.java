@@ -344,8 +344,8 @@ public class CliMain {
                     var minAmount = toSatoshis(opts.getMinAmount());
                     var useMarketBasedPrice = opts.isUsingMktPriceMargin();
                     var fixedPrice = opts.getFixedPrice();
-                    var marketPriceMargin = opts.getMktPriceMarginAsBigDecimal();
-                    var securityDepositPct = isSwap ? 0.00 : opts.getSecurityDepositPct();
+                    var marketPriceMarginPct = opts.getMktPriceMarginPct();
+                    var securityDepositPct = isSwap ? 0.00d : opts.getSecurityDepositPct();
                     var makerFeeCurrencyCode = opts.getMakerFeeCurrencyCode();
                     var triggerPrice = "0"; // Cannot be defined until the new offer is added to book.
                     OfferInfo offer;
@@ -361,7 +361,7 @@ public class CliMain {
                                 minAmount,
                                 useMarketBasedPrice,
                                 fixedPrice,
-                                marketPriceMargin.doubleValue(),
+                                marketPriceMarginPct,
                                 securityDepositPct,
                                 paymentAcctId,
                                 makerFeeCurrencyCode,

@@ -126,7 +126,7 @@ public class OptionParsersTest {
                 "--" + OPT_DIRECTION + "=" + "BUY",
                 "--" + OPT_CURRENCY_CODE + "=" + "EUR",
                 "--" + OPT_AMOUNT + "=" + "0.125",
-                "--" + OPT_MKT_PRICE_MARGIN + "=" + "0.0",
+                "--" + OPT_MKT_PRICE_MARGIN + "=" + "3.15",
                 "--" + OPT_SECURITY_DEPOSIT + "=" + "25.0"
         };
         CreateOfferOptionParser parser = new CreateOfferOptionParser(args).parse();
@@ -134,7 +134,7 @@ public class OptionParsersTest {
         assertEquals("BUY", parser.getDirection());
         assertEquals("EUR", parser.getCurrencyCode());
         assertEquals("0.125", parser.getAmount());
-        assertEquals("0.0", parser.getMktPriceMargin());
+        assertEquals(3.15d, parser.getMktPriceMarginPct());
         assertEquals(25.0, parser.getSecurityDepositPct());
     }
 
