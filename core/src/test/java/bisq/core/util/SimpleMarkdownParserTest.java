@@ -28,4 +28,16 @@ public class SimpleMarkdownParserTest {
         SimpleMarkdownParser.TextNode item2 = (SimpleMarkdownParser.TextNode) result.get(2);
         assertEquals(". \n\nIf you have any problems you can try to contact the trade peer in the trade chat.", item2.getText());
     }
+
+    @Test
+    public void testParseWithBrackets() {
+        String text = "Take a look (here) for more";
+
+        List<? extends SimpleMarkdownParser.MarkdownNode> result = SimpleMarkdownParser.parse(text);
+
+        assertEquals(1, result.size());
+
+        SimpleMarkdownParser.TextNode item0 = (SimpleMarkdownParser.TextNode) result.get(0);
+        assertEquals("Take a look (here) for more", item0.getText());
+    }
 }
