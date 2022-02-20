@@ -22,14 +22,11 @@ import bisq.proto.grpc.EditOfferRequest;
 
 import joptsimple.OptionSpec;
 
-import java.math.BigDecimal;
-
 import static bisq.cli.opts.OptLabel.OPT_ENABLE;
 import static bisq.cli.opts.OptLabel.OPT_FIXED_PRICE;
 import static bisq.cli.opts.OptLabel.OPT_MKT_PRICE_MARGIN;
 import static bisq.cli.opts.OptLabel.OPT_TRIGGER_PRICE;
 import static bisq.proto.grpc.EditOfferRequest.EditType.*;
-import static java.lang.String.format;
 
 
 
@@ -45,7 +42,7 @@ public class EditOfferOptionParser extends OfferIdOptionParser implements Method
             .withOptionalArg()
             .defaultsTo("0");
 
-    final OptionSpec<String> mktPriceMarginOpt = parser.accepts(OPT_MKT_PRICE_MARGIN,
+    final OptionSpec<String> mktPriceMarginPctOpt = parser.accepts(OPT_MKT_PRICE_MARGIN,
                     "market btc price margin (%)")
             .withOptionalArg()
             .defaultsTo("0.00");
@@ -75,7 +72,7 @@ public class EditOfferOptionParser extends OfferIdOptionParser implements Method
         // Super class will short-circuit parsing if help option is present.
 
         boolean hasNoEditDetails = !options.has(fixedPriceOpt)
-                && !options.has(mktPriceMarginOpt)
+                && !options.has(mktPriceMarginPctOpt)
                 && !options.has(triggerPriceOpt)
                 && !options.has(enableOpt);
         if (hasNoEditDetails)
@@ -92,7 +89,7 @@ public class EditOfferOptionParser extends OfferIdOptionParser implements Method
 
             // A single enable opt is a valid opt combo.
             boolean enableOptIsOnlyOpt = !options.has(fixedPriceOpt)
-                    && !options.has(mktPriceMarginOpt)
+                    && !options.has(mktPriceMarginPctOpt)
                     && !options.has(triggerPriceOpt);
             if (enableOptIsOnlyOpt) {
                 offerEditType = ACTIVATION_STATE_ONLY;
@@ -107,7 +104,7 @@ public class EditOfferOptionParser extends OfferIdOptionParser implements Method
             String fixedPriceAsString = options.valueOf(fixedPriceOpt);
             verifyStringIsValidDouble(fixedPriceAsString);
 
-            boolean fixedPriceOptIsOnlyOpt = !options.has(mktPriceMarginOpt)
+            boolean fixedPriceOptIsOnlyOpt = !options.has(mktPriceMarginPctOpt)
                     && !options.has(triggerPriceOpt)
                     && !options.has(enableOpt);
             if (fixedPriceOptIsOnlyOpt) {
@@ -116,7 +113,7 @@ public class EditOfferOptionParser extends OfferIdOptionParser implements Method
             }
 
             boolean fixedPriceOptAndEnableOptAreOnlyOpts = options.has(enableOpt)
-                    && !options.has(mktPriceMarginOpt)
+                    && !options.has(mktPriceMarginPctOpt)
                     && !options.has(triggerPriceOpt);
             if (fixedPriceOptAndEnableOptAreOnlyOpts) {
                 offerEditType = FIXED_PRICE_AND_ACTIVATION_STATE;
@@ -124,15 +121,15 @@ public class EditOfferOptionParser extends OfferIdOptionParser implements Method
             }
         }
 
-        if (options.has(mktPriceMarginOpt)) {
-            if (valueNotSpecified.test(mktPriceMarginOpt))
+        if (options.has(mktPriceMarginPctOpt)) {
+            if (valueNotSpecified.test(mktPriceMarginPctOpt))
                 throw new IllegalArgumentException("no mkt price margin specified");
 
-            String priceMarginAsString = options.valueOf(mktPriceMarginOpt);
-            if (priceMarginAsString.isEmpty())
+            String priceMarginPctAsString = options.valueOf(mktPriceMarginPctOpt);
+            if (priceMarginPctAsString.isEmpty())
                 throw new IllegalArgumentException("no market price margin specified");
 
-            verifyStringIsValidDouble(priceMarginAsString);
+            verifyStringIsValidDouble(priceMarginPctAsString);
 
             boolean mktPriceMarginOptIsOnlyOpt = !options.has(triggerPriceOpt)
                     && !options.has(fixedPriceOpt)
@@ -160,7 +157,7 @@ public class EditOfferOptionParser extends OfferIdOptionParser implements Method
 
             verifyStringIsValidDouble(triggerPriceAsString);
 
-            boolean triggerPriceOptIsOnlyOpt = !options.has(mktPriceMarginOpt)
+            boolean triggerPriceOptIsOnlyOpt = !options.has(mktPriceMarginPctOpt)
                     && !options.has(fixedPriceOpt)
                     && !options.has(enableOpt);
             if (triggerPriceOptIsOnlyOpt) {
@@ -168,7 +165,7 @@ public class EditOfferOptionParser extends OfferIdOptionParser implements Method
                 return this;
             }
 
-            boolean triggerPriceOptAndEnableOptAreOnlyOpts = !options.has(mktPriceMarginOpt)
+            boolean triggerPriceOptAndEnableOptAreOnlyOpts = !options.has(mktPriceMarginPctOpt)
                     && !options.has(fixedPriceOpt)
                     && options.has(enableOpt);
             if (triggerPriceOptAndEnableOptAreOnlyOpts) {
@@ -177,18 +174,18 @@ public class EditOfferOptionParser extends OfferIdOptionParser implements Method
             }
         }
 
-        if (options.has(mktPriceMarginOpt) && options.has(fixedPriceOpt))
+        if (options.has(mktPriceMarginPctOpt) && options.has(fixedPriceOpt))
             throw new IllegalArgumentException("cannot specify market price margin and fixed price");
 
         if (options.has(fixedPriceOpt) && options.has(triggerPriceOpt))
             throw new IllegalArgumentException("trigger price cannot be set on fixed price offers");
 
-        if (options.has(mktPriceMarginOpt) && options.has(triggerPriceOpt) && !options.has(enableOpt)) {
+        if (options.has(mktPriceMarginPctOpt) && options.has(triggerPriceOpt) && !options.has(enableOpt)) {
             offerEditType = MKT_PRICE_MARGIN_AND_TRIGGER_PRICE;
             return this;
         }
 
-        if (options.has(mktPriceMarginOpt) && options.has(triggerPriceOpt) && options.has(enableOpt)) {
+        if (options.has(mktPriceMarginPctOpt) && options.has(triggerPriceOpt) && options.has(enableOpt)) {
             offerEditType = MKT_PRICE_MARGIN_AND_TRIGGER_PRICE_AND_ACTIVATION_STATE;
             return this;
         }
@@ -220,14 +217,14 @@ public class EditOfferOptionParser extends OfferIdOptionParser implements Method
                 || offerEditType.equals(MKT_PRICE_MARGIN_AND_ACTIVATION_STATE)
                 || offerEditType.equals(MKT_PRICE_MARGIN_AND_TRIGGER_PRICE)
                 || offerEditType.equals(MKT_PRICE_MARGIN_AND_TRIGGER_PRICE_AND_ACTIVATION_STATE)) {
-            return isUsingMktPriceMargin() ? options.valueOf(mktPriceMarginOpt) : "0.00";
+            return isUsingMktPriceMargin() ? options.valueOf(mktPriceMarginPctOpt) : "0.00";
         } else {
             return "0.00";
         }
     }
 
-    public BigDecimal getMktPriceMarginAsBigDecimal() {
-        return new BigDecimal(options.valueOf(mktPriceMarginOpt));
+    public double getMktPriceMarginPct() {
+        return Double.parseDouble(options.valueOf(mktPriceMarginPctOpt));
     }
 
     public boolean isUsingMktPriceMargin() {
@@ -259,13 +256,5 @@ public class EditOfferOptionParser extends OfferIdOptionParser implements Method
 
     public EditOfferRequest.EditType getOfferEditType() {
         return offerEditType;
-    }
-
-    private void verifyStringIsValidDouble(String string) {
-        try {
-            Double.valueOf(string);
-        } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException(format("%s is not a number", string));
-        }
     }
 }

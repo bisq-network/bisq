@@ -53,7 +53,7 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
             .withOptionalArg()
             .defaultsTo("0");
 
-    final OptionSpec<String> securityDepositOpt = parser.accepts(OPT_SECURITY_DEPOSIT, "maker security deposit (%)")
+    final OptionSpec<String> securityDepositPctOpt = parser.accepts(OPT_SECURITY_DEPOSIT, "maker security deposit (%)")
             .withRequiredArg();
 
     final OptionSpec<String> makerFeeCurrencyCodeOpt = parser.accepts(OPT_FEE_CURRENCY, "maker fee currency code (bsq|btc)")
@@ -95,7 +95,7 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
             if (options.has(mktPriceMarginOpt))
                 throw new IllegalArgumentException("cannot use a market price margin in bsq swap offer");
 
-            if (options.has(securityDepositOpt))
+            if (options.has(securityDepositPctOpt))
                 throw new IllegalArgumentException("cannot use a security deposit in bsq swap offer");
 
             if (!options.has(fixedPriceOpt) || options.valueOf(fixedPriceOpt).isEmpty())
@@ -114,8 +114,10 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
             if (options.has(fixedPriceOpt) && options.valueOf(fixedPriceOpt).isEmpty())
                 throw new IllegalArgumentException("no fixed price specified");
 
-            if (!options.has(securityDepositOpt) || options.valueOf(securityDepositOpt).isEmpty())
+            if (!options.has(securityDepositPctOpt) || options.valueOf(securityDepositPctOpt).isEmpty())
                 throw new IllegalArgumentException("no security deposit specified");
+            else
+                verifyStringIsValidDouble(options.valueOf(securityDepositPctOpt));
         }
 
         return this;
@@ -158,8 +160,8 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
         return options.has(fixedPriceOpt) ? options.valueOf(fixedPriceOpt) : "0.00";
     }
 
-    public String getSecurityDeposit() {
-        return options.valueOf(securityDepositOpt);
+    public double getSecurityDepositPct() {
+        return Double.valueOf(options.valueOf(securityDepositPctOpt));
     }
 
     public String getMakerFeeCurrencyCode() {

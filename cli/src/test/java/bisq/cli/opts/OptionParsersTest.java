@@ -135,7 +135,7 @@ public class OptionParsersTest {
         assertEquals("EUR", parser.getCurrencyCode());
         assertEquals("0.125", parser.getAmount());
         assertEquals("0.0", parser.getMktPriceMargin());
-        assertEquals("25.0", parser.getSecurityDeposit());
+        assertEquals(25.0, parser.getSecurityDepositPct());
     }
 
     // createoffer (bsq swap) opt parser tests

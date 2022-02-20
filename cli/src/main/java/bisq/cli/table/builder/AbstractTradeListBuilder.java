@@ -217,7 +217,7 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
 
     protected final Function<TradeInfo, String> toPriceDeviation = (t) ->
             t.getOffer().getUseMarketBasedPrice()
-                    ? formatToPercent(t.getOffer().getMarketPriceMargin())
+                    ? formatToPercent(t.getOffer().getMarketPriceMarginPct())
                     : "N/A";
 
     protected final Function<TradeInfo, Long> toMyMinerTxFee = (t) -> {

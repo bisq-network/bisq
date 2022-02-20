@@ -162,7 +162,7 @@ public final class GrpcClient {
                                             long amount,
                                             long minAmount,
                                             String fixedPrice,
-                                            double securityDeposit,
+                                            double securityDepositPct,
                                             String paymentAcctId,
                                             String makerFeeCurrencyCode) {
         return offersServiceRequest.createOffer(direction,
@@ -172,7 +172,7 @@ public final class GrpcClient {
                 false,
                 fixedPrice,
                 0.00,
-                securityDeposit,
+                securityDepositPct,
                 paymentAcctId,
                 makerFeeCurrencyCode,
                 "0" /* no trigger price */);
@@ -182,8 +182,8 @@ public final class GrpcClient {
                                                   String currencyCode,
                                                   long amount,
                                                   long minAmount,
-                                                  double marketPriceMargin,
-                                                  double securityDeposit,
+                                                  double marketPriceMarginPct,
+                                                  double securityDepositPct,
                                                   String paymentAcctId,
                                                   String makerFeeCurrencyCode,
                                                   String triggerPrice) {
@@ -193,8 +193,8 @@ public final class GrpcClient {
                 minAmount,
                 true,
                 "0",
-                marketPriceMargin,
-                securityDeposit,
+                marketPriceMarginPct,
+                securityDepositPct,
                 paymentAcctId,
                 makerFeeCurrencyCode,
                 triggerPrice);
@@ -206,8 +206,8 @@ public final class GrpcClient {
                                  long minAmount,
                                  boolean useMarketBasedPrice,
                                  String fixedPrice,
-                                 double marketPriceMargin,
-                                 double securityDeposit,
+                                 double marketPriceMarginPct,
+                                 double securityDepositPct,
                                  String paymentAcctId,
                                  String makerFeeCurrencyCode,
                                  String triggerPrice) {
@@ -217,8 +217,8 @@ public final class GrpcClient {
                 minAmount,
                 useMarketBasedPrice,
                 fixedPrice,
-                marketPriceMargin,
-                securityDeposit,
+                marketPriceMarginPct,
+                securityDepositPct,
                 paymentAcctId,
                 makerFeeCurrencyCode,
                 triggerPrice);
@@ -243,7 +243,7 @@ public final class GrpcClient {
     public void editOffer(String offerId,
                           String price,
                           boolean useMarketBasedPrice,
-                          double marketPriceMargin,
+                          double marketPriceMarginPct,
                           String triggerPrice,
                           int enable,
                           EditType editType) {
@@ -253,7 +253,7 @@ public final class GrpcClient {
         offersServiceRequest.editOffer(offerId,
                 price,
                 useMarketBasedPrice,
-                marketPriceMargin,
+                marketPriceMarginPct,
                 triggerPrice,
                 enable,
                 editType);

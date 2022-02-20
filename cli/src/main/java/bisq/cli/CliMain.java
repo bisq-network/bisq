@@ -43,7 +43,6 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.cli.CurrencyFormat.formatInternalFiatPrice;
 import static bisq.cli.CurrencyFormat.formatTxFeeRateInfo;
 import static bisq.cli.CurrencyFormat.toSatoshis;
-import static bisq.cli.CurrencyFormat.toSecurityDepositAsPct;
 import static bisq.cli.Method.*;
 import static bisq.cli.opts.OptLabel.*;
 import static bisq.cli.table.builder.TableType.*;
@@ -346,7 +345,7 @@ public class CliMain {
                     var useMarketBasedPrice = opts.isUsingMktPriceMargin();
                     var fixedPrice = opts.getFixedPrice();
                     var marketPriceMargin = opts.getMktPriceMarginAsBigDecimal();
-                    var securityDeposit = isSwap ? 0.00 : toSecurityDepositAsPct(opts.getSecurityDeposit());
+                    var securityDepositPct = isSwap ? 0.00 : opts.getSecurityDepositPct();
                     var makerFeeCurrencyCode = opts.getMakerFeeCurrencyCode();
                     var triggerPrice = "0"; // Cannot be defined until the new offer is added to book.
                     OfferInfo offer;
@@ -363,7 +362,7 @@ public class CliMain {
                                 useMarketBasedPrice,
                                 fixedPrice,
                                 marketPriceMargin.doubleValue(),
-                                securityDeposit,
+                                securityDepositPct,
                                 paymentAcctId,
                                 makerFeeCurrencyCode,
                                 triggerPrice);
@@ -387,14 +386,14 @@ public class CliMain {
                     var opts = new EditOfferOptionParser(args).parse();
                     var fixedPrice = opts.getFixedPrice();
                     var isUsingMktPriceMargin = opts.isUsingMktPriceMargin();
-                    var marketPriceMargin = opts.getMktPriceMarginAsBigDecimal();
+                    var marketPriceMarginPct = opts.getMktPriceMarginPct();
                     var triggerPrice = opts.getTriggerPrice();
                     var enable = opts.getEnableAsSignedInt();
                     var editOfferType = opts.getOfferEditType();
                     client.editOffer(offerId,
                             fixedPrice,
                             isUsingMktPriceMargin,
-                            marketPriceMargin.doubleValue(),
+                            marketPriceMarginPct,
                             triggerPrice,
                             enable,
                             editOfferType);
@@ -517,7 +516,7 @@ public class CliMain {
                             ? client.getOpenTrades()
                             : client.getTradeHistory(category);
                     if (trades.isEmpty()) {
-                        out.println(format("no %s trades found", category.name().toLowerCase()));
+                        out.printf("no %s trades found%n", category.name().toLowerCase());
                     } else {
                         var tableType = category.equals(OPEN)
                                 ? OPEN_TRADES_TBL
