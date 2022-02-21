@@ -892,7 +892,7 @@ message LockWalletReply {
 
 message UnlockWalletRequest {
     string password = 1;    // The Bisq wallet's encryption password.
-    uint64 timeout = 2;     // The Bisq wallet unlock time period, in seconds.
+    uint64 timeout = 2;     // The Bisq wallet's unlock time period, in seconds.
 }
 
 message UnlockWalletReply {
