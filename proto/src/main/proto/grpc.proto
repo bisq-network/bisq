@@ -760,7 +760,7 @@ service Wallets {
     // Unlock a Bisq encrypted wallet before calling wallet sensitive rpc methods: CreateOffer, TakeOffer, GetBalances,
     // etc., for a timeout period in seconds.  An unlocked wallet will automatically lock itself after the timeout
     // period has expired, or a LockWallet request has been made, whichever is first.  An unlocked wallet's timeout
-    // setting can be overridden by subsequent SetWalletPassword calls.
+    // setting can be overridden by subsequent UnlockWallet calls.
     rpc UnlockWallet (UnlockWalletRequest) returns (UnlockWalletReply) {
     }
 }
