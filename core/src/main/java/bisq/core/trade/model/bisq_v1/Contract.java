@@ -298,8 +298,8 @@ public final class Contract implements NetworkPayload {
     }
 
     public String getPaymentMethodId() {
-        // Either makerPaymentMethodId is set or available in makerPaymentAccountPayload
-        return makerPaymentMethodId != null ? makerPaymentMethodId : Objects.requireNonNull(makerPaymentAccountPayload).getPaymentMethodId();
+        // Either makerPaymentMethodId is set or available in offerPayload
+        return makerPaymentMethodId != null ? makerPaymentMethodId : Objects.requireNonNull(getOfferPayload()).getPaymentMethodId();
     }
 
     public Coin getTradeAmount() {
