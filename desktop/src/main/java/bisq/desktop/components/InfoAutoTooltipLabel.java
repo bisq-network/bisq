@@ -74,6 +74,12 @@ public class InfoAutoTooltipLabel extends AutoTooltipLabel {
         setGraphic(textIcon);
     }
 
+    // May be required until https://bugs.openjdk.java.net/browse/JDK-8265835 is fixed.
+    public void disableRolloverPopup() {
+        textIcon.setOnMouseEntered(null);
+        textIcon.setOnMouseExited(null);
+    }
+
     private void positionAndActivateIcon(ContentDisplay contentDisplay, String info, double width) {
         textIcon.setOpacity(0.4);
         textIcon.getStyleClass().add("tooltip-icon");
