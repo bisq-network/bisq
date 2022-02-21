@@ -959,6 +959,7 @@ public class GUIUtil {
                         MaterialDesignIcon icon = getIconForSignState(signState);
 
                         label.setIcon(icon, info);
+                        label.disableRolloverPopup();   // see https://github.com/bisq-network/bisq/issues/6059
                     }
                     setGraphic(label);
                 } else {
