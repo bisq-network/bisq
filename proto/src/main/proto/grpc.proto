@@ -713,7 +713,7 @@ message TxInfo {
 * an encryption password on a a wallet, and unlocking / locking an encrypted wallet.
 */
 service Wallets {
-    // Get current BSQ and BTC balances.
+    // Get the Bisq wallet's current BSQ and BTC balances.
     rpc GetBalances (GetBalancesRequest) returns (GetBalancesReply) {
     }
     // Get BTC balance for a wallet address.
@@ -722,95 +722,112 @@ service Wallets {
     // Get an unused BSQ wallet address.
     rpc GetUnusedBsqAddress (GetUnusedBsqAddressRequest) returns (GetUnusedBsqAddressReply) {
     }
-    // Send BSQ to an address.
+    // Send an amount of BSQ to an external address.
     rpc SendBsq (SendBsqRequest) returns (SendBsqReply) {
     }
-    // Send BSQ to an address.
+    // Send an amount of BTC to an external address.
     rpc SendBtc (SendBtcRequest) returns (SendBtcReply) {
     }
-    // Verify a specific amount of BSQ was received by a BSQ wallet address.  (TODO change method name?)
+    // Verify a specific amount of BSQ was received by a BSQ wallet address.
+    // This is a problematic way of verifying BSQ payment has been received for a v1 trade protocol BSQ-BTC trade,
+    // which has been solved by the introduction of BSQ swap trades, which use a different, unused BSQ address for each trade.
     rpc VerifyBsqSentToAddress (VerifyBsqSentToAddressRequest) returns (VerifyBsqSentToAddressReply) {
     }
-    // Get most recently available BTC network tx fee, or custom fee rate if set.
+    // Get the most recently available Bisq network's bitcoin miner transaction fee rate, or custom fee rate if set.
     rpc GetTxFeeRate (GetTxFeeRateRequest) returns (GetTxFeeRateReply) {
     }
-    // Set custom tx fee rate.
+    // Set the Bisq daemon's custom bitcoin miner transaction fee rate, in sats/byte..
     rpc SetTxFeeRatePreference (SetTxFeeRatePreferenceRequest) returns (SetTxFeeRatePreferenceReply) {
     }
-    // Remove custom tx fee rate, revert to using BTC network tx fee rate.
+    // Remove the custom bitcoin miner transaction fee rate;  revert to the Bisq network's bitcoin miner transaction fee rate.
     rpc UnsetTxFeeRatePreference (UnsetTxFeeRatePreferenceRequest) returns (UnsetTxFeeRatePreferenceReply) {
     }
-    // Get a BTC tx with a transaction-id.
+    // Get a bitcoin transaction summary.
     rpc GetTransaction (GetTransactionRequest) returns (GetTransactionReply) {
     }
-    // Get all BTC receiving address in the wallet.
+    // Get all bitcoin receiving address in the Bisq BTC wallet.
     rpc GetFundingAddresses (GetFundingAddressesRequest) returns (GetFundingAddressesReply) {
     }
-    // Set wallet encryption password.
+    // Set the Bisq wallet's encryption password for a time period in seconds.  An unlocked wallet will automatically
+    // lock itself after the timeout period has expired, or a LockWallet request has been made, whichever is first.
+    // An unlocked wallet's timeout setting can be overridden by subsequent SetWalletPassword calls.
     rpc SetWalletPassword (SetWalletPasswordRequest) returns (SetWalletPasswordReply) {
     }
-    // Remove wallet encryption password.
+    // Remove the encryption password from the Bisq wallet.
     rpc RemoveWalletPassword (RemoveWalletPasswordRequest) returns (RemoveWalletPasswordReply) {
     }
-    // Lock unlocked, encrypted wallet.
+    // Lock an encrypted Bisq wallet before the UnlockWallet rpc method's timeout period has expired.
     rpc LockWallet (LockWalletRequest) returns (LockWalletReply) {
     }
-    // Unlock encrypted wallet before executing wallet sensitive methods:
-    // createoffer, takeoffer, getbalances, etc.
+    // Unlock a Bisq encrypted wallet before calling wallet sensitive rpc methods: CreateOffer, TakeOffer, GetBalances, etc.
     rpc UnlockWallet (UnlockWalletRequest) returns (UnlockWalletReply) {
     }
 }
 
 message GetBalancesRequest {
-    string currencyCode = 1;
+    string currencyCode = 1;    // The Bisq wallet currency (BSQ or BTC) for the balances request.
 }
 
 message GetBalancesReply {
-    BalancesInfo balances = 1;
+    BalancesInfo balances = 1;  // The summary of Bisq wallet's BSQ and BTC balances.
 }
 
 message GetAddressBalanceRequest {
-    string address = 1;
+    string address = 1;     // The BTC wallet address being queried.
 }
 
 message GetAddressBalanceReply {
-    AddressBalanceInfo addressBalanceInfo = 1;
+    AddressBalanceInfo addressBalanceInfo = 1;  // The BTC wallet address with its balance summary.
 }
 
 message GetUnusedBsqAddressRequest {
 }
 
 message GetUnusedBsqAddressReply {
-     string address = 1;
+     string address = 1;    // The BSQ wallet's unused address.
 }
 
 message SendBsqRequest {
+    // The external BSQ wallet address.
     string address = 1;
+    // The amount being sent to the external BSQ wallet address, as a string in "#######,##" format.
     string amount = 2;
+    // An optional bitcoin miner transaction fee rate, in sats/byte.  If not defined, Bisq will revert
+    // to the custom transaction fee rate preference, if set, else the common Bisq network fee rate.
     string txFeeRate = 3;
 }
 
 message SendBsqReply {
+    // The summary of a bitcoin transaction.  (BSQ is a colored coin, and transacted on the bitcoin blockchain.)
     TxInfo txInfo = 1;
 }
 
 message SendBtcRequest {
+    // The external bitcoin address.
     string address = 1;
+    // The amount of BTC to send to the external address, as a string in "##.########" (BTC unit) format.
     string amount = 2;
+    // An optional bitcoin miner transaction fee rate, in sats/byte.  If not defined, Bisq will revert
+    // to the custom transaction fee rate preference, if set, else the common Bisq network fee rate.
     string txFeeRate = 3;
+    // An optional memo associated with the bitcoin transaction.
     string memo = 4;
 }
 
 message SendBtcReply {
-    TxInfo txInfo = 1;
+    TxInfo txInfo = 1;      // The summary of a bitcoin transaction.
 }
 
 message VerifyBsqSentToAddressRequest {
-    string address = 1;
-    string amount = 2;
+    string address = 1;     // The internal BSQ wallet address.
+    string amount = 2;      // The amount supposedly sent to the BSQ wallet address, as a string in "#######,##" format.
 }
 
 message VerifyBsqSentToAddressReply {
+    // Whether a specific BSQ wallet address has received a specific amount of BSQ.  If the same address has received
+    // the same amount of BSQ more than once, a true value does not indicate payment has been made for a v1 protocol
+    // BSQ-BTC trade.  This BSQ payment verification problem is solved with BSQ swaps, which use a different BSQ
+    // address for each swap transaction.
     bool isAmountReceived = 1;
 }
 
@@ -818,7 +835,7 @@ message GetTxFeeRateRequest {
 }
 
 message GetTxFeeRateReply {
-    TxFeeRateInfo txFeeRateInfo = 1;
+    TxFeeRateInfo txFeeRateInfo = 1;    // The summary of the most recently available bitcoin transaction fee rates.
 }
 
 message SetTxFeeRatePreferenceRequest {
@@ -826,14 +843,14 @@ message SetTxFeeRatePreferenceRequest {
 }
 
 message SetTxFeeRatePreferenceReply {
-    TxFeeRateInfo txFeeRateInfo = 1;
+    TxFeeRateInfo txFeeRateInfo = 1;    // The summary of the most recently available bitcoin transaction fee rates.
 }
 
 message UnsetTxFeeRatePreferenceRequest {
 }
 
 message UnsetTxFeeRatePreferenceReply {
-    TxFeeRateInfo txFeeRateInfo = 1;
+    TxFeeRateInfo txFeeRateInfo = 1;    // The summary of the most recently available bitcoin transaction fee rates.
 }
 
 message GetTransactionRequest {
@@ -841,26 +858,26 @@ message GetTransactionRequest {
 }
 
 message GetTransactionReply {
-    TxInfo txInfo = 1;
+    TxInfo txInfo = 1;      // The summary of a bitcoin transaction.
 }
 
 message GetFundingAddressesRequest {
 }
 
 message GetFundingAddressesReply {
-    repeated AddressBalanceInfo addressBalanceInfo = 1;
+    repeated AddressBalanceInfo addressBalanceInfo = 1; // The list of BTC wallet addresses with their balances.
 }
 
 message SetWalletPasswordRequest {
-    string password = 1;
-    string newPassword = 2;
+    string password = 1;        // The new password for encrypting an unencrypted Bisq wallet.
+    string newPassword = 2;     // The new password for encrypting an already encrypted Bisq wallet (a password override).
 }
 
 message SetWalletPasswordReply {
 }
 
 message RemoveWalletPasswordRequest {
-    string password = 1;
+    string password = 1;    // The Bisq wallet's current encryption password.
 }
 
 message RemoveWalletPasswordReply {
@@ -873,43 +890,57 @@ message LockWalletReply {
 }
 
 message UnlockWalletRequest {
-    string password = 1;
-    uint64 timeout = 2;
+    string password = 1;    // The Bisq wallet's encryption password.
+    uint64 timeout = 2;     // The Bisq wallet unlock time period, in seconds.
 }
 
 message UnlockWalletReply {
 }
 
-/* Field names are shortened for readability's sake, i.e.,
-* balancesInfo.getBtc().getAvailableBalance() is cleaner than
-* balancesInfo.getBtcBalanceInfo().getAvailableBalance().
-*/
 message BalancesInfo {
-    BsqBalanceInfo bsq = 1;
-    BtcBalanceInfo btc = 2;
+    BsqBalanceInfo bsq = 1;     // BSQ wallet balance information.
+    BtcBalanceInfo btc = 2;     // BTC wallet balance information.
 }
 
 message BsqBalanceInfo {
+    // The BSQ amount currently available to send to other addresses at the user's discretion, in satoshis.
     uint64 availableConfirmedBalance = 1;
+    // The BSQ amount currently being used in a send transaction, in satoshis. Unverified BSQ balances are not spendable,
+    // but are often quickly returned to the availableConfirmedBalance as soon as the send transaction has been broadcast.
+    // (TODO Clarify meaning of unverifiedBalance.)
     uint64 unverifiedBalance = 2;
+    // The BSQ transaction change amount tied up in an unconfirmed transaction, remaining unspendable until the change
+    // is returned to the availableConfirmedBalance.
+    // (TODO Clarify meaning of unverifiedBalance.)
     uint64 unconfirmedChangeBalance = 3;
+    // The locked BSQ amount held by DAO voting transaction.
     uint64 lockedForVotingBalance = 4;
+    // The locked BSQ amount held by DAO bonding transaction.
     uint64 lockupBondsBalance = 5;
+    // The BSQ amount received during a time-based DAO bonding release transaction.
+    // (TODO Clarify meaning of unlockingBondsBalance.)
     uint64 unlockingBondsBalance = 6;
 }
 
 message BtcBalanceInfo {
+    // The BTC amount currently available to send to other addresses at the user's discretion, in satoshis.
     uint64 availableBalance = 1;
+    // The BTC amount currently reserved to cover open offers' security deposits, and BTC sellers' payout amounts,
+    // in satoshis.  Reserved funds are not spendable, but are recoverable by users. When a user cancels an offer
+    // funds reserved for that offer are returned to the availableBalance.
     uint64 reservedBalance = 2;
+    // The sum of availableBalance + reservedBalance, in satoshis.
     uint64 totalAvailableBalance = 3;
+    // The BTC amount being locked to cover the security deposits and BTC seller's pending trade payouts.  Locked
+    // funds are not recoverable until a trade is completed, when security deposits are returned to the availableBalance.
     uint64 lockedBalance = 4;
 }
 
 message AddressBalanceInfo {
-    string address = 1;
-    int64 balance = 2;
-    int64 numConfirmations = 3;
-    bool isAddressUnused = 4;
+    string address = 1;         // The bitcoin wallet address.
+    int64 balance = 2;          // The address' BTC balance in satoshis.
+    int64 numConfirmations = 3; // The number of confirmations for the most recent transaction referencing the output address.
+    bool isAddressUnused = 4;   // Whether the bitcoin address has ever been used, or not.
 }
 
 service GetVersion {
@@ -922,5 +953,5 @@ message GetVersionRequest {
 }
 
 message GetVersionReply {
-    string version = 1;
+    string version = 1;     // The version of the Bisq software release.
 }
