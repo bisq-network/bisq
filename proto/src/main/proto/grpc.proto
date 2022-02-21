@@ -699,8 +699,8 @@ message TxFeeRateInfo {
 
 message TxInfo {
     string txId = 1;        // The bitcoin transaction id.
-    uint64 inputSum = 2;    // The sum of the bitcoin transactions input values in satoshis.
-    uint64 outputSum = 3;   // The sum of the bitcoin transactions output values in satoshis.
+    uint64 inputSum = 2;    // The sum of the bitcoin transaction's input values in satoshis.
+    uint64 outputSum = 3;   // The sum of the bitcoin transaction's output values in satoshis.
     uint64 fee = 4;         // The bitcoin transaction's miner fee in satoshis.
     int32 size = 5;         // The bitcoin transaction's size in bytes.
     bool isPending = 6;     // Whether the bitcoin transaction has been confirmed at least one time, or not.
@@ -733,7 +733,7 @@ service Wallets {
     // which has been solved by the introduction of BSQ swap trades, which use a different, unused BSQ address for each trade.
     rpc VerifyBsqSentToAddress (VerifyBsqSentToAddressRequest) returns (VerifyBsqSentToAddressReply) {
     }
-    // Get the most recently available Bisq network's bitcoin miner transaction fee rate, or custom fee rate if set.
+    // Get the Bisq network's most recently available bitcoin miner transaction fee rate, or custom fee rate if set.
     rpc GetTxFeeRate (GetTxFeeRateRequest) returns (GetTxFeeRateReply) {
     }
     // Set the Bisq daemon's custom bitcoin miner transaction fee rate, in sats/byte..
@@ -745,12 +745,10 @@ service Wallets {
     // Get a bitcoin transaction summary.
     rpc GetTransaction (GetTransactionRequest) returns (GetTransactionReply) {
     }
-    // Get all bitcoin receiving address in the Bisq BTC wallet.
+    // Get all bitcoin receiving addresses in the Bisq BTC wallet.
     rpc GetFundingAddresses (GetFundingAddressesRequest) returns (GetFundingAddressesReply) {
     }
-    // Set the Bisq wallet's encryption password for a time period in seconds.  An unlocked wallet will automatically
-    // lock itself after the timeout period has expired, or a LockWallet request has been made, whichever is first.
-    // An unlocked wallet's timeout setting can be overridden by subsequent SetWalletPassword calls.
+    // Set the Bisq wallet's encryption password.
     rpc SetWalletPassword (SetWalletPasswordRequest) returns (SetWalletPasswordReply) {
     }
     // Remove the encryption password from the Bisq wallet.
@@ -759,7 +757,10 @@ service Wallets {
     // Lock an encrypted Bisq wallet before the UnlockWallet rpc method's timeout period has expired.
     rpc LockWallet (LockWalletRequest) returns (LockWalletReply) {
     }
-    // Unlock a Bisq encrypted wallet before calling wallet sensitive rpc methods: CreateOffer, TakeOffer, GetBalances, etc.
+    // Unlock a Bisq encrypted wallet before calling wallet sensitive rpc methods: CreateOffer, TakeOffer, GetBalances,
+    // etc., for a timeout period in seconds.  An unlocked wallet will automatically lock itself after the timeout
+    // period has expired, or a LockWallet request has been made, whichever is first.  An unlocked wallet's timeout
+    // setting can be overridden by subsequent SetWalletPassword calls.
     rpc UnlockWallet (UnlockWalletRequest) returns (UnlockWalletReply) {
     }
 }
