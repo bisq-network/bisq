@@ -410,7 +410,7 @@ $ apitest/scripts/trade-simulation.sh -d sell -c jp -m 0.5  -a 0.125
 ```
 
 The `createoffer` command can also be used to create BSQ swap offers, where trade execution is performed immediately
-after a BSQ swap offer is taken.  To swap 0.5 BTC for BSQ at a price of 0.00005 BSQ per 1 BTC:
+after a BSQ swap offer is taken.  To swap 0.5 BTC for BSQ at a price of 0.00005 BTC for 1 BSQ:
 ```
 $ ./bisq-cli --password=xyz --port=9998 createoffer \
     --swap=true \
