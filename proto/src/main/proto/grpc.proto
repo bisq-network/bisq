@@ -22,79 +22,75 @@ option java_package = "bisq.proto.grpc";
 option java_multiple_files = true;
 
 /*
-* DisputeAgents service is provided for development, and can only be used when running in regtest mode.
+* The DisputeAgents service is provided for development only;  it can only be used when running in regtest mode.
 */
 service DisputeAgents {
-    // Register regtest / dev mode dispute agents.  Does not work if running on mainnet.
+    // Register regtest / dev mode dispute agents.  Does not work when running on mainnet.
     rpc RegisterDisputeAgent (RegisterDisputeAgentRequest) returns (RegisterDisputeAgentReply) {
     }
 }
 
-/*
-* Register a dispute agent using a registration key.
-*/
 message RegisterDisputeAgentRequest {
+    // One of "mediator" or "refundagent".  Development / test arbitrators can only be registered in the UI.
     string disputeAgentType = 1;
+    // Private developer (only) registration key.
     string registrationKey = 2;
 }
 
 message RegisterDisputeAgentReply {
 }
 
-
-/*
-* CLI command help service.
-*/
 service Help {
-    // Returns CLI command help in man page format.
+    // Returns a CLI command man page.
     rpc GetMethodHelp (GetMethodHelpRequest) returns (GetMethodHelpReply) {
     }
 }
 
 message GetMethodHelpRequest {
-    string methodName = 1;
+    string methodName = 1;  // CLI command name.
 }
 
 message GetMethodHelpReply {
-    string methodHelp = 1;
+    string methodHelp = 1;  // Man page for CLI command.
 }
 
-
 /*
-* Offers service provides rpc methods for creating, editing, listing, and cancelling Bisq offers.
+* The Offers service provides rpc methods for creating, editing, listing, and cancelling Bisq offers.
 */
 service Offers {
-    // Get offer category, one of  FIAT, ALTCOIN, or BSQ_SWAP.
+    // Get an offer's category, one of  FIAT, ALTCOIN, or BSQ_SWAP.  This information is needed before an offer
+    // can be taken, and is used by a client to determine what kind of offer to take:  a v1 FIAT or ALTCOIN offer,
+    // or a BSQ swap offer.  V1 and BSQ swap trades are handled differently in the API daemon.
     rpc GetOfferCategory (GetOfferCategoryRequest) returns (GetOfferCategoryReply) {
     }
-    // Get available BSQ swap offer with offer-id.
+    // Get the available BSQ swap offer with offer-id.
     rpc GetBsqSwapOffer (GetOfferRequest) returns (GetBsqSwapOfferReply) {
     }
-    // Get version 1 protocol offer with offer-id.
+    // Get the v1 protocol offer with offer-id.
     rpc GetOffer (GetOfferRequest) returns (GetOfferReply) {
     }
-    // Get my BSQ swap offer with offer-id.
+    // Get user's BSQ swap offer with offer-id.
     rpc GetMyBsqSwapOffer (GetMyOfferRequest) returns (GetMyBsqSwapOfferReply) {
     }
-    // Get my open version 1 protocol offer with offer-id.  Deprecated since 27-Dec-2021 (v1.8.0).
+    // Get my open v1 protocol offer with offer-id.  Deprecated since 27-Dec-2021 (v1.8.0).  Use GetOffer.
     rpc GetMyOffer (GetMyOfferRequest) returns (GetMyOfferReply) {
     }
-    // Get available BSQ swap offers with direction BUY or SELL.
+    // Get all available BSQ swap offers with a BUY (BTC) or SELL (BTC) direction.
     rpc GetBsqSwapOffers (GetBsqSwapOffersRequest) returns (GetBsqSwapOffersReply) {
     }
-    // Get available version 1 protocol offers with direction BUY or SELL.
+    // Get all available v1 protocol offers with a BUY (BTC) or SELL (BTC) direction.
     rpc GetOffers (GetOffersRequest) returns (GetOffersReply) {
     }
-    // Get my BSQ swap offers with direction BUY or SELL.
+    // Get all user's BSQ swap offers with a BUY (BTC) or SELL (BTC) direction.
     rpc GetMyBsqSwapOffers (GetBsqSwapOffersRequest) returns (GetMyBsqSwapOffersReply) {
     }
-    // Get my open version 1 protocol offers with direction BUY or SELL.
+    // Get all user's open v1 protocol offers with a BUY (BTC) or SELL (BTC) direction.
     rpc GetMyOffers (GetMyOffersRequest) returns (GetMyOffersReply) {
     }
     // Create a BSQ swap offer.
     rpc CreateBsqSwapOffer (CreateBsqSwapOfferRequest) returns (CreateBsqSwapOfferReply) {
     }
-    // Create a version 1 protocol offer.
+    // Create a v1 protocol offer.
     rpc CreateOffer (CreateOfferRequest) returns (CreateOfferReply) {
     }
     // Edit an open offer.
@@ -106,8 +102,8 @@ service Offers {
 }
 
 message GetOfferCategoryRequest {
-    string id = 1;
-    bool isMyOffer = 2;
+    string id = 1;          // The offer's unique identifier.
+    bool isMyOffer = 2;     // Whether the offer was created by the user or not.
 }
 
 message GetOfferCategoryReply {
@@ -121,113 +117,154 @@ message GetOfferCategoryReply {
 }
 
 message GetBsqSwapOfferReply {
-    OfferInfo bsqSwapOffer = 1;
+    OfferInfo bsqSwapOffer = 1; // The returned BSQ swap offer.
 }
 
 message GetOfferRequest {
-    string id = 1;
+    string id = 1;  // The offer's unique identifier.
 }
 
 message GetOfferReply {
-    OfferInfo offer = 1;
+    OfferInfo offer = 1; // The returned v1 protocol offer.
 }
 
 message GetMyBsqSwapOfferReply {
-    OfferInfo bsqSwapOffer = 1;
+    OfferInfo bsqSwapOffer = 1; // The returned BSQ swap offer.
 }
 
-// @Deprecated since 27-Dec-2021 (v1.8.0)
+// Deprecated with rpc method GetMyOffer since 27-Dec-2021 (v1.8.0).
 message GetMyOfferRequest {
-    string id = 1;
+    string id = 1;  // The offer's unique identifier.
 }
 
-// @Deprecated since 27-Dec-2021 (v1.8.0)
+// Deprecated with rpc method GetMyOffer since 27-Dec-2021 (v1.8.0).
 message GetMyOfferReply {
-    OfferInfo offer = 1;
+    OfferInfo offer = 1; // The returned v1 protocol offer.
 }
 
 message GetOffersRequest {
-    string direction = 1;
-    string currencyCode = 2;
+    string direction = 1;       // The offer's BUY (BTC) or SELL (BTC) direction.
+    string currencyCode = 2;    // The offer's fiat or altcoin currency code.
 }
 
 message GetOffersReply {
-    repeated OfferInfo offers = 1;
+    repeated OfferInfo offers = 1;  // The returned list of available offers.
 }
 
 message GetBsqSwapOffersRequest {
-    string direction = 1;
+    string direction = 1;       // The BSQ swap offer's BUY (BTC) or SELL (BTC) direction.
 }
 
 message GetBsqSwapOffersReply {
-    repeated OfferInfo bsqSwapOffers = 1;
+    repeated OfferInfo bsqSwapOffers = 1; // The returned list of available BSQ swap offers.
 }
 
 message GetMyOffersRequest {
-    string direction = 1;
-    string currencyCode = 2;
+    string direction = 1;       // The offers' BUY (BTC) or SELL (BTC) direction.
+    string currencyCode = 2;    // The offer's fiat or altcoin currency code.
 }
 
 message GetMyOffersReply {
-    repeated OfferInfo offers = 1;
+    repeated OfferInfo offers = 1;  // The returned list of user's open offers.
 }
 
 message GetMyBsqSwapOffersReply {
-    repeated OfferInfo bsqSwapOffers = 1;
+    repeated OfferInfo bsqSwapOffers = 1;    // The returned list of user's open BSQ swap offers.
 }
 
+// TODO:  Change some numeric fields to string to prevent loss of precision and/or ambiguity.
 message CreateBsqSwapOfferRequest {
+    // The new BSQ swap offer's BUY (BTC) or SELL (BTC) direction.
     string direction = 1;
+    // The amount of BTC to be traded as a long representing satoshi units.
     uint64 amount = 2;
+    // The minimum amount of BTC to be traded as a long representing satoshi units.
     uint64 minAmount = 3;
+    // The fixed price of the offer as a string representing BTC units, e.g., "0.00005" or "0.00005000".
     string price = 4;
 }
 
 message CreateBsqSwapOfferReply {
-    OfferInfo bsqSwapOffer = 1;
+    OfferInfo bsqSwapOffer = 1;     // The newly created BSQ swap offer.
 }
 
+// TODO:  Change some numeric fields to string to prevent loss of precision and/or ambiguity.
 message CreateOfferRequest {
+    // The new offer's fiat or altcoin currency code.
     string currencyCode = 1;
+    // The new v1 protocol offer's BUY (BTC) or SELL (BTC) direction.
     string direction = 2;
+    // For fiat offers:  a string representing the rounded, fixed fiat price of the offer, e.g., "45000", not "45000".
+    // For altcoin offers:  a string representing the fixed BTC price of the offer, e.g., "0.00005".
     string price = 3;
+    // Whether the offer price is fixed, or market price margin based.
     bool useMarketBasedPrice = 4;
+    // The offer's market price margin as a percentage above or below the current market BTC price, e.g., 2.50 represents 2.5%.
     double marketPriceMargin = 5;
+    // The amount of BTC to be traded, in satoshis.
     uint64 amount = 6;
+     // The minimum amount of BTC to be traded, in satoshis.
     uint64 minAmount = 7;
+    // For a new BUY BTC offer, the offer maker's security deposit as a percentage of the BTC amount to be traded, e.g., 0.15 represents 15%.
+    // TODO:  This parameter (where 0.## represents ##%) conflicts with marketPriceMargin (where #.## literally represents #.##%).
+    // Backward compat breaking change to buyerSecurityDeposit is needed to make it consistent with marketPriceMargin (or vice-versa).
     double buyerSecurityDeposit = 8;
+    // For fiat, market price margin based offer, the current market BTC price at which the offer is automatically disabled.
+    // The parameter type is a long, representing the fiat price to 4 decimal places, but without the decimal.
+    // For example trigger price in EUR of 43749.3940 would be passed as 437493940.
+    // TODO:  This should be a string type:  "43749.3940", and converted to a long on the server.
     uint64 triggerPrice = 9;
+    // The unique identifier of the payment account used to create the new offer, and send or receive trade payment.
     string paymentAccountId = 10;
+    // The offer maker's trade fee currency:  BTC or BSQ.
     string makerFeeCurrencyCode = 11;
 }
 
 message CreateOfferReply {
-    OfferInfo offer = 1;
+    OfferInfo offer = 1;    // The newly created v1 protocol offer.
 }
 
 message EditOfferRequest {
+    // The edited offer's unique identifier.
     string id = 1;
+    // For fiat offers:  a string representing the new rounded, fixed fiat price of the offer, e.g., "45000", not "45000".
+    // For altcoin offers:  a string representing the new fixed BTC price of the offer, e.g., "0.00005".
     string price = 2;
+    // Whether the offer price is fixed, or market price margin based.
     bool useMarketBasedPrice = 3;
+    // The offer's new market price margin as a percentage above or below the current market BTC price.
     double marketPriceMargin = 4;
+    // For market price margin based offer, the current market BTC price at which the offer is automatically disabled.
     uint64 triggerPrice = 5;
+    // Whether the offer's activation state should be changed (disable or enable), or left alone.
     // Send a signed int, not a bool (with default=false).
     //      -1 = do not change activation state
     //      0 = disable
     //      1 = enable
     sint32 enable = 6;
-    // The EditType constricts what offer details can be modified and simplifies param validation.
+    // The EditType determines and constricts what offer details can
+    // be modified by the request, simplifying param validation.
     enum EditType {
-         ACTIVATION_STATE_ONLY = 0;
-         FIXED_PRICE_ONLY = 1;
-         FIXED_PRICE_AND_ACTIVATION_STATE = 2;
-         MKT_PRICE_MARGIN_ONLY = 3;
-         MKT_PRICE_MARGIN_AND_ACTIVATION_STATE = 4;
-         TRIGGER_PRICE_ONLY = 5;
-         TRIGGER_PRICE_AND_ACTIVATION_STATE = 6;
-         MKT_PRICE_MARGIN_AND_TRIGGER_PRICE = 7;
-         MKT_PRICE_MARGIN_AND_TRIGGER_PRICE_AND_ACTIVATION_STATE = 8;
+        // Edit only the offer's activation state (enabled or disabled).
+        ACTIVATION_STATE_ONLY = 0;
+        // Edit only the offer's fixed price.
+        FIXED_PRICE_ONLY = 1;
+        // Edit only the offer's fixed price and activation state.
+        FIXED_PRICE_AND_ACTIVATION_STATE = 2;
+        // Edit only the offer's market price margin.
+        MKT_PRICE_MARGIN_ONLY = 3;
+        // Edit only the offer's market price margin and activation state.
+        MKT_PRICE_MARGIN_AND_ACTIVATION_STATE = 4;
+        // Edit only the market price margin based offer's trigger price.
+        TRIGGER_PRICE_ONLY = 5;
+        // Edit only the market price margin based offer's trigger price and activation state.
+        TRIGGER_PRICE_AND_ACTIVATION_STATE = 6;
+        // Edit only the offer's market price margin and trigger price.
+        MKT_PRICE_MARGIN_AND_TRIGGER_PRICE = 7;
+        // Edit only the offer's market price margin, trigger price, and activation state.
+        MKT_PRICE_MARGIN_AND_TRIGGER_PRICE_AND_ACTIVATION_STATE = 8;
     }
+    // Tell the daemon precisely what is being edited.
     EditType editType = 7;
 }
 
@@ -235,53 +272,106 @@ message EditOfferReply {
 }
 
 message CancelOfferRequest {
-    string id = 1;
+    string id = 1; // The canceled offer's unique identifier.
 }
 
 message CancelOfferReply {
 }
 
+// OfferInfo describes an offer to a client.  It is derived from the heavier
+// Offer object in the daemon, which holds too much state to be sent to clients.
+// TODO:  Change some numeric fields to string to prevent loss of precision and/or ambiguity.
 message OfferInfo {
+    // The offer's unique identifier.
     string id = 1;
+    // The offer's BUY (BTC) or SELL (BTC) direction.
     string direction = 2;
+    // For fiat offers:  a long representing the BTC price of the offer to 4 decimal places.
+    // A USD fiat price of 45000.4321 USD is represented as 450004321.
+    // For altcoin offers:  a long representing the BTC price of the offer in satoshis.
+    // An altcoin price of five hundred thousand satoshis is represented as 500000.
+    // TODO: Change to string type.
     uint64 price = 3;
+    // Whether the offer price is fixed, or market price margin based.
     bool useMarketBasedPrice = 4;
+    // The offer's market price margin above or below the current market BTC price, represented as a decimal.
+    // 5% is represented as 0.05.
+    // TODO:  Change to string type, and make consistent with Create & Edit Offer's marketPriceMargin params.
     double marketPriceMargin = 5;
+    // The offer's BTC amount in satoshis.  Ten million satoshis is represented as 10000000.
     uint64 amount = 6;
+    // The offer's minimum BTC amount in satoshis.  One million satoshis is represented as 1000000.
     uint64 minAmount = 7;
+    // A long representing the rounded volume of currency to be traded for BTC.
+    // For EUR fiat offers, a volume of 29500.000 EUR would be represented as 29500000.
+    // TODO:  Seems to be a bug in the volume, missing one trailing decimal.
+    // Price has 4 "ghost" decimal places.  Volume has only 3 "ghost" decimal places, e.g.,
+    //     EUR PRICE:   295001234
+    //     EUR VOL:     29500000
     uint64 volume = 8;
+    // A long representing the minimum, rounded volume of currency to be traded for BTC.
+    // TODO: Resolve the problem mentioned above, in the volume field description.
     uint64 minVolume = 9;
+    // A long representing the BTC buyer's security deposit in satoshis.
     uint64 buyerSecurityDeposit = 10;
+    // A long representing a market price margin based offer's trigger price:  the current market BTC price at
+    // which the offer is automatically disabled.  For fiat offers, a trigger price of 40000.5000 is represented
+    // as 400005000.
     uint64 triggerPrice = 11;
+    // Whether the offer maker paid the trading fee in BTC or not (BSQ).
     bool isCurrencyForMakerFeeBtc = 12;
+    // The unique identifier of the payment account used to create the offer.
     string paymentAccountId = 13;
+    // The unique identifier of the payment method used to create the offer.
     string paymentMethodId = 14;
+    // The short description of the payment method used to create the offer.
     string paymentMethodShortName = 15;
+    // For fiat offers, the baseCurrencyCode is BTC, and the counterCurrencyCode is the fiat currency code.
+    // For altcoin offers it is the opposite, the baseCurrencyCode is the altcoin code and the counterCurrencyCode is BTC.
     string baseCurrencyCode = 16;
+    // For fiat offers, the baseCurrencyCode is BTC, and the counterCurrencyCode is the fiat currency code.
+    // For altcoin offers it is the opposite, the baseCurrencyCode is the altcoin code and the counterCurrencyCode is BTC.
     string counterCurrencyCode = 17;
+    // The creation date of the offer as a long: the number of milliseconds that have elapsed since January 1, 1970.
     uint64 date = 18;
+    // The internal state of the offer, e.g., AVAILABLE, NOT_AVAILABLE, REMOVED, etc.
     string state = 19;
+    // A long representing the BTC seller's security deposit in satoshis.
     uint64 sellerSecurityDeposit = 20;
+    // The bitcoin transaction id of the offer maker's fee payment.
     string offerFeePaymentTxId = 21;
+    // The bitcoin transaction fee (amount) for the offer maker's fee payment transaction, in satoshis.
     uint64 txFee = 22;
+    // The offer maker's Bisq trade fee amount in satoshis.
     uint64 makerFee = 23;
+    // Whether the offer is currently enabled or not.
     bool isActivated = 24;
+    // Whether the offer was created by the user or not.
     bool isMyOffer = 25;
+    // Whether the newly created offer was created by the user or not.
     bool isMyPendingOffer = 26;
+    // Whether the offer is a BSQ swap offer or not (v1 protocol offer).
     bool isBsqSwapOffer = 27;
+    // The offer creator's Tor onion address.
     string ownerNodeAddress = 28;
+    // The offer creator's public key ring as a string.
     string pubKeyRing = 29;
+    // The Bisq software version used to create the offer.
     string versionNr = 30;
+    // The bitcoin protocol version used to create the offer.
     int32 protocolVersion = 31;
 }
 
+// An offer's current availability status.
 message AvailabilityResultWithDescription {
+    // An offer's current status as an eum.
     AvailabilityResult availabilityResult = 1;
+    // A user friendly description of an offer's current availability status.
     string description = 2;
 }
 
 /*
-* PaymentAccounts service provides rpc methods for creating fiat and crypto currency payment accounts.
+* The PaymentAccounts service provides rpc methods for creating fiat and crypto currency payment accounts.
 */
 service PaymentAccounts {
     // Create a fiat payment account, providing details in a json form.
@@ -352,11 +442,8 @@ message GetCryptoCurrencyPaymentMethodsReply {
     repeated PaymentMethod paymentMethods = 1;
 }
 
-/*
-* Price service comment.
-*/
 service Price {
-    // Get current market price for a crypto currency.
+    // Get the current market price for a crypto currency.
     rpc GetMarketPrice (MarketPriceRequest) returns (MarketPriceReply) {
     }
 }
@@ -385,9 +472,6 @@ message GetTradeStatisticsReply {
     repeated TradeStatistics3 TradeStatistics = 1;
 }
 
-/*
-* ShutdownServer service comment.
-*/
 service ShutdownServer {
     // Shut down a local Bisq daemon.
     rpc Stop (StopRequest) returns (StopReply) {
@@ -397,11 +481,12 @@ service ShutdownServer {
 message StopRequest {
 }
 
+
 message StopReply {
 }
 
 /*
-* Trades service provides rpc methods for taking, executing, and listing trades.
+* The Trades service provides rpc methods for taking, executing, and listing trades.
 */
 service Trades {
     // Get an open trade with a trade-id.
@@ -601,7 +686,7 @@ message TxInfo {
 }
 
 /*
-* Wallets service provides rpc methods for basic wallet operations such as checking balances,
+* The Wallets service provides rpc methods for basic wallet operations such as checking balances,
 * sending BTC or BSQ to external wallets, checking transaction fee rates, setting or unsetting
 * an encryption password on a a wallet, and unlocking / locking an encrypted wallet.
 */
@@ -805,11 +890,8 @@ message AddressBalanceInfo {
     bool isAddressUnused = 4;
 }
 
-/*
-* GetVersion service provides the local Bisq daemon's version.
-*/
 service GetVersion {
-    // Get current Bisq version number.
+    // Get the current Bisq version number.
     rpc GetVersion (GetVersionRequest) returns (GetVersionReply) {
     }
 }
