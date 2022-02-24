@@ -352,8 +352,10 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     }
 
     public boolean removeAllChatMessages() {
-        if (chatMessages.size() > 0) {
-            chatMessages.clear();
+        if (chatMessages.size() > 1) {
+            // removes all chat except the initial guidelines message.
+            String firstMessageUid = chatMessages.get(0).getUid();
+            chatMessages.removeIf((msg) -> !msg.getUid().equals(firstMessageUid));
             return true;
         }
         return false;
