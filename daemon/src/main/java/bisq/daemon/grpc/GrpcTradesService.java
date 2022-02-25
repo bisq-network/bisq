@@ -20,6 +20,7 @@ package bisq.daemon.grpc;
 import bisq.core.api.CoreApi;
 import bisq.core.api.model.CanceledTradeInfo;
 import bisq.core.api.model.TradeInfo;
+import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
@@ -93,31 +94,37 @@ class GrpcTradesService extends TradesImplBase {
                         responseObserver,
                         exceptionHandler,
                         log);
+        try {
+            // Make sure the offer exists before trying to take it.
+            Offer offer = coreApi.getOffer(req.getOfferId());
 
-        if (coreApi.isBsqSwapOffer(req.getOfferId(), false)) {
-            coreApi.takeBsqSwapOffer(req.getOfferId(),
-                    bsqSwapTrade -> {
-                        var reply = buildTakeOfferReply(bsqSwapTrade);
-                        responseObserver.onNext(reply);
-                        responseObserver.onCompleted();
-                    },
-                    errorMessage -> {
-                        if (!errorMessageHandler.isErrorHandled())
-                            errorMessageHandler.handleErrorMessage(errorMessage);
-                    });
-        } else {
-            coreApi.takeOffer(req.getOfferId(),
-                    req.getPaymentAccountId(),
-                    req.getTakerFeeCurrencyCode(),
-                    trade -> {
-                        var reply = buildTakeOfferReply(trade);
-                        responseObserver.onNext(reply);
-                        responseObserver.onCompleted();
-                    },
-                    errorMessage -> {
-                        if (!errorMessageHandler.isErrorHandled())
-                            errorMessageHandler.handleErrorMessage(errorMessage);
-                    });
+            if (offer.isBsqSwapOffer()) {
+                coreApi.takeBsqSwapOffer(offer.getId(),
+                        bsqSwapTrade -> {
+                            var reply = buildTakeOfferReply(bsqSwapTrade);
+                            responseObserver.onNext(reply);
+                            responseObserver.onCompleted();
+                        },
+                        errorMessage -> {
+                            if (!errorMessageHandler.isErrorHandled())
+                                errorMessageHandler.handleErrorMessage(errorMessage);
+                        });
+            } else {
+                coreApi.takeOffer(offer.getId(),
+                        req.getPaymentAccountId(),
+                        req.getTakerFeeCurrencyCode(),
+                        trade -> {
+                            var reply = buildTakeOfferReply(trade);
+                            responseObserver.onNext(reply);
+                            responseObserver.onCompleted();
+                        },
+                        errorMessage -> {
+                            if (!errorMessageHandler.isErrorHandled())
+                                errorMessageHandler.handleErrorMessage(errorMessage);
+                        });
+            }
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(log, cause, responseObserver);
         }
     }
 
