@@ -307,7 +307,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         Instant safeDate = closedTradableManager.getSafeDateForSensitiveDataClearing();
         getDisputeList().getList().stream()
                 .filter(e -> e.isClosed())
-                .filter(e -> e.getTradeDate().toInstant().isBefore(safeDate))
+                .filter(e -> e.getOpeningDate().toInstant().isBefore(safeDate))
                 .forEach(Dispute::maybeClearSensitiveData);
         requestPersistence();
     }
