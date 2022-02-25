@@ -146,7 +146,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public static final boolean USE_SYMMETRIC_SECURITY_DEPOSIT = true;
     public static final int CLEAR_DATA_AFTER_DAYS_INITIAL = 99999; // feature effectively disabled until user agrees to settings notification
-    public static final int CLEAR_DATA_AFTER_DAYS_DEFAULT = 20; // used when user has agreed to settings notification
+    public static final int CLEAR_DATA_AFTER_DAYS_DEFAULT = 60; // used when user has agreed to settings notification
 
     // payload is initialized so the default values are available for Property initialization.
     @Setter
