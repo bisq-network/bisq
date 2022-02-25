@@ -172,6 +172,7 @@ message GetMyBsqSwapOffersReply {
     repeated OfferInfo bsqSwapOffers = 1;    // The returned list of user's open BSQ swap offers.
 }
 
+// TODO:  Change some numeric fields to string to prevent loss of precision and/or ambiguity.
 message CreateBsqSwapOfferRequest {
     // The new BSQ swap offer's BUY (BTC) or SELL (BTC) direction.
     string direction = 1;
@@ -187,6 +188,7 @@ message CreateBsqSwapOfferReply {
     OfferInfo bsqSwapOffer = 1;     // The newly created BSQ swap offer.
 }
 
+// TODO:  Change some numeric fields to string to prevent loss of precision and/or ambiguity.
 message CreateOfferRequest {
     // The new offer's fiat or altcoin currency code.
     string currencyCode = 1;

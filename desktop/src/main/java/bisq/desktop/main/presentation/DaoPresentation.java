@@ -1,6 +1,7 @@
 package bisq.desktop.main.presentation;
 
 import bisq.desktop.Navigation;
+import bisq.desktop.util.GUIUtil;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -98,9 +99,7 @@ public class DaoPresentation implements DaoStateListener {
                 bsqInfo.set("");
                 if (daoFacade.isInConflictWithSeedNode() && !daoConflictWarningShown) {
                     daoConflictWarningShown = true;     // only warn max 1 time per session so as not to annoy
-                    // TODO: only temporarily removed for v1.8.2 to prevent showing false positives and will be
-                    //  re-enabled with the next release
-//                    GUIUtil.showDaoNeedsResyncPopup(navigation);
+                    GUIUtil.showDaoNeedsResyncPopup(navigation);
                 }
             } else {
                 bsqInfo.set(Res.get("mainView.footer.bsqInfo.synchronizing"));

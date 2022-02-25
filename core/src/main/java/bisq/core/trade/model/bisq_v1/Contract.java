@@ -151,12 +151,12 @@ public final class Contract implements NetworkPayload {
         this.makerPaymentMethodId = makerPaymentMethodId;
         this.takerPaymentMethodId = takerPaymentMethodId;
 
-        // Either makerPaymentAccountPayload is set or makerPaymentMethodId
+        // Either makerPaymentMethodId is set, or obtained from offerPayload.
         if (makerPaymentMethodId == null) {
-            makerPaymentMethodId = checkNotNull(makerPaymentAccountPayload).getPaymentMethodId();
+            makerPaymentMethodId = checkNotNull(offerPayload).getPaymentMethodId();
         }
         if (takerPaymentMethodId == null) {
-            takerPaymentMethodId = checkNotNull(takerPaymentAccountPayload).getPaymentMethodId();
+            takerPaymentMethodId = checkNotNull(offerPayload).getPaymentMethodId();
         }
         checkNotNull(makerPaymentMethodId);
         checkNotNull(takerPaymentMethodId);
@@ -298,8 +298,8 @@ public final class Contract implements NetworkPayload {
     }
 
     public String getPaymentMethodId() {
-        // Either makerPaymentMethodId is set or available in makerPaymentAccountPayload
-        return makerPaymentMethodId != null ? makerPaymentMethodId : Objects.requireNonNull(makerPaymentAccountPayload).getPaymentMethodId();
+        // Either makerPaymentMethodId is set or available in offerPayload
+        return makerPaymentMethodId != null ? makerPaymentMethodId : Objects.requireNonNull(getOfferPayload()).getPaymentMethodId();
     }
 
     public Coin getTradeAmount() {

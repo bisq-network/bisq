@@ -46,9 +46,9 @@ public class SimpleMarkdownParser {
                     sb = new StringBuilder();
                 }
                 state = MarkdownParsingState.LINK_TEXT;
-            } else if (c == '(') {
+            } else if (c == '(' && state == MarkdownParsingState.LINK_TEXT) {
                 state = MarkdownParsingState.LINK_HREF;
-            } else if (c == ')') {
+            } else if (c == ')' && state == MarkdownParsingState.LINK_HREF) {
                 state = MarkdownParsingState.TEXT;
                 items.add(new HyperlinkNode(sb.toString(), sb2.toString()));
                 sb = new StringBuilder();

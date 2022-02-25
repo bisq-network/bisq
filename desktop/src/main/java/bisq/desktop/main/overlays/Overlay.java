@@ -756,21 +756,23 @@ public abstract class Overlay<T extends Overlay<T>> {
 
 
         if (headLineLabel != null) {
-            copyIcon.getStyleClass().add("popup-icon-information");
-            copyIcon.setManaged(true);
-            copyIcon.setVisible(true);
-            FormBuilder.getIconForLabel(AwesomeIcon.COPY, copyIcon, "1.5em");
-            copyIcon.addEventHandler(MOUSE_CLICKED, mouseEvent -> {
-                if (message != null) {
-                    String forClipboard = headLineLabel.getText() + System.lineSeparator() + message
-                            + System.lineSeparator() + (messageHyperlinks == null ? "" : messageHyperlinks.toString());
-                    Utilities.copyToClipboard(forClipboard);
-                    Tooltip tp = new Tooltip(Res.get("shared.copiedToClipboard"));
-                    Node node = (Node) mouseEvent.getSource();
-                    UserThread.runAfter(() -> tp.hide(), 1);
-                    tp.show(node, mouseEvent.getScreenX() + Layout.PADDING, mouseEvent.getScreenY() + Layout.PADDING);
-                }
-            });
+            if (copyIcon != null) {
+                copyIcon.getStyleClass().add("popup-icon-information");
+                copyIcon.setManaged(true);
+                copyIcon.setVisible(true);
+                FormBuilder.getIconForLabel(AwesomeIcon.COPY, copyIcon, "1.5em");
+                copyIcon.addEventHandler(MOUSE_CLICKED, mouseEvent -> {
+                    if (message != null) {
+                        String forClipboard = headLineLabel.getText() + System.lineSeparator() + message
+                                + System.lineSeparator() + (messageHyperlinks == null ? "" : messageHyperlinks.toString());
+                        Utilities.copyToClipboard(forClipboard);
+                        Tooltip tp = new Tooltip(Res.get("shared.copiedToClipboard"));
+                        Node node = (Node) mouseEvent.getSource();
+                        UserThread.runAfter(() -> tp.hide(), 1);
+                        tp.show(node, mouseEvent.getScreenX() + Layout.PADDING, mouseEvent.getScreenY() + Layout.PADDING);
+                    }
+                });
+            }
 
             switch (type) {
                 case Information:
@@ -815,14 +817,6 @@ public abstract class Overlay<T extends Overlay<T>> {
 
             HBox hBox = new HBox();
             hBox.setSpacing(7);
-            copyIcon = new Label();
-            copyIcon.setManaged(false);
-            copyIcon.setVisible(false);
-            copyIcon.setPadding(new Insets(3));
-            copyIcon.setTooltip(new Tooltip(Res.get("shared.copyToClipboard")));
-            final Pane spacer = new Pane();
-            HBox.setHgrow(spacer, Priority.ALWAYS);
-            spacer.setMinSize(Layout.PADDING, 1);
             headLineLabel = new AutoTooltipLabel(headLine);
             headlineIcon = new Label();
             headlineIcon.setManaged(false);
@@ -833,7 +827,19 @@ public abstract class Overlay<T extends Overlay<T>> {
             if (headlineStyle != null)
                 headLineLabel.setStyle(headlineStyle);
 
-            hBox.getChildren().addAll(headlineIcon, headLineLabel, spacer, copyIcon);
+            if (message != null) {
+                copyIcon = new Label();
+                copyIcon.setManaged(false);
+                copyIcon.setVisible(false);
+                copyIcon.setPadding(new Insets(3));
+                copyIcon.setTooltip(new Tooltip(Res.get("shared.copyToClipboard")));
+                final Pane spacer = new Pane();
+                HBox.setHgrow(spacer, Priority.ALWAYS);
+                spacer.setMinSize(Layout.PADDING, 1);
+                hBox.getChildren().addAll(headlineIcon, headLineLabel, spacer, copyIcon);
+            } else {
+                hBox.getChildren().addAll(headlineIcon, headLineLabel);
+            }
 
             GridPane.setHalignment(hBox, HPos.LEFT);
             GridPane.setRowIndex(hBox, rowIndex);
