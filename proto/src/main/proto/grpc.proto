@@ -444,22 +444,6 @@ message MarketPriceReply {
     double price = 1;           // The most recently available market price.
 }
 
-/*
-* GetTradeStatistics service is not implemented.  It's stub will be remove from the gRPC daemon.
-*/
-service GetTradeStatistics {
-    // Not implemented.
-    rpc GetTradeStatistics (GetTradeStatisticsRequest) returns (GetTradeStatisticsReply) {
-    }
-}
-
-message GetTradeStatisticsRequest {
-}
-
-message GetTradeStatisticsReply {
-    repeated TradeStatistics3 TradeStatistics = 1;
-}
-
 service ShutdownServer {
     // Shut down a local Bisq daemon.
     rpc Stop (StopRequest) returns (StopReply) {
@@ -468,7 +452,6 @@ service ShutdownServer {
 
 message StopRequest {
 }
-
 
 message StopReply {
 }
