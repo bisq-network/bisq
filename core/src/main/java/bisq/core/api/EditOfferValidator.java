@@ -68,7 +68,12 @@ class EditOfferValidator {
                        int newEnable,
                        EditOfferRequest.EditType editType) {
         this.currentlyOpenOffer = currentlyOpenOffer;
-        this.newPrice = newPrice;
+        // The client may have passed an empty string for the price parameter
+        // if only enabling or disabling the offer.  If so, validate with new
+        // price = old price.
+        this.newPrice = editType.equals(ACTIVATION_STATE_ONLY)
+                ? currentlyOpenOffer.getOffer().getPrice().toString()
+                : newPrice;
         // The client cannot determine what offer.isUseMarketBasedPrice should be
         // when editType = ACTIVATION_STATE_ONLY.  Override newIsUseMarketBasedPrice
         // param for the ACTIVATION_STATE_ONLY case.
