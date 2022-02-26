@@ -204,7 +204,7 @@ public class CoreApi {
                                     Consumer<Offer> resultHandler) {
         coreOffersService.createAndPlaceOffer(currencyCode,
                 directionAsString,
-                price,
+                useMarketBasedPrice ? "0" : price,
                 useMarketBasedPrice,
                 marketPriceMargin,
                 amountAsLong,
