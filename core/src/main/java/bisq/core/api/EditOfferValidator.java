@@ -68,7 +68,7 @@ class EditOfferValidator {
                        int newEnable,
                        EditOfferRequest.EditType editType) {
         this.currentlyOpenOffer = currentlyOpenOffer;
-        this.newPrice = newPrice;
+        this.newPrice = newPrice.isBlank() ? "0" : newPrice;
         // The client cannot determine what offer.isUseMarketBasedPrice should be
         // when editType = ACTIVATION_STATE_ONLY.  Override newIsUseMarketBasedPrice
         // param for the ACTIVATION_STATE_ONLY case.
@@ -78,12 +78,12 @@ class EditOfferValidator {
                 ? currentlyOpenOffer.getOffer().isUseMarketBasedPrice()
                 : newIsUseMarketBasedPrice;
         this.newMarketPriceMargin = newMarketPriceMargin;
-        this.newTriggerPrice = newTriggerPrice;
+        this.newTriggerPrice = newTriggerPrice.isBlank() ? "0" : newTriggerPrice;
         this.newEnable = newEnable;
         this.editType = editType;
 
-        this.isZeroEditedFixedPriceString = new BigDecimal(newPrice).doubleValue() == 0;
-        this.isZeroEditedTriggerPrice = new BigDecimal(newTriggerPrice).equals(ZERO);
+        this.isZeroEditedFixedPriceString = new BigDecimal(this.newPrice).doubleValue() == 0;
+        this.isZeroEditedTriggerPrice = new BigDecimal(this.newTriggerPrice).equals(ZERO);
     }
 
     EditOfferValidator validate() {
