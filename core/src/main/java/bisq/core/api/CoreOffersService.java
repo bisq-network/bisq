@@ -259,7 +259,7 @@ class CoreOffersService {
         String offerId = getRandomOfferId();
         OfferDirection direction = OfferDirection.valueOf(directionAsString.toUpperCase());
         Coin amount = Coin.valueOf(amountAsLong);
-        Coin minAmount = Coin.valueOf(minAmountAsLong);
+        Coin minAmount = minAmountAsLong == 0 ? amount : Coin.valueOf(minAmountAsLong);
         Price price = Price.valueOf(currencyCode, priceStringToLong(priceAsString, currencyCode));
         openBsqSwapOfferService.requestNewOffer(offerId,
                 direction,
@@ -294,7 +294,7 @@ class CoreOffersService {
         OfferDirection direction = OfferDirection.valueOf(directionAsString.toUpperCase());
         Price price = Price.valueOf(upperCaseCurrencyCode, priceStringToLong(priceAsString, upperCaseCurrencyCode));
         Coin amount = Coin.valueOf(amountAsLong);
-        Coin minAmount = Coin.valueOf(minAmountAsLong);
+        Coin minAmount = minAmountAsLong == 0 ? amount : Coin.valueOf(minAmountAsLong);
         Coin useDefaultTxFee = Coin.ZERO;
 
         // Almost ready to call createOfferService.createAndGetOffer(), but first:
