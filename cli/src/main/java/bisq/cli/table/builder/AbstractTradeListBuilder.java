@@ -88,16 +88,15 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
     @Nullable
     protected final Column<Boolean> colIsPayoutPublished;
     @Nullable
-    protected final Column<Boolean> colIsFundsWithdrawn;
+    protected final Column<Boolean> colIsCompleted;
     @Nullable
     protected final Column<Long> colBisqTradeFee;
     @Nullable
     protected final Column<String> colTradeCost;
-    //protected final Column<Long> colTradeCost;
     @Nullable
-    protected final Column<Boolean> colIsPaymentSent;
+    protected final Column<Boolean> colIsPaymentStartedMessageSent;
     @Nullable
-    protected final Column<Boolean> colIsPaymentReceived;
+    protected final Column<Boolean> colIsPaymentReceivedMessageSent;
     @Nullable
     protected final Column<String> colAltcoinReceiveAddressColumn;
 
@@ -139,11 +138,11 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
         this.colIsDepositPublished = colSupplier.depositPublishedColumn.get();
         this.colIsDepositConfirmed = colSupplier.depositConfirmedColumn.get();
         this.colIsPayoutPublished = colSupplier.payoutPublishedColumn.get();
-        this.colIsFundsWithdrawn = colSupplier.fundsWithdrawnColumn.get();
+        this.colIsCompleted = colSupplier.fundsWithdrawnColumn.get();
         this.colBisqTradeFee = colSupplier.bisqTradeDetailFeeColumn.get();
         this.colTradeCost = colSupplier.tradeCostColumn.get();
-        this.colIsPaymentSent = colSupplier.paymentSentColumn.get();
-        this.colIsPaymentReceived = colSupplier.paymentReceivedColumn.get();
+        this.colIsPaymentStartedMessageSent = colSupplier.paymentStartedMessageSentColumn.get();
+        this.colIsPaymentReceivedMessageSent = colSupplier.paymentReceivedMessageSentColumn.get();
         //noinspection ConstantConditions
         this.colAltcoinReceiveAddressColumn = colSupplier.altcoinReceiveAddressColumn.get();
 

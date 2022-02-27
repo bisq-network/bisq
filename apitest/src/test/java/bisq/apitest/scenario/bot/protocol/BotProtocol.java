@@ -133,7 +133,7 @@ public abstract class BotProtocol {
                 checkIfShutdownCalled("Interrupted before checking if 'payment started' message has been sent.");
                 try {
                     var t = this.getBotClient().getTrade(trade.getTradeId());
-                    if (t.getIsFiatSent()) {
+                    if (t.getIsPaymentStartedMessageSent()) {
                         log.info("Buyer has started payment for trade:\n{}",
                                 new TableBuilder(TRADE_DETAIL_TBL, t).build().toString());
                         return t;
@@ -168,7 +168,7 @@ public abstract class BotProtocol {
                 checkIfShutdownCalled("Interrupted before checking if 'payment received confirmation' message has been sent.");
                 try {
                     var t = this.getBotClient().getTrade(trade.getTradeId());
-                    if (t.getIsFiatReceived()) {
+                    if (t.getIsPaymentReceivedMessageSent()) {
                         log.info("Seller has received payment for trade:\n{}",
                                 new TableBuilder(TRADE_DETAIL_TBL, t).build().toString());
                         return t;
