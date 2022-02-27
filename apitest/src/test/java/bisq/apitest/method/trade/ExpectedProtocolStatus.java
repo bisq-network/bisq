@@ -11,10 +11,10 @@ public class ExpectedProtocolStatus {
     Trade.Phase phase;
     boolean isDepositPublished;
     boolean isDepositConfirmed;
-    boolean isFiatSent;
-    boolean isFiatReceived;
+    boolean isPaymentStartedMessageSent;
+    boolean isPaymentReceivedMessageSent;
     boolean isPayoutPublished;
-    boolean isWithdrawn;
+    boolean isCompleted;
 
     public ExpectedProtocolStatus setState(Trade.State state) {
         this.state = state;
@@ -36,13 +36,13 @@ public class ExpectedProtocolStatus {
         return this;
     }
 
-    public ExpectedProtocolStatus setFiatSent(boolean fiatSent) {
-        isFiatSent = fiatSent;
+    public ExpectedProtocolStatus setPaymentStartedMessageSent(boolean paymentStartedMessageSent) {
+        isPaymentStartedMessageSent = paymentStartedMessageSent;
         return this;
     }
 
-    public ExpectedProtocolStatus setFiatReceived(boolean fiatReceived) {
-        isFiatReceived = fiatReceived;
+    public ExpectedProtocolStatus setPaymentReceivedMessageSent(boolean paymentReceivedMessageSent) {
+        isPaymentReceivedMessageSent = paymentReceivedMessageSent;
         return this;
     }
 
@@ -51,8 +51,8 @@ public class ExpectedProtocolStatus {
         return this;
     }
 
-    public ExpectedProtocolStatus setWithdrawn(boolean withdrawn) {
-        isWithdrawn = withdrawn;
+    public ExpectedProtocolStatus setCompleted(boolean completed) {
+        isCompleted = completed;
         return this;
     }
 
@@ -61,9 +61,9 @@ public class ExpectedProtocolStatus {
         phase = null;
         isDepositPublished = false;
         isDepositConfirmed = false;
-        isFiatSent = false;
-        isFiatReceived = false;
+        isPaymentStartedMessageSent = false;
+        isPaymentReceivedMessageSent = false;
         isPayoutPublished = false;
-        isWithdrawn = false;
+        isCompleted = false;
     }
 }

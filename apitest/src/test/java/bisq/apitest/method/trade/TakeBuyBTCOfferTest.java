@@ -122,7 +122,7 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
             EXPECTED_PROTOCOL_STATUS.setState(SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG)
                     .setPhase(PAYOUT_PUBLISHED)
                     .setPayoutPublished(true)
-                    .setFiatReceived(true);
+                    .setPaymentReceivedMessageSent(true);
             verifyExpectedProtocolStatus(trade);
             logTrade(log, testInfo, "Bob's view after confirming fiat payment received", trade);
         } catch (StatusRuntimeException e) {

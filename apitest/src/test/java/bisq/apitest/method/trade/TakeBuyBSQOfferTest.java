@@ -145,7 +145,7 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
             EXPECTED_PROTOCOL_STATUS.setState(SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG)
                     .setPhase(PAYOUT_PUBLISHED)
                     .setPayoutPublished(true)
-                    .setFiatReceived(true);
+                    .setPaymentReceivedMessageSent(true);
             verifyExpectedProtocolStatus(trade);
             logTrade(log, testInfo, "Alice's Maker/Buyer View (Payment Received)", aliceClient.getTrade(tradeId));
             logTrade(log, testInfo, "Bob's Taker/Seller View (Payment Received)", bobClient.getTrade(tradeId));
