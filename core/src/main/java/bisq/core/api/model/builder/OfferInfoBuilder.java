@@ -37,8 +37,8 @@ public final class OfferInfoBuilder {
     private double marketPriceMargin;
     private long amount;
     private long minAmount;
-    private long volume;
-    private long minVolume;
+    private String volume;
+    private String minVolume;
     private long txFee;
     private long makerFee;
     private String offerFeePaymentTxId;
@@ -97,12 +97,12 @@ public final class OfferInfoBuilder {
         return this;
     }
 
-    public OfferInfoBuilder withVolume(long volume) {
+    public OfferInfoBuilder withVolume(String volume) {
         this.volume = volume;
         return this;
     }
 
-    public OfferInfoBuilder withMinVolume(long minVolume) {
+    public OfferInfoBuilder withMinVolume(String minVolume) {
         this.minVolume = minVolume;
         return this;
     }

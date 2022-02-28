@@ -300,16 +300,12 @@ message OfferInfo {
     uint64 amount = 6;
     // The offer's minimum BTC amount in satoshis.  One million satoshis is represented as 1000000.
     uint64 minAmount = 7;
-    // A long representing the rounded volume of currency to be traded for BTC.
-    // For EUR fiat offers, a volume of 29500.000 EUR would be represented as 29500000.
-    // TODO:  Seems to be a bug in the volume, missing one trailing decimal.
-    // Price has 4 "ghost" decimal places.  Volume has only 3 "ghost" decimal places, e.g.,
-    //     EUR PRICE:   295001234
-    //     EUR VOL:     29500000
-    uint64 volume = 8;
-    // A long representing the minimum, rounded volume of currency to be traded for BTC.
-    // TODO: Resolve the problem mentioned above, in the volume field description.
-    uint64 minVolume = 9;
+    // The rounded volume of currency to be traded for BTC.
+    // Fiat volume is rounded to whole currency units (no cents).  Altcoin volume is rounded to 2 decimal places.
+    string volume = 8;
+    // The rounded, minimum volume of currency to be traded for BTC.
+    // Fiat volume is rounded to whole currency units (no cents).  Altcoin volume is rounded to 2 decimal places.
+    string minVolume = 9;
     // A long representing the BTC buyer's security deposit in satoshis.
     uint64 buyerSecurityDeposit = 10;
     // A market price margin based offer's trigger price is the market BTC price at which the offer is automatically disabled.

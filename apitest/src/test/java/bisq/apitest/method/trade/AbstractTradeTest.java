@@ -14,7 +14,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInfo;
 
 import static bisq.apitest.config.ApiTestConfig.BTC;
-import static bisq.cli.CurrencyFormat.formatBsqAmount;
 import static bisq.cli.table.builder.TableType.TRADE_DETAIL_TBL;
 import static bisq.core.trade.model.bisq_v1.Trade.Phase.DEPOSIT_CONFIRMED;
 import static bisq.core.trade.model.bisq_v1.Trade.Phase.FIAT_SENT;
@@ -208,7 +207,10 @@ public class AbstractTradeTest extends AbstractOfferTest {
         String receiverAddress = contract.getIsBuyerMakerAndSellerTaker()
                 ? contract.getTakerPaymentAccountPayload().getAddress()
                 : contract.getMakerPaymentAccountPayload().getAddress();
-        String sendBsqAmount = formatBsqAmount(trade.getOffer().getVolume());
+        // TODO Fix trade vol src bug for subclasses.
+        //  This bug was fixed for production CLI with https://github.com/bisq-network/bisq/pull/5704 on Sep 27, 2021
+        String sendBsqAmount = trade.getOffer().getVolume();
+        // String sendBsqAmount = trade.getTradeVolume();
         log.debug("Sending {} BSQ to address {}", sendBsqAmount, receiverAddress);
         grpcClient.sendBsq(receiverAddress, sendBsqAmount, "");
     }
@@ -217,8 +219,10 @@ public class AbstractTradeTest extends AbstractOfferTest {
                                                          GrpcClient grpcClient,
                                                          TradeInfo trade) {
         var contract = trade.getContract();
-        var bsqSats = trade.getOffer().getVolume();
-        var receiveAmountAsString = formatBsqAmount(bsqSats);
+        // TODO Fix trade vol src bug for subclasses.
+        //  This bug was fixed for production with https://github.com/bisq-network/bisq/pull/5704 on Sep 27, 2021
+        var receiveAmountAsString = trade.getOffer().getVolume();
+        // String receiveAmountAsString = trade.getTradeVolume();
         var address = contract.getIsBuyerMakerAndSellerTaker()
                 ? contract.getTakerPaymentAccountPayload().getAddress()
                 : contract.getMakerPaymentAccountPayload().getAddress();

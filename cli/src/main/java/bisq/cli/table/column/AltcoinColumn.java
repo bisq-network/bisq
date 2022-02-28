@@ -32,6 +32,7 @@ import static bisq.cli.table.column.Column.JUSTIFICATION.RIGHT;
 public class AltcoinColumn extends LongColumn {
 
     public enum DISPLAY_MODE {
+        @Deprecated
         ALTCOIN_OFFER_VOLUME,
         ALTCOIN_PRICE,
         @Deprecated

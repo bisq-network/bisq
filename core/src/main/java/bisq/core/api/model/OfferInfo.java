@@ -32,6 +32,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 import static bisq.core.util.PriceUtil.reformatMarketPrice;
+import static bisq.core.util.VolumeUtil.formatVolume;
 import static java.util.Objects.requireNonNull;
 
 @EqualsAndHashCode
@@ -50,8 +51,8 @@ public class OfferInfo implements Payload {
     private final double marketPriceMargin;
     private final long amount;
     private final long minAmount;
-    private final long volume;
-    private final long minVolume;
+    private final String volume;
+    private final String minVolume;
     private final long txFee;
     private final long makerFee;
     private final String offerFeePaymentTxId;
@@ -147,9 +148,12 @@ public class OfferInfo implements Payload {
     }
 
     private static OfferInfoBuilder getBuilder(Offer offer, boolean isMyOffer) {
+        var currencyCode = offer.getCurrencyCode();
         var preciseOfferPrice = reformatMarketPrice(
                 requireNonNull(offer.getPrice()).toPlainString(),
-                offer.getCurrencyCode());
+                currencyCode);
+        var roundedVolume = formatVolume(requireNonNull(offer.getVolume()));
+        var roundedMinVolume = formatVolume(requireNonNull(offer.getMinVolume()));
         return new OfferInfoBuilder()
                 .withId(offer.getId())
                 .withDirection(offer.getDirection().name())
@@ -158,8 +162,8 @@ public class OfferInfo implements Payload {
                 .withMarketPriceMargin(offer.getMarketPriceMargin())
                 .withAmount(offer.getAmount().value)
                 .withMinAmount(offer.getMinAmount().value)
-                .withVolume(requireNonNull(offer.getVolume()).getValue())
-                .withMinVolume(requireNonNull(offer.getMinVolume()).getValue())
+                .withVolume(roundedVolume)
+                .withMinVolume(roundedMinVolume)
                 .withMakerFee(getMakerFee(offer, isMyOffer))
                 .withTxFee(offer.getTxFee().value)
                 .withOfferFeePaymentTxId(offer.getOfferFeePaymentTxId())
@@ -206,8 +210,8 @@ public class OfferInfo implements Payload {
                 .setMarketPriceMargin(marketPriceMargin)
                 .setAmount(amount)
                 .setMinAmount(minAmount)
-                .setVolume(volume)
-                .setMinVolume(minVolume)
+                .setVolume(volume == null ? "0" : volume)
+                .setMinVolume(minVolume == null ? "0" : minVolume)
                 .setMakerFee(makerFee)
                 .setTxFee(txFee)
                 .setOfferFeePaymentTxId(isBsqSwapOffer ? "" : offerFeePaymentTxId)

@@ -35,6 +35,7 @@ public class FiatColumn extends LongColumn {
         PRICE,
         @Deprecated
         TRIGGER_PRICE,
+        @Deprecated
         VOLUME
     }
 

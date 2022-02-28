@@ -79,7 +79,7 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
                     getDefaultBuyerSecurityDepositAsPercent(),
                     alicesLegacyBsqAcct.getId(),
                     TRADE_FEE_CURRENCY_CODE);
-            log.debug("ALICE'S BUY BSQ (SELL BTC) OFFER:\n{}", toOfferTable.apply(alicesOffer));
+            log.debug("Alice's BUY BSQ (SELL BTC) Offer:\n{}", toOfferTable.apply(alicesOffer));
             genBtcBlocksThenWait(1, 5000);
             var offerId = alicesOffer.getId();
             assertFalse(alicesOffer.getIsCurrencyForMakerFeeBtc());
