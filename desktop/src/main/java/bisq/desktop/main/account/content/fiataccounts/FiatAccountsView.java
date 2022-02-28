@@ -476,11 +476,14 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
 
     // Select account form
     @Override
-    protected void onSelectAccount(PaymentAccount paymentAccount) {
+    protected void onSelectAccount(PaymentAccount previous, PaymentAccount current) {
+        if (previous != null) {
+            previous.revertChanges();
+        }
         removeAccountRows();
         addAccountButton.setDisable(false);
         accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("shared.selectedAccount"), Layout.GROUP_DISTANCE);
-        paymentMethodForm = getPaymentMethodForm(paymentAccount);
+        paymentMethodForm = getPaymentMethodForm(current);
         if (paymentMethodForm != null) {
             paymentMethodForm.addFormForEditAccount();
             gridRow = paymentMethodForm.getGridRow();
@@ -498,7 +501,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
             Button cancelButton = tuple.third;
             cancelButton.setOnAction(event -> onCancelSelectedAccount(paymentMethodForm.getPaymentAccount()));
             GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan());
-            model.onSelectAccount(paymentAccount);
+            model.onSelectAccount(current);
         }
     }
 

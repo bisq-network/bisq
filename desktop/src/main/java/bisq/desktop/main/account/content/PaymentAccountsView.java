@@ -70,7 +70,7 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
         buildForm();
         paymentAccountChangeListener = (observable, oldValue, newValue) -> {
             if (newValue != null)
-                onSelectAccount(newValue);
+                onSelectAccount(oldValue, newValue);
         };
         Label placeholder = new AutoTooltipLabel(Res.get("shared.noAccountsSetupYet"));
         placeholder.setWrapText(true);
@@ -175,7 +175,8 @@ public abstract class PaymentAccountsView<R extends Node, M extends ActivatableW
 
     protected abstract void buildForm();
 
-    protected abstract void onSelectAccount(PaymentAccount paymentAccount);
+    protected abstract void onSelectAccount(PaymentAccount previous,
+                                            PaymentAccount current);
 
     protected void copyAccount() {
     }

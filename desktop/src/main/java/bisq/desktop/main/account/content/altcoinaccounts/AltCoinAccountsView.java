@@ -223,11 +223,14 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
     }
 
     // Select account form
-    protected void onSelectAccount(PaymentAccount paymentAccount) {
+    protected void onSelectAccount(PaymentAccount previous, PaymentAccount current) {
+        if (previous != null) {
+            previous.revertChanges();
+        }
         removeAccountRows();
         addAccountButton.setDisable(false);
         accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 2, Res.get("shared.selectedAccount"), Layout.GROUP_DISTANCE);
-        paymentMethodForm = getPaymentMethodForm(paymentAccount);
+        paymentMethodForm = getPaymentMethodForm(current);
         paymentMethodForm.addFormForEditAccount();
         gridRow = paymentMethodForm.getGridRow();
         Tuple3<Button, Button, Button> tuple = add3ButtonsAfterGroup(
@@ -239,13 +242,13 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
         );
 
         Button saveAccountButton = tuple.first;
-        saveAccountButton.setOnAction(event -> onUpdateAccount(paymentAccount));
+        saveAccountButton.setOnAction(event -> onUpdateAccount(current));
         Button deleteAccountButton = tuple.second;
-        deleteAccountButton.setOnAction(event -> onDeleteAccount(paymentAccount));
+        deleteAccountButton.setOnAction(event -> onDeleteAccount(current));
         Button cancelButton = tuple.third;
-        cancelButton.setOnAction(event -> onCancelSelectedAccount(paymentAccount));
+        cancelButton.setOnAction(event -> onCancelSelectedAccount(current));
         GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan());
-        model.onSelectAccount(paymentAccount);
+        model.onSelectAccount(current);
     }
 
 
