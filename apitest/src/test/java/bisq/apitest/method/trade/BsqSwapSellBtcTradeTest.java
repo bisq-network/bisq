@@ -83,7 +83,7 @@ public class BsqSwapSellBtcTradeTest extends AbstractTradeTest {
                 1_000_000L,     // 0.01 BTC
                 1_000_000L,
                 "0.00005");
-        log.debug("Pending BsqSwap Buy BSQ (Sell BTC) OFFER:\n{}", toOfferTable.apply(mySwapOffer));
+        log.debug("Pending BsqSwap BUY BSQ (SELL BTC) Offer:\n{}", toOfferTable.apply(mySwapOffer));
         var newOfferId = mySwapOffer.getId();
         assertNotEquals("", newOfferId);
         assertEquals(SELL.name(), mySwapOffer.getDirection());

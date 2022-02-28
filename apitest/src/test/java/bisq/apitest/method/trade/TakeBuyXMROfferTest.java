@@ -80,7 +80,7 @@ public class TakeBuyXMROfferTest extends AbstractTradeTest {
                     getDefaultBuyerSecurityDepositAsPercent(),
                     alicesXmrAcct.getId(),
                     TRADE_FEE_CURRENCY_CODE);
-            log.debug("Alice's Buy XMR (Sell BTC) offer:\n{}", new TableBuilder(OFFER_TBL, alicesOffer).build());
+            log.debug("Alice's BUY XMR (SELL BTC) Offer:\n{}", new TableBuilder(OFFER_TBL, alicesOffer).build());
             genBtcBlocksThenWait(1, 5000);
             var offerId = alicesOffer.getId();
             assertFalse(alicesOffer.getIsCurrencyForMakerFeeBtc());

@@ -17,43 +17,33 @@
 
 package bisq.cli.table.column;
 
+import java.math.BigDecimal;
+
 import java.util.function.BiFunction;
 import java.util.stream.IntStream;
 
-import static bisq.cli.CurrencyFormat.formatCryptoCurrencyPrice;
-import static bisq.cli.CurrencyFormat.formatCryptoCurrencyVolume;
-import static bisq.cli.table.column.AltcoinColumn.DISPLAY_MODE.ALTCOIN_PRICE;
 import static bisq.cli.table.column.Column.JUSTIFICATION.RIGHT;
 
 /**
- * For displaying altcoin values as volume, price, or optional trigger price
- * with appropriate precision.
+ * For displaying altcoin volume with appropriate precision.
  */
-public class AltcoinColumn extends LongColumn {
+public class AltcoinVolumeColumn extends LongColumn {
 
     public enum DISPLAY_MODE {
-        @Deprecated
-        ALTCOIN_OFFER_VOLUME,
-        ALTCOIN_PRICE,
-        @Deprecated
-        ALTCOIN_TRIGGER_PRICE
+        ALTCOIN_VOLUME,
+        BSQ_VOLUME,
     }
 
     private final DISPLAY_MODE displayMode;
 
-    // The default AltcoinColumn JUSTIFICATION is RIGHT.
-    // The default AltcoinColumn DISPLAY_MODE is ALTCOIN_PRICE.
-    public AltcoinColumn(String name) {
-        this(name, RIGHT, ALTCOIN_PRICE);
-    }
-
-    public AltcoinColumn(String name, DISPLAY_MODE displayMode) {
+    // The default AltcoinVolumeColumn JUSTIFICATION is RIGHT.
+    public AltcoinVolumeColumn(String name, DISPLAY_MODE displayMode) {
         this(name, RIGHT, displayMode);
     }
 
-    public AltcoinColumn(String name,
-                         JUSTIFICATION justification,
-                         DISPLAY_MODE displayMode) {
+    public AltcoinVolumeColumn(String name,
+                               JUSTIFICATION justification,
+                               DISPLAY_MODE displayMode) {
         super(name, justification);
         this.displayMode = displayMode;
     }
@@ -88,11 +78,10 @@ public class AltcoinColumn extends LongColumn {
 
     private final BiFunction<Long, DISPLAY_MODE, String> toFormattedString = (value, displayMode) -> {
         switch (displayMode) {
-            case ALTCOIN_OFFER_VOLUME:
-                return value > 0 ? formatCryptoCurrencyVolume(value) : "";
-            case ALTCOIN_PRICE:
-            case ALTCOIN_TRIGGER_PRICE:
-                return value > 0 ? formatCryptoCurrencyPrice(value) : "";
+            case ALTCOIN_VOLUME:
+                return value > 0 ? new BigDecimal(value).movePointLeft(8).toString() : "";
+            case BSQ_VOLUME:
+                return value > 0 ? new BigDecimal(value).movePointLeft(2).toString() : "";
             default:
                 throw new IllegalStateException("invalid display mode: " + displayMode);
         }

@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import static bisq.cli.CurrencyFormat.formatSatoshis;
 import static bisq.cli.table.builder.TableBuilderConstants.COL_HEADER_BUYER_DEPOSIT;
 import static bisq.cli.table.builder.TableBuilderConstants.COL_HEADER_SELLER_DEPOSIT;
 import static bisq.cli.table.builder.TableType.TRADE_DETAIL_TBL;
@@ -42,7 +43,6 @@ import static protobuf.OfferDirection.SELL;
 
 import bisq.cli.table.column.Column;
 import bisq.cli.table.column.MixedTradeFeeColumn;
-import bisq.cli.table.column.MixedVolumeColumn;
 
 abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
 
@@ -55,15 +55,15 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
     protected final Column<Long> colCreateDate;
     @Nullable
     protected final Column<String> colMarket;
-    protected final Column<Long> colPrice;
+    protected final Column<String> colPrice;
     @Nullable
     protected final Column<String> colPriceDeviation;
     @Nullable
     protected final Column<String> colCurrency;
     @Nullable
-    protected final Column<Long> colAmountInBtc;
+    protected final Column<Long> colAmount;
     @Nullable
-    protected final MixedVolumeColumn colMixedAmount;
+    protected final Column<String> colMixedAmount;
     @Nullable
     protected final Column<Long> colMinerTxFee;
     @Nullable
@@ -94,7 +94,8 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
     @Nullable
     protected final Column<Long> colBisqTradeFee;
     @Nullable
-    protected final Column<Long> colTradeCost;
+    protected final Column<String> colTradeCost;
+    //protected final Column<Long> colTradeCost;
     @Nullable
     protected final Column<Boolean> colIsPaymentSent;
     @Nullable
@@ -124,7 +125,7 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
         this.colPrice = colSupplier.priceColumn.get();
         this.colPriceDeviation = colSupplier.priceDeviationColumn.get();
         this.colCurrency = colSupplier.currencyColumn.get();
-        this.colAmountInBtc = colSupplier.amountInBtcColumn.get();
+        this.colAmount = colSupplier.amountColumn.get();
         this.colMixedAmount = colSupplier.mixedAmountColumn.get();
         this.colMinerTxFee = colSupplier.minerTxFeeColumn.get();
         this.colMixedTradeFee = colSupplier.mixedTradeFeeColumn.get();
@@ -145,6 +146,7 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
         this.colTradeCost = colSupplier.tradeCostColumn.get();
         this.colIsPaymentSent = colSupplier.paymentSentColumn.get();
         this.colIsPaymentReceived = colSupplier.paymentReceivedColumn.get();
+        //noinspection ConstantConditions
         this.colAltcoinReceiveAddressColumn = colSupplier.altcoinReceiveAddressColumn.get();
 
         // BSQ swap trade detail specific columns
@@ -167,6 +169,7 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
 
     private final Supplier<Boolean> isTradeDetailTblBuilder = () -> tableType.equals(TRADE_DETAIL_TBL);
     protected final Predicate<TradeInfo> isFiatTrade = (t) -> isFiatOffer.test(t.getOffer());
+    protected final Predicate<TradeInfo> isBsqTrade = (t) -> !isFiatOffer.test(t.getOffer()) && t.getOffer().getBaseCurrencyCode().equals("BSQ");
     protected final Predicate<TradeInfo> isBsqSwapTrade = (t) -> t.getOffer().getIsBsqSwapOffer();
     protected final Predicate<TradeInfo> isMyOffer = (t) -> t.getOffer().getIsMyOffer();
     protected final Predicate<TradeInfo> isTaker = (t) -> t.getRole().toLowerCase().contains("taker");
@@ -180,15 +183,28 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
 
     // Column Value Functions
 
-    protected final Function<TradeInfo, Long> toAmount = (t) ->
-            isFiatTrade.test(t)
-                    ? t.getTradeAmountAsLong()
-                    : t.getTradeVolume();
+    // Altcoin volumes from server are string representations of decimals.
+    // Converting them to longs ("sats") requires shifting the decimal points
+    // to left:  2 for BSQ, 8 for other altcoins.
+    protected final Function<TradeInfo, Long> toAltcoinTradeVolumeAsLong = (t) ->
+            isBsqTrade.test(t)
+                    ? new BigDecimal(t.getTradeVolume()).movePointRight(2).longValue()
+                    : new BigDecimal(t.getTradeVolume()).movePointRight(8).longValue();
 
-    protected final Function<TradeInfo, Long> toTradeVolume = (t) ->
+    protected final Function<TradeInfo, String> toTradeVolumeAsString = (t) ->
             isFiatTrade.test(t)
                     ? t.getTradeVolume()
-                    : t.getTradeAmountAsLong();
+                    : formatSatoshis(t.getTradeAmountAsLong());
+
+    protected final Function<TradeInfo, Long> toTradeVolumeAsLong = (t) ->
+            isFiatTrade.test(t)
+                    ? Long.parseLong(t.getTradeVolume())
+                    : toAltcoinTradeVolumeAsLong.apply(t);
+
+    protected final Function<TradeInfo, Long> toTradeAmount = (t) ->
+            isFiatTrade.test(t)
+                    ? t.getTradeAmountAsLong()
+                    : toTradeVolumeAsLong.apply(t);
 
     protected final Function<TradeInfo, String> toMarket = (t) ->
             t.getOffer().getBaseCurrencyCode() + "/"
@@ -198,16 +214,6 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
             isFiatTrade.test(t)
                     ? t.getOffer().getCounterCurrencyCode()
                     : t.getOffer().getBaseCurrencyCode();
-
-
-    protected final Function<TradeInfo, Integer> toDisplayedVolumePrecision = (t) -> {
-        if (isFiatTrade.test(t)) {
-            return 0;
-        } else {
-            String currencyCode = toPaymentCurrencyCode.apply(t);
-            return currencyCode.equalsIgnoreCase("BSQ") ? 2 : 8;
-        }
-    };
 
     protected final Function<TradeInfo, String> toPriceDeviation = (t) ->
             t.getOffer().getUseMarketBasedPrice()

@@ -39,7 +39,7 @@ public class CanceledTradeInfo {
         Offer offer = myCanceledOpenOffer.getOffer();
         OfferInfo offerInfo = toMyOfferInfo(offer);
 
-        return new TradeInfoV1Builder()  // TODO May need to use BsqSwapTradeInfoBuilder?
+        return new TradeInfoV1Builder()
                 .withOffer(offerInfo)
                 .withTradeId(myCanceledOpenOffer.getId())
                 .withShortId(myCanceledOpenOffer.getShortId())
@@ -52,8 +52,8 @@ public class CanceledTradeInfo {
                 .withDepositTxId("")                // Ignored
                 .withPayoutTxId("")                 // Ignored
                 .withTradeAmountAsLong(0)           // Ignored
-                .withTradePrice(offer.getPrice().getValue())
-                .withTradeVolume(0)                 // Ignored
+                .withTradePrice(offerInfo.getPrice())
+                .withTradeVolume("")                // Ignored
                 .withTradingPeerNodeAddress("")     // Ignored
                 .withState("")                      // Ignored
                 .withPhase("")                      // Ignored

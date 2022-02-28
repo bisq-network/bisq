@@ -77,12 +77,12 @@ class TradeDetailTableBuilder extends AbstractTradeListBuilder {
         colTradeId.addRow(trade.getShortId());
         colRole.addRow(trade.getRole());
         colPrice.addRow(trade.getTradePrice());
-        colAmountInBtc.addRow(toAmount.apply(trade));
+        colAmount.addRow(toTradeAmount.apply(trade));
         colMinerTxFee.addRow(toMyMinerTxFee.apply(trade));
         colBisqTradeFee.addRow(toMyMakerOrTakerFee.apply(trade));
         colIsDepositPublished.addRow(trade.getIsDepositPublished());
         colIsDepositConfirmed.addRow(trade.getIsDepositConfirmed());
-        colTradeCost.addRow(toTradeVolume.apply(trade));
+        colTradeCost.addRow(toTradeVolumeAsString.apply(trade));
         colIsPaymentSent.addRow(trade.getIsFiatSent());
         colIsPaymentReceived.addRow(trade.getIsFiatReceived());
         colIsPayoutPublished.addRow(trade.getIsPayoutPublished());
@@ -95,10 +95,11 @@ class TradeDetailTableBuilder extends AbstractTradeListBuilder {
         colTradeId.addRow(trade.getShortId());
         colRole.addRow(trade.getRole());
         colPrice.addRow(trade.getTradePrice());
-        colAmountInBtc.addRow(toAmount.apply(trade));
+        colAmount.addRow(toTradeAmount.apply(trade));
         colMinerTxFee.addRow(toMyMinerTxFee.apply(trade));
         colBisqTradeFee.addRow(toMyMakerOrTakerFee.apply(trade));
-        colTradeCost.addRow(toTradeVolume.apply(trade));
+
+        colTradeCost.addRow(toTradeVolumeAsString.apply(trade));
 
         var isCompleted = isCompletedBsqSwap.test(trade);
         status.addRow(isCompleted ? "COMPLETED" : "PENDING");
@@ -118,13 +119,13 @@ class TradeDetailTableBuilder extends AbstractTradeListBuilder {
         List<Column<?>> columns = new ArrayList<>() {{
             add(colTradeId);
             add(colRole);
-            add(colPrice.asStringColumn());
-            add(colAmountInBtc.asStringColumn());
+            add(colPrice.justify());
+            add(colAmount.asStringColumn());
             add(colMinerTxFee.asStringColumn());
             add(colBisqTradeFee.asStringColumn());
             add(colIsDepositPublished.asStringColumn());
             add(colIsDepositConfirmed.asStringColumn());
-            add(colTradeCost.asStringColumn());
+            add(colTradeCost.justify());
             add(colIsPaymentSent.asStringColumn());
             add(colIsPaymentReceived.asStringColumn());
             add(colIsPayoutPublished.asStringColumn());
@@ -141,11 +142,11 @@ class TradeDetailTableBuilder extends AbstractTradeListBuilder {
         List<Column<?>> columns = new ArrayList<>() {{
             add(colTradeId);
             add(colRole);
-            add(colPrice.asStringColumn());
-            add(colAmountInBtc.asStringColumn());
+            add(colPrice.justify());
+            add(colAmount.asStringColumn());
             add(colMinerTxFee.asStringColumn());
             add(colBisqTradeFee.asStringColumn());
-            add(colTradeCost.asStringColumn());
+            add(colTradeCost.justify());
             add(status);
         }};
 

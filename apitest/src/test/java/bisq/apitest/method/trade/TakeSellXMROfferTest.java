@@ -84,7 +84,7 @@ public class TakeSellXMROfferTest extends AbstractTradeTest {
                     alicesXmrAcct.getId(),
                     TRADE_FEE_CURRENCY_CODE,
                     NO_TRIGGER_PRICE);
-            log.debug("Alice's SELL XMR (Buy BTC) offer:\n{}", new TableBuilder(OFFER_TBL, alicesOffer).build());
+            log.debug("Alice's SELL XMR (BUY BTC) Offer:\n{}", new TableBuilder(OFFER_TBL, alicesOffer).build());
             genBtcBlocksThenWait(1, 4000);
             var offerId = alicesOffer.getId();
             assertTrue(alicesOffer.getIsCurrencyForMakerFeeBtc());

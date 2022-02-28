@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
-import static bisq.cli.CurrencyFormat.formatVolumeString;
 import static bisq.cli.table.builder.TableBuilderConstants.*;
 import static bisq.cli.table.builder.TableType.OFFER_TBL;
 import static bisq.cli.table.column.Column.JUSTIFICATION.LEFT;
@@ -74,17 +73,16 @@ class OfferTableBuilder extends AbstractTableBuilder {
     @SuppressWarnings("ConstantConditions")
     public Table buildFiatOfferTable(List<OfferInfo> offers) {
         @Nullable
-        Column<String> colEnabled = enabledColumn.get(); // Not boolean: YES, NO, or PENDING
+        Column<String> colEnabled = enabledColumn.get(); // Not boolean: "YES", "NO", or "PENDING"
         Column<String> colFiatPrice = new StringColumn(format(COL_HEADER_DETAILED_PRICE, fiatTradeCurrency.get()), RIGHT);
-        Column<String> colFiatVolume = new StringColumn(format("Temp Volume (%s)", fiatTradeCurrency.get()), NONE);
-        Column<String> colMinFiatVolume = new StringColumn(format("Temp Min Volume (%s)", fiatTradeCurrency.get()), NONE);
+        Column<String> colVolume = new StringColumn(format("Temp Volume (%s)", fiatTradeCurrency.get()), NONE);
+        Column<String> colMinVolume = new StringColumn(format("Temp Min Volume (%s)", fiatTradeCurrency.get()), NONE);
         @Nullable
         Column<String> colTriggerPrice = fiatTriggerPriceColumn.get();
 
         // Populate columns with offer info.
 
-        //noinspection SimplifyStreamApiCallChains
-        offers.stream().forEachOrdered(o -> {
+        offers.forEach(o -> {
             if (colEnabled != null)
                 colEnabled.addRow(toEnabled.apply(o));
 
@@ -92,10 +90,8 @@ class OfferTableBuilder extends AbstractTableBuilder {
             colFiatPrice.addRow(o.getPrice());
             colMinAmount.addRow(o.getMinAmount());
             colAmount.addRow(o.getAmount());
-
-            var volumePrecision = toOfferVolumePrecision.apply(o);
-            colMinFiatVolume.addRow(formatVolumeString(toBlankOrNonZeroValue.apply(o.getMinVolume()), volumePrecision));
-            colFiatVolume.addRow(formatVolumeString(o.getVolume(), volumePrecision));
+            colVolume.addRow(o.getVolume());
+            colMinVolume.addRow(o.getMinVolume());
 
             if (colTriggerPrice != null)
                 colTriggerPrice.addRow(toBlankOrNonZeroValue.apply(o.getTriggerPrice()));
@@ -110,8 +106,8 @@ class OfferTableBuilder extends AbstractTableBuilder {
                 new ZippedStringColumns(format(COL_HEADER_VOLUME_RANGE, fiatTradeCurrency.get()),
                         RIGHT,
                         " - ",
-                        colMinFiatVolume.asStringColumn(),
-                        colFiatVolume.asStringColumn());
+                        colMinVolume.asStringColumn(),
+                        colVolume.asStringColumn());
 
         // Define and return the table instance with populated columns.
 
@@ -141,15 +137,14 @@ class OfferTableBuilder extends AbstractTableBuilder {
         @Nullable
         Column<String> colEnabled = enabledColumn.get(); // Not boolean: YES, NO, or PENDING
         Column<String> colBtcPrice = new StringColumn(format(COL_HEADER_DETAILED_PRICE_OF_ALTCOIN, altcoinTradeCurrency.get()), RIGHT);
-        Column<String> colBtcVolume = new StringColumn(format("Temp Volume (%s)", altcoinTradeCurrency.get()), NONE);
-        Column<String> colMinBtcVolume = new StringColumn(format("Temp Min Volume (%s)", altcoinTradeCurrency.get()), NONE);
+        Column<String> colVolume = new StringColumn(format("Temp Volume (%s)", altcoinTradeCurrency.get()), NONE);
+        Column<String> colMinVolume = new StringColumn(format("Temp Min Volume (%s)", altcoinTradeCurrency.get()), NONE);
         @Nullable
         Column<String> colTriggerPrice = altcoinTriggerPriceColumn.get();
 
         // Populate columns with offer info.
 
-        //noinspection SimplifyStreamApiCallChains
-        offers.stream().forEachOrdered(o -> {
+        offers.forEach(o -> {
             if (colEnabled != null)
                 colEnabled.addRow(toEnabled.apply(o));
 
@@ -157,9 +152,8 @@ class OfferTableBuilder extends AbstractTableBuilder {
             colBtcPrice.addRow(o.getPrice());
             colAmount.addRow(o.getAmount());
             colMinAmount.addRow(o.getMinAmount());
-            var volumePrecision = toOfferVolumePrecision.apply(o);
-            colBtcVolume.addRow(formatVolumeString(o.getVolume(), volumePrecision));
-            colMinBtcVolume.addRow(formatVolumeString(toBlankOrNonZeroValue.apply(o.getMinVolume()), volumePrecision));
+            colVolume.addRow(o.getVolume());
+            colMinVolume.addRow(o.getMinVolume());
 
             if (colTriggerPrice != null)
                 colTriggerPrice.addRow(toBlankOrNonZeroValue.apply(o.getTriggerPrice()));
@@ -174,8 +168,8 @@ class OfferTableBuilder extends AbstractTableBuilder {
                 new ZippedStringColumns(format(COL_HEADER_VOLUME_RANGE, altcoinTradeCurrency.get()),
                         RIGHT,
                         " - ",
-                        colMinBtcVolume.asStringColumn(),
-                        colBtcVolume.asStringColumn());
+                        colMinVolume.asStringColumn(),
+                        colVolume.asStringColumn());
 
         // Define and return the table instance with populated columns.
 
@@ -211,18 +205,7 @@ class OfferTableBuilder extends AbstractTableBuilder {
         }
     }
 
-    // TODO Might want to move these three functions into superclass (if TradeTableBuilder needs them).
     private final Function<String, String> toBlankOrNonZeroValue = (s) -> s.trim().equals("0") ? "" : s;
-    private final Function<OfferInfo, String> toOfferCurrencyCode = (o) -> isFiatOffer.test(o)
-            ? o.getCounterCurrencyCode()
-            : o.getBaseCurrencyCode();
-    private final Function<OfferInfo, Integer> toOfferVolumePrecision = (o) -> {
-        if (isFiatOffer.test(o))
-            return 0;
-        else
-            return toOfferCurrencyCode.apply(o).equals("BSQ") ? 2 : 8;
-    };
-
     private final Supplier<OfferInfo> firstOfferInList = () -> (OfferInfo) protos.get(0);
     private final Supplier<Boolean> isShowingMyOffers = () -> firstOfferInList.get().getIsMyOffer();
     private final Supplier<Boolean> isShowingFiatOffers = () -> isFiatOffer.test(firstOfferInList.get());
