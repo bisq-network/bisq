@@ -215,10 +215,6 @@ public class EditOfferOptionParser extends OfferIdOptionParser implements Method
         }
     }
 
-    public BigDecimal getTriggerPriceAsBigDecimal() {
-        return new BigDecimal(getTriggerPrice());
-    }
-
     public String getMktPriceMargin() {
         if (offerEditType.equals(MKT_PRICE_MARGIN_ONLY)
                 || offerEditType.equals(MKT_PRICE_MARGIN_AND_ACTIVATION_STATE)

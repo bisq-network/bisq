@@ -34,6 +34,7 @@ public class AltcoinColumn extends LongColumn {
     public enum DISPLAY_MODE {
         ALTCOIN_OFFER_VOLUME,
         ALTCOIN_PRICE,
+        @Deprecated
         ALTCOIN_TRIGGER_PRICE
     }
 

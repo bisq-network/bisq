@@ -348,7 +348,7 @@ public class CliMain {
                     var marketPriceMargin = opts.getMktPriceMarginAsBigDecimal();
                     var securityDeposit = isSwap ? 0.00 : toSecurityDepositAsPct(opts.getSecurityDeposit());
                     var makerFeeCurrencyCode = opts.getMakerFeeCurrencyCode();
-                    var triggerPrice = 0; // Cannot be defined until offer is in book.
+                    var triggerPrice = "0"; // Cannot be defined until the new offer is added to book.
                     OfferInfo offer;
                     if (isSwap) {
                         offer = client.createBsqSwapOffer(direction,
@@ -388,7 +388,7 @@ public class CliMain {
                     var fixedPrice = opts.getFixedPrice();
                     var isUsingMktPriceMargin = opts.isUsingMktPriceMargin();
                     var marketPriceMargin = opts.getMktPriceMarginAsBigDecimal();
-                    var triggerPrice = toInternalTriggerPrice(client, offerId, opts.getTriggerPriceAsBigDecimal());
+                    var triggerPrice = opts.getTriggerPrice();
                     var enable = opts.getEnableAsSignedInt();
                     var editOfferType = opts.getOfferEditType();
                     client.editOffer(offerId,
@@ -789,6 +789,7 @@ public class CliMain {
         }
     }
 
+    @Deprecated
     private static long toInternalTriggerPrice(GrpcClient client,
                                                String offerId,
                                                BigDecimal unscaledTriggerPrice) {

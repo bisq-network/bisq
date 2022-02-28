@@ -44,7 +44,7 @@ public final class OfferInfoBuilder {
     private String offerFeePaymentTxId;
     private long buyerSecurityDeposit;
     private long sellerSecurityDeposit;
-    private long triggerPrice;
+    private String triggerPrice;
     private boolean isCurrencyForMakerFeeBtc;
     private String paymentAccountId;
     private String paymentMethodId;
@@ -132,7 +132,7 @@ public final class OfferInfoBuilder {
         return this;
     }
 
-    public OfferInfoBuilder withTriggerPrice(long triggerPrice) {
+    public OfferInfoBuilder withTriggerPrice(String triggerPrice) {
         this.triggerPrice = triggerPrice;
         return this;
     }

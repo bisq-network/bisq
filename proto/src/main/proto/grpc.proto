@@ -209,11 +209,10 @@ message CreateOfferRequest {
     // TODO:  This parameter (where 0.## represents ##%) conflicts with marketPriceMargin (where #.## literally represents #.##%).
     // Backward compat breaking change to buyerSecurityDeposit is needed to make it consistent with marketPriceMargin (or vice-versa).
     double buyerSecurityDeposit = 8;
-    // For fiat, market price margin based offer, the current market BTC price at which the offer is automatically disabled.
-    // The parameter type is a long, representing the fiat price to 4 decimal places, but without the decimal.
-    // For example trigger price in EUR of 43749.3940 would be passed as 437493940.
-    // TODO:  This should be a string type:  "43749.3940", and converted to a long on the server.
-    uint64 triggerPrice = 9;
+    // A market price margin based offer's trigger price is the market BTC price at which the offer is automatically disabled.
+    // Disabled offers are never automatically enabled, they must be manually re-enabled.
+    // A zero value indicates trigger price is not set.  Trigger price does not apply to fixed price offers.
+    string triggerPrice = 9;
     // The unique identifier of the payment account used to create the new offer, and send or receive trade payment.
     string paymentAccountId = 10;
     // The offer maker's trade fee currency:  BTC or BSQ.
@@ -234,8 +233,10 @@ message EditOfferRequest {
     bool useMarketBasedPrice = 3;
     // The offer's new market price margin as a percentage above or below the current market BTC price.
     double marketPriceMargin = 4;
-    // For market price margin based offer, the current market BTC price at which the offer is automatically disabled.
-    uint64 triggerPrice = 5;
+    // A market price margin based offer's trigger price is the market BTC price at which the offer is automatically disabled.
+    // Disabled offers are never automatically enabled, they must be manually re-enabled.
+    // A zero value indicates trigger price is not set.  Trigger price does not apply to fixed price offers.
+    string triggerPrice = 5;
     // Whether the offer's activation state should be changed (disable or enable), or left alone.
     // Send a signed int, not a bool (with default=false).
     //      -1 = do not change activation state
@@ -311,10 +312,10 @@ message OfferInfo {
     uint64 minVolume = 9;
     // A long representing the BTC buyer's security deposit in satoshis.
     uint64 buyerSecurityDeposit = 10;
-    // A long representing a market price margin based offer's trigger price:  the current market BTC price at
-    // which the offer is automatically disabled.  For fiat offers, a trigger price of 40000.5000 is represented
-    // as 400005000.
-    uint64 triggerPrice = 11;
+    // A market price margin based offer's trigger price is the market BTC price at which the offer is automatically disabled.
+    // Disabled offers are never automatically enabled, they must be manually re-enabled.
+    // A zero value indicates trigger price is not set.  Trigger price does not apply to fixed price offers.
+    string triggerPrice = 11;
     // Whether the offer maker paid the trading fee in BTC or not (BSQ).
     bool isCurrencyForMakerFeeBtc = 12;
     // The unique identifier of the payment account used to create the offer.

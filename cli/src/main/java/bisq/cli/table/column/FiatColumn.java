@@ -33,6 +33,7 @@ public class FiatColumn extends LongColumn {
 
     public enum DISPLAY_MODE {
         PRICE,
+        @Deprecated
         TRIGGER_PRICE,
         VOLUME
     }

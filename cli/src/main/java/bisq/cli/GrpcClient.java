@@ -175,7 +175,7 @@ public final class GrpcClient {
                 securityDeposit,
                 paymentAcctId,
                 makerFeeCurrencyCode,
-                0 /* no trigger price */);
+                "0" /* no trigger price */);
     }
 
     public OfferInfo createMarketBasedPricedOffer(String direction,
@@ -186,7 +186,7 @@ public final class GrpcClient {
                                                   double securityDeposit,
                                                   String paymentAcctId,
                                                   String makerFeeCurrencyCode,
-                                                  long triggerPrice) {
+                                                  String triggerPrice) {
         return offersServiceRequest.createOffer(direction,
                 currencyCode,
                 amount,
@@ -210,7 +210,7 @@ public final class GrpcClient {
                                  double securityDeposit,
                                  String paymentAcctId,
                                  String makerFeeCurrencyCode,
-                                 long triggerPrice) {
+                                 String triggerPrice) {
         return offersServiceRequest.createOffer(direction,
                 currencyCode,
                 amount,
@@ -236,22 +236,22 @@ public final class GrpcClient {
         offersServiceRequest.editOfferPriceMargin(offerId, marketPriceMargin);
     }
 
-    public void editOfferTriggerPrice(String offerId, long triggerPrice) {
+    public void editOfferTriggerPrice(String offerId, String triggerPrice) {
         offersServiceRequest.editOfferTriggerPrice(offerId, triggerPrice);
     }
 
     public void editOffer(String offerId,
-                          String priceAsString,
+                          String price,
                           boolean useMarketBasedPrice,
                           double marketPriceMargin,
-                          long triggerPrice,
+                          String triggerPrice,
                           int enable,
                           EditType editType) {
         // Take care when using this method directly:
         //  useMarketBasedPrice = true if margin based offer, false for fixed priced offer
         //  scaledPriceString fmt = ######.####
         offersServiceRequest.editOffer(offerId,
-                priceAsString,
+                price,
                 useMarketBasedPrice,
                 marketPriceMargin,
                 triggerPrice,

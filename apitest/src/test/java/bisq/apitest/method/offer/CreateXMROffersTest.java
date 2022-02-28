@@ -156,7 +156,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
     public void testCreatePriceMarginBasedBuy1BTCOfferWithTriggerPrice() {
         double priceMarginPctInput = 1.00;
         double mktPriceAsDouble = aliceClient.getBtcPrice(XMR);
-        long triggerPriceAsLong = calcAltcoinTriggerPriceAsLong.apply(mktPriceAsDouble, -0.001);
+        String triggerPrice = calcPriceAsString(mktPriceAsDouble, Double.parseDouble("-0.001"), 8);
         var newOffer = aliceClient.createMarketBasedPricedOffer(BUY.name(),
                 XMR,
                 100_000_000L,
@@ -165,7 +165,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
                 getDefaultBuyerSecurityDepositAsPercent(),
                 alicesXmrAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE,
-                triggerPriceAsLong);
+                triggerPrice);
         log.debug("Pending Sell XMR (Buy BTC) offer:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
@@ -176,7 +176,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
         assertTrue(newOffer.getUseMarketBasedPrice());
 
         // There is no trigger price while offer is pending.
-        assertEquals(0, newOffer.getTriggerPrice());
+        assertEquals(NO_TRIGGER_PRICE, newOffer.getTriggerPrice());
 
         assertEquals(100_000_000L, newOffer.getAmount());
         assertEquals(75_000_000L, newOffer.getMinAmount());
@@ -197,7 +197,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
         assertTrue(newOffer.getUseMarketBasedPrice());
 
         // The trigger price should exist on the prepared offer.
-        assertEquals(triggerPriceAsLong, newOffer.getTriggerPrice());
+        assertEquals(triggerPrice, newOffer.getTriggerPrice());
 
         assertEquals(100_000_000L, newOffer.getAmount());
         assertEquals(75_000_000L, newOffer.getMinAmount());

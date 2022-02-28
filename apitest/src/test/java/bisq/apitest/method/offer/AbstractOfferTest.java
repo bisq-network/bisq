@@ -28,7 +28,6 @@ import java.math.MathContext;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import lombok.Setter;
@@ -63,7 +62,7 @@ public abstract class AbstractOfferTest extends MethodTest {
 
     protected static final int ACTIVATE_OFFER = 1;
     protected static final int DEACTIVATE_OFFER = 0;
-    protected static final long NO_TRIGGER_PRICE = 0;
+    protected static final String NO_TRIGGER_PRICE = "0";
 
     @Setter
     protected static boolean isLongRunningTest;
@@ -94,22 +93,6 @@ public abstract class AbstractOfferTest extends MethodTest {
     // Mkt Price Margin value of offer returned from server is scaled down by 10^-2.
     protected final Function<Double, Double> scaledDownMktPriceMargin = (mktPriceMargin) ->
             exactMultiply(mktPriceMargin, 0.01);
-
-    // Price value of fiat offer returned from server will be scaled up by 10^4.
-    protected final Function<BigDecimal, Long> scaledUpFiatOfferPrice = (price) -> {
-        BigDecimal factor = new BigDecimal(10).pow(4);
-        return price.multiply(factor).longValue();
-    };
-
-    protected final BiFunction<Double, Double, Long> calcFiatTriggerPriceAsLong = (base, delta) -> {
-        var priceAsDouble = new BigDecimal(base).add(new BigDecimal(delta)).doubleValue();
-        return Double.valueOf(exactMultiply(priceAsDouble, 10_000)).longValue();
-    };
-
-    protected final BiFunction<Double, Double, Long> calcAltcoinTriggerPriceAsLong = (base, delta) -> {
-        var priceAsDouble = new BigDecimal(base).add(new BigDecimal(delta)).doubleValue();
-        return Double.valueOf(exactMultiply(priceAsDouble, 100_000_000)).longValue();
-    };
 
     protected final Function<OfferInfo, String> toOfferTable = (offer) ->
             new TableBuilder(OFFER_TBL, offer).build().toString();

@@ -66,6 +66,7 @@ import static bisq.core.offer.OfferUtil.getRandomOfferId;
 import static bisq.core.offer.OpenOffer.State.AVAILABLE;
 import static bisq.core.offer.OpenOffer.State.DEACTIVATED;
 import static bisq.core.payment.PaymentAccountUtil.isPaymentAccountValidForOffer;
+import static bisq.core.util.PriceUtil.getMarketPriceAsLong;
 import static bisq.proto.grpc.EditOfferRequest.EditType;
 import static bisq.proto.grpc.EditOfferRequest.EditType.FIXED_PRICE_AND_ACTIVATION_STATE;
 import static bisq.proto.grpc.EditOfferRequest.EditType.FIXED_PRICE_ONLY;
@@ -276,7 +277,7 @@ class CoreOffersService {
                              long amountAsLong,
                              long minAmountAsLong,
                              double buyerSecurityDeposit,
-                             long triggerPrice,
+                             String triggerPrice,
                              String paymentAccountId,
                              String makerFeeCurrencyCode,
                              Consumer<Offer> resultHandler) {
@@ -321,15 +322,15 @@ class CoreOffersService {
 
     // Edit a placed offer.
     void editOffer(String offerId,
-                   String editedPriceAsString,
+                   String editedPrice,
                    boolean editedUseMarketBasedPrice,
                    double editedMarketPriceMargin,
-                   long editedTriggerPrice,
+                   String editedTriggerPrice,
                    int editedEnable,
                    EditType editType) {
         OpenOffer openOffer = getMyOpenOffer(offerId);
         var validator = new EditOfferValidator(openOffer,
-                editedPriceAsString,
+                editedPrice,
                 editedUseMarketBasedPrice,
                 editedMarketPriceMargin,
                 editedTriggerPrice,
@@ -346,7 +347,7 @@ class CoreOffersService {
                 : editedEnable > 0 ? AVAILABLE : DEACTIVATED;
         OfferPayload editedPayload = getMergedOfferPayload(validator,
                 openOffer,
-                editedPriceAsString,
+                editedPrice,
                 editedMarketPriceMargin,
                 editType);
         Offer editedOffer = new Offer(editedPayload);
@@ -356,8 +357,9 @@ class CoreOffersService {
         openOfferManager.editOpenOfferStart(openOffer,
                 () -> log.info("EditOpenOfferStart: offer {}", openOffer.getId()),
                 log::error);
+        long triggerPriceAsLong = getMarketPriceAsLong(editedTriggerPrice, editedOffer.getCurrencyCode());
         openOfferManager.editOpenOfferPublish(editedOffer,
-                editedTriggerPrice,
+                triggerPriceAsLong,
                 newOfferState,
                 () -> log.info("EditOpenOfferPublish: offer {}", openOffer.getId()),
                 log::error);
@@ -382,13 +384,14 @@ class CoreOffersService {
 
     private void placeOffer(Offer offer,
                             double buyerSecurityDeposit,
-                            long triggerPrice,
+                            String triggerPrice,
                             boolean useSavingsWallet,
                             Consumer<Transaction> resultHandler) {
+        var triggerPriceAsLong = getMarketPriceAsLong(triggerPrice, offer.getCurrencyCode());
         openOfferManager.placeOffer(offer,
                 buyerSecurityDeposit,
                 useSavingsWallet,
-                triggerPrice,
+                triggerPriceAsLong,
                 resultHandler::accept,
                 log::error);
 
