@@ -60,10 +60,10 @@ public class CanceledTradeInfo {
                 .withTradePeriodState("")           // Ignored
                 .withIsDepositPublished(false)      // Ignored
                 .withIsDepositConfirmed(false)      // Ignored
-                .withIsFiatSent(false)              // Ignored
-                .withIsFiatReceived(false)          // Ignored
+                .withIsPaymentStartedMessageSent(false)     // Ignored
+                .withIsPaymentReceivedMessageSent(false)    // Ignored
                 .withIsPayoutPublished(false)       // Ignored
-                .withIsWithdrawn(false)             // Ignored
+                .withIsCompleted(false)             // Ignored
                 .withContractAsJson("")             // Ignored
                 .withContract(emptyContract.get())  // Ignored
                 .withClosingStatus(capitalize(CANCELED.name().toLowerCase()))

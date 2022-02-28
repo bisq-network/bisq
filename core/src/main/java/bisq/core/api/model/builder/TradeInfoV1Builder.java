@@ -52,10 +52,10 @@ public final class TradeInfoV1Builder {
     private String tradePeriodState;
     private boolean isDepositPublished;
     private boolean isDepositConfirmed;
-    private boolean isFiatSent;
-    private boolean isFiatReceived;
+    private boolean isPaymentStartedMessageSent;
+    private boolean isPaymentReceivedMessageSent;
     private boolean isPayoutPublished;
-    private boolean isWithdrawn;
+    private boolean isCompleted;
     private String contractAsJson;
     private ContractInfo contract;
     private String closingStatus;
@@ -160,13 +160,13 @@ public final class TradeInfoV1Builder {
         return this;
     }
 
-    public TradeInfoV1Builder withIsFiatSent(boolean isFiatSent) {
-        this.isFiatSent = isFiatSent;
+    public TradeInfoV1Builder withIsPaymentStartedMessageSent(boolean isPaymentStartedMessageSent) {
+        this.isPaymentStartedMessageSent = isPaymentStartedMessageSent;
         return this;
     }
 
-    public TradeInfoV1Builder withIsFiatReceived(boolean isFiatReceived) {
-        this.isFiatReceived = isFiatReceived;
+    public TradeInfoV1Builder withIsPaymentReceivedMessageSent(boolean isPaymentReceivedMessageSent) {
+        this.isPaymentReceivedMessageSent = isPaymentReceivedMessageSent;
         return this;
     }
 
@@ -175,8 +175,8 @@ public final class TradeInfoV1Builder {
         return this;
     }
 
-    public TradeInfoV1Builder withIsWithdrawn(boolean isWithdrawn) {
-        this.isWithdrawn = isWithdrawn;
+    public TradeInfoV1Builder withIsCompleted(boolean isCompleted) {
+        this.isCompleted = isCompleted;
         return this;
     }
 
@@ -189,7 +189,6 @@ public final class TradeInfoV1Builder {
         this.contract = contract;
         return this;
     }
-
 
     public TradeInfoV1Builder withClosingStatus(String closingStatus) {
         this.closingStatus = closingStatus;

@@ -83,10 +83,10 @@ class TradeDetailTableBuilder extends AbstractTradeListBuilder {
         colIsDepositPublished.addRow(trade.getIsDepositPublished());
         colIsDepositConfirmed.addRow(trade.getIsDepositConfirmed());
         colTradeCost.addRow(toTradeVolumeAsString.apply(trade));
-        colIsPaymentSent.addRow(trade.getIsFiatSent());
-        colIsPaymentReceived.addRow(trade.getIsFiatReceived());
+        colIsPaymentStartedMessageSent.addRow(trade.getIsPaymentStartedMessageSent());
+        colIsPaymentReceivedMessageSent.addRow(trade.getIsPaymentReceivedMessageSent());
         colIsPayoutPublished.addRow(trade.getIsPayoutPublished());
-        colIsFundsWithdrawn.addRow(trade.getIsWithdrawn());
+        colIsCompleted.addRow(trade.getIsCompleted());
         if (colAltcoinReceiveAddressColumn != null)
             colAltcoinReceiveAddressColumn.addRow(toAltcoinReceiveAddress.apply(trade));
     }
@@ -126,10 +126,10 @@ class TradeDetailTableBuilder extends AbstractTradeListBuilder {
             add(colIsDepositPublished.asStringColumn());
             add(colIsDepositConfirmed.asStringColumn());
             add(colTradeCost.justify());
-            add(colIsPaymentSent.asStringColumn());
-            add(colIsPaymentReceived.asStringColumn());
+            add(colIsPaymentStartedMessageSent.asStringColumn());
+            add(colIsPaymentReceivedMessageSent.asStringColumn());
             add(colIsPayoutPublished.asStringColumn());
-            add(colIsFundsWithdrawn.asStringColumn());
+            add(colIsCompleted.asStringColumn());
         }};
 
         if (colAltcoinReceiveAddressColumn != null)

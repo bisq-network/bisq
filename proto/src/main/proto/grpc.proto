@@ -609,16 +609,13 @@ message TradeInfo {
     // Whether the trade's security deposit bitcoin transaction has been confirmed at least once, or not.
     bool is_deposit_confirmed = 19;
     // Whether the trade's 'start payment' message has been sent by the BTC buyer, or not.
-    // (TODO Rename field to isPaymentSent because payment could be made in altcoin.)
-    bool is_fiat_sent = 20;
+    bool is_payment_started_message_sent = 20;
     // Whether the trade's 'payment received' message has been sent by the BTC seller, or not.
-    // (TODO Rename field to isPaymentReceived because payment could be made in altcoin.)
-    bool is_fiat_received = 21;
+    bool is_payment_received_message_sent = 21;
     // Whether the trade's payout bitcoin transaction has been confirmed at least once, or not.
     bool is_payout_published = 22;
     // Whether the trade's payout has been completed and the trade is now closed, or not.
-    // (TODO Rename field to isClosed, or isCompleted because payment could be made in altcoin.)
-    bool is_withdrawn = 23;
+    bool is_completed = 23;
     // The entire trade contract as a json string.
     string contract_as_json = 24;
     // The summary of the trade contract.

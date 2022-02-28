@@ -144,7 +144,7 @@ public class TakeSellXMROfferTest extends AbstractTradeTest {
             EXPECTED_PROTOCOL_STATUS.setState(SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG)
                     .setPhase(PAYOUT_PUBLISHED)
                     .setPayoutPublished(true)
-                    .setFiatReceived(true);
+                    .setPaymentReceivedMessageSent(true);
             verifyExpectedProtocolStatus(trade);
             logTrade(log, testInfo, "Alice's Maker/Seller View (Payment Received)", aliceClient.getTrade(tradeId));
             logTrade(log, testInfo, "Bob's Taker/Buyer View (Payment Received)", bobClient.getTrade(tradeId));
@@ -170,7 +170,7 @@ public class TakeSellXMROfferTest extends AbstractTradeTest {
             trade = aliceClient.getTrade(tradeId);
             EXPECTED_PROTOCOL_STATUS.setState(WITHDRAW_COMPLETED)
                     .setPhase(WITHDRAWN)
-                    .setWithdrawn(true);
+                    .setCompleted(true);
             verifyExpectedProtocolStatus(trade);
             logTrade(log, testInfo, "Alice's Maker/Seller View (Done)", aliceClient.getTrade(tradeId));
             logTrade(log, testInfo, "Bob's Taker/Buyer View (Done)", bobClient.getTrade(tradeId));

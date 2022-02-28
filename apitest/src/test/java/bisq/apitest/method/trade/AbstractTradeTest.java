@@ -133,7 +133,7 @@ public class AbstractTradeTest extends AbstractOfferTest {
         String userName = toUserName.apply(grpcClient);
         for (int i = 1; i <= maxTradeStateAndPhaseChecks.get(); i++) {
             TradeInfo trade = grpcClient.getTrade(tradeId);
-            if (!trade.getIsFiatSent()) {
+            if (!trade.getIsPaymentStartedMessageSent()) {
                 log.warn("{} still waiting for trade {} {}, attempt # {}",
                         userName,
                         trade.getShortId(),
@@ -145,7 +145,7 @@ public class AbstractTradeTest extends AbstractOfferTest {
                 // it might be AVAILABLE, not OFFER_FEE_PAID.
                 EXPECTED_PROTOCOL_STATUS.setState(BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG)
                         .setPhase(FIAT_SENT)
-                        .setFiatSent(true);
+                        .setPaymentStartedMessageSent(true);
                 verifyExpectedProtocolStatus(trade);
                 logTrade(log, testInfo, userName + "'s view after confirming trade payment sent", trade);
                 break;
@@ -194,10 +194,10 @@ public class AbstractTradeTest extends AbstractOfferTest {
             assertEquals(EXPECTED_PROTOCOL_STATUS.isDepositPublished, trade.getIsDepositPublished());
 
         assertEquals(EXPECTED_PROTOCOL_STATUS.isDepositConfirmed, trade.getIsDepositConfirmed());
-        assertEquals(EXPECTED_PROTOCOL_STATUS.isFiatSent, trade.getIsFiatSent());
-        assertEquals(EXPECTED_PROTOCOL_STATUS.isFiatReceived, trade.getIsFiatReceived());
+        assertEquals(EXPECTED_PROTOCOL_STATUS.isPaymentStartedMessageSent, trade.getIsPaymentStartedMessageSent());
+        assertEquals(EXPECTED_PROTOCOL_STATUS.isPaymentReceivedMessageSent, trade.getIsPaymentReceivedMessageSent());
         assertEquals(EXPECTED_PROTOCOL_STATUS.isPayoutPublished, trade.getIsPayoutPublished());
-        assertEquals(EXPECTED_PROTOCOL_STATUS.isWithdrawn, trade.getIsWithdrawn());
+        assertEquals(EXPECTED_PROTOCOL_STATUS.isCompleted, trade.getIsCompleted());
     }
 
     protected final void sendBsqPayment(Logger log,

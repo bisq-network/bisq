@@ -87,10 +87,10 @@ public class TradeInfo implements Payload {
     private final String tradePeriodState;
     private final boolean isDepositPublished;
     private final boolean isDepositConfirmed;
-    private final boolean isFiatSent;
-    private final boolean isFiatReceived;
+    private final boolean isPaymentStartedMessageSent;
+    private final boolean isPaymentReceivedMessageSent;
     private final boolean isPayoutPublished;
-    private final boolean isWithdrawn;
+    private final boolean isCompleted;
     private final String contractAsJson;
     private final ContractInfo contract;
     // Optional BSQ swap trade protocol details (post v1).
@@ -118,10 +118,10 @@ public class TradeInfo implements Payload {
         this.tradePeriodState = builder.getTradePeriodState();
         this.isDepositPublished = builder.isDepositPublished();
         this.isDepositConfirmed = builder.isDepositConfirmed();
-        this.isFiatSent = builder.isFiatSent();
-        this.isFiatReceived = builder.isFiatReceived();
+        this.isPaymentStartedMessageSent = builder.isPaymentStartedMessageSent();
+        this.isPaymentReceivedMessageSent = builder.isPaymentReceivedMessageSent();
         this.isPayoutPublished = builder.isPayoutPublished();
-        this.isWithdrawn = builder.isWithdrawn();
+        this.isCompleted = builder.isCompleted();
         this.contractAsJson = builder.getContractAsJson();
         this.contract = builder.getContract();
         this.bsqSwapTradeInfo = null;
@@ -172,19 +172,19 @@ public class TradeInfo implements Payload {
                 .withShortId(bsqSwapTrade.getShortId())
                 .withDate(bsqSwapTrade.getDate().getTime())
                 .withRole(role == null ? "" : role)
-                .withIsCurrencyForTakerFeeBtc(false) // BSQ Swap fees always paid in BSQ.
+                .withIsCurrencyForTakerFeeBtc(false) // BSQ Swap fee is always paid in BSQ.
                 .withTxFeeAsLong(txFeeInBtc)
                 .withTakerFeeAsLong(takerFeeInBsq)
-                // N/A for bsq-swaps: .withTakerFeeTxId(""), .withDepositTxId(""), .withPayoutTxId("")
+                // N/A for bsq-swaps: takerFeeTxId, depositTxId, payoutTxId
                 .withTradeAmountAsLong(bsqSwapTrade.getAmountAsLong())
                 .withTradePrice(toPreciseTradePrice.apply(bsqSwapTrade))
                 .withTradeVolume(toRoundedVolume.apply(bsqSwapTrade))
                 .withTradingPeerNodeAddress(toPeerNodeAddress.apply(bsqSwapTrade))
                 .withState(bsqSwapTrade.getTradeState().name())
                 .withPhase(bsqSwapTrade.getTradePhase().name())
-                // N/A for bsq-swaps: .withTradePeriodState(""), .withIsDepositPublished(false), .withIsDepositConfirmed(false)
-                // N/A for bsq-swaps: .withIsFiatSent(false), .withIsFiatReceived(false), .withIsPayoutPublished(false)
-                // N/A for bsq-swaps: .withIsWithdrawn(false), .withContractAsJson(""), .withContract(null)
+                // N/A for bsq-swaps: tradePeriodState, isDepositPublished, isDepositConfirmed
+                // N/A for bsq-swaps: isPaymentStartedMessageSent, isPaymentReceivedMessageSent, isPayoutPublished
+                // N/A for bsq-swaps: isCompleted, contractAsJson, contract
                 .withClosingStatus(closingStatus)
                 .build();
         tradeInfo.bsqSwapTradeInfo = toBsqSwapTradeInfo(bsqSwapTrade, isMyOffer, numConfirmations);
@@ -236,10 +236,10 @@ public class TradeInfo implements Payload {
                 .withTradePeriodState(trade.getTradePeriodState().name())
                 .withIsDepositPublished(trade.isDepositPublished())
                 .withIsDepositConfirmed(trade.isDepositConfirmed())
-                .withIsFiatSent(trade.isFiatSent())
-                .withIsFiatReceived(trade.isFiatReceived())
+                .withIsPaymentStartedMessageSent(trade.isFiatSent())
+                .withIsPaymentReceivedMessageSent(trade.isFiatReceived())
                 .withIsPayoutPublished(trade.isPayoutPublished())
-                .withIsWithdrawn(trade.isWithdrawn())
+                .withIsCompleted(trade.isWithdrawn())
                 .withContractAsJson(trade.getContractAsJson())
                 .withContract(contractInfo)
                 .withClosingStatus(closingStatus)
@@ -274,10 +274,10 @@ public class TradeInfo implements Payload {
                         .setTradePeriodState(tradePeriodState == null ? "" : tradePeriodState)
                         .setIsDepositPublished(isDepositPublished)
                         .setIsDepositConfirmed(isDepositConfirmed)
-                        .setIsFiatSent(isFiatSent)
-                        .setIsFiatReceived(isFiatReceived)
+                        .setIsPaymentStartedMessageSent(isPaymentStartedMessageSent)
+                        .setIsPaymentReceivedMessageSent(isPaymentReceivedMessageSent)
                         .setIsPayoutPublished(isPayoutPublished)
-                        .setIsWithdrawn(isWithdrawn)
+                        .setIsCompleted(isCompleted)
                         .setClosingStatus(closingStatus);
         if (offer.isBsqSwapOffer()) {
             protoBuilder.setBsqSwapTradeInfo(bsqSwapTradeInfo.toProtoMessage());
@@ -311,10 +311,10 @@ public class TradeInfo implements Payload {
                 .withTradingPeerNodeAddress(proto.getTradingPeerNodeAddress())
                 .withIsDepositPublished(proto.getIsDepositPublished())
                 .withIsDepositConfirmed(proto.getIsDepositConfirmed())
-                .withIsFiatSent(proto.getIsFiatSent())
-                .withIsFiatReceived(proto.getIsFiatReceived())
+                .withIsPaymentStartedMessageSent(proto.getIsPaymentStartedMessageSent())
+                .withIsPaymentReceivedMessageSent(proto.getIsPaymentReceivedMessageSent())
                 .withIsPayoutPublished(proto.getIsPayoutPublished())
-                .withIsWithdrawn(proto.getIsWithdrawn())
+                .withIsCompleted(proto.getIsCompleted())
                 .withContractAsJson(proto.getContractAsJson())
                 .withContract((ContractInfo.fromProto(proto.getContract())))
                 .withClosingStatus(proto.getClosingStatus())
@@ -348,10 +348,10 @@ public class TradeInfo implements Payload {
                 ", tradePeriodState='" + tradePeriodState + '\'' + "\n" +
                 ", isDepositPublished=" + isDepositPublished + "\n" +
                 ", isDepositConfirmed=" + isDepositConfirmed + "\n" +
-                ", isFiatSent=" + isFiatSent + "\n" +
-                ", isFiatReceived=" + isFiatReceived + "\n" +
+                ", isPaymentStartedMessageSent=" + isPaymentStartedMessageSent + "\n" +
+                ", isPaymentReceivedMessageSent=" + isPaymentReceivedMessageSent + "\n" +
                 ", isPayoutPublished=" + isPayoutPublished + "\n" +
-                ", isWithdrawn=" + isWithdrawn + "\n" +
+                ", isCompleted=" + isCompleted + "\n" +
                 ", offer=" + offer + "\n" +
                 ", contractAsJson=" + contractAsJson + "\n" +
                 ", contract=" + contract + "\n" +
