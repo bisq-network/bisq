@@ -64,7 +64,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
                 XMR,
                 100_000_000L,
                 75_000_000L,
-                "0.005",   // FIXED PRICE IN BTC (satoshis) FOR 1 XMR
+                "0.005",   // FIXED PRICE IN BTC FOR 1 XMR
                 defaultBuyerSecurityDepositPct.get(),
                 alicesXmrAcct.getId(),
                 MAKER_FEE_CURRENCY_CODE);
