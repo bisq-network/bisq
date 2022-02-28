@@ -82,7 +82,7 @@ public class OffersServiceRequest {
                                             long amount,
                                             long minAmount,
                                             String fixedPrice,
-                                            double securityDeposit,
+                                            double securityDepositPct,
                                             String paymentAcctId,
                                             String makerFeeCurrencyCode) {
         return createOffer(direction,
@@ -92,7 +92,7 @@ public class OffersServiceRequest {
                 false,
                 fixedPrice,
                 0.00,
-                securityDeposit,
+                securityDepositPct,
                 paymentAcctId,
                 makerFeeCurrencyCode,
                 "0" /* no trigger price */);
@@ -104,8 +104,8 @@ public class OffersServiceRequest {
                                  long minAmount,
                                  boolean useMarketBasedPrice,
                                  String fixedPrice,
-                                 double marketPriceMargin,
-                                 double securityDeposit,
+                                 double marketPriceMarginPct,
+                                 double securityDepositPct,
                                  String paymentAcctId,
                                  String makerFeeCurrencyCode,
                                  String triggerPrice) {
@@ -116,8 +116,8 @@ public class OffersServiceRequest {
                 .setMinAmount(minAmount)
                 .setUseMarketBasedPrice(useMarketBasedPrice)
                 .setPrice(fixedPrice)
-                .setMarketPriceMargin(marketPriceMargin)
-                .setBuyerSecurityDeposit(securityDeposit)
+                .setMarketPriceMarginPct(marketPriceMarginPct)
+                .setBuyerSecurityDepositPct(securityDepositPct)
                 .setPaymentAccountId(paymentAcctId)
                 .setMakerFeeCurrencyCode(makerFeeCurrencyCode)
                 .setTriggerPrice(triggerPrice)
@@ -133,7 +133,7 @@ public class OffersServiceRequest {
         editOffer(offerId,
                 offerPrice,
                 offer.getUseMarketBasedPrice(),
-                offer.getMarketPriceMargin(),
+                offer.getMarketPriceMarginPct(),
                 offer.getTriggerPrice(),
                 enable,
                 ACTIVATION_STATE_ONLY);
@@ -144,18 +144,18 @@ public class OffersServiceRequest {
         editOffer(offerId,
                 rawPriceString,
                 false,
-                offer.getMarketPriceMargin(),
+                offer.getMarketPriceMarginPct(),
                 offer.getTriggerPrice(),
                 offer.getIsActivated() ? 1 : 0,
                 FIXED_PRICE_ONLY);
     }
 
-    public void editOfferPriceMargin(String offerId, double marketPriceMargin) {
+    public void editOfferPriceMargin(String offerId, double marketPriceMarginPct) {
         var offer = getMyOffer(offerId);
         editOffer(offerId,
                 "0.00",
                 true,
-                marketPriceMargin,
+                marketPriceMarginPct,
                 offer.getTriggerPrice(),
                 offer.getIsActivated() ? 1 : 0,
                 MKT_PRICE_MARGIN_ONLY);
@@ -166,7 +166,7 @@ public class OffersServiceRequest {
         editOffer(offerId,
                 "0.00",
                 offer.getUseMarketBasedPrice(),
-                offer.getMarketPriceMargin(),
+                offer.getMarketPriceMarginPct(),
                 triggerPrice,
                 offer.getIsActivated() ? 1 : 0,
                 TRIGGER_PRICE_ONLY);
@@ -175,7 +175,7 @@ public class OffersServiceRequest {
     public void editOffer(String offerId,
                           String scaledPriceString,
                           boolean useMarketBasedPrice,
-                          double marketPriceMargin,
+                          double marketPriceMarginPct,
                           String triggerPrice,
                           int enable,
                           EditOfferRequest.EditType editType) {
@@ -186,7 +186,7 @@ public class OffersServiceRequest {
                 .setId(offerId)
                 .setPrice(scaledPriceString)
                 .setUseMarketBasedPrice(useMarketBasedPrice)
-                .setMarketPriceMargin(marketPriceMargin)
+                .setMarketPriceMarginPct(marketPriceMarginPct)
                 .setTriggerPrice(triggerPrice)
                 .setEnable(enable)
                 .setEditType(editType)

@@ -33,7 +33,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
-import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static protobuf.OfferDirection.BUY;
 
@@ -52,7 +51,7 @@ public class CancelOfferTest extends AbstractOfferTest {
                 10000000L,
                 10000000L,
                 0.00,
-                getDefaultBuyerSecurityDepositAsPercent(),
+                defaultBuyerSecurityDepositPct.get(),
                 paymentAccountId,
                 BSQ,
                 NO_TRIGGER_PRICE);

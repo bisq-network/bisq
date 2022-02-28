@@ -172,7 +172,6 @@ message GetMyBsqSwapOffersReply {
     repeated OfferInfo bsqSwapOffers = 1;    // The returned list of user's open BSQ swap offers.
 }
 
-// TODO:  Change some numeric fields to string to prevent loss of precision and/or ambiguity.
 message CreateBsqSwapOfferRequest {
     // The new BSQ swap offer's BUY (BTC) or SELL (BTC) direction.
     string direction = 1;
@@ -188,7 +187,6 @@ message CreateBsqSwapOfferReply {
     OfferInfo bsqSwapOffer = 1;     // The newly created BSQ swap offer.
 }
 
-// TODO:  Change some numeric fields to string to prevent loss of precision and/or ambiguity.
 message CreateOfferRequest {
     // The new offer's fiat or altcoin currency code.
     string currencyCode = 1;
@@ -200,15 +198,13 @@ message CreateOfferRequest {
     // Whether the offer price is fixed, or market price margin based.
     bool useMarketBasedPrice = 4;
     // The offer's market price margin as a percentage above or below the current market BTC price, e.g., 2.50 represents 2.5%.
-    double marketPriceMargin = 5;
+    double marketPriceMarginPct = 5;
     // The amount of BTC to be traded, in satoshis.
     uint64 amount = 6;
      // The minimum amount of BTC to be traded, in satoshis.
     uint64 minAmount = 7;
-    // For a new BUY BTC offer, the offer maker's security deposit as a percentage of the BTC amount to be traded, e.g., 0.15 represents 15%.
-    // TODO:  This parameter (where 0.## represents ##%) conflicts with marketPriceMargin (where #.## literally represents #.##%).
-    // Backward compat breaking change to buyerSecurityDeposit is needed to make it consistent with marketPriceMargin (or vice-versa).
-    double buyerSecurityDeposit = 8;
+    // A BUY BTC offer maker's security deposit as a percentage of the BTC amount to be traded, e.g., 15.00 represents 15%.
+    double buyerSecurityDepositPct = 8;
     // A market price margin based offer's trigger price is the market BTC price at which the offer is automatically disabled.
     // Disabled offers are never automatically enabled, they must be manually re-enabled.
     // A zero value indicates trigger price is not set.  Trigger price does not apply to fixed price offers.
@@ -231,8 +227,8 @@ message EditOfferRequest {
     string price = 2;
     // Whether the offer price is fixed, or market price margin based.
     bool useMarketBasedPrice = 3;
-    // The offer's new market price margin as a percentage above or below the current market BTC price.
-    double marketPriceMargin = 4;
+    // An offer's new market price margin as a percentage above or below the current market BTC price.
+    double marketPriceMarginPct = 4;
     // A market price margin based offer's trigger price is the market BTC price at which the offer is automatically disabled.
     // Disabled offers are never automatically enabled, they must be manually re-enabled.
     // A zero value indicates trigger price is not set.  Trigger price does not apply to fixed price offers.
@@ -281,7 +277,6 @@ message CancelOfferReply {
 
 // OfferInfo describes an offer to a client.  It is derived from the heavier
 // Offer object in the daemon, which holds too much state to be sent to clients.
-// TODO:  Change some numeric fields to string to prevent loss of precision and/or ambiguity.
 message OfferInfo {
     // The offer's unique identifier.
     string id = 1;
@@ -292,10 +287,8 @@ message OfferInfo {
     string price = 3;
     // Whether the offer price is fixed, or market price margin based.
     bool useMarketBasedPrice = 4;
-    // The offer's market price margin above or below the current market BTC price, represented as a decimal.
-    // 5% is represented as 0.05.
-    // TODO:  Change to string type, and make consistent with Create & Edit Offer's marketPriceMargin params.
-    double marketPriceMargin = 5;
+    // The offer's market price margin above or below the current market BTC price, e.g., 5.00 represents 5%.
+    double marketPriceMarginPct = 5;
     // The offer's BTC amount in satoshis.  Ten million satoshis is represented as 10000000.
     uint64 amount = 6;
     // The offer's minimum BTC amount in satoshis.  One million satoshis is represented as 1000000.

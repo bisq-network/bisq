@@ -20,10 +20,7 @@ package bisq.cli.table.builder;
 import bisq.proto.grpc.ContractInfo;
 import bisq.proto.grpc.TradeInfo;
 
-import java.text.DecimalFormat;
-
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 import java.util.List;
 import java.util.function.Function;
@@ -37,6 +34,7 @@ import static bisq.cli.CurrencyFormat.formatSatoshis;
 import static bisq.cli.table.builder.TableBuilderConstants.COL_HEADER_BUYER_DEPOSIT;
 import static bisq.cli.table.builder.TableBuilderConstants.COL_HEADER_SELLER_DEPOSIT;
 import static bisq.cli.table.builder.TableType.TRADE_DETAIL_TBL;
+import static java.lang.String.format;
 import static protobuf.OfferDirection.SELL;
 
 
@@ -217,7 +215,7 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
 
     protected final Function<TradeInfo, String> toPriceDeviation = (t) ->
             t.getOffer().getUseMarketBasedPrice()
-                    ? formatToPercent(t.getOffer().getMarketPriceMargin())
+                    ? format("%.2f%s", t.getOffer().getMarketPriceMarginPct(), "%")
                     : "N/A";
 
     protected final Function<TradeInfo, Long> toMyMinerTxFee = (t) -> {
@@ -306,38 +304,4 @@ abstract class AbstractTradeListBuilder extends AbstractTableBuilder {
             return "";
         }
     };
-
-    // TODO Move to bisq/cli/CurrencyFormat.java ?
-
-    public static String formatToPercent(double value) {
-        DecimalFormat decimalFormat = new DecimalFormat("#.##");
-        decimalFormat.setMinimumFractionDigits(2);
-        decimalFormat.setMaximumFractionDigits(2);
-        return formatToPercent(value, decimalFormat);
-    }
-
-    public static String formatToPercent(double value, DecimalFormat decimalFormat) {
-        return decimalFormat.format(roundDouble(value * 100.0, 2)).replace(",", ".") + "%";
-    }
-
-    public static double roundDouble(double value, int precision) {
-        return roundDouble(value, precision, RoundingMode.HALF_UP);
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    public static double roundDouble(double value, int precision, RoundingMode roundingMode) {
-        if (precision < 0)
-            throw new IllegalArgumentException();
-        if (!Double.isFinite(value))
-            throw new IllegalArgumentException("Expected a finite double, but found " + value);
-
-        try {
-            BigDecimal bd = BigDecimal.valueOf(value);
-            bd = bd.setScale(precision, roundingMode);
-            return bd.doubleValue();
-        } catch (Throwable t) {
-            t.printStackTrace(); // TODO throw pretty exception for CLI console
-            return 0;
-        }
-    }
 }

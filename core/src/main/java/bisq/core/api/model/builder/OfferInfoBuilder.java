@@ -34,7 +34,7 @@ public final class OfferInfoBuilder {
     private String direction;
     private String price;
     private boolean useMarketBasedPrice;
-    private double marketPriceMargin;
+    private double marketPriceMarginPct;
     private long amount;
     private long minAmount;
     private String volume;
@@ -82,8 +82,8 @@ public final class OfferInfoBuilder {
         return this;
     }
 
-    public OfferInfoBuilder withMarketPriceMargin(double useMarketBasedPrice) {
-        this.marketPriceMargin = useMarketBasedPrice;
+    public OfferInfoBuilder withMarketPriceMarginPct(double marketPriceMarginPct) {
+        this.marketPriceMarginPct = marketPriceMarginPct;
         return this;
     }
 

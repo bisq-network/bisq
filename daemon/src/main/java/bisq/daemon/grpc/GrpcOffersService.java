@@ -125,9 +125,8 @@ class GrpcOffersService extends OffersImplBase {
         try {
             String offerId = req.getId();
             Optional<OpenOffer> myOpenOffer = coreApi.findMyOpenOffer(offerId);
-            OfferInfo offerInfo = myOpenOffer.isPresent()
-                    ? toMyOfferInfo(myOpenOffer.get())
-                    : toOfferInfo(coreApi.getOffer(offerId));
+            OfferInfo offerInfo = myOpenOffer.map(OfferInfo::toMyOfferInfo)
+                    .orElseGet(() -> toOfferInfo(coreApi.getOffer(offerId)));
             var reply = GetOfferReply.newBuilder()
                     .setOffer(offerInfo.toProtoMessage())
                     .build();
@@ -278,10 +277,10 @@ class GrpcOffersService extends OffersImplBase {
                     req.getDirection(),
                     req.getPrice(),
                     req.getUseMarketBasedPrice(),
-                    req.getMarketPriceMargin(),
+                    req.getMarketPriceMarginPct(),
                     req.getAmount(),
                     req.getMinAmount(),
-                    req.getBuyerSecurityDeposit(),
+                    req.getBuyerSecurityDepositPct(),
                     req.getTriggerPrice(),
                     req.getPaymentAccountId(),
                     req.getMakerFeeCurrencyCode(),
@@ -307,7 +306,7 @@ class GrpcOffersService extends OffersImplBase {
             coreApi.editOffer(req.getId(),
                     req.getPrice(),
                     req.getUseMarketBasedPrice(),
-                    req.getMarketPriceMargin(),
+                    req.getMarketPriceMarginPct(),
                     req.getTriggerPrice(),
                     req.getEnable(),
                     req.getEditType());

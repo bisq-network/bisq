@@ -31,7 +31,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.condition.EnabledIf;
 
 import static bisq.apitest.config.ApiTestConfig.BTC;
-import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static java.lang.System.getenv;
 import static org.junit.jupiter.api.Assertions.fail;
 import static protobuf.OfferDirection.BUY;
@@ -65,7 +64,7 @@ public class LongRunningOfferDeactivationTest extends AbstractOfferTest {
                 1_000_000,
                 1_000_000,
                 0.00,
-                getDefaultBuyerSecurityDepositAsPercent(),
+                defaultBuyerSecurityDepositPct.get(),
                 paymentAcct.getId(),
                 BTC,
                 triggerPrice);
@@ -112,7 +111,7 @@ public class LongRunningOfferDeactivationTest extends AbstractOfferTest {
                 1_000_000,
                 1_000_000,
                 0.00,
-                getDefaultBuyerSecurityDepositAsPercent(),
+                defaultBuyerSecurityDepositPct.get(),
                 paymentAcct.getId(),
                 BTC,
                 triggerPrice);

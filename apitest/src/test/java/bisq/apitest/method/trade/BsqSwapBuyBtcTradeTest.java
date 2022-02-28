@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -48,7 +49,7 @@ import static protobuf.BsqSwapTrade.State.PREPARATION;
 import bisq.apitest.method.offer.AbstractOfferTest;
 import bisq.cli.GrpcClient;
 
-// @Disabled
+@Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class BsqSwapBuyBtcTradeTest extends AbstractTradeTest {

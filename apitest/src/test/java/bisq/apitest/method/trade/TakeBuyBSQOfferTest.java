@@ -30,7 +30,6 @@ import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
-import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static bisq.core.trade.model.bisq_v1.Trade.Phase.PAYOUT_PUBLISHED;
 import static bisq.core.trade.model.bisq_v1.Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG;
 import static bisq.core.trade.model.bisq_v1.Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG;
@@ -76,7 +75,7 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
                     15_000_000L,
                     7_500_000L,
                     "0.000035",   // FIXED PRICE IN BTC (satoshis) FOR 1 BSQ
-                    getDefaultBuyerSecurityDepositAsPercent(),
+                    defaultBuyerSecurityDepositPct.get(),
                     alicesLegacyBsqAcct.getId(),
                     TRADE_FEE_CURRENCY_CODE);
             log.debug("Alice's BUY BSQ (SELL BTC) Offer:\n{}", toOfferTable.apply(alicesOffer));

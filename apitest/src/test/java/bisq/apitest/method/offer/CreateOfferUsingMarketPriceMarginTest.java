@@ -38,7 +38,6 @@ import static bisq.apitest.config.ApiTestConfig.USD;
 import static bisq.common.util.MathUtils.roundDouble;
 import static bisq.common.util.MathUtils.scaleDownByPowerOf10;
 import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
-import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 import static java.math.RoundingMode.HALF_UP;
@@ -65,13 +64,13 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
     @Order(1)
     public void testCreateUSDBTCBuyOffer5PctPriceMargin() {
         PaymentAccount usdAccount = createDummyF2FAccount(aliceClient, "US");
-        double priceMarginPctInput = 5.00;
+        double priceMarginPctInput = 5.00d;
         var newOffer = aliceClient.createMarketBasedPricedOffer(BUY.name(),
                 "usd",
                 10_000_000L,
                 10_000_000L,
                 priceMarginPctInput,
-                getDefaultBuyerSecurityDepositAsPercent(),
+                defaultBuyerSecurityDepositPct.get(),
                 usdAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE,
                 NO_TRIGGER_PRICE);
@@ -83,6 +82,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         assertNotEquals("", newOfferId);
         assertEquals(BUY.name(), newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
+        assertEquals(priceMarginPctInput, newOffer.getMarketPriceMarginPct());
         assertEquals(10_000_000, newOffer.getAmount());
         assertEquals(10_000_000, newOffer.getMinAmount());
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
@@ -97,6 +97,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(BUY.name(), newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
+        assertEquals(priceMarginPctInput, newOffer.getMarketPriceMarginPct());
         assertEquals(10_000_000, newOffer.getAmount());
         assertEquals(10_000_000, newOffer.getMinAmount());
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
@@ -112,13 +113,13 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
     @Order(2)
     public void testCreateNZDBTCBuyOfferMinus2PctPriceMargin() {
         PaymentAccount nzdAccount = createDummyF2FAccount(aliceClient, "NZ");
-        double priceMarginPctInput = -2.00;
+        double priceMarginPctInput = -2.00d;    // -2%
         var newOffer = aliceClient.createMarketBasedPricedOffer(BUY.name(),
                 "nzd",
                 10_000_000L,
                 10_000_000L,
                 priceMarginPctInput,
-                getDefaultBuyerSecurityDepositAsPercent(),
+                defaultBuyerSecurityDepositPct.get(),
                 nzdAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE,
                 NO_TRIGGER_PRICE);
@@ -130,6 +131,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         assertNotEquals("", newOfferId);
         assertEquals(BUY.name(), newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
+        assertEquals(priceMarginPctInput, newOffer.getMarketPriceMarginPct());
         assertEquals(10_000_000, newOffer.getAmount());
         assertEquals(10_000_000, newOffer.getMinAmount());
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
@@ -144,6 +146,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(BUY.name(), newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
+        assertEquals(priceMarginPctInput, newOffer.getMarketPriceMarginPct());
         assertEquals(10_000_000, newOffer.getAmount());
         assertEquals(10_000_000, newOffer.getMinAmount());
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
@@ -165,7 +168,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
                 10_000_000L,
                 5_000_000L,
                 priceMarginPctInput,
-                getDefaultBuyerSecurityDepositAsPercent(),
+                defaultBuyerSecurityDepositPct.get(),
                 gbpAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE,
                 NO_TRIGGER_PRICE);
@@ -177,6 +180,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         assertNotEquals("", newOfferId);
         assertEquals(SELL.name(), newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
+        assertEquals(priceMarginPctInput, newOffer.getMarketPriceMarginPct());
         assertEquals(10_000_000, newOffer.getAmount());
         assertEquals(5_000_000, newOffer.getMinAmount());
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
@@ -191,6 +195,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(SELL.name(), newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
+        assertEquals(priceMarginPctInput, newOffer.getMarketPriceMarginPct());
         assertEquals(10_000_000, newOffer.getAmount());
         assertEquals(5_000_000, newOffer.getMinAmount());
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
@@ -212,7 +217,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
                 10_000_000L,
                 5_000_000L,
                 priceMarginPctInput,
-                getDefaultBuyerSecurityDepositAsPercent(),
+                defaultBuyerSecurityDepositPct.get(),
                 brlAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE,
                 NO_TRIGGER_PRICE);
@@ -224,6 +229,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         assertNotEquals("", newOfferId);
         assertEquals(SELL.name(), newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
+        assertEquals(priceMarginPctInput, newOffer.getMarketPriceMarginPct());
         assertEquals(10_000_000, newOffer.getAmount());
         assertEquals(5_000_000, newOffer.getMinAmount());
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
@@ -238,6 +244,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(SELL.name(), newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
+        assertEquals(priceMarginPctInput, newOffer.getMarketPriceMarginPct());
         assertEquals(10_000_000, newOffer.getAmount());
         assertEquals(5_000_000, newOffer.getMinAmount());
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
@@ -260,7 +267,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
                 10_000_000L,
                 5_000_000L,
                 0.0,
-                getDefaultBuyerSecurityDepositAsPercent(),
+                defaultBuyerSecurityDepositPct.get(),
                 usdAccount.getId(),
                 MAKER_FEE_CURRENCY_CODE,
                 triggerPrice);

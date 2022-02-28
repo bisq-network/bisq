@@ -20,8 +20,6 @@ package bisq.cli.opts;
 
 import joptsimple.OptionSpec;
 
-import java.math.BigDecimal;
-
 import static bisq.cli.opts.OptLabel.*;
 import static java.lang.Boolean.FALSE;
 import static joptsimple.internal.Strings.EMPTY;
@@ -45,7 +43,7 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
     final OptionSpec<String> minAmountOpt = parser.accepts(OPT_MIN_AMOUNT, "minimum amount of btc to buy or sell")
             .withOptionalArg();
 
-    final OptionSpec<String> mktPriceMarginOpt = parser.accepts(OPT_MKT_PRICE_MARGIN, "market btc price margin (%)")
+    final OptionSpec<String> mktPriceMarginPctOpt = parser.accepts(OPT_MKT_PRICE_MARGIN, "market btc price margin (%)")
             .withOptionalArg()
             .defaultsTo("0.00");
 
@@ -53,7 +51,7 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
             .withOptionalArg()
             .defaultsTo("0");
 
-    final OptionSpec<String> securityDepositOpt = parser.accepts(OPT_SECURITY_DEPOSIT, "maker security deposit (%)")
+    final OptionSpec<String> securityDepositPctOpt = parser.accepts(OPT_SECURITY_DEPOSIT, "maker security deposit (%)")
             .withRequiredArg();
 
     final OptionSpec<String> makerFeeCurrencyCodeOpt = parser.accepts(OPT_FEE_CURRENCY, "maker fee currency code (bsq|btc)")
@@ -92,10 +90,10 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
             if (options.has(paymentAccountIdOpt))
                 throw new IllegalArgumentException("cannot use a payment account id in bsq swap offer");
 
-            if (options.has(mktPriceMarginOpt))
+            if (options.has(mktPriceMarginPctOpt))
                 throw new IllegalArgumentException("cannot use a market price margin in bsq swap offer");
 
-            if (options.has(securityDepositOpt))
+            if (options.has(securityDepositPctOpt))
                 throw new IllegalArgumentException("cannot use a security deposit in bsq swap offer");
 
             if (!options.has(fixedPriceOpt) || options.valueOf(fixedPriceOpt).isEmpty())
@@ -105,17 +103,24 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
             if (!options.has(paymentAccountIdOpt) || options.valueOf(paymentAccountIdOpt).isEmpty())
                 throw new IllegalArgumentException("no payment account id specified");
 
-            if (!options.has(mktPriceMarginOpt) && !options.has(fixedPriceOpt))
+            if (!options.has(mktPriceMarginPctOpt) && !options.has(fixedPriceOpt))
                 throw new IllegalArgumentException("no market price margin or fixed price specified");
 
-            if (options.has(mktPriceMarginOpt) && options.valueOf(mktPriceMarginOpt).isEmpty())
-                throw new IllegalArgumentException("no market price margin specified");
+            if (options.has(mktPriceMarginPctOpt)) {
+                var mktPriceMarginPctString = options.valueOf(mktPriceMarginPctOpt);
+                if (mktPriceMarginPctString.isEmpty())
+                    throw new IllegalArgumentException("no market price margin specified");
+                else
+                    verifyStringIsValidDouble(mktPriceMarginPctString);
+            }
 
             if (options.has(fixedPriceOpt) && options.valueOf(fixedPriceOpt).isEmpty())
                 throw new IllegalArgumentException("no fixed price specified");
 
-            if (!options.has(securityDepositOpt) || options.valueOf(securityDepositOpt).isEmpty())
+            if (!options.has(securityDepositPctOpt) || options.valueOf(securityDepositPctOpt).isEmpty())
                 throw new IllegalArgumentException("no security deposit specified");
+            else
+                verifyStringIsValidDouble(options.valueOf(securityDepositPctOpt));
         }
 
         return this;
@@ -142,24 +147,19 @@ public class CreateOfferOptionParser extends AbstractMethodOptionParser implemen
     }
 
     public boolean isUsingMktPriceMargin() {
-        return options.has(mktPriceMarginOpt);
+        return options.has(mktPriceMarginPctOpt);
     }
 
-    @SuppressWarnings("unused")
-    public String getMktPriceMargin() {
-        return isUsingMktPriceMargin() ? options.valueOf(mktPriceMarginOpt) : "0.00";
-    }
-
-    public BigDecimal getMktPriceMarginAsBigDecimal() {
-        return isUsingMktPriceMargin() ? new BigDecimal(options.valueOf(mktPriceMarginOpt)) : BigDecimal.ZERO;
+    public double getMktPriceMarginPct() {
+        return isUsingMktPriceMargin() ? Double.parseDouble(options.valueOf(mktPriceMarginPctOpt)) : 0.00d;
     }
 
     public String getFixedPrice() {
         return options.has(fixedPriceOpt) ? options.valueOf(fixedPriceOpt) : "0.00";
     }
 
-    public String getSecurityDeposit() {
-        return options.valueOf(securityDepositOpt);
+    public double getSecurityDepositPct() {
+        return Double.valueOf(options.valueOf(securityDepositPctOpt));
     }
 
     public String getMakerFeeCurrencyCode() {
