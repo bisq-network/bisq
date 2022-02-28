@@ -66,7 +66,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertNotEquals("", newOfferId);
         assertEquals(BUY.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals(360_000_000, newOffer.getPrice());
+        assertEquals("36000.0000", newOffer.getPrice());
         assertEquals(10_000_000, newOffer.getAmount());
         assertEquals(10_000_000, newOffer.getMinAmount());
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
@@ -81,7 +81,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(BUY.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals(360_000_000, newOffer.getPrice());
+        assertEquals("36000.0000", newOffer.getPrice());
         assertEquals(10_000_000, newOffer.getAmount());
         assertEquals(10_000_000, newOffer.getMinAmount());
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
@@ -111,7 +111,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertNotEquals("", newOfferId);
         assertEquals(BUY.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals(300_001_234, newOffer.getPrice());
+        assertEquals("30000.1234", newOffer.getPrice());
         assertEquals(10_000_000, newOffer.getAmount());
         assertEquals(10_000_000, newOffer.getMinAmount());
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
@@ -126,7 +126,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(BUY.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals(300_001_234, newOffer.getPrice());
+        assertEquals("30000.1234", newOffer.getPrice());
         assertEquals(10_000_000, newOffer.getAmount());
         assertEquals(10_000_000, newOffer.getMinAmount());
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
@@ -156,7 +156,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertNotEquals("", newOfferId);
         assertEquals(SELL.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals(295_001_234, newOffer.getPrice());
+        assertEquals("29500.1234", newOffer.getPrice());
         assertEquals(10_000_000, newOffer.getAmount());
         assertEquals(5_000_000, newOffer.getMinAmount());
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
@@ -171,7 +171,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(SELL.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals(295_001_234, newOffer.getPrice());
+        assertEquals("29500.1234", newOffer.getPrice());
         assertEquals(10_000_000, newOffer.getAmount());
         assertEquals(5_000_000, newOffer.getMinAmount());
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());

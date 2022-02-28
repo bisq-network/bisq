@@ -32,7 +32,7 @@ public final class OfferInfoBuilder {
 
     private String id;
     private String direction;
-    private long price;
+    private String price;
     private boolean useMarketBasedPrice;
     private double marketPriceMargin;
     private long amount;
@@ -72,7 +72,7 @@ public final class OfferInfoBuilder {
         return this;
     }
 
-    public OfferInfoBuilder withPrice(long price) {
+    public OfferInfoBuilder withPrice(String price) {
         this.price = price;
         return this;
     }

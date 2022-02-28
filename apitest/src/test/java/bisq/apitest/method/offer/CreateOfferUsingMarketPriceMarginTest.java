@@ -17,13 +17,10 @@
 
 package bisq.apitest.method.offer;
 
-import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.payment.PaymentAccount;
 
 import bisq.proto.grpc.OfferInfo;
-
-import org.bitcoinj.utils.Fiat;
 
 import java.text.DecimalFormat;
 
@@ -43,7 +40,6 @@ import static bisq.common.util.MathUtils.roundDouble;
 import static bisq.common.util.MathUtils.scaleDownByPowerOf10;
 import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
 import static bisq.core.btc.wallet.Restrictions.getDefaultBuyerSecurityDepositAsPercent;
-import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static java.lang.Math.abs;
 import static java.lang.String.format;
 import static java.math.RoundingMode.HALF_UP;
@@ -287,17 +283,17 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         assertTrue(() -> {
             String counterCurrencyCode = offer.getCounterCurrencyCode();
             double mktPrice = aliceClient.getBtcPrice(counterCurrencyCode);
-            double scaledOfferPrice = getScaledOfferPrice(offer.getPrice(), counterCurrencyCode);
+            double priceAsDouble = Double.parseDouble(offer.getPrice());
             double expectedDiffPct = scaleDownByPowerOf10(priceMarginPctInput, 2);
             double actualDiffPct = offer.getDirection().equals(BUY.name())
-                    ? getPercentageDifference(scaledOfferPrice, mktPrice)
-                    : getPercentageDifference(mktPrice, scaledOfferPrice);
+                    ? getPercentageDifference(priceAsDouble, mktPrice)
+                    : getPercentageDifference(mktPrice, priceAsDouble);
             double pctDiffDelta = abs(expectedDiffPct) - abs(actualDiffPct);
             return isCalculatedPriceWithinErrorTolerance(pctDiffDelta,
                     expectedDiffPct,
                     actualDiffPct,
                     mktPrice,
-                    scaledOfferPrice,
+                    priceAsDouble,
                     offer);
         });
     }
@@ -306,11 +302,6 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         return BigDecimal.valueOf(roundDouble((1 - (price1 / price2)), 5))
                 .setScale(4, HALF_UP)
                 .doubleValue();
-    }
-
-    private double getScaledOfferPrice(double offerPrice, String currencyCode) {
-        int precision = isCryptoCurrency(currencyCode) ? Altcoin.SMALLEST_UNIT_EXPONENT : Fiat.SMALLEST_UNIT_EXPONENT;
-        return scaleDownByPowerOf10(offerPrice, precision);
     }
 
     private boolean isCalculatedPriceWithinErrorTolerance(double delta,

@@ -9,7 +9,6 @@ import static java.lang.System.out;
 
 import bisq.cli.AbstractCliTest;
 import bisq.cli.GrpcClient;
-import bisq.cli.TradeFormat;
 import bisq.cli.table.builder.TableBuilder;
 
 @SuppressWarnings("unused")
@@ -43,10 +42,12 @@ public class GetTradeCliOutputDiffTest extends AbstractCliTest {
 
     private void getTrade(GrpcClient client) {
         var trade = client.getTrade(tradeId);
-        var oldTbl = TradeFormat.format(trade);
+        // TradeFormat class had been deprecated, then deleted on 17-Feb-2022, but these
+        // diff tests can be useful for testing changes to the current tbl formatting api.
+        // var oldTbl = TradeFormat.format(trade);
         var newTbl = new TableBuilder(TRADE_DETAIL_TBL, trade).build().toString();
-        printOldTbl(oldTbl);
+        // printOldTbl(oldTbl);
         printNewTbl(newTbl);
-        checkDiffsIgnoreWhitespace(oldTbl, newTbl);
+        // checkDiffsIgnoreWhitespace(oldTbl, newTbl);
     }
 }

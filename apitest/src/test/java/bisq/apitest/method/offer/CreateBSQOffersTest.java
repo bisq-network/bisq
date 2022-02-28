@@ -74,7 +74,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertNotEquals("", newOfferId);
         assertEquals(BUY.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals(5_000, newOffer.getPrice());
+        assertEquals("0.00005000", newOffer.getPrice());
         assertEquals(100_000_000L, newOffer.getAmount());
         assertEquals(100_000_000L, newOffer.getMinAmount());
         assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());
@@ -91,7 +91,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(BUY.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals(5_000, newOffer.getPrice());
+        assertEquals("0.00005000", newOffer.getPrice());
         assertEquals(100_000_000L, newOffer.getAmount());
         assertEquals(100_000_000L, newOffer.getMinAmount());
         assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());
@@ -121,7 +121,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertNotEquals("", newOfferId);
         assertEquals(SELL.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals(5_000, newOffer.getPrice());
+        assertEquals("0.00005000", newOffer.getPrice());
         assertEquals(100_000_000L, newOffer.getAmount());
         assertEquals(100_000_000L, newOffer.getMinAmount());
         assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());
@@ -138,7 +138,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(SELL.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals(5_000, newOffer.getPrice());
+        assertEquals("0.00005000", newOffer.getPrice());
         assertEquals(100_000_000L, newOffer.getAmount());
         assertEquals(100_000_000L, newOffer.getMinAmount());
         assertEquals(15_000_000, newOffer.getBuyerSecurityDeposit());
@@ -168,7 +168,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertNotEquals("", newOfferId);
         assertEquals(BUY.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals(5_000, newOffer.getPrice());
+        assertEquals("0.00005000", newOffer.getPrice());
         assertEquals(10_000_000L, newOffer.getAmount());
         assertEquals(5_000_000L, newOffer.getMinAmount());
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
@@ -185,7 +185,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(BUY.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals(5_000, newOffer.getPrice());
+        assertEquals("0.00005000", newOffer.getPrice());
         assertEquals(10_000_000L, newOffer.getAmount());
         assertEquals(5_000_000L, newOffer.getMinAmount());
         assertEquals(1_500_000, newOffer.getBuyerSecurityDeposit());
@@ -215,7 +215,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertNotEquals("", newOfferId);
         assertEquals(SELL.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals(5_000, newOffer.getPrice());
+        assertEquals("0.00005000", newOffer.getPrice());
         assertEquals(50_000_000L, newOffer.getAmount());
         assertEquals(25_000_000L, newOffer.getMinAmount());
         assertEquals(7_500_000, newOffer.getBuyerSecurityDeposit());
@@ -232,7 +232,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(SELL.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
-        assertEquals(5_000, newOffer.getPrice());
+        assertEquals("0.00005000", newOffer.getPrice());
         assertEquals(50_000_000L, newOffer.getAmount());
         assertEquals(25_000_000L, newOffer.getMinAmount());
         assertEquals(7_500_000, newOffer.getBuyerSecurityDeposit());

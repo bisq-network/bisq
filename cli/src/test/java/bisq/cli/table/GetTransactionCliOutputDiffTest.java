@@ -7,7 +7,6 @@ import static bisq.cli.table.builder.TableType.TRANSACTION_TBL;
 
 
 import bisq.cli.AbstractCliTest;
-import bisq.cli.TransactionFormat;
 import bisq.cli.table.builder.TableBuilder;
 
 @SuppressWarnings("unused")
@@ -31,11 +30,12 @@ public class GetTransactionCliOutputDiffTest extends AbstractCliTest {
 
     private void getTransaction() {
         var tx = aliceClient.getTransaction(transactionId);
-        var oldTbl = TransactionFormat.format(tx);
+        // TransactionFormat class had been deprecated, then deleted on 17-Feb-2022, but
+        // these diff tests can be useful for testing changes to the current tbl formatting api.
+        // var oldTbl = TransactionFormat.format(tx);
         var newTbl = new TableBuilder(TRANSACTION_TBL, tx).build().toString();
-        printOldTbl(oldTbl);
+        // printOldTbl(oldTbl);
         printNewTbl(newTbl);
-        // Should show 1 (OK) diff due to new 'Is Confirmed' column being left justified (fixed).
-        checkDiffsIgnoreWhitespace(oldTbl, newTbl);
+        // checkDiffsIgnoreWhitespace(oldTbl, newTbl);
     }
 }

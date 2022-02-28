@@ -117,7 +117,7 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
         var newOfferId = bsqSwapOffer.getId();
         assertNotEquals("", newOfferId);
         assertEquals(BUY.name(), bsqSwapOffer.getDirection());
-        assertEquals(5_000, bsqSwapOffer.getPrice());
+        assertEquals("0.00005000", bsqSwapOffer.getPrice());
         assertEquals(1_000_000L, bsqSwapOffer.getAmount());
         assertEquals(1_000_000L, bsqSwapOffer.getMinAmount());
         assertEquals(BSQ, bsqSwapOffer.getBaseCurrencyCode());

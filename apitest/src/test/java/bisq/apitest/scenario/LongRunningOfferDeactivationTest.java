@@ -72,7 +72,7 @@ public class LongRunningOfferDeactivationTest extends AbstractOfferTest {
                 triggerPrice);
         log.info("SELL offer {} created with margin based price {}.",
                 offer.getId(),
-                formatPrice(offer.getPrice()));
+                offer.getPrice());
         genBtcBlocksThenWait(1, 2500);  // Wait for offer book entry.
 
         offer = aliceClient.getOffer(offer.getId()); // Offer has trigger price now.
@@ -120,7 +120,7 @@ public class LongRunningOfferDeactivationTest extends AbstractOfferTest {
                 triggerPrice);
         log.info("BUY offer {} created with margin based price {}.",
                 offer.getId(),
-                formatPrice(offer.getPrice()));
+                offer.getPrice());
         genBtcBlocksThenWait(1, 2500);  // Wait for offer book entry.
 
         offer = aliceClient.getOffer(offer.getId()); // Offer has trigger price now.

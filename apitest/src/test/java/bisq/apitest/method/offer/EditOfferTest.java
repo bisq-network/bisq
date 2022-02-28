@@ -67,7 +67,7 @@ public class EditOfferTest extends AbstractOfferTest {
                 NO_TRIGGER_PRICE);
         log.debug("Original EUR offer:\n{}", toOfferTable.apply(originalOffer));
         assertFalse(originalOffer.getIsActivated()); // Not activated until prep is done.
-        genBtcBlocksThenWait(1, 2_500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2_500); // Wait for entry into offer book.
         originalOffer = aliceClient.getOffer(originalOffer.getId());
         assertTrue(originalOffer.getIsActivated());
         // Disable offer
@@ -98,7 +98,7 @@ public class EditOfferTest extends AbstractOfferTest {
                 0.0,
                 NO_TRIGGER_PRICE);
         log.debug("Original EUR offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2_500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2_500); // Wait for entry into offer book.
         originalOffer = aliceClient.getOffer(originalOffer.getId());
         assertEquals(0 /*no trigger price*/, originalOffer.getTriggerPrice());
 
@@ -127,7 +127,7 @@ public class EditOfferTest extends AbstractOfferTest {
                 0.0,
                 NO_TRIGGER_PRICE);
         log.debug("Original EUR offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2_500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2_500); // Wait for entry into offer book.
         // Edit the offer's trigger price, set to -1, check error.
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 aliceClient.editOfferTriggerPrice(originalOffer.getId(), -1L));
@@ -148,7 +148,7 @@ public class EditOfferTest extends AbstractOfferTest {
                 originalMktPriceMargin,
                 NO_TRIGGER_PRICE);
         log.debug("Original USD offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2_500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2_500); // Wait for entry into offer book.
         assertEquals(scaledDownMktPriceMargin.apply(originalMktPriceMargin), originalOffer.getMarketPriceMargin());
         // Edit the offer's price margin, nothing else.
         var newMktPriceMargin = new BigDecimal("0.5").doubleValue();
@@ -166,22 +166,21 @@ public class EditOfferTest extends AbstractOfferTest {
     public void testEditFixedPrice() {
         PaymentAccount paymentAcct = getOrCreatePaymentAccount("RU");
         double mktPriceAsDouble = aliceClient.getBtcPrice(RUBLE);
-        String fixedPriceAsString = calcPriceAsString.apply(mktPriceAsDouble, 200_000.0000);
+        String fixedPriceAsString = calcPriceAsString(mktPriceAsDouble, 200_000.0000, 4);
         var originalOffer = createFixedPricedOfferForEdit(BUY.name(),
                 RUBLE,
                 paymentAcct.getId(),
                 fixedPriceAsString);
         log.debug("Original RUB offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2_500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2_500); // Wait for entry into offer book.
         // Edit the offer's fixed price, nothing else.
-        String editedFixedPriceAsString = calcPriceAsString.apply(mktPriceAsDouble, 100_000.0000);
+        String editedFixedPriceAsString = calcPriceAsString(mktPriceAsDouble, 100_000.0000, 4);
         aliceClient.editOfferFixedPrice(originalOffer.getId(), editedFixedPriceAsString);
         // Wait for edited offer to be removed from offer-book, edited, and re-published.
         genBtcBlocksThenWait(1, 2_500);
         OfferInfo editedOffer = aliceClient.getOffer(originalOffer.getId());
         log.debug("Edited RUB offer:\n{}", toOfferTable.apply(editedOffer));
-        var expectedNewFixedPrice = scaledUpFiatOfferPrice.apply(new BigDecimal(editedFixedPriceAsString));
-        assertEquals(expectedNewFixedPrice, editedOffer.getPrice());
+        assertEquals(editedFixedPriceAsString, editedOffer.getPrice());
         assertFalse(editedOffer.getUseMarketBasedPrice());
 
         doSanityCheck(originalOffer, editedOffer);
@@ -192,15 +191,15 @@ public class EditOfferTest extends AbstractOfferTest {
     public void testEditFixedPriceAndDeactivation() {
         PaymentAccount paymentAcct = getOrCreatePaymentAccount("RU");
         double mktPriceAsDouble = aliceClient.getBtcPrice(RUBLE);
-        String fixedPriceAsString = calcPriceAsString.apply(mktPriceAsDouble, 200_000.0000);
+        String fixedPriceAsString = calcPriceAsString(mktPriceAsDouble, 200_000.0000, 4);
         var originalOffer = createFixedPricedOfferForEdit(BUY.name(),
                 RUBLE,
                 paymentAcct.getId(),
                 fixedPriceAsString);
         log.debug("Original RUB offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2_500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2_500); // Wait for entry into offer book.
         // Edit the offer's fixed price and deactivate it.
-        String editedFixedPriceAsString = calcPriceAsString.apply(mktPriceAsDouble, 100_000.0000);
+        String editedFixedPriceAsString = calcPriceAsString(mktPriceAsDouble, 100_000.0000, 4);
         aliceClient.editOffer(originalOffer.getId(),
                 editedFixedPriceAsString,
                 originalOffer.getUseMarketBasedPrice(),
@@ -212,8 +211,7 @@ public class EditOfferTest extends AbstractOfferTest {
         genBtcBlocksThenWait(1, 2_500);
         OfferInfo editedOffer = aliceClient.getOffer(originalOffer.getId());
         log.debug("Edited RUB offer:\n{}", toOfferTable.apply(editedOffer));
-        var expectedNewFixedPrice = scaledUpFiatOfferPrice.apply(new BigDecimal(editedFixedPriceAsString));
-        assertEquals(expectedNewFixedPrice, editedOffer.getPrice());
+        assertEquals(editedFixedPriceAsString, editedOffer.getPrice());
         assertFalse(editedOffer.getIsActivated());
         assertFalse(editedOffer.getUseMarketBasedPrice());
 
@@ -232,7 +230,7 @@ public class EditOfferTest extends AbstractOfferTest {
                 originalMktPriceMargin,
                 0);
         log.debug("Original USD offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2_500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2_500); // Wait for entry into offer book.
         originalOffer = aliceClient.getOffer(originalOffer.getId());
         assertEquals(scaledDownMktPriceMargin.apply(originalMktPriceMargin), originalOffer.getMarketPriceMargin());
 
@@ -270,7 +268,7 @@ public class EditOfferTest extends AbstractOfferTest {
                 originalMktPriceMargin,
                 originalTriggerPriceAsLong);
         log.debug("Original USD offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2_500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2_500); // Wait for entry into offer book.
         originalOffer = aliceClient.getOffer(originalOffer.getId());
         assertEquals(scaledDownMktPriceMargin.apply(originalMktPriceMargin), originalOffer.getMarketPriceMargin());
         assertEquals(originalTriggerPriceAsLong, originalOffer.getTriggerPrice());
@@ -307,7 +305,7 @@ public class EditOfferTest extends AbstractOfferTest {
                 originalMktPriceMargin,
                 NO_TRIGGER_PRICE);
         log.debug("Original USD offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2_500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2_500); // Wait for entry into offer book.
         // Try to edit both the fixed price and mkt price margin.
         var newMktPriceMargin = new BigDecimal("0.25").doubleValue();
         var newFixedPrice = "50000.0000";
@@ -332,13 +330,13 @@ public class EditOfferTest extends AbstractOfferTest {
     public void testEditingTriggerPriceInFixedPriceOfferShouldThrowException() {
         PaymentAccount paymentAcct = getOrCreatePaymentAccount("RU");
         double mktPriceAsDouble = aliceClient.getBtcPrice(RUBLE);
-        String fixedPriceAsString = calcPriceAsString.apply(mktPriceAsDouble, 200_000.0000);
+        String fixedPriceAsString = calcPriceAsString(mktPriceAsDouble, 200_000.0000, 4);
         var originalOffer = createFixedPricedOfferForEdit(BUY.name(),
                 RUBLE,
                 paymentAcct.getId(),
                 fixedPriceAsString);
         log.debug("Original RUB offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2_500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2_500); // Wait for entry into offer book.
         long newTriggerPrice = 1000000L;
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 aliceClient.editOfferTriggerPrice(originalOffer.getId(), newTriggerPrice));
@@ -354,13 +352,13 @@ public class EditOfferTest extends AbstractOfferTest {
     public void testChangeFixedPriceOfferToPriceMarginBasedOfferWithTriggerPrice() {
         PaymentAccount paymentAcct = getOrCreatePaymentAccount("MX");
         double mktPriceAsDouble = aliceClient.getBtcPrice("MXN");
-        String fixedPriceAsString = calcPriceAsString.apply(mktPriceAsDouble, 0.00);
+        String fixedPriceAsString = calcPriceAsString(mktPriceAsDouble, 0.00, 4);
         var originalOffer = createFixedPricedOfferForEdit(BUY.name(),
                 "MXN",
                 paymentAcct.getId(),
                 fixedPriceAsString);
         log.debug("Original MXN offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2_500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2_500); // Wait for entry into offer book.
 
         // Change the offer to mkt price based and set a trigger price.
         var newMktPriceMargin = new BigDecimal("0.05").doubleValue();
@@ -399,9 +397,9 @@ public class EditOfferTest extends AbstractOfferTest {
                 originalMktPriceMargin,
                 originalTriggerPriceAsLong);
         log.debug("Original GBP offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2_500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2_500); // Wait for entry into offer book.
 
-        String fixedPriceAsString = calcPriceAsString.apply(mktPriceAsDouble, 0.00);
+        String fixedPriceAsString = calcPriceAsString(mktPriceAsDouble, 0.00, 4);
         aliceClient.editOffer(originalOffer.getId(),
                 fixedPriceAsString,
                 false,
@@ -413,7 +411,7 @@ public class EditOfferTest extends AbstractOfferTest {
         genBtcBlocksThenWait(1, 2_500);
         OfferInfo editedOffer = aliceClient.getOffer(originalOffer.getId());
         log.debug("Edited GBP offer:\n{}", toOfferTable.apply(editedOffer));
-        assertEquals(scaledUpFiatOfferPrice.apply(new BigDecimal(fixedPriceAsString)), editedOffer.getPrice());
+        assertEquals(fixedPriceAsString, editedOffer.getPrice());
         assertFalse(editedOffer.getUseMarketBasedPrice());
         assertEquals(0.00, editedOffer.getMarketPriceMargin());
         assertEquals(0, editedOffer.getTriggerPrice());
@@ -432,7 +430,7 @@ public class EditOfferTest extends AbstractOfferTest {
                 alicesLegacyBsqAcct.getId(),
                 BSQ);
         log.debug("Original BSQ offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2_500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2_500); // Wait for entry into offer book.
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 aliceClient.editOffer(originalOffer.getId(),
                         "0.00",
@@ -459,7 +457,7 @@ public class EditOfferTest extends AbstractOfferTest {
                 alicesLegacyBsqAcct.getId(),
                 BSQ);
         log.debug("Original BSQ offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2_500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2_500); // Wait for entry into offer book.
         var newTriggerPriceAsLong = calcFiatTriggerPriceAsLong.apply(0.00005, 0.00);
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 aliceClient.editOffer(originalOffer.getId(),
@@ -488,7 +486,7 @@ public class EditOfferTest extends AbstractOfferTest {
                 alicesLegacyBsqAcct.getId(),
                 BSQ);
         log.debug("Original BSQ offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2_500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2_500); // Wait for entry into offer book.
         String newFixedPriceAsString = "0.00003111";
         aliceClient.editOffer(originalOffer.getId(),
                 newFixedPriceAsString,
@@ -501,7 +499,7 @@ public class EditOfferTest extends AbstractOfferTest {
         genBtcBlocksThenWait(1, 2_500);
         OfferInfo editedOffer = aliceClient.getOffer(originalOffer.getId());
         log.debug("Edited BSQ offer:\n{}", toOfferTable.apply(editedOffer));
-        assertEquals(scaledUpAltcoinOfferPrice.apply(newFixedPriceAsString), editedOffer.getPrice());
+        assertEquals(newFixedPriceAsString, editedOffer.getPrice());
         assertTrue(editedOffer.getIsActivated());
         assertFalse(editedOffer.getUseMarketBasedPrice());
         assertEquals(0.00, editedOffer.getMarketPriceMargin());
@@ -511,7 +509,7 @@ public class EditOfferTest extends AbstractOfferTest {
     @Test
     @Order(16)
     public void testDisableBsqOffer() {
-        String fixedPriceAsString = "0.00005"; // FIXED PRICE IN BTC (satoshis) FOR 1 BSQ
+        String fixedPriceAsString = "0.00005000";
         var originalOffer = aliceClient.createFixedPricedOffer(BUY.name(),
                 BSQ,
                 100_000_000L,
@@ -521,7 +519,7 @@ public class EditOfferTest extends AbstractOfferTest {
                 alicesLegacyBsqAcct.getId(),
                 BSQ);
         log.debug("Original BSQ offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2_500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2_500); // Wait for entry into offer book.
         aliceClient.editOffer(originalOffer.getId(),
                 fixedPriceAsString,
                 false,
@@ -534,7 +532,7 @@ public class EditOfferTest extends AbstractOfferTest {
         OfferInfo editedOffer = aliceClient.getOffer(originalOffer.getId());
         log.debug("Edited BSQ offer:\n{}", toOfferTable.apply(editedOffer));
         assertFalse(editedOffer.getIsActivated());
-        assertEquals(scaledUpAltcoinOfferPrice.apply(fixedPriceAsString), editedOffer.getPrice());
+        assertEquals(fixedPriceAsString, editedOffer.getPrice());
         assertFalse(editedOffer.getUseMarketBasedPrice());
         assertEquals(0.00, editedOffer.getMarketPriceMargin());
         assertEquals(0, editedOffer.getTriggerPrice());
@@ -543,7 +541,7 @@ public class EditOfferTest extends AbstractOfferTest {
     @Test
     @Order(17)
     public void testEditFixedPriceAndDisableBsqOffer() {
-        String fixedPriceAsString = "0.00005"; // FIXED PRICE IN BTC (satoshis) FOR 1 BSQ
+        String fixedPriceAsString = "0.00005000";
         var originalOffer = aliceClient.createFixedPricedOffer(BUY.name(),
                 BSQ,
                 100_000_000L,
@@ -553,8 +551,8 @@ public class EditOfferTest extends AbstractOfferTest {
                 alicesLegacyBsqAcct.getId(),
                 BSQ);
         log.debug("Original BSQ offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2_500); // Wait for offer book entry.
-        String newFixedPriceAsString = "0.000045";
+        genBtcBlocksThenWait(1, 2_500); // Wait for entry into offer book.
+        String newFixedPriceAsString = "0.00004500";
         aliceClient.editOffer(originalOffer.getId(),
                 newFixedPriceAsString,
                 false,
@@ -567,7 +565,7 @@ public class EditOfferTest extends AbstractOfferTest {
         OfferInfo editedOffer = aliceClient.getOffer(originalOffer.getId());
         log.debug("Edited BSQ offer:\n{}", toOfferTable.apply(editedOffer));
         assertFalse(editedOffer.getIsActivated());
-        assertEquals(scaledUpAltcoinOfferPrice.apply(newFixedPriceAsString), editedOffer.getPrice());
+        assertEquals(newFixedPriceAsString, editedOffer.getPrice());
         assertFalse(editedOffer.getUseMarketBasedPrice());
         assertEquals(0.00, editedOffer.getMarketPriceMargin());
         assertEquals(0, editedOffer.getTriggerPrice());
@@ -587,12 +585,12 @@ public class EditOfferTest extends AbstractOfferTest {
                 0.0,
                 triggerPriceAsLong);
         log.debug("Pending XMR offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2500); // Wait for entry into offer book.
 
         originalOffer = aliceClient.getOffer(originalOffer.getId());
         log.debug("Original XMR offer:\n{}", toOfferTable.apply(originalOffer));
 
-        String newFixedPriceAsString = calcPriceAsString.apply(mktPriceAsDouble, -0.001);
+        String newFixedPriceAsString = calcPriceAsString(mktPriceAsDouble, -0.001, 8);
         aliceClient.editOffer(originalOffer.getId(),
                 newFixedPriceAsString,
                 false,
@@ -604,7 +602,7 @@ public class EditOfferTest extends AbstractOfferTest {
         genBtcBlocksThenWait(1, 2500);
         OfferInfo editedOffer = aliceClient.getOffer(originalOffer.getId());
         log.debug("Edited XMR offer:\n{}", toOfferTable.apply(editedOffer));
-        assertEquals(scaledUpAltcoinOfferPrice.apply(newFixedPriceAsString), editedOffer.getPrice());
+        assertEquals(newFixedPriceAsString, editedOffer.getPrice());
         assertFalse(editedOffer.getUseMarketBasedPrice());
         assertEquals(0.00, editedOffer.getMarketPriceMargin());
         assertEquals(0, editedOffer.getTriggerPrice());
@@ -624,7 +622,7 @@ public class EditOfferTest extends AbstractOfferTest {
                 mktPriceMargin,
                 NO_TRIGGER_PRICE);
         log.debug("Pending XMR offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2500); // Wait for entry into offer book.
 
         originalOffer = aliceClient.getOffer(originalOffer.getId());
         log.info("Original XMR offer:\n{}", toOfferTable.apply(originalOffer));
@@ -655,7 +653,7 @@ public class EditOfferTest extends AbstractOfferTest {
     public void testChangeFixedPricedXmrOfferToPriceMarginBasedOfferWithTriggerPrice() {
         createXmrPaymentAccounts();
         double mktPriceAsDouble = aliceClient.getBtcPrice(XMR);
-        String fixedPriceAsString = calcPriceAsString.apply(mktPriceAsDouble, 0.00);
+        String fixedPriceAsString = calcPriceAsString(mktPriceAsDouble, 0.00, 8);
         OfferInfo originalOffer = aliceClient.createFixedPricedOffer(BUY.name(),
                 XMR,
                 100_000_000L,
@@ -665,7 +663,7 @@ public class EditOfferTest extends AbstractOfferTest {
                 alicesXmrAcct.getId(),
                 BSQ);
         log.debug("Pending XMR offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2500); // Wait for entry into offer book.
 
         originalOffer = aliceClient.getOffer(originalOffer.getId());
         log.debug("Original XMR offer:\n{}", toOfferTable.apply(originalOffer));
@@ -706,7 +704,7 @@ public class EditOfferTest extends AbstractOfferTest {
                 alicesXmrAcct.getId(),
                 BSQ);
         log.debug("Original XMR offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2500); // Wait for entry into offer book.
 
         var newTriggerPriceAsLong = calcAltcoinTriggerPriceAsLong.apply(0.007, 0.001);
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
@@ -737,8 +735,8 @@ public class EditOfferTest extends AbstractOfferTest {
                 alicesXmrAcct.getId(),
                 BSQ);
         log.debug("Original BSQ offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2500); // Wait for offer book entry.
-        String newFixedPriceAsString = "0.009";
+        genBtcBlocksThenWait(1, 2500); // Wait for entry into offer book.
+        String newFixedPriceAsString = "0.00900000";
         aliceClient.editOffer(originalOffer.getId(),
                 newFixedPriceAsString,
                 false,
@@ -750,7 +748,7 @@ public class EditOfferTest extends AbstractOfferTest {
         genBtcBlocksThenWait(1, 2500);
         OfferInfo editedOffer = aliceClient.getOffer(originalOffer.getId());
         log.debug("Edited XMR offer:\n{}", toOfferTable.apply(editedOffer));
-        assertEquals(scaledUpAltcoinOfferPrice.apply(newFixedPriceAsString), editedOffer.getPrice());
+        assertEquals(newFixedPriceAsString, editedOffer.getPrice());
         assertTrue(editedOffer.getIsActivated());
         assertMarketBasedPriceFieldsAreIgnored(editedOffer);
 
@@ -761,7 +759,7 @@ public class EditOfferTest extends AbstractOfferTest {
     @Order(23)
     public void testDisableXmrOffer() {
         createXmrPaymentAccounts();
-        String fixedPriceAsString = "0.008"; // FIXED PRICE IN BTC (satoshis) FOR 1 BSQ
+        String fixedPriceAsString = "0.00800000";
         final OfferInfo originalOffer = aliceClient.createFixedPricedOffer(BUY.name(),
                 XMR,
                 100_000_000L,
@@ -771,7 +769,7 @@ public class EditOfferTest extends AbstractOfferTest {
                 alicesXmrAcct.getId(),
                 BSQ);
         log.debug("Original XMR offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2500); // Wait for entry into offer book.
         aliceClient.editOffer(originalOffer.getId(),
                 fixedPriceAsString,
                 false,
@@ -784,7 +782,7 @@ public class EditOfferTest extends AbstractOfferTest {
         OfferInfo editedOffer = aliceClient.getOffer(originalOffer.getId());
         log.debug("Edited XMR offer:\n{}", toOfferTable.apply(editedOffer));
         assertFalse(editedOffer.getIsActivated());
-        assertEquals(scaledUpAltcoinOfferPrice.apply(fixedPriceAsString), editedOffer.getPrice());
+        assertEquals(fixedPriceAsString, editedOffer.getPrice());
         assertMarketBasedPriceFieldsAreIgnored(editedOffer);
 
         doSanityCheck(originalOffer, editedOffer);
@@ -794,7 +792,7 @@ public class EditOfferTest extends AbstractOfferTest {
     @Order(24)
     public void testEditFixedPriceAndDisableXmrOffer() {
         createXmrPaymentAccounts();
-        String fixedPriceAsString = "0.004"; // FIXED PRICE IN BTC (satoshis) FOR 1 BSQ
+        String fixedPriceAsString = "0.004";
         final OfferInfo originalOffer = aliceClient.createFixedPricedOffer(BUY.name(),
                 XMR,
                 100_000_000L,
@@ -804,8 +802,8 @@ public class EditOfferTest extends AbstractOfferTest {
                 alicesXmrAcct.getId(),
                 BSQ);
         log.debug("Original XMR offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2500); // Wait for offer book entry.
-        String newFixedPriceAsString = "0.000045";
+        genBtcBlocksThenWait(1, 2500); // Wait for entry into offer book.
+        String newFixedPriceAsString = "0.00004500";
         aliceClient.editOffer(originalOffer.getId(),
                 newFixedPriceAsString,
                 false,
@@ -818,7 +816,7 @@ public class EditOfferTest extends AbstractOfferTest {
         OfferInfo editedOffer = aliceClient.getOffer(originalOffer.getId());
         log.debug("Edited XMR offer:\n{}", toOfferTable.apply(editedOffer));
         assertFalse(editedOffer.getIsActivated());
-        assertEquals(scaledUpAltcoinOfferPrice.apply(newFixedPriceAsString), editedOffer.getPrice());
+        assertEquals(newFixedPriceAsString, editedOffer.getPrice());
         assertMarketBasedPriceFieldsAreIgnored(editedOffer);
 
         doSanityCheck(originalOffer, editedOffer);
@@ -837,14 +835,14 @@ public class EditOfferTest extends AbstractOfferTest {
         var newOfferId = originalOffer.getId();
         assertNotEquals("", newOfferId);
         assertEquals(SELL.name(), originalOffer.getDirection());
-        assertEquals(5_000, originalOffer.getPrice());
+        assertEquals("0.00005000", originalOffer.getPrice());
         assertEquals(1_250_000L, originalOffer.getAmount());
         assertEquals(750_000L, originalOffer.getMinAmount());
         assertEquals(BSQ, originalOffer.getBaseCurrencyCode());
         assertEquals(BTC, originalOffer.getCounterCurrencyCode());
 
         log.debug("Original BsqSwap offer:\n{}", toOfferTable.apply(originalOffer));
-        genBtcBlocksThenWait(1, 2_500); // Wait for offer book entry.
+        genBtcBlocksThenWait(1, 2_500); // Wait for entry into offer book.
         var newFixedPrice = "0.000055";
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 aliceClient.editOffer(originalOffer.getId(),

@@ -24,6 +24,7 @@ import bisq.proto.grpc.OfferInfo;
 import protobuf.PaymentAccount;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -100,13 +101,6 @@ public abstract class AbstractOfferTest extends MethodTest {
         return price.multiply(factor).longValue();
     };
 
-    // Price value of altcoin offer returned from server will be scaled up by 10^8.
-    protected final Function<String, Long> scaledUpAltcoinOfferPrice = (altcoinPriceAsString) -> {
-        BigDecimal factor = new BigDecimal(10).pow(8);
-        BigDecimal priceAsBigDecimal = new BigDecimal(altcoinPriceAsString);
-        return priceAsBigDecimal.multiply(factor).longValue();
-    };
-
     protected final BiFunction<Double, Double, Long> calcFiatTriggerPriceAsLong = (base, delta) -> {
         var priceAsDouble = new BigDecimal(base).add(new BigDecimal(delta)).doubleValue();
         return Double.valueOf(exactMultiply(priceAsDouble, 10_000)).longValue();
@@ -117,17 +111,19 @@ public abstract class AbstractOfferTest extends MethodTest {
         return Double.valueOf(exactMultiply(priceAsDouble, 100_000_000)).longValue();
     };
 
-    protected final BiFunction<Double, Double, String> calcPriceAsString = (base, delta) -> {
-        var priceAsBigDecimal = new BigDecimal(Double.toString(base))
-                .add(new BigDecimal(Double.toString(delta)));
-        return priceAsBigDecimal.toPlainString();
-    };
-
     protected final Function<OfferInfo, String> toOfferTable = (offer) ->
             new TableBuilder(OFFER_TBL, offer).build().toString();
 
     protected final Function<List<OfferInfo>, String> toOffersTable = (offers) ->
             new TableBuilder(OFFER_TBL, offers).build().toString();
+
+    protected String calcPriceAsString(double base, double delta, int precision) {
+        var mathContext = new MathContext(precision);
+        var priceAsBigDecimal = new BigDecimal(Double.toString(base), mathContext)
+                .add(new BigDecimal(Double.toString(delta), mathContext))
+                .round(mathContext);
+        return format("%." + precision + "f", priceAsBigDecimal.doubleValue());
+    }
 
     protected OfferInfo getAvailableBsqSwapOffer(GrpcClient client,
                                                  OfferDirection direction,
