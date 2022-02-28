@@ -30,7 +30,6 @@ import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
-import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.common.app.Version;
@@ -47,7 +46,6 @@ import javax.inject.Singleton;
 
 import com.google.common.util.concurrent.FutureCallback;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -440,10 +438,6 @@ public class CoreApi {
 
     public void removeWalletPassword(String password) {
         walletsService.removeWalletPassword(password);
-    }
-
-    public List<TradeStatistics3> getTradeStatistics() {
-        return new ArrayList<>(tradeStatisticsManager.getObservableTradeStatisticsSet());
     }
 
     public int getNumConfirmationsForMostRecentTransaction(String addressString) {
