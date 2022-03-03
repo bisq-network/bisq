@@ -793,4 +793,17 @@ public class CurrencyUtil {
     public static String getOfferVolumeCode(String currencyCode) {
         return Res.get("shared.offerVolumeCode", currencyCode);
     }
+
+    public static boolean apiSupportsCryptoCurrency(String currencyCode) {
+        // Although this method is only used by the core.api package, its
+        // presence here avoids creating a new util class just for this method.
+        if (isCryptoCurrency(currencyCode))
+            return currencyCode.equals("BTC")
+                    || currencyCode.equals("BSQ")
+                    || currencyCode.equals("XMR");
+        else
+            throw new IllegalArgumentException(
+                    format("Method requires a crypto currency code, but was given '%s'.",
+                            currencyCode));
+    }
 }

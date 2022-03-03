@@ -257,7 +257,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
     @Test
     @Order(5)
     public void testGetAllMyXMROffers() {
-        List<OfferInfo> offers = aliceClient.getMyCryptoCurrencyOffersSortedByDate(XMR);
+        List<OfferInfo> offers = aliceClient.getMyOffersSortedByDate(XMR);
         log.debug("All of Alice's XMR offers:\n{}", toOffersTable.apply(offers));
         assertEquals(4, offers.size());
         log.debug("Alice's balances\n{}", formatBalancesTbls(aliceClient.getBalances()));
@@ -266,7 +266,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
     @Test
     @Order(6)
     public void testGetAvailableXMROffers() {
-        List<OfferInfo> offers = bobClient.getCryptoCurrencyOffersSortedByDate(XMR);
+        List<OfferInfo> offers = bobClient.getOffersSortedByDate(XMR);
         log.debug("All of Bob's available XMR offers:\n{}", toOffersTable.apply(offers));
         assertEquals(4, offers.size());
         log.debug("Bob's balances\n{}", formatBalancesTbls(bobClient.getBalances()));

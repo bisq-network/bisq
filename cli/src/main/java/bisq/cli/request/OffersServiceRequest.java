@@ -32,7 +32,6 @@ import bisq.proto.grpc.OfferInfo;
 import java.util.ArrayList;
 import java.util.List;
 
-import static bisq.cli.CryptoCurrencyUtil.apiDoesSupportCryptoCurrency;
 import static bisq.proto.grpc.EditOfferRequest.EditType.ACTIVATION_STATE_ONLY;
 import static bisq.proto.grpc.EditOfferRequest.EditType.FIXED_PRICE_ONLY;
 import static bisq.proto.grpc.EditOfferRequest.EditType.MKT_PRICE_MARGIN_ONLY;
@@ -217,13 +216,6 @@ public class OffersServiceRequest {
         return grpcStubs.offersService.getOffer(request).getOffer();
     }
 
-    public OfferInfo getMyBsqSwapOffer(String offerId) {
-        var request = GetMyOfferRequest.newBuilder()
-                .setId(offerId)
-                .build();
-        return grpcStubs.offersService.getMyBsqSwapOffer(request).getBsqSwapOffer();
-    }
-
     public OfferInfo getMyOffer(String offerId) {
         var request = GetMyOfferRequest.newBuilder()
                 .setId(offerId)
@@ -240,40 +232,23 @@ public class OffersServiceRequest {
     }
 
     public List<OfferInfo> getOffers(String direction, String currencyCode) {
-        if (apiDoesSupportCryptoCurrency(currencyCode)) {
-            return getCryptoCurrencyOffers(direction, currencyCode);
-        } else {
-            var request = GetOffersRequest.newBuilder()
-                    .setDirection(direction)
-                    .setCurrencyCode(currencyCode)
-                    .build();
-            return grpcStubs.offersService.getOffers(request).getOffersList();
-        }
-    }
-
-    public List<OfferInfo> getCryptoCurrencyOffers(String direction, String currencyCode) {
-        return getOffers(direction, "BTC").stream()
-                .filter(o -> o.getBaseCurrencyCode().equalsIgnoreCase(currencyCode))
-                .collect(toList());
+        var request = GetOffersRequest.newBuilder()
+                .setDirection(direction)
+                .setCurrencyCode(currencyCode)
+                .build();
+        return grpcStubs.offersService.getOffers(request).getOffersList();
     }
 
     public List<OfferInfo> getOffersSortedByDate(String currencyCode) {
         ArrayList<OfferInfo> offers = new ArrayList<>();
         offers.addAll(getOffers(BUY.name(), currencyCode));
         offers.addAll(getOffers(SELL.name(), currencyCode));
-        return sortOffersByDate(offers);
+        return offers.isEmpty() ? offers : sortOffersByDate(offers);
     }
 
     public List<OfferInfo> getOffersSortedByDate(String direction, String currencyCode) {
         var offers = getOffers(direction, currencyCode);
         return offers.isEmpty() ? offers : sortOffersByDate(offers);
-    }
-
-    public List<OfferInfo> getCryptoCurrencyOffersSortedByDate(String currencyCode) {
-        ArrayList<OfferInfo> offers = new ArrayList<>();
-        offers.addAll(getCryptoCurrencyOffers(BUY.name(), currencyCode));
-        offers.addAll(getCryptoCurrencyOffers(SELL.name(), currencyCode));
-        return sortOffersByDate(offers);
     }
 
     public List<OfferInfo> getBsqSwapOffersSortedByDate() {
@@ -291,40 +266,23 @@ public class OffersServiceRequest {
     }
 
     public List<OfferInfo> getMyOffers(String direction, String currencyCode) {
-        if (apiDoesSupportCryptoCurrency(currencyCode)) {
-            return getMyCryptoCurrencyOffers(direction, currencyCode);
-        } else {
-            var request = GetMyOffersRequest.newBuilder()
-                    .setDirection(direction)
-                    .setCurrencyCode(currencyCode)
-                    .build();
-            return grpcStubs.offersService.getMyOffers(request).getOffersList();
-        }
-    }
-
-    public List<OfferInfo> getMyCryptoCurrencyOffers(String direction, String currencyCode) {
-        return getMyOffers(direction, "BTC").stream()
-                .filter(o -> o.getBaseCurrencyCode().equalsIgnoreCase(currencyCode))
-                .collect(toList());
-    }
-
-    public List<OfferInfo> getMyOffersSortedByDate(String direction, String currencyCode) {
-        var offers = getMyOffers(direction, currencyCode);
-        return offers.isEmpty() ? offers : sortOffersByDate(offers);
+        var request = GetMyOffersRequest.newBuilder()
+                .setDirection(direction)
+                .setCurrencyCode(currencyCode)
+                .build();
+        return grpcStubs.offersService.getMyOffers(request).getOffersList();
     }
 
     public List<OfferInfo> getMyOffersSortedByDate(String currencyCode) {
         ArrayList<OfferInfo> offers = new ArrayList<>();
         offers.addAll(getMyOffers(BUY.name(), currencyCode));
         offers.addAll(getMyOffers(SELL.name(), currencyCode));
-        return sortOffersByDate(offers);
+        return offers.isEmpty() ? offers : sortOffersByDate(offers);
     }
 
-    public List<OfferInfo> getMyCryptoCurrencyOffersSortedByDate(String currencyCode) {
-        ArrayList<OfferInfo> offers = new ArrayList<>();
-        offers.addAll(getMyCryptoCurrencyOffers(BUY.name(), currencyCode));
-        offers.addAll(getMyCryptoCurrencyOffers(SELL.name(), currencyCode));
-        return sortOffersByDate(offers);
+    public List<OfferInfo> getMyOffersSortedByDate(String direction, String currencyCode) {
+        var offers = getMyOffers(direction, currencyCode);
+        return offers.isEmpty() ? offers : sortOffersByDate(offers);
     }
 
     public List<OfferInfo> getMyBsqSwapOffersSortedByDate() {

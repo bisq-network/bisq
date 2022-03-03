@@ -40,13 +40,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.common.app.DevEnv.isDaoTradingActivated;
 import static bisq.common.config.Config.baseCurrencyNetwork;
+import static bisq.core.locale.CurrencyUtil.apiSupportsCryptoCurrency;
 import static bisq.core.locale.CurrencyUtil.findAsset;
 import static bisq.core.locale.CurrencyUtil.getCryptoCurrency;
 import static java.lang.String.format;
@@ -54,9 +54,6 @@ import static java.lang.String.format;
 @Singleton
 @Slf4j
 class CorePaymentAccountsService {
-
-    private final Predicate<String> apiDoesSupportCryptoCurrencyAccount = (c) ->
-            c.equals("BSQ") || c.equals("XMR");
 
     private final CoreWalletsService coreWalletsService;
     private final AccountAgeWitnessService accountAgeWitnessService;
@@ -159,7 +156,7 @@ class CorePaymentAccountsService {
     }
 
     private void verifyApiDoesSupportCryptoCurrencyAccount(String cryptoCurrencyCode) {
-        if (!apiDoesSupportCryptoCurrencyAccount.test(cryptoCurrencyCode))
+        if (!apiSupportsCryptoCurrency(cryptoCurrencyCode))
             throw new IllegalArgumentException(
                     format("api does not currently support %s accounts",
                             cryptoCurrencyCode.toLowerCase()));
