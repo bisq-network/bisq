@@ -89,7 +89,7 @@ public class SettingsView extends ActivatableView<TabPane, Void> {
     @Override
     protected void activate() {
         // Hide new badge if user saw this section
-        preferences.dontShowAgain(SettingsPresentation.SETTINGS_NEWS, true);
+        preferences.dontShowAgain(SettingsPresentation.SETTINGS_BADGE_KEY, true);
 
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
         navigation.addListener(navigationListener);
