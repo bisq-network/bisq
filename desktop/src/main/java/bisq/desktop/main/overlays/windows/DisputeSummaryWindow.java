@@ -334,13 +334,20 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addTradeAmountPayoutControls() {
-        buyerGetsTradeAmountRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.getsTradeAmount", Res.get("shared.buyer")));
-        buyerGetsCompensationRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.getsCompensation", Res.get("shared.buyer")));
-        buyerGetsTradeAmountMinusPenaltyRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.getsPenalty", Res.get("shared.buyer")));
-        sellerGetsTradeAmountRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.getsTradeAmount", Res.get("shared.seller")));
-        sellerGetsCompensationRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.getsCompensation", Res.get("shared.seller")));
-        sellerGetsTradeAmountMinusPenaltyRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.getsPenalty", Res.get("shared.seller")));
-        customRadioButton = new AutoTooltipRadioButton(Res.get("disputeSummaryWindow.payout.custom"));
+        buyerGetsTradeAmountRadioButton = new AutoTooltipRadioButton(
+                DisputeResult.PayoutSuggestion.BUYER_GETS_TRADE_AMOUNT.toString());
+        buyerGetsCompensationRadioButton = new AutoTooltipRadioButton(
+                DisputeResult.PayoutSuggestion.BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION.toString());
+        buyerGetsTradeAmountMinusPenaltyRadioButton = new AutoTooltipRadioButton(
+                DisputeResult.PayoutSuggestion.BUYER_GETS_TRADE_AMOUNT_MINUS_PENALTY.toString());
+        sellerGetsTradeAmountRadioButton = new AutoTooltipRadioButton(
+                DisputeResult.PayoutSuggestion.SELLER_GETS_TRADE_AMOUNT.toString());
+        sellerGetsCompensationRadioButton = new AutoTooltipRadioButton(
+                DisputeResult.PayoutSuggestion.SELLER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION.toString());
+        sellerGetsTradeAmountMinusPenaltyRadioButton = new AutoTooltipRadioButton(
+                DisputeResult.PayoutSuggestion.SELLER_GETS_TRADE_AMOUNT_MINUS_PENALTY.toString());
+        customRadioButton = new AutoTooltipRadioButton(
+                DisputeResult.PayoutSuggestion.CUSTOM_PAYOUT.toString());
 
         VBox radioButtonPane = new VBox();
         radioButtonPane.setSpacing(10);
@@ -877,10 +884,11 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 agentNodeAddress,
                 dispute.getShortTradeId(),
                 currencyCode,
+                Res.get("disputeSummaryWindow.reason." + reason.name()),
+                disputeResult.getPayoutSuggestionText(),
                 amount,
                 formatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount()),
                 formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()),
-                Res.get("disputeSummaryWindow.reason." + reason.name()),
                 disputeResult.summaryNotesProperty().get()
         );
 
