@@ -31,7 +31,7 @@ import javafx.collections.MapChangeListener;
 @Singleton
 public class SettingsPresentation {
 
-    public static final String SETTINGS_NEWS = "settingsNews";
+    public static final String SETTINGS_BADGE_KEY = "settingsPrivacyFeature";
 
     private Preferences preferences;
 
@@ -43,7 +43,7 @@ public class SettingsPresentation {
         this.preferences = preferences;
 
         preferences.getDontShowAgainMapAsObservable().addListener((MapChangeListener<? super String, ? super Boolean>) change -> {
-            if (change.getKey().equals(SETTINGS_NEWS)) {
+            if (change.getKey().equals(SETTINGS_BADGE_KEY)) {
                 showNotification.set(!change.wasAdded());
             }
         });
@@ -58,6 +58,6 @@ public class SettingsPresentation {
     }
 
     public void setup() {
-        showNotification.set(preferences.showAgain(SETTINGS_NEWS));
+        showNotification.set(preferences.showAgain(SETTINGS_BADGE_KEY));
     }
 }
