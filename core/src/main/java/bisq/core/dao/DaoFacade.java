@@ -529,8 +529,8 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getBlockAtHeight(chainHeight);
     }
 
-    public boolean isInConflictWithSeedNode() {
-        return daoStateMonitoringService.isInConflictWithSeedNode();
+    public boolean daoStateNeedsRebuilding() {
+        return daoStateMonitoringService.isInConflictWithSeedNode() || daoStateMonitoringService.isDaoStateBlockChainNotConnecting();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
