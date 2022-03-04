@@ -97,7 +97,7 @@ public class DaoPresentation implements DaoStateListener {
 
             if (synced) {
                 bsqInfo.set("");
-                if (daoFacade.isInConflictWithSeedNode() && !daoConflictWarningShown) {
+                if (daoFacade.daoStateNeedsRebuilding() && !daoConflictWarningShown) {
                     daoConflictWarningShown = true;     // only warn max 1 time per session so as not to annoy
                     GUIUtil.showDaoNeedsResyncPopup(navigation);
                 }
