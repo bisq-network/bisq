@@ -137,7 +137,7 @@ class GrpcExceptionHandler {
             return UNAVAILABLE.withDescription(description);
 
         // If the above checks did not return an io.grpc.Status.Code, we map
-        // the native Java exception to an io.grpc.Status, usually defaulting to UNKNOWN.
+        // the native Java exception to an io.grpc.Status.
         if (t instanceof IllegalArgumentException)
             return INVALID_ARGUMENT.withDescription(description);
         else if (t instanceof IllegalStateException)
