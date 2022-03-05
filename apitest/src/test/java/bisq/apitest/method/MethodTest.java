@@ -26,6 +26,9 @@ import bisq.common.util.Utilities;
 
 import bisq.proto.grpc.BalancesInfo;
 
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -188,6 +191,15 @@ public class MethodTest extends ApiTestCase {
 
     protected static String encodeToHex(String s) {
         return Utilities.bytesAsHexString(s.getBytes(UTF_8));
+    }
+
+    protected static Status.Code getStatusRuntimeExceptionStatusCode(Exception grpcException) {
+        if (grpcException instanceof io.grpc.StatusRuntimeException)
+            return ((StatusRuntimeException) grpcException).getStatus().getCode();
+        else
+            throw new IllegalArgumentException(
+                    format("Expected a io.grpc.StatusRuntimeException argument, but got a %s",
+                            grpcException.getClass().getName()));
     }
 
     protected void verifyNoLoggedNodeExceptions() {

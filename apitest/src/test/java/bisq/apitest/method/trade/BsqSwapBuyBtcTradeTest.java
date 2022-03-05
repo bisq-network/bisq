@@ -36,6 +36,7 @@ import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.ApiTestConfig.BTC;
 import static bisq.core.offer.OfferDirection.BUY;
 import static bisq.proto.grpc.GetOfferCategoryReply.OfferCategory.BSQ_SWAP;
+import static io.grpc.Status.Code.NOT_FOUND;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -171,6 +172,9 @@ public class BsqSwapBuyBtcTradeTest extends AbstractTradeTest {
                 return client.getTrade(tradeId);
             } catch (Exception ex) {
                 log.warn(ex.getMessage());
+                var statusCode = getStatusRuntimeExceptionStatusCode(ex);
+                assertEquals(NOT_FOUND, statusCode, "Expected a NOT_FOUND status code from server");
+
                 if (numFetchAttempts > 9) {
                     if (checkForLoggedExceptions) {
                         printNodeExceptionMessages(log);

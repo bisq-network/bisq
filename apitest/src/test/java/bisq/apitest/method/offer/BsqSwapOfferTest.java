@@ -31,6 +31,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 import static bisq.apitest.config.ApiTestConfig.BSQ;
 import static bisq.apitest.config.ApiTestConfig.BTC;
+import static io.grpc.Status.Code.NOT_FOUND;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -140,6 +141,8 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
                 break;
             } catch (Exception ex) {
                 log.warn(ex.getMessage());
+                var statusCode = getStatusRuntimeExceptionStatusCode(ex);
+                assertEquals(NOT_FOUND, statusCode, "Expected a NOT_FOUND status code from server");
 
                 if (numFetchAttempts >= 9)
                     fail(format("Alice giving up on fetching her (my) bsq swap offer after %d attempts.", numFetchAttempts), ex);
@@ -160,6 +163,8 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
                 break;
             } catch (Exception ex) {
                 log.warn(ex.getMessage());
+                var statusCode = getStatusRuntimeExceptionStatusCode(ex);
+                assertEquals(NOT_FOUND, statusCode, "Expected a NOT_FOUND status code from server");
 
                 if (numFetchAttempts > 9)
                     fail(format("Bob gave up on fetching available bsq swap offer after %d attempts.", numFetchAttempts), ex);

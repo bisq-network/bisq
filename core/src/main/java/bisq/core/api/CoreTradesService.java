@@ -17,6 +17,7 @@
 
 package bisq.core.api;
 
+import bisq.core.api.exception.NotFoundException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
@@ -204,7 +205,7 @@ class CoreTradesService {
 
         verifyTradeIsNotClosed(tradeId);
         var trade = getOpenTrade(tradeId).orElseThrow(() ->
-                new IllegalArgumentException(format("trade with id '%s' not found", tradeId)));
+                new NotFoundException(format("trade with id '%s' not found", tradeId)));
         log.info("Closing trade {}", tradeId);
         tradeManager.onTradeCompleted(trade);
     }
@@ -215,7 +216,7 @@ class CoreTradesService {
 
         verifyTradeIsNotClosed(tradeId);
         var trade = getOpenTrade(tradeId).orElseThrow(() ->
-                new IllegalArgumentException(format("trade with id '%s' not found", tradeId)));
+                new NotFoundException(format("trade with id '%s' not found", tradeId)));
 
         verifyIsValidBTCAddress(toAddress);
 
@@ -263,7 +264,7 @@ class CoreTradesService {
             return closedTrade.get();
 
         return tradeManager.findBsqSwapTradeById(tradeId).orElseThrow(() ->
-                new IllegalArgumentException(format("trade with id '%s' not found", tradeId)));
+                new NotFoundException(format("trade with id '%s' not found", tradeId)));
     }
 
     String getTradeRole(TradeModel tradeModel) {
@@ -285,7 +286,7 @@ class CoreTradesService {
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
         return getOpenTrade(tradeId).orElseGet(() ->
                 getClosedTrade(tradeId).orElseThrow(() ->
-                        new IllegalArgumentException(format("trade with id '%s' not found", tradeId))
+                        new NotFoundException(format("trade with id '%s' not found", tradeId))
                 ));
     }
 
@@ -333,7 +334,7 @@ class CoreTradesService {
             tradeManager.addFailedTradeToPendingTrades(failedTrade);
             log.info("Failed trade {} changed to open trade.", tradeId);
         }, () -> {
-            throw new IllegalArgumentException(format("failed trade '%s' not found", tradeId));
+            throw new NotFoundException(format("failed trade '%s' not found", tradeId));
         });
     }
 

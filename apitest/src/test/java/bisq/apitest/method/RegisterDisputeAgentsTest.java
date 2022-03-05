@@ -61,7 +61,7 @@ public class RegisterDisputeAgentsTest extends MethodTest {
     public void testRegisterArbitratorShouldThrowException() {
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 arbClient.registerDisputeAgent(ARBITRATOR, DEV_PRIVILEGE_PRIV_KEY));
-        assertEquals("INVALID_ARGUMENT: arbitrators must be registered in a Bisq UI",
+        assertEquals("UNIMPLEMENTED: arbitrators must be registered in a Bisq UI",
                 exception.getMessage());
     }
 

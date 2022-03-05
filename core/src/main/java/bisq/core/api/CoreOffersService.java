@@ -17,6 +17,7 @@
 
 package bisq.core.api;
 
+import bisq.core.api.exception.NotFoundException;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
@@ -145,7 +146,7 @@ class CoreOffersService {
 
     Offer getOffer(String id) {
         return findAvailableOffer(id).orElseThrow(() ->
-                new IllegalStateException(format("offer with id '%s' not found", id)));
+                new NotFoundException(format("offer with id '%s' not found", id)));
     }
 
     Optional<Offer> findAvailableOffer(String id) {
@@ -158,7 +159,7 @@ class CoreOffersService {
 
     OpenOffer getMyOffer(String id) {
         return findMyOpenOffer(id).orElseThrow(() ->
-                new IllegalStateException(format("offer with id '%s' not found", id)));
+                new NotFoundException(format("offer with id '%s' not found", id)));
     }
 
     Optional<OpenOffer> findMyOpenOffer(String id) {
@@ -170,7 +171,7 @@ class CoreOffersService {
 
     Offer getBsqSwapOffer(String id) {
         return findAvailableBsqSwapOffer(id).orElseThrow(() ->
-                new IllegalStateException(format("offer with id '%s' not found", id)));
+                new NotFoundException(format("offer with id '%s' not found", id)));
     }
 
     Optional<Offer> findAvailableBsqSwapOffer(String id) {
@@ -184,7 +185,7 @@ class CoreOffersService {
 
     Offer getMyBsqSwapOffer(String id) {
         return findMyBsqSwapOffer(id).orElseThrow(() ->
-                new IllegalStateException(format("offer with id '%s' not found", id)));
+                new NotFoundException(format("offer with id '%s' not found", id)));
     }
 
     Optional<Offer> findMyBsqSwapOffer(String id) {
@@ -272,14 +273,14 @@ class CoreOffersService {
                 .filter(open -> open.getOffer().isMyOffer(keyRing))
                 .filter(open -> open.getOffer().isBsqSwapOffer())
                 .orElseThrow(() ->
-                        new IllegalStateException(format("openoffer with id '%s' not found", id)));
+                        new NotFoundException(format("openoffer with id '%s' not found", id)));
     }
 
     OpenOffer getMyOpenOffer(String id) {
         return openOfferManager.getOpenOfferById(id)
                 .filter(open -> open.getOffer().isMyOffer(keyRing))
                 .orElseThrow(() ->
-                        new IllegalStateException(format("offer with id '%s' not found", id)));
+                        new NotFoundException(format("offer with id '%s' not found", id)));
     }
 
     boolean isMyOffer(Offer offer) {
