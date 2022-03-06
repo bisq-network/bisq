@@ -194,7 +194,7 @@ public class MethodTest extends ApiTestCase {
     }
 
     protected static Status.Code getStatusRuntimeExceptionStatusCode(Exception grpcException) {
-        if (grpcException instanceof io.grpc.StatusRuntimeException)
+        if (grpcException instanceof StatusRuntimeException)
             return ((StatusRuntimeException) grpcException).getStatus().getCode();
         else
             throw new IllegalArgumentException(

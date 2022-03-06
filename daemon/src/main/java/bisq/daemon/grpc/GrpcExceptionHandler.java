@@ -17,6 +17,9 @@
 
 package bisq.daemon.grpc;
 
+import bisq.core.api.exception.AlreadyExistsException;
+import bisq.core.api.exception.FailedPreconditionException;
+import bisq.core.api.exception.NotAvailableException;
 import bisq.core.api.exception.NotFoundException;
 
 import io.grpc.Status;
@@ -127,13 +130,13 @@ class GrpcExceptionHandler {
     private Status mapGrpcErrorStatus(Throwable t, String description) {
         // Check if a custom core.api.exception was thrown, so we can map it to a more
         // meaningful io.grpc.Status, something more useful to gRPC clients than UNKNOWN.
-        if (t instanceof bisq.core.api.exception.AlreadyExistsException)
+        if (t instanceof AlreadyExistsException)
             return ALREADY_EXISTS.withDescription(description);
-        else if (t instanceof bisq.core.api.exception.FailedPreconditionException)
+        else if (t instanceof FailedPreconditionException)
             return FAILED_PRECONDITION.withDescription(description);
-        else if (t instanceof bisq.core.api.exception.NotFoundException)
+        else if (t instanceof NotFoundException)
             return NOT_FOUND.withDescription(description);
-        else if (t instanceof bisq.core.api.exception.NotAvailableException)
+        else if (t instanceof NotAvailableException)
             return UNAVAILABLE.withDescription(description);
 
         // If the above checks did not return an io.grpc.Status.Code, we map
