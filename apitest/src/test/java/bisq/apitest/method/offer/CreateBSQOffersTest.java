@@ -68,6 +68,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         log.debug("Sell BSQ (Buy BTC) Offer:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
+        assertFalse(newOffer.getIsActivated());
 
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
@@ -89,6 +90,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
+        assertTrue(newOffer.getIsActivated());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(BUY.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
@@ -119,6 +121,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         log.debug("SELL 20K BSQ Offer:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
+        assertFalse(newOffer.getIsActivated());
 
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
@@ -140,6 +143,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
+        assertTrue(newOffer.getIsActivated());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(SELL.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
@@ -170,6 +174,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         log.debug("BUY 1-2K BSQ Offer:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
+        assertFalse(newOffer.getIsActivated());
 
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
@@ -191,6 +196,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
+        assertTrue(newOffer.getIsActivated());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(BUY.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
@@ -221,6 +227,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         log.debug("SELL 5-10K BSQ Offer:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
+        assertFalse(newOffer.getIsActivated());
 
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
@@ -242,6 +249,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
         newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
+        assertTrue(newOffer.getIsActivated());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(SELL.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());

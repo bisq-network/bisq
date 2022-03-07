@@ -77,6 +77,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         log.debug("Offer #1:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
+        assertFalse(newOffer.getIsActivated());
 
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
@@ -94,6 +95,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
+        assertTrue(newOffer.getIsActivated());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(BUY.name(), newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
@@ -126,6 +128,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         log.debug("Offer #2:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
+        assertFalse(newOffer.getIsActivated());
 
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
@@ -143,6 +146,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
+        assertTrue(newOffer.getIsActivated());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(BUY.name(), newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
@@ -175,6 +179,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         log.debug("Offer #3:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
+        assertFalse(newOffer.getIsActivated());
 
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
@@ -192,6 +197,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
+        assertTrue(newOffer.getIsActivated());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(SELL.name(), newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
@@ -224,6 +230,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         log.debug("Offer #4:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
+        assertFalse(newOffer.getIsActivated());
 
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
@@ -241,6 +248,7 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
         newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
+        assertTrue(newOffer.getIsActivated());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(SELL.name(), newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
@@ -273,12 +281,14 @@ public class CreateOfferUsingMarketPriceMarginTest extends AbstractOfferTest {
                 triggerPrice);
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
+        assertFalse(newOffer.getIsActivated());
 
         genBtcBlocksThenWait(1, 4000); // give time to add to offer book
         newOffer = aliceClient.getOffer(newOffer.getId());
         log.debug("Offer #5:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
+        assertTrue(newOffer.getIsActivated());
         assertEquals(triggerPrice, newOffer.getTriggerPrice());
     }
 

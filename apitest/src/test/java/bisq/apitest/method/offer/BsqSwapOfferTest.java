@@ -35,6 +35,7 @@ import static io.grpc.Status.Code.NOT_FOUND;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static protobuf.OfferDirection.BUY;
 
@@ -45,7 +46,7 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
 
     @BeforeAll
     public static void setUp() {
-        AbstractOfferTest.setUp();
+        AbstractOfferTest.setUp(false);
     }
 
     @BeforeEach
@@ -137,6 +138,7 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
                 numFetchAttempts++;
                 var fetchedBsqSwapOffer = aliceClient.getOffer(bsqSwapOffer.getId());
                 assertEquals(bsqSwapOffer.getId(), fetchedBsqSwapOffer.getId());
+                assertTrue(fetchedBsqSwapOffer.getIsActivated());
                 log.debug("Alice found her (my) new bsq swap offer on attempt # {}.", numFetchAttempts);
                 break;
             } catch (Exception ex) {
@@ -159,6 +161,7 @@ public class BsqSwapOfferTest extends AbstractOfferTest {
                 numFetchAttempts++;
                 var fetchedBsqSwapOffer = bobClient.getOffer(bsqSwapOffer.getId());
                 assertEquals(bsqSwapOffer.getId(), fetchedBsqSwapOffer.getId());
+                assertTrue(fetchedBsqSwapOffer.getIsActivated());
                 log.debug("Bob found new available bsq swap offer on attempt # {}.", numFetchAttempts);
                 break;
             } catch (Exception ex) {

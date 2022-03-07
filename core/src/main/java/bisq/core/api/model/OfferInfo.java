@@ -113,14 +113,18 @@ public class OfferInfo implements Payload {
         this.protocolVersion = builder.getProtocolVersion();
     }
 
-    public static OfferInfo toMyOfferInfo(Offer offer) {
-        return getBuilder(offer, true).build();
+    public static OfferInfo toMyInactiveOfferInfo(Offer offer) {
+        return getBuilder(offer, true)
+                .withIsActivated(false)
+                .build();
     }
 
     public static OfferInfo toOfferInfo(Offer offer) {
         // Assume the offer is not mine, but isMyOffer can be reset to true, i.e., when
         // calling TradeInfo toTradeInfo(Trade trade, String role, boolean isMyOffer);
-        return getBuilder(offer, false).build();
+        return getBuilder(offer, false)
+                .withIsActivated(true)
+                .build();
     }
 
     public static OfferInfo toMyPendingOfferInfo(Offer myNewOffer) {
@@ -130,21 +134,24 @@ public class OfferInfo implements Payload {
         // column that will show a PENDING value when this.isMyPendingOffer = true.
         return getBuilder(myNewOffer, true)
                 .withIsMyPendingOffer(true)
+                .withIsActivated(false)
                 .build();
     }
 
     public static OfferInfo toMyOfferInfo(OpenOffer openOffer) {
         // An OpenOffer is always my offer.
-        var currencyCode = openOffer.getOffer().getCurrencyCode();
-        Optional<Price> optionalTriggerPrice = openOffer.getTriggerPrice() > 0
+        var offer = openOffer.getOffer();
+        var currencyCode = offer.getCurrencyCode();
+        var isActivated = !openOffer.isDeactivated();
+        Optional<Price> optionalTriggerPrice = (!offer.isBsqSwapOffer() && openOffer.getTriggerPrice() > 0)
                 ? Optional.of(Price.valueOf(currencyCode, openOffer.getTriggerPrice()))
                 : Optional.empty();
         var preciseTriggerPrice = optionalTriggerPrice
                 .map(value -> reformatMarketPrice(value.toPlainString(), currencyCode))
                 .orElse("0");
-        return getBuilder(openOffer.getOffer(), true)
+        return getBuilder(offer, true)
                 .withTriggerPrice(preciseTriggerPrice)
-                .withIsActivated(!openOffer.isDeactivated())
+                .withIsActivated(isActivated)
                 .build();
     }
 
