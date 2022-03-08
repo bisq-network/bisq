@@ -260,7 +260,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
     @Test
     @Order(5)
     public void testGetAllMyBsqOffers() {
-        List<OfferInfo> offers = aliceClient.getMyCryptoCurrencyOffersSortedByDate(BSQ);
+        List<OfferInfo> offers = aliceClient.getMyOffersSortedByDate(BSQ);
         log.debug("All Alice's BSQ Offers:\n{}", toOffersTable.apply(offers));
         assertEquals(4, offers.size());
         log.debug("ALICE'S BALANCES\n{}", formatBalancesTbls(aliceClient.getBalances()));
@@ -269,7 +269,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
     @Test
     @Order(6)
     public void testGetAvailableBsqOffers() {
-        List<OfferInfo> offers = bobClient.getCryptoCurrencyOffersSortedByDate(BSQ);
+        List<OfferInfo> offers = bobClient.getOffersSortedByDate(BSQ);
         log.debug("All Bob's Available BSQ Offers:\n{}", toOffersTable.apply(offers));
         assertEquals(4, offers.size());
         log.debug("BOB'S BALANCES\n{}", formatBalancesTbls(bobClient.getBalances()));

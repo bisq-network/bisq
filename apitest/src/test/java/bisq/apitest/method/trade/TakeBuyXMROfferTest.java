@@ -84,10 +84,10 @@ public class TakeBuyXMROfferTest extends AbstractTradeTest {
             var offerId = alicesOffer.getId();
             assertFalse(alicesOffer.getIsCurrencyForMakerFeeBtc());
 
-            var alicesXmrOffers = aliceClient.getMyCryptoCurrencyOffers(btcTradeDirection, XMR);
+            var alicesXmrOffers = aliceClient.getMyOffers(btcTradeDirection, XMR);
             assertEquals(1, alicesXmrOffers.size());
             var trade = takeAlicesOffer(offerId, bobsXmrAcct.getId(), TRADE_FEE_CURRENCY_CODE);
-            alicesXmrOffers = aliceClient.getMyCryptoCurrencyOffersSortedByDate(XMR);
+            alicesXmrOffers = aliceClient.getMyOffersSortedByDate(XMR);
             assertEquals(0, alicesXmrOffers.size());
             genBtcBlocksThenWait(1, 2_500);
             waitForDepositConfirmation(log, testInfo, bobClient, trade.getTradeId());

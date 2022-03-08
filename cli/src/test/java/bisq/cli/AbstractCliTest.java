@@ -135,7 +135,7 @@ public abstract class AbstractCliTest {
         CliMain.main(args);
         out.println("<<<<<");
 
-        return aliceClient.getMyCryptoCurrencyOffersSortedByDate(currencyCode);
+        return aliceClient.getMyOffersSortedByDate(currencyCode);
     }
 
     protected String[] getMyOffersCommand(String direction, String currencyCode) {

@@ -61,7 +61,7 @@ public class FailUnfailTradeTest extends AbstractTradeTest {
         TakeBuyBTCOfferTest test = new TakeBuyBTCOfferTest();
         test.testTakeAlicesBuyOffer(testInfo);
 
-        var tradeId = test.getTradeId();
+        var tradeId = AbstractTradeTest.getTradeId();
         aliceClient.failTrade(tradeId);
 
         Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getTrade(tradeId));
@@ -82,7 +82,7 @@ public class FailUnfailTradeTest extends AbstractTradeTest {
         TakeSellBTCOfferTest test = new TakeSellBTCOfferTest();
         test.testTakeAlicesSellOffer(testInfo);
 
-        var tradeId = test.getTradeId();
+        var tradeId = AbstractTradeTest.getTradeId();
         aliceClient.failTrade(tradeId);
 
         Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getTrade(tradeId));
@@ -101,10 +101,10 @@ public class FailUnfailTradeTest extends AbstractTradeTest {
     @Order(3)
     public void testFailAndUnFailBuyXmrTrade(final TestInfo testInfo) {
         TakeBuyXMROfferTest test = new TakeBuyXMROfferTest();
-        test.createXmrPaymentAccounts();
+        createXmrPaymentAccounts();
         test.testTakeAlicesSellBTCForXMROffer(testInfo);
 
-        var tradeId = test.getTradeId();
+        var tradeId = AbstractTradeTest.getTradeId();
         aliceClient.failTrade(tradeId);
 
         Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getTrade(tradeId));
@@ -123,10 +123,10 @@ public class FailUnfailTradeTest extends AbstractTradeTest {
     @Order(4)
     public void testFailAndUnFailTakeSellXMRTrade(final TestInfo testInfo) {
         TakeSellXMROfferTest test = new TakeSellXMROfferTest();
-        test.createXmrPaymentAccounts();
+        createXmrPaymentAccounts();
         test.testTakeAlicesBuyBTCForXMROffer(testInfo);
 
-        var tradeId = test.getTradeId();
+        var tradeId = AbstractTradeTest.getTradeId();
         aliceClient.failTrade(tradeId);
 
         Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getTrade(tradeId));

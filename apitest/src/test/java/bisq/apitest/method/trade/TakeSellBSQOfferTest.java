@@ -84,14 +84,14 @@ public class TakeSellBSQOfferTest extends AbstractTradeTest {
             genBtcBlocksThenWait(1, 4_000);
             var offerId = alicesOffer.getId();
             assertTrue(alicesOffer.getIsCurrencyForMakerFeeBtc());
-            var alicesBsqOffers = aliceClient.getMyCryptoCurrencyOffers(btcTradeDirection, BSQ);
+            var alicesBsqOffers = aliceClient.getMyOffers(btcTradeDirection, BSQ);
             assertEquals(1, alicesBsqOffers.size());
             var trade = takeAlicesOffer(offerId,
                     bobsLegacyBsqAcct.getId(),
                     TRADE_FEE_CURRENCY_CODE,
                     false);
             sleep(2_500);  // Allow available offer to be removed from offer book.
-            alicesBsqOffers = aliceClient.getMyCryptoCurrencyOffersSortedByDate(BSQ);
+            alicesBsqOffers = aliceClient.getMyOffersSortedByDate(BSQ);
             assertEquals(0, alicesBsqOffers.size());
             genBtcBlocksThenWait(1, 2_500);
             waitForDepositConfirmation(log, testInfo, bobClient, trade.getTradeId());

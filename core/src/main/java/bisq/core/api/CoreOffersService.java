@@ -59,7 +59,9 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.common.util.MathUtils.exactMultiply;
 import static bisq.common.util.MathUtils.roundDoubleToLong;
 import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
+import static bisq.core.locale.CurrencyUtil.apiSupportsCryptoCurrency;
 import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
+import static bisq.core.locale.CurrencyUtil.isFiatCurrency;
 import static bisq.core.offer.Offer.State;
 import static bisq.core.offer.OfferDirection.BUY;
 import static bisq.core.offer.OfferUtil.getRandomOfferId;
@@ -203,20 +205,57 @@ class CoreOffersService {
     }
 
     List<Offer> getOffers(String direction, String currencyCode) {
-        return offerBookService.getOffers().stream()
-                .filter(o -> !o.isMyOffer(keyRing))
-                .filter(o -> offerMatchesDirectionAndCurrency(o, direction, currencyCode))
-                .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
-                .sorted(priceComparator(direction))
-                .collect(Collectors.toList());
+        var upperCaseCurrencyCode = currencyCode.toUpperCase();
+        if (isFiatCurrency(upperCaseCurrencyCode)) {
+            return offerBookService.getOffers().stream()
+                    .filter(o -> !o.isMyOffer(keyRing))
+                    .filter(o -> offerMatchesDirectionAndCurrency(o, direction, upperCaseCurrencyCode))
+                    .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
+                    .sorted(priceComparator(direction))
+                    .collect(Collectors.toList());
+        } else {
+            // In fiat offers, the baseCurrencyCode=BTC, counterCurrencyCode=FiatCode.
+            // In altcoin offers, baseCurrencyCode=AltcoinCode, counterCurrencyCode=BTC.
+            // This forces an extra filtering step below:  get all BTC offers,
+            // then filter on the currencyCode param (the altcoin code).
+            if (apiSupportsCryptoCurrency(upperCaseCurrencyCode))
+                return offerBookService.getOffers().stream()
+                        .filter(o -> !o.isMyOffer(keyRing))
+                        .filter(o -> offerMatchesDirectionAndCurrency(o, direction, "BTC"))
+                        .filter(o -> o.getBaseCurrencyCode().equalsIgnoreCase(upperCaseCurrencyCode))
+                        .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
+                        .sorted(priceComparator(direction))
+                        .collect(Collectors.toList());
+            else
+                throw new IllegalArgumentException(
+                        format("api does not support the '%s' crypto currency", upperCaseCurrencyCode));
+        }
     }
 
     List<OpenOffer> getMyOffers(String direction, String currencyCode) {
-        return openOfferManager.getObservableList().stream()
-                .filter(o -> o.getOffer().isMyOffer(keyRing))
-                .filter(o -> offerMatchesDirectionAndCurrency(o.getOffer(), direction, currencyCode))
-                .sorted(openOfferPriceComparator(direction))
-                .collect(Collectors.toList());
+        var upperCaseCurrencyCode = currencyCode.toUpperCase();
+        if (isFiatCurrency(upperCaseCurrencyCode)) {
+            return openOfferManager.getObservableList().stream()
+                    .filter(o -> o.getOffer().isMyOffer(keyRing))
+                    .filter(o -> offerMatchesDirectionAndCurrency(o.getOffer(), direction, upperCaseCurrencyCode))
+                    .sorted(openOfferPriceComparator(direction))
+                    .collect(Collectors.toList());
+        } else {
+            // In fiat offers, the baseCurrencyCode=BTC, counterCurrencyCode=FiatCode.
+            // In altcoin offers, baseCurrencyCode=AltcoinCode, counterCurrencyCode=BTC.
+            // This forces an extra filtering step below:  get all BTC offers,
+            // then filter on the currencyCode param (the altcoin code).
+            if (apiSupportsCryptoCurrency(upperCaseCurrencyCode))
+                return openOfferManager.getObservableList().stream()
+                        .filter(o -> o.getOffer().isMyOffer(keyRing))
+                        .filter(o -> offerMatchesDirectionAndCurrency(o.getOffer(), direction, "BTC"))
+                        .filter(o -> o.getOffer().getBaseCurrencyCode().equalsIgnoreCase(upperCaseCurrencyCode))
+                        .sorted(openOfferPriceComparator(direction))
+                        .collect(Collectors.toList());
+            else
+                throw new IllegalArgumentException(
+                        format("api does not support the '%s' crypto currency", upperCaseCurrencyCode));
+        }
     }
 
     List<Offer> getMyBsqSwapOffers(String direction) {

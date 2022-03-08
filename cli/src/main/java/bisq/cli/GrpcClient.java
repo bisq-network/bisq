@@ -27,7 +27,6 @@ import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.RegisterDisputeAgentRequest;
 import bisq.proto.grpc.StopRequest;
-import bisq.proto.grpc.TakeOfferReply;
 import bisq.proto.grpc.TradeInfo;
 import bisq.proto.grpc.TxFeeRateInfo;
 import bisq.proto.grpc.TxInfo;
@@ -271,10 +270,6 @@ public final class GrpcClient {
         return offersServiceRequest.getOffer(offerId);
     }
 
-    public OfferInfo getMyBsqSwapOffer(String offerId) {
-        return offersServiceRequest.getMyBsqSwapOffer(offerId);
-    }
-
     @Deprecated // Since 5-Dec-2021.
     // Endpoint to be removed from future version.  Use getOffer service method instead.
     public OfferInfo getMyOffer(String offerId) {
@@ -289,10 +284,6 @@ public final class GrpcClient {
         return offersServiceRequest.getOffers(direction, currencyCode);
     }
 
-    public List<OfferInfo> getCryptoCurrencyOffers(String direction, String currencyCode) {
-        return offersServiceRequest.getCryptoCurrencyOffers(direction, currencyCode);
-    }
-
     public List<OfferInfo> getOffersSortedByDate(String currencyCode) {
         return offersServiceRequest.getOffersSortedByDate(currencyCode);
     }
@@ -301,56 +292,24 @@ public final class GrpcClient {
         return offersServiceRequest.getOffersSortedByDate(direction, currencyCode);
     }
 
-    public List<OfferInfo> getCryptoCurrencyOffersSortedByDate(String currencyCode) {
-        return offersServiceRequest.getCryptoCurrencyOffersSortedByDate(currencyCode);
-    }
-
     public List<OfferInfo> getBsqSwapOffersSortedByDate() {
         return offersServiceRequest.getBsqSwapOffersSortedByDate();
-    }
-
-    public List<OfferInfo> getMyBsqSwapOffers(String direction) {
-        return offersServiceRequest.getMyBsqSwapOffers(direction);
     }
 
     public List<OfferInfo> getMyOffers(String direction, String currencyCode) {
         return offersServiceRequest.getMyOffers(direction, currencyCode);
     }
 
-    public List<OfferInfo> getMyCryptoCurrencyOffers(String direction, String currencyCode) {
-        return offersServiceRequest.getMyCryptoCurrencyOffers(direction, currencyCode);
+    public List<OfferInfo> getMyOffersSortedByDate(String currencyCode) {
+        return offersServiceRequest.getMyOffersSortedByDate(currencyCode);
     }
 
     public List<OfferInfo> getMyOffersSortedByDate(String direction, String currencyCode) {
         return offersServiceRequest.getMyOffersSortedByDate(direction, currencyCode);
     }
 
-    public List<OfferInfo> getMyOffersSortedByDate(String currencyCode) {
-        return offersServiceRequest.getMyOffersSortedByDate(currencyCode);
-    }
-
-    public List<OfferInfo> getMyCryptoCurrencyOffersSortedByDate(String currencyCode) {
-        return offersServiceRequest.getMyCryptoCurrencyOffersSortedByDate(currencyCode);
-    }
-
     public List<OfferInfo> getMyBsqSwapBsqOffersSortedByDate() {
         return offersServiceRequest.getMyBsqSwapOffersSortedByDate();
-    }
-
-    public OfferInfo getMostRecentOffer(String direction, String currencyCode) {
-        return offersServiceRequest.getMostRecentOffer(direction, currencyCode);
-    }
-
-    public List<OfferInfo> sortBsqSwapOffersByDate(List<OfferInfo> offers) {
-        return offersServiceRequest.sortOffersByDate(offers);
-    }
-
-    public List<OfferInfo> sortOffersByDate(List<OfferInfo> offers) {
-        return offersServiceRequest.sortOffersByDate(offers);
-    }
-
-    public TakeOfferReply getTakeOfferReply(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
-        return tradesServiceRequest.getTakeOfferReply(offerId, paymentAccountId, takerFeeCurrencyCode);
     }
 
     public TradeInfo takeBsqSwapOffer(String offerId) {
