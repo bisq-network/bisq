@@ -142,7 +142,7 @@ public class AutocompleteComboBox<T> extends JFXComboBox<T> {
     }
 
     private void filterBy(String query) {
-        matchingList = (extendedList != null && query.length() > 1 ? extendedList : list)
+        matchingList = (extendedList != null && query.length() > 0 ? extendedList : list)
                 .stream()
                 .filter(item -> StringUtils.containsIgnoreCase(asString(item), query))
                 .collect(Collectors.toList());
