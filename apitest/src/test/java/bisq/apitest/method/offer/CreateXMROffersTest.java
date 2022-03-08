@@ -71,6 +71,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
         log.debug("Sell XMR (Buy BTC) offer:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
+        assertFalse(newOffer.getIsActivated());
 
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
@@ -90,6 +91,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
         newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
+        assertTrue(newOffer.getIsActivated());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(BUY.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
@@ -118,6 +120,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
         log.debug("Buy XMR (Sell BTC) offer:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
+        assertFalse(newOffer.getIsActivated());
 
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
@@ -137,6 +140,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
         newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
+        assertTrue(newOffer.getIsActivated());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(SELL.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
@@ -168,6 +172,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
         log.debug("Pending Sell XMR (Buy BTC) offer:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
+        assertFalse(newOffer.getIsActivated());
 
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
@@ -191,6 +196,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
         log.debug("Available Sell XMR (Buy BTC) offer:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
+        assertTrue(newOffer.getIsActivated());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(BUY.name(), newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());
@@ -224,6 +230,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
         log.debug("Buy XMR (Sell BTC) offer:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
+        assertFalse(newOffer.getIsActivated());
 
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
@@ -242,6 +249,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
         newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
+        assertTrue(newOffer.getIsActivated());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(SELL.name(), newOffer.getDirection());
         assertTrue(newOffer.getUseMarketBasedPrice());

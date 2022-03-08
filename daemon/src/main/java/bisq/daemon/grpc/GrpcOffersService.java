@@ -125,8 +125,10 @@ class GrpcOffersService extends OffersImplBase {
         try {
             String offerId = req.getId();
             Optional<OpenOffer> myOpenOffer = coreApi.findMyOpenOffer(offerId);
+            Offer offer = myOpenOffer.map(OpenOffer::getOffer)
+                    .orElseGet(() -> coreApi.getOffer(offerId));
             OfferInfo offerInfo = myOpenOffer.map(OfferInfo::toMyOfferInfo)
-                    .orElseGet(() -> toOfferInfo(coreApi.getOffer(offerId)));
+                    .orElseGet(() -> toOfferInfo(offer));
             var reply = GetOfferReply.newBuilder()
                     .setOffer(offerInfo.toProtoMessage())
                     .build();
@@ -174,7 +176,8 @@ class GrpcOffersService extends OffersImplBase {
                                  StreamObserver<GetBsqSwapOffersReply> responseObserver) {
         try {
             List<OfferInfo> result = coreApi.getBsqSwapOffers(req.getDirection())
-                    .stream().map(OfferInfo::toOfferInfo)
+                    .stream()
+                    .map(OfferInfo::toOfferInfo)
                     .collect(Collectors.toList());
             var reply = GetBsqSwapOffersReply.newBuilder()
                     .addAllBsqSwapOffers(result.stream()
@@ -193,7 +196,8 @@ class GrpcOffersService extends OffersImplBase {
                           StreamObserver<GetOffersReply> responseObserver) {
         try {
             List<OfferInfo> result = coreApi.getOffers(req.getDirection(), req.getCurrencyCode())
-                    .stream().map(OfferInfo::toOfferInfo)
+                    .stream()
+                    .map(OfferInfo::toOfferInfo)
                     .collect(Collectors.toList());
             var reply = GetOffersReply.newBuilder()
                     .addAllOffers(result.stream()
@@ -212,7 +216,9 @@ class GrpcOffersService extends OffersImplBase {
                                    StreamObserver<GetMyBsqSwapOffersReply> responseObserver) {
         try {
             List<OfferInfo> result = coreApi.getMyBsqSwapOffers(req.getDirection())
-                    .stream().map(OfferInfo::toOfferInfo)
+                    .stream()
+                    .map(o -> coreApi.getMyOpenBsqSwapOffer(o.getId()))
+                    .map(OfferInfo::toMyOfferInfo)
                     .collect(Collectors.toList());
             var reply = GetMyBsqSwapOffersReply.newBuilder()
                     .addAllBsqSwapOffers(result.stream()

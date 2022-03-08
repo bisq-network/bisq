@@ -32,7 +32,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import static bisq.core.api.model.BsqSwapTradeInfo.toBsqSwapTradeInfo;
-import static bisq.core.api.model.OfferInfo.toMyOfferInfo;
+import static bisq.core.api.model.OfferInfo.toMyInactiveOfferInfo;
 import static bisq.core.api.model.OfferInfo.toOfferInfo;
 import static bisq.core.api.model.PaymentAccountPayloadInfo.toPaymentAccountPayloadInfo;
 import static bisq.core.offer.OfferDirection.BUY;
@@ -50,7 +50,7 @@ public class TradeInfo implements Payload {
     // view and interact with trades.
 
     private static final BiFunction<TradeModel, Boolean, OfferInfo> toOfferInfo = (tradeModel, isMyOffer) ->
-            isMyOffer ? toMyOfferInfo(tradeModel.getOffer()) : toOfferInfo(tradeModel.getOffer());
+            isMyOffer ? toMyInactiveOfferInfo(tradeModel.getOffer()) : toOfferInfo(tradeModel.getOffer());
 
     private static final Function<TradeModel, String> toPeerNodeAddress = (tradeModel) ->
             tradeModel.getTradingPeerNodeAddress() == null

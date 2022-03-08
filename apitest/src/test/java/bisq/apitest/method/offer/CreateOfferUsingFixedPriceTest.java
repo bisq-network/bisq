@@ -60,6 +60,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         log.debug("Offer #1:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
+        assertFalse(newOffer.getIsActivated());
 
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
@@ -79,6 +80,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
+        assertTrue(newOffer.getIsActivated());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(BUY.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
@@ -109,6 +111,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         log.debug("Offer #2:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
+        assertFalse(newOffer.getIsActivated());
 
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
@@ -128,6 +131,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
+        assertTrue(newOffer.getIsActivated());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(BUY.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());
@@ -158,6 +162,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         log.debug("Offer #3:\n{}", toOfferTable.apply(newOffer));
         assertTrue(newOffer.getIsMyOffer());
         assertTrue(newOffer.getIsMyPendingOffer());
+        assertFalse(newOffer.getIsActivated());
 
         String newOfferId = newOffer.getId();
         assertNotEquals("", newOfferId);
@@ -177,6 +182,7 @@ public class CreateOfferUsingFixedPriceTest extends AbstractOfferTest {
         newOffer = aliceClient.getOffer(newOfferId);
         assertTrue(newOffer.getIsMyOffer());
         assertFalse(newOffer.getIsMyPendingOffer());
+        assertTrue(newOffer.getIsActivated());
         assertEquals(newOfferId, newOffer.getId());
         assertEquals(SELL.name(), newOffer.getDirection());
         assertFalse(newOffer.getUseMarketBasedPrice());

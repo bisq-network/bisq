@@ -22,7 +22,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 
 import static bisq.core.api.model.ContractInfo.emptyContract;
-import static bisq.core.api.model.OfferInfo.toMyOfferInfo;
+import static bisq.core.api.model.OfferInfo.toMyInactiveOfferInfo;
 import static bisq.core.offer.OpenOffer.State.CANCELED;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.capitalize;
@@ -37,7 +37,7 @@ public class CanceledTradeInfo {
             throw new IllegalArgumentException(format("offer '%s' is not canceled", myCanceledOpenOffer.getId()));
 
         Offer offer = myCanceledOpenOffer.getOffer();
-        OfferInfo offerInfo = toMyOfferInfo(offer);
+        OfferInfo offerInfo = toMyInactiveOfferInfo(offer);
 
         return new TradeInfoV1Builder()
                 .withOffer(offerInfo)
