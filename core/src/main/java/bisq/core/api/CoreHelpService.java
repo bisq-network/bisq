@@ -17,6 +17,8 @@
 
 package bisq.core.api;
 
+import bisq.core.api.exception.NotFoundException;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -45,7 +47,7 @@ class CoreHelpService {
             return readHelpFile(resourceFile);
         } catch (NullPointerException ex) {
             log.error("", ex);
-            throw new IllegalStateException(format("no help found for api method %s", methodName));
+            throw new NotFoundException(format("no help found for api method %s", methodName));
         } catch (IOException ex) {
             log.error("", ex);
             throw new IllegalStateException(format("could not read %s help doc", methodName));

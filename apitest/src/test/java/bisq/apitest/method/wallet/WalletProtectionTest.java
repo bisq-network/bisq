@@ -48,7 +48,7 @@ public class WalletProtectionTest extends MethodTest {
     @Order(2)
     public void testGetBalanceOnEncryptedWalletShouldThrowException() {
         Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getBtcBalances());
-        assertEquals("UNKNOWN: wallet is locked", exception.getMessage());
+        assertEquals("FAILED_PRECONDITION: wallet is locked", exception.getMessage());
     }
 
     @Test
@@ -58,7 +58,7 @@ public class WalletProtectionTest extends MethodTest {
         aliceClient.getBtcBalances(); // should not throw 'wallet locked' exception
         sleep(4500); // let unlock timeout expire
         Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getBtcBalances());
-        assertEquals("UNKNOWN: wallet is locked", exception.getMessage());
+        assertEquals("FAILED_PRECONDITION: wallet is locked", exception.getMessage());
     }
 
     @Test
@@ -67,7 +67,7 @@ public class WalletProtectionTest extends MethodTest {
         aliceClient.unlockWallet("first-password", 3);
         sleep(4000); // let unlock timeout expire
         Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getBtcBalances());
-        assertEquals("UNKNOWN: wallet is locked", exception.getMessage());
+        assertEquals("FAILED_PRECONDITION: wallet is locked", exception.getMessage());
     }
 
     @Test
@@ -76,14 +76,14 @@ public class WalletProtectionTest extends MethodTest {
         aliceClient.unlockWallet("first-password", 60);
         aliceClient.lockWallet();
         Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getBtcBalances());
-        assertEquals("UNKNOWN: wallet is locked", exception.getMessage());
+        assertEquals("FAILED_PRECONDITION: wallet is locked", exception.getMessage());
     }
 
     @Test
     @Order(6)
     public void testLockWalletWhenWalletAlreadyLockedShouldThrowException() {
         Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.lockWallet());
-        assertEquals("UNKNOWN: wallet is already locked", exception.getMessage());
+        assertEquals("ALREADY_EXISTS: wallet is already locked", exception.getMessage());
     }
 
     @Test
@@ -110,7 +110,7 @@ public class WalletProtectionTest extends MethodTest {
     public void testSetNewWalletPasswordWithIncorrectNewPasswordShouldThrowException() {
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
                 aliceClient.setWalletPassword("bad old password", "irrelevant"));
-        assertEquals("UNKNOWN: incorrect old password", exception.getMessage());
+        assertEquals("INVALID_ARGUMENT: incorrect old password", exception.getMessage());
     }
 
     @Test

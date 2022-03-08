@@ -17,6 +17,7 @@
 
 package bisq.core.api;
 
+import bisq.core.api.exception.NotAvailableException;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
@@ -79,12 +80,12 @@ class CoreDisputeAgentsService {
 
     void registerDisputeAgent(String disputeAgentType, String registrationKey) {
         if (!p2PService.isBootstrapped())
-            throw new IllegalStateException("p2p service is not bootstrapped yet");
+            throw new NotAvailableException("p2p service is not bootstrapped yet");
 
         if (config.baseCurrencyNetwork.isMainnet()
                 || config.baseCurrencyNetwork.isDaoBetaNet()
                 || !config.useLocalhostForP2P)
-            throw new IllegalStateException("dispute agents must be registered in a Bisq UI");
+            throw new UnsupportedOperationException("dispute agents must be registered in a Bisq UI");
 
         if (!registrationKey.equals(DEV_PRIVILEGE_PRIV_KEY))
             throw new IllegalArgumentException("invalid registration key");
@@ -95,7 +96,7 @@ class CoreDisputeAgentsService {
             String signature;
             switch (supportType.get()) {
                 case ARBITRATION:
-                    throw new IllegalArgumentException("arbitrators must be registered in a Bisq UI");
+                    throw new UnsupportedOperationException("arbitrators must be registered in a Bisq UI");
                 case MEDIATION:
                     ecKey = mediatorManager.getRegistrationKey(registrationKey);
                     signature = mediatorManager.signStorageSignaturePubKey(Objects.requireNonNull(ecKey));
@@ -107,7 +108,7 @@ class CoreDisputeAgentsService {
                     registerRefundAgent(nodeAddress, languageCodes, ecKey, signature);
                     return;
                 case TRADE:
-                    throw new IllegalArgumentException("trade agent registration not supported");
+                    throw new UnsupportedOperationException("trade agent registration not supported");
             }
         } else {
             throw new IllegalArgumentException(format("unknown dispute agent type '%s'", disputeAgentType));

@@ -243,9 +243,9 @@ public class GrpcServiceRateMeteringConfig {
                     timeUnit.toMillis(1) * numTimeUnits);
             rateMeterConfigs.stream().filter(c -> c.isConfigForGrpcService(grpcServiceClassName))
                     .findFirst().ifPresentOrElse(
-                    (config) -> config.addMethodCallRateMeter(methodName, maxCalls, timeUnit, numTimeUnits),
-                    () -> rateMeterConfigs.add(new GrpcServiceRateMeteringConfig(grpcServiceClassName)
-                            .addMethodCallRateMeter(methodName, maxCalls, timeUnit, numTimeUnits)));
+                            (config) -> config.addMethodCallRateMeter(methodName, maxCalls, timeUnit, numTimeUnits),
+                            () -> rateMeterConfigs.add(new GrpcServiceRateMeteringConfig(grpcServiceClassName)
+                                    .addMethodCallRateMeter(methodName, maxCalls, timeUnit, numTimeUnits)));
         }
 
         public File build() {

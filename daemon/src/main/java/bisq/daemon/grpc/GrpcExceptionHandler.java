@@ -17,6 +17,11 @@
 
 package bisq.daemon.grpc;
 
+import bisq.core.api.exception.AlreadyExistsException;
+import bisq.core.api.exception.FailedPreconditionException;
+import bisq.core.api.exception.NotAvailableException;
+import bisq.core.api.exception.NotFoundException;
+
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
@@ -29,8 +34,7 @@ import java.util.function.Predicate;
 
 import org.slf4j.Logger;
 
-import static io.grpc.Status.INVALID_ARGUMENT;
-import static io.grpc.Status.UNKNOWN;
+import static io.grpc.Status.*;
 
 /**
  * The singleton instance of this class handles any expected core api Throwable by
@@ -40,9 +44,26 @@ import static io.grpc.Status.UNKNOWN;
 @Singleton
 class GrpcExceptionHandler {
 
-    private final Predicate<Throwable> isExpectedException = (t) ->
-            t instanceof IllegalStateException || t instanceof IllegalArgumentException;
+    private static final String CORE_API_EXCEPTION_PKG_NAME = NotFoundException.class.getPackage().getName();
 
+    /**
+     * Returns true if Throwable is a custom core api exception instance,
+     * or one of the following native Java exception instances:
+     * <p>
+     * <pre>
+     * IllegalArgumentException
+     * IllegalStateException
+     * UnsupportedOperationException
+     * </pre>
+     * </p>
+     */
+    private final Predicate<Throwable> isExpectedException = (t) ->
+            t.getClass().getPackage().getName().equals(CORE_API_EXCEPTION_PKG_NAME)
+                    || t instanceof IllegalArgumentException
+                    || t instanceof IllegalStateException
+                    || t instanceof UnsupportedOperationException;
+
+    @SuppressWarnings("unused")
     @Inject
     public GrpcExceptionHandler() {
     }
@@ -107,18 +128,27 @@ class GrpcExceptionHandler {
     };
 
     private Status mapGrpcErrorStatus(Throwable t, String description) {
-        // We default to the UNKNOWN status, except were the mapping of a core api
-        // exception to a gRPC Status is obvious.  If we ever use a gRPC reverse-proxy
-        // to support RESTful clients, we will need to have more specific mappings
-        // to support correct HTTP 1.1. status codes.
-        //noinspection SwitchStatementWithTooFewBranches
-        switch (t.getClass().getSimpleName()) {
-            // We go ahead and use a switch statement instead of if, in anticipation
-            // of more, specific exception mappings.
-            case "IllegalArgumentException":
-                return INVALID_ARGUMENT.withDescription(description);
-            default:
-                return UNKNOWN.withDescription(description);
-        }
+        // Check if a custom core.api.exception was thrown, so we can map it to a more
+        // meaningful io.grpc.Status, something more useful to gRPC clients than UNKNOWN.
+        if (t instanceof AlreadyExistsException)
+            return ALREADY_EXISTS.withDescription(description);
+        else if (t instanceof FailedPreconditionException)
+            return FAILED_PRECONDITION.withDescription(description);
+        else if (t instanceof NotFoundException)
+            return NOT_FOUND.withDescription(description);
+        else if (t instanceof NotAvailableException)
+            return UNAVAILABLE.withDescription(description);
+
+        // If the above checks did not return an io.grpc.Status.Code, we map
+        // the native Java exception to an io.grpc.Status.
+        if (t instanceof IllegalArgumentException)
+            return INVALID_ARGUMENT.withDescription(description);
+        else if (t instanceof IllegalStateException)
+            return UNKNOWN.withDescription(description);
+        else if (t instanceof UnsupportedOperationException)
+            return UNIMPLEMENTED.withDescription(description);
+        else
+            return UNKNOWN.withDescription(description);
     }
 }
+

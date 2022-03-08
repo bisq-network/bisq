@@ -17,6 +17,10 @@
 
 package bisq.core.api;
 
+import bisq.core.api.exception.AlreadyExistsException;
+import bisq.core.api.exception.FailedPreconditionException;
+import bisq.core.api.exception.NotAvailableException;
+import bisq.core.api.exception.NotFoundException;
 import bisq.core.api.model.AddressBalanceInfo;
 import bisq.core.api.model.BalancesInfo;
 import bisq.core.api.model.BsqBalanceInfo;
@@ -152,7 +156,7 @@ class CoreWalletsService {
         verifyWalletsAreAvailable();
         verifyEncryptedWalletIsUnlocked();
         if (balances.getAvailableBalance().get() == null)
-            throw new IllegalStateException("balance is not yet available");
+            throw new NotAvailableException("balance is not yet available");
 
         switch (currencyCode.trim().toUpperCase()) {
             case "BSQ":
@@ -241,13 +245,13 @@ class CoreWalletsService {
                     txFeePerVbyte.value);
             bsqTransferService.sendFunds(model, callback);
         } catch (InsufficientMoneyException ex) {
-            log.error("", ex);
-            throw new IllegalStateException("cannot send bsq due to insufficient funds", ex);
+            log.error(ex.toString());
+            throw new NotAvailableException("cannot send bsq due to insufficient funds", ex);
         } catch (NumberFormatException
                 | BsqChangeBelowDustException
                 | TransactionVerificationException
                 | WalletException ex) {
-            log.error("", ex);
+            log.error(ex.toString());
             throw new IllegalStateException(ex);
         }
     }
@@ -299,11 +303,11 @@ class CoreWalletsService {
                     memo.isEmpty() ? null : memo,
                     callback);
         } catch (AddressEntryException ex) {
-            log.error("", ex);
+            log.error(ex.toString());
             throw new IllegalStateException("cannot send btc from any addresses in wallet", ex);
         } catch (InsufficientFundsException | InsufficientMoneyException ex) {
-            log.error("", ex);
-            throw new IllegalStateException("cannot send btc due to insufficient funds", ex);
+            log.error(ex.toString());
+            throw new NotAvailableException("cannot send btc due to insufficient funds", ex);
         }
     }
 
@@ -362,7 +366,7 @@ class CoreWalletsService {
             }, MoreExecutors.directExecutor());
 
         } catch (Exception ex) {
-            log.error("", ex);
+            log.error(ex.toString());
             throw new IllegalStateException("could not request fees from fee service", ex);
         }
     }
@@ -371,7 +375,7 @@ class CoreWalletsService {
                                 ResultHandler resultHandler) {
         long minFeePerVbyte = feeService.getMinFeePerVByte();
         if (txFeeRate < minFeePerVbyte)
-            throw new IllegalStateException(
+            throw new IllegalArgumentException(
                     format("tx fee rate preference must be >= %d sats/byte", minFeePerVbyte));
 
         preferences.setUseCustomWithdrawalTxFee(true);
@@ -416,11 +420,11 @@ class CoreWalletsService {
         if (newPassword != null && !newPassword.isEmpty()) {
             // TODO Validate new password before replacing old password.
             if (!walletsManager.areWalletsEncrypted())
-                throw new IllegalStateException("wallet is not encrypted with a password");
+                throw new FailedPreconditionException("wallet is not encrypted with a password");
 
             KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
             if (!walletsManager.checkAESKey(aesKey))
-                throw new IllegalStateException("incorrect old password");
+                throw new IllegalArgumentException("incorrect old password");
 
             walletsManager.decryptWallets(aesKey);
             aesKey = keyCrypterScrypt.deriveKey(newPassword);
@@ -430,7 +434,7 @@ class CoreWalletsService {
         }
 
         if (walletsManager.areWalletsEncrypted())
-            throw new IllegalStateException("wallet is encrypted with a password");
+            throw new AlreadyExistsException("wallet is already encrypted with a password");
 
         // TODO Validate new password.
         KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
@@ -440,10 +444,10 @@ class CoreWalletsService {
 
     void lockWallet() {
         if (!walletsManager.areWalletsEncrypted())
-            throw new IllegalStateException("wallet is not encrypted with a password");
+            throw new FailedPreconditionException("wallet is not encrypted with a password");
 
         if (tempAesKey == null)
-            throw new IllegalStateException("wallet is already locked");
+            throw new AlreadyExistsException("wallet is already locked");
 
         tempAesKey = null;
     }
@@ -457,7 +461,7 @@ class CoreWalletsService {
         tempAesKey = keyCrypterScrypt.deriveKey(password);
 
         if (!walletsManager.checkAESKey(tempAesKey))
-            throw new IllegalStateException("incorrect password");
+            throw new IllegalArgumentException("incorrect password");
 
         if (lockTimer != null) {
             // The user has called unlockwallet again, before the prior unlockwallet
@@ -488,7 +492,7 @@ class CoreWalletsService {
 
         KeyParameter aesKey = keyCrypterScrypt.deriveKey(password);
         if (!walletsManager.checkAESKey(aesKey))
-            throw new IllegalStateException("incorrect password");
+            throw new IllegalArgumentException("incorrect password");
 
         walletsManager.decryptWallets(aesKey);
         walletsManager.backupWallets();
@@ -503,7 +507,7 @@ class CoreWalletsService {
         //  to leave this check in place until certain AppStartupState will always work
         //  as expected.
         if (!walletsManager.areWalletsAvailable())
-            throw new IllegalStateException("wallet is not yet available");
+            throw new NotAvailableException("wallet is not yet available");
     }
 
     // Throws a RuntimeException if wallets are not available or not encrypted.
@@ -511,28 +515,28 @@ class CoreWalletsService {
         verifyWalletAndNetworkIsReady();
 
         if (!walletsManager.areWalletsAvailable())
-            throw new IllegalStateException("wallet is not yet available");
+            throw new NotAvailableException("wallet is not yet available");
 
         if (!walletsManager.areWalletsEncrypted())
-            throw new IllegalStateException("wallet is not encrypted with a password");
+            throw new FailedPreconditionException("wallet is not encrypted with a password");
     }
 
     // Throws a RuntimeException if wallets are encrypted and locked.
     void verifyEncryptedWalletIsUnlocked() {
         if (walletsManager.areWalletsEncrypted() && tempAesKey == null)
-            throw new IllegalStateException("wallet is locked");
+            throw new FailedPreconditionException("wallet is locked");
     }
 
     // Throws a RuntimeException if wallets and network are not ready.
     void verifyWalletAndNetworkIsReady() {
         if (!appStartupState.isWalletAndNetworkReady())
-            throw new IllegalStateException("wallet and network is not yet initialized");
+            throw new NotAvailableException("wallet and network are not yet initialized");
     }
 
     // Throws a RuntimeException if application is not fully initialized.
     void verifyApplicationIsFullyInitialized() {
         if (!appStartupState.isApplicationFullyInitialized())
-            throw new IllegalStateException("server is not fully initialized");
+            throw new NotAvailableException("server is not fully initialized");
     }
 
     // Returns an Address for the string, or a RuntimeException if invalid.
@@ -541,7 +545,7 @@ class CoreWalletsService {
             return bsqFormatter.getAddressFromBsqAddress(address);
         } catch (RuntimeException e) {
             log.error("", e);
-            throw new IllegalStateException(format("%s is not a valid bsq address", address));
+            throw new IllegalArgumentException(format("%s is not a valid bsq address", address));
         }
     }
 
@@ -552,7 +556,7 @@ class CoreWalletsService {
 
         if (!currencyCode.equalsIgnoreCase("BSQ")
                 && !currencyCode.equalsIgnoreCase("BTC"))
-            throw new IllegalStateException(format("wallet does not support %s", currencyCode));
+            throw new UnsupportedOperationException(format("wallet does not support %s", currencyCode));
     }
 
     private void maybeSetWalletsManagerKey() {
@@ -593,15 +597,15 @@ class CoreWalletsService {
 
         var availableBalance = balances.getAvailableBalance().get();
         if (availableBalance == null)
-            throw new IllegalStateException("balance is not yet available");
+            throw new NotAvailableException("balance is not yet available");
 
         var reservedBalance = balances.getReservedBalance().get();
         if (reservedBalance == null)
-            throw new IllegalStateException("reserved balance is not yet available");
+            throw new NotAvailableException("reserved balance is not yet available");
 
         var lockedBalance = balances.getLockedBalance().get();
         if (lockedBalance == null)
-            throw new IllegalStateException("locked balance is not yet available");
+            throw new NotAvailableException("locked balance is not yet available");
 
         return new BtcBalanceInfo(availableBalance.value,
                 reservedBalance.value,
@@ -613,7 +617,7 @@ class CoreWalletsService {
     private Coin getValidTransferAmount(String amount, CoinFormatter coinFormatter) {
         Coin amountAsCoin = parseToCoin(amount, coinFormatter);
         if (amountAsCoin.isLessThan(getMinNonDustOutput()))
-            throw new IllegalStateException(format("%s is an invalid transfer amount", amount));
+            throw new IllegalArgumentException(format("%s is an invalid transfer amount", amount));
 
         return amountAsCoin;
     }
@@ -639,7 +643,7 @@ class CoreWalletsService {
                         .findFirst();
 
         if (!addressEntry.isPresent())
-            throw new IllegalStateException(format("address %s not found in wallet", addressString));
+            throw new NotFoundException(format("address %s not found in wallet", addressString));
 
         return addressEntry.get();
     }
@@ -651,13 +655,13 @@ class CoreWalletsService {
         try {
             Transaction tx = btcWalletService.getTransaction(txId);
             if (tx == null)
-                throw new IllegalArgumentException(format("tx with id %s not found", txId));
+                throw new NotFoundException(format("tx with id %s not found", txId));
             else
                 return tx;
 
         } catch (IllegalArgumentException ex) {
-            log.error("", ex);
-            throw new IllegalArgumentException(
+            log.error(ex.toString());
+            throw new IllegalStateException(
                     format("could not get transaction with id %s%ncause: %s",
                             txId,
                             ex.getMessage().toLowerCase()));

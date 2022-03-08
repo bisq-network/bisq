@@ -207,10 +207,7 @@ public class AbstractTradeTest extends AbstractOfferTest {
         String receiverAddress = contract.getIsBuyerMakerAndSellerTaker()
                 ? contract.getTakerPaymentAccountPayload().getAddress()
                 : contract.getMakerPaymentAccountPayload().getAddress();
-        // TODO Fix trade vol src bug for subclasses.
-        //  This bug was fixed for production CLI with https://github.com/bisq-network/bisq/pull/5704 on Sep 27, 2021
-        String sendBsqAmount = trade.getOffer().getVolume();
-        // String sendBsqAmount = trade.getTradeVolume();
+        String sendBsqAmount = trade.getTradeVolume();
         log.debug("Sending {} BSQ to address {}", sendBsqAmount, receiverAddress);
         grpcClient.sendBsq(receiverAddress, sendBsqAmount, "");
     }
@@ -219,10 +216,7 @@ public class AbstractTradeTest extends AbstractOfferTest {
                                                          GrpcClient grpcClient,
                                                          TradeInfo trade) {
         var contract = trade.getContract();
-        // TODO Fix trade vol src bug for subclasses.
-        //  This bug was fixed for production with https://github.com/bisq-network/bisq/pull/5704 on Sep 27, 2021
-        var receiveAmountAsString = trade.getOffer().getVolume();
-        // String receiveAmountAsString = trade.getTradeVolume();
+        String receiveAmountAsString = trade.getTradeVolume();
         var address = contract.getIsBuyerMakerAndSellerTaker()
                 ? contract.getTakerPaymentAccountPayload().getAddress()
                 : contract.getMakerPaymentAccountPayload().getAddress();

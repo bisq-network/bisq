@@ -65,7 +65,7 @@ public class FailUnfailTradeTest extends AbstractTradeTest {
         aliceClient.failTrade(tradeId);
 
         Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getTrade(tradeId));
-        String expectedExceptionMessage = format("INVALID_ARGUMENT: trade with id '%s' not found", tradeId);
+        String expectedExceptionMessage = format("NOT_FOUND: trade with id '%s' not found", tradeId);
         assertEquals(expectedExceptionMessage, exception.getMessage());
 
         try {
@@ -86,7 +86,7 @@ public class FailUnfailTradeTest extends AbstractTradeTest {
         aliceClient.failTrade(tradeId);
 
         Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getTrade(tradeId));
-        String expectedExceptionMessage = format("INVALID_ARGUMENT: trade with id '%s' not found", tradeId);
+        String expectedExceptionMessage = format("NOT_FOUND: trade with id '%s' not found", tradeId);
         assertEquals(expectedExceptionMessage, exception.getMessage());
 
         try {
@@ -108,7 +108,7 @@ public class FailUnfailTradeTest extends AbstractTradeTest {
         aliceClient.failTrade(tradeId);
 
         Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getTrade(tradeId));
-        String expectedExceptionMessage = format("INVALID_ARGUMENT: trade with id '%s' not found", tradeId);
+        String expectedExceptionMessage = format("NOT_FOUND: trade with id '%s' not found", tradeId);
         assertEquals(expectedExceptionMessage, exception.getMessage());
 
         try {
@@ -130,7 +130,7 @@ public class FailUnfailTradeTest extends AbstractTradeTest {
         aliceClient.failTrade(tradeId);
 
         Throwable exception = assertThrows(StatusRuntimeException.class, () -> aliceClient.getTrade(tradeId));
-        String expectedExceptionMessage = format("INVALID_ARGUMENT: trade with id '%s' not found", tradeId);
+        String expectedExceptionMessage = format("NOT_FOUND: trade with id '%s' not found", tradeId);
         assertEquals(expectedExceptionMessage, exception.getMessage());
 
         try {

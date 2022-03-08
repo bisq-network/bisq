@@ -437,7 +437,7 @@ public class EditOfferTest extends AbstractOfferTest {
                         NO_TRIGGER_PRICE,
                         ACTIVATE_OFFER,
                         MKT_PRICE_MARGIN_ONLY));
-        String expectedExceptionMessage = format("UNKNOWN: cannot set mkt price margin or"
+        String expectedExceptionMessage = format("INVALID_ARGUMENT: cannot set mkt price margin or"
                         + " trigger price on fixed price bsq offer with id '%s'",
                 originalOffer.getId());
         assertEquals(expectedExceptionMessage, exception.getMessage());
@@ -465,7 +465,7 @@ public class EditOfferTest extends AbstractOfferTest {
                         newTriggerPriceAsLong,
                         ACTIVATE_OFFER,
                         TRIGGER_PRICE_ONLY));
-        String expectedExceptionMessage = format("UNKNOWN: cannot set mkt price margin or"
+        String expectedExceptionMessage = format("INVALID_ARGUMENT: cannot set mkt price margin or"
                         + " trigger price on fixed price bsq offer with id '%s'",
                 originalOffer.getId());
         assertEquals(expectedExceptionMessage, exception.getMessage());
@@ -850,8 +850,10 @@ public class EditOfferTest extends AbstractOfferTest {
                         NO_TRIGGER_PRICE,
                         ACTIVATE_OFFER,
                         TRIGGER_PRICE_ONLY));
-        String expectedExceptionMessage = format("UNKNOWN: cannot edit bsq swap offer with id '%s'",
-                originalOffer.getId());
+        String expectedExceptionMessage =
+                format("INVALID_ARGUMENT: cannot edit bsq swap offer with id '%s',"
+                                + " replace it with a new swap offer instead",
+                        originalOffer.getId());
         assertEquals(expectedExceptionMessage, exception.getMessage());
     }
 

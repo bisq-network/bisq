@@ -205,7 +205,8 @@ class EditOfferValidator {
 
     private void checkNotBsqOffer() {
         if ("BSQ".equals(currentlyOpenOffer.getOffer().getCurrencyCode())) {
-            throw new IllegalStateException(
+            // An illegal argument is a user error.
+            throw new IllegalArgumentException(
                     format("cannot set mkt price margin or trigger price on fixed price bsq offer with id '%s'",
                             currentlyOpenOffer.getId()));
         }
@@ -213,8 +214,10 @@ class EditOfferValidator {
 
     private void checkNotBsqSwapOffer() {
         if (currentlyOpenOffer.getOffer().isBsqSwapOffer()) {
-            throw new IllegalStateException(
-                    format("cannot edit bsq swap offer with id '%s'", currentlyOpenOffer.getId()));
+            // An illegal argument is a user error.
+            throw new IllegalArgumentException(
+                    format("cannot edit bsq swap offer with id '%s', replace it with a new swap offer instead",
+                            currentlyOpenOffer.getId()));
         }
     }
 }

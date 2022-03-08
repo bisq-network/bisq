@@ -740,7 +740,8 @@ public class CliMain {
                 }
             }
         } catch (StatusRuntimeException ex) {
-            // Remove the leading gRPC status code (e.g. "UNKNOWN: ") from the message
+            // Remove the leading gRPC status code, e.g., INVALID_ARGUMENT,
+            // NOT_FOUND, ..., UNKNOWN from the exception message.
             String message = ex.getMessage().replaceFirst("^[A-Z_]+: ", "");
             if (message.equals("io exception"))
                 throw new RuntimeException(message + ", server may not be running", ex);
