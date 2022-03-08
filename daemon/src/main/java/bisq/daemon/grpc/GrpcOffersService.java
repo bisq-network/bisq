@@ -125,8 +125,10 @@ class GrpcOffersService extends OffersImplBase {
         try {
             String offerId = req.getId();
             Optional<OpenOffer> myOpenOffer = coreApi.findMyOpenOffer(offerId);
-            Offer offer = myOpenOffer.map(OpenOffer::getOffer).orElseGet(() -> coreApi.getOffer(offerId));
-            OfferInfo offerInfo = myOpenOffer.map(OfferInfo::toMyOfferInfo).orElseGet(() -> OfferInfo.toOfferInfo(offer));
+            Offer offer = myOpenOffer.map(OpenOffer::getOffer)
+                    .orElseGet(() -> coreApi.getOffer(offerId));
+            OfferInfo offerInfo = myOpenOffer.map(OfferInfo::toMyOfferInfo)
+                    .orElseGet(() -> toOfferInfo(offer));
             var reply = GetOfferReply.newBuilder()
                     .setOffer(offerInfo.toProtoMessage())
                     .build();
