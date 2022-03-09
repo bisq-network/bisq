@@ -19,7 +19,6 @@ package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.GUIUtil;
-import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.EmailValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -190,11 +189,11 @@ public class CashDepositForm extends GeneralBankForm {
     }
 
     @Override
-    public void addFormForDisplayAccount() {
+    public void addFormForEditAccount() {
         gridRowFrom = gridRow;
         String countryCode = cashDepositAccountPayload.getCountryCode();
 
-        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(paymentAccount.getPaymentMethod().getId()));
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),

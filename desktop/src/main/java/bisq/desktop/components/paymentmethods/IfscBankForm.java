@@ -42,8 +42,7 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
 public class IfscBankForm extends PaymentMethodForm {
     private final IfscBasedAccountPayload ifscBasedAccountPayload;
-    private InputTextField holderNameInputTextField, accountNrInputTextField, ifscInputTextField;
-    private RegexValidator ifscValidator;  // https://en.wikipedia.org/wiki/Indian_Financial_System_Code
+    private final RegexValidator ifscValidator;  // https://en.wikipedia.org/wiki/Indian_Financial_System_Code
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
@@ -72,7 +71,7 @@ public class IfscBankForm extends PaymentMethodForm {
 
         gridRowFrom = gridRow + 1;
 
-        holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
+        InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
                 Res.get("payment.account.owner"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -80,14 +79,14 @@ public class IfscBankForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        accountNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.accountNr"));
+        InputTextField accountNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.accountNr"));
         accountNrInputTextField.setValidator(inputValidator);
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             ifscBasedAccountPayload.setAccountNr(newValue.trim());
             updateFromInputs();
         });
 
-        ifscInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.ifsc"));
+        InputTextField ifscInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.ifsc"));
         ifscInputTextField.setText("XXXX0999999");
         ifscInputTextField.setValidator(ifscValidator);
         ifscInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -103,13 +102,13 @@ public class IfscBankForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        setAccountNameWithString(holderNameInputTextField.getText());
+        setAccountNameWithString(ifscBasedAccountPayload.getHolderName());
     }
 
     @Override
-    public void addFormForDisplayAccount() {
+    public void addFormForEditAccount() {
         gridRowFrom = gridRow;
-        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"), Res.get(paymentAccount.getPaymentMethod().getId()));
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 ifscBasedAccountPayload.getHolderName());

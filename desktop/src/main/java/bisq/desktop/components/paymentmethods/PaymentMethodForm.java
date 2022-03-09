@@ -28,7 +28,6 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.locale.Country;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
@@ -68,7 +67,6 @@ import javafx.collections.FXCollections;
 import javafx.util.StringConverter;
 
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -318,7 +316,7 @@ public abstract class PaymentMethodForm {
 
     public abstract void addFormForAddAccount();
 
-    public abstract void addFormForDisplayAccount();
+    public abstract void addFormForEditAccount();
 
     protected abstract void updateAllInputsValid();
 

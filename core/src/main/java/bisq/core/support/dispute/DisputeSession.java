@@ -20,8 +20,6 @@ package bisq.core.support.dispute;
 import bisq.core.support.SupportSession;
 import bisq.core.support.messages.ChatMessage;
 
-import bisq.common.crypto.PubKeyRing;
-
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 

@@ -19,7 +19,6 @@ package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.FormBuilder;
-import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.InteracETransferValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -41,7 +40,6 @@ public class InteracETransferForm extends PaymentMethodForm {
 
     private final InteracETransferAccount interacETransferAccount;
     private final InteracETransferValidator interacETransferValidator;
-    private InputTextField mobileNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
@@ -75,7 +73,7 @@ public class InteracETransferForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        mobileNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.emailOrMobile"));
+        InputTextField mobileNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.emailOrMobile"));
         mobileNrInputTextField.setValidator(interacETransferValidator);
         mobileNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             interacETransferAccount.setEmail(newValue);
@@ -105,14 +103,13 @@ public class InteracETransferForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        setAccountNameWithString(mobileNrInputTextField.getText());
+        setAccountNameWithString(interacETransferAccount.getEmail());
     }
 
     @Override
-    public void addFormForDisplayAccount() {
+    public void addFormForEditAccount() {
         gridRowFrom = gridRow;
-        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
-                interacETransferAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(interacETransferAccount.getPaymentMethod().getId()));
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),

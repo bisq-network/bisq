@@ -19,7 +19,6 @@ package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.FormBuilder;
-import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.IBANValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -41,7 +40,6 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 public class TikkieForm extends PaymentMethodForm {
     private final TikkieAccount account;
-    private InputTextField ibanField;
     private final IBANValidator ibanValidator = new IBANValidator("NL");
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
@@ -66,7 +64,7 @@ public class TikkieForm extends PaymentMethodForm {
 
         gridRowFrom = gridRow + 1;
 
-        ibanField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.tikkie.iban"));
+        InputTextField ibanField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.tikkie.iban"));
         ibanField.setValidator(ibanValidator);
         ibanField.textProperty().addListener((ov, oldValue, newValue) -> {
             account.setIban(newValue.trim());
@@ -81,14 +79,13 @@ public class TikkieForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        setAccountNameWithString(ibanField.getText());
+        setAccountNameWithString(account.getIban());
     }
 
     @Override
-    public void addFormForDisplayAccount() {
+    public void addFormForEditAccount() {
         gridRowFrom = gridRow;
-        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
-                account.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(account.getPaymentMethod().getId()));
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.tikkie.iban"), account.getIban())

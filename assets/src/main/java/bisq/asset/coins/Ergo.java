@@ -21,10 +21,8 @@ import bisq.asset.AddressValidationResult;
 import bisq.asset.AddressValidator;
 import bisq.asset.Coin;
 
-import java.util.Arrays;
-
-import org.bitcoinj.core.Base58;
 import org.bitcoinj.core.AddressFormatException;
+import org.bitcoinj.core.Base58;
 
 public class Ergo extends Coin {
 

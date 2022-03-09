@@ -47,8 +47,8 @@ public class DomesticWireTransferForm extends GeneralUsBankForm {
     }
 
     @Override
-    public void addFormForDisplayAccount() {
-        addFormForDisplayAccount(domesticWireTransferAccount.getPayload(), domesticWireTransferAccount.getPayload().getHolderAddress());
+    public void addFormForEditAccount() {
+        addFormForEditAccount(domesticWireTransferAccount.getPayload(), domesticWireTransferAccount.getPayload().getHolderAddress());
     }
 
     @Override

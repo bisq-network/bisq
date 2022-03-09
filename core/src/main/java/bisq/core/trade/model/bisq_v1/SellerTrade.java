@@ -18,7 +18,6 @@
 package bisq.core.trade.model.bisq_v1;
 
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.offer.Offer;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 

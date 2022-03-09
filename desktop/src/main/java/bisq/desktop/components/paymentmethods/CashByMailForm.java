@@ -42,7 +42,6 @@ import static bisq.desktop.util.FormBuilder.*;
 public class CashByMailForm extends PaymentMethodForm {
     private final CashByMailAccount cashByMailAccount;
     private TextArea postalAddressTextArea;
-    private InputTextField contactField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
@@ -78,7 +77,7 @@ public class CashByMailForm extends PaymentMethodForm {
         addTradeCurrencyComboBox();
         currencyComboBox.setItems(FXCollections.observableArrayList(CurrencyUtil.getAllSortedFiatCurrencies()));
 
-        contactField = addInputTextField(gridPane, ++gridRow,
+        InputTextField contactField = addInputTextField(gridPane, ++gridRow,
                 Res.get("payment.cashByMail.contact"));
         contactField.setPromptText(Res.get("payment.cashByMail.contact.prompt"));
         contactField.setValidator(inputValidator);
@@ -110,14 +109,13 @@ public class CashByMailForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        setAccountNameWithString(contactField.getText());
+        setAccountNameWithString(cashByMailAccount.getContact());
     }
 
     @Override
-    public void addFormForDisplayAccount() {
+    public void addFormForEditAccount() {
         gridRowFrom = gridRow;
-        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
-                cashByMailAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(cashByMailAccount.getPaymentMethod().getId()));
 

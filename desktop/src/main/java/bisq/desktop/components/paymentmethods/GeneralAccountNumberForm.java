@@ -1,13 +1,11 @@
 package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
@@ -20,8 +18,6 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 public abstract class GeneralAccountNumberForm extends PaymentMethodForm {
 
-    private InputTextField accountNrInputTextField;
-
     GeneralAccountNumberForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator, GridPane gridPane, int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
     }
@@ -30,7 +26,7 @@ public abstract class GeneralAccountNumberForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        accountNrInputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.account.no"));
+        InputTextField accountNrInputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.account.no"));
         accountNrInputTextField.setValidator(inputValidator);
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             setAccountNumber(newValue);
@@ -51,13 +47,21 @@ public abstract class GeneralAccountNumberForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        setAccountNameWithString(accountNrInputTextField.getText());
+        setAccountNameWithString(getAccountNr());
     }
 
     @Override
-    public void addFormForDisplayAccount() {
-        addFormForAccountNumberDisplayAccount(paymentAccount.getAccountName(), paymentAccount.getPaymentMethod(), getAccountNr(),
-                paymentAccount.getSingleTradeCurrency());
+    public void addFormForEditAccount() {
+        gridRowFrom = gridRow;
+        addAccountNameTextFieldWithAutoFillToggleButton();
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"), Res.get(paymentAccount.getPaymentMethod().getId()));
+        TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.no"), getAccountNr()).second;
+        field.setMouseTransparent(false);
+
+        final String nameAndCode = paymentAccount.getSingleTradeCurrency() != null ? paymentAccount.getSingleTradeCurrency().getNameAndCode() : "";
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+
+        addLimitations(true);
     }
 
 
@@ -71,18 +75,4 @@ public abstract class GeneralAccountNumberForm extends PaymentMethodForm {
     abstract void setAccountNumber(String newValue);
 
     abstract String getAccountNr();
-
-    private void addFormForAccountNumberDisplayAccount(String accountName, PaymentMethod paymentMethod, String accountNr,
-                                                       TradeCurrency singleTradeCurrency) {
-        gridRowFrom = gridRow;
-        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), accountName, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"), Res.get(paymentMethod.getId()));
-        TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.no"), accountNr).second;
-        field.setMouseTransparent(false);
-
-        final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
-
-        addLimitations(true);
-    }
 }

@@ -30,7 +30,6 @@ import bisq.core.payment.AmazonGiftCardAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.AmazonGiftCardAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
-import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
@@ -50,7 +49,6 @@ import static bisq.desktop.util.FormBuilder.*;
 
 @Slf4j
 public class AmazonGiftCardForm extends PaymentMethodForm {
-    private InputTextField accountNrInputTextField;
     ComboBox<Country> countryCombo;
     private final AmazonGiftCardAccount amazonGiftCardAccount;
 
@@ -87,7 +85,7 @@ public class AmazonGiftCardForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        accountNrInputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.email.mobile"));
+        InputTextField accountNrInputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.email.mobile"));
         accountNrInputTextField.setValidator(inputValidator);
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             amazonGiftCardAccount.setEmailOrMobileNr(newValue);
@@ -123,14 +121,25 @@ public class AmazonGiftCardForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        setAccountNameWithString(accountNrInputTextField.getText());
+        setAccountNameWithString(amazonGiftCardAccount.getEmailOrMobileNr());
     }
 
     @Override
-    public void addFormForDisplayAccount() {
-        addFormForAccountNumberDisplayAccount(paymentAccount.getAccountName(), paymentAccount.getPaymentMethod(),
-                amazonGiftCardAccount.getEmailOrMobileNr(),
-                paymentAccount.getSingleTradeCurrency());
+    public void addFormForEditAccount() {
+        gridRowFrom = gridRow;
+        addAccountNameTextFieldWithAutoFillToggleButton();
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
+                Res.get(paymentAccount.getPaymentMethod().getId()));
+        TextField field = addCompactTopLabelTextField(gridPane, ++gridRow,
+                Res.get("payment.email.mobile"), amazonGiftCardAccount.getEmailOrMobileNr()).second;
+        field.setMouseTransparent(false);
+
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),
+                amazonGiftCardAccount.getCountry() != null ? amazonGiftCardAccount.getCountry().name : "");
+        String nameAndCode = paymentAccount.getSingleTradeCurrency() != null ? paymentAccount.getSingleTradeCurrency().getNameAndCode() : "";
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
+
+        addLimitations(true);
     }
 
     @Override
@@ -138,27 +147,6 @@ public class AmazonGiftCardForm extends PaymentMethodForm {
         allInputsValid.set(isAccountNameValid()
                 && inputValidator.validate(amazonGiftCardAccount.getEmailOrMobileNr()).isValid
                 && paymentAccount.getTradeCurrencies().size() > 0);
-    }
-
-    private void addFormForAccountNumberDisplayAccount(String accountName,
-                                                       PaymentMethod paymentMethod,
-                                                       String accountNr,
-                                                       TradeCurrency singleTradeCurrency) {
-        gridRowFrom = gridRow;
-        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), accountName,
-                Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
-                Res.get(paymentMethod.getId()));
-        TextField field = addCompactTopLabelTextField(gridPane, ++gridRow,
-                Res.get("payment.email.mobile"), accountNr).second;
-        field.setMouseTransparent(false);
-
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),
-                amazonGiftCardAccount.getCountry() != null ? amazonGiftCardAccount.getCountry().name : "");
-        String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), nameAndCode);
-
-        addLimitations(true);
     }
 
     private static String countryToAmazonSite(String countryCode) {

@@ -17,19 +17,10 @@
 
 package bisq.core.payment;
 
+import bisq.core.locale.FiatCurrency;
 import bisq.core.payment.payload.JapanBankAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.payment.payload.JapanBankAccountPayload;
-
-import org.jetbrains.annotations.NotNull;
-
-import lombok.Getter;
-import lombok.Setter;
-
-import bisq.core.locale.Country;
-import bisq.core.locale.FiatCurrency;
-import bisq.core.payment.payload.JapanBankAccountPayload;
 
 public final class JapanBankAccount extends PaymentAccount
 {

@@ -67,7 +67,6 @@ public class MoneyGramForm extends PaymentMethodForm {
     }
 
     private final MoneyGramAccountPayload moneyGramAccountPayload;
-    private InputTextField holderNameInputTextField;
     private InputTextField stateInputTextField;
     private final EmailValidator emailValidator;
 
@@ -80,10 +79,10 @@ public class MoneyGramForm extends PaymentMethodForm {
     }
 
     @Override
-    public void addFormForDisplayAccount() {
+    public void addFormForEditAccount() {
         gridRowFrom = gridRow;
         final Country country = getMoneyGramPaymentAccount().getCountry();
-        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"), paymentAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(paymentAccount.getPaymentMethod().getId()));
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.country"), country != null ? country.name : "");
@@ -104,7 +103,7 @@ public class MoneyGramForm extends PaymentMethodForm {
 
         gridRow = GUIUtil.addRegionCountry(gridPane, gridRow, this::onCountrySelected);
 
-        holderNameInputTextField = addInputTextField(gridPane,
+        InputTextField holderNameInputTextField = addInputTextField(gridPane,
                 ++gridRow, Res.get("payment.account.fullName"));
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             moneyGramAccountPayload.setHolderName(newValue);
@@ -170,7 +169,7 @@ public class MoneyGramForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        setAccountNameWithString(holderNameInputTextField.getText());
+        setAccountNameWithString(moneyGramAccountPayload.getHolderName());
     }
 
     @Override

@@ -41,7 +41,6 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
 public class PaytmForm extends PaymentMethodForm {
     private final PaytmAccount account;
-    private InputTextField emailOrMobileNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
@@ -65,7 +64,7 @@ public class PaytmForm extends PaymentMethodForm {
 
         gridRowFrom = gridRow + 1;
 
-        emailOrMobileNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.email.mobile"));
+        InputTextField emailOrMobileNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.email.mobile"));
         emailOrMobileNrInputTextField.setValidator(inputValidator);
         emailOrMobileNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             account.setEmailOrMobileNr(newValue.trim());
@@ -80,14 +79,13 @@ public class PaytmForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        setAccountNameWithString(emailOrMobileNrInputTextField.getText());
+        setAccountNameWithString(account.getEmailOrMobileNr());
     }
 
     @Override
-    public void addFormForDisplayAccount() {
+    public void addFormForEditAccount() {
         gridRowFrom = gridRow;
-        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
-                account.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(account.getPaymentMethod().getId()));
         TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email.mobile"),

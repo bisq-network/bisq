@@ -41,7 +41,6 @@ import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
 public class PixForm extends PaymentMethodForm {
     private final PixAccount account;
-    private InputTextField pixKeyInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
@@ -65,7 +64,7 @@ public class PixForm extends PaymentMethodForm {
 
         gridRowFrom = gridRow + 1;
 
-        pixKeyInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.pix.key"));
+        InputTextField pixKeyInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.pix.key"));
         pixKeyInputTextField.setValidator(inputValidator);
         pixKeyInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             account.setPixKey(newValue.trim());
@@ -80,14 +79,13 @@ public class PixForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        setAccountNameWithString(pixKeyInputTextField.getText());
+        setAccountNameWithString(account.getPixKey());
     }
 
     @Override
-    public void addFormForDisplayAccount() {
+    public void addFormForEditAccount() {
         gridRowFrom = gridRow;
-        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
-                account.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(account.getPaymentMethod().getId()));
         TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.pix.key"),

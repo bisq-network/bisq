@@ -18,8 +18,8 @@
 package bisq.desktop.util;
 
 import bisq.core.locale.Res;
-import bisq.core.util.coin.ImmutableCoinFormatter;
 import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
 
 import bisq.common.config.Config;
 
@@ -36,8 +36,6 @@ import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static org.bitcoinj.core.CoinMaker.oneBitcoin;
 import static org.bitcoinj.core.CoinMaker.satoshis;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 
 public class ImmutableCoinFormatterTest {
 

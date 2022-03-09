@@ -19,7 +19,6 @@ package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.FormBuilder;
-import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.ChaseQuickPayValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -42,7 +41,6 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
 
     private final ChaseQuickPayAccount chaseQuickPayAccount;
     private final ChaseQuickPayValidator chaseQuickPayValidator;
-    private InputTextField mobileNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
@@ -71,7 +69,7 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        mobileNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.email"));
+        InputTextField mobileNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.email"));
         mobileNrInputTextField.setValidator(chaseQuickPayValidator);
         mobileNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             chaseQuickPayAccount.setEmail(newValue);
@@ -87,14 +85,13 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        setAccountNameWithString(mobileNrInputTextField.getText());
+        setAccountNameWithString(chaseQuickPayAccount.getEmail());
     }
 
     @Override
-    public void addFormForDisplayAccount() {
+    public void addFormForEditAccount() {
         gridRowFrom = gridRow;
-        addTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
-                chaseQuickPayAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(chaseQuickPayAccount.getPaymentMethod().getId()));
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),

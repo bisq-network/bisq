@@ -19,7 +19,6 @@ package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.FormBuilder;
-import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.CapitualValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -45,7 +44,6 @@ import static bisq.desktop.util.FormBuilder.addTopLabelFlowPane;
 public class CapitualForm extends PaymentMethodForm {
     private final CapitualAccount capitualAccount;
     private final CapitualValidator capitualValidator;
-    private InputTextField accountNrInputTextField;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
@@ -70,7 +68,7 @@ public class CapitualForm extends PaymentMethodForm {
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
 
-        accountNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.capitual.cap"));
+        InputTextField accountNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.capitual.cap"));
         accountNrInputTextField.setValidator(capitualValidator);
         accountNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             capitualAccount.setAccountNr(newValue);
@@ -98,14 +96,13 @@ public class CapitualForm extends PaymentMethodForm {
 
     @Override
     protected void autoFillNameTextField() {
-        setAccountNameWithString(accountNrInputTextField.getText());
+        setAccountNameWithString(capitualAccount.getAccountNr());
     }
 
     @Override
-    public void addFormForDisplayAccount() {
+    public void addFormForEditAccount() {
         gridRowFrom = gridRow;
-        addCompactTopLabelTextField(gridPane, gridRow, Res.get("payment.account.name"),
-                capitualAccount.getAccountName(), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(capitualAccount.getPaymentMethod().getId()));
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.capitual.cap"),

@@ -27,7 +27,6 @@ import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.account.content.backup.BackupView;
-import bisq.desktop.main.account.content.seedwords.SeedWordsView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.PasswordValidator;
