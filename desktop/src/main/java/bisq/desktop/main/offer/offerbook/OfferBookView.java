@@ -353,7 +353,7 @@ public class OfferBookView extends ActivatableViewAndModel<GridPane, OfferBookVi
         currencyComboBox.setConverter(new CurrencyStringConverter(currencyComboBox));
         currencyComboBox.getEditor().getStyleClass().add("combo-box-editor-bold");
 
-        currencyComboBox.setAutocompleteItems(model.getTradeCurrencies());
+        currencyComboBox.setAutocompleteItems(model.getTradeCurrencies(), model.getAllCurrencies());
         currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 10));
 
         currencyComboBox.setOnChangeConfirmed(e -> {

@@ -35,6 +35,7 @@ import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Implements searchable dropdown (an autocomplete like experience).
@@ -44,8 +45,9 @@ import java.util.List;
  * @param <T>  type of the ComboBox item; in the simplest case this can be a String
  */
 public class AutocompleteComboBox<T> extends JFXComboBox<T> {
-    private ArrayList<T> completeList;
-    private ArrayList<T> matchingList;
+    private List<? extends T> list;
+    private List<? extends T> extendedList;
+    private List<T> matchingList;
     private JFXComboBoxListViewSkin<T> comboBoxListViewSkin;
 
     public AutocompleteComboBox() {
@@ -65,13 +67,18 @@ public class AutocompleteComboBox<T> extends JFXComboBox<T> {
     /**
      * Set the complete list of ComboBox items. Use this instead of setItems().
      */
-    public void setAutocompleteItems(List<? extends T> items) {
-        completeList = new ArrayList<>(items);
-        matchingList = new ArrayList<>(completeList);
+    public void setAutocompleteItems(List<? extends T> items, List<? extends T> allItems) {
+        list = items;
+        extendedList = allItems;
+        matchingList = new ArrayList<>(list);
         setValue(null);
         getSelectionModel().clearSelection();
         setItems(FXCollections.observableList(matchingList));
         getEditor().setText("");
+    }
+
+    public void setAutocompleteItems(List<? extends T> items) {
+        setAutocompleteItems(items, null);
     }
 
     /**
@@ -135,11 +142,11 @@ public class AutocompleteComboBox<T> extends JFXComboBox<T> {
     }
 
     private void filterBy(String query) {
-        ArrayList<T> newMatchingList = new ArrayList<>();
-        for (T item : completeList)
-            if (StringUtils.containsIgnoreCase(asString(item), query))
-                newMatchingList.add(item);
-        matchingList = newMatchingList;
+        matchingList = (extendedList != null && query.length() > 0 ? extendedList : list)
+                .stream()
+                .filter(item -> StringUtils.containsIgnoreCase(asString(item), query))
+                .collect(Collectors.toList());
+
         setValue(null);
         getSelectionModel().clearSelection();
         setItems(FXCollections.observableList(matchingList));
@@ -153,7 +160,7 @@ public class AutocompleteComboBox<T> extends JFXComboBox<T> {
         getEditor().addEventHandler(KeyEvent.KEY_RELEASED, (KeyEvent event) -> {
             UserThread.execute(() -> {
                 String query = getEditor().getText();
-                var exactMatch = completeList.stream().anyMatch(item -> asString(item).equalsIgnoreCase(query));
+                var exactMatch = list.stream().anyMatch(item -> asString(item).equalsIgnoreCase(query));
                 if (!exactMatch) {
                     if (query.isEmpty())
                         removeFilter();
@@ -166,7 +173,7 @@ public class AutocompleteComboBox<T> extends JFXComboBox<T> {
     }
 
     private void removeFilter() {
-        matchingList = new ArrayList<>(completeList);
+        matchingList = new ArrayList<>(list);
         setValue(null);
         getSelectionModel().clearSelection();
         setItems(FXCollections.observableList(matchingList));
