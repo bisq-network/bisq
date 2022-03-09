@@ -135,6 +135,7 @@ public class PaymentAccountForm {
             "paymentAccountPayload",
             "paymentMethod",
             "paymentMethodId",          // Will be included, but handled differently.
+            "persistedAccountName",     // Automatically set in PaymentAccount.onPersistChanges().
             "selectedTradeCurrency",    // May be included, but handled differently.
             "tradeCurrencies",          // May be included, but handled differently.
             "HOLDER_NAME",
