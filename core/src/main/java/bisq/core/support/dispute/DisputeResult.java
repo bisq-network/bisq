@@ -17,6 +17,7 @@
 
 package bisq.core.support.dispute;
 
+import bisq.core.locale.Res;
 import bisq.core.support.messages.ChatMessage;
 
 import bisq.common.proto.ProtoUtil;
@@ -68,14 +69,30 @@ public final class DisputeResult implements NetworkPayload {
     }
 
     public enum PayoutSuggestion {
-        UNKNOWN,
-        BUYER_GETS_TRADE_AMOUNT,
-        BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION,
-        BUYER_GETS_TRADE_AMOUNT_MINUS_PENALTY,
-        SELLER_GETS_TRADE_AMOUNT,
-        SELLER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION,
-        SELLER_GETS_TRADE_AMOUNT_MINUS_PENALTY,
-        CUSTOM_PAYOUT
+        UNKNOWN("shared.na", null),
+        BUYER_GETS_TRADE_AMOUNT("disputeSummaryWindow.payout.getsTradeAmount", "shared.buyer"),
+        BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION("disputeSummaryWindow.payout.getsCompensation", "shared.buyer"),
+        BUYER_GETS_TRADE_AMOUNT_MINUS_PENALTY("disputeSummaryWindow.payout.getsPenalty", "shared.buyer"),
+        SELLER_GETS_TRADE_AMOUNT("disputeSummaryWindow.payout.getsTradeAmount", "shared.seller"),
+        SELLER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION("disputeSummaryWindow.payout.getsCompensation", "shared.seller"),
+        SELLER_GETS_TRADE_AMOUNT_MINUS_PENALTY("disputeSummaryWindow.payout.getsPenalty", "shared.seller"),
+        CUSTOM_PAYOUT("disputeSummaryWindow.payout.custom", null);
+
+        private String suggestionKey;
+        @Nullable private String buyerSellerKey;
+
+        PayoutSuggestion(String suggestionKey, @Nullable String buyerSellerKey) {
+            this.suggestionKey = suggestionKey;
+            this.buyerSellerKey = buyerSellerKey;
+        }
+
+        public String toString() {
+            if (buyerSellerKey == null) {
+                return Res.get(suggestionKey);
+            } else {
+                return Res.get(suggestionKey, Res.get(buyerSellerKey));
+            }
+        }
     }
 
     private final String tradeId;
@@ -258,6 +275,17 @@ public final class DisputeResult implements NetworkPayload {
     public Date getCloseDate() {
         return new Date(closeDate);
     }
+
+    public String getPayoutSuggestionText() {
+        if (payoutSuggestion.equals(PayoutSuggestion.BUYER_GETS_TRADE_AMOUNT_MINUS_PENALTY)
+            || payoutSuggestion.equals(PayoutSuggestion.BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION)
+            || payoutSuggestion.equals(PayoutSuggestion.SELLER_GETS_TRADE_AMOUNT_MINUS_PENALTY)
+            || payoutSuggestion.equals(PayoutSuggestion.SELLER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION)) {
+            return payoutSuggestion + " " + payoutAdjustmentPercent + "%";
+        }
+        return payoutSuggestion.toString();
+    }
+
 
     @Override
     public String toString() {

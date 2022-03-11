@@ -45,6 +45,7 @@ import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.stage.FileChooser;
 
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -112,7 +113,7 @@ public class ChatView extends AnchorPane {
 
     // Options
     @Getter
-    Button extraButton;
+    Node extraButton;
     @Getter
     private ReadOnlyDoubleProperty widthProperty;
     @Setter
@@ -169,7 +170,7 @@ public class ChatView extends AnchorPane {
     }
 
     public void display(SupportSession supportSession,
-                        @Nullable Button extraButton,
+                        @Nullable Node extraButton,
                         ReadOnlyDoubleProperty widthProperty) {
         optionalSupportSession = Optional.of(supportSession);
         removeListenersOnSessionChange();
@@ -233,7 +234,6 @@ public class ChatView extends AnchorPane {
                 buttonBox.getChildren().addAll(sendButton, sendMsgBusyAnimation, sendMsgInfoLabel);
 
             if (extraButton != null) {
-                extraButton.setDefaultButton(true);
                 Pane spacer = new Pane();
                 HBox.setHgrow(spacer, Priority.ALWAYS);
                 buttonBox.getChildren().addAll(spacer, extraButton);
@@ -568,6 +568,26 @@ public class ChatView extends AnchorPane {
             }
         } else {
             new Popup().warning(Res.get("support.tooManyAttachments")).show();
+        }
+    }
+
+    public void onAttachText(String textAttachment, String name) {
+        if (!allowAttachments)
+            return;
+        try {
+            byte[] filesAsBytes = textAttachment.getBytes("UTF8");
+            int size = filesAsBytes.length;
+            int maxMsgSize = Connection.getPermittedMessageSize();
+            int maxSizeInKB = maxMsgSize / 1024;
+            if (size > maxMsgSize) {
+                new Popup().warning(Res.get("support.attachmentTooLarge", (size / 1024), maxSizeInKB)).show();
+            } else {
+                tempAttachments.add(new Attachment(name, filesAsBytes));
+                inputTextArea.setText(inputTextArea.getText() + "\n[" + Res.get("support.attachment") + " " + name + "]");
+            }
+        } catch (Exception e) {
+            log.error(e.toString());
+            e.printStackTrace();
         }
     }
 
