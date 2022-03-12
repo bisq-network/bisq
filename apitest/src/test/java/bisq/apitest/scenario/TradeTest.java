@@ -88,7 +88,7 @@ public class TradeTest extends AbstractTradeTest {
         test.testBankAcctDetailsIncludedInContracts(testInfo);
         test.testAlicesConfirmPaymentStarted(testInfo);
         test.testBobsConfirmPaymentReceived(testInfo);
-        test.testKeepFunds(testInfo);
+        test.testCloseTrade(testInfo);
     }
 
     @Test

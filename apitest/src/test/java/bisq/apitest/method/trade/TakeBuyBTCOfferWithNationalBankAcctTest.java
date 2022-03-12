@@ -41,6 +41,7 @@ import io.grpc.StatusRuntimeException;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -75,6 +76,11 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
 
     private static PaymentAccount alicesPaymentAccount;
     private static PaymentAccount bobsPaymentAccount;
+
+    @BeforeAll
+    public static void setUp() {
+        setUp(false);
+    }
 
     @Test
     @Order(1)
@@ -156,13 +162,19 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
         assertNotNull(alicesPaymentAccount);
         assertNotNull(bobsPaymentAccount);
 
-        var alicesContract = aliceClient.getTrade(tradeId).getContractAsJson();
-        verifyJsonContractIncludesBankAccountDetails(alicesContract, alicesPaymentAccount);
-        verifyJsonContractIncludesBankAccountDetails(alicesContract, bobsPaymentAccount);
+        var alicesTrade = aliceClient.getTrade(tradeId);
+        assertNotEquals("", alicesTrade.getContract().getMakerPaymentAccountPayload().getPaymentDetails());
+        assertNotEquals("", alicesTrade.getContract().getTakerPaymentAccountPayload().getPaymentDetails());
+        var alicesContractJson = alicesTrade.getContractAsJson();
+        verifyJsonContractIncludesBankAccountDetails(alicesContractJson, alicesPaymentAccount);
+        verifyJsonContractIncludesBankAccountDetails(alicesContractJson, bobsPaymentAccount);
 
-        var bobsContract = bobClient.getTrade(tradeId).getContractAsJson();
-        verifyJsonContractIncludesBankAccountDetails(bobsContract, alicesPaymentAccount);
-        verifyJsonContractIncludesBankAccountDetails(bobsContract, bobsPaymentAccount);
+        var bobsTrade = bobClient.getTrade(tradeId);
+        assertNotEquals("", bobsTrade.getContract().getMakerPaymentAccountPayload().getPaymentDetails());
+        assertNotEquals("", bobsTrade.getContract().getTakerPaymentAccountPayload().getPaymentDetails());
+        var bobsContractJson = bobsTrade.getContractAsJson();
+        verifyJsonContractIncludesBankAccountDetails(bobsContractJson, alicesPaymentAccount);
+        verifyJsonContractIncludesBankAccountDetails(bobsContractJson, bobsPaymentAccount);
     }
 
     @Test
@@ -207,7 +219,7 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
 
     @Test
     @Order(5)
-    public void testKeepFunds(final TestInfo testInfo) {
+    public void testCloseTrade(final TestInfo testInfo) {
         try {
             genBtcBlocksThenWait(1, 1_000);
 

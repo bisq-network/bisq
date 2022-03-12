@@ -667,6 +667,7 @@ message PaymentAccountPayloadInfo {
     string id = 1;                  // The unique identifier of the payment account.
     string payment_method_id = 2;   // The unique identifier of the payment method.
     string address = 3;             // The optional altcoin wallet address associated with the (altcoin) payment account.
+    string payment_details = 4;     // The optional payment details, if available.
 }
 
 message TxFeeRateInfo {

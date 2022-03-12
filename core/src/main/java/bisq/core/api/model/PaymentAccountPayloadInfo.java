@@ -37,13 +37,17 @@ public class PaymentAccountPayloadInfo implements Payload {
     private final String paymentMethodId;
     @Nullable
     private final String address;
+    @Nullable
+    private final String paymentDetails;
 
     public PaymentAccountPayloadInfo(String id,
                                      String paymentMethodId,
-                                     @Nullable String address) {
+                                     @Nullable String address,
+                                     @Nullable String paymentDetails) {
         this.id = id;
         this.paymentMethodId = paymentMethodId;
         this.address = address;
+        this.paymentDetails = paymentDetails;
     }
 
     public static PaymentAccountPayloadInfo toPaymentAccountPayloadInfo(
@@ -57,21 +61,30 @@ public class PaymentAccountPayloadInfo implements Payload {
         else if (paymentAccountPayload instanceof InstantCryptoCurrencyPayload)
             address = Optional.of(((InstantCryptoCurrencyPayload) paymentAccountPayload).getAddress());
 
+        String prettyPaymentDetails = paymentAccountPayload.getPaymentDetailsForTradePopup();
+        Optional<String> paymentDetails = prettyPaymentDetails.isBlank()
+                ? Optional.empty()
+                : Optional.of(prettyPaymentDetails);
+
         return new PaymentAccountPayloadInfo(paymentAccountPayload.getId(),
                 paymentAccountPayload.getPaymentMethodId(),
-                address.orElse(""));
+                address.orElse(""),
+                paymentDetails.orElse(""));
     }
 
     // For transmitting TradeInfo messages when the contract or the contract's payload is not yet available.
     public static Supplier<PaymentAccountPayloadInfo> emptyPaymentAccountPayload = () ->
-            new PaymentAccountPayloadInfo("", "", "");
+            new PaymentAccountPayloadInfo("", "", "", "");
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static PaymentAccountPayloadInfo fromProto(bisq.proto.grpc.PaymentAccountPayloadInfo proto) {
-        return new PaymentAccountPayloadInfo(proto.getId(), proto.getPaymentMethodId(), proto.getAddress());
+        return new PaymentAccountPayloadInfo(proto.getId(),
+                proto.getPaymentMethodId(),
+                proto.getAddress(),
+                proto.getPaymentDetails());
     }
 
     @Override
@@ -80,6 +93,7 @@ public class PaymentAccountPayloadInfo implements Payload {
                 .setId(id)
                 .setPaymentMethodId(paymentMethodId)
                 .setAddress(address != null ? address : "")
+                .setPaymentDetails(paymentDetails != null ? paymentDetails : "")
                 .build();
     }
 }
