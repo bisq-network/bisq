@@ -24,6 +24,8 @@ import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
 
+import bisq.common.util.Tuple2;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -45,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DaoChartDataModel extends ChartDataModel {
     private final DaoStateService daoStateService;
     private final Function<Issuance, Long> blockTimeOfIssuanceFunction;
-    private Map<Long, Long> totalIssuedByInterval, compensationByInterval, reimbursementByInterval,
+    private Map<Long, Long> totalSupplyByInterval, totalIssuedByInterval, compensationByInterval, reimbursementByInterval,
             totalBurnedByInterval, bsqTradeFeeByInterval, proofOfBurnByInterval;
 
 
@@ -68,6 +70,7 @@ public class DaoChartDataModel extends ChartDataModel {
 
     @Override
     protected void invalidateCache() {
+        totalSupplyByInterval = null;
         totalIssuedByInterval = null;
         compensationByInterval = null;
         reimbursementByInterval = null;
@@ -110,6 +113,19 @@ public class DaoChartDataModel extends ChartDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Data for chart
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    Map<Long, Long> getTotalSupplyByInterval() {
+        if (totalSupplyByInterval != null) {
+            return totalSupplyByInterval;
+        }
+
+        totalSupplyByInterval = getTotalBsqSupplyByInterval(
+                daoStateService.getTotalBsqSupply(),
+                getDateFilter()
+        );
+
+        return totalSupplyByInterval;
+    }
 
     Map<Long, Long> getTotalIssuedByInterval() {
         if (totalIssuedByInterval != null) {
@@ -178,6 +194,12 @@ public class DaoChartDataModel extends ChartDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Aggregated collection data by interval
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private Map<Long, Long> getTotalBsqSupplyByInterval(Set<Tuple2<Long, Long>> bsqSupply, Predicate<Long> dateFilter) {
+        return bsqSupply.stream()
+                .filter(i -> dateFilter.test(i.first))
+                .collect(Collectors.toMap(i -> i.first, i -> i.second));
+    }
 
     private Map<Long, Long> getIssuedBsqByInterval(Set<Issuance> issuanceSet, Predicate<Long> dateFilter) {
         return issuanceSet.stream()

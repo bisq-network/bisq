@@ -39,6 +39,8 @@ import bisq.core.dao.state.model.governance.ParamChange;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.BsqFormatter;
 
+import bisq.common.util.Tuple2;
+
 import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
@@ -1042,6 +1044,44 @@ public class DaoStateService implements DaoSetupService {
 
     public Set<TxOutput> getProofOfBurnOpReturnTxOutputs() {
         return getTxOutputsByTxOutputType(TxOutputType.PROOF_OF_BURN_OP_RETURN_OUTPUT);
+    }
+
+    public Set<Tuple2<Long, Long>> getTotalBsqSupply() {
+        return new HashSet<>() {{
+            add(new Tuple2<>(1555340856L, 372540100L));  // Cycle 01 - 15 APR 2019
+            add(new Tuple2<>(1558083590L, 374541600L));  // Cycle 02 - 17 MAY 2019
+            add(new Tuple2<>(1560771266L, 375464400L));  // Cycle 03 - 17 JUN 2019
+            add(new Tuple2<>(1563347672L, 374153300L));  // Cycle 04 - 17 JUL 2019
+            add(new Tuple2<>(1566009595L, 378733200L));  // Cycle 05 - 16 AUG 2019
+            add(new Tuple2<>(1568643566L, 385347900L));  // Cycle 06 - 16 SEP 2019
+            add(new Tuple2<>(1571349571L, 391167400L));  // Cycle 07 - 17 OCT 2019
+            add(new Tuple2<>(1574180991L, 398324900L));  // Cycle 08 - 19 NOV 2019
+            add(new Tuple2<>(1576966522L, 394719900L));  // Cycle 09 - 21 DEC 2019
+            add(new Tuple2<>(1579613568L, 397643900L));  // Cycle 10 - 21 JAN 2020
+            add(new Tuple2<>(1582399054L, 401189100L));  // Cycle 11 - 22 FEB 2020
+            add(new Tuple2<>(1585342220L, 403141900L));  // Cycle 12 - 27 MAR 2020
+            add(new Tuple2<>(1588025030L, 399991400L));  // Cycle 13
+            add(new Tuple2<>(1591004931L, 411136400L));  // Cycle 14
+            add(new Tuple2<>(1593654027L, 420908500L));  // Cycle 15
+            add(new Tuple2<>(1596407074L, 421255800L));  // Cycle 16
+            add(new Tuple2<>(1599175867L, 430737100L));  // Cycle 17
+            add(new Tuple2<>(1601861442L, 429305600L));  // Cycle 18
+            add(new Tuple2<>(1604845863L, 431446100L));  // Cycle 19 - 8 NOV 2020
+            add(new Tuple2<>(1610233200L, 422663200L));  // Cycle 20
+            add(new Tuple2<>(1612911600L, 449935500L));  // Cycle 21
+            add(new Tuple2<>(1615762800L, 446547000L));  // Cycle 22
+            add(new Tuple2<>(1618437600L, 441126800L));  // Cycle 23
+            add(new Tuple2<>(1621288800L, 442629900L));  // Cycle 24
+            add(new Tuple2<>(1624572000L, 434999300L));  // Cycle 25
+            add(new Tuple2<>(1627596000L, 437237400L));  // Cycle 26
+            add(new Tuple2<>(1630188000L, 431897700L));  // Cycle 27
+            add(new Tuple2<>(1632952800L, 433282600L));  // Cycle 28
+            add(new Tuple2<>(1635544800L, 431026400L));  // Cycle 29 - 29 SEP 2021
+            add(new Tuple2<>(1638399600L, 424954400L));  // Cycle 30
+            add(new Tuple2<>(1641078000L, 438560500L));  // Cycle 31
+            add(new Tuple2<>(1643756400L, 433806200L));  // Cycle 32
+            add(new Tuple2<>(1646555748L, 431667800L));  // Cycle 33
+        }};
     }
 
 
