@@ -533,7 +533,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
             case PaymentMethod.PERFECT_MONEY_ID:
                 return new PerfectMoneyForm(paymentAccount, accountAgeWitnessService, perfectMoneyValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SEPA_ID:
-                return new SepaForm(paymentAccount, accountAgeWitnessService, sepaIBANValidator, bicValidator, inputValidator, root, gridRow, formatter);
+                return new SepaForm(paymentAccount, accountAgeWitnessService, bicValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SEPA_INSTANT_ID:
                 return new SepaInstantForm(paymentAccount, accountAgeWitnessService, sepaIBANValidator, bicValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.FASTER_PAYMENTS_ID:

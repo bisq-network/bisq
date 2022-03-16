@@ -24,9 +24,12 @@ import java.math.BigInteger;
 
 import java.util.Locale;
 
+import lombok.Setter;
+
 // TODO Does not yet recognize special letters like ä, ö, ü, å, ... as invalid characters
 public class IBANValidator extends InputValidator {
 
+    @Setter
     private String restrictToCountry = "";
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods

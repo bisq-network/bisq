@@ -70,13 +70,17 @@ public class SepaForm extends GeneralSepaForm {
     private final SepaIBANValidator sepaIBANValidator;
     private final BICValidator bicValidator;
 
-    public SepaForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, SepaIBANValidator sepaIBANValidator,
-                    BICValidator bicValidator, InputValidator inputValidator,
-                    GridPane gridPane, int gridRow, CoinFormatter formatter) {
+    public SepaForm(PaymentAccount paymentAccount,
+                    AccountAgeWitnessService accountAgeWitnessService,
+                    BICValidator bicValidator,
+                    InputValidator inputValidator,
+                    GridPane gridPane,
+                    int gridRow,
+                    CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.sepaAccount = (SepaAccount) paymentAccount;
-        this.sepaIBANValidator = sepaIBANValidator;
         this.bicValidator = bicValidator;
+        this.sepaIBANValidator = new SepaIBANValidator();
     }
 
     @Override
@@ -139,13 +143,8 @@ public class SepaForm extends GeneralSepaForm {
         });
 
         countryComboBox.valueProperty().addListener((ov, oldValue, newValue) -> {
-            if (ibanInputTextField.validate()) {
-                String ibanCountryCode = ibanInputTextField.getText(0, 2);
-                String comboBoxCountryCode = countryComboBox.getValue().code;
-                if (!ibanCountryCode.equals(comboBoxCountryCode)) {
-                    ibanInputTextField.setInvalid(Res.get("validation.iban.countryCodeNotMatchCountryOfBank"));
-                }
-            }
+            sepaIBANValidator.setRestrictToCountry(newValue.code);
+            ibanInputTextField.refreshValidation();
         });
 
         updateFromInputs();
