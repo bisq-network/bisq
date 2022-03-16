@@ -41,6 +41,9 @@ import javafx.scene.layout.GridPane;
 
 import javafx.collections.FXCollections;
 
+import java.util.List;
+import java.util.Optional;
+
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 
@@ -119,6 +122,34 @@ public class SepaForm extends GeneralSepaForm {
             countryComboBox.getSelectionModel().select(country);
             sepaAccount.setCountry(country);
         }
+
+        ibanInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+            if (ibanInputTextField.validate()) {
+                List<Country> countries = CountryUtil.getAllSepaCountries();
+                String ibanCountryCode = newValue.substring(0, 2).toUpperCase();
+                Optional<Country> ibanCountry = countries
+                        .stream()
+                        .filter(c -> c.code.equals(ibanCountryCode))
+                        .findFirst();
+
+                if (ibanCountry.isPresent())
+                    countryComboBox.setValue(ibanCountry.get());
+            }
+        });
+
+        countryComboBox.valueProperty().addListener((ov, oldValue, newValue) -> {
+            if (ibanInputTextField.validate()) {
+                String ibanCountryCode = ibanInputTextField.getText(0, 2);
+                String comboBoxCountryCode = countryComboBox.getValue().code;
+                if (!ibanCountryCode.equals(comboBoxCountryCode)) {
+                    InputValidator.ValidationResult result = new InputValidator.ValidationResult(
+                            false,
+                            Res.get("validation.iban.countryCodeNotMatchCountryOfBank")
+                    );
+                    ibanInputTextField.validationResultProperty().setValue(result);
+                }
+            }
+        });
 
         updateFromInputs();
     }
