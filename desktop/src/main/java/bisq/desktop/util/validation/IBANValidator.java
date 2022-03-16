@@ -25,7 +25,7 @@ import java.math.BigInteger;
 import java.util.Locale;
 
 // TODO Does not yet recognize special letters like ä, ö, ü, å, ... as invalid characters
-public final class IBANValidator extends InputValidator {
+public class IBANValidator extends InputValidator {
 
     private String restrictToCountry = "";
     ///////////////////////////////////////////////////////////////////////////////////////////

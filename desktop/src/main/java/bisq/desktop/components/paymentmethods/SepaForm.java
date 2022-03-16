@@ -21,7 +21,7 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.normalization.IBANNormalizer;
 import bisq.desktop.util.validation.BICValidator;
-import bisq.desktop.util.validation.IBANValidator;
+import bisq.desktop.util.validation.SepaIBANValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Country;
@@ -67,15 +67,15 @@ public class SepaForm extends GeneralSepaForm {
     }
 
     private final SepaAccount sepaAccount;
-    private final IBANValidator ibanValidator;
+    private final SepaIBANValidator sepaIBANValidator;
     private final BICValidator bicValidator;
 
-    public SepaForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, IBANValidator ibanValidator,
+    public SepaForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, SepaIBANValidator sepaIBANValidator,
                     BICValidator bicValidator, InputValidator inputValidator,
                     GridPane gridPane, int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.sepaAccount = (SepaAccount) paymentAccount;
-        this.ibanValidator = ibanValidator;
+        this.sepaIBANValidator = sepaIBANValidator;
         this.bicValidator = bicValidator;
     }
 
@@ -93,7 +93,7 @@ public class SepaForm extends GeneralSepaForm {
 
         InputTextField ibanInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, IBAN);
         ibanInputTextField.setTextFormatter(new TextFormatter<>(new IBANNormalizer()));
-        ibanInputTextField.setValidator(ibanValidator);
+        ibanInputTextField.setValidator(sepaIBANValidator);
         ibanInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             sepaAccount.setIban(newValue);
             updateFromInputs();
@@ -132,8 +132,9 @@ public class SepaForm extends GeneralSepaForm {
                         .filter(c -> c.code.equals(ibanCountryCode))
                         .findFirst();
 
-                if (ibanCountry.isPresent())
+                if (ibanCountry.isPresent()) {
                     countryComboBox.setValue(ibanCountry.get());
+                }
             }
         });
 
@@ -142,11 +143,7 @@ public class SepaForm extends GeneralSepaForm {
                 String ibanCountryCode = ibanInputTextField.getText(0, 2);
                 String comboBoxCountryCode = countryComboBox.getValue().code;
                 if (!ibanCountryCode.equals(comboBoxCountryCode)) {
-                    InputValidator.ValidationResult result = new InputValidator.ValidationResult(
-                            false,
-                            Res.get("validation.iban.countryCodeNotMatchCountryOfBank")
-                    );
-                    ibanInputTextField.validationResultProperty().setValue(result);
+                    ibanInputTextField.setInvalid(Res.get("validation.iban.countryCodeNotMatchCountryOfBank"));
                 }
             }
         });
@@ -158,7 +155,7 @@ public class SepaForm extends GeneralSepaForm {
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
                 && bicValidator.validate(sepaAccount.getBic()).isValid
-                && ibanValidator.validate(sepaAccount.getIban()).isValid
+                && sepaIBANValidator.validate(sepaAccount.getIban()).isValid
                 && inputValidator.validate(sepaAccount.getHolderName()).isValid
                 && sepaAccount.getAcceptedCountryCodes().size() > 0
                 && sepaAccount.getSingleTradeCurrency() != null
