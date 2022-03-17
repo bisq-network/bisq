@@ -112,7 +112,7 @@ class LockedListItem implements FilterableListItem {
 
     public String getDetails() {
         return trade != null ?
-                Res.get("funds.locked.locked", trade.getShortId()) :
+                Res.get("funds.locked.locked") :
                 Res.get("shared.noDetailsAvailable");
     }
 
