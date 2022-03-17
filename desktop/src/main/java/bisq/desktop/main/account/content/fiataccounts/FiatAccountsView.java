@@ -85,7 +85,6 @@ import bisq.desktop.util.validation.ChaseQuickPayValidator;
 import bisq.desktop.util.validation.ClearXchangeValidator;
 import bisq.desktop.util.validation.F2FValidator;
 import bisq.desktop.util.validation.HalCashValidator;
-import bisq.desktop.util.validation.SepaIBANValidator;
 import bisq.desktop.util.validation.InteracETransferValidator;
 import bisq.desktop.util.validation.JapanBankTransferValidator;
 import bisq.desktop.util.validation.LengthValidator;
@@ -155,7 +154,6 @@ import static bisq.desktop.util.FormBuilder.addTopLabelListView;
 @FxmlView
 public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccountsViewModel> {
 
-    private final SepaIBANValidator sepaIBANValidator;
     private final BICValidator bicValidator;
     private final CapitualValidator capitualValidator;
     private final LengthValidator inputValidator;
@@ -187,7 +185,6 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
 
     @Inject
     public FiatAccountsView(FiatAccountsViewModel model,
-                            SepaIBANValidator sepaIBANValidator,
                             BICValidator bicValidator,
                             CapitualValidator capitualValidator,
                             LengthValidator inputValidator,
@@ -214,7 +211,6 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                             @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         super(model, accountAgeWitnessService);
 
-        this.sepaIBANValidator = sepaIBANValidator;
         this.bicValidator = bicValidator;
         this.capitualValidator = capitualValidator;
         this.inputValidator = inputValidator;
@@ -535,7 +531,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
             case PaymentMethod.SEPA_ID:
                 return new SepaForm(paymentAccount, accountAgeWitnessService, bicValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.SEPA_INSTANT_ID:
-                return new SepaInstantForm(paymentAccount, accountAgeWitnessService, sepaIBANValidator, bicValidator, inputValidator, root, gridRow, formatter);
+                return new SepaInstantForm(paymentAccount, accountAgeWitnessService, bicValidator, inputValidator, root, gridRow, formatter);
             case PaymentMethod.FASTER_PAYMENTS_ID:
                 return new FasterPaymentsForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.NATIONAL_BANK_ID:
