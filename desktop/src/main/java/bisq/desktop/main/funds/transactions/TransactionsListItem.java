@@ -71,7 +71,6 @@ class TransactionsListItem implements FilterableListItem {
     private String direction = "";
     private TxConfidenceListener txConfidenceListener;
     private boolean received;
-    private boolean detailsAvailable;
     private Coin amountAsCoin = Coin.ZERO;
     private String memo = "";
     private int confirmations = 0;
@@ -198,26 +197,25 @@ class TransactionsListItem implements FilterableListItem {
 
         if (optionalTradable.isPresent()) {
             tradable = optionalTradable.get();
-            detailsAvailable = true;
             String tradeId = tradable.getShortId();
             if (tradable instanceof OpenOffer) {
-                details = Res.get("funds.tx.createOfferFee", tradeId);
+                details = Res.get("funds.tx.createOfferFee");
             } else if (tradable instanceof Trade) {
                 Trade trade = (Trade) tradable;
                 TransactionAwareTrade transactionAwareTrade = (TransactionAwareTrade) transactionAwareTradable;
                 if (trade.getTakerFeeTxId() != null && trade.getTakerFeeTxId().equals(txId)) {
-                    details = Res.get("funds.tx.takeOfferFee", tradeId);
+                    details = Res.get("funds.tx.takeOfferFee");
                 } else {
                     Offer offer = trade.getOffer();
                     String offerFeePaymentTxID = offer.getOfferFeePaymentTxId();
                     if (offerFeePaymentTxID != null && offerFeePaymentTxID.equals(txId)) {
-                        details = Res.get("funds.tx.createOfferFee", tradeId);
+                        details = Res.get("funds.tx.createOfferFee");
                     } else if (trade.getDepositTx() != null &&
                             trade.getDepositTx().getTxId().equals(Sha256Hash.wrap(txId))) {
-                        details = Res.get("funds.tx.multiSigDeposit", tradeId);
+                        details = Res.get("funds.tx.multiSigDeposit");
                     } else if (trade.getPayoutTx() != null &&
                             trade.getPayoutTx().getTxId().equals(Sha256Hash.wrap(txId))) {
-                        details = Res.get("funds.tx.multiSigPayout", tradeId);
+                        details = Res.get("funds.tx.multiSigPayout");
 
                         if (amountAsCoin.isZero()) {
                             initialTxConfidenceVisibility = false;
@@ -226,16 +224,16 @@ class TransactionsListItem implements FilterableListItem {
                         Trade.DisputeState disputeState = trade.getDisputeState();
                         if (disputeState == Trade.DisputeState.DISPUTE_CLOSED) {
                             if (valueSentToMe.isPositive()) {
-                                details = Res.get("funds.tx.disputePayout", tradeId);
+                                details = Res.get("funds.tx.disputePayout");
                             } else {
-                                details = Res.get("funds.tx.disputeLost", tradeId);
+                                details = Res.get("funds.tx.disputeLost");
                                 initialTxConfidenceVisibility = false;
                             }
                         } else if (disputeState == Trade.DisputeState.REFUND_REQUEST_CLOSED ||
                                 disputeState == Trade.DisputeState.REFUND_REQUESTED ||
                                 disputeState == Trade.DisputeState.REFUND_REQUEST_STARTED_BY_PEER) {
                             if (valueSentToMe.isPositive()) {
-                                details = Res.get("funds.tx.refund", tradeId);
+                                details = Res.get("funds.tx.refund");
                             } else {
                                 // We have spent the deposit tx outputs to the Bisq donation address to enable
                                 // the refund process (refund agent -> reimbursement). As the funds have left our wallet
@@ -243,15 +241,15 @@ class TransactionsListItem implements FilterableListItem {
                                 // Confirmation is not known from the BitcoinJ side (not 100% clear why) as no funds
                                 // left our wallet nor we received funds. So we set indicator invisible.
                                 amountAsCoin = Coin.ZERO;
-                                details = Res.get("funds.tx.collateralForRefund", tradeId);
+                                details = Res.get("funds.tx.collateralForRefund");
                                 initialTxConfidenceVisibility = false;
                             }
                         } else {
                             if (transactionAwareTrade.isDelayedPayoutTx(txId)) {
-                                details = Res.get("funds.tx.timeLockedPayoutTx", tradeId);
+                                details = Res.get("funds.tx.timeLockedPayoutTx");
                                 initialTxConfidenceVisibility = false;
                             } else {
-                                details = Res.get("funds.tx.unknown", tradeId);
+                                details = Res.get("funds.tx.unknown");
                             }
                         }
                     }
@@ -270,7 +268,7 @@ class TransactionsListItem implements FilterableListItem {
                                 .findFirst()
                                 .orElse("") :
                         "";
-                details = Res.get("funds.tx.bsqSwapTx", tradeId);
+                details = Res.get("funds.tx.bsqSwapTx");
             }
         } else {
             if (amountAsCoin.isZero()) {
@@ -358,10 +356,6 @@ class TransactionsListItem implements FilterableListItem {
 
     public String getDetails() {
         return details;
-    }
-
-    public boolean getDetailsAvailable() {
-        return detailsAvailable;
     }
 
     public Date getDate() {

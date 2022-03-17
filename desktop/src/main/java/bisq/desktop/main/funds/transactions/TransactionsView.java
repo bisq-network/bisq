@@ -107,7 +107,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     @FXML
     TableView<TransactionsListItem> tableView;
     @FXML
-    TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, detailsColumn, addressColumn, transactionColumn, amountColumn, memoColumn, confidenceColumn, revertTxColumn;
+    TableColumn<TransactionsListItem, TransactionsListItem> dateColumn, tradeIdColumn, detailsColumn, addressColumn, transactionColumn, amountColumn, memoColumn, confidenceColumn, revertTxColumn;
     @FXML
     Label numItems;
     @FXML
@@ -178,6 +178,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     public void initialize() {
         filterBox.initialize(filteredList, tableView);
         dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
+        tradeIdColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.tradeId")));
         detailsColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.details")));
         addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
         transactionColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.txId", Res.getBaseCurrencyCode())));
@@ -190,6 +191,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("funds.tx.noTxAvailable")));
 
         setDateColumnCellFactory();
+        setTradeIdColumnCellFactory();
         setDetailsColumnCellFactory();
         setAddressColumnCellFactory();
         setTransactionColumnCellFactory();
@@ -199,13 +201,8 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         setRevertTxColumnCellFactory();
 
         dateColumn.setComparator(Comparator.comparing(TransactionsListItem::getDate));
-        detailsColumn.setComparator((o1, o2) -> {
-            String id1 = !o1.getDetails().isEmpty() ? o1.getDetails() :
-                    o1.getTradable() != null ? o1.getTradable().getId() : o1.getTxId();
-            String id2 = !o2.getDetails().isEmpty() ? o2.getDetails() :
-                    o2.getTradable() != null ? o2.getTradable().getId() : o2.getTxId();
-            return id1.compareTo(id2);
-        });
+        tradeIdColumn.setComparator(Comparator.comparing(o -> o.getTradable() != null ? o.getTradable().getId() : ""));
+        detailsColumn.setComparator(Comparator.comparing(o -> o.getDetails()));
         addressColumn.setComparator(Comparator.comparing(item -> item.getDirection() + item.getAddressString()));
         transactionColumn.setComparator(Comparator.comparing(TransactionsListItem::getTxId));
         amountColumn.setComparator(Comparator.comparing(TransactionsListItem::getAmountAsCoin));
@@ -263,12 +260,13 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
             CSVEntryConverter<TransactionsListItem> contentConverter = item -> {
                 String[] columns = new String[reportColumns];
                 columns[0] = item.getDateString();
-                columns[1] = item.getDetails();
-                columns[2] = item.getDirection() + " " + item.getAddressString();
-                columns[3] = item.getTxId();
-                columns[4] = item.getAmount();
-                columns[5] = item.getMemo() == null ? "" : item.getMemo();
-                columns[6] = item.getNumConfirmations();
+                columns[1] = item.getTradable() != null ? item.getTradable().getId() : "";
+                columns[2] = item.getDetails();
+                columns[3] = item.getDirection() + " " + item.getAddressString();
+                columns[4] = item.getTxId();
+                columns[5] = item.getAmount();
+                columns[6] = item.getMemo() == null ? "" : item.getMemo();
+                columns[7] = item.getNumConfirmations();
                 return columns;
             };
 
@@ -360,10 +358,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     private void setDateColumnCellFactory() {
         dateColumn.getStyleClass().add("first-column");
-        dateColumn.setCellValueFactory((addressListItem) ->
-                new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        dateColumn.setMaxWidth(200);
-        dateColumn.setMinWidth(dateColumn.getMaxWidth());
+        dateColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
         dateColumn.setCellFactory(
                 new Callback<>() {
 
@@ -380,6 +375,49 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                     setGraphic(new AutoTooltipLabel(item.getDateString()));
                                 } else {
                                     setGraphic(null);
+                                }
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void setTradeIdColumnCellFactory() {
+        tradeIdColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        tradeIdColumn.setCellFactory(
+                new Callback<>() {
+
+                    @Override
+                    public TableCell<TransactionsListItem, TransactionsListItem> call(TableColumn<TransactionsListItem,
+                            TransactionsListItem> column) {
+                        return new TableCell<>() {
+
+                            private HyperlinkWithIcon hyperlinkWithIcon;
+
+                            @Override
+                            public void updateItem(final TransactionsListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    if (item.getTradable() != null) {
+                                        hyperlinkWithIcon = new HyperlinkWithIcon(item.getTradable().getId(), AwesomeIcon.INFO_SIGN);
+                                        hyperlinkWithIcon.setOnAction(event -> openDetailPopup(item));
+                                        hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
+                                        setGraphic(hyperlinkWithIcon);
+                                        // If details are available its a trade tx and we don't expect any dust attack tx
+                                    } else {
+                                        if (item.isDustAttackTx()) {
+                                            hyperlinkWithIcon = new HyperlinkWithIcon(item.getTradable().getId(), AwesomeIcon.WARNING_SIGN);
+                                            hyperlinkWithIcon.setOnAction(event -> new Popup().warning(Res.get("funds.tx.dustAttackTx.popup")).show());
+                                            setGraphic(hyperlinkWithIcon);
+                                        } else {
+                                            setGraphic(null);
+                                        }
+                                    }
+                                } else {
+                                    setGraphic(null);
+                                    if (hyperlinkWithIcon != null)
+                                        hyperlinkWithIcon.setOnAction(null);
                                 }
                             }
                         };
@@ -404,25 +442,9 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    if (item.getDetailsAvailable()) {
-                                        hyperlinkWithIcon = new HyperlinkWithIcon(item.getDetails(), AwesomeIcon.INFO_SIGN);
-                                        hyperlinkWithIcon.setOnAction(event -> openDetailPopup(item));
-                                        hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
-                                        setGraphic(hyperlinkWithIcon);
-                                        // If details are available its a trade tx and we don't expect any dust attack tx
-                                    } else {
-                                        if (item.isDustAttackTx()) {
-                                            hyperlinkWithIcon = new HyperlinkWithIcon(item.getDetails(), AwesomeIcon.WARNING_SIGN);
-                                            hyperlinkWithIcon.setOnAction(event -> new Popup().warning(Res.get("funds.tx.dustAttackTx.popup")).show());
-                                            setGraphic(hyperlinkWithIcon);
-                                        } else {
-                                            setGraphic(new AutoTooltipLabel(item.getDetails()));
-                                        }
-                                    }
+                                    setGraphic(new AutoTooltipLabel(item.getDetails()));
                                 } else {
                                     setGraphic(null);
-                                    if (hyperlinkWithIcon != null)
-                                        hyperlinkWithIcon.setOnAction(null);
                                 }
                             }
                         };
