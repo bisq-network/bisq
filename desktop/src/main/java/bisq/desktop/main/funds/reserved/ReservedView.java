@@ -367,7 +367,6 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     }
 
     private void setAddressColumnCellFactory() {
-        addressColumn.getStyleClass().add("last-column");
         addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
 
         addressColumn.setCellFactory(
