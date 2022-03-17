@@ -72,7 +72,8 @@ public class PriceUtil {
     }
 
     public static InputValidator.ValidationResult isTriggerPriceValid(String triggerPriceAsString,
-                                                                      Price price,
+                                                                      double marketPrice,
+                                                                      String currencyCode,
                                                                       boolean isSellOffer,
                                                                       boolean isFiatCurrency) {
         if (triggerPriceAsString == null || triggerPriceAsString.isEmpty()) {
@@ -84,20 +85,21 @@ public class PriceUtil {
             return result;
         }
 
-        long triggerPriceAsLong = PriceUtil.getMarketPriceAsLong(triggerPriceAsString, price.getCurrencyCode());
-        long priceAsLong = price.getValue();
-        String priceAsString = FormattingUtils.formatPrice(price);
+        long triggerPriceAsLong = PriceUtil.getMarketPriceAsLong(triggerPriceAsString, currencyCode);
+        long marketPriceAsLong = PriceUtil.getMarketPriceAsLong("" +  marketPrice, currencyCode);
+        String marketPriceAsString = FormattingUtils.formatMarketPrice(marketPrice, currencyCode);
+
         if ((isSellOffer && isFiatCurrency) || (!isSellOffer && !isFiatCurrency)) {
-            if (triggerPriceAsLong >= priceAsLong) {
+            if (triggerPriceAsLong >= marketPriceAsLong) {
                 return new InputValidator.ValidationResult(false,
-                        Res.get("createOffer.triggerPrice.invalid.tooHigh", priceAsString));
+                        Res.get("createOffer.triggerPrice.invalid.tooHigh", marketPriceAsString));
             } else {
                 return new InputValidator.ValidationResult(true);
             }
         } else {
-            if (triggerPriceAsLong <= priceAsLong) {
+            if (triggerPriceAsLong <= marketPriceAsLong) {
                 return new InputValidator.ValidationResult(false,
-                        Res.get("createOffer.triggerPrice.invalid.tooLow", priceAsString));
+                        Res.get("createOffer.triggerPrice.invalid.tooLow", marketPriceAsString));
             } else {
                 return new InputValidator.ValidationResult(true);
             }
