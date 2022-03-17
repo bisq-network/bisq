@@ -115,7 +115,7 @@ class ReservedListItem implements FilterableListItem {
 
     public String getDetails() {
         return openOffer != null ?
-                Res.get("funds.reserved.reserved", openOffer.getShortId()) :
+                Res.get("funds.reserved.reserved") :
                 Res.get("shared.noDetailsAvailable");
     }
 
