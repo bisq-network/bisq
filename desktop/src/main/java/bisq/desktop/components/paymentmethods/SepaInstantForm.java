@@ -98,11 +98,7 @@ public class SepaInstantForm extends GeneralSepaForm {
         InputTextField ibanInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, IBAN);
         ibanInputTextField.setTextFormatter(new TextFormatter<>(new IBANNormalizer()));
         ibanInputTextField.setValidator(sepaIBANValidator);
-        ibanInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
-            sepaInstantAccount.setIban(newValue);
-            updateFromInputs();
 
-        });
         InputTextField bicInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, BIC);
         bicInputTextField.setValidator(bicValidator);
         bicInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -128,6 +124,9 @@ public class SepaInstantForm extends GeneralSepaForm {
         }
 
         ibanInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+            sepaInstantAccount.setIban(newValue);
+            updateFromInputs();
+
             if (ibanInputTextField.validate()) {
                 List<Country> countries = CountryUtil.getAllSepaCountries();
                 String ibanCountryCode = newValue.substring(0, 2).toUpperCase();
