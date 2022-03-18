@@ -90,7 +90,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
     @FXML
     TableView<LockedListItem> tableView;
     @FXML
-    TableColumn<LockedListItem, LockedListItem> dateColumn, detailsColumn, addressColumn, balanceColumn;
+    TableColumn<LockedListItem, LockedListItem> dateColumn, tradeIdColumn, detailsColumn, addressColumn, balanceColumn;
     @FXML
     Label numItems;
     @FXML
@@ -138,6 +138,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
     public void initialize() {
         filterBox.initialize(filteredList, tableView);
         dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
+        tradeIdColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.tradeId")));
         detailsColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.details")));
         addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
         balanceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode())));
@@ -145,13 +146,15 @@ public class LockedView extends ActivatableView<VBox, Void> {
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("funds.locked.noFunds")));
 
+        setTradeIdColumnCellFactory();
         setDateColumnCellFactory();
         setDetailsColumnCellFactory();
         setAddressColumnCellFactory();
         setBalanceColumnCellFactory();
 
         addressColumn.setComparator(Comparator.comparing(LockedListItem::getAddressString));
-        detailsColumn.setComparator(Comparator.comparing(o -> o.getTrade().getId()));
+        tradeIdColumn.setComparator(Comparator.comparing(o -> o.getTrade().getId()));
+        detailsColumn.setComparator(Comparator.comparing(o -> o.getDetails()));
         balanceColumn.setComparator(Comparator.comparing(LockedListItem::getBalance));
         dateColumn.setComparator(Comparator.comparing(o -> getTradable(o).map(Tradable::getDate).orElse(new Date(0))));
         tableView.getSortOrder().add(dateColumn);
@@ -196,9 +199,10 @@ public class LockedView extends ActivatableView<VBox, Void> {
             CSVEntryConverter<LockedListItem> contentConverter = item -> {
                 String[] columns = new String[reportColumns];
                 columns[0] = item.getDateString();
-                columns[1] = item.getDetails();
-                columns[2] = item.getAddressString();
-                columns[3] = item.getBalanceString();
+                columns[1] = item.getTrade().getId();
+                columns[2] = item.getDetails();
+                columns[3] = item.getAddressString();
+                columns[4] = item.getBalanceString();
                 return columns;
             };
 
@@ -302,9 +306,9 @@ public class LockedView extends ActivatableView<VBox, Void> {
         });
     }
 
-    private void setDetailsColumnCellFactory() {
-        detailsColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        detailsColumn.setCellFactory(new Callback<>() {
+    private void setTradeIdColumnCellFactory() {
+        tradeIdColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        tradeIdColumn.setCellFactory(new Callback<>() {
 
             @Override
             public TableCell<LockedListItem, LockedListItem> call(TableColumn<LockedListItem,
@@ -320,19 +324,43 @@ public class LockedView extends ActivatableView<VBox, Void> {
                         if (item != null && !empty) {
                             Optional<Tradable> tradableOptional = getTradable(item);
                             if (tradableOptional.isPresent()) {
-                                field = new HyperlinkWithIcon(item.getDetails(),
-                                        AwesomeIcon.INFO_SIGN);
+                                field = new HyperlinkWithIcon(item.getTrade().getId(), AwesomeIcon.INFO_SIGN);
                                 field.setOnAction(event -> openDetailPopup(item));
                                 field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                 setGraphic(field);
                             } else {
-                                setGraphic(new AutoTooltipLabel(item.getDetails()));
+                                setGraphic(new AutoTooltipLabel(item.getTrade().getId()));
                             }
 
                         } else {
                             setGraphic(null);
                             if (field != null)
                                 field.setOnAction(null);
+                        }
+                    }
+                };
+            }
+        });
+    }
+
+    private void setDetailsColumnCellFactory() {
+        detailsColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        detailsColumn.setCellFactory(new Callback<>() {
+
+            @Override
+            public TableCell<LockedListItem, LockedListItem> call(TableColumn<LockedListItem,
+                    LockedListItem> column) {
+                return new TableCell<>() {
+
+                    private HyperlinkWithIcon field;
+
+                    @Override
+                    public void updateItem(final LockedListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null && !empty) {
+                            setGraphic(new AutoTooltipLabel(item.getDetails()));
+                        } else {
+                            setGraphic(null);
                         }
                     }
                 };

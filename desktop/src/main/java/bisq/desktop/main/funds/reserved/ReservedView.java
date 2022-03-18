@@ -90,7 +90,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     @FXML
     TableView<ReservedListItem> tableView;
     @FXML
-    TableColumn<ReservedListItem, ReservedListItem> dateColumn, detailsColumn, addressColumn, balanceColumn;
+    TableColumn<ReservedListItem, ReservedListItem> dateColumn, offerIdColumn, detailsColumn, addressColumn, balanceColumn;
     @FXML
     Label numItems;
     @FXML
@@ -138,6 +138,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
     public void initialize() {
         filterBox.initialize(filteredList, tableView);
         dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
+        offerIdColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerId")));
         detailsColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.details")));
         addressColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.address")));
         balanceColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.balanceWithCur", Res.getBaseCurrencyCode())));
@@ -146,12 +147,14 @@ public class ReservedView extends ActivatableView<VBox, Void> {
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("funds.reserved.noFunds")));
 
         setDateColumnCellFactory();
+        setOfferIdColumnCellFactory();
         setDetailsColumnCellFactory();
         setAddressColumnCellFactory();
         setBalanceColumnCellFactory();
 
         addressColumn.setComparator(Comparator.comparing(ReservedListItem::getAddressString));
-        detailsColumn.setComparator(Comparator.comparing(o -> o.getOpenOffer().getId()));
+        offerIdColumn.setComparator(Comparator.comparing(o -> o.getOpenOffer().getId()));
+        detailsColumn.setComparator(Comparator.comparing(o -> o.getDetails()));
         balanceColumn.setComparator(Comparator.comparing(ReservedListItem::getBalance));
         dateColumn.setComparator(Comparator.comparing(o -> getTradable(o).map(Tradable::getDate).orElse(new Date(0))));
         tableView.getSortOrder().add(dateColumn);
@@ -196,9 +199,10 @@ public class ReservedView extends ActivatableView<VBox, Void> {
             CSVEntryConverter<ReservedListItem> contentConverter = item -> {
                 String[] columns = new String[reportColumns];
                 columns[0] = item.getDateAsString();
-                columns[1] = item.getDetails();
-                columns[2] = item.getAddressString();
-                columns[3] = item.getBalanceString();
+                columns[1] = item.getOpenOffer().getId();
+                columns[2] = item.getDetails();
+                columns[3] = item.getAddressString();
+                columns[4] = item.getBalanceString();
                 return columns;
             };
 
@@ -301,9 +305,9 @@ public class ReservedView extends ActivatableView<VBox, Void> {
         });
     }
 
-    private void setDetailsColumnCellFactory() {
-        detailsColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
-        detailsColumn.setCellFactory(new Callback<>() {
+    private void setOfferIdColumnCellFactory() {
+        offerIdColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        offerIdColumn.setCellFactory(new Callback<>() {
 
             @Override
             public TableCell<ReservedListItem, ReservedListItem> call(TableColumn<ReservedListItem,
@@ -319,7 +323,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
                         if (item != null && !empty) {
                             Optional<Tradable> tradableOptional = getTradable(item);
                             if (tradableOptional.isPresent()) {
-                                field = new HyperlinkWithIcon(item.getDetails(), AwesomeIcon.INFO_SIGN);
+                                field = new HyperlinkWithIcon(item.getOpenOffer().getId(), AwesomeIcon.INFO_SIGN);
                                 field.setOnAction(event -> openDetailPopup(item));
                                 field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                 setGraphic(field);
@@ -336,10 +340,33 @@ public class ReservedView extends ActivatableView<VBox, Void> {
                 };
             }
         });
+
+    }
+
+    private void setDetailsColumnCellFactory() {
+        detailsColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
+        detailsColumn.setCellFactory(new Callback<>() {
+
+            @Override
+            public TableCell<ReservedListItem, ReservedListItem> call(TableColumn<ReservedListItem,
+                    ReservedListItem> column) {
+                return new TableCell<>() {
+
+                    @Override
+                    public void updateItem(final ReservedListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null && !empty && getTradable(item).isPresent()) {
+                            setGraphic(new AutoTooltipLabel(item.getDetails()));
+                        } else {
+                            setGraphic(null);
+                        }
+                    }
+                };
+            }
+        });
     }
 
     private void setAddressColumnCellFactory() {
-        addressColumn.getStyleClass().add("last-column");
         addressColumn.setCellValueFactory((addressListItem) -> new ReadOnlyObjectWrapper<>(addressListItem.getValue()));
 
         addressColumn.setCellFactory(

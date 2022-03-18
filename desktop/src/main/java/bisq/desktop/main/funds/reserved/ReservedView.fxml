@@ -35,8 +35,9 @@
     <TableView fx:id="tableView" VBox.vgrow="ALWAYS">
         <columns>
             <TableColumn fx:id="dateColumn" minWidth="180" maxWidth="180"/>
-            <TableColumn fx:id="detailsColumn" minWidth="320"/>
-            <TableColumn fx:id="addressColumn" minWidth="320"/>
+            <TableColumn fx:id="offerIdColumn" minWidth="280"/>
+            <TableColumn fx:id="detailsColumn" minWidth="180"/>
+            <TableColumn fx:id="addressColumn" minWidth="280"/>
             <TableColumn fx:id="balanceColumn" minWidth="110"/>
         </columns>
     </TableView>
