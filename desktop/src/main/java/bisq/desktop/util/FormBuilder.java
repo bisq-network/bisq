@@ -48,6 +48,7 @@ import bisq.core.locale.Res;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Tuple4;
+import bisq.common.util.Utilities;
 
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
@@ -2148,7 +2149,7 @@ public class FormBuilder {
     public static Tuple3<HBox, InfoInputTextField, Label> getEditableValueBoxWithInfo(String promptText) {
         InfoInputTextField infoInputTextField = new InfoInputTextField(60);
         InputTextField input = infoInputTextField.getInputTextField();
-        input.setPromptText(promptText);
+        input.setPromptText(Utilities.toTruncatedString(promptText, 28));
 
         Label label = new AutoTooltipLabel(Res.getBaseCurrencyCode());
         label.getStyleClass().add("input-label");
