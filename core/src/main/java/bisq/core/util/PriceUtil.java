@@ -72,8 +72,7 @@ public class PriceUtil {
     }
 
     public static InputValidator.ValidationResult isTriggerPriceValid(String triggerPriceAsString,
-                                                                      double marketPrice,
-                                                                      String currencyCode,
+                                                                      MarketPrice marketPrice,
                                                                       boolean isSellOffer,
                                                                       boolean isFiatCurrency) {
         if (triggerPriceAsString == null || triggerPriceAsString.isEmpty()) {
@@ -85,9 +84,9 @@ public class PriceUtil {
             return result;
         }
 
-        long triggerPriceAsLong = PriceUtil.getMarketPriceAsLong(triggerPriceAsString, currencyCode);
-        long marketPriceAsLong = PriceUtil.getMarketPriceAsLong("" +  marketPrice, currencyCode);
-        String marketPriceAsString = FormattingUtils.formatMarketPrice(marketPrice, currencyCode);
+        long triggerPriceAsLong = PriceUtil.getMarketPriceAsLong(triggerPriceAsString, marketPrice.getCurrencyCode());
+        long marketPriceAsLong = PriceUtil.getMarketPriceAsLong("" +  marketPrice.getPrice(), marketPrice.getCurrencyCode());
+        String marketPriceAsString = FormattingUtils.formatMarketPrice(marketPrice.getPrice(), marketPrice.getCurrencyCode());
 
         if ((isSellOffer && isFiatCurrency) || (!isSellOffer && !isFiatCurrency)) {
             if (triggerPriceAsLong >= marketPriceAsLong) {

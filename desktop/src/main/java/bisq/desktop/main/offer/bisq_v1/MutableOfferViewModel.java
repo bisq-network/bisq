@@ -795,8 +795,7 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         MarketPrice marketPrice = priceFeedService.getMarketPrice(currencyCode);
 
         InputValidator.ValidationResult result = PriceUtil.isTriggerPriceValid(triggerPriceAsString,
-                marketPrice.getPrice(),
-                currencyCode,
+                marketPrice,
                 dataModel.isSellOffer(),
                 dataModel.isFiatCurrency()
         );
