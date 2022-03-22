@@ -21,10 +21,9 @@ import bisq.desktop.components.chart.ChartDataModel;
 
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.governance.BsqSupplyChange;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
-
-import bisq.common.util.Tuple2;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -32,13 +31,16 @@ import javax.inject.Singleton;
 import java.time.Instant;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -120,7 +122,7 @@ public class DaoChartDataModel extends ChartDataModel {
         }
 
         totalSupplyByInterval = getTotalBsqSupplyByInterval(
-                daoStateService.getTotalBsqSupply(),
+                daoStateService.getBsqSupplyChanges(),
                 getDateFilter()
         );
 
@@ -195,10 +197,25 @@ public class DaoChartDataModel extends ChartDataModel {
     // Aggregated collection data by interval
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Map<Long, Long> getTotalBsqSupplyByInterval(Set<Tuple2<Long, Long>> bsqSupply, Predicate<Long> dateFilter) {
-        return bsqSupply.stream()
-                .filter(i -> dateFilter.test(i.first))
-                .collect(Collectors.toMap(i -> i.first, i -> i.second));
+    private Map<Long, Long> getTotalBsqSupplyByInterval(Stream<BsqSupplyChange> bsqSupplyChanges, Predicate<Long> dateFilter) {
+        AtomicLong supply = new AtomicLong(372540100L); // Cycle 1 (15 APR 2019) supply
+
+        return bsqSupplyChanges
+                .collect(Collectors.groupingBy(tx -> toTimeInterval(Instant.ofEpochMilli(tx.getTime()))))
+                .entrySet()
+                .stream()
+                .sorted(Comparator.comparingLong(e -> e.getKey()))
+                .map(e -> new BsqSupplyChange(
+                        e.getKey(),
+                        supply.addAndGet(e
+                                .getValue()
+                                .stream()
+                                .mapToLong(BsqSupplyChange::getValue)
+                                .sum()
+                        ))
+                )
+                .filter(t -> dateFilter.test(t.getTime()))
+                .collect(Collectors.toMap(BsqSupplyChange::getTime, BsqSupplyChange::getValue));
     }
 
     private Map<Long, Long> getIssuedBsqByInterval(Set<Issuance> issuanceSet, Predicate<Long> dateFilter) {
