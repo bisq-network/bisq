@@ -198,7 +198,9 @@ public class DaoChartDataModel extends ChartDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private Map<Long, Long> getTotalBsqSupplyByInterval(Stream<BsqSupplyChange> bsqSupplyChanges, Predicate<Long> dateFilter) {
-        AtomicLong supply = new AtomicLong(372540100L); // Cycle 1 (15 APR 2019) supply
+        AtomicLong supply = new AtomicLong(
+                DaoEconomyHistoricalData.TOTAL_SUPPLY_BY_CYCLE_DATE.get(1555340856L)
+        );
 
         return bsqSupplyChanges
                 .collect(Collectors.groupingBy(tx -> toTimeInterval(Instant.ofEpochMilli(tx.getTime()))))
@@ -275,6 +277,7 @@ public class DaoChartDataModel extends ChartDataModel {
         // Key is start date of the cycle in epoch seconds, value is reimbursement amount
         public final static Map<Long, Long> REIMBURSEMENTS_BY_CYCLE_DATE = new HashMap<>();
         public final static Map<Long, Long> COMPENSATIONS_BY_CYCLE_DATE = new HashMap<>();
+        public final static Map<Long, Long> TOTAL_SUPPLY_BY_CYCLE_DATE = new HashMap<>();
 
         static {
             REIMBURSEMENTS_BY_CYCLE_DATE.put(1571349571L, 60760L);
@@ -310,6 +313,8 @@ public class DaoChartDataModel extends ChartDataModel {
             COMPENSATIONS_BY_CYCLE_DATE.put(1599175867L, 6086442L);
             COMPENSATIONS_BY_CYCLE_DATE.put(1601861442L, 5615973L);
             COMPENSATIONS_BY_CYCLE_DATE.put(1604845863L, 7782667L);
+
+            TOTAL_SUPPLY_BY_CYCLE_DATE.put(1555340856L, 372540100L);
         }
     }
 }
