@@ -336,11 +336,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             tradeFeeInBsqToggle.setManaged(false);
             buyBsqBox.setVisible(false);
             buyBsqBox.setManaged(false);
-        }
-
-        if (!model.isShowBuyBsqHint()) {
-            buyBsqBox.setVisible(false);
-            buyBsqBox.setManaged(false);
+        } else {
+            buyBsqBox.setVisible(model.isShowBuyBsqHint());
+            buyBsqBox.setManaged(model.isShowBuyBsqHint());
         }
     }
 
@@ -705,7 +703,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         errorMessageSubscription = EasyBind.subscribe(model.errorMessage, newValue -> {
             if (newValue != null) {
                 new Popup().error(Res.get("takeOffer.error.message", model.errorMessage.get()) + "\n\n" +
-                        Res.get("popup.error.tryRestart"))
+                                Res.get("popup.error.tryRestart"))
                         .onClose(() -> {
                             errorPopupDisplayed.set(true);
                             model.resetErrorMessage();
