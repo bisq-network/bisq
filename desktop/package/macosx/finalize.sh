@@ -20,6 +20,25 @@ rm -r $target_dir
 
 mkdir -p $target_dir
 
+# Save the current working dir (assumed to be "desktop"), and
+# build the API daemon and cli distributions in the target dir.
+script_working_directory=$(pwd)
+# Copy the build's cli and daemon tarballs to target_dir.
+cp -v ../cli/build/distributions/cli.tar $target_dir
+cp -v ../daemon/build/distributions/daemon.tar $target_dir
+# Copy the cli and daemon zip creation scripts to target_dir.
+cp -v ../cli/package/create-cli-dist.sh $target_dir
+cp -v ../daemon/package/create-daemon-dist.sh $target_dir
+# Run the zip creation scripts in target_dir.
+cd $target_dir
+./create-cli-dist.sh $version
+./create-daemon-dist.sh $version
+# Clean up.
+rm -v create-cli-dist.sh
+rm -v create-daemon-dist.sh
+# Done building cli and daemon zip files;  return to the original current working directory.
+cd $script_working_directory
+
 # sig key mkarrer
 cp "$target_dir/../../package/F379A1C6.asc" "$target_dir/"
 # sig key cbeams
