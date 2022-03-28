@@ -37,7 +37,7 @@ cd $target_dir
 rm -v create-cli-dist.sh
 rm -v create-daemon-dist.sh
 # Done building cli and daemon zip files;  return to the original current working directory.
-cd $script_working_directory
+cd "$script_working_directory"
 
 # sig key mkarrer
 cp "$target_dir/../../package/F379A1C6.asc" "$target_dir/"
