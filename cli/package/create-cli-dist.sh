@@ -1,6 +1,11 @@
 #! /bin/bash
 
-export BISQ_RELEASE_NAME="bisq-cli-release"
+VERSION="$1"
+if [[ -z "$VERSION" ]]; then
+   VERSION="SNAPSHOT"
+fi
+
+export BISQ_RELEASE_NAME="bisq-cli-$VERSION"
 export BISQ_RELEASE_ZIP_NAME="$BISQ_RELEASE_NAME.zip"
 
 export GRADLE_DIST_NAME="cli.tar"
