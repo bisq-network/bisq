@@ -31,9 +31,11 @@ import bisq.core.user.Preferences;
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.util.Hex;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Utils;
+import org.bitcoinj.script.Script;
 
 import com.google.inject.Inject;
 
@@ -75,7 +77,7 @@ public class RpcService {
     private static final int ACTIVATE_HARD_FORK_2_HEIGHT_MAINNET = 680300;
     private static final int ACTIVATE_HARD_FORK_2_HEIGHT_TESTNET = 1943000;
     private static final int ACTIVATE_HARD_FORK_2_HEIGHT_REGTEST = 1;
-    private static final Range<Integer> SUPPORTED_NODE_VERSION_RANGE = Range.closedOpen(180000, 210100);
+    private static final Range<Integer> SUPPORTED_NODE_VERSION_RANGE = Range.closedOpen(180000, 220100);
 
     private final String rpcUser;
     private final String rpcPassword;
@@ -350,9 +352,14 @@ public class RpcService {
                                     }
                                 }
                             }
-                            // We don't support raw MS which are the only case where scriptPubKey.getAddresses()>1
-                            String address = scriptPubKey.getAddresses() != null &&
-                                    scriptPubKey.getAddresses().size() == 1 ? scriptPubKey.getAddresses().get(0) : null;
+                            String address = null;
+                            try {
+                                address = new Script(Hex.decode(scriptPubKey.getHex()))
+                                        .getToAddress(Config.baseCurrencyNetworkParameters()).toString();
+                            } catch (Exception ex) {
+                                // certain scripts e.g. OP_RETURN do not resolve to an address
+                                // in that case do not provide an address to the RawTxOutput
+                            }
                             PubKeyScript pubKeyScript = new PubKeyScript(scriptPubKey);
                             return new RawTxOutput(rawDtoTxOutput.getN(),
                                     BigDecimal.valueOf(rawDtoTxOutput.getValue()).movePointRight(8).longValueExact(),
