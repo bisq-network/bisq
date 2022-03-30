@@ -66,6 +66,9 @@ cp "$win64/$exe" "$target_dir/$exe64"
 rpi="jar-lib-for-raspberry-pi-$version.zip"
 cp "$macos/$rpi" "$target_dir/"
 
+cli="bisq-cli-$version.zip"
+daemon="bisq-daemon-$version.zip"
+
 # create file with jar signatures
 cat "$macos/desktop-$version-all-mac.jar.SHA-256" \
 "$linux64/desktop-$version-all-linux.jar.SHA-256" \
@@ -83,6 +86,8 @@ gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $deb64.asc --detac
 gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $rpm64.asc --detach-sig --armor $rpm64
 gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $exe64.asc --detach-sig --armor $exe64
 gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $rpi.asc --detach-sig --armor $rpi
+gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $cli.asc --detach-sig --armor $cli
+gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $daemon.asc --detach-sig --armor $daemon
 
 echo Verify signatures
 gpg --digest-algo SHA256 --verify $dmg{.asc*,}
@@ -90,6 +95,8 @@ gpg --digest-algo SHA256 --verify $deb64{.asc*,}
 gpg --digest-algo SHA256 --verify $rpm64{.asc*,}
 gpg --digest-algo SHA256 --verify $exe64{.asc*,}
 gpg --digest-algo SHA256 --verify $rpi{.asc*,}
+gpg --digest-algo SHA256 --verify $cli{.asc*,}
+gpg --digest-algo SHA256 --verify $daemon{.asc*,}
 
 mkdir $win64/$version
 cp -r . $win64/$version
