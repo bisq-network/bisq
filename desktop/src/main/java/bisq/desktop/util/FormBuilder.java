@@ -2171,9 +2171,9 @@ public class FormBuilder {
         return new Tuple3<>(box, infoInputTextField, label);
     }
 
-    public static Tuple3<HBox, TextField, Label> getNonEditableValueBox() {
+    public static Tuple3<HBox, InputTextField, Label> getNonEditableValueBox() {
         final Tuple3<HBox, InputTextField, Label> editableValueBox = getEditableValueBox("");
-        final TextField textField = editableValueBox.second;
+        final InputTextField textField = editableValueBox.second;
 
         textField.setDisable(true);
 
