@@ -17,6 +17,7 @@
 
 package bisq.core.offer.bsq_swap;
 
+import bisq.core.monetary.Price;
 import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferPayloadBase;
 import bisq.core.payment.BsqSwapAccount;
@@ -60,6 +61,21 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                 original.getAmount(),
                 original.getMinAmount(),
                 proofOfWork,
+                original.getExtraDataMap(),
+                original.getVersionNr(),
+                original.getProtocolVersion()
+        );
+    }
+    public static BsqSwapOfferPayload from(BsqSwapOfferPayload original, Price price) {
+        return new BsqSwapOfferPayload(original.getId(),
+                original.getDate(),
+                original.getOwnerNodeAddress(),
+                original.getPubKeyRing(),
+                original.getDirection(),
+                price.getValue(),
+                original.getAmount(),
+                original.getMinAmount(),
+                original.proofOfWork,
                 original.getExtraDataMap(),
                 original.getVersionNr(),
                 original.getProtocolVersion()

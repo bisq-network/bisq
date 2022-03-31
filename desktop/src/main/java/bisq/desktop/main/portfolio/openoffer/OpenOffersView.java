@@ -797,21 +797,36 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    if (button == null) {
-                                        button = getRegularIconButton(MaterialDesignIcon.SHIELD_HALF_FULL);
-                                        boolean triggerPriceSet = item.getOpenOffer().getTriggerPrice() > 0;
-                                        button.setVisible(triggerPriceSet);
-
-                                        if (model.dataModel.wasTriggered(item.getOpenOffer())) {
-                                            button.getGraphic().getStyleClass().add("warning");
-                                            button.setTooltip(new Tooltip(Res.get("openOffer.triggered")));
-                                        } else {
-                                            button.getGraphic().getStyleClass().remove("warning");
-                                            button.setTooltip(new Tooltip(Res.get("openOffer.triggerPrice", item.getTriggerPriceAsString())));
+                                    if (item.getOffer().isBsqSwapOffer()) {
+                                        if (button != null) {
+                                            button.setOnAction(null);
+                                            button = null;
                                         }
-                                        setGraphic(button);
+                                        if (item.getOpenOffer().isBsqSwapOfferHasMissingFunds()) {
+                                            Label label = new Label();
+                                            Text icon = getRegularIconForLabel(MaterialDesignIcon.EYE_OFF, label, "opaque-icon");
+                                            Tooltip.install(icon, new Tooltip(Res.get("openOffer.bsqSwap.missingFunds")));
+                                            setGraphic(icon);
+                                        } else {
+                                            setGraphic(null);
+                                        }
+                                    } else {
+                                        if (button == null) {
+                                            button = getRegularIconButton(MaterialDesignIcon.SHIELD_HALF_FULL);
+                                            boolean triggerPriceSet = item.getOpenOffer().getTriggerPrice() > 0;
+                                            button.setVisible(triggerPriceSet);
+
+                                            if (model.dataModel.wasTriggered(item.getOpenOffer())) {
+                                                button.getGraphic().getStyleClass().add("warning");
+                                                button.setTooltip(new Tooltip(Res.get("openOffer.triggered")));
+                                            } else {
+                                                button.getGraphic().getStyleClass().remove("warning");
+                                                button.setTooltip(new Tooltip(Res.get("openOffer.triggerPrice", item.getTriggerPriceAsString())));
+                                            }
+                                            setGraphic(button);
+                                        }
+                                        button.setOnAction(event -> onEditOpenOffer(item.getOpenOffer()));
                                     }
-                                    button.setOnAction(event -> onEditOpenOffer(item.getOpenOffer()));
                                 } else {
                                     setGraphic(null);
                                     if (button != null) {
@@ -839,26 +854,11 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    if (item.getOffer().isBsqSwapOffer()) {
-                                        if (button != null) {
-                                            button.setOnAction(null);
-                                            button = null;
-                                        }
-                                        if (item.getOpenOffer().isBsqSwapOfferHasMissingFunds()) {
-                                            Label label = new Label();
-                                            Text icon = getRegularIconForLabel(MaterialDesignIcon.EYE_OFF, label, "opaque-icon");
-                                            Tooltip.install(icon, new Tooltip(Res.get("openOffer.bsqSwap.missingFunds")));
-                                            setGraphic(icon);
-                                        } else {
-                                            setGraphic(null);
-                                        }
-                                    } else {
-                                        if (button == null) {
-                                            button = getRegularIconButton(MaterialDesignIcon.PENCIL);
-                                            button.setTooltip(new Tooltip(Res.get("shared.editOffer")));
-                                            button.setOnAction(event -> onEditOpenOffer(item.getOpenOffer()));
-                                            setGraphic(button);
-                                        }
+                                    if (button == null) {
+                                        button = getRegularIconButton(MaterialDesignIcon.PENCIL);
+                                        button.setTooltip(new Tooltip(Res.get("shared.editOffer")));
+                                        button.setOnAction(event -> onEditOpenOffer(item.getOpenOffer()));
+                                        setGraphic(button);
                                     }
                                 } else {
                                     setGraphic(null);
