@@ -272,11 +272,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                 tradeFeeInBsqToggle.setManaged(false);
                 buyBsqBox.setVisible(false);
                 buyBsqBox.setManaged(false);
-            }
-
-            if (!model.isShowBuyBsqHint()) {
-                buyBsqBox.setVisible(false);
-                buyBsqBox.setManaged(false);
+            } else {
+                buyBsqBox.setVisible(model.isShowBuyBsqHint());
+                buyBsqBox.setManaged(model.isShowBuyBsqHint());
             }
 
             Label popOverLabel = OfferViewUtil.createPopOverLabel(Res.get("createOffer.triggerPrice.tooltip"));
