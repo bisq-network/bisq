@@ -358,7 +358,9 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
                 currencyComboBox.getSelectionModel().select(SHOW_ALL);
             model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
             paymentMethodComboBox.setAutocompleteItems(model.getPaymentMethods());
+            model.updateSelectedPaymentMethod();
             updatePaymentMethodComboBoxEditor();
+            model.onSetPaymentMethod(paymentMethodComboBox.getSelectionModel().getSelectedItem());
         });
         updateCurrencyComboBoxFromModel();
 

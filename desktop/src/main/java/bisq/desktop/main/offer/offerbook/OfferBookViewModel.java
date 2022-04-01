@@ -702,6 +702,11 @@ abstract class OfferBookViewModel extends ActivatableViewModel {
         tradeCurrencyCode.set(selectedTradeCurrency.getCode());
     }
 
+    public void updateSelectedPaymentMethod() {
+        showAllPaymentMethods = getPaymentMethods().stream().noneMatch(paymentMethod ->
+                paymentMethod.equals(selectedPaymentMethod));
+    }
+
     abstract String getCurrencyCodeFromPreferences(OfferDirection direction);
 
     public OpenOffer getOpenOffer(Offer offer) {
