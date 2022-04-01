@@ -260,23 +260,27 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                     btcOfferBookTab.setContent(btcOfferBookView.getRoot());
                     btcOfferBookView.setOfferActionHandler(offerActionHandler);
                     btcOfferBookView.setDirection(direction);
+                    tabPane.getSelectionModel().select(btcOfferBookTab);
                     btcOfferBookView.onTabSelected(true);
                 } else if (viewClass == BsqOfferBookView.class) {
                     bsqOfferBookView = (OfferBookView) viewLoader.load(BsqOfferBookView.class);
                     bsqOfferBookView.setOfferActionHandler(offerActionHandler);
                     bsqOfferBookView.setDirection(direction);
+                    tabPane.getSelectionModel().select(bsqOfferBookTab);
                     bsqOfferBookTab.setContent(bsqOfferBookView.getRoot());
                     bsqOfferBookView.onTabSelected(true);
                 } else if (viewClass == TopAltcoinOfferBookView.class) {
                     topAltcoinOfferBookView = (OfferBookView) viewLoader.load(TopAltcoinOfferBookView.class);
                     topAltcoinOfferBookView.setOfferActionHandler(offerActionHandler);
                     topAltcoinOfferBookView.setDirection(direction);
+                    tabPane.getSelectionModel().select(topAltcoinOfferBookTab);
                     topAltcoinOfferBookTab.setContent(topAltcoinOfferBookView.getRoot());
                     topAltcoinOfferBookView.onTabSelected(true);
                 } else if (viewClass == OtherOfferBookView.class) {
                     otherOfferBookView = (OfferBookView) viewLoader.load(OtherOfferBookView.class);
                     otherOfferBookView.setOfferActionHandler(offerActionHandler);
                     otherOfferBookView.setDirection(direction);
+                    tabPane.getSelectionModel().select(otherOfferBookTab);
                     otherOfferBookTab.setContent(otherOfferBookView.getRoot());
                     otherOfferBookView.onTabSelected(true);
                 }

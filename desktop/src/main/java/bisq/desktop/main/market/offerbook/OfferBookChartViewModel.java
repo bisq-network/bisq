@@ -293,7 +293,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         // the buy column is actually the sell column and vice versa. To maintain the expected
         // ordering, we have to reverse the price comparator.
         boolean isCrypto = CurrencyUtil.isCryptoCurrency(getCurrencyCode());
-        if (isCrypto) offerPriceComparator = offerPriceComparator.reversed();
+//        if (isCrypto) offerPriceComparator = offerPriceComparator.reversed();
 
         // Offer amounts are used for the secondary sort. They are sorted from high to low.
         Comparator<Offer> offerAmountComparator = Comparator.comparing(Offer::getAmount).reversed();
@@ -305,10 +305,12 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 offerPriceComparator
                         .thenComparing(offerAmountComparator);
 
+        OfferDirection buyOfferDirection = isCrypto ? OfferDirection.SELL : OfferDirection.BUY;
+
         List<Offer> allBuyOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
                 .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
-                        && e.getDirection().equals(OfferDirection.BUY))
+                        && e.getDirection().equals(buyOfferDirection))
                 .sorted(buyOfferSortComparator)
                 .collect(Collectors.toList());
 
@@ -334,10 +336,12 @@ class OfferBookChartViewModel extends ActivatableViewModel {
 
         buildChartAndTableEntries(allBuyOffers, OfferDirection.BUY, buyData, topBuyOfferList);
 
+        OfferDirection sellOfferDirection = isCrypto ? OfferDirection.BUY : OfferDirection.SELL;
+
         List<Offer> allSellOffers = offerBookListItems.stream()
                 .map(OfferBookListItem::getOffer)
                 .filter(e -> e.getCurrencyCode().equals(selectedTradeCurrencyProperty.get().getCode())
-                        && e.getDirection().equals(OfferDirection.SELL))
+                        && e.getDirection().equals(sellOfferDirection))
                 .sorted(sellOfferSortComparator)
                 .collect(Collectors.toList());
 
@@ -377,17 +381,10 @@ class OfferBookChartViewModel extends ActivatableViewModel {
                 offerTableListTemp.add(new OfferListItem(offer, accumulatedAmount));
 
                 double priceAsDouble = (double) price.getValue() / LongMath.pow(10, price.smallestUnitExponent());
-                if (CurrencyUtil.isCryptoCurrency(getCurrencyCode())) {
-                    if (direction.equals(OfferDirection.SELL))
-                        data.add(0, new XYChart.Data<>(priceAsDouble, accumulatedAmount));
-                    else
-                        data.add(new XYChart.Data<>(priceAsDouble, accumulatedAmount));
-                } else {
-                    if (direction.equals(OfferDirection.BUY))
-                        data.add(0, new XYChart.Data<>(priceAsDouble, accumulatedAmount));
-                    else
-                        data.add(new XYChart.Data<>(priceAsDouble, accumulatedAmount));
-                }
+                if (direction.equals(OfferDirection.BUY))
+                    data.add(0, new XYChart.Data<>(priceAsDouble, accumulatedAmount));
+                else
+                    data.add(new XYChart.Data<>(priceAsDouble, accumulatedAmount));
             }
         }
         offerTableList.setAll(offerTableListTemp);

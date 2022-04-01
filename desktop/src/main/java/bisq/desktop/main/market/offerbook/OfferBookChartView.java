@@ -29,7 +29,14 @@ import bisq.desktop.components.PeerInfoIconSmall;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.offer.BuyOfferView;
 import bisq.desktop.main.offer.SellOfferView;
+import bisq.desktop.main.offer.offerbook.BsqOfferBookView;
+import bisq.desktop.main.offer.offerbook.BsqOfferBookViewModel;
+import bisq.desktop.main.offer.offerbook.BtcOfferBookView;
 import bisq.desktop.main.offer.offerbook.OfferBookListItem;
+import bisq.desktop.main.offer.offerbook.OfferBookView;
+import bisq.desktop.main.offer.offerbook.OtherOfferBookView;
+import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookView;
+import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookViewModel;
 import bisq.desktop.util.CurrencyListItem;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
@@ -85,9 +92,7 @@ import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 
-import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 
 import javafx.util.Callback;
 import javafx.util.StringConverter;
@@ -118,19 +123,19 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private Subscription tradeCurrencySubscriber;
     private final StringProperty volumeColumnLabel = new SimpleStringProperty();
     private final StringProperty priceColumnLabel = new SimpleStringProperty();
-    private AutoTooltipButton leftButton;
-    private AutoTooltipButton rightButton;
+    private AutoTooltipButton sellButton;
+    private AutoTooltipButton buyButton;
     private ChangeListener<Number> selectedTabIndexListener;
     private SingleSelectionModel<Tab> tabPaneSelectionModel;
-    private Label leftHeaderLabel, rightHeaderLabel;
+    private Label sellHeaderLabel, buyHeaderLabel;
     private ChangeListener<OfferListItem> sellTableRowSelectionListener, buyTableRowSelectionListener;
-    private HBox bottomHBox;
     private ListChangeListener<OfferBookListItem> changeListener;
     private ListChangeListener<CurrencyListItem> currencyListItemsListener;
     private final double dataLimitFactor = 3;
     private final double initialOfferTableViewHeight = 121;
-    private final double pixelsPerOfferTableRow = (initialOfferTableViewHeight - 30) / 5.0; // initial visible row count=5, header height=30
     private final Function<Double, Double> offerTableViewHeight = (screenSize) -> {
+        // initial visible row count=5, header height=30
+        double pixelsPerOfferTableRow = (initialOfferTableViewHeight - 30) / 5.0;
         int extraRows = screenSize <= INITIAL_WINDOW_HEIGHT ? 0 : (int) ((screenSize - INITIAL_WINDOW_HEIGHT) / pixelsPerOfferTableRow);
         return extraRows == 0 ? initialOfferTableViewHeight : Math.ceil(initialOfferTableViewHeight + ((extraRows + 1) * pixelsPerOfferTableRow));
     };
@@ -169,13 +174,13 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         buyOfferTableView = tupleBuy.first;
         sellOfferTableView = tupleSell.first;
 
-        leftButton = (AutoTooltipButton) tupleBuy.third;
-        rightButton = (AutoTooltipButton) tupleSell.third;
+        sellButton = (AutoTooltipButton) tupleBuy.third;
+        buyButton = (AutoTooltipButton) tupleSell.third;
 
-        leftHeaderLabel = tupleBuy.fourth;
-        rightHeaderLabel = tupleSell.fourth;
+        sellHeaderLabel = tupleBuy.fourth;
+        buyHeaderLabel = tupleSell.fourth;
 
-        bottomHBox = new HBox();
+        HBox bottomHBox = new HBox();
         bottomHBox.setSpacing(20); //30
         bottomHBox.setAlignment(Pos.CENTER);
         VBox.setMargin(bottomHBox, new Insets(-5, 0, 0, 0));
@@ -225,15 +230,15 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     String code = tradeCurrency.getCode();
                     volumeColumnLabel.set(Res.get("offerbook.volume", code));
                     xAxis.setTickLabelFormatter(new StringConverter<>() {
-                        int cryptoPrecision = 3;
-                        DecimalFormat df = new DecimalFormat(",###");
+                        final int cryptoPrecision = 3;
+                        final DecimalFormat df = new DecimalFormat(",###");
 
                         @Override
                         public String toString(Number object) {
                             final double doubleValue = (double) object;
                             if (CurrencyUtil.isCryptoCurrency(model.getCurrencyCode())) {
                                 final String withCryptoPrecision = FormattingUtils.formatRoundedDoubleWithPrecision(doubleValue, cryptoPrecision);
-                                if (withCryptoPrecision.substring(0, 3).equals("0.0")) {
+                                if (withCryptoPrecision.startsWith("0.0")) {
                                     return FormattingUtils.formatRoundedDoubleWithPrecision(doubleValue, 8).replaceFirst("0+$", "");
                                 } else {
                                     return withCryptoPrecision.replaceFirst("0+$", "");
@@ -249,37 +254,21 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                         }
                     });
 
-                    if (CurrencyUtil.isCryptoCurrency(code)) {
-                        if (bottomHBox.getChildren().size() == 2 && bottomHBox.getChildren().get(0).getUserData().equals(OfferDirection.BUY.name())) {
-                            bottomHBox.getChildren().get(0).toFront();
-                            reverseTableColumns();
-                        }
+                    String viewBaseCurrencyCode = CurrencyUtil.isCryptoCurrency(code) ? code : Res.getBaseCurrencyCode();
+                    String viewPriceCurrencyCode = CurrencyUtil.isCryptoCurrency(code) ? Res.getBaseCurrencyCode() : code;
 
-                        leftHeaderLabel.setText(Res.get("market.offerBook.buyOffersHeaderLabel", code));
-                        leftButton.updateText(Res.get("market.offerBook.buyAltcoin", code, Res.getBaseCurrencyCode()));
+                    sellHeaderLabel.setText(Res.get("market.offerBook.sellOffersHeaderLabel", viewBaseCurrencyCode));
+                    sellButton.updateText(Res.get("market.offerBook.sellWith", viewBaseCurrencyCode, viewPriceCurrencyCode));
 
-                        rightHeaderLabel.setText(Res.get("market.offerBook.sellOffersHeaderLabel", code));
-                        rightButton.updateText(Res.get("market.offerBook.sellAltcoin", code, Res.getBaseCurrencyCode()));
+                    buyHeaderLabel.setText(Res.get("market.offerBook.buyOffersHeaderLabel", viewBaseCurrencyCode));
+                    buyButton.updateText(Res.get("market.offerBook.buyWith", viewBaseCurrencyCode, viewPriceCurrencyCode));
 
-                        priceColumnLabel.set(Res.get("shared.priceWithCur", Res.getBaseCurrencyCode()));
-                    } else {
-                        if (bottomHBox.getChildren().size() == 2 && bottomHBox.getChildren().get(0).getUserData().equals(OfferDirection.SELL.name())) {
-                            bottomHBox.getChildren().get(0).toFront();
-                            reverseTableColumns();
-                        }
+                    priceColumnLabel.set(Res.get("shared.priceWithCur", viewPriceCurrencyCode));
 
-                        leftHeaderLabel.setText(Res.get("market.offerBook.sellOffersHeaderLabel", Res.getBaseCurrencyCode()));
-                        leftButton.updateText(Res.get("market.offerBook.sellWithFiat", Res.getBaseCurrencyCode(), code));
-
-                        rightHeaderLabel.setText(Res.get("market.offerBook.buyOffersHeaderLabel", Res.getBaseCurrencyCode()));
-                        rightButton.updateText(Res.get("market.offerBook.buyWithFiat", Res.getBaseCurrencyCode(), code));
-
-                        priceColumnLabel.set(Res.get("shared.priceWithCur", code));
-                    }
                     xAxis.setLabel(CurrencyUtil.getPriceWithCurrencyCode(code));
 
-                    seriesBuy.setName(leftHeaderLabel.getText() + "   ");
-                    seriesSell.setName(rightHeaderLabel.getText());
+                    seriesBuy.setName(sellHeaderLabel.getText() + "   ");
+                    seriesSell.setName(buyHeaderLabel.getText());
                 });
 
         buyOfferTableView.setItems(model.getTopBuyOfferList());
@@ -295,7 +284,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     }
 
     static class CurrencyListItemStringConverter extends StringConverter<CurrencyListItem> {
-        private ComboBox<CurrencyListItem> comboBox;
+        private final ComboBox<CurrencyListItem> comboBox;
 
         CurrencyListItemStringConverter(ComboBox<CurrencyListItem> comboBox) {
             this.comboBox = comboBox;
@@ -390,33 +379,30 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         seriesSell.getData().clear();
         areaChart.getData().clear();
 
-        boolean isCrypto = CurrencyUtil.isCryptoCurrency(model.getCurrencyCode());
-
-        // crypto: left-sell, right-buy. fiat: left-buy, right-sell
-        seriesBuy.getData().addAll(filterOutliersBuy(model.getBuyData(), isCrypto));
-        seriesSell.getData().addAll(filterOutliersSell(model.getSellData(), isCrypto));
+        seriesBuy.getData().addAll(filterOutliersBuy(model.getBuyData()));
+        seriesSell.getData().addAll(filterOutliersSell(model.getSellData()));
 
         areaChart.getData().addAll(List.of(seriesBuy, seriesSell));
     }
 
-    List<XYChart.Data<Number, Number>> filterOutliersBuy(List<XYChart.Data<Number, Number>> buy, boolean isCrypto) {
-        List<Double> mnmx = isCrypto ? minMaxFilterRight(buy) : minMaxFilterLeft(buy);
-        if (mnmx.get(0).doubleValue() == Double.MAX_VALUE ||
-                mnmx.get(1).doubleValue() == Double.MIN_VALUE) { // no filtering
+    List<XYChart.Data<Number, Number>> filterOutliersBuy(List<XYChart.Data<Number, Number>> buy) {
+        List<Double> mnmx = minMaxFilterLeft(buy);
+        if (mnmx.get(0) == Double.MAX_VALUE ||
+                mnmx.get(1) == Double.MIN_VALUE) { // no filtering
             return buy;
         }
         // apply filtering
-        return isCrypto ? filterRight(buy, mnmx.get(0)) : filterLeft(buy, mnmx.get(1));
+        return filterLeft(buy, mnmx.get(1));
     }
 
-    List<XYChart.Data<Number, Number>> filterOutliersSell(List<XYChart.Data<Number, Number>> sell, boolean isCrypto) {
-        List<Double> mnmx = isCrypto ? minMaxFilterLeft(sell) : minMaxFilterRight(sell);
-        if (mnmx.get(0).doubleValue() == Double.MAX_VALUE ||
-                mnmx.get(1).doubleValue() == Double.MIN_VALUE) { // no filtering
+    List<XYChart.Data<Number, Number>> filterOutliersSell(List<XYChart.Data<Number, Number>> sell) {
+        List<Double> mnmx = minMaxFilterRight(sell);
+        if (mnmx.get(0) == Double.MAX_VALUE ||
+                mnmx.get(1) == Double.MIN_VALUE) { // no filtering
             return sell;
         }
         // apply filtering
-        return isCrypto ? filterLeft(sell, mnmx.get(1)) : filterRight(sell, mnmx.get(0));
+        return filterRight(sell, mnmx.get(0));
     }
 
     private List<Double> minMaxFilterLeft(List<XYChart.Data<Number, Number>> data) {
@@ -674,12 +660,35 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         button.setMinHeight(32);
         button.setId(isSellOffer ? "buy-button-big" : "sell-button-big");
         button.setOnAction(e -> {
-            if (isSellOffer) {
-                model.preferences.setBuyScreenCurrencyCode(model.getCurrencyCode());
-                navigation.navigateTo(MainView.class, BuyOfferView.class);
+            Class<? extends OfferBookView<?, ?>> offerBookViewClazz;
+            if (CurrencyUtil.isFiatCurrency(model.getCurrencyCode())) {
+                offerBookViewClazz = BtcOfferBookView.class;
+            } else if (model.getCurrencyCode().equals(BsqOfferBookViewModel.BSQ.getCode())) {
+                offerBookViewClazz = BsqOfferBookView.class;
+            } else if (model.getCurrencyCode().equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode())) {
+                offerBookViewClazz = TopAltcoinOfferBookView.class;
             } else {
-                model.preferences.setSellScreenCurrencyCode(model.getCurrencyCode());
-                navigation.navigateTo(MainView.class, SellOfferView.class);
+                offerBookViewClazz = OtherOfferBookView.class;
+            }
+
+            if (isSellOffer) {
+                if (CurrencyUtil.isFiatCurrency(model.getCurrencyCode())) {
+                    model.preferences.setBuyScreenCurrencyCode(model.getCurrencyCode());
+                } else if (!model.getCurrencyCode().equals(BsqOfferBookViewModel.BSQ.getCode()) &&
+                        model.getCurrencyCode().equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode())) {
+                    model.preferences.setBuyScreenCryptoCurrencyCode(model.getCurrencyCode());
+                }
+
+                navigation.navigateTo(MainView.class, BuyOfferView.class, offerBookViewClazz);
+            } else {
+                if (CurrencyUtil.isFiatCurrency(model.getCurrencyCode())) {
+                    model.preferences.setSellScreenCurrencyCode(model.getCurrencyCode());
+                } else if (!model.getCurrencyCode().equals(BsqOfferBookViewModel.BSQ.getCode()) &&
+                        model.getCurrencyCode().equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode())) {
+                    model.preferences.setSellScreenCryptoCurrencyCode(model.getCurrencyCode());
+                }
+
+                navigation.navigateTo(MainView.class, SellOfferView.class, offerBookViewClazz);
             }
         });
 
@@ -698,18 +707,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         vBox.getChildren().addAll(titleButtonBox, tableView);
 
         return new Tuple4<>(tableView, vBox, button, titleLabel);
-    }
-
-    private void reverseTableColumns() {
-        ObservableList<TableColumn<OfferListItem, ?>> columns = FXCollections.observableArrayList(buyOfferTableView.getColumns());
-        buyOfferTableView.getColumns().clear();
-        FXCollections.reverse(columns);
-        buyOfferTableView.getColumns().addAll(columns);
-
-        columns = FXCollections.observableArrayList(sellOfferTableView.getColumns());
-        sellOfferTableView.getColumns().clear();
-        FXCollections.reverse(columns);
-        sellOfferTableView.getColumns().addAll(columns);
     }
 
     private void layout() {
