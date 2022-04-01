@@ -610,6 +610,10 @@ public class CurrencyUtil {
         return List.of(new FiatCurrency("USD"));
     }
 
+    public static List<TradeCurrency> getAllACHTransferCurrencies() {
+        return List.of(new FiatCurrency("USD"));
+    }
+
     public static List<TradeCurrency> getMatureMarketCurrencies() {
         ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
                 new FiatCurrency("EUR"),
@@ -913,5 +917,9 @@ public class CurrencyUtil {
             throw new IllegalArgumentException(
                     format("Method requires a crypto currency code, but was given '%s'.",
                             currencyCode));
+    }
+
+    public static List<TradeCurrency> getAllTransferwiseUSDCurrencies() {
+        return List.of(new FiatCurrency("USD"));
     }
 }

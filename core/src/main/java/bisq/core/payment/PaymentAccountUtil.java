@@ -195,11 +195,22 @@ public class PaymentAccountUtil {
             case SAME_BANK_ID:
             case SPECIFIC_BANKS_ID:
             case CASH_DEPOSIT_ID:
+            case WESTERN_UNION_ID:
                 return CurrencyUtil.getAllFiatCurrencies();
             case FASTER_PAYMENTS_ID:
                 return CurrencyUtil.getAllFasterPaymentCurrencies();
-                case DOMESTIC_WIRE_TRANSFER_ID:
-                    return CurrencyUtil.getAllDomesticWireTransferCurrencies();
+            case DOMESTIC_WIRE_TRANSFER_ID:
+                return CurrencyUtil.getAllDomesticWireTransferCurrencies();
+            case ACH_TRANSFER_ID:
+                return CurrencyUtil.getAllACHTransferCurrencies();
+            case CELPAY_ID:
+                return CurrencyUtil.getAllCelPayCurrencies();
+            case MONESE_ID:
+                return CurrencyUtil.getAllMoneseCurrencies();
+            case TRANSFERWISE_USD_ID:
+                return CurrencyUtil.getAllTransferwiseUSDCurrencies();
+            case VERSE_ID:
+                return CurrencyUtil.getAllVerseCurrencies();
             default:
                 return Collections.emptyList();
         }
