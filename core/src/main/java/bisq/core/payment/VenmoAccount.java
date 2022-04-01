@@ -17,7 +17,7 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.VenmoAccountPayload;
@@ -31,7 +31,7 @@ import lombok.EqualsAndHashCode;
 public final class VenmoAccount extends PaymentAccount {
     public VenmoAccount() {
         super(PaymentMethod.VENMO);
-        setSingleTradeCurrency(new FiatCurrency("USD"));
+        setSingleTradeCurrency(CurrencyUtil.getAllVenmoCurrencies().get(0));
     }
 
     @Override

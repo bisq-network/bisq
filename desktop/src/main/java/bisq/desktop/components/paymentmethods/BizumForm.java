@@ -23,12 +23,12 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CountryUtil;
-import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.BizumAccount;
-import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.BizumAccountPayload;
+import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
@@ -59,7 +59,7 @@ public class BizumForm extends PaymentMethodForm {
     @Override
     public void addFormForAddAccount() {
         // this payment method is only for Spain/EUR
-        account.setSingleTradeCurrency(new FiatCurrency("EUR"));
+        account.setSingleTradeCurrency(CurrencyUtil.getAllBizumCurrencies().get(0));
         CountryUtil.findCountryByCode("ES").ifPresent(c -> account.setCountry(c));
 
         gridRowFrom = gridRow + 1;

@@ -17,7 +17,7 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
@@ -28,7 +28,7 @@ import lombok.EqualsAndHashCode;
 public final class USPostalMoneyOrderAccount extends PaymentAccount {
     public USPostalMoneyOrderAccount() {
         super(PaymentMethod.US_POSTAL_MONEY_ORDER);
-        setSingleTradeCurrency(new FiatCurrency("USD"));
+        setSingleTradeCurrency(CurrencyUtil.getAllUSPostalMoneyOrderCurrencies().get(0));
     }
 
     @Override

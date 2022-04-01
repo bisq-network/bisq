@@ -17,7 +17,7 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.PromptPayAccountPayload;
@@ -28,7 +28,7 @@ import lombok.EqualsAndHashCode;
 public final class PromptPayAccount extends PaymentAccount {
     public PromptPayAccount() {
         super(PaymentMethod.PROMPT_PAY);
-        setSingleTradeCurrency(new FiatCurrency("THB"));
+        setSingleTradeCurrency(CurrencyUtil.getAllPromptPayCurrencies().get(0));
     }
 
     @Override

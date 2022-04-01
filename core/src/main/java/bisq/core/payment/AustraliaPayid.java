@@ -17,7 +17,7 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.payment.payload.AustraliaPayidPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -25,7 +25,7 @@ import bisq.core.payment.payload.PaymentMethod;
 public final class AustraliaPayid extends PaymentAccount {
     public AustraliaPayid() {
         super(PaymentMethod.AUSTRALIA_PAYID);
-        setSingleTradeCurrency(new FiatCurrency("AUD"));
+        setSingleTradeCurrency(CurrencyUtil.getAllAustraliaPayidCurrencies().get(0));
     }
 
     @Override

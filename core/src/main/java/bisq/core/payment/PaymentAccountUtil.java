@@ -19,6 +19,7 @@ package bisq.core.payment;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Country;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
@@ -135,6 +136,70 @@ public class PaymentAccountUtil {
                 return getAllTransferwiseCurrencies();
             case UPHOLD_ID:
                 return getAllUpholdCurrencies();
+            case INTERAC_E_TRANSFER_ID:
+                return getAllInteracETransferIdCurrencies();
+            case STRIKE_ID:
+                return getAllStrikeCurrencies();
+            case TIKKIE_ID:
+                return CurrencyUtil.getAllTikkieIdCurrencies();
+            case ALI_PAY_ID:
+                return CurrencyUtil.getAllAliPayAccountCurrencies();
+            case NEQUI_ID:
+                return CurrencyUtil.getAllNequiCurrencies();
+            case IMPS_ID:
+            case NEFT_ID:
+            case PAYTM_ID:
+            case RTGS_ID:
+            case UPI_ID:
+                return CurrencyUtil.getAllIfscBankCurrencies();
+            case BIZUM_ID:
+                return CurrencyUtil.getAllBizumCurrencies();
+            case MONEY_BEAM_ID:
+                return CurrencyUtil.getAllMoneyBeamCurrencies();
+            case PIX_ID:
+                return CurrencyUtil.getAllPixCurrencies();
+            case SATISPAY_ID:
+                return CurrencyUtil.getAllSatispayCurrencies();
+            case CHASE_QUICK_PAY_ID:
+                return CurrencyUtil.getAllChaseQuickPayCurrencies();
+            case US_POSTAL_MONEY_ORDER_ID:
+                return CurrencyUtil.getAllUSPostalMoneyOrderCurrencies();
+            case VENMO_ID:
+                return CurrencyUtil.getAllVenmoCurrencies();
+            case JAPAN_BANK_ID:
+                return CurrencyUtil.getAllJapanBankCurrencies();
+            case WECHAT_PAY_ID:
+                return CurrencyUtil.getAllWeChatPayCurrencies();
+            case CLEAR_X_CHANGE_ID:
+                return CurrencyUtil.getAllClearXchangeCurrencies();
+            case AUSTRALIA_PAYID_ID:
+                return CurrencyUtil.getAllAustraliaPayidCurrencies();
+            case PERFECT_MONEY_ID:
+                return CurrencyUtil.getAllPerfectMoneyCurrencies();
+            case HAL_CASH_ID:
+                return CurrencyUtil.getAllHalCashCurrencies();
+            case SWISH_ID:
+                return CurrencyUtil.getAllSwishCurrencies();
+            case CASH_APP_ID:
+                return CurrencyUtil.getAllCashAppCurrencies();
+            case POPMONEY_ID:
+                return CurrencyUtil.getAllPopmoneyCurrencies();
+            case PROMPT_PAY_ID:
+                return CurrencyUtil.getAllPromptPayCurrencies();
+            case SEPA_ID:
+            case SEPA_INSTANT_ID:
+                return CurrencyUtil.getAllSEPACurrencies();
+            case CASH_BY_MAIL_ID:
+            case F2F_ID:
+            case NATIONAL_BANK_ID:
+            case SAME_BANK_ID:
+            case SPECIFIC_BANKS_ID:
+            case CASH_DEPOSIT_ID:
+                return CurrencyUtil.getAllFiatCurrencies();
+            case FASTER_PAYMENTS_ID:
+                return CurrencyUtil.getAllFasterPaymentCurrencies();
+                case DOMESTIC_WIRE_TRANSFER_ID:
+                    return CurrencyUtil.getAllDomesticWireTransferCurrencies();
             default:
                 return Collections.emptyList();
         }

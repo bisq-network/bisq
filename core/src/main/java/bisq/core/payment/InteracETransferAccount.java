@@ -17,7 +17,7 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.payment.payload.InteracETransferAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -28,7 +28,7 @@ import lombok.EqualsAndHashCode;
 public final class InteracETransferAccount extends PaymentAccount {
     public InteracETransferAccount() {
         super(PaymentMethod.INTERAC_E_TRANSFER);
-        setSingleTradeCurrency(new FiatCurrency("CAD"));
+        setSingleTradeCurrency(CurrencyUtil.getAllInteracETransferIdCurrencies().get(0));
     }
 
     @Override

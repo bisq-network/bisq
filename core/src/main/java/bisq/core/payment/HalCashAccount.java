@@ -17,7 +17,7 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.payment.payload.HalCashAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -28,7 +28,7 @@ import lombok.EqualsAndHashCode;
 public final class HalCashAccount extends PaymentAccount {
     public HalCashAccount() {
         super(PaymentMethod.HAL_CASH);
-        setSingleTradeCurrency(new FiatCurrency("EUR"));
+        setSingleTradeCurrency(CurrencyUtil.getAllHalCashCurrencies().get(0));
     }
 
     @Override

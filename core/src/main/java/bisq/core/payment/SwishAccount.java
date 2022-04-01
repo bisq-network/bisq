@@ -17,7 +17,7 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.SwishAccountPayload;
@@ -28,7 +28,7 @@ import lombok.EqualsAndHashCode;
 public final class SwishAccount extends PaymentAccount {
     public SwishAccount() {
         super(PaymentMethod.SWISH);
-        setSingleTradeCurrency(new FiatCurrency("SEK"));
+        setSingleTradeCurrency(CurrencyUtil.getAllSwishCurrencies().get(0));
     }
 
     @Override

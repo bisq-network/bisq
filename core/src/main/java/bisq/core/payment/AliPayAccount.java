@@ -17,7 +17,7 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.payment.payload.AliPayAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -28,7 +28,7 @@ import lombok.EqualsAndHashCode;
 public final class AliPayAccount extends PaymentAccount {
     public AliPayAccount() {
         super(PaymentMethod.ALI_PAY);
-        setSingleTradeCurrency(new FiatCurrency("CNY"));
+        setSingleTradeCurrency(CurrencyUtil.getAllAliPayAccountCurrencies().get(0));
     }
 
     @Override

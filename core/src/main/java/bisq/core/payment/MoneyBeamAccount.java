@@ -17,7 +17,7 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.payment.payload.MoneyBeamAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -29,7 +29,7 @@ import lombok.EqualsAndHashCode;
 public final class MoneyBeamAccount extends PaymentAccount {
     public MoneyBeamAccount() {
         super(PaymentMethod.MONEY_BEAM);
-        setSingleTradeCurrency(new FiatCurrency("EUR"));
+        setSingleTradeCurrency(CurrencyUtil.getAllMoneyBeamCurrencies().get(0));
     }
 
     @Override

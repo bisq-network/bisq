@@ -17,7 +17,7 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.payment.payload.ChaseQuickPayAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -31,7 +31,7 @@ import lombok.EqualsAndHashCode;
 public final class ChaseQuickPayAccount extends PaymentAccount {
     public ChaseQuickPayAccount() {
         super(PaymentMethod.CHASE_QUICK_PAY);
-        setSingleTradeCurrency(new FiatCurrency("USD"));
+        setSingleTradeCurrency(CurrencyUtil.getAllChaseQuickPayCurrencies().get(0));
     }
 
     @Override

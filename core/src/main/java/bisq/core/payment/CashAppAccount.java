@@ -17,7 +17,7 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.payment.payload.CashAppAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -31,7 +31,7 @@ import lombok.EqualsAndHashCode;
 public final class CashAppAccount extends PaymentAccount {
     public CashAppAccount() {
         super(PaymentMethod.CASH_APP);
-        setSingleTradeCurrency(new FiatCurrency("USD"));
+        setSingleTradeCurrency(CurrencyUtil.getAllCashAppCurrencies().get(0));
     }
 
     @Override

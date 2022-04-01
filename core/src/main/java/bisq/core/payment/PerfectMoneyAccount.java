@@ -17,7 +17,7 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.PerfectMoneyAccountPayload;
@@ -28,7 +28,7 @@ import lombok.EqualsAndHashCode;
 public final class PerfectMoneyAccount extends PaymentAccount {
     public PerfectMoneyAccount() {
         super(PaymentMethod.PERFECT_MONEY);
-        setSingleTradeCurrency(new FiatCurrency("USD"));
+        setSingleTradeCurrency(CurrencyUtil.getAllPerfectMoneyCurrencies().get(0));
     }
 
     @Override

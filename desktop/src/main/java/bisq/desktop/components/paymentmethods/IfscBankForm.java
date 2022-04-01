@@ -23,7 +23,7 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CountryUtil;
-import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.IfscBasedAccountPayload;
@@ -66,7 +66,7 @@ public class IfscBankForm extends PaymentMethodForm {
     @Override
     public void addFormForAddAccount() {
         // this payment method is only for India/INR
-        paymentAccount.setSingleTradeCurrency(new FiatCurrency("INR"));
+        paymentAccount.setSingleTradeCurrency(CurrencyUtil.getAllIfscBankCurrencies().get(0));
         CountryUtil.findCountryByCode("IN").ifPresent(c -> ifscBasedAccountPayload.setCountryCode(c.code));
 
         gridRowFrom = gridRow + 1;

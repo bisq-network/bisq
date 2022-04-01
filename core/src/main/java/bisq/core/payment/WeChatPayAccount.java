@@ -17,7 +17,7 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.WeChatPayAccountPayload;
@@ -29,7 +29,7 @@ public final class WeChatPayAccount extends PaymentAccount {
 
     public WeChatPayAccount() {
         super(PaymentMethod.WECHAT_PAY);
-        setSingleTradeCurrency(new FiatCurrency("CNY"));
+        setSingleTradeCurrency(CurrencyUtil.getAllWeChatPayCurrencies().get(0));
     }
 
     @Override

@@ -17,7 +17,7 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.payment.payload.JapanBankAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -27,7 +27,7 @@ public final class JapanBankAccount extends PaymentAccount
     public JapanBankAccount()
     {
         super(PaymentMethod.JAPAN_BANK);
-        setSingleTradeCurrency(new FiatCurrency("JPY"));
+        setSingleTradeCurrency(CurrencyUtil.getAllJapanBankCurrencies().get(0));
     }
 
     @Override

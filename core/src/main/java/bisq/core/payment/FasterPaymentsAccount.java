@@ -17,7 +17,7 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.payment.payload.FasterPaymentsAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -28,7 +28,7 @@ import lombok.EqualsAndHashCode;
 public final class FasterPaymentsAccount extends PaymentAccount {
     public FasterPaymentsAccount() {
         super(PaymentMethod.FASTER_PAYMENTS);
-        setSingleTradeCurrency(new FiatCurrency("GBP"));
+        setSingleTradeCurrency(CurrencyUtil.getAllFasterPaymentCurrencies().get(0));
     }
 
     @Override

@@ -22,7 +22,7 @@ import bisq.desktop.util.FormBuilder;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CountryUtil;
-import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.SatispayAccount;
@@ -59,7 +59,7 @@ public class SatispayForm extends PaymentMethodForm {
     @Override
     public void addFormForAddAccount() {
         // this payment method is only for Italy/EUR
-        account.setSingleTradeCurrency(new FiatCurrency("EUR"));
+        account.setSingleTradeCurrency(CurrencyUtil.getAllSatispayCurrencies().get(0));
         CountryUtil.findCountryByCode("IT").ifPresent(c -> account.setCountry(c));
 
         gridRowFrom = gridRow + 1;

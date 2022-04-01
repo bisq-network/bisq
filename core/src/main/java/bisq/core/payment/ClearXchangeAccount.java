@@ -17,7 +17,7 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.payment.payload.ClearXchangeAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -28,7 +28,7 @@ import lombok.EqualsAndHashCode;
 public final class ClearXchangeAccount extends PaymentAccount {
     public ClearXchangeAccount() {
         super(PaymentMethod.CLEAR_X_CHANGE);
-        setSingleTradeCurrency(new FiatCurrency("USD"));
+        setSingleTradeCurrency(CurrencyUtil.getAllClearXchangeCurrencies().get(0));
     }
 
     @Override

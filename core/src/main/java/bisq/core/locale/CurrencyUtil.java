@@ -85,6 +85,10 @@ public class CurrencyUtil {
         return fiatCurrencyMapSupplier.get().values();  // sorted by currency name
     }
 
+    public static List<TradeCurrency> getAllFiatCurrencies() {
+        return new ArrayList<>(fiatCurrencyMapSupplier.get().values());
+    }
+
     public static Collection<FiatCurrency> getAllSortedFiatCurrencies(Comparator comparator) {
         return (List<FiatCurrency>) getAllSortedFiatCurrencies().stream()
                 .sorted(comparator)                     // sorted by comparator param
@@ -500,6 +504,110 @@ public class CurrencyUtil {
 
         currencies.sort(Comparator.comparing(TradeCurrency::getCode));
         return currencies;
+    }
+
+    public static List<TradeCurrency> getAllInteracETransferIdCurrencies() {
+        return List.of(new FiatCurrency("CAD"));
+    }
+
+    public static List<TradeCurrency> getAllStrikeCurrencies() {
+        return List.of(new FiatCurrency("USD"));
+    }
+
+    public static List<TradeCurrency> getAllTikkieIdCurrencies() {
+        return List.of(new FiatCurrency("EUR"));
+    }
+
+    public static List<TradeCurrency> getAllAliPayAccountCurrencies() {
+        return List.of(new FiatCurrency("CNY"));
+    }
+
+    public static List<TradeCurrency> getAllNequiCurrencies() {
+        return List.of(new FiatCurrency("COP"));
+    }
+
+    public static List<TradeCurrency> getAllIfscBankCurrencies() {
+        return List.of(new FiatCurrency("INR"));
+    }
+
+    public static List<TradeCurrency> getAllBizumCurrencies() {
+        return List.of(new FiatCurrency("EUR"));
+    }
+
+    public static List<TradeCurrency> getAllMoneyBeamCurrencies() {
+        return List.of(new FiatCurrency("EUR"));
+    }
+
+    public static List<TradeCurrency> getAllPixCurrencies() {
+        return List.of(new FiatCurrency("BRL"));
+    }
+
+    public static List<TradeCurrency> getAllSatispayCurrencies() {
+        return List.of(new FiatCurrency("EUR"));
+    }
+
+    public static List<TradeCurrency> getAllChaseQuickPayCurrencies() {
+        return List.of(new FiatCurrency("USD"));
+    }
+
+    public static List<TradeCurrency> getAllUSPostalMoneyOrderCurrencies() {
+        return List.of(new FiatCurrency("USD"));
+    }
+
+    public static List<TradeCurrency> getAllVenmoCurrencies() {
+        return List.of(new FiatCurrency("USD"));
+    }
+
+    public static List<TradeCurrency> getAllFasterPaymentCurrencies() {
+        return List.of(new FiatCurrency("GBP"));
+    }
+
+    public static List<TradeCurrency> getAllJapanBankCurrencies() {
+        return List.of(new FiatCurrency("JPY"));
+    }
+
+    public static List<TradeCurrency> getAllWeChatPayCurrencies() {
+        return List.of(new FiatCurrency("CNY"));
+    }
+
+    public static List<TradeCurrency> getAllClearXchangeCurrencies() {
+        return List.of(new FiatCurrency("USD"));
+    }
+
+    public static List<TradeCurrency> getAllAustraliaPayidCurrencies() {
+        return List.of(new FiatCurrency("AUD"));
+    }
+
+    public static List<TradeCurrency> getAllPerfectMoneyCurrencies() {
+        return List.of(new FiatCurrency("USD"));
+    }
+
+    public static List<TradeCurrency> getAllHalCashCurrencies() {
+        return List.of(new FiatCurrency("EUR"));
+    }
+
+    public static List<TradeCurrency> getAllSwishCurrencies() {
+        return List.of(new FiatCurrency("SEK"));
+    }
+
+    public static List<TradeCurrency> getAllCashAppCurrencies() {
+        return List.of(new FiatCurrency("USD"));
+    }
+
+    public static List<TradeCurrency> getAllPopmoneyCurrencies() {
+        return List.of(new FiatCurrency("USD"));
+    }
+
+    public static List<TradeCurrency> getAllPromptPayCurrencies() {
+        return List.of(new FiatCurrency("THB"));
+    }
+
+    public static List<TradeCurrency> getAllSEPACurrencies() {
+        return List.of(new FiatCurrency("EUR"));
+    }
+
+    public static List<TradeCurrency> getAllDomesticWireTransferCurrencies() {
+        return List.of(new FiatCurrency("USD"));
     }
 
     public static List<TradeCurrency> getMatureMarketCurrencies() {
