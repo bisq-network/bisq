@@ -68,10 +68,6 @@ import bisq.common.handlers.ResultHandler;
 
 import org.bitcoinj.core.Coin;
 
-import com.google.inject.Inject;
-
-import javax.inject.Named;
-
 import com.google.common.base.Joiner;
 
 import javafx.beans.property.BooleanProperty;
@@ -102,7 +98,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-class OfferBookViewModel extends ActivatableViewModel {
+abstract class OfferBookViewModel extends ActivatableViewModel {
     private final OpenOfferManager openOfferManager;
     private final User user;
     private final OfferBook offerBook;
@@ -156,7 +152,6 @@ class OfferBookViewModel extends ActivatableViewModel {
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    @Inject
     public OfferBookViewModel(User user,
                               OpenOfferManager openOfferManager,
                               OfferBook offerBook,
@@ -170,7 +165,7 @@ class OfferBookViewModel extends ActivatableViewModel {
                               Navigation navigation,
                               PriceUtil priceUtil,
                               OfferFilterService offerFilterService,
-                              @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
+                              CoinFormatter btcFormatter,
                               BsqFormatter bsqFormatter,
                               BsqWalletService bsqWalletService,
                               CoreApi coreApi) {
@@ -297,12 +292,11 @@ class OfferBookViewModel extends ActivatableViewModel {
             setMarketPriceFeedCurrency();
             filterOffers();
 
-            if (direction == OfferDirection.BUY)
-                preferences.setBuyScreenCurrencyCode(code);
-            else
-                preferences.setSellScreenCurrencyCode(code);
+            saveSelectedCurrencyCodeInPreferences(direction, code);
         }
     }
+
+    abstract void saveSelectedCurrencyCodeInPreferences(OfferDirection direction, String code);
 
     void onSetPaymentMethod(PaymentMethod paymentMethod) {
         if (paymentMethod == null)
@@ -381,10 +375,15 @@ class OfferBookViewModel extends ActivatableViewModel {
             }
         }
 
+        list = filterPaymentMethods(list, selectedTradeCurrency);
+
         list.sort(Comparator.naturalOrder());
         list.add(0, getShowAllEntryForPaymentMethod());
         return list;
     }
+
+    protected abstract ObservableList<PaymentMethod> filterPaymentMethods(ObservableList<PaymentMethod> list,
+                                                                          TradeCurrency selectedTradeCurrency);
 
     String getAmount(OfferBookListItem item) {
         return formatAmount(item.getOffer(), true);
@@ -557,18 +556,13 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     private void fillCurrencies() {
         tradeCurrencies.clear();
-        // Used for ignoring filter (show all)
-        tradeCurrencies.add(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, ""));
-        tradeCurrencies.addAll(preferences.getTradeCurrenciesAsObservable());
-        tradeCurrencies.add(new CryptoCurrency(GUIUtil.EDIT_FLAG, ""));
-
         allCurrencies.clear();
-        allCurrencies.add(new CryptoCurrency(GUIUtil.SHOW_ALL_FLAG, ""));
-        allCurrencies.addAll(CurrencyUtil.getAllSortedFiatCurrencies());
-        allCurrencies.addAll(CurrencyUtil.getAllSortedCryptoCurrencies());
-        allCurrencies.add(new CryptoCurrency(GUIUtil.EDIT_FLAG, ""));
+
+        fillCurrencies(tradeCurrencies, allCurrencies);
     }
 
+    abstract void fillCurrencies(ObservableList<TradeCurrency> tradeCurrencies,
+                                 ObservableList<TradeCurrency> allCurrencies);
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Checks
@@ -594,23 +588,13 @@ class OfferBookViewModel extends ActivatableViewModel {
 
     private void filterOffers() {
         Predicate<OfferBookListItem> predicate = useOffersMatchingMyAccountsFilter ?
-                getCurrencyAndMethodPredicate().and(getOffersMatchingMyAccountsPredicate()) :
-                getCurrencyAndMethodPredicate();
+                getCurrencyAndMethodPredicate(direction, selectedTradeCurrency).and(getOffersMatchingMyAccountsPredicate()) :
+                getCurrencyAndMethodPredicate(direction, selectedTradeCurrency);
         filteredItems.setPredicate(predicate);
     }
 
-    private Predicate<OfferBookListItem> getCurrencyAndMethodPredicate() {
-        return offerBookListItem -> {
-            Offer offer = offerBookListItem.getOffer();
-            boolean directionResult = offer.getDirection() != direction;
-            boolean currencyResult = (showAllTradeCurrenciesProperty.get()) ||
-                    offer.getCurrencyCode().equals(selectedTradeCurrency.getCode());
-            boolean paymentMethodResult = showAllPaymentMethods ||
-                    offer.getPaymentMethod().equals(selectedPaymentMethod);
-            boolean notMyOfferOrShowMyOffersActivated = !isMyOffer(offerBookListItem.getOffer()) || preferences.isShowOwnOffersInOfferBook();
-            return directionResult && currencyResult && paymentMethodResult && notMyOfferOrShowMyOffersActivated;
-        };
-    }
+    abstract Predicate<OfferBookListItem> getCurrencyAndMethodPredicate(OfferDirection direction,
+                                                                        TradeCurrency selectedTradeCurrency);
 
     private Predicate<OfferBookListItem> getOffersMatchingMyAccountsPredicate() {
         // This code duplicates code in the view at the button column. We need there the different results for
@@ -706,7 +690,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     private void updateSelectedTradeCurrency() {
-        String code = direction == OfferDirection.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
+        String code = getCurrencyCodeFromPreferences(direction);
         if (code != null && !code.isEmpty() && !isShowAllEntry(code) &&
                 CurrencyUtil.getTradeCurrency(code).isPresent()) {
             showAllTradeCurrenciesProperty.set(false);
@@ -717,6 +701,8 @@ class OfferBookViewModel extends ActivatableViewModel {
         }
         tradeCurrencyCode.set(selectedTradeCurrency.getCode());
     }
+
+    abstract String getCurrencyCodeFromPreferences(OfferDirection direction);
 
     public OpenOffer getOpenOffer(Offer offer) {
         return openOfferManager.getOpenOfferById(offer.getId()).orElse(null);

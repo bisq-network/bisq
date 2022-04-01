@@ -1031,7 +1031,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     }
 
     private void addPaymentGroup() {
-        paymentTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("shared.selectTradingAccount"));
+        paymentTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, "Buy BTC with Fiat");
         GridPane.setColumnSpan(paymentTitledGroupBg, 2);
 
         HBox paymentGroupBox = new HBox();
@@ -1106,8 +1106,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         GridPane.setMargin(advancedOptionsBox, new Insets(Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(advancedOptionsBox);
 
-        Tuple2<AutoTooltipButton, HBox> buyBsqButtonBox = OfferViewUtil.createBuyBsqButtonBox(
-                navigation, preferences);
+        Tuple2<AutoTooltipButton, HBox> buyBsqButtonBox = OfferViewUtil.createBuyBsqButtonBox(navigation);
         buyBsqBox = buyBsqButtonBox.second;
         buyBsqBox.setManaged(false);
         buyBsqBox.setVisible(false);

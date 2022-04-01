@@ -307,7 +307,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             paymentAccountsComboBox.setItems(model.getPossiblePaymentAccounts());
             paymentAccountsComboBox.getSelectionModel().select(lastPaymentAccount);
             model.onPaymentAccountSelected(lastPaymentAccount);
-            paymentAccountTitledGroupBg.setText(Res.get("shared.selectTradingAccount"));
+            paymentAccountTitledGroupBg.setText(Res.get("Buy BTC with EUR (using SEPA)"));
         }
 
         balanceTextField.setTargetAmount(model.dataModel.getTotalToPayAsCoin().get());
@@ -882,8 +882,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         GridPane.setMargin(advancedOptionsBox, new Insets(Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(advancedOptionsBox);
 
-        Tuple2<AutoTooltipButton, HBox> buyBsqButtonBox = OfferViewUtil.createBuyBsqButtonBox(
-                navigation, model.dataModel.preferences);
+        Tuple2<AutoTooltipButton, HBox> buyBsqButtonBox = OfferViewUtil.createBuyBsqButtonBox(navigation);
         buyBsqBox = buyBsqButtonBox.second;
         buyBsqBox.setManaged(false);
         buyBsqBox.setVisible(false);

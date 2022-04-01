@@ -19,6 +19,7 @@ package bisq.core.payment;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Country;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -29,6 +30,7 @@ import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -37,6 +39,10 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+
+import static bisq.core.locale.CurrencyUtil.*;
+import static bisq.core.payment.payload.PaymentMethod.*;
+import static java.util.Comparator.comparing;
 
 @Slf4j
 public class PaymentAccountUtil {
@@ -104,6 +110,39 @@ public class PaymentAccountUtil {
                 acceptedCountryCodes.add(country.code);
         }
         return acceptedCountryCodes;
+    }
+
+    public static List<TradeCurrency> getTradeCurrencies(PaymentMethod paymentMethod) {
+        switch (paymentMethod.getId()) {
+            case ADVANCED_CASH_ID:
+                return getAllAdvancedCashCurrencies();
+            case AMAZON_GIFT_CARD_ID:
+                return getAllAmazonGiftCardCurrencies();
+            case CAPITUAL_ID:
+                return getAllCapitualCurrencies();
+            case MONEY_GRAM_ID:
+                return getAllMoneyGramCurrencies();
+            case PAXUM_ID:
+                return getAllPaxumCurrencies();
+            case PAYSERA_ID:
+                return getAllPayseraCurrencies();
+            case REVOLUT_ID:
+                return getAllRevolutCurrencies();
+            case SWIFT_ID:
+                return new ArrayList<>(getAllSortedFiatCurrencies(
+                        comparing(TradeCurrency::getCode)));
+            case TRANSFERWISE_ID:
+                return getAllTransferwiseCurrencies();
+            case UPHOLD_ID:
+                return getAllUpholdCurrencies();
+            default:
+                return Collections.emptyList();
+        }
+    }
+
+    public static boolean supportsCurrency(PaymentMethod paymentMethod, TradeCurrency selectedTradeCurrency) {
+        return getTradeCurrencies(paymentMethod).stream()
+                .anyMatch(tradeCurrency -> tradeCurrency.equals(selectedTradeCurrency));
     }
 
     @Nullable

@@ -43,7 +43,6 @@ public class BuyOfferView extends OfferView {
         super(viewLoader,
                 navigation,
                 preferences,
-                arbitratorManager,
                 user,
                 p2PService,
                 OfferDirection.BUY);

@@ -323,6 +323,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         };
 
         buyTableRowSelectionListener = (observable, oldValue, newValue) -> {
+
             model.preferences.setSellScreenCurrencyCode(model.getCurrencyCode());
             navigation.navigateTo(MainView.class, SellOfferView.class);
         };

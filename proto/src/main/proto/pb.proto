@@ -1952,6 +1952,8 @@ message PreferencesPayload {
     bool notify_on_pre_release = 61;
     bool use_full_mode_dao_monitor = 62;
     int32 clear_data_after_days = 63;
+    string buy_screen_crypto_currency_code = 64;
+    string sell_screen_crypto_currency_code = 65;
 }
 
 message AutoConfirmSettings {

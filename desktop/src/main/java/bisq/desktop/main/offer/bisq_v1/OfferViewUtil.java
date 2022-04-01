@@ -23,11 +23,13 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.offer.SellOfferView;
-import bisq.desktop.main.offer.offerbook.OfferBookView;
+import bisq.desktop.main.offer.offerbook.BsqOfferBookView;
 import bisq.desktop.main.overlays.popups.Popup;
 
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.user.Preferences;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferDirection;
 
 import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
@@ -84,14 +86,13 @@ public class OfferViewUtil {
         infoGridPane.getChildren().addAll(label, textField);
     }
 
-    public static Tuple2<AutoTooltipButton, HBox> createBuyBsqButtonBox(Navigation navigation,
-                                                                        Preferences preferences) {
+    public static Tuple2<AutoTooltipButton, HBox> createBuyBsqButtonBox(Navigation navigation) {
         String buyBsqText = Res.get("shared.buyCurrency", "BSQ");
         var buyBsqButton = new AutoTooltipButton(buyBsqText);
         buyBsqButton.getStyleClass().add("action-button");
         buyBsqButton.getStyleClass().add("tiny-button");
         buyBsqButton.setMinWidth(60);
-        buyBsqButton.setOnAction(e -> openBuyBsqOfferBook(navigation, preferences)
+        buyBsqButton.setOnAction(e -> openBuyBsqOfferBook(navigation)
         );
 
         var info = new AutoTooltipLabel("BSQ is colored BTC that helps fund Bisq developers.");
@@ -100,7 +101,7 @@ public class OfferViewUtil {
                 .information(Res.get("createOffer.buyBsq.popupMessage"))
                 .actionButtonText(buyBsqText)
                 .buttonAlignment(HPos.CENTER)
-                .onAction(() -> openBuyBsqOfferBook(navigation, preferences)).show());
+                .onAction(() -> openBuyBsqOfferBook(navigation)).show());
         learnMore.setMinWidth(100);
 
         HBox buyBsqBox = new HBox(buyBsqButton, info, learnMore);
@@ -111,9 +112,12 @@ public class OfferViewUtil {
         return new Tuple2<>(buyBsqButton, buyBsqBox);
     }
 
-    private static void openBuyBsqOfferBook(Navigation navigation, Preferences preferences) {
-        preferences.setSellScreenCurrencyCode("BSQ");
+    private static void openBuyBsqOfferBook(Navigation navigation) {
         navigation.navigateTo(
-                MainView.class, SellOfferView.class, OfferBookView.class);
+                MainView.class, SellOfferView.class, BsqOfferBookView.class);
+    }
+
+    public static boolean isShownAsSellOffer(Offer offer) {
+        return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) == (offer.getDirection() == OfferDirection.SELL);
     }
 }
