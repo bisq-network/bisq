@@ -31,11 +31,9 @@ import bisq.core.user.Preferences;
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.util.Hex;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Utils;
-import org.bitcoinj.script.Script;
 
 import com.google.inject.Inject;
 
