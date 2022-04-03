@@ -81,13 +81,13 @@ sed -i '' '3 s_^_windows: _' "$target_dir/Bisq-$version.jar.txt"
 cd "$target_dir"
 
 echo Create signatures
-gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output "$dmg.asc" --detach-sig --armor "$dmg"
-gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output "$deb64.asc" --detach-sig --armor "$deb64"
-gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output "$rpm64.asc" --detach-sig --armor "$rpm64"
-gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output "$exe64.asc" --detach-sig --armor "$exe64"
-gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output "$rpi.asc" --detach-sig --armor "$rpi"
-gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output "$cli.asc" --detach-sig --armor "$cli"
-gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output "$daemon.asc" --detach-sig --armor "$daemon"
+gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$dmg.asc" --detach-sig --armor "$dmg"
+gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$deb64.asc" --detach-sig --armor "$deb64"
+gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$rpm64.asc" --detach-sig --armor "$rpm64"
+gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$exe64.asc" --detach-sig --armor "$exe64"
+gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$rpi.asc" --detach-sig --armor "$rpi"
+gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$cli.asc" --detach-sig --armor "$cli"
+gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$daemon.asc" --detach-sig --armor "$daemon"
 
 echo Verify signatures
 gpg --digest-algo SHA256 --verify $dmg{.asc*,}
