@@ -2,7 +2,7 @@
 
 cd ../../
 
-version="1.8.4-SNAPSHOT"
+version="1.8.4"
 
 target_dir="releases/$version"
 
@@ -19,6 +19,25 @@ deployDir=deploy
 rm -r $target_dir
 
 mkdir -p $target_dir
+
+# Save the current working dir (assumed to be "desktop"), and
+# build the API daemon and cli distributions in the target dir.
+script_working_directory=$(pwd)
+# Copy the build's cli and daemon tarballs to target_dir.
+cp -v ../cli/build/distributions/cli.tar $target_dir
+cp -v ../daemon/build/distributions/daemon.tar $target_dir
+# Copy the cli and daemon zip creation scripts to target_dir.
+cp -v ../cli/package/create-cli-dist.sh $target_dir
+cp -v ../daemon/package/create-daemon-dist.sh $target_dir
+# Run the zip creation scripts in target_dir.
+cd $target_dir
+./create-cli-dist.sh $version
+./create-daemon-dist.sh $version
+# Clean up.
+rm -v create-cli-dist.sh
+rm -v create-daemon-dist.sh
+# Done building cli and daemon zip files;  return to the original current working directory.
+cd "$script_working_directory"
 
 # sig key mkarrer
 cp "$target_dir/../../package/F379A1C6.asc" "$target_dir/"
@@ -47,6 +66,9 @@ cp "$win64/$exe" "$target_dir/$exe64"
 rpi="jar-lib-for-raspberry-pi-$version.zip"
 cp "$macos/$rpi" "$target_dir/"
 
+cli="bisq-cli-$version.zip"
+daemon="bisq-daemon-$version.zip"
+
 # create file with jar signatures
 cat "$macos/desktop-$version-all-mac.jar.SHA-256" \
 "$linux64/desktop-$version-all-linux.jar.SHA-256" \
@@ -59,11 +81,13 @@ sed -i '' '3 s_^_windows: _' "$target_dir/Bisq-$version.jar.txt"
 cd "$target_dir"
 
 echo Create signatures
-gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $dmg.asc --detach-sig --armor $dmg
-gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $deb64.asc --detach-sig --armor $deb64
-gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $rpm64.asc --detach-sig --armor $rpm64
-gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $exe64.asc --detach-sig --armor $exe64
-gpg --digest-algo SHA256 --local-user $BISQ_GPG_USER --output $rpi.asc --detach-sig --armor $rpi
+gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$dmg.asc" --detach-sig --armor "$dmg"
+gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$deb64.asc" --detach-sig --armor "$deb64"
+gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$rpm64.asc" --detach-sig --armor "$rpm64"
+gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$exe64.asc" --detach-sig --armor "$exe64"
+gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$rpi.asc" --detach-sig --armor "$rpi"
+gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$cli.asc" --detach-sig --armor "$cli"
+gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$daemon.asc" --detach-sig --armor "$daemon"
 
 echo Verify signatures
 gpg --digest-algo SHA256 --verify $dmg{.asc*,}
@@ -71,6 +95,8 @@ gpg --digest-algo SHA256 --verify $deb64{.asc*,}
 gpg --digest-algo SHA256 --verify $rpm64{.asc*,}
 gpg --digest-algo SHA256 --verify $exe64{.asc*,}
 gpg --digest-algo SHA256 --verify $rpi{.asc*,}
+gpg --digest-algo SHA256 --verify $cli{.asc*,}
+gpg --digest-algo SHA256 --verify $daemon{.asc*,}
 
 mkdir $win64/$version
 cp -r . $win64/$version
