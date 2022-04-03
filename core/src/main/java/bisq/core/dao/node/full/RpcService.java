@@ -352,14 +352,9 @@ public class RpcService {
                                     }
                                 }
                             }
-                            String address = null;
-                            try {
-                                address = new Script(Hex.decode(scriptPubKey.getHex()))
-                                        .getToAddress(Config.baseCurrencyNetworkParameters()).toString();
-                            } catch (Exception ex) {
-                                // certain scripts e.g. OP_RETURN do not resolve to an address
-                                // in that case do not provide an address to the RawTxOutput
-                            }
+                            // We don't support raw MS which are the only case where scriptPubKey.getAddresses()>1
+                            String address = scriptPubKey.getAddresses() != null &&
+                                    scriptPubKey.getAddresses().size() == 1 ? scriptPubKey.getAddresses().get(0) : null;
                             PubKeyScript pubKeyScript = new PubKeyScript(scriptPubKey);
                             return new RawTxOutput(rawDtoTxOutput.getN(),
                                     BigDecimal.valueOf(rawDtoTxOutput.getValue()).movePointRight(8).longValueExact(),
