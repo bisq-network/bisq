@@ -75,7 +75,7 @@ public class RpcService {
     private static final int ACTIVATE_HARD_FORK_2_HEIGHT_MAINNET = 680300;
     private static final int ACTIVATE_HARD_FORK_2_HEIGHT_TESTNET = 1943000;
     private static final int ACTIVATE_HARD_FORK_2_HEIGHT_REGTEST = 1;
-    private static final Range<Integer> SUPPORTED_NODE_VERSION_RANGE = Range.closedOpen(180000, 210100);
+    private static final Range<Integer> SUPPORTED_NODE_VERSION_RANGE = Range.closedOpen(180000, 220100);
 
     private final String rpcUser;
     private final String rpcPassword;
