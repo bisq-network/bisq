@@ -19,10 +19,12 @@ package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
+import bisq.desktop.main.offer.bisq_v1.OfferViewUtil;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Layout;
 
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
@@ -264,14 +266,15 @@ public class BsqSwapOfferDetailsWindow extends Overlay<BsqSwapOfferDetailsWindow
     }
 
     private void addConfirmAndCancelButtons(boolean isPlaceOffer) {
-        boolean isBuyOffer = offer.isBuyOffer();
+        boolean isBuyOffer = OfferViewUtil.isShownAsBuyOffer(offer);
         boolean isBuyerRole = isPlaceOffer == isBuyOffer;
+        String tradeCurrencyByName = CurrencyUtil.getNameByCode(offer.getCurrencyCode());
         String placeOfferButtonText = isBuyerRole ?
-                Res.get("offerDetailsWindow.confirm.maker", Res.get("shared.buy")) :
-                Res.get("offerDetailsWindow.confirm.maker", Res.get("shared.sell"));
+                Res.get("offerDetailsWindow.confirm.makerAltcoin", Res.get("shared.buy"), tradeCurrencyByName) :
+                Res.get("offerDetailsWindow.confirm.makerAltcoin", Res.get("shared.sell"), tradeCurrencyByName);
         String takeOfferButtonText = isBuyerRole ?
-                Res.get("offerDetailsWindow.confirm.taker", Res.get("shared.buy")) :
-                Res.get("offerDetailsWindow.confirm.taker", Res.get("shared.sell"));
+                Res.get("offerDetailsWindow.confirm.takerAltcoin", Res.get("shared.buy"), tradeCurrencyByName) :
+                Res.get("offerDetailsWindow.confirm.takerAltcoin", Res.get("shared.sell"), tradeCurrencyByName);
 
         ImageView iconView = new ImageView();
         iconView.setId(isBuyerRole ? "image-buy-white" : "image-sell-white");

@@ -25,6 +25,8 @@ import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
+import bisq.desktop.main.offer.InitializableWithData;
+import bisq.desktop.main.offer.bisq_v1.OfferViewUtil;
 import bisq.desktop.main.offer.bsq_swap.BsqSwapOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.BsqSwapOfferDetailsWindow;
@@ -72,7 +74,7 @@ import static bisq.core.offer.bsq_swap.BsqSwapOfferModel.BSQ;
 import static bisq.desktop.util.FormBuilder.*;
 
 @FxmlView
-public class BsqSwapTakeOfferView extends BsqSwapOfferView<BsqSwapTakeOfferViewModel> {
+public class BsqSwapTakeOfferView extends BsqSwapOfferView<BsqSwapTakeOfferViewModel> implements InitializableWithData {
     private HBox minAmountHBox;
     private Label offerAvailabilityLabel;
     private TextField paymentMethodTextField, currencyTextField, priceTextField,
@@ -152,16 +154,16 @@ public class BsqSwapTakeOfferView extends BsqSwapOfferView<BsqSwapTakeOfferViewM
     public void initWithData(Offer offer) {
         model.initWithData(offer);
 
-        if (model.dataModel.isSellOffer()) {
+        if (OfferViewUtil.isShownAsSellOffer(model.dataModel.getOffer())) {
             actionButton.setId("buy-button-big");
-            actionButton.updateText(Res.get("takeOffer.takeOfferButton", Res.get("shared.buy")));
+            actionButton.updateText(Res.get("takeOffer.takeOfferButtonAltcoin", Res.get("shared.buy"), BSQ));
             nextButton.setId("buy-button");
             volumeDescriptionLabel.setText(Res.get("createOffer.amountPriceBox.buy.volumeDescription", BSQ));
             amountDescriptionLabel.setText(Res.get("takeOffer.amountPriceBox.sell.amountDescription"));
         } else {
             actionButton.setId("sell-button-big");
             nextButton.setId("sell-button");
-            actionButton.updateText(Res.get("takeOffer.takeOfferButton", Res.get("shared.sell")));
+            actionButton.updateText(Res.get("takeOffer.takeOfferButtonAltcoin", Res.get("shared.sell"), BSQ));
             volumeDescriptionLabel.setText(Res.get("createOffer.amountPriceBox.sell.volumeDescription", BSQ));
             amountDescriptionLabel.setText(Res.get("takeOffer.amountPriceBox.buy.amountDescription"));
         }

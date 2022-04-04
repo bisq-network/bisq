@@ -22,6 +22,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.TxIdTextField;
+import bisq.desktop.main.offer.bisq_v1.OfferViewUtil;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
@@ -387,14 +388,27 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     }
 
     private void addConfirmAndCancelButtons(boolean isPlaceOffer) {
-        boolean isBuyOffer = offer.isBuyOffer();
+        boolean isBuyOffer = OfferViewUtil.isShownAsBuyOffer(offer);
         boolean isBuyerRole = isPlaceOffer == isBuyOffer;
+        String tradeCurrencyByName = CurrencyUtil.getNameByCode(offer.getCurrencyCode());
         String placeOfferButtonText = isBuyerRole ?
-                Res.get("offerDetailsWindow.confirm.maker", Res.get("shared.buy")) :
-                Res.get("offerDetailsWindow.confirm.maker", Res.get("shared.sell"));
+                CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
+                        Res.get("offerDetailsWindow.confirm.maker", Res.get("shared.buy")) :
+                        Res.get("offerDetailsWindow.confirm.makerAltcoin", Res.get("shared.buy"),
+                                tradeCurrencyByName) :
+                CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
+                        Res.get("offerDetailsWindow.confirm.maker", Res.get("shared.sell")) :
+                        Res.get("offerDetailsWindow.confirm.makerAltcoin", Res.get("shared.sell"),
+                                tradeCurrencyByName);
         String takeOfferButtonText = isBuyerRole ?
-                Res.get("offerDetailsWindow.confirm.taker", Res.get("shared.buy")) :
-                Res.get("offerDetailsWindow.confirm.taker", Res.get("shared.sell"));
+                CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
+                        Res.get("offerDetailsWindow.confirm.taker", Res.get("shared.buy")) :
+                        Res.get("offerDetailsWindow.confirm.takerAltcoin", Res.get("shared.buy"),
+                                tradeCurrencyByName) :
+                CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
+                        Res.get("offerDetailsWindow.confirm.taker", Res.get("shared.sell")) :
+                        Res.get("offerDetailsWindow.confirm.takerAltcoin", Res.get("shared.sell"),
+                                tradeCurrencyByName);
 
         ImageView iconView = new ImageView();
         iconView.setId(isBuyerRole ? "image-buy-white" : "image-sell-white");

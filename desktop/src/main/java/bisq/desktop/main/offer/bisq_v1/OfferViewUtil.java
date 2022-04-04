@@ -120,4 +120,8 @@ public class OfferViewUtil {
     public static boolean isShownAsSellOffer(Offer offer) {
         return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) == (offer.getDirection() == OfferDirection.SELL);
     }
+
+    public static boolean isShownAsBuyOffer(Offer offer) {
+        return !isShownAsSellOffer(offer);
+    }
 }
