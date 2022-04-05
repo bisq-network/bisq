@@ -20,6 +20,7 @@ package bisq.core.trade.bsq_swap;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.offer.Offer;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradableList;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 
@@ -113,6 +114,10 @@ public class BsqSwapTradeManager implements PersistedDataHost {
     }
 
     public List<BsqSwapTrade> getBsqSwapTrades() {
+        return ImmutableList.copyOf(new ArrayList<>(getObservableList()));
+    }
+
+    public List<Tradable> getTradableList() {
         return ImmutableList.copyOf(new ArrayList<>(getObservableList()));
     }
 

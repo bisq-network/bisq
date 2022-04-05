@@ -52,6 +52,7 @@ import javafx.collections.ObservableList;
 
 import java.time.Instant;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -147,6 +148,10 @@ public class ClosedTradableManager implements PersistedDataHost {
 
     public ObservableList<Tradable> getObservableList() {
         return closedTradables.getObservableList();
+    }
+
+    public List<Tradable> getTradableList() {
+        return ImmutableList.copyOf(new ArrayList<>(getObservableList()));
     }
 
     public List<Trade> getClosedTrades() {
