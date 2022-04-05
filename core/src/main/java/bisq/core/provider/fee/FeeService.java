@@ -122,7 +122,7 @@ public class FeeService {
     private long txFeePerVbyte = BTC_DEFAULT_TX_FEE;
     private Map<String, Long> timeStampMap;
     @Getter
-    private long lastRequest;
+    private long lastRequest = 0;
     @Getter
     private long minFeePerVByte;
     private long epochInSecondAtLastRequest;
@@ -176,6 +176,7 @@ public class FeeService {
             log.debug("We got a requestFees called again before min pause of {} minutes has passed.",
                     MIN_PAUSE_BETWEEN_REQUESTS_IN_MIN);
             success();
+            return;
         }
 
         lastRequest = now;
