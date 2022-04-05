@@ -23,6 +23,7 @@ import bisq.core.offer.Offer;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.model.TradableList;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.user.Preferences;
 
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
@@ -35,10 +36,13 @@ import javax.inject.Named;
 
 import javafx.collections.ObservableList;
 
+import java.time.Instant;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -56,6 +60,7 @@ public class FailedTradesManager implements PersistedDataHost {
     private final KeyRing keyRing;
     private final PriceFeedService priceFeedService;
     private final BtcWalletService btcWalletService;
+    private final Preferences preferences;
     private final CleanupMailboxMessagesService cleanupMailboxMessagesService;
     private final PersistenceManager<TradableList<Trade>> persistenceManager;
     private final TradeUtil tradeUtil;
@@ -69,6 +74,7 @@ public class FailedTradesManager implements PersistedDataHost {
     public FailedTradesManager(KeyRing keyRing,
                                PriceFeedService priceFeedService,
                                BtcWalletService btcWalletService,
+                               Preferences preferences,
                                PersistenceManager<TradableList<Trade>> persistenceManager,
                                TradeUtil tradeUtil,
                                CleanupMailboxMessagesService cleanupMailboxMessagesService,
@@ -77,6 +83,7 @@ public class FailedTradesManager implements PersistedDataHost {
         this.keyRing = keyRing;
         this.priceFeedService = priceFeedService;
         this.btcWalletService = btcWalletService;
+        this.preferences = preferences;
         this.cleanupMailboxMessagesService = cleanupMailboxMessagesService;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
         this.persistenceManager = persistenceManager;
@@ -101,10 +108,12 @@ public class FailedTradesManager implements PersistedDataHost {
 
     public void onAllServicesInitialized() {
         cleanupMailboxMessagesService.handleTrades(failedTrades.getList());
+        maybeClearSensitiveData();
     }
 
     public void add(Trade trade) {
         if (failedTrades.add(trade)) {
+            maybeClearSensitiveData();
             requestPersistence();
         }
     }
@@ -210,5 +219,26 @@ public class FailedTradesManager implements PersistedDataHost {
 
     private void requestPersistence() {
         persistenceManager.requestPersistence();
+    }
+
+    private void maybeClearSensitiveData() {
+        log.info("checking failed trades eligibility for having sensitive data cleared");
+        failedTrades.stream()
+                .filter(e -> canTradeHaveSensitiveDataCleared(e.getId()))
+                .forEach(Trade::maybeClearSensitiveData);
+        requestPersistence();
+    }
+
+    private boolean canTradeHaveSensitiveDataCleared(String tradeId) {
+        Instant safeDate = getSafeDateForSensitiveDataClearing();
+        return failedTrades.stream()
+                .filter(e -> e.getId().equals(tradeId))
+                .filter(e -> e.getDate().toInstant().isBefore(safeDate))
+                .count() > 0;
+    }
+
+    private Instant getSafeDateForSensitiveDataClearing() {
+        return Instant.ofEpochSecond(Instant.now().getEpochSecond()
+                - TimeUnit.DAYS.toSeconds(preferences.getClearDataAfterDays()));
     }
 }
