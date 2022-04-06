@@ -253,11 +253,7 @@ public class PriceFeedService {
     }
 
     public void setBisqMarketPrice(String currencyCode, Price price) {
-        if (!cache.containsKey(currencyCode) || !cache.get(currencyCode).isExternallyProvidedPrice()) {
-            cache.put(currencyCode, new MarketPrice(currencyCode,
-                    MathUtils.scaleDownByPowerOf10(price.getValue(), CurrencyUtil.isCryptoCurrency(currencyCode) ? 8 : 4),
-                    0,
-                    false));
+        if (applyPriceToCache(currencyCode, price)) {
             updateCounter.set(updateCounter.get() + 1);
         }
     }
@@ -297,15 +293,19 @@ public class PriceFeedService {
     }
 
     public void applyInitialBisqMarketPrice(Map<String, Price> priceByCurrencyCode) {
-        priceByCurrencyCode.forEach((currencyCode, price) -> {
-            if (!cache.containsKey(currencyCode) || !cache.get(currencyCode).isExternallyProvidedPrice()) {
-                cache.put(currencyCode, new MarketPrice(currencyCode,
-                        MathUtils.scaleDownByPowerOf10(price.getValue(), CurrencyUtil.isCryptoCurrency(currencyCode) ? 8 : 4),
-                        0,
-                        false));
-            }
-        });
+        priceByCurrencyCode.forEach(this::applyPriceToCache);
         updateCounter.set(updateCounter.get() + 1);
+    }
+
+    private boolean applyPriceToCache(String currencyCode, Price price) {
+        if (!cache.containsKey(currencyCode) || !cache.get(currencyCode).isExternallyProvidedPrice()) {
+            cache.put(currencyCode, new MarketPrice(currencyCode,
+                    MathUtils.scaleDownByPowerOf10(price.getValue(), CurrencyUtil.isCryptoCurrency(currencyCode) ? 8 : 4),
+                    0,
+                    false));
+            return true;
+        }
+        return false;
     }
 
     public Optional<Price> getBsqPrice() {
