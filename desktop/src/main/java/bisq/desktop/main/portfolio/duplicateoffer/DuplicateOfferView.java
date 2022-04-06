@@ -24,6 +24,7 @@ import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
@@ -33,16 +34,18 @@ import com.google.inject.Inject;
 
 import javax.inject.Named;
 
+import javafx.collections.ObservableList;
+
 @FxmlView
 public class DuplicateOfferView extends MutableOfferView<DuplicateOfferViewModel> {
 
     @Inject
     private DuplicateOfferView(DuplicateOfferViewModel model,
-                          Navigation navigation,
-                          Preferences preferences,
-                          OfferDetailsWindow offerDetailsWindow,
-                          @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
-                          BsqFormatter bsqFormatter) {
+                               Navigation navigation,
+                               Preferences preferences,
+                               OfferDetailsWindow offerDetailsWindow,
+                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
+                               BsqFormatter bsqFormatter) {
         super(model, navigation, preferences, offerDetailsWindow, btcFormatter, bsqFormatter);
     }
 
@@ -59,6 +62,11 @@ public class DuplicateOfferView extends MutableOfferView<DuplicateOfferViewModel
 
         // To force re-validation of payment account validation
         onPaymentAccountsComboBoxSelected();
+    }
+
+    @Override
+    protected ObservableList<PaymentAccount> filterPaymentAccounts(ObservableList<PaymentAccount> paymentAccounts) {
+        return paymentAccounts;
     }
 
     public void initWithData(OfferPayload offerPayload) {

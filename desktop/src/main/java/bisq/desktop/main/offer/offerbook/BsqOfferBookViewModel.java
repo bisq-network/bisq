@@ -109,6 +109,11 @@ public class BsqOfferBookViewModel extends OfferBookViewModel {
     }
 
     @Override
+    TradeCurrency getDefaultTradeCurrency() {
+        return BSQ;
+    }
+
+    @Override
     String getCurrencyCodeFromPreferences(OfferDirection direction) {
         return BSQ.getCode();
     }

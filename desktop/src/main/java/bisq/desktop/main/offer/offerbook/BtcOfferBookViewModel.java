@@ -26,6 +26,7 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
@@ -124,6 +125,11 @@ public class BtcOfferBookViewModel extends OfferBookViewModel {
             boolean notMyOfferOrShowMyOffersActivated = !isMyOffer(offerBookListItem.getOffer()) || preferences.isShowOwnOffersInOfferBook();
             return directionResult && currencyResult && paymentMethodResult && notMyOfferOrShowMyOffersActivated;
         };
+    }
+
+    @Override
+    TradeCurrency getDefaultTradeCurrency() {
+        return GlobalSettings.getDefaultTradeCurrency();
     }
 
     @Override

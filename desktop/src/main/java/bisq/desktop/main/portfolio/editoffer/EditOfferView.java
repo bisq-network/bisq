@@ -28,6 +28,7 @@ import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
@@ -49,6 +50,8 @@ import javafx.scene.layout.HBox;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+
+import javafx.collections.ObservableList;
 
 import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabelAfterGroup;
 
@@ -172,6 +175,11 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
 
     private void removeBindings() {
         confirmButton.disableProperty().unbind();
+    }
+
+    @Override
+    protected ObservableList<PaymentAccount> filterPaymentAccounts(ObservableList<PaymentAccount> paymentAccounts) {
+        return paymentAccounts;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

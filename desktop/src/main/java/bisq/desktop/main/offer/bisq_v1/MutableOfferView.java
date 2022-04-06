@@ -35,7 +35,9 @@ import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.wallet.BsqWalletView;
 import bisq.desktop.main.dao.wallet.receive.BsqReceiveView;
+import bisq.desktop.main.offer.ClosableView;
 import bisq.desktop.main.offer.OfferView;
+import bisq.desktop.main.offer.SelectableView;
 import bisq.desktop.main.overlays.notifications.Notification;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
@@ -104,6 +106,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 import javafx.util.StringConverter;
 
@@ -125,7 +128,7 @@ import static bisq.desktop.main.offer.bisq_v1.OfferViewUtil.addPayInfoEntry;
 import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
-public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> extends ActivatableViewAndModel<AnchorPane, M> {
+public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> extends ActivatableViewAndModel<AnchorPane, M> implements ClosableView, SelectableView {
     protected final Navigation navigation;
     private final Preferences preferences;
     private final OfferDetailsWindow offerDetailsWindow;
@@ -137,7 +140,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     private TitledGroupBg payFundsTitledGroupBg, setDepositTitledGroupBg, paymentTitledGroupBg;
     protected TitledGroupBg amountTitledGroupBg;
     private BusyAnimation waitingForFundsSpinner;
-    private AutoTooltipButton nextButton, cancelButton1, cancelButton2, placeOfferButton;
+    private AutoTooltipButton nextButton, cancelButton1, cancelButton2, placeOfferButton, fundFromSavingsWalletButton;
     private Button priceTypeToggleButton;
     private InputTextField fixedPriceTextField, marketBasedPriceTextField, triggerPriceInputTextField;
     protected InputTextField amountTextField, minAmountTextField, volumeTextField, buyerSecurityDepositInputTextField;
@@ -217,7 +220,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         balanceTextField.setFormatter(model.getBtcFormatter());
 
         paymentAccountsComboBox.setConverter(GUIUtil.getPaymentAccountsComboBoxStringConverter());
-        paymentAccountsComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("shared.selectTradingAccount"),
+        paymentAccountsComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("shared.chooseTradingAccount"),
                 paymentAccountsComboBox, false));
         paymentAccountsComboBox.setCellFactory(model.getPaymentAccountListCellFactory(paymentAccountsComboBox));
 
@@ -252,9 +255,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             addressTextField.setAddress(model.getAddressAsString());
             addressTextField.setPaymentLabel(model.getPaymentLabel());
 
-            paymentAccountsComboBox.setItems(model.getDataModel().getPaymentAccounts());
-            paymentAccountsComboBox.getSelectionModel().select(model.getPaymentAccount());
             currencyComboBox.getSelectionModel().select(model.getTradeCurrency());
+            paymentAccountsComboBox.setItems(getPaymentAccounts());
+            paymentAccountsComboBox.getSelectionModel().select(model.getPaymentAccount());
 
             onPaymentAccountsComboBoxSelected();
 
@@ -327,13 +330,29 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                     }).show();
         }
 
-        if (direction == OfferDirection.BUY) {
+        String placeOfferButtonLabel;
+
+        if (OfferViewUtil.isShownAsBuyOffer(direction, tradeCurrency)) {
             placeOfferButton.setId("buy-button-big");
-            placeOfferButton.updateText(Res.get("createOffer.placeOfferButton", Res.get("shared.buy")));
+            if (CurrencyUtil.isFiatCurrency(tradeCurrency.getCode())) {
+                placeOfferButtonLabel = Res.get("createOffer.placeOfferButton", Res.get("shared.buy"));
+            } else {
+                placeOfferButtonLabel = Res.get("createOffer.placeOfferButtonAltcoin", Res.get("shared.buy"), tradeCurrency.getName());
+            }
+            placeOfferButton.updateText(placeOfferButtonLabel);
+            nextButton.setId("buy-button");
+            fundFromSavingsWalletButton.setId("buy-button");
         } else {
             placeOfferButton.setId("sell-button-big");
-            placeOfferButton.updateText(Res.get("createOffer.placeOfferButton", Res.get("shared.sell")));
+            if (CurrencyUtil.isFiatCurrency(tradeCurrency.getCode())) {
+                placeOfferButtonLabel = Res.get("createOffer.placeOfferButton", Res.get("shared.sell"));
+            } else {
+                placeOfferButtonLabel = Res.get("createOffer.placeOfferButtonAltcoin", Res.get("shared.sell"), tradeCurrency.getName());
+            }
+            nextButton.setId("sell-button");
+            fundFromSavingsWalletButton.setId("sell-button");
         }
+
 
         updatePriceToggle();
 
@@ -771,6 +790,15 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             marketBasedPriceTextField.clear();
             volumeTextField.clear();
             triggerPriceInputTextField.clear();
+            if (!CurrencyUtil.isFiatCurrency(newValue)) {
+                if (model.isShownAsBuyOffer()) {
+                    placeOfferButton.updateText(Res.get("createOffer.placeOfferButtonAltcoin", Res.get("shared.buy"),
+                            model.getTradeCurrency().getName()));
+                } else {
+                    placeOfferButton.updateText(Res.get("createOffer.placeOfferButtonAltcoin", Res.get("shared.sell"),
+                            model.getTradeCurrency().getName()));
+                }
+            }
         };
 
         placeOfferCompletedListener = (o, oldValue, newValue) -> {
@@ -1031,7 +1059,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     }
 
     private void addPaymentGroup() {
-        paymentTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, "Buy BTC with Fiat");
+        paymentTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("shared.chooseTradingAccount"));
         GridPane.setColumnSpan(paymentTitledGroupBg, 2);
 
         HBox paymentGroupBox = new HBox();
@@ -1040,7 +1068,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         paymentGroupBox.setPadding(new Insets(10, 0, 18, 0));
 
         final Tuple3<VBox, Label, ComboBox<PaymentAccount>> tradingAccountBoxTuple = addTopLabelComboBox(
-                Res.get("shared.tradingAccount"), Res.get("shared.selectTradingAccount"));
+                Res.get("shared.chooseTradingAccount"), Res.get("shared.chooseTradingAccount"));
         final Tuple3<VBox, Label, ComboBox<TradeCurrency>> currencyBoxTuple = addTopLabelComboBox(
                 Res.get("shared.currency"), Res.get("list.currency.select"));
 
@@ -1234,7 +1262,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         fundingHBox.setVisible(false);
         fundingHBox.setManaged(false);
         fundingHBox.setSpacing(10);
-        Button fundFromSavingsWalletButton = new AutoTooltipButton(Res.get("shared.fundFromSavingsWalletButton"));
+        fundFromSavingsWalletButton = new AutoTooltipButton(Res.get("shared.fundFromSavingsWalletButton"));
         fundFromSavingsWalletButton.setDefaultButton(true);
         fundFromSavingsWalletButton.getStyleClass().add("action-button");
         fundFromSavingsWalletButton.setOnAction(e -> model.fundFromSavingsWallet());
@@ -1553,4 +1581,18 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                 model.getTotalToPayInfo());
         return infoGridPane;
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Helpers
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private ObservableList<PaymentAccount> getPaymentAccounts() {
+        return filterPaymentAccounts(model.getDataModel().getPaymentAccounts());
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Abstract Methods
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected abstract ObservableList<PaymentAccount> filterPaymentAccounts(ObservableList<PaymentAccount> paymentAccounts);
 }

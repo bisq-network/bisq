@@ -19,7 +19,7 @@ package bisq.desktop.main.offer;
 
 import bisq.core.offer.Offer;
 
-public interface InitializableWithData {
+public interface InitializableViewWithTakeOfferData {
 
     public void initWithData(Offer offer);
 

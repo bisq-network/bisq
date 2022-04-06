@@ -25,7 +25,8 @@ import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
-import bisq.desktop.main.offer.InitializableWithData;
+import bisq.desktop.main.offer.InitializableViewWithTakeOfferData;
+import bisq.desktop.main.offer.SelectableView;
 import bisq.desktop.main.offer.bisq_v1.OfferViewUtil;
 import bisq.desktop.main.offer.bsq_swap.BsqSwapOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -74,7 +75,7 @@ import static bisq.core.offer.bsq_swap.BsqSwapOfferModel.BSQ;
 import static bisq.desktop.util.FormBuilder.*;
 
 @FxmlView
-public class BsqSwapTakeOfferView extends BsqSwapOfferView<BsqSwapTakeOfferViewModel> implements InitializableWithData {
+public class BsqSwapTakeOfferView extends BsqSwapOfferView<BsqSwapTakeOfferViewModel> implements InitializableViewWithTakeOfferData, SelectableView {
     private HBox minAmountHBox;
     private Label offerAvailabilityLabel;
     private TextField paymentMethodTextField, currencyTextField, priceTextField,

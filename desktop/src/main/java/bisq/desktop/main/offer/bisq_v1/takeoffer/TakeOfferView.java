@@ -36,9 +36,10 @@ import bisq.desktop.main.dao.wallet.BsqWalletView;
 import bisq.desktop.main.dao.wallet.receive.BsqReceiveView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.withdrawal.WithdrawalView;
-import bisq.desktop.main.offer.Closable;
-import bisq.desktop.main.offer.InitializableWithData;
+import bisq.desktop.main.offer.ClosableView;
+import bisq.desktop.main.offer.InitializableViewWithTakeOfferData;
 import bisq.desktop.main.offer.OfferView;
+import bisq.desktop.main.offer.SelectableView;
 import bisq.desktop.main.offer.bisq_v1.OfferViewUtil;
 import bisq.desktop.main.overlays.notifications.Notification;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -123,7 +124,7 @@ import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 @FxmlView
-public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOfferViewModel> implements Closable, InitializableWithData {
+public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOfferViewModel> implements ClosableView, InitializableViewWithTakeOfferData, SelectableView {
     private final Navigation navigation;
     private final CoinFormatter formatter;
     private final BsqFormatter bsqFormatter;
@@ -819,7 +820,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         GridPane.setColumnSpan(paymentAccountTitledGroupBg, 2);
 
         final Tuple4<ComboBox<PaymentAccount>, Label, TextField, HBox> paymentAccountTuple = addComboBoxTopLabelTextField(gridPane,
-                gridRow, Res.get("shared.selectTradingAccount"),
+                gridRow, Res.get("shared.chooseTradingAccount"),
                 Res.get("shared.paymentMethod"), Layout.FIRST_ROW_DISTANCE);
 
         paymentAccountsComboBox = paymentAccountTuple.first;

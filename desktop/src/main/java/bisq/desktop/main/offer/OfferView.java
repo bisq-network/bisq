@@ -31,13 +31,13 @@ import bisq.desktop.main.offer.offerbook.BsqOfferBookViewModel;
 import bisq.desktop.main.offer.offerbook.BtcOfferBookView;
 import bisq.desktop.main.offer.offerbook.OfferBookView;
 import bisq.desktop.main.offer.offerbook.OtherOfferBookView;
+import bisq.desktop.main.offer.offerbook.OtherOfferBookViewModel;
 import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookView;
 import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookViewModel;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.GlobalSettings;
-import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
@@ -50,25 +50,20 @@ import bisq.network.p2p.P2PService;
 
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
-import javafx.scene.layout.AnchorPane;
 
 import javafx.beans.value.ChangeListener;
 
-import javafx.collections.ListChangeListener;
-
-import java.util.List;
 import java.util.Optional;
+
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
 public abstract class OfferView extends ActivatableView<TabPane, Void> {
 
     private OfferBookView<?, ?> btcOfferBookView, bsqOfferBookView, topAltcoinOfferBookView, otherOfferBookView;
-    private CreateOfferView createOfferView;
-    private BsqSwapCreateOfferView bsqSwapCreateOfferView;
 
-    private AnchorPane createOfferPane;
-    private Tab createOfferTab, btcOfferBookTab, bsqOfferBookTab, topAltcoinOfferBookTab, otherOfferBookTab;
+    private Tab btcOfferBookTab, bsqOfferBookTab, topAltcoinOfferBookTab, otherOfferBookTab;
 
     private final ViewLoader viewLoader;
     private final Navigation navigation;
@@ -79,14 +74,9 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
 
     private Offer offer;
     private TradeCurrency tradeCurrency;
-    private boolean createOfferViewOpen;
     private Navigation.Listener navigationListener;
     private ChangeListener<Tab> tabChangeListener;
-    private ListChangeListener<Tab> tabListChangeListener;
     private OfferView.OfferActionHandler offerActionHandler;
-
-    private Class<? extends View> currentViewClass;
-
 
     protected OfferView(ViewLoader viewLoader,
                         Navigation navigation,
@@ -113,11 +103,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         };
         tabChangeListener = (observableValue, oldValue, newValue) -> {
             if (newValue != null) {
-                if (newValue.equals(createOfferTab) && createOfferView != null) {
-                    createOfferView.onTabSelected(true);
-                } else if (newValue.equals(createOfferTab) && bsqSwapCreateOfferView != null) {
-                    bsqSwapCreateOfferView.onTabSelected(true);
-                } else if (newValue.equals(btcOfferBookTab)) {
+                if (newValue.equals(btcOfferBookTab)) {
                     if (btcOfferBookView != null) {
                         btcOfferBookView.onTabSelected(true);
                     } else {
@@ -144,11 +130,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 }
             }
             if (oldValue != null) {
-                if (oldValue.equals(createOfferTab) && createOfferView != null) {
-                    createOfferView.onTabSelected(false);
-                } else if (oldValue.equals(createOfferTab) && bsqSwapCreateOfferView != null) {
-                    bsqSwapCreateOfferView.onTabSelected(false);
-                } else if (oldValue.equals(btcOfferBookTab) && btcOfferBookView != null) {
+                if (oldValue.equals(btcOfferBookTab) && btcOfferBookView != null) {
                     btcOfferBookView.onTabSelected(false);
                 } else if (oldValue.equals(bsqOfferBookTab) && bsqOfferBookView != null) {
                     bsqOfferBookView.onTabSelected(false);
@@ -159,32 +141,20 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 }
             }
         };
-        tabListChangeListener = change -> {
-            change.next();
-            List<? extends Tab> removedTabs = change.getRemoved();
-            if (removedTabs.size() == 1) {
-                if (removedTabs.get(0).getContent().equals(createOfferPane))
-                    onCreateOfferViewRemoved();
-            }
-        };
 
         offerActionHandler = new OfferActionHandler() {
             @Override
             public void onCreateOffer(TradeCurrency tradeCurrency, PaymentMethod paymentMethod) {
-                if (createOfferViewOpen) {
-                    root.getTabs().remove(createOfferTab);
-                }
                 if (canCreateOrTakeOffer(tradeCurrency)) {
-                    openCreateOffer(tradeCurrency, paymentMethod);
+                    showCreateOffer(tradeCurrency, paymentMethod);
                 }
             }
 
             @Override
             public void onTakeOffer(Offer offer) {
-                // can we have multiple take offer views open?
                 Optional<TradeCurrency> optionalTradeCurrency = CurrencyUtil.getTradeCurrency(offer.getCurrencyCode());
                 if (optionalTradeCurrency.isPresent() && canCreateOrTakeOffer(optionalTradeCurrency.get())) {
-                    openTakeOffer(offer);
+                    showTakeOffer(offer);
                 }
             }
         };
@@ -198,7 +168,6 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         tradeCurrency = tradeCurrencyOptional.orElseGet(GlobalSettings::getDefaultTradeCurrency);
 
         root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
-        root.getTabs().addListener(tabListChangeListener);
         navigation.addListener(navigationListener);
         if (btcOfferBookView == null) {
             navigation.navigateTo(MainView.class, this.getClass(), BtcOfferBookView.class);
@@ -209,17 +178,6 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
     protected void deactivate() {
         navigation.removeListener(navigationListener);
         root.getSelectionModel().selectedItemProperty().removeListener(tabChangeListener);
-        root.getTabs().removeListener(tabListChangeListener);
-    }
-
-    private String getCreateOfferTabName(Class<? extends View> viewClass) {
-        return viewClass == BsqSwapCreateOfferView.class ?
-                Res.get("offerbook.bsqSwap.createOffer").toUpperCase() :
-                Res.get("offerbook.createOffer").toUpperCase();
-    }
-
-    private String getTakeOfferTabName() {
-        return Res.get("offerbook.takeOffer").toUpperCase();
     }
 
     private void loadView(Class<? extends View> viewClass,
@@ -227,41 +185,57 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                           @Nullable Object data) {
         TabPane tabPane = root;
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
-        currentViewClass = viewClass;
-        View view;
 
         if (OfferBookView.class.isAssignableFrom(viewClass)) {
 
             if (viewClass == BtcOfferBookView.class && btcOfferBookTab != null && btcOfferBookView != null) {
                 if (childViewClass == null) {
                     btcOfferBookTab.setContent(btcOfferBookView.getRoot());
-                } else {
+                } else if (childViewClass == TakeOfferView.class) {
                     loadTakeViewClass(viewClass, childViewClass, btcOfferBookTab);
+                } else {
+                    loadCreateViewClass(btcOfferBookView, viewClass, childViewClass, btcOfferBookTab, (PaymentMethod) data, null);
                 }
                 tabPane.getSelectionModel().select(btcOfferBookTab);
             } else if (viewClass == BsqOfferBookView.class && bsqOfferBookTab != null && bsqOfferBookView != null) {
                 if (childViewClass == null) {
                     bsqOfferBookTab.setContent(bsqOfferBookView.getRoot());
-                } else {
+                } else if (childViewClass == TakeOfferView.class) {
                     loadTakeViewClass(viewClass, childViewClass, bsqOfferBookTab);
+                } else if (data instanceof BsqSwapOfferPayload) {
+                    loadCreateViewClass(bsqOfferBookView, viewClass, childViewClass, bsqOfferBookTab, PaymentMethod.BSQ_SWAP, (BsqSwapOfferPayload) data);
+                } else {
+                    loadCreateViewClass(bsqOfferBookView, viewClass, childViewClass, bsqOfferBookTab, (PaymentMethod) data, null);
                 }
                 tabPane.getSelectionModel().select(bsqOfferBookTab);
             } else if (viewClass == TopAltcoinOfferBookView.class && topAltcoinOfferBookTab != null && topAltcoinOfferBookView != null) {
                 if (childViewClass == null) {
                     topAltcoinOfferBookTab.setContent(topAltcoinOfferBookView.getRoot());
-                } else {
+                } else if (childViewClass == TakeOfferView.class) {
                     loadTakeViewClass(viewClass, childViewClass, topAltcoinOfferBookTab);
+                } else {
+                    loadCreateViewClass(topAltcoinOfferBookView, viewClass, childViewClass, topAltcoinOfferBookTab, (PaymentMethod) data, null);
                 }
                 tabPane.getSelectionModel().select(topAltcoinOfferBookTab);
             } else if (viewClass == OtherOfferBookView.class && otherOfferBookTab != null && otherOfferBookView != null) {
                 if (childViewClass == null) {
                     otherOfferBookTab.setContent(otherOfferBookView.getRoot());
-                } else {
+                } else if (childViewClass == TakeOfferView.class) {
                     loadTakeViewClass(viewClass, childViewClass, otherOfferBookTab);
+                } else {
+                    //add sanity check in case of app restart
+                    if (CurrencyUtil.isFiatCurrency(tradeCurrency.getCode())) {
+                        Optional<TradeCurrency> tradeCurrencyOptional = (this.direction == OfferDirection.SELL) ?
+                                CurrencyUtil.getTradeCurrency(preferences.getSellScreenCryptoCurrencyCode()) :
+                                CurrencyUtil.getTradeCurrency(preferences.getBuyScreenCryptoCurrencyCode());
+                        tradeCurrency = tradeCurrencyOptional.isEmpty() ? OtherOfferBookViewModel.DEFAULT_ALTCOIN : tradeCurrencyOptional.get();
+                    }
+                    loadCreateViewClass(otherOfferBookView, viewClass, childViewClass, otherOfferBookTab, (PaymentMethod) data, null);
                 }
-                tabPane.getSelectionModel().select(topAltcoinOfferBookTab);
+                tabPane.getSelectionModel().select(otherOfferBookTab);
             } else {
                 if (btcOfferBookTab == null) {
+                    //TODO: use naming from currencies or from translations
                     btcOfferBookTab = new Tab("BITCOIN");
                     btcOfferBookTab.setClosable(false);
                     bsqOfferBookTab = new Tab("BSQ");
@@ -303,35 +277,39 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                     otherOfferBookView.onTabSelected(true);
                 }
             }
-        } else if (viewClass == CreateOfferView.class && createOfferView == null) {
-            view = viewLoader.load(viewClass);
-            // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
-            // in different graphs
-            createOfferView = (CreateOfferView) view;
-            createOfferView.initWithData(direction, tradeCurrency, offerActionHandler);
-            createOfferPane = createOfferView.getRoot();
-            createOfferTab = new Tab(getCreateOfferTabName(viewClass));
-            createOfferTab.setClosable(true);
-            // close handler from close on create offer action
-            createOfferView.setCloseHandler(() -> tabPane.getTabs().remove(createOfferTab));
-            createOfferTab.setContent(createOfferPane);
-            tabPane.getTabs().add(createOfferTab);
-            tabPane.getSelectionModel().select(createOfferTab);
-            createOfferViewOpen = true;
-        } else if (viewClass == BsqSwapCreateOfferView.class && bsqSwapCreateOfferView == null) {
-            view = viewLoader.load(viewClass);
-            bsqSwapCreateOfferView = (BsqSwapCreateOfferView) view;
-            bsqSwapCreateOfferView.initWithData(direction, offerActionHandler, (BsqSwapOfferPayload) data);
-            createOfferPane = bsqSwapCreateOfferView.getRoot();
-            createOfferTab = new Tab(getCreateOfferTabName(viewClass));
-            createOfferTab.setClosable(true);
-            // close handler from close on create offer action
-            bsqSwapCreateOfferView.setCloseHandler(() -> tabPane.getTabs().remove(createOfferTab));
-            createOfferTab.setContent(createOfferPane);
-            tabPane.getTabs().add(createOfferTab);
-            tabPane.getSelectionModel().select(createOfferTab);
-            createOfferViewOpen = true;
         }
+    }
+
+    private void loadCreateViewClass(OfferBookView<?, ?> offerBookView,
+                                     Class<? extends View> viewClass,
+                                     Class<? extends View> childViewClass,
+                                     Tab marketOfferBookTab,
+                                     @Nullable PaymentMethod paymentMethod,
+                                     @Nullable BsqSwapOfferPayload payload) {
+        if (tradeCurrency == null) {
+            return;
+        }
+
+        View view = viewLoader.load(paymentMethod != null && paymentMethod.isBsqSwap() ? BsqSwapCreateOfferView.class : childViewClass);
+        // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
+        // in different graphs
+        if (paymentMethod != null && paymentMethod.isBsqSwap()) {
+            ((BsqSwapCreateOfferView) view).initWithData(direction, offerActionHandler, payload);
+        } else {
+            ((CreateOfferView) view).initWithData(direction, tradeCurrency, offerActionHandler);
+        }
+
+        ((SelectableView) view).onTabSelected(true);
+
+        ((ClosableView) view).setCloseHandler(() -> {
+            offerBookView.enableCreateOfferButton();
+            ((SelectableView) view).onTabSelected(false);
+            navigation.navigateTo(MainView.class, this.getClass(), viewClass);
+        });
+
+
+        // close handler from close on create offer action
+        marketOfferBookTab.setContent(view.getRoot());
     }
 
     private void loadTakeViewClass(Class<? extends View> viewClass,
@@ -342,14 +320,15 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             return;
         }
 
-        View view;
-        view = viewLoader.load(offer.isBsqSwapOffer() ? BsqSwapTakeOfferView.class : childViewClass);
+        View view = viewLoader.load(offer.isBsqSwapOffer() ? BsqSwapTakeOfferView.class : childViewClass);
         // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
         // in different graphs
+        ((InitializableViewWithTakeOfferData) view).initWithData(offer);
+        ((SelectableView) view).onTabSelected(true);
 
-        ((InitializableWithData) view).initWithData(offer);
         // close handler from close on take offer action
-        ((Closable) view).setCloseHandler(() -> {
+        ((ClosableView) view).setCloseHandler(() -> {
+            ((SelectableView) view).onTabSelected(false);
             navigation.navigateTo(MainView.class, this.getClass(), viewClass);
         });
         marketOfferBookTab.setContent(view.getRoot());
@@ -360,44 +339,33 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 GUIUtil.canCreateOrTakeOfferOrShowPopup(user, navigation, tradeCurrency);
     }
 
-    private void openTakeOffer(Offer offer) {
+    private void showTakeOffer(Offer offer) {
         this.offer = offer;
-        Class<? extends OfferBookView<?, ?>> offerBookViewClass;
 
-        if (CurrencyUtil.isFiatCurrency(offer.getCurrencyCode())) {
+        Class<? extends OfferBookView<?, ?>> offerBookViewClass = getOfferBookViewClassFor(offer.getCurrencyCode());
+        navigation.navigateTo(MainView.class, this.getClass(), offerBookViewClass, TakeOfferView.class);
+    }
+
+    private void showCreateOffer(TradeCurrency tradeCurrency, PaymentMethod paymentMethod) {
+        this.tradeCurrency = tradeCurrency;
+
+        Class<? extends OfferBookView<?, ?>> offerBookViewClass = getOfferBookViewClassFor(tradeCurrency.getCode());
+        navigation.navigateToWithData(paymentMethod, MainView.class, this.getClass(), offerBookViewClass, CreateOfferView.class);
+    }
+
+    @NotNull
+    private Class<? extends OfferBookView<?, ?>> getOfferBookViewClassFor(String currencyCode) {
+        Class<? extends OfferBookView<?, ?>> offerBookViewClass;
+        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             offerBookViewClass = BtcOfferBookView.class;
-        } else if (offer.getCurrencyCode().equals(BsqOfferBookViewModel.BSQ.getCode())) {
+        } else if (currencyCode.equals(BsqOfferBookViewModel.BSQ.getCode())) {
             offerBookViewClass = BsqOfferBookView.class;
-        } else if (offer.getCurrencyCode().equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode())) {
+        } else if (currencyCode.equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode())) {
             offerBookViewClass = TopAltcoinOfferBookView.class;
         } else {
             offerBookViewClass = OtherOfferBookView.class;
         }
-        navigation.navigateTo(MainView.class, this.getClass(), offerBookViewClass, TakeOfferView.class);
-    }
-
-    private void openCreateOffer(TradeCurrency tradeCurrency, PaymentMethod paymentMethod) {
-        createOfferViewOpen = true;
-        this.tradeCurrency = tradeCurrency;
-        if (tradeCurrency.getCode().equals("BSQ") && paymentMethod.isBsqSwap()) {
-            navigation.navigateTo(MainView.class, this.getClass(), BsqSwapCreateOfferView.class);
-        } else {
-            navigation.navigateTo(MainView.class, this.getClass(), CreateOfferView.class);
-        }
-    }
-
-    private void onCreateOfferViewRemoved() {
-        createOfferViewOpen = false;
-        if (createOfferView != null) {
-            createOfferView.onClose();
-            createOfferView = null;
-        }
-        if (bsqSwapCreateOfferView != null) {
-            bsqSwapCreateOfferView = null;
-        }
-        btcOfferBookView.enableCreateOfferButton();
-        //TODO: go to last selected tab
-        navigation.navigateTo(MainView.class, this.getClass(), BtcOfferBookView.class);
+        return offerBookViewClass;
     }
 
     public interface OfferActionHandler {

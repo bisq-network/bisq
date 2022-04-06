@@ -109,6 +109,11 @@ public class TopAltcoinOfferBookViewModel extends OfferBookViewModel {
     }
 
     @Override
+    TradeCurrency getDefaultTradeCurrency() {
+        return TOP_ALTCOIN;
+    }
+
+    @Override
     String getCurrencyCodeFromPreferences(OfferDirection direction) {
         return TOP_ALTCOIN.getCode();
     }

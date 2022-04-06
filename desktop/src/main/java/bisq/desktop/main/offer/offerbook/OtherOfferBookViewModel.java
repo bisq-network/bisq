@@ -57,6 +57,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class OtherOfferBookViewModel extends OfferBookViewModel {
 
+    public static final TradeCurrency DEFAULT_ALTCOIN = CurrencyUtil.getTradeCurrency("ETH").get();
+
     @Inject
     public OtherOfferBookViewModel(User user,
                                    OpenOfferManager openOfferManager,
@@ -125,6 +127,13 @@ public class OtherOfferBookViewModel extends OfferBookViewModel {
             boolean notMyOfferOrShowMyOffersActivated = !isMyOffer(offerBookListItem.getOffer()) || preferences.isShowOwnOffersInOfferBook();
             return directionResult && currencyResult && paymentMethodResult && notMyOfferOrShowMyOffersActivated;
         };
+    }
+
+    @Override
+    TradeCurrency getDefaultTradeCurrency() {
+        // select first currency in list, otherwise if view is not initialized add Ether as default one
+        return !getTradeCurrencies().isEmpty() ? getTradeCurrencies().get(1) :
+                DEFAULT_ALTCOIN;
     }
 
     @Override

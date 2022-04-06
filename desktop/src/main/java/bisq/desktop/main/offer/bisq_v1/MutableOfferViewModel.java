@@ -981,6 +981,10 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         return btcFormatter;
     }
 
+    public boolean isShownAsBuyOffer() {
+        return OfferViewUtil.isShownAsBuyOffer(dataModel.getDirection(), dataModel.getTradeCurrency());
+    }
+
     public boolean isSellOffer() {
         return dataModel.getDirection() == OfferDirection.SELL;
     }

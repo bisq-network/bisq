@@ -28,6 +28,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
 
@@ -118,10 +119,18 @@ public class OfferViewUtil {
     }
 
     public static boolean isShownAsSellOffer(Offer offer) {
-        return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) == (offer.getDirection() == OfferDirection.SELL);
+        return isShownAsSellOffer(offer.getCurrencyCode(), offer.getDirection());
+    }
+
+    public static boolean isShownAsSellOffer(String currencyCode, OfferDirection direction) {
+        return CurrencyUtil.isFiatCurrency(currencyCode) == (direction == OfferDirection.SELL);
     }
 
     public static boolean isShownAsBuyOffer(Offer offer) {
         return !isShownAsSellOffer(offer);
+    }
+
+    public static boolean isShownAsBuyOffer(OfferDirection direction, TradeCurrency tradeCurrency) {
+        return !isShownAsSellOffer(tradeCurrency.getCode(), direction);
     }
 }

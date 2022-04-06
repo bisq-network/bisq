@@ -21,7 +21,8 @@ import bisq.desktop.Navigation;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.offer.BuyOfferView;
 import bisq.desktop.main.offer.SellOfferView;
-import bisq.desktop.main.offer.bsq_swap.create_offer.BsqSwapCreateOfferView;
+import bisq.desktop.main.offer.bisq_v1.createoffer.CreateOfferView;
+import bisq.desktop.main.offer.offerbook.BsqOfferBookView;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.portfolio.duplicateoffer.DuplicateOfferView;
 
@@ -33,8 +34,9 @@ public class PortfolioUtil {
 
     public static void duplicateOffer(Navigation navigation, OfferPayloadBase offerPayload) {
         if (offerPayload instanceof BsqSwapOfferPayload) {
-            var offerViewClass = offerPayload.getDirection() == OfferDirection.BUY ? BuyOfferView.class : SellOfferView.class;
-            navigation.navigateToWithData(offerPayload, MainView.class, offerViewClass, BsqSwapCreateOfferView.class);
+            // BUY Bitcoin means SELL BSQ
+            var offerViewClass = offerPayload.getDirection() == OfferDirection.BUY ? SellOfferView.class : BuyOfferView.class;
+            navigation.navigateToWithData(offerPayload, MainView.class, offerViewClass, BsqOfferBookView.class, CreateOfferView.class);
         } else {
             navigation.navigateToWithData(offerPayload, MainView.class, PortfolioView.class, DuplicateOfferView.class);
         }

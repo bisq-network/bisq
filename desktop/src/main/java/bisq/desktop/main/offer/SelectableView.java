@@ -17,6 +17,6 @@
 
 package bisq.desktop.main.offer;
 
-public interface Closable {
-    public void setCloseHandler(OfferView.CloseHandler closeHandler);
+public interface SelectableView {
+    public void onTabSelected(boolean isSelected);
 }

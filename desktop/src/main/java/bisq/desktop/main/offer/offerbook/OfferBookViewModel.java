@@ -34,7 +34,6 @@ import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyUtil;
-import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
@@ -232,14 +231,13 @@ abstract class OfferBookViewModel extends ActivatableViewModel {
     protected void activate() {
         filteredItems.addListener(filterItemsListener);
 
-        updateSelectedTradeCurrency();
-
         if (user != null) {
             disableMatchToggle.set(user.getPaymentAccounts() == null || user.getPaymentAccounts().isEmpty());
         }
         useOffersMatchingMyAccountsFilter = !disableMatchToggle.get() && isShowOffersMatchingMyAccounts();
 
         fillCurrencies();
+        updateSelectedTradeCurrency();
         preferences.getTradeCurrenciesAsObservable().addListener(tradeCurrencyListChangeListener);
         offerBook.fillOfferBookListItems();
         filterOffers();
@@ -548,7 +546,7 @@ abstract class OfferBookViewModel extends ActivatableViewModel {
     private void setMarketPriceFeedCurrency() {
         if (isTabSelected) {
             if (showAllTradeCurrenciesProperty.get())
-                priceFeedService.setCurrencyCode(GlobalSettings.getDefaultTradeCurrency().getCode());
+                priceFeedService.setCurrencyCode(getDefaultTradeCurrency().getCode());
             else
                 priceFeedService.setCurrencyCode(tradeCurrencyCode.get());
         }
@@ -697,10 +695,12 @@ abstract class OfferBookViewModel extends ActivatableViewModel {
             selectedTradeCurrency = CurrencyUtil.getTradeCurrency(code).get();
         } else {
             showAllTradeCurrenciesProperty.set(true);
-            selectedTradeCurrency = GlobalSettings.getDefaultTradeCurrency();
+            selectedTradeCurrency = getDefaultTradeCurrency();
         }
         tradeCurrencyCode.set(selectedTradeCurrency.getCode());
     }
+
+    abstract TradeCurrency getDefaultTradeCurrency();
 
     public void updateSelectedPaymentMethod() {
         showAllPaymentMethods = getPaymentMethods().stream().noneMatch(paymentMethod ->

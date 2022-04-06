@@ -210,7 +210,7 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
         matchingOffersToggle.setText(Res.get("offerbook.matchingOffers"));
         HBox.setMargin(matchingOffersToggle, new Insets(7, 0, -9, -15));
 
-        createOfferButton = new AutoTooltipButton(Res.get("offerbook.createNewOffer"));
+        createOfferButton = new AutoTooltipButton("");
         createOfferButton.setMinHeight(40);
         createOfferButton.setGraphicTextGap(10);
 
@@ -361,6 +361,7 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
             model.updateSelectedPaymentMethod();
             updatePaymentMethodComboBoxEditor();
             model.onSetPaymentMethod(paymentMethodComboBox.getSelectionModel().getSelectedItem());
+            updateCreateOfferButton();
         });
         updateCurrencyComboBoxFromModel();
 
@@ -587,7 +588,6 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
     public void setDirection(OfferDirection direction) {
         model.initWithDirection(direction);
         ImageView iconView = new ImageView();
-
         createOfferButton.setGraphic(iconView);
         iconView.setId(direction == OfferDirection.SELL ? "image-sell-white" : "image-buy-white");
         createOfferButton.setId(direction == OfferDirection.SELL ? "sell-button-big" : "buy-button-big");
@@ -605,6 +605,7 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
             updateCurrencyComboBoxFromModel();
             root.requestFocus();
         }
+        updateCreateOfferButton();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -616,12 +617,14 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
             if (!model.hasPaymentAccountForCurrency()) {
                 new Popup().headLine(Res.get("offerbook.warning.noTradingAccountForCurrency.headline"))
                         .instruction(Res.get("offerbook.warning.noTradingAccountForCurrency.msg"))
-                        .actionButtonText(Res.get("offerbook.yesCreateOffer"))
-                        .onAction(this::disableCreateOfferButton)
-                        .secondaryActionButtonText(Res.get("offerbook.setupNewAccount"))
-                        .onSecondaryAction(() -> {
+                        .actionButtonText(Res.get("offerbook.setupNewAccount"))
+                        .onAction(() -> {
                             navigation.setReturnPath(navigation.getCurrentPath());
-                            navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
+                            if (CurrencyUtil.isFiatCurrency(model.getSelectedTradeCurrency().getCode())) {
+                                navigation.navigateTo(MainView.class, AccountView.class, FiatAccountsView.class);
+                            } else {
+                                navigation.navigateTo(MainView.class, AccountView.class, AltCoinAccountsView.class);
+                            }
                         })
                         .width(725)
                         .show();
@@ -1084,6 +1087,7 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
 
                             final ImageView iconView = new ImageView();
                             final AutoTooltipButton button = new AutoTooltipButton();
+
                             {
                                 button.setGraphic(iconView);
                                 button.setGraphicTextGap(10);
@@ -1092,6 +1096,7 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
 
                             final ImageView iconView2 = new ImageView();
                             final AutoTooltipButton button2 = new AutoTooltipButton();
+
                             {
                                 button2.setGraphic(iconView2);
                                 button2.setGraphicTextGap(10);
@@ -1099,6 +1104,7 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
                             }
 
                             final HBox hbox = new HBox();
+
                             {
                                 hbox.setSpacing(8);
                                 hbox.setAlignment(Pos.CENTER);
@@ -1282,4 +1288,12 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
         HBox.setHgrow(spacer, Priority.ALWAYS);
         return spacer;
     }
+
+    private void updateCreateOfferButton() {
+        createOfferButton.setText(Res.get("offerbook.createNewOffer",
+                model.getDirection() == OfferDirection.BUY ? Res.get("shared.buy") : Res.get("shared.sell"),
+                getCreateOfferButtonLabel()).toUpperCase());
+    }
+
+    abstract String getCreateOfferButtonLabel();
 }

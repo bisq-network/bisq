@@ -26,6 +26,7 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.offer.OfferView;
+import bisq.desktop.main.offer.SelectableView;
 import bisq.desktop.main.offer.bsq_swap.BsqSwapOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.BsqSwapOfferDetailsWindow;
@@ -82,7 +83,7 @@ import static bisq.desktop.util.FormBuilder.*;
 
 @FxmlView
 @Slf4j
-public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferViewModel> {
+public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferViewModel> implements SelectableView {
     private InputTextField minAmountTextField, priceTextField, volumeTextField;
     private Label miningPowLabel;
     private BusyAnimation miningPowBusyAnimation;
@@ -431,7 +432,7 @@ public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferV
 
     @Override
     protected void addPaymentAccountGroup() {
-        paymentAccountTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("shared.selectTradingAccount"));
+        paymentAccountTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("shared.chooseTradingAccount"));
         GridPane.setColumnSpan(paymentAccountTitledGroupBg, 2);
 
         HBox paymentGroupBox = new HBox();
@@ -440,7 +441,7 @@ public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferV
         paymentGroupBox.setPadding(new Insets(10, 0, 18, 0));
 
         Tuple3<VBox, Label, ComboBox<PaymentAccount>> paymentAccountBoxTuple = addTopLabelComboBox(
-                Res.get("shared.tradingAccount"), Res.get("shared.selectTradingAccount"));
+                Res.get("shared.chooseTradingAccount"), Res.get("shared.chooseTradingAccount"));
 
         Tuple3<Label, TextField, VBox> currencyTextFieldTuple = addTopLabelTextField(gridPane, gridRow,
                 Res.get("shared.currency"), BSQ, 5d);
@@ -459,7 +460,7 @@ public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferV
         paymentAccountsComboBox.setMinWidth(paymentAccountVBox.getMinWidth());
         paymentAccountsComboBox.setPrefWidth(paymentAccountVBox.getMinWidth());
         paymentAccountsComboBox.setConverter(GUIUtil.getPaymentAccountsComboBoxStringConverter());
-        paymentAccountsComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("shared.selectTradingAccount"),
+        paymentAccountsComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("shared.chooseTradingAccount"),
                 paymentAccountsComboBox, false));
         paymentAccountsComboBox.setCellFactory(getPaymentAccountListCellFactory(paymentAccountsComboBox));
 
