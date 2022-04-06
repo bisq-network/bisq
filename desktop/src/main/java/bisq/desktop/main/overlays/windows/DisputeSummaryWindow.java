@@ -132,6 +132,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private ChangeListener<Toggle> tradeAmountToggleGroupListener;
     private ChangeListener<String> compensationOrPenaltyListener;
     private boolean updatingUi = false;
+    private Popup payoutPromptOnDisplay = null;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public API
@@ -711,7 +712,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     .closeButtonText(Res.get("shared.cancel"))
                     .show();
         }
-
+        if (payoutPromptOnDisplay != null) {
+            log.warn("The payout prompt is already on display, we do not show another copy of it.");
+            return;
+        }
         Coin buyerPayoutAmount = disputeResult.getBuyerPayoutAmount();
         String buyerPayoutAddressString = contract.getBuyerPayoutAddressString();
         Coin sellerPayoutAmount = disputeResult.getSellerPayoutAmount();
@@ -736,8 +740,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     sellerPayoutAddressString);
         }
         if (outputAmount.isPositive()) {
-            new Popup().width(900)
-                    .headLine(Res.get("disputeSummaryWindow.close.txDetails.headline"))
+            payoutPromptOnDisplay = new Popup().width(900);
+            payoutPromptOnDisplay.headLine(Res.get("disputeSummaryWindow.close.txDetails.headline"))
                     .confirmation(Res.get("disputeSummaryWindow.close.txDetails",
                             formatter.formatCoinWithCode(inputAmount),
                             buyerDetails,
@@ -747,6 +751,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                             vkb))
                     .actionButtonText(Res.get("shared.yes"))
                     .onAction(() -> {
+                        payoutPromptOnDisplay = null;
                         doPayout(buyerPayoutAmount,
                                 sellerPayoutAmount,
                                 fee,
@@ -755,6 +760,9 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                                 resultHandler);
                     })
                     .closeButtonText(Res.get("shared.cancel"))
+                    .onClose(() -> {
+                        payoutPromptOnDisplay = null;
+                    })
                     .show();
         } else {
             // No payout will be made
