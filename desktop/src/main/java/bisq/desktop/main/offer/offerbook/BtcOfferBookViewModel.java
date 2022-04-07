@@ -36,6 +36,7 @@ import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.ClosedTradableManager;
+import bisq.core.trade.bsq_swap.BsqSwapTradeManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
@@ -66,6 +67,7 @@ public class BtcOfferBookViewModel extends OfferBookViewModel {
                                  P2PService p2PService,
                                  PriceFeedService priceFeedService,
                                  ClosedTradableManager closedTradableManager,
+                                 BsqSwapTradeManager bsqSwapTradeManager,
                                  AccountAgeWitnessService accountAgeWitnessService,
                                  Navigation navigation,
                                  PriceUtil priceUtil,
@@ -73,7 +75,7 @@ public class BtcOfferBookViewModel extends OfferBookViewModel {
                                  @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                                  BsqFormatter bsqFormatter,
                                  BsqWalletService bsqWalletService, CoreApi coreApi) {
-        super(user, openOfferManager, offerBook, preferences, walletsSetup, p2PService, priceFeedService, closedTradableManager, accountAgeWitnessService, navigation, priceUtil, offerFilterService, btcFormatter, bsqFormatter, bsqWalletService, coreApi);
+        super(user, openOfferManager, offerBook, preferences, walletsSetup, p2PService, priceFeedService, closedTradableManager, bsqSwapTradeManager, accountAgeWitnessService, navigation, priceUtil, offerFilterService, btcFormatter, bsqFormatter, bsqWalletService, coreApi);
     }
 
     @Override

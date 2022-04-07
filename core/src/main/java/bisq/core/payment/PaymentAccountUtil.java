@@ -19,7 +19,6 @@ package bisq.core.payment;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Country;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
@@ -141,54 +140,54 @@ public class PaymentAccountUtil {
             case STRIKE_ID:
                 return getAllStrikeCurrencies();
             case TIKKIE_ID:
-                return CurrencyUtil.getAllTikkieIdCurrencies();
+                return getAllTikkieIdCurrencies();
             case ALI_PAY_ID:
-                return CurrencyUtil.getAllAliPayAccountCurrencies();
+                return getAllAliPayAccountCurrencies();
             case NEQUI_ID:
-                return CurrencyUtil.getAllNequiCurrencies();
+                return getAllNequiCurrencies();
             case IMPS_ID:
             case NEFT_ID:
             case PAYTM_ID:
             case RTGS_ID:
             case UPI_ID:
-                return CurrencyUtil.getAllIfscBankCurrencies();
+                return getAllIfscBankCurrencies();
             case BIZUM_ID:
-                return CurrencyUtil.getAllBizumCurrencies();
+                return getAllBizumCurrencies();
             case MONEY_BEAM_ID:
-                return CurrencyUtil.getAllMoneyBeamCurrencies();
+                return getAllMoneyBeamCurrencies();
             case PIX_ID:
-                return CurrencyUtil.getAllPixCurrencies();
+                return getAllPixCurrencies();
             case SATISPAY_ID:
-                return CurrencyUtil.getAllSatispayCurrencies();
+                return getAllSatispayCurrencies();
             case CHASE_QUICK_PAY_ID:
-                return CurrencyUtil.getAllChaseQuickPayCurrencies();
+                return getAllChaseQuickPayCurrencies();
             case US_POSTAL_MONEY_ORDER_ID:
-                return CurrencyUtil.getAllUSPostalMoneyOrderCurrencies();
+                return getAllUSPostalMoneyOrderCurrencies();
             case VENMO_ID:
-                return CurrencyUtil.getAllVenmoCurrencies();
+                return getAllVenmoCurrencies();
             case JAPAN_BANK_ID:
-                return CurrencyUtil.getAllJapanBankCurrencies();
+                return getAllJapanBankCurrencies();
             case WECHAT_PAY_ID:
-                return CurrencyUtil.getAllWeChatPayCurrencies();
+                return getAllWeChatPayCurrencies();
             case CLEAR_X_CHANGE_ID:
-                return CurrencyUtil.getAllClearXchangeCurrencies();
+                return getAllClearXchangeCurrencies();
             case AUSTRALIA_PAYID_ID:
-                return CurrencyUtil.getAllAustraliaPayidCurrencies();
+                return getAllAustraliaPayidCurrencies();
             case PERFECT_MONEY_ID:
-                return CurrencyUtil.getAllPerfectMoneyCurrencies();
+                return getAllPerfectMoneyCurrencies();
             case HAL_CASH_ID:
-                return CurrencyUtil.getAllHalCashCurrencies();
+                return getAllHalCashCurrencies();
             case SWISH_ID:
-                return CurrencyUtil.getAllSwishCurrencies();
+                return getAllSwishCurrencies();
             case CASH_APP_ID:
-                return CurrencyUtil.getAllCashAppCurrencies();
+                return getAllCashAppCurrencies();
             case POPMONEY_ID:
-                return CurrencyUtil.getAllPopmoneyCurrencies();
+                return getAllPopmoneyCurrencies();
             case PROMPT_PAY_ID:
-                return CurrencyUtil.getAllPromptPayCurrencies();
+                return getAllPromptPayCurrencies();
             case SEPA_ID:
             case SEPA_INSTANT_ID:
-                return CurrencyUtil.getAllSEPACurrencies();
+                return getAllSEPACurrencies();
             case CASH_BY_MAIL_ID:
             case F2F_ID:
             case NATIONAL_BANK_ID:
@@ -196,21 +195,21 @@ public class PaymentAccountUtil {
             case SPECIFIC_BANKS_ID:
             case CASH_DEPOSIT_ID:
             case WESTERN_UNION_ID:
-                return CurrencyUtil.getAllFiatCurrencies();
+                return getAllFiatCurrencies();
             case FASTER_PAYMENTS_ID:
-                return CurrencyUtil.getAllFasterPaymentCurrencies();
+                return getAllFasterPaymentCurrencies();
             case DOMESTIC_WIRE_TRANSFER_ID:
-                return CurrencyUtil.getAllDomesticWireTransferCurrencies();
+                return getAllDomesticWireTransferCurrencies();
             case ACH_TRANSFER_ID:
-                return CurrencyUtil.getAllACHTransferCurrencies();
+                return getAllACHTransferCurrencies();
             case CELPAY_ID:
-                return CurrencyUtil.getAllCelPayCurrencies();
+                return getAllCelPayCurrencies();
             case MONESE_ID:
-                return CurrencyUtil.getAllMoneseCurrencies();
+                return getAllMoneseCurrencies();
             case TRANSFERWISE_USD_ID:
-                return CurrencyUtil.getAllTransferwiseUSDCurrencies();
+                return getAllTransferwiseUSDCurrencies();
             case VERSE_ID:
-                return CurrencyUtil.getAllVerseCurrencies();
+                return getAllVerseCurrencies();
             default:
                 return Collections.emptyList();
         }
