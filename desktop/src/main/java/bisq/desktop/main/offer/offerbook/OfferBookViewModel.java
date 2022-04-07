@@ -49,7 +49,9 @@ import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.ClosedTradableManager;
+import bisq.core.trade.bsq_swap.BsqSwapTradeManager;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
@@ -94,6 +96,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -108,6 +111,7 @@ class OfferBookViewModel extends ActivatableViewModel {
     private final P2PService p2PService;
     final PriceFeedService priceFeedService;
     private final ClosedTradableManager closedTradableManager;
+    private final BsqSwapTradeManager bsqSwapTradeManager;
     final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
     private final PriceUtil priceUtil;
@@ -161,6 +165,7 @@ class OfferBookViewModel extends ActivatableViewModel {
                               P2PService p2PService,
                               PriceFeedService priceFeedService,
                               ClosedTradableManager closedTradableManager,
+                              BsqSwapTradeManager bsqSwapTradeManager,
                               AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
                               PriceUtil priceUtil,
@@ -179,6 +184,7 @@ class OfferBookViewModel extends ActivatableViewModel {
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
         this.closedTradableManager = closedTradableManager;
+        this.bsqSwapTradeManager = bsqSwapTradeManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
         this.priceUtil = priceUtil;
@@ -626,11 +632,12 @@ class OfferBookViewModel extends ActivatableViewModel {
     }
 
     int getNumTrades(Offer offer) {
-        return closedTradableManager.getObservableList().stream()
+        return Stream.concat(closedTradableManager.getTradableList().stream(), bsqSwapTradeManager.getTradableList().stream())
+                .filter(e -> e instanceof Trade || e instanceof BsqSwapTrade)    // weed out canceled offers
                 .filter(e -> {
-                    final NodeAddress tradingPeerNodeAddress = e instanceof Trade ? ((Trade) e).getTradingPeerNodeAddress() : null;
-                    return tradingPeerNodeAddress != null &&
-                            tradingPeerNodeAddress.getFullAddress().equals(offer.getMakerNodeAddress().getFullAddress());
+                    final Optional<NodeAddress> tradingPeerNodeAddress = e.getOptionalTradingPeerNodeAddress();
+                    return tradingPeerNodeAddress.isPresent() &&
+                            tradingPeerNodeAddress.get().getFullAddress().equals(offer.getMakerNodeAddress().getFullAddress());
                 })
                 .collect(Collectors.toSet())
                 .size();

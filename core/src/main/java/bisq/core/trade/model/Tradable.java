@@ -21,6 +21,8 @@ import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 
+import bisq.network.p2p.NodeAddress;
+
 import bisq.common.proto.persistable.PersistablePayload;
 
 import org.bitcoinj.core.Coin;
@@ -71,5 +73,9 @@ public interface Tradable extends PersistablePayload {
 
     default Optional<Coin> getOptionalMakerFee() {
         return asTradeModel().map(TradeModel::getMakerFee).or(() -> Optional.ofNullable(getOffer().getMakerFee()));
+    }
+
+    default Optional<NodeAddress> getOptionalTradingPeerNodeAddress() {
+        return asTradeModel().map(TradeModel::getTradingPeerNodeAddress);
     }
 }
