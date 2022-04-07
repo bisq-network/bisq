@@ -23,7 +23,6 @@ import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.provider.PriceHttpClient;
 import bisq.core.provider.ProvidersRepository;
-import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.user.Preferences;
 
 import bisq.network.http.HttpClient;
@@ -49,15 +48,11 @@ import javafx.beans.property.StringProperty;
 
 import java.time.Instant;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import java.util.Set;
 import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
@@ -257,12 +252,8 @@ public class PriceFeedService {
         return cache.getOrDefault(currencyCode, null);
     }
 
-    private void setBisqMarketPrice(String currencyCode, Price price) {
-        if (!cache.containsKey(currencyCode) || !cache.get(currencyCode).isExternallyProvidedPrice()) {
-            cache.put(currencyCode, new MarketPrice(currencyCode,
-                    MathUtils.scaleDownByPowerOf10(price.getValue(), CurrencyUtil.isCryptoCurrency(currencyCode) ? 8 : 4),
-                    0,
-                    false));
+    public void setBisqMarketPrice(String currencyCode, Price price) {
+        if (applyPriceToCache(currencyCode, price)) {
             updateCounter.set(updateCounter.get() + 1);
         }
     }
@@ -301,28 +292,20 @@ public class PriceFeedService {
         return new Date(epochInMillisAtLastRequest);
     }
 
-    public void applyLatestBisqMarketPrice(Set<TradeStatistics3> tradeStatisticsSet) {
-        // takes about 10 ms for 5000 items
-        Map<String, List<TradeStatistics3>> mapByCurrencyCode = new HashMap<>();
-        tradeStatisticsSet.forEach(e -> {
-            List<TradeStatistics3> list;
-            String currencyCode = e.getCurrency();
-            if (mapByCurrencyCode.containsKey(currencyCode)) {
-                list = mapByCurrencyCode.get(currencyCode);
-            } else {
-                list = new ArrayList<>();
-                mapByCurrencyCode.put(currencyCode, list);
-            }
-            list.add(e);
-        });
+    public void applyInitialBisqMarketPrice(Map<String, Price> priceByCurrencyCode) {
+        priceByCurrencyCode.forEach(this::applyPriceToCache);
+        updateCounter.set(updateCounter.get() + 1);
+    }
 
-        mapByCurrencyCode.values().stream()
-                .filter(list -> !list.isEmpty())
-                .forEach(list -> {
-                    list.sort(Comparator.comparing(TradeStatistics3::getDate));
-                    TradeStatistics3 tradeStatistics = list.get(list.size() - 1);
-                    setBisqMarketPrice(tradeStatistics.getCurrency(), tradeStatistics.getTradePrice());
-                });
+    private boolean applyPriceToCache(String currencyCode, Price price) {
+        if (!cache.containsKey(currencyCode) || !cache.get(currencyCode).isExternallyProvidedPrice()) {
+            cache.put(currencyCode, new MarketPrice(currencyCode,
+                    MathUtils.scaleDownByPowerOf10(price.getValue(), CurrencyUtil.isCryptoCurrency(currencyCode) ? 8 : 4),
+                    0,
+                    false));
+            return true;
+        }
+        return false;
     }
 
     public Optional<Price> getBsqPrice() {
@@ -386,7 +369,6 @@ public class PriceFeedService {
             if (faultHandler != null)
                 faultHandler.handleFault(errorMessage, new PriceRequestException(errorMessage));
         }
-
         updateCounter.set(updateCounter.get() + 1);
 
         return result;

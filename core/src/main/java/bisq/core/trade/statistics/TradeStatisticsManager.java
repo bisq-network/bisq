@@ -20,6 +20,7 @@ package bisq.core.trade.statistics;
 import bisq.core.locale.CurrencyTuple;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.monetary.Price;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.BuyerTrade;
@@ -46,7 +47,10 @@ import java.time.Instant;
 import java.io.File;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -93,6 +97,7 @@ public class TradeStatisticsManager {
     }
 
     public void onAllServicesInitialized() {
+        // tradestatistics listener for updating last traded price
         p2PService.getP2PDataStorage().addAppendOnlyDataStoreListener(payload -> {
             if (payload instanceof TradeStatistics3) {
                 TradeStatistics3 tradeStatistics = (TradeStatistics3) payload;
@@ -100,7 +105,7 @@ public class TradeStatisticsManager {
                     return;
                 }
                 observableTradeStatisticsSet.add(tradeStatistics);
-                priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
+                priceFeedService.setBisqMarketPrice(tradeStatistics.getCurrency(), tradeStatistics.getTradePrice());
                 maybeDumpStatistics();
             }
         });
@@ -111,7 +116,30 @@ public class TradeStatisticsManager {
                 .filter(TradeStatistics3::isValid)
                 .collect(Collectors.toSet());
         observableTradeStatisticsSet.addAll(set);
-        priceFeedService.applyLatestBisqMarketPrice(observableTradeStatisticsSet);
+
+        // collate prices by ccy -- takes about 10 ms for 5000 items
+        Map<String, List<TradeStatistics3>> allPriceByCurrencyCode = new HashMap<>();
+        observableTradeStatisticsSet.forEach(e -> {
+            List<TradeStatistics3> list;
+            String currencyCode = e.getCurrency();
+            if (allPriceByCurrencyCode.containsKey(currencyCode)) {
+                list = allPriceByCurrencyCode.get(currencyCode);
+            } else {
+                list = new ArrayList<>();
+                allPriceByCurrencyCode.put(currencyCode, list);
+            }
+            list.add(e);
+        });
+        // get the most recent price for each ccy and notify priceFeedService
+        Map<String, Price> newestPriceByCurrencyCode = new HashMap<>();
+        allPriceByCurrencyCode.values().stream()
+                .filter(list -> !list.isEmpty())
+                .forEach(list -> {
+                    list.sort(Comparator.comparing(TradeStatistics3::getDate));
+                    TradeStatistics3 tradeStatistics = list.get(list.size() - 1);
+                    newestPriceByCurrencyCode.put(tradeStatistics.getCurrency(), tradeStatistics.getTradePrice());
+                });
+        priceFeedService.applyInitialBisqMarketPrice(newestPriceByCurrencyCode);
         maybeDumpStatistics();
     }
 
