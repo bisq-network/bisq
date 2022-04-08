@@ -1351,7 +1351,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                 Res.get("takeOffer.takeOfferButton", direction) :
                 Res.get("takeOffer.takeOfferButtonAltcoin",
                         direction,
-                        CurrencyUtil.getNameByCode(offer.getCurrencyCode()));
+                        offer.getCurrencyCode());
     }
 
 }

@@ -56,8 +56,8 @@ public class TopAltcoinOfferBookView extends OfferBookView<GridPane, TopAltcoinO
     @Override
     protected String getMarketTitle() {
         return model.getDirection().equals(OfferDirection.BUY) ?
-                Res.get("offerbook.availableOffersToBuy", TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getName(), Res.getBaseCurrencyName()) :
-                Res.get("offerbook.availableOffersToSell", TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getName(), Res.getBaseCurrencyName());
+                Res.get("offerbook.availableOffersToBuy", TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode(), Res.getBaseCurrencyCode()) :
+                Res.get("offerbook.availableOffersToSell", TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode(), Res.getBaseCurrencyCode());
     }
 
     @Override
@@ -71,7 +71,7 @@ public class TopAltcoinOfferBookView extends OfferBookView<GridPane, TopAltcoinO
     }
 
     @Override
-    String getCreateOfferButtonLabel() {
-        return TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getName();
+    String getTradeCurrencyCode() {
+        return TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode();
     }
 }

@@ -390,25 +390,25 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
     private void addConfirmAndCancelButtons(boolean isPlaceOffer) {
         boolean isBuyOffer = OfferViewUtil.isShownAsBuyOffer(offer);
         boolean isBuyerRole = isPlaceOffer == isBuyOffer;
-        String tradeCurrencyByName = CurrencyUtil.getNameByCode(offer.getCurrencyCode());
+        String tradeCurrencyByCode = offer.getCurrencyCode();
         String placeOfferButtonText = isBuyerRole ?
                 CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
                         Res.get("offerDetailsWindow.confirm.maker", Res.get("shared.buy")) :
                         Res.get("offerDetailsWindow.confirm.makerAltcoin", Res.get("shared.buy"),
-                                tradeCurrencyByName) :
+                                tradeCurrencyByCode) :
                 CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
                         Res.get("offerDetailsWindow.confirm.maker", Res.get("shared.sell")) :
                         Res.get("offerDetailsWindow.confirm.makerAltcoin", Res.get("shared.sell"),
-                                tradeCurrencyByName);
+                                tradeCurrencyByCode);
         String takeOfferButtonText = isBuyerRole ?
                 CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
                         Res.get("offerDetailsWindow.confirm.taker", Res.get("shared.buy")) :
                         Res.get("offerDetailsWindow.confirm.takerAltcoin", Res.get("shared.buy"),
-                                tradeCurrencyByName) :
+                                tradeCurrencyByCode) :
                 CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
                         Res.get("offerDetailsWindow.confirm.taker", Res.get("shared.sell")) :
                         Res.get("offerDetailsWindow.confirm.takerAltcoin", Res.get("shared.sell"),
-                                tradeCurrencyByName);
+                                tradeCurrencyByCode);
 
         ImageView iconView = new ImageView();
         iconView.setId(isBuyerRole ? "image-buy-white" : "image-sell-white");

@@ -58,8 +58,8 @@ public class BsqOfferBookView extends OfferBookView<GridPane, BsqOfferBookViewMo
     @Override
     protected String getMarketTitle() {
         return model.getDirection().equals(OfferDirection.BUY) ?
-                Res.get("offerbook.availableOffersToBuy", BsqOfferBookViewModel.BSQ.getCode(), Res.getBaseCurrencyName()) :
-                Res.get("offerbook.availableOffersToSell", BsqOfferBookViewModel.BSQ.getCode(), Res.getBaseCurrencyName());
+                Res.get("offerbook.availableOffersToBuy", BsqOfferBookViewModel.BSQ.getCode(), Res.getBaseCurrencyCode()) :
+                Res.get("offerbook.availableOffersToSell", BsqOfferBookViewModel.BSQ.getCode(), Res.getBaseCurrencyCode());
     }
 
     @Override
@@ -73,7 +73,7 @@ public class BsqOfferBookView extends OfferBookView<GridPane, BsqOfferBookViewMo
     }
 
     @Override
-    String getCreateOfferButtonLabel() {
+    String getTradeCurrencyCode() {
         return BsqOfferBookViewModel.BSQ.getCode();
     }
 }

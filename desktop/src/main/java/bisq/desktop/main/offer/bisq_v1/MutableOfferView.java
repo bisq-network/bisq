@@ -337,7 +337,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             if (CurrencyUtil.isFiatCurrency(tradeCurrency.getCode())) {
                 placeOfferButtonLabel = Res.get("createOffer.placeOfferButton", Res.get("shared.buy"));
             } else {
-                placeOfferButtonLabel = Res.get("createOffer.placeOfferButtonAltcoin", Res.get("shared.buy"), tradeCurrency.getName());
+                placeOfferButtonLabel = Res.get("createOffer.placeOfferButtonAltcoin", Res.get("shared.buy"), tradeCurrency.getCode());
             }
             placeOfferButton.updateText(placeOfferButtonLabel);
             nextButton.setId("buy-button");
@@ -347,7 +347,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             if (CurrencyUtil.isFiatCurrency(tradeCurrency.getCode())) {
                 placeOfferButtonLabel = Res.get("createOffer.placeOfferButton", Res.get("shared.sell"));
             } else {
-                placeOfferButtonLabel = Res.get("createOffer.placeOfferButtonAltcoin", Res.get("shared.sell"), tradeCurrency.getName());
+                placeOfferButtonLabel = Res.get("createOffer.placeOfferButtonAltcoin", Res.get("shared.sell"), tradeCurrency.getCode());
             }
             nextButton.setId("sell-button");
             fundFromSavingsWalletButton.setId("sell-button");
@@ -793,10 +793,10 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             if (!CurrencyUtil.isFiatCurrency(newValue)) {
                 if (model.isShownAsBuyOffer()) {
                     placeOfferButton.updateText(Res.get("createOffer.placeOfferButtonAltcoin", Res.get("shared.buy"),
-                            model.getTradeCurrency().getName()));
+                            model.getTradeCurrency().getCode()));
                 } else {
                     placeOfferButton.updateText(Res.get("createOffer.placeOfferButtonAltcoin", Res.get("shared.sell"),
-                            model.getTradeCurrency().getName()));
+                            model.getTradeCurrency().getCode()));
                 }
             }
         };

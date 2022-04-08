@@ -18,6 +18,7 @@
 package bisq.desktop.main.offer.offerbook;
 
 import bisq.desktop.Navigation;
+import bisq.desktop.main.offer.bisq_v1.OfferViewUtil;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -57,8 +58,6 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 
 public class OtherOfferBookViewModel extends OfferBookViewModel {
-
-    public static final TradeCurrency DEFAULT_ALTCOIN = CurrencyUtil.getTradeCurrency("ETH").get();
 
     @Inject
     public OtherOfferBookViewModel(User user,
@@ -133,9 +132,9 @@ public class OtherOfferBookViewModel extends OfferBookViewModel {
 
     @Override
     TradeCurrency getDefaultTradeCurrency() {
-        // select first currency in list, otherwise if view is not initialized add Ether as default one
+        // select first currency in list, otherwise if view is not initialized any of the main crypto currencies
         return !getTradeCurrencies().isEmpty() ? getTradeCurrencies().get(1) :
-                DEFAULT_ALTCOIN;
+                OfferViewUtil.getAnyOfMainCryptoCurrencies();
     }
 
     @Override

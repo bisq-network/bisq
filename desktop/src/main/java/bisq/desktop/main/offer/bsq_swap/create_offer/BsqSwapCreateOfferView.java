@@ -27,7 +27,9 @@ import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.offer.OfferView;
 import bisq.desktop.main.offer.SelectableView;
+import bisq.desktop.main.offer.bisq_v1.OfferViewUtil;
 import bisq.desktop.main.offer.bsq_swap.BsqSwapOfferView;
+import bisq.desktop.main.offer.offerbook.BsqOfferBookViewModel;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.BsqSwapOfferDetailsWindow;
 import bisq.desktop.main.portfolio.PortfolioView;
@@ -168,16 +170,21 @@ public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferV
                              @Nullable BsqSwapOfferPayload offerPayload) {
         this.offerActionHandler = offerActionHandler;
 
-        model.initWithData(offerPayload != null ? offerPayload.getDirection() : direction, offerPayload);
+        // Invert direction for non-Fiat trade currencies -> BUY BSQ is to SELL Bitcoin
+        OfferDirection offerDirection = direction == OfferDirection.BUY ? OfferDirection.SELL : OfferDirection.BUY;
 
-        if (model.dataModel.isBuyOffer()) {
+        model.initWithData(offerPayload != null ? offerPayload.getDirection() : offerDirection, offerPayload);
+
+        if (OfferViewUtil.isShownAsBuyOffer(offerDirection, BsqOfferBookViewModel.BSQ)) {
             actionButton.setId("buy-button-big");
-            actionButton.updateText(Res.get("createOffer.placeOfferButton", Res.get("shared.buy")));
-            volumeDescriptionLabel.setText(Res.get("createOffer.amountPriceBox.buy.volumeDescription", BSQ));
+            actionButton.updateText(Res.get("createOffer.placeOfferButtonAltcoin", Res.get("shared.buy"), BSQ));
+            nextButton.setId("buy-button");
+            volumeDescriptionLabel.setText(Res.get("createOffer.amountPriceBox.sell.volumeDescription", BSQ));
         } else {
             actionButton.setId("sell-button-big");
-            actionButton.updateText(Res.get("createOffer.placeOfferButton", Res.get("shared.sell")));
-            volumeDescriptionLabel.setText(Res.get("createOffer.amountPriceBox.sell.volumeDescription", BSQ));
+            actionButton.updateText(Res.get("createOffer.placeOfferButtonAltcoin", Res.get("shared.sell"), BSQ));
+            nextButton.setId("sell-button");
+            volumeDescriptionLabel.setText(Res.get("createOffer.amountPriceBox.buy.volumeDescription", BSQ));
         }
 
         String amountDescription = Res.get("createOffer.amountPriceBox.amountDescription",

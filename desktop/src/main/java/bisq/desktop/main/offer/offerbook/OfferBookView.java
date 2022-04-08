@@ -289,7 +289,7 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
             if (price2 == null || price1 == null) {
                 return 0;
             }
-            if (model.getDirection() == OfferDirection.SELL) {
+            if (OfferViewUtil.isShownAsSellOffer(model.getSelectedTradeCurrency().getCode(), model.getDirection())) {
                 return price1.compareTo(price2);
             } else {
                 return price2.compareTo(price1);
@@ -1292,8 +1292,8 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
     private void updateCreateOfferButton() {
         createOfferButton.setText(Res.get("offerbook.createNewOffer",
                 model.getDirection() == OfferDirection.BUY ? Res.get("shared.buy") : Res.get("shared.sell"),
-                getCreateOfferButtonLabel()).toUpperCase());
+                getTradeCurrencyCode()).toUpperCase());
     }
 
-    abstract String getCreateOfferButtonLabel();
+    abstract String getTradeCurrencyCode();
 }

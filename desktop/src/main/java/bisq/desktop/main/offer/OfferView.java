@@ -22,6 +22,7 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
+import bisq.desktop.main.offer.bisq_v1.OfferViewUtil;
 import bisq.desktop.main.offer.bisq_v1.createoffer.CreateOfferView;
 import bisq.desktop.main.offer.bisq_v1.takeoffer.TakeOfferView;
 import bisq.desktop.main.offer.bsq_swap.create_offer.BsqSwapCreateOfferView;
@@ -31,13 +32,13 @@ import bisq.desktop.main.offer.offerbook.BsqOfferBookViewModel;
 import bisq.desktop.main.offer.offerbook.BtcOfferBookView;
 import bisq.desktop.main.offer.offerbook.OfferBookView;
 import bisq.desktop.main.offer.offerbook.OtherOfferBookView;
-import bisq.desktop.main.offer.offerbook.OtherOfferBookViewModel;
 import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookView;
 import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookViewModel;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.GlobalSettings;
+import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
@@ -205,6 +206,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 } else if (data instanceof BsqSwapOfferPayload) {
                     loadCreateViewClass(bsqOfferBookView, viewClass, childViewClass, bsqOfferBookTab, PaymentMethod.BSQ_SWAP, (BsqSwapOfferPayload) data);
                 } else {
+                    tradeCurrency = BsqOfferBookViewModel.BSQ;
                     loadCreateViewClass(bsqOfferBookView, viewClass, childViewClass, bsqOfferBookTab, (PaymentMethod) data, null);
                 }
                 tabPane.getSelectionModel().select(bsqOfferBookTab);
@@ -214,6 +216,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 } else if (childViewClass == TakeOfferView.class) {
                     loadTakeViewClass(viewClass, childViewClass, topAltcoinOfferBookTab);
                 } else {
+                    tradeCurrency = TopAltcoinOfferBookViewModel.TOP_ALTCOIN;
                     loadCreateViewClass(topAltcoinOfferBookView, viewClass, childViewClass, topAltcoinOfferBookTab, (PaymentMethod) data, null);
                 }
                 tabPane.getSelectionModel().select(topAltcoinOfferBookTab);
@@ -228,21 +231,20 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                         Optional<TradeCurrency> tradeCurrencyOptional = (this.direction == OfferDirection.SELL) ?
                                 CurrencyUtil.getTradeCurrency(preferences.getSellScreenCryptoCurrencyCode()) :
                                 CurrencyUtil.getTradeCurrency(preferences.getBuyScreenCryptoCurrencyCode());
-                        tradeCurrency = tradeCurrencyOptional.isEmpty() ? OtherOfferBookViewModel.DEFAULT_ALTCOIN : tradeCurrencyOptional.get();
+                        tradeCurrency = tradeCurrencyOptional.isEmpty() ? OfferViewUtil.getAnyOfMainCryptoCurrencies() : tradeCurrencyOptional.get();
                     }
                     loadCreateViewClass(otherOfferBookView, viewClass, childViewClass, otherOfferBookTab, (PaymentMethod) data, null);
                 }
                 tabPane.getSelectionModel().select(otherOfferBookTab);
             } else {
                 if (btcOfferBookTab == null) {
-                    //TODO: use naming from currencies or from translations
-                    btcOfferBookTab = new Tab("BITCOIN");
+                    btcOfferBookTab = new Tab(Res.getBaseCurrencyName().toUpperCase());
                     btcOfferBookTab.setClosable(false);
-                    bsqOfferBookTab = new Tab("BSQ");
+                    bsqOfferBookTab = new Tab(BsqOfferBookViewModel.BSQ.getCode());
                     bsqOfferBookTab.setClosable(false);
-                    topAltcoinOfferBookTab = new Tab("MONERO");
+                    topAltcoinOfferBookTab = new Tab(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode());
                     topAltcoinOfferBookTab.setClosable(false);
-                    otherOfferBookTab = new Tab("OTHER");
+                    otherOfferBookTab = new Tab(Res.get("shared.other").toUpperCase());
                     otherOfferBookTab.setClosable(false);
 
                     tabPane.getTabs().addAll(btcOfferBookTab, bsqOfferBookTab, topAltcoinOfferBookTab, otherOfferBookTab);

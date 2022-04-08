@@ -24,6 +24,8 @@ import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.offer.SellOfferView;
 import bisq.desktop.main.offer.offerbook.BsqOfferBookView;
+import bisq.desktop.main.offer.offerbook.BsqOfferBookViewModel;
+import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookViewModel;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.locale.CurrencyUtil;
@@ -46,6 +48,7 @@ import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 // Shared utils for Views
@@ -132,5 +135,11 @@ public class OfferViewUtil {
 
     public static boolean isShownAsBuyOffer(OfferDirection direction, TradeCurrency tradeCurrency) {
         return !isShownAsSellOffer(tradeCurrency.getCode(), direction);
+    }
+
+    public static TradeCurrency getAnyOfMainCryptoCurrencies() {
+        return CurrencyUtil.getMainCryptoCurrencies().stream().filter(cryptoCurrency ->
+                !Objects.equals(cryptoCurrency.getCode(), TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode()) &&
+                        !Objects.equals(cryptoCurrency.getCode(), BsqOfferBookViewModel.BSQ.getCode())).findAny().get();
     }
 }
