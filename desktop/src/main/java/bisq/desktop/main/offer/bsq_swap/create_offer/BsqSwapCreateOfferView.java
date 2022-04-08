@@ -180,11 +180,13 @@ public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferV
             actionButton.updateText(Res.get("createOffer.placeOfferButtonAltcoin", Res.get("shared.buy"), BSQ));
             nextButton.setId("buy-button");
             volumeDescriptionLabel.setText(Res.get("createOffer.amountPriceBox.sell.volumeDescription", BSQ));
+            amountDescriptionLabel.setText(Res.get("takeOffer.amountPriceBox.buy.amountDescription"));
         } else {
             actionButton.setId("sell-button-big");
             actionButton.updateText(Res.get("createOffer.placeOfferButtonAltcoin", Res.get("shared.sell"), BSQ));
             nextButton.setId("sell-button");
             volumeDescriptionLabel.setText(Res.get("createOffer.amountPriceBox.buy.volumeDescription", BSQ));
+            amountDescriptionLabel.setText(Res.get("takeOffer.amountPriceBox.sell.amountDescription"));
         }
 
         String amountDescription = Res.get("createOffer.amountPriceBox.amountDescription",
