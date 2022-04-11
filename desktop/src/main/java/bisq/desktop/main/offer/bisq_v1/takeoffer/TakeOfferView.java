@@ -133,7 +133,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private ScrollPane scrollPane;
     private GridPane gridPane;
-    private TitledGroupBg payFundsTitledGroupBg, paymentAccountTitledGroupBg, advancedOptionsGroup;
+    private TitledGroupBg payFundsTitledGroupBg;
+    private TitledGroupBg advancedOptionsGroup;
     private VBox priceAsPercentageInputBox, amountRangeBox;
     private HBox fundingHBox, amountValueCurrencyBox, priceValueCurrencyBox, volumeValueCurrencyBox,
             priceAsPercentageValueCurrencyBox, minAmountValueCurrencyBox, advancedOptionsBox,
@@ -816,7 +817,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     private void addPaymentGroup() {
-        paymentAccountTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("takeOffer.paymentInfo"));
+        TitledGroupBg paymentAccountTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("takeOffer.paymentInfo"));
         GridPane.setColumnSpan(paymentAccountTitledGroupBg, 2);
 
         final Tuple4<ComboBox<PaymentAccount>, Label, TextField, HBox> paymentAccountTuple = addComboBoxTopLabelTextField(gridPane,
@@ -922,9 +923,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         int result = model.dataModel.mempoolStatus.get();
         if (result == 0) {
             new Popup().warning(Res.get("popup.warning.makerTxInvalid") + model.dataModel.getMempoolStatusText())
-                    .onClose(() -> {
-                        cancelButton1.fire();
-                    })
+                    .onClose(() -> cancelButton1.fire())
                     .show();
         } else {
             if (result == -1) {
@@ -1294,16 +1293,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         if (paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.CASH_BY_MAIL_ID) &&
                 !cashByMailWarningDisplayed && !offer.getExtraInfo().isEmpty()) {
             cashByMailWarningDisplayed = true;
-            UserThread.runAfter(() -> {
-                new GenericMessageWindow()
-                        .preamble(Res.get("payment.cashByMail.tradingRestrictions"))
-                        .instruction(offer.getExtraInfo())
-                        .actionButtonText(Res.get("shared.iConfirm"))
-                        .closeButtonText(Res.get("shared.close"))
-                        .width(Layout.INITIAL_WINDOW_WIDTH)
-                        .onClose(() -> close(false))
-                        .show();
-            }, 500, TimeUnit.MILLISECONDS);
+            UserThread.runAfter(() -> new GenericMessageWindow()
+                    .preamble(Res.get("payment.cashByMail.tradingRestrictions"))
+                    .instruction(offer.getExtraInfo())
+                    .actionButtonText(Res.get("shared.iConfirm"))
+                    .closeButtonText(Res.get("shared.close"))
+                    .width(Layout.INITIAL_WINDOW_WIDTH)
+                    .onClose(() -> close(false))
+                    .show(), 500, TimeUnit.MILLISECONDS);
         }
     }
 

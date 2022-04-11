@@ -201,9 +201,14 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         dataModel.initWithData(offer);
         this.offer = offer;
 
+        String buyAmountDescriptionKey = offer.isFiatOffer() ? "takeOffer.amountPriceBox.buy.amountDescription" :
+                "takeOffer.amountPriceBox.buy.amountDescriptionAltcoin";
+        String sellAmountDescriptionKey = offer.isFiatOffer() ? "takeOffer.amountPriceBox.sell.amountDescription" :
+                "takeOffer.amountPriceBox.sell.amountDescriptionAltcoin";
+
         amountDescription = offer.isBuyOffer()
-                ? Res.get("takeOffer.amountPriceBox.buy.amountDescription")
-                : Res.get("takeOffer.amountPriceBox.sell.amountDescription");
+                ? Res.get(buyAmountDescriptionKey)
+                : Res.get(sellAmountDescriptionKey);
 
         amountRange = btcFormatter.formatCoin(offer.getMinAmount()) + " - " + btcFormatter.formatCoin(offer.getAmount());
         price = FormattingUtils.formatPrice(dataModel.tradePrice);
@@ -478,10 +483,15 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private void addBindings() {
         volume.bind(createStringBinding(() -> VolumeUtil.formatVolume(dataModel.volume.get()), dataModel.volume));
 
+        String buyVolumeDescriptionKey = offer.isFiatOffer() ? "createOffer.amountPriceBox.buy.volumeDescription" :
+                "createOffer.amountPriceBox.buy.volumeDescriptionAltcoin";
+        String sellVolumeDescriptionKey = offer.isFiatOffer() ? "createOffer.amountPriceBox.sell.volumeDescription" :
+                "createOffer.amountPriceBox.sell.volumeDescriptionAltcoin";
+
         if (dataModel.getDirection() == OfferDirection.SELL) {
-            volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.getCurrencyCode()));
+            volumeDescriptionLabel.set(Res.get(buyVolumeDescriptionKey, dataModel.getCurrencyCode()));
         } else {
-            volumeDescriptionLabel.set(Res.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.getCurrencyCode()));
+            volumeDescriptionLabel.set(Res.get(sellVolumeDescriptionKey, dataModel.getCurrencyCode()));
         }
         totalToPay.bind(createStringBinding(() -> btcFormatter.formatCoinWithCode(dataModel.getTotalToPayAsCoin().get()), dataModel.getTotalToPayAsCoin()));
     }
