@@ -1,4 +1,10 @@
-# Bisq
+<p align="center">
+  <a href="https://bisq.network">
+    <img src="https://bisq.network/images/bisq-logo.svg"/>
+  </a>
+</p>
+
+<h3 align="center">
 
 [![Build Status](https://travis-ci.org/bisq-network/bisq.svg?branch=master)](https://travis-ci.org/bisq-network/bisq)
 
