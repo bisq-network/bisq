@@ -15,16 +15,19 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.offer.bisq_v1;
+package bisq.desktop.main.offer;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.MainView;
-import bisq.desktop.main.offer.SellOfferView;
 import bisq.desktop.main.offer.offerbook.BsqOfferBookView;
 import bisq.desktop.main.offer.offerbook.BsqOfferBookViewModel;
+import bisq.desktop.main.offer.offerbook.BtcOfferBookView;
+import bisq.desktop.main.offer.offerbook.OfferBookView;
+import bisq.desktop.main.offer.offerbook.OtherOfferBookView;
+import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookView;
 import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookViewModel;
 import bisq.desktop.main.overlays.popups.Popup;
 
@@ -119,6 +122,20 @@ public class OfferViewUtil {
     private static void openBuyBsqOfferBook(Navigation navigation) {
         navigation.navigateTo(
                 MainView.class, SellOfferView.class, BsqOfferBookView.class);
+    }
+
+    public static Class<? extends OfferBookView<?, ?>> getOfferBookViewClass(String currencyCode) {
+        Class<? extends OfferBookView<?, ?>> offerBookViewClazz;
+        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+            offerBookViewClazz = BtcOfferBookView.class;
+        } else if (currencyCode.equals(BsqOfferBookViewModel.BSQ.getCode())) {
+            offerBookViewClazz = BsqOfferBookView.class;
+        } else if (currencyCode.equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode())) {
+            offerBookViewClazz = TopAltcoinOfferBookView.class;
+        } else {
+            offerBookViewClazz = OtherOfferBookView.class;
+        }
+        return offerBookViewClazz;
     }
 
     public static boolean isShownAsSellOffer(Offer offer) {

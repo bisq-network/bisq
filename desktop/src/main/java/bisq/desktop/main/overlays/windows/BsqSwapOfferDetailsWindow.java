@@ -19,7 +19,7 @@ package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
-import bisq.desktop.main.offer.bisq_v1.OfferViewUtil;
+import bisq.desktop.main.offer.OfferViewUtil;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Layout;

@@ -39,8 +39,8 @@ import bisq.desktop.main.funds.withdrawal.WithdrawalView;
 import bisq.desktop.main.offer.ClosableView;
 import bisq.desktop.main.offer.InitializableViewWithTakeOfferData;
 import bisq.desktop.main.offer.OfferView;
+import bisq.desktop.main.offer.OfferViewUtil;
 import bisq.desktop.main.offer.SelectableView;
-import bisq.desktop.main.offer.bisq_v1.OfferViewUtil;
 import bisq.desktop.main.overlays.notifications.Notification;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.GenericMessageWindow;
@@ -119,7 +119,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
 
-import static bisq.desktop.main.offer.bisq_v1.OfferViewUtil.addPayInfoEntry;
+import static bisq.desktop.main.offer.OfferViewUtil.addPayInfoEntry;
 import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 

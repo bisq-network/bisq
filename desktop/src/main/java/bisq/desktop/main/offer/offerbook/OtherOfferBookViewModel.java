@@ -18,7 +18,7 @@
 package bisq.desktop.main.offer.offerbook;
 
 import bisq.desktop.Navigation;
-import bisq.desktop.main.offer.bisq_v1.OfferViewUtil;
+import bisq.desktop.main.offer.OfferViewUtil;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;

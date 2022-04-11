@@ -22,6 +22,7 @@ import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.deposit.DepositView;
+import bisq.desktop.main.offer.OfferViewUtil;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
