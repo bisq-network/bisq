@@ -179,20 +179,15 @@ public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferV
             actionButton.setId("buy-button-big");
             actionButton.updateText(Res.get("createOffer.placeOfferButtonAltcoin", Res.get("shared.buy"), BSQ));
             nextButton.setId("buy-button");
-            volumeDescriptionLabel.setText(Res.get("createOffer.amountPriceBox.sell.volumeDescription", BSQ));
-            amountDescriptionLabel.setText(Res.get("takeOffer.amountPriceBox.buy.amountDescription"));
+            volumeDescriptionLabel.setText(Res.get("createOffer.amountPriceBox.sell.volumeDescriptionAltcoin", BSQ));
+            amountDescriptionLabel.setText(Res.get("takeOffer.amountPriceBox.buy.amountDescriptionAltcoin"));
         } else {
             actionButton.setId("sell-button-big");
             actionButton.updateText(Res.get("createOffer.placeOfferButtonAltcoin", Res.get("shared.sell"), BSQ));
             nextButton.setId("sell-button");
-            volumeDescriptionLabel.setText(Res.get("createOffer.amountPriceBox.buy.volumeDescription", BSQ));
-            amountDescriptionLabel.setText(Res.get("takeOffer.amountPriceBox.sell.amountDescription"));
+            volumeDescriptionLabel.setText(Res.get("createOffer.amountPriceBox.buy.volumeDescriptionAltcoin", BSQ));
+            amountDescriptionLabel.setText(Res.get("takeOffer.amountPriceBox.sell.amountDescriptionAltcoin"));
         }
-
-        String amountDescription = Res.get("createOffer.amountPriceBox.amountDescription",
-                model.dataModel.isBuyOffer() ? Res.get("shared.buy") : Res.get("shared.sell"));
-        amountDescriptionLabel.setText(amountDescription);
-
     }
 
 

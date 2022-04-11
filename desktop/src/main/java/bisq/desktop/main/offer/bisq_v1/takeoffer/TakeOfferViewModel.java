@@ -167,6 +167,17 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         addBindings();
         addListeners();
 
+        String buyVolumeDescriptionKey = offer.isFiatOffer() ? "createOffer.amountPriceBox.buy.volumeDescription" :
+                "createOffer.amountPriceBox.buy.volumeDescriptionAltcoin";
+        String sellVolumeDescriptionKey = offer.isFiatOffer() ? "createOffer.amountPriceBox.sell.volumeDescription" :
+                "createOffer.amountPriceBox.sell.volumeDescriptionAltcoin";
+
+        if (dataModel.getDirection() == OfferDirection.SELL) {
+            volumeDescriptionLabel.set(Res.get(buyVolumeDescriptionKey, dataModel.getCurrencyCode()));
+        } else {
+            volumeDescriptionLabel.set(Res.get(sellVolumeDescriptionKey, dataModel.getCurrencyCode()));
+        }
+
         amount.set(btcFormatter.formatCoin(dataModel.getAmount().get()));
         showTransactionPublishedScreen.set(false);
 
@@ -482,17 +493,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
     private void addBindings() {
         volume.bind(createStringBinding(() -> VolumeUtil.formatVolume(dataModel.volume.get()), dataModel.volume));
-
-        String buyVolumeDescriptionKey = offer.isFiatOffer() ? "createOffer.amountPriceBox.buy.volumeDescription" :
-                "createOffer.amountPriceBox.buy.volumeDescriptionAltcoin";
-        String sellVolumeDescriptionKey = offer.isFiatOffer() ? "createOffer.amountPriceBox.sell.volumeDescription" :
-                "createOffer.amountPriceBox.sell.volumeDescriptionAltcoin";
-
-        if (dataModel.getDirection() == OfferDirection.SELL) {
-            volumeDescriptionLabel.set(Res.get(buyVolumeDescriptionKey, dataModel.getCurrencyCode()));
-        } else {
-            volumeDescriptionLabel.set(Res.get(sellVolumeDescriptionKey, dataModel.getCurrencyCode()));
-        }
         totalToPay.bind(createStringBinding(() -> btcFormatter.formatCoinWithCode(dataModel.getTotalToPayAsCoin().get()), dataModel.getTotalToPayAsCoin()));
     }
 

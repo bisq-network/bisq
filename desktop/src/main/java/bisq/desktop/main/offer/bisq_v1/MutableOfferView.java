@@ -340,7 +340,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             } else {
                 placeOfferButtonLabel = Res.get("createOffer.placeOfferButtonAltcoin", Res.get("shared.buy"), tradeCurrency.getCode());
             }
-            placeOfferButton.updateText(placeOfferButtonLabel);
             nextButton.setId("buy-button");
             fundFromSavingsWalletButton.setId("buy-button");
         } else {
@@ -354,7 +353,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             fundFromSavingsWalletButton.setId("sell-button");
         }
 
-
+        placeOfferButton.updateText(placeOfferButtonLabel);
         updatePriceToggle();
 
         if (!model.getDataModel().isMakerFeeValid() && model.getDataModel().getMakerFee() != null)
