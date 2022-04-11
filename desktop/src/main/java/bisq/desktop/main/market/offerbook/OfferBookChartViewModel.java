@@ -20,8 +20,14 @@ package bisq.desktop.main.market.offerbook;
 import bisq.desktop.Navigation;
 import bisq.desktop.common.model.ActivatableViewModel;
 import bisq.desktop.main.MainView;
+import bisq.desktop.main.offer.BuyOfferView;
+import bisq.desktop.main.offer.OfferView;
+import bisq.desktop.main.offer.OfferViewUtil;
+import bisq.desktop.main.offer.SellOfferView;
+import bisq.desktop.main.offer.offerbook.BsqOfferBookViewModel;
 import bisq.desktop.main.offer.offerbook.OfferBook;
 import bisq.desktop.main.offer.offerbook.OfferBookListItem;
+import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookViewModel;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
 import bisq.desktop.util.CurrencyList;
@@ -194,11 +200,20 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         }
     }
 
-    void setSelectedTabIndex(int selectedTabIndex) {
+    public void setSelectedTabIndex(int selectedTabIndex) {
         this.selectedTabIndex = selectedTabIndex;
         syncPriceFeedCurrency();
     }
 
+    public boolean isSellOffer(OfferDirection direction) {
+        return direction == OfferDirection.SELL;
+    }
+
+    public void goToOfferView(OfferDirection direction) {
+        updateScreenCurrencyInPreferences(direction);
+        Class<? extends OfferView> offerView = isSellOffer(direction) ? BuyOfferView.class : SellOfferView.class;
+        navigation.navigateTo(MainView.class, offerView, OfferViewUtil.getOfferBookViewClass(getCurrencyCode()));
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
@@ -392,5 +407,23 @@ class OfferBookChartViewModel extends ActivatableViewModel {
 
     private boolean isEditEntry(String id) {
         return id.equals(GUIUtil.EDIT_FLAG);
+    }
+
+    private void updateScreenCurrencyInPreferences(OfferDirection direction) {
+        if (isSellOffer(direction)) {
+            if (CurrencyUtil.isFiatCurrency(getCurrencyCode())) {
+                preferences.setBuyScreenCurrencyCode(getCurrencyCode());
+            } else if (!getCurrencyCode().equals(BsqOfferBookViewModel.BSQ.getCode()) &&
+                    getCurrencyCode().equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode())) {
+                preferences.setBuyScreenCryptoCurrencyCode(getCurrencyCode());
+            }
+        } else {
+            if (CurrencyUtil.isFiatCurrency(getCurrencyCode())) {
+                preferences.setSellScreenCurrencyCode(getCurrencyCode());
+            } else if (!getCurrencyCode().equals(BsqOfferBookViewModel.BSQ.getCode()) &&
+                    getCurrencyCode().equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode())) {
+                preferences.setSellScreenCryptoCurrencyCode(getCurrencyCode());
+            }
+        }
     }
 }

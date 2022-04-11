@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.market.offerbook;
 
-import bisq.desktop.Navigation;
 import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
@@ -26,17 +25,7 @@ import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
 import bisq.desktop.components.PeerInfoIconSmall;
-import bisq.desktop.main.MainView;
-import bisq.desktop.main.offer.BuyOfferView;
-import bisq.desktop.main.offer.SellOfferView;
-import bisq.desktop.main.offer.offerbook.BsqOfferBookView;
-import bisq.desktop.main.offer.offerbook.BsqOfferBookViewModel;
-import bisq.desktop.main.offer.offerbook.BtcOfferBookView;
 import bisq.desktop.main.offer.offerbook.OfferBookListItem;
-import bisq.desktop.main.offer.offerbook.OfferBookView;
-import bisq.desktop.main.offer.offerbook.OtherOfferBookView;
-import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookView;
-import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookViewModel;
 import bisq.desktop.util.CurrencyListItem;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
@@ -113,7 +102,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
     private NumberAxis xAxis;
     private XYChart.Series<Number, Number> seriesBuy, seriesSell;
-    private final Navigation navigation;
     private final CoinFormatter formatter;
     private TableView<OfferListItem> buyOfferTableView;
     private TableView<OfferListItem> sellOfferTableView;
@@ -147,11 +135,9 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
     @Inject
     public OfferBookChartView(OfferBookChartViewModel model,
-                              Navigation navigation,
                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                               @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         super(model);
-        this.navigation = navigation;
         this.formatter = formatter;
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
     }
@@ -311,15 +297,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 currencyComboBox.getSelectionModel().select(model.getSelectedCurrencyListItem().get());
         };
 
-        buyTableRowSelectionListener = (observable, oldValue, newValue) -> {
-
-            model.preferences.setSellScreenCurrencyCode(model.getCurrencyCode());
-            navigation.navigateTo(MainView.class, SellOfferView.class);
-        };
-        sellTableRowSelectionListener = (observable, oldValue, newValue) -> {
-            model.preferences.setBuyScreenCurrencyCode(model.getCurrencyCode());
-            navigation.navigateTo(MainView.class, BuyOfferView.class);
-        };
+        buyTableRowSelectionListener = (observable, oldValue, newValue) -> model.goToOfferView(OfferDirection.BUY);
+        sellTableRowSelectionListener = (observable, oldValue, newValue) -> model.goToOfferView(OfferDirection.SELL);
 
         bisqWindowVerticalSizeListener = (observable, oldValue, newValue) -> layout();
     }
@@ -592,7 +571,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     }
                 });
 
-        boolean isSellOffer = direction == OfferDirection.SELL;
+        boolean isSellOffer = model.isSellOffer(direction);
 
         // trader avatar
         TableColumn<OfferListItem, OfferListItem> avatarColumn = new AutoTooltipTableColumn<>(isSellOffer ?
@@ -659,38 +638,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         button.updateText(isSellOffer ? Res.get("market.offerBook.buy") : Res.get("market.offerBook.sell"));
         button.setMinHeight(32);
         button.setId(isSellOffer ? "buy-button-big" : "sell-button-big");
-        button.setOnAction(e -> {
-            Class<? extends OfferBookView<?, ?>> offerBookViewClazz;
-            if (CurrencyUtil.isFiatCurrency(model.getCurrencyCode())) {
-                offerBookViewClazz = BtcOfferBookView.class;
-            } else if (model.getCurrencyCode().equals(BsqOfferBookViewModel.BSQ.getCode())) {
-                offerBookViewClazz = BsqOfferBookView.class;
-            } else if (model.getCurrencyCode().equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode())) {
-                offerBookViewClazz = TopAltcoinOfferBookView.class;
-            } else {
-                offerBookViewClazz = OtherOfferBookView.class;
-            }
-
-            if (isSellOffer) {
-                if (CurrencyUtil.isFiatCurrency(model.getCurrencyCode())) {
-                    model.preferences.setBuyScreenCurrencyCode(model.getCurrencyCode());
-                } else if (!model.getCurrencyCode().equals(BsqOfferBookViewModel.BSQ.getCode()) &&
-                        model.getCurrencyCode().equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode())) {
-                    model.preferences.setBuyScreenCryptoCurrencyCode(model.getCurrencyCode());
-                }
-
-                navigation.navigateTo(MainView.class, BuyOfferView.class, offerBookViewClazz);
-            } else {
-                if (CurrencyUtil.isFiatCurrency(model.getCurrencyCode())) {
-                    model.preferences.setSellScreenCurrencyCode(model.getCurrencyCode());
-                } else if (!model.getCurrencyCode().equals(BsqOfferBookViewModel.BSQ.getCode()) &&
-                        model.getCurrencyCode().equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode())) {
-                    model.preferences.setSellScreenCryptoCurrencyCode(model.getCurrencyCode());
-                }
-
-                navigation.navigateTo(MainView.class, SellOfferView.class, offerBookViewClazz);
-            }
-        });
+        button.setOnAction(e -> model.goToOfferView(direction));
 
         Region spacer = new Region();
 
