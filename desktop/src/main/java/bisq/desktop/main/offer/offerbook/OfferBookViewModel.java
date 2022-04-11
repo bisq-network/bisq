@@ -296,7 +296,7 @@ abstract class OfferBookViewModel extends ActivatableViewModel {
 
     abstract void saveSelectedCurrencyCodeInPreferences(OfferDirection direction, String code);
 
-    void onSetPaymentMethod(PaymentMethod paymentMethod) {
+    protected void onSetPaymentMethod(PaymentMethod paymentMethod) {
         if (paymentMethod == null)
             return;
 
@@ -613,7 +613,7 @@ abstract class OfferBookViewModel extends ActivatableViewModel {
         return id.equals(GUIUtil.EDIT_FLAG);
     }
 
-    int getNumTrades(Offer offer) {
+    public int getNumTrades(Offer offer) {
         return Stream.concat(closedTradableManager.getTradableList().stream(), bsqSwapTradeManager.getTradableList().stream())
                 .filter(e -> e instanceof Trade || e instanceof BsqSwapTrade)    // weed out canceled offers
                 .filter(e -> {

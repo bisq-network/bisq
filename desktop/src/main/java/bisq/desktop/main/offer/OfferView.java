@@ -291,12 +291,15 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
             return;
         }
 
-        View view = viewLoader.load(paymentMethod != null && paymentMethod.isBsqSwap() ? BsqSwapCreateOfferView.class : childViewClass);
+        View view;
         // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
         // in different graphs
-        if (paymentMethod != null && paymentMethod.isBsqSwap()) {
+        if ((paymentMethod != null && paymentMethod.isBsqSwap()) ||
+                (paymentMethod == null && viewClass.isAssignableFrom(BsqOfferBookView.class))) {
+            view = viewLoader.load(BsqSwapCreateOfferView.class);
             ((BsqSwapCreateOfferView) view).initWithData(direction, offerActionHandler, payload);
         } else {
+            view = viewLoader.load(childViewClass);
             ((CreateOfferView) view).initWithData(direction, tradeCurrency, offerActionHandler);
         }
 
