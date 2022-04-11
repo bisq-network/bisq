@@ -62,7 +62,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 
 import java.util.List;
@@ -376,11 +375,7 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
 
             addConfirmAndCancelButtons(false);
         } else {
-            Button closeButton = addButtonAfterGroup(gridPane, ++rowIndex, Res.get("shared.close"));
-            GridPane.setColumnIndex(closeButton, 1);
-            GridPane.setHalignment(closeButton, HPos.RIGHT);
-
-            closeButton.setOnAction(e -> {
+            addCloseButton(gridPane, ++rowIndex, () -> {
                 closeHandlerOptional.ifPresent(Runnable::run);
                 hide();
             });
