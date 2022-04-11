@@ -406,7 +406,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         addressTextField.setPaymentLabel(model.getPaymentLabel());
         addressTextField.setAddress(model.dataModel.getAddressEntry().getAddressString());
 
-        if (CurrencyUtil.isFiatCurrency(offer.getCurrencyCode())) {
+        if (offer.isFiatOffer()) {
             Label popOverLabel = OfferViewUtil.createPopOverLabel(Res.get("offerbook.info.roundedFiatVolume"));
             volumeInfoTextField.setContentForPrivacyPopOver(popOverLabel);
         }
@@ -1344,7 +1344,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     @NotNull
     private String getTakeOfferLabel(Offer offer, String direction) {
-        return CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
+        return offer.isFiatOffer() ?
                 Res.get("takeOffer.takeOfferButton", direction) :
                 Res.get("takeOffer.takeOfferButtonAltcoin",
                         direction,

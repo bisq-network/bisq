@@ -27,7 +27,6 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
@@ -340,7 +339,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                 data += "\n\nOther detail data:";
                 data += "\n\nBuyerMultiSigPubKeyHex: " + Utils.HEX.encode(contract.getBuyerMultiSigPubKey());
                 data += "\nSellerMultiSigPubKeyHex: " + Utils.HEX.encode(contract.getSellerMultiSigPubKey());
-                if (CurrencyUtil.isFiatCurrency(offer.getCurrencyCode())) {
+                if (offer.isFiatOffer()) {
                     data += "\n\nBuyersAccountAge: " + buyersAccountAge;
                     data += "\nSellersAccountAge: " + sellersAccountAge;
                 }

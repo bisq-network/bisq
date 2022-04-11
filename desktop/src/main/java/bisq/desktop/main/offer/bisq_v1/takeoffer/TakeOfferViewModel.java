@@ -31,7 +31,6 @@ import bisq.desktop.util.validation.BtcValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.Restrictions;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
@@ -341,7 +340,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                             maxTradeLimit);
                     dataModel.applyAmount(adjustedAmountForHalCash);
                     amount.set(btcFormatter.formatCoin(dataModel.getAmount().get()));
-                } else if (CurrencyUtil.isFiatCurrency(dataModel.getCurrencyCode())) {
+                } else if (dataModel.getOffer().isFiatOffer()) {
                     if (!isAmountEqualMinAmount(dataModel.getAmount().get()) && (!isAmountEqualMaxAmount(dataModel.getAmount().get()))) {
                         // We only apply the rounding if the amount is variable (minAmount is lower as amount).
                         // Otherwise we could get an amount lower then the minAmount set by rounding
@@ -624,7 +623,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             if (price != null) {
                 if (dataModel.isUsingHalCashAccount()) {
                     amount = CoinUtil.getAdjustedAmountForHalCash(amount, price, maxTradeLimit);
-                } else if (CurrencyUtil.isFiatCurrency(dataModel.getCurrencyCode())
+                } else if (dataModel.getOffer().isFiatOffer()
                         && !isAmountEqualMinAmount(amount) && !isAmountEqualMaxAmount(amount)) {
                     // We only apply the rounding if the amount is variable (minAmount is lower as amount).
                     // Otherwise we could get an amount lower then the minAmount set by rounding

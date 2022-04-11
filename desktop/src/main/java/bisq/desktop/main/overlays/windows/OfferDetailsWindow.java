@@ -392,20 +392,20 @@ public class OfferDetailsWindow extends Overlay<OfferDetailsWindow> {
         boolean isBuyerRole = isPlaceOffer == isBuyOffer;
         String tradeCurrencyByCode = offer.getCurrencyCode();
         String placeOfferButtonText = isBuyerRole ?
-                CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
+                offer.isFiatOffer() ?
                         Res.get("offerDetailsWindow.confirm.maker", Res.get("shared.buy")) :
                         Res.get("offerDetailsWindow.confirm.makerAltcoin", Res.get("shared.buy"),
                                 tradeCurrencyByCode) :
-                CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
+                offer.isFiatOffer() ?
                         Res.get("offerDetailsWindow.confirm.maker", Res.get("shared.sell")) :
                         Res.get("offerDetailsWindow.confirm.makerAltcoin", Res.get("shared.sell"),
                                 tradeCurrencyByCode);
         String takeOfferButtonText = isBuyerRole ?
-                CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
+                offer.isFiatOffer() ?
                         Res.get("offerDetailsWindow.confirm.taker", Res.get("shared.buy")) :
                         Res.get("offerDetailsWindow.confirm.takerAltcoin", Res.get("shared.buy"),
                                 tradeCurrencyByCode) :
-                CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ?
+                offer.isFiatOffer() ?
                         Res.get("offerDetailsWindow.confirm.taker", Res.get("shared.sell")) :
                         Res.get("offerDetailsWindow.confirm.takerAltcoin", Res.get("shared.sell"),
                                 tradeCurrencyByCode);

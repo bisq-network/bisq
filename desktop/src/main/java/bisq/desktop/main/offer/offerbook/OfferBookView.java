@@ -774,7 +774,7 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
                     }).show();
         } else {
 
-            var accountViewClass = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) ? FiatAccountsView.class : AltCoinAccountsView.class;
+            var accountViewClass = offer.isFiatOffer() ? FiatAccountsView.class : AltCoinAccountsView.class;
 
             new Popup().headLine(headline)
                     .instruction(Res.get("offerbook.warning.noMatchingAccount.msg"))
