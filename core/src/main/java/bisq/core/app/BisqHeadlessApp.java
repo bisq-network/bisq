@@ -94,6 +94,7 @@ public class BisqHeadlessApp implements HeadlessApp {
         bisqSetup.setShowPopupIfInvalidBtcConfigHandler(() -> log.error("onShowPopupIfInvalidBtcConfigHandler"));
         bisqSetup.setRevolutAccountsUpdateHandler(revolutAccountList -> log.info("setRevolutAccountsUpdateHandler: revolutAccountList={}", revolutAccountList));
         bisqSetup.setQubesOSInfoHandler(() -> log.info("setQubesOSInfoHandler"));
+        bisqSetup.setFirewallIssueHandler(() -> log.info("setFirewallIssueHandler"));
         bisqSetup.setDownGradePreventionHandler(lastVersion -> log.info("Downgrade from version {} to version {} is not supported",
                 lastVersion, Version.VERSION));
         bisqSetup.setDaoRequiresRestartHandler(() -> {

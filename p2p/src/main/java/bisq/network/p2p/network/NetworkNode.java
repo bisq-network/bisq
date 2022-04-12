@@ -127,7 +127,7 @@ public abstract class NetworkNode implements MessageListener {
                 Thread.currentThread().setName("NetworkNode:SendMessage-to-" + peersNodeAddress.getFullAddress());
 
                 if (peersNodeAddress.equals(getNodeAddress())) {
-                    throw new ConnectException("We do not send a message to ourselves");
+                    log.warn("We are sending a message to ourselves");
                 }
 
                 OutboundConnection outboundConnection = null;

@@ -22,6 +22,11 @@ import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.SendMailboxMessageListener;
 import bisq.network.p2p.mailbox.MailboxMessageService;
+import bisq.network.p2p.network.Connection;
+import bisq.network.p2p.network.MessageListener;
+import bisq.network.p2p.network.NetworkNode;
+import bisq.network.p2p.peers.keepalive.messages.Ping;
+import bisq.network.p2p.peers.keepalive.messages.Pong;
 
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
@@ -36,6 +41,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import com.google.common.base.Charsets;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.SettableFuture;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -45,16 +54,20 @@ import java.security.SignatureException;
 
 import java.math.BigInteger;
 
+import java.util.Random;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
 import static org.bitcoinj.core.Utils.HEX;
 
-public class PrivateNotificationManager {
+public class PrivateNotificationManager implements MessageListener {
     private static final Logger log = LoggerFactory.getLogger(PrivateNotificationManager.class);
 
     private final P2PService p2PService;
@@ -69,6 +82,8 @@ public class PrivateNotificationManager {
     @Nullable
     private PrivateNotificationMessage privateNotificationMessage;
 
+    private final NetworkNode networkNode;
+    private Consumer<String> pingResponseHandler = null;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, Initialization
@@ -76,11 +91,13 @@ public class PrivateNotificationManager {
 
     @Inject
     public PrivateNotificationManager(P2PService p2PService,
+                                      NetworkNode networkNode,
                                       MailboxMessageService mailboxMessageService,
                                       KeyRing keyRing,
                                       @Named(Config.IGNORE_DEV_MSG) boolean ignoreDevMsg,
                                       @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.p2PService = p2PService;
+        this.networkNode = networkNode;
         this.mailboxMessageService = mailboxMessageService;
         this.keyRing = keyRing;
 
@@ -173,5 +190,38 @@ public class PrivateNotificationManager {
         }
     }
 
+    public void sendPing(NodeAddress peersNodeAddress, Consumer<String> resultHandler) {
+        Ping ping = new Ping(new Random().nextInt(), 0);
+        log.info("Send Ping to peer {}, nonce={}", peersNodeAddress, ping.getNonce());
+        SettableFuture<Connection> future = networkNode.sendMessage(peersNodeAddress, ping);
+        Futures.addCallback(future, new FutureCallback<>() {
+            @Override
+            public void onSuccess(Connection connection) {
+                connection.addMessageListener(PrivateNotificationManager.this);
+                pingResponseHandler = resultHandler;
+            }
 
+            @Override
+            public void onFailure(@NotNull Throwable throwable) {
+                String errorMessage = "Sending ping to " + peersNodeAddress.getHostNameForDisplay() +
+                        " failed. That is expected if the peer is offline.\n\tping=" + ping +
+                        ".\n\tException=" + throwable.getMessage();
+                log.info(errorMessage);
+                resultHandler.accept(errorMessage);
+            }
+        }, MoreExecutors.directExecutor());
+    }
+
+    @Override
+    public void onMessage(NetworkEnvelope networkEnvelope, Connection connection) {
+        if (networkEnvelope instanceof Pong) {
+            Pong pong = (Pong) networkEnvelope;
+            String key = connection.getPeersNodeAddressOptional().get().getFullAddress();
+            log.info("Received Pong! {} from {}", pong.toString(), key);
+            connection.removeMessageListener(this);
+            if (pingResponseHandler != null) {
+                pingResponseHandler.accept("SUCCESS");
+            }
+        }
+    }
 }

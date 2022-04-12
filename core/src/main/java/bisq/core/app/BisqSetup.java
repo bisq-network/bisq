@@ -22,6 +22,7 @@ import bisq.core.account.sign.SignedWitnessStorageService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.Alert;
 import bisq.core.alert.AlertManager;
+import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.alert.PrivateNotificationPayload;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.nodes.LocalBitcoinNode;
@@ -49,6 +50,7 @@ import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.Socks5ProxyProvider;
+import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.utils.Utils;
@@ -132,6 +134,7 @@ public class BisqSetup {
     private final WalletsSetup walletsSetup;
     private final BtcWalletService btcWalletService;
     private final P2PService p2PService;
+    private final PrivateNotificationManager privateNotificationManager;
     private final SignedWitnessStorageService signedWitnessStorageService;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
@@ -194,6 +197,9 @@ public class BisqSetup {
     private Runnable qubesOSInfoHandler;
     @Setter
     @Nullable
+    private Runnable firewallIssueHandler;
+    @Setter
+    @Nullable
     private Runnable daoRequiresRestartHandler;
     @Setter
     @Nullable
@@ -219,6 +225,7 @@ public class BisqSetup {
                      WalletsSetup walletsSetup,
                      BtcWalletService btcWalletService,
                      P2PService p2PService,
+                     PrivateNotificationManager privateNotificationManager,
                      SignedWitnessStorageService signedWitnessStorageService,
                      TradeManager tradeManager,
                      OpenOfferManager openOfferManager,
@@ -242,6 +249,7 @@ public class BisqSetup {
         this.walletsSetup = walletsSetup;
         this.btcWalletService = btcWalletService;
         this.p2PService = p2PService;
+        this.privateNotificationManager = privateNotificationManager;
         this.signedWitnessStorageService = signedWitnessStorageService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
@@ -328,6 +336,7 @@ public class BisqSetup {
         maybeShowLocalhostRunningInfo();
         maybeShowAccountSigningStateInfo();
         maybeShowTorAddressUpgradeInformation();
+        checkTorFirewall();
     }
 
 
@@ -648,6 +657,24 @@ public class BisqSetup {
         if (Utilities.isQubesOS() && qubesOSInfoHandler != null) {
             qubesOSInfoHandler.run();
         }
+    }
+
+    /**
+     * If Bisq cannot connect to its own onion address through Tor, display
+     * an informative message to let the user know to configure their firewall else
+     * their offers will not be reachable.
+     */
+    private void checkTorFirewall() {
+        NodeAddress onionAddress = p2PService.getNetworkNode().nodeAddressProperty().get();
+        if (onionAddress == null || !onionAddress.getFullAddress().contains("onion")) {
+            return;
+        }
+        privateNotificationManager.sendPing(onionAddress, stringResult -> {
+            log.warn(stringResult);
+            if (stringResult.contains("failed")) {
+                firewallIssueHandler.run();
+            }
+        });
     }
 
     private void maybeShowSecurityRecommendation() {
