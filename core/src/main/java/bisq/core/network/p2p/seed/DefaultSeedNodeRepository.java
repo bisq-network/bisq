@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -69,7 +70,7 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
             }
 
             cache.clear();
-            List<NodeAddress> result = getSeedNodeAddressesFromPropertyFile(config.baseCurrencyNetwork.name().toLowerCase());
+            List<NodeAddress> result = getSeedNodeAddressesFromPropertyFile(config.baseCurrencyNetwork.name().toLowerCase(Locale.ENGLISH));
             cache.addAll(result);
 
             // let values configured by filter fail more gracefully
