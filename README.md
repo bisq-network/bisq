@@ -5,8 +5,8 @@
 </p>
 
 <h3 align="center">
-
-[![Build Status](https://travis-ci.org/bisq-network/bisq.svg?branch=master)](https://travis-ci.org/bisq-network/bisq)
+    
+![Actions Status](https://github.com/bisq-network/bisq/workflows/Build%20Bisq/badge.svg)
 
 
 ## What is Bisq?
