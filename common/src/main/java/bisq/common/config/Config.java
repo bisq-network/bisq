@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.io.UncheckedIOException;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import ch.qos.logback.classic.Level;
@@ -799,7 +800,7 @@ public class Config {
         }
 
         // Create all appDataDir subdirectories and assign to their respective properties
-        File btcNetworkDir = mkdir(appDataDir, baseCurrencyNetwork.name().toLowerCase());
+        File btcNetworkDir = mkdir(appDataDir, baseCurrencyNetwork.name().toLowerCase(Locale.ENGLISH));
         this.keyStorageDir = mkdir(btcNetworkDir, "keys");
         this.storageDir = mkdir(btcNetworkDir, "db");
         this.torDir = mkdir(btcNetworkDir, "tor");
