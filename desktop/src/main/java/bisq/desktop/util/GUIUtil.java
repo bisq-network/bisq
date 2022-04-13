@@ -168,6 +168,9 @@ public class GUIUtil {
     public final static int AMOUNT_DECIMALS_WITH_ZEROS = 3;
     public final static int AMOUNT_DECIMALS = 4;
 
+    public final static TradeCurrency BSQ = CurrencyUtil.getTradeCurrency("BSQ").get();
+    public final static TradeCurrency TOP_ALTCOIN = CurrencyUtil.getTradeCurrency("XMR").get();
+
     private static FeeService feeService;
     private static Preferences preferences;
 
@@ -1246,5 +1249,4 @@ public class GUIUtil {
         columnConstraints2.setHgrow(Priority.ALWAYS);
         gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
     }
-
 }

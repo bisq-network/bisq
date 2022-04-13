@@ -567,10 +567,11 @@ abstract class OfferBookViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     boolean hasPaymentAccountForCurrency() {
-        return (showAllTradeCurrenciesProperty.get() &&
-                user.getPaymentAccounts() != null &&
-                !user.getPaymentAccounts().isEmpty()) ||
-                user.hasPaymentAccountForCurrency(selectedTradeCurrency);
+        return hasPaymentAccountForCurrency(selectedTradeCurrency);
+    }
+
+    boolean hasPaymentAccountForCurrency(TradeCurrency currency) {
+        return user.hasPaymentAccountForCurrency(currency);
     }
 
     boolean canCreateOrTakeOffer() {

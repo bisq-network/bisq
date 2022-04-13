@@ -52,6 +52,7 @@ import javax.inject.Named;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -132,14 +133,25 @@ public class OtherOfferBookViewModel extends OfferBookViewModel {
 
     @Override
     TradeCurrency getDefaultTradeCurrency() {
-        // select first currency in list, otherwise if view is not initialized any of the main crypto currencies
-        return !getTradeCurrencies().isEmpty() ? getTradeCurrencies().get(1) :
-                OfferViewUtil.getAnyOfMainCryptoCurrencies();
+        ObservableList<TradeCurrency> tradeCurrencies = FXCollections.observableArrayList(getTradeCurrencies());
+        if (!tradeCurrencies.isEmpty()) {
+            // drop show all entry and select first currency with payment account available
+            tradeCurrencies.remove(0);
+            List<TradeCurrency> sortedList = tradeCurrencies.stream().sorted((o1, o2) ->
+                    Boolean.compare(!hasPaymentAccountForCurrency(o1),
+                            !hasPaymentAccountForCurrency(o2))).collect(Collectors.toList());
+            return sortedList.get(0);
+        } else {
+            return OfferViewUtil.getMainCryptoCurrencies().sorted((o1, o2) ->
+                    Boolean.compare(!hasPaymentAccountForCurrency(o1),
+                            !hasPaymentAccountForCurrency(o2))).collect(Collectors.toList()).get(0);
+        }
     }
 
     @Override
     String getCurrencyCodeFromPreferences(OfferDirection direction) {
-        return direction == OfferDirection.BUY ? preferences.getBuyScreenCryptoCurrencyCode() : preferences.getSellScreenCryptoCurrencyCode();
+        return direction == OfferDirection.BUY ? preferences.getBuyScreenCryptoCurrencyCode() :
+                preferences.getSellScreenCryptoCurrencyCode();
     }
 
     @NotNull

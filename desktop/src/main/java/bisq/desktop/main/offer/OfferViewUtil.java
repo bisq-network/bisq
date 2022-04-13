@@ -31,6 +31,7 @@ import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookView;
 import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookViewModel;
 import bisq.desktop.main.overlays.popups.Popup;
 
+import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
@@ -53,6 +54,9 @@ import javafx.geometry.VPos;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
+
+import org.jetbrains.annotations.NotNull;
 
 // Shared utils for Views
 public class OfferViewUtil {
@@ -155,8 +159,13 @@ public class OfferViewUtil {
     }
 
     public static TradeCurrency getAnyOfMainCryptoCurrencies() {
+        return getMainCryptoCurrencies().findAny().get();
+    }
+
+    @NotNull
+    public static Stream<CryptoCurrency> getMainCryptoCurrencies() {
         return CurrencyUtil.getMainCryptoCurrencies().stream().filter(cryptoCurrency ->
                 !Objects.equals(cryptoCurrency.getCode(), TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode()) &&
-                        !Objects.equals(cryptoCurrency.getCode(), BsqOfferBookViewModel.BSQ.getCode())).findAny().get();
+                        !Objects.equals(cryptoCurrency.getCode(), BsqOfferBookViewModel.BSQ.getCode()));
     }
 }

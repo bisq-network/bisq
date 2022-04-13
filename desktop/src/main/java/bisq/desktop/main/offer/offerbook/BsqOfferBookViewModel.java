@@ -18,12 +18,12 @@
 package bisq.desktop.main.offer.offerbook;
 
 import bisq.desktop.Navigation;
+import bisq.desktop.util.GUIUtil;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.api.CoreApi;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
 public class BsqOfferBookViewModel extends OfferBookViewModel {
 
 
-    public static final TradeCurrency BSQ = CurrencyUtil.getTradeCurrency("BSQ").get();
+    public static final TradeCurrency BSQ = GUIUtil.BSQ;
 
     @Inject
     public BsqOfferBookViewModel(User user,
