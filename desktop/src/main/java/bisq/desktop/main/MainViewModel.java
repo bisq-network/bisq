@@ -479,6 +479,15 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                         .show();
             }
         });
+        bisqSetup.setFirewallIssueHandler(() -> {
+            String key = "firewallSetupInfo";
+            if (preferences.showAgain(key)) {
+                new Popup().information(Res.get("popup.info.firewallSetupInfo"))
+                        .closeButtonText(Res.get("shared.iUnderstand"))
+                        .dontShowAgainId(key)
+                        .show();
+            }
+        });
 
         bisqSetup.setDownGradePreventionHandler(lastVersion -> {
             new Popup().warning(Res.get("popup.warn.downGradePrevention", lastVersion, Version.VERSION))
