@@ -1,6 +1,12 @@
-# Bisq
+<p align="center">
+  <a href="https://bisq.network">
+    <img src="https://bisq.network/images/bisq-logo.svg"/>
+  </a>
+</p>
 
-[![Build Status](https://travis-ci.org/bisq-network/bisq.svg?branch=master)](https://travis-ci.org/bisq-network/bisq)
+<h3 align="center">
+    
+![Actions Status](https://github.com/bisq-network/bisq/workflows/Build%20Bisq/badge.svg)
 
 
 ## What is Bisq?
