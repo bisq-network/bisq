@@ -414,14 +414,14 @@ class OfferBookChartViewModel extends ActivatableViewModel {
             if (CurrencyUtil.isFiatCurrency(getCurrencyCode())) {
                 preferences.setBuyScreenCurrencyCode(getCurrencyCode());
             } else if (!getCurrencyCode().equals(BsqOfferBookViewModel.BSQ.getCode()) &&
-                    getCurrencyCode().equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode())) {
+                    !getCurrencyCode().equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode())) {
                 preferences.setBuyScreenCryptoCurrencyCode(getCurrencyCode());
             }
         } else {
             if (CurrencyUtil.isFiatCurrency(getCurrencyCode())) {
                 preferences.setSellScreenCurrencyCode(getCurrencyCode());
             } else if (!getCurrencyCode().equals(BsqOfferBookViewModel.BSQ.getCode()) &&
-                    getCurrencyCode().equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode())) {
+                    !getCurrencyCode().equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode())) {
                 preferences.setSellScreenCryptoCurrencyCode(getCurrencyCode());
             }
         }
