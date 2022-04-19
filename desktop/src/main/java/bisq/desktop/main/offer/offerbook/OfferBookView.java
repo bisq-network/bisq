@@ -112,6 +112,7 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
@@ -343,9 +344,10 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
                 ? "https://bisq.wiki/Introduction#In_a_nutshell"
                 : "https://bisq.wiki/Taking_an_offer");
 
+        Map<String, Integer> offerCounts = OfferViewUtil.isShownAsBuyOffer(model.getDirection(), model.getSelectedTradeCurrency()) ? model.getSellOfferCounts() : model.getBuyOfferCounts();
         currencyComboBox.setCellFactory(GUIUtil.getTradeCurrencyCellFactory(Res.get("shared.oneOffer"),
                 Res.get("shared.multipleOffers"),
-                (model.getDirection() == OfferDirection.BUY ? model.getSellOfferCounts() : model.getBuyOfferCounts())));
+                offerCounts));
 
         currencyComboBox.setConverter(new CurrencyStringConverter(currencyComboBox));
         currencyComboBox.getEditor().getStyleClass().add("combo-box-editor-bold");
