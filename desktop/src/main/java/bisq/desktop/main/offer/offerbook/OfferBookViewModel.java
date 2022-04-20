@@ -421,7 +421,9 @@ abstract class OfferBookViewModel extends ActivatableViewModel {
     }
 
     public Optional<Double> getMarketBasedPrice(Offer offer) {
-        return priceUtil.getMarketBasedPrice(offer, direction);
+        OfferDirection displayDirection = offer.isFiatOffer() ? direction :
+                direction.equals(OfferDirection.BUY) ? OfferDirection.SELL : OfferDirection.BUY;
+        return priceUtil.getMarketBasedPrice(offer, displayDirection);
     }
 
     String formatMarketPriceMargin(Offer offer) {

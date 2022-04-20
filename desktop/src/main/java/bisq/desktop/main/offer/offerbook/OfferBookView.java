@@ -881,13 +881,14 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
                             private HBox getPriceAndPercentage(OfferBookListItem item) {
                                 Offer offer = item.getOffer();
                                 boolean useMarketBasedPrice = offer.isUseMarketBasedPrice();
+                                boolean isShownAsBuyOffer = OfferViewUtil.isShownAsBuyOffer(offer);
                                 MaterialDesignIcon icon = useMarketBasedPrice ? MaterialDesignIcon.CHART_LINE : MaterialDesignIcon.LOCK;
                                 String info;
 
                                 if (useMarketBasedPrice) {
                                     double marketPriceMargin = offer.getMarketPriceMargin();
                                     if (marketPriceMargin == 0) {
-                                        if (offer.isBuyOffer()) {
+                                        if (isShownAsBuyOffer) {
                                             info = Res.get("offerbook.info.sellAtMarketPrice");
                                         } else {
                                             info = Res.get("offerbook.info.buyAtMarketPrice");
@@ -895,13 +896,13 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
                                     } else {
                                         String absolutePriceMargin = model.getAbsolutePriceMargin(offer);
                                         if (marketPriceMargin > 0) {
-                                            if (offer.isBuyOffer()) {
+                                            if (isShownAsBuyOffer) {
                                                 info = Res.get("offerbook.info.sellBelowMarketPrice", absolutePriceMargin);
                                             } else {
                                                 info = Res.get("offerbook.info.buyAboveMarketPrice", absolutePriceMargin);
                                             }
                                         } else {
-                                            if (offer.isBuyOffer()) {
+                                            if (isShownAsBuyOffer) {
                                                 info = Res.get("offerbook.info.sellAboveMarketPrice", absolutePriceMargin);
                                             } else {
                                                 info = Res.get("offerbook.info.buyBelowMarketPrice", absolutePriceMargin);
@@ -909,7 +910,7 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
                                         }
                                     }
                                 } else {
-                                    if (offer.isBuyOffer()) {
+                                    if (isShownAsBuyOffer) {
                                         info = Res.get("offerbook.info.sellAtFixedPrice");
                                     } else {
                                         info = Res.get("offerbook.info.buyAtFixedPrice");
