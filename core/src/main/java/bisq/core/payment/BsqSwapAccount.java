@@ -17,18 +17,25 @@
 
 package bisq.core.payment;
 
+import bisq.core.locale.CryptoCurrency;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.BsqSwapAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 
 import java.util.Date;
+import java.util.List;
 
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 
 // Placeholder account for Bsq swaps. We do not hold any data here, its just used to fit into the
 // standard domain. We mimic the different trade protocol as a payment method with a dedicated account.
 @EqualsAndHashCode(callSuper = true)
 public final class BsqSwapAccount extends PaymentAccount {
+
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = List.of(new CryptoCurrency("BSQ", "BSQ"));
+
     public static final String ID = "BsqSwapAccount";
 
     public BsqSwapAccount() {
@@ -45,6 +52,11 @@ public final class BsqSwapAccount extends PaymentAccount {
     @Override
     protected PaymentAccountPayload createPayload() {
         return new BsqSwapAccountPayload(paymentMethod.getId(), id);
+    }
+
+    @Override
+    public @NonNull List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 
 }

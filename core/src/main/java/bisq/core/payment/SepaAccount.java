@@ -18,6 +18,8 @@
 package bisq.core.payment;
 
 import bisq.core.locale.CountryUtil;
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.SepaAccountPayload;
@@ -26,10 +28,16 @@ import java.util.List;
 
 import lombok.EqualsAndHashCode;
 
+import org.jetbrains.annotations.NotNull;
+
 @EqualsAndHashCode(callSuper = true)
 public final class SepaAccount extends CountryBasedPaymentAccount implements BankAccount {
+
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = List.of(new FiatCurrency("EUR"));
+
     public SepaAccount() {
         super(PaymentMethod.SEPA);
+        setSingleTradeCurrency(SUPPORTED_CURRENCIES.get(0));
     }
 
     @Override
@@ -89,5 +97,11 @@ public final class SepaAccount extends CountryBasedPaymentAccount implements Ban
     public void revertChanges() {
         super.revertChanges();
         ((SepaAccountPayload) paymentAccountPayload).revertChanges();
+    }
+
+    @NotNull
+    @Override
+    public List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 }

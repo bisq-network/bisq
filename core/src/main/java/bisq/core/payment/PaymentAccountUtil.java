@@ -40,9 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static bisq.core.locale.CurrencyUtil.*;
 import static bisq.core.payment.payload.PaymentMethod.*;
-import static java.util.Comparator.comparing;
 
 @Slf4j
 public class PaymentAccountUtil {
@@ -115,101 +113,107 @@ public class PaymentAccountUtil {
     public static List<TradeCurrency> getTradeCurrencies(PaymentMethod paymentMethod) {
         switch (paymentMethod.getId()) {
             case ADVANCED_CASH_ID:
-                return getAllAdvancedCashCurrencies();
+                return AdvancedCashAccount.SUPPORTED_CURRENCIES;
             case AMAZON_GIFT_CARD_ID:
-                return getAllAmazonGiftCardCurrencies();
+                return AmazonGiftCardAccount.SUPPORTED_CURRENCIES;
             case CAPITUAL_ID:
-                return getAllCapitualCurrencies();
+                return CapitualAccount.SUPPORTED_CURRENCIES;
             case MONEY_GRAM_ID:
-                return getAllMoneyGramCurrencies();
+                return MoneyGramAccount.SUPPORTED_CURRENCIES;
             case PAXUM_ID:
-                return getAllPaxumCurrencies();
+                return PaxumAccount.SUPPORTED_CURRENCIES;
             case PAYSERA_ID:
-                return getAllPayseraCurrencies();
+                return PayseraAccount.SUPPORTED_CURRENCIES;
             case REVOLUT_ID:
-                return getAllRevolutCurrencies();
+                return RevolutAccount.SUPPORTED_CURRENCIES;
             case SWIFT_ID:
-                return new ArrayList<>(getAllSortedFiatCurrencies(
-                        comparing(TradeCurrency::getCode)));
+                return SwiftAccount.SUPPORTED_CURRENCIES;
             case TRANSFERWISE_ID:
-                return getAllTransferwiseCurrencies();
+                return TransferwiseAccount.SUPPORTED_CURRENCIES;
             case UPHOLD_ID:
-                return getAllUpholdCurrencies();
+                return UpholdAccount.SUPPORTED_CURRENCIES;
             case INTERAC_E_TRANSFER_ID:
-                return getAllInteracETransferIdCurrencies();
+                return InteracETransferAccount.SUPPORTED_CURRENCIES;
             case STRIKE_ID:
-                return getAllStrikeCurrencies();
+                return StrikeAccount.SUPPORTED_CURRENCIES;
             case TIKKIE_ID:
-                return getAllTikkieIdCurrencies();
+                return TikkieAccount.SUPPORTED_CURRENCIES;
             case ALI_PAY_ID:
-                return getAllAliPayAccountCurrencies();
+                return AliPayAccount.SUPPORTED_CURRENCIES;
             case NEQUI_ID:
-                return getAllNequiCurrencies();
+                return NequiAccount.SUPPORTED_CURRENCIES;
             case IMPS_ID:
             case NEFT_ID:
             case PAYTM_ID:
             case RTGS_ID:
             case UPI_ID:
-                return getAllIfscBankCurrencies();
+                return IfscBasedAccount.SUPPORTED_CURRENCIES;
             case BIZUM_ID:
-                return getAllBizumCurrencies();
+                return BizumAccount.SUPPORTED_CURRENCIES;
             case MONEY_BEAM_ID:
-                return getAllMoneyBeamCurrencies();
+                return MoneyBeamAccount.SUPPORTED_CURRENCIES;
             case PIX_ID:
-                return getAllPixCurrencies();
+                return PixAccount.SUPPORTED_CURRENCIES;
             case SATISPAY_ID:
-                return getAllSatispayCurrencies();
+                return SatispayAccount.SUPPORTED_CURRENCIES;
             case CHASE_QUICK_PAY_ID:
-                return getAllChaseQuickPayCurrencies();
+                return ChaseQuickPayAccount.SUPPORTED_CURRENCIES;
             case US_POSTAL_MONEY_ORDER_ID:
-                return getAllUSPostalMoneyOrderCurrencies();
+                return USPostalMoneyOrderAccount.SUPPORTED_CURRENCIES;
             case VENMO_ID:
-                return getAllVenmoCurrencies();
+                return VenmoAccount.SUPPORTED_CURRENCIES;
             case JAPAN_BANK_ID:
-                return getAllJapanBankCurrencies();
+                return JapanBankAccount.SUPPORTED_CURRENCIES;
             case WECHAT_PAY_ID:
-                return getAllWeChatPayCurrencies();
+                return WeChatPayAccount.SUPPORTED_CURRENCIES;
             case CLEAR_X_CHANGE_ID:
-                return getAllClearXchangeCurrencies();
+                return ClearXchangeAccount.SUPPORTED_CURRENCIES;
             case AUSTRALIA_PAYID_ID:
-                return getAllAustraliaPayidCurrencies();
+                return AustraliaPayidAccount.SUPPORTED_CURRENCIES;
             case PERFECT_MONEY_ID:
-                return getAllPerfectMoneyCurrencies();
+                return PerfectMoneyAccount.SUPPORTED_CURRENCIES;
             case HAL_CASH_ID:
-                return getAllHalCashCurrencies();
+                return HalCashAccount.SUPPORTED_CURRENCIES;
             case SWISH_ID:
-                return getAllSwishCurrencies();
+                return SwishAccount.SUPPORTED_CURRENCIES;
             case CASH_APP_ID:
-                return getAllCashAppCurrencies();
+                return CashAppAccount.SUPPORTED_CURRENCIES;
             case POPMONEY_ID:
-                return getAllPopmoneyCurrencies();
+                return PopmoneyAccount.SUPPORTED_CURRENCIES;
             case PROMPT_PAY_ID:
-                return getAllPromptPayCurrencies();
+                return PromptPayAccount.SUPPORTED_CURRENCIES;
             case SEPA_ID:
+                return SepaAccount.SUPPORTED_CURRENCIES;
             case SEPA_INSTANT_ID:
-                return getAllSEPACurrencies();
+                return SepaInstantAccount.SUPPORTED_CURRENCIES;
             case CASH_BY_MAIL_ID:
+                return CashByMailAccount.SUPPORTED_CURRENCIES;
             case F2F_ID:
+                return F2FAccount.SUPPORTED_CURRENCIES;
             case NATIONAL_BANK_ID:
+                return NationalBankAccount.SUPPORTED_CURRENCIES;
             case SAME_BANK_ID:
+                return SameBankAccount.SUPPORTED_CURRENCIES;
             case SPECIFIC_BANKS_ID:
+                return SpecificBanksAccount.SUPPORTED_CURRENCIES;
             case CASH_DEPOSIT_ID:
+                return CashDepositAccount.SUPPORTED_CURRENCIES;
             case WESTERN_UNION_ID:
-                return getAllFiatCurrencies();
+                return WesternUnionAccount.SUPPORTED_CURRENCIES;
             case FASTER_PAYMENTS_ID:
-                return getAllFasterPaymentCurrencies();
+                return FasterPaymentsAccount.SUPPORTED_CURRENCIES;
             case DOMESTIC_WIRE_TRANSFER_ID:
-                return getAllDomesticWireTransferCurrencies();
+                return DomesticWireTransferAccount.SUPPORTED_CURRENCIES;
             case ACH_TRANSFER_ID:
-                return getAllACHTransferCurrencies();
+                return AchTransferAccount.SUPPORTED_CURRENCIES;
             case CELPAY_ID:
-                return getAllCelPayCurrencies();
+                return CelPayAccount.SUPPORTED_CURRENCIES;
             case MONESE_ID:
-                return getAllMoneseCurrencies();
+                return MoneseAccount.SUPPORTED_CURRENCIES;
             case TRANSFERWISE_USD_ID:
-                return getAllTransferwiseUSDCurrencies();
+                return TransferwiseUsdAccount.SUPPORTED_CURRENCIES;
             case VERSE_ID:
-                return getAllVerseCurrencies();
+                return VerseAccount.SUPPORTED_CURRENCIES;
             default:
                 return Collections.emptyList();
         }

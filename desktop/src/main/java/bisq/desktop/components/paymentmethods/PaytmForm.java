@@ -23,7 +23,6 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CountryUtil;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaytmAccount;
@@ -59,7 +58,7 @@ public class PaytmForm extends PaymentMethodForm {
     @Override
     public void addFormForAddAccount() {
         // this payment method is only for India/INR
-        account.setSingleTradeCurrency(CurrencyUtil.getAllIfscBankCurrencies().get(0));
+        account.setSingleTradeCurrency(account.getSupportedCurrencies().get(0));
         CountryUtil.findCountryByCode("IN").ifPresent(c -> account.setCountry(c));
 
         gridRowFrom = gridRow + 1;

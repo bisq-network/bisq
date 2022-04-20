@@ -21,7 +21,7 @@ import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.AdvancedCashAccount;
 import bisq.core.payment.AliPayAccount;
-import bisq.core.payment.AustraliaPayid;
+import bisq.core.payment.AustraliaPayidAccount;
 import bisq.core.payment.CapitualAccount;
 import bisq.core.payment.CashDepositAccount;
 import bisq.core.payment.ClearXchangeAccount;
@@ -81,7 +81,8 @@ import static bisq.apitest.config.ApiTestConfig.EUR;
 import static bisq.apitest.config.ApiTestConfig.USD;
 import static bisq.apitest.config.BisqAppConfig.alicedaemon;
 import static bisq.cli.table.builder.TableType.PAYMENT_ACCOUNT_TBL;
-import static bisq.core.locale.CurrencyUtil.*;
+import static bisq.core.locale.CurrencyUtil.getAllSortedFiatCurrencies;
+import static bisq.core.locale.CurrencyUtil.getTradeCurrency;
 import static bisq.core.payment.payload.PaymentMethod.*;
 import static java.util.Comparator.comparing;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -117,7 +118,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, ADVANCED_CASH_ID);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Advanced Cash Acct");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NR, "0000 1111 2222");
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, getAllAdvancedCashCurrencies()
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, AdvancedCashAccount.SUPPORTED_CURRENCIES
                 .stream()
                 .map(TradeCurrency::getCode)
                 .collect(Collectors.joining(",")));
@@ -126,7 +127,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         AdvancedCashAccount paymentAccount = (AdvancedCashAccount) createPaymentAccount(aliceClient, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
-        verifyAccountTradeCurrencies(getAllAdvancedCashCurrencies(), paymentAccount);
+        verifyAccountTradeCurrencies(AdvancedCashAccount.SUPPORTED_CURRENCIES, paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SELECTED_TRADE_CURRENCY),
                 paymentAccount.getSelectedTradeCurrency().getCode());
         verifyCommonFormEntries(paymentAccount);
@@ -166,7 +167,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_BANK_ACCOUNT_NAME, "Credit Union Australia");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_SALT, encodeToHex("Restored Australia Pay ID Acct Salt"));
         String jsonString = getCompletedFormAsJsonString();
-        AustraliaPayid paymentAccount = (AustraliaPayid) createPaymentAccount(aliceClient, jsonString);
+        AustraliaPayidAccount paymentAccount = (AustraliaPayidAccount) createPaymentAccount(aliceClient, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
         verifyAccountSingleTradeCurrency("AUD", paymentAccount);
         verifyCommonFormEntries(paymentAccount);
@@ -185,7 +186,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, CAPITUAL_ID);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Capitual Acct");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NR, "1111 2222 3333-4");
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, getAllCapitualCurrencies()
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, CapitualAccount.SUPPORTED_CURRENCIES
                 .stream()
                 .map(TradeCurrency::getCode)
                 .collect(Collectors.joining(",")));
@@ -194,7 +195,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         CapitualAccount paymentAccount = (CapitualAccount) createPaymentAccount(aliceClient, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
-        verifyAccountTradeCurrencies(getAllCapitualCurrencies(), paymentAccount);
+        verifyAccountTradeCurrencies(CapitualAccount.SUPPORTED_CURRENCIES, paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SELECTED_TRADE_CURRENCY),
                 paymentAccount.getSelectedTradeCurrency().getCode());
         verifyCommonFormEntries(paymentAccount);
@@ -491,7 +492,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
                 PROPERTY_NAME_STATE);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, MONEY_GRAM_ID);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Money Gram Acct");
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, getAllMoneyGramCurrencies()
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, MoneyGramAccount.SUPPORTED_CURRENCIES
                 .stream()
                 .map(TradeCurrency::getCode)
                 .collect(Collectors.joining(",")));
@@ -504,7 +505,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         MoneyGramAccount paymentAccount = (MoneyGramAccount) createPaymentAccount(aliceClient, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
-        verifyAccountTradeCurrencies(getAllMoneyGramCurrencies(), paymentAccount);
+        verifyAccountTradeCurrencies(MoneyGramAccount.SUPPORTED_CURRENCIES, paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SELECTED_TRADE_CURRENCY),
                 paymentAccount.getSelectedTradeCurrency().getCode());
         verifyCommonFormEntries(paymentAccount);
@@ -544,7 +545,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
                 PROPERTY_NAME_EMAIL);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, PAXUM_ID);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Paxum Acct");
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, getAllPaxumCurrencies()
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, PaxumAccount.SUPPORTED_CURRENCIES
                 .stream()
                 .map(TradeCurrency::getCode)
                 .collect(Collectors.joining(",")));
@@ -554,7 +555,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         PaxumAccount paymentAccount = (PaxumAccount) createPaymentAccount(aliceClient, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
-        verifyAccountTradeCurrencies(getAllPaxumCurrencies(), paymentAccount);
+        verifyAccountTradeCurrencies(PaxumAccount.SUPPORTED_CURRENCIES, paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SELECTED_TRADE_CURRENCY),
                 paymentAccount.getSelectedTradeCurrency().getCode());
         verifyCommonFormEntries(paymentAccount);
@@ -570,7 +571,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
                 PROPERTY_NAME_EMAIL);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, PAYSERA_ID);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Paysera Acct");
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, getAllPayseraCurrencies()
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, PayseraAccount.SUPPORTED_CURRENCIES
                 .stream()
                 .map(TradeCurrency::getCode)
                 .collect(Collectors.joining(",")));
@@ -580,7 +581,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         PayseraAccount paymentAccount = (PayseraAccount) createPaymentAccount(aliceClient, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
-        verifyAccountTradeCurrencies(getAllPayseraCurrencies(), paymentAccount);
+        verifyAccountTradeCurrencies(PayseraAccount.SUPPORTED_CURRENCIES, paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SELECTED_TRADE_CURRENCY),
                 paymentAccount.getSelectedTradeCurrency().getCode());
         verifyCommonFormEntries(paymentAccount);
@@ -638,7 +639,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
                 PROPERTY_NAME_USERNAME);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, REVOLUT_ID);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Revolut Acct");
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, getAllRevolutCurrencies()
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, RevolutAccount.SUPPORTED_CURRENCIES
                 .stream()
                 .map(TradeCurrency::getCode)
                 .collect(Collectors.joining(",")));
@@ -648,7 +649,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         RevolutAccount paymentAccount = (RevolutAccount) createPaymentAccount(aliceClient, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
-        verifyAccountTradeCurrencies(getAllRevolutCurrencies(), paymentAccount);
+        verifyAccountTradeCurrencies(RevolutAccount.SUPPORTED_CURRENCIES, paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SELECTED_TRADE_CURRENCY),
                 paymentAccount.getSelectedTradeCurrency().getCode());
         verifyCommonFormEntries(paymentAccount);
@@ -959,7 +960,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
                 PROPERTY_NAME_EMAIL);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, TRANSFERWISE_ID);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Transferwise Acct");
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, getAllTransferwiseCurrencies()
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, TransferwiseAccount.SUPPORTED_CURRENCIES
                 .stream()
                 .map(TradeCurrency::getCode)
                 .collect(Collectors.joining(",")));
@@ -969,7 +970,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         TransferwiseAccount paymentAccount = (TransferwiseAccount) createPaymentAccount(aliceClient, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
-        verifyAccountTradeCurrencies(getAllTransferwiseCurrencies(), paymentAccount);
+        verifyAccountTradeCurrencies(TransferwiseAccount.SUPPORTED_CURRENCIES, paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SELECTED_TRADE_CURRENCY),
                 paymentAccount.getSelectedTradeCurrency().getCode());
         verifyCommonFormEntries(paymentAccount);
@@ -1024,7 +1025,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_PAYMENT_METHOD_ID, UPHOLD_ID);
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_NAME, "Uphold Acct");
         COMPLETED_FORM_MAP.put(PROPERTY_NAME_ACCOUNT_ID, "UA 9876");
-        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, getAllUpholdCurrencies()
+        COMPLETED_FORM_MAP.put(PROPERTY_NAME_TRADE_CURRENCIES, UpholdAccount.SUPPORTED_CURRENCIES
                 .stream()
                 .map(TradeCurrency::getCode)
                 .collect(Collectors.joining(",")));
@@ -1033,7 +1034,7 @@ public class CreatePaymentAccountTest extends AbstractPaymentAccountTest {
         String jsonString = getCompletedFormAsJsonString();
         UpholdAccount paymentAccount = (UpholdAccount) createPaymentAccount(aliceClient, jsonString);
         verifyUserPayloadHasPaymentAccountWithId(aliceClient, paymentAccount.getId());
-        verifyAccountTradeCurrencies(getAllUpholdCurrencies(), paymentAccount);
+        verifyAccountTradeCurrencies(UpholdAccount.SUPPORTED_CURRENCIES, paymentAccount);
         assertEquals(COMPLETED_FORM_MAP.get(PROPERTY_NAME_SELECTED_TRADE_CURRENCY),
                 paymentAccount.getSelectedTradeCurrency().getCode());
         verifyCommonFormEntries(paymentAccount);

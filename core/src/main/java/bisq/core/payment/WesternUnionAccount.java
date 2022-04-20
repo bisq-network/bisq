@@ -17,11 +17,20 @@
 
 package bisq.core.payment;
 
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
 
+import java.util.List;
+
+import lombok.NonNull;
+
 public final class WesternUnionAccount extends CountryBasedPaymentAccount {
+
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = CurrencyUtil.getAllFiatCurrencies();
+
     public WesternUnionAccount() {
         super(PaymentMethod.WESTERN_UNION);
     }
@@ -29,6 +38,11 @@ public final class WesternUnionAccount extends CountryBasedPaymentAccount {
     @Override
     protected PaymentAccountPayload createPayload() {
         return new WesternUnionAccountPayload(paymentMethod.getId(), id);
+    }
+
+    @Override
+    public @NonNull List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 
     public String getEmail() {

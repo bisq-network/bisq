@@ -19,15 +19,33 @@ package bisq.core.payment;
 
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.AmazonGiftCardAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
+
+import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
 public final class AmazonGiftCardAccount extends PaymentAccount {
+
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = List.of(
+            new FiatCurrency("AUD"),
+            new FiatCurrency("CAD"),
+            new FiatCurrency("EUR"),
+            new FiatCurrency("GBP"),
+            new FiatCurrency("INR"),
+            new FiatCurrency("JPY"),
+            new FiatCurrency("SAR"),
+            new FiatCurrency("SEK"),
+            new FiatCurrency("SGD"),
+            new FiatCurrency("TRY"),
+            new FiatCurrency("USD")
+    );
 
     @Nullable
     private Country country;
@@ -39,6 +57,12 @@ public final class AmazonGiftCardAccount extends PaymentAccount {
     @Override
     protected PaymentAccountPayload createPayload() {
         return new AmazonGiftCardAccountPayload(paymentMethod.getId(), id);
+    }
+
+    @NotNull
+    @Override
+    public List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 
     public String getEmailOrMobileNr() {

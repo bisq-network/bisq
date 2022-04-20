@@ -17,20 +17,33 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.AustraliaPayidPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 
-public final class AustraliaPayid extends PaymentAccount {
-    public AustraliaPayid() {
+import java.util.List;
+
+import lombok.NonNull;
+
+public final class AustraliaPayidAccount extends PaymentAccount {
+
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = List.of(new FiatCurrency("AUD"));
+
+    public AustraliaPayidAccount() {
         super(PaymentMethod.AUSTRALIA_PAYID);
-        setSingleTradeCurrency(CurrencyUtil.getAllAustraliaPayidCurrencies().get(0));
+        setSingleTradeCurrency(SUPPORTED_CURRENCIES.get(0));
     }
 
     @Override
     protected PaymentAccountPayload createPayload() {
         return new AustraliaPayidPayload(paymentMethod.getId(), id);
+    }
+
+    @Override
+    public @NonNull List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 
     public String getPayid() {

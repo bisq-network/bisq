@@ -51,7 +51,6 @@ import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 
 @Slf4j
@@ -72,10 +71,10 @@ public class CurrencyUtil {
     private static final Map<String, Boolean> isFiatCurrencyMap = new ConcurrentHashMap<>();
     private static final Map<String, Boolean> isCryptoCurrencyMap = new ConcurrentHashMap<>();
 
-    private static Supplier<Map<String, FiatCurrency>> fiatCurrencyMapSupplier = Suppliers.memoize(
-            CurrencyUtil::createFiatCurrencyMap)::get;
-    private static Supplier<Map<String, CryptoCurrency>> cryptoCurrencyMapSupplier = Suppliers.memoize(
-            CurrencyUtil::createCryptoCurrencyMap)::get;
+    private static final Supplier<Map<String, FiatCurrency>> fiatCurrencyMapSupplier = Suppliers.memoize(
+            CurrencyUtil::createFiatCurrencyMap);
+    private static final Supplier<Map<String, CryptoCurrency>> cryptoCurrencyMapSupplier = Suppliers.memoize(
+            CurrencyUtil::createCryptoCurrencyMap);
 
     public static void setBaseCurrencyCode(String baseCurrencyCode) {
         CurrencyUtil.baseCurrencyCode = baseCurrencyCode;
@@ -187,433 +186,6 @@ public class CurrencyUtil {
         return currencies;
     }
 
-    public static List<TradeCurrency> getAllAdvancedCashCurrencies() {
-        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
-                new FiatCurrency("USD"),
-                new FiatCurrency("EUR"),
-                new FiatCurrency("GBP"),
-                new FiatCurrency("RUB"),
-                new FiatCurrency("UAH"),
-                new FiatCurrency("KZT"),
-                new FiatCurrency("BRL")
-        ));
-        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
-        return currencies;
-    }
-
-    public static List<TradeCurrency> getAllMoneyGramCurrencies() {
-        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
-                new FiatCurrency("AED"),
-                new FiatCurrency("ARS"),
-                new FiatCurrency("AUD"),
-                new FiatCurrency("BND"),
-                new FiatCurrency("CAD"),
-                new FiatCurrency("CHF"),
-                new FiatCurrency("CZK"),
-                new FiatCurrency("DKK"),
-                new FiatCurrency("EUR"),
-                new FiatCurrency("FJD"),
-                new FiatCurrency("GBP"),
-                new FiatCurrency("HKD"),
-                new FiatCurrency("HUF"),
-                new FiatCurrency("IDR"),
-                new FiatCurrency("ILS"),
-                new FiatCurrency("INR"),
-                new FiatCurrency("JPY"),
-                new FiatCurrency("KRW"),
-                new FiatCurrency("KWD"),
-                new FiatCurrency("LKR"),
-                new FiatCurrency("MAD"),
-                new FiatCurrency("MGA"),
-                new FiatCurrency("MXN"),
-                new FiatCurrency("MYR"),
-                new FiatCurrency("NOK"),
-                new FiatCurrency("NZD"),
-                new FiatCurrency("OMR"),
-                new FiatCurrency("PEN"),
-                new FiatCurrency("PGK"),
-                new FiatCurrency("PHP"),
-                new FiatCurrency("PKR"),
-                new FiatCurrency("PLN"),
-                new FiatCurrency("SAR"),
-                new FiatCurrency("SBD"),
-                new FiatCurrency("SCR"),
-                new FiatCurrency("SEK"),
-                new FiatCurrency("SGD"),
-                new FiatCurrency("THB"),
-                new FiatCurrency("TOP"),
-                new FiatCurrency("TRY"),
-                new FiatCurrency("TWD"),
-                new FiatCurrency("USD"),
-                new FiatCurrency("VND"),
-                new FiatCurrency("VUV"),
-                new FiatCurrency("WST"),
-                new FiatCurrency("XOF"),
-                new FiatCurrency("XPF"),
-                new FiatCurrency("ZAR")
-        ));
-
-        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
-        return currencies;
-    }
-
-    // https://support.uphold.com/hc/en-us/articles/202473803-Supported-currencies
-    public static List<TradeCurrency> getAllUpholdCurrencies() {
-        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
-                new FiatCurrency("USD"),
-                new FiatCurrency("EUR"),
-                new FiatCurrency("GBP"),
-                new FiatCurrency("CNY"),
-                new FiatCurrency("JPY"),
-                new FiatCurrency("CHF"),
-                new FiatCurrency("INR"),
-                new FiatCurrency("MXN"),
-                new FiatCurrency("AUD"),
-                new FiatCurrency("CAD"),
-                new FiatCurrency("HKD"),
-                new FiatCurrency("NZD"),
-                new FiatCurrency("SGD"),
-                new FiatCurrency("KES"),
-                new FiatCurrency("ILS"),
-                new FiatCurrency("DKK"),
-                new FiatCurrency("NOK"),
-                new FiatCurrency("SEK"),
-                new FiatCurrency("PLN"),
-                new FiatCurrency("ARS"),
-                new FiatCurrency("BRL"),
-                new FiatCurrency("AED"),
-                new FiatCurrency("PHP")
-        ));
-
-        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
-        return currencies;
-    }
-
-    // https://github.com/bisq-network/proposals/issues/243
-    public static List<TradeCurrency> getAllTransferwiseCurrencies() {
-        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
-                new FiatCurrency("ARS"),
-                new FiatCurrency("AUD"),
-                new FiatCurrency("XOF"),
-                new FiatCurrency("BGN"),
-                new FiatCurrency("CAD"),
-                new FiatCurrency("CLP"),
-                new FiatCurrency("HRK"),
-                new FiatCurrency("CZK"),
-                new FiatCurrency("DKK"),
-                new FiatCurrency("EGP"),
-                new FiatCurrency("EUR"),
-                new FiatCurrency("GEL"),
-                new FiatCurrency("HKD"),
-                new FiatCurrency("HUF"),
-                new FiatCurrency("IDR"),
-                new FiatCurrency("ILS"),
-                new FiatCurrency("JPY"),
-                new FiatCurrency("KES"),
-                new FiatCurrency("MYR"),
-                new FiatCurrency("MXN"),
-                new FiatCurrency("MAD"),
-                new FiatCurrency("NPR"),
-                new FiatCurrency("NZD"),
-                new FiatCurrency("NOK"),
-                new FiatCurrency("PKR"),
-                new FiatCurrency("PEN"),
-                new FiatCurrency("PHP"),
-                new FiatCurrency("PLN"),
-                new FiatCurrency("RON"),
-                new FiatCurrency("RUB"),
-                new FiatCurrency("SGD"),
-                new FiatCurrency("ZAR"),
-                new FiatCurrency("KRW"),
-                new FiatCurrency("SEK"),
-                new FiatCurrency("CHF"),
-                new FiatCurrency("THB"),
-                new FiatCurrency("TRY"),
-                new FiatCurrency("UGX"),
-                new FiatCurrency("AED"),
-                new FiatCurrency("GBP"),
-                new FiatCurrency("VND"),
-                new FiatCurrency("ZMW")
-        ));
-
-        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
-        return currencies;
-    }
-
-    // https://github.com/bisq-network/growth/issues/233
-    public static List<TradeCurrency> getAllPayseraCurrencies() {
-        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
-                new FiatCurrency("AUD"),
-                new FiatCurrency("BGN"),
-                new FiatCurrency("BYN"),
-                new FiatCurrency("CAD"),
-                new FiatCurrency("CHF"),
-                new FiatCurrency("CNY"),
-                new FiatCurrency("CZK"),
-                new FiatCurrency("DKK"),
-                new FiatCurrency("EUR"),
-                new FiatCurrency("GBP"),
-                new FiatCurrency("GEL"),
-                new FiatCurrency("HKD"),
-                new FiatCurrency("HRK"),
-                new FiatCurrency("HUF"),
-                new FiatCurrency("ILS"),
-                new FiatCurrency("INR"),
-                new FiatCurrency("JPY"),
-                new FiatCurrency("KZT"),
-                new FiatCurrency("MXN"),
-                new FiatCurrency("NOK"),
-                new FiatCurrency("NZD"),
-                new FiatCurrency("PHP"),
-                new FiatCurrency("PLN"),
-                new FiatCurrency("RON"),
-                new FiatCurrency("RSD"),
-                new FiatCurrency("RUB"),
-                new FiatCurrency("SEK"),
-                new FiatCurrency("SGD"),
-                new FiatCurrency("THB"),
-                new FiatCurrency("TRY"),
-                new FiatCurrency("USD"),
-                new FiatCurrency("ZAR")
-        ));
-
-        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
-        return currencies;
-    }
-
-    // https://github.com/bisq-network/growth/issues/235
-    public static List<TradeCurrency> getAllPaxumCurrencies() {
-        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
-                new FiatCurrency("USD"),
-                new FiatCurrency("CAD"),
-                new FiatCurrency("EUR"),
-                new FiatCurrency("DKK"),
-                new FiatCurrency("CZK"),
-                new FiatCurrency("AUD"),
-                new FiatCurrency("ZAR"),
-                new FiatCurrency("THB"),
-                new FiatCurrency("CHF"),
-                new FiatCurrency("SEK"),
-                new FiatCurrency("RON"),
-                new FiatCurrency("PLN"),
-                new FiatCurrency("NZD"),
-                new FiatCurrency("NOK"),
-                new FiatCurrency("INR"),
-                new FiatCurrency("IDR"),
-                new FiatCurrency("HUF"),
-                new FiatCurrency("GBP")
-        ));
-
-        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
-        return currencies;
-    }
-
-    public static List<TradeCurrency> getAllAmazonGiftCardCurrencies() {
-        List<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
-                new FiatCurrency("AUD"),
-                new FiatCurrency("CAD"),
-                new FiatCurrency("EUR"),
-                new FiatCurrency("GBP"),
-                new FiatCurrency("INR"),
-                new FiatCurrency("JPY"),
-                new FiatCurrency("SAR"),
-                new FiatCurrency("SEK"),
-                new FiatCurrency("SGD"),
-                new FiatCurrency("TRY"),
-                new FiatCurrency("USD")
-        ));
-        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
-        return currencies;
-    }
-
-    public static List<TradeCurrency> getAllCapitualCurrencies() {
-        return new ArrayList<>(Arrays.asList(
-                new FiatCurrency("BRL"),
-                new FiatCurrency("EUR"),
-                new FiatCurrency("GBP"),
-                new FiatCurrency("USD")
-        ));
-    }
-
-    // https://github.com/bisq-network/growth/issues/231
-    public static List<TradeCurrency> getAllCelPayCurrencies() {
-        return new ArrayList<>(Arrays.asList(
-                new FiatCurrency("AUD"),
-                new FiatCurrency("CAD"),
-                new FiatCurrency("GBP"),
-                new FiatCurrency("HKD"),
-                new FiatCurrency("USD")
-        ));
-    }
-
-    // https://github.com/bisq-network/growth/issues/227
-    public static List<TradeCurrency> getAllMoneseCurrencies() {
-        return new ArrayList<>(Arrays.asList(
-                new FiatCurrency("EUR"),
-                new FiatCurrency("GBP"),
-                new FiatCurrency("RON")
-        ));
-    }
-
-    // https://github.com/bisq-network/growth/issues/223
-    public static List<TradeCurrency> getAllVerseCurrencies() {
-        return new ArrayList<>(Arrays.asList(
-                new FiatCurrency("DKK"),
-                new FiatCurrency("EUR"),
-                new FiatCurrency("HUF"),
-                new FiatCurrency("PLN"),
-                new FiatCurrency("SEK")
-        ));
-    }
-
-    // https://www.revolut.com/help/getting-started/exchanging-currencies/what-fiat-currencies-are-supported-for-holding-and-exchange
-    public static List<TradeCurrency> getAllRevolutCurrencies() {
-        ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
-                new FiatCurrency("AED"),
-                new FiatCurrency("AUD"),
-                new FiatCurrency("BGN"),
-                new FiatCurrency("CAD"),
-                new FiatCurrency("CHF"),
-                new FiatCurrency("CZK"),
-                new FiatCurrency("DKK"),
-                new FiatCurrency("EUR"),
-                new FiatCurrency("GBP"),
-                new FiatCurrency("HKD"),
-                new FiatCurrency("HRK"),
-                new FiatCurrency("HUF"),
-                new FiatCurrency("ILS"),
-                new FiatCurrency("ISK"),
-                new FiatCurrency("JPY"),
-                new FiatCurrency("MAD"),
-                new FiatCurrency("MXN"),
-                new FiatCurrency("NOK"),
-                new FiatCurrency("NZD"),
-                new FiatCurrency("PLN"),
-                new FiatCurrency("QAR"),
-                new FiatCurrency("RON"),
-                new FiatCurrency("RSD"),
-                new FiatCurrency("RUB"),
-                new FiatCurrency("SAR"),
-                new FiatCurrency("SEK"),
-                new FiatCurrency("SGD"),
-                new FiatCurrency("THB"),
-                new FiatCurrency("TRY"),
-                new FiatCurrency("USD"),
-                new FiatCurrency("ZAR")
-        ));
-
-        currencies.sort(Comparator.comparing(TradeCurrency::getCode));
-        return currencies;
-    }
-
-    public static List<TradeCurrency> getAllInteracETransferIdCurrencies() {
-        return List.of(new FiatCurrency("CAD"));
-    }
-
-    public static List<TradeCurrency> getAllStrikeCurrencies() {
-        return List.of(new FiatCurrency("USD"));
-    }
-
-    public static List<TradeCurrency> getAllTikkieIdCurrencies() {
-        return List.of(new FiatCurrency("EUR"));
-    }
-
-    public static List<TradeCurrency> getAllAliPayAccountCurrencies() {
-        return List.of(new FiatCurrency("CNY"));
-    }
-
-    public static List<TradeCurrency> getAllNequiCurrencies() {
-        return List.of(new FiatCurrency("COP"));
-    }
-
-    public static List<TradeCurrency> getAllIfscBankCurrencies() {
-        return List.of(new FiatCurrency("INR"));
-    }
-
-    public static List<TradeCurrency> getAllBizumCurrencies() {
-        return List.of(new FiatCurrency("EUR"));
-    }
-
-    public static List<TradeCurrency> getAllMoneyBeamCurrencies() {
-        return List.of(new FiatCurrency("EUR"));
-    }
-
-    public static List<TradeCurrency> getAllPixCurrencies() {
-        return List.of(new FiatCurrency("BRL"));
-    }
-
-    public static List<TradeCurrency> getAllSatispayCurrencies() {
-        return List.of(new FiatCurrency("EUR"));
-    }
-
-    public static List<TradeCurrency> getAllChaseQuickPayCurrencies() {
-        return List.of(new FiatCurrency("USD"));
-    }
-
-    public static List<TradeCurrency> getAllUSPostalMoneyOrderCurrencies() {
-        return List.of(new FiatCurrency("USD"));
-    }
-
-    public static List<TradeCurrency> getAllVenmoCurrencies() {
-        return List.of(new FiatCurrency("USD"));
-    }
-
-    public static List<TradeCurrency> getAllFasterPaymentCurrencies() {
-        return List.of(new FiatCurrency("GBP"));
-    }
-
-    public static List<TradeCurrency> getAllJapanBankCurrencies() {
-        return List.of(new FiatCurrency("JPY"));
-    }
-
-    public static List<TradeCurrency> getAllWeChatPayCurrencies() {
-        return List.of(new FiatCurrency("CNY"));
-    }
-
-    public static List<TradeCurrency> getAllClearXchangeCurrencies() {
-        return List.of(new FiatCurrency("USD"));
-    }
-
-    public static List<TradeCurrency> getAllAustraliaPayidCurrencies() {
-        return List.of(new FiatCurrency("AUD"));
-    }
-
-    public static List<TradeCurrency> getAllPerfectMoneyCurrencies() {
-        return List.of(new FiatCurrency("USD"));
-    }
-
-    public static List<TradeCurrency> getAllHalCashCurrencies() {
-        return List.of(new FiatCurrency("EUR"));
-    }
-
-    public static List<TradeCurrency> getAllSwishCurrencies() {
-        return List.of(new FiatCurrency("SEK"));
-    }
-
-    public static List<TradeCurrency> getAllCashAppCurrencies() {
-        return List.of(new FiatCurrency("USD"));
-    }
-
-    public static List<TradeCurrency> getAllPopmoneyCurrencies() {
-        return List.of(new FiatCurrency("USD"));
-    }
-
-    public static List<TradeCurrency> getAllPromptPayCurrencies() {
-        return List.of(new FiatCurrency("THB"));
-    }
-
-    public static List<TradeCurrency> getAllSEPACurrencies() {
-        return List.of(new FiatCurrency("EUR"));
-    }
-
-    public static List<TradeCurrency> getAllDomesticWireTransferCurrencies() {
-        return List.of(new FiatCurrency("USD"));
-    }
-
-    public static List<TradeCurrency> getAllACHTransferCurrencies() {
-        return List.of(new FiatCurrency("USD"));
-    }
-
     public static List<TradeCurrency> getMatureMarketCurrencies() {
         ArrayList<TradeCurrency> currencies = new ArrayList<>(Arrays.asList(
                 new FiatCurrency("EUR"),
@@ -644,9 +216,7 @@ public class CurrencyUtil {
 
             return isFiatCurrency;
         } catch (Throwable t) {
-            if (currencyCode != null) {
-                isFiatCurrencyMap.put(currencyCode, false);
-            }
+            isFiatCurrencyMap.put(currencyCode, false);
             return false;
         }
     }
@@ -684,7 +254,7 @@ public class CurrencyUtil {
             // It might be that an asset was removed from the assetsRegistry, we deal with such cases below by checking if
             // it is a fiat currency
             isCryptoCurrency = true;
-        } else if (!getFiatCurrency(currencyCode).isPresent()) {
+        } else if (getFiatCurrency(currencyCode).isEmpty()) {
             // In case the code is from a removed asset we cross check if there exist a fiat currency with that code,
             // if we don't find a fiat currency we treat it as a crypto currency.
             isCryptoCurrency = true;
@@ -829,7 +399,7 @@ public class CurrencyUtil {
                 .filter(asset -> assetMatchesCurrencyCode(asset, currencyCode)).collect(Collectors.toList());
 
         // If we don't have the ticker symbol we throw an exception
-        if (!assets.stream().findFirst().isPresent())
+        if (assets.stream().findFirst().isEmpty())
             return Optional.empty();
 
         if (currencyCode.equals("BSQ") && baseCurrencyNetwork.isMainnet() && !daoTradingActivated)
@@ -846,8 +416,6 @@ public class CurrencyUtil {
         // that if no exact match was found in previous step
         if (!baseCurrencyNetwork.isMainnet()) {
             Optional<Asset> optionalAsset = assets.stream().findFirst();
-            checkArgument(optionalAsset.isPresent(), "optionalAsset must be present as we checked for " +
-                    "not matching ticker symbols already above");
             return optionalAsset;
         }
 

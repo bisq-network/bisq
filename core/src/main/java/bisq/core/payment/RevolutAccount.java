@@ -17,18 +17,58 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.RevolutAccountPayload;
 
+import java.util.List;
+
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 
 @EqualsAndHashCode(callSuper = true)
 public final class RevolutAccount extends PaymentAccount {
+
+    // https://www.revolut.com/help/getting-started/exchanging-currencies/what-fiat-currencies-are-supported-for-holding-and-exchange
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = List.of(
+            new FiatCurrency("AED"),
+            new FiatCurrency("AUD"),
+            new FiatCurrency("BGN"),
+            new FiatCurrency("CAD"),
+            new FiatCurrency("CHF"),
+            new FiatCurrency("CZK"),
+            new FiatCurrency("DKK"),
+            new FiatCurrency("EUR"),
+            new FiatCurrency("GBP"),
+            new FiatCurrency("HKD"),
+            new FiatCurrency("HRK"),
+            new FiatCurrency("HUF"),
+            new FiatCurrency("ILS"),
+            new FiatCurrency("ISK"),
+            new FiatCurrency("JPY"),
+            new FiatCurrency("MAD"),
+            new FiatCurrency("MXN"),
+            new FiatCurrency("NOK"),
+            new FiatCurrency("NZD"),
+            new FiatCurrency("PLN"),
+            new FiatCurrency("QAR"),
+            new FiatCurrency("RON"),
+            new FiatCurrency("RSD"),
+            new FiatCurrency("RUB"),
+            new FiatCurrency("SAR"),
+            new FiatCurrency("SEK"),
+            new FiatCurrency("SGD"),
+            new FiatCurrency("THB"),
+            new FiatCurrency("TRY"),
+            new FiatCurrency("USD"),
+            new FiatCurrency("ZAR")
+    );
+
     public RevolutAccount() {
         super(PaymentMethod.REVOLUT);
-        tradeCurrencies.addAll(CurrencyUtil.getAllRevolutCurrencies());
+        tradeCurrencies.addAll(getSupportedCurrencies());
     }
 
     @Override
@@ -66,5 +106,10 @@ public final class RevolutAccount extends PaymentAccount {
 
         // At save we apply the userName to accountId in case it is empty for backward compatibility
         revolutAccountPayload().maybeApplyUserNameToAccountId();
+    }
+
+    @Override
+    public @NonNull List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 }

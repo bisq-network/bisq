@@ -24,7 +24,7 @@ import bisq.core.payment.payload.UpiAccountPayload;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
-public final class UpiAccount extends CountryBasedPaymentAccount {
+public final class UpiAccount extends IfscBasedAccount {
     public UpiAccount() {
         super(PaymentMethod.UPI);
     }

@@ -52,8 +52,10 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.common.util.ReflectionUtils.*;
 import static bisq.common.util.Utilities.decodeFromHex;
 import static bisq.core.locale.CountryUtil.findCountryByCode;
-import static bisq.core.locale.CurrencyUtil.*;
-import static bisq.core.payment.payload.PaymentMethod.*;
+import static bisq.core.locale.CurrencyUtil.getCurrencyByCountryCode;
+import static bisq.core.locale.CurrencyUtil.getTradeCurrenciesInList;
+import static bisq.core.locale.CurrencyUtil.getTradeCurrency;
+import static bisq.core.payment.payload.PaymentMethod.MONEY_GRAM_ID;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.util.Arrays.stream;
@@ -377,30 +379,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
 
     private Optional<List<TradeCurrency>> getReconciledTradeCurrencies(List<String> currencyCodes,
                                                                        PaymentAccount account) {
-        if (account.hasPaymentMethodWithId(ADVANCED_CASH_ID))
-            return getTradeCurrenciesInList(currencyCodes, getAllAdvancedCashCurrencies());
-        else if (account.hasPaymentMethodWithId(AMAZON_GIFT_CARD_ID))
-            return getTradeCurrenciesInList(currencyCodes, getAllAmazonGiftCardCurrencies());
-        else if (account.hasPaymentMethodWithId(CAPITUAL_ID))
-            return getTradeCurrenciesInList(currencyCodes, getAllCapitualCurrencies());
-        else if (account.hasPaymentMethodWithId(MONEY_GRAM_ID))
-            return getTradeCurrenciesInList(currencyCodes, getAllMoneyGramCurrencies());
-        else if (account.hasPaymentMethodWithId(PAXUM_ID))
-            return getTradeCurrenciesInList(currencyCodes, getAllPaxumCurrencies());
-        else if (account.hasPaymentMethodWithId(PAYSERA_ID))
-            return getTradeCurrenciesInList(currencyCodes, getAllPayseraCurrencies());
-        else if (account.hasPaymentMethodWithId(REVOLUT_ID))
-            return getTradeCurrenciesInList(currencyCodes, getAllRevolutCurrencies());
-        else if (account.hasPaymentMethodWithId(SWIFT_ID))
-            return getTradeCurrenciesInList(currencyCodes,
-                    new ArrayList<>(getAllSortedFiatCurrencies(
-                            comparing(TradeCurrency::getCode))));
-        else if (account.hasPaymentMethodWithId(TRANSFERWISE_ID))
-            return getTradeCurrenciesInList(currencyCodes, getAllTransferwiseCurrencies());
-        else if (account.hasPaymentMethodWithId(UPHOLD_ID))
-            return getTradeCurrenciesInList(currencyCodes, getAllUpholdCurrencies());
-        else
-            return Optional.empty();
+        return getTradeCurrenciesInList(currencyCodes, account.getSupportedCurrencies());
     }
 
     private boolean didReadSelectedTradeCurrencyField(JsonReader in,

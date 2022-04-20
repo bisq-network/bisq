@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +50,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Getter
 @Slf4j
 public abstract class PaymentAccount implements PersistablePayload {
+
     protected final PaymentMethod paymentMethod;
     @Setter
     protected String id;
@@ -259,4 +261,7 @@ public abstract class PaymentAccount implements PersistablePayload {
     public void revertChanges() {
         setAccountName(getPersistedAccountName());
     }
+
+    @NonNull
+    public abstract List<TradeCurrency> getSupportedCurrencies();
 }

@@ -17,11 +17,19 @@
 
 package bisq.core.payment;
 
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.CashByMailAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 
+import java.util.List;
+
+import lombok.NonNull;
+
 public final class CashByMailAccount extends PaymentAccount {
+
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = CurrencyUtil.getAllFiatCurrencies();
 
     public CashByMailAccount() {
         super(PaymentMethod.CASH_BY_MAIL);
@@ -30,6 +38,11 @@ public final class CashByMailAccount extends PaymentAccount {
     @Override
     protected PaymentAccountPayload createPayload() {
         return new CashByMailAccountPayload(paymentMethod.getId(), id);
+    }
+
+    @Override
+    public @NonNull List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 
     public void setPostalAddress(String postalAddress) {

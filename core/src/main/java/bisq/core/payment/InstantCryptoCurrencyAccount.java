@@ -17,14 +17,22 @@
 
 package bisq.core.payment;
 
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.InstantCryptoCurrencyPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 
 @EqualsAndHashCode(callSuper = true)
 public final class InstantCryptoCurrencyAccount extends AssetAccount {
+
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = new ArrayList<>(CurrencyUtil.getAllSortedCryptoCurrencies());
 
     public InstantCryptoCurrencyAccount() {
         super(PaymentMethod.BLOCK_CHAINS_INSTANT);
@@ -33,5 +41,10 @@ public final class InstantCryptoCurrencyAccount extends AssetAccount {
     @Override
     protected PaymentAccountPayload createPayload() {
         return new InstantCryptoCurrencyPayload(paymentMethod.getId(), id);
+    }
+
+    @Override
+    public @NonNull List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 }

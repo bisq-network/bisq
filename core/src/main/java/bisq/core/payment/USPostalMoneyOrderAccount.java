@@ -17,23 +17,35 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 
+import java.util.List;
+
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 
 @EqualsAndHashCode(callSuper = true)
 public final class USPostalMoneyOrderAccount extends PaymentAccount {
+
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = List.of(new FiatCurrency("USD"));
+
     public USPostalMoneyOrderAccount() {
         super(PaymentMethod.US_POSTAL_MONEY_ORDER);
-        setSingleTradeCurrency(CurrencyUtil.getAllUSPostalMoneyOrderCurrencies().get(0));
+        setSingleTradeCurrency(SUPPORTED_CURRENCIES.get(0));
     }
 
     @Override
     protected PaymentAccountPayload createPayload() {
         return new USPostalMoneyOrderAccountPayload(paymentMethod.getId(), id);
+    }
+
+    @Override
+    public @NonNull List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 
     public void setPostalAddress(String postalAddress) {

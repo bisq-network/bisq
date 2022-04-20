@@ -103,7 +103,7 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.AmazonGiftCardAccount;
-import bisq.core.payment.AustraliaPayid;
+import bisq.core.payment.AustraliaPayidAccount;
 import bisq.core.payment.CashByMailAccount;
 import bisq.core.payment.CashDepositAccount;
 import bisq.core.payment.ClearXchangeAccount;
@@ -346,7 +346,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                                     .actionButtonText(Res.get("shared.iUnderstand"))
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
-                        } else if (paymentAccount instanceof AustraliaPayid) {
+                        } else if (paymentAccount instanceof AustraliaPayidAccount) {
                             new Popup().information(Res.get("payment.payid.info", currencyName, currencyName))
                                     .width(900)
                                     .closeButtonText(Res.get("shared.cancel"))

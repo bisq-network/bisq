@@ -24,7 +24,7 @@ import bisq.core.payment.payload.PaytmAccountPayload;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
-public final class PaytmAccount extends CountryBasedPaymentAccount {
+public final class PaytmAccount extends IfscBasedAccount {
     public PaytmAccount() {
         super(PaymentMethod.PAYTM);
     }

@@ -22,7 +22,6 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.validation.EmailValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.CelPayAccount;
 import bisq.core.payment.PaymentAccount;
@@ -82,7 +81,7 @@ public class CelPayForm extends PaymentMethodForm {
             flowPane.setId("flow-pane-checkboxes-non-editable-bg");
         }
 
-        CurrencyUtil.getAllCelPayCurrencies().forEach(currency ->
+        account.getSupportedCurrencies().forEach(currency ->
                 fillUpFlowPaneWithCurrencies(isEditable, flowPane, currency, account));
     }
 

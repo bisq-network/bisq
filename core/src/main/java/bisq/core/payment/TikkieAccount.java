@@ -17,16 +17,27 @@
 
 package bisq.core.payment;
 
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.TikkieAccountPayload;
 
+import java.util.List;
+
 import lombok.EqualsAndHashCode;
+
+import org.jetbrains.annotations.NotNull;
 
 @EqualsAndHashCode(callSuper = true)
 public final class TikkieAccount extends CountryBasedPaymentAccount {
+
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = List.of(new FiatCurrency("EUR"));
+
     public TikkieAccount() {
         super(PaymentMethod.TIKKIE);
+        // this payment method is only for Netherlands/EUR
+        setSingleTradeCurrency(SUPPORTED_CURRENCIES.get(0));
     }
 
     @Override
@@ -52,5 +63,11 @@ public final class TikkieAccount extends CountryBasedPaymentAccount {
 
     public String getMessageForAccountCreation() {
         return "payment.tikkie.info.account";
+    }
+
+    @NotNull
+    @Override
+    public List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 }

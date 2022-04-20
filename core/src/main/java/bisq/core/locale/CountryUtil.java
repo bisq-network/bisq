@@ -21,6 +21,7 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -61,7 +62,7 @@ public class CountryUtil {
         String[] codes = {"AU", "CA", "FR", "DE", "IT", "NL", "ES", "GB", "IN", "JP",
                 "SA", "SE", "SG", "TR", "US"};
         populateCountryListByCodes(list, codes);
-        list.sort((a, b) -> a.name.compareTo(b.name));
+        list.sort(Comparator.comparing(a -> a.name));
 
         return list;
     }
