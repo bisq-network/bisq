@@ -294,7 +294,8 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         View view;
         // CreateOffer and TakeOffer must not be cached by ViewLoader as we cannot use a view multiple times
         // in different graphs
-        if ((paymentMethod != null && (paymentMethod.isBsqSwap() || paymentMethod.getId().equals(GUIUtil.SHOW_ALL_FLAG))) ||
+        if ((paymentMethod != null && paymentMethod.isBsqSwap()) ||
+                (paymentMethod != null && paymentMethod.getId().equals(GUIUtil.SHOW_ALL_FLAG) && viewClass.equals(BsqOfferBookView.class)) ||
                 (paymentMethod == null && viewClass.equals(BsqOfferBookView.class))) {
             view = viewLoader.load(BsqSwapCreateOfferView.class);
             ((BsqSwapCreateOfferView) view).initWithData(direction, offerActionHandler, payload);
