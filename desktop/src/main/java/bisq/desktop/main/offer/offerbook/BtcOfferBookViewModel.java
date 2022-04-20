@@ -155,6 +155,9 @@ public class BtcOfferBookViewModel extends OfferBookViewModel {
 
     @Override
     String getCurrencyCodeFromPreferences(OfferDirection direction) {
-        return direction == OfferDirection.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
+        // validate if previous stored currencies are Fiat ones
+        String currencyCode = direction == OfferDirection.BUY ? preferences.getBuyScreenCurrencyCode() : preferences.getSellScreenCurrencyCode();
+
+        return CurrencyUtil.isFiatCurrency(currencyCode) ? currencyCode : null;
     }
 }
