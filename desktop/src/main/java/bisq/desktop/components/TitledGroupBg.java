@@ -20,12 +20,13 @@ package bisq.desktop.components;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 
-import de.jensd.fx.fontawesome.AwesomeIcon;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.text.Text;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -38,7 +39,7 @@ public class TitledGroupBg extends Pane {
     private final HBox box;
     private final Label label;
     private final StringProperty text = new SimpleStringProperty();
-    private Label helpIcon;
+    private Text helpIcon;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -89,8 +90,8 @@ public class TitledGroupBg extends Pane {
 
     public void setHelpUrl(String helpUrl) {
         if (helpIcon == null) {
-            helpIcon = FormBuilder.getSmallIcon(AwesomeIcon.QUESTION);
-            helpIcon.getStyleClass().addAll("show-hand", "highlight");
+            helpIcon = FormBuilder.getIcon(MaterialDesignIcon.HELP_CIRCLE_OUTLINE, "1em");
+            helpIcon.getStyleClass().addAll("icon", "link-icon");
             box.getChildren().add(helpIcon);
         }
 

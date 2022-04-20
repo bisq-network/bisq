@@ -856,6 +856,14 @@ tree-table-view:focused {
     -fx-fill: -bs-text-color;
 }
 
+.link-icon {
+    -fx-fill: -bs-color-gray-ccc;
+}
+
+.link-icon:hover {
+    -fx-fill: -fx-accent;
+}
+
 /*******************************************************************************
  *                                                                             *
  * Tooltip                                                                     *
