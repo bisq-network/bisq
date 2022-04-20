@@ -53,6 +53,7 @@ import javax.inject.Named;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -131,7 +132,25 @@ public class BtcOfferBookViewModel extends OfferBookViewModel {
 
     @Override
     TradeCurrency getDefaultTradeCurrency() {
-        return GlobalSettings.getDefaultTradeCurrency();
+        TradeCurrency defaultTradeCurrency = GlobalSettings.getDefaultTradeCurrency();
+
+        if (CurrencyUtil.isFiatCurrency(defaultTradeCurrency.getCode())) {
+            return defaultTradeCurrency;
+        }
+
+        ObservableList<TradeCurrency> tradeCurrencies = FXCollections.observableArrayList(getTradeCurrencies());
+        if (!tradeCurrencies.isEmpty()) {
+            // drop show all entry and select first currency with payment account available
+            tradeCurrencies.remove(0);
+            List<TradeCurrency> sortedList = tradeCurrencies.stream().sorted((o1, o2) ->
+                    Boolean.compare(!hasPaymentAccountForCurrency(o1),
+                            !hasPaymentAccountForCurrency(o2))).collect(Collectors.toList());
+            return sortedList.get(0);
+        } else {
+            return CurrencyUtil.getMainFiatCurrencies().stream().sorted((o1, o2) ->
+                    Boolean.compare(!hasPaymentAccountForCurrency(o1),
+                            !hasPaymentAccountForCurrency(o2))).collect(Collectors.toList()).get(0);
+        }
     }
 
     @Override

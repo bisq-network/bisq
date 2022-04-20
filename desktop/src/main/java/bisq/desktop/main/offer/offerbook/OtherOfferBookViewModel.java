@@ -27,6 +27,7 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.GlobalSettings;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
@@ -133,6 +134,14 @@ public class OtherOfferBookViewModel extends OfferBookViewModel {
 
     @Override
     TradeCurrency getDefaultTradeCurrency() {
+        TradeCurrency defaultTradeCurrency = GlobalSettings.getDefaultTradeCurrency();
+
+        if (!CurrencyUtil.isFiatCurrency(defaultTradeCurrency.getCode()) &&
+                !defaultTradeCurrency.equals(GUIUtil.BSQ) &&
+                !defaultTradeCurrency.equals(GUIUtil.TOP_ALTCOIN)) {
+            return defaultTradeCurrency;
+        }
+
         ObservableList<TradeCurrency> tradeCurrencies = FXCollections.observableArrayList(getTradeCurrencies());
         if (!tradeCurrencies.isEmpty()) {
             // drop show all entry and select first currency with payment account available
