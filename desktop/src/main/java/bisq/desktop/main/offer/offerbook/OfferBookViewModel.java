@@ -136,7 +136,7 @@ abstract class OfferBookViewModel extends ActivatableViewModel {
 
     PaymentMethod selectedPaymentMethod = getShowAllEntryForPaymentMethod();
 
-    private boolean isTabSelected;
+    boolean isTabSelected;
     final BooleanProperty showAllTradeCurrenciesProperty = new SimpleBooleanProperty(true);
     final BooleanProperty disableMatchToggle = new SimpleBooleanProperty();
     final IntegerProperty maxPlacesForAmount = new SimpleIntegerProperty();

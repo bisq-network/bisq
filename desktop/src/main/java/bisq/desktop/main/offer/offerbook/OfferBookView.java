@@ -601,11 +601,15 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
     }
 
     public void onTabSelected(boolean isSelected) {
+        if (model.isTabSelected == isSelected) {
+            return;
+        }
         model.onTabSelected(isSelected);
 
         if (isSelected) {
             updateCurrencyComboBoxFromModel();
             root.requestFocus();
+            updateCreateOfferButton();
         }
         updateCreateOfferButton();
     }

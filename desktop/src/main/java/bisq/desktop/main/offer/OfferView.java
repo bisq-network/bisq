@@ -250,32 +250,32 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 }
                 if (viewClass == BtcOfferBookView.class) {
                     btcOfferBookView = (BtcOfferBookView) viewLoader.load(BtcOfferBookView.class);
-                    btcOfferBookTab.setContent(btcOfferBookView.getRoot());
                     btcOfferBookView.setOfferActionHandler(offerActionHandler);
                     btcOfferBookView.setDirection(direction);
-                    tabPane.getSelectionModel().select(btcOfferBookTab);
                     btcOfferBookView.onTabSelected(true);
+                    tabPane.getSelectionModel().select(btcOfferBookTab);
+                    btcOfferBookTab.setContent(btcOfferBookView.getRoot());
                 } else if (viewClass == BsqOfferBookView.class) {
                     bsqOfferBookView = (BsqOfferBookView) viewLoader.load(BsqOfferBookView.class);
                     bsqOfferBookView.setOfferActionHandler(offerActionHandler);
                     bsqOfferBookView.setDirection(direction);
+                    bsqOfferBookView.onTabSelected(true);
                     tabPane.getSelectionModel().select(bsqOfferBookTab);
                     bsqOfferBookTab.setContent(bsqOfferBookView.getRoot());
-                    bsqOfferBookView.onTabSelected(true);
                 } else if (viewClass == TopAltcoinOfferBookView.class) {
                     topAltcoinOfferBookView = (TopAltcoinOfferBookView) viewLoader.load(TopAltcoinOfferBookView.class);
                     topAltcoinOfferBookView.setOfferActionHandler(offerActionHandler);
                     topAltcoinOfferBookView.setDirection(direction);
+                    topAltcoinOfferBookView.onTabSelected(true);
                     tabPane.getSelectionModel().select(topAltcoinOfferBookTab);
                     topAltcoinOfferBookTab.setContent(topAltcoinOfferBookView.getRoot());
-                    topAltcoinOfferBookView.onTabSelected(true);
                 } else if (viewClass == OtherOfferBookView.class) {
                     otherOfferBookView = (OtherOfferBookView) viewLoader.load(OtherOfferBookView.class);
                     otherOfferBookView.setOfferActionHandler(offerActionHandler);
                     otherOfferBookView.setDirection(direction);
+                    otherOfferBookView.onTabSelected(true);
                     tabPane.getSelectionModel().select(otherOfferBookTab);
                     otherOfferBookTab.setContent(otherOfferBookView.getRoot());
-                    otherOfferBookView.onTabSelected(true);
                 }
             }
         }
