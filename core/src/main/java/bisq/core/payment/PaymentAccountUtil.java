@@ -69,7 +69,7 @@ public class PaymentAccountUtil {
     public static boolean isAmountValidForOffer(Offer offer,
                                                 PaymentAccount paymentAccount,
                                                 AccountAgeWitnessService accountAgeWitnessService) {
-        boolean hasChargebackRisk = PaymentMethod.hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode());
+        boolean hasChargebackRisk = hasChargebackRisk(offer.getPaymentMethod(), offer.getCurrencyCode());
         boolean hasValidAccountAgeWitness = accountAgeWitnessService.getMyTradeLimit(paymentAccount,
                 offer.getCurrencyCode(), offer.getMirroredDirection()) >= offer.getMinAmount().value;
         return !hasChargebackRisk || hasValidAccountAgeWitness;
@@ -252,8 +252,8 @@ public class PaymentAccountUtil {
     }
 
     public static boolean isCryptoCurrencyAccount(PaymentAccount paymentAccount) {
-        return (paymentAccount != null && paymentAccount.getPaymentMethod().equals(PaymentMethod.BLOCK_CHAINS) ||
-                paymentAccount != null && paymentAccount.getPaymentMethod().equals(PaymentMethod.BLOCK_CHAINS_INSTANT));
+        return (paymentAccount != null && paymentAccount.getPaymentMethod().equals(BLOCK_CHAINS) ||
+                paymentAccount != null && paymentAccount.getPaymentMethod().equals(BLOCK_CHAINS_INSTANT));
     }
 
     public static Optional<PaymentAccount> findPaymentAccount(PaymentAccountPayload paymentAccountPayload,
