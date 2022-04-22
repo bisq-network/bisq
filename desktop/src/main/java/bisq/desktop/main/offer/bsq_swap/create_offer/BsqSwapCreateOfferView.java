@@ -315,18 +315,12 @@ public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferV
                                     .feedback(Res.get("createOffer.success.info"))
                                     .dontShowAgainId(key)
                                     .actionButtonTextWithGoTo("navigation.portfolio.myOpenOffers")
-                                    .onAction(() -> {
-                                        UserThread.runAfter(() ->
-                                                        navigation.navigateTo(MainView.class, PortfolioView.class,
-                                                                OpenOffersView.class),
-                                                100, TimeUnit.MILLISECONDS);
-                                        close();
-                                    })
-                                    .onClose(this::close)
+                                    .onAction(this::closeAndGoToOpenOffers)
+                                    .onClose(this::closeAndGoToOpenOffers)
                                     .show(),
-                            100, TimeUnit.MILLISECONDS);
+                            1, TimeUnit.SECONDS);
                 } else {
-                    close();
+                    closeAndGoToOpenOffers();
                 }
             }
         };
@@ -607,5 +601,14 @@ public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferV
                     })
                     .show();
         }
+    }
+
+    private void closeAndGoToOpenOffers() {
+        //go to open offers
+        UserThread.runAfter(() ->
+                        navigation.navigateTo(MainView.class, PortfolioView.class,
+                                OpenOffersView.class),
+                1, TimeUnit.SECONDS);
+        close();
     }
 }

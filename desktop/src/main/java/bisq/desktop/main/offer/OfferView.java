@@ -309,9 +309,9 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         ((ClosableView) view).setCloseHandler(() -> {
             offerBookView.enableCreateOfferButton();
             ((SelectableView) view).onTabSelected(false);
+            //reset tab
             navigation.navigateTo(MainView.class, this.getClass(), viewClass);
         });
-
 
         // close handler from close on create offer action
         marketOfferBookTab.setContent(view.getRoot());

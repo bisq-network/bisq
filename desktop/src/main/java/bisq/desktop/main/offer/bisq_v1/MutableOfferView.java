@@ -812,18 +812,12 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                                     .feedback(Res.get("createOffer.success.info"))
                                     .dontShowAgainId(key)
                                     .actionButtonTextWithGoTo("navigation.portfolio.myOpenOffers")
-                                    .onAction(() -> {
-                                        UserThread.runAfter(() ->
-                                                        navigation.navigateTo(MainView.class, PortfolioView.class,
-                                                                OpenOffersView.class),
-                                                100, TimeUnit.MILLISECONDS);
-                                        close();
-                                    })
-                                    .onClose(this::close)
+                                    .onAction(this::closeAndGoToOpenOffers)
+                                    .onClose(this::closeAndGoToOpenOffers)
                                     .show(),
                             1);
                 } else {
-                    close();
+                    closeAndGoToOpenOffers();
                 }
             }
         };
@@ -945,6 +939,15 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                 buyerSecurityDepositInputTextField.setDisable(false);
             }
         });
+    }
+
+    private void closeAndGoToOpenOffers() {
+        //go to open offers
+        UserThread.runAfter(() ->
+                        navigation.navigateTo(MainView.class, PortfolioView.class,
+                                OpenOffersView.class),
+                1, TimeUnit.SECONDS);
+        close();
     }
 
     private void setIsCurrencyForMakerFeeBtc(boolean isCurrencyForMakerFeeBtc) {
