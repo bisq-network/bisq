@@ -23,13 +23,12 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.offer.offerbook.BsqOfferBookView;
-import bisq.desktop.main.offer.offerbook.BsqOfferBookViewModel;
 import bisq.desktop.main.offer.offerbook.BtcOfferBookView;
 import bisq.desktop.main.offer.offerbook.OfferBookView;
 import bisq.desktop.main.offer.offerbook.OtherOfferBookView;
 import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookView;
-import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookViewModel;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.CryptoCurrency;
 import bisq.core.locale.CurrencyUtil;
@@ -132,9 +131,9 @@ public class OfferViewUtil {
         Class<? extends OfferBookView<?, ?>> offerBookViewClazz;
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             offerBookViewClazz = BtcOfferBookView.class;
-        } else if (currencyCode.equals(BsqOfferBookViewModel.BSQ.getCode())) {
+        } else if (currencyCode.equals(GUIUtil.BSQ.getCode())) {
             offerBookViewClazz = BsqOfferBookView.class;
-        } else if (currencyCode.equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode())) {
+        } else if (currencyCode.equals(GUIUtil.TOP_ALTCOIN.getCode())) {
             offerBookViewClazz = TopAltcoinOfferBookView.class;
         } else {
             offerBookViewClazz = OtherOfferBookView.class;
@@ -169,7 +168,7 @@ public class OfferViewUtil {
     @NotNull
     public static Stream<CryptoCurrency> getMainCryptoCurrencies() {
         return CurrencyUtil.getMainCryptoCurrencies().stream().filter(cryptoCurrency ->
-                !Objects.equals(cryptoCurrency.getCode(), TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode()) &&
-                        !Objects.equals(cryptoCurrency.getCode(), BsqOfferBookViewModel.BSQ.getCode()));
+                !Objects.equals(cryptoCurrency.getCode(), GUIUtil.TOP_ALTCOIN.getCode()) &&
+                        !Objects.equals(cryptoCurrency.getCode(), GUIUtil.BSQ.getCode()));
     }
 }

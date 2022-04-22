@@ -122,8 +122,8 @@ public class OtherOfferBookViewModel extends OfferBookViewModel {
             boolean directionResult = offer.getDirection() == direction;
             boolean currencyResult = CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode()) &&
                     ((showAllTradeCurrenciesProperty.get() &&
-                            !offer.getCurrencyCode().equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode()) &&
-                            !offer.getCurrencyCode().equals(BsqOfferBookViewModel.BSQ.getCode())) ||
+                            !offer.getCurrencyCode().equals(GUIUtil.TOP_ALTCOIN.getCode()) &&
+                            !offer.getCurrencyCode().equals(GUIUtil.BSQ.getCode())) ||
                             offer.getCurrencyCode().equals(selectedTradeCurrency.getCode()));
             boolean paymentMethodResult = showAllPaymentMethods ||
                     offer.getPaymentMethod().equals(selectedPaymentMethod);
@@ -166,7 +166,7 @@ public class OtherOfferBookViewModel extends OfferBookViewModel {
     @NotNull
     private Predicate<CryptoCurrency> withoutBSQAndTopAltcoin() {
         return cryptoCurrency ->
-                !cryptoCurrency.equals(BsqOfferBookViewModel.BSQ) &&
-                        !cryptoCurrency.equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN);
+                !cryptoCurrency.equals(GUIUtil.BSQ) &&
+                        !cryptoCurrency.equals(GUIUtil.TOP_ALTCOIN);
     }
 }

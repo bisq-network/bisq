@@ -27,12 +27,10 @@ import bisq.desktop.main.offer.bisq_v1.takeoffer.TakeOfferView;
 import bisq.desktop.main.offer.bsq_swap.create_offer.BsqSwapCreateOfferView;
 import bisq.desktop.main.offer.bsq_swap.take_offer.BsqSwapTakeOfferView;
 import bisq.desktop.main.offer.offerbook.BsqOfferBookView;
-import bisq.desktop.main.offer.offerbook.BsqOfferBookViewModel;
 import bisq.desktop.main.offer.offerbook.BtcOfferBookView;
 import bisq.desktop.main.offer.offerbook.OfferBookView;
 import bisq.desktop.main.offer.offerbook.OtherOfferBookView;
 import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookView;
-import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookViewModel;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.CurrencyUtil;
@@ -172,6 +170,12 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         if (btcOfferBookView == null) {
             navigation.navigateTo(MainView.class, this.getClass(), BtcOfferBookView.class);
         }
+
+        GUIUtil.updateTopAltcoin(preferences);
+
+        if (topAltcoinOfferBookTab != null) {
+            topAltcoinOfferBookTab.setText(GUIUtil.TOP_ALTCOIN.getCode());
+        }
     }
 
     @Override
@@ -205,7 +209,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 } else if (data instanceof BsqSwapOfferPayload) {
                     loadCreateViewClass(bsqOfferBookView, viewClass, childViewClass, bsqOfferBookTab, PaymentMethod.BSQ_SWAP, (BsqSwapOfferPayload) data);
                 } else {
-                    tradeCurrency = BsqOfferBookViewModel.BSQ;
+                    tradeCurrency = GUIUtil.BSQ;
                     loadCreateViewClass(bsqOfferBookView, viewClass, childViewClass, bsqOfferBookTab, (PaymentMethod) data, null);
                 }
                 tabPane.getSelectionModel().select(bsqOfferBookTab);
@@ -215,7 +219,7 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 } else if (childViewClass == TakeOfferView.class) {
                     loadTakeViewClass(viewClass, childViewClass, topAltcoinOfferBookTab);
                 } else {
-                    tradeCurrency = TopAltcoinOfferBookViewModel.TOP_ALTCOIN;
+                    tradeCurrency = GUIUtil.TOP_ALTCOIN;
                     loadCreateViewClass(topAltcoinOfferBookView, viewClass, childViewClass, topAltcoinOfferBookTab, (PaymentMethod) data, null);
                 }
                 tabPane.getSelectionModel().select(topAltcoinOfferBookTab);
@@ -239,9 +243,9 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
                 if (btcOfferBookTab == null) {
                     btcOfferBookTab = new Tab(Res.getBaseCurrencyName().toUpperCase());
                     btcOfferBookTab.setClosable(false);
-                    bsqOfferBookTab = new Tab(BsqOfferBookViewModel.BSQ.getCode());
+                    bsqOfferBookTab = new Tab(GUIUtil.BSQ.getCode());
                     bsqOfferBookTab.setClosable(false);
-                    topAltcoinOfferBookTab = new Tab(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode());
+                    topAltcoinOfferBookTab = new Tab(GUIUtil.TOP_ALTCOIN.getCode());
                     topAltcoinOfferBookTab.setClosable(false);
                     otherOfferBookTab = new Tab(Res.get("shared.other").toUpperCase());
                     otherOfferBookTab.setClosable(false);
@@ -363,9 +367,9 @@ public abstract class OfferView extends ActivatableView<TabPane, Void> {
         Class<? extends OfferBookView<?, ?>> offerBookViewClass;
         if (CurrencyUtil.isFiatCurrency(currencyCode)) {
             offerBookViewClass = BtcOfferBookView.class;
-        } else if (currencyCode.equals(BsqOfferBookViewModel.BSQ.getCode())) {
+        } else if (currencyCode.equals(GUIUtil.BSQ.getCode())) {
             offerBookViewClass = BsqOfferBookView.class;
-        } else if (currencyCode.equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode())) {
+        } else if (currencyCode.equals(GUIUtil.TOP_ALTCOIN.getCode())) {
             offerBookViewClass = TopAltcoinOfferBookView.class;
         } else {
             offerBookViewClass = OtherOfferBookView.class;

@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
 
 public class TopAltcoinOfferBookViewModel extends OfferBookViewModel {
 
-    public static final TradeCurrency TOP_ALTCOIN = GUIUtil.TOP_ALTCOIN;
+    public static TradeCurrency TOP_ALTCOIN = GUIUtil.TOP_ALTCOIN;
 
     @Inject
     public TopAltcoinOfferBookViewModel(User user,
@@ -75,6 +75,12 @@ public class TopAltcoinOfferBookViewModel extends OfferBookViewModel {
                                         BsqWalletService bsqWalletService,
                                         CoreApi coreApi) {
         super(user, openOfferManager, offerBook, preferences, walletsSetup, p2PService, priceFeedService, closedTradableManager, bsqSwapTradeManager, accountAgeWitnessService, navigation, priceUtil, offerFilterService, btcFormatter, bsqFormatter, bsqWalletService, coreApi);
+    }
+
+    @Override
+    protected void activate() {
+        super.activate();
+        TOP_ALTCOIN = GUIUtil.TOP_ALTCOIN;
     }
 
     @Override

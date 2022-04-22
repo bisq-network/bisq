@@ -29,7 +29,6 @@ import bisq.desktop.main.offer.OfferView;
 import bisq.desktop.main.offer.OfferViewUtil;
 import bisq.desktop.main.offer.SelectableView;
 import bisq.desktop.main.offer.bsq_swap.BsqSwapOfferView;
-import bisq.desktop.main.offer.offerbook.BsqOfferBookViewModel;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.BsqSwapOfferDetailsWindow;
 import bisq.desktop.main.portfolio.PortfolioView;
@@ -175,7 +174,7 @@ public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferV
 
         model.initWithData(offerPayload != null ? offerPayload.getDirection() : offerDirection, offerPayload);
 
-        if (OfferViewUtil.isShownAsBuyOffer(offerDirection, BsqOfferBookViewModel.BSQ)) {
+        if (OfferViewUtil.isShownAsBuyOffer(offerDirection, GUIUtil.BSQ)) {
             actionButton.setId("buy-button-big");
             actionButton.updateText(Res.get("createOffer.placeOfferButtonAltcoin", Res.get("shared.buy"), BSQ));
             nextButton.setId("buy-button");

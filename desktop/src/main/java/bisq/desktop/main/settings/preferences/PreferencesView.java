@@ -944,6 +944,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             TradeCurrency selectedItem = preferredTradeCurrencyComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null)
                 preferences.setPreferredTradeCurrency(selectedItem);
+                GUIUtil.updateTopAltcoin(preferences);
         });
 
         fiatCurrenciesComboBox.setItems(allFiatCurrencies);

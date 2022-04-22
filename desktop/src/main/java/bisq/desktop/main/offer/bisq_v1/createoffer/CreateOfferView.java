@@ -21,9 +21,8 @@ import bisq.desktop.Navigation;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.main.offer.OfferView;
 import bisq.desktop.main.offer.bisq_v1.MutableOfferView;
-import bisq.desktop.main.offer.offerbook.BsqOfferBookViewModel;
-import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookViewModel;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
+import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.TradeCurrency;
@@ -70,16 +69,16 @@ public class CreateOfferView extends MutableOfferView<CreateOfferViewModel> {
     protected ObservableList<PaymentAccount> filterPaymentAccounts(ObservableList<PaymentAccount> paymentAccounts) {
         return FXCollections.observableArrayList(
                 paymentAccounts.stream().filter(paymentAccount -> {
-                    if (model.getTradeCurrency().equals(BsqOfferBookViewModel.BSQ)) {
-                        return Objects.equals(paymentAccount.getSingleTradeCurrency(), BsqOfferBookViewModel.BSQ);
-                    } else if (model.getTradeCurrency().equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN)) {
-                        return Objects.equals(paymentAccount.getSingleTradeCurrency(), TopAltcoinOfferBookViewModel.TOP_ALTCOIN);
+                    if (model.getTradeCurrency().equals(GUIUtil.BSQ)) {
+                        return Objects.equals(paymentAccount.getSingleTradeCurrency(), GUIUtil.BSQ);
+                    } else if (model.getTradeCurrency().equals(GUIUtil.TOP_ALTCOIN)) {
+                        return Objects.equals(paymentAccount.getSingleTradeCurrency(), GUIUtil.TOP_ALTCOIN);
                     } else if (CurrencyUtil.isFiatCurrency(model.getTradeCurrency().getCode())) {
                         return !paymentAccount.getPaymentMethod().isAltcoin();
                     } else {
                         return paymentAccount.getPaymentMethod().isAltcoin() &&
-                                !(Objects.equals(paymentAccount.getSingleTradeCurrency(), BsqOfferBookViewModel.BSQ) ||
-                                        Objects.equals(paymentAccount.getSingleTradeCurrency(), TopAltcoinOfferBookViewModel.TOP_ALTCOIN));
+                                !(Objects.equals(paymentAccount.getSingleTradeCurrency(), GUIUtil.BSQ) ||
+                                        Objects.equals(paymentAccount.getSingleTradeCurrency(), GUIUtil.TOP_ALTCOIN));
                     }
                 }).collect(Collectors.toList()));
     }

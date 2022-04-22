@@ -18,8 +18,6 @@
 package bisq.desktop.main.offer.bisq_v1;
 
 import bisq.desktop.Navigation;
-import bisq.desktop.main.offer.offerbook.BsqOfferBookViewModel;
-import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookViewModel;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
@@ -289,8 +287,8 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         } else {
             return paymentAccounts.stream().filter(paymentAccount1 -> paymentAccount1.getPaymentMethod().isAltcoin() &&
                     paymentAccount1.getTradeCurrency().isPresent() &&
-                    !Objects.equals(paymentAccount1.getTradeCurrency().get().getCode(), BsqOfferBookViewModel.BSQ.getCode()) &&
-                    !Objects.equals(paymentAccount1.getTradeCurrency().get().getCode(), TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode())).findAny();
+                    !Objects.equals(paymentAccount1.getTradeCurrency().get().getCode(), GUIUtil.BSQ.getCode()) &&
+                    !Objects.equals(paymentAccount1.getTradeCurrency().get().getCode(), GUIUtil.TOP_ALTCOIN.getCode())).findAny();
         }
     }
 

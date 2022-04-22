@@ -24,10 +24,8 @@ import bisq.desktop.main.offer.BuyOfferView;
 import bisq.desktop.main.offer.OfferView;
 import bisq.desktop.main.offer.OfferViewUtil;
 import bisq.desktop.main.offer.SellOfferView;
-import bisq.desktop.main.offer.offerbook.BsqOfferBookViewModel;
 import bisq.desktop.main.offer.offerbook.OfferBook;
 import bisq.desktop.main.offer.offerbook.OfferBookListItem;
-import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookViewModel;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
 import bisq.desktop.util.CurrencyList;
@@ -413,15 +411,15 @@ class OfferBookChartViewModel extends ActivatableViewModel {
         if (isSellOffer(direction)) {
             if (CurrencyUtil.isFiatCurrency(getCurrencyCode())) {
                 preferences.setBuyScreenCurrencyCode(getCurrencyCode());
-            } else if (!getCurrencyCode().equals(BsqOfferBookViewModel.BSQ.getCode()) &&
-                    !getCurrencyCode().equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode())) {
+            } else if (!getCurrencyCode().equals(GUIUtil.BSQ.getCode()) &&
+                    !getCurrencyCode().equals(GUIUtil.TOP_ALTCOIN.getCode())) {
                 preferences.setBuyScreenCryptoCurrencyCode(getCurrencyCode());
             }
         } else {
             if (CurrencyUtil.isFiatCurrency(getCurrencyCode())) {
                 preferences.setSellScreenCurrencyCode(getCurrencyCode());
-            } else if (!getCurrencyCode().equals(BsqOfferBookViewModel.BSQ.getCode()) &&
-                    !getCurrencyCode().equals(TopAltcoinOfferBookViewModel.TOP_ALTCOIN.getCode())) {
+            } else if (!getCurrencyCode().equals(GUIUtil.BSQ.getCode()) &&
+                    !getCurrencyCode().equals(GUIUtil.TOP_ALTCOIN.getCode())) {
                 preferences.setSellScreenCryptoCurrencyCode(getCurrencyCode());
             }
         }
