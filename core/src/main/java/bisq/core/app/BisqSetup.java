@@ -670,7 +670,7 @@ public class BisqSetup {
             return;
         }
         privateNotificationManager.sendPing(onionAddress, stringResult -> {
-            log.warn(stringResult);
+            log.info(stringResult);
             if (stringResult.contains("failed")) {
                 firewallIssueHandler.run();
             }
