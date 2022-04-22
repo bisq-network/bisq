@@ -446,7 +446,7 @@ public class BsqSwapTakeOfferView extends BsqSwapOfferView<BsqSwapTakeOfferViewM
 
     @Override
     protected void addPaymentAccountGroup() {
-        paymentAccountTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("takeOffer.paymentInfo"));
+        paymentAccountTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("offerbook.takeOffer"));
         GridPane.setColumnSpan(paymentAccountTitledGroupBg, 2);
 
         // We use the addComboBoxTopLabelTextField only for convenience for having the expected layout

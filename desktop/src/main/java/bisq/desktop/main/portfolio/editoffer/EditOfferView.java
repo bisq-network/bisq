@@ -245,8 +245,8 @@ public class EditOfferView extends MutableOfferView<EditOfferViewModel> {
 
     private void updateElementsWithDirection() {
         ImageView iconView = new ImageView();
-        iconView.setId(model.isSellOffer() ? "image-sell-white" : "image-buy-white");
+        iconView.setId(model.isShownAsSellOffer() ? "image-sell-white" : "image-buy-white");
         confirmButton.setGraphic(iconView);
-        confirmButton.setId(model.isSellOffer() ? "sell-button-big" : "buy-button-big");
+        confirmButton.setId(model.isShownAsSellOffer() ? "sell-button-big" : "buy-button-big");
     }
 }

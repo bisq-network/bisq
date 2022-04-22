@@ -817,12 +817,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     private void addPaymentGroup() {
-        TitledGroupBg paymentAccountTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("takeOffer.paymentInfo"));
+        TitledGroupBg paymentAccountTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("offerbook.takeOffer"));
         GridPane.setColumnSpan(paymentAccountTitledGroupBg, 2);
 
         final Tuple4<ComboBox<PaymentAccount>, Label, TextField, HBox> paymentAccountTuple = addComboBoxTopLabelTextField(gridPane,
                 gridRow, Res.get("shared.chooseTradingAccount"),
-                Res.get("shared.paymentMethod"), Layout.FIRST_ROW_DISTANCE);
+                Res.get("shared.chooseTradingAccount"), Layout.FIRST_ROW_DISTANCE);
 
         paymentAccountsComboBox = paymentAccountTuple.first;
         HBox.setMargin(paymentAccountsComboBox, new Insets(Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));

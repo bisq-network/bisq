@@ -436,7 +436,7 @@ public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferV
 
     @Override
     protected void addPaymentAccountGroup() {
-        paymentAccountTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("shared.chooseTradingAccount"));
+        paymentAccountTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("offerbook.createOffer"));
         GridPane.setColumnSpan(paymentAccountTitledGroupBg, 2);
 
         HBox paymentGroupBox = new HBox();

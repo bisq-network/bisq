@@ -1059,7 +1059,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
     }
 
     private void addPaymentGroup() {
-        paymentTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("shared.chooseTradingAccount"));
+        paymentTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("offerbook.createOffer"));
         GridPane.setColumnSpan(paymentTitledGroupBg, 2);
 
         HBox paymentGroupBox = new HBox();

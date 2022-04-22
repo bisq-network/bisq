@@ -481,7 +481,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return true;
     }
 
-    OfferDirection getDirection() {
+    public OfferDirection getDirection() {
         return direction;
     }
 

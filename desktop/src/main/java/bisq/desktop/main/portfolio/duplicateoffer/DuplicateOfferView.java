@@ -34,6 +34,8 @@ import com.google.inject.Inject;
 
 import javax.inject.Named;
 
+import javafx.geometry.Insets;
+
 import javafx.collections.ObservableList;
 
 @FxmlView
@@ -57,6 +59,9 @@ public class DuplicateOfferView extends MutableOfferView<DuplicateOfferViewModel
     @Override
     protected void doActivate() {
         super.doActivate();
+
+        // Workaround to fix margin on top of amount group
+        gridPane.setPadding(new Insets(-20, 25, -1, 25));
 
         updatePriceToggle();
 
