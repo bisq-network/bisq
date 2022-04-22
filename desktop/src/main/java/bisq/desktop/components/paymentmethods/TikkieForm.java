@@ -23,7 +23,6 @@ import bisq.desktop.util.validation.IBANValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CountryUtil;
-import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.TikkieAccount;
@@ -59,8 +58,7 @@ public class TikkieForm extends PaymentMethodForm {
     @Override
     public void addFormForAddAccount() {
         // this payment method is only for Netherlands/EUR
-        account.setSingleTradeCurrency(new FiatCurrency("EUR"));
-        CountryUtil.findCountryByCode("NL").ifPresent(c -> account.setCountry(c));
+        CountryUtil.findCountryByCode("NL").ifPresent(account::setCountry);
 
         gridRowFrom = gridRow + 1;
 

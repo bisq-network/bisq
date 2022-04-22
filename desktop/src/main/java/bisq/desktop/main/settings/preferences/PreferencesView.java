@@ -553,6 +553,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                             removeButton.setOnAction(e -> {
                                 if (item.equals(preferences.getPreferredTradeCurrency())) {
                                     new Popup().warning(Res.get("setting.preferences.cannotRemovePrefCurrency")).show();
+                                }
+                                if (item.equals(GUIUtil.BSQ) || item.equals(GUIUtil.TOP_ALTCOIN)) {
+                                    new Popup().warning(Res.get("setting.preferences.cannotRemoveMainAltcoinCurrency")).show();
                                 } else {
                                     preferences.removeCryptoCurrency(item);
                                     if (!allCryptoCurrencies.contains(item)) {
@@ -941,6 +944,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             TradeCurrency selectedItem = preferredTradeCurrencyComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null)
                 preferences.setPreferredTradeCurrency(selectedItem);
+                GUIUtil.updateTopAltcoin(preferences);
         });
 
         fiatCurrenciesComboBox.setItems(allFiatCurrencies);

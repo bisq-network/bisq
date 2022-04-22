@@ -22,7 +22,6 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.validation.AdvancedCashValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.AdvancedCashAccount;
 import bisq.core.payment.PaymentAccount;
@@ -91,7 +90,7 @@ public class AdvancedCashForm extends PaymentMethodForm {
         else
             flowPane.setId("flow-pane-checkboxes-non-editable-bg");
 
-        CurrencyUtil.getAllAdvancedCashCurrencies().stream().forEach(e ->
+        paymentAccount.getSupportedCurrencies().forEach(e ->
                 fillUpFlowPaneWithCurrencies(isEditable, flowPane, e, advancedCashAccount));
     }
 

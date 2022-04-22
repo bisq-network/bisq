@@ -19,7 +19,6 @@ package bisq.core.offer;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.filter.FilterManager;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.user.Preferences;
@@ -178,7 +177,7 @@ public class OfferFilterService {
             return insufficientCounterpartyTradeLimitCache.get(offerId);
         }
 
-        boolean result = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) &&
+        boolean result = offer.isFiatOffer() &&
                 !accountAgeWitnessService.verifyPeersTradeAmount(offer, offer.getAmount(),
                         errorMessage -> {
                         });
@@ -205,7 +204,7 @@ public class OfferFilterService {
                 accountOptional.isPresent() ? accountOptional.get().getAccountName() : "null",
                 Coin.valueOf(myTradeLimit).toFriendlyString(),
                 Coin.valueOf(offerMinAmount).toFriendlyString());
-        boolean result = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()) &&
+        boolean result = offer.isFiatOffer() &&
                 accountOptional.isPresent() &&
                 myTradeLimit < offerMinAmount;
         myInsufficientTradeLimitCache.put(offerId, result);

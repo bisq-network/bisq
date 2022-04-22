@@ -17,14 +17,30 @@
 
 package bisq.core.payment;
 
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
+import bisq.core.payment.payload.CelPayAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.payment.payload.CelPayAccountPayload;
+
+import java.util.List;
 
 import lombok.EqualsAndHashCode;
 
+import org.jetbrains.annotations.NotNull;
+
 @EqualsAndHashCode(callSuper = true)
 public final class CelPayAccount extends PaymentAccount {
+
+    // https://github.com/bisq-network/growth/issues/231
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = List.of(
+            new FiatCurrency("AUD"),
+            new FiatCurrency("CAD"),
+            new FiatCurrency("GBP"),
+            new FiatCurrency("HKD"),
+            new FiatCurrency("USD")
+    );
+
     public CelPayAccount() {
         super(PaymentMethod.CELPAY);
     }
@@ -52,5 +68,11 @@ public final class CelPayAccount extends PaymentAccount {
 
     public String getMessageForAccountCreation() {
         return "payment.celpay.info.account";
+    }
+
+    @NotNull
+    @Override
+    public List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 }

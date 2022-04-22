@@ -23,7 +23,6 @@ import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.RevolutValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.RevolutAccount;
@@ -90,7 +89,7 @@ public class RevolutForm extends PaymentMethodForm {
         else
             flowPane.setId("flow-pane-checkboxes-non-editable-bg");
 
-        CurrencyUtil.getAllRevolutCurrencies().forEach(e ->
+        account.getSupportedCurrencies().forEach(e ->
                 fillUpFlowPaneWithCurrencies(isEditable, flowPane, e, account));
     }
 

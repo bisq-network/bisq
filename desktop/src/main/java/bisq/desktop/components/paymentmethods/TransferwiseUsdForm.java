@@ -24,7 +24,6 @@ import bisq.desktop.util.validation.LengthValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CountryUtil;
-import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.TransferwiseUsdAccount;
@@ -74,9 +73,8 @@ public class TransferwiseUsdForm extends PaymentMethodForm {
 
     @Override
     public void addFormForAddAccount() {
-        // this payment method is currently restricted to United States/USD
-        account.setSingleTradeCurrency(new FiatCurrency("USD"));
-        CountryUtil.findCountryByCode("US").ifPresent(c -> account.setCountry(c));
+
+        CountryUtil.findCountryByCode("US").ifPresent(account::setCountry);
 
         gridRowFrom = gridRow + 1;
 

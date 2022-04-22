@@ -20,7 +20,6 @@ package bisq.core.offer.bisq_v1;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
@@ -196,7 +195,7 @@ public class TakeOfferModel implements Model {
 
         if (offer.getPaymentMethod().getId().equals(PaymentMethod.HAL_CASH_ID))
             volumeByAmount = getAdjustedVolumeForHalCash(volumeByAmount);
-        else if (CurrencyUtil.isFiatCurrency(offer.getCurrencyCode()))
+        else if (offer.isFiatOffer())
             volumeByAmount = getRoundedFiatVolume(volumeByAmount);
 
         volume = volumeByAmount;

@@ -81,12 +81,15 @@ import javafx.collections.SetChangeListener;
 
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
+
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
@@ -247,7 +250,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         if (account != null) {
             this.paymentAccount = account;
         } else {
-            Optional<PaymentAccount> paymentAccountOptional = paymentAccounts.stream().findAny();
+            Optional<PaymentAccount> paymentAccountOptional = getAnyPaymentAccount();
             if (paymentAccountOptional.isPresent()) {
                 this.paymentAccount = paymentAccountOptional.get();
 
@@ -275,6 +278,18 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         setSuggestedSecurityDeposit(getPaymentAccount());
 
         return true;
+    }
+
+    @NotNull
+    private Optional<PaymentAccount> getAnyPaymentAccount() {
+        if (CurrencyUtil.isFiatCurrency(tradeCurrency.getCode())) {
+            return paymentAccounts.stream().filter(paymentAccount1 -> !paymentAccount1.getPaymentMethod().isAltcoin()).findAny();
+        } else {
+            return paymentAccounts.stream().filter(paymentAccount1 -> paymentAccount1.getPaymentMethod().isAltcoin() &&
+                    paymentAccount1.getTradeCurrency().isPresent() &&
+                    !Objects.equals(paymentAccount1.getTradeCurrency().get().getCode(), GUIUtil.BSQ.getCode()) &&
+                    !Objects.equals(paymentAccount1.getTradeCurrency().get().getCode(), GUIUtil.TOP_ALTCOIN.getCode())).findAny();
+        }
     }
 
     protected PaymentAccount getPreselectedPaymentAccount() {
@@ -405,7 +420,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
 
             Optional<TradeCurrency> tradeCurrencyOptional = preferences.getTradeCurrenciesAsObservable()
                     .stream().filter(e -> e.getCode().equals(code)).findAny();
-            if (!tradeCurrencyOptional.isPresent()) {
+            if (tradeCurrencyOptional.isEmpty()) {
                 if (CurrencyUtil.isCryptoCurrency(code)) {
                     CurrencyUtil.getCryptoCurrency(code).ifPresent(preferences::addCryptoCurrency);
                 } else {
@@ -464,7 +479,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         return true;
     }
 
-    OfferDirection getDirection() {
+    public OfferDirection getDirection() {
         return direction;
     }
 

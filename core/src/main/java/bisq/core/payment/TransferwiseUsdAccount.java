@@ -17,16 +17,27 @@
 
 package bisq.core.payment;
 
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.TransferwiseUsdAccountPayload;
 
+import java.util.List;
+
 import lombok.EqualsAndHashCode;
+
+import org.jetbrains.annotations.NotNull;
 
 @EqualsAndHashCode(callSuper = true)
 public final class TransferwiseUsdAccount extends CountryBasedPaymentAccount {
+
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = List.of(new FiatCurrency("USD"));
+
     public TransferwiseUsdAccount() {
         super(PaymentMethod.TRANSFERWISE_USD);
+        // this payment method is currently restricted to United States/USD
+        setSingleTradeCurrency(SUPPORTED_CURRENCIES.get(0));
     }
 
     @Override
@@ -68,5 +79,11 @@ public final class TransferwiseUsdAccount extends CountryBasedPaymentAccount {
 
     public String getMessageForAccountCreation() {
         return "payment.transferwiseUsd.info.account";
+    }
+
+    @NotNull
+    @Override
+    public List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 }

@@ -18,97 +18,100 @@
 package bisq.core.payment;
 
 import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.JapanBankAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 
-public final class JapanBankAccount extends PaymentAccount
-{
-    public JapanBankAccount()
-    {
+import java.util.List;
+
+import lombok.NonNull;
+
+public final class JapanBankAccount extends PaymentAccount {
+
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = List.of(new FiatCurrency("JPY"));
+
+    public JapanBankAccount() {
         super(PaymentMethod.JAPAN_BANK);
-        setSingleTradeCurrency(new FiatCurrency("JPY"));
+        setSingleTradeCurrency(SUPPORTED_CURRENCIES.get(0));
     }
 
     @Override
-    protected PaymentAccountPayload createPayload()
-    {
+    protected PaymentAccountPayload createPayload() {
         return new JapanBankAccountPayload(paymentMethod.getId(), id);
     }
 
+    @Override
+    public @NonNull List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
+    }
+
     // bank code
-    public String getBankCode()
-    {
+    public String getBankCode() {
         return ((JapanBankAccountPayload) paymentAccountPayload).getBankCode();
     }
-    public void setBankCode(String bankCode)
-    {
+
+    public void setBankCode(String bankCode) {
         if (bankCode == null) bankCode = "";
         ((JapanBankAccountPayload) paymentAccountPayload).setBankCode(bankCode);
     }
 
     // bank name
-    public String getBankName()
-    {
+    public String getBankName() {
         return ((JapanBankAccountPayload) paymentAccountPayload).getBankName();
     }
-    public void setBankName(String bankName)
-    {
+
+    public void setBankName(String bankName) {
         if (bankName == null) bankName = "";
         ((JapanBankAccountPayload) paymentAccountPayload).setBankName(bankName);
     }
 
     // branch code
-    public String getBankBranchCode()
-    {
+    public String getBankBranchCode() {
         return ((JapanBankAccountPayload) paymentAccountPayload).getBankBranchCode();
     }
-    public void setBankBranchCode(String bankBranchCode)
-    {
+
+    public void setBankBranchCode(String bankBranchCode) {
         if (bankBranchCode == null) bankBranchCode = "";
         ((JapanBankAccountPayload) paymentAccountPayload).setBankBranchCode(bankBranchCode);
     }
 
     // branch name
-    public String getBankBranchName()
-    {
+    public String getBankBranchName() {
         return ((JapanBankAccountPayload) paymentAccountPayload).getBankBranchName();
     }
-    public void setBankBranchName(String bankBranchName)
-    {
+
+    public void setBankBranchName(String bankBranchName) {
         if (bankBranchName == null) bankBranchName = "";
         ((JapanBankAccountPayload) paymentAccountPayload).setBankBranchName(bankBranchName);
     }
 
     // account type
-    public String getBankAccountType()
-    {
+    public String getBankAccountType() {
         return ((JapanBankAccountPayload) paymentAccountPayload).getBankAccountType();
     }
-    public void setBankAccountType(String bankAccountType)
-    {
+
+    public void setBankAccountType(String bankAccountType) {
         if (bankAccountType == null) bankAccountType = "";
         ((JapanBankAccountPayload) paymentAccountPayload).setBankAccountType(bankAccountType);
     }
 
     // account number
-    public String getBankAccountNumber()
-    {
+    public String getBankAccountNumber() {
         return ((JapanBankAccountPayload) paymentAccountPayload).getBankAccountNumber();
     }
-    public void setBankAccountNumber(String bankAccountNumber)
-    {
+
+    public void setBankAccountNumber(String bankAccountNumber) {
         if (bankAccountNumber == null) bankAccountNumber = "";
         ((JapanBankAccountPayload) paymentAccountPayload).setBankAccountNumber(bankAccountNumber);
     }
 
     // account name
-    public String getBankAccountName()
-    {
+    public String getBankAccountName() {
         return ((JapanBankAccountPayload) paymentAccountPayload).getBankAccountName();
     }
-    public void setBankAccountName(String bankAccountName)
-    {
+
+    public void setBankAccountName(String bankAccountName) {
         if (bankAccountName == null) bankAccountName = "";
         ((JapanBankAccountPayload) paymentAccountPayload).setBankAccountName(bankAccountName);
     }

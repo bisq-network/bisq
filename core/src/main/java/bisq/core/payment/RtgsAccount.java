@@ -24,7 +24,8 @@ import bisq.core.payment.payload.RtgsAccountPayload;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
-public final class RtgsAccount extends CountryBasedPaymentAccount {
+public final class RtgsAccount extends IfscBasedAccount {
+
     public RtgsAccount() {
         super(PaymentMethod.RTGS);
     }

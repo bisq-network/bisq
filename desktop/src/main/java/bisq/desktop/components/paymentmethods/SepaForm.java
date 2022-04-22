@@ -135,9 +135,7 @@ public class SepaForm extends GeneralSepaForm {
                         .filter(c -> c.code.equals(ibanCountryCode))
                         .findFirst();
 
-                if (ibanCountry.isPresent()) {
-                    countryComboBox.setValue(ibanCountry.get());
-                }
+                ibanCountry.ifPresent(countryComboBox::setValue);
             }
         });
 

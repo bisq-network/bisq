@@ -17,23 +17,42 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.CapitualAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 
+import java.util.List;
+
 import lombok.EqualsAndHashCode;
+
+import org.jetbrains.annotations.NotNull;
 
 @EqualsAndHashCode(callSuper = true)
 public final class CapitualAccount extends PaymentAccount {
+
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = List.of(
+            new FiatCurrency("BRL"),
+            new FiatCurrency("EUR"),
+            new FiatCurrency("GBP"),
+            new FiatCurrency("USD")
+    );
+
     public CapitualAccount() {
         super(PaymentMethod.CAPITUAL);
-        tradeCurrencies.addAll(CurrencyUtil.getAllCapitualCurrencies());
+        tradeCurrencies.addAll(SUPPORTED_CURRENCIES);
     }
 
     @Override
     protected PaymentAccountPayload createPayload() {
         return new CapitualAccountPayload(paymentMethod.getId(), id);
+    }
+
+    @NotNull
+    @Override
+    public List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 
     public void setAccountNr(String accountNr) {

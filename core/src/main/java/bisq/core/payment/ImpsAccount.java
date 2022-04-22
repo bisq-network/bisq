@@ -17,14 +17,22 @@
 
 package bisq.core.payment;
 
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
+import bisq.core.payment.payload.ImpsAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.payment.payload.ImpsAccountPayload;
+
+import java.util.List;
 
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 
 @EqualsAndHashCode(callSuper = true)
 public final class ImpsAccount extends CountryBasedPaymentAccount {
+
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = List.of(new FiatCurrency("INR"));
+
     public ImpsAccount() {
         super(PaymentMethod.IMPS);
     }
@@ -44,5 +52,10 @@ public final class ImpsAccount extends CountryBasedPaymentAccount {
 
     public String getMessageForAccountCreation() {
         return "payment.imps.info.account";
+    }
+
+    @Override
+    public @NonNull List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 }

@@ -168,6 +168,9 @@ public class GUIUtil {
     public final static int AMOUNT_DECIMALS_WITH_ZEROS = 3;
     public final static int AMOUNT_DECIMALS = 4;
 
+    public final static TradeCurrency BSQ = CurrencyUtil.getTradeCurrency("BSQ").get();
+    public static TradeCurrency TOP_ALTCOIN = CurrencyUtil.getTradeCurrency("XMR").get();
+
     private static FeeService feeService;
     private static Preferences preferences;
 
@@ -1247,4 +1250,11 @@ public class GUIUtil {
         gridPane.getColumnConstraints().addAll(columnConstraints1, columnConstraints2);
     }
 
+    public static void updateTopAltcoin(Preferences preferences) {
+        TradeCurrency tradeCurrency = preferences.getPreferredTradeCurrency();
+        if (CurrencyUtil.isFiatCurrency(tradeCurrency.getCode()) || tradeCurrency.equals(BSQ)) {
+            return;
+        }
+        TOP_ALTCOIN = tradeCurrency;
+    }
 }

@@ -17,24 +17,28 @@
 
 package bisq.core.payment;
 
-import bisq.core.locale.CurrencyUtil;
-import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.SwiftAccountPayload;
 
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
+
+import static bisq.core.locale.CurrencyUtil.getAllSortedFiatCurrencies;
+import static java.util.Comparator.comparing;
 
 @EqualsAndHashCode(callSuper = true)
 public final class SwiftAccount extends PaymentAccount {
+
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = new ArrayList<>(getAllSortedFiatCurrencies(comparing(TradeCurrency::getCode)));
+
     public SwiftAccount() {
         super(PaymentMethod.SWIFT);
-        selectAllTradeCurrencies();
+        tradeCurrencies.addAll(SUPPORTED_CURRENCIES);
     }
 
     @Override
@@ -58,10 +62,8 @@ public final class SwiftAccount extends PaymentAccount {
         return "payment.swift.info.account";
     }
 
-    private void selectAllTradeCurrencies() {
-        List<FiatCurrency> currencyCodesSorted = CurrencyUtil.getAllSortedFiatCurrencies().stream()
-                .sorted(Comparator.comparing(TradeCurrency::getCode))
-                .collect(Collectors.toList());
-        tradeCurrencies.addAll(currencyCodesSorted);
+    @Override
+    public @NonNull List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 }

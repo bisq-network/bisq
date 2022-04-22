@@ -179,7 +179,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     public Price getPrice() {
         String currencyCode = getCurrencyCode();
         Optional<OfferPayload> optionalOfferPayload = getOfferPayload();
-        if (!optionalOfferPayload.isPresent()) {
+        if (optionalOfferPayload.isEmpty()) {
             return Price.valueOf(currencyCode, offerPayloadBase.getPrice());
         }
 
@@ -269,7 +269,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
         Volume volumeByAmount = price.getVolumeByAmount(amount);
         if (offerPayloadBase.getPaymentMethodId().equals(PaymentMethod.HAL_CASH_ID))
             volumeByAmount = VolumeUtil.getAdjustedVolumeForHalCash(volumeByAmount);
-        else if (CurrencyUtil.isFiatCurrency(offerPayloadBase.getCurrencyCode()))
+        else if (isFiatOffer())
             volumeByAmount = VolumeUtil.getRoundedFiatVolume(volumeByAmount);
 
         return volumeByAmount;
@@ -560,6 +560,10 @@ public class Offer implements NetworkPayload, PersistablePayload {
             return Optional.of((OfferPayload) offerPayloadBase);
         }
         return Optional.empty();
+    }
+
+    public boolean isFiatOffer() {
+        return CurrencyUtil.isFiatCurrency(currencyCode);
     }
 
     public Optional<BsqSwapOfferPayload> getBsqSwapOfferPayload() {

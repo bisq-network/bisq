@@ -17,14 +17,57 @@
 
 package bisq.core.payment;
 
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.PayseraAccountPayload;
 
+import java.util.List;
+
 import lombok.EqualsAndHashCode;
+
+import org.jetbrains.annotations.NotNull;
 
 @EqualsAndHashCode(callSuper = true)
 public final class PayseraAccount extends PaymentAccount {
+
+    // https://github.com/bisq-network/growth/issues/233
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = List.of(
+            new FiatCurrency("AUD"),
+            new FiatCurrency("BGN"),
+            new FiatCurrency("BYN"),
+            new FiatCurrency("CAD"),
+            new FiatCurrency("CHF"),
+            new FiatCurrency("CNY"),
+            new FiatCurrency("CZK"),
+            new FiatCurrency("DKK"),
+            new FiatCurrency("EUR"),
+            new FiatCurrency("GBP"),
+            new FiatCurrency("GEL"),
+            new FiatCurrency("HKD"),
+            new FiatCurrency("HRK"),
+            new FiatCurrency("HUF"),
+            new FiatCurrency("ILS"),
+            new FiatCurrency("INR"),
+            new FiatCurrency("JPY"),
+            new FiatCurrency("KZT"),
+            new FiatCurrency("MXN"),
+            new FiatCurrency("NOK"),
+            new FiatCurrency("NZD"),
+            new FiatCurrency("PHP"),
+            new FiatCurrency("PLN"),
+            new FiatCurrency("RON"),
+            new FiatCurrency("RSD"),
+            new FiatCurrency("RUB"),
+            new FiatCurrency("SEK"),
+            new FiatCurrency("SGD"),
+            new FiatCurrency("THB"),
+            new FiatCurrency("TRY"),
+            new FiatCurrency("USD"),
+            new FiatCurrency("ZAR")
+    );
+
     public PayseraAccount() {
         super(PaymentMethod.PAYSERA);
     }
@@ -32,6 +75,12 @@ public final class PayseraAccount extends PaymentAccount {
     @Override
     protected PaymentAccountPayload createPayload() {
         return new PayseraAccountPayload(paymentMethod.getId(), id);
+    }
+
+    @NotNull
+    @Override
+    public List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 
     public void setEmail(String accountId) {

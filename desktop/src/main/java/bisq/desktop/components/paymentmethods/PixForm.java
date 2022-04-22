@@ -23,7 +23,6 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CountryUtil;
-import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PixAccount;
@@ -59,7 +58,7 @@ public class PixForm extends PaymentMethodForm {
     @Override
     public void addFormForAddAccount() {
         // this payment method is only for Brazil/BRL
-        account.setSingleTradeCurrency(new FiatCurrency("BRL"));
+        account.setSingleTradeCurrency(account.getSupportedCurrencies().get(0));
         CountryUtil.findCountryByCode("BR").ifPresent(c -> account.setCountry(c));
 
         gridRowFrom = gridRow + 1;

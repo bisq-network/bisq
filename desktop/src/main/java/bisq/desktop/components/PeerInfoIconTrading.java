@@ -19,7 +19,6 @@ package bisq.desktop.components;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.alert.PrivateNotificationManager;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentMethod;
@@ -107,7 +106,7 @@ public class PeerInfoIconTrading extends PeerInfoIcon {
             offer = tradeModel.getOffer();
         }
         checkNotNull(offer, "Offer must not be null");
-        isFiatCurrency = CurrencyUtil.isFiatCurrency(offer.getCurrencyCode());
+        isFiatCurrency = offer.isFiatOffer();
         initialize(role, offer, tradeModel, privateNotificationManager, useDevPrivilegeKeys);
     }
 

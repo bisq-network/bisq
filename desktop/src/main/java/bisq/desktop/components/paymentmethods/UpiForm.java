@@ -22,7 +22,6 @@ import bisq.desktop.util.FormBuilder;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CountryUtil;
-import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.UpiAccount;
@@ -58,7 +57,7 @@ public class UpiForm extends PaymentMethodForm {
     @Override
     public void addFormForAddAccount() {
         // this payment method is only for India/INR
-        account.setSingleTradeCurrency(new FiatCurrency("INR"));
+        account.setSingleTradeCurrency(account.getSupportedCurrencies().get(0));
         CountryUtil.findCountryByCode("IN").ifPresent(c -> account.setCountry(c));
 
         gridRowFrom = gridRow + 1;

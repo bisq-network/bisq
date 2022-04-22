@@ -22,7 +22,6 @@ import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.validation.TransferwiseValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.TransferwiseAccount;
@@ -83,7 +82,7 @@ public class TransferwiseForm extends PaymentMethodForm {
             flowPane.setId("flow-pane-checkboxes-non-editable-bg");
         }
 
-        CurrencyUtil.getAllTransferwiseCurrencies().forEach(currency ->
+        account.getSupportedCurrencies().forEach(currency ->
                 fillUpFlowPaneWithCurrencies(isEditable, flowPane, currency, account));
     }
 

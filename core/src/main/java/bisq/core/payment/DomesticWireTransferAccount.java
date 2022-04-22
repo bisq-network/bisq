@@ -17,15 +17,23 @@
 
 package bisq.core.payment;
 
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.BankAccountPayload;
 import bisq.core.payment.payload.DomesticWireTransferAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 
+import java.util.List;
+
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 
 @EqualsAndHashCode(callSuper = true)
 public final class DomesticWireTransferAccount extends CountryBasedPaymentAccount implements SameCountryRestrictedBankAccount {
+
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = List.of(new FiatCurrency("USD"));
+
     public DomesticWireTransferAccount() {
         super(PaymentMethod.DOMESTIC_WIRE_TRANSFER);
     }
@@ -59,5 +67,10 @@ public final class DomesticWireTransferAccount extends CountryBasedPaymentAccoun
 
     public String getMessageForAccountCreation() {
         return "payment.domesticWire.info.account";
+    }
+
+    @Override
+    public @NonNull List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 }

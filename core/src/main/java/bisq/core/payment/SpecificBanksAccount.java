@@ -17,16 +17,23 @@
 
 package bisq.core.payment;
 
+import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.SpecificBanksAccountPayload;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 
 @EqualsAndHashCode(callSuper = true)
 public final class SpecificBanksAccount extends CountryBasedPaymentAccount implements BankNameRestrictedBankAccount, SameCountryRestrictedBankAccount {
+
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = CurrencyUtil.getAllFiatCurrencies();
+
     public SpecificBanksAccount() {
         super(PaymentMethod.SPECIFIC_BANKS);
     }
@@ -34,6 +41,11 @@ public final class SpecificBanksAccount extends CountryBasedPaymentAccount imple
     @Override
     protected PaymentAccountPayload createPayload() {
         return new SpecificBanksAccountPayload(paymentMethod.getId(), id);
+    }
+
+    @Override
+    public @NonNull List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 
     // TODO change to List

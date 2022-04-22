@@ -17,14 +17,29 @@
 
 package bisq.core.payment;
 
-import bisq.core.payment.payload.VerseAccountPayload;
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.payment.payload.VerseAccountPayload;
+
+import java.util.List;
 
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 
 @EqualsAndHashCode(callSuper = true)
 public final class VerseAccount extends PaymentAccount {
+
+    // https://github.com/bisq-network/growth/issues/223
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = List.of(
+            new FiatCurrency("DKK"),
+            new FiatCurrency("EUR"),
+            new FiatCurrency("HUF"),
+            new FiatCurrency("PLN"),
+            new FiatCurrency("SEK")
+    );
+
     public VerseAccount() {
         super(PaymentMethod.VERSE);
     }
@@ -52,5 +67,10 @@ public final class VerseAccount extends PaymentAccount {
 
     public String getMessageForAccountCreation() {
         return "payment.verse.info.account";
+    }
+
+    @Override
+    public @NonNull List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 }

@@ -36,11 +36,8 @@ import org.bitcoinj.core.Transaction;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
-import javafx.scene.layout.GridPane;
 
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 
 import javafx.beans.property.IntegerProperty;
@@ -205,10 +202,7 @@ public class BsqTradeDetailsWindow extends Overlay<BsqTradeDetailsWindow> {
                     bsqSwapTrade.getState().name());
         }
 
-        Button closeButton = addButtonAfterGroup(gridPane, ++rowIndex, Res.get("shared.close"));
-        GridPane.setColumnIndex(closeButton, 1);
-        GridPane.setHalignment(closeButton, HPos.RIGHT);
-        closeButton.setOnAction(e -> {
+        addCloseButton(gridPane, ++rowIndex, () -> {
             closeHandlerOptional.ifPresent(Runnable::run);
             hide();
         });

@@ -17,14 +17,27 @@
 
 package bisq.core.payment;
 
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.MoneseAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 
+import java.util.List;
+
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 
 @EqualsAndHashCode(callSuper = true)
 public final class MoneseAccount extends PaymentAccount {
+
+    // https://github.com/bisq-network/growth/issues/227
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = List.of(
+            new FiatCurrency("EUR"),
+            new FiatCurrency("GBP"),
+            new FiatCurrency("RON")
+    );
+
     public MoneseAccount() {
         super(PaymentMethod.MONESE);
     }
@@ -60,5 +73,10 @@ public final class MoneseAccount extends PaymentAccount {
 
     public String getMessageForAccountCreation() {
         return "payment.monese.info.account";
+    }
+
+    @Override
+    public @NonNull List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 }

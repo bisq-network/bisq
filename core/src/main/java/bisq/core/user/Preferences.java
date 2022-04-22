@@ -592,6 +592,16 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         requestPersistence();
     }
 
+    public void setBuyScreenCryptoCurrencyCode(String buyScreenCurrencyCode) {
+        prefPayload.setBuyScreenCryptoCurrencyCode(buyScreenCurrencyCode);
+        requestPersistence();
+    }
+
+    public void setSellScreenCryptoCurrencyCode(String sellScreenCurrencyCode) {
+        prefPayload.setSellScreenCryptoCurrencyCode(sellScreenCurrencyCode);
+        requestPersistence();
+    }
+
     public void setIgnoreTradersList(List<String> ignoreTradersList) {
         prefPayload.setIgnoreTradersList(ignoreTradersList);
         requestPersistence();

@@ -15,19 +15,27 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.offer.bisq_v1;
+package bisq.desktop.main.offer;
 
 import bisq.desktop.Navigation;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.main.MainView;
-import bisq.desktop.main.offer.SellOfferView;
+import bisq.desktop.main.offer.offerbook.BsqOfferBookView;
+import bisq.desktop.main.offer.offerbook.BtcOfferBookView;
 import bisq.desktop.main.offer.offerbook.OfferBookView;
+import bisq.desktop.main.offer.offerbook.OtherOfferBookView;
+import bisq.desktop.main.offer.offerbook.TopAltcoinOfferBookView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.util.GUIUtil;
 
+import bisq.core.locale.CryptoCurrency;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.user.Preferences;
+import bisq.core.locale.TradeCurrency;
+import bisq.core.offer.Offer;
+import bisq.core.offer.OfferDirection;
 
 import bisq.common.UserThread;
 import bisq.common.util.Tuple2;
@@ -43,7 +51,11 @@ import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
+
+import org.jetbrains.annotations.NotNull;
 
 // Shared utils for Views
 public class OfferViewUtil {
@@ -84,14 +96,13 @@ public class OfferViewUtil {
         infoGridPane.getChildren().addAll(label, textField);
     }
 
-    public static Tuple2<AutoTooltipButton, HBox> createBuyBsqButtonBox(Navigation navigation,
-                                                                        Preferences preferences) {
+    public static Tuple2<AutoTooltipButton, HBox> createBuyBsqButtonBox(Navigation navigation) {
         String buyBsqText = Res.get("shared.buyCurrency", "BSQ");
         var buyBsqButton = new AutoTooltipButton(buyBsqText);
         buyBsqButton.getStyleClass().add("action-button");
         buyBsqButton.getStyleClass().add("tiny-button");
         buyBsqButton.setMinWidth(60);
-        buyBsqButton.setOnAction(e -> openBuyBsqOfferBook(navigation, preferences)
+        buyBsqButton.setOnAction(e -> openBuyBsqOfferBook(navigation)
         );
 
         var info = new AutoTooltipLabel("BSQ is colored BTC that helps fund Bisq developers.");
@@ -100,7 +111,7 @@ public class OfferViewUtil {
                 .information(Res.get("createOffer.buyBsq.popupMessage"))
                 .actionButtonText(buyBsqText)
                 .buttonAlignment(HPos.CENTER)
-                .onAction(() -> openBuyBsqOfferBook(navigation, preferences)).show());
+                .onAction(() -> openBuyBsqOfferBook(navigation)).show());
         learnMore.setMinWidth(100);
 
         HBox buyBsqBox = new HBox(buyBsqButton, info, learnMore);
@@ -111,9 +122,53 @@ public class OfferViewUtil {
         return new Tuple2<>(buyBsqButton, buyBsqBox);
     }
 
-    private static void openBuyBsqOfferBook(Navigation navigation, Preferences preferences) {
-        preferences.setSellScreenCurrencyCode("BSQ");
+    private static void openBuyBsqOfferBook(Navigation navigation) {
         navigation.navigateTo(
-                MainView.class, SellOfferView.class, OfferBookView.class);
+                MainView.class, SellOfferView.class, BsqOfferBookView.class);
+    }
+
+    public static Class<? extends OfferBookView<?, ?>> getOfferBookViewClass(String currencyCode) {
+        Class<? extends OfferBookView<?, ?>> offerBookViewClazz;
+        if (CurrencyUtil.isFiatCurrency(currencyCode)) {
+            offerBookViewClazz = BtcOfferBookView.class;
+        } else if (currencyCode.equals(GUIUtil.BSQ.getCode())) {
+            offerBookViewClazz = BsqOfferBookView.class;
+        } else if (currencyCode.equals(GUIUtil.TOP_ALTCOIN.getCode())) {
+            offerBookViewClazz = TopAltcoinOfferBookView.class;
+        } else {
+            offerBookViewClazz = OtherOfferBookView.class;
+        }
+        return offerBookViewClazz;
+    }
+
+    public static boolean isShownAsSellOffer(Offer offer) {
+        return isShownAsSellOffer(offer.getCurrencyCode(), offer.getDirection());
+    }
+
+    public static boolean isShownAsSellOffer(TradeCurrency tradeCurrency, OfferDirection direction) {
+        return isShownAsSellOffer(tradeCurrency.getCode(), direction);
+    }
+
+    public static boolean isShownAsSellOffer(String currencyCode, OfferDirection direction) {
+        return CurrencyUtil.isFiatCurrency(currencyCode) == (direction == OfferDirection.SELL);
+    }
+
+    public static boolean isShownAsBuyOffer(Offer offer) {
+        return !isShownAsSellOffer(offer);
+    }
+
+    public static boolean isShownAsBuyOffer(OfferDirection direction, TradeCurrency tradeCurrency) {
+        return !isShownAsSellOffer(tradeCurrency.getCode(), direction);
+    }
+
+    public static TradeCurrency getAnyOfMainCryptoCurrencies() {
+        return getMainCryptoCurrencies().findAny().get();
+    }
+
+    @NotNull
+    public static Stream<CryptoCurrency> getMainCryptoCurrencies() {
+        return CurrencyUtil.getMainCryptoCurrencies().stream().filter(cryptoCurrency ->
+                !Objects.equals(cryptoCurrency.getCode(), GUIUtil.TOP_ALTCOIN.getCode()) &&
+                        !Objects.equals(cryptoCurrency.getCode(), GUIUtil.BSQ.getCode()));
     }
 }

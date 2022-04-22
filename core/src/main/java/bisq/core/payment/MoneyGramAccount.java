@@ -19,10 +19,13 @@ package bisq.core.payment;
 
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
-import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
+
+import java.util.List;
 
 import lombok.EqualsAndHashCode;
 
@@ -36,15 +39,71 @@ public final class MoneyGramAccount extends PaymentAccount {
     @Nullable
     private Country country;
 
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = List.of(
+            new FiatCurrency("AED"),
+            new FiatCurrency("ARS"),
+            new FiatCurrency("AUD"),
+            new FiatCurrency("BND"),
+            new FiatCurrency("CAD"),
+            new FiatCurrency("CHF"),
+            new FiatCurrency("CZK"),
+            new FiatCurrency("DKK"),
+            new FiatCurrency("EUR"),
+            new FiatCurrency("FJD"),
+            new FiatCurrency("GBP"),
+            new FiatCurrency("HKD"),
+            new FiatCurrency("HUF"),
+            new FiatCurrency("IDR"),
+            new FiatCurrency("ILS"),
+            new FiatCurrency("INR"),
+            new FiatCurrency("JPY"),
+            new FiatCurrency("KRW"),
+            new FiatCurrency("KWD"),
+            new FiatCurrency("LKR"),
+            new FiatCurrency("MAD"),
+            new FiatCurrency("MGA"),
+            new FiatCurrency("MXN"),
+            new FiatCurrency("MYR"),
+            new FiatCurrency("NOK"),
+            new FiatCurrency("NZD"),
+            new FiatCurrency("OMR"),
+            new FiatCurrency("PEN"),
+            new FiatCurrency("PGK"),
+            new FiatCurrency("PHP"),
+            new FiatCurrency("PKR"),
+            new FiatCurrency("PLN"),
+            new FiatCurrency("SAR"),
+            new FiatCurrency("SBD"),
+            new FiatCurrency("SCR"),
+            new FiatCurrency("SEK"),
+            new FiatCurrency("SGD"),
+            new FiatCurrency("THB"),
+            new FiatCurrency("TOP"),
+            new FiatCurrency("TRY"),
+            new FiatCurrency("TWD"),
+            new FiatCurrency("USD"),
+            new FiatCurrency("VND"),
+            new FiatCurrency("VUV"),
+            new FiatCurrency("WST"),
+            new FiatCurrency("XOF"),
+            new FiatCurrency("XPF"),
+            new FiatCurrency("ZAR")
+    );
 
     public MoneyGramAccount() {
         super(PaymentMethod.MONEY_GRAM);
-        tradeCurrencies.addAll(CurrencyUtil.getAllMoneyGramCurrencies());
+        tradeCurrencies.addAll(SUPPORTED_CURRENCIES);
     }
 
     @Override
     protected PaymentAccountPayload createPayload() {
         return new MoneyGramAccountPayload(paymentMethod.getId(), id);
+    }
+
+    @NotNull
+    @Override
+    public List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 
     @Nullable

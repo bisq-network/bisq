@@ -23,12 +23,11 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CountryUtil;
-import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
-import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.NequiAccount;
-import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.NequiAccountPayload;
+import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
@@ -59,7 +58,7 @@ public class NequiForm extends PaymentMethodForm {
     @Override
     public void addFormForAddAccount() {
         // this payment method is only for Columbia/COP
-        account.setSingleTradeCurrency(new FiatCurrency("COP"));
+        account.setSingleTradeCurrency(account.getSupportedCurrencies().get(0));
         CountryUtil.findCountryByCode("CO").ifPresent(c -> account.setCountry(c));
 
         gridRowFrom = gridRow + 1;

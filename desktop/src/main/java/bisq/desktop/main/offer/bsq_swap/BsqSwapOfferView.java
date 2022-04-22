@@ -24,6 +24,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.FundsTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.main.offer.ClosableView;
 import bisq.desktop.main.offer.OfferView;
 import bisq.desktop.main.overlays.windows.BsqSwapOfferDetailsWindow;
 import bisq.desktop.util.GUIUtil;
@@ -68,7 +69,7 @@ import static bisq.desktop.util.FormBuilder.addFundsTextfield;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static javafx.scene.layout.Region.USE_COMPUTED_SIZE;
 
-public abstract class BsqSwapOfferView<M extends BsqSwapOfferViewModel<?>> extends ActivatableViewAndModel<AnchorPane, M> {
+public abstract class BsqSwapOfferView<M extends BsqSwapOfferViewModel<?>> extends ActivatableViewAndModel<AnchorPane, M> implements ClosableView {
     protected final Navigation navigation;
     protected final BsqSwapOfferDetailsWindow bsqSwapOfferDetailsWindow;
 

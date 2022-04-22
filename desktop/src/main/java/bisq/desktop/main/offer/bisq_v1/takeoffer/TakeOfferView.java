@@ -36,8 +36,11 @@ import bisq.desktop.main.dao.wallet.BsqWalletView;
 import bisq.desktop.main.dao.wallet.receive.BsqReceiveView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.withdrawal.WithdrawalView;
+import bisq.desktop.main.offer.ClosableView;
+import bisq.desktop.main.offer.InitializableViewWithTakeOfferData;
 import bisq.desktop.main.offer.OfferView;
-import bisq.desktop.main.offer.bisq_v1.OfferViewUtil;
+import bisq.desktop.main.offer.OfferViewUtil;
+import bisq.desktop.main.offer.SelectableView;
 import bisq.desktop.main.overlays.notifications.Notification;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.GenericMessageWindow;
@@ -52,7 +55,6 @@ import bisq.desktop.util.Transitions;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
-import bisq.core.offer.OfferDirection;
 import bisq.core.payment.FasterPaymentsAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
@@ -117,12 +119,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
 
-import static bisq.desktop.main.offer.bisq_v1.OfferViewUtil.addPayInfoEntry;
+import static bisq.desktop.main.offer.OfferViewUtil.addPayInfoEntry;
 import static bisq.desktop.util.FormBuilder.*;
 import static javafx.beans.binding.Bindings.createStringBinding;
 
 @FxmlView
-public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOfferViewModel> {
+public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOfferViewModel> implements ClosableView, InitializableViewWithTakeOfferData, SelectableView {
     private final Navigation navigation;
     private final CoinFormatter formatter;
     private final BsqFormatter bsqFormatter;
@@ -131,7 +133,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private ScrollPane scrollPane;
     private GridPane gridPane;
-    private TitledGroupBg payFundsTitledGroupBg, paymentAccountTitledGroupBg, advancedOptionsGroup;
+    private TitledGroupBg payFundsTitledGroupBg;
+    private TitledGroupBg advancedOptionsGroup;
     private VBox priceAsPercentageInputBox, amountRangeBox;
     private HBox fundingHBox, amountValueCurrencyBox, priceValueCurrencyBox, volumeValueCurrencyBox,
             priceAsPercentageValueCurrencyBox, minAmountValueCurrencyBox, advancedOptionsBox,
@@ -152,7 +155,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private BalanceTextField balanceTextField;
     private Text xIcon, fakeXIcon;
     private Button nextButton, cancelButton1, cancelButton2;
-    private AutoTooltipButton takeOfferButton;
+    private AutoTooltipButton takeOfferButton, fundFromSavingsWalletButton;
     private ImageView qrCodeImageView;
     private BusyAnimation waitingForFundsBusyAnimation, offerAvailabilityBusyAnimation;
     private Notification walletFundedNotification;
@@ -307,7 +310,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             paymentAccountsComboBox.setItems(model.getPossiblePaymentAccounts());
             paymentAccountsComboBox.getSelectionModel().select(lastPaymentAccount);
             model.onPaymentAccountSelected(lastPaymentAccount);
-            paymentAccountTitledGroupBg.setText(Res.get("shared.selectTradingAccount"));
         }
 
         balanceTextField.setTargetAmount(model.dataModel.getTotalToPayAsCoin().get());
@@ -363,14 +365,16 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         model.initWithData(offer);
         priceAsPercentageInputBox.setVisible(offer.isUseMarketBasedPrice());
 
-        if (model.getOffer().getDirection() == OfferDirection.SELL) {
+        if (OfferViewUtil.isShownAsSellOffer(model.getOffer())) {
             takeOfferButton.setId("buy-button-big");
-            takeOfferButton.updateText(Res.get("takeOffer.takeOfferButton", Res.get("shared.buy")));
             nextButton.setId("buy-button");
+            fundFromSavingsWalletButton.setId("buy-button");
+            takeOfferButton.updateText(getTakeOfferLabel(offer, Res.get("shared.buy")));
         } else {
             takeOfferButton.setId("sell-button-big");
             nextButton.setId("sell-button");
-            takeOfferButton.updateText(Res.get("takeOffer.takeOfferButton", Res.get("shared.sell")));
+            fundFromSavingsWalletButton.setId("sell-button");
+            takeOfferButton.updateText(getTakeOfferLabel(offer, Res.get("shared.sell")));
         }
         priceAsPercentageDescription.setText(model.getPercentagePriceDescription());
 
@@ -402,7 +406,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         addressTextField.setPaymentLabel(model.getPaymentLabel());
         addressTextField.setAddress(model.dataModel.getAddressEntry().getAddressString());
 
-        if (CurrencyUtil.isFiatCurrency(offer.getCurrencyCode())) {
+        if (offer.isFiatOffer()) {
             Label popOverLabel = OfferViewUtil.createPopOverLabel(Res.get("offerbook.info.roundedFiatVolume"));
             volumeInfoTextField.setContentForPrivacyPopOver(popOverLabel);
         }
@@ -813,12 +817,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     private void addPaymentGroup() {
-        paymentAccountTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("takeOffer.paymentInfo"));
+        TitledGroupBg paymentAccountTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("offerbook.takeOffer"));
         GridPane.setColumnSpan(paymentAccountTitledGroupBg, 2);
 
         final Tuple4<ComboBox<PaymentAccount>, Label, TextField, HBox> paymentAccountTuple = addComboBoxTopLabelTextField(gridPane,
-                gridRow, Res.get("shared.selectTradingAccount"),
-                Res.get("shared.paymentMethod"), Layout.FIRST_ROW_DISTANCE);
+                gridRow, Res.get("shared.chooseTradingAccount"),
+                Res.get("shared.chooseTradingAccount"), Layout.FIRST_ROW_DISTANCE);
 
         paymentAccountsComboBox = paymentAccountTuple.first;
         HBox.setMargin(paymentAccountsComboBox, new Insets(Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
@@ -882,8 +886,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         GridPane.setMargin(advancedOptionsBox, new Insets(Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(advancedOptionsBox);
 
-        Tuple2<AutoTooltipButton, HBox> buyBsqButtonBox = OfferViewUtil.createBuyBsqButtonBox(
-                navigation, model.dataModel.preferences);
+        Tuple2<AutoTooltipButton, HBox> buyBsqButtonBox = OfferViewUtil.createBuyBsqButtonBox(navigation);
         buyBsqBox = buyBsqButtonBox.second;
         buyBsqBox.setManaged(false);
         buyBsqBox.setVisible(false);
@@ -920,9 +923,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         int result = model.dataModel.mempoolStatus.get();
         if (result == 0) {
             new Popup().warning(Res.get("popup.warning.makerTxInvalid") + model.dataModel.getMempoolStatusText())
-                    .onClose(() -> {
-                        cancelButton1.fire();
-                    })
+                    .onClose(() -> cancelButton1.fire())
                     .show();
         } else {
             if (result == -1) {
@@ -1015,7 +1016,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         fundingHBox.setVisible(false);
         fundingHBox.setManaged(false);
         fundingHBox.setSpacing(10);
-        Button fundFromSavingsWalletButton = new AutoTooltipButton(Res.get("shared.fundFromSavingsWalletButton"));
+        fundFromSavingsWalletButton = new AutoTooltipButton(Res.get("shared.fundFromSavingsWalletButton"));
         fundFromSavingsWalletButton.setDefaultButton(true);
         fundFromSavingsWalletButton.getStyleClass().add("action-button");
         fundFromSavingsWalletButton.setOnAction(e -> model.fundFromSavingsWallet());
@@ -1292,16 +1293,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         if (paymentAccount.getPaymentMethod().getId().equals(PaymentMethod.CASH_BY_MAIL_ID) &&
                 !cashByMailWarningDisplayed && !offer.getExtraInfo().isEmpty()) {
             cashByMailWarningDisplayed = true;
-            UserThread.runAfter(() -> {
-                new GenericMessageWindow()
-                        .preamble(Res.get("payment.cashByMail.tradingRestrictions"))
-                        .instruction(offer.getExtraInfo())
-                        .actionButtonText(Res.get("shared.iConfirm"))
-                        .closeButtonText(Res.get("shared.close"))
-                        .width(Layout.INITIAL_WINDOW_WIDTH)
-                        .onClose(() -> close(false))
-                        .show();
-            }, 500, TimeUnit.MILLISECONDS);
+            UserThread.runAfter(() -> new GenericMessageWindow()
+                    .preamble(Res.get("payment.cashByMail.tradingRestrictions"))
+                    .instruction(offer.getExtraInfo())
+                    .actionButtonText(Res.get("shared.iConfirm"))
+                    .closeButtonText(Res.get("shared.close"))
+                    .width(Layout.INITIAL_WINDOW_WIDTH)
+                    .onClose(() -> close(false))
+                    .show(), 500, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -1342,5 +1341,15 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         return infoGridPane;
     }
+
+    @NotNull
+    private String getTakeOfferLabel(Offer offer, String direction) {
+        return offer.isFiatOffer() ?
+                Res.get("takeOffer.takeOfferButton", direction) :
+                Res.get("takeOffer.takeOfferButtonAltcoin",
+                        direction,
+                        offer.getCurrencyCode());
+    }
+
 }
 

@@ -26,6 +26,8 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.offer.OfferView;
+import bisq.desktop.main.offer.OfferViewUtil;
+import bisq.desktop.main.offer.SelectableView;
 import bisq.desktop.main.offer.bsq_swap.BsqSwapOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.BsqSwapOfferDetailsWindow;
@@ -82,7 +84,7 @@ import static bisq.desktop.util.FormBuilder.*;
 
 @FxmlView
 @Slf4j
-public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferViewModel> {
+public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferViewModel> implements SelectableView {
     private InputTextField minAmountTextField, priceTextField, volumeTextField;
     private Label miningPowLabel;
     private BusyAnimation miningPowBusyAnimation;
@@ -167,22 +169,24 @@ public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferV
                              @Nullable BsqSwapOfferPayload offerPayload) {
         this.offerActionHandler = offerActionHandler;
 
-        model.initWithData(offerPayload != null ? offerPayload.getDirection() : direction, offerPayload);
+        // Invert direction for non-Fiat trade currencies -> BUY BSQ is to SELL Bitcoin
+        OfferDirection offerDirection = direction == OfferDirection.BUY ? OfferDirection.SELL : OfferDirection.BUY;
 
-        if (model.dataModel.isBuyOffer()) {
+        model.initWithData(offerPayload != null ? offerPayload.getDirection() : offerDirection, offerPayload);
+
+        if (OfferViewUtil.isShownAsBuyOffer(offerDirection, GUIUtil.BSQ)) {
             actionButton.setId("buy-button-big");
-            actionButton.updateText(Res.get("createOffer.placeOfferButton", Res.get("shared.buy")));
-            volumeDescriptionLabel.setText(Res.get("createOffer.amountPriceBox.buy.volumeDescription", BSQ));
+            actionButton.updateText(Res.get("createOffer.placeOfferButtonAltcoin", Res.get("shared.buy"), BSQ));
+            nextButton.setId("buy-button");
+            volumeDescriptionLabel.setText(Res.get("createOffer.amountPriceBox.sell.volumeDescriptionAltcoin", BSQ));
+            amountDescriptionLabel.setText(Res.get("takeOffer.amountPriceBox.buy.amountDescriptionAltcoin"));
         } else {
             actionButton.setId("sell-button-big");
-            actionButton.updateText(Res.get("createOffer.placeOfferButton", Res.get("shared.sell")));
-            volumeDescriptionLabel.setText(Res.get("createOffer.amountPriceBox.sell.volumeDescription", BSQ));
+            actionButton.updateText(Res.get("createOffer.placeOfferButtonAltcoin", Res.get("shared.sell"), BSQ));
+            nextButton.setId("sell-button");
+            volumeDescriptionLabel.setText(Res.get("createOffer.amountPriceBox.buy.volumeDescriptionAltcoin", BSQ));
+            amountDescriptionLabel.setText(Res.get("takeOffer.amountPriceBox.sell.amountDescriptionAltcoin"));
         }
-
-        String amountDescription = Res.get("createOffer.amountPriceBox.amountDescription",
-                model.dataModel.isBuyOffer() ? Res.get("shared.buy") : Res.get("shared.sell"));
-        amountDescriptionLabel.setText(amountDescription);
-
     }
 
 
@@ -310,18 +314,12 @@ public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferV
                                     .feedback(Res.get("createOffer.success.info"))
                                     .dontShowAgainId(key)
                                     .actionButtonTextWithGoTo("navigation.portfolio.myOpenOffers")
-                                    .onAction(() -> {
-                                        UserThread.runAfter(() ->
-                                                        navigation.navigateTo(MainView.class, PortfolioView.class,
-                                                                OpenOffersView.class),
-                                                100, TimeUnit.MILLISECONDS);
-                                        close();
-                                    })
-                                    .onClose(this::close)
+                                    .onAction(this::closeAndGoToOpenOffers)
+                                    .onClose(this::closeAndGoToOpenOffers)
                                     .show(),
-                            100, TimeUnit.MILLISECONDS);
+                            1, TimeUnit.SECONDS);
                 } else {
-                    close();
+                    closeAndGoToOpenOffers();
                 }
             }
         };
@@ -431,7 +429,7 @@ public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferV
 
     @Override
     protected void addPaymentAccountGroup() {
-        paymentAccountTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("shared.selectTradingAccount"));
+        paymentAccountTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 1, Res.get("offerbook.createOffer"));
         GridPane.setColumnSpan(paymentAccountTitledGroupBg, 2);
 
         HBox paymentGroupBox = new HBox();
@@ -440,7 +438,7 @@ public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferV
         paymentGroupBox.setPadding(new Insets(10, 0, 18, 0));
 
         Tuple3<VBox, Label, ComboBox<PaymentAccount>> paymentAccountBoxTuple = addTopLabelComboBox(
-                Res.get("shared.tradingAccount"), Res.get("shared.selectTradingAccount"));
+                Res.get("shared.chooseTradingAccount"), Res.get("shared.chooseTradingAccount"));
 
         Tuple3<Label, TextField, VBox> currencyTextFieldTuple = addTopLabelTextField(gridPane, gridRow,
                 Res.get("shared.currency"), BSQ, 5d);
@@ -459,7 +457,7 @@ public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferV
         paymentAccountsComboBox.setMinWidth(paymentAccountVBox.getMinWidth());
         paymentAccountsComboBox.setPrefWidth(paymentAccountVBox.getMinWidth());
         paymentAccountsComboBox.setConverter(GUIUtil.getPaymentAccountsComboBoxStringConverter());
-        paymentAccountsComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("shared.selectTradingAccount"),
+        paymentAccountsComboBox.setButtonCell(GUIUtil.getComboBoxButtonCell(Res.get("shared.chooseTradingAccount"),
                 paymentAccountsComboBox, false));
         paymentAccountsComboBox.setCellFactory(getPaymentAccountListCellFactory(paymentAccountsComboBox));
 
@@ -602,5 +600,14 @@ public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferV
                     })
                     .show();
         }
+    }
+
+    private void closeAndGoToOpenOffers() {
+        //go to open offers
+        UserThread.runAfter(() ->
+                        navigation.navigateTo(MainView.class, PortfolioView.class,
+                                OpenOffersView.class),
+                1, TimeUnit.SECONDS);
+        close();
     }
 }

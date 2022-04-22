@@ -17,14 +17,15 @@
 
 package bisq.core.payment;
 
+import bisq.core.payment.payload.NeftAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.payment.payload.NeftAccountPayload;
 
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
-public final class NeftAccount extends CountryBasedPaymentAccount {
+public final class NeftAccount extends IfscBasedAccount {
+
     public NeftAccount() {
         super(PaymentMethod.NEFT);
     }
@@ -45,4 +46,5 @@ public final class NeftAccount extends CountryBasedPaymentAccount {
     public String getMessageForAccountCreation() {
         return "payment.neft.info.account";
     }
+
 }

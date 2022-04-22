@@ -5,8 +5,6 @@ import bisq.desktop.util.FormBuilder;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.Country;
-import bisq.core.locale.CurrencyUtil;
-import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.CountryBasedPaymentAccount;
@@ -30,7 +28,7 @@ import javafx.scene.layout.HBox;
 import javafx.util.StringConverter;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 
 import static bisq.desktop.util.FormBuilder.addTopLabelWithVBox;
 
@@ -39,17 +37,8 @@ public abstract class GeneralSepaForm extends PaymentMethodForm {
     static final String BIC = "BIC";
     static final String IBAN = "IBAN";
 
-    private FiatCurrency euroCurrency = null;
-
     GeneralSepaForm(PaymentAccount paymentAccount, AccountAgeWitnessService accountAgeWitnessService, InputValidator inputValidator, GridPane gridPane, int gridRow, CoinFormatter formatter) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
-
-        Optional<FiatCurrency> euroCurrencyOptional = CurrencyUtil.getFiatCurrency("EUR");
-
-        if (euroCurrencyOptional.isPresent()) {
-            this.euroCurrency = euroCurrencyOptional.get();
-            paymentAccount.setSingleTradeCurrency(euroCurrency);
-        }
     }
 
     @Override
@@ -120,7 +109,8 @@ public abstract class GeneralSepaForm extends PaymentMethodForm {
 
         currencyTextField.setVisible(true);
         currencyTextField.setManaged(true);
-        currencyTextField.setText(Res.get("payment.currencyWithSymbol", euroCurrency.getNameAndCode()));
+        currencyTextField.setText(Res.get("payment.currencyWithSymbol",
+                Objects.requireNonNull(paymentAccount.getSingleTradeCurrency()).getNameAndCode()));
 
         hBox.getChildren().addAll(countryComboBox, currencyTextField);
 

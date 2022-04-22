@@ -17,15 +17,23 @@
 
 package bisq.core.payment;
 
-import bisq.core.payment.payload.BankAccountPayload;
+import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.AchTransferAccountPayload;
+import bisq.core.payment.payload.BankAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 
+import java.util.List;
+
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 
 @EqualsAndHashCode(callSuper = true)
 public final class AchTransferAccount extends CountryBasedPaymentAccount implements SameCountryRestrictedBankAccount {
+
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = List.of(new FiatCurrency("USD"));
+
     public AchTransferAccount() {
         super(PaymentMethod.ACH_TRANSFER);
     }
@@ -59,5 +67,10 @@ public final class AchTransferAccount extends CountryBasedPaymentAccount impleme
 
     public String getMessageForAccountCreation() {
         return "payment.achTransfer.info.account";
+    }
+
+    @Override
+    public @NonNull List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 }

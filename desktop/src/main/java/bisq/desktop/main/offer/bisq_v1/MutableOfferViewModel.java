@@ -22,6 +22,7 @@ import bisq.desktop.common.model.ActivatableWithDataModel;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.deposit.DepositView;
+import bisq.desktop.main.offer.OfferViewUtil;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
@@ -268,11 +269,15 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     private void addBindings() {
         if (dataModel.getDirection() == OfferDirection.BUY) {
             volumeDescriptionLabel.bind(createStringBinding(
-                    () -> Res.get("createOffer.amountPriceBox.buy.volumeDescription", dataModel.getTradeCurrencyCode().get()),
-                    dataModel.getTradeCurrencyCode()));
+                    () -> Res.get(CurrencyUtil.isFiatCurrency(dataModel.getTradeCurrencyCode().get()) ?
+                                    "createOffer.amountPriceBox.buy.volumeDescription" :
+                                    "createOffer.amountPriceBox.buy.volumeDescriptionAltcoin", dataModel.getTradeCurrencyCode().get(),
+                            dataModel.getTradeCurrencyCode())));
         } else {
             volumeDescriptionLabel.bind(createStringBinding(
-                    () -> Res.get("createOffer.amountPriceBox.sell.volumeDescription", dataModel.getTradeCurrencyCode().get()),
+                    () -> Res.get(CurrencyUtil.isFiatCurrency(dataModel.getTradeCurrencyCode().get()) ?
+                            "createOffer.amountPriceBox.sell.volumeDescription" :
+                            "createOffer.amountPriceBox.sell.volumeDescriptionAltcoin", dataModel.getTradeCurrencyCode().get()),
                     dataModel.getTradeCurrencyCode()));
         }
         volumePromptLabel.bind(createStringBinding(
@@ -589,8 +594,16 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         btcValidator.setMinValue(Restrictions.getMinTradeAmount());
 
         final boolean isBuy = dataModel.getDirection() == OfferDirection.BUY;
-        amountDescription = Res.get("createOffer.amountPriceBox.amountDescription",
-                isBuy ? Res.get("shared.buy") : Res.get("shared.sell"));
+
+        boolean isFiatCurrency = CurrencyUtil.isFiatCurrency(tradeCurrency.getCode());
+
+        if (isFiatCurrency) {
+            amountDescription = Res.get("createOffer.amountPriceBox.amountDescription",
+                    isBuy ? Res.get("shared.buy") : Res.get("shared.sell"));
+        } else {
+            amountDescription = Res.get(isBuy ? "createOffer.amountPriceBox.sell.amountDescriptionAltcoin" :
+                    "createOffer.amountPriceBox.buy.amountDescriptionAltcoin");
+        }
 
         securityDepositValidator.setPaymentAccount(dataModel.paymentAccount);
         validateAndSetBuyerSecurityDepositToModel();
@@ -979,6 +992,10 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
 
     CoinFormatter getBtcFormatter() {
         return btcFormatter;
+    }
+
+    public boolean isShownAsBuyOffer() {
+        return OfferViewUtil.isShownAsBuyOffer(dataModel.getDirection(), dataModel.getTradeCurrency());
     }
 
     public boolean isSellOffer() {

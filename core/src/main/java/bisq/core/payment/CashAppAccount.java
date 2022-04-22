@@ -18,25 +18,37 @@
 package bisq.core.payment;
 
 import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.CashAppAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 
+import java.util.List;
+
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 
 // Removed due too high chargeback risk
 // Cannot be deleted as it would break old trade history entries
 @Deprecated
 @EqualsAndHashCode(callSuper = true)
 public final class CashAppAccount extends PaymentAccount {
+
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = List.of(new FiatCurrency("USD"));
+
     public CashAppAccount() {
         super(PaymentMethod.CASH_APP);
-        setSingleTradeCurrency(new FiatCurrency("USD"));
+        setSingleTradeCurrency(SUPPORTED_CURRENCIES.get(0));
     }
 
     @Override
     protected PaymentAccountPayload createPayload() {
         return new CashAppAccountPayload(paymentMethod.getId(), id);
+    }
+
+    @Override
+    public @NonNull List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 
     public void setCashTag(String cashTag) {

@@ -19,6 +19,7 @@ package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
+import bisq.desktop.main.offer.OfferViewUtil;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.Layout;
@@ -46,10 +47,8 @@ import javax.inject.Named;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 
 import java.util.Optional;
@@ -252,11 +251,7 @@ public class BsqSwapOfferDetailsWindow extends Overlay<BsqSwapOfferDetailsWindow
         } else if (isTakeOfferScreen) {
             addConfirmAndCancelButtons(false);
         } else {
-            Button closeButton = addButtonAfterGroup(gridPane, ++rowIndex, Res.get("shared.close"));
-            GridPane.setColumnIndex(closeButton, 1);
-            GridPane.setHalignment(closeButton, HPos.RIGHT);
-
-            closeButton.setOnAction(e -> {
+            addCloseButton(gridPane, ++rowIndex, () -> {
                 closeHandlerOptional.ifPresent(Runnable::run);
                 hide();
             });
@@ -264,14 +259,15 @@ public class BsqSwapOfferDetailsWindow extends Overlay<BsqSwapOfferDetailsWindow
     }
 
     private void addConfirmAndCancelButtons(boolean isPlaceOffer) {
-        boolean isBuyOffer = offer.isBuyOffer();
+        boolean isBuyOffer = OfferViewUtil.isShownAsBuyOffer(offer);
         boolean isBuyerRole = isPlaceOffer == isBuyOffer;
+        String tradeCurrencyByCode = offer.getCurrencyCode();
         String placeOfferButtonText = isBuyerRole ?
-                Res.get("offerDetailsWindow.confirm.maker", Res.get("shared.buy")) :
-                Res.get("offerDetailsWindow.confirm.maker", Res.get("shared.sell"));
+                Res.get("offerDetailsWindow.confirm.makerAltcoin", Res.get("shared.buy"), tradeCurrencyByCode) :
+                Res.get("offerDetailsWindow.confirm.makerAltcoin", Res.get("shared.sell"), tradeCurrencyByCode);
         String takeOfferButtonText = isBuyerRole ?
-                Res.get("offerDetailsWindow.confirm.taker", Res.get("shared.buy")) :
-                Res.get("offerDetailsWindow.confirm.taker", Res.get("shared.sell"));
+                Res.get("offerDetailsWindow.confirm.takerAltcoin", Res.get("shared.buy"), tradeCurrencyByCode) :
+                Res.get("offerDetailsWindow.confirm.takerAltcoin", Res.get("shared.sell"), tradeCurrencyByCode);
 
         ImageView iconView = new ImageView();
         iconView.setId(isBuyerRole ? "image-buy-white" : "image-sell-white");

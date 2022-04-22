@@ -18,25 +18,37 @@
 package bisq.core.payment;
 
 import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.payload.ChaseQuickPayAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 
+import java.util.List;
+
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 
 // Removed due to QuickPay becoming Zelle
 // Cannot be deleted as it would break old trade history entries
 @Deprecated
 @EqualsAndHashCode(callSuper = true)
 public final class ChaseQuickPayAccount extends PaymentAccount {
+
+    public static final List<TradeCurrency> SUPPORTED_CURRENCIES = List.of(new FiatCurrency("USD"));
+
     public ChaseQuickPayAccount() {
         super(PaymentMethod.CHASE_QUICK_PAY);
-        setSingleTradeCurrency(new FiatCurrency("USD"));
+        setSingleTradeCurrency(SUPPORTED_CURRENCIES.get(0));
     }
 
     @Override
     protected PaymentAccountPayload createPayload() {
         return new ChaseQuickPayAccountPayload(paymentMethod.getId(), id);
+    }
+
+    @Override
+    public @NonNull List<TradeCurrency> getSupportedCurrencies() {
+        return SUPPORTED_CURRENCIES;
     }
 
     public void setEmail(String email) {

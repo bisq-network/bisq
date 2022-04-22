@@ -1961,6 +1961,15 @@ public class FormBuilder {
         return button;
     }
 
+    public static Button addCloseButton(GridPane gridPane, int rowIndex, Runnable closeHandler) {
+        Button closeButton = addButtonAfterGroup(gridPane, rowIndex, Res.get("shared.close"));
+        GridPane.setColumnIndex(closeButton, 1);
+        GridPane.setHalignment(closeButton, HPos.RIGHT);
+
+        closeButton.setOnAction(e -> closeHandler.run());
+
+        return closeButton;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Button + Button

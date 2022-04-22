@@ -18,6 +18,7 @@
 package bisq.desktop.main.portfolio.editoffer;
 
 import bisq.desktop.Navigation;
+import bisq.desktop.main.offer.OfferViewUtil;
 import bisq.desktop.main.offer.bisq_v1.MutableOfferViewModel;
 import bisq.desktop.util.validation.BsqValidator;
 import bisq.desktop.util.validation.BtcValidator;
@@ -127,5 +128,9 @@ class EditOfferViewModel extends MutableOfferViewModel<EditOfferDataModel> {
     public void triggerFocusOutOnAmountFields() {
         // do not update BTC Amount or minAmount here
         // issue 2798: "after a few edits of offer the BTC amount has increased"
+    }
+
+    public boolean isShownAsSellOffer() {
+        return OfferViewUtil.isShownAsSellOffer(getTradeCurrency(), dataModel.getDirection());
     }
 }

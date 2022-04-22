@@ -49,6 +49,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -144,8 +145,12 @@ class BsqSwapCreateOfferDataModel extends BsqSwapOfferDataModel {
     }
 
     private void fillPaymentAccounts() {
-        if (getUserPaymentAccounts() != null) {
-            paymentAccounts.setAll(new HashSet<>(getUserPaymentAccounts()));
+        Set<PaymentAccount> userPaymentAccounts = getUserPaymentAccounts();
+        if (userPaymentAccounts != null) {
+            paymentAccounts.setAll(new HashSet<>(userPaymentAccounts.stream().filter(paymentAccount1 -> {
+                Optional<TradeCurrency> tradeCurrency = paymentAccount1.getTradeCurrency();
+                return tradeCurrency.map(currency -> currency.getCode().equals("BSQ")).orElse(false);
+            }).collect(Collectors.toList())));
         }
         paymentAccounts.sort(comparing(PaymentAccount::getAccountName));
     }
