@@ -156,7 +156,7 @@ deploy: setup
 	for target in \
 			bitcoind \
 			seednode \
-			seednode2 \
+			monerod \
 			alice \
 			bob \
 			mediator; do \
@@ -277,3 +277,4 @@ blocks:
     				generatetoaddress $(n)
 
 .PHONY: build seednode
+.REAL:  build monero
