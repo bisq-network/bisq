@@ -138,7 +138,8 @@ public class OtherOfferBookViewModel extends OfferBookViewModel {
 
         if (!CurrencyUtil.isFiatCurrency(defaultTradeCurrency.getCode()) &&
                 !defaultTradeCurrency.equals(GUIUtil.BSQ) &&
-                !defaultTradeCurrency.equals(GUIUtil.TOP_ALTCOIN)) {
+                !defaultTradeCurrency.equals(GUIUtil.TOP_ALTCOIN) &&
+                hasPaymentAccountForCurrency(defaultTradeCurrency)) {
             return defaultTradeCurrency;
         }
 

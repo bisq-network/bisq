@@ -134,7 +134,7 @@ public class BtcOfferBookViewModel extends OfferBookViewModel {
     TradeCurrency getDefaultTradeCurrency() {
         TradeCurrency defaultTradeCurrency = GlobalSettings.getDefaultTradeCurrency();
 
-        if (CurrencyUtil.isFiatCurrency(defaultTradeCurrency.getCode())) {
+        if (CurrencyUtil.isFiatCurrency(defaultTradeCurrency.getCode()) && hasPaymentAccountForCurrency(defaultTradeCurrency)) {
             return defaultTradeCurrency;
         }
 
