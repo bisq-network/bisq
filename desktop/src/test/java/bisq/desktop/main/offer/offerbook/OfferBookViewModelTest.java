@@ -42,6 +42,7 @@ import bisq.core.payment.payload.SpecificBanksAccountPayload;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
+import bisq.core.user.User;
 import bisq.core.util.PriceUtil;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
@@ -78,6 +79,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -85,12 +87,15 @@ import static org.mockito.Mockito.when;
 public class OfferBookViewModelTest {
     private final CoinFormatter coinFormatter = new ImmutableCoinFormatter(Config.baseCurrencyNetworkParameters().getMonetaryFormat());
     private static final Logger log = LoggerFactory.getLogger(OfferBookViewModelTest.class);
+    private User user;
 
     @Before
     public void setUp() {
         GlobalSettings.setDefaultTradeCurrency(usd);
         Res.setBaseCurrencyCode(usd.getCode());
         Res.setBaseCurrencyName(usd.getName());
+        user = mock(User.class);
+        when(user.hasPaymentAccountForCurrency(any())).thenReturn(true);
     }
 
     private PriceUtil getPriceUtil() {
@@ -252,7 +257,7 @@ public class OfferBookViewModelTest {
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        final OfferBookViewModel model = new BtcOfferBookViewModel(null, openOfferManager, offerBook, empty, null, null, null,
+        final OfferBookViewModel model = new BtcOfferBookViewModel(user, openOfferManager, offerBook, empty, null, null, null,
                 null, null, null, null, getPriceUtil(), null, coinFormatter, new BsqFormatter(), null, null);
         model.activate();
 
@@ -270,7 +275,7 @@ public class OfferBookViewModelTest {
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        final OfferBookViewModel model = new BtcOfferBookViewModel(null, openOfferManager, offerBook, empty, null, null, null,
+        final OfferBookViewModel model = new BtcOfferBookViewModel(user, openOfferManager, offerBook, empty, null, null, null,
                 null, null, null, null, getPriceUtil(), null, coinFormatter, new BsqFormatter(), null, null);
         model.activate();
 
@@ -303,7 +308,7 @@ public class OfferBookViewModelTest {
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        final OfferBookViewModel model = new BtcOfferBookViewModel(null, openOfferManager, offerBook, empty, null, null, null,
+        final OfferBookViewModel model = new BtcOfferBookViewModel(user, openOfferManager, offerBook, empty, null, null, null,
                 null, null, null, null, getPriceUtil(), null, coinFormatter, new BsqFormatter(), null, null);
         model.activate();
 
@@ -321,7 +326,7 @@ public class OfferBookViewModelTest {
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        final OfferBookViewModel model = new BtcOfferBookViewModel(null, openOfferManager, offerBook, empty, null, null, null,
+        final OfferBookViewModel model = new BtcOfferBookViewModel(user, openOfferManager, offerBook, empty, null, null, null,
                 null, null, null, null, getPriceUtil(), null, coinFormatter, new BsqFormatter(), null, null);
         model.activate();
 
@@ -354,7 +359,7 @@ public class OfferBookViewModelTest {
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        final OfferBookViewModel model = new BtcOfferBookViewModel(null, openOfferManager, offerBook, empty, null, null, null,
+        final OfferBookViewModel model = new BtcOfferBookViewModel(user, openOfferManager, offerBook, empty, null, null, null,
                 null, null, null, null, getPriceUtil(), null, coinFormatter, new BsqFormatter(), null, null);
         model.activate();
 
@@ -407,7 +412,7 @@ public class OfferBookViewModelTest {
         item4.getOffer().setPriceFeedService(priceFeedService);
         offerBookListItems.addAll(item1, item2);
 
-        final OfferBookViewModel model = new BtcOfferBookViewModel(null, openOfferManager, offerBook, empty, null, null, priceFeedService,
+        final OfferBookViewModel model = new BtcOfferBookViewModel(user, openOfferManager, offerBook, empty, null, null, priceFeedService,
                 null, null, null, null, getPriceUtil(), null, coinFormatter, new BsqFormatter(), null, null);
         model.activate();
 
@@ -428,7 +433,7 @@ public class OfferBookViewModelTest {
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
         when(priceFeedService.getMarketPrice(anyString())).thenReturn(new MarketPrice("USD", 12684.0450, Instant.now().getEpochSecond(), true));
 
-        final OfferBookViewModel model = new BtcOfferBookViewModel(null, openOfferManager, offerBook, empty, null, null, null,
+        final OfferBookViewModel model = new BtcOfferBookViewModel(user, openOfferManager, offerBook, empty, null, null, null,
                 null, null, null, null, getPriceUtil(), null, coinFormatter, new BsqFormatter(), null, null);
 
         final OfferBookListItem item = make(btcBuyItem.but(
