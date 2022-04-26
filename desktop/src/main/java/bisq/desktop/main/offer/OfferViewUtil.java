@@ -124,7 +124,7 @@ public class OfferViewUtil {
 
     private static void openBuyBsqOfferBook(Navigation navigation) {
         navigation.navigateTo(
-                MainView.class, SellOfferView.class, BsqOfferBookView.class);
+                MainView.class, BuyOfferView.class, BsqOfferBookView.class);
     }
 
     public static Class<? extends OfferBookView<?, ?>> getOfferBookViewClass(String currencyCode) {
