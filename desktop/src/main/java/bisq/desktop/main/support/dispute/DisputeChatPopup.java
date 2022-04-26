@@ -121,6 +121,7 @@ public class DisputeChatPopup {
                 MenuItem menuItem1 = new MenuItem(Res.get("support.uploadTraderChat"));
                 MenuItem menuItem2 = new MenuItem(Res.get("support.sendLogFiles"));
                 menuItem1.setOnAction(e -> doTextAttachment(chatView));
+                setChatUploadEnabledState(menuItem1);
                 menuItem2.setOnAction(e -> chatCallback.onSendLogsFromChatWindow(selectedDispute));
                 menuButton.getItems().addAll(menuItem1, menuItem2);
                 menuButton.getStyleClass().add("jfx-button");
@@ -194,6 +195,14 @@ public class DisputeChatPopup {
                 String fileName = selectedDispute.getShortTradeId() + "_" + selectedDispute.getRoleStringForLogFile() + "_TraderChat.txt";
                 chatView.onAttachText(stringBuilder.toString(), fileName);
             }
+        });
+    }
+
+    private void setChatUploadEnabledState(MenuItem menuItem) {
+        disputeManager.findTrade(selectedDispute).ifPresentOrElse(t -> {
+            menuItem.setDisable(t.getChatMessages().size() == 0);
+        }, () -> {
+            menuItem.setDisable(true);
         });
     }
 }
