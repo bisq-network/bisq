@@ -165,6 +165,6 @@ public abstract class GeneralUsBankForm extends GeneralBankForm {
 
     @Override
     protected void autoFillNameTextField() {
-        autoFillAccountTextFields((CountryBasedPaymentAccountPayload) paymentAccount.getPaymentAccountPayload());
+        autoFillAccountTextFields((BankAccountPayload) paymentAccount.getPaymentAccountPayload());
     }
 }

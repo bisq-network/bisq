@@ -454,8 +454,8 @@ public class CashDepositForm extends GeneralBankForm {
         boolean result = isAccountNameValid()
                 && paymentAccount.getSingleTradeCurrency() != null
                 && getCountryBasedPaymentAccount().getCountry() != null
-                && holderNameInputTextField.getValidator().validate(cashDepositAccountPayload.getHolderName()).isValid
-                && emailInputTextField.getValidator().validate(cashDepositAccountPayload.getHolderEmail()).isValid;
+                && inputValidator.validate(cashDepositAccountPayload.getHolderName()).isValid
+                && emailValidator.validate(cashDepositAccountPayload.getHolderEmail()).isValid;
 
         String countryCode = cashDepositAccountPayload.getCountryCode();
         result = getValidationResult(result, countryCode,

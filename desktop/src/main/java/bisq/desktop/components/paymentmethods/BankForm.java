@@ -406,7 +406,7 @@ abstract class BankForm extends GeneralBankForm {
         boolean result = isAccountNameValid()
                 && paymentAccount.getSingleTradeCurrency() != null
                 && getCountryBasedPaymentAccount().getCountry() != null
-                && (holderNameInputTextField == null || holderNameInputTextField.getValidator().validate(bankAccountPayload.getHolderName()).isValid);
+                && inputValidator.validate(bankAccountPayload.getHolderName()).isValid;
 
         String countryCode = bankAccountPayload.getCountryCode();
         result = getValidationResult(result, countryCode,
