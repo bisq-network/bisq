@@ -23,8 +23,6 @@ import bisq.core.locale.Res;
 
 import com.google.protobuf.Message;
 
-import java.nio.charset.StandardCharsets;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -42,22 +40,11 @@ import javax.annotation.Nullable;
 @Setter
 @Getter
 @Slf4j
-public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload implements PayloadWithHolderName {
-    private String holderName = "";
+public class CashDepositAccountPayload extends BankAccountPayload {
     @Nullable
     private String holderEmail;
-    private String bankName = "";
-    private String branchId = "";
-    private String accountNr = "";
-    @Nullable
-    private String accountType;
     @Nullable
     private String requirements;
-    @Nullable
-    private String holderTaxId;
-    private String bankId = "";
-    @Nullable
-    protected String nationalAccountId;
 
     public CashDepositAccountPayload(String paymentMethod, String id) {
         super(paymentMethod, id);
@@ -86,18 +73,19 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
         super(paymentMethodName,
                 id,
                 countryCode,
+                holderName,
+                bankName,
+                branchId,
+                accountNr,
+                accountType,
+                holderTaxId,
+                bankId,
+                nationalAccountId,
                 maxTradePeriod,
                 excludeFromJsonDataMap);
-        this.holderName = holderName;
+
         this.holderEmail = holderEmail;
-        this.bankName = bankName;
-        this.branchId = branchId;
-        this.accountNr = accountNr;
-        this.accountType = accountType;
         this.requirements = requirements;
-        this.holderTaxId = holderTaxId;
-        this.bankId = bankId;
-        this.nationalAccountId = nationalAccountId;
     }
 
     @Override
@@ -185,44 +173,5 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
                 holderTaxIdString +
                 requirementsString +
                 Res.getWithCol("payment.bank.country") + " " + CountryUtil.getNameByCode(countryCode);
-    }
-
-    public String getHolderIdLabel() {
-        return BankUtil.getHolderIdLabel(countryCode);
-    }
-
-    @Nullable
-    public String getBankId() {
-        return BankUtil.isBankIdRequired(countryCode) ? bankId : bankName;
-    }
-
-    @Override
-    public byte[] getAgeWitnessInputData() {
-        String bankName = BankUtil.isBankNameRequired(countryCode) ? this.bankName : "";
-        String bankId = BankUtil.isBankIdRequired(countryCode) ? this.bankId : "";
-        String branchId = BankUtil.isBranchIdRequired(countryCode) ? this.branchId : "";
-        String accountNr = BankUtil.isAccountNrRequired(countryCode) ? this.accountNr : "";
-        String accountType = BankUtil.isAccountTypeRequired(countryCode) ? this.accountType : "";
-        String holderTaxIdString = BankUtil.isHolderIdRequired(countryCode) ?
-                (BankUtil.getHolderIdLabel(countryCode) + " " + holderTaxId + "\n") : "";
-        String nationalAccountId = BankUtil.isNationalAccountIdRequired(countryCode) ? this.nationalAccountId : "";
-
-        // We don't add holderName and holderEmail because we don't want to break age validation if the user recreates an account with
-        // slight changes in holder name (e.g. add or remove middle name)
-
-        String all = bankName +
-                bankId +
-                branchId +
-                accountNr +
-                accountType +
-                holderTaxIdString +
-                nationalAccountId;
-
-        return super.getAgeWitnessInputData(all.getBytes(StandardCharsets.UTF_8));
-    }
-
-    @Override
-    public String getOwnerId() {
-        return holderName;
     }
 }

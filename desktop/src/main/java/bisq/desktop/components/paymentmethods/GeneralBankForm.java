@@ -11,8 +11,6 @@ import bisq.core.locale.BankUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.BankAccountPayload;
-import bisq.core.payment.payload.CashDepositAccountPayload;
-import bisq.core.payment.payload.CountryBasedPaymentAccountPayload;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
@@ -140,25 +138,26 @@ public abstract class GeneralBankForm extends PaymentMethodForm {
     @Override
     protected void autoFillNameTextField() {
         if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
+            BankAccountPayload payload = (BankAccountPayload) paymentAccount.paymentAccountPayload;
             String bankId = null;
-            String countryCode = getCountryCode();
+            String countryCode = payload.getCountryCode();
             if (countryCode == null)
                 countryCode = "";
             if (BankUtil.isBankIdRequired(countryCode)) {
-                bankId = getBankId();
+                bankId = payload.getBankId();
                 if (bankId.length() > 9)
                     bankId = StringUtils.abbreviate(bankId, 9);
             } else if (BankUtil.isBranchIdRequired(countryCode)) {
-                bankId = getBranchId();
+                bankId = payload.getBranchId();
                 if (bankId.length() > 9)
                     bankId = StringUtils.abbreviate(bankId, 9);
             } else if (BankUtil.isBankNameRequired(countryCode)) {
-                bankId = getBankName();
+                bankId = payload.getBankName();
                 if (bankId.length() > 9)
                     bankId = StringUtils.abbreviate(bankId, 9);
             }
 
-            String accountNr = getAccountNr();
+            String accountNr = payload.getAccountNr();
             if (accountNr.length() > 9)
                 accountNr = StringUtils.abbreviate(accountNr, 9);
 
@@ -208,25 +207,5 @@ public abstract class GeneralBankForm extends PaymentMethodForm {
         }
 
         return result;
-    }
-
-    protected String getBankId() {
-        return ((BankAccountPayload) paymentAccount.paymentAccountPayload).getBankId();
-    }
-
-    protected String getBranchId() {
-        return ((BankAccountPayload) paymentAccount.paymentAccountPayload).getBranchId();
-    }
-
-    protected String getBankName() {
-        return ((BankAccountPayload) paymentAccount.paymentAccountPayload).getBankName();
-    }
-
-    protected String getAccountNr() {
-        return ((BankAccountPayload) paymentAccount.paymentAccountPayload).getAccountNr();
-    }
-
-    protected String getCountryCode() {
-        return ((CountryBasedPaymentAccountPayload) paymentAccount.paymentAccountPayload).getCountryCode();
     }
 }

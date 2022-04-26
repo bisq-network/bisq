@@ -31,7 +31,6 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.payload.BankAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.coin.CoinFormatter;
@@ -478,25 +477,5 @@ public class CashDepositForm extends GeneralBankForm {
             addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                     cashDepositAccountPayload.getHolderName());
         }
-    }
-
-    @Override
-    protected String getBankId() {
-        return ((CashDepositAccountPayload) paymentAccount.paymentAccountPayload).getBankId();
-    }
-
-    @Override
-    protected String getBranchId() {
-        return ((CashDepositAccountPayload) paymentAccount.paymentAccountPayload).getBranchId();
-    }
-
-    @Override
-    protected String getBankName() {
-        return ((CashDepositAccountPayload) paymentAccount.paymentAccountPayload).getBankName();
-    }
-
-    @Override
-    protected String getAccountNr() {
-        return ((CashDepositAccountPayload) paymentAccount.paymentAccountPayload).getAccountNr();
     }
 }
