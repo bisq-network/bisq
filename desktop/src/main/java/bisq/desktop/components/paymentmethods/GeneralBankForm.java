@@ -201,7 +201,7 @@ public abstract class GeneralBankForm extends PaymentMethodForm {
             if (BankUtil.isNationalAccountIdRequired(countryCode))
                 result = result && nationalAccountIdInputTextField.getValidator().validate(nationalAccountId).isValid;
         } else {   // only account number not empty validation
-            result = result && accountNrInputTextField.getValidator().validate(accountNr).isValid;
+            result = result && (accountNrInputTextField == null || accountNrInputTextField.getValidator().validate(accountNr).isValid);
         }
 
         return result;
