@@ -46,20 +46,16 @@ public class CashDepositAccountPayload extends CountryBasedPaymentAccountPayload
     private String holderName = "";
     @Nullable
     private String holderEmail;
-    @Nullable
-    private String bankName;
-    @Nullable
-    private String branchId;
-    @Nullable
-    private String accountNr;
+    private String bankName = "";
+    private String branchId = "";
+    private String accountNr = "";
     @Nullable
     private String accountType;
     @Nullable
     private String requirements;
     @Nullable
     private String holderTaxId;
-    @Nullable
-    private String bankId;
+    private String bankId = "";
     @Nullable
     protected String nationalAccountId;
 

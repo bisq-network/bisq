@@ -10,6 +10,8 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.BankAccountPayload;
+import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.CountryBasedPaymentAccountPayload;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
@@ -136,26 +138,61 @@ public abstract class GeneralBankForm extends PaymentMethodForm {
     }
 
     void autoFillAccountTextFields(CountryBasedPaymentAccountPayload paymentAccountPayload) {
+
+
+        BankAccountPayload bankAccountPayload = null;
+        CashDepositAccountPayload cashDepositAccountPayload = null;
+        if (paymentAccountPayload instanceof BankAccountPayload) {
+            bankAccountPayload = (BankAccountPayload) paymentAccountPayload;
+        } else if (paymentAccountPayload instanceof CashDepositAccountPayload) {
+            cashDepositAccountPayload = (CashDepositAccountPayload) paymentAccountPayload;
+        }
+
         if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
             String bankId = null;
             String countryCode = paymentAccountPayload.getCountryCode();
             if (countryCode == null)
                 countryCode = "";
             if (BankUtil.isBankIdRequired(countryCode)) {
-                bankId = bankIdInputTextField.getText().trim();
+                if (bankAccountPayload != null) {
+                    bankId = bankAccountPayload.getBankId();
+                } else if (cashDepositAccountPayload != null) {
+                    bankId = cashDepositAccountPayload.getBankId();
+                } else {
+                    bankId = bankIdInputTextField.getText().trim();
+                }
                 if (bankId.length() > 9)
                     bankId = StringUtils.abbreviate(bankId, 9);
             } else if (BankUtil.isBranchIdRequired(countryCode)) {
-                bankId = branchIdInputTextField.getText().trim();
+                if (bankAccountPayload != null) {
+                    bankId = bankAccountPayload.getBranchId();
+                } else if (cashDepositAccountPayload != null) {
+                    bankId = cashDepositAccountPayload.getBranchId();
+                } else {
+                    bankId = branchIdInputTextField.getText().trim();
+                }
                 if (bankId.length() > 9)
                     bankId = StringUtils.abbreviate(bankId, 9);
             } else if (BankUtil.isBankNameRequired(countryCode)) {
-                bankId = bankNameInputTextField.getText().trim();
+                if (bankAccountPayload != null) {
+                    bankId = bankAccountPayload.getBankName();
+                } else if (cashDepositAccountPayload != null) {
+                    bankId = cashDepositAccountPayload.getBankName();
+                } else {
+                    bankId = bankNameInputTextField.getText().trim();
+                }
                 if (bankId.length() > 9)
                     bankId = StringUtils.abbreviate(bankId, 9);
             }
 
-            String accountNr = accountNrInputTextField.getText().trim();
+            String accountNr;
+            if (bankAccountPayload != null) {
+                accountNr = bankAccountPayload.getAccountNr();
+            } else if (cashDepositAccountPayload != null) {
+                accountNr = cashDepositAccountPayload.getAccountNr();
+            } else {
+                accountNr = accountNrInputTextField.getText().trim();
+            }
             if (accountNr.length() > 9)
                 accountNr = StringUtils.abbreviate(accountNr, 9);
 

@@ -41,18 +41,14 @@ import javax.annotation.Nullable;
 @Slf4j
 public abstract class BankAccountPayload extends CountryBasedPaymentAccountPayload implements PayloadWithHolderName {
     protected String holderName = "";
-    @Nullable
-    protected String bankName;
-    @Nullable
-    protected String branchId;
-    @Nullable
-    protected String accountNr;
+    protected String bankName = "";
+    protected String branchId = "";
+    protected String accountNr = "";
     @Nullable
     protected String accountType;
     @Nullable
     protected String holderTaxId;
-    @Nullable
-    protected String bankId;
+    protected String bankId = "";
     @Nullable
     protected String nationalAccountId;
 
