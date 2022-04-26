@@ -61,6 +61,7 @@ public abstract class PaymentAccount implements PersistablePayload {
     @Setter
     protected String accountName;
     @Setter
+    @EqualsAndHashCode.Exclude
     protected String persistedAccountName;
 
     protected final List<TradeCurrency> tradeCurrencies = new ArrayList<>();
