@@ -397,11 +397,6 @@ abstract class BankForm extends GeneralBankForm {
     }
 
     @Override
-    protected void autoFillNameTextField() {
-        autoFillAccountTextFields(bankAccountPayload);
-    }
-
-    @Override
     public void updateAllInputsValid() {
         boolean result = isAccountNameValid()
                 && paymentAccount.getSingleTradeCurrency() != null

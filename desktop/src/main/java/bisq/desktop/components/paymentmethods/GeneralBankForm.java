@@ -137,62 +137,28 @@ public abstract class GeneralBankForm extends PaymentMethodForm {
         }
     }
 
-    void autoFillAccountTextFields(CountryBasedPaymentAccountPayload paymentAccountPayload) {
-
-
-        BankAccountPayload bankAccountPayload = null;
-        CashDepositAccountPayload cashDepositAccountPayload = null;
-        if (paymentAccountPayload instanceof BankAccountPayload) {
-            bankAccountPayload = (BankAccountPayload) paymentAccountPayload;
-        } else if (paymentAccountPayload instanceof CashDepositAccountPayload) {
-            cashDepositAccountPayload = (CashDepositAccountPayload) paymentAccountPayload;
-        }
-
+    @Override
+    protected void autoFillNameTextField() {
         if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
             String bankId = null;
-            String countryCode = paymentAccountPayload.getCountryCode();
+            String countryCode = getCountryCode();
             if (countryCode == null)
                 countryCode = "";
             if (BankUtil.isBankIdRequired(countryCode)) {
-                if (bankAccountPayload != null) {
-                    bankId = bankAccountPayload.getBankId();
-                } else if (cashDepositAccountPayload != null) {
-                    bankId = cashDepositAccountPayload.getBankId();
-                } else {
-                    bankId = bankIdInputTextField.getText().trim();
-                }
+                bankId = getBankId();
                 if (bankId.length() > 9)
                     bankId = StringUtils.abbreviate(bankId, 9);
             } else if (BankUtil.isBranchIdRequired(countryCode)) {
-                if (bankAccountPayload != null) {
-                    bankId = bankAccountPayload.getBranchId();
-                } else if (cashDepositAccountPayload != null) {
-                    bankId = cashDepositAccountPayload.getBranchId();
-                } else {
-                    bankId = branchIdInputTextField.getText().trim();
-                }
+                bankId = getBranchId();
                 if (bankId.length() > 9)
                     bankId = StringUtils.abbreviate(bankId, 9);
             } else if (BankUtil.isBankNameRequired(countryCode)) {
-                if (bankAccountPayload != null) {
-                    bankId = bankAccountPayload.getBankName();
-                } else if (cashDepositAccountPayload != null) {
-                    bankId = cashDepositAccountPayload.getBankName();
-                } else {
-                    bankId = bankNameInputTextField.getText().trim();
-                }
+                bankId = getBankName();
                 if (bankId.length() > 9)
                     bankId = StringUtils.abbreviate(bankId, 9);
             }
 
-            String accountNr;
-            if (bankAccountPayload != null) {
-                accountNr = bankAccountPayload.getAccountNr();
-            } else if (cashDepositAccountPayload != null) {
-                accountNr = cashDepositAccountPayload.getAccountNr();
-            } else {
-                accountNr = accountNrInputTextField.getText().trim();
-            }
+            String accountNr = getAccountNr();
             if (accountNr.length() > 9)
                 accountNr = StringUtils.abbreviate(accountNr, 9);
 
@@ -242,5 +208,25 @@ public abstract class GeneralBankForm extends PaymentMethodForm {
         }
 
         return result;
+    }
+
+    protected String getBankId() {
+        return ((BankAccountPayload) paymentAccount.paymentAccountPayload).getBankId();
+    }
+
+    protected String getBranchId() {
+        return ((BankAccountPayload) paymentAccount.paymentAccountPayload).getBranchId();
+    }
+
+    protected String getBankName() {
+        return ((BankAccountPayload) paymentAccount.paymentAccountPayload).getBankName();
+    }
+
+    protected String getAccountNr() {
+        return ((BankAccountPayload) paymentAccount.paymentAccountPayload).getAccountNr();
+    }
+
+    protected String getCountryCode() {
+        return ((CountryBasedPaymentAccountPayload) paymentAccount.paymentAccountPayload).getCountryCode();
     }
 }

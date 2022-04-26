@@ -30,7 +30,6 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.BankAccountPayload;
-import bisq.core.payment.payload.CountryBasedPaymentAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
@@ -161,10 +160,5 @@ public abstract class GeneralUsBankForm extends GeneralBankForm {
             TradeCurrency currency = CurrencyUtil.getCurrencyByCountryCode(countryCode);
             paymentAccount.setSingleTradeCurrency(currency);
         }
-    }
-
-    @Override
-    protected void autoFillNameTextField() {
-        autoFillAccountTextFields((BankAccountPayload) paymentAccount.getPaymentAccountPayload());
     }
 }
