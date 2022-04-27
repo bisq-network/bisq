@@ -270,9 +270,9 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         if (dataModel.getDirection() == OfferDirection.BUY) {
             volumeDescriptionLabel.bind(createStringBinding(
                     () -> Res.get(CurrencyUtil.isFiatCurrency(dataModel.getTradeCurrencyCode().get()) ?
-                                    "createOffer.amountPriceBox.buy.volumeDescription" :
-                                    "createOffer.amountPriceBox.buy.volumeDescriptionAltcoin", dataModel.getTradeCurrencyCode().get(),
-                            dataModel.getTradeCurrencyCode())));
+                            "createOffer.amountPriceBox.buy.volumeDescription" :
+                            "createOffer.amountPriceBox.buy.volumeDescriptionAltcoin", dataModel.getTradeCurrencyCode().get()),
+                    dataModel.getTradeCurrencyCode()));
         } else {
             volumeDescriptionLabel.bind(createStringBinding(
                     () -> Res.get(CurrencyUtil.isFiatCurrency(dataModel.getTradeCurrencyCode().get()) ?
