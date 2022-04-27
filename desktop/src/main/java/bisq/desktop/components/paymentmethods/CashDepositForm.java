@@ -31,6 +31,7 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.CountryBasedPaymentAccount;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.BankAccountPayload;
 import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.coin.CoinFormatter;
@@ -445,17 +446,12 @@ public class CashDepositForm extends GeneralBankForm {
     }
 
     @Override
-    protected void autoFillNameTextField() {
-        autoFillAccountTextFields(cashDepositAccountPayload);
-    }
-
-    @Override
     public void updateAllInputsValid() {
         boolean result = isAccountNameValid()
                 && paymentAccount.getSingleTradeCurrency() != null
                 && getCountryBasedPaymentAccount().getCountry() != null
-                && holderNameInputTextField.getValidator().validate(cashDepositAccountPayload.getHolderName()).isValid
-                && emailInputTextField.getValidator().validate(cashDepositAccountPayload.getHolderEmail()).isValid;
+                && inputValidator.validate(cashDepositAccountPayload.getHolderName()).isValid
+                && emailValidator.validate(cashDepositAccountPayload.getHolderEmail()).isValid;
 
         String countryCode = cashDepositAccountPayload.getCountryCode();
         result = getValidationResult(result, countryCode,
@@ -482,5 +478,25 @@ public class CashDepositForm extends GeneralBankForm {
             addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                     cashDepositAccountPayload.getHolderName());
         }
+    }
+
+    @Override
+    protected String getBankId() {
+        return ((CashDepositAccountPayload) paymentAccount.paymentAccountPayload).getBankId();
+    }
+
+    @Override
+    protected String getBranchId() {
+        return ((CashDepositAccountPayload) paymentAccount.paymentAccountPayload).getBranchId();
+    }
+
+    @Override
+    protected String getBankName() {
+        return ((CashDepositAccountPayload) paymentAccount.paymentAccountPayload).getBankName();
+    }
+
+    @Override
+    protected String getAccountNr() {
+        return ((CashDepositAccountPayload) paymentAccount.paymentAccountPayload).getAccountNr();
     }
 }

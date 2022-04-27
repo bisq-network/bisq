@@ -10,6 +10,8 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.Res;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.payload.BankAccountPayload;
+import bisq.core.payment.payload.CashDepositAccountPayload;
 import bisq.core.payment.payload.CountryBasedPaymentAccountPayload;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
@@ -135,27 +137,28 @@ public abstract class GeneralBankForm extends PaymentMethodForm {
         }
     }
 
-    void autoFillAccountTextFields(CountryBasedPaymentAccountPayload paymentAccountPayload) {
+    @Override
+    protected void autoFillNameTextField() {
         if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
             String bankId = null;
-            String countryCode = paymentAccountPayload.getCountryCode();
+            String countryCode = getCountryCode();
             if (countryCode == null)
                 countryCode = "";
             if (BankUtil.isBankIdRequired(countryCode)) {
-                bankId = bankIdInputTextField.getText().trim();
+                bankId = getBankId();
                 if (bankId.length() > 9)
                     bankId = StringUtils.abbreviate(bankId, 9);
             } else if (BankUtil.isBranchIdRequired(countryCode)) {
-                bankId = branchIdInputTextField.getText().trim();
+                bankId = getBranchId();
                 if (bankId.length() > 9)
                     bankId = StringUtils.abbreviate(bankId, 9);
             } else if (BankUtil.isBankNameRequired(countryCode)) {
-                bankId = bankNameInputTextField.getText().trim();
+                bankId = getBankName();
                 if (bankId.length() > 9)
                     bankId = StringUtils.abbreviate(bankId, 9);
             }
 
-            String accountNr = accountNrInputTextField.getText().trim();
+            String accountNr = getAccountNr();
             if (accountNr.length() > 9)
                 accountNr = StringUtils.abbreviate(accountNr, 9);
 
@@ -201,9 +204,29 @@ public abstract class GeneralBankForm extends PaymentMethodForm {
             if (BankUtil.isNationalAccountIdRequired(countryCode))
                 result = result && nationalAccountIdInputTextField.getValidator().validate(nationalAccountId).isValid;
         } else {   // only account number not empty validation
-            result = result && accountNrInputTextField.getValidator().validate(accountNr).isValid;
+            result = result && (accountNrInputTextField == null || accountNrInputTextField.getValidator().validate(accountNr).isValid);
         }
 
         return result;
+    }
+
+    protected String getBankId() {
+        return ((BankAccountPayload) paymentAccount.paymentAccountPayload).getBankId();
+    }
+
+    protected String getBranchId() {
+        return ((BankAccountPayload) paymentAccount.paymentAccountPayload).getBranchId();
+    }
+
+    protected String getBankName() {
+        return ((BankAccountPayload) paymentAccount.paymentAccountPayload).getBankName();
+    }
+
+    protected String getAccountNr() {
+        return ((BankAccountPayload) paymentAccount.paymentAccountPayload).getAccountNr();
+    }
+
+    protected String getCountryCode() {
+        return ((CountryBasedPaymentAccountPayload) paymentAccount.paymentAccountPayload).getCountryCode();
     }
 }

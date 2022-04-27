@@ -397,16 +397,11 @@ abstract class BankForm extends GeneralBankForm {
     }
 
     @Override
-    protected void autoFillNameTextField() {
-        autoFillAccountTextFields(bankAccountPayload);
-    }
-
-    @Override
     public void updateAllInputsValid() {
         boolean result = isAccountNameValid()
                 && paymentAccount.getSingleTradeCurrency() != null
                 && getCountryBasedPaymentAccount().getCountry() != null
-                && holderNameInputTextField.getValidator().validate(bankAccountPayload.getHolderName()).isValid;
+                && inputValidator.validate(bankAccountPayload.getHolderName()).isValid;
 
         String countryCode = bankAccountPayload.getCountryCode();
         result = getValidationResult(result, countryCode,
