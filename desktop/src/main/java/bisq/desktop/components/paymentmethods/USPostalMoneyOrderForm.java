@@ -118,7 +118,7 @@ public class USPostalMoneyOrderForm extends PaymentMethodForm {
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
                 && usPostalMoneyOrderValidator.validate(usPostalMoneyOrderAccount.getPostalAddress()).isValid
-                && !postalAddressTextArea.getText().isEmpty()
+                && !usPostalMoneyOrderAccount.getPostalAddress().isEmpty()
                 && inputValidator.validate(usPostalMoneyOrderAccount.getHolderName()).isValid
                 && usPostalMoneyOrderAccount.getTradeCurrencies().size() > 0);
     }
