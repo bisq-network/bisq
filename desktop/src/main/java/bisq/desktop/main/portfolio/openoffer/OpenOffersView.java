@@ -73,6 +73,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 
+import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 
@@ -87,6 +88,7 @@ import static bisq.desktop.util.FormBuilder.getRegularIconForLabel;
 
 @FxmlView
 public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersViewModel> {
+
 
     private enum ColumnNames {
         OFFER_ID(Res.get("shared.offerId")),
@@ -136,6 +138,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     private SortedList<OpenOfferListItem> sortedList;
     private PortfolioView.OpenOfferActionHandler openOfferActionHandler;
     private ChangeListener<Number> widthListener;
+    private ListChangeListener<OpenOfferListItem> sortedListeChangedListener;
 
     @Inject
     public OpenOffersView(OpenOffersViewModel model,
@@ -224,6 +227,13 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         HBox.setHgrow(footerSpacer, Priority.ALWAYS);
         HBox.setMargin(exportButton, new Insets(0, 10, 0, 0));
         exportButton.updateText(Res.get("shared.exportCSV"));
+
+        sortedListeChangedListener = c -> {
+            c.next();
+            if (c.wasAdded() || c.wasRemoved()) {
+                updateNumberOfOffers();
+            }
+        };
     }
 
     @Override
@@ -231,6 +241,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         FilteredList<OpenOfferListItem> filteredList = new FilteredList<>(model.dataModel.getList());
         sortedList = new SortedList<>(filteredList);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
+        sortedList.addListener(sortedListeChangedListener);
         tableView.setItems(sortedList);
 
         filterBox.initialize(filteredList, tableView); // here because filteredList is instantiated here
@@ -249,7 +260,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             tableView.refresh();
         });
 
-        numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
+        updateNumberOfOffers();
         exportButton.setOnAction(event -> {
             CSVEntryConverter<OpenOfferListItem> headerConverter = item -> {
                 String[] columns = new String[ColumnNames.values().length];
@@ -286,9 +297,14 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         onWidthChange(root.getWidth());
     }
 
+    private void updateNumberOfOffers() {
+        numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
+    }
+
     @Override
     protected void deactivate() {
         sortedList.comparatorProperty().unbind();
+        sortedList.removeListener(sortedListeChangedListener);
         exportButton.setOnAction(null);
 
         filterBox.deactivate();
