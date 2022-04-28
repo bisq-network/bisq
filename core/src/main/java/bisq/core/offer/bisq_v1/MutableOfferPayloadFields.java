@@ -39,6 +39,8 @@ public final class MutableOfferPayloadFields {
     private final String counterCurrencyCode;
     private final String paymentMethodId;
     private final String makerPaymentAccountId;
+    private final long maxTradeLimit;
+    private final long maxTradePeriod;
     @Nullable
     private final String countryCode;
     @Nullable
@@ -58,6 +60,8 @@ public final class MutableOfferPayloadFields {
                 offerPayload.getCounterCurrencyCode(),
                 offerPayload.getPaymentMethodId(),
                 offerPayload.getMakerPaymentAccountId(),
+                offerPayload.getMaxTradeLimit(),
+                offerPayload.getMaxTradePeriod(),
                 offerPayload.getCountryCode(),
                 offerPayload.getAcceptedCountryCodes(),
                 offerPayload.getBankId(),
@@ -72,6 +76,8 @@ public final class MutableOfferPayloadFields {
                                      String counterCurrencyCode,
                                      String paymentMethodId,
                                      String makerPaymentAccountId,
+                                     long maxTradeLimit,
+                                     long maxTradePeriod,
                                      @Nullable String countryCode,
                                      @Nullable List<String> acceptedCountryCodes,
                                      @Nullable String bankId,
@@ -84,6 +90,8 @@ public final class MutableOfferPayloadFields {
         this.counterCurrencyCode = counterCurrencyCode;
         this.paymentMethodId = paymentMethodId;
         this.makerPaymentAccountId = makerPaymentAccountId;
+        this.maxTradeLimit = maxTradeLimit;
+        this.maxTradePeriod = maxTradePeriod;
         this.countryCode = countryCode;
         this.acceptedCountryCodes = acceptedCountryCodes;
         this.bankId = bankId;
@@ -101,6 +109,8 @@ public final class MutableOfferPayloadFields {
                 ", counterCurrencyCode='" + counterCurrencyCode + '\'' + "\n" +
                 ", paymentMethodId='" + paymentMethodId + '\'' + "\n" +
                 ", makerPaymentAccountId='" + makerPaymentAccountId + '\'' + "\n" +
+                ", maxTradeLimit='" + maxTradeLimit + '\'' + "\n" +
+                ", maxTradePeriod='" + maxTradePeriod + '\'' + "\n" +
                 ", countryCode='" + countryCode + '\'' + "\n" +
                 ", acceptedCountryCodes=" + acceptedCountryCodes + "\n" +
                 ", bankId='" + bankId + '\'' + "\n" +
