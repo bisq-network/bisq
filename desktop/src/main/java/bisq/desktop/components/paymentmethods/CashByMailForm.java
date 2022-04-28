@@ -141,7 +141,7 @@ public class CashByMailForm extends PaymentMethodForm {
     @Override
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
-                && !postalAddressTextArea.getText().isEmpty()
+                && !cashByMailAccount.getPostalAddress().isEmpty()
                 && inputValidator.validate(cashByMailAccount.getContact()).isValid
                 && paymentAccount.getSingleTradeCurrency() != null);
     }
