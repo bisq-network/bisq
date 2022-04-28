@@ -148,7 +148,7 @@ public abstract class PaymentMethodForm {
     public static InfoTextField addOpenTradeDuration(GridPane gridPane,
                                                      int gridRow,
                                                      Offer offer) {
-        long hours = offer.getMaxTradePeriod() / 3600_000;
+        long hours = offer.getPaymentMethod().getMaxTradePeriod() / 3600_000;
         final Tuple3<Label, InfoTextField, VBox> labelInfoTextFieldVBoxTuple3 =
                 addTopLabelInfoTextField(gridPane, gridRow, Res.get("payment.maxPeriod"),
                         getTimeText(hours), -Layout.FLOATING_LABEL_DISTANCE);
