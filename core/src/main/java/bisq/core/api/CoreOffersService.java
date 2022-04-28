@@ -486,6 +486,8 @@ class CoreOffersService {
                 offer.getCounterCurrencyCode(),
                 offer.getPaymentMethod().getId(),
                 offer.getMakerPaymentAccountId(),
+                offer.getMaxTradeLimit().getValue(),
+                offer.getMaxTradePeriod(),
                 offer.getCountryCode(),
                 offer.getAcceptedCountryCodes(),
                 offer.getBankId(),
