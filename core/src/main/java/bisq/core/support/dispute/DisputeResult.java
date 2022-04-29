@@ -127,6 +127,7 @@ public final class DisputeResult implements NetworkPayload {
     public DisputeResult(String tradeId, int traderId) {
         this.tradeId = tradeId;
         this.traderId = traderId;
+        this.payoutSuggestion = PayoutSuggestion.CUSTOM_PAYOUT;
     }
 
     public DisputeResult(String tradeId,
