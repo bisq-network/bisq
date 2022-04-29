@@ -180,6 +180,7 @@ public class TxValidator {
                 String error = "fee address: " + jsonFeeAddress.getAsString() + " was not a known BTC fee receiver";
                 errorList.add(error);
                 log.info(error);
+                log.info("Known BTC fee receivers: {}", btcFeeReceivers.toString());
             }
         } catch (JsonSyntaxException e) {
             errorList.add(e.toString());
