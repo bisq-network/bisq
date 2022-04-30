@@ -688,7 +688,7 @@ configure(project(':seednode')) {
 }
 
 configure(project(':daonode')) {
-  /*  apply plugin: 'com.github.johnrengelman.shadow'*/
+    apply plugin: 'com.github.johnrengelman.shadow'
 
     mainClassName = 'bisq.daonode.Main'
 
