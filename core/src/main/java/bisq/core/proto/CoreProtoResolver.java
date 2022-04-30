@@ -25,7 +25,7 @@ import bisq.core.payment.payload.AchTransferAccountPayload;
 import bisq.core.payment.payload.AdvancedCashAccountPayload;
 import bisq.core.payment.payload.AliPayAccountPayload;
 import bisq.core.payment.payload.AmazonGiftCardAccountPayload;
-import bisq.core.payment.payload.AustraliaPayidPayload;
+import bisq.core.payment.payload.AustraliaPayidAccountPayload;
 import bisq.core.payment.payload.BizumAccountPayload;
 import bisq.core.payment.payload.BsqSwapAccountPayload;
 import bisq.core.payment.payload.CapitualAccountPayload;
@@ -186,7 +186,7 @@ public class CoreProtoResolver implements ProtoResolver {
                 case JAPAN_BANK_ACCOUNT_PAYLOAD:
                     return JapanBankAccountPayload.fromProto(proto);
                 case AUSTRALIA_PAYID_PAYLOAD:
-                    return AustraliaPayidPayload.fromProto(proto);
+                    return AustraliaPayidAccountPayload.fromProto(proto);
                 case UPHOLD_ACCOUNT_PAYLOAD:
                     return UpholdAccountPayload.fromProto(proto);
                 case MONEY_BEAM_ACCOUNT_PAYLOAD:
