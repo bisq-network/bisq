@@ -104,7 +104,8 @@ configure([project(':cli'),
            project(':statsnode'),
            project(':pricenode'),
            project(':inventory'),
-           project(':apitest')]) {
+           project(':apitest'),
+           project(':daonode')]) {
 
     apply plugin: 'application'
 
@@ -686,6 +687,25 @@ configure(project(':seednode')) {
     }
 }
 
+configure(project(':daonode')) {
+    apply plugin: 'com.github.johnrengelman.shadow'
+
+    mainClassName = 'bisq.daonode.DaoNodeMain'
+
+    dependencies {
+        implementation project(':common')
+        implementation project(':p2p')
+        implementation project(':core')
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        implementation "com.google.guava:guava:$guavaVersion"
+        implementation "org.slf4j:slf4j-api:$slf4jVersion"
+        implementation("com.google.inject:guice:$guiceVersion") {
+            exclude(module: 'guava')
+        }
+        testImplementation "org.mockito:mockito-core:$mockitoVersion"
+    }
+}
 
 configure(project(':statsnode')) {
     mainClassName = 'bisq.statistics.StatisticsMain'

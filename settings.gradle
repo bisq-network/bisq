@@ -13,5 +13,6 @@ include 'seednode'
 include 'statsnode'
 include 'inventory'
 include 'apitest'
+include 'daonode'
 
 rootProject.name = 'bisq'
