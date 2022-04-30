@@ -19,12 +19,31 @@ package bisq.daonode;
 
 import bisq.core.app.misc.AppSetup;
 import bisq.core.app.misc.AppSetupWithP2PAndDAO;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.network.p2p.inventory.GetInventoryRequestHandler;
+
+import protobuf.BaseTx;
+
+import com.google.protobuf.util.JsonFormat;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.google.inject.Injector;
 
+import java.net.InetSocketAddress;
+
+import java.io.IOException;
+import java.io.OutputStream;
+
+import java.util.function.Supplier;
+
 import lombok.Setter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+
+
+
+import com.sun.net.httpserver.HttpServer;
 
 @Slf4j
 public class DaoNode {
@@ -32,6 +51,8 @@ public class DaoNode {
     private Injector injector;
     private AppSetup appSetup;
     private GetInventoryRequestHandler getInventoryRequestHandler;
+    private HttpServer server;
+    private DaoStateService daoStateService;
 
     public DaoNode() {
     }
@@ -41,9 +62,60 @@ public class DaoNode {
         appSetup.start();
 
         getInventoryRequestHandler = injector.getInstance(GetInventoryRequestHandler.class);
+        daoStateService = injector.getInstance(DaoStateService.class);
+
+        startServer();
+        addGetHandler("getAllBurnBsqTxs", this::getAllBurnBsqTxs);
+        addGetHandler("getLastBlock", this::getLastBlock);
+    }
+
+    private void addGetHandler(String path, Supplier<String> response) {
+        server.createContext("/api/" + path, exchange -> {
+            if ("GET".equals(exchange.getRequestMethod())) {
+                String responseText = response.get();
+                exchange.sendResponseHeaders(200, responseText.getBytes().length);
+                OutputStream output = exchange.getResponseBody();
+                output.write(responseText.getBytes());
+                output.flush();
+            } else {
+                exchange.sendResponseHeaders(405, -1);
+            }
+            exchange.close();
+        });
+    }
+
+    private String getAllBurnBsqTxs() {
+        return toJson(daoStateService.getBurntFeeTxs());
+    }
+
+    private String getLastBlock() {
+        return toJson(daoStateService.getLastBlock().orElse(null));
+    }
+
+    @SneakyThrows
+    private String toJson(Object object) {
+        return new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(object);
+    }
+
+    @SneakyThrows
+    private String protoToJson(BaseTx proto) {
+        return JsonFormat.printer().print(proto);
+    }
+
+    public void startServer() {
+        try {
+            server = HttpServer.create(new InetSocketAddress(8080), 0);
+            server.setExecutor(null);
+            server.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void shutDown() {
         getInventoryRequestHandler.shutDown();
+        if (server != null) {
+            server.stop(0);
+        }
     }
 }

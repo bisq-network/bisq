@@ -688,12 +688,13 @@ configure(project(':seednode')) {
 }
 
 configure(project(':daonode')) {
-    apply plugin: 'com.github.johnrengelman.shadow'
+  /*  apply plugin: 'com.github.johnrengelman.shadow'*/
 
-    mainClassName = 'bisq.daonode.DaoNodeMain'
+    mainClassName = 'bisq.daonode.Main'
 
     dependencies {
         implementation project(':common')
+        implementation project(':proto')
         implementation project(':p2p')
         implementation project(':core')
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
@@ -703,6 +704,13 @@ configure(project(':daonode')) {
         implementation("com.google.inject:guice:$guiceVersion") {
             exclude(module: 'guava')
         }
+
+        implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
+        implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+        implementation("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
+
+        implementation "com.google.protobuf:protobuf-java-util:$protobufVersion"
+
         testImplementation "org.mockito:mockito-core:$mockitoVersion"
     }
 }
