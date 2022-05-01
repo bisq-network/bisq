@@ -21,6 +21,7 @@ import bisq.core.app.misc.AppSetup;
 import bisq.core.app.misc.AppSetupWithP2PAndDAO;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.network.p2p.inventory.GetInventoryRequestHandler;
+import bisq.core.user.Preferences;
 
 import protobuf.BaseTx;
 
@@ -59,13 +60,14 @@ public class DaoNode {
 
     public void startApplication() {
         appSetup = injector.getInstance(AppSetupWithP2PAndDAO.class);
+        injector.getInstance(Preferences.class).setUseFullModeDaoMonitor(false);
         appSetup.start();
 
         getInventoryRequestHandler = injector.getInstance(GetInventoryRequestHandler.class);
         daoStateService = injector.getInstance(DaoStateService.class);
 
         startServer();
-        addGetHandler("getAllBurnBsqTxs", this::getAllBurnBsqTxs);
+        addGetHandler("getProofOfBurnTxs", this::getProofOfBurnTxs);
         addGetHandler("getLastBlock", this::getLastBlock);
     }
 
@@ -84,8 +86,8 @@ public class DaoNode {
         });
     }
 
-    private String getAllBurnBsqTxs() {
-        return toJson(daoStateService.getBurntFeeTxs());
+    private String getProofOfBurnTxs() {
+        return toJson(daoStateService.getProofOfBurnTxs());
     }
 
     private String getLastBlock() {
@@ -104,7 +106,8 @@ public class DaoNode {
 
     public void startServer() {
         try {
-            server = HttpServer.create(new InetSocketAddress(8080), 0);
+            server = HttpServer.create(new InetSocketAddress(8082), 0);
+            // server.setExecutor(Utilities.getSingleThreadExecutor("REST-API-Server"));
             server.setExecutor(null);
             server.start();
         } catch (IOException e) {
