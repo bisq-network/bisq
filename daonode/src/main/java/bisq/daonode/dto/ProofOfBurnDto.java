@@ -25,12 +25,14 @@ import lombok.Getter;
  */
 @Getter
 public class ProofOfBurnDto {
+    private String txId;
     private final long burnedAmount;
     private final int blockHeight;
     private final long time;
     private final String hash;
 
-    public ProofOfBurnDto(long burnedAmount, int blockHeight, long time, String hash) {
+    public ProofOfBurnDto(String txId, long burnedAmount, int blockHeight, long time, String hash) {
+        this.txId = txId;
         this.burnedAmount = burnedAmount;
         this.blockHeight = blockHeight;
         this.time = time;

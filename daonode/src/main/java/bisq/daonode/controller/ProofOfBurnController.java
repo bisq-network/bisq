@@ -44,7 +44,8 @@ public class ProofOfBurnController implements RestController {
     private String getProofOfBurnDtoList(int fromBlockHeight) {
         List<ProofOfBurnDto> proofOfBurnDtoList = daoStateService.getProofOfBurnTxs().stream()
                 .filter(tx -> tx.getBlockHeight() >= fromBlockHeight)
-                .map(tx -> new ProofOfBurnDto(tx.getBurntBsq(),
+                .map(tx -> new ProofOfBurnDto(tx.getId(),
+                        tx.getBurntBsq(),
                         tx.getBlockHeight(),
                         tx.getTime(),
                         getHash(tx)))
