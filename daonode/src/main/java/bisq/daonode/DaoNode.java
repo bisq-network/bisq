@@ -23,102 +23,43 @@ import bisq.core.dao.state.DaoStateService;
 import bisq.core.network.p2p.inventory.GetInventoryRequestHandler;
 import bisq.core.user.Preferences;
 
-import protobuf.BaseTx;
-
-import com.google.protobuf.util.JsonFormat;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.google.inject.Injector;
 
-import java.net.InetSocketAddress;
-
-import java.io.IOException;
-import java.io.OutputStream;
-
-import java.util.function.Supplier;
-
 import lombok.Setter;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 
 
-import com.sun.net.httpserver.HttpServer;
+import bisq.daonode.service.DaoNodeService;
 
 @Slf4j
 public class DaoNode {
     @Setter
     private Injector injector;
     private AppSetup appSetup;
+    private DaoNodeService daoNodeService;
     private GetInventoryRequestHandler getInventoryRequestHandler;
-    private HttpServer server;
-    private DaoStateService daoStateService;
 
     public DaoNode() {
     }
 
-    public void startApplication() {
+    public void startApplication(int restServerPort) {
         appSetup = injector.getInstance(AppSetupWithP2PAndDAO.class);
+
+        // todo should run as full dao node when in production
         injector.getInstance(Preferences.class).setUseFullModeDaoMonitor(false);
+
         appSetup.start();
 
         getInventoryRequestHandler = injector.getInstance(GetInventoryRequestHandler.class);
-        daoStateService = injector.getInstance(DaoStateService.class);
+        DaoStateService daoStateService = injector.getInstance(DaoStateService.class);
 
-        startServer();
-        addGetHandler("getProofOfBurnTxs", this::getProofOfBurnTxs);
-        addGetHandler("getLastBlock", this::getLastBlock);
-    }
-
-    private void addGetHandler(String path, Supplier<String> response) {
-        server.createContext("/api/" + path, exchange -> {
-            if ("GET".equals(exchange.getRequestMethod())) {
-                String responseText = response.get();
-                exchange.sendResponseHeaders(200, responseText.getBytes().length);
-                OutputStream output = exchange.getResponseBody();
-                output.write(responseText.getBytes());
-                output.flush();
-            } else {
-                exchange.sendResponseHeaders(405, -1);
-            }
-            exchange.close();
-        });
-    }
-
-    private String getProofOfBurnTxs() {
-        return toJson(daoStateService.getProofOfBurnTxs());
-    }
-
-    private String getLastBlock() {
-        return toJson(daoStateService.getLastBlock().orElse(null));
-    }
-
-    @SneakyThrows
-    private String toJson(Object object) {
-        return new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(object);
-    }
-
-    @SneakyThrows
-    private String protoToJson(BaseTx proto) {
-        return JsonFormat.printer().print(proto);
-    }
-
-    public void startServer() {
-        try {
-            server = HttpServer.create(new InetSocketAddress(8082), 0);
-            // server.setExecutor(Utilities.getSingleThreadExecutor("REST-API-Server"));
-            server.setExecutor(null);
-            server.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        daoNodeService = new DaoNodeService(daoStateService);
+        daoNodeService.start(restServerPort);
     }
 
     public void shutDown() {
         getInventoryRequestHandler.shutDown();
-        if (server != null) {
-            server.stop(0);
-        }
+        daoNodeService.shutDown();
     }
 }

@@ -42,13 +42,17 @@ import com.google.inject.Key;
 import com.google.inject.name.Names;
 
 import lombok.extern.slf4j.Slf4j;
+//todo not sure if the restart handling from seed nodes is required
 
 @Slf4j
 public class DaoNodeMain extends ExecutableForAppWithP2p {
     private static final long CHECK_CONNECTION_LOSS_SEC = 30;
+    private static final int DEFAULT_REST_SERVER_PORT = 8080;
     private static final String VERSION = "1.8.4";
+
     private DaoNode daoNode;
     private Timer checkConnectionLossTime;
+    private int restServerPort = DEFAULT_REST_SERVER_PORT;
 
     public DaoNodeMain() {
         super("Bisq Daonode", "bisq-daonode", "bisq_daonode", VERSION);
@@ -56,6 +60,7 @@ public class DaoNodeMain extends ExecutableForAppWithP2p {
 
     public static void main(String[] args) {
         System.out.println("DaoNode.VERSION: " + VERSION);
+
         new DaoNodeMain().execute(args);
     }
 
@@ -70,7 +75,6 @@ public class DaoNodeMain extends ExecutableForAppWithP2p {
 
     @Override
     protected void addCapabilities() {
-        // Capabilities.app.addAll(Capability.SEED_NODE);
     }
 
     @Override
@@ -125,7 +129,8 @@ public class DaoNodeMain extends ExecutableForAppWithP2p {
             }
         });
 
-        daoNode.startApplication();
+        //todo add program arg for port
+        daoNode.startApplication(restServerPort);
 
         injector.getInstance(P2PService.class).addP2PServiceListener(new P2PServiceListener() {
             @Override
