@@ -59,7 +59,6 @@ public class MempoolService {
     private final FilterManager filterManager;
     private final DaoFacade daoFacade;
     private final DaoStateService daoStateService;
-    private final List<String> btcFeeReceivers = new ArrayList<>();
     @Getter
     private int outstandingRequests = 0;
 
@@ -79,7 +78,6 @@ public class MempoolService {
     }
 
     public void onAllServicesInitialized() {
-        btcFeeReceivers.addAll(getAllBtcFeeReceivers());
     }
 
     public boolean canRequestBeMade() {
@@ -158,7 +156,7 @@ public class MempoolService {
             public void onSuccess(@Nullable String jsonTxt) {
                 UserThread.execute(() -> {
                     outstandingRequests--;
-                    resultHandler.accept(txValidator.parseJsonValidateMakerFeeTx(jsonTxt, btcFeeReceivers));
+                    resultHandler.accept(txValidator.parseJsonValidateMakerFeeTx(jsonTxt, getAllBtcFeeReceivers()));
                 });
             }
 
@@ -188,7 +186,7 @@ public class MempoolService {
             public void onSuccess(@Nullable String jsonTxt) {
                 UserThread.execute(() -> {
                     outstandingRequests--;
-                    resultHandler.accept(txValidator.parseJsonValidateTakerFeeTx(jsonTxt, btcFeeReceivers));
+                    resultHandler.accept(txValidator.parseJsonValidateTakerFeeTx(jsonTxt, getAllBtcFeeReceivers()));
                 });
             }
 
@@ -252,7 +250,7 @@ public class MempoolService {
             }
         });
         btcFeeReceivers.addAll(daoFacade.getAllDonationAddresses());
-        log.info("Known BTC fee receivers: {}", btcFeeReceivers.toString());
+        log.debug("Known BTC fee receivers: {}", btcFeeReceivers.toString());
 
         return btcFeeReceivers;
     }
