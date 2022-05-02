@@ -19,7 +19,7 @@ package bisq.core.payment;
 
 import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.TradeCurrency;
-import bisq.core.payment.payload.AustraliaPayidPayload;
+import bisq.core.payment.payload.AustraliaPayidAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
 
@@ -38,7 +38,7 @@ public final class AustraliaPayidAccount extends PaymentAccount {
 
     @Override
     protected PaymentAccountPayload createPayload() {
-        return new AustraliaPayidPayload(paymentMethod.getId(), id);
+        return new AustraliaPayidAccountPayload(paymentMethod.getId(), id);
     }
 
     @Override
@@ -47,20 +47,20 @@ public final class AustraliaPayidAccount extends PaymentAccount {
     }
 
     public String getPayid() {
-        return ((AustraliaPayidPayload) paymentAccountPayload).getPayid();
+        return ((AustraliaPayidAccountPayload) paymentAccountPayload).getPayid();
     }
 
     public void setPayid(String payid) {
         if (payid == null) payid = "";
-        ((AustraliaPayidPayload) paymentAccountPayload).setPayid(payid);
+        ((AustraliaPayidAccountPayload) paymentAccountPayload).setPayid(payid);
     }
 
     public String getBankAccountName() {
-        return ((AustraliaPayidPayload) paymentAccountPayload).getBankAccountName();
+        return ((AustraliaPayidAccountPayload) paymentAccountPayload).getBankAccountName();
     }
 
     public void setBankAccountName(String bankAccountName) {
         if (bankAccountName == null) bankAccountName = "";
-        ((AustraliaPayidPayload) paymentAccountPayload).setBankAccountName(bankAccountName);
+        ((AustraliaPayidAccountPayload) paymentAccountPayload).setBankAccountName(bankAccountName);
     }
 }

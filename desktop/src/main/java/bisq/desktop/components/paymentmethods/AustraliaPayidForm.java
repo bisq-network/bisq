@@ -26,7 +26,7 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.AustraliaPayidAccount;
 import bisq.core.payment.PaymentAccount;
-import bisq.core.payment.payload.AustraliaPayidPayload;
+import bisq.core.payment.payload.AustraliaPayidAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
@@ -43,9 +43,9 @@ public class AustraliaPayidForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
-                ((AustraliaPayidPayload) paymentAccountPayload).getBankAccountName());
+                ((AustraliaPayidAccountPayload) paymentAccountPayload).getBankAccountName());
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.payid"),
-                ((AustraliaPayidPayload) paymentAccountPayload).getPayid());
+                ((AustraliaPayidAccountPayload) paymentAccountPayload).getPayid());
         return gridRow;
     }
 

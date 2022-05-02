@@ -39,11 +39,11 @@ import lombok.extern.slf4j.Slf4j;
 @Setter
 @Getter
 @Slf4j
-public final class AustraliaPayidPayload extends PaymentAccountPayload {
+public final class AustraliaPayidAccountPayload extends PaymentAccountPayload {
     private String payid = "";
     private String bankAccountName = "";
 
-    public AustraliaPayidPayload(String paymentMethod, String id) {
+    public AustraliaPayidAccountPayload(String paymentMethod, String id) {
         super(paymentMethod, id);
     }
 
@@ -52,12 +52,12 @@ public final class AustraliaPayidPayload extends PaymentAccountPayload {
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private AustraliaPayidPayload(String paymentMethod,
-                                  String id,
-                                  String payid,
-                                  String bankAccountName,
-                                  long maxTradePeriod,
-                                  Map<String, String> excludeFromJsonDataMap) {
+    private AustraliaPayidAccountPayload(String paymentMethod,
+                                         String id,
+                                         String payid,
+                                         String bankAccountName,
+                                         long maxTradePeriod,
+                                         Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
                 id,
                 maxTradePeriod,
@@ -77,9 +77,9 @@ public final class AustraliaPayidPayload extends PaymentAccountPayload {
                 ).build();
     }
 
-    public static AustraliaPayidPayload fromProto(protobuf.PaymentAccountPayload proto) {
+    public static AustraliaPayidAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         protobuf.AustraliaPayidPayload AustraliaPayidPayload = proto.getAustraliaPayidPayload();
-        return new AustraliaPayidPayload(proto.getPaymentMethodId(),
+        return new AustraliaPayidAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 AustraliaPayidPayload.getPayid(),
                 AustraliaPayidPayload.getBankAccountName(),
