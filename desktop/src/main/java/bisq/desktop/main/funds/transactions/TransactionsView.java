@@ -207,7 +207,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         transactionColumn.setComparator(Comparator.comparing(TransactionsListItem::getTxId));
         amountColumn.setComparator(Comparator.comparing(TransactionsListItem::getAmountAsCoin));
         confidenceColumn.setComparator(Comparator.comparingDouble(item -> item.getTxConfidenceIndicator().getProgress()));
-        memoColumn.setComparator(Comparator.comparing(TransactionsListItem::getMemo));
+        memoColumn.setComparator(Comparator.comparing(o -> o.getMemo() != null ? o.getMemo() : ""));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
