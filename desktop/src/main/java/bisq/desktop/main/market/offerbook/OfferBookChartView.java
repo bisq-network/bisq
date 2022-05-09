@@ -596,16 +596,21 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                                 super.updateItem(newItem, empty);
                                 if (newItem != null && !empty) {
                                     final Offer offer = newItem.offer;
-                                    final NodeAddress makersNodeAddress = offer.getOwnerNodeAddress();
-                                    String role = Res.get("peerInfoIcon.tooltip.maker");
-                                    PeerInfoIconSmall peerInfoIcon = new PeerInfoIconSmall(makersNodeAddress,
-                                            role,
-                                            offer,
-                                            model.preferences,
-                                            model.accountAgeWitnessService,
-                                            useDevPrivilegeKeys);
+                                    boolean myOffer = model.isMyOffer(offer);
+                                    if (!myOffer) {
+                                        final NodeAddress makersNodeAddress = offer.getOwnerNodeAddress();
+                                        String role = Res.get("peerInfoIcon.tooltip.maker");
+                                        PeerInfoIconSmall peerInfoIcon = new PeerInfoIconSmall(makersNodeAddress,
+                                                role,
+                                                offer,
+                                                model.preferences,
+                                                model.accountAgeWitnessService,
+                                                useDevPrivilegeKeys);
 //                                    setAlignment(Pos.CENTER);
-                                    setGraphic(peerInfoIcon);
+                                        setGraphic(peerInfoIcon);
+                                    } else {
+                                        setGraphic(new Label(Res.get("shared.me")));
+                                    }
                                 } else {
                                     setGraphic(null);
                                 }

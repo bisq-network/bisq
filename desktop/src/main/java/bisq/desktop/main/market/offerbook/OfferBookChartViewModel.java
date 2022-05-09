@@ -40,6 +40,7 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
+import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.Preferences;
 import bisq.core.util.VolumeUtil;
@@ -71,6 +72,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     private static final int TAB_INDEX = 0;
 
     private final OfferBook offerBook;
+    private final OpenOfferManager openOfferManager;
     final Preferences preferences;
     final PriceFeedService priceFeedService;
     final AccountAgeWitnessService accountAgeWitnessService;
@@ -96,9 +98,14 @@ class OfferBookChartViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    OfferBookChartViewModel(OfferBook offerBook, Preferences preferences, PriceFeedService priceFeedService,
-                            AccountAgeWitnessService accountAgeWitnessService, Navigation navigation) {
+    OfferBookChartViewModel(OfferBook offerBook,
+                            OpenOfferManager openOfferManager,
+                            Preferences preferences,
+                            PriceFeedService priceFeedService,
+                            AccountAgeWitnessService accountAgeWitnessService,
+                            Navigation navigation) {
         this.offerBook = offerBook;
+        this.openOfferManager = openOfferManager;
         this.preferences = preferences;
         this.priceFeedService = priceFeedService;
         this.navigation = navigation;
@@ -205,6 +212,10 @@ class OfferBookChartViewModel extends ActivatableViewModel {
 
     public boolean isSellOffer(OfferDirection direction) {
         return direction == OfferDirection.SELL;
+    }
+
+    public boolean isMyOffer(Offer offer) {
+        return openOfferManager.isMyOffer(offer);
     }
 
     public void goToOfferView(OfferDirection direction) {
