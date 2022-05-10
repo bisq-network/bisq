@@ -46,7 +46,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
     private final LongProperty proofOfBurnAmountProperty = new SimpleLongProperty();
 
     private XYChart.Series<Number, Number> seriesBsqTradeFee, seriesProofOfBurn, seriesCompensation,
-            seriesReimbursement, seriesTotalIssued, seriesTotalBurned;
+            seriesReimbursement, seriesTotalSupply, seriesTotalIssued, seriesTotalBurned;
 
 
     @Inject
@@ -90,6 +90,11 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         return List.of(seriesTotalBurned, seriesBsqTradeFee, seriesProofOfBurn);
     }
 
+    @Override
+    protected Collection<XYChart.Series<Number, Number>> getSeriesForLegend3() {
+        return List.of(seriesTotalSupply);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Timeline navigation
@@ -130,6 +135,10 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         seriesProofOfBurn = new XYChart.Series<>();
         seriesProofOfBurn.setName(Res.get("dao.factsAndFigures.supply.proofOfBurn"));
         seriesIndexMap.put(getSeriesId(seriesProofOfBurn), 5);
+
+        seriesTotalSupply = new XYChart.Series<>();
+        seriesTotalSupply.setName(Res.get("dao.factsAndFigures.supply.totalBsqSupply"));
+        seriesIndexMap.put(getSeriesId(seriesTotalSupply), 6);
     }
 
     @Override
@@ -176,6 +185,11 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
             allFutures.add(task6Done);
             applyProofOfBurn(task6Done);
         }
+        if (activeSeries.contains(seriesTotalSupply)) {
+            CompletableFuture<Boolean> task6ADone = new CompletableFuture<>();
+            allFutures.add(task6ADone);
+            applyTotalSupply(task6ADone);
+        }
 
         CompletableFuture<Boolean> task7Done = new CompletableFuture<>();
         allFutures.add(task7Done);
@@ -214,6 +228,15 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
                         }));
 
         return CompletableFutureUtils.allOf(allFutures).thenApply(e -> true);
+    }
+
+    private void applyTotalSupply(CompletableFuture<Boolean> completeFuture) {
+        model.getTotalSupplyChartData()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            seriesTotalSupply.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
     }
 
     private void applyTotalIssued(CompletableFuture<Boolean> completeFuture) {

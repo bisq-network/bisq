@@ -21,6 +21,7 @@ import bisq.desktop.components.chart.ChartDataModel;
 
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.governance.BsqSupplyChange;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
 
@@ -30,13 +31,16 @@ import javax.inject.Singleton;
 import java.time.Instant;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,7 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DaoChartDataModel extends ChartDataModel {
     private final DaoStateService daoStateService;
     private final Function<Issuance, Long> blockTimeOfIssuanceFunction;
-    private Map<Long, Long> totalIssuedByInterval, compensationByInterval, reimbursementByInterval,
+    private Map<Long, Long> totalSupplyByInterval, totalIssuedByInterval, compensationByInterval, reimbursementByInterval,
             totalBurnedByInterval, bsqTradeFeeByInterval, proofOfBurnByInterval;
 
 
@@ -68,6 +72,7 @@ public class DaoChartDataModel extends ChartDataModel {
 
     @Override
     protected void invalidateCache() {
+        totalSupplyByInterval = null;
         totalIssuedByInterval = null;
         compensationByInterval = null;
         reimbursementByInterval = null;
@@ -110,6 +115,19 @@ public class DaoChartDataModel extends ChartDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Data for chart
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    Map<Long, Long> getTotalSupplyByInterval() {
+        if (totalSupplyByInterval != null) {
+            return totalSupplyByInterval;
+        }
+
+        totalSupplyByInterval = getTotalBsqSupplyByInterval(
+                daoStateService.getBsqSupplyChanges(),
+                getDateFilter()
+        );
+
+        return totalSupplyByInterval;
+    }
 
     Map<Long, Long> getTotalIssuedByInterval() {
         if (totalIssuedByInterval != null) {
@@ -179,6 +197,29 @@ public class DaoChartDataModel extends ChartDataModel {
     // Aggregated collection data by interval
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private Map<Long, Long> getTotalBsqSupplyByInterval(Stream<BsqSupplyChange> bsqSupplyChanges, Predicate<Long> dateFilter) {
+        AtomicLong supply = new AtomicLong(
+                DaoEconomyHistoricalData.TOTAL_SUPPLY_BY_CYCLE_DATE.get(1555340856L)
+        );
+
+        return bsqSupplyChanges
+                .collect(Collectors.groupingBy(tx -> toTimeInterval(Instant.ofEpochMilli(tx.getTime()))))
+                .entrySet()
+                .stream()
+                .sorted(Comparator.comparingLong(Map.Entry::getKey))
+                .map(e -> new BsqSupplyChange(
+                        e.getKey(),
+                        supply.addAndGet(e
+                                .getValue()
+                                .stream()
+                                .mapToLong(BsqSupplyChange::getValue)
+                                .sum()
+                        ))
+                )
+                .filter(t -> dateFilter.test(t.getTime()))
+                .collect(Collectors.toMap(BsqSupplyChange::getTime, BsqSupplyChange::getValue));
+    }
+
     private Map<Long, Long> getIssuedBsqByInterval(Set<Issuance> issuanceSet, Predicate<Long> dateFilter) {
         return issuanceSet.stream()
                 .collect(Collectors.groupingBy(issuance ->
@@ -199,7 +240,7 @@ public class DaoChartDataModel extends ChartDataModel {
                 .filter(e -> dateFilter.test(e.getKey()))
                 .collect(Collectors.toMap(e -> toTimeInterval(Instant.ofEpochSecond(e.getKey())),
                         Map.Entry::getValue,
-                        (a, b) -> a + b));
+                        Long::sum));
     }
 
     private Map<Long, Long> getBurntBsqByInterval(Collection<Tx> txs, Predicate<Long> dateFilter) {
@@ -236,6 +277,7 @@ public class DaoChartDataModel extends ChartDataModel {
         // Key is start date of the cycle in epoch seconds, value is reimbursement amount
         public final static Map<Long, Long> REIMBURSEMENTS_BY_CYCLE_DATE = new HashMap<>();
         public final static Map<Long, Long> COMPENSATIONS_BY_CYCLE_DATE = new HashMap<>();
+        public final static Map<Long, Long> TOTAL_SUPPLY_BY_CYCLE_DATE = new HashMap<>();
 
         static {
             REIMBURSEMENTS_BY_CYCLE_DATE.put(1571349571L, 60760L);
@@ -271,6 +313,8 @@ public class DaoChartDataModel extends ChartDataModel {
             COMPENSATIONS_BY_CYCLE_DATE.put(1599175867L, 6086442L);
             COMPENSATIONS_BY_CYCLE_DATE.put(1601861442L, 5615973L);
             COMPENSATIONS_BY_CYCLE_DATE.put(1604845863L, 7782667L);
+
+            TOTAL_SUPPLY_BY_CYCLE_DATE.put(1555340856L, 372540100L);
         }
     }
 }
