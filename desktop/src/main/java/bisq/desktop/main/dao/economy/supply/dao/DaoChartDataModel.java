@@ -206,7 +206,7 @@ public class DaoChartDataModel extends ChartDataModel {
                 .collect(Collectors.groupingBy(tx -> toTimeInterval(Instant.ofEpochMilli(tx.getTime()))))
                 .entrySet()
                 .stream()
-                .sorted(Comparator.comparingLong(e -> e.getKey()))
+                .sorted(Comparator.comparingLong(Map.Entry::getKey))
                 .map(e -> new BsqSupplyChange(
                         e.getKey(),
                         supply.addAndGet(e
@@ -240,7 +240,7 @@ public class DaoChartDataModel extends ChartDataModel {
                 .filter(e -> dateFilter.test(e.getKey()))
                 .collect(Collectors.toMap(e -> toTimeInterval(Instant.ofEpochSecond(e.getKey())),
                         Map.Entry::getValue,
-                        (a, b) -> a + b));
+                        Long::sum));
     }
 
     private Map<Long, Long> getBurntBsqByInterval(Collection<Tx> txs, Predicate<Long> dateFilter) {
