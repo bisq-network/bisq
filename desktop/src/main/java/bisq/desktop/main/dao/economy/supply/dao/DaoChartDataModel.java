@@ -50,7 +50,7 @@ public class DaoChartDataModel extends ChartDataModel {
     private final DaoStateService daoStateService;
     private final Function<Issuance, Long> blockTimeOfIssuanceFunction;
     private Map<Long, Long> totalSupplyByInterval, totalIssuedByInterval, compensationByInterval, reimbursementByInterval,
-            totalBurnedByInterval, bsqTradeFeeByInterval, proofOfBurnByInterval;
+            totalBurnedByInterval, bsqTradeFeeByInterval, proofOfBurnByInterval, revenueByInterval;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -79,7 +79,7 @@ public class DaoChartDataModel extends ChartDataModel {
         totalBurnedByInterval = null;
         bsqTradeFeeByInterval = null;
         proofOfBurnByInterval = null;
-
+        revenueByInterval = null;
     }
 
 
@@ -127,6 +127,21 @@ public class DaoChartDataModel extends ChartDataModel {
         );
 
         return totalSupplyByInterval;
+    }
+
+    Map<Long, Long> getRevenueByInterval() {
+        if (revenueByInterval != null) {
+            return revenueByInterval;
+        }
+
+        Map<Long, Long> burnedMap = getTotalBurnedByInterval();
+        Map<Long, Long> reimbursementMap = getReimbursementByInterval();
+        revenueByInterval = getMergedMap(burnedMap, reimbursementMap, (a, b) -> a - b);
+        log.error("burnedMap {}", burnedMap);
+        log.error("reimbursementMap {}", reimbursementMap);
+        log.error("revenueByInterval {}", revenueByInterval);
+
+        return revenueByInterval;
     }
 
     Map<Long, Long> getTotalIssuedByInterval() {
@@ -197,7 +212,8 @@ public class DaoChartDataModel extends ChartDataModel {
     // Aggregated collection data by interval
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Map<Long, Long> getTotalBsqSupplyByInterval(Stream<BsqSupplyChange> bsqSupplyChanges, Predicate<Long> dateFilter) {
+    private Map<Long, Long> getTotalBsqSupplyByInterval(Stream<BsqSupplyChange> bsqSupplyChanges,
+                                                        Predicate<Long> dateFilter) {
         AtomicLong supply = new AtomicLong(
                 DaoEconomyHistoricalData.TOTAL_SUPPLY_BY_CYCLE_DATE.get(1555340856L)
         );

@@ -46,7 +46,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
     private final LongProperty proofOfBurnAmountProperty = new SimpleLongProperty();
 
     private XYChart.Series<Number, Number> seriesBsqTradeFee, seriesProofOfBurn, seriesCompensation,
-            seriesReimbursement, seriesTotalSupply, seriesTotalIssued, seriesTotalBurned;
+            seriesReimbursement, seriesTotalSupply, seriesTotalIssued, seriesTotalBurned, seriesRevenue;
 
 
     @Inject
@@ -92,7 +92,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
 
     @Override
     protected Collection<XYChart.Series<Number, Number>> getSeriesForLegend3() {
-        return List.of(seriesTotalSupply);
+        return List.of(seriesTotalSupply, seriesRevenue);
     }
 
 
@@ -139,6 +139,10 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         seriesTotalSupply = new XYChart.Series<>();
         seriesTotalSupply.setName(Res.get("dao.factsAndFigures.supply.totalBsqSupply"));
         seriesIndexMap.put(getSeriesId(seriesTotalSupply), 6);
+
+        seriesRevenue = new XYChart.Series<>();
+        seriesRevenue.setName(Res.get("dao.factsAndFigures.supply.revenue"));
+        seriesIndexMap.put(getSeriesId(seriesRevenue), 7);
     }
 
     @Override
@@ -186,9 +190,14 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
             applyProofOfBurn(task6Done);
         }
         if (activeSeries.contains(seriesTotalSupply)) {
-            CompletableFuture<Boolean> task6ADone = new CompletableFuture<>();
-            allFutures.add(task6ADone);
-            applyTotalSupply(task6ADone);
+            CompletableFuture<Boolean> taskTotalSupplyDone = new CompletableFuture<>();
+            allFutures.add(taskTotalSupplyDone);
+            applyTotalSupply(taskTotalSupplyDone);
+        }
+        if (activeSeries.contains(seriesRevenue)) {
+            CompletableFuture<Boolean> taskRevenueDone = new CompletableFuture<>();
+            allFutures.add(taskRevenueDone);
+            applyRevenue(taskRevenueDone);
         }
 
         CompletableFuture<Boolean> task7Done = new CompletableFuture<>();
@@ -235,6 +244,15 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
                             seriesTotalSupply.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
+    }
+
+    private void applyRevenue(CompletableFuture<Boolean> completeFuture) {
+        model.getRevenueChartData()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            seriesRevenue.getData().setAll(data);
                             completeFuture.complete(true);
                         }));
     }
