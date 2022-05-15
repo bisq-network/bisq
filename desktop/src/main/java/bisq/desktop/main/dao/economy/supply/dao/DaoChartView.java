@@ -92,7 +92,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
 
     @Override
     protected Collection<XYChart.Series<Number, Number>> getSeriesForLegend3() {
-        return List.of(seriesTotalSupply, seriesRevenue);
+        return List.of(seriesRevenue, seriesTotalSupply);
     }
 
 
