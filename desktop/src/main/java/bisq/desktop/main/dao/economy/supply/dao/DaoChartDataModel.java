@@ -125,7 +125,6 @@ public class DaoChartDataModel extends ChartDataModel {
                 daoStateService.getBsqSupplyChanges(),
                 getDateFilter()
         );
-
         return totalSupplyByInterval;
     }
 
@@ -137,10 +136,6 @@ public class DaoChartDataModel extends ChartDataModel {
         Map<Long, Long> burnedMap = getTotalBurnedByInterval();
         Map<Long, Long> reimbursementMap = getReimbursementByInterval();
         revenueByInterval = getMergedMap(burnedMap, reimbursementMap, (a, b) -> a - b);
-        log.error("burnedMap {}", burnedMap);
-        log.error("reimbursementMap {}", reimbursementMap);
-        log.error("revenueByInterval {}", revenueByInterval);
-
         return revenueByInterval;
     }
 

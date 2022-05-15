@@ -17,14 +17,21 @@
 
 package bisq.desktop.components.chart;
 
+import bisq.common.util.MathUtils;
+
 import java.time.DayOfWeek;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAdjusters;
 
+import java.math.RoundingMode;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import static java.time.temporal.ChronoField.DAY_OF_YEAR;
 
 @Slf4j
 public class TemporalAdjusterModel {
@@ -32,6 +39,36 @@ public class TemporalAdjusterModel {
 
     public enum Interval {
         YEAR(TemporalAdjusters.firstDayOfYear()),
+        HALF_YEAR(temporal -> {
+            long halfYear = temporal.range(DAY_OF_YEAR).getMaximum() / 2;
+            int dayOfYear = 0;
+            if (temporal instanceof LocalDate) {
+                dayOfYear = ((LocalDate) temporal).getDayOfYear(); // getDayOfYear delivers 1-365 (366 in leap years)
+            }
+            if (dayOfYear <= halfYear) {
+                return temporal.with(DAY_OF_YEAR, 1);
+            } else {
+                return temporal.with(DAY_OF_YEAR, halfYear + 1);
+            }
+        }),
+        QUARTER(temporal -> {
+            long quarter1 = temporal.range(DAY_OF_YEAR).getMaximum() / 4;
+            long halfYear = temporal.range(DAY_OF_YEAR).getMaximum() / 2;
+            long quarter3 = MathUtils.roundDoubleToLong(temporal.range(DAY_OF_YEAR).getMaximum() * 0.75, RoundingMode.FLOOR);
+            int dayOfYear = 0;
+            if (temporal instanceof LocalDate) {
+                dayOfYear = ((LocalDate) temporal).getDayOfYear();
+            }
+            if (dayOfYear <= quarter1) {
+                return temporal.with(DAY_OF_YEAR, 1);
+            } else if (dayOfYear <= halfYear) {
+                return temporal.with(DAY_OF_YEAR, quarter1 + 1);
+            } else if (dayOfYear <= quarter3) {
+                return temporal.with(DAY_OF_YEAR, halfYear + 1);
+            } else {
+                return temporal.with(DAY_OF_YEAR, quarter3 + 1);
+            }
+        }),
         MONTH(TemporalAdjusters.firstDayOfMonth()),
         WEEK(TemporalAdjusters.next(DayOfWeek.MONDAY)),
         DAY(TemporalAdjusters.ofDateAdjuster(d -> d));

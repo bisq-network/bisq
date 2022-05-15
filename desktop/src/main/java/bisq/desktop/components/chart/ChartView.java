@@ -291,6 +291,10 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     protected HBox getTimeIntervalBox() {
         ToggleButton year = getTimeIntervalToggleButton(Res.get("time.year"), TemporalAdjusterModel.Interval.YEAR,
                 timeIntervalToggleGroup, "toggle-left");
+        ToggleButton halfYear = getTimeIntervalToggleButton(Res.get("time.halfYear"), TemporalAdjusterModel.Interval.HALF_YEAR,
+                timeIntervalToggleGroup, "toggle-center");
+        ToggleButton quarter = getTimeIntervalToggleButton(Res.get("time.quarter"), TemporalAdjusterModel.Interval.QUARTER,
+                timeIntervalToggleGroup, "toggle-center");
         ToggleButton month = getTimeIntervalToggleButton(Res.get("time.month"), TemporalAdjusterModel.Interval.MONTH,
                 timeIntervalToggleGroup, "toggle-center");
         ToggleButton week = getTimeIntervalToggleButton(Res.get("time.week"), TemporalAdjusterModel.Interval.WEEK,
@@ -302,7 +306,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         toggleBox.setAlignment(Pos.CENTER_LEFT);
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        toggleBox.getChildren().addAll(spacer, year, month, week, day);
+        toggleBox.getChildren().addAll(spacer, year, halfYear, quarter, month, week, day);
         return toggleBox;
     }
 
