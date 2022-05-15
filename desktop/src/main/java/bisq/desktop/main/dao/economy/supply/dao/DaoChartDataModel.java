@@ -25,6 +25,8 @@ import bisq.core.dao.state.model.governance.BsqSupplyChange;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
 
+import bisq.common.util.Hex;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -32,9 +34,11 @@ import java.time.Instant;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
@@ -47,11 +51,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class DaoChartDataModel extends ChartDataModel {
+    // Date when we started to use tags for separating proof of burn txs
+    private static final GregorianCalendar TAG_DATE = new GregorianCalendar(2021, GregorianCalendar.NOVEMBER, 3, 13, 0);
+
     private final DaoStateService daoStateService;
     private final Function<Issuance, Long> blockTimeOfIssuanceFunction;
     private Map<Long, Long> totalSupplyByInterval, totalIssuedByInterval, compensationByInterval, reimbursementByInterval,
-            totalBurnedByInterval, bsqTradeFeeByInterval, proofOfBurnByInterval, revenueByInterval;
+            totalBurnedByInterval, bsqTradeFeeByInterval, proofOfBurnByInterval,
+            proofOfBurnFromBtcFeesByInterval, proofOfBurnFromArbitrationByInterval,
+            proofOfBurnReimbursementDiffByInterval, totalTradeFeesByInterval;
 
+    static {
+        TAG_DATE.setTimeZone(TimeZone.getTimeZone("UTC"));
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -79,7 +91,10 @@ public class DaoChartDataModel extends ChartDataModel {
         totalBurnedByInterval = null;
         bsqTradeFeeByInterval = null;
         proofOfBurnByInterval = null;
-        revenueByInterval = null;
+        proofOfBurnFromBtcFeesByInterval = null;
+        proofOfBurnFromArbitrationByInterval = null;
+        proofOfBurnReimbursementDiffByInterval = null;
+        totalTradeFeesByInterval = null;
     }
 
 
@@ -128,15 +143,38 @@ public class DaoChartDataModel extends ChartDataModel {
         return totalSupplyByInterval;
     }
 
-    Map<Long, Long> getRevenueByInterval() {
-        if (revenueByInterval != null) {
-            return revenueByInterval;
+    Map<Long, Long> getProofOfBurnReimbursementDiffByInterval() {
+        if (proofOfBurnReimbursementDiffByInterval != null) {
+            return proofOfBurnReimbursementDiffByInterval;
         }
 
+        // By subtracting the reimbursement amounts from the total burned amount we derive the total trade fees.
+        // Reimbursements have not been used in early days, so those periods do not reflect the value correctly.
+        // Due to time delays between reimbursements and burning there is not a very good temporal match.
+        // For shorter time periods we even get negative values if reimbursement was larger than accumulated
+        // burned BSQ in that time frame.
+        // It is an alternative view on the revenue to the total fee data which we only support since Nov 2021
         Map<Long, Long> burnedMap = getTotalBurnedByInterval();
         Map<Long, Long> reimbursementMap = getReimbursementByInterval();
-        revenueByInterval = getMergedMap(burnedMap, reimbursementMap, (a, b) -> a - b);
-        return revenueByInterval;
+        proofOfBurnReimbursementDiffByInterval = getMergedMap(burnedMap, reimbursementMap, (a, b) -> a - b);
+        return proofOfBurnReimbursementDiffByInterval;
+    }
+
+
+    Map<Long, Long> getTotalTradeFeesByInterval() {
+        if (totalTradeFeesByInterval != null) {
+            return totalTradeFeesByInterval;
+        }
+
+        // From Nov 2021 we use tags for the burned BSQ from BTC fees and for those from delayed payout txs.
+        // By that we can filter out the burned BSQ from BTC fees.
+        Map<Long, Long> tradeFee = getBsqTradeFeeByInterval();
+        Map<Long, Long> proofOfBurn = getProofOfBurnFromBtcFeesByInterval();
+        Map<Long, Long> merged = getMergedMap(tradeFee, proofOfBurn, Long::sum);
+        totalTradeFeesByInterval = merged.entrySet().stream()
+                .filter(entry -> entry.getKey() * 1000 >= TAG_DATE.getTimeInMillis())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return totalTradeFeesByInterval;
     }
 
     Map<Long, Long> getTotalIssuedByInterval() {
@@ -200,6 +238,37 @@ public class DaoChartDataModel extends ChartDataModel {
 
         proofOfBurnByInterval = getBurntBsqByInterval(daoStateService.getProofOfBurnTxs(), getDateFilter());
         return proofOfBurnByInterval;
+    }
+
+    Map<Long, Long> getProofOfBurnFromBtcFeesByInterval() {
+        if (proofOfBurnFromBtcFeesByInterval != null) {
+            return proofOfBurnFromBtcFeesByInterval;
+        }
+
+        // Tagging started Nov 2021
+        // opReturn data from BTC fees: 1701721206fe6b40777763de1c741f4fd2706d94775d
+        Set<Tx> proofOfBurnTxs = daoStateService.getProofOfBurnTxs();
+        Set<Tx> feeTxs = proofOfBurnTxs.stream()
+                .filter(tx -> "1701721206fe6b40777763de1c741f4fd2706d94775d".equals(Hex.encode(tx.getLastTxOutput().getOpReturnData())))
+                .collect(Collectors.toSet());
+        proofOfBurnFromBtcFeesByInterval = getBurntBsqByInterval(feeTxs, getDateFilter());
+        return proofOfBurnFromBtcFeesByInterval;
+    }
+
+    Map<Long, Long> getProofOfBurnFromArbitrationByInterval() {
+        if (proofOfBurnFromArbitrationByInterval != null) {
+            return proofOfBurnFromArbitrationByInterval;
+        }
+
+        // Tagging started Nov 2021
+        // opReturn data from delayed payout txs: 1701e47e5d8030f444c182b5e243871ebbaeadb5e82f
+        // opReturn data from BM trades with a trade who got reimbursed by the DAO : 1701293c488822f98e70e047012f46f5f1647f37deb7
+        Set<Tx> feeTxs = daoStateService.getProofOfBurnTxs().stream()
+                .filter(e -> "1701e47e5d8030f444c182b5e243871ebbaeadb5e82f".equals(Hex.encode(e.getLastTxOutput().getOpReturnData())) ||
+                        "1701293c488822f98e70e047012f46f5f1647f37deb7".equals(Hex.encode(e.getLastTxOutput().getOpReturnData())))
+                .collect(Collectors.toSet());
+        proofOfBurnFromArbitrationByInterval = getBurntBsqByInterval(feeTxs, getDateFilter());
+        return proofOfBurnFromArbitrationByInterval;
     }
 
 
