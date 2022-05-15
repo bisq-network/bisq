@@ -78,7 +78,7 @@ public class GetTradesOptionParser extends AbstractMethodOptionParser implements
     }
 
     public GetTradesRequest.Category getCategory() {
-        String cliOpt = options.valueOf(categoryOpt);
-        return CATEGORY.valueOf(cliOpt).grpcRequestCategory;
+        String categoryOpt = options.valueOf(this.categoryOpt).toLowerCase();
+        return CATEGORY.valueOf(categoryOpt).grpcRequestCategory;
     }
 }

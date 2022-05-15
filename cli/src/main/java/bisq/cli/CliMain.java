@@ -516,7 +516,7 @@ public class CliMain {
                             ? client.getOpenTrades()
                             : client.getTradeHistory(category);
                     if (trades.isEmpty()) {
-                        out.printf("no %s trades found%n", category.name().toLowerCase());
+                        out.printf("no %s trades found%n", category.name());
                     } else {
                         var tableType = category.equals(OPEN)
                                 ? OPEN_TRADES_TBL
