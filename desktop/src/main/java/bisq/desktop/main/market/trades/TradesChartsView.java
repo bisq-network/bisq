@@ -329,9 +329,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceChart.setAnimated(useAnimations);
         volumeChart.setAnimated(useAnimations);
         volumeInUsdChart.setAnimated(useAnimations);
-        priceAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
-        volumeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
-        volumeInUsdAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
 
         nrOfTradeStatisticsLabel.setText(Res.get("market.trades.nrOfTrades", model.tradeStatisticsByCurrency.size()));
 
@@ -473,7 +470,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceAxisX.setMinorTickCount(4);
         priceAxisX.setMinorTickVisible(true);
         priceAxisX.setForceZeroInRange(false);
-        priceAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
         addTickMarkLabelCssClass(priceAxisX, "axis-tick-mark-text-node");
 
         priceAxisY = new NumberAxis();
@@ -568,7 +564,6 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         axisX.setMinorTickCount(4);
         axisX.setMinorTickVisible(true);
         axisX.setForceZeroInRange(false);
-        axisX.setTickLabelFormatter(getTimeAxisStringConverter());
         addTickMarkLabelCssClass(axisX, "axis-tick-mark-text-node");
 
         axisY.setForceZeroInRange(true);
@@ -621,6 +616,9 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         priceSeries.getData().setAll(model.priceItems);
         priceChart.getData().clear();
         priceChart.setData(FXCollections.observableArrayList(List.of(priceSeries)));
+        priceAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
+        volumeAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
+        volumeInUsdAxisX.setTickLabelFormatter(getTimeAxisStringConverter());
     }
 
     private void layoutChart() {
