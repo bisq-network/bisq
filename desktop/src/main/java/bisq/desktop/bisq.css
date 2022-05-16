@@ -1765,34 +1765,117 @@ textfield */
 #charts-dao .default-color1.chart-line-symbol { -fx-background-color: -bs-chart-dao-line2, -bs-chart-dao-line2; }
 
 #charts-dao .default-color2.chart-series-line { -fx-stroke: -bs-chart-dao-line3; }
-#charts-dao .default-color2.chart-line-symbol { -fx-background-color: -bs-chart-dao-line3, -bs-chart-dao-line3; }
+#charts-dao .default-color2.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line3, -bs-chart-dao-line3;
+}
 
-#charts-dao .default-color3.chart-series-line { -fx-stroke: -bs-chart-dao-line4; }
-#charts-dao .default-color3.chart-line-symbol { -fx-background-color: -bs-chart-dao-line4, -bs-chart-dao-line4; }
+#charts-dao .default-color3.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line4;
+}
 
-#charts-dao .default-color4.chart-series-line { -fx-stroke: -bs-chart-dao-line5; }
-#charts-dao .default-color4.chart-line-symbol { -fx-background-color: -bs-chart-dao-line5, -bs-chart-dao-line5; }
+#charts-dao .default-color3.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line4, -bs-chart-dao-line4;
+}
 
-#charts-dao .default-color5.chart-series-line { -fx-stroke: -bs-chart-dao-line6; }
-#charts-dao .default-color5.chart-line-symbol { -fx-background-color: -bs-chart-dao-line6, -bs-chart-dao-line6; }
+#charts-dao .default-color4.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line5;
+}
+
+#charts-dao .default-color4.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line5, -bs-chart-dao-line5;
+}
+
+#charts-dao .default-color5.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line6;
+}
+
+#charts-dao .default-color5.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line6, -bs-chart-dao-line6;
+}
+
+#charts-dao .default-color6.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line7;
+}
+
+#charts-dao .default-color6.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line7, -bs-chart-dao-line7;
+}
+
+#charts-dao .default-color7.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line8;
+}
+
+#charts-dao .default-color7.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line8, -bs-chart-dao-line8;
+}
+
+#charts-dao .default-color8.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line9;
+}
+
+#charts-dao .default-color8.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line9, -bs-chart-dao-line9;
+}
+
+#charts-dao .default-color9.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line10;
+}
+
+#charts-dao .default-color9.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line10, -bs-chart-dao-line10;
+}
+
+
+#charts-dao .default-color10.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line11;
+}
+
+#charts-dao .default-color10.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line11, -bs-chart-dao-line11;
+}
 
 #charts-legend-toggle0 {
     -jfx-toggle-color: -bs-chart-dao-line1
 }
+
 #charts-legend-toggle1 {
     -jfx-toggle-color: -bs-chart-dao-line2;
 }
+
 #charts-legend-toggle2 {
     -jfx-toggle-color: -bs-chart-dao-line3;
 }
+
 #charts-legend-toggle3 {
     -jfx-toggle-color: -bs-chart-dao-line4;
 }
+
 #charts-legend-toggle4 {
     -jfx-toggle-color: -bs-chart-dao-line5;
 }
+
 #charts-legend-toggle5 {
     -jfx-toggle-color: -bs-chart-dao-line6;
+}
+
+#charts-legend-toggle6 {
+    -jfx-toggle-color: -bs-chart-dao-line7;
+}
+
+#charts-legend-toggle7 {
+    -jfx-toggle-color: -bs-chart-dao-line8;
+}
+
+#charts-legend-toggle8 {
+    -jfx-toggle-color: -bs-chart-dao-line9;
+}
+
+#charts-legend-toggle9 {
+    -jfx-toggle-color: -bs-chart-dao-line10;
+}
+
+#charts-legend-toggle10 {
+    -jfx-toggle-color: -bs-chart-dao-line11;
 }
 
 #charts-dao .chart-series-line {

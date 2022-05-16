@@ -79,6 +79,8 @@ public abstract class ChartViewModel<T extends ChartDataModel> extends Activatab
             case YEAR:
                 dateFormatPatters = "yyyy";
                 break;
+            case HALF_YEAR:
+            case QUARTER:
             case MONTH:
                 dateFormatPatters = "MMM\nyyyy";
                 break;
