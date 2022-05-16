@@ -92,6 +92,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -216,6 +217,7 @@ public class BisqSetup {
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> p2pNetworkAndWalletInitialized;
     private final List<BisqSetupListener> bisqSetupListeners = new ArrayList<>();
+    private int failedSelfPings = 0;
 
     @Inject
     public BisqSetup(DomainInitialisation domainInitialisation,
@@ -663,6 +665,7 @@ public class BisqSetup {
      * If Bisq cannot connect to its own onion address through Tor, display
      * an informative message to let the user know to configure their firewall else
      * their offers will not be reachable.
+     * In rare cases a self ping can fail (thanks Tor), so we retry up to 3 times at random intervals in hope of success.
      */
     private void checkTorFirewall() {
         NodeAddress onionAddress = p2PService.getNetworkNode().nodeAddressProperty().get();
@@ -672,7 +675,15 @@ public class BisqSetup {
         privateNotificationManager.sendPing(onionAddress, stringResult -> {
             log.info(stringResult);
             if (stringResult.contains("failed")) {
-                firewallIssueHandler.run();
+                // the self-ping failed: after 3 failures notify the user and stop trying
+                if (++failedSelfPings >= 3) {
+                    if (firewallIssueHandler != null) {
+                        firewallIssueHandler.run();
+                    }
+                } else {
+                    // retry self ping after a random delay
+                    UserThread.runAfter(this::checkTorFirewall, new Random().nextInt((int) STARTUP_TIMEOUT_MINUTES), TimeUnit.MINUTES);
+                }
             }
         });
     }
