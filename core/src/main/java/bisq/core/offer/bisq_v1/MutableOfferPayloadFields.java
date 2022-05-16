@@ -32,7 +32,7 @@ import javax.annotation.Nullable;
 @Setter
 public final class MutableOfferPayloadFields {
 
-    private final long price;
+    private final long fixedPrice; // Must be 0 when marketPriceMargin = true (on server).
     private final double marketPriceMargin;
     private final boolean useMarketBasedPrice;
     private final String baseCurrencyCode;
@@ -69,7 +69,7 @@ public final class MutableOfferPayloadFields {
                 offerPayload.getExtraDataMap());
     }
 
-    public MutableOfferPayloadFields(long price,
+    public MutableOfferPayloadFields(long fixedPrice,
                                      double marketPriceMargin,
                                      boolean useMarketBasedPrice,
                                      String baseCurrencyCode,
@@ -83,7 +83,7 @@ public final class MutableOfferPayloadFields {
                                      @Nullable String bankId,
                                      @Nullable List<String> acceptedBankIds,
                                      @Nullable Map<String, String> extraDataMap) {
-        this.price = price;
+        this.fixedPrice = fixedPrice;
         this.marketPriceMargin = marketPriceMargin;
         this.useMarketBasedPrice = useMarketBasedPrice;
         this.baseCurrencyCode = baseCurrencyCode;
@@ -102,7 +102,7 @@ public final class MutableOfferPayloadFields {
     @Override
     public String toString() {
         return "MutableOfferPayloadFields{" + "\n" +
-                "  price=" + price + "\n" +
+                "  fixedPrice=" + fixedPrice + "\n" +
                 ", marketPriceMargin=" + marketPriceMargin + "\n" +
                 ", useMarketBasedPrice=" + useMarketBasedPrice + "\n" +
                 ", baseCurrencyCode='" + baseCurrencyCode + '\'' + "\n" +

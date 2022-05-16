@@ -464,22 +464,35 @@ class CoreOffersService {
         // in OfferPayload.
         Offer offer = openOffer.getOffer();
         String currencyCode = offer.getCurrencyCode();
-        boolean isEditingPrice = editType.equals(FIXED_PRICE_ONLY) || editType.equals(FIXED_PRICE_AND_ACTIVATION_STATE);
-        Price editedPrice;
-        if (isEditingPrice) {
-            editedPrice = Price.valueOf(currencyCode, priceStringToLong(editedPriceAsString, currencyCode));
+        boolean isUsingMktPriceMargin = editOfferValidator.isEditingUseMktPriceMarginFlag.test(offer, editType);
+        boolean isEditingFixedPrice = editType.equals(FIXED_PRICE_ONLY) || editType.equals(FIXED_PRICE_AND_ACTIVATION_STATE);
+        Price editedFixedPrice;
+        if (isEditingFixedPrice) {
+            editedFixedPrice = Price.valueOf(currencyCode, priceStringToLong(editedPriceAsString, currencyCode));
         } else {
-            editedPrice = offer.getPrice();
+            // When isUsingMktPriceMargin=true, (fixed) price must be set to 0 on the server.
+            // The client, however, still must show the calculated price when
+            // isUsingMktPriceMargin=true.
+            editedFixedPrice = isUsingMktPriceMargin ? Price.valueOf(currencyCode, 0) : offer.getPrice();
         }
 
-        boolean isUsingMktPriceMargin = editOfferValidator.isEditingUseMktPriceMarginFlag.test(offer, editType);
+        // If isUsingMktPriceMargin=true, throw exception if new fixed-price != 0.
+        // If isUsingMktPriceMargin=false, throw exception if new fixed-price == 0.
+        if (isUsingMktPriceMargin && editedFixedPrice.getValue() != 0)
+            throw new IllegalStateException(
+                    format("Fixed price on mkt price margin based offer %s must be set to 0 in server.",
+                            offer.getId()));
+        else if (!isUsingMktPriceMargin && editedFixedPrice.getValue() == 0)
+            throw new IllegalStateException(
+                    format("Fixed price on fixed price offer %s cannot be 0.", offer.getId()));
+
         boolean isEditingMktPriceMargin = editOfferValidator.isEditingMktPriceMargin.test(editType);
         double newMarketPriceMargin = isEditingMktPriceMargin
                 ? exactMultiply(editedMarketPriceMargin, 0.01)
                 : offer.getMarketPriceMargin();
 
         MutableOfferPayloadFields mutableOfferPayloadFields = new MutableOfferPayloadFields(
-                Objects.requireNonNull(editedPrice).getValue(),
+                Objects.requireNonNull(editedFixedPrice).getValue(),
                 isUsingMktPriceMargin ? newMarketPriceMargin : 0.00,
                 isUsingMktPriceMargin,
                 offer.getBaseCurrencyCode(),
