@@ -260,25 +260,16 @@ public class TxValidator {
         JsonObject jsonVin0 = jsonVin.get(0).getAsJsonObject();
         JsonObject jsonVout0 = jsonVout.get(0).getAsJsonObject();
         JsonElement jsonVIn0Value = jsonVin0.getAsJsonObject("prevout").get("value");
-        JsonElement jsonFeeValue = jsonVout0.get("value");
-        if (jsonVIn0Value == null || jsonFeeValue == null) {
+        JsonElement jsonVOut0Value = jsonVout0.getAsJsonObject().get("value");
+        if (jsonVIn0Value == null || jsonVOut0Value == null) {
             throw new JsonSyntaxException("vin/vout missing data");
         }
         Param minFeeParam = isMaker ? Param.MIN_MAKER_FEE_BSQ : Param.MIN_TAKER_FEE_BSQ;
-        Coin expectedFee = calculateFee(tradeAmount,
+        long expectedFeeAsLong = calculateFee(tradeAmount,
                 isMaker ? getMakerFeeRateBsq(blockHeight) : getTakerFeeRateBsq(blockHeight),
-                minFeeParam);
-        long feeValue = jsonVIn0Value.getAsLong() - jsonFeeValue.getAsLong();
-        // if the first output (BSQ) is greater than the first input (BSQ) include the second input (presumably BSQ)
-        if ((jsonFeeValue.getAsLong() > jsonVIn0Value.getAsLong() ||
-                expectedFee.getValue() > jsonVIn0Value.getAsLong()) && jsonVin.size() > 2) {
-            // in this case 2 or more UTXOs were spent to pay the fee:
-            JsonObject jsonVin1 = jsonVin.get(1).getAsJsonObject();
-            JsonElement jsonVIn1Value = jsonVin1.getAsJsonObject("prevout").get("value");
-            feeValue += jsonVIn1Value.getAsLong();
-        }
+                minFeeParam).getValue();
+        long feeValue = getBsqBurnt(jsonVin, jsonVOut0Value.getAsLong(), expectedFeeAsLong);
         log.debug("BURNT BSQ maker fee: {} BSQ ({} sats)", (double) feeValue / 100.0, feeValue);
-        long expectedFeeAsLong = expectedFee.getValue();
         String description = String.format("Expected fee: %.2f BSQ, actual fee paid: %.2f BSQ",
                 (double) expectedFeeAsLong / 100.0, (double) feeValue / 100.0);
 
@@ -357,6 +348,39 @@ public class TxValidator {
         return (jsonConfirmed != null);
         // the json is valid and it contains a "confirmed" field then tx is known to mempool.space
         // we don't care if it is confirmed or not, just that it exists.
+    }
+
+    // a BSQ maker/taker fee transaction looks like this:
+    // BSQ INPUT 1          BSQ OUTPUT
+    // BSQ INPUT 2          BTC OUTPUT FOR RESERVED AMOUNT
+    // BSQ INPUT n          BTC OUTPUT FOR CHANGE
+    // BTC INPUT 1
+    // BTC INPUT 2
+    // BTC INPUT n
+    // there can be any number of BSQ inputs and BTC inputs
+    // BSQ inputs always come first in the tx, followed by BTC for the collateral.
+    // the sum of all BSQ inputs minus the BSQ output is the burnt amount, or trading fee.
+    long getBsqBurnt(JsonArray jsonVin, long bsqOutValue, long expectedFee) {
+        // sum consecutive inputs until we have accumulated enough to cover the output + burnt amount
+        long bsqInValue = 0;
+        for (int txIndex = 0; txIndex < jsonVin.size() - 1; txIndex++) {
+            bsqInValue += jsonVin.get(txIndex).getAsJsonObject().getAsJsonObject("prevout").get("value").getAsLong();
+            if (bsqInValue - expectedFee >= bsqOutValue) {
+                break;  // target reached - bsq input exceeds the output and expected burn amount
+            }
+        }
+        // guard against negative burn amount (i.e. only 1 tx input, or first in < first out)
+        long burntAmount = Math.max(0, bsqInValue - bsqOutValue);
+        // since we do not know which of the first 'n' are definitively BSQ inputs, sanity-check that the burnt amount
+        // is not too ridiculously high, as that would imply that we counted a BTC input.
+        if (burntAmount > 10 * expectedFee) {
+            log.error("The apparent BSQ fee burnt seems ridiculously high ({}) compared to expected ({})", burntAmount, expectedFee);
+            burntAmount = 0;  //  returning zero will flag the trade for manual review
+        }
+        if (burntAmount == 0) {
+            log.error("Could not obtain the burnt BSQ amount, trade will be flagged for manual review.");
+        }
+        return burntAmount;
     }
 
     private static long getTxConfirms(String jsonTxt, long chainHeight) {
