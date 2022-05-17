@@ -231,10 +231,7 @@ abstract class OfferBookViewModel extends ActivatableViewModel {
     protected void activate() {
         filteredItems.addListener(filterItemsListener);
 
-        if (user != null) {
-            disableMatchToggle.set(user.getPaymentAccounts() == null || user.getPaymentAccounts().isEmpty());
-        }
-        useOffersMatchingMyAccountsFilter = !disableMatchToggle.get() && isShowOffersMatchingMyAccounts();
+        updateMatchingAccountToggleState();
 
         fillCurrencies();
         updateSelectedTradeCurrency();
@@ -268,6 +265,7 @@ abstract class OfferBookViewModel extends ActivatableViewModel {
         if (isTabSelected) {
             updateSelectedTradeCurrency();
             filterOffers();
+            updateMatchingAccountToggleState();
         }
     }
 
@@ -559,6 +557,13 @@ abstract class OfferBookViewModel extends ActivatableViewModel {
         allCurrencies.clear();
 
         fillCurrencies(tradeCurrencies, allCurrencies);
+    }
+
+    private void updateMatchingAccountToggleState() {
+        if (user != null) {
+            disableMatchToggle.set(user.getPaymentAccounts() == null || user.getPaymentAccounts().isEmpty());
+        }
+        useOffersMatchingMyAccountsFilter = !disableMatchToggle.get() && isShowOffersMatchingMyAccounts();
     }
 
     abstract void fillCurrencies(ObservableList<TradeCurrency> tradeCurrencies,
