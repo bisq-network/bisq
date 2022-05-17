@@ -27,6 +27,7 @@ import static bisq.daonode.web.jdk.handler.HandlerUtil.sendResponse;
 import static bisq.daonode.web.jdk.handler.HandlerUtil.toJson;
 import static bisq.daonode.web.jdk.handler.HandlerUtil.wrapErrorResponse;
 import static bisq.daonode.web.jdk.handler.ResourcePathElement.PROOFOFBURN;
+import static java.util.Objects.requireNonNull;
 
 
 
@@ -49,8 +50,7 @@ public class RestHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
         try {
-            if (httpExchange == null)
-                throw new NullPointerException("HttpExchange cannot be null.");
+            requireNonNull(httpExchange, "HttpExchange cannot be null.");
 
             // Parse the request URI details here, and pass them to a new
             // sub handler instance.
