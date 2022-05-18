@@ -103,6 +103,7 @@ configure([project(':cli'),
            project(':seednode'),
            project(':statsnode'),
            project(':pricenode'),
+           project(':daonode'),
            project(':inventory'),
            project(':apitest')]) {
 
@@ -686,6 +687,49 @@ configure(project(':seednode')) {
     }
 }
 
+configure(project(':daonode')) {
+    apply plugin: 'com.github.johnrengelman.shadow'
+
+    mainClassName = 'bisq.daonode.DaoNodeMain'
+
+    dependencies {
+        implementation project(':common')
+        implementation project(':proto')
+        implementation project(':p2p')
+        implementation project(':core')
+        implementation "com.google.guava:guava:$guavaVersion"
+        implementation("com.google.inject:guice:$guiceVersion") {
+            exclude(module: 'guava')
+        }
+
+        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+        compileOnly "org.projectlombok:lombok:$lombokVersion"
+        implementation "ch.qos.logback:logback-classic:$logbackVersion"
+        implementation "ch.qos.logback:logback-core:$logbackVersion"
+        implementation "org.slf4j:slf4j-api:$slf4jVersion"
+
+        implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
+        implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+        implementation("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
+
+        implementation "com.google.protobuf:protobuf-java-util:$protobufVersion"
+
+        testImplementation "org.mockito:mockito-core:$mockitoVersion"
+
+        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+        testImplementation "org.apache.httpcomponents:httpclient:$httpclientVersion"
+        testImplementation "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"
+        testImplementation "org.junit.jupiter:junit-jupiter-params:$jupiterVersion"
+        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
+    }
+
+    test {
+        useJUnitPlatform()
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
+    }
+}
 
 configure(project(':statsnode')) {
     mainClassName = 'bisq.statistics.StatisticsMain'
