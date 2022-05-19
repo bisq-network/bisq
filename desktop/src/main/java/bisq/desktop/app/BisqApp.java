@@ -384,24 +384,19 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
             if (trade.getTradePhase().equals(Trade.Phase.TAKER_FEE_PUBLISHED) &&
                     new Date(trade.getTakeOfferDate()).toInstant().isAfter(fiveMinutesAgo)) {
                 String tradeDateString = DisplayUtils.formatDateTime(new Date(trade.getTakeOfferDate()));
-                tradeIdsWithOperationsPending += System.lineSeparator() +
-                        Res.get("shared.tradeId") + ": " + trade.getShortId() + " " +
-                        Res.get("shared.dateTime") + ": " + tradeDateString;
+                tradeIdsWithOperationsPending += Res.get("shared.tradeId") + ": " + trade.getShortId() + " " +
+                        Res.get("shared.dateTime") + ": " + tradeDateString + System.lineSeparator();
                 break;
             }
         }
         if (tradeIdsWithOperationsPending.length() > 0) {
             // We show a popup to inform user that some trades are still being initialised.
-            String key = "showInitTradeWarnPopupAtShutDown";
-            if (injector.getInstance(Preferences.class).showAgain(key) && !DevEnv.isDevMode()) {
-                new Popup().information(Res.get("popup.info.shutDownWithTradeInit", tradeIdsWithOperationsPending))
-                        .dontShowAgainId(key)
-                        .useShutDownButton()
-                        .onAction(() -> asyncStatus.complete(true))
-                        .closeButtonText(Res.get("shared.cancel"))
-                        .onClose(() -> asyncStatus.complete(false))
-                        .show();
-            }
+            new Popup().warning(Res.get("popup.info.shutDownWithTradeInit", tradeIdsWithOperationsPending))
+                    .actionButtonText(Res.get("shared.okWait"))
+                    .onAction(() -> asyncStatus.complete(false))
+                    .closeButtonText(Res.get("shared.closeAnywayDanger"))
+                    .onClose(() -> asyncStatus.complete(true))
+                    .show();
         } else {
             asyncStatus.complete(true);
         }
