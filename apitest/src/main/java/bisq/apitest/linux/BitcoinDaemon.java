@@ -52,7 +52,6 @@ public class BitcoinDaemon extends AbstractLinuxProcess implements LinuxProcess 
                 + " -daemon"
                 + " -regtest=1"
                 + " -server=1"
-                + " -txindex=1"
                 + " -peerbloomfilters=1"
                 + " -debug=net"
                 + " -fallbackfee=0.0002"
