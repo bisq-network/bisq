@@ -225,9 +225,9 @@ public class XmrTxProofService implements AssetTxProofService {
     }
 
     private void startRequestsIfValid(SellerTrade trade) {
-        String txId = trade.getCounterCurrencyTxId();
-        String txHash = trade.getCounterCurrencyExtraData();
-        if (is32BitHexStringInValid(txId) || is32BitHexStringInValid(txHash)) {
+        String txHash = trade.getCounterCurrencyTxId();
+        String txKey = trade.getCounterCurrencyExtraData();
+        if (is32BitHexStringInValid(txHash) || is32BitHexStringInValid(txKey)) {
             trade.setAssetTxProofResult(AssetTxProofResult.INVALID_DATA.details(Res.get("portfolio.pending.autoConf.state.txKeyOrTxIdInvalid")));
             tradeManager.requestPersistence();
             return;
@@ -365,13 +365,14 @@ public class XmrTxProofService implements AssetTxProofService {
     }
 
     private boolean wasTxKeyReUsed(Trade trade, List<Trade> activeTrades) {
-        // For dev testing we reuse test data so we ignore that check
+        // For dev testing we reuse test data, so we ignore that check
         if (DevEnv.isDevMode()) {
             return false;
         }
 
         // We need to prevent that a user tries to scam by reusing a txKey and txHash of a previous XMR trade with
-        // the same user (same address) and same amount. We check only for the txKey as a same txHash but different
+        // the same user (same address) and same amount.
+        // We check additionally to the txKey also the txHash though different
         // txKey is not possible to get a valid result at proof.
         Stream<Trade> failedAndOpenTrades = Stream.concat(
                 activeTrades.stream(),
@@ -380,18 +381,26 @@ public class XmrTxProofService implements AssetTxProofService {
                 .filter(tradable -> tradable instanceof Trade)
                 .map(tradable -> (Trade) tradable);
         Stream<Trade> allTrades = Stream.concat(failedAndOpenTrades, closedTrades);
-        String txKey = trade.getCounterCurrencyExtraData();
+        String tradeTxKey = trade.getCounterCurrencyExtraData();
+        String tradeTxHash = trade.getCounterCurrencyTxId();
         return allTrades
                 .filter(t -> !t.getId().equals(trade.getId())) // ignore same trade
                 .anyMatch(t -> {
-                    String extra = t.getCounterCurrencyExtraData();
-                    if (extra == null) {
+                    String txKey = t.getCounterCurrencyExtraData();
+                    String txHash = t.getCounterCurrencyTxId();
+                    if (txKey == null || txHash == null) {
                         return false;
                     }
 
-                    boolean alreadyUsed = extra.equals(txKey);
+                    boolean alreadyUsed = txKey.equalsIgnoreCase(tradeTxKey);
                     if (alreadyUsed) {
                         log.warn("Peer used the XMR tx key already at another trade with trade ID {}. " +
+                                "This might be a scam attempt.", t.getId());
+                        return alreadyUsed;
+                    }
+                    alreadyUsed = txHash.equalsIgnoreCase(tradeTxHash);
+                    if (alreadyUsed) {
+                        log.warn("Peer used the XMR tx ID already at another trade with trade ID {}. " +
                                 "This might be a scam attempt.", t.getId());
                     }
                     return alreadyUsed;
