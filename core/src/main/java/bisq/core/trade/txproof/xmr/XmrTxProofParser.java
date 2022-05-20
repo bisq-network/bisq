@@ -94,12 +94,13 @@ public class XmrTxProofParser implements AssetTxProofParser<XmrTxProofRequest.Re
             }
 
             // validate that the txKey matches
-            JsonElement jsonViewkey = jsonData.get("viewkey");
-            if (jsonViewkey == null) {
+            // The API use viewkey param as txKey for our operation mode
+            JsonElement jsonTxkey = jsonData.get("viewkey");
+            if (jsonTxkey == null) {
                 return XmrTxProofRequest.Result.ERROR.with(XmrTxProofRequest.Detail.API_INVALID.error("Missing viewkey field"));
             } else {
-                if (!jsonViewkey.getAsString().equalsIgnoreCase(model.getTxKey())) {
-                    log.warn("viewkey {}, expected: {}", jsonViewkey.getAsString(), model.getTxKey());
+                if (!jsonTxkey.getAsString().equalsIgnoreCase(model.getTxKey())) {
+                    log.warn("viewkey {}, expected: {}", jsonTxkey.getAsString(), model.getTxKey());
                     return XmrTxProofRequest.Result.FAILED.with(XmrTxProofRequest.Detail.TX_KEY_INVALID);
                 }
             }
