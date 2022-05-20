@@ -350,14 +350,14 @@ public class XmrTxProofService implements AssetTxProofService {
         return newValue == Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG;
     }
 
-    private boolean is32BitHexStringInValid(String hexString) {
-        if (hexString == null || hexString.isEmpty() || !hexString.matches("[a-fA-F0-9]{64}")) {
-            log.warn("Invalid hexString: {}", hexString);
-            return true;
-        }
+   static boolean is32BitHexStringInValid(String hexString) {
+       if (hexString == null || hexString.isEmpty() || !hexString.matches("[a-fA-F0-9]{64}")) {
+           log.warn("Invalid hexString: {}", hexString);
+           return true;
+       }
 
-        return false;
-    }
+       return false;
+   }
 
     private boolean isAutoConfDisabledByFilter() {
         return filterManager.getFilter() != null &&
