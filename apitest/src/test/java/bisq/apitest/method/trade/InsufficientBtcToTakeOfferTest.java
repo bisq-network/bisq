@@ -68,7 +68,7 @@ public class InsufficientBtcToTakeOfferTest extends AbstractTradeTest {
 
     @Test
     @Order(1)
-    public void test1() {
+    public void testTakeOfferWithInsufficientBTC() {
         try {
             PaymentAccount alicesUsdAccount = createDummyF2FAccount(aliceClient, "US");
             PaymentAccount bobsUsdAccount = createDummyF2FAccount(bobClient, "US");
