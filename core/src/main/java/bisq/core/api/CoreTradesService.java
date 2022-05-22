@@ -17,6 +17,7 @@
 
 package bisq.core.api;
 
+import bisq.core.api.exception.NotAvailableException;
 import bisq.core.api.exception.NotFoundException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -50,6 +51,7 @@ import org.bitcoinj.core.Coin;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -151,6 +153,11 @@ class CoreTradesService {
         log.info("Initiating take {} offer, {}",
                 offer.isBuyOffer() ? "buy" : "sell",
                 takeOfferModel);
+
+        if (!takeOfferModel.isBtcWalletFunded())
+            throw new NotAvailableException(
+                    format("wallet has insufficient btc to take offer with id '%s'", offer.getId()));
+
         //noinspection ConstantConditions
         tradeManager.onTakeOffer(offer.getAmount(),
                 takeOfferModel.getTxFeeFromFeeService(),
@@ -293,7 +300,7 @@ class CoreTradesService {
     List<TradeModel> getOpenTrades() {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
-        return tradeManager.getTrades().stream().collect(Collectors.toList());
+        return new ArrayList<>(tradeManager.getTrades());
     }
 
     List<TradeModel> getTradeHistory(GetTradesRequest.Category category) {
@@ -307,7 +314,7 @@ class CoreTradesService {
             return closedTrades;
         } else {
             var failedV1Trades = failedTradesManager.getTrades();
-            return failedV1Trades.stream().collect(Collectors.toList());
+            return new ArrayList<>(failedV1Trades);
         }
     }
 
