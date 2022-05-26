@@ -239,7 +239,7 @@ public class XmrTxProofService implements AssetTxProofService {
         }
 
         String canonicalTxKey = CryptoUtil.toCanonicalTxKey(txKey);
-        if (!txKey.equalsIgnoreCase(canonicalTxKey)) {
+        if (!txKey.equals(canonicalTxKey)) {
             log.error("Provided txKey is not in canonical form. txKey={}, canonicalTxKey={}", txKey, canonicalTxKey);
             trade.setAssetTxProofResult(AssetTxProofResult.INVALID_DATA.details(Res.get("portfolio.pending.autoConf.state.txKeyOrTxIdInvalid")));
             tradeManager.requestPersistence();

@@ -570,7 +570,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
     private void maybeShowXmrTxKeyReUseWarning() {
         String key = "xmrTxKeyReUse";
-
         // If we do not have a XMR account we set showAgain to true to avoid the popup at next restart because we show
         // the information at account creation as well.
         if (user.getPaymentAccounts() != null &&
