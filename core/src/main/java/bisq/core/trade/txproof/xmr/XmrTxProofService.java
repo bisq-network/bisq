@@ -33,6 +33,7 @@ import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.trade.txproof.AssetTxProofService;
 import bisq.core.user.AutoConfirmSettings;
 import bisq.core.user.Preferences;
+import bisq.core.xmr.knaccc.monero.crypto.CryptoUtil;
 
 import bisq.network.Socks5ProxyProvider;
 import bisq.network.p2p.BootstrapListener;
@@ -61,10 +62,6 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
-
-
-import knaccc.monero.crypto.CryptoUtil;
 
 /**
  * Entry point for clients to request tx proof and trigger auto-confirm if all conditions

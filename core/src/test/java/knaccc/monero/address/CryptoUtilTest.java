@@ -17,14 +17,12 @@
 
 package knaccc.monero.address;
 
+import bisq.core.xmr.knaccc.monero.crypto.CryptoUtil;
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-
-
-
-import knaccc.monero.crypto.CryptoUtil;
 
 public class CryptoUtilTest {
     @Test

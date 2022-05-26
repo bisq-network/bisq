@@ -17,6 +17,8 @@
 
 package knaccc.monero.address;
 
+import bisq.core.xmr.knaccc.monero.address.WalletAddress;
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
