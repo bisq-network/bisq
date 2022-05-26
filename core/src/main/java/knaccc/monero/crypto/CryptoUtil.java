@@ -42,7 +42,11 @@ public class CryptoUtil {
     public static BigInteger l = BigInteger.valueOf(2).pow(252).add(new BigInteger("27742317777372353535851937790883648493"));
 
     public static String toCanonicalTxKey(String txKey) {
-        return HexEncoder.getString(new BigInteger(HexEncoder.getBytes(txKey)).mod(l).toByteArray());
+        byte[] bytes = HexEncoder.getBytes(txKey);
+        byte[] asLittleEndianBytes = ensure32BytesAndConvertToLittleEndian(bytes);
+        byte[] nonMalleable = new BigInteger(asLittleEndianBytes).mod(l).toByteArray();
+        byte[] nonMalleableAsLittleEndian = ensure32BytesAndConvertToLittleEndian(nonMalleable);
+        return HexEncoder.getString(nonMalleableAsLittleEndian);
     }
 
     public static byte[] scReduce32(byte[] a) {

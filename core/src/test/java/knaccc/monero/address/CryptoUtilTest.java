@@ -20,6 +20,7 @@ package knaccc.monero.address;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 
 
@@ -31,5 +32,9 @@ public class CryptoUtilTest {
         String txKey = "6c336e52ed537676968ee319af6983c80b869ca6a732b5962c02748b486f8f0f";
         assertEquals(txKey, CryptoUtil.toCanonicalTxKey(txKey));
         assertEquals(txKey, CryptoUtil.toCanonicalTxKey(txKey.toUpperCase()));
+
+        // key with 1 above l value (created with HexEncoder.getString(ensure32BytesAndConvertToLittleEndian(l.add(BigInteger.ONE).toByteArray())))
+        txKey = "eed3f55c1a631258d69cf7a2def9de1400000000000000000000000000000010";
+        assertFalse(txKey.equals(CryptoUtil.toCanonicalTxKey(txKey)));
     }
 }
