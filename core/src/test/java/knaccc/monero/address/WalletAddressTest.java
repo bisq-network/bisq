@@ -44,6 +44,5 @@ public class WalletAddressTest {
         assertEquals(walletAddress.getSubaddressBase58(privateViewKeyHex, 0, 1), addr01);
         assertEquals(walletAddress.getSubaddressBase58(privateViewKeyHex, 1, 0), addr10);
         assertEquals(walletAddress.getSubaddressBase58(privateViewKeyHex, 1, 1), addr11);
-
     }
 }

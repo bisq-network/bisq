@@ -62,6 +62,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+
+
+import knaccc.monero.crypto.CryptoUtil;
+
 /**
  * Entry point for clients to request tx proof and trigger auto-confirm if all conditions
  * are met.
@@ -163,7 +167,7 @@ public class XmrTxProofService implements AssetTxProofService {
             p2pNetworkAndWalletReadyListener = null;
         }
 
-        if (!preferences.findAutoConfirmSettings("XMR").isPresent()) {
+        if (preferences.findAutoConfirmSettings("XMR").isEmpty()) {
             log.error("AutoConfirmSettings is not present");
             return;
         }
@@ -227,7 +231,16 @@ public class XmrTxProofService implements AssetTxProofService {
     private void startRequestsIfValid(SellerTrade trade) {
         String txHash = trade.getCounterCurrencyTxId();
         String txKey = trade.getCounterCurrencyExtraData();
+
         if (is32BitHexStringInValid(txHash) || is32BitHexStringInValid(txKey)) {
+            trade.setAssetTxProofResult(AssetTxProofResult.INVALID_DATA.details(Res.get("portfolio.pending.autoConf.state.txKeyOrTxIdInvalid")));
+            tradeManager.requestPersistence();
+            return;
+        }
+
+        String canonicalTxKey = CryptoUtil.toCanonicalTxKey(txKey);
+        if (!txKey.equalsIgnoreCase(canonicalTxKey)) {
+            log.error("Provided txKey is not in canonical form. txKey={}, canonicalTxKey={}", txKey, canonicalTxKey);
             trade.setAssetTxProofResult(AssetTxProofResult.INVALID_DATA.details(Res.get("portfolio.pending.autoConf.state.txKeyOrTxIdInvalid")));
             tradeManager.requestPersistence();
             return;
@@ -350,14 +363,14 @@ public class XmrTxProofService implements AssetTxProofService {
         return newValue == Trade.State.SELLER_RECEIVED_FIAT_PAYMENT_INITIATED_MSG;
     }
 
-   static boolean is32BitHexStringInValid(String hexString) {
-       if (hexString == null || hexString.isEmpty() || !hexString.matches("[a-fA-F0-9]{64}")) {
-           log.warn("Invalid hexString: {}", hexString);
-           return true;
-       }
+    static boolean is32BitHexStringInValid(String hexString) {
+        if (hexString == null || hexString.isEmpty() || !hexString.matches("[a-fA-F0-9]{64}")) {
+            log.warn("Invalid hexString: {}", hexString);
+            return true;
+        }
 
-       return false;
-   }
+        return false;
+    }
 
     private boolean isAutoConfDisabledByFilter() {
         return filterManager.getFilter() != null &&
