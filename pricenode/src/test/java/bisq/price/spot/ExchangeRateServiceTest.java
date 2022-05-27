@@ -166,8 +166,10 @@ public class ExchangeRateServiceTest {
     @Test
     public void getAllMarketPrices_withMultipleProviders_excludedCurrencyCodes() {
         String excludedCcyString = "LBP,USD,EUR";
+        String providerExcludedCcyString = "HUOBI:BRL,BINANCE:GBP,BINANCE:SEK";
         Environment mockedEnvironment = mock(Environment.class);
         when(mockedEnvironment.getProperty(eq("bisq.price.fiatcurrency.excluded"), anyString())).thenReturn(excludedCcyString);
+        when(mockedEnvironment.getProperty(eq("bisq.price.fiatcurrency.excludedByProvider"), anyString())).thenReturn(providerExcludedCcyString);
 
         class MockedExchangeRateProvider extends ExchangeRateProvider {
             MockedExchangeRateProvider() {
