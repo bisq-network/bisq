@@ -15,27 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daonode.dto;
+package bisq.daonodeOld.web.jdk.handler;
 
-import lombok.Getter;
-
-/**
- * Minimal data required for Bisq 2 reputation use case.
- * Need to be in sync with the Bisq 2 ProofOfBurnDto class.
- */
-@Getter
-public class ProofOfBurnDto {
-    private String txId;
-    private final long burnedAmount;
-    private final int blockHeight;
-    private final long time;
-    private final String hash;
-
-    public ProofOfBurnDto(String txId, long burnedAmount, int blockHeight, long time, String hash) {
-        this.txId = txId;
-        this.burnedAmount = burnedAmount;
-        this.blockHeight = blockHeight;
-        this.time = time;
-        this.hash = hash;
-    }
+public class ResourcePathElement {
+    public static String DAONODE = "daonode";
+    public static final String BLOCKHEIGHT = "blockheight";
+    public static final String PROOFOFBURN = "proofofburn";
 }

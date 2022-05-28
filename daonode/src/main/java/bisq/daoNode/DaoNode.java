@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daonode;
+package bisq.daoNode;
 
 import bisq.core.app.misc.AppSetup;
 import bisq.core.app.misc.AppSetupWithP2PAndDAO;
@@ -25,26 +25,23 @@ import bisq.core.user.Preferences;
 
 import com.google.inject.Injector;
 
+import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-
-
-
-import bisq.daonode.service.DaoNodeService;
 
 @Slf4j
 public class DaoNode {
     @Setter
     private Injector injector;
-    private AppSetup appSetup;
-    private DaoNodeService daoNodeService;
     private GetInventoryRequestHandler getInventoryRequestHandler;
+    @Getter
+    private DaoStateService daoStateService;
 
     public DaoNode() {
     }
 
-    public void startApplication(int restServerPort) {
-        appSetup = injector.getInstance(AppSetupWithP2PAndDAO.class);
+    public void startApplication() {
+        AppSetup appSetup = injector.getInstance(AppSetupWithP2PAndDAO.class);
 
         // todo should run as full dao node when in production
         injector.getInstance(Preferences.class).setUseFullModeDaoMonitor(false);
@@ -52,14 +49,13 @@ public class DaoNode {
         appSetup.start();
 
         getInventoryRequestHandler = injector.getInstance(GetInventoryRequestHandler.class);
-        DaoStateService daoStateService = injector.getInstance(DaoStateService.class);
-
-        daoNodeService = new DaoNodeService(daoStateService);
-        daoNodeService.start(restServerPort);
+        daoStateService = injector.getInstance(DaoStateService.class);
     }
 
     public void shutDown() {
-        getInventoryRequestHandler.shutDown();
-        daoNodeService.shutDown();
+        if (getInventoryRequestHandler != null) {
+            getInventoryRequestHandler.shutDown();
+        }
+
     }
 }

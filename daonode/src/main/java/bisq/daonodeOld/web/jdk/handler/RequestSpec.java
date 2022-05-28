@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daonode.web.jdk.handler;
+package bisq.daonodeOld.web.jdk.handler;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -52,7 +52,7 @@ import com.sun.net.httpserver.HttpExchange;
  */
 @Getter
 @Slf4j
-class RequestSpec {
+public class RequestSpec {
 
     private final HttpExchange httpExchange;
     private final String method;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daonode.web.jdk.handler;
+package bisq.daonodeOld.web.jdk.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -31,17 +31,17 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.sun.net.httpserver.HttpExchange;
 
-class HandlerUtil {
+public class HandlerUtil {
 
-    static void setDefaultResponseHeaders(HttpExchange httpExchange) {
+    public static void setDefaultResponseHeaders(HttpExchange httpExchange) {
         httpExchange.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
     }
 
-    static void sendResponse(HttpExchange httpExchange, String response) throws IOException {
+    public static void sendResponse(HttpExchange httpExchange, String response) throws IOException {
         sendResponse(200, httpExchange, response);
     }
 
-    static void sendResponse(int status, HttpExchange httpExchange, String response) throws IOException {
+    public static void sendResponse(int status, HttpExchange httpExchange, String response) throws IOException {
         setDefaultResponseHeaders(httpExchange);
 
         byte[] responseBytes = response.getBytes(UTF_8);
@@ -52,17 +52,17 @@ class HandlerUtil {
     }
 
     // TODO make as function toWhat?
-    static String wrapResponse(String jsonData) {
+    public static String wrapResponse(String jsonData) {
         return format("{\"data\":%s}", jsonData);
     }
 
     // TODO make as function toErrorWhat?
-    static String wrapErrorResponse(String jsonError) {
+    public static String wrapErrorResponse(String jsonError) {
         return format("{\"error\":%s}", jsonError);
     }
 
     @SneakyThrows
-    static String toJson(Object object) {
+    public static String toJson(Object object) {
         return new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(object);
     }
 }

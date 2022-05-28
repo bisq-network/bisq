@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daonode.service;
+package bisq.daonodeOld.service;
 
 import bisq.core.dao.state.DaoStateService;
 
@@ -23,8 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 
 
 
-import bisq.daonode.web.WebServer;
-import bisq.daonode.web.jdk.JdkServer;
+import bisq.daonodeOld.web.WebServer;
+import bisq.daonodeOld.web.jdk.JdkServer;
 
 // Todo We should limit usage to localhost as its not intended at that stage to be used
 // as a public API, but rather be used by Bisq 2 bridge clients or BSQ explorer nodes,

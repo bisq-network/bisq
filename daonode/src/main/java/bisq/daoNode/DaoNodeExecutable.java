@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daonode;
+package bisq.daoNode;
 
 
 import bisq.core.app.TorSetup;
@@ -41,27 +41,20 @@ import bisq.common.handlers.ResultHandler;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 //todo not sure if the restart handling from seed nodes is required
 
 @Slf4j
-public class DaoNodeMain extends ExecutableForAppWithP2p {
+public class DaoNodeExecutable extends ExecutableForAppWithP2p {
     private static final long CHECK_CONNECTION_LOSS_SEC = 30;
-    private static final int DEFAULT_REST_SERVER_PORT = 8080;
     private static final String VERSION = "1.8.4";
-
-    private DaoNode daoNode;
+    @Getter
+    private final DaoNode daoNode = new DaoNode();
     private Timer checkConnectionLossTime;
-    private int restServerPort = DEFAULT_REST_SERVER_PORT;
 
-    public DaoNodeMain() {
-        super("Bisq Daonode", "bisq-daonode", "bisq_daonode", VERSION);
-    }
-
-    public static void main(String[] args) {
-        System.out.println("DaoNode.VERSION: " + VERSION);
-
-        new DaoNodeMain().execute(args);
+    public DaoNodeExecutable() {
+        super("Bisq Dao Node", "bisq-dao-node", "bisq_dao_node", VERSION);
     }
 
     @Override
@@ -81,7 +74,6 @@ public class DaoNodeMain extends ExecutableForAppWithP2p {
     protected void launchApplication() {
         UserThread.execute(() -> {
             try {
-                daoNode = new DaoNode();
                 onApplicationLaunched();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -129,8 +121,7 @@ public class DaoNodeMain extends ExecutableForAppWithP2p {
             }
         });
 
-        //todo add program arg for port
-        daoNode.startApplication(restServerPort);
+        daoNode.startApplication();
 
         injector.getInstance(P2PService.class).addP2PServiceListener(new P2PServiceListener() {
             @Override
@@ -163,7 +154,7 @@ public class DaoNodeMain extends ExecutableForAppWithP2p {
                 boolean preventPeriodicShutdownAtSeedNode = injector.getInstance(Key.get(boolean.class,
                         Names.named(Config.PREVENT_PERIODIC_SHUTDOWN_AT_SEED_NODE)));
                 if (!preventPeriodicShutdownAtSeedNode) {
-                    startShutDownInterval(DaoNodeMain.this);
+                    startShutDownInterval(DaoNodeExecutable.this);
                 }
                 UserThread.runAfter(() -> setupConnectionLossCheck(), 60);
             }

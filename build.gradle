@@ -54,6 +54,7 @@ configure(subprojects) {
         javafxVersion = '16'
         javaxAnnotationVersion = '1.2'
         jcsvVersion = '1.4.0'
+        jerseyVersion = '3.0.4'
         jetbrainsAnnotationsVersion = '13.0'
         jfoenixVersion = '9.0.10'
         joptVersion = '5.0.4'
@@ -76,6 +77,7 @@ configure(subprojects) {
         slf4jVersion = '1.7.30'
         sparkVersion = '2.5.2'
         springBootVersion = '2.5.6'
+        swaggerVersion = '2.2.0'
 
         os = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
     }
@@ -691,7 +693,7 @@ configure(project(':seednode')) {
 configure(project(':daonode')) {
     apply plugin: 'com.github.johnrengelman.shadow'
 
-    mainClassName = 'bisq.daonode.DaoNodeMain'
+    mainClassName = 'bisq.daoNode.DaoNodeRestApiApplication'
 
     dependencies {
         implementation project(':common')
@@ -709,11 +711,17 @@ configure(project(':daonode')) {
         implementation "ch.qos.logback:logback-core:$logbackVersion"
         implementation "org.slf4j:slf4j-api:$slf4jVersion"
 
-        implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
-        implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-        implementation("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
+        /*  implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
+          implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+          implementation("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
 
-        implementation "com.google.protobuf:protobuf-java-util:$protobufVersion"
+          implementation "com.google.protobuf:protobuf-java-util:$protobufVersion"*/
+
+        implementation("org.glassfish.jersey.containers:jersey-container-jdk-http:$jerseyVersion")
+        implementation("org.glassfish.jersey.media:jersey-media-json-jackson:$jerseyVersion")
+        implementation("org.glassfish.jersey.inject:jersey-hk2:$jerseyVersion")
+        implementation("org.glassfish.jaxb:jaxb-runtime:3.0.2")
+        implementation("io.swagger.core.v3:swagger-jaxrs2-jakarta:$swaggerVersion")
 
         testImplementation "org.mockito:mockito-core:$mockitoVersion"
 

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daonode.web.jdk.handler;
+package bisq.daonodeOld.web.jdk.handler;
 
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
@@ -30,15 +30,14 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.daonode.web.jdk.handler.HandlerUtil.sendResponse;
-import static bisq.daonode.web.jdk.handler.HandlerUtil.toJson;
-import static bisq.daonode.web.jdk.handler.HandlerUtil.wrapErrorResponse;
-import static bisq.daonode.web.jdk.handler.HandlerUtil.wrapResponse;
-import static bisq.daonode.web.jdk.handler.ResourcePathElement.BLOCKHEIGHT;
+import static bisq.daonodeOld.web.jdk.handler.HandlerUtil.toJson;
+import static bisq.daonodeOld.web.jdk.handler.HandlerUtil.wrapErrorResponse;
+import static bisq.daonodeOld.web.jdk.handler.HandlerUtil.wrapResponse;
+import static bisq.daonodeOld.web.jdk.handler.ResourcePathElement.BLOCKHEIGHT;
 
 
 
-import bisq.daonode.dto.ProofOfBurnDto;
+import bisq.daoNode.dto.ProofOfBurnDto;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
@@ -50,7 +49,7 @@ import com.sun.net.httpserver.HttpHandler;
  * Example:  http://localhost:8080/daonode/proofofburn/blockheight/731270
  */
 @Slf4j
-class GetProofOfBurnHandler implements HttpHandler {
+public class GetProofOfBurnHandler implements HttpHandler {
 
     private final DaoStateService daoStateService;
     private final RequestSpec requestSpec;
@@ -73,22 +72,22 @@ class GetProofOfBurnHandler implements HttpHandler {
         try {
             if (daoStateService == null) {
                 log.warn("DAO Node daoStateService is null;  OK during web server dev/test.");
-                sendResponse(httpExchange, wrapResponse("[]"));
+                HandlerUtil.sendResponse(httpExchange, wrapResponse("[]"));
             } else {
                 int blockHeight = requestSpec.getIntParam(BLOCKHEIGHT);
                 log.info("Requesting POB for blockheight {}.", blockHeight);
-                List<ProofOfBurnDto> data = getProofOfBurnDtoList(blockHeight);
-                if (data != null) {
-                    sendResponse(httpExchange, wrapResponse(toJson(data)));
+                List<ProofOfBurnDto> list = getProofOfBurnDtoList(blockHeight);
+                if (list != null) {
+                    HandlerUtil.sendResponse(httpExchange, toJson(list));
                 } else {
                     log.error("DAO Node Proof of Burn data for blockHeight {} is null.", blockHeight);
-                    sendResponse(500,
+                    HandlerUtil.sendResponse(500,
                             httpExchange,
                             wrapErrorResponse(toJson("DAO Node proof of burn data is null.")));
                 }
             }
         } catch (RuntimeException ex) {
-            sendResponse(500,
+            HandlerUtil.sendResponse(500,
                     httpExchange,
                     wrapErrorResponse(toJson(ex.getMessage())));
         }

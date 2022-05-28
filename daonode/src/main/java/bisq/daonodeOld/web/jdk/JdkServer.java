@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daonode.web.jdk;
+package bisq.daonodeOld.web.jdk;
 
 import bisq.core.dao.state.DaoStateService;
 
@@ -29,12 +29,12 @@ import java.util.concurrent.Executor;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.daonode.web.jdk.handler.ResourcePathElement.DAONODE;
+import static bisq.daonodeOld.web.jdk.handler.ResourcePathElement.DAONODE;
 
 
 
-import bisq.daonode.web.WebServer;
-import bisq.daonode.web.jdk.handler.RestHandler;
+import bisq.daonodeOld.web.WebServer;
+import bisq.daonodeOld.web.jdk.handler.RestHandler;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
