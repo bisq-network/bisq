@@ -17,7 +17,11 @@
 
 package bisq.daoNode;
 
+import bisq.common.config.Config;
+
 import java.net.URI;
+
+import java.util.function.Consumer;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -40,40 +44,58 @@ import org.glassfish.jersey.server.ResourceConfig;
  */
 @Slf4j
 public class DaoNodeRestApiApplication extends ResourceConfig {
-    public static final String BASE_URL = "http://localhost:8082/api/v1";
+    @Getter
+    private static String baseUrl;
 
     public static void main(String[] args) throws Exception {
-        DaoNodeRestApiApplication daoNodeRestApiApplication = new DaoNodeRestApiApplication(args);
-        daoNodeRestApiApplication
-                .register(CustomExceptionMapper.class)
-                .register(StatusException.StatusExceptionMapper.class)
-                .register(ProofOfBurnApi.class)
-                .register(SwaggerResolution.class);
-
-        daoNodeRestApiApplication.startServer();
+        DaoNodeRestApiApplication daoNodeRestApiApplication = new DaoNodeRestApiApplication();
+        daoNodeRestApiApplication.execute(args, config -> {
+            daoNodeRestApiApplication
+                    .register(CustomExceptionMapper.class)
+                    .register(StatusException.StatusExceptionMapper.class)
+                    .register(ProofOfBurnApi.class)
+                    .register(SwaggerResolution.class);
+            daoNodeRestApiApplication.startServer(config.daoNodeApiUrl, config.daoNodeApiPort);
+        });
     }
+
 
     @Getter
     private final DaoNodeExecutable daoNodeExecutable;
     private HttpServer httpServer;
 
-    public DaoNodeRestApiApplication(String[] args) {
+    public DaoNodeRestApiApplication() {
         daoNodeExecutable = new DaoNodeExecutable();
+    }
+
+    private void execute(String[] args, Consumer<Config> configConsumer) {
         new Thread(() -> {
             daoNodeExecutable.execute(args);
+            configConsumer.accept(daoNodeExecutable.getConfig());
+            try {
+                // Keep running
+                Thread.currentThread().join();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }).start();
     }
 
-    private void startServer() throws Exception {
-        httpServer = JdkHttpServerFactory.createHttpServer(URI.create(BASE_URL), this);
+    private void startServer(String url, int port) {
+        baseUrl = url + ":" + port + "/api/v1";
+        httpServer = JdkHttpServerFactory.createHttpServer(URI.create(baseUrl), this);
         httpServer.createContext("/doc", new StaticFileHandler("/doc/v1/"));
 
         Runtime.getRuntime().addShutdownHook(new Thread(this::stopServer));
 
-        log.info("Server started at {}.", BASE_URL);
+        log.info("Server started at {}.", baseUrl);
 
         // block and wait shut down signal, like CTRL+C
-        Thread.currentThread().join();
+        try {
+            Thread.currentThread().join();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
         stopServer();
     }

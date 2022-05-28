@@ -62,8 +62,6 @@ public class DaoNodeExecutable extends ExecutableForAppWithP2p {
         super.doExecute();
 
         checkMemory(config, this);
-
-        keepRunning();
     }
 
     @Override
@@ -202,5 +200,9 @@ public class DaoNodeExecutable extends ExecutableForAppWithP2p {
     public void gracefulShutDown(ResultHandler resultHandler) {
         daoNode.shutDown();
         super.gracefulShutDown(resultHandler);
+    }
+
+    public Config getConfig() {
+        return config;
     }
 }
