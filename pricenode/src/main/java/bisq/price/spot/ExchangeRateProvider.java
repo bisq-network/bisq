@@ -64,6 +64,7 @@ public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRat
 
     private static Set<String> SUPPORTED_CRYPTO_CURRENCIES = new HashSet<>();
     private static Set<String> SUPPORTED_FIAT_CURRENCIES = new HashSet<>();
+    private Set<String> providerExclusionList = new HashSet<>();
     private final String name;
     private final String prefix;
     private final Environment env;
@@ -73,6 +74,18 @@ public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRat
         this.name = name;
         this.prefix = prefix;
         this.env = env;
+        List<String> excludedByProvider =
+                Arrays.asList(env.getProperty("bisq.price.fiatcurrency.excludedByProvider", "")
+                        .toUpperCase().trim().split("\\s*,\\s*"));
+        for (String s: excludedByProvider) {
+            String[] splits = s.split(":");
+            if (splits.length == 2 && splits[0].equalsIgnoreCase(name) && CurrencyUtil.isFiatCurrency(splits[1])) {
+                    providerExclusionList.add(splits[1]);
+                }
+            }
+        if (providerExclusionList.size() > 0) {
+            log.info("{} specific exclusion list={}", name, providerExclusionList.toString());
+        }
     }
 
     public Set<String> getSupportedFiatCurrencies() {
@@ -91,7 +104,10 @@ public abstract class ExchangeRateProvider extends PriceProvider<Set<ExchangeRat
             log.info("fiat currencies excluded: {}", validatedExclusionList);
             log.info("fiat currencies supported: {}", SUPPORTED_FIAT_CURRENCIES.size());
         }
-        return SUPPORTED_FIAT_CURRENCIES;
+        // filter out any provider specific ccy exclusions
+        return SUPPORTED_FIAT_CURRENCIES.stream()
+                .filter(ccy -> !providerExclusionList.contains(ccy.toUpperCase()))
+                .collect(Collectors.toSet());
     }
 
     public Set<String> getSupportedCryptoCurrencies() {
