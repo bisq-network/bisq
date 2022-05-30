@@ -57,10 +57,10 @@ public class ProofOfBurnApi {
     private final DaoNode daoNode;
 
     public ProofOfBurnApi(@Context Application application) {
-        daoNode = ((DaoNodeRestApiApplication) application).getDaoNodeExecutable().getDaoNode();
+        daoNode = ((DaoNodeRestApiApplication) application).getDaoNode();
     }
 
-    @Operation(description = "request the proof of burn data")
+    @Operation(description = "Request the proof of burn data")
     @ApiResponse(responseCode = "200", description = "The proof of burn data",
             content = {@Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(allOf = ProofOfBurnDto.class))}

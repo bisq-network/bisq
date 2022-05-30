@@ -49,7 +49,7 @@ public class DaoNodeRestApiApplication extends ResourceConfig {
 
     public static void main(String[] args) throws Exception {
         DaoNodeRestApiApplication daoNodeRestApiApplication = new DaoNodeRestApiApplication();
-        daoNodeRestApiApplication.execute(args, config -> {
+        daoNodeRestApiApplication.startDaoNode(args, config -> {
             daoNodeRestApiApplication
                     .register(CustomExceptionMapper.class)
                     .register(StatusException.StatusExceptionMapper.class)
@@ -61,22 +61,25 @@ public class DaoNodeRestApiApplication extends ResourceConfig {
 
 
     @Getter
-    private final DaoNodeExecutable daoNodeExecutable;
+    private final DaoNode daoNode;
     private HttpServer httpServer;
 
     public DaoNodeRestApiApplication() {
-        daoNodeExecutable = new DaoNodeExecutable();
+        daoNode = new DaoNode();
     }
 
-    private void execute(String[] args, Consumer<Config> configConsumer) {
+    private void startDaoNode(String[] args, Consumer<Config> configConsumer) {
         new Thread(() -> {
-            daoNodeExecutable.execute(args);
-            configConsumer.accept(daoNodeExecutable.getConfig());
+            daoNode.execute(args);
+            configConsumer.accept(daoNode.getConfig());
             try {
                 // Keep running
+                Thread.currentThread().setName("daoNodeThread");
                 Thread.currentThread().join();
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                log.error("daoNodeThread interrupted", e);
+                e.printStackTrace();
+                shutDown();
             }
         }).start();
     }
@@ -86,23 +89,33 @@ public class DaoNodeRestApiApplication extends ResourceConfig {
         httpServer = JdkHttpServerFactory.createHttpServer(URI.create(baseUrl), this);
         httpServer.createContext("/doc", new StaticFileHandler("/doc/v1/"));
 
-        Runtime.getRuntime().addShutdownHook(new Thread(this::stopServer));
+        Runtime.getRuntime().addShutdownHook(new Thread(this::shutDown));
 
         log.info("Server started at {}.", baseUrl);
 
         // block and wait shut down signal, like CTRL+C
         try {
+            Thread.currentThread().setName("serverThread");
             Thread.currentThread().join();
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            log.error("serverThread interrupted", e);
+            System.exit(1);
         }
 
-        stopServer();
+        shutDown();
+    }
+
+    private void shutDown() {
+        if (daoNode != null) {
+            daoNode.gracefulShutDown(this::stopServer);
+        } else {
+            stopServer();
+        }
     }
 
     private void stopServer() {
-        daoNodeExecutable.gracefulShutDown(() -> {
+        if (httpServer != null) {
             httpServer.stop(1);
-        });
+        }
     }
 }
