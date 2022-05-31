@@ -152,9 +152,10 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         // We observe slow tor start at seed nodes. Not sure what caused that but cleaning the tor files might help.
         injector.getInstance(TorSetup.class).cleanupTorFiles(() -> {
             log.info("Tor directory reset");
+
+            seedNode.startApplication();
         }, log::error);
 
-        seedNode.startApplication();
 
         injector.getInstance(P2PService.class).addP2PServiceListener(new P2PServiceListener() {
             @Override
