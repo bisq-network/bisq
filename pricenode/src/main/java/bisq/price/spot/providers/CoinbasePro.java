@@ -14,13 +14,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
-
 package bisq.price.spot.providers;
 
 import bisq.price.spot.ExchangeRate;
 import bisq.price.spot.ExchangeRateProvider;
 
-import org.knowm.xchange.bitbay.BitbayExchange;
+import org.knowm.xchange.coinbasepro.CoinbaseProExchange;
 
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
@@ -30,16 +29,21 @@ import java.time.Duration;
 import java.util.Set;
 
 @Component
-class Bitbay extends ExchangeRateProvider {
+class CoinbasePro extends ExchangeRateProvider {
 
-    public Bitbay(Environment env) {
-        super(env, "BITBAY", "bitbay", Duration.ofMinutes(1));
+    public CoinbasePro(Environment env) {
+        super(env, "COINBASEPRO", "coinbasepro", Duration.ofMinutes(1));
     }
 
     @Override
     public Set<ExchangeRate> doGet() {
-        // Supported fiat: EUR, GBP, PLN, USD
-        // Supported alts: DASH, ETH, LTC
-        return doGet(BitbayExchange.class);
+        // Supported fiat: EUR, USD, GBP
+        // Supported alts: DASH, DOGE, ETC, ETH, LTC, ZEC, ZEN
+        return doGet(CoinbaseProExchange.class);
+    }
+
+    @Override
+    protected boolean requiresFilterDuringBulkTickerRetrieval() {
+        return true;
     }
 }
