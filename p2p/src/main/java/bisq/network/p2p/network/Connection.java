@@ -504,7 +504,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     }
 
     private void doShutDown(CloseConnectionReason closeConnectionReason, @Nullable Runnable shutDownCompleteHandler) {
-        log.info("Connection doShutDown started");
         // Use UserThread.execute as it's not clear if that is called from a non-UserThread
         UserThread.execute(() -> connectionListener.onDisconnect(closeConnectionReason, this));
         try {
