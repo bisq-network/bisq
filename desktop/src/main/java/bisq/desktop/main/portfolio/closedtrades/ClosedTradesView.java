@@ -44,6 +44,7 @@ import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.user.Preferences;
+import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -147,6 +148,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     private final BsqTradeDetailsWindow bsqTradeDetailsWindow;
     private final Navigation navigation;
     private final KeyRing keyRing;
+    private final User user;
     private final Preferences preferences;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final PrivateNotificationManager privateNotificationManager;
@@ -160,6 +162,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             BsqTradeDetailsWindow bsqTradeDetailsWindow,
                             Navigation navigation,
                             KeyRing keyRing,
+                            User user,
                             Preferences preferences,
                             TradeDetailsWindow tradeDetailsWindow,
                             PrivateNotificationManager privateNotificationManager,
@@ -169,6 +172,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         this.bsqTradeDetailsWindow = bsqTradeDetailsWindow;
         this.navigation = navigation;
         this.keyRing = keyRing;
+        this.user = user;
         this.preferences = preferences;
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.privateNotificationManager = privateNotificationManager;
@@ -478,7 +482,11 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             public void updateItem(final ClosedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
-                                if (item != null && !empty && isMyOfferAsMaker(item.getTradable().getOffer().getOfferPayloadBase())) {
+                                if (item != null
+                                        && !empty
+                                        && isMyOfferAsMaker(item.getTradable().getOffer().getOfferPayloadBase())
+                                        && (item.getTradable().getOffer().isFiatOffer() ? user.hasAnyFiatPaymentAccount() : user.hasAnyNonFiatPaymentAccount())
+                                ) {
                                     if (button == null) {
                                         button = getRegularIconButton(MaterialDesignIcon.CONTENT_COPY);
                                         button.setTooltip(new Tooltip(Res.get("shared.duplicateOffer")));

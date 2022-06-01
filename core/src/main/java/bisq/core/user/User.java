@@ -214,6 +214,22 @@ public class User implements PersistedDataHost {
         }
     }
 
+    public boolean hasAnyFiatPaymentAccount() {
+        return paymentAccountsAsObservable
+                .stream()
+                .filter(paymentAccount -> paymentAccount.getPaymentMethod().isFiat())
+                .collect(Collectors.toList())
+                .size() > 0;
+    }
+
+    public boolean hasAnyNonFiatPaymentAccount() {
+        return paymentAccountsAsObservable
+                .stream()
+                .filter(paymentAccount -> !paymentAccount.getPaymentMethod().isFiat())
+                .collect(Collectors.toList())
+                .size() > 0;
+    }
+
     public boolean hasPaymentAccountForCurrency(TradeCurrency tradeCurrency) {
         return findFirstPaymentAccountWithCurrency(tradeCurrency) != null;
     }
