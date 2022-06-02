@@ -39,6 +39,7 @@ import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayloadBase;
 import bisq.core.offer.OpenOffer;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
@@ -92,6 +93,8 @@ import javafx.util.Callback;
 
 import java.util.Comparator;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static bisq.desktop.util.FormBuilder.getRegularIconButton;
 
@@ -485,7 +488,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                 if (item != null
                                         && !empty
                                         && isMyOfferAsMaker(item.getTradable().getOffer().getOfferPayloadBase())
-                                        && (item.getTradable().getOffer().isFiatOffer() ? user.hasAnyFiatPaymentAccount() : user.hasAnyNonFiatPaymentAccount())
+                                        && isMatchingAccountAvailable(item.getTradable().getOffer())
                                 ) {
                                     if (button == null) {
                                         button = getRegularIconButton(MaterialDesignIcon.CONTENT_COPY);
@@ -757,5 +760,22 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
     private boolean isMyOfferAsMaker(OfferPayloadBase offerPayloadBase) {
         return offerPayloadBase.getPubKeyRing().equals(keyRing.getPubKeyRing());
+    }
+
+    private boolean isMatchingAccountAvailable(Offer offer) {
+        Predicate<PaymentAccount> predicate;
+        if (offer.isFiatOffer()) {
+            predicate = paymentAccount -> paymentAccount.getPaymentMethod().isFiat();
+        } else if (offer.isBsqSwapOffer()) {
+            predicate = paymentAccount -> paymentAccount.getPaymentMethod().isBsqSwap();
+        } else {
+            predicate = paymentAccount -> paymentAccount.getPaymentMethod().isBlockchain();
+        }
+
+        return user.getPaymentAccountsAsObservable()
+                .stream()
+                .filter(predicate)
+                .collect(Collectors.toList())
+                .size() > 0;
     }
 }
