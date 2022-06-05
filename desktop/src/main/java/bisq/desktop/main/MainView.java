@@ -190,6 +190,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         JFXBadge portfolioButtonWithBadge = new JFXBadge(portfolioButton);
         JFXBadge supportButtonWithBadge = new JFXBadge(supportButton);
         JFXBadge settingsButtonWithBadge = new JFXBadge(settingsButton);
+        JFXBadge accountButtonWithBadge = new JFXBadge(accountButton);
         JFXBadge daoButtonWithBadge = new JFXBadge(daoButton);
 
         Locale locale = GlobalSettings.getLocale();
@@ -322,7 +323,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         HBox.setHgrow(primaryNav, Priority.SOMETIMES);
 
         HBox secondaryNav = new HBox(supportButtonWithBadge, getNavigationSpacer(), settingsButtonWithBadge,
-                getNavigationSpacer(), accountButton, getNavigationSpacer(), daoButtonWithBadge);
+                getNavigationSpacer(), accountButtonWithBadge, getNavigationSpacer(), daoButtonWithBadge);
         secondaryNav.getStyleClass().add("nav-secondary");
         HBox.setHgrow(secondaryNav, Priority.SOMETIMES);
 
@@ -368,6 +369,9 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
 
         setupBadge(settingsButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowSettingsUpdatesNotification());
         settingsButtonWithBadge.getStyleClass().add("new");
+
+        setupBadge(accountButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowAccountUpdatesNotification());
+        accountButtonWithBadge.getStyleClass().add("new");
 
         setupBadge(daoButtonWithBadge, new SimpleStringProperty(Res.get("shared.new")), model.getShowDaoUpdatesNotification());
         daoButtonWithBadge.getStyleClass().add("new");

@@ -27,6 +27,8 @@ import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.availability.OfferAvailabilityModel;
+import bisq.core.payment.PaymentAccount;
+import bisq.core.proto.persistable.CorePersistenceProtoResolver;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
@@ -110,6 +112,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -163,6 +166,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     @Getter
     private final LongProperty numPendingTrades = new SimpleLongProperty();
     private final ReferralIdService referralIdService;
+    private final CorePersistenceProtoResolver corePersistenceProtoResolver;
     private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
     @Getter
     private final boolean allowFaultyDelayedTxs;
@@ -191,6 +195,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                         ClockWatcher clockWatcher,
                         PersistenceManager<TradableList<Trade>> persistenceManager,
                         ReferralIdService referralIdService,
+                        CorePersistenceProtoResolver corePersistenceProtoResolver,
                         DumpDelayedPayoutTx dumpDelayedPayoutTx,
                         @Named(Config.ALLOW_FAULTY_DELAYED_TXS) boolean allowFaultyDelayedTxs) {
         this.user = user;
@@ -210,6 +215,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         this.provider = provider;
         this.clockWatcher = clockWatcher;
         this.referralIdService = referralIdService;
+        this.corePersistenceProtoResolver = corePersistenceProtoResolver;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
         this.allowFaultyDelayedTxs = allowFaultyDelayedTxs;
         this.persistenceManager = persistenceManager;
@@ -930,5 +936,9 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         btcWalletService.recoverAddressEntry(trade.getId(), entries.second,
                 AddressEntry.Context.TRADE_PAYOUT);
         return true;
+    }
+
+    public PaymentAccount cloneAccount(PaymentAccount paymentAccount) {
+        return Objects.requireNonNull(PaymentAccount.fromProto(paymentAccount.toProtoMessage(), corePersistenceProtoResolver));
     }
 }

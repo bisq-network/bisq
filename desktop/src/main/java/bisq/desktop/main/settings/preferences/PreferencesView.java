@@ -226,7 +226,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     @Override
     protected void activate() {
         String key = "sensitiveDataRemovalInfo";
-        if (DontShowAgainLookup.showAgain(key)) {
+        if (DontShowAgainLookup.showAgain(key) &&
+                preferences.getClearDataAfterDays() == preferences.CLEAR_DATA_AFTER_DAYS_INITIAL) {
             new Popup()
                     .headLine(Res.get("setting.info.headline"))
                     .backgroundInfo(Res.get("settings.preferences.sensitiveDataRemoval.msg"))

@@ -27,6 +27,7 @@ import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureRespons
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxResponse;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.protocol.bisq_v1.tasks.seller.MaybeCreateSubAccount;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerCreatesDelayedPayoutTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSendDelayedPayoutTxSignatureRequest;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSignsDelayedPayoutTx;
@@ -72,6 +73,7 @@ public class SellerAsTakerProtocol extends SellerProtocol implements TakerProtoc
                 .with(TakerEvent.TAKE_OFFER)
                 .from(trade.getTradingPeerNodeAddress()))
                 .setup(tasks(
+                        MaybeCreateSubAccount.class,
                         ApplyFilter.class,
                         getVerifyPeersFeePaymentClass(),
                         CreateTakerFeeTx.class,

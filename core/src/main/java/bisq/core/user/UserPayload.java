@@ -31,14 +31,15 @@ import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.persistable.PersistableEnvelope;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,7 +47,6 @@ import javax.annotation.Nullable;
 
 @Slf4j
 @Data
-@AllArgsConstructor
 public class UserPayload implements PersistableEnvelope {
     @Nullable
     private String accountId;
@@ -81,12 +81,53 @@ public class UserPayload implements PersistableEnvelope {
     @Nullable
     private List<RefundAgent> acceptedRefundAgents = new ArrayList<>();
 
-    // Added at 1.5.3
+    // Added at v1.5.3
     // Generic map for persisting various UI states. We keep values un-typed as string to
     // provide sufficient flexibility.
     private Cookie cookie = new Cookie();
 
+    // Was added at v1.9.2
+    // Key is in case of XMR subAccounts the subAccountId (mainAddress + accountIndex). This creates unique sets of
+    // mainAddress + accountIndex combinations.
+    private Map<String, Set<PaymentAccount>> subAccountsById = new HashMap<>();
+
     public UserPayload() {
+    }
+
+    public UserPayload(String accountId,
+                       Set<PaymentAccount> paymentAccounts,
+                       PaymentAccount currentPaymentAccount,
+                       List<String> acceptedLanguageLocaleCodes,
+                       Alert developersAlert,
+                       Alert displayedAlert,
+                       Filter developersFilter,
+                       Arbitrator registeredArbitrator,
+                       Mediator registeredMediator,
+                       List<Arbitrator> acceptedArbitrators,
+                       List<Mediator> acceptedMediators,
+                       PriceAlertFilter priceAlertFilter,
+                       List<MarketAlertFilter> marketAlertFilters,
+                       RefundAgent registeredRefundAgent,
+                       List<RefundAgent> acceptedRefundAgents,
+                       Cookie cookie,
+                       Map<String, Set<PaymentAccount>> subAccountsById) {
+        this.accountId = accountId;
+        this.paymentAccounts = paymentAccounts;
+        this.currentPaymentAccount = currentPaymentAccount;
+        this.acceptedLanguageLocaleCodes = acceptedLanguageLocaleCodes;
+        this.developersAlert = developersAlert;
+        this.displayedAlert = displayedAlert;
+        this.developersFilter = developersFilter;
+        this.registeredArbitrator = registeredArbitrator;
+        this.registeredMediator = registeredMediator;
+        this.acceptedArbitrators = acceptedArbitrators;
+        this.acceptedMediators = acceptedMediators;
+        this.priceAlertFilter = priceAlertFilter;
+        this.marketAlertFilters = marketAlertFilters;
+        this.registeredRefundAgent = registeredRefundAgent;
+        this.acceptedRefundAgents = acceptedRefundAgents;
+        this.cookie = cookie;
+        this.subAccountsById = subAccountsById;
     }
 
     @Override
@@ -125,10 +166,27 @@ public class UserPayload implements PersistableEnvelope {
                 .ifPresent(e -> builder.addAllAcceptedRefundAgents(ProtoUtil.collectionToProto(acceptedRefundAgents,
                         message -> ((protobuf.StoragePayload) message).getRefundAgent())));
         Optional.ofNullable(cookie).ifPresent(e -> builder.putAllCookie(cookie.toProtoMessage()));
+
+        // We transform our map to a list of SubAccountEntries because protobuf has no good support for maps
+        builder.addAllSubAccountMapEntries(subAccountsById.entrySet().stream()
+                .map(mapEntry -> protobuf.SubAccountMapEntry.newBuilder()
+                        .setKey(mapEntry.getKey())
+                        .addAllValue(mapEntry.getValue().stream()
+                                .map(PaymentAccount::toProtoMessage)
+                                .collect(Collectors.toList()))
+                        .build())
+                .collect(Collectors.toList()));
         return protobuf.PersistableEnvelope.newBuilder().setUserPayload(builder).build();
     }
 
     public static UserPayload fromProto(protobuf.UserPayload proto, CoreProtoResolver coreProtoResolver) {
+        // We map the protobuf list to our map (due weak protobuf support for maps)
+        Map<String, Set<PaymentAccount>> subAccounts = proto.getSubAccountMapEntriesList().stream()
+                .collect(Collectors.toMap(protobuf.SubAccountMapEntry::getKey,
+                        subAccountMapEntry -> subAccountMapEntry.getValueList().stream()
+                                .map(subAccount -> PaymentAccount.fromProto(subAccount, coreProtoResolver))
+                                .collect(Collectors.toSet())));
+
         return new UserPayload(
                 ProtoUtil.stringOrNullFromProto(proto.getAccountId()),
                 proto.getPaymentAccountsList().isEmpty() ? new HashSet<>() : new HashSet<>(proto.getPaymentAccountsList().stream()
@@ -156,7 +214,8 @@ public class UserPayload implements PersistableEnvelope {
                 proto.getAcceptedRefundAgentsList().isEmpty() ? new ArrayList<>() : new ArrayList<>(proto.getAcceptedRefundAgentsList().stream()
                         .map(RefundAgent::fromProto)
                         .collect(Collectors.toList())),
-                Cookie.fromProto(proto.getCookieMap())
+                Cookie.fromProto(proto.getCookieMap()),
+                subAccounts
         );
     }
 }

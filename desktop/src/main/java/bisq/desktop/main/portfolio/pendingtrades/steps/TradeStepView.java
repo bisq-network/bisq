@@ -685,7 +685,7 @@ public abstract class TradeStepView extends AnchorPane {
     }
 
     protected boolean isXmrTrade() {
-        return getCurrencyCode(trade).equals("XMR");
+        return checkNotNull(trade.getOffer()).isXmr();
     }
 
     private void updateTradePeriodState(Trade.TradePeriodState tradePeriodState) {
