@@ -46,6 +46,7 @@ public class StatusException extends RuntimeException {
     public static class StatusExceptionMapper implements ExceptionMapper<StatusException> {
         @Override
         public Response toResponse(StatusException exception) {
+            log.error("", exception);
             return Response.status(exception.getHttpStatus())
                     .entity(new ErrorMessage(exception.getMessage()))
                     .build();

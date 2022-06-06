@@ -26,9 +26,6 @@ import java.io.OutputStream;
 import java.util.Arrays;
 
 import lombok.Getter;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -45,17 +42,16 @@ import com.sun.net.httpserver.HttpHandler;
  * This handler is limited to html,css,json and javascript files.
  */
 @Slf4j
-@RequiredArgsConstructor
 public class StaticFileHandler implements HttpHandler {
     private static final String NOT_FOUND = "404 (Not Found)\n";
-
     public static final String[] VALID_SUFFIX = {".html", ".json", ".css", ".js"};
 
     @Getter
-    @Setter
-    @NonNull
-    protected String rootContext;
-    ClassLoader classLoader = getClass().getClassLoader();
+    protected final String rootContext;
+
+    public StaticFileHandler(String rootContext) {
+        this.rootContext = rootContext;
+    }
 
     public void handle(HttpExchange exchange) throws IOException {
         URI uri = exchange.getRequestURI();
@@ -74,7 +70,7 @@ public class StaticFileHandler implements HttpHandler {
         }
 
         // we are using getResourceAsStream to ultimately prevent load from parent directories
-        try (InputStream resource = classLoader.getResourceAsStream(resourceName)) {
+        try (InputStream resource = getClass().getClassLoader().getResourceAsStream(resourceName)) {
             if (resource == null) {
                 respond404(exchange);
                 return;
@@ -89,6 +85,7 @@ public class StaticFileHandler implements HttpHandler {
 
             Headers headers = exchange.getResponseHeaders();
             headers.set("Content-Type", mime);
+            headers.add("Cache-Control", "max-age=3600"); // cache static content on browser for 3600 seconds
             exchange.sendResponseHeaders(200, 0);
 
             try (OutputStream outputStream = exchange.getResponseBody()) {
