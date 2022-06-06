@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daoNode;
+package bisq.daonode;
 
 import bisq.common.config.Config;
 
@@ -28,17 +28,17 @@ import lombok.extern.slf4j.Slf4j;
 
 
 
-import bisq.daoNode.endpoints.ProofOfBurnApi;
-import bisq.daoNode.error.CustomExceptionMapper;
-import bisq.daoNode.error.StatusException;
-import bisq.daoNode.util.StaticFileHandler;
+import bisq.daonode.endpoints.ProofOfBurnApi;
+import bisq.daonode.error.CustomExceptionMapper;
+import bisq.daonode.error.StatusException;
+import bisq.daonode.util.StaticFileHandler;
 import com.sun.net.httpserver.HttpServer;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
 /**
  * Application to start and config the rest service.
- * This creates and rest service at BASE_URL for clients to connect and for users to browse the documentation.
+ * This creates a rest service for clients to connect and for users to browse the documentation.
  * <p>
  * Swagger doc are available at <a href="http://localhost:8082/doc/v1/index.html">REST API documentation</a>
  */

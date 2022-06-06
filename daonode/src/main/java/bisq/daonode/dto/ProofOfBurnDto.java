@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daoNode.dto;
+package bisq.daonode.dto;
 
 import lombok.Getter;
 

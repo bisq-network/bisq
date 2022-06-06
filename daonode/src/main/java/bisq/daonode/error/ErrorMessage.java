@@ -15,10 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daonodeOld.web.jdk.handler;
+package bisq.daonode.error;
 
-public class ResourcePathElement {
-    public static String DAONODE = "daonode";
-    public static final String BLOCKHEIGHT = "blockheight";
-    public static final String PROOFOFBURN = "proofofburn";
+import lombok.Getter;
+
+@Getter
+public class ErrorMessage {
+    private final String error;
+
+    public ErrorMessage(String error) {
+        this.error = error;
+    }
 }
+

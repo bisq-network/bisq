@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daoNode.error;
+package bisq.daonode.error;
 
 import lombok.Getter;
 import lombok.Setter;

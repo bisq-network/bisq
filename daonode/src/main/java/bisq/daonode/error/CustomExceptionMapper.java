@@ -15,11 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daonodeOld.web;
+package bisq.daonode.error;
 
-public interface WebServer {
+import lombok.extern.slf4j.Slf4j;
 
-    void start();
 
-    void stop(int delay);
+
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Provider;
+
+@Slf4j
+@Provider
+public class CustomExceptionMapper implements ExceptionMapper<Exception> {
+    @Override
+    public Response toResponse(Exception exception) {
+        log.error("", exception);
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity(new ErrorMessage(exception.getMessage()))
+                .build();
+    }
 }

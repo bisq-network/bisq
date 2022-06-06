@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daoNode;
+package bisq.daonode;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -60,9 +60,9 @@ public class SwaggerResolution {
                 Reader reader = new Reader(configuration);
                 OpenAPI openAPI = reader.read(application.getClasses());
                 swaggerJson = Json.pretty(openAPI);
-            } catch (RuntimeException e) {
-                log.error(e.getMessage(), e);
-                throw e;
+            } catch (Exception exception) {
+                log.error("", exception);
+                throw new RuntimeException(exception);
             }
         }
 

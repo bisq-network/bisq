@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daoNode.util;
+package bisq.daonode.util;
 
 import java.net.URI;
 

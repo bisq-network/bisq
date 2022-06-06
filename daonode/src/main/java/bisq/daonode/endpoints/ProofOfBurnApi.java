@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daoNode.endpoints;
+package bisq.daonode.endpoints;
 
 import bisq.core.dao.state.model.blockchain.Tx;
 
@@ -31,9 +31,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 
 
-import bisq.daoNode.DaoNode;
-import bisq.daoNode.DaoNodeRestApiApplication;
-import bisq.daoNode.dto.ProofOfBurnDto;
+import bisq.daonode.DaoNode;
+import bisq.daonode.DaoNodeRestApiApplication;
+import bisq.daonode.dto.ProofOfBurnDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -53,7 +53,7 @@ import jakarta.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "Proof of burn API")
 public class ProofOfBurnApi {
-    public static final String DESC_BLOCK_HEIGHT = "The block height from which we request the proof of burn data";
+    private static final String DESC_BLOCK_HEIGHT = "The block height from which we request the proof of burn data";
     private final DaoNode daoNode;
 
     public ProofOfBurnApi(@Context Application application) {
