@@ -127,6 +127,9 @@ public class WesternUnionAccountPayload extends CountryBasedPaymentAccountPayloa
     }
 
     @Override
+    public boolean showRefTextWarning() { return false; }
+
+    @Override
     public byte[] getAgeWitnessInputData() {
         String all = this.countryCode +
                 this.holderName +

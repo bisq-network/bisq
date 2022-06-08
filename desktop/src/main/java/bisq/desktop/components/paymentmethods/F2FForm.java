@@ -63,6 +63,7 @@ public class F2FForm extends PaymentMethodForm {
                 f2fAccountPayload.getContact());
         TextArea textArea = addTopLabelTextArea(gridPane, gridRow, 1, Res.get("payment.shared.extraInfo"), "").second;
         textArea.setMinHeight(70);
+        textArea.setMaxHeight(70);
         textArea.setEditable(false);
         textArea.setId("text-area-disabled");
         textArea.setText(offer.getExtraInfo());

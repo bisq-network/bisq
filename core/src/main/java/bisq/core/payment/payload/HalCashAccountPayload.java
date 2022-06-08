@@ -92,6 +92,9 @@ public final class HalCashAccountPayload extends PaymentAccountPayload {
     }
 
     @Override
+    public boolean showRefTextWarning() { return false; }
+
+    @Override
     public byte[] getAgeWitnessInputData() {
         return super.getAgeWitnessInputData(mobileNr.getBytes(StandardCharsets.UTF_8));
     }

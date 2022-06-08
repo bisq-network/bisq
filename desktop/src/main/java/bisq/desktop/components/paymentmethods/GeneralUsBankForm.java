@@ -70,6 +70,7 @@ public abstract class GeneralUsBankForm extends GeneralBankForm {
             TextArea textAddress = addCompactTopLabelTextArea(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
                     Res.get("payment.account.address"), "").second;
             textAddress.setMinHeight(70);
+            textAddress.setMaxHeight(70);
             textAddress.setEditable(false);
             textAddress.setText(holderAddress);
         }

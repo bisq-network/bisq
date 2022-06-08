@@ -97,6 +97,7 @@ import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
@@ -1256,5 +1257,9 @@ public class GUIUtil {
             return;
         }
         TOP_ALTCOIN = tradeCurrency;
+    }
+
+    public static boolean isLimitedScreenHeight() {
+        return Screen.getPrimary().getVisualBounds().getHeight() < 800;
     }
 }

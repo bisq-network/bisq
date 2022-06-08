@@ -53,11 +53,13 @@ public class CashByMailForm extends PaymentMethodForm {
 
         TextArea textAddress = addCompactTopLabelTextArea(gridPane, ++gridRow, Res.get("payment.postal.address"), "").second;
         textAddress.setMinHeight(70);
+        textAddress.setMaxHeight(70);
         textAddress.setEditable(false);
         textAddress.setText(cbm.getPostalAddress());
 
         TextArea textExtraInfo = addCompactTopLabelTextArea(gridPane, gridRow, 1, Res.get("payment.shared.extraInfo"), "").second;
         textExtraInfo.setMinHeight(70);
+        textExtraInfo.setMaxHeight(70);
         textExtraInfo.setEditable(false);
         textExtraInfo.setText(cbm.getExtraInfo());
         return gridRow;
