@@ -19,6 +19,7 @@ package bisq.desktop.main.portfolio.pendingtrades.steps.buyer;
 
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.BusyAnimation;
+import bisq.desktop.components.SimpleMarkdownLabel;
 import bisq.desktop.components.TextFieldWithCopyIcon;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.paymentmethods.AchTransferForm;
@@ -81,6 +82,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.SetXmrTxKeyWindow;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
+import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.Transitions;
 
@@ -125,10 +127,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabel;
-import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
-import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
-import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class BuyerStep2View extends TradeStepView {
@@ -240,11 +239,15 @@ public class BuyerStep2View extends TradeStepView {
 
         addTradeInfoBlock();
 
+        int rowSpanStart = gridRow;
+
         PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
         String paymentMethodId = paymentAccountPayload != null ? paymentAccountPayload.getPaymentMethodId() : "";
         TitledGroupBg accountTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 4,
                 Res.get("portfolio.pending.step2_buyer.startPaymentUsing", Res.get(paymentMethodId)),
                 Layout.COMPACT_GROUP_DISTANCE);
+        GridPane.setColumnSpan(accountTitledGroupBg, 2);
+
         TextFieldWithCopyIcon field = addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 0,
                 Res.get("portfolio.pending.step2_buyer.amountToTransfer"),
                 model.getFiatVolume(),
@@ -435,7 +438,13 @@ public class BuyerStep2View extends TradeStepView {
             }
         }
 
-        GridPane.setRowSpan(accountTitledGroupBg, gridRow - 1);
+        if (paymentAccountPayload.showRefTextWarning()) {
+            SimpleMarkdownLabel footerLabel = addSimpleMarkdownLabel(gridPane, ++gridRow, Res.get("portfolio.pending.step2_buyer.refTextWarn"), 10);
+            footerLabel.getStyleClass().add("medium-text");
+            GridPane.setColumnSpan(footerLabel, 2);
+        }
+
+        GridPane.setRowSpan(accountTitledGroupBg, gridRow - rowSpanStart);
 
         Tuple4<Button, BusyAnimation, Label, HBox> tuple3 = addButtonBusyAnimationLabel(gridPane, ++gridRow, 0,
                 Res.get("portfolio.pending.step2_buyer.paymentStarted"), 10);
@@ -446,6 +455,11 @@ public class BuyerStep2View extends TradeStepView {
         confirmButton.setOnAction(e -> onPaymentStarted());
         busyAnimation = tuple3.second;
         statusLabel = tuple3.third;
+
+        // fix GH issue 6238 - on small res screen, the payment started button cannot be reached
+        if (GUIUtil.isLimitedScreenHeight()) {
+            gridPane.setMinHeight(600); // make the scrollpane parent node activate its scrollbar
+        }
 
         if (trade.getOffer().getCurrencyCode().equals("BSQ")) {
             fillBsqButton = new AutoTooltipButton(Res.get("portfolio.pending.step2_buyer.fillInBsqWallet"));
