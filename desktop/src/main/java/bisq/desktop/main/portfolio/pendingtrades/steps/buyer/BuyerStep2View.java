@@ -26,6 +26,7 @@ import bisq.desktop.components.paymentmethods.AdvancedCashForm;
 import bisq.desktop.components.paymentmethods.AliPayForm;
 import bisq.desktop.components.paymentmethods.AmazonGiftCardForm;
 import bisq.desktop.components.paymentmethods.AssetsForm;
+import bisq.desktop.components.paymentmethods.AustraliaPayidForm;
 import bisq.desktop.components.paymentmethods.BizumForm;
 import bisq.desktop.components.paymentmethods.CapitualForm;
 import bisq.desktop.components.paymentmethods.CashByMailForm;
@@ -277,6 +278,9 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.NATIONAL_BANK_ID:
                 gridRow = NationalBankForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
+            case PaymentMethod.AUSTRALIA_PAYID_ID:
+                gridRow = AustraliaPayidForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.SAME_BANK_ID:
                 gridRow = SameBankForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
