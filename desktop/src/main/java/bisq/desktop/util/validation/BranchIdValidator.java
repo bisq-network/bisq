@@ -31,6 +31,9 @@ public final class BranchIdValidator extends BankValidator {
         int length;
         switch (countryCode) {
             case "GB":
+                if (input.strip().startsWith("040075")) {
+                    return new ValidationResult(false, Res.get("validation.gbp.revolutBranch"));
+                }
                 length = 6;
                 if (isNumberWithFixedLength(input, length))
                     return super.validate(input);
