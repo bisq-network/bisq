@@ -145,7 +145,7 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
             alicesOffers = aliceClient.getMyOffersSortedByDate(BUY.name(), BRL);
             assertEquals(0, alicesOffers.size());
             genBtcBlocksThenWait(1, 2_500);
-            waitForDepositConfirmation(log, testInfo, bobClient, trade.getTradeId());
+            waitForTakerDepositConfirmation(log, testInfo, bobClient, trade.getTradeId());
 
             trade = bobClient.getTrade(tradeId);
             verifyTakerDepositConfirmed(trade);
@@ -182,7 +182,7 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
     public void testAlicesConfirmPaymentStarted(final TestInfo testInfo) {
         try {
             var trade = aliceClient.getTrade(tradeId);
-            waitForDepositConfirmation(log, testInfo, aliceClient, trade.getTradeId());
+            waitForTakerDepositConfirmation(log, testInfo, aliceClient, trade.getTradeId());
             aliceClient.confirmPaymentStarted(trade.getTradeId());
             sleep(6_000);
             waitUntilBuyerSeesPaymentStartedMessage(log, testInfo, aliceClient, tradeId);

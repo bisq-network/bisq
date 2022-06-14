@@ -115,7 +115,7 @@ public class TakeBuyXMROfferTest extends AbstractTradeTest {
 
             // Now generate the BTC block to confirm the taker deposit tx.
             genBtcBlocksThenWait(1, 2_500);
-            waitForDepositConfirmation(log, testInfo, bobClient, tradeId);
+            waitForTakerDepositConfirmation(log, testInfo, bobClient, tradeId);
 
             // Verify the seller can only send a payment rcvd msg after the payment started msg.
             verifyPaymentReceivedMsgAfterPaymentSentMsgPrecondition(log, aliceClient);

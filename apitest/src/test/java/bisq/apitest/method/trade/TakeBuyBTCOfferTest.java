@@ -108,7 +108,7 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
 
             // Now generate the BTC block to confirm the taker deposit tx.
             genBtcBlocksThenWait(1, 2_500);
-            waitForDepositConfirmation(log, testInfo, bobClient, tradeId);
+            waitForTakerDepositConfirmation(log, testInfo, bobClient, tradeId);
 
             // Verify the seller can only send a payment rcvd msg after the payment started msg.
             verifyPaymentReceivedMsgAfterPaymentSentMsgPrecondition(log, bobClient);
@@ -122,7 +122,7 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
     public void testAlicesConfirmPaymentStarted(final TestInfo testInfo) {
         try {
             var trade = aliceClient.getTrade(tradeId);
-            waitForDepositConfirmation(log, testInfo, aliceClient, trade.getTradeId());
+            waitForTakerDepositConfirmation(log, testInfo, aliceClient, trade.getTradeId());
             aliceClient.confirmPaymentStarted(trade.getTradeId());
             sleep(6_000);
             waitUntilBuyerSeesPaymentStartedMessage(log, testInfo, aliceClient, tradeId);

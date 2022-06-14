@@ -43,10 +43,16 @@ public class AbstractTradeTest extends AbstractOfferTest {
     @Getter
     protected static String tradeId;
 
-    protected final Supplier<Integer> maxTradeStateAndPhaseChecks = () -> isLongRunningTest ? 10 : 2;
+    protected final Supplier<Integer> maxTradeStateAndPhaseChecks = () ->
+            isLongRunningTest
+                    ? 10
+                    : 2;
     protected final Function<TradeInfo, String> toTradeDetailTable = (trade) ->
             new TableBuilder(TRADE_DETAIL_TBL, trade).build().toString();
-    protected final Function<GrpcClient, String> toUserName = (client) -> client.equals(aliceClient) ? "Alice" : "Bob";
+    protected final Function<GrpcClient, String> toUserName = (client) ->
+            client.equals(aliceClient)
+                    ? "Alice"
+                    : "Bob";
 
     @BeforeAll
     public static void initStaticFixtures() {
@@ -87,17 +93,17 @@ public class AbstractTradeTest extends AbstractOfferTest {
         return trade;
     }
 
-    protected final void waitForDepositConfirmation(Logger log,
-                                                    TestInfo testInfo,
-                                                    GrpcClient grpcClient,
-                                                    String tradeId) {
+    protected final void waitForTakerDepositConfirmation(Logger log,
+                                                         TestInfo testInfo,
+                                                         GrpcClient takerClient,
+                                                         String tradeId) {
         Predicate<TradeInfo> isTradeInDepositConfirmedStateAndPhase = (t) ->
                 t.getState().equals(DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN.name())
                         && t.getPhase().equals(DEPOSIT_CONFIRMED.name());
 
-        String userName = toUserName.apply(grpcClient);
+        String userName = toUserName.apply(takerClient);
         for (int i = 1; i <= maxTradeStateAndPhaseChecks.get(); i++) {
-            TradeInfo trade = grpcClient.getTrade(tradeId);
+            TradeInfo trade = takerClient.getTrade(tradeId);
             if (!isTradeInDepositConfirmedStateAndPhase.test(trade)) {
                 log.warn("{} still waiting on trade {} tx {}: DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN, attempt # {}",
                         userName,

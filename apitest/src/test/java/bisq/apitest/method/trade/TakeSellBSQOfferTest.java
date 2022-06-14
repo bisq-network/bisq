@@ -82,7 +82,7 @@ public class TakeSellBSQOfferTest extends AbstractTradeTest {
                     alicesLegacyBsqAcct.getId(),
                     TRADE_FEE_CURRENCY_CODE);
             log.debug("Alice's SELL BSQ (BUY BTC) Offer:\n{}", new TableBuilder(OFFER_TBL, alicesOffer).build());
-            genBtcBlocksThenWait(1, 4_000);
+            genBtcBlocksThenWait(1, 2_500);
             var offerId = alicesOffer.getId();
             assertTrue(alicesOffer.getIsCurrencyForMakerFeeBtc());
             var alicesBsqOffers = aliceClient.getMyOffers(btcTradeDirection, BSQ);
@@ -95,7 +95,7 @@ public class TakeSellBSQOfferTest extends AbstractTradeTest {
             alicesBsqOffers = aliceClient.getMyOffersSortedByDate(BSQ);
             assertEquals(0, alicesBsqOffers.size());
             genBtcBlocksThenWait(1, 2_500);
-            waitForDepositConfirmation(log, testInfo, bobClient, trade.getTradeId());
+            waitForTakerDepositConfirmation(log, testInfo, bobClient, trade.getTradeId());
             trade = bobClient.getTrade(tradeId);
             verifyTakerDepositConfirmed(trade);
             logTrade(log, testInfo, "Alice's Maker/Seller View", aliceClient.getTrade(tradeId));
@@ -110,7 +110,7 @@ public class TakeSellBSQOfferTest extends AbstractTradeTest {
     public void testAlicesConfirmPaymentStarted(final TestInfo testInfo) {
         try {
             var trade = aliceClient.getTrade(tradeId);
-            waitForDepositConfirmation(log, testInfo, aliceClient, trade.getTradeId());
+            waitForTakerDepositConfirmation(log, testInfo, aliceClient, trade.getTradeId());
             sendBsqPayment(log, aliceClient, trade);
             genBtcBlocksThenWait(1, 2_500);
             aliceClient.confirmPaymentStarted(trade.getTradeId());

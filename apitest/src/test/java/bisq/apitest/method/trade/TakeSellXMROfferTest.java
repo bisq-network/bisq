@@ -118,7 +118,7 @@ public class TakeSellXMROfferTest extends AbstractTradeTest {
 
             // Now generate the BTC block to confirm the taker deposit tx.
             genBtcBlocksThenWait(1, 2_500);
-            waitForDepositConfirmation(log, testInfo, bobClient, tradeId);
+            waitForTakerDepositConfirmation(log, testInfo, bobClient, tradeId);
 
             // Verify the seller can only send a payment rcvd msg after the payment started msg.
             verifyPaymentReceivedMsgAfterPaymentSentMsgPrecondition(log, bobClient);
@@ -132,10 +132,10 @@ public class TakeSellXMROfferTest extends AbstractTradeTest {
     public void testAlicesConfirmPaymentStarted(final TestInfo testInfo) {
         try {
             var trade = aliceClient.getTrade(tradeId);
-            waitForDepositConfirmation(log, testInfo, aliceClient, trade.getTradeId());
+            waitForTakerDepositConfirmation(log, testInfo, aliceClient, trade.getTradeId());
             log.debug("Alice sends XMR payment to Bob for trade {}", trade.getTradeId());
             aliceClient.confirmPaymentStarted(trade.getTradeId());
-            sleep(3500);
+            sleep(3_500);
 
             waitUntilBuyerSeesPaymentStartedMessage(log, testInfo, aliceClient, tradeId);
             logTrade(log, testInfo, "Alice's Maker/Seller View (Payment Sent)", aliceClient.getTrade(tradeId));

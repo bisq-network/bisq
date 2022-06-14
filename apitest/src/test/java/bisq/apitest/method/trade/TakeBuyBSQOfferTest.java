@@ -101,7 +101,7 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
             alicesBsqOffers = aliceClient.getMyOffersSortedByDate(BSQ);
             assertEquals(0, alicesBsqOffers.size());
 
-            waitForDepositConfirmation(log, testInfo, bobClient, trade.getTradeId());
+            waitForTakerDepositConfirmation(log, testInfo, bobClient, trade.getTradeId());
             genBtcBlocksThenWait(1, 2_500);
 
             trade = bobClient.getTrade(tradeId);
