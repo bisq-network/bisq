@@ -20,6 +20,7 @@ package bisq.apitest.scenario;
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -70,6 +71,7 @@ public class TradeTest extends AbstractTradeTest {
         test.testBobsBtcWithdrawalToExternalAddress(testInfo);
     }
 
+    @Disabled
     @Test
     @Order(3)
     public void testTakeBuyBSQOffer(final TestInfo testInfo) {
@@ -91,6 +93,7 @@ public class TradeTest extends AbstractTradeTest {
         test.testCloseTrade(testInfo);
     }
 
+    @Disabled
     @Test
     @Order(5)
     public void testTakeSellBSQOffer(final TestInfo testInfo) {
