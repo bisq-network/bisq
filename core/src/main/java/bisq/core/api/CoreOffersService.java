@@ -48,7 +48,6 @@ import java.math.BigDecimal;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -65,6 +64,7 @@ import static bisq.core.locale.CurrencyUtil.isCryptoCurrency;
 import static bisq.core.locale.CurrencyUtil.isFiatCurrency;
 import static bisq.core.offer.Offer.State;
 import static bisq.core.offer.OfferDirection.BUY;
+import static bisq.core.offer.OfferDirection.SELL;
 import static bisq.core.offer.OfferUtil.getRandomOfferId;
 import static bisq.core.offer.OpenOffer.State.AVAILABLE;
 import static bisq.core.offer.OpenOffer.State.DEACTIVATED;
@@ -75,6 +75,7 @@ import static bisq.proto.grpc.EditOfferRequest.EditType.FIXED_PRICE_AND_ACTIVATI
 import static bisq.proto.grpc.EditOfferRequest.EditType.FIXED_PRICE_ONLY;
 import static java.lang.String.format;
 import static java.util.Comparator.comparing;
+import static java.util.Objects.requireNonNull;
 
 @Singleton
 @Slf4j
@@ -201,18 +202,19 @@ class CoreOffersService {
                 .filter(o -> !o.isMyOffer(keyRing))
                 .filter(o -> o.getDirection().name().equalsIgnoreCase(direction))
                 .filter(Offer::isBsqSwapOffer)
-                .sorted(priceComparator(direction))
+                .sorted(priceComparator(direction, false))
                 .collect(Collectors.toList());
     }
 
     List<Offer> getOffers(String direction, String currencyCode) {
         var upperCaseCurrencyCode = currencyCode.toUpperCase();
-        if (isFiatCurrency(upperCaseCurrencyCode)) {
+        var isFiat = isFiatCurrency(upperCaseCurrencyCode);
+        if (isFiat) {
             return offerBookService.getOffers().stream()
                     .filter(o -> !o.isMyOffer(keyRing))
                     .filter(o -> offerMatchesDirectionAndCurrency(o, direction, upperCaseCurrencyCode))
                     .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
-                    .sorted(priceComparator(direction))
+                    .sorted(priceComparator(direction, true))
                     .collect(Collectors.toList());
         } else {
             // In fiat offers, the baseCurrencyCode=BTC, counterCurrencyCode=FiatCode.
@@ -225,7 +227,7 @@ class CoreOffersService {
                         .filter(o -> offerMatchesDirectionAndCurrency(o, direction, "BTC"))
                         .filter(o -> o.getBaseCurrencyCode().equalsIgnoreCase(upperCaseCurrencyCode))
                         .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
-                        .sorted(priceComparator(direction))
+                        .sorted(priceComparator(direction, false))
                         .collect(Collectors.toList());
             else
                 throw new IllegalArgumentException(
@@ -235,11 +237,12 @@ class CoreOffersService {
 
     List<OpenOffer> getMyOffers(String direction, String currencyCode) {
         var upperCaseCurrencyCode = currencyCode.toUpperCase();
-        if (isFiatCurrency(upperCaseCurrencyCode)) {
+        var isFiat = isFiatCurrency(upperCaseCurrencyCode);
+        if (isFiat) {
             return openOfferManager.getObservableList().stream()
                     .filter(o -> o.getOffer().isMyOffer(keyRing))
                     .filter(o -> offerMatchesDirectionAndCurrency(o.getOffer(), direction, upperCaseCurrencyCode))
-                    .sorted(openOfferPriceComparator(direction))
+                    .sorted(openOfferPriceComparator(direction, true))
                     .collect(Collectors.toList());
         } else {
             // In fiat offers, the baseCurrencyCode=BTC, counterCurrencyCode=FiatCode.
@@ -251,7 +254,7 @@ class CoreOffersService {
                         .filter(o -> o.getOffer().isMyOffer(keyRing))
                         .filter(o -> offerMatchesDirectionAndCurrency(o.getOffer(), direction, "BTC"))
                         .filter(o -> o.getOffer().getBaseCurrencyCode().equalsIgnoreCase(upperCaseCurrencyCode))
-                        .sorted(openOfferPriceComparator(direction))
+                        .sorted(openOfferPriceComparator(direction, false))
                         .collect(Collectors.toList());
             else
                 throw new IllegalArgumentException(
@@ -264,7 +267,7 @@ class CoreOffersService {
                 .filter(o -> o.isMyOffer(keyRing))
                 .filter(o -> o.getDirection().name().equalsIgnoreCase(direction))
                 .filter(Offer::isBsqSwapOffer)
-                .sorted(priceComparator(direction))
+                .sorted(priceComparator(direction, false))
                 .collect(Collectors.toList());
     }
 
@@ -366,7 +369,6 @@ class CoreOffersService {
 
         // We don't support atm funding from external wallet to keep it simple.
         boolean useSavingsWallet = true;
-        //noinspection ConstantConditions
         placeOffer(offer,
                 scaledBuyerSecurityDepositPct,
                 triggerPrice,
@@ -482,7 +484,7 @@ class CoreOffersService {
             throw new IllegalStateException(
                     format("Fixed price on mkt price margin based offer %s must be set to 0 in server.",
                             offer.getId()));
-        else if (!isUsingMktPriceMargin && editedFixedPrice.getValue() == 0)
+        else if (!isUsingMktPriceMargin && requireNonNull(editedFixedPrice).getValue() == 0)
             throw new IllegalStateException(
                     format("Fixed price on fixed price offer %s cannot be 0.", offer.getId()));
 
@@ -492,7 +494,7 @@ class CoreOffersService {
                 : offer.getMarketPriceMargin();
 
         MutableOfferPayloadFields mutableOfferPayloadFields = new MutableOfferPayloadFields(
-                Objects.requireNonNull(editedFixedPrice).getValue(),
+                requireNonNull(editedFixedPrice).getValue(),
                 isUsingMktPriceMargin ? newMarketPriceMargin : 0.00,
                 isUsingMktPriceMargin,
                 offer.getBaseCurrencyCode(),
@@ -527,21 +529,32 @@ class CoreOffersService {
         return isDirectionMatch && isCurrencyMatch;
     }
 
-    private Comparator<OpenOffer> openOfferPriceComparator(String direction) {
+    private Comparator<OpenOffer> openOfferPriceComparator(String direction, boolean isFiat) {
         // A buyer probably wants to see sell orders in price ascending order.
         // A seller probably wants to see buy orders in price descending order.
-        return direction.equalsIgnoreCase(BUY.name())
-                ? openOfferPriceComparator.get().reversed()
-                : openOfferPriceComparator.get();
+        if (isFiat)
+            return direction.equalsIgnoreCase(BUY.name())
+                    ? openOfferPriceComparator.get().reversed()
+                    : openOfferPriceComparator.get();
+        else
+            return direction.equalsIgnoreCase(SELL.name())
+                    ? openOfferPriceComparator.get().reversed()
+                    : openOfferPriceComparator.get();
     }
 
-    private Comparator<Offer> priceComparator(String direction) {
+    private Comparator<Offer> priceComparator(String direction, boolean isFiat) {
         // A buyer probably wants to see sell orders in price ascending order.
         // A seller probably wants to see buy orders in price descending order.
-        return direction.equalsIgnoreCase(BUY.name())
-                ? priceComparator.get().reversed()
-                : priceComparator.get();
+        if (isFiat)
+            return direction.equalsIgnoreCase(BUY.name())
+                    ? priceComparator.get().reversed()
+                    : priceComparator.get();
+        else
+            return direction.equalsIgnoreCase(SELL.name())
+                    ? priceComparator.get().reversed()
+                    : priceComparator.get();
     }
+
 
     private long priceStringToLong(String priceAsString, String currencyCode) {
         int precision = isCryptoCurrency(currencyCode) ? Altcoin.SMALLEST_UNIT_EXPONENT : Fiat.SMALLEST_UNIT_EXPONENT;
