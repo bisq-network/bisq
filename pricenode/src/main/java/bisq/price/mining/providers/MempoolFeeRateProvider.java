@@ -97,14 +97,13 @@ abstract class MempoolFeeRateProvider extends FeeRateProvider {
                 .map(r -> Math.max(r, MIN_FEE_RATE_FOR_TRADING))
                 .map(r -> Math.min(r, MAX_FEE_RATE))
                 .orElse(MIN_FEE_RATE_FOR_TRADING);
-        long minimumFee = feeRatePredictions.stream()
-                .filter(p -> p.getKey().equalsIgnoreCase("minimumFee"))
+        long economyFee = feeRatePredictions.stream()
+                .filter(p -> p.getKey().equalsIgnoreCase("economyFee"))
                 .map(Map.Entry::getValue)
                 .findFirst()
-                .map(r -> Math.multiplyExact(r, 2)) // multiply the minimumFee by 2 (per wiz)
                 .orElse(MIN_FEE_RATE_FOR_WITHDRAWAL);
-        log.info("Retrieved estimated mining fee of {} sat/vB and minimumFee of {} sat/vB from {}", estimatedFeeRate, minimumFee, getMempoolApiHostname());
-        return new FeeRate("BTC", estimatedFeeRate, minimumFee, Instant.now().getEpochSecond());
+        log.info("Retrieved estimated mining fee of {} sat/vB and economyFee of {} sat/vB from {}", estimatedFeeRate, economyFee, getMempoolApiHostname());
+        return new FeeRate("BTC", estimatedFeeRate, economyFee, Instant.now().getEpochSecond());
     }
 
     private Set<Map.Entry<String, Long>> getFeeRatePredictions() {
