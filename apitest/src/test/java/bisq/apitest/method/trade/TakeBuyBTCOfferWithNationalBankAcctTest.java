@@ -185,7 +185,7 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
             waitForDepositConfirmation(log, testInfo, aliceClient, trade.getTradeId());
             aliceClient.confirmPaymentStarted(trade.getTradeId());
             sleep(6_000);
-            waitForBuyerSeesPaymentInitiatedMessage(log, testInfo, aliceClient, tradeId);
+            waitUntilBuyerSeesPaymentStartedMessage(log, testInfo, aliceClient, tradeId);
             trade = aliceClient.getTrade(tradeId);
             assertEquals(OFFER_FEE_PAID.name(), trade.getOffer().getState());
             logTrade(log, testInfo, "Alice's Maker/Buyer View (Payment Sent)", aliceClient.getTrade(tradeId));
@@ -199,7 +199,7 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
     @Order(4)
     public void testBobsConfirmPaymentReceived(final TestInfo testInfo) {
         try {
-            waitForSellerSeesPaymentInitiatedMessage(log, testInfo, bobClient, tradeId);
+            waitUntilSellerSeesPaymentStartedMessage(log, testInfo, bobClient, tradeId);
             var trade = bobClient.getTrade(tradeId);
             bobClient.confirmPaymentReceived(trade.getTradeId());
             sleep(3_000);
