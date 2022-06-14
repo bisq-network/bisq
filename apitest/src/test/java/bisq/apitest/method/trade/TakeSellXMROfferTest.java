@@ -60,7 +60,7 @@ public class TakeSellXMROfferTest extends AbstractTradeTest {
 
     @BeforeAll
     public static void setUp() {
-        AbstractOfferTest.setUp();
+        AbstractOfferTest.setUp(false);
         createXmrPaymentAccounts();
         EXPECTED_PROTOCOL_STATUS.init();
     }
@@ -93,12 +93,9 @@ public class TakeSellXMROfferTest extends AbstractTradeTest {
             var trade = takeAlicesOffer(offerId, bobsXmrAcct.getId(), TRADE_FEE_CURRENCY_CODE);
             alicesXmrOffers = aliceClient.getMyOffersSortedByDate(XMR);
             assertEquals(0, alicesXmrOffers.size());
-            genBtcBlocksThenWait(1, 2_500);
-
-            waitForDepositConfirmation(log, testInfo, bobClient, trade.getTradeId());
 
             trade = bobClient.getTrade(tradeId);
-            verifyTakerDepositConfirmed(trade);
+            verifyTakerDepositNotConfirmed(trade);
             logTrade(log, testInfo, "Alice's Maker/Seller View", aliceClient.getTrade(tradeId));
             logTrade(log, testInfo, "Bob's Taker/Buyer View", bobClient.getTrade(tradeId));
         } catch (StatusRuntimeException e) {
@@ -108,6 +105,30 @@ public class TakeSellXMROfferTest extends AbstractTradeTest {
 
     @Test
     @Order(2)
+    public void testPaymentMessagingPreconditions(final TestInfo testInfo) {
+        try {
+            // Alice is maker / xmr seller (btc buyer), Bob is taker / xmr buyer (btc seller).
+            // Verify payment sent and rcvd msgs are sent by the right peers:  buyer and seller.
+            verifyPaymentSentMsgIsFromBtcBuyerPrecondition(log, bobClient);
+            verifyPaymentReceivedMsgIsFromBtcSellerPrecondition(log, aliceClient);
+
+            // Verify xmr payment sent and rcvd msgs cannot be sent before trade deposit tx is confirmed.
+            verifyPaymentSentMsgDepositTxConfirmedPrecondition(log, aliceClient);
+            verifyPaymentReceivedMsgDepositTxConfirmedPrecondition(log, bobClient);
+
+            // Now generate the BTC block to confirm the taker deposit tx.
+            genBtcBlocksThenWait(1, 2_500);
+            waitForDepositConfirmation(log, testInfo, bobClient, tradeId);
+
+            // Verify the seller can only send a payment rcvd msg after the payment started msg.
+            verifyPaymentReceivedMsgAfterPaymentSentMsgPrecondition(log, bobClient);
+        } catch (StatusRuntimeException e) {
+            fail(e);
+        }
+    }
+
+    @Test
+    @Order(3)
     public void testAlicesConfirmPaymentStarted(final TestInfo testInfo) {
         try {
             var trade = aliceClient.getTrade(tradeId);
@@ -116,7 +137,7 @@ public class TakeSellXMROfferTest extends AbstractTradeTest {
             aliceClient.confirmPaymentStarted(trade.getTradeId());
             sleep(3500);
 
-            waitForBuyerSeesPaymentInitiatedMessage(log, testInfo, aliceClient, tradeId);
+            waitUntilBuyerSeesPaymentStartedMessage(log, testInfo, aliceClient, tradeId);
             logTrade(log, testInfo, "Alice's Maker/Seller View (Payment Sent)", aliceClient.getTrade(tradeId));
             logTrade(log, testInfo, "Bob's Taker/Buyer View (Payment Sent)", bobClient.getTrade(tradeId));
         } catch (StatusRuntimeException e) {
@@ -125,10 +146,10 @@ public class TakeSellXMROfferTest extends AbstractTradeTest {
     }
 
     @Test
-    @Order(3)
+    @Order(4)
     public void testBobsConfirmPaymentReceived(final TestInfo testInfo) {
         try {
-            waitForSellerSeesPaymentInitiatedMessage(log, testInfo, bobClient, tradeId);
+            waitUntilSellerSeesPaymentStartedMessage(log, testInfo, bobClient, tradeId);
 
             var trade = bobClient.getTrade(tradeId);
             sleep(2_000);
@@ -154,7 +175,7 @@ public class TakeSellXMROfferTest extends AbstractTradeTest {
     }
 
     @Test
-    @Order(4)
+    @Order(5)
     public void testAlicesBtcWithdrawalToExternalAddress(final TestInfo testInfo) {
         try {
             genBtcBlocksThenWait(1, 1_000);
