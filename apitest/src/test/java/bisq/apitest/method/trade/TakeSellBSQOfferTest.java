@@ -46,6 +46,7 @@ import static protobuf.OfferDirection.BUY;
 import bisq.apitest.method.offer.AbstractOfferTest;
 import bisq.cli.table.builder.TableBuilder;
 
+@Deprecated // Bisq v1 protocol BSQ trades have been replaced by BSQ Swaps.
 @Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -114,7 +115,7 @@ public class TakeSellBSQOfferTest extends AbstractTradeTest {
             genBtcBlocksThenWait(1, 2_500);
             aliceClient.confirmPaymentStarted(trade.getTradeId());
             sleep(6_000);
-            waitForBuyerSeesPaymentInitiatedMessage(log, testInfo, aliceClient, tradeId);
+            waitUntilBuyerSeesPaymentStartedMessage(log, testInfo, aliceClient, tradeId);
             logTrade(log, testInfo, "Alice's Maker/Seller View (Payment Sent)", aliceClient.getTrade(tradeId));
             logTrade(log, testInfo, "Bob's Taker/Buyer View (Payment Sent)", bobClient.getTrade(tradeId));
         } catch (StatusRuntimeException e) {
@@ -126,7 +127,7 @@ public class TakeSellBSQOfferTest extends AbstractTradeTest {
     @Order(3)
     public void testBobsConfirmPaymentReceived(final TestInfo testInfo) {
         try {
-            waitForSellerSeesPaymentInitiatedMessage(log, testInfo, bobClient, tradeId);
+            waitUntilSellerSeesPaymentStartedMessage(log, testInfo, bobClient, tradeId);
 
             sleep(2_000);
             var trade = bobClient.getTrade(tradeId);
