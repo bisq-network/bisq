@@ -360,6 +360,10 @@ public class CoreApi {
     // Wallets
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public String getNetworkName() {
+        return walletsService.getNetworkName();
+    }
+
     public BalancesInfo getBalances(String currencyCode) {
         return walletsService.getBalances(currencyCode);
     }

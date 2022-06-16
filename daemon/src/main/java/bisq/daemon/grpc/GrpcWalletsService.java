@@ -29,6 +29,8 @@ import bisq.proto.grpc.GetBalancesReply;
 import bisq.proto.grpc.GetBalancesRequest;
 import bisq.proto.grpc.GetFundingAddressesReply;
 import bisq.proto.grpc.GetFundingAddressesRequest;
+import bisq.proto.grpc.GetNetworkReply;
+import bisq.proto.grpc.GetNetworkRequest;
 import bisq.proto.grpc.GetTransactionReply;
 import bisq.proto.grpc.GetTransactionRequest;
 import bisq.proto.grpc.GetTxFeeRateReply;
@@ -93,6 +95,20 @@ class GrpcWalletsService extends WalletsImplBase {
     public GrpcWalletsService(CoreApi coreApi, GrpcExceptionHandler exceptionHandler) {
         this.coreApi = coreApi;
         this.exceptionHandler = exceptionHandler;
+    }
+
+    @Override
+    public void getNetwork(GetNetworkRequest req, StreamObserver<GetNetworkReply> responseObserver) {
+        try {
+            var network = coreApi.getNetworkName();
+            var reply = GetNetworkReply.newBuilder()
+                    .setNetwork(network)
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(log, cause, responseObserver);
+        }
     }
 
     @Override

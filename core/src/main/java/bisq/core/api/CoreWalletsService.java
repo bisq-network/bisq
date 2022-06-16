@@ -91,6 +91,8 @@ import static bisq.core.util.ParsingUtils.parseToCoin;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.bitcoinj.core.NetworkParameters.PAYMENT_PROTOCOL_ID_REGTEST;
+import static org.bitcoinj.core.NetworkParameters.PAYMENT_PROTOCOL_ID_TESTNET;
 
 @Singleton
 @Slf4j
@@ -149,6 +151,18 @@ class CoreWalletsService {
 
     NetworkParameters getNetworkParameters() {
         return btcWalletService.getWallet().getContext().getParams();
+    }
+
+    String getNetworkName() {
+        var networkParameters = getNetworkParameters();
+        switch (networkParameters.getPaymentProtocolId()) {
+            case PAYMENT_PROTOCOL_ID_TESTNET:
+                return "testnet3";
+            case PAYMENT_PROTOCOL_ID_REGTEST:
+                return "regtest";
+            default:
+                return "mainnet";
+        }
     }
 
     BalancesInfo getBalances(String currencyCode) {
@@ -642,7 +656,7 @@ class CoreWalletsService {
                         .filter(e -> addressString.equals(e.getAddressString()))
                         .findFirst();
 
-        if (!addressEntry.isPresent())
+        if (addressEntry.isEmpty())
             throw new NotFoundException(format("address %s not found in wallet", addressString));
 
         return addressEntry.get();
