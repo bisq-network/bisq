@@ -22,7 +22,6 @@ import bisq.proto.grpc.BalancesInfo;
 import bisq.proto.grpc.BsqBalanceInfo;
 import bisq.proto.grpc.BtcBalanceInfo;
 import bisq.proto.grpc.GetMethodHelpRequest;
-import bisq.proto.grpc.GetNetworkRequest;
 import bisq.proto.grpc.GetTradesRequest;
 import bisq.proto.grpc.GetVersionRequest;
 import bisq.proto.grpc.OfferInfo;
@@ -76,8 +75,7 @@ public final class GrpcClient {
     }
 
     public String getNetwork() {
-        var request = GetNetworkRequest.newBuilder().build();
-        return grpcStubs.walletsService.getNetwork(request).getNetwork();
+        return walletsServiceRequest.getNetwork();
     }
 
     public BalancesInfo getBalances() {
