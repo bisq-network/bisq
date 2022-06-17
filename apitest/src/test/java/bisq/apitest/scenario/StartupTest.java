@@ -44,7 +44,6 @@ import bisq.apitest.method.GetMethodHelpTest;
 import bisq.apitest.method.GetVersionTest;
 import bisq.apitest.method.MethodTest;
 import bisq.apitest.method.RegisterDisputeAgentsTest;
-import bisq.apitest.method.wallet.GetNetworkTest;
 
 
 @Slf4j
@@ -89,13 +88,6 @@ public class StartupTest extends MethodTest {
 
     @Test
     @Order(3)
-    public void testGetNetwork() {
-        GetNetworkTest test = new GetNetworkTest();
-        test.testGetNetwork();
-    }
-
-    @Test
-    @Order(4)
     public void testRegisterDisputeAgents() {
         RegisterDisputeAgentsTest test = new RegisterDisputeAgentsTest();
         test.testRegisterArbitratorShouldThrowException();
@@ -106,7 +98,7 @@ public class StartupTest extends MethodTest {
     }
 
     @Test
-    @Order(5)
+    @Order(4)
     public void testGetCreateOfferHelp() {
         GetMethodHelpTest test = new GetMethodHelpTest();
         test.testGetCreateOfferHelp();

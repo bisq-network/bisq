@@ -39,6 +39,7 @@ import bisq.apitest.method.MethodTest;
 import bisq.apitest.method.wallet.BsqWalletTest;
 import bisq.apitest.method.wallet.BtcTxFeeRateTest;
 import bisq.apitest.method.wallet.BtcWalletTest;
+import bisq.apitest.method.wallet.GetNetworkTest;
 import bisq.apitest.method.wallet.WalletProtectionTest;
 
 @Slf4j
@@ -62,6 +63,13 @@ public class WalletTest extends MethodTest {
 
     @Test
     @Order(1)
+    public void testGetNetwork() {
+        GetNetworkTest test = new GetNetworkTest();
+        test.testGetNetwork();
+    }
+
+    @Test
+    @Order(2)
     public void testBtcWalletFunding(final TestInfo testInfo) {
         BtcWalletTest btcWalletTest = new BtcWalletTest();
 
@@ -71,7 +79,7 @@ public class WalletTest extends MethodTest {
     }
 
     @Test
-    @Order(2)
+    @Order(3)
     public void testBsqWalletFunding(final TestInfo testInfo) {
         BsqWalletTest bsqWalletTest = new BsqWalletTest();
 
@@ -82,7 +90,7 @@ public class WalletTest extends MethodTest {
     }
 
     @Test
-    @Order(3)
+    @Order(4)
     public void testWalletProtection() {
         WalletProtectionTest walletProtectionTest = new WalletProtectionTest();
 
@@ -99,7 +107,7 @@ public class WalletTest extends MethodTest {
     }
 
     @Test
-    @Order(4)
+    @Order(5)
     public void testTxFeeRateMethods(final TestInfo testInfo) {
         BtcTxFeeRateTest test = new BtcTxFeeRateTest();
 
