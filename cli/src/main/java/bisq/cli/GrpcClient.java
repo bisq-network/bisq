@@ -18,9 +18,11 @@
 package bisq.cli;
 
 import bisq.proto.grpc.AddressBalanceInfo;
+import bisq.proto.grpc.AverageBsqTradePrice;
 import bisq.proto.grpc.BalancesInfo;
 import bisq.proto.grpc.BsqBalanceInfo;
 import bisq.proto.grpc.BtcBalanceInfo;
+import bisq.proto.grpc.GetAverageBsqTradePriceRequest;
 import bisq.proto.grpc.GetMethodHelpRequest;
 import bisq.proto.grpc.GetTradesRequest;
 import bisq.proto.grpc.GetVersionRequest;
@@ -96,6 +98,13 @@ public final class GrpcClient {
 
     public AddressBalanceInfo getAddressBalance(String address) {
         return walletsServiceRequest.getAddressBalance(address);
+    }
+
+    public AverageBsqTradePrice getAverageBsqTradePrice(int days) {
+        var request = GetAverageBsqTradePriceRequest.newBuilder()
+                .setDays(days)
+                .build();
+        return grpcStubs.priceService.getAverageBsqTradePrice(request).getPrice();
     }
 
     public double getBtcPrice(String currencyCode) {

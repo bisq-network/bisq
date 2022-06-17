@@ -434,6 +434,10 @@ service Price {
     // Get the current market price for a crypto currency.
     rpc GetMarketPrice (MarketPriceRequest) returns (MarketPriceReply) {
     }
+    // Get the volume weighted average trade price for BSQ, calculated over N days.
+    // The response contains the average BSQ trade price in USD to 4 decimal places, and in BTC to 8 decimal places.
+    rpc GetAverageBsqTradePrice (GetAverageBsqTradePriceRequest) returns (GetAverageBsqTradePriceReply) {
+    }
 }
 
 message MarketPriceRequest {
@@ -442,6 +446,21 @@ message MarketPriceRequest {
 
 message MarketPriceReply {
     double price = 1;   // The most recently available market price.
+}
+
+message GetAverageBsqTradePriceRequest {
+    sint32 days = 1;    // The number of days used in the average BSQ trade price calculations.
+}
+
+message GetAverageBsqTradePriceReply {
+    // The average BSQ trade price in USD to 4 decimal places, and in BTC to 8 decimal places.
+    AverageBsqTradePrice price = 1;
+}
+
+// The average BSQ trade price in USD and BTC.
+message AverageBsqTradePrice {
+    string usdPrice = 1;   // The average BSQ trade price in USD to 4 decimal places.
+    string btcPrice = 2;   // The average BSQ trade price in BTC to 8 decimal places.
 }
 
 service ShutdownServer {

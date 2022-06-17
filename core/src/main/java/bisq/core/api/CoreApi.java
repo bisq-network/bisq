@@ -21,6 +21,7 @@ import bisq.core.api.model.AddressBalanceInfo;
 import bisq.core.api.model.BalancesInfo;
 import bisq.core.api.model.TxFeeRateInfo;
 import bisq.core.btc.wallet.TxBroadcaster;
+import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.payment.PaymentAccount;
@@ -36,6 +37,7 @@ import bisq.common.app.Version;
 import bisq.common.config.Config;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.util.Tuple2;
 
 import bisq.proto.grpc.GetTradesRequest;
 
@@ -280,6 +282,10 @@ public class CoreApi {
 
     public void getMarketPrice(String currencyCode, Consumer<Double> resultHandler) {
         corePriceService.getMarketPrice(currencyCode, resultHandler);
+    }
+
+    public Tuple2<Price, Price> getAverageBsqTradePrice(int days) {
+        return corePriceService.getAverageBsqTradePrice(days);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

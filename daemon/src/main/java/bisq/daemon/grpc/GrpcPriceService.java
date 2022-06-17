@@ -18,14 +18,26 @@
 package bisq.daemon.grpc;
 
 import bisq.core.api.CoreApi;
+import bisq.core.monetary.Altcoin;
+import bisq.core.monetary.Price;
 
+import bisq.common.util.Tuple2;
+
+import bisq.proto.grpc.AverageBsqTradePrice;
+import bisq.proto.grpc.GetAverageBsqTradePriceReply;
+import bisq.proto.grpc.GetAverageBsqTradePriceRequest;
 import bisq.proto.grpc.MarketPriceReply;
 import bisq.proto.grpc.MarketPriceRequest;
 
 import io.grpc.ServerInterceptor;
 import io.grpc.stub.StreamObserver;
 
+import org.bitcoinj.utils.Fiat;
+
 import javax.inject.Inject;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import java.util.HashMap;
 import java.util.Optional;
@@ -34,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
 import static bisq.proto.grpc.PriceGrpc.PriceImplBase;
+import static bisq.proto.grpc.PriceGrpc.getGetAverageBsqTradePriceMethod;
 import static bisq.proto.grpc.PriceGrpc.getGetMarketPriceMethod;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -69,6 +82,30 @@ class GrpcPriceService extends PriceImplBase {
         }
     }
 
+    @Override
+    public void getAverageBsqTradePrice(GetAverageBsqTradePriceRequest req,
+                                        StreamObserver<GetAverageBsqTradePriceReply> responseObserver) {
+        try {
+            var days = req.getDays();
+            Tuple2<Price, Price> prices = coreApi.getAverageBsqTradePrice(days);
+            var usdPrice = new BigDecimal(prices.first.toString())
+                    .setScale(Fiat.SMALLEST_UNIT_EXPONENT, RoundingMode.HALF_UP);
+            var btcPrice = new BigDecimal(prices.second.toString())
+                    .setScale(Altcoin.SMALLEST_UNIT_EXPONENT, RoundingMode.HALF_UP);
+            var proto = AverageBsqTradePrice.newBuilder()
+                    .setUsdPrice(usdPrice.toString())
+                    .setBtcPrice(btcPrice.toString())
+                    .build();
+            var reply = GetAverageBsqTradePriceReply.newBuilder()
+                    .setPrice(proto)
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(log, cause, responseObserver);
+        }
+    }
+
     final ServerInterceptor[] interceptors() {
         Optional<ServerInterceptor> rateMeteringInterceptor = rateMeteringInterceptor();
         return rateMeteringInterceptor.map(serverInterceptor ->
@@ -80,6 +117,7 @@ class GrpcPriceService extends PriceImplBase {
                 .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
                         new HashMap<>() {{
                             put(getGetMarketPriceMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getGetAverageBsqTradePriceMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                         }}
                 )));
     }
