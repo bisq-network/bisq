@@ -2,7 +2,7 @@ getavgbsqprice
 
 NAME
 ----
-getavgbsqprice - get average BSQ price in btc and usd
+getavgbsqprice - get average bsq price in btc and usd
 
 SYNOPSIS
 --------

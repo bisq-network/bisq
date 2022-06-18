@@ -88,17 +88,7 @@ class GrpcPriceService extends PriceImplBase {
         try {
             var days = req.getDays();
             Tuple2<Price, Price> prices = coreApi.getAverageBsqTradePrice(days);
-            var usdPrice = new BigDecimal(prices.first.toString())
-                    .setScale(Fiat.SMALLEST_UNIT_EXPONENT, RoundingMode.HALF_UP);
-            var btcPrice = new BigDecimal(prices.second.toString())
-                    .setScale(Altcoin.SMALLEST_UNIT_EXPONENT, RoundingMode.HALF_UP);
-            var proto = AverageBsqTradePrice.newBuilder()
-                    .setUsdPrice(usdPrice.toString())
-                    .setBtcPrice(btcPrice.toString())
-                    .build();
-            var reply = GetAverageBsqTradePriceReply.newBuilder()
-                    .setPrice(proto)
-                    .build();
+            var reply = buildGetAverageBsqTradePriceReply(prices);
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
         } catch (Throwable cause) {
@@ -120,5 +110,19 @@ class GrpcPriceService extends PriceImplBase {
                             put(getGetAverageBsqTradePriceMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                         }}
                 )));
+    }
+
+    private GetAverageBsqTradePriceReply buildGetAverageBsqTradePriceReply(Tuple2<Price, Price> prices) {
+        var usdPrice = new BigDecimal(prices.first.toString())
+                .setScale(Fiat.SMALLEST_UNIT_EXPONENT, RoundingMode.HALF_UP);
+        var btcPrice = new BigDecimal(prices.second.toString())
+                .setScale(Altcoin.SMALLEST_UNIT_EXPONENT, RoundingMode.HALF_UP);
+        var proto = AverageBsqTradePrice.newBuilder()
+                .setUsdPrice(usdPrice.toString())
+                .setBtcPrice(btcPrice.toString())
+                .build();
+        return GetAverageBsqTradePriceReply.newBuilder()
+                .setPrice(proto)
+                .build();
     }
 }
