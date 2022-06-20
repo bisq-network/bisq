@@ -18,9 +18,11 @@
 package bisq.desktop.main.account.content.altcoinaccounts;
 
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.paymentmethods.AssetsForm;
 import bisq.desktop.components.paymentmethods.PaymentMethodForm;
+import bisq.desktop.components.paymentmethods.XmrForm;
 import bisq.desktop.main.account.content.PaymentAccountsView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
@@ -38,6 +40,7 @@ import bisq.core.payment.PaymentAccountFactory;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.validation.AltCoinAddressValidator;
 import bisq.core.user.Preferences;
+import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
@@ -55,6 +58,7 @@ import javax.inject.Named;
 import javafx.stage.Stage;
 
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.GridPane;
@@ -62,13 +66,15 @@ import javafx.scene.layout.VBox;
 
 import javafx.collections.ObservableList;
 
+import javafx.util.StringConverter;
+
 import java.util.Optional;
 
-import static bisq.desktop.components.paymentmethods.AssetsForm.INSTANT_TRADE_NEWS;
 import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
 import static bisq.desktop.util.FormBuilder.add3ButtonsAfterGroup;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 import static bisq.desktop.util.FormBuilder.addTopLabelListView;
+import static bisq.desktop.util.GUIUtil.getComboBoxButtonCell;
 
 @FxmlView
 public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAccountsViewModel> {
@@ -78,12 +84,14 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
     private final AssetService assetService;
     private final FilterManager filterManager;
     private final CoinFormatter formatter;
+    private final User user;
     private final Preferences preferences;
 
     private PaymentMethodForm paymentMethodForm;
     private TitledGroupBg accountTitledGroupBg;
     private Button saveNewAccountButton;
     private int gridRow = 0;
+    protected ComboBox<TradeCurrency> currencyComboBox;
 
     @Inject
     public AltCoinAccountsView(AltCoinAccountsViewModel model,
@@ -93,6 +101,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
                                AssetService assetService,
                                FilterManager filterManager,
                                @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
+                               User user,
                                Preferences preferences) {
         super(model, accountAgeWitnessService);
 
@@ -101,6 +110,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
         this.assetService = assetService;
         this.filterManager = filterManager;
         this.formatter = formatter;
+        this.user = user;
         this.preferences = preferences;
     }
 
@@ -157,15 +167,11 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
             } else {
                 new Popup().warning(Res.get("shared.accountNameAlreadyUsed")).show();
             }
-
-            preferences.dontShowAgain(INSTANT_TRADE_NEWS, true);
         }
     }
 
     private void onCancelNewAccount() {
         removeNewAccountForm();
-
-        preferences.dontShowAgain(INSTANT_TRADE_NEWS, true);
     }
 
     private void onUpdateAccount(PaymentAccount paymentAccount) {
@@ -201,6 +207,7 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
     // Add new account form
     protected void addNewAccount() {
         paymentAccountsListView.getSelectionModel().clearSelection();
+        TradeCurrency selectedCurrency = currencyComboBox == null ? null : currencyComboBox.getValue();
         removeAccountRows();
         addAccountButton.setDisable(true);
         accountTitledGroupBg = addTitledGroupBg(root, ++gridRow, 1, Res.get("shared.createNewAccount"), Layout.GROUP_DISTANCE);
@@ -210,7 +217,8 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
             GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan() + 1);
         }
         gridRow = 2;
-        paymentMethodForm = getPaymentMethodForm(PaymentMethod.BLOCK_CHAINS);
+        addTradeCurrencyComboBox(root, selectedCurrency);
+        paymentMethodForm = getPaymentMethodForm(PaymentMethod.BLOCK_CHAINS, selectedCurrency);
         paymentMethodForm.addFormForAddAccount();
         gridRow = paymentMethodForm.getGridRow();
         Tuple2<Button, Button> tuple2 = add2ButtonsAfterGroup(root, ++gridRow, Res.get("shared.saveNewAccount"), Res.get("shared.cancel"));
@@ -262,9 +270,23 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
         return getPaymentMethodForm(paymentAccount);
     }
 
+    private PaymentMethodForm getPaymentMethodForm(PaymentMethod paymentMethod, TradeCurrency currencyCode) {
+        PaymentAccount paymentAccount = PaymentAccountFactory.getPaymentAccount(paymentMethod);
+        paymentAccount.init();
+        paymentAccount.setSingleTradeCurrency(currencyCode);
+        paymentAccount.setSelectedTradeCurrency(currencyCode);
+        return getPaymentMethodForm(paymentAccount);
+    }
+
     private PaymentMethodForm getPaymentMethodForm(PaymentAccount paymentAccount) {
+        if (paymentAccount.getSelectedTradeCurrency() != null &&
+                paymentAccount.getSelectedTradeCurrency().getCode() != null &&
+                paymentAccount.getSelectedTradeCurrency().getCode().equalsIgnoreCase("XMR")) {
+            return new XmrForm(paymentAccount, accountAgeWitnessService, altCoinAddressValidator,
+                    inputValidator, root, gridRow, formatter, assetService, user);
+        }
         return new AssetsForm(paymentAccount, accountAgeWitnessService, altCoinAddressValidator,
-                inputValidator, root, gridRow, formatter, assetService, filterManager);
+                inputValidator, root, gridRow, formatter, assetService);
     }
 
     private void removeNewAccountForm() {
@@ -290,4 +312,43 @@ public class AltCoinAccountsView extends PaymentAccountsView<GridPane, AltCoinAc
         FormBuilder.removeRowsFromGridPane(root, 2, gridRow);
         gridRow = 1;
     }
+
+    protected void addTradeCurrencyComboBox(GridPane gridPane, TradeCurrency selectedCurrency) {
+        currencyComboBox = FormBuilder.<TradeCurrency>addLabelAutocompleteComboBox(gridPane, ++gridRow, Res.get("payment.altcoin"),
+                Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
+        currencyComboBox.setPromptText(Res.get("payment.select.altcoin"));
+        currencyComboBox.setButtonCell(getComboBoxButtonCell(Res.get("payment.select.altcoin"), currencyComboBox));
+
+        currencyComboBox.getEditor().focusedProperty().addListener(observable ->
+                currencyComboBox.setPromptText(""));
+
+        ((AutocompleteComboBox<TradeCurrency>) currencyComboBox).setAutocompleteItems(
+                CurrencyUtil.getActiveSortedCryptoCurrencies(assetService, filterManager));
+        currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 10));
+
+        currencyComboBox.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(TradeCurrency tradeCurrency) {
+                return tradeCurrency != null ? tradeCurrency.getNameAndCode() : "";
+            }
+
+            @Override
+            public TradeCurrency fromString(String s) {
+                return currencyComboBox.getItems().stream().
+                        filter(item -> item.getNameAndCode().equals(s)).
+                        findAny().orElse(null);
+            }
+        });
+
+        if (selectedCurrency != null) {
+            currencyComboBox.setValue(selectedCurrency);
+        }
+        ((AutocompleteComboBox<?>) currencyComboBox).setOnChangeConfirmed(e -> {
+            if (currencyComboBox.getValue() != null) {
+                addNewAccount();
+            }
+        });
+    }
+
+
 }

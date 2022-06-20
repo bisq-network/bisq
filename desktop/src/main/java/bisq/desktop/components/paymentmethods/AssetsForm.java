@@ -17,16 +17,12 @@
 
 package bisq.desktop.components.paymentmethods;
 
-import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.FormBuilder;
-import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.dao.governance.asset.AssetService;
-import bisq.core.filter.FilterManager;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.AssetAccount;
@@ -49,24 +45,18 @@ import javafx.scene.layout.VBox;
 
 import javafx.geometry.Insets;
 
-import javafx.util.StringConverter;
-
 import static bisq.desktop.util.DisplayUtils.createAssetsAccountName;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addLabelCheckBox;
-import static bisq.desktop.util.GUIUtil.getComboBoxButtonCell;
 
 public class AssetsForm extends PaymentMethodForm {
-    public static final String INSTANT_TRADE_NEWS = "instantTradeNews0.9.5";
-    private final AssetAccount assetAccount;
-    private final AltCoinAddressValidator altCoinAddressValidator;
-    private final AssetService assetService;
-    private final FilterManager filterManager;
-
-    private InputTextField addressInputTextField;
-    private CheckBox tradeInstantCheckBox;
-    private boolean tradeInstant;
+    protected final AssetAccount assetAccount;
+    protected final AltCoinAddressValidator altCoinAddressValidator;
+    protected final AssetService assetService;
+    protected InputTextField addressInputTextField;
+    protected CheckBox tradeInstantCheckBox;
+    protected boolean tradeInstant;
 
     public static int addFormForBuyer(GridPane gridPane,
                                       int gridRow,
@@ -84,13 +74,11 @@ public class AssetsForm extends PaymentMethodForm {
                       GridPane gridPane,
                       int gridRow,
                       CoinFormatter formatter,
-                      AssetService assetService,
-                      FilterManager filterManager) {
+                      AssetService assetService) {
         super(paymentAccount, accountAgeWitnessService, inputValidator, gridPane, gridRow, formatter);
         this.assetAccount = (AssetAccount) paymentAccount;
         this.altCoinAddressValidator = altCoinAddressValidator;
         this.assetService = assetService;
-        this.filterManager = filterManager;
 
         tradeInstant = paymentAccount instanceof InstantCryptoCurrencyAccount;
     }
@@ -98,9 +86,6 @@ public class AssetsForm extends PaymentMethodForm {
     @Override
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
-
-        addTradeCurrencyComboBox();
-        currencyComboBox.setPrefWidth(250);
 
         tradeInstantCheckBox = addLabelCheckBox(gridPane, ++gridRow,
                 Res.get("payment.altcoin.tradeInstantCheckbox"), 10);
@@ -114,7 +99,6 @@ public class AssetsForm extends PaymentMethodForm {
 
         gridPane.getChildren().remove(tradeInstantCheckBox);
         tradeInstantCheckBox.setPadding(new Insets(0, 40, 0, 0));
-
         gridPane.getChildren().add(tradeInstantCheckBox);
 
         addressInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
@@ -195,46 +179,5 @@ public class AssetsForm extends PaymentMethodForm {
                     && altCoinAddressValidator.validate(assetAccount.getAddress()).isValid
                     && assetAccount.getSingleTradeCurrency() != null);
         }
-    }
-
-    @Override
-    protected void addTradeCurrencyComboBox() {
-        currencyComboBox = FormBuilder.<TradeCurrency>addLabelAutocompleteComboBox(gridPane, ++gridRow, Res.get("payment.altcoin"),
-                Layout.FIRST_ROW_AND_GROUP_DISTANCE).second;
-        currencyComboBox.setPromptText(Res.get("payment.select.altcoin"));
-        currencyComboBox.setButtonCell(getComboBoxButtonCell(Res.get("payment.select.altcoin"), currencyComboBox));
-
-        currencyComboBox.getEditor().focusedProperty().addListener(observable ->
-                currencyComboBox.setPromptText(""));
-
-        ((AutocompleteComboBox<TradeCurrency>) currencyComboBox).setAutocompleteItems(
-                CurrencyUtil.getActiveSortedCryptoCurrencies(assetService, filterManager));
-        currencyComboBox.setVisibleRowCount(Math.min(currencyComboBox.getItems().size(), 10));
-
-        currencyComboBox.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(TradeCurrency tradeCurrency) {
-                return tradeCurrency != null ? tradeCurrency.getNameAndCode() : "";
-            }
-
-            @Override
-            public TradeCurrency fromString(String s) {
-                return currencyComboBox.getItems().stream().
-                        filter(item -> item.getNameAndCode().equals(s)).
-                        findAny().orElse(null);
-            }
-        });
-
-        ((AutocompleteComboBox<?>) currencyComboBox).setOnChangeConfirmed(e -> {
-            addressInputTextField.resetValidation();
-            addressInputTextField.validate();
-            TradeCurrency tradeCurrency = currencyComboBox.getSelectionModel().getSelectedItem();
-            paymentAccount.setSingleTradeCurrency(tradeCurrency);
-            updateFromInputs();
-
-            if (tradeCurrency != null && tradeCurrency.getCode().equals("BSQ")) {
-                new Popup().information(Res.get("payment.select.altcoin.bsq.warning")).show();
-            }
-        });
     }
 }

@@ -24,11 +24,14 @@ import bisq.core.proto.CoreProtoResolver;
 
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.persistable.PersistablePayload;
+import bisq.common.util.CollectionUtils;
 import bisq.common.util.Utilities;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -69,6 +72,11 @@ public abstract class PaymentAccount implements PersistablePayload {
     @Nullable
     protected TradeCurrency selectedTradeCurrency;
 
+    // Was added at v1.9.2
+    @Setter
+    @Nullable
+    protected Map<String, String> extraData;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -100,6 +108,7 @@ public abstract class PaymentAccount implements PersistablePayload {
                 .setAccountName(accountName)
                 .addAllTradeCurrencies(ProtoUtil.collectionToProto(tradeCurrencies, protobuf.TradeCurrency.class));
         Optional.ofNullable(selectedTradeCurrency).ifPresent(selectedTradeCurrency -> builder.setSelectedTradeCurrency((protobuf.TradeCurrency) selectedTradeCurrency.toProtoMessage()));
+        Optional.ofNullable(extraData).ifPresent(builder::putAllExtraData);
         return builder.build();
     }
 
@@ -130,6 +139,11 @@ public abstract class PaymentAccount implements PersistablePayload {
             if (proto.hasSelectedTradeCurrency())
                 account.setSelectedTradeCurrency(TradeCurrency.fromProto(proto.getSelectedTradeCurrency()));
 
+            if (CollectionUtils.isEmpty(proto.getExtraDataMap())) {
+                account.setExtraData(null);
+            } else {
+                account.setExtraData(new HashMap<>(proto.getExtraDataMap()));
+            }
             return account;
         } catch (RuntimeException e) {
             log.warn("Could not load account: {}, exception: {}", paymentMethodId, e.toString());
@@ -265,4 +279,11 @@ public abstract class PaymentAccount implements PersistablePayload {
 
     @NonNull
     public abstract List<TradeCurrency> getSupportedCurrencies();
+
+    public Map<String, String> getOrCreateExtraData() {
+        if (extraData == null) {
+            extraData = new HashMap<>();
+        }
+        return extraData;
+    }
 }

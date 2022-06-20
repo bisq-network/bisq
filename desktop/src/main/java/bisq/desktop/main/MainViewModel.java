@@ -323,7 +323,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             setupDevDummyPaymentAccounts();
         }
 
-        maybeAddMediationRulesAwarenessWindowToQueue();
         getShowAppScreen().set(true);
     }
 
@@ -534,13 +533,11 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
         if (p2PService.isBootstrapped()) {
             setupInvalidOpenOffersHandler();
-            maybeShowXmrTxKeyReUseWarning();
         } else {
             p2PService.addP2PServiceListener(new BootstrapListener() {
                 @Override
                 public void onUpdatedDataReceived() {
                     setupInvalidOpenOffersHandler();
-                    maybeShowXmrTxKeyReUseWarning();
                 }
             });
         }
@@ -565,21 +562,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                 // We delay a bit in case we have multiple account for better UX
                 UserThread.runAfter(() -> showAmazonGiftCardAccountUpdateWindow(amazonGiftCardAccountList), 300, TimeUnit.MILLISECONDS);
             }).show();
-        }
-    }
-
-    private void maybeShowXmrTxKeyReUseWarning() {
-        String key = "xmrTxKeyReUse";
-        // If we do not have a XMR account we set showAgain to true to avoid the popup at next restart because we show
-        // the information at account creation as well.
-        if (user.getPaymentAccounts() != null &&
-                user.getPaymentAccounts().stream()
-                        .noneMatch(a -> a.getSingleTradeCurrency() != null && a.getSingleTradeCurrency().getCode().equals("XMR"))) {
-            preferences.dontShowAgain(key, true);
-        }
-
-        if (preferences.showAgain(key)) {
-            new Popup().information(Res.get("account.altcoin.popup.xmr.dataDirWarning")).dontShowAgainId(key).show();
         }
     }
 
@@ -905,20 +887,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
     public BooleanProperty getShowSettingsUpdatesNotification() {
         return settingsPresentation.getShowSettingsUpdatesNotification();
-    }
-
-    private void maybeAddMediationRulesAwarenessWindowToQueue() {
-        String key = "mediationRulesAwarenessPopup";
-        if (DontShowAgainLookup.showAgain(key)) {
-            Popup popup = new Popup()
-                    .headLine(Res.get("news.mediationRules.title"))
-                    .information(Res.get("news.mediationRules.info"))
-                    .actionButtonText(Res.get("shared.iUnderstand"))
-                    .hideCloseButton()
-                    .dontShowAgainId(key);
-            popup.setDisplayOrderPriority(1);
-            popupQueue.add(popup);
-        }
     }
 
     private void maybeShowPopupsFromQueue() {

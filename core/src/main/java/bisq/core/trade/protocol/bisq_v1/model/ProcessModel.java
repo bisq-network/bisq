@@ -118,7 +118,6 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     // Persistable Immutable
     private final TradingPeer tradingPeer;
     private final String offerId;
-    private final String accountId;
     private final PubKeyRing pubKeyRing;
 
     // Persistable Mutable
@@ -161,6 +160,15 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     @Setter
     private long sellerPayoutAmountFromMediation;
 
+    // Was changed at v1.9.2 from immutable to mutable
+    @Setter
+    private String accountId;
+
+    // Was added at v1.9.2
+    @Setter
+    @Nullable
+    private PaymentAccount paymentAccount;
+
 
     // We want to indicate the user the state of the message delivery of the
     // CounterCurrencyTransferStartedMessage. As well we do an automatic re-send in case it was not ACKed yet.
@@ -180,12 +188,16 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         this.tradingPeer = tradingPeer != null ? tradingPeer : new TradingPeer();
     }
 
-    public void applyTransient(Provider provider,
-                               TradeManager tradeManager,
-                               Offer offer) {
+    public void applyTransient(Provider provider, TradeManager tradeManager, Offer offer) {
         this.offer = offer;
         this.provider = provider;
         this.tradeManager = tradeManager;
+    }
+
+    public void applyPaymentAccount(Trade trade) {
+        paymentAccount = trade instanceof MakerTrade ?
+                getUser().getPaymentAccount(offer.getMakerPaymentAccountId()) :
+                getUser().getPaymentAccount(trade.getTakerPaymentAccountId());
     }
 
 
@@ -216,6 +228,7 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         Optional.ofNullable(myMultiSigPubKey).ifPresent(e -> builder.setMyMultiSigPubKey(ByteString.copyFrom(myMultiSigPubKey)));
         Optional.ofNullable(tempTradingPeerNodeAddress).ifPresent(e -> builder.setTempTradingPeerNodeAddress(tempTradingPeerNodeAddress.toProtoMessage()));
         Optional.ofNullable(mediatedPayoutTxSignature).ifPresent(e -> builder.setMediatedPayoutTxSignature(ByteString.copyFrom(e)));
+        Optional.ofNullable(paymentAccount).ifPresent(e -> builder.setPaymentAccount(e.toProtoMessage()));
 
         return builder.build();
     }
@@ -247,6 +260,9 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         MessageState paymentStartedMessageState = ProtoUtil.enumFromProto(MessageState.class, paymentStartedMessageStateString);
         processModel.setPaymentStartedMessageState(paymentStartedMessageState);
 
+        if (proto.hasPaymentAccount()) {
+            processModel.setPaymentAccount(PaymentAccount.fromProto(proto.getPaymentAccount(), coreProtoResolver));
+        }
         return processModel;
     }
 
@@ -271,12 +287,13 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
 
     @Nullable
     public PaymentAccountPayload getPaymentAccountPayload(Trade trade) {
-        PaymentAccount paymentAccount;
-        if (trade instanceof MakerTrade)
-            paymentAccount = getUser().getPaymentAccount(offer.getMakerPaymentAccountId());
-        else
-            paymentAccount = getUser().getPaymentAccount(trade.getTakerPaymentAccountId());
-        return paymentAccount != null ? paymentAccount.getPaymentAccountPayload() : null;
+        if (paymentAccount == null) {
+            // Persisted trades pre v 1.9.2 have no paymentAccount set, so it will be null.
+            // We do not need to persist it (though it would not hurt as well).
+            applyPaymentAccount(trade);
+        }
+
+        return paymentAccount.getPaymentAccountPayload();
     }
 
     public Coin getFundsNeededForTrade() {

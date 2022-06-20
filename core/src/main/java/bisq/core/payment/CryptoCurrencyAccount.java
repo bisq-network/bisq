@@ -47,4 +47,8 @@ public final class CryptoCurrencyAccount extends AssetAccount {
     public @NonNull List<TradeCurrency> getSupportedCurrencies() {
         return SUPPORTED_CURRENCIES;
     }
+
+    public PaymentAccountPayload getPaymentAccountPayload() {
+        return paymentAccountPayload;
+    }
 }
