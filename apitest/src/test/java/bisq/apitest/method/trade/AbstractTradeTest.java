@@ -2,6 +2,8 @@ package bisq.apitest.method.trade;
 
 import bisq.proto.grpc.TradeInfo;
 
+import io.grpc.StatusRuntimeException;
+
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -32,6 +34,7 @@ import bisq.cli.CliMain;
 import bisq.cli.GrpcClient;
 import bisq.cli.table.builder.TableBuilder;
 
+@SuppressWarnings({"ConstantConditions", "unused"})
 public class AbstractTradeTest extends AbstractOfferTest {
 
     public static final ExpectedProtocolStatus EXPECTED_PROTOCOL_STATUS = new ExpectedProtocolStatus();
@@ -40,10 +43,16 @@ public class AbstractTradeTest extends AbstractOfferTest {
     @Getter
     protected static String tradeId;
 
-    protected final Supplier<Integer> maxTradeStateAndPhaseChecks = () -> isLongRunningTest ? 10 : 2;
+    protected final Supplier<Integer> maxTradeStateAndPhaseChecks = () ->
+            isLongRunningTest
+                    ? 10
+                    : 2;
     protected final Function<TradeInfo, String> toTradeDetailTable = (trade) ->
             new TableBuilder(TRADE_DETAIL_TBL, trade).build().toString();
-    protected final Function<GrpcClient, String> toUserName = (client) -> client.equals(aliceClient) ? "Alice" : "Bob";
+    protected final Function<GrpcClient, String> toUserName = (client) ->
+            client.equals(aliceClient)
+                    ? "Alice"
+                    : "Bob";
 
     @BeforeAll
     public static void initStaticFixtures() {
@@ -84,17 +93,17 @@ public class AbstractTradeTest extends AbstractOfferTest {
         return trade;
     }
 
-    protected final void waitForDepositConfirmation(Logger log,
-                                                    TestInfo testInfo,
-                                                    GrpcClient grpcClient,
-                                                    String tradeId) {
+    protected final void waitForTakerDepositConfirmation(Logger log,
+                                                         TestInfo testInfo,
+                                                         GrpcClient takerClient,
+                                                         String tradeId) {
         Predicate<TradeInfo> isTradeInDepositConfirmedStateAndPhase = (t) ->
                 t.getState().equals(DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN.name())
                         && t.getPhase().equals(DEPOSIT_CONFIRMED.name());
 
-        String userName = toUserName.apply(grpcClient);
+        String userName = toUserName.apply(takerClient);
         for (int i = 1; i <= maxTradeStateAndPhaseChecks.get(); i++) {
-            TradeInfo trade = grpcClient.getTrade(tradeId);
+            TradeInfo trade = takerClient.getTrade(tradeId);
             if (!isTradeInDepositConfirmedStateAndPhase.test(trade)) {
                 log.warn("{} still waiting on trade {} tx {}: DEPOSIT_CONFIRMED_IN_BLOCK_CHAIN, attempt # {}",
                         userName,
@@ -117,6 +126,15 @@ public class AbstractTradeTest extends AbstractOfferTest {
         }
     }
 
+    protected final void verifyTakerDepositNotConfirmed(TradeInfo trade) {
+        if (trade.getIsDepositConfirmed()) {
+            fail(format("INVALID_PHASE for trade %s in STATE=%s PHASE=%s, deposit tx should NOT be confirmed yet.",
+                    trade.getShortId(),
+                    trade.getState(),
+                    trade.getPhase()));
+        }
+    }
+
     protected final void verifyTakerDepositConfirmed(TradeInfo trade) {
         if (!trade.getIsDepositConfirmed()) {
             fail(format("INVALID_PHASE for trade %s in STATE=%s PHASE=%s, deposit tx never confirmed.",
@@ -126,7 +144,80 @@ public class AbstractTradeTest extends AbstractOfferTest {
         }
     }
 
-    protected final void waitForBuyerSeesPaymentInitiatedMessage(Logger log,
+    protected final void verifyPaymentSentMsgIsFromBtcBuyerPrecondition(Logger log, GrpcClient sellerClient) {
+        String userName = toUserName.apply(sellerClient);
+        log.debug("BTC seller {} incorrectly sends a confirmpaymentstarted message, for trade {}", userName, tradeId);
+        Throwable exception = assertThrows(StatusRuntimeException.class, () -> sellerClient.confirmPaymentStarted(tradeId));
+        String expectedExceptionMessage = "FAILED_PRECONDITION: you are the seller, and not sending payment";
+        assertEquals(expectedExceptionMessage, exception.getMessage());
+    }
+
+    protected final void verifyPaymentReceivedMsgIsFromBtcSellerPrecondition(Logger log, GrpcClient buyerClient) {
+        String userName = toUserName.apply(buyerClient);
+        log.debug("BTC buyer {} incorrectly sends a confirmpaymentreceived message, for trade {}", userName, tradeId);
+        Throwable exception = assertThrows(StatusRuntimeException.class, () -> buyerClient.confirmPaymentReceived(tradeId));
+        String expectedExceptionMessage = "FAILED_PRECONDITION: you are the buyer, and not receiving payment";
+        assertEquals(expectedExceptionMessage, exception.getMessage());
+    }
+
+    protected final void verifyPaymentSentMsgDepositTxConfirmedPrecondition(Logger log, GrpcClient buyerClient) {
+        var trade = buyerClient.getTrade(tradeId);
+        verifyTakerDepositNotConfirmed(trade);
+
+        String userName = toUserName.apply(buyerClient);
+        log.debug("BTC buyer {} sends a confirmpaymentstarted message before deposit tx is confirmed, for trade {}",
+                userName,
+                tradeId);
+        Throwable exception = assertThrows(StatusRuntimeException.class, () -> buyerClient.confirmPaymentStarted(tradeId));
+        String expectedExceptionMessage =
+                format("FAILED_PRECONDITION: cannot send a payment started message for trade '%s'", tradeId);
+        String failureReason = format("Expected exception message to start with '%s'%n, but got '%s'",
+                expectedExceptionMessage,
+                exception.getMessage());
+        assertTrue(exception.getMessage().startsWith(expectedExceptionMessage), failureReason);
+        expectedExceptionMessage = format("until trade deposit tx '%s' is confirmed", trade.getDepositTxId());
+        assertTrue(exception.getMessage().contains(expectedExceptionMessage));
+    }
+
+    protected final void verifyPaymentReceivedMsgDepositTxConfirmedPrecondition(Logger log, GrpcClient sellerClient) {
+        var trade = sellerClient.getTrade(tradeId);
+        verifyTakerDepositNotConfirmed(trade);
+
+        String userName = toUserName.apply(sellerClient);
+        log.debug("BTC seller {} sends a confirmpaymentreceived message before deposit tx is confirmed, for trade {}",
+                userName,
+                tradeId);
+        Throwable exception = assertThrows(StatusRuntimeException.class, () -> sellerClient.confirmPaymentReceived(tradeId));
+        String expectedExceptionMessage =
+                format("FAILED_PRECONDITION: cannot send a payment received message for trade '%s'", tradeId);
+        String failureReason = format("Expected exception message to start with '%s'%n, but got '%s'",
+                expectedExceptionMessage,
+                exception.getMessage());
+        assertTrue(exception.getMessage().startsWith(expectedExceptionMessage), failureReason);
+        expectedExceptionMessage = format("until trade deposit tx '%s' is confirmed", trade.getDepositTxId());
+        assertTrue(exception.getMessage().contains(expectedExceptionMessage));
+    }
+
+    protected final void verifyPaymentReceivedMsgAfterPaymentSentMsgPrecondition(Logger log, GrpcClient sellerClient) {
+        var trade = sellerClient.getTrade(tradeId);
+        verifyTakerDepositConfirmed(trade);
+
+        String userName = toUserName.apply(sellerClient);
+        log.debug("BTC seller {} sends a confirmpaymentreceived message before a payment started message has been sent, for trade {}",
+                userName,
+                tradeId);
+        Throwable exception = assertThrows(StatusRuntimeException.class, () -> sellerClient.confirmPaymentReceived(tradeId));
+        String expectedExceptionMessage =
+                format("FAILED_PRECONDITION: cannot send a payment received confirmation message for trade '%s'", tradeId);
+        String failureReason = format("Expected exception message to start with '%s'%n, but got '%s'",
+                expectedExceptionMessage,
+                exception.getMessage());
+        assertTrue(exception.getMessage().startsWith(expectedExceptionMessage), failureReason);
+        expectedExceptionMessage = "until after a trade payment started message has been sent";
+        assertTrue(exception.getMessage().contains(expectedExceptionMessage));
+    }
+
+    protected final void waitUntilBuyerSeesPaymentStartedMessage(Logger log,
                                                                  TestInfo testInfo,
                                                                  GrpcClient grpcClient,
                                                                  String tradeId) {
@@ -153,7 +244,7 @@ public class AbstractTradeTest extends AbstractOfferTest {
         }
     }
 
-    protected final void waitForSellerSeesPaymentInitiatedMessage(Logger log,
+    protected final void waitUntilSellerSeesPaymentStartedMessage(Logger log,
                                                                   TestInfo testInfo,
                                                                   GrpcClient grpcClient,
                                                                   String tradeId) {

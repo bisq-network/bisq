@@ -20,6 +20,7 @@ package bisq.apitest.scenario;
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -55,6 +56,7 @@ public class TradeTest extends AbstractTradeTest {
     public void testTakeBuyBTCOffer(final TestInfo testInfo) {
         TakeBuyBTCOfferTest test = new TakeBuyBTCOfferTest();
         test.testTakeAlicesBuyOffer(testInfo);
+        test.testPaymentMessagingPreconditions(testInfo);
         test.testAlicesConfirmPaymentStarted(testInfo);
         test.testBobsConfirmPaymentReceived(testInfo);
         test.testCloseTrade(testInfo);
@@ -65,11 +67,13 @@ public class TradeTest extends AbstractTradeTest {
     public void testTakeSellBTCOffer(final TestInfo testInfo) {
         TakeSellBTCOfferTest test = new TakeSellBTCOfferTest();
         test.testTakeAlicesSellOffer(testInfo);
+        test.testPaymentMessagingPreconditions(testInfo);
         test.testBobsConfirmPaymentStarted(testInfo);
         test.testAlicesConfirmPaymentReceived(testInfo);
         test.testBobsBtcWithdrawalToExternalAddress(testInfo);
     }
 
+    @Disabled
     @Test
     @Order(3)
     public void testTakeBuyBSQOffer(final TestInfo testInfo) {
@@ -91,6 +95,7 @@ public class TradeTest extends AbstractTradeTest {
         test.testCloseTrade(testInfo);
     }
 
+    @Disabled
     @Test
     @Order(5)
     public void testTakeSellBSQOffer(final TestInfo testInfo) {
@@ -107,6 +112,7 @@ public class TradeTest extends AbstractTradeTest {
         TakeBuyXMROfferTest test = new TakeBuyXMROfferTest();
         TakeBuyXMROfferTest.createXmrPaymentAccounts();
         test.testTakeAlicesSellBTCForXMROffer(testInfo);
+        test.testPaymentMessagingPreconditions(testInfo);
         test.testBobsConfirmPaymentStarted(testInfo);
         test.testAlicesConfirmPaymentReceived(testInfo);
         test.testCloseTrade(testInfo);
@@ -118,6 +124,7 @@ public class TradeTest extends AbstractTradeTest {
         TakeSellXMROfferTest test = new TakeSellXMROfferTest();
         TakeBuyXMROfferTest.createXmrPaymentAccounts();
         test.testTakeAlicesBuyBTCForXMROffer(testInfo);
+        test.testPaymentMessagingPreconditions(testInfo);
         test.testAlicesConfirmPaymentStarted(testInfo);
         test.testBobsConfirmPaymentReceived(testInfo);
         test.testAlicesBtcWithdrawalToExternalAddress(testInfo);

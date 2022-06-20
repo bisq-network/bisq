@@ -17,6 +17,7 @@
 
 package bisq.core.api;
 
+import bisq.core.api.exception.FailedPreconditionException;
 import bisq.core.api.exception.NotAvailableException;
 import bisq.core.api.exception.NotFoundException;
 import bisq.core.btc.model.AddressEntry;
@@ -177,6 +178,13 @@ class CoreTradesService {
     void confirmPaymentStarted(String tradeId) {
         var trade = getTrade(tradeId);
         if (isFollowingBuyerProtocol(trade)) {
+            if (!trade.isDepositConfirmed()) {
+                throw new FailedPreconditionException(
+                        format("cannot send a payment started message for trade '%s'%n"
+                                        + "until trade deposit tx '%s' is confirmed",
+                                trade.getId(),
+                                trade.getDepositTxId()));
+            }
             var tradeProtocol = tradeManager.getTradeProtocol(trade);
             ((BuyerProtocol) tradeProtocol).onPaymentStarted(
                     () -> {
@@ -186,15 +194,29 @@ class CoreTradesService {
                     }
             );
         } else {
-            throw new IllegalStateException("you are the seller and not sending payment");
+            throw new FailedPreconditionException("you are the seller, and not sending payment");
         }
     }
 
     void confirmPaymentReceived(String tradeId) {
         var trade = getTrade(tradeId);
         if (isFollowingBuyerProtocol(trade)) {
-            throw new IllegalStateException("you are the buyer, and not receiving payment");
+            throw new FailedPreconditionException("you are the buyer, and not receiving payment");
         } else {
+            if (!trade.isDepositConfirmed()) {
+                throw new FailedPreconditionException(
+                        format("cannot send a payment received message for trade '%s'%n"
+                                        + "until trade deposit tx '%s' is confirmed",
+                                trade.getId(),
+                                trade.getDepositTxId()));
+            }
+
+            if (!trade.isFiatSent()) {
+                throw new FailedPreconditionException(
+                        format("cannot send a payment received confirmation message for trade '%s'%n"
+                                        + "until after a trade payment started message has been sent",
+                                trade.getId()));
+            }
             var tradeProtocol = tradeManager.getTradeProtocol(trade);
             ((SellerProtocol) tradeProtocol).onPaymentReceived(
                     () -> {

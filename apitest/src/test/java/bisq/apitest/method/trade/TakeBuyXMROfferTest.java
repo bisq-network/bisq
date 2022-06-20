@@ -47,6 +47,7 @@ import bisq.apitest.method.offer.AbstractOfferTest;
 import bisq.cli.table.builder.TableBuilder;
 
 @Disabled
+@SuppressWarnings("ConstantConditions")
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class TakeBuyXMROfferTest extends AbstractTradeTest {
@@ -89,11 +90,9 @@ public class TakeBuyXMROfferTest extends AbstractTradeTest {
             var trade = takeAlicesOffer(offerId, bobsXmrAcct.getId(), TRADE_FEE_CURRENCY_CODE);
             alicesXmrOffers = aliceClient.getMyOffersSortedByDate(XMR);
             assertEquals(0, alicesXmrOffers.size());
-            genBtcBlocksThenWait(1, 2_500);
-            waitForDepositConfirmation(log, testInfo, bobClient, trade.getTradeId());
 
             trade = bobClient.getTrade(tradeId);
-            verifyTakerDepositConfirmed(trade);
+            verifyTakerDepositNotConfirmed(trade);
             logTrade(log, testInfo, "Alice's Maker/Buyer View", aliceClient.getTrade(tradeId));
             logTrade(log, testInfo, "Bob's Taker/Seller View", bobClient.getTrade(tradeId));
         } catch (StatusRuntimeException e) {
@@ -103,15 +102,39 @@ public class TakeBuyXMROfferTest extends AbstractTradeTest {
 
     @Test
     @Order(2)
+    public void testPaymentMessagingPreconditions(final TestInfo testInfo) {
+        try {
+            // Alice is maker / xmr buyer (btc seller), Bob is taker / xmr seller (btc buyer).
+            // Verify payment sent and rcvd msgs are sent by the right peers:  buyer and seller.
+            verifyPaymentSentMsgIsFromBtcBuyerPrecondition(log, aliceClient);
+            verifyPaymentReceivedMsgIsFromBtcSellerPrecondition(log, bobClient);
+
+            // Verify xmr payment sent and rcvd msgs cannot be sent before trade deposit tx is confirmed.
+            verifyPaymentSentMsgDepositTxConfirmedPrecondition(log, bobClient);
+            verifyPaymentReceivedMsgDepositTxConfirmedPrecondition(log, aliceClient);
+
+            // Now generate the BTC block to confirm the taker deposit tx.
+            genBtcBlocksThenWait(1, 2_500);
+            waitForTakerDepositConfirmation(log, testInfo, bobClient, tradeId);
+
+            // Verify the seller can only send a payment rcvd msg after the payment started msg.
+            verifyPaymentReceivedMsgAfterPaymentSentMsgPrecondition(log, aliceClient);
+        } catch (StatusRuntimeException e) {
+            fail(e);
+        }
+    }
+
+    @Test
+    @Order(3)
     public void testBobsConfirmPaymentStarted(final TestInfo testInfo) {
         try {
             var trade = bobClient.getTrade(tradeId);
 
             verifyTakerDepositConfirmed(trade);
-            log.debug("Bob sends XMR payment to Alice for trade {}", trade.getTradeId());
-            bobClient.confirmPaymentStarted(trade.getTradeId());
+            log.debug("Bob sends XMR payment to Alice for trade {}", tradeId);
+            bobClient.confirmPaymentStarted(tradeId);
             sleep(3500);
-            waitForBuyerSeesPaymentInitiatedMessage(log, testInfo, bobClient, tradeId);
+            waitUntilBuyerSeesPaymentStartedMessage(log, testInfo, bobClient, tradeId);
 
             logTrade(log, testInfo, "Alice's Maker/Buyer View (Payment Sent)", aliceClient.getTrade(tradeId));
             logTrade(log, testInfo, "Bob's Taker/Seller View (Payment Sent)", bobClient.getTrade(tradeId));
@@ -121,18 +144,18 @@ public class TakeBuyXMROfferTest extends AbstractTradeTest {
     }
 
     @Test
-    @Order(3)
+    @Order(4)
     public void testAlicesConfirmPaymentReceived(final TestInfo testInfo) {
         try {
-            waitForSellerSeesPaymentInitiatedMessage(log, testInfo, aliceClient, tradeId);
+            waitUntilSellerSeesPaymentStartedMessage(log, testInfo, aliceClient, tradeId);
 
             sleep(2_000);
             var trade = aliceClient.getTrade(tradeId);
             // If we were trading BSQ, Alice would verify payment has been sent to her
             // Bisq / BSQ wallet, but we can do no such checks for XMR payments.
             // All XMR transfers are done outside Bisq.
-            log.debug("Alice verifies XMR payment was received from Bob, for trade {}", trade.getTradeId());
-            aliceClient.confirmPaymentReceived(trade.getTradeId());
+            log.debug("Alice verifies XMR payment was received from Bob, for trade {}", tradeId);
+            aliceClient.confirmPaymentReceived(tradeId);
             sleep(3_000);
 
             trade = aliceClient.getTrade(tradeId);
@@ -150,7 +173,7 @@ public class TakeBuyXMROfferTest extends AbstractTradeTest {
     }
 
     @Test
-    @Order(4)
+    @Order(5)
     public void testCloseTrade(final TestInfo testInfo) {
         try {
             genBtcBlocksThenWait(1, 1_000);
