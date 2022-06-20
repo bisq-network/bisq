@@ -17,6 +17,7 @@
 
 package bisq.cli;
 
+import bisq.proto.grpc.AverageBsqTradePrice;
 import bisq.proto.grpc.OfferInfo;
 import bisq.proto.grpc.TradeInfo;
 
@@ -63,6 +64,7 @@ import bisq.cli.opts.CreateOfferOptionParser;
 import bisq.cli.opts.CreatePaymentAcctOptionParser;
 import bisq.cli.opts.EditOfferOptionParser;
 import bisq.cli.opts.GetAddressBalanceOptionParser;
+import bisq.cli.opts.GetAvgBsqPriceOptionParser;
 import bisq.cli.opts.GetBTCMarketPriceOptionParser;
 import bisq.cli.opts.GetBalanceOptionParser;
 import bisq.cli.opts.GetOffersOptionParser;
@@ -208,6 +210,21 @@ public class CliMain {
                     var address = opts.getAddress();
                     var addressBalance = client.getAddressBalance(address);
                     new TableBuilder(ADDRESS_BALANCE_TBL, addressBalance).build().print(out);
+                    return;
+                }
+                case getavgbsqprice: {
+                    var opts = new GetAvgBsqPriceOptionParser(args).parse();
+                    if (opts.isForHelp()) {
+                        out.println(client.getMethodHelp(method));
+                        return;
+                    }
+                    var days = opts.getDays();
+                    AverageBsqTradePrice price = client.getAverageBsqTradePrice(days);
+                    out.println(format("avg %d day btc price: %s    avg %d day usd price: %s",
+                            days,
+                            price.getBtcPrice(),
+                            days,
+                            price.getUsdPrice()));
                     return;
                 }
                 case getbtcprice: {
@@ -836,6 +853,8 @@ public class CliMain {
             stream.format(rowFormat, getbalance.name(), "[--currency-code=<bsq|btc>]", "Get server wallet balances");
             stream.println();
             stream.format(rowFormat, getaddressbalance.name(), "--address=<btc-address>", "Get server wallet address balance");
+            stream.println();
+            stream.format(rowFormat, getavgbsqprice.name(), "--days=<days>", "Get volume weighted average bsq trade price");
             stream.println();
             stream.format(rowFormat, getbtcprice.name(), "--currency-code=<currency-code>", "Get current market btc price");
             stream.println();

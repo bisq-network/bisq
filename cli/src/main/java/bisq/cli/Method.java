@@ -29,6 +29,7 @@ public enum Method {
     editoffer,
     createpaymentacct,
     createcryptopaymentacct,
+    getavgbsqprice,
     getaddressbalance,
     getbalance,
     getbtcprice,

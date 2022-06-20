@@ -17,7 +17,14 @@
 
 package bisq.core.api;
 
+import bisq.core.api.exception.NotAvailableException;
+import bisq.core.monetary.Price;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.trade.statistics.TradeStatisticsManager;
+import bisq.core.user.Preferences;
+import bisq.core.util.AveragePriceUtil;
+
+import bisq.common.util.Tuple2;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -38,14 +45,20 @@ class CorePriceService {
 
     private final Predicate<String> isCurrencyCode = (c) -> isFiatCurrency(c) || isCryptoCurrency(c);
 
+    private final Preferences preferences;
     private final PriceFeedService priceFeedService;
+    private final TradeStatisticsManager tradeStatisticsManager;
 
     @Inject
-    public CorePriceService(PriceFeedService priceFeedService) {
+    public CorePriceService(Preferences preferences,
+                            PriceFeedService priceFeedService,
+                            TradeStatisticsManager tradeStatisticsManager) {
+        this.preferences = preferences;
         this.priceFeedService = priceFeedService;
+        this.tradeStatisticsManager = tradeStatisticsManager;
     }
 
-    public void getMarketPrice(String currencyCode, Consumer<Double> resultHandler) {
+    void getMarketPrice(String currencyCode, Consumer<Double> resultHandler) {
         String upperCaseCurrencyCode = currencyCode.toUpperCase();
 
         if (!isCurrencyCode.test(upperCaseCurrencyCode))
@@ -72,9 +85,17 @@ class CorePriceService {
                                     format("%s price feed request should not return data for unsupported currency code",
                                             upperCaseCurrencyCode));
                     } else {
-                        throw new IllegalStateException(format("%s price is not available", upperCaseCurrencyCode));
+                        throw new NotAvailableException(format("%s price is not available", upperCaseCurrencyCode));
                     }
                 },
                 log::warn);
+    }
+
+    Tuple2<Price, Price> getAverageBsqTradePrice(int days) {
+        Tuple2<Price, Price> prices = AveragePriceUtil.getAveragePriceTuple(preferences, tradeStatisticsManager, days);
+        if (prices.first.getValue() == 0 || prices.second.getValue() == 0)
+            throw new NotAvailableException("average bsq price is not available");
+
+        return prices;
     }
 }
