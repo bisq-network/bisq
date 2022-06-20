@@ -124,6 +124,12 @@ class CoreTradesService {
         bsqSwapTakeOfferModel.initWithData(offer);
         bsqSwapTakeOfferModel.applyAmount(offer.getAmount());
 
+        // Block attempt to take swap offer if there are insufficient funds for the trade.
+        var missingCoin = bsqSwapTakeOfferModel.getMissingFundsAsCoin();
+        if (missingCoin.value > 0)
+            throw new NotAvailableException(
+                    format("wallet has insufficient funds to take offer with id '%s'", offer.getId()));
+
         log.info("Initiating take {} offer, {}",
                 offer.isBuyOffer() ? "buy" : "sell",
                 bsqSwapTakeOfferModel);
@@ -155,6 +161,7 @@ class CoreTradesService {
                 offer.isBuyOffer() ? "buy" : "sell",
                 takeOfferModel);
 
+        // Block attempt to take swap offer if there are insufficient funds for the trade.
         if (!takeOfferModel.isBtcWalletFunded())
             throw new NotAvailableException(
                     format("wallet has insufficient btc to take offer with id '%s'", offer.getId()));
