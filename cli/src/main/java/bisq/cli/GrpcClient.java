@@ -74,6 +74,10 @@ public final class GrpcClient {
         return grpcStubs.versionService.getVersion(request).getVersion();
     }
 
+    public String getNetwork() {
+        return walletsServiceRequest.getNetwork();
+    }
+
     public BalancesInfo getBalances() {
         return walletsServiceRequest.getBalances();
     }
@@ -386,6 +390,7 @@ public final class GrpcClient {
                 tradeInstant);
     }
 
+    @SuppressWarnings("unused")
     public List<PaymentMethod> getCryptoPaymentMethods() {
         return paymentAccountsServiceRequest.getCryptoPaymentMethods();
     }

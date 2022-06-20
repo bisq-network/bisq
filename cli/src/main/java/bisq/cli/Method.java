@@ -36,6 +36,7 @@ public enum Method {
     @Deprecated // Since 27-Dec-2021.
     getmyoffer, // Endpoint to be removed from future version.  Use getoffer instead.
     getmyoffers,
+    getnetwork,
     getoffer,
     getoffers,
     getpaymentacctform,

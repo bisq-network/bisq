@@ -24,6 +24,7 @@ import bisq.proto.grpc.BtcBalanceInfo;
 import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalancesRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
+import bisq.proto.grpc.GetNetworkRequest;
 import bisq.proto.grpc.GetTransactionRequest;
 import bisq.proto.grpc.GetTxFeeRateRequest;
 import bisq.proto.grpc.GetUnusedBsqAddressRequest;
@@ -52,6 +53,11 @@ public class WalletsServiceRequest {
 
     public WalletsServiceRequest(GrpcStubs grpcStubs) {
         this.grpcStubs = grpcStubs;
+    }
+
+    public String getNetwork() {
+        var request = GetNetworkRequest.newBuilder().build();
+        return grpcStubs.walletsService.getNetwork(request).getNetwork();
     }
 
     public BalancesInfo getBalances() {
