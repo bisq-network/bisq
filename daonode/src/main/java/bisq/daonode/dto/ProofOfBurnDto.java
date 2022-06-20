@@ -19,13 +19,18 @@ package bisq.daonode.dto;
 
 import lombok.Getter;
 
+
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * Minimal data required for Bisq 2 reputation use case.
  * Need to be in sync with the Bisq 2 ProofOfBurnDto class.
  */
 @Getter
+@Schema(title = "ProofOfBurn")
 public class ProofOfBurnDto {
-    private String txId;
+    private final String txId;
     private final long burnedAmount;
     private final int blockHeight;
     private final long time;

@@ -128,6 +128,8 @@ public class Config {
     public static final String BTC_FEES_TS = "bitcoinFeesTs";
     public static final String BTC_FEE_INFO = "bitcoinFeeInfo";
     public static final String BYPASS_MEMPOOL_VALIDATION = "bypassMempoolValidation";
+    public static final String DAO_NODE_API_URL = "daoNodeApiUrl";
+    public static final String DAO_NODE_API_PORT = "daoNodeApiPort";
 
     // Default values for certain options
     public static final int UNSPECIFIED_PORT = -1;
@@ -218,6 +220,8 @@ public class Config {
     public final boolean preventPeriodicShutdownAtSeedNode;
     public final boolean republishMailboxEntries;
     public final boolean bypassMempoolValidation;
+    public final String daoNodeApiUrl;
+    public final int daoNodeApiPort;
 
     // Properties derived from options but not exposed as options themselves
     public final File torDir;
@@ -273,7 +277,7 @@ public class Config {
 
         ArgumentAcceptingOptionSpec<String> configFileOpt =
                 parser.accepts(CONFIG_FILE, format("Specify configuration file. " +
-                        "Relative paths will be prefixed by %s location.", APP_DATA_DIR))
+                                "Relative paths will be prefixed by %s location.", APP_DATA_DIR))
                         .withRequiredArg()
                         .ofType(String.class)
                         .defaultsTo(DEFAULT_CONFIG_FILE_NAME);
@@ -346,7 +350,7 @@ public class Config {
 
         ArgumentAcceptingOptionSpec<Boolean> ignoreLocalBtcNodeOpt =
                 parser.accepts(IGNORE_LOCAL_BTC_NODE,
-                        "If set to true a Bitcoin Core node running locally will be ignored")
+                                "If set to true a Bitcoin Core node running locally will be ignored")
                         .withRequiredArg()
                         .ofType(Boolean.class)
                         .defaultsTo(false);
@@ -366,21 +370,21 @@ public class Config {
 
         ArgumentAcceptingOptionSpec<Boolean> useDevModeOpt =
                 parser.accepts(USE_DEV_MODE,
-                        "Enables dev mode which is used for convenience for developer testing")
+                                "Enables dev mode which is used for convenience for developer testing")
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);
 
         ArgumentAcceptingOptionSpec<Boolean> useDevModeHeaderOpt =
                 parser.accepts(USE_DEV_MODE_HEADER,
-                        "Use dev mode css scheme to distinguish dev instances.")
+                                "Use dev mode css scheme to distinguish dev instances.")
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);
 
         ArgumentAcceptingOptionSpec<Boolean> useDevPrivilegeKeysOpt =
                 parser.accepts(USE_DEV_PRIVILEGE_KEYS, "If set to true all privileged features requiring a private " +
-                        "key to be enabled are overridden by a dev key pair (This is for developers only!)")
+                                "key to be enabled are overridden by a dev key pair (This is for developers only!)")
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);
@@ -393,9 +397,9 @@ public class Config {
 
         ArgumentAcceptingOptionSpec<Boolean> ignoreDevMsgOpt =
                 parser.accepts(IGNORE_DEV_MSG, "If set to true all signed " +
-                        "network_messages from bisq developers are ignored (Global " +
-                        "alert, Version update alert, Filters for offers, nodes or " +
-                        "trading account data)")
+                                "network_messages from bisq developers are ignored (Global " +
+                                "alert, Version update alert, Filters for offers, nodes or " +
+                                "trading account data)")
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);
@@ -408,7 +412,7 @@ public class Config {
 
         ArgumentAcceptingOptionSpec<String> seedNodesOpt =
                 parser.accepts(SEED_NODES, "Override hard coded seed nodes as comma separated list e.g. " +
-                        "'rxdkppp3vicnbgqt.onion:8002,mfla72c4igh5ta2t.onion:8002'")
+                                "'rxdkppp3vicnbgqt.onion:8002,mfla72c4igh5ta2t.onion:8002'")
                         .withRequiredArg()
                         .withValuesSeparatedBy(',')
                         .describedAs("host:port[,...]");
@@ -440,29 +444,29 @@ public class Config {
 
         ArgumentAcceptingOptionSpec<String> socks5ProxyHttpAddressOpt =
                 parser.accepts(SOCKS_5_PROXY_HTTP_ADDRESS,
-                        "A proxy address to be used for Http requests (should be non-Tor)")
+                                "A proxy address to be used for Http requests (should be non-Tor)")
                         .withRequiredArg()
                         .describedAs("host:port")
                         .defaultsTo("");
 
         ArgumentAcceptingOptionSpec<Path> torrcFileOpt =
                 parser.accepts(TORRC_FILE, "An existing torrc-file to be sourced for Tor. Note that torrc-entries, " +
-                        "which are critical to Bisq's correct operation, cannot be overwritten.")
+                                "which are critical to Bisq's correct operation, cannot be overwritten.")
                         .withRequiredArg()
                         .describedAs("File")
                         .withValuesConvertedBy(new PathConverter(PathProperties.FILE_EXISTING, PathProperties.READABLE));
 
         ArgumentAcceptingOptionSpec<String> torrcOptionsOpt =
                 parser.accepts(TORRC_OPTIONS, "A list of torrc-entries to amend to Bisq's torrc. Note that " +
-                        "torrc-entries, which are critical to Bisq's flawless operation, cannot be overwritten. " +
-                        "[torrc options line, torrc option, ...]")
+                                "torrc-entries, which are critical to Bisq's flawless operation, cannot be overwritten. " +
+                                "[torrc options line, torrc option, ...]")
                         .withRequiredArg()
                         .withValuesConvertedBy(RegexMatcher.regex("^([^\\s,]+\\s[^,]+,?\\s*)+$"))
                         .defaultsTo("");
 
         ArgumentAcceptingOptionSpec<Integer> torControlPortOpt =
                 parser.accepts(TOR_CONTROL_PORT,
-                        "The control port of an already running Tor service to be used by Bisq.")
+                                "The control port of an already running Tor service to be used by Bisq.")
                         .availableUnless(TORRC_FILE, TORRC_OPTIONS)
                         .withRequiredArg()
                         .ofType(int.class)
@@ -477,7 +481,7 @@ public class Config {
 
         ArgumentAcceptingOptionSpec<Path> torControlCookieFileOpt =
                 parser.accepts(TOR_CONTROL_COOKIE_FILE, "The cookie file for authenticating against the already " +
-                        "running Tor service. Use in conjunction with --" + TOR_CONTROL_USE_SAFE_COOKIE_AUTH)
+                                "running Tor service. Use in conjunction with --" + TOR_CONTROL_USE_SAFE_COOKIE_AUTH)
                         .availableIf(TOR_CONTROL_PORT)
                         .availableUnless(TOR_CONTROL_PASSWORD)
                         .withRequiredArg()
@@ -486,7 +490,7 @@ public class Config {
 
         OptionSpecBuilder torControlUseSafeCookieAuthOpt =
                 parser.accepts(TOR_CONTROL_USE_SAFE_COOKIE_AUTH,
-                        "Use the SafeCookie method when authenticating to the already running Tor service.")
+                                "Use the SafeCookie method when authenticating to the already running Tor service.")
                         .availableIf(TOR_CONTROL_COOKIE_FILE);
 
         OptionSpecBuilder torStreamIsolationOpt =
@@ -532,21 +536,21 @@ public class Config {
 
         ArgumentAcceptingOptionSpec<String> socks5DiscoverModeOpt =
                 parser.accepts(SOCKS5_DISCOVER_MODE, "Specify discovery mode for Bitcoin nodes. " +
-                        "One or more of: [ADDR, DNS, ONION, ALL] (comma separated, they get OR'd together).")
+                                "One or more of: [ADDR, DNS, ONION, ALL] (comma separated, they get OR'd together).")
                         .withRequiredArg()
                         .describedAs("mode[,...]")
                         .defaultsTo("ALL");
 
         ArgumentAcceptingOptionSpec<Boolean> useAllProvidedNodesOpt =
                 parser.accepts(USE_ALL_PROVIDED_NODES,
-                        "Set to true if connection of bitcoin nodes should include clear net nodes")
+                                "Set to true if connection of bitcoin nodes should include clear net nodes")
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);
 
         ArgumentAcceptingOptionSpec<String> userAgentOpt =
                 parser.accepts(USER_AGENT,
-                        "User agent at btc node connections")
+                                "User agent at btc node connections")
                         .withRequiredArg()
                         .defaultsTo("Bisq");
 
@@ -585,21 +589,21 @@ public class Config {
 
         ArgumentAcceptingOptionSpec<String> rpcBlockNotificationHostOpt =
                 parser.accepts(RPC_BLOCK_NOTIFICATION_HOST,
-                        "Bitcoind rpc accepted incoming host for block notifications")
+                                "Bitcoind rpc accepted incoming host for block notifications")
                         .withRequiredArg()
                         .defaultsTo("");
 
         ArgumentAcceptingOptionSpec<Boolean> dumpBlockchainDataOpt =
                 parser.accepts(DUMP_BLOCKCHAIN_DATA, "If set to true the blockchain data " +
-                        "from RPC requests to Bitcoin Core are stored as json file in the data dir.")
+                                "from RPC requests to Bitcoin Core are stored as json file in the data dir.")
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);
 
         ArgumentAcceptingOptionSpec<Boolean> fullDaoNodeOpt =
                 parser.accepts(FULL_DAO_NODE, "If set to true the node requests the blockchain data via RPC requests " +
-                        "from Bitcoin Core and provide the validated BSQ txs to the network. It requires that the " +
-                        "other RPC properties are set as well.")
+                                "from Bitcoin Core and provide the validated BSQ txs to the network. It requires that the " +
+                                "other RPC properties are set as well.")
                         .withRequiredArg()
                         .ofType(Boolean.class)
                         .defaultsTo(DEFAULT_FULL_DAO_NODE);
@@ -611,7 +615,7 @@ public class Config {
 
         ArgumentAcceptingOptionSpec<Integer> genesisBlockHeightOpt =
                 parser.accepts(GENESIS_BLOCK_HEIGHT,
-                        "Genesis transaction block height when not using the hard coded one")
+                                "Genesis transaction block height when not using the hard coded one")
                         .withRequiredArg()
                         .ofType(int.class)
                         .defaultsTo(-1);
@@ -636,7 +640,7 @@ public class Config {
 
         ArgumentAcceptingOptionSpec<Boolean> allowFaultyDelayedTxsOpt =
                 parser.accepts(ALLOW_FAULTY_DELAYED_TXS, "Allow completion of trades with faulty delayed " +
-                        "payout transactions")
+                                "payout transactions")
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);
@@ -654,24 +658,35 @@ public class Config {
 
         ArgumentAcceptingOptionSpec<Boolean> preventPeriodicShutdownAtSeedNodeOpt =
                 parser.accepts(PREVENT_PERIODIC_SHUTDOWN_AT_SEED_NODE,
-                        "Prevents periodic shutdown at seed nodes")
+                                "Prevents periodic shutdown at seed nodes")
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);
 
         ArgumentAcceptingOptionSpec<Boolean> republishMailboxEntriesOpt =
                 parser.accepts(REPUBLISH_MAILBOX_ENTRIES,
-                        "Republish mailbox messages at startup")
+                                "Republish mailbox messages at startup")
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);
 
         ArgumentAcceptingOptionSpec<Boolean> bypassMempoolValidationOpt =
                 parser.accepts(BYPASS_MEMPOOL_VALIDATION,
-                        "Prevents mempool check of trade parameters")
+                                "Prevents mempool check of trade parameters")
                         .withRequiredArg()
                         .ofType(boolean.class)
                         .defaultsTo(false);
+
+        ArgumentAcceptingOptionSpec<String> daoNodeApiUrlOpt =
+                parser.accepts(DAO_NODE_API_URL, "Dao node API url")
+                        .withRequiredArg()
+                        .defaultsTo("http://localhost");
+
+        ArgumentAcceptingOptionSpec<Integer> daoNodeApiPortOpt =
+                parser.accepts(DAO_NODE_API_PORT, "Dao node API port")
+                        .withRequiredArg()
+                        .ofType(Integer.class)
+                        .defaultsTo(8082);
 
         try {
             CompositeOptionSet options = new CompositeOptionSet();
@@ -791,6 +806,8 @@ public class Config {
             this.preventPeriodicShutdownAtSeedNode = options.valueOf(preventPeriodicShutdownAtSeedNodeOpt);
             this.republishMailboxEntries = options.valueOf(republishMailboxEntriesOpt);
             this.bypassMempoolValidation = options.valueOf(bypassMempoolValidationOpt);
+            this.daoNodeApiUrl = options.valueOf(daoNodeApiUrlOpt);
+            this.daoNodeApiPort = options.valueOf(daoNodeApiPortOpt);
         } catch (OptionException ex) {
             throw new ConfigException("problem parsing option '%s': %s",
                     ex.options().get(0),
