@@ -1,4 +1,4 @@
-                                       /*
+/*
  * This file is part of Bisq.
  *
  * Bisq is free software: you can redistribute it and/or modify it
@@ -17,40 +17,20 @@
 
 package bisq.asset.coins;
 
-import bisq.asset.AddressValidationResult;
 import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class SpaceXpanse extends Coin {
-
     public SpaceXpanse() {
-        super("SpaceXpanse", "ROD", new Base58BitcoinAddressValidator(new SpaceXpanseParams()));
+        super("SpaceXpanse", "ROD", new Base58BitcoinAddressValidator(new SpaceXpanseMainNetParams()));
     }
 
-
-    public static class SpaceXpanseAddressValidator extends Base58BitcoinAddressValidator {
-
-        public SpaceXpanseAddressValidator() {
-            super(new SpaceXpanseParams());
-        }
-
-        @Override
-        public AddressValidationResult validate(String address) {
-            if (!address.matches("^[R][a-km-zA-HJ-NP-Z1-9]{33}$"))
-                return AddressValidationResult.invalidStructure();
-
-            return super.validate(address);
-        }
-    }
-
-    
-    public static class SpaceXpanseParams extends NetworkParametersAdapter {
-
-        public SpaceXpanseParams() {
-            addressHeader = 60;
-            p2shHeader = 75;
-            acceptableAddressCodes = new int[]{addressHeader, p2shHeader};
+    public static class SpaceXpanseMainNetParams extends NetworkParametersAdapter {
+        public SpaceXpanseMainNetParams() {
+            this.addressHeader = 60;
+            this.p2shHeader = 75;
+            this.acceptableAddressCodes = new int[]{this.addressHeader, this.p2shHeader};
         }
     }
 }
