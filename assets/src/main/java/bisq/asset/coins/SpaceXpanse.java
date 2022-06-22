@@ -21,16 +21,16 @@ import bisq.asset.Base58AddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
-public class Actinium extends Coin {
+public class SpaceXpanse extends Coin {
 
-    public Actinium() {
-        super("SpaceXpanse", "ROD", new Base58AddressValidator(new ActiniumParams()));
+    public SpaceXpanse() {
+        super("SpaceXpanse", "ROD", new Base58AddressValidator(new SpaceXpanseParams()));
     }
 
 
-    public static class ActiniumParams extends NetworkParametersAdapter {
+    public static class SpaceXpanseParams extends NetworkParametersAdapter {
 
-        public ActiniumParams() {
+        public SpaceXpanseParams() {
             addressHeader = 60;
             p2shHeader = 75;
         }
