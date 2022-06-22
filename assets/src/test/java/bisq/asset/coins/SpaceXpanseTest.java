@@ -30,8 +30,8 @@ public class SpaceXpanseTest extends AbstractAssetTest {
 
     @Test
     public void testValidAddresses() {
-        assertValidAddress("rLY4YraSSs7Jnc9Bv9Z3tzT7pFXwGR4rmX");
-        assertValidAddress("rAeG35hZoKrVkooi266m5Saj5tNP3kix8z");
+        assertValidAddress("RHxfHQ1ipNqzDmHLiRWAYzpdGPRVqLnAx9");
+        assertValidAddress("RUVUrpJvZSLaQK4XEQFcQzCxnrL7rER44V");
     }
 
     @Test
