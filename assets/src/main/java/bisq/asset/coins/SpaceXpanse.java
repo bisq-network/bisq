@@ -17,14 +17,31 @@
 
 package bisq.asset.coins;
 
+import bisq.asset.AddressValidationResult;
 import bisq.asset.Base58BitcoinAddressValidator;
 import bisq.asset.Coin;
 import bisq.asset.NetworkParametersAdapter;
 
 public class SpaceXpanse extends Coin {
     public SpaceXpanse() {
-        super("SpaceXpanse", "ROD", new Base58BitcoinAddressValidator(new SpaceXpanseMainNetParams()));
+        super("SpaceXpanse", "ROD", new Base58BitcoinAddressValidator(new SpaceXpanseParams()));
     }
+
+    public static class SpaceXpanseAddressValidator extends Base58BitcoinAddressValidator {
+
+        public SpaceXpanseAddressValidator() {
+            super(new SpaceXpanseParams());
+        }
+
+        @Override
+        public AddressValidationResult validate(String address) {
+            if (!address.matches("^[R][a-km-zA-HJ-NP-Z1-9]{33}$"))
+                return AddressValidationResult.invalidStructure();
+
+            return super.validate(address);
+        }
+    }
+
 
     public static class SpaceXpanseMainNetParams extends NetworkParametersAdapter {
         public SpaceXpanseMainNetParams() {
