@@ -3,7 +3,7 @@ SOCKSPort 9050
 ControlPort 9051
 Log notice syslog
 
-CookieAuthentication 1
+CookieAuthentication 0
 CookieAuthFileGroupReadable 1
 DataDirectoryGroupReadable 1
 
