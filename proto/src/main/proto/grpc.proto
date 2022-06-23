@@ -434,6 +434,10 @@ service Price {
     // Get the current market price for a crypto currency.
     rpc GetMarketPrice (MarketPriceRequest) returns (MarketPriceReply) {
     }
+    // Get the volume weighted average trade price for BSQ, calculated over N days.
+    // The response contains the average BSQ trade price in USD to 4 decimal places, and in BTC to 8 decimal places.
+    rpc GetAverageBsqTradePrice (GetAverageBsqTradePriceRequest) returns (GetAverageBsqTradePriceReply) {
+    }
 }
 
 message MarketPriceRequest {
@@ -442,6 +446,21 @@ message MarketPriceRequest {
 
 message MarketPriceReply {
     double price = 1;   // The most recently available market price.
+}
+
+message GetAverageBsqTradePriceRequest {
+    sint32 days = 1;    // The number of days used in the average BSQ trade price calculations.
+}
+
+message GetAverageBsqTradePriceReply {
+    // The average BSQ trade price in USD to 4 decimal places, and in BTC to 8 decimal places.
+    AverageBsqTradePrice price = 1;
+}
+
+// The average BSQ trade price in USD and BTC.
+message AverageBsqTradePrice {
+    string usdPrice = 1;   // The average BSQ trade price in USD to 4 decimal places.
+    string btcPrice = 2;   // The average BSQ trade price in BTC to 8 decimal places.
 }
 
 service ShutdownServer {
@@ -491,7 +510,7 @@ service Trades {
 
 message TakeOfferRequest {
     string offer_id = 1;                    // The unique identifier of the offer being taken.
-    string payment_account_id = 2;          // The unique identifier of the payment account used to take offer..
+    string payment_account_id = 2;          // The unique identifier of the payment account used to take offer.
     string taker_fee_currency_code = 3;     // The code of the currency (BSQ or BTC) used to pay the taker's Bisq trade fee.
 }
 
@@ -695,6 +714,9 @@ message TxInfo {
 * an encryption password on a a wallet, and unlocking / locking an encrypted wallet.
 */
 service Wallets {
+    // Get the name of the BTC / BSQ network (mainnet, testnet3, or regtest).
+    rpc GetNetwork (GetNetworkRequest) returns (GetNetworkReply) {
+    }
     // Get the Bisq wallet's current BSQ and BTC balances.
     rpc GetBalances (GetBalancesRequest) returns (GetBalancesReply) {
     }
@@ -718,7 +740,7 @@ service Wallets {
     // Get the Bisq network's most recently available bitcoin miner transaction fee rate, or custom fee rate if set.
     rpc GetTxFeeRate (GetTxFeeRateRequest) returns (GetTxFeeRateReply) {
     }
-    // Set the Bisq daemon's custom bitcoin miner transaction fee rate, in sats/byte..
+    // Set the Bisq daemon's custom bitcoin miner transaction fee rate, in sats/byte.
     rpc SetTxFeeRatePreference (SetTxFeeRatePreferenceRequest) returns (SetTxFeeRatePreferenceReply) {
     }
     // Remove the custom bitcoin miner transaction fee rate;  revert to the Bisq network's bitcoin miner transaction fee rate.
@@ -745,6 +767,13 @@ service Wallets {
     // setting can be overridden by subsequent UnlockWallet calls.
     rpc UnlockWallet (UnlockWalletRequest) returns (UnlockWalletReply) {
     }
+}
+
+message GetNetworkRequest {
+}
+
+message GetNetworkReply {
+    string network = 1;         // The BTC network name (mainnet, testnet3, or regtest).
 }
 
 message GetBalancesRequest {
@@ -885,7 +914,6 @@ message BalancesInfo {
     BtcBalanceInfo btc = 2;     // BTC wallet balance information.
 }
 
-// TODO Thoroughly review field descriptions.
 message BsqBalanceInfo {
     // The BSQ amount currently available to send to other addresses at the user's discretion, in satoshis.
     uint64 available_confirmed_balance = 1;
@@ -904,7 +932,6 @@ message BsqBalanceInfo {
     uint64 unlocking_bonds_balance = 6;
 }
 
-// TODO Thoroughly review field descriptions.
 message BtcBalanceInfo {
     // The BTC amount currently available to send to other addresses at the user's discretion, in satoshis.
     uint64 available_balance = 1;

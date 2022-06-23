@@ -225,10 +225,8 @@ public class SellerStep3View extends TradeStepView {
                     .orElse("");
 
             if (myPaymentAccountPayload instanceof AssetsAccountPayload) {
-                if (myPaymentDetails.isEmpty()) {
-                    // Not expected
-                    myPaymentDetails = ((AssetsAccountPayload) myPaymentAccountPayload).getAddress();
-                }
+                // for altcoins always display the receiving address
+                myPaymentDetails = ((AssetsAccountPayload) myPaymentAccountPayload).getAddress();
                 peersPaymentDetails = peersPaymentAccountPayload != null ?
                         ((AssetsAccountPayload) peersPaymentAccountPayload).getAddress() : "NA";
                 myTitle = Res.get("portfolio.pending.step3_seller.yourAddress", currencyName);

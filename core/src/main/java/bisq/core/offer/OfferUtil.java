@@ -420,7 +420,7 @@ public class OfferUtil {
                 original.getOwnerNodeAddress(),
                 original.getPubKeyRing(),
                 original.getDirection(),
-                mutableOfferPayloadFields.getPrice(),
+                mutableOfferPayloadFields.getFixedPrice(),
                 mutableOfferPayloadFields.getMarketPriceMargin(),
                 mutableOfferPayloadFields.isUseMarketBasedPrice(),
                 original.getAmount(),

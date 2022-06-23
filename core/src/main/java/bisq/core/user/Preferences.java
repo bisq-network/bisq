@@ -1147,5 +1147,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setNotifyOnPreRelease(boolean value);
 
         void setUseFullModeDaoMonitor(boolean value);
+
+        void setClearDataAfterDays(int value);
+
+        void setBuyScreenCryptoCurrencyCode(String buyScreenCurrencyCode);
+
+        void setSellScreenCryptoCurrencyCode(String sellScreenCurrencyCode);
     }
 }

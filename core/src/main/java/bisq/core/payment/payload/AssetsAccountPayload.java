@@ -74,6 +74,9 @@ public abstract class AssetsAccountPayload extends PaymentAccountPayload {
     }
 
     @Override
+    public boolean showRefTextWarning() { return false; }
+
+    @Override
     public byte[] getAgeWitnessInputData() {
         return super.getAgeWitnessInputData(address.getBytes(StandardCharsets.UTF_8));
     }

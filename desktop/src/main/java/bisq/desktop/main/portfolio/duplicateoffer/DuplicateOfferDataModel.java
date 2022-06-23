@@ -92,7 +92,11 @@ class DuplicateOfferDataModel extends MutableOfferDataModel {
     public void populateData(Offer offer) {
         if (offer == null)
             return;
-        paymentAccount = user.getPaymentAccount(offer.getMakerPaymentAccountId());
+
+        PaymentAccount account = user.getPaymentAccount(offer.getMakerPaymentAccountId());
+        if (account != null) {
+            this.paymentAccount = account;
+        }
         setMinAmount(offer.getMinAmount());
         setAmount(offer.getAmount());
         setPrice(offer.getPrice());

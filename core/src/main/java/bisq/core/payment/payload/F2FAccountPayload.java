@@ -119,6 +119,9 @@ public final class F2FAccountPayload extends CountryBasedPaymentAccountPayload {
     }
 
     @Override
+    public boolean showRefTextWarning() { return false; }
+
+    @Override
     public byte[] getAgeWitnessInputData() {
         // We use here the city because the address alone seems to be too weak
         return super.getAgeWitnessInputData(ArrayUtils.addAll(contact.getBytes(StandardCharsets.UTF_8),

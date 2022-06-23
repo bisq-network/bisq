@@ -147,9 +147,6 @@ public class DaoView extends ActivatableView<TabPane, Void> {
 
             if (preferences.showAgain(DaoPresentation.DAO_NEWS)) {
                 preferences.dontShowAgain(DaoPresentation.DAO_NEWS, true);
-                new Popup().headLine(Res.get("news.bsqSwap.title"))
-                        .information(Res.get("news.bsqSwap.description"))
-                        .show();
             }
 
             navigation.addListener(navigationListener);

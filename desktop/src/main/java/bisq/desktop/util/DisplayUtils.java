@@ -93,7 +93,7 @@ public class DisplayUtils {
                 signAge = accountAgeWitnessService.getWitnessSignAge(aaw.get(), new Date());
             }
             if (signAge > -1) {
-                description = Res.get("peerInfo.age.chargeBackRisk") + ": " + formatAccountAge(accountAge);
+                description = Res.get("peerInfo.age.chargeBackRisk") + ": " + formatAccountAge(signAge);
             } else if (accountAge > -1) {
                 description = Res.get("peerInfoIcon.tooltip.age", formatAccountAge(accountAge));
                 if (PaymentMethod.hasChargebackRisk(paymentMethod)) {

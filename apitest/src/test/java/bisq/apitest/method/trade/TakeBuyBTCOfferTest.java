@@ -42,6 +42,7 @@ import static protobuf.OfferDirection.BUY;
 import static protobuf.OpenOffer.State.AVAILABLE;
 
 @Disabled
+@SuppressWarnings("ConstantConditions")
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class TakeBuyBTCOfferTest extends AbstractTradeTest {
@@ -82,11 +83,9 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
             sleep(2_500);  // Allow available offer to be removed from offer book.
             alicesUsdOffers = aliceClient.getMyOffersSortedByDate(BUY.name(), USD);
             assertEquals(0, alicesUsdOffers.size());
-            genBtcBlocksThenWait(1, 2_500);
-            waitForDepositConfirmation(log, testInfo, bobClient, trade.getTradeId());
 
             trade = bobClient.getTrade(tradeId);
-            verifyTakerDepositConfirmed(trade);
+            verifyTakerDepositNotConfirmed(trade);
             logTrade(log, testInfo, "Alice's Maker/Buyer View", aliceClient.getTrade(tradeId));
             logTrade(log, testInfo, "Bob's Taker/Seller View", bobClient.getTrade(tradeId));
         } catch (StatusRuntimeException e) {
@@ -96,13 +95,23 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
 
     @Test
     @Order(2)
-    public void testAlicesConfirmPaymentStarted(final TestInfo testInfo) {
+    public void testPaymentMessagingPreconditions(final TestInfo testInfo) {
         try {
-            var trade = aliceClient.getTrade(tradeId);
-            waitForDepositConfirmation(log, testInfo, aliceClient, trade.getTradeId());
-            aliceClient.confirmPaymentStarted(trade.getTradeId());
-            sleep(6_000);
-            waitForBuyerSeesPaymentInitiatedMessage(log, testInfo, aliceClient, tradeId);
+            // Alice is maker / btc buyer, Bob is taker / btc seller.
+            // Verify payment sent and rcvd msgs are sent by the right peers:  buyer and seller.
+            verifyPaymentSentMsgIsFromBtcBuyerPrecondition(log, bobClient);
+            verifyPaymentReceivedMsgIsFromBtcSellerPrecondition(log, aliceClient);
+
+            // Verify fiat payment sent and rcvd msgs cannot be sent before trade deposit tx is confirmed.
+            verifyPaymentSentMsgDepositTxConfirmedPrecondition(log, aliceClient);
+            verifyPaymentReceivedMsgDepositTxConfirmedPrecondition(log, bobClient);
+
+            // Now generate the BTC block to confirm the taker deposit tx.
+            genBtcBlocksThenWait(1, 2_500);
+            waitForTakerDepositConfirmation(log, testInfo, bobClient, tradeId);
+
+            // Verify the seller can only send a payment rcvd msg after the payment started msg.
+            verifyPaymentReceivedMsgAfterPaymentSentMsgPrecondition(log, bobClient);
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -110,9 +119,23 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
 
     @Test
     @Order(3)
+    public void testAlicesConfirmPaymentStarted(final TestInfo testInfo) {
+        try {
+            var trade = aliceClient.getTrade(tradeId);
+            waitForTakerDepositConfirmation(log, testInfo, aliceClient, trade.getTradeId());
+            aliceClient.confirmPaymentStarted(trade.getTradeId());
+            sleep(6_000);
+            waitUntilBuyerSeesPaymentStartedMessage(log, testInfo, aliceClient, tradeId);
+        } catch (StatusRuntimeException e) {
+            fail(e);
+        }
+    }
+
+    @Test
+    @Order(4)
     public void testBobsConfirmPaymentReceived(final TestInfo testInfo) {
         try {
-            waitForSellerSeesPaymentInitiatedMessage(log, testInfo, bobClient, tradeId);
+            waitUntilSellerSeesPaymentStartedMessage(log, testInfo, bobClient, tradeId);
             var trade = bobClient.getTrade(tradeId);
             bobClient.confirmPaymentReceived(trade.getTradeId());
             sleep(3_000);
@@ -131,7 +154,7 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
     }
 
     @Test
-    @Order(4)
+    @Order(5)
     public void testCloseTrade(final TestInfo testInfo) {
         try {
             genBtcBlocksThenWait(1, 1_000);

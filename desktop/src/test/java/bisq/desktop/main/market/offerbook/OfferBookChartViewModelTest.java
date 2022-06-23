@@ -57,7 +57,7 @@ public class OfferBookChartViewModelTest {
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, empty, null, null, null);
+        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, null, empty, null, null, null);
         assertEquals(0, model.maxPlacesForBuyPrice.intValue());
     }
 
@@ -76,7 +76,7 @@ public class OfferBookChartViewModelTest {
         when(priceFeedService.updateCounterProperty()).thenReturn(new SimpleIntegerProperty());
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, empty, priceFeedService, null, null);
+        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, null, empty, priceFeedService, null, null);
         model.activate();
         assertEquals(0, model.maxPlacesForBuyPrice.intValue());
     }
@@ -90,7 +90,7 @@ public class OfferBookChartViewModelTest {
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, empty, service, null, null);
+        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, null, empty, service, null, null);
         model.activate();
         assertEquals(7, model.maxPlacesForBuyPrice.intValue());
         offerBookListItems.addAll(make(btcBuyItem.but(with(OfferBookListItemMaker.price, 94016475L))));
@@ -106,7 +106,7 @@ public class OfferBookChartViewModelTest {
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, empty, null, null, null);
+        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, null, empty, null, null, null);
         assertEquals(0, model.maxPlacesForBuyVolume.intValue());
     }
 
@@ -119,7 +119,7 @@ public class OfferBookChartViewModelTest {
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, empty, service, null, null);
+        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, null, empty, service, null, null);
         model.activate();
         assertEquals(1, model.maxPlacesForBuyVolume.intValue()); //0
         offerBookListItems.addAll(make(btcBuyItem.but(with(OfferBookListItemMaker.amount, 100000000L))));
@@ -135,7 +135,7 @@ public class OfferBookChartViewModelTest {
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, empty, null, null, null);
+        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, null, empty, null, null, null);
         assertEquals(0, model.maxPlacesForSellPrice.intValue());
     }
 
@@ -154,7 +154,7 @@ public class OfferBookChartViewModelTest {
         when(priceFeedService.updateCounterProperty()).thenReturn(new SimpleIntegerProperty());
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, empty, priceFeedService, null, null);
+        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, null, empty, priceFeedService, null, null);
         model.activate();
         assertEquals(0, model.maxPlacesForSellPrice.intValue());
     }
@@ -168,7 +168,7 @@ public class OfferBookChartViewModelTest {
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, empty, service, null, null);
+        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, null, empty, service, null, null);
         model.activate();
         assertEquals(7, model.maxPlacesForSellPrice.intValue()); // 10.0000 default price
         offerBookListItems.addAll(make(btcSellItem.but(with(OfferBookListItemMaker.price, 94016475L))));
@@ -184,7 +184,7 @@ public class OfferBookChartViewModelTest {
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, empty, null, null, null);
+        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, null, empty, null, null, null);
         assertEquals(0, model.maxPlacesForSellVolume.intValue());
     }
 
@@ -197,7 +197,7 @@ public class OfferBookChartViewModelTest {
 
         when(offerBook.getOfferBookListItems()).thenReturn(offerBookListItems);
 
-        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, empty, service, null, null);
+        final OfferBookChartViewModel model = new OfferBookChartViewModel(offerBook, null, empty, service, null, null);
         model.activate();
         assertEquals(1, model.maxPlacesForSellVolume.intValue()); //0
         offerBookListItems.addAll(make(btcSellItem.but(with(OfferBookListItemMaker.amount, 100000000L))));

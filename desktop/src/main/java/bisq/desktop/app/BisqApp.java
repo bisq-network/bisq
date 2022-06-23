@@ -31,6 +31,7 @@ import bisq.desktop.main.overlays.windows.SendAlertMessageWindow;
 import bisq.desktop.main.overlays.windows.ShowWalletDataWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
 import bisq.desktop.util.CssTheme;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.ImageUtil;
 
 import bisq.core.btc.wallet.BtcWalletService;
@@ -39,6 +40,8 @@ import bisq.core.dao.governance.voteresult.MissingDataRequestService;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.trade.TradeManager;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.Cookie;
 import bisq.core.user.CookieKey;
 import bisq.core.user.Preferences;
@@ -73,9 +76,14 @@ import javafx.scene.layout.StackPane;
 import javafx.geometry.Rectangle2D;
 import javafx.geometry.BoundingBox;
 
+import java.time.Instant;
+
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import org.slf4j.LoggerFactory;
@@ -356,6 +364,47 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     }
 
     private void shutDownByUser() {
+        // two potential popup prompts to user before shutting down, each step can possibly abort the shutdown
+        shutDownByUserCheckTrades().thenAccept(shutdownStage1 -> {
+            if (shutdownStage1) {
+                shutDownByUserCheckOffers().thenAccept(shutdownStage2 -> {
+                    if (shutdownStage2) {
+                        stop();
+                    }
+                });
+            }
+        });
+    }
+
+    private CompletableFuture<Boolean> shutDownByUserCheckTrades() {
+        final CompletableFuture<Boolean> asyncStatus = new CompletableFuture<>();
+        Instant fiveMinutesAgo = Instant.ofEpochSecond(Instant.now().getEpochSecond() - TimeUnit.MINUTES.toSeconds(5));
+        String tradeIdsWithOperationsPending = "";
+        for (Trade trade : injector.getInstance(TradeManager.class).getObservableList()) {
+            if (trade.getTradePhase().equals(Trade.Phase.TAKER_FEE_PUBLISHED) &&
+                    new Date(trade.getTakeOfferDate()).toInstant().isAfter(fiveMinutesAgo)) {
+                String tradeDateString = DisplayUtils.formatDateTime(new Date(trade.getTakeOfferDate()));
+                tradeIdsWithOperationsPending += Res.get("shared.tradeId") + ": " + trade.getShortId() + " " +
+                        Res.get("shared.dateTime") + ": " + tradeDateString + System.lineSeparator();
+                break;
+            }
+        }
+        if (tradeIdsWithOperationsPending.length() > 0) {
+            // We show a popup to inform user that some trades are still being initialised.
+            new Popup().warning(Res.get("popup.info.shutDownWithTradeInit", tradeIdsWithOperationsPending))
+                    .actionButtonText(Res.get("shared.okWait"))
+                    .onAction(() -> asyncStatus.complete(false))
+                    .closeButtonText(Res.get("shared.closeAnywayDanger"))
+                    .onClose(() -> asyncStatus.complete(true))
+                    .show();
+        } else {
+            asyncStatus.complete(true);
+        }
+        return asyncStatus;
+    }
+
+    private CompletableFuture<Boolean> shutDownByUserCheckOffers() {
+        final CompletableFuture<Boolean> asyncStatus = new CompletableFuture<>();
         boolean hasOpenOffers = false;
         for (OpenOffer openOffer : injector.getInstance(OpenOfferManager.class).getObservableList()) {
             if (openOffer.getState().equals(OpenOffer.State.AVAILABLE)) {
@@ -365,8 +414,8 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
         }
         if (!hasOpenOffers) {
             // No open offers, so no need to show the popup.
-            stop();
-            return;
+            asyncStatus.complete(true);
+            return asyncStatus;
         }
 
         // We show a popup to inform user that open offers will be removed if Bisq is not running.
@@ -375,11 +424,14 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
             new Popup().information(Res.get("popup.info.shutDownWithOpenOffers"))
                     .dontShowAgainId(key)
                     .useShutDownButton()
+                    .onAction(() -> asyncStatus.complete(true))
                     .closeButtonText(Res.get("shared.cancel"))
+                    .onClose(() -> asyncStatus.complete(false))
                     .show();
         } else {
-            stop();
+            asyncStatus.complete(true);
         }
+        return asyncStatus;
     }
 
     // Used for debugging trade process

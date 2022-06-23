@@ -46,7 +46,9 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
     private final LongProperty proofOfBurnAmountProperty = new SimpleLongProperty();
 
     private XYChart.Series<Number, Number> seriesBsqTradeFee, seriesProofOfBurn, seriesCompensation,
-            seriesReimbursement, seriesTotalIssued, seriesTotalBurned;
+            seriesReimbursement, seriesTotalSupply, seriesTotalIssued, seriesTotalBurned,
+            seriesTotalTradeFees, seriesProofOfBurnFromBtcFees,
+            seriesProofOfBurnFromArbitration, seriesProofOfBurnReimbursementDiff;
 
 
     @Inject
@@ -87,7 +89,12 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
 
     @Override
     protected Collection<XYChart.Series<Number, Number>> getSeriesForLegend2() {
-        return List.of(seriesTotalBurned, seriesBsqTradeFee, seriesProofOfBurn);
+        return List.of(seriesTotalBurned, seriesBsqTradeFee, seriesProofOfBurnFromBtcFees, seriesProofOfBurnFromArbitration, seriesProofOfBurn);
+    }
+
+    @Override
+    protected Collection<XYChart.Series<Number, Number>> getSeriesForLegend3() {
+        return List.of(seriesTotalTradeFees, seriesTotalSupply, seriesProofOfBurnReimbursementDiff);
     }
 
 
@@ -130,6 +137,26 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         seriesProofOfBurn = new XYChart.Series<>();
         seriesProofOfBurn.setName(Res.get("dao.factsAndFigures.supply.proofOfBurn"));
         seriesIndexMap.put(getSeriesId(seriesProofOfBurn), 5);
+
+        seriesTotalSupply = new XYChart.Series<>();
+        seriesTotalSupply.setName(Res.get("dao.factsAndFigures.supply.totalBsqSupply"));
+        seriesIndexMap.put(getSeriesId(seriesTotalSupply), 6);
+
+        seriesTotalTradeFees = new XYChart.Series<>();
+        seriesTotalTradeFees.setName(Res.get("dao.factsAndFigures.supply.totalTradeFees"));
+        seriesIndexMap.put(getSeriesId(seriesTotalTradeFees), 7);
+
+        seriesProofOfBurnFromBtcFees = new XYChart.Series<>();
+        seriesProofOfBurnFromBtcFees.setName(Res.get("dao.factsAndFigures.supply.btcFees"));
+        seriesIndexMap.put(getSeriesId(seriesProofOfBurnFromBtcFees), 8);
+
+        seriesProofOfBurnFromArbitration = new XYChart.Series<>();
+        seriesProofOfBurnFromArbitration.setName(Res.get("dao.factsAndFigures.supply.arbitration"));
+        seriesIndexMap.put(getSeriesId(seriesProofOfBurnFromArbitration), 9);
+
+        seriesProofOfBurnReimbursementDiff = new XYChart.Series<>();
+        seriesProofOfBurnReimbursementDiff.setName(Res.get("dao.factsAndFigures.supply.proofOfBurnReimbursementDiff"));
+        seriesIndexMap.put(getSeriesId(seriesProofOfBurnReimbursementDiff), 10);
     }
 
     @Override
@@ -147,34 +174,59 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
     protected CompletableFuture<Boolean> applyData() {
         List<CompletableFuture<Boolean>> allFutures = new ArrayList<>();
         if (activeSeries.contains(seriesTotalIssued)) {
-            CompletableFuture<Boolean> task1Done = new CompletableFuture<>();
-            allFutures.add(task1Done);
-            applyTotalIssued(task1Done);
+            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            allFutures.add(future);
+            applyTotalIssued(future);
         }
         if (activeSeries.contains(seriesCompensation)) {
-            CompletableFuture<Boolean> task2Done = new CompletableFuture<>();
-            allFutures.add(task2Done);
-            applyCompensation(task2Done);
+            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            allFutures.add(future);
+            applyCompensation(future);
         }
         if (activeSeries.contains(seriesReimbursement)) {
-            CompletableFuture<Boolean> task3Done = new CompletableFuture<>();
-            allFutures.add(task3Done);
-            applyReimbursement(task3Done);
+            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            allFutures.add(future);
+            applyReimbursement(future);
         }
         if (activeSeries.contains(seriesTotalBurned)) {
-            CompletableFuture<Boolean> task4Done = new CompletableFuture<>();
-            allFutures.add(task4Done);
-            applyTotalBurned(task4Done);
+            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            allFutures.add(future);
+            applyTotalBurned(future);
         }
         if (activeSeries.contains(seriesBsqTradeFee)) {
-            CompletableFuture<Boolean> task5Done = new CompletableFuture<>();
-            allFutures.add(task5Done);
-            applyBsqTradeFee(task5Done);
+            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            allFutures.add(future);
+            applyBsqTradeFee(future);
         }
         if (activeSeries.contains(seriesProofOfBurn)) {
-            CompletableFuture<Boolean> task6Done = new CompletableFuture<>();
-            allFutures.add(task6Done);
-            applyProofOfBurn(task6Done);
+            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            allFutures.add(future);
+            applyProofOfBurn(future);
+        }
+        if (activeSeries.contains(seriesTotalSupply)) {
+            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            allFutures.add(future);
+            applyTotalSupply(future);
+        }
+        if (activeSeries.contains(seriesTotalTradeFees)) {
+            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            allFutures.add(future);
+            applyTotalTradeFees(future);
+        }
+        if (activeSeries.contains(seriesProofOfBurnFromBtcFees)) {
+            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            allFutures.add(future);
+            applyProofOfBurnFromBtcFees(future);
+        }
+        if (activeSeries.contains(seriesProofOfBurnFromArbitration)) {
+            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            allFutures.add(future);
+            applyProofOfBurnFromArbitration(future);
+        }
+        if (activeSeries.contains(seriesProofOfBurnReimbursementDiff)) {
+            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            allFutures.add(future);
+            applyProofOfBurnReimbursementDiff(future);
         }
 
         CompletableFuture<Boolean> task7Done = new CompletableFuture<>();
@@ -214,6 +266,51 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
                         }));
 
         return CompletableFutureUtils.allOf(allFutures).thenApply(e -> true);
+    }
+
+    private void applyTotalSupply(CompletableFuture<Boolean> completeFuture) {
+        model.getTotalSupplyChartData()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            seriesTotalSupply.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
+    }
+
+    private void applyTotalTradeFees(CompletableFuture<Boolean> completeFuture) {
+        model.getTotalTradeFeesChartData()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            seriesTotalTradeFees.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
+    }
+
+    private void applyProofOfBurnFromBtcFees(CompletableFuture<Boolean> completeFuture) {
+        model.getProofOfBurnFromBtcFeesChartData()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            seriesProofOfBurnFromBtcFees.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
+    }
+
+    private void applyProofOfBurnFromArbitration(CompletableFuture<Boolean> completeFuture) {
+        model.getProofOfBurnFromArbitrationChartData()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            seriesProofOfBurnFromArbitration.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
+    }
+
+    private void applyProofOfBurnReimbursementDiff(CompletableFuture<Boolean> completeFuture) {
+        model.getProofOfBurnReimbursementDiffChartData()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            seriesProofOfBurnReimbursementDiff.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
     }
 
     private void applyTotalIssued(CompletableFuture<Boolean> completeFuture) {

@@ -17,6 +17,8 @@
 
 package bisq.core.api;
 
+import bisq.core.api.exception.FailedPreconditionException;
+import bisq.core.api.exception.NotAvailableException;
 import bisq.core.api.exception.NotFoundException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -50,6 +52,7 @@ import org.bitcoinj.core.Coin;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -121,6 +124,12 @@ class CoreTradesService {
         bsqSwapTakeOfferModel.initWithData(offer);
         bsqSwapTakeOfferModel.applyAmount(offer.getAmount());
 
+        // Block attempt to take swap offer if there are insufficient funds for the trade.
+        var missingCoin = bsqSwapTakeOfferModel.getMissingFundsAsCoin();
+        if (missingCoin.value > 0)
+            throw new NotAvailableException(
+                    format("wallet has insufficient funds to take offer with id '%s'", offer.getId()));
+
         log.info("Initiating take {} offer, {}",
                 offer.isBuyOffer() ? "buy" : "sell",
                 bsqSwapTakeOfferModel);
@@ -151,6 +160,12 @@ class CoreTradesService {
         log.info("Initiating take {} offer, {}",
                 offer.isBuyOffer() ? "buy" : "sell",
                 takeOfferModel);
+
+        // Block attempt to take swap offer if there are insufficient funds for the trade.
+        if (!takeOfferModel.isBtcWalletFunded())
+            throw new NotAvailableException(
+                    format("wallet has insufficient btc to take offer with id '%s'", offer.getId()));
+
         //noinspection ConstantConditions
         tradeManager.onTakeOffer(offer.getAmount(),
                 takeOfferModel.getTxFeeFromFeeService(),
@@ -170,6 +185,13 @@ class CoreTradesService {
     void confirmPaymentStarted(String tradeId) {
         var trade = getTrade(tradeId);
         if (isFollowingBuyerProtocol(trade)) {
+            if (!trade.isDepositConfirmed()) {
+                throw new FailedPreconditionException(
+                        format("cannot send a payment started message for trade '%s'%n"
+                                        + "until trade deposit tx '%s' is confirmed",
+                                trade.getId(),
+                                trade.getDepositTxId()));
+            }
             var tradeProtocol = tradeManager.getTradeProtocol(trade);
             ((BuyerProtocol) tradeProtocol).onPaymentStarted(
                     () -> {
@@ -179,15 +201,29 @@ class CoreTradesService {
                     }
             );
         } else {
-            throw new IllegalStateException("you are the seller and not sending payment");
+            throw new FailedPreconditionException("you are the seller, and not sending payment");
         }
     }
 
     void confirmPaymentReceived(String tradeId) {
         var trade = getTrade(tradeId);
         if (isFollowingBuyerProtocol(trade)) {
-            throw new IllegalStateException("you are the buyer, and not receiving payment");
+            throw new FailedPreconditionException("you are the buyer, and not receiving payment");
         } else {
+            if (!trade.isDepositConfirmed()) {
+                throw new FailedPreconditionException(
+                        format("cannot send a payment received message for trade '%s'%n"
+                                        + "until trade deposit tx '%s' is confirmed",
+                                trade.getId(),
+                                trade.getDepositTxId()));
+            }
+
+            if (!trade.isFiatSent()) {
+                throw new FailedPreconditionException(
+                        format("cannot send a payment received confirmation message for trade '%s'%n"
+                                        + "until after a trade payment started message has been sent",
+                                trade.getId()));
+            }
             var tradeProtocol = tradeManager.getTradeProtocol(trade);
             ((SellerProtocol) tradeProtocol).onPaymentReceived(
                     () -> {
@@ -293,7 +329,7 @@ class CoreTradesService {
     List<TradeModel> getOpenTrades() {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
-        return tradeManager.getTrades().stream().collect(Collectors.toList());
+        return new ArrayList<>(tradeManager.getTrades());
     }
 
     List<TradeModel> getTradeHistory(GetTradesRequest.Category category) {
@@ -307,7 +343,7 @@ class CoreTradesService {
             return closedTrades;
         } else {
             var failedV1Trades = failedTradesManager.getTrades();
-            return failedV1Trades.stream().collect(Collectors.toList());
+            return new ArrayList<>(failedV1Trades);
         }
     }
 

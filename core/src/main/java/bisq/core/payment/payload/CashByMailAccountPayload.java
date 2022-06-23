@@ -107,6 +107,9 @@ public final class CashByMailAccountPayload extends PaymentAccountPayload implem
     }
 
     @Override
+    public boolean showRefTextWarning() { return false; }
+
+    @Override
     public byte[] getAgeWitnessInputData() {
         // We use here the contact because the address alone seems to be too weak
         return super.getAgeWitnessInputData(ArrayUtils.addAll(contact.getBytes(StandardCharsets.UTF_8),

@@ -15,22 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.price.spot.providers;
+package bisq.daonode.error;
 
-import bisq.price.AbstractExchangeRateProviderTest;
+import lombok.Getter;
 
-import org.springframework.core.env.StandardEnvironment;
+@Getter
+public class ErrorMessage {
+    private final String error;
 
-import lombok.extern.slf4j.Slf4j;
-
-import org.junit.jupiter.api.Test;
-
-@Slf4j
-public class CoinpaprikaTest extends AbstractExchangeRateProviderTest {
-
-    @Test
-    public void doGet_successfulCall() {
-        doGet_successfulCall(new Coinpaprika(new StandardEnvironment()));
+    public ErrorMessage(String error) {
+        this.error = error;
     }
-
 }
+

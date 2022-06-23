@@ -43,6 +43,7 @@ import static protobuf.Offer.State.OFFER_FEE_PAID;
 import static protobuf.OfferDirection.SELL;
 
 @Disabled
+@SuppressWarnings("ConstantConditions")
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class TakeSellBTCOfferTest extends AbstractTradeTest {
@@ -86,10 +87,9 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
             sleep(2_500);  // Allow available offer to be removed from offer book.
             var takeableUsdOffers = bobClient.getOffersSortedByDate(SELL.name(), USD);
             assertEquals(0, takeableUsdOffers.size());
-            genBtcBlocksThenWait(1, 2_500);
-            waitForDepositConfirmation(log, testInfo, bobClient, trade.getTradeId());
+
             trade = bobClient.getTrade(tradeId);
-            verifyTakerDepositConfirmed(trade);
+            verifyTakerDepositNotConfirmed(trade);
             logTrade(log, testInfo, "Alice's Maker/Buyer View", aliceClient.getTrade(tradeId));
             logTrade(log, testInfo, "Bob's Taker/Seller View", bobClient.getTrade(tradeId));
         } catch (StatusRuntimeException e) {
@@ -99,13 +99,23 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
 
     @Test
     @Order(2)
-    public void testBobsConfirmPaymentStarted(final TestInfo testInfo) {
+    public void testPaymentMessagingPreconditions(final TestInfo testInfo) {
         try {
-            var trade = bobClient.getTrade(tradeId);
-            verifyTakerDepositConfirmed(trade);
-            bobClient.confirmPaymentStarted(tradeId);
-            sleep(6_000);
-            waitForBuyerSeesPaymentInitiatedMessage(log, testInfo, bobClient, tradeId);
+            // Alice is maker / btc seller, Bob is taker / btc buyer.
+            // Verify payment sent and rcvd msgs are sent by the right peers:  buyer and seller.
+            verifyPaymentSentMsgIsFromBtcBuyerPrecondition(log, aliceClient);
+            verifyPaymentReceivedMsgIsFromBtcSellerPrecondition(log, bobClient);
+
+            // Verify fiat payment sent and rcvd msgs cannot be sent before trade deposit tx is confirmed.
+            verifyPaymentSentMsgDepositTxConfirmedPrecondition(log, bobClient);
+            verifyPaymentReceivedMsgDepositTxConfirmedPrecondition(log, aliceClient);
+
+            // Now generate the BTC block to confirm the taker deposit tx.
+            genBtcBlocksThenWait(1, 2_500);
+            waitForTakerDepositConfirmation(log, testInfo, bobClient, tradeId);
+
+            // Verify the seller can only send a payment rcvd msg after the payment started msg.
+            verifyPaymentReceivedMsgAfterPaymentSentMsgPrecondition(log, aliceClient);
         } catch (StatusRuntimeException e) {
             fail(e);
         }
@@ -113,9 +123,23 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
 
     @Test
     @Order(3)
+    public void testBobsConfirmPaymentStarted(final TestInfo testInfo) {
+        try {
+            var trade = bobClient.getTrade(tradeId);
+            verifyTakerDepositConfirmed(trade);
+            bobClient.confirmPaymentStarted(tradeId);
+            sleep(6_000);
+            waitUntilBuyerSeesPaymentStartedMessage(log, testInfo, bobClient, tradeId);
+        } catch (StatusRuntimeException e) {
+            fail(e);
+        }
+    }
+
+    @Test
+    @Order(4)
     public void testAlicesConfirmPaymentReceived(final TestInfo testInfo) {
         try {
-            waitForSellerSeesPaymentInitiatedMessage(log, testInfo, aliceClient, tradeId);
+            waitUntilSellerSeesPaymentStartedMessage(log, testInfo, aliceClient, tradeId);
 
             var trade = aliceClient.getTrade(tradeId);
             aliceClient.confirmPaymentReceived(trade.getTradeId());
@@ -134,7 +158,7 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
     }
 
     @Test
-    @Order(4)
+    @Order(5)
     public void testBobsBtcWithdrawalToExternalAddress(final TestInfo testInfo) {
         try {
             genBtcBlocksThenWait(1, 1_000);

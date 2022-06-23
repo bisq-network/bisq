@@ -78,6 +78,7 @@ public class LongRunningTradesTest extends AbstractTradeTest {
         TakeSellBTCOfferTest test = new TakeSellBTCOfferTest();
         setLongRunningTest(true);
         test.testTakeAlicesSellOffer(testInfo);
+        test.testPaymentMessagingPreconditions(testInfo);
         test.testBobsConfirmPaymentStarted(testInfo);
         test.testAlicesConfirmPaymentReceived(testInfo);
         test.testBobsBtcWithdrawalToExternalAddress(testInfo);

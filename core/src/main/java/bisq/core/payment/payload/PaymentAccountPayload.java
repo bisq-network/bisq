@@ -118,6 +118,8 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
 
     public abstract String getPaymentDetailsForTradePopup();
 
+    public boolean showRefTextWarning() { return true; }
+
     public byte[] getSalt() {
         checkArgument(excludeFromJsonDataMap.containsKey(SALT), "Salt must have been set in excludeFromJsonDataMap.");
         return Utilities.decodeFromHex(excludeFromJsonDataMap.get(SALT));

@@ -609,7 +609,7 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
         if (isSelected) {
             updateCurrencyComboBoxFromModel();
             root.requestFocus();
-            updateCreateOfferButton();
+            matchingOffersToggle.setSelected(model.useOffersMatchingMyAccountsFilter);
         }
         updateCreateOfferButton();
     }

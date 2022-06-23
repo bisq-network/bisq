@@ -27,6 +27,7 @@ ExecStart=/bin/sh __BISQ_HOME__/__BISQ_REPO_NAME__/${BISQ_ENTRYPOINT} \
           --rpcPassword=${BITCOIN_RPC_PASS} \
           --dumpBlockchainData=${BISQ_DUMP_BLOCKCHAIN} \
           --dumpStatistics=${BISQ_DUMP_STATISTICS} \
+          --torControlPort=${BISQ_EXTERNAL_TOR_PORT} \
 
 ExecStop=/bin/kill ${MAINPID} ; sleep 5
 Restart=on-failure

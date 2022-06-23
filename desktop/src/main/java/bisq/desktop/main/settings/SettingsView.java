@@ -24,14 +24,12 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
 import bisq.desktop.common.view.ViewLoader;
 import bisq.desktop.main.MainView;
-import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.presentation.SettingsPresentation;
 import bisq.desktop.main.settings.about.AboutView;
 import bisq.desktop.main.settings.network.NetworkSettingsView;
 import bisq.desktop.main.settings.preferences.PreferencesView;
 
 import bisq.core.locale.Res;
-import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 
 import javax.inject.Inject;

@@ -169,11 +169,11 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
         if (model.getServiceAddress().regionMatches(0, "http:", 0, 5)) {
             httpClient.setBaseUrl(model.getServiceAddress());
             httpClient.setIgnoreSocks5Proxy(true);
-        // any non-onion FQDN starts with https://, use Tor
+            // any non-onion FQDN starts with https://, use Tor
         } else if (model.getServiceAddress().regionMatches(0, "https:", 0, 6)) {
             httpClient.setBaseUrl(model.getServiceAddress());
             httpClient.setIgnoreSocks5Proxy(false);
-        // it's a raw onion so add http:// and use Tor proxy
+            // it's a raw onion so add http:// and use Tor proxy
         } else {
             httpClient.setBaseUrl("http://" + model.getServiceAddress());
             httpClient.setIgnoreSocks5Proxy(false);
@@ -206,6 +206,8 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
 
         ListenableFuture<Result> future = executorService.submit(() -> {
             Thread.currentThread().setName("XmrTransferProofRequest-" + this.getShortId());
+            // The API use the viewkey param for txKey if txprove is true
+            // https://github.com/moneroexamples/onion-monero-blockchain-explorer/blob/9a37839f37abef0b8b94ceeba41ab51a41f3fbd8/src/page.h#L5254
             String param = "/api/outputs?txhash=" + model.getTxHash() +
                     "&address=" + model.getRecipientAddress() +
                     "&viewkey=" + model.getTxKey() +

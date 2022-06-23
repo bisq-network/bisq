@@ -39,11 +39,13 @@ import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferPayloadBase;
 import bisq.core.offer.OpenOffer;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 import bisq.core.user.Preferences;
+import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -91,6 +93,8 @@ import javafx.util.Callback;
 
 import java.util.Comparator;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static bisq.desktop.util.FormBuilder.getRegularIconButton;
 
@@ -147,6 +151,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     private final BsqTradeDetailsWindow bsqTradeDetailsWindow;
     private final Navigation navigation;
     private final KeyRing keyRing;
+    private final User user;
     private final Preferences preferences;
     private final TradeDetailsWindow tradeDetailsWindow;
     private final PrivateNotificationManager privateNotificationManager;
@@ -160,6 +165,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             BsqTradeDetailsWindow bsqTradeDetailsWindow,
                             Navigation navigation,
                             KeyRing keyRing,
+                            User user,
                             Preferences preferences,
                             TradeDetailsWindow tradeDetailsWindow,
                             PrivateNotificationManager privateNotificationManager,
@@ -169,6 +175,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
         this.bsqTradeDetailsWindow = bsqTradeDetailsWindow;
         this.navigation = navigation;
         this.keyRing = keyRing;
+        this.user = user;
         this.preferences = preferences;
         this.tradeDetailsWindow = tradeDetailsWindow;
         this.privateNotificationManager = privateNotificationManager;
@@ -478,7 +485,11 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                             public void updateItem(final ClosedTradesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
-                                if (item != null && !empty && isMyOfferAsMaker(item.getTradable().getOffer().getOfferPayloadBase())) {
+                                if (item != null
+                                        && !empty
+                                        && isMyOfferAsMaker(item.getTradable().getOffer().getOfferPayloadBase())
+                                        && isMatchingAccountAvailable(item.getTradable().getOffer())
+                                ) {
                                     if (button == null) {
                                         button = getRegularIconButton(MaterialDesignIcon.CONTENT_COPY);
                                         button.setTooltip(new Tooltip(Res.get("shared.duplicateOffer")));
@@ -749,5 +760,22 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
     private boolean isMyOfferAsMaker(OfferPayloadBase offerPayloadBase) {
         return offerPayloadBase.getPubKeyRing().equals(keyRing.getPubKeyRing());
+    }
+
+    private boolean isMatchingAccountAvailable(Offer offer) {
+        Predicate<PaymentAccount> predicate;
+        if (offer.isFiatOffer()) {
+            predicate = paymentAccount -> paymentAccount.getPaymentMethod().isFiat();
+        } else if (offer.isBsqSwapOffer()) {
+            predicate = paymentAccount -> paymentAccount.getPaymentMethod().isBsqSwap();
+        } else {
+            predicate = paymentAccount -> paymentAccount.getPaymentMethod().isBlockchain();
+        }
+
+        return user.getPaymentAccountsAsObservable()
+                .stream()
+                .filter(predicate)
+                .collect(Collectors.toList())
+                .size() > 0;
     }
 }

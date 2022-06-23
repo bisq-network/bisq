@@ -37,7 +37,7 @@ import javafx.collections.MapChangeListener;
 @Singleton
 public class AccountPresentation {
 
-    public static final String ACCOUNT_NEWS = "accountNews";
+    public static final String ACCOUNT_NEWS = "accountNews_XmrSubAddresses";
 
     private Preferences preferences;
 
@@ -64,6 +64,7 @@ public class AccountPresentation {
     }
 
     public void setup() {
+        // devs enable this when a news badge is required
         showNotification.set(preferences.showAgain(ACCOUNT_NEWS));
     }
 

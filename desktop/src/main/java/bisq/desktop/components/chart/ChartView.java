@@ -87,7 +87,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     private SplitPane timelineNavigation;
     protected NumberAxis xAxis, yAxis;
     protected LineChart<Number, Number> chart;
-    private HBox timelineLabels, legendBox2;
+    private HBox timelineLabels, legendBox2, legendBox3;
     private final ToggleGroup timeIntervalToggleGroup = new ToggleGroup();
 
     protected final Set<XYChart.Series<Number, Number>> activeSeries = new HashSet<>();
@@ -157,6 +157,11 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
             legendBox2 = initLegendsAndGetLegendBox(seriesForLegend2);
         }
 
+        Collection<XYChart.Series<Number, Number>> seriesForLegend3 = getSeriesForLegend3();
+        if (seriesForLegend3 != null && !seriesForLegend3.isEmpty()) {
+            legendBox3 = initLegendsAndGetLegendBox(seriesForLegend3);
+        }
+
         // Set active series/legends
         defineAndAddActiveSeries();
 
@@ -176,6 +181,9 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
                 if (legendBox2 != null) {
                     VBox.setMargin(legendBox2, new Insets(-20, rightPadding, 0, paddingLeft));
                 }
+                if (legendBox3 != null) {
+                    VBox.setMargin(legendBox3, new Insets(-20, rightPadding, 0, paddingLeft));
+                }
 
                 if (model.getDividerPositions()[0] == 0 && model.getDividerPositions()[1] == 1) {
                     resetTimeNavigation();
@@ -191,6 +199,10 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         if (legendBox2 != null) {
             VBox.setMargin(legendBox2, new Insets(-20, paddingRight, 0, paddingLeft));
             timelineNavigationBox.getChildren().add(legendBox2);
+        }
+        if (legendBox3 != null) {
+            VBox.setMargin(legendBox3, new Insets(-20, paddingRight, 0, paddingLeft));
+            timelineNavigationBox.getChildren().add(legendBox3);
         }
         root.getChildren().addAll(timeIntervalBox, chart, timelineNavigationBox);
 
@@ -241,6 +253,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
 
         addLegendToggleActionHandlers(getSeriesForLegend1());
         addLegendToggleActionHandlers(getSeriesForLegend2());
+        addLegendToggleActionHandlers(getSeriesForLegend3());
         addActionHandlersToDividers();
     }
 
@@ -258,6 +271,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
 
         removeLegendToggleActionHandlers(getSeriesForLegend1());
         removeLegendToggleActionHandlers(getSeriesForLegend2());
+        removeLegendToggleActionHandlers(getSeriesForLegend3());
         removeActionHandlersToDividers();
 
         // clear data, reset states. We keep timeInterval state though
@@ -277,6 +291,10 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     protected HBox getTimeIntervalBox() {
         ToggleButton year = getTimeIntervalToggleButton(Res.get("time.year"), TemporalAdjusterModel.Interval.YEAR,
                 timeIntervalToggleGroup, "toggle-left");
+        ToggleButton halfYear = getTimeIntervalToggleButton(Res.get("time.halfYear"), TemporalAdjusterModel.Interval.HALF_YEAR,
+                timeIntervalToggleGroup, "toggle-center");
+        ToggleButton quarter = getTimeIntervalToggleButton(Res.get("time.quarter"), TemporalAdjusterModel.Interval.QUARTER,
+                timeIntervalToggleGroup, "toggle-center");
         ToggleButton month = getTimeIntervalToggleButton(Res.get("time.month"), TemporalAdjusterModel.Interval.MONTH,
                 timeIntervalToggleGroup, "toggle-center");
         ToggleButton week = getTimeIntervalToggleButton(Res.get("time.week"), TemporalAdjusterModel.Interval.WEEK,
@@ -288,7 +306,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         toggleBox.setAlignment(Pos.CENTER_LEFT);
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        toggleBox.getChildren().addAll(spacer, year, month, week, day);
+        toggleBox.getChildren().addAll(spacer, year, halfYear, quarter, month, week, day);
         return toggleBox;
     }
 
@@ -538,6 +556,10 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
 
     // If a second legend is used this has to be overridden
     protected Collection<XYChart.Series<Number, Number>> getSeriesForLegend2() {
+        return null;
+    }
+
+    protected Collection<XYChart.Series<Number, Number>> getSeriesForLegend3() {
         return null;
     }
 

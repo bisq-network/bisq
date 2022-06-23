@@ -31,7 +31,7 @@ import lombok.Getter;
 
 @Singleton
 public class DaoPresentation implements DaoStateListener {
-    public static final String DAO_NEWS = "daoNews_BsqSwaps";
+    public static final String DAO_NEWS = "daoNews";
 
     private final Preferences preferences;
     private final Navigation navigation;
@@ -65,7 +65,9 @@ public class DaoPresentation implements DaoStateListener {
 
         preferences.getDontShowAgainMapAsObservable().addListener((MapChangeListener<? super String, ? super Boolean>) change -> {
             if (change.getKey().equals(DAO_NEWS) && DevEnv.isDaoActivated()) {
-                showNotification.set(!change.wasAdded());
+                // devs enable this when a news badge is required
+                // showNotification.set(!change.wasAdded());
+                showNotification.set(false);
             }
         });
 
@@ -127,8 +129,9 @@ public class DaoPresentation implements DaoStateListener {
     }
 
     public void setup() {
-        if (DevEnv.isDaoActivated())
-            showNotification.set(preferences.showAgain(DAO_NEWS));
+        // devs enable this when a news badge is required
+        //showNotification.set(DevEnv.isDaoActivated() && preferences.showAgain(DAO_NEWS));
+        showNotification.set(false);
 
         this.btcWalletService.getChainHeightProperty().addListener(walletChainHeightListener);
         daoStateService.addDaoStateListener(this);

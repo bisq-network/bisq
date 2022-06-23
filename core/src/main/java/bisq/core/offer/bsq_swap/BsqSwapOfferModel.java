@@ -54,6 +54,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static org.bitcoinj.core.Coin.ZERO;
+
 @Slf4j
 public class BsqSwapOfferModel {
     public final static String BSQ = "BSQ";
@@ -90,7 +92,7 @@ public class BsqSwapOfferModel {
     @Getter
     private final ObjectProperty<Coin> payoutAmountAsCoin = new SimpleObjectProperty<>();
     @Getter
-    private final ObjectProperty<Coin> missingFunds = new SimpleObjectProperty<>(Coin.ZERO);
+    private final ObjectProperty<Coin> missingFunds = new SimpleObjectProperty<>(ZERO);
     @Nullable
     private Coin txFee;
     @Getter
@@ -380,6 +382,10 @@ public class BsqSwapOfferModel {
         return PaymentMethod.BSQ_SWAP.getMaxTradeLimitAsCoin(BSQ).getValue();
     }
 
+    public Coin getMissingFundsAsCoin() {
+        // This extra getter is needed for API CoreTradesService, which avoids importing JFX dependencies.
+        return missingFunds.get().isPositive() ? missingFunds.get() : ZERO;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
@@ -398,6 +404,6 @@ public class BsqSwapOfferModel {
 
     private void resetTxFeeAndMissingFunds() {
         txFee = null;
-        missingFunds.set(Coin.ZERO);
+        missingFunds.set(ZERO);
     }
 }

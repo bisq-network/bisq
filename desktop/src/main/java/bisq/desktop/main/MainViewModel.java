@@ -323,7 +323,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             setupDevDummyPaymentAccounts();
         }
 
-        maybeAddMediationRulesAwarenessWindowToQueue();
         getShowAppScreen().set(true);
     }
 
@@ -888,20 +887,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
     public BooleanProperty getShowSettingsUpdatesNotification() {
         return settingsPresentation.getShowSettingsUpdatesNotification();
-    }
-
-    private void maybeAddMediationRulesAwarenessWindowToQueue() {
-        String key = "mediationRulesAwarenessPopup";
-        if (DontShowAgainLookup.showAgain(key)) {
-            Popup popup = new Popup()
-                    .headLine(Res.get("news.mediationRules.title"))
-                    .information(Res.get("news.mediationRules.info"))
-                    .actionButtonText(Res.get("shared.iUnderstand"))
-                    .hideCloseButton()
-                    .dontShowAgainId(key);
-            popup.setDisplayOrderPriority(1);
-            popupQueue.add(popup);
-        }
     }
 
     private void maybeShowPopupsFromQueue() {

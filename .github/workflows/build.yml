@@ -18,14 +18,14 @@ jobs:
             java: [ '11', '11.0.3', '15', '15.0.5']
     name: Test Java ${{ matrix.Java }}, ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@dcd71f646680f2efd8db4afa5ad64fdcba30e748
+    - uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
       with:
         fetch-depth: 0
         ref: ${{ github.event.pull_request.head.sha }}
         lfs: true
 
     - name: Set up JDK
-      uses: actions/setup-java@9519cf1382ac8dc61ad461f7f7cb45f033220189
+      uses: actions/setup-java@860f60056505705214d223b91ed7a30f173f6142
       with:
         java-version: ${{ matrix.java }}
         distribution: 'zulu'

@@ -46,6 +46,7 @@ import bisq.apitest.method.offer.AbstractOfferTest;
 
 // https://github.com/ghubstan/bisq/blob/master/cli/src/main/java/bisq/cli/TradeFormat.java
 
+@Deprecated // Bisq v1 protocol BSQ trades have been replaced by BSQ Swaps.
 @Disabled
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -100,7 +101,7 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
             alicesBsqOffers = aliceClient.getMyOffersSortedByDate(BSQ);
             assertEquals(0, alicesBsqOffers.size());
 
-            waitForDepositConfirmation(log, testInfo, bobClient, trade.getTradeId());
+            waitForTakerDepositConfirmation(log, testInfo, bobClient, trade.getTradeId());
             genBtcBlocksThenWait(1, 2_500);
 
             trade = bobClient.getTrade(tradeId);
@@ -122,7 +123,7 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
             genBtcBlocksThenWait(1, 2_500);
             bobClient.confirmPaymentStarted(trade.getTradeId());
             sleep(6000);
-            waitForBuyerSeesPaymentInitiatedMessage(log, testInfo, bobClient, tradeId);
+            waitUntilBuyerSeesPaymentStartedMessage(log, testInfo, bobClient, tradeId);
             logTrade(log, testInfo, "Alice's Maker/Buyer View (Payment Sent)", aliceClient.getTrade(tradeId));
             logTrade(log, testInfo, "Bob's Taker/Seller View (Payment Sent)", bobClient.getTrade(tradeId));
         } catch (StatusRuntimeException e) {
@@ -134,7 +135,7 @@ public class TakeBuyBSQOfferTest extends AbstractTradeTest {
     @Order(3)
     public void testAlicesConfirmPaymentReceived(final TestInfo testInfo) {
         try {
-            waitForSellerSeesPaymentInitiatedMessage(log, testInfo, aliceClient, tradeId);
+            waitUntilSellerSeesPaymentStartedMessage(log, testInfo, aliceClient, tradeId);
             sleep(2_000);
             var trade = aliceClient.getTrade(tradeId);
             verifyBsqPaymentHasBeenReceived(log, aliceClient, trade);

@@ -17,29 +17,20 @@
 
 package bisq.price.spot.providers;
 
-import bisq.price.spot.ExchangeRate;
-import bisq.price.spot.ExchangeRateProvider;
+import bisq.price.AbstractExchangeRateProviderTest;
 
-import org.knowm.xchange.bitbay.BitbayExchange;
+import org.springframework.core.env.StandardEnvironment;
 
-import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
 
-import java.time.Duration;
+import org.junit.jupiter.api.Test;
 
-import java.util.Set;
+@Slf4j
+public class CoinbaseProTest extends AbstractExchangeRateProviderTest {
 
-@Component
-class Bitbay extends ExchangeRateProvider {
-
-    public Bitbay(Environment env) {
-        super(env, "BITBAY", "bitbay", Duration.ofMinutes(1));
+    @Test
+    public void doGet_successfulCall() {
+        doGet_successfulCall(new CoinbasePro(new StandardEnvironment()));
     }
 
-    @Override
-    public Set<ExchangeRate> doGet() {
-        // Supported fiat: EUR, GBP, PLN, USD
-        // Supported alts: DASH, ETH, LTC
-        return doGet(BitbayExchange.class);
-    }
 }

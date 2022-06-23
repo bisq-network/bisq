@@ -1808,6 +1808,7 @@ message ProcessModel {
     bytes mediated_payout_tx_signature = 18;
     int64 buyer_payout_amount_from_mediation = 19;
     int64 seller_payout_amount_from_mediation = 20;
+    PaymentAccount payment_account = 21;
 }
 
 message TradingPeer {
@@ -1981,6 +1982,12 @@ message UserPayload {
     repeated RefundAgent accepted_refund_agents = 14;
     RefundAgent registered_refund_agent = 15;
     map<string, string> cookie = 16;
+    repeated SubAccountMapEntry sub_account_map_entries = 17;
+}
+
+message SubAccountMapEntry {
+    string key = 1;
+    repeated PaymentAccount value = 2;
 }
 
 message BaseBlock {
@@ -2414,6 +2421,7 @@ message PaymentAccount {
     repeated TradeCurrency trade_currencies = 5;
     TradeCurrency selected_trade_currency = 6;
     PaymentAccountPayload payment_account_payload = 7;
+    map<string, string> extra_data = 8;
 }
 
 message PaymentMethod {

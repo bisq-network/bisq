@@ -67,6 +67,13 @@ public class DisputeProtocol extends TradeProtocol {
         this.processModel = trade.getProcessModel();
     }
 
+    @Override
+    protected void onInitialized() {
+        super.onInitialized();
+        processModel.applyPaymentAccount(trade);
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // TradeProtocol implementation
     ///////////////////////////////////////////////////////////////////////////////////////////
