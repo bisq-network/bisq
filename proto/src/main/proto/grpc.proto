@@ -459,8 +459,8 @@ message GetAverageBsqTradePriceReply {
 
 // The average BSQ trade price in USD and BTC.
 message AverageBsqTradePrice {
-    string usdPrice = 1;   // The average BSQ trade price in USD to 4 decimal places.
-    string btcPrice = 2;   // The average BSQ trade price in BTC to 8 decimal places.
+    string usd_price = 1;   // The average BSQ trade price in USD to 4 decimal places.
+    string btc_price = 2;   // The average BSQ trade price in BTC to 8 decimal places.
 }
 
 service ShutdownServer {
