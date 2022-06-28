@@ -337,7 +337,7 @@ public class BuyerStep2View extends TradeStepView {
                 break;
             case PaymentMethod.BLOCK_CHAINS_ID:
             case PaymentMethod.BLOCK_CHAINS_INSTANT_ID:
-                String labelTitle = Res.get("portfolio.pending.step2_buyer.sellersAddress", getCurrencyName(trade));
+                String labelTitle = Res.get("portfolio.pending.step2_buyer.altcoin.address", getCurrencyName(trade));
                 gridRow = AssetsForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, labelTitle);
                 break;
             case PaymentMethod.PROMPT_PAY_ID:
