@@ -74,6 +74,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import lombok.Setter;
@@ -370,9 +371,11 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     protected HBox initLegendsAndGetLegendBox(Collection<XYChart.Series<Number, Number>> collection) {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
+        AtomicInteger index = new AtomicInteger();
+        var mainColumns = 2;
         collection.forEach(series -> {
             AutoTooltipSlideToggleButton toggle = new AutoTooltipSlideToggleButton();
-            toggle.setMinWidth(180);
+            toggle.setMinWidth(index.getAndIncrement() < mainColumns ? 200 : 160);
             toggle.setAlignment(Pos.TOP_LEFT);
             String seriesId = getSeriesId(series);
             legendToggleBySeriesName.put(seriesId, toggle);
