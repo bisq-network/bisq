@@ -400,7 +400,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         hBox.setSpacing(10);
         collection.forEach(series -> {
             AutoTooltipSlideToggleButton toggle = new AutoTooltipSlideToggleButton();
-            toggle.setMinWidth(220);
+            toggle.setMinWidth(300);
             toggle.setAlignment(Pos.TOP_LEFT);
             String seriesId = getSeriesId(series);
             legendToggleBySeriesName.put(seriesId, toggle);

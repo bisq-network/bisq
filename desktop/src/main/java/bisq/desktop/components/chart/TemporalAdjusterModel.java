@@ -81,7 +81,7 @@ public class TemporalAdjusterModel {
         }
     }
 
-    protected TemporalAdjuster temporalAdjuster = Interval.DAY.getAdjuster();
+    protected TemporalAdjuster temporalAdjuster = Interval.MONTH.getAdjuster();
 
     public void setTemporalAdjuster(TemporalAdjuster temporalAdjuster) {
         this.temporalAdjuster = temporalAdjuster;
