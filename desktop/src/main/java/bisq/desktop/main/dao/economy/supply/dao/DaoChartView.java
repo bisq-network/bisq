@@ -190,8 +190,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
 
     @Override
     protected void defineAndAddActiveSeries() {
-        activateSeries(seriesCompensation);
-        activateSeries(seriesTotalTradeFees);
+        activateSeries(seriesSupplyChange);
     }
 
     @Override
@@ -213,7 +212,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
             tooltip.setShowDelay(Duration.millis(100));
             Tooltip.install(toggle, tooltip);
         } else if (series.equals(seriesTotalSupply)) {
-            Tooltip tooltip = new Tooltip(Res.get("dao.factsAndFigures.supply.supplyChange.tooltip"));
+            Tooltip tooltip = new Tooltip(Res.get("dao.factsAndFigures.supply.totalSupply.tooltip"));
             tooltip.setShowDelay(Duration.millis(100));
             Tooltip.install(toggle, tooltip);
         } else if (series.equals(seriesSupplyChange)) {
