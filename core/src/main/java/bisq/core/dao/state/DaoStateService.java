@@ -1053,11 +1053,11 @@ public class DaoStateService implements DaoSetupService {
     public Stream<BsqSupplyChange> getBsqSupplyChanges() {
         Stream<BsqSupplyChange> issued = getIssuanceItems()
                 .stream()
-                .map(i -> new BsqSupplyChange(getBlockTime(i.getChainHeight()), i.getAmount()));
+                .map(issuance -> new BsqSupplyChange(getBlockTime(issuance.getChainHeight()), issuance.getAmount()));
 
         Stream<BsqSupplyChange> burned = getUnorderedTxStream()
                 .filter(tx -> tx.getTxType() == TxType.PROOF_OF_BURN || tx.getTxType() == TxType.PAY_TRADE_FEE)
-                .map(i -> new BsqSupplyChange(i.getTime(), -i.getBurntBsq()));
+                .map(tx -> new BsqSupplyChange(tx.getTime(), -tx.getBurntBsq()));
 
         return Stream.concat(issued, burned);
     }

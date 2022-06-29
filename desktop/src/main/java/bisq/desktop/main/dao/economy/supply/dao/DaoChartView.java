@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.dao.economy.supply.dao;
 
+import bisq.desktop.components.AutoTooltipSlideToggleButton;
 import bisq.desktop.components.chart.ChartView;
 
 import bisq.core.locale.Res;
@@ -26,10 +27,13 @@ import bisq.common.util.CompletableFutureUtils;
 import javax.inject.Inject;
 
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.Tooltip;
 
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.ReadOnlyLongProperty;
 import javafx.beans.property.SimpleLongProperty;
+
+import javafx.util.Duration;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -48,7 +52,8 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
     private XYChart.Series<Number, Number> seriesBsqTradeFee, seriesProofOfBurn, seriesCompensation,
             seriesReimbursement, seriesTotalSupply, seriesTotalIssued, seriesTotalBurned,
             seriesTotalTradeFees, seriesProofOfBurnFromBtcFees,
-            seriesProofOfBurnFromArbitration, seriesProofOfBurnReimbursementDiff;
+            seriesProofOfBurnFromArbitration, seriesArbitrationDiff,
+            seriesReimbursementAfterTagging, seriesBsqTradeFeeAfterTagging;
 
 
     @Inject
@@ -84,17 +89,29 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
 
     @Override
     protected Collection<XYChart.Series<Number, Number>> getSeriesForLegend1() {
+        // Total issued BSQ is sum of compensation requests and reimbursement requests
         return List.of(seriesTotalIssued, seriesCompensation, seriesReimbursement);
     }
 
     @Override
     protected Collection<XYChart.Series<Number, Number>> getSeriesForLegend2() {
-        return List.of(seriesTotalBurned, seriesBsqTradeFee, seriesProofOfBurnFromBtcFees, seriesProofOfBurnFromArbitration, seriesProofOfBurn);
+        // Total burned BSQ is sum of BSQ trade fees and all Proof of Burn txs
+        return List.of(seriesTotalBurned, seriesBsqTradeFee, seriesProofOfBurn);
     }
 
     @Override
     protected Collection<XYChart.Series<Number, Number>> getSeriesForLegend3() {
-        return List.of(seriesTotalTradeFees, seriesTotalSupply, seriesProofOfBurnReimbursementDiff);
+        //  Total trade fees is sum of BSQ trade fees and burned BSQ from BTC trade fees. Started to separate data in Nov 2021.
+        return List.of(seriesTotalTradeFees, seriesBsqTradeFeeAfterTagging, seriesProofOfBurnFromBtcFees);
+    }
+
+    protected Collection<XYChart.Series<Number, Number>> getSeriesForLegend4() {
+        // Difference of reimbursement requests and burned BSQ from arbitration cases. Should tend to zero. Started to separate data in Nov 2021.
+        return List.of(seriesArbitrationDiff, seriesReimbursementAfterTagging, seriesProofOfBurnFromArbitration);
+    }
+
+    protected Collection<XYChart.Series<Number, Number>> getSeriesForLegend5() {
+        return List.of(seriesTotalSupply);
     }
 
 
@@ -139,7 +156,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         seriesIndexMap.put(getSeriesId(seriesProofOfBurn), 5);
 
         seriesTotalSupply = new XYChart.Series<>();
-        seriesTotalSupply.setName(Res.get("dao.factsAndFigures.supply.totalBsqSupply"));
+        seriesTotalSupply.setName(Res.get("dao.factsAndFigures.supply.totalSupply"));
         seriesIndexMap.put(getSeriesId(seriesTotalSupply), 6);
 
         seriesTotalTradeFees = new XYChart.Series<>();
@@ -154,15 +171,48 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         seriesProofOfBurnFromArbitration.setName(Res.get("dao.factsAndFigures.supply.arbitration"));
         seriesIndexMap.put(getSeriesId(seriesProofOfBurnFromArbitration), 9);
 
-        seriesProofOfBurnReimbursementDiff = new XYChart.Series<>();
-        seriesProofOfBurnReimbursementDiff.setName(Res.get("dao.factsAndFigures.supply.proofOfBurnReimbursementDiff"));
-        seriesIndexMap.put(getSeriesId(seriesProofOfBurnReimbursementDiff), 10);
+        seriesArbitrationDiff = new XYChart.Series<>();
+        seriesArbitrationDiff.setName(Res.get("dao.factsAndFigures.supply.arbitrationDiff"));
+        seriesIndexMap.put(getSeriesId(seriesArbitrationDiff), 10);
+
+        seriesReimbursementAfterTagging = new XYChart.Series<>();
+        seriesReimbursementAfterTagging.setName(Res.get("dao.factsAndFigures.supply.reimbursementAfterTagging"));
+        seriesIndexMap.put(getSeriesId(seriesReimbursementAfterTagging), 11);
+
+        seriesBsqTradeFeeAfterTagging = new XYChart.Series<>();
+        seriesBsqTradeFeeAfterTagging.setName(Res.get("dao.factsAndFigures.supply.bsqTradeFeeAfterTagging"));
+        seriesIndexMap.put(getSeriesId(seriesBsqTradeFeeAfterTagging), 12);
     }
 
     @Override
     protected void defineAndAddActiveSeries() {
-        activateSeries(seriesTotalIssued);
-        activateSeries(seriesTotalBurned);
+        activateSeries(seriesCompensation);
+        activateSeries(seriesTotalTradeFees);
+    }
+
+    @Override
+    protected void maybeAddToolTip(AutoTooltipSlideToggleButton toggle, XYChart.Series<Number, Number> series) {
+        if (series.equals(seriesTotalIssued)) {
+            Tooltip tooltip = new Tooltip(Res.get("dao.factsAndFigures.supply.totalIssued.tooltip"));
+            tooltip.setShowDelay(Duration.millis(100));
+            Tooltip.install(toggle, tooltip);
+        } else if (series.equals(seriesTotalBurned)) {
+            Tooltip tooltip = new Tooltip(Res.get("dao.factsAndFigures.supply.totalBurned.tooltip"));
+            tooltip.setShowDelay(Duration.millis(100));
+            Tooltip.install(toggle, tooltip);
+        } else if (series.equals(seriesTotalTradeFees)) {
+            Tooltip tooltip = new Tooltip(Res.get("dao.factsAndFigures.supply.totalTradeFees.tooltip"));
+            tooltip.setShowDelay(Duration.millis(100));
+            Tooltip.install(toggle, tooltip);
+        } else if (series.equals(seriesArbitrationDiff)) {
+            Tooltip tooltip = new Tooltip(Res.get("dao.factsAndFigures.supply.arbitrationDiff.tooltip"));
+            tooltip.setShowDelay(Duration.millis(100));
+            Tooltip.install(toggle, tooltip);
+        } else if (series.equals(seriesTotalSupply)) {
+            Tooltip tooltip = new Tooltip(Res.get("dao.factsAndFigures.supply.totalSupply.tooltip"));
+            tooltip.setShowDelay(Duration.millis(100));
+            Tooltip.install(toggle, tooltip);
+        }
     }
 
 
@@ -223,11 +273,22 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
             allFutures.add(future);
             applyProofOfBurnFromArbitration(future);
         }
-        if (activeSeries.contains(seriesProofOfBurnReimbursementDiff)) {
+        if (activeSeries.contains(seriesArbitrationDiff)) {
             CompletableFuture<Boolean> future = new CompletableFuture<>();
             allFutures.add(future);
-            applyProofOfBurnReimbursementDiff(future);
+            applyArbitrationDiff(future);
         }
+        if (activeSeries.contains(seriesReimbursementAfterTagging)) {
+            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            allFutures.add(future);
+            applyReimbursementAfterTagging(future);
+        }
+        if (activeSeries.contains(seriesBsqTradeFeeAfterTagging)) {
+            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            allFutures.add(future);
+            applyBsqTradeFeeAfterTagging(future);
+        }
+
 
         CompletableFuture<Boolean> task7Done = new CompletableFuture<>();
         allFutures.add(task7Done);
@@ -304,11 +365,11 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
                         }));
     }
 
-    private void applyProofOfBurnReimbursementDiff(CompletableFuture<Boolean> completeFuture) {
-        model.getProofOfBurnReimbursementDiffChartData()
+    private void applyArbitrationDiff(CompletableFuture<Boolean> completeFuture) {
+        model.getArbitrationDiffByInterval()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
-                            seriesProofOfBurnReimbursementDiff.getData().setAll(data);
+                            seriesArbitrationDiff.getData().setAll(data);
                             completeFuture.complete(true);
                         }));
     }
@@ -363,6 +424,24 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
                             seriesProofOfBurn.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
+    }
+
+    private void applyReimbursementAfterTagging(CompletableFuture<Boolean> completeFuture) {
+        model.getReimbursementAfterTaggingChartData()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            seriesReimbursementAfterTagging.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
+    }
+
+    private void applyBsqTradeFeeAfterTagging(CompletableFuture<Boolean> completeFuture) {
+        model.getBsqTradeFeeAfterTaggingChartData()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            seriesBsqTradeFeeAfterTagging.getData().setAll(data);
                             completeFuture.complete(true);
                         }));
     }

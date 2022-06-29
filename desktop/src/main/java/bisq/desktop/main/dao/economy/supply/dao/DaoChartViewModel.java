@@ -70,8 +70,8 @@ public class DaoChartViewModel extends ChartViewModel<DaoChartDataModel> {
         return CompletableFuture.supplyAsync(() -> toChartData(dataModel.getProofOfBurnFromArbitrationByInterval()));
     }
 
-    CompletableFuture<List<XYChart.Data<Number, Number>>> getProofOfBurnReimbursementDiffChartData() {
-        return CompletableFuture.supplyAsync(() -> toChartData(dataModel.getProofOfBurnReimbursementDiffByInterval()));
+    CompletableFuture<List<XYChart.Data<Number, Number>>> getArbitrationDiffByInterval() {
+        return CompletableFuture.supplyAsync(() -> toChartData(dataModel.getArbitrationDiffByInterval()));
     }
 
     CompletableFuture<List<XYChart.Data<Number, Number>>> getTotalIssuedChartData() {
@@ -96,6 +96,14 @@ public class DaoChartViewModel extends ChartViewModel<DaoChartDataModel> {
 
     CompletableFuture<List<XYChart.Data<Number, Number>>> getProofOfBurnChartData() {
         return CompletableFuture.supplyAsync(() -> toChartData(dataModel.getProofOfBurnByInterval()));
+    }
+
+    CompletableFuture<List<XYChart.Data<Number, Number>>> getReimbursementAfterTaggingChartData() {
+        return CompletableFuture.supplyAsync(() -> toChartData(dataModel.getReimbursementAfterTaggingByInterval()));
+    }
+
+    CompletableFuture<List<XYChart.Data<Number, Number>>> getBsqTradeFeeAfterTaggingChartData() {
+        return CompletableFuture.supplyAsync(() -> toChartData(dataModel.getBsqTradeFeeByIntervalAfterTagging()));
     }
 
 
