@@ -50,7 +50,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
     private final LongProperty proofOfBurnAmountProperty = new SimpleLongProperty();
 
     private XYChart.Series<Number, Number> seriesBsqTradeFee, seriesProofOfBurn, seriesCompensation,
-            seriesReimbursement, seriesTotalSupply, seriesTotalIssued, seriesTotalBurned,
+            seriesReimbursement, seriesTotalSupply, seriesSupplyChange, seriesTotalIssued, seriesTotalBurned,
             seriesTotalTradeFees, seriesProofOfBurnFromBtcFees,
             seriesProofOfBurnFromArbitration, seriesArbitrationDiff,
             seriesReimbursementAfterTagging, seriesBsqTradeFeeAfterTagging;
@@ -111,7 +111,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
     }
 
     protected Collection<XYChart.Series<Number, Number>> getSeriesForLegend5() {
-        return List.of(seriesTotalSupply);
+        return List.of(seriesSupplyChange, seriesTotalSupply);
     }
 
 
@@ -182,6 +182,10 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         seriesBsqTradeFeeAfterTagging = new XYChart.Series<>();
         seriesBsqTradeFeeAfterTagging.setName(Res.get("dao.factsAndFigures.supply.bsqTradeFeeAfterTagging"));
         seriesIndexMap.put(getSeriesId(seriesBsqTradeFeeAfterTagging), 12);
+
+        seriesSupplyChange = new XYChart.Series<>();
+        seriesSupplyChange.setName(Res.get("dao.factsAndFigures.supply.supplyChange"));
+        seriesIndexMap.put(getSeriesId(seriesSupplyChange), 13);
     }
 
     @Override
@@ -209,7 +213,11 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
             tooltip.setShowDelay(Duration.millis(100));
             Tooltip.install(toggle, tooltip);
         } else if (series.equals(seriesTotalSupply)) {
-            Tooltip tooltip = new Tooltip(Res.get("dao.factsAndFigures.supply.totalSupply.tooltip"));
+            Tooltip tooltip = new Tooltip(Res.get("dao.factsAndFigures.supply.supplyChange.tooltip"));
+            tooltip.setShowDelay(Duration.millis(100));
+            Tooltip.install(toggle, tooltip);
+        } else if (series.equals(seriesSupplyChange)) {
+            Tooltip tooltip = new Tooltip(Res.get("dao.factsAndFigures.supply.supplyChange.tooltip"));
             tooltip.setShowDelay(Duration.millis(100));
             Tooltip.install(toggle, tooltip);
         }
@@ -257,6 +265,11 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
             CompletableFuture<Boolean> future = new CompletableFuture<>();
             allFutures.add(future);
             applyTotalSupply(future);
+        }
+        if (activeSeries.contains(seriesSupplyChange)) {
+            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            allFutures.add(future);
+            applySupplyChange(future);
         }
         if (activeSeries.contains(seriesTotalTradeFees)) {
             CompletableFuture<Boolean> future = new CompletableFuture<>();
@@ -334,6 +347,15 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
                             seriesTotalSupply.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
+    }
+
+    private void applySupplyChange(CompletableFuture<Boolean> completeFuture) {
+        model.getSupplyChangeChartData()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            seriesSupplyChange.getData().setAll(data);
                             completeFuture.complete(true);
                         }));
     }

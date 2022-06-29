@@ -58,6 +58,10 @@ public class DaoChartViewModel extends ChartViewModel<DaoChartDataModel> {
         return CompletableFuture.supplyAsync(() -> toChartData(dataModel.getTotalSupplyByInterval()));
     }
 
+    CompletableFuture<List<XYChart.Data<Number, Number>>> getSupplyChangeChartData() {
+        return CompletableFuture.supplyAsync(() -> toChartData(dataModel.getSupplyChangeByInterval()));
+    }
+
     CompletableFuture<List<XYChart.Data<Number, Number>>> getTotalTradeFeesChartData() {
         return CompletableFuture.supplyAsync(() -> toChartData(dataModel.getTotalTradeFeesByInterval()));
     }
