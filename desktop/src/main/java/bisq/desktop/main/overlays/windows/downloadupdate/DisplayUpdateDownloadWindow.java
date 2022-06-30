@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.overlays.windows.downloadupdate;
 
+import bisq.desktop.app.BisqApp;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.BusyAnimation;
@@ -25,7 +26,10 @@ import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.alert.Alert;
 import bisq.core.locale.Res;
+import bisq.core.user.CookieKey;
+import bisq.core.user.User;
 
+import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
@@ -72,6 +76,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWindow> {
     private final Alert alert;
     private final Config config;
+    private final User user;
     private Optional<DownloadTask> downloadTaskOptional;
     private VerifyTask verifyTask;
     private ProgressBar progressBar;
@@ -82,9 +87,10 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
     // Public API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public DisplayUpdateDownloadWindow(Alert alert, Config config) {
+    public DisplayUpdateDownloadWindow(Alert alert, Config config, User user) {
         this.alert = alert;
         this.config = config;
+        this.user = user;
         this.type = Type.Attention;
     }
 
@@ -254,12 +260,16 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
                                 if (verifyResults == null || verifyResults.isEmpty() || verifyFailed.isPresent()) {
                                     showErrorMessage(downloadButton, statusLabel, Res.get("displayUpdateDownloadWindow.verify.failed"));
                                 } else {
+                                    // We set a flag to clear tor cache files at re-start. We cannot clear it now as Tor is used and
+                                    // that can cause problems.
+                                    user.getCookie().putAsBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART, true);
                                     verifiedSigLabel.getStyleClass().add("success-text");
                                     new Popup().feedback(Res.get("displayUpdateDownloadWindow.success"))
                                             .actionButtonText(Res.get("displayUpdateDownloadWindow.download.openDir"))
                                             .onAction(() -> {
                                                 try {
                                                     Utilities.openFile(new File(Utilities.getDownloadOfHomeDir()));
+                                                    BisqApp.getShutDownHandler().run();
                                                     doClose();
                                                 } catch (IOException e2) {
                                                     log.error(e2.getMessage());
