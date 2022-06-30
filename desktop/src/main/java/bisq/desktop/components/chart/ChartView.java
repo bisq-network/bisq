@@ -87,7 +87,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     private SplitPane timelineNavigation;
     protected NumberAxis xAxis, yAxis;
     protected LineChart<Number, Number> chart;
-    private HBox timelineLabels, legendBox2, legendBox3;
+    private HBox timelineLabels, legendBox2, legendBox3, legendBox4, legendBox5;
     private final ToggleGroup timeIntervalToggleGroup = new ToggleGroup();
 
     protected final Set<XYChart.Series<Number, Number>> activeSeries = new HashSet<>();
@@ -162,6 +162,16 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
             legendBox3 = initLegendsAndGetLegendBox(seriesForLegend3);
         }
 
+        Collection<XYChart.Series<Number, Number>> seriesForLegend4 = getSeriesForLegend4();
+        if (seriesForLegend4 != null && !seriesForLegend4.isEmpty()) {
+            legendBox4 = initLegendsAndGetLegendBox(seriesForLegend4);
+        }
+
+        Collection<XYChart.Series<Number, Number>> seriesForLegend5 = getSeriesForLegend5();
+        if (seriesForLegend5 != null && !seriesForLegend5.isEmpty()) {
+            legendBox5 = initLegendsAndGetLegendBox(seriesForLegend5);
+        }
+
         // Set active series/legends
         defineAndAddActiveSeries();
 
@@ -184,6 +194,12 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
                 if (legendBox3 != null) {
                     VBox.setMargin(legendBox3, new Insets(-20, rightPadding, 0, paddingLeft));
                 }
+                if (legendBox4 != null) {
+                    VBox.setMargin(legendBox4, new Insets(-20, rightPadding, 0, paddingLeft));
+                }
+                if (legendBox5 != null) {
+                    VBox.setMargin(legendBox5, new Insets(-20, rightPadding, 0, paddingLeft));
+                }
 
                 if (model.getDividerPositions()[0] == 0 && model.getDividerPositions()[1] == 1) {
                     resetTimeNavigation();
@@ -203,6 +219,14 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         if (legendBox3 != null) {
             VBox.setMargin(legendBox3, new Insets(-20, paddingRight, 0, paddingLeft));
             timelineNavigationBox.getChildren().add(legendBox3);
+        }
+        if (legendBox4 != null) {
+            VBox.setMargin(legendBox4, new Insets(-20, paddingRight, 0, paddingLeft));
+            timelineNavigationBox.getChildren().add(legendBox4);
+        }
+        if (legendBox5 != null) {
+            VBox.setMargin(legendBox5, new Insets(-20, paddingRight, 0, paddingLeft));
+            timelineNavigationBox.getChildren().add(legendBox5);
         }
         root.getChildren().addAll(timeIntervalBox, chart, timelineNavigationBox);
 
@@ -254,6 +278,8 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         addLegendToggleActionHandlers(getSeriesForLegend1());
         addLegendToggleActionHandlers(getSeriesForLegend2());
         addLegendToggleActionHandlers(getSeriesForLegend3());
+        addLegendToggleActionHandlers(getSeriesForLegend4());
+        addLegendToggleActionHandlers(getSeriesForLegend5());
         addActionHandlersToDividers();
     }
 
@@ -272,6 +298,8 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         removeLegendToggleActionHandlers(getSeriesForLegend1());
         removeLegendToggleActionHandlers(getSeriesForLegend2());
         removeLegendToggleActionHandlers(getSeriesForLegend3());
+        removeLegendToggleActionHandlers(getSeriesForLegend4());
+        removeLegendToggleActionHandlers(getSeriesForLegend5());
         removeActionHandlersToDividers();
 
         // clear data, reset states. We keep timeInterval state though
@@ -372,13 +400,14 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
         hBox.setSpacing(10);
         collection.forEach(series -> {
             AutoTooltipSlideToggleButton toggle = new AutoTooltipSlideToggleButton();
-            toggle.setMinWidth(200);
+            toggle.setMinWidth(300);
             toggle.setAlignment(Pos.TOP_LEFT);
             String seriesId = getSeriesId(series);
             legendToggleBySeriesName.put(seriesId, toggle);
             toggle.setText(seriesId);
             toggle.setId("charts-legend-toggle" + seriesIndexMap.get(seriesId));
             toggle.setSelected(false);
+            maybeAddToolTip(toggle, series);
             hBox.getChildren().add(toggle);
         });
         Region spacer = new Region();
@@ -560,6 +589,14 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     }
 
     protected Collection<XYChart.Series<Number, Number>> getSeriesForLegend3() {
+        return null;
+    }
+
+    protected Collection<XYChart.Series<Number, Number>> getSeriesForLegend4() {
+        return null;
+    }
+
+    protected Collection<XYChart.Series<Number, Number>> getSeriesForLegend5() {
         return null;
     }
 
@@ -796,6 +833,10 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
     // We use the name as id as there is no other suitable data inside series
     protected String getSeriesId(XYChart.Series<Number, Number> series) {
         return series.getName();
+    }
+
+    protected void maybeAddToolTip(AutoTooltipSlideToggleButton toggle, XYChart.Series<Number, Number> series) {
+        // Implement in subclass if tooltip should be added
     }
 
     protected void mapToUserThread(Runnable command) {

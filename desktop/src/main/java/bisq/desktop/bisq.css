@@ -1,23 +1,28 @@
 @font-face {
     src: url("/fonts/IBMPlexSans-Regular.ttf");
 }
+
 @font-face {
     src: url("/fonts/IBMPlexSans-Bold.ttf");
 }
+
 @font-face {
     src: url("/fonts/IBMPlexSans-Medium.ttf");
 }
+
 @font-face {
     src: url("/fonts/IBMPlexSans-Light.ttf");
 }
+
 @font-face {
     src: url("/fonts/IBMPlexMono-Regular.ttf");
 }
+
 .root {
     -fx-font-size: 13;
 }
 
-.root:dir(ltr){
+.root:dir(ltr) {
     -fx-font-family: "IBM Plex Sans";
 }
 
@@ -250,12 +255,15 @@
 .list-view .list-cell {
     -fx-background-color: -bs-background-color;
 }
+
 .list-view .list-cell:odd {
     -fx-background-color: derive(-bs-background-color, -5%);
 }
+
 .list-view .list-cell:even {
     -fx-background-color: derive(-bs-background-color, 5%);
 }
+
 .list-view .list-cell:hover,
 .list-view .list-cell:selected,
 .table-view .table-cell:hover,
@@ -277,6 +285,7 @@
 tree-table-view:focused {
     -fx-background-insets: 0;
 }
+
 .list-view:focused {
     -fx-background-color: -bs-color-primary;
     -fx-background-insets: 0;
@@ -935,8 +944,8 @@ textfield */
 }
 
 .hyperlink.error {
-     -fx-text-fill: -bs-rd-error-red;
-     -fx-fill: -bs-rd-error-red;
+    -fx-text-fill: -bs-rd-error-red;
+    -fx-fill: -bs-rd-error-red;
 }
 
 /*******************************************************************************
@@ -946,25 +955,30 @@ textfield */
  ******************************************************************************/
 .table-view .table-row-cell:even .table-cell {
     -fx-background-color: derive(-bs-background-color, 5%);
-    -fx-border-color: derive(-bs-background-color,5%);
+    -fx-border-color: derive(-bs-background-color, 5%);
 }
+
 .table-view .table-row-cell:odd .table-cell {
-    -fx-background-color: derive(-bs-background-color,-5%);
-    -fx-border-color: derive(-bs-background-color,-5%);
+    -fx-background-color: derive(-bs-background-color, -5%);
+    -fx-border-color: derive(-bs-background-color, -5%);
 }
+
 .table-view .table-row-cell:hover .table-cell,
 .table-view .table-row-cell:selected .table-cell {
     -fx-background: -fx-accent;
     -fx-background-color: -fx-selection-bar;
     -fx-border-color: -fx-selection-bar;
 }
+
 .table-row-cell {
     -fx-border-color: -bs-background-color;
 }
+
 .table-row-cell:empty, .table-row-cell:empty:even, .table-row-cell:empty:odd {
     -fx-background-color: -bs-background-color;
     -fx-min-height: 36;
 }
+
 .offer-table .table-row-cell {
     -fx-background: -fx-accent;
     -fx-background-color: -bs-color-gray-6;
@@ -1731,9 +1745,9 @@ textfield */
     -fx-font-size: 0.880em;
 }
 
-#price-chart  .axis-tick-mark-text-node,
+#price-chart .axis-tick-mark-text-node,
 #volume-chart .axis-tick-mark-text-node,
-#charts-dao   .axis-tick-mark-text-node {
+#charts-dao .axis-tick-mark-text-node {
     -fx-text-alignment: center;
 }
 
@@ -1758,13 +1772,26 @@ textfield */
 }
 
 /* The .chart-line-symbol rules change the color of the legend symbol */
-#charts-dao .default-color0.chart-series-line { -fx-stroke: -bs-chart-dao-line1; }
-#charts-dao .default-color0.chart-line-symbol { -fx-background-color: -bs-chart-dao-line1, -bs-chart-dao-line1; }
+#charts-dao .default-color0.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line1;
+}
 
-#charts-dao .default-color1.chart-series-line { -fx-stroke: -bs-chart-dao-line2; }
-#charts-dao .default-color1.chart-line-symbol { -fx-background-color: -bs-chart-dao-line2, -bs-chart-dao-line2; }
+#charts-dao .default-color0.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line1, -bs-chart-dao-line1;
+}
 
-#charts-dao .default-color2.chart-series-line { -fx-stroke: -bs-chart-dao-line3; }
+#charts-dao .default-color1.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line2;
+}
+
+#charts-dao .default-color1.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line2, -bs-chart-dao-line2;
+}
+
+#charts-dao .default-color2.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line3;
+}
+
 #charts-dao .default-color2.chart-line-symbol {
     -fx-background-color: -bs-chart-dao-line3, -bs-chart-dao-line3;
 }
@@ -1834,6 +1861,32 @@ textfield */
     -fx-background-color: -bs-chart-dao-line11, -bs-chart-dao-line11;
 }
 
+#charts-dao .default-color11.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line12;
+}
+
+#charts-dao .default-color11.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line12, -bs-chart-dao-line12;
+}
+
+#charts-dao .default-color12.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line13;
+}
+
+#charts-dao .default-color12.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line13, -bs-chart-dao-line13;
+}
+
+
+#charts-dao .default-color13.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line14;
+}
+
+#charts-dao .default-color13.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line14, -bs-chart-dao-line14;
+}
+
+
 #charts-legend-toggle0 {
     -jfx-toggle-color: -bs-chart-dao-line1
 }
@@ -1878,6 +1931,18 @@ textfield */
     -jfx-toggle-color: -bs-chart-dao-line11;
 }
 
+#charts-legend-toggle11 {
+    -jfx-toggle-color: -bs-chart-dao-line12;
+}
+
+#charts-legend-toggle12 {
+    -jfx-toggle-color: -bs-chart-dao-line13;
+}
+
+#charts-legend-toggle13 {
+    -jfx-toggle-color: -bs-chart-dao-line14;
+}
+
 #charts-dao .chart-series-line {
     -fx-stroke-width: 2px;
 }
@@ -1889,6 +1954,7 @@ textfield */
 #charts .default-color1.chart-series-area-fill, #charts-dao .default-color0.chart-series-area-fill {
     -fx-fill: -bs-buy-transparent;
 }
+
 .chart-vertical-grid-lines {
     -fx-stroke: transparent;
 }
@@ -2327,6 +2393,7 @@ textfield */
     -fx-border-width: 1;
     -fx-border-color: -bs-rd-separator-dark;
 }
+
 /********************************************************************************************************************
  *                                                                                                                  *
  * Notifications                                                                                                    *

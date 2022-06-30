@@ -21,7 +21,6 @@ import bisq.desktop.components.chart.ChartDataModel;
 
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
-import bisq.core.dao.state.model.governance.BsqSupplyChange;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
 
@@ -33,18 +32,15 @@ import javax.inject.Singleton;
 import java.time.Instant;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,10 +52,11 @@ public class DaoChartDataModel extends ChartDataModel {
 
     private final DaoStateService daoStateService;
     private final Function<Issuance, Long> blockTimeOfIssuanceFunction;
-    private Map<Long, Long> totalSupplyByInterval, totalIssuedByInterval, compensationByInterval, reimbursementByInterval,
-            totalBurnedByInterval, bsqTradeFeeByInterval, proofOfBurnByInterval,
-            proofOfBurnFromBtcFeesByInterval, proofOfBurnFromArbitrationByInterval,
-            proofOfBurnReimbursementDiffByInterval, totalTradeFeesByInterval;
+    private Map<Long, Long> totalSupplyByInterval, supplyChangeByInterval, totalIssuedByInterval, compensationByInterval,
+            reimbursementByInterval, reimbursementByIntervalAfterTagging,
+            totalBurnedByInterval, bsqTradeFeeByInterval, bsqTradeFeeByIntervalAfterTagging,
+            proofOfBurnByInterval, proofOfBurnFromBtcFeesByInterval, proofOfBurnFromArbitrationByInterval,
+            arbitrationDiffByInterval, totalTradeFeesByInterval;
 
     static {
         TAG_DATE.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -85,15 +82,18 @@ public class DaoChartDataModel extends ChartDataModel {
     @Override
     protected void invalidateCache() {
         totalSupplyByInterval = null;
+        supplyChangeByInterval = null;
         totalIssuedByInterval = null;
         compensationByInterval = null;
         reimbursementByInterval = null;
+        reimbursementByIntervalAfterTagging = null;
         totalBurnedByInterval = null;
         bsqTradeFeeByInterval = null;
+        bsqTradeFeeByIntervalAfterTagging = null;
         proofOfBurnByInterval = null;
         proofOfBurnFromBtcFeesByInterval = null;
         proofOfBurnFromArbitrationByInterval = null;
-        proofOfBurnReimbursementDiffByInterval = null;
+        arbitrationDiffByInterval = null;
         totalTradeFeesByInterval = null;
     }
 
@@ -131,35 +131,21 @@ public class DaoChartDataModel extends ChartDataModel {
     // Data for chart
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    Map<Long, Long> getTotalSupplyByInterval() {
-        if (totalSupplyByInterval != null) {
-            return totalSupplyByInterval;
+    Map<Long, Long> getArbitrationDiffByInterval() {
+        if (arbitrationDiffByInterval != null) {
+            return arbitrationDiffByInterval;
         }
 
-        totalSupplyByInterval = getTotalBsqSupplyByInterval(
-                daoStateService.getBsqSupplyChanges(),
-                getDateFilter()
-        );
-        return totalSupplyByInterval;
-    }
-
-    Map<Long, Long> getProofOfBurnReimbursementDiffByInterval() {
-        if (proofOfBurnReimbursementDiffByInterval != null) {
-            return proofOfBurnReimbursementDiffByInterval;
-        }
-
-        // By subtracting the reimbursement amounts from the total burned amount we derive the total trade fees.
-        // Reimbursements have not been used in early days, so those periods do not reflect the value correctly.
-        // Due to time delays between reimbursements and burning there is not a very good temporal match.
-        // For shorter time periods we even get negative values if reimbursement was larger than accumulated
-        // burned BSQ in that time frame.
-        // It is an alternative view on the revenue to the total fee data which we only support since Nov 2021
-        Map<Long, Long> burnedMap = getTotalBurnedByInterval();
+        // The subtraction of the burned BSQ from arbitration cases from reimbursement amounts should tend to zero.
+        // We only support data separation for burned BSQ from arbitration since Nov 2021.
         Map<Long, Long> reimbursementMap = getReimbursementByInterval();
-        proofOfBurnReimbursementDiffByInterval = getMergedMap(burnedMap, reimbursementMap, (a, b) -> a - b);
-        return proofOfBurnReimbursementDiffByInterval;
+        Map<Long, Long> burnFromArbitrationMap = getProofOfBurnFromArbitrationByInterval();
+        Map<Long, Long> mergedMap = getMergedMap(reimbursementMap, burnFromArbitrationMap, (a, b) -> a - b);
+        arbitrationDiffByInterval = mergedMap.entrySet().stream()
+                .filter(e -> getPostTagDateFilter().test(e.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return arbitrationDiffByInterval;
     }
-
 
     Map<Long, Long> getTotalTradeFeesByInterval() {
         if (totalTradeFeesByInterval != null) {
@@ -211,6 +197,17 @@ public class DaoChartDataModel extends ChartDataModel {
         return reimbursementByInterval;
     }
 
+    Map<Long, Long> getReimbursementAfterTaggingByInterval() {
+        if (reimbursementByIntervalAfterTagging != null) {
+            return reimbursementByIntervalAfterTagging;
+        }
+
+        reimbursementByIntervalAfterTagging = getReimbursementByInterval().entrySet().stream()
+                .filter(e -> getPostTagDateFilter().test(e.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return reimbursementByIntervalAfterTagging;
+    }
+
     Map<Long, Long> getTotalBurnedByInterval() {
         if (totalBurnedByInterval != null) {
             return totalBurnedByInterval;
@@ -229,6 +226,17 @@ public class DaoChartDataModel extends ChartDataModel {
 
         bsqTradeFeeByInterval = getBurntBsqByInterval(daoStateService.getTradeFeeTxs(), getDateFilter());
         return bsqTradeFeeByInterval;
+    }
+
+    Map<Long, Long> getBsqTradeFeeByIntervalAfterTagging() {
+        if (bsqTradeFeeByIntervalAfterTagging != null) {
+            return bsqTradeFeeByIntervalAfterTagging;
+        }
+
+        bsqTradeFeeByIntervalAfterTagging = getBsqTradeFeeByInterval().entrySet().stream()
+                .filter(e -> getPostTagDateFilter().test(e.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return bsqTradeFeeByIntervalAfterTagging;
     }
 
     Map<Long, Long> getProofOfBurnByInterval() {
@@ -271,34 +279,31 @@ public class DaoChartDataModel extends ChartDataModel {
         return proofOfBurnFromArbitrationByInterval;
     }
 
+    Map<Long, Long> getTotalSupplyByInterval() {
+        if (totalSupplyByInterval != null) {
+            return totalSupplyByInterval;
+        }
+
+        long genesisValue = daoStateService.getGenesisTotalSupply().value;
+        totalSupplyByInterval = getSupplyChangeByInterval().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> genesisValue + e.getValue()));
+        return totalSupplyByInterval;
+    }
+
+    Map<Long, Long> getSupplyChangeByInterval() {
+        if (supplyChangeByInterval != null) {
+            return supplyChangeByInterval;
+        }
+
+        Map<Long, Long> issued = getTotalIssuedByInterval();
+        Map<Long, Long> burned = getTotalBurnedByInterval();
+        supplyChangeByInterval = getMergedMap(issued, burned, (a, b) -> a - b);
+        return supplyChangeByInterval;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Aggregated collection data by interval
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private Map<Long, Long> getTotalBsqSupplyByInterval(Stream<BsqSupplyChange> bsqSupplyChanges,
-                                                        Predicate<Long> dateFilter) {
-        AtomicLong supply = new AtomicLong(
-                DaoEconomyHistoricalData.TOTAL_SUPPLY_BY_CYCLE_DATE.get(1555340856L)
-        );
-
-        return bsqSupplyChanges
-                .collect(Collectors.groupingBy(tx -> toTimeInterval(Instant.ofEpochMilli(tx.getTime()))))
-                .entrySet()
-                .stream()
-                .sorted(Comparator.comparingLong(Map.Entry::getKey))
-                .map(e -> new BsqSupplyChange(
-                        e.getKey(),
-                        supply.addAndGet(e
-                                .getValue()
-                                .stream()
-                                .mapToLong(BsqSupplyChange::getValue)
-                                .sum()
-                        ))
-                )
-                .filter(t -> dateFilter.test(t.getTime()))
-                .collect(Collectors.toMap(BsqSupplyChange::getTime, BsqSupplyChange::getValue));
-    }
 
     private Map<Long, Long> getIssuedBsqByInterval(Set<Issuance> issuanceSet, Predicate<Long> dateFilter) {
         return issuanceSet.stream()
@@ -335,6 +340,12 @@ public class DaoChartDataModel extends ChartDataModel {
                                 .sum()));
     }
 
+    private Predicate<Long> getPostTagDateFilter() {
+        // We filter out old dates as it only makes sense since Nov 2021
+        return date -> date >= TAG_DATE.getTimeInMillis() / 1000;  // we use seconds
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -350,14 +361,13 @@ public class DaoChartDataModel extends ChartDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     // We did not use the reimbursement requests initially (but the compensation requests) because the limits
-    // have been too low. Over time it got mixed in compensation requests and reimbursement requests.
-    // To reflect that we use static data derived from the Github data. For new data we do not need that anymore
+    // have been too low. Over time, it got mixed in compensation requests and reimbursement requests.
+    // To reflect that we use static data derived from the GitHub data. For new data we do not need that anymore
     // as we have clearly separated that now. In case we have duplicate data for a months we use the static data.
     private static class DaoEconomyHistoricalData {
         // Key is start date of the cycle in epoch seconds, value is reimbursement amount
         public final static Map<Long, Long> REIMBURSEMENTS_BY_CYCLE_DATE = new HashMap<>();
         public final static Map<Long, Long> COMPENSATIONS_BY_CYCLE_DATE = new HashMap<>();
-        public final static Map<Long, Long> TOTAL_SUPPLY_BY_CYCLE_DATE = new HashMap<>();
 
         static {
             REIMBURSEMENTS_BY_CYCLE_DATE.put(1571349571L, 60760L);
@@ -393,8 +403,6 @@ public class DaoChartDataModel extends ChartDataModel {
             COMPENSATIONS_BY_CYCLE_DATE.put(1599175867L, 6086442L);
             COMPENSATIONS_BY_CYCLE_DATE.put(1601861442L, 5615973L);
             COMPENSATIONS_BY_CYCLE_DATE.put(1604845863L, 7782667L);
-
-            TOTAL_SUPPLY_BY_CYCLE_DATE.put(1555340856L, 372540100L);
         }
     }
 }

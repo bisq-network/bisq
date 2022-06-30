@@ -30,7 +30,6 @@ import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.dao.state.model.blockchain.TxOutputType;
 import bisq.core.dao.state.model.blockchain.TxType;
-import bisq.core.dao.state.model.governance.BsqSupplyChange;
 import bisq.core.dao.state.model.governance.Cycle;
 import bisq.core.dao.state.model.governance.DecryptedBallotsWithMerits;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
@@ -1048,18 +1047,6 @@ public class DaoStateService implements DaoSetupService {
 
     public Set<TxOutput> getProofOfBurnOpReturnTxOutputs() {
         return getTxOutputsByTxOutputType(TxOutputType.PROOF_OF_BURN_OP_RETURN_OUTPUT);
-    }
-
-    public Stream<BsqSupplyChange> getBsqSupplyChanges() {
-        Stream<BsqSupplyChange> issued = getIssuanceItems()
-                .stream()
-                .map(i -> new BsqSupplyChange(getBlockTime(i.getChainHeight()), i.getAmount()));
-
-        Stream<BsqSupplyChange> burned = getUnorderedTxStream()
-                .filter(tx -> tx.getTxType() == TxType.PROOF_OF_BURN || tx.getTxType() == TxType.PAY_TRADE_FEE)
-                .map(i -> new BsqSupplyChange(i.getTime(), -i.getBurntBsq()));
-
-        return Stream.concat(issued, burned);
     }
 
 
