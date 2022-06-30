@@ -279,6 +279,7 @@ public class AccountView extends ActivatableView<TabPane, Void> {
                     .headLine(Res.get("account.altcoin.popup.xmr.dataDirWarningHeadline"))
                     .backgroundInfo(Res.get("account.altcoin.popup.xmr.dataDirWarning"))
                     .dontShowAgainId("accountSubAddressInfo")
+                    .width(700)
                     .show();
         }
     }
