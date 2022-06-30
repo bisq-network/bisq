@@ -23,6 +23,10 @@ import bisq.desktop.setup.DesktopPersistedDataHost;
 
 import bisq.core.app.AvoidStandbyModeService;
 import bisq.core.app.BisqExecutable;
+import bisq.core.app.TorSetup;
+import bisq.core.user.Cookie;
+import bisq.core.user.CookieKey;
+import bisq.core.user.User;
 
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
@@ -125,6 +129,16 @@ public class BisqAppMain extends BisqExecutable {
 
     @Override
     protected void startApplication() {
+        Cookie cookie = injector.getInstance(User.class).getCookie();
+        cookie.getAsOptionalBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART).ifPresent(wasCleanTorDirSet -> {
+            if (wasCleanTorDirSet) {
+                injector.getInstance(TorSetup.class).cleanupTorFiles(() -> {
+                    log.info("Tor directory reset");
+                    cookie.remove(CookieKey.CLEAN_TOR_DIR_AT_RESTART);
+                }, log::error);
+            }
+        });
+
         // We need to be in user thread! We mapped at launchApplication already.  Once
         // the UI is ready we get onApplicationStarted called and start the setup there.
         application.startApplication(this::onApplicationStarted);
