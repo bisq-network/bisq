@@ -411,7 +411,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                 .onClose(() -> BisqApp.getShutDownHandler().run())
                 .show());
 
-        bisqSetup.setDisplayUpdateHandler((alert, key) -> new DisplayUpdateDownloadWindow(alert, config)
+        bisqSetup.setDisplayUpdateHandler((alert, key) -> new DisplayUpdateDownloadWindow(alert, config, user)
                 .actionButtonText(Res.get("displayUpdateDownloadWindow.button.downloadLater"))
                 .onAction(() -> {
                     preferences.dontShowAgain(key, false); // update later
