@@ -66,7 +66,8 @@ service Offers {
     // Get the available BSQ swap offer with offer-id.
     rpc GetBsqSwapOffer (GetOfferRequest) returns (GetBsqSwapOfferReply) {
     }
-    // Get the v1 protocol offer with offer-id.
+    // Get the v1 protocol offer with an offer-id.  Your node must have a payment account with the same
+    // payment method as the offer's associated payment method, e,g., ACH_TRANSFER, CASH_DEPOSIT, etc.
     rpc GetOffer (GetOfferRequest) returns (GetOfferReply) {
     }
     // Get user's BSQ swap offer with offer-id.
@@ -78,7 +79,9 @@ service Offers {
     // Get all available BSQ swap offers with a BUY (BTC) or SELL (BTC) direction.
     rpc GetBsqSwapOffers (GetBsqSwapOffersRequest) returns (GetBsqSwapOffersReply) {
     }
-    // Get all available v1 protocol offers with a BUY (BTC) or SELL (BTC) direction.
+    // Get all available v1 protocol offers with a BUY (BTC) or SELL (BTC) direction.  The returned offers
+    // are restricted to those associated with payment methods matching the payment methods you have set up
+    // on your node, e,g., NATIONAL_BANK, US_POSTAL_MONEY_ORDER, etc.
     rpc GetOffers (GetOffersRequest) returns (GetOffersReply) {
     }
     // Get all user's BSQ swap offers with a BUY (BTC) or SELL (BTC) direction.
@@ -485,7 +488,8 @@ service Trades {
     // Get currently open, or historical trades (closed or failed).
     rpc GetTrades (GetTradesRequest) returns (GetTradesReply) {
     }
-    // Take an open offer.
+    // Take an available offer.  Your node must have a payment account with the same payment method as
+    // the offer's payment method, e.g., NATIONAL_BANK, SEPA, SWIFT, etc.
     rpc TakeOffer (TakeOfferRequest) returns (TakeOfferReply) {
     }
     // Send a 'payment started' message to a trading peer (the BTC seller).
