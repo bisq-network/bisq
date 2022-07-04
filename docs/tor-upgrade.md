@@ -14,7 +14,6 @@ unpacks the tor browser binaries to extract and repackage the tor binaries thems
 
 Therefore, upgrading tor in Bisq comes down to upgrading these two artefacts.
 
-
 ## Upgrade steps
 
 
@@ -74,7 +73,7 @@ next.
 
 ### 3. Update `netlayer`
 
-Create a PR for the `externaltor` branch of [netlayer][1] with the following changes:
+Create a PR for the `master` branch of [netlayer][1] with the following changes:
 
  - In `netlayer/pom.xml`:
    - Update `tor-binary.version` to the `tor-binary` commit ID from above (e.g. `a4b868a`)
@@ -84,13 +83,13 @@ Create a PR for the `externaltor` branch of [netlayer][1] with the following cha
    - `netlayer/tor.external/pom.xml`
    - `netlayer/tor.native/pom.xml`
 
-Once the PR is merged, make a note of the commit ID in the `externaltor` branch (for example `32779ac`), as it will be
+Once the PR is merged, make a note of the commit ID in the `master` branch (for example `32779ac`), as it will be
 needed next.
 
 Create a tag for the new artefact version, having the new tor binary version as description, for example:
 
 ```
-# Create tag locally for new netlayer release, on the externaltor branch
+# Create tag locally for new netlayer release, on the master branch
 git tag -s 0.7.0 -m"tor 0.4.5.6"
 
 # Push it to netlayer repo
@@ -104,7 +103,7 @@ Create a Bisq PR with the following changes:
 
  - In `bisq/build.gradle` update `netlayerVersion` to the `netlayer` commit ID from above
  - Update the gradle dependency checksums
-   - See instructions in `bisq/gradle/witness/gradle-witness.gradle`
+     - See instructions in `bisq/gradle/README.md`
 
 
 
