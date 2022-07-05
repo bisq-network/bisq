@@ -69,8 +69,7 @@ configure(subprojects) {
         loggingVersion = '1.2'
         lombokVersion = '1.18.22'
         mockitoVersion = '4.0.0'
-        /* Netlayer version 0.7.4 with Tor browser version 11.0.15 and tor binary version: 0.4.7.8 */
-        netlayerVersion = '0858d6dd19ff14486460bb9dbef079e363fc3c47'
+        netlayerVersion = '0.7.4'
         protobufVersion = '3.19.1'
         protocVersion = protobufVersion
         pushyVersion = '0.13.2'
