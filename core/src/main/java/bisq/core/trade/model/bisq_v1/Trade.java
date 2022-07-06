@@ -284,8 +284,6 @@ public abstract class Trade extends TradeModel {
     // Persistable
     // Immutable
     @Getter
-    private final ProcessModel processModel;
-    @Getter
     private final boolean isCurrencyForTakerFeeBtc;
     @Getter
     private final long tradeTxFeeAsLong;
@@ -293,6 +291,8 @@ public abstract class Trade extends TradeModel {
     private final long takerFeeAsLong;
 
     //  Mutable
+    @Getter
+    private ProcessModel processModel;
     @Nullable
     @Getter
     @Setter
@@ -709,6 +709,9 @@ public abstract class Trade extends TradeModel {
         String change = "";
         if (contract != null && contract.maybeClearSensitiveData()) {
             change += "contract;";
+        }
+        if (processModel != null && processModel.maybeClearSensitiveData()) {
+            change += "processModel;";
         }
         if (contractAsJson != null) {
             String edited = contract.sanitizeContractAsJson(contractAsJson);

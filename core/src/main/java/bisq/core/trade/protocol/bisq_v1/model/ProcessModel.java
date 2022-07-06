@@ -116,11 +116,11 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     transient private Transaction depositTx;
 
     // Persistable Immutable
-    private final TradingPeer tradingPeer;
     private final String offerId;
     private final PubKeyRing pubKeyRing;
 
     // Persistable Mutable
+    private TradingPeer tradingPeer;
     @Nullable
     @Setter
     private String takeOfferFeeTxId;
@@ -343,6 +343,15 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         }
     }
 
+    public boolean maybeClearSensitiveData() {
+        boolean changed = false;
+        if (tradingPeer.getPaymentAccountPayload() != null || tradingPeer.getContractAsJson() != null) {
+            // If tradingPeer was null in persisted data from some error cases we set a new one to not cause nullPointers
+            this.tradingPeer = new TradingPeer();
+            changed = true;
+        }
+        return changed;
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Delegates
