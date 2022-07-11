@@ -26,11 +26,18 @@ configure(rootProject) {
 configure(subprojects) {
     apply plugin: 'java'
     apply plugin: 'com.google.osdetector'
+    apply plugin: 'maven-publish'
 
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
 
-    ext { // in alphabetical order
+    ext {
+        // Desktop application version, accessible to subprojects being published to jitpack.
+        // Submodules with their own version numbers (like pricenode) will be split out into their
+        // own repos, and will import needed submodule from jitpack libs published by this build.
+        desktopVersion = '1.9.2-SNAPSHOT'
+
+        // Dependency Version Constraints
         bcVersion = '1.63'
         bitcoinjVersion = '42bbae9'
         codecVersion = '1.13'
@@ -94,8 +101,18 @@ configure(subprojects) {
     tasks.withType(JavaCompile) {
         options.encoding = 'UTF-8'
     }
-}
 
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                groupId project.group
+                artifactId project.name
+                version "${desktopVersion}"
+                from components.java
+            }
+        }
+    }
+}
 
 configure([project(':cli'),
            project(':daemon'),
@@ -464,7 +481,7 @@ configure(project(':desktop')) {
         modules = ['javafx.controls', 'javafx.fxml']
     }
 
-    version = '1.9.2-SNAPSHOT'
+    version = desktopVersion
 
     jar.manifest.attributes(
         "Implementation-Title": project.name,
