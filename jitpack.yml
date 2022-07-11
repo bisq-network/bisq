@@ -1,0 +1,7 @@
+before_install:
+  - echo "Checking git-lfs version..."
+  - git-lfs --version
+  - echo "Running git lfs pull..."
+  - git lfs pull
+  - echo "Checking java version..."
+  - java -version
