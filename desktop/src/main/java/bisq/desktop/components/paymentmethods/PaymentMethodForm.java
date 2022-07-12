@@ -71,6 +71,8 @@ import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static bisq.desktop.util.DisplayUtils.createAccountName;
 import static bisq.desktop.util.FormBuilder.*;
 
@@ -286,9 +288,9 @@ public abstract class PaymentMethodForm {
         }
     }
 
-    void setAccountNameWithString(String name) {
+    void setAccountNameWithString(@Nullable String name) {
         if (useCustomAccountNameToggleButton != null && !useCustomAccountNameToggleButton.isSelected()) {
-            String accountName = createAccountName(paymentAccount.getPaymentMethod().getId(), name);
+            String accountName = createAccountName(paymentAccount.getPaymentMethod().getId(), name == null ? "" : name);
             accountNameTextField.setText(accountName);
         }
     }
