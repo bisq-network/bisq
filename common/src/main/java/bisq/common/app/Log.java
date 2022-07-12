@@ -79,6 +79,12 @@ public class Log {
         ((Logger) LoggerFactory.getLogger(pattern)).setLevel(logLevel);
     }
 
+    public static String pushCustomLogLevel(String pattern, String logLevel) {
+        Level oldLevel = ((Logger) LoggerFactory.getLogger(pattern)).getLevel();
+        ((Logger) LoggerFactory.getLogger(pattern)).setLevel(Level.toLevel(logLevel));
+        return oldLevel == null ? "INFO" : oldLevel.toString();
+    }
+
     public static void filterByThreadName(String threadName) {
         logbackLogger.getLoggerContext().addTurboFilter(new TurboFilter() {
             @Override
