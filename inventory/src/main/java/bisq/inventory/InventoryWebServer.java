@@ -242,6 +242,8 @@ public class InventoryWebServer {
         sb.append("Response received at: ").append(responseTime).append("<br/>");
 
         sb.append(getErrorMsgLine(seedNode, requestInfo, map));
+
+        sb.append(getLastSuccessfulResponseLine(seedNode, map));
         return sb.toString();
     }
 
@@ -529,6 +531,22 @@ public class InventoryWebServer {
                 getColorTagByDeviationSeverity(deviationSeverity) +
                 errorMessage +
                 historicalErrorsHtml +
+                CLOSE_TAG;
+    }
+
+    private String getLastSuccessfulResponseLine(NodeAddress seedNode,
+                                   Map<NodeAddress, List<RequestInfo>> map) {
+        long newestResponseTime = 0;
+        List<RequestInfo> requestInfoList = map.get(seedNode);
+        if (requestInfoList != null) {
+            for (int i = 0; i < requestInfoList.size(); i++) {
+                RequestInfo requestInfo1 = requestInfoList.get(i);
+                newestResponseTime = Math.max(newestResponseTime, requestInfo1.getResponseTime());
+            }
+        }
+        String responseMessage = newestResponseTime > 0 ? new Date(newestResponseTime).toString() : "none";
+        return "Last response received: " +
+                responseMessage +
                 CLOSE_TAG;
     }
 }
