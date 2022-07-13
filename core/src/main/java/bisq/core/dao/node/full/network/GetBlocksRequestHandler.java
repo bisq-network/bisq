@@ -91,8 +91,8 @@ class GetBlocksRequestHandler {
 
     public void onGetBlocksRequest(GetBlocksRequest getBlocksRequest, Connection connection) {
         long ts = System.currentTimeMillis();
-        // We limit number of blocks to 6000 which is about 1.5 month.
-        List<Block> blocks = new LinkedList<>(daoStateService.getBlocksFromBlockHeight(getBlocksRequest.getFromBlockHeight(), 6000));
+        // We limit number of blocks to 4000 which is about 1 month.
+        List<Block> blocks = new LinkedList<>(daoStateService.getBlocksFromBlockHeight(getBlocksRequest.getFromBlockHeight(), 4000));
         List<RawBlock> rawBlocks = blocks.stream().map(RawBlock::fromBlock).collect(Collectors.toList());
         GetBlocksResponse getBlocksResponse = new GetBlocksResponse(rawBlocks, getBlocksRequest.getNonce());
         log.info("Received GetBlocksRequest from {} for blocks from height {}. " +
