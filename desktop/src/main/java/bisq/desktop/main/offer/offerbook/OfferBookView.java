@@ -1177,7 +1177,7 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
                                         iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
                                         button.setId(isSellOffer ? "buy-button" : "sell-button");
                                         button.setStyle("-fx-text-fill: white");
-                                        title = Res.get("offerbook.takeOffer");
+                                        title = Res.get(isSellOffer ? "shared.buy" : "shared.sell");
                                         button.setTooltip(new Tooltip(Res.get("offerbook.takeOfferButton.tooltip", model.getDirectionLabelTooltip(offer))));
                                         button.setOnAction(e -> onTakeOffer(offer));
                                         button2.setManaged(false);
