@@ -17,11 +17,10 @@
 
 package bisq.daonode.endpoints;
 
-import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.governance.proofofburn.ProofOfBurnService;
 
 import bisq.common.util.Hex;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,6 +47,11 @@ import jakarta.ws.rs.core.Application;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 
+/**
+ * Endpoint for getting the proof of burn data from a given block height.
+ * Used for reputation system in Bisq 2.
+ * <a href="http://localhost:8082/api/v1/proof-of-burn/get-proof-of-burn/0">Request with block height 0</a>
+ */
 @Slf4j
 @Path("/proof-of-burn")
 @Produces(MediaType.APPLICATION_JSON)
@@ -69,23 +73,13 @@ public class ProofOfBurnApi {
     @Path("get-proof-of-burn/{block-height}")
     public List<ProofOfBurnDto> getProofOfBurn(@Parameter(description = DESC_BLOCK_HEIGHT)
                                                @PathParam("block-height")
-                                               int blockHeight) {
+                                               int fromBlockHeight) {
         return checkNotNull(daoNode.getDaoStateService()).getProofOfBurnTxs().stream()
-                .filter(tx -> tx.getBlockHeight() >= blockHeight)
-                .map(tx -> new ProofOfBurnDto(tx.getId(),
-                        tx.getBurntBsq(),
-                        tx.getBlockHeight(),
+                .filter(tx -> tx.getBlockHeight() >= fromBlockHeight)
+                .map(tx -> new ProofOfBurnDto(tx.getBurntBsq(),
                         tx.getTime(),
-                        getHash(tx)))
+                        Hex.encode(ProofOfBurnService.getHashFromOpReturnData(tx)),
+                        tx.getBlockHeight()))
                 .collect(Collectors.toList());
-    }
-
-    // We strip out the version bytes
-    private String getHash(Tx tx) {
-        byte[] opReturnData = tx.getLastTxOutput().getOpReturnData();
-        if (opReturnData == null) {
-            return "";
-        }
-        return Hex.encode(Arrays.copyOfRange(opReturnData, 2, 22));
     }
 }

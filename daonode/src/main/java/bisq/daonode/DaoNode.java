@@ -22,6 +22,7 @@ import bisq.core.app.TorSetup;
 import bisq.core.app.misc.AppSetupWithP2PAndDAO;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
 import bisq.core.app.misc.ModuleForAppWithP2p;
+import bisq.core.dao.governance.bond.reputation.BondedReputationRepository;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.core.user.Cookie;
@@ -55,6 +56,8 @@ public class DaoNode extends ExecutableForAppWithP2p {
     private Timer checkConnectionLossTime;
     @Getter
     private DaoStateService daoStateService;
+    @Getter
+    private BondedReputationRepository bondedReputationRepository;
 
     public DaoNode() {
         super("Bisq Dao Node", "bisq-dao-node", "bisq_dao_node", Version.VERSION);
@@ -117,6 +120,7 @@ public class DaoNode extends ExecutableForAppWithP2p {
         injector.getInstance(AppSetupWithP2PAndDAO.class).start();
 
         daoStateService = injector.getInstance(DaoStateService.class);
+        bondedReputationRepository = injector.getInstance(BondedReputationRepository.class);
 
         injector.getInstance(P2PService.class).addP2PServiceListener(new P2PServiceListener() {
             @Override

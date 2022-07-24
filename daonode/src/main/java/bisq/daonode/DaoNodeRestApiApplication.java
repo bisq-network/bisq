@@ -28,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 
 
+import bisq.daonode.endpoints.BondedReputationApi;
 import bisq.daonode.endpoints.ProofOfBurnApi;
 import bisq.daonode.error.CustomExceptionMapper;
 import bisq.daonode.error.StatusException;
@@ -54,6 +55,7 @@ public class DaoNodeRestApiApplication extends ResourceConfig {
                     .register(CustomExceptionMapper.class)
                     .register(StatusException.StatusExceptionMapper.class)
                     .register(ProofOfBurnApi.class)
+                    .register(BondedReputationApi.class)
                     .register(SwaggerResolution.class);
             daoNodeRestApiApplication.startServer(config.daoNodeApiUrl, config.daoNodeApiPort);
         });
@@ -62,6 +64,7 @@ public class DaoNodeRestApiApplication extends ResourceConfig {
 
     @Getter
     private final DaoNode daoNode;
+
     private HttpServer httpServer;
 
     public DaoNodeRestApiApplication() {

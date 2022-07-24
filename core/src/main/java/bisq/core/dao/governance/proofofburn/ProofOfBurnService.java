@@ -167,7 +167,7 @@ public class ProofOfBurnService implements DaoSetupService, DaoStateListener {
         myProofOfBurnListService.addMyProofOfBurn(myProofOfBurn);
     }
 
-    public byte[] getHashFromOpReturnData(Tx tx) {
+    public static byte[] getHashFromOpReturnData(Tx tx) {
         return ProofOfBurnConsensus.getHashFromOpReturnData(tx.getLastTxOutput().getOpReturnData());
     }
 

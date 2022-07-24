@@ -18,27 +18,31 @@
 package bisq.daonode.dto;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
- * Minimal data required for Bisq 2 proof of burn use case.
- * Need to be in sync with the Bisq 2 ProofOfBurnDto class.
+ * Minimal data required for Bisq 2 bonded reputation use case.
+ * Need to be in sync with the Bisq 2 BondedReputationDto class.
  */
 @Getter
-@Schema(title = "ProofOfBurn")
-public class ProofOfBurnDto {
-    private final long amount;
-    private final long time;
-    private final String hash;
-    private final int blockHeight;
+@Slf4j
+@Schema(title = "BondedReputation")
+public class BondedReputationDto {
+    private long amount;
+    private long time;
+    private String hash;
+    private int blockHeight;
+    private int lockTime;
 
-    public ProofOfBurnDto(long amount, long time, String hash, int blockHeight) {
+    public BondedReputationDto(long amount, long time, String hash, int blockHeight, int lockTime) {
         this.amount = amount;
         this.time = time;
         this.hash = hash;
         this.blockHeight = blockHeight;
+        this.lockTime = lockTime;
     }
 }
