@@ -287,7 +287,7 @@ public class AccountAgeWitnessService {
     }
 
     public Optional<AccountAgeWitness> findWitness(PaymentAccountPayload paymentAccountPayload,
-                                            PubKeyRing pubKeyRing) {
+                                                   PubKeyRing pubKeyRing) {
         if (paymentAccountPayload == null) {
             return Optional.empty();
         }

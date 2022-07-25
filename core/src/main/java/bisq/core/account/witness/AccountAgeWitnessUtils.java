@@ -19,17 +19,25 @@ package bisq.core.account.witness;
 
 import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.util.JsonUtil;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 
+import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.crypto.Sig;
+import bisq.common.util.Hex;
 import bisq.common.util.Utilities;
 
+import java.security.KeyPair;
+
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Stack;
@@ -167,5 +175,49 @@ public class AccountAgeWitnessUtils {
                 trade.getAmount(),
                 accountAgeWitnessService.tradeAmountIsSufficient(trade.getAmount()),
                 isSignWitnessTrade);
+    }
+
+    static class AccountAgeWitnessDto {
+        private final String profileId;
+        private final String hashAsHex;
+        private final long date;
+        private final String pubKeyBase64;
+        private final String signatureBase64;
+
+        public AccountAgeWitnessDto(String profileId,
+                                    String hashAsHex,
+                                    long date,
+                                    String pubKeyBase64,
+                                    String signatureBase64) {
+            this.profileId = profileId;
+            this.hashAsHex = hashAsHex;
+            this.date = date;
+            this.pubKeyBase64 = pubKeyBase64;
+            this.signatureBase64 = signatureBase64;
+        }
+    }
+
+    public static Optional<String> exportAccount(AccountAgeWitnessService accountAgeWitnessService,
+                                                 PaymentAccount account,
+                                                 KeyRing keyRing,
+                                                 String profileId) {
+        return accountAgeWitnessService.findWitness(account.getPaymentAccountPayload(), keyRing.getPubKeyRing())
+                .map(accountAgeWitness -> {
+                    try {
+                        String hashAsHex = Hex.encode(accountAgeWitness.getHash());
+                        String message = profileId + hashAsHex + accountAgeWitness.getDate();
+                        KeyPair signatureKeyPair = keyRing.getSignatureKeyPair();
+                        String signatureBase64 = Sig.sign(signatureKeyPair.getPrivate(), message);
+                        String pubKeyBase64 = Base64.getEncoder().encodeToString(Sig.getPublicKeyBytes(signatureKeyPair.getPublic()));
+                        AccountAgeWitnessDto dto = new AccountAgeWitnessDto(profileId,
+                                hashAsHex,
+                                accountAgeWitness.getDate(),
+                                pubKeyBase64,
+                                signatureBase64);
+                        return JsonUtil.objectToJson(dto);
+                    } catch (CryptoException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 }
