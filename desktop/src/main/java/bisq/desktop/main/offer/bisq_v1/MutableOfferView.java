@@ -1435,6 +1435,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                 firstRowHBox.getChildren().add(2, fixedPriceBox);
             if (!secondRowHBox.getChildren().contains(percentagePriceBox))
                 secondRowHBox.getChildren().add(2, percentagePriceBox);
+
+            model.triggerPrice.set("");
+            model.onTriggerPriceTextFieldChanged();
         } else {
             firstRowHBox.getChildren().remove(fixedPriceBox);
             secondRowHBox.getChildren().remove(percentagePriceBox);
