@@ -17,12 +17,7 @@
 
 package bisq.daonode.endpoints;
 
-import bisq.core.dao.governance.proofofburn.ProofOfBurnService;
-
-import bisq.common.util.Hex;
-
-import java.util.List;
-import java.util.stream.Collectors;
+import bisq.core.account.witness.AccountAgeWitness;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,38 +43,34 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 
 /**
- * Endpoint for getting the proof of burn data from a given block height.
+ * Endpoint for getting the account age date from a given hash as hex string.
  * Used for reputation system in Bisq 2.
- * <a href="http://localhost:8082/api/v1/proof-of-burn/get-proof-of-burn/0">Request with block height 0</a>
+ * <a href="http://localhost:8082/api/v1/account-age/get-date/dd75a7175c7c83fe9a4729e36b85f5fbc44e29ae">Request with hash</a>
  */
 @Slf4j
-@Path("/proof-of-burn")
+@Path("/account-age")
 @Produces(MediaType.APPLICATION_JSON)
-@Tag(name = "Proof of burn API")
-public class ProofOfBurnApi {
-    private static final String DESC_BLOCK_HEIGHT = "The block height from which we request the proof of burn data";
+@Tag(name = "Account age API")
+public class AccountAgeApi {
+    private static final String DESC_HASH = "The hash of the account age witness as hex string";
     private final ServiceNode serviceNode;
 
-    public ProofOfBurnApi(@Context Application application) {
+    public AccountAgeApi(@Context Application application) {
         serviceNode = ((DaoNodeRestApiApplication) application).getServiceNode();
     }
 
-    @Operation(description = "Request the proof of burn data")
-    @ApiResponse(responseCode = "200", description = "The proof of burn data",
+    @Operation(description = "Request the account age date")
+    @ApiResponse(responseCode = "200", description = "The account age date",
             content = {@Content(mediaType = MediaType.APPLICATION_JSON,
                     schema = @Schema(allOf = ProofOfBurnDto.class))}
     )
     @GET
-    @Path("get-proof-of-burn/{block-height}")
-    public List<ProofOfBurnDto> getProofOfBurn(@Parameter(description = DESC_BLOCK_HEIGHT)
-                                               @PathParam("block-height")
-                                               int fromBlockHeight) {
-        return checkNotNull(serviceNode.getDaoStateService()).getProofOfBurnTxs().stream()
-                .filter(tx -> tx.getBlockHeight() >= fromBlockHeight)
-                .map(tx -> new ProofOfBurnDto(tx.getBurntBsq(),
-                        tx.getTime(),
-                        Hex.encode(ProofOfBurnService.getHashFromOpReturnData(tx)),
-                        tx.getBlockHeight()))
-                .collect(Collectors.toList());
+    @Path("get-date/{hash}")
+    public Long getDate(@Parameter(description = DESC_HASH)
+                        @PathParam("hash")
+                        String hash) {
+        return checkNotNull(serviceNode.getAccountAgeWitnessService()).getWitnessByHashAsHex(hash)
+                .map(AccountAgeWitness::getDate)
+                .orElse(-1L);
     }
 }

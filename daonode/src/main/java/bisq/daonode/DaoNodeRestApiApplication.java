@@ -28,8 +28,10 @@ import lombok.extern.slf4j.Slf4j;
 
 
 
+import bisq.daonode.endpoints.AccountAgeApi;
 import bisq.daonode.endpoints.BondedReputationApi;
 import bisq.daonode.endpoints.ProofOfBurnApi;
+import bisq.daonode.endpoints.SignedWitnessApi;
 import bisq.daonode.error.CustomExceptionMapper;
 import bisq.daonode.error.StatusException;
 import bisq.daonode.util.StaticFileHandler;
@@ -56,6 +58,8 @@ public class DaoNodeRestApiApplication extends ResourceConfig {
                     .register(StatusException.StatusExceptionMapper.class)
                     .register(ProofOfBurnApi.class)
                     .register(BondedReputationApi.class)
+                    .register(AccountAgeApi.class)
+                    .register(SignedWitnessApi.class)
                     .register(SwaggerResolution.class);
             daoNodeRestApiApplication.startServer(config.daoNodeApiUrl, config.daoNodeApiPort);
         });
@@ -63,18 +67,18 @@ public class DaoNodeRestApiApplication extends ResourceConfig {
 
 
     @Getter
-    private final DaoNode daoNode;
+    private final ServiceNode serviceNode;
 
     private HttpServer httpServer;
 
     public DaoNodeRestApiApplication() {
-        daoNode = new DaoNode();
+        serviceNode = new ServiceNode();
     }
 
     private void startDaoNode(String[] args, Consumer<Config> configConsumer) {
         new Thread(() -> {
-            daoNode.execute(args);
-            configConsumer.accept(daoNode.getConfig());
+            serviceNode.execute(args);
+            configConsumer.accept(serviceNode.getConfig());
             try {
                 // Keep running
                 Thread.currentThread().setName("daoNodeThread");
@@ -109,8 +113,8 @@ public class DaoNodeRestApiApplication extends ResourceConfig {
     }
 
     private void shutDown() {
-        if (daoNode != null) {
-            daoNode.gracefulShutDown(this::stopServer);
+        if (serviceNode != null) {
+            serviceNode.gracefulShutDown(this::stopServer);
         } else {
             stopServer();
         }

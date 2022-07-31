@@ -18,6 +18,7 @@
 package bisq.daonode;
 
 
+import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.app.TorSetup;
 import bisq.core.app.misc.AppSetupWithP2PAndDAO;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
@@ -50,7 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 //todo not sure if the restart handling from seed nodes is required
 
 @Slf4j
-public class DaoNode extends ExecutableForAppWithP2p {
+public class ServiceNode extends ExecutableForAppWithP2p {
     private static final long CHECK_CONNECTION_LOSS_SEC = 30;
 
     private Timer checkConnectionLossTime;
@@ -58,8 +59,10 @@ public class DaoNode extends ExecutableForAppWithP2p {
     private DaoStateService daoStateService;
     @Getter
     private BondedReputationRepository bondedReputationRepository;
+    @Getter
+    private AccountAgeWitnessService accountAgeWitnessService;
 
-    public DaoNode() {
+    public ServiceNode() {
         super("Bisq Dao Node", "bisq-dao-node", "bisq_dao_node", Version.VERSION);
     }
 
@@ -120,6 +123,7 @@ public class DaoNode extends ExecutableForAppWithP2p {
         injector.getInstance(AppSetupWithP2PAndDAO.class).start();
 
         daoStateService = injector.getInstance(DaoStateService.class);
+        accountAgeWitnessService = injector.getInstance(AccountAgeWitnessService.class);
         bondedReputationRepository = injector.getInstance(BondedReputationRepository.class);
 
         injector.getInstance(P2PService.class).addP2PServiceListener(new P2PServiceListener() {
@@ -153,9 +157,11 @@ public class DaoNode extends ExecutableForAppWithP2p {
                 boolean preventPeriodicShutdownAtSeedNode = injector.getInstance(Key.get(boolean.class,
                         Names.named(Config.PREVENT_PERIODIC_SHUTDOWN_AT_SEED_NODE)));
                 if (!preventPeriodicShutdownAtSeedNode) {
-                    startShutDownInterval(DaoNode.this);
+                    startShutDownInterval(ServiceNode.this);
                 }
                 UserThread.runAfter(() -> setupConnectionLossCheck(), 60);
+
+                accountAgeWitnessService.onAllServicesInitialized();
             }
 
             @Override

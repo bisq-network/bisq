@@ -315,7 +315,7 @@ public class AccountAgeWitnessService {
                 findWitness(tradingPeer.getPaymentAccountPayload(), tradingPeer.getPubKeyRing());
     }
 
-    private Optional<AccountAgeWitness> getWitnessByHash(byte[] hash) {
+    public Optional<AccountAgeWitness> getWitnessByHash(byte[] hash) {
         P2PDataStorage.ByteArray hashAsByteArray = new P2PDataStorage.ByteArray(hash);
 
         // First we look up in our fast lookup cache
@@ -335,7 +335,7 @@ public class AccountAgeWitnessService {
         return Optional.empty();
     }
 
-    private Optional<AccountAgeWitness> getWitnessByHashAsHex(String hashAsHex) {
+    public Optional<AccountAgeWitness> getWitnessByHashAsHex(String hashAsHex) {
         return getWitnessByHash(Utilities.decodeFromHex(hashAsHex));
     }
 

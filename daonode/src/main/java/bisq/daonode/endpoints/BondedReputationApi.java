@@ -32,8 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 
 
 
-import bisq.daonode.DaoNode;
 import bisq.daonode.DaoNodeRestApiApplication;
+import bisq.daonode.ServiceNode;
 import bisq.daonode.dto.BondedReputationDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -64,9 +64,9 @@ public class BondedReputationApi {
     private final DaoStateService daoStateService;
 
     public BondedReputationApi(@Context Application application) {
-        DaoNode daoNode = ((DaoNodeRestApiApplication) application).getDaoNode();
-        daoStateService = daoNode.getDaoStateService();
-        bondedReputationRepository = daoNode.getBondedReputationRepository();
+        ServiceNode serviceNode = ((DaoNodeRestApiApplication) application).getServiceNode();
+        daoStateService = serviceNode.getDaoStateService();
+        bondedReputationRepository = serviceNode.getBondedReputationRepository();
     }
 
     @Operation(description = "Request the bonded reputation data")
