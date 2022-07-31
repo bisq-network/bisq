@@ -381,6 +381,15 @@ public class AccountAgeWitnessService {
         }
     }
 
+    public long getWitnessSignDate(AccountAgeWitness accountAgeWitness) {
+        List<Long> dates = signedWitnessService.getVerifiedWitnessDateList(accountAgeWitness);
+        if (dates.isEmpty()) {
+            return -1L;
+        } else {
+            return dates.get(0);
+        }
+    }
+
     // Return -1 if not signed
     public long getWitnessSignAge(Offer offer, Date now) {
         return findWitness(offer)
@@ -950,5 +959,9 @@ public class AccountAgeWitnessService {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public boolean isFilteredWitness(AccountAgeWitness accountAgeWitness) {
+        return signedWitnessService.isFilteredWitness(accountAgeWitness);
     }
 }

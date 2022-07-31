@@ -510,35 +510,65 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
             GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan());
 
             Button exportAccountAgeButton = new AutoTooltipButton(Res.get("account.fiat.exportAccountAge"));
-            exportAccountAgeButton.setOnAction(event -> onExportAccountAge(paymentMethodForm.getPaymentAccount()));
+            exportAccountAgeButton.setOnAction(event -> onExportAccountAgeForBisq2(paymentMethodForm.getPaymentAccount()));
             exportAccountAgeButton.setMaxWidth(Double.MAX_VALUE);
             HBox.setHgrow(exportAccountAgeButton, Priority.ALWAYS);
+
+            Button signedWitnessButton = new AutoTooltipButton(Res.get("account.fiat.signedWitness"));
+            signedWitnessButton.setOnAction(event -> onExportSignedWitnessForBisq2(paymentMethodForm.getPaymentAccount()));
+            signedWitnessButton.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(signedWitnessButton, Priority.ALWAYS);
+
+
             HBox hBox = (HBox) cancelButton.getParent();
-            hBox.getChildren().add(exportAccountAgeButton);
+            hBox.getChildren().addAll(exportAccountAgeButton, signedWitnessButton);
 
             model.onSelectAccount(current);
         }
     }
 
-    private void onExportAccountAge(PaymentAccount paymentAccount) {
+    private void onExportAccountAgeForBisq2(PaymentAccount paymentAccount) {
+        String prefix = "BISQ2_ACCOUNT_AGE:";
+        try {
+            String profileId = getProfileIdFromClipBoard(prefix);
+            AccountAgeWitnessUtils.signAccountAgeAndBisq2ProfileId(accountAgeWitnessService, paymentAccount, keyRing, profileId)
+                    .ifPresent(json -> {
+                        Utilities.copyToClipboard(prefix + json);
+                        new Popup().information(Res.get("account.fiat.exportAccountAge.popup", json))
+                                .width(900).show();
+                    });
+        } catch (Exception e) {
+            String error = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
+            new Popup().warning(error).show();
+        }
+    }
+
+    private void onExportSignedWitnessForBisq2(PaymentAccount paymentAccount) {
+        String prefix = "BISQ2_SIGNED_WITNESS:";
+        try {
+            String profileId = getProfileIdFromClipBoard(prefix);
+            AccountAgeWitnessUtils.signSignedWitnessAndBisq2ProfileId(accountAgeWitnessService, paymentAccount, keyRing, profileId)
+                    .ifPresent(json -> {
+                        Utilities.copyToClipboard(prefix + json);
+                        new Popup().information(Res.get("account.fiat.signedWitness.popup", json))
+                                .width(900).show();
+                    });
+        } catch (Exception e) {
+            String error = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
+            new Popup().warning(error).show();
+        }
+    }
+
+    private String getProfileIdFromClipBoard(String prefix) {
         String clipboardText = Clipboard.getSystemClipboard().getString();
-        String prefix = "BISQ2_ACCOUNT_AGE_REQUEST:";
         if (clipboardText != null && clipboardText.startsWith(prefix)) {
             String profileId = clipboardText.replace(prefix, "");
             if (profileId.length() == 40) {
-                try {
-                    Hex.decode(profileId);
-                    AccountAgeWitnessUtils.exportAccount(accountAgeWitnessService, paymentAccount, keyRing, profileId)
-                            .ifPresent(json -> {
-                                Utilities.copyToClipboard(json);
-                                new Popup().information(Res.get("account.fiat.exportAccountAge.popup")).show();
-                            });
-                    return;
-                } catch (Throwable ignore) {
-                }
+                Hex.decode(profileId);
+                return profileId;
             }
         }
-        log.warn("Clipboard text not in expected format.");
+        throw new RuntimeException("Clipboard text not in expected format. " + clipboardText);
     }
 
 
