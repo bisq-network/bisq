@@ -218,9 +218,10 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     return row;
                 });
 
-        selectToggleButton.setPadding(new Insets(0, 90, -20, 0));
+        selectToggleButton.setPadding(new Insets(0, 0, -20, 0));
         selectToggleButton.setText(Res.get("shared.enabled"));
         selectToggleButton.setDisable(true);
+        HBox.setMargin(selectToggleButton, new Insets(0, 90, 0, 0));
 
         numItems.setId("num-offers");
         numItems.setPadding(new Insets(-5, 0, 0, 10));
