@@ -232,13 +232,15 @@ public class AccountAgeWitnessUtils {
                     try {
                         checkArgument(!accountAgeWitnessService.isFilteredWitness(accountAgeWitness), "Invalid account age witness");
                         String hashAsHex = Hex.encode(accountAgeWitness.getHash());
-                        String message = profileId + hashAsHex + accountAgeWitness.getDate();
+                        long date = accountAgeWitness.getDate();
+                        checkArgument(date > 0, "Date must be > 0");
+                        String message = profileId + hashAsHex + date;
                         KeyPair signatureKeyPair = keyRing.getSignatureKeyPair();
                         String signatureBase64 = Sig.sign(signatureKeyPair.getPrivate(), message);
                         String pubKeyBase64 = Base64.getEncoder().encodeToString(Sig.getPublicKeyBytes(signatureKeyPair.getPublic()));
                         AccountAgeWitnessDto dto = new AccountAgeWitnessDto(profileId,
                                 hashAsHex,
-                                accountAgeWitness.getDate(),
+                                date,
                                 pubKeyBase64,
                                 signatureBase64);
                         return JsonUtil.objectToJson(dto);
@@ -262,14 +264,17 @@ public class AccountAgeWitnessUtils {
                             checkArgument(witnessSignDate > 0, "Account is not signed yet");
                             checkArgument(ageInDays > 60, "Account must have been signed at least 61 days ago");
                         }
+
                         String hashAsHex = Hex.encode(accountAgeWitness.getHash());
-                        String message = profileId + hashAsHex + accountAgeWitness.getDate() + witnessSignDate;
+                        long date = accountAgeWitness.getDate();
+                        checkArgument(date > 0, "AccountAgeWitness date must be > 0");
+                        String message = profileId + hashAsHex + date + witnessSignDate;
                         KeyPair signatureKeyPair = keyRing.getSignatureKeyPair();
                         String signatureBase64 = Sig.sign(signatureKeyPair.getPrivate(), message);
                         String pubKeyBase64 = Base64.getEncoder().encodeToString(Sig.getPublicKeyBytes(signatureKeyPair.getPublic()));
                         SignedWitnessDto dto = new SignedWitnessDto(profileId,
                                 hashAsHex,
-                                accountAgeWitness.getDate(),
+                                date,
                                 witnessSignDate,
                                 pubKeyBase64,
                                 signatureBase64);
