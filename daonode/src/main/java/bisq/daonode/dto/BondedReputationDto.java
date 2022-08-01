@@ -32,11 +32,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Slf4j
 @Schema(title = "BondedReputation")
 public class BondedReputationDto {
-    private long amount;
-    private long time;
-    private String hash;
-    private int blockHeight;
-    private int lockTime;
+    private final long amount;
+    private final long time;
+    private final String hash;
+    private final int blockHeight;
+    private final int lockTime;
 
     public BondedReputationDto(long amount, long time, String hash, int blockHeight, int lockTime) {
         this.amount = amount;
