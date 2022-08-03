@@ -36,6 +36,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 
@@ -170,23 +171,27 @@ public class PeerInfoIcon extends Group {
                         Res.get("peerInfo.unknownAge") :
                 null;
 
-        setOnMouseClicked(e -> new PeerInfoWithTagEditor(privateNotificationManager, tradeModel, offer, preferences, useDevPrivilegeKeys)
-                .fullAddress(fullAddress)
-                .numTrades(numTrades)
-                .accountAge(accountAgeFormatted)
-                .signAge(signAgeFormatted)
-                .accountAgeInfo(peersAccountAgeInfo)
-                .signAgeInfo(peersSignAgeInfo)
-                .accountSigningState(accountSigningState)
-                .position(localToScene(new Point2D(0, 0)))
-                .onSave(newTag -> {
-                    preferences.setTagForPeer(fullAddress, newTag);
-                    updatePeerInfoIcon();
-                    if (callback != null) {
-                        callback.avatarTagUpdated();
-                    }
-                })
-                .show());
+        setOnMouseClicked(e -> {
+            if (e.getButton().equals(MouseButton.PRIMARY)) {
+                new PeerInfoWithTagEditor(privateNotificationManager, tradeModel, offer, preferences, useDevPrivilegeKeys)
+                        .fullAddress(fullAddress)
+                        .numTrades(numTrades)
+                        .accountAge(accountAgeFormatted)
+                        .signAge(signAgeFormatted)
+                        .accountAgeInfo(peersAccountAgeInfo)
+                        .signAgeInfo(peersSignAgeInfo)
+                        .accountSigningState(accountSigningState)
+                        .position(localToScene(new Point2D(0, 0)))
+                        .onSave(newTag -> {
+                            preferences.setTagForPeer(fullAddress, newTag);
+                            updatePeerInfoIcon();
+                            if (callback != null) {
+                                callback.avatarTagUpdated();
+                            }
+                        })
+                        .show();
+            }
+        });
     }
 
     protected double getScaleFactor() {
