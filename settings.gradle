@@ -12,7 +12,6 @@ include 'relay'
 include 'seednode'
 include 'statsnode'
 include 'daonode'
-include 'inventory'
 include 'apitest'
 
 rootProject.name = 'bisq'
