@@ -106,7 +106,6 @@ configure([project(':cli'),
            project(':statsnode'),
            project(':pricenode'),
            project(':daonode'),
-           project(':inventory'),
            project(':apitest')]) {
 
     apply plugin: 'application'
@@ -804,28 +803,6 @@ configure(project(':daemon')) {
         testImplementation "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"
         testImplementation "org.junit.jupiter:junit-jupiter-params:$jupiterVersion"
         testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
-    }
-}
-
-configure(project(':inventory')) {
-    apply plugin: 'com.github.johnrengelman.shadow'
-
-    mainClassName = 'bisq.inventory.InventoryMonitorMain'
-
-    dependencies {
-        implementation project(':common')
-        implementation project(':p2p')
-        implementation project(':core')
-        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        compileOnly "org.projectlombok:lombok:$lombokVersion"
-        implementation "ch.qos.logback:logback-classic:$logbackVersion"
-        implementation "ch.qos.logback:logback-core:$logbackVersion"
-        implementation "com.google.guava:guava:$guavaVersion"
-        implementation "com.sparkjava:spark-core:$sparkVersion"
-        implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
-        implementation("com.google.inject:guice:$guiceVersion") {
-            exclude(module: 'guava')
-        }
     }
 }
 
