@@ -516,6 +516,10 @@ message TakeOfferRequest {
     string offer_id = 1;                    // The unique identifier of the offer being taken.
     string payment_account_id = 2;          // The unique identifier of the payment account used to take offer.
     string taker_fee_currency_code = 3;     // The code of the currency (BSQ or BTC) used to pay the taker's Bisq trade fee.
+    // The trade's intended BTC amount in satoshis.  Ten million satoshis is represented as 10000000.
+    // If set, the takeoffer amount value must be >= offer.min_amount and <= offer.amount.
+    // If not set (0 default), the taken offer's (max) amount becomes the intended trade amount.
+    uint64 amount = 4;
 }
 
 message TakeOfferReply {
