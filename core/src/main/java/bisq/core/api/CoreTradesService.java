@@ -114,15 +114,17 @@ class CoreTradesService {
         this.user = user;
     }
 
-    // TODO We need to pass the intended trade amount, not default to the maximum.
     void takeBsqSwapOffer(Offer offer,
+                          long intendedTradeAmount,
                           TradeResultHandler<BsqSwapTrade> tradeResultHandler,
                           ErrorMessageHandler errorMessageHandler) {
         coreWalletsService.verifyWalletsAreAvailable();
         coreWalletsService.verifyEncryptedWalletIsUnlocked();
 
+        verifyIntendedTradeAmountIsInRange(intendedTradeAmount, offer);
+
         bsqSwapTakeOfferModel.initWithData(offer);
-        bsqSwapTakeOfferModel.applyAmount(offer.getAmount());
+        bsqSwapTakeOfferModel.applyAmount(Coin.valueOf(intendedTradeAmount));
 
         // Block attempt to take swap offer if there are insufficient funds for the trade.
         var missingCoin = bsqSwapTakeOfferModel.getMissingFundsAsCoin();
@@ -139,10 +141,10 @@ class CoreTradesService {
                 coreContext.isApiUser());
     }
 
-    // TODO We need to pass the intended trade amount, not default to the maximum.
     void takeOffer(Offer offer,
                    String paymentAccountId,
                    String takerFeeCurrencyCode,
+                   long intendedTradeAmount,
                    Consumer<Trade> resultHandler,
                    ErrorMessageHandler errorMessageHandler) {
         coreWalletsService.verifyWalletsAreAvailable();
@@ -154,9 +156,11 @@ class CoreTradesService {
         if (paymentAccount == null)
             throw new IllegalArgumentException(format("payment account with id '%s' not found", paymentAccountId));
 
+        verifyIntendedTradeAmountIsInRange(intendedTradeAmount, offer);
+
         var useSavingsWallet = true;
 
-        takeOfferModel.initModel(offer, paymentAccount, useSavingsWallet);
+        takeOfferModel.initModel(offer, paymentAccount, intendedTradeAmount, useSavingsWallet);
         log.info("Initiating take {} offer, {}",
                 offer.isBuyOffer() ? "buy" : "sell",
                 takeOfferModel);
@@ -167,7 +171,7 @@ class CoreTradesService {
                     format("wallet has insufficient btc to take offer with id '%s'", offer.getId()));
 
         //noinspection ConstantConditions
-        tradeManager.onTakeOffer(offer.getAmount(),
+        tradeManager.onTakeOffer(Coin.valueOf(intendedTradeAmount),
                 takeOfferModel.getTxFeeFromFeeService(),
                 takeOfferModel.getTakerFee(),
                 takeOfferModel.isCurrencyForTakerFeeBtc(),
@@ -456,5 +460,15 @@ class CoreTradesService {
                             failedTrade.getId(),
                             String.join(", ", tradeIds)));
         });
+    }
+
+    // Throws a RuntimeException if the takeoffer's amount parameter is out of range.
+    void verifyIntendedTradeAmountIsInRange(long intendedTradeAmount, Offer offer) {
+        if (intendedTradeAmount < offer.getMinAmount().value || intendedTradeAmount > offer.getAmount().value)
+            throw new IllegalArgumentException(
+                    format("intended trade amount %s is outside offer's min - max amount range of %s - %s",
+                            Coin.valueOf(intendedTradeAmount).toPlainString().toLowerCase(),
+                            offer.getMinAmount().toPlainString().toLowerCase(),
+                            offer.getAmount().toPlainString().toLowerCase()));
     }
 }

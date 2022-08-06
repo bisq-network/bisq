@@ -97,9 +97,13 @@ class GrpcTradesService extends TradesImplBase {
         try {
             // Make sure the offer exists before trying to take it.
             Offer offer = coreApi.getOffer(req.getOfferId());
+            var intendedTradeAmount = req.getAmount() == 0
+                    ? offer.getAmount().value
+                    : req.getAmount();
 
             if (offer.isBsqSwapOffer()) {
                 coreApi.takeBsqSwapOffer(offer.getId(),
+                        intendedTradeAmount,
                         bsqSwapTrade -> {
                             var reply = buildTakeOfferReply(bsqSwapTrade);
                             responseObserver.onNext(reply);
@@ -113,6 +117,7 @@ class GrpcTradesService extends TradesImplBase {
                 coreApi.takeOffer(offer.getId(),
                         req.getPaymentAccountId(),
                         req.getTakerFeeCurrencyCode(),
+                        intendedTradeAmount,
                         trade -> {
                             var reply = buildTakeOfferReply(trade);
                             responseObserver.onNext(reply);

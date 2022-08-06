@@ -293,10 +293,12 @@ public class CoreApi {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void takeBsqSwapOffer(String offerId,
+                                 long intendedTradeAmount,
                                  TradeResultHandler<BsqSwapTrade> tradeResultHandler,
                                  ErrorMessageHandler errorMessageHandler) {
         Offer bsqSwapOffer = coreOffersService.getBsqSwapOffer(offerId);
         coreTradesService.takeBsqSwapOffer(bsqSwapOffer,
+                intendedTradeAmount,
                 tradeResultHandler,
                 errorMessageHandler);
     }
@@ -304,12 +306,14 @@ public class CoreApi {
     public void takeOffer(String offerId,
                           String paymentAccountId,
                           String takerFeeCurrencyCode,
+                          long intendedTradeAmount,
                           Consumer<Trade> resultHandler,
                           ErrorMessageHandler errorMessageHandler) {
         Offer offer = coreOffersService.getOffer(offerId);
         coreTradesService.takeOffer(offer,
                 paymentAccountId,
                 takerFeeCurrencyCode,
+                intendedTradeAmount,
                 resultHandler,
                 errorMessageHandler);
     }

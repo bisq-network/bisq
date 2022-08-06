@@ -111,6 +111,7 @@ public class TakeOfferModel implements Model {
 
     public void initModel(Offer offer,
                           PaymentAccount paymentAccount,
+                          long intendedTradeAmount,
                           boolean useSavingsWallet) {
         this.clearModel();
         this.offer = offer;
@@ -119,12 +120,12 @@ public class TakeOfferModel implements Model {
         validateModelInputs();
 
         this.useSavingsWallet = useSavingsWallet;
-        this.amount = valueOf(Math.min(offer.getAmount().value, getMaxTradeLimit()));
+        this.amount = valueOf(Math.min(intendedTradeAmount, getMaxTradeLimit()));
         this.securityDeposit = offer.getDirection() == SELL
                 ? offer.getBuyerSecurityDeposit()
                 : offer.getSellerSecurityDeposit();
-        this.isCurrencyForTakerFeeBtc = offerUtil.isCurrencyForTakerFeeBtc(amount);
-        this.takerFee = offerUtil.getTakerFee(isCurrencyForTakerFeeBtc, amount);
+        this.isCurrencyForTakerFeeBtc = offerUtil.isCurrencyForTakerFeeBtc(this.amount);
+        this.takerFee = offerUtil.getTakerFee(isCurrencyForTakerFeeBtc, this.amount);
 
         calculateTxFees();
         calculateVolume();
