@@ -25,23 +25,17 @@ import static bisq.cli.opts.OptLabel.OPT_AMOUNT;
 import static bisq.cli.opts.OptLabel.OPT_FEE_CURRENCY;
 import static bisq.cli.opts.OptLabel.OPT_PAYMENT_ACCOUNT_ID;
 
-public class TakeOfferOptionParser extends OfferIdOptionParser implements MethodOpts {
+public class TakeBsqSwapOfferOptionParser extends OfferIdOptionParser implements MethodOpts {
 
     final OptionSpec<String> amountOpt = parser.accepts(OPT_AMOUNT, "intended amount of btc to buy or sell")
             .withRequiredArg()
             .defaultsTo("0");
-    final OptionSpec<String> paymentAccountIdOpt = parser.accepts(OPT_PAYMENT_ACCOUNT_ID, "id of payment account used for trade")
-            .withRequiredArg();
 
-    final OptionSpec<String> takerFeeCurrencyCodeOpt = parser.accepts(OPT_FEE_CURRENCY, "taker fee currency code (bsq|btc)")
-            .withOptionalArg()
-            .defaultsTo("btc");
-
-    public TakeOfferOptionParser(String[] args) {
+    public TakeBsqSwapOfferOptionParser(String[] args) {
         super(args, true);
     }
 
-    public TakeOfferOptionParser parse() {
+    public TakeBsqSwapOfferOptionParser parse() {
         super.parse();
 
         // Super class will short-circuit parsing if help option is present.
@@ -57,21 +51,10 @@ public class TakeOfferOptionParser extends OfferIdOptionParser implements Method
             }
         }
 
-        if (!options.has(paymentAccountIdOpt) || options.valueOf(paymentAccountIdOpt).isEmpty())
-            throw new IllegalArgumentException("no payment account id specified");
-
         return this;
     }
 
     public String getAmount() {
         return options.valueOf(amountOpt);
-    }
-
-    public String getPaymentAccountId() {
-        return options.valueOf(paymentAccountIdOpt);
-    }
-
-    public String getTakerFeeCurrencyCode() {
-        return options.has(takerFeeCurrencyCodeOpt) ? options.valueOf(takerFeeCurrencyCodeOpt) : "btc";
     }
 }

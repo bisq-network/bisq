@@ -2,10 +2,8 @@ package bisq.cli.opts;
 
 import org.junit.jupiter.api.Test;
 
-import static bisq.cli.Method.canceloffer;
-import static bisq.cli.Method.createcryptopaymentacct;
-import static bisq.cli.Method.createoffer;
-import static bisq.cli.Method.createpaymentacct;
+import static bisq.cli.Method.*;
+import static bisq.cli.Method.takeoffer;
 import static bisq.cli.opts.OptLabel.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -382,5 +380,68 @@ public class OptionParsersTest {
         assertEquals(acctName, parser.getAccountName());
         assertEquals(currencyCode, parser.getCurrencyCode());
         assertEquals(address, parser.getAddress());
+    }
+
+
+    // takeoffer opt parser tests
+
+    @Test
+    public void testTakeOfferForDefaultAmount() {
+        var offerId = "ABC-OFFER-ID";
+        var paymentAccountId = "ABC-ACCT-ID";
+        var takerFeeCurrencyCode = "BSQ";
+        var defaultAmount = "0";
+        String[] args = new String[]{
+                PASSWORD_OPT,
+                takeoffer.name(),
+                "--" + OPT_OFFER_ID + "=" + offerId,
+                "--" + OPT_PAYMENT_ACCOUNT_ID + "=" + paymentAccountId,
+                "--" + OPT_FEE_CURRENCY + "=" + takerFeeCurrencyCode
+        };
+        var parser = new TakeOfferOptionParser(args).parse();
+        assertEquals(offerId, parser.getOfferId());
+        assertEquals(paymentAccountId, parser.getPaymentAccountId());
+        assertEquals(takerFeeCurrencyCode, parser.getTakerFeeCurrencyCode());
+        assertEquals(defaultAmount, parser.getAmount());
+    }
+
+    @Test
+    public void testTakeOfferForNegativeAmount() {
+        var offerId = "ABC-OFFER-ID";
+        var paymentAccountId = "ABC-ACCT-ID";
+        var takerFeeCurrencyCode = "BSQ";
+        var amount = "-0.05";
+        String[] args = new String[]{
+                PASSWORD_OPT,
+                takeoffer.name(),
+                "--" + OPT_OFFER_ID + "=" + offerId,
+                "--" + OPT_PAYMENT_ACCOUNT_ID + "=" + paymentAccountId,
+                "--" + OPT_FEE_CURRENCY + "=" + takerFeeCurrencyCode,
+                "--" + OPT_AMOUNT + "=" + amount
+        };
+        Throwable exception = assertThrows(RuntimeException.class, () ->
+                new TakeOfferOptionParser(args).parse());
+        assertEquals("invalid amount: '-0.05' is not a positive number", exception.getMessage());
+    }
+
+    @Test
+    public void testTakeOffer() {
+        var offerId = "ABC-OFFER-ID";
+        var paymentAccountId = "ABC-ACCT-ID";
+        var takerFeeCurrencyCode = "BSQ";
+        var amount = "0.05";
+        String[] args = new String[]{
+                PASSWORD_OPT,
+                takeoffer.name(),
+                "--" + OPT_OFFER_ID + "=" + offerId,
+                "--" + OPT_PAYMENT_ACCOUNT_ID + "=" + paymentAccountId,
+                "--" + OPT_FEE_CURRENCY + "=" + takerFeeCurrencyCode,
+                "--" + OPT_AMOUNT + "=" + amount
+        };
+        var parser = new TakeOfferOptionParser(args).parse();
+        assertEquals(offerId, parser.getOfferId());
+        assertEquals(paymentAccountId, parser.getPaymentAccountId());
+        assertEquals(takerFeeCurrencyCode, parser.getTakerFeeCurrencyCode());
+        assertEquals(amount, parser.getAmount());
     }
 }

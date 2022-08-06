@@ -325,12 +325,18 @@ public final class GrpcClient {
         return offersServiceRequest.getMyBsqSwapOffersSortedByDate();
     }
 
-    public TradeInfo takeBsqSwapOffer(String offerId) {
-        return tradesServiceRequest.takeBsqSwapOffer(offerId);
+    public TradeInfo takeBsqSwapOffer(String offerId, long amount) {
+        return tradesServiceRequest.takeBsqSwapOffer(offerId, amount);
     }
 
-    public TradeInfo takeOffer(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
-        return tradesServiceRequest.takeOffer(offerId, paymentAccountId, takerFeeCurrencyCode);
+    public TradeInfo takeOffer(String offerId,
+                               String paymentAccountId,
+                               String takerFeeCurrencyCode,
+                               long amount) {
+        return tradesServiceRequest.takeOffer(offerId,
+                paymentAccountId,
+                takerFeeCurrencyCode,
+                amount);
     }
 
     public TradeInfo getTrade(String tradeId) {

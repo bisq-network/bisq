@@ -80,6 +80,7 @@ import bisq.cli.opts.SendBtcOptionParser;
 import bisq.cli.opts.SetTxFeeRateOptionParser;
 import bisq.cli.opts.SetWalletPasswordOptionParser;
 import bisq.cli.opts.SimpleMethodOptionParser;
+import bisq.cli.opts.TakeBsqSwapOfferOptionParser;
 import bisq.cli.opts.TakeOfferOptionParser;
 import bisq.cli.opts.UnlockWalletOptionParser;
 import bisq.cli.opts.VerifyBsqSentToAddressOptionParser;
@@ -504,12 +505,15 @@ public class CliMain {
                     // 'takeoffer' request.
                     var offerCategory = client.getAvailableOfferCategory(offerId);
                     if (offerCategory.equals(BSQ_SWAP)) {
-                        trade = client.takeBsqSwapOffer(offerId);
+                        var opts = new TakeBsqSwapOfferOptionParser(args).parse();
+                        var amount = toSatoshis(opts.getAmount());
+                        trade = client.takeBsqSwapOffer(offerId, amount);
                     } else {
                         var opts = new TakeOfferOptionParser(args).parse();
+                        var amount = toSatoshis(opts.getAmount());
                         var paymentAccountId = opts.getPaymentAccountId();
                         var takerFeeCurrencyCode = opts.getTakerFeeCurrencyCode();
-                        trade = client.takeOffer(offerId, paymentAccountId, takerFeeCurrencyCode);
+                        trade = client.takeOffer(offerId, paymentAccountId, takerFeeCurrencyCode, amount);
                     }
                     out.printf("trade %s successfully taken%n", trade.getTradeId());
                     return;
@@ -912,6 +916,7 @@ public class CliMain {
             stream.format(rowFormat, takeoffer.name(), "--offer-id=<offer-id> \\", "Take offer with id");
             stream.format(rowFormat, "", "[--payment-account=<payment-account-id>]", "");
             stream.format(rowFormat, "", "[--fee-currency=<btc|bsq>]", "");
+            stream.format(rowFormat, "", "[--amount=<min-btc-amount >= amount <= btc-amount>]", "");
             stream.println();
             stream.format(rowFormat, gettrade.name(), "--trade-id=<trade-id> \\", "Get trade summary or full contract");
             stream.format(rowFormat, "", "[--show-contract=<true|false>]", "");
