@@ -10,6 +10,7 @@ takeoffer
 		--offer-id=<offer-id>
 		--payment-account=<payment-acct-id>
 		[--fee-currency=<btc|bsq>]
+		[--amount=<offer.min-btc-amount >= amount <= offer.btc-amount>]
 
 DESCRIPTION
 -----------
@@ -18,13 +19,13 @@ Take an existing offer. There are currently two types offers and trade protocols
     BSQ swap offers
 
         The takeoffer command only requires an offer-id parameter, and sufficient BSQ and BTC
-        to cover the trade amount and the taker fee.  The trade (swap) will be executed immediately
-        after being successfully taken.
+        to cover the trade amount and the taker fee.  The amount parameter is optional.
+        The trade (swap) will be executed immediately after being successfully taken.
 
     Version 1 protocol fiat and BSQ offers
 
-        The offer-id and payment-account parameters are required.  The fee-currency parameter can
-        be optionally used to pay the taker fee in BSQ.
+        The offer-id and payment-account parameters are required.  The amount parameter is optional.
+        The fee-currency parameter can be optionally used to pay the taker fee in BSQ.
 
 OPTIONS
 -------
@@ -38,14 +39,22 @@ OPTIONS
 --fee-currency
 		The wallet currency used to pay the Bisq trade taker fee (BSQ|BTC).  Default is BTC
 
+--amount
+		The trade's intended btc amount.  The amount must be within the offer's min-amount and (max) amount range.
+		If the taken offer's min-amount = amount, this request parameter must be equal the offer's amount (or omitted).
+		If this optional request parameter is omitted, the offers (max) amount is set on the new trade.
+
 EXAMPLES
 --------
-To take a BSQ swap offer with ID y3a8b2e2-51b6-4f39-b6c1-3ebd52c22aea;
+To take a BSQ swap offer with ID y3a8b2e2-51b6-4f39-b6c1-3ebd52c22aea,
+    setting the trade amount = the offer's amount (the amount parameter is omitted):
 $ ./bisq-cli --password=xyz --port=9998 takeoffer --offer-id=y3a8b2e2-51b6-4f39-b6c1-3ebd52c22aea
 
 To take an offer with ID 83e8b2e2-51b6-4f39-a748-3ebd29c22aea
 	using a payment account with ID fe20cdbd-22be-4b8a-a4b6-d2608ff09d6e,
-	and paying the Bisq trading fee in BSQ:
+	paying the Bisq trading fee in BSQ,
+	and setting the trade amount = the offer's min-amount (0.025 BTC):
 $ ./bisq-cli --password=xyz --port=9998 takeoffer --offer-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea \
     --payment-account=fe20cdbd-22be-4b8a-a4b6-d2608ff09d6e \
-    -fee-currency=bsq
+    -fee-currency=bsq \
+    --amount=0.025
