@@ -37,6 +37,7 @@ import bisq.apitest.method.trade.TakeBuyBSQOfferTest;
 import bisq.apitest.method.trade.TakeBuyBTCOfferTest;
 import bisq.apitest.method.trade.TakeBuyBTCOfferWithNationalBankAcctTest;
 import bisq.apitest.method.trade.TakeBuyXMROfferTest;
+import bisq.apitest.method.trade.TakeOfferWithOutOfRangeAmountTest;
 import bisq.apitest.method.trade.TakeSellBSQOfferTest;
 import bisq.apitest.method.trade.TakeSellBTCOfferTest;
 import bisq.apitest.method.trade.TakeSellXMROfferTest;
@@ -158,5 +159,12 @@ public class TradeTest extends AbstractTradeTest {
         test.testFailAndUnFailSellBTCTrade(testInfo);
         test.testFailAndUnFailBuyXmrTrade(testInfo);
         test.testFailAndUnFailTakeSellXMRTrade(testInfo);
+    }
+
+    @Test
+    @Order(11)
+    public void testTakeOfferWithOutOfRangeAmount(final TestInfo testInfo) {
+        TakeOfferWithOutOfRangeAmountTest test = new TakeOfferWithOutOfRangeAmountTest();
+        test.testTakeOfferWithInvalidAmountParam(testInfo);
     }
 }

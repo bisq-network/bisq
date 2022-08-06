@@ -120,7 +120,7 @@ public class BsqSwapBuyBtcTradeTest extends AbstractTradeTest {
 
         sleep(3_000);
 
-        var swapTrade = bobClient.takeBsqSwapOffer(availableSwapOffer.getId());
+        var swapTrade = bobClient.takeBsqSwapOffer(availableSwapOffer.getId(), 0L);
         tradeId = swapTrade.getTradeId(); // Cache the tradeId for following test case(s).
         log.debug("BsqSwap Trade at PREPARATION:\n{}", toTradeDetailTable.apply(swapTrade));
         assertEquals(PREPARATION.name(), swapTrade.getState());

@@ -87,11 +87,17 @@ public class TakeBuyXMROfferTest extends AbstractTradeTest {
 
             var alicesXmrOffers = aliceClient.getMyOffers(btcTradeDirection, XMR);
             assertEquals(1, alicesXmrOffers.size());
-            var trade = takeAlicesOffer(offerId, bobsXmrAcct.getId(), TRADE_FEE_CURRENCY_CODE);
+
+            var intendedTradeAmount = 10_000_000L;
+            var trade = takeAlicesOffer(offerId,
+                    bobsXmrAcct.getId(),
+                    TRADE_FEE_CURRENCY_CODE,
+                    intendedTradeAmount);
             alicesXmrOffers = aliceClient.getMyOffersSortedByDate(XMR);
             assertEquals(0, alicesXmrOffers.size());
 
             trade = bobClient.getTrade(tradeId);
+            assertEquals(intendedTradeAmount, trade.getTradeAmountAsLong());
             verifyTakerDepositNotConfirmed(trade);
             logTrade(log, testInfo, "Alice's Maker/Buyer View", aliceClient.getTrade(tradeId));
             logTrade(log, testInfo, "Bob's Taker/Seller View", bobClient.getTrade(tradeId));
