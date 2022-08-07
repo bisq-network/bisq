@@ -287,7 +287,7 @@ public class AccountAgeWitnessService {
     }
 
     public Optional<AccountAgeWitness> findWitness(PaymentAccountPayload paymentAccountPayload,
-                                            PubKeyRing pubKeyRing) {
+                                                   PubKeyRing pubKeyRing) {
         if (paymentAccountPayload == null) {
             return Optional.empty();
         }
@@ -315,7 +315,7 @@ public class AccountAgeWitnessService {
                 findWitness(tradingPeer.getPaymentAccountPayload(), tradingPeer.getPubKeyRing());
     }
 
-    private Optional<AccountAgeWitness> getWitnessByHash(byte[] hash) {
+    public Optional<AccountAgeWitness> getWitnessByHash(byte[] hash) {
         P2PDataStorage.ByteArray hashAsByteArray = new P2PDataStorage.ByteArray(hash);
 
         // First we look up in our fast lookup cache
@@ -335,7 +335,7 @@ public class AccountAgeWitnessService {
         return Optional.empty();
     }
 
-    private Optional<AccountAgeWitness> getWitnessByHashAsHex(String hashAsHex) {
+    public Optional<AccountAgeWitness> getWitnessByHashAsHex(String hashAsHex) {
         return getWitnessByHash(Utilities.decodeFromHex(hashAsHex));
     }
 
@@ -378,6 +378,15 @@ public class AccountAgeWitnessService {
             return -1L;
         } else {
             return now.getTime() - dates.get(0);
+        }
+    }
+
+    public long getWitnessSignDate(AccountAgeWitness accountAgeWitness) {
+        List<Long> dates = signedWitnessService.getVerifiedWitnessDateList(accountAgeWitness);
+        if (dates.isEmpty()) {
+            return -1L;
+        } else {
+            return dates.get(0);
         }
     }
 
@@ -950,5 +959,9 @@ public class AccountAgeWitnessService {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public boolean isFilteredWitness(AccountAgeWitness accountAgeWitness) {
+        return signedWitnessService.isFilteredWitness(accountAgeWitness);
     }
 }

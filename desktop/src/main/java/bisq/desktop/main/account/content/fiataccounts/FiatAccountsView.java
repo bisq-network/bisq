@@ -18,6 +18,7 @@
 package bisq.desktop.main.account.content.fiataccounts;
 
 import bisq.desktop.common.view.FxmlView;
+import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.paymentmethods.AchTransferForm;
 import bisq.desktop.components.paymentmethods.AdvancedCashForm;
@@ -100,6 +101,7 @@ import bisq.desktop.util.validation.UpholdValidator;
 import bisq.desktop.util.validation.WeChatPayValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
+import bisq.core.account.witness.AccountAgeWitnessUtils;
 import bisq.core.locale.Res;
 import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.AmazonGiftCardAccount;
@@ -120,6 +122,8 @@ import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.config.Config;
+import bisq.common.crypto.KeyRing;
+import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
@@ -135,7 +139,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.input.Clipboard;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import javafx.collections.FXCollections;
@@ -157,6 +164,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
     private final BICValidator bicValidator;
     private final CapitualValidator capitualValidator;
     private final LengthValidator inputValidator;
+    private final KeyRing keyRing;
     private final UpholdValidator upholdValidator;
     private final MoneyBeamValidator moneyBeamValidator;
     private final PopmoneyValidator popmoneyValidator;
@@ -208,12 +216,14 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                             AdvancedCashValidator advancedCashValidator,
                             TransferwiseValidator transferwiseValidator,
                             AccountAgeWitnessService accountAgeWitnessService,
+                            KeyRing keyRing,
                             @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         super(model, accountAgeWitnessService);
 
         this.bicValidator = bicValidator;
         this.capitualValidator = capitualValidator;
         this.inputValidator = inputValidator;
+        this.keyRing = keyRing;
         this.inputValidator.setMaxLength(100); // restrict general field entry length
         this.inputValidator.setMinLength(2);
         this.upholdValidator = upholdValidator;
@@ -296,9 +306,9 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
             }
 
             new Popup().information(Res.get(limitsInfoKey,
-                    initialLimit,
-                    formatter.formatCoinWithCode(maxTradeLimitSecondMonth),
-                    formatter.formatCoinWithCode(maxTradeLimitAsCoin)))
+                            initialLimit,
+                            formatter.formatCoinWithCode(maxTradeLimitSecondMonth),
+                            formatter.formatCoinWithCode(maxTradeLimitAsCoin)))
                     .width(700)
                     .closeButtonText(Res.get("shared.cancel"))
                     .actionButtonText(Res.get("shared.iUnderstand"))
@@ -490,6 +500,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                     Res.get("shared.deleteAccount"),
                     Res.get("shared.cancel")
             );
+
             Button updateButton = tuple.first;
             updateButton.setOnAction(event -> onUpdateAccount(paymentMethodForm.getPaymentAccount()));
             Button deleteAccountButton = tuple.second;
@@ -497,8 +508,67 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
             Button cancelButton = tuple.third;
             cancelButton.setOnAction(event -> onCancelSelectedAccount(paymentMethodForm.getPaymentAccount()));
             GridPane.setRowSpan(accountTitledGroupBg, paymentMethodForm.getRowSpan());
+
+            Button exportAccountAgeButton = new AutoTooltipButton(Res.get("account.fiat.exportAccountAge"));
+            exportAccountAgeButton.setOnAction(event -> onExportAccountAgeForBisq2(paymentMethodForm.getPaymentAccount()));
+            exportAccountAgeButton.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(exportAccountAgeButton, Priority.ALWAYS);
+
+            Button signedWitnessButton = new AutoTooltipButton(Res.get("account.fiat.signedWitness"));
+            signedWitnessButton.setOnAction(event -> onExportSignedWitnessForBisq2(paymentMethodForm.getPaymentAccount()));
+            signedWitnessButton.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(signedWitnessButton, Priority.ALWAYS);
+
+
+            HBox hBox = (HBox) cancelButton.getParent();
+            hBox.getChildren().addAll(exportAccountAgeButton, signedWitnessButton);
+
             model.onSelectAccount(current);
         }
+    }
+
+    private void onExportAccountAgeForBisq2(PaymentAccount paymentAccount) {
+        String prefix = "BISQ2_ACCOUNT_AGE:";
+        try {
+            String profileId = getProfileIdFromClipBoard(prefix);
+            AccountAgeWitnessUtils.signAccountAgeAndBisq2ProfileId(accountAgeWitnessService, paymentAccount, keyRing, profileId)
+                    .ifPresent(json -> {
+                        Utilities.copyToClipboard(prefix + json);
+                        new Popup().information(Res.get("account.fiat.exportAccountAge.popup", json))
+                                .width(900).show();
+                    });
+        } catch (Exception e) {
+            String error = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
+            new Popup().warning(error).show();
+        }
+    }
+
+    private void onExportSignedWitnessForBisq2(PaymentAccount paymentAccount) {
+        String prefix = "BISQ2_SIGNED_WITNESS:";
+        try {
+            String profileId = getProfileIdFromClipBoard(prefix);
+            AccountAgeWitnessUtils.signSignedWitnessAndBisq2ProfileId(accountAgeWitnessService, paymentAccount, keyRing, profileId)
+                    .ifPresent(json -> {
+                        Utilities.copyToClipboard(prefix + json);
+                        new Popup().information(Res.get("account.fiat.signedWitness.popup", json))
+                                .width(900).show();
+                    });
+        } catch (Exception e) {
+            String error = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
+            new Popup().warning(error).show();
+        }
+    }
+
+    private String getProfileIdFromClipBoard(String prefix) {
+        String clipboardText = Clipboard.getSystemClipboard().getString();
+        if (clipboardText != null && clipboardText.startsWith(prefix)) {
+            String profileId = clipboardText.replace(prefix, "");
+            if (profileId.length() == 40) {
+                Hex.decode(profileId);
+                return profileId;
+            }
+        }
+        throw new RuntimeException("Clipboard text not in expected format. " + clipboardText);
     }
 
 

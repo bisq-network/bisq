@@ -19,25 +19,36 @@ package bisq.core.account.witness;
 
 import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
+import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.util.JsonUtil;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 
+import bisq.common.app.DevEnv;
+import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.KeyRing;
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.crypto.Sig;
+import bisq.common.util.Hex;
 import bisq.common.util.Utilities;
 
+import java.security.KeyPair;
+
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Stack;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -167,5 +178,110 @@ public class AccountAgeWitnessUtils {
                 trade.getAmount(),
                 accountAgeWitnessService.tradeAmountIsSufficient(trade.getAmount()),
                 isSignWitnessTrade);
+    }
+
+    static class AccountAgeWitnessDto {
+        private final String profileId;
+        private final String hashAsHex;
+        private final long date;
+        private final String pubKeyBase64;
+        private final String signatureBase64;
+
+        public AccountAgeWitnessDto(String profileId,
+                                    String hashAsHex,
+                                    long date,
+                                    String pubKeyBase64,
+                                    String signatureBase64) {
+            this.profileId = profileId;
+            this.hashAsHex = hashAsHex;
+            this.date = date;
+            this.pubKeyBase64 = pubKeyBase64;
+            this.signatureBase64 = signatureBase64;
+        }
+    }
+
+    static class SignedWitnessDto {
+        private final String profileId;
+        private final String hashAsHex;
+        private final long accountAgeWitnessDate;
+        private final long witnessSignDate;
+        private final String pubKeyBase64;
+        private final String signatureBase64;
+
+        public SignedWitnessDto(String profileId,
+                                String hashAsHex,
+                                long accountAgeWitnessDate,
+                                long witnessSignDate,
+                                String pubKeyBase64,
+                                String signatureBase64) {
+            this.profileId = profileId;
+            this.hashAsHex = hashAsHex;
+            this.accountAgeWitnessDate = accountAgeWitnessDate;
+            this.witnessSignDate = witnessSignDate;
+            this.pubKeyBase64 = pubKeyBase64;
+            this.signatureBase64 = signatureBase64;
+        }
+    }
+
+    public static Optional<String> signAccountAgeAndBisq2ProfileId(AccountAgeWitnessService accountAgeWitnessService,
+                                                                   PaymentAccount account,
+                                                                   KeyRing keyRing,
+                                                                   String profileId) {
+        return accountAgeWitnessService.findWitness(account.getPaymentAccountPayload(), keyRing.getPubKeyRing())
+                .map(accountAgeWitness -> {
+                    try {
+                        checkArgument(!accountAgeWitnessService.isFilteredWitness(accountAgeWitness), "Invalid account age witness");
+                        String hashAsHex = Hex.encode(accountAgeWitness.getHash());
+                        long date = accountAgeWitness.getDate();
+                        checkArgument(date > 0, "Date must be > 0");
+                        String message = profileId + hashAsHex + date;
+                        KeyPair signatureKeyPair = keyRing.getSignatureKeyPair();
+                        String signatureBase64 = Sig.sign(signatureKeyPair.getPrivate(), message);
+                        String pubKeyBase64 = Base64.getEncoder().encodeToString(Sig.getPublicKeyBytes(signatureKeyPair.getPublic()));
+                        AccountAgeWitnessDto dto = new AccountAgeWitnessDto(profileId,
+                                hashAsHex,
+                                date,
+                                pubKeyBase64,
+                                signatureBase64);
+                        return JsonUtil.objectToJson(dto);
+                    } catch (CryptoException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    public static Optional<String> signSignedWitnessAndBisq2ProfileId(AccountAgeWitnessService accountAgeWitnessService,
+                                                                      PaymentAccount account,
+                                                                      KeyRing keyRing,
+                                                                      String profileId) {
+        return accountAgeWitnessService.findWitness(account.getPaymentAccountPayload(), keyRing.getPubKeyRing())
+                .map(accountAgeWitness -> {
+                    try {
+                        checkArgument(!accountAgeWitnessService.isFilteredWitness(accountAgeWitness), "Invalid account age witness");
+                        long witnessSignDate = accountAgeWitnessService.getWitnessSignDate(accountAgeWitness);
+                        long ageInDays = (System.currentTimeMillis() - witnessSignDate) / TimeUnit.DAYS.toMillis(1);
+                        if (!DevEnv.isDevMode()) {
+                            checkArgument(witnessSignDate > 0, "Account is not signed yet");
+                            checkArgument(ageInDays > 60, "Account must have been signed at least 61 days ago");
+                        }
+
+                        String hashAsHex = Hex.encode(accountAgeWitness.getHash());
+                        long date = accountAgeWitness.getDate();
+                        checkArgument(date > 0, "AccountAgeWitness date must be > 0");
+                        String message = profileId + hashAsHex + date + witnessSignDate;
+                        KeyPair signatureKeyPair = keyRing.getSignatureKeyPair();
+                        String signatureBase64 = Sig.sign(signatureKeyPair.getPrivate(), message);
+                        String pubKeyBase64 = Base64.getEncoder().encodeToString(Sig.getPublicKeyBytes(signatureKeyPair.getPublic()));
+                        SignedWitnessDto dto = new SignedWitnessDto(profileId,
+                                hashAsHex,
+                                date,
+                                witnessSignDate,
+                                pubKeyBase64,
+                                signatureBase64);
+                        return JsonUtil.objectToJson(dto);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 }

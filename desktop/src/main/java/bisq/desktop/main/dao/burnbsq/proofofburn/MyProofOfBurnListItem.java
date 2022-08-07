@@ -58,7 +58,7 @@ class MyProofOfBurnListItem {
             amount = proofOfBurnService.getAmount(tx);
             amountAsString = bsqFormatter.formatCoinWithCode(Coin.valueOf(amount));
             txId = tx.getId();
-            hashAsHex = Utilities.bytesAsHexString(proofOfBurnService.getHashFromOpReturnData(tx));
+            hashAsHex = Utilities.bytesAsHexString(ProofOfBurnService.getHashFromOpReturnData(tx));
             pubKey = Utilities.bytesAsHexString(proofOfBurnService.getPubKey(txId));
         } else {
             amount = 0;
