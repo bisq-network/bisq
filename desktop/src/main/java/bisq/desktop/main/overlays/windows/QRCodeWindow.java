@@ -65,26 +65,16 @@ public class QRCodeWindow extends Overlay<QRCodeWindow> {
     public void show() {
         createGridPane();
         addHeadLine();
-        addMessage();
 
         GridPane.setRowIndex(qrCodeImageView, ++rowIndex);
         GridPane.setColumnSpan(qrCodeImageView, 2);
         GridPane.setHalignment(qrCodeImageView, HPos.CENTER);
         gridPane.getChildren().add(qrCodeImageView);
 
-        String request = bitcoinURI.replace("%20", " ").replace("?", "\n?").replace("&", "\n&");
-        Label infoLabel = new AutoTooltipLabel(Res.get("qRCodeWindow.request", request));
-        infoLabel.setMouseTransparent(true);
-        infoLabel.setWrapText(true);
-        infoLabel.setId("popup-qr-code-info");
-        GridPane.setHalignment(infoLabel, HPos.CENTER);
-        GridPane.setHgrow(infoLabel, Priority.ALWAYS);
-        GridPane.setMargin(infoLabel, new Insets(3, 0, 0, 0));
-        GridPane.setRowIndex(infoLabel, ++rowIndex);
-        GridPane.setColumnIndex(infoLabel, 0);
-        GridPane.setColumnSpan(infoLabel, 2);
-        gridPane.getChildren().add(infoLabel);
+        message = bitcoinURI.replace("%20", " ").replace("?", "\n?").replace("&", "\n&");
+        setTruncatedMessage();
 
+        addMessage();
         addButtons();
         applyStyles();
         display();
