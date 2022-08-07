@@ -107,6 +107,7 @@ public class InsufficientBtcToTakeOfferTest extends AbstractTradeTest {
                         takeAlicesOffer(offerId,
                                 bobsUsdAccount.getId(),
                                 TRADE_FEE_CURRENCY_CODE,
+                                12_500_000L,
                                 false));
                 String expectedExceptionMessage =
                         format("UNAVAILABLE: wallet has insufficient btc to take offer with id '%s'", offerId);

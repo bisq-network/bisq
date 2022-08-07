@@ -46,25 +46,38 @@ public class TradesServiceRequest {
         this.grpcStubs = grpcStubs;
     }
 
-    public TakeOfferReply getTakeOfferReply(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
+    public TakeOfferReply getTakeOfferReply(String offerId,
+                                            String paymentAccountId,
+                                            String takerFeeCurrencyCode,
+                                            long amount) {
         var request = TakeOfferRequest.newBuilder()
                 .setOfferId(offerId)
                 .setPaymentAccountId(paymentAccountId)
                 .setTakerFeeCurrencyCode(takerFeeCurrencyCode)
+                .setAmount(amount)
                 .build();
         return grpcStubs.tradesService.takeOffer(request);
     }
 
-    public TradeInfo takeBsqSwapOffer(String offerId) {
-        var reply = getTakeOfferReply(offerId, "", "");
+    public TradeInfo takeBsqSwapOffer(String offerId, long amount) {
+        var reply = getTakeOfferReply(offerId,
+                "",
+                "",
+                amount);
         if (reply.hasTrade())
             return reply.getTrade();
         else
             throw new IllegalStateException(reply.getFailureReason().getDescription());
     }
 
-    public TradeInfo takeOffer(String offerId, String paymentAccountId, String takerFeeCurrencyCode) {
-        var reply = getTakeOfferReply(offerId, paymentAccountId, takerFeeCurrencyCode);
+    public TradeInfo takeOffer(String offerId,
+                               String paymentAccountId,
+                               String takerFeeCurrencyCode,
+                               long amount) {
+        var reply = getTakeOfferReply(offerId,
+                paymentAccountId,
+                takerFeeCurrencyCode,
+                amount);
         if (reply.hasTrade())
             return reply.getTrade();
         else

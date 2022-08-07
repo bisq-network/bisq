@@ -76,15 +76,18 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
             assertEquals(1, alicesUsdOffers.size());
 
             PaymentAccount bobsUsdAccount = createDummyF2FAccount(bobClient, "US");
+            var ignoredTakeOfferAmountParam = 0L;
             var trade = takeAlicesOffer(offerId,
                     bobsUsdAccount.getId(),
                     TRADE_FEE_CURRENCY_CODE,
+                    ignoredTakeOfferAmountParam,
                     false);
             sleep(2_500);  // Allow available offer to be removed from offer book.
             alicesUsdOffers = aliceClient.getMyOffersSortedByDate(BUY.name(), USD);
             assertEquals(0, alicesUsdOffers.size());
 
             trade = bobClient.getTrade(tradeId);
+            assertEquals(alicesOffer.getAmount(), trade.getTradeAmountAsLong());
             verifyTakerDepositNotConfirmed(trade);
             logTrade(log, testInfo, "Alice's Maker/Buyer View", aliceClient.getTrade(tradeId));
             logTrade(log, testInfo, "Bob's Taker/Seller View", bobClient.getTrade(tradeId));

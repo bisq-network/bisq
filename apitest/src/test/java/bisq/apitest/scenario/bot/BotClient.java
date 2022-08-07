@@ -174,7 +174,7 @@ public class BotClient {
     }
 
     public TradeInfo takeOffer(String offerId, PaymentAccount paymentAccount, String feeCurrency) {
-        return grpcClient.takeOffer(offerId, paymentAccount.getId(), feeCurrency);
+        return grpcClient.takeOffer(offerId, paymentAccount.getId(), feeCurrency, 0L);
     }
 
     /**

@@ -83,12 +83,14 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
             var trade = takeAlicesOffer(offerId,
                     bobsUsdAccount.getId(),
                     TRADE_FEE_CURRENCY_CODE,
+                    0L,
                     false);
             sleep(2_500);  // Allow available offer to be removed from offer book.
             var takeableUsdOffers = bobClient.getOffersSortedByDate(SELL.name(), USD);
             assertEquals(0, takeableUsdOffers.size());
 
             trade = bobClient.getTrade(tradeId);
+            assertEquals(alicesOffer.getAmount(), trade.getTradeAmountAsLong());
             verifyTakerDepositNotConfirmed(trade);
             logTrade(log, testInfo, "Alice's Maker/Buyer View", aliceClient.getTrade(tradeId));
             logTrade(log, testInfo, "Bob's Taker/Seller View", bobClient.getTrade(tradeId));

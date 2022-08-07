@@ -37,6 +37,7 @@ package bisq.apitest.method.trade;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.NationalBankAccountPayload;
 
+import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -112,11 +113,12 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
             var alicesOffers = aliceClient.getMyOffersSortedByDate(BUY.name(), BRL);
             assertEquals(1, alicesOffers.size());
 
-
             var trade = takeAlicesOffer(offerId,
                     bobsPaymentAccount.getId(),
                     TRADE_FEE_CURRENCY_CODE,
+                    0L,
                     false);
+            assertEquals(alicesOffer.getAmount(), trade.getTradeAmountAsLong());
 
             // Before generating a blk and confirming deposit tx, make sure there
             // are no bank acct details in the either side's contract.
@@ -130,13 +132,11 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
                     verifyJsonContractExcludesBankAccountDetails(bobsContract, bobsPaymentAccount);
                     break;
                 } catch (StatusRuntimeException ex) {
-                    if (ex.getMessage() == null) {
+                    if (ex.getStatus().equals(Status.NOT_FOUND)) {
                         String message = ex.getMessage().replaceFirst("^[A-Z_]+: ", "");
-                        if (message.contains("trade") && message.contains("not found")) {
-                            fail(ex);
-                        }
+                        log.warn(message);
                     } else {
-                        sleep(500);
+                        sleep(1_000);
                     }
                 }
             }

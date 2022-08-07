@@ -1,6 +1,6 @@
 # Bisq API Beta Testing Guide
 
-This guide explains how Bisq Api beta testers can quickly get a test harness running, watch a regtest trade simulation,
+This guide explains how Bisq API beta testers can quickly get a test harness running, watch a regtest trade simulation,
 and use the CLI to execute trades between Bob and Alice.
 
 Knowledge of Git, Java, and installing bitcoin-core is required.
@@ -41,7 +41,7 @@ $ ./gradlew clean build :apitest:installDaoSetup -x test    # if you want to ski
 $ ./gradlew clean build :apitest:installDaoSetup            # if you want to run Bisq tests
 ```
 
-## Running Api Test Harness
+## Running API Test Harness
 
 #### Warning:  Never run an API daemon and the [Bisq GUI](https://bisq.network) on the same host at the same time.
 
@@ -118,7 +118,7 @@ Same as described at the top of this document, but your bitcoin-core’s `bitcoi
 
 ### Description
 
-The regtest trade simulation script `apitest/scripts/trade-simulation.sh` is a useful introduction to the Bisq Api.
+The regtest trade simulation script `apitest/scripts/trade-simulation.sh` is a useful introduction to the Bisq API.
 The bash script’s output is intended to serve as a tutorial, showing how the CLI can be used to create payment
 accounts for Bob and Alice, create an offer, take the offer, and complete a trade.
 (The bash script itself is not intended to be as useful as the output.)  The output is generated too quickly to
@@ -155,9 +155,9 @@ $ apitest/scripts/trade-simulation.sh -d buy -c at -f 30800  -a 0.125
 The test harness used by the simulation script described in the previous section can also be used for manual CLI
 testing, and you can leave it running as you try the commands described below.
 
-The Api’s default server listening port is `9998`, and you do not need to specify a `–port=<port>` option in a
-CLI command unless you change the server’s `–apiPort=<listening-port>`.   In the test harness, Alice’s Api port is
-`9998`, Bob’s is `9999`.  When you manually test the Api using the test harness, be aware of the port numbers being
+The API’s default server listening port is `9998`, and you do not need to specify a `–port=<port>` option in a
+CLI command unless you change the server’s `–apiPort=<listening-port>`.   In the test harness, Alice’s API port is
+`9998`, Bob’s is `9999`.  When you manually test the API using the test harness, be aware of the port numbers being
 used in the CLI commands, so you know which server (Bob’s or Alice’s) the CLI is sending requests to.
 
 ### CLI Help
@@ -278,7 +278,7 @@ $ ./bisq-cli --password=xyz --port=9998 sendbtc --address=<btc-address> --amount
 ### Withdrawal Transaction Fees
 
 If you have traded using the Bisq UI, you are probably aware of the default network bitcoin withdrawal transaction
-fee and custom withdrawal transaction fee user preference in the UI’s setting view.  The Api uses these same
+fee and custom withdrawal transaction fee user preference in the UI’s setting view.  The API uses these same
 withdrawal transaction fee rates, and affords a third – as mentioned in the previous section -- withdrawal
 transaction fee option in the `sendbsq` and `sendbtc` commands.  The `sendbsq` and `sendbtc` commands'
 `--tx-fee-rate=<sats/byte>` options override both the default network fee rate, and your custom transaction fee
@@ -305,7 +305,7 @@ $ ./bisq-cli --password=xyz unsettxfeerate
 
 ### Creating Test Fiat Payment Accounts
 
-Creating a fiat payment account using the Api involves three steps:
+Creating a fiat payment account using the API involves three steps:
 
 1.  Find the payment-method-id  for the payment account type you wish to create.  For example, if you want to
     create a face-to-face type payment account, find the face-to-face  payment-method-id (`F2F`):
@@ -376,7 +376,7 @@ $ ./bisq-cli --password=xyz --port=9999 createcryptopaymentacct --account-name=X
 
 ### Creating Offers
 
-The createoffer command is the Api's most complex command (so far), but CLI posix-style options are self-explanatory,
+The createoffer command is the API's most complex command (so far), but CLI posix-style options are self-explanatory,
 and CLI `createoffer` command help gives you specific information about each option.
 ```
 $ ./bisq-cli --password=xyz --port=9998 createoffer --help
@@ -597,11 +597,15 @@ with the `takeoffer` command:
 $ ./bisq-cli --password=xyz --port=9998 takeoffer \
     --offer-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea \
     --payment-account-id=fe20cdbd-22be-4b8a-a4b6-d2608ff09d6e \
+    --amount=0.125
     --fee-currency=btc
 ```
 Depending on the offer type, the taken offer will be used to (1) create a trade contract, or (2) execute a BSQ swap.
 
-The next section describes how to use the Api to execute a trade.  The following <b>Completing a BSQ Swap Trade</b>
+The value passed with the optional `--amount` parameter must be between the offer's min-amount and amount values.
+If the `--amount` parameter is omitted, the intended trade amount will equal the taken offer's amount.
+
+The next section describes how to use the API to execute a trade.  The following <b>Completing a BSQ Swap Trade</b>
 section explains how to use the `takeoffer` command to complete a BSQ swap.
 
 ### Completing Trade Protocol
@@ -671,7 +675,7 @@ $ ./bisq-cli --password=xyz --port=9998 takeoffer --offer-id=Xge8b2e2-51b6-3TOOB
 
 ## Shutting Down Test Harness
 
-The test harness should cleanly shutdown all the background apps in proper order after entering ^C.
+The test harness should cleanly shut down all the background apps in proper order after entering ^C.
 
 Once shutdown, all Bisq and bitcoin-core data files are left in the state they were in at shutdown time,
 so they and logs can be examined after a test run.  All datafiles will be refreshed the next time the test harness

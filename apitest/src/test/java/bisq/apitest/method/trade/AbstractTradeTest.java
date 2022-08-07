@@ -61,21 +61,25 @@ public class AbstractTradeTest extends AbstractOfferTest {
 
     protected final TradeInfo takeAlicesOffer(String offerId,
                                               String paymentAccountId,
-                                              String takerFeeCurrencyCode) {
+                                              String takerFeeCurrencyCode,
+                                              long intendedTradeAmount) {
         return takeAlicesOffer(offerId,
                 paymentAccountId,
                 takerFeeCurrencyCode,
+                intendedTradeAmount,
                 true);
     }
 
     protected final TradeInfo takeAlicesOffer(String offerId,
                                               String paymentAccountId,
                                               String takerFeeCurrencyCode,
+                                              long intendedTradeAmount,
                                               boolean generateBtcBlock) {
         @SuppressWarnings("ConstantConditions")
         var trade = bobClient.takeOffer(offerId,
                 paymentAccountId,
-                takerFeeCurrencyCode);
+                takerFeeCurrencyCode,
+                intendedTradeAmount);
         assertNotNull(trade);
         assertEquals(offerId, trade.getTradeId());
 
