@@ -669,10 +669,6 @@ public abstract class TradeStepView extends AnchorPane {
                     acceptMediationResultPopup = null;
                 });
 
-        if (hasSelfAccepted()) {
-            acceptMediationResultPopup.disableActionButton();
-        }
-
         acceptMediationResultPopup.show();
     }
 
