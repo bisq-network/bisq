@@ -49,7 +49,7 @@ import jakarta.ws.rs.core.MediaType;
  */
 @Slf4j
 @Path("/signed-witness")
-@Produces(MediaType.APPLICATION_JSON)
+@Produces(MediaType.TEXT_PLAIN)
 @Tag(name = "Signed witness API")
 public class SignedWitnessApi {
     private static final String DESC_HASH = "The hash of the signed account age witness as hex string";
@@ -61,7 +61,7 @@ public class SignedWitnessApi {
 
     @Operation(description = "Request the signed witness date")
     @ApiResponse(responseCode = "200", description = "The signed witness date",
-            content = {@Content(mediaType = MediaType.APPLICATION_JSON,
+            content = {@Content(mediaType = MediaType.TEXT_PLAIN,
                     schema = @Schema(allOf = ProofOfBurnDto.class))}
     )
     @GET
