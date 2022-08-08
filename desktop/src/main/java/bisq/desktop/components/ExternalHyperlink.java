@@ -17,12 +17,31 @@
 
 package bisq.desktop.components;
 
+import bisq.core.locale.Res;
+
+import bisq.common.util.Utilities;
+
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
+
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 
 public class ExternalHyperlink extends HyperlinkWithIcon {
 
     public ExternalHyperlink(String text) {
         super(text, MaterialDesignIcon.LINK);
+    }
+    public ExternalHyperlink(String text, boolean setupCopyContextMenu) {
+        super(text, MaterialDesignIcon.LINK);
+        if (setupCopyContextMenu) {
+            ContextMenu contextMenu = new ContextMenu();
+            MenuItem copyMenuItem = new MenuItem(Res.get("shared.copy"));
+            copyMenuItem.setOnAction(e -> {
+                Utilities.copyToClipboard(text);
+            });
+            contextMenu.getItems().add(copyMenuItem);
+            setContextMenu(contextMenu);
+        }
     }
 
     public ExternalHyperlink(String text, String style) {

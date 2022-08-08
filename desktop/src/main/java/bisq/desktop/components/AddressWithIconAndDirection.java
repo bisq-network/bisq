@@ -54,7 +54,7 @@ public class AddressWithIconAndDirection extends HBox {
         HBox.setMargin(directionIcon, new Insets(0, 3, 0, 0));
         HBox.setHgrow(label, Priority.ALWAYS);
 
-        hyperlink = new ExternalHyperlink(address);
+        hyperlink = new ExternalHyperlink(address, true);
         HBox.setMargin(hyperlink, new Insets(0));
         HBox.setHgrow(hyperlink, Priority.SOMETIMES);
         // You need to set max width to Double.MAX_VALUE to make HBox.setHgrow working like expected!

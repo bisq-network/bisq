@@ -494,7 +494,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                 //noinspection Duplicates
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
-                                    hyperlinkWithIcon = new ExternalHyperlink(transactionId);
+                                    hyperlinkWithIcon = new ExternalHyperlink(transactionId, true);
                                     hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBlockExplorer(transactionId));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);

@@ -379,7 +379,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
                                 if (item != null && !empty) {
                                     String address = item.getAddressString();
-                                    field = new ExternalHyperlink(address);
+                                    field = new ExternalHyperlink(address, true);
                                     field.setOnAction(event -> {
                                         GUIUtil.openAddressInBlockExplorer(address);
                                         tableView.getSelectionModel().select(item);
