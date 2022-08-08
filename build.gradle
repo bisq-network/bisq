@@ -54,7 +54,6 @@ configure(subprojects) {
         javafxVersion = '16'
         javaxAnnotationVersion = '1.2'
         jcsvVersion = '1.4.0'
-        jerseyVersion = '3.0.4'
         jetbrainsAnnotationsVersion = '13.0'
         jfoenixVersion = '9.0.10'
         joptVersion = '5.0.4'
@@ -77,7 +76,6 @@ configure(subprojects) {
         slf4jVersion = '1.7.30'
         sparkVersion = '2.5.2'
         springBootVersion = '2.5.6'
-        swaggerVersion = '2.2.0'
 
         os = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
     }
@@ -105,7 +103,6 @@ configure([project(':cli'),
            project(':seednode'),
            project(':statsnode'),
            project(':pricenode'),
-           project(':daonode'),
            project(':apitest')]) {
 
     apply plugin: 'application'
@@ -686,56 +683,6 @@ configure(project(':seednode')) {
             exclude(module: 'guava')
         }
         testImplementation "org.mockito:mockito-core:$mockitoVersion"
-    }
-}
-
-configure(project(':daonode')) {
-    apply plugin: 'com.github.johnrengelman.shadow'
-
-    mainClassName = 'bisq.daoNode.DaoNodeRestApiApplication'
-
-    dependencies {
-        implementation project(':common')
-        implementation project(':proto')
-        implementation project(':p2p')
-        implementation project(':core')
-        implementation "com.google.guava:guava:$guavaVersion"
-        implementation("com.google.inject:guice:$guiceVersion") {
-            exclude(module: 'guava')
-        }
-
-        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        compileOnly "org.projectlombok:lombok:$lombokVersion"
-        implementation "ch.qos.logback:logback-classic:$logbackVersion"
-        implementation "ch.qos.logback:logback-core:$logbackVersion"
-        implementation "org.slf4j:slf4j-api:$slf4jVersion"
-
-        /*  implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
-          implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-          implementation("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
-
-          implementation "com.google.protobuf:protobuf-java-util:$protobufVersion"*/
-
-        implementation("org.glassfish.jersey.containers:jersey-container-jdk-http:$jerseyVersion")
-        implementation("org.glassfish.jersey.media:jersey-media-json-jackson:$jerseyVersion")
-        implementation("org.glassfish.jersey.inject:jersey-hk2:$jerseyVersion")
-        implementation("org.glassfish.jaxb:jaxb-runtime:3.0.2")
-        implementation("io.swagger.core.v3:swagger-jaxrs2-jakarta:$swaggerVersion")
-
-        testImplementation "org.mockito:mockito-core:$mockitoVersion"
-
-        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
-        testImplementation "org.apache.httpcomponents:httpclient:$httpclientVersion"
-        testImplementation "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"
-        testImplementation "org.junit.jupiter:junit-jupiter-params:$jupiterVersion"
-        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
-    }
-
-    test {
-        useJUnitPlatform()
-        testLogging {
-            events "passed", "skipped", "failed"
-        }
     }
 }
 
