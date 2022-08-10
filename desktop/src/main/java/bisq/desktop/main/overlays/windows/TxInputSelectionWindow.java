@@ -29,7 +29,6 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
-import bisq.core.user.Preferences;
 import bisq.core.util.coin.CoinFormatter;
 
 import org.bitcoinj.core.Coin;
@@ -77,7 +76,6 @@ public class TxInputSelectionWindow extends Overlay<TxInputSelectionWindow> {
     private final List<TransactionOutput> spendableTransactionOutputs;
     @Getter
     private final Set<TransactionOutput> candidates;
-    private final Preferences preferences;
     private final CoinFormatter formatter;
 
     private BalanceTextField balanceTextField;
@@ -85,11 +83,9 @@ public class TxInputSelectionWindow extends Overlay<TxInputSelectionWindow> {
 
     public TxInputSelectionWindow(List<TransactionOutput> spendableTransactionOutputs,
                                   Set<TransactionOutput> candidates,
-                                  Preferences preferences,
                                   CoinFormatter formatter) {
         this.spendableTransactionOutputs = spendableTransactionOutputs;
         this.candidates = candidates;
-        this.preferences = preferences;
         this.formatter = formatter;
         type = Type.Attention;
     }
@@ -228,7 +224,7 @@ public class TxInputSelectionWindow extends Overlay<TxInputSelectionWindow> {
                                     TransactionOutput transactionOutput = item.getTransactionOutput();
                                     String txId = transactionOutput.getParentTransaction().getTxId().toString();
                                     hyperlinkWithIcon = new ExternalHyperlink(txId + ":" + transactionOutput.getIndex());
-                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + txId, false));
+                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBlockExplorer(txId, true));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", txId)));
                                     setGraphic(hyperlinkWithIcon);
                                 } else {

@@ -49,6 +49,7 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.txproof.AssetTxProofResult;
+import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -1168,9 +1169,42 @@ public class GUIUtil {
         };
     }
 
-    public static void openTxInBsqBlockExplorer(String txId, Preferences preferences) {
+    private static BlockChainExplorer getBlockExplorer(boolean isBsq) {
+        return isBsq ? preferences.getBsqBlockChainExplorer() : preferences.getBlockChainExplorer();
+    }
+
+    public static void openAddressInBlockExplorer(String address) {
+        openAddressInBlockExplorer(address, false);
+    }
+
+    public static void openAddressInBlockExplorer(String address, boolean isBsq) {
+        if (address != null)
+            openWebPage(getAddressUrl(address, isBsq), false);
+    }
+
+    public static void openTxInBlockExplorer(String txId) {
+        openTxInBlockExplorer(txId, false);
+    }
+
+    public static void openTxInBlockExplorer(String txId, boolean isBsq) {
         if (txId != null)
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + txId, false);
+            openWebPage(getTxUrl(txId, isBsq), false);
+    }
+
+    public static String getAddressUrl(String address) {
+        return getAddressUrl(address, false);
+    }
+
+    public static String getAddressUrl(String address, boolean isBsq) {
+        return getBlockExplorer(isBsq).addressUrl + address;
+    }
+
+    public static String getTxUrl(String txId) {
+        return getTxUrl(txId, false);
+    }
+
+    public static String getTxUrl(String txId, boolean isBsq) {
+        return getBlockExplorer(isBsq).txUrl + txId;
     }
 
     public static String getBsqInUsd(Price bsqPrice,

@@ -39,7 +39,6 @@ import bisq.core.dao.governance.proofofburn.MyProofOfBurnListService;
 import bisq.core.dao.governance.proofofburn.ProofOfBurnService;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.locale.Res;
-import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.BsqFormatter;
@@ -86,7 +85,6 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
     private final ProofOfBurnService proofOfBurnService;
     private final SignVerifyService signVerifyService;
     private final MyProofOfBurnListService myProofOfBurnListService;
-    private final Preferences preferences;
     private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
     private final BsqWalletService bsqWalletService;
@@ -122,7 +120,6 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
                             ProofOfBurnService proofOfBurnService,
                             SignVerifyService signVerifyService,
                             MyProofOfBurnListService myProofOfBurnListService,
-                            Preferences preferences,
                             @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
@@ -130,7 +127,6 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
         this.proofOfBurnService = proofOfBurnService;
         this.signVerifyService = signVerifyService;
         this.myProofOfBurnListService = myProofOfBurnListService;
-        this.preferences = preferences;
         this.btcFormatter = btcFormatter;
     }
 
@@ -417,7 +413,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
                                     hyperlinkWithIcon = new ExternalHyperlink(transactionId);
-                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(item.getTxId(), preferences));
+                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBlockExplorer(transactionId, true));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);
                                 } else {
@@ -580,7 +576,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
                                     hyperlinkWithIcon = new ExternalHyperlink(transactionId);
-                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(item.getTxId(), preferences));
+                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBlockExplorer(transactionId, true));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);
                                 } else {

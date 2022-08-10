@@ -33,7 +33,6 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.dao.SignVerifyService;
 import bisq.core.dao.governance.bond.role.BondedRole;
 import bisq.core.locale.Res;
-import bisq.core.user.Preferences;
 import bisq.core.util.coin.BsqFormatter;
 
 import javax.inject.Inject;
@@ -68,7 +67,6 @@ public class RolesView extends ActivatableView<GridPane, Void> {
     private final SignVerifyService signVerifyService;
     private final BsqFormatter bsqFormatter;
     private final DaoFacade daoFacade;
-    private final Preferences preferences;
 
     private final ObservableList<RolesListItem> observableList = FXCollections.observableArrayList();
     private final SortedList<RolesListItem> sortedList = new SortedList<>(observableList);
@@ -84,13 +82,11 @@ public class RolesView extends ActivatableView<GridPane, Void> {
     private RolesView(BsqFormatter bsqFormatter,
                       BondingViewUtils bondingViewUtils,
                       SignVerifyService signVerifyService,
-                      DaoFacade daoFacade,
-                      Preferences preferences) {
+                      DaoFacade daoFacade) {
         this.bsqFormatter = bsqFormatter;
         this.bondingViewUtils = bondingViewUtils;
         this.signVerifyService = signVerifyService;
         this.daoFacade = daoFacade;
-        this.preferences = preferences;
     }
 
     @Override
@@ -245,7 +241,7 @@ public class RolesView extends ActivatableView<GridPane, Void> {
                                     String lockupTxId = item.getLockupTxId();
                                     if (lockupTxId != null) {
                                         hyperlinkWithIcon = new ExternalHyperlink(lockupTxId);
-                                        hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(lockupTxId, preferences));
+                                        hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBlockExplorer(lockupTxId, true));
                                         hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", lockupTxId)));
                                         setGraphic(hyperlinkWithIcon);
                                     } else {

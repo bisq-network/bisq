@@ -50,7 +50,6 @@ import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Volume;
 import bisq.core.user.DontShowAgainLookup;
-import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.VolumeUtil;
@@ -104,7 +103,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     private final BtcValidator btcValidator;
     private final BsqAddressValidator bsqAddressValidator;
     private final BtcAddressValidator btcAddressValidator;
-    private final Preferences preferences;
     private final WalletPasswordWindow walletPasswordWindow;
 
     private int gridRow = 0;
@@ -138,7 +136,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                         BtcValidator btcValidator,
                         BsqAddressValidator bsqAddressValidator,
                         BtcAddressValidator btcAddressValidator,
-                        Preferences preferences,
                         WalletPasswordWindow walletPasswordWindow) {
         this.bsqWalletService = bsqWalletService;
         this.btcWalletService = btcWalletService;
@@ -153,7 +150,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         this.btcValidator = btcValidator;
         this.bsqAddressValidator = bsqAddressValidator;
         this.btcAddressValidator = btcAddressValidator;
-        this.preferences = preferences;
         this.walletPasswordWindow = walletPasswordWindow;
     }
 
@@ -347,7 +343,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         }
         TxInputSelectionWindow txInputSelectionWindow = new TxInputSelectionWindow(unspentTransactionOutputs,
                 bsqUtxoCandidates,
-                preferences,
                 bsqFormatter);
         txInputSelectionWindow.onAction(() -> setBsqUtxoCandidates(txInputSelectionWindow.getCandidates()))
                 .show();
@@ -410,7 +405,6 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         }
         TxInputSelectionWindow txInputSelectionWindow = new TxInputSelectionWindow(unspentTransactionOutputs,
                 btcUtxoCandidates,
-                preferences,
                 btcFormatter);
         txInputSelectionWindow.onAction(() -> setBtcUtxoCandidates(txInputSelectionWindow.getCandidates())).
                 show();

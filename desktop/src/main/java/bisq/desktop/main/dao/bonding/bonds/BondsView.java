@@ -32,7 +32,6 @@ import bisq.core.dao.governance.bond.reputation.BondedReputationRepository;
 import bisq.core.dao.governance.bond.role.BondedRole;
 import bisq.core.dao.governance.bond.role.BondedRolesRepository;
 import bisq.core.locale.Res;
-import bisq.core.user.Preferences;
 import bisq.core.util.coin.BsqFormatter;
 
 import javax.inject.Inject;
@@ -68,7 +67,6 @@ public class BondsView extends ActivatableView<GridPane, Void> {
     private final BsqFormatter bsqFormatter;
     private final BondedRolesRepository bondedRolesRepository;
     private final BondedReputationRepository bondedReputationRepository;
-    private final Preferences preferences;
 
     private int gridRow = 0;
 
@@ -87,12 +85,10 @@ public class BondsView extends ActivatableView<GridPane, Void> {
     @Inject
     private BondsView(BsqFormatter bsqFormatter,
                       BondedRolesRepository bondedRolesRepository,
-                      BondedReputationRepository bondedReputationRepository,
-                      Preferences preferences) {
+                      BondedReputationRepository bondedReputationRepository) {
         this.bsqFormatter = bsqFormatter;
         this.bondedRolesRepository = bondedRolesRepository;
         this.bondedReputationRepository = bondedReputationRepository;
-        this.preferences = preferences;
     }
 
     @Override
@@ -330,7 +326,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
                                 if (item != null && !empty) {
                                     String lockupTxId = item.getLockupTxId();
                                     hyperlinkWithIcon = new ExternalHyperlink(lockupTxId);
-                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(lockupTxId, preferences));
+                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBlockExplorer(lockupTxId, true));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", lockupTxId)));
                                     if (item.getLockupDateString().equals("-")) hyperlinkWithIcon.hideIcon();
                                     setGraphic(hyperlinkWithIcon);

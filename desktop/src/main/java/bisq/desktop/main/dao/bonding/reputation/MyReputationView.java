@@ -37,7 +37,6 @@ import bisq.core.dao.governance.bond.BondConsensus;
 import bisq.core.dao.governance.bond.BondState;
 import bisq.core.dao.governance.bond.reputation.MyBondedReputation;
 import bisq.core.locale.Res;
-import bisq.core.user.Preferences;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.validation.HexStringValidator;
@@ -90,7 +89,6 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
     private final HexStringValidator hexStringValidator;
     private final BsqValidator bsqValidator;
     private final DaoFacade daoFacade;
-    private final Preferences preferences;
 
     private final IntegerValidator timeInputTextFieldValidator;
 
@@ -114,15 +112,13 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
                              BondingViewUtils bondingViewUtils,
                              HexStringValidator hexStringValidator,
                              BsqValidator bsqValidator,
-                             DaoFacade daoFacade,
-                             Preferences preferences) {
+                             DaoFacade daoFacade) {
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
         this.bondingViewUtils = bondingViewUtils;
         this.hexStringValidator = hexStringValidator;
         this.bsqValidator = bsqValidator;
         this.daoFacade = daoFacade;
-        this.preferences = preferences;
 
         timeInputTextFieldValidator = new IntegerValidator();
         timeInputTextFieldValidator.setMinValue(BondConsensus.getMinLockTime());
@@ -397,7 +393,7 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
                                     hyperlinkWithIcon = new ExternalHyperlink(transactionId);
-                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(item.getTxId(), preferences));
+                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBlockExplorer(transactionId, true));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);
                                 } else {

@@ -547,11 +547,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         }
     }
 
-    private void openBlockExplorer(WithdrawalListItem item) {
-        if (item.getAddressString() != null)
-            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString(), false);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -676,7 +671,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                 if (item != null && !empty) {
                                     String address = item.getAddressString();
                                     hyperlinkWithIcon = new ExternalHyperlink(address);
-                                    hyperlinkWithIcon.setOnAction(event -> openBlockExplorer(item));
+                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openAddressInBlockExplorer(address));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", address)));
                                     setAlignment(Pos.CENTER);
                                     setGraphic(hyperlinkWithIcon);

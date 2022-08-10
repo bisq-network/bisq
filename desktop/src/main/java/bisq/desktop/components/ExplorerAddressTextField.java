@@ -20,8 +20,6 @@ package bisq.desktop.components;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.Res;
-import bisq.core.user.BlockChainExplorer;
-import bisq.core.user.Preferences;
 
 import bisq.common.util.Utilities;
 
@@ -41,9 +39,6 @@ import lombok.Setter;
 import javax.annotation.Nullable;
 
 public class ExplorerAddressTextField extends AnchorPane {
-    @Setter
-    private static Preferences preferences;
-
     @Getter
     private final TextField textField;
     private final Label copyIcon, blockExplorerIcon, missingAddressWarningIcon;
@@ -107,8 +102,8 @@ public class ExplorerAddressTextField extends AnchorPane {
         }
 
         textField.setText(address);
-        textField.setOnMouseClicked(mouseEvent -> openBlockExplorer(address));
-        blockExplorerIcon.setOnMouseClicked(mouseEvent -> openBlockExplorer(address));
+        textField.setOnMouseClicked(mouseEvent -> GUIUtil.openAddressInBlockExplorer(address, isBsq));
+        blockExplorerIcon.setOnMouseClicked(mouseEvent -> GUIUtil.openAddressInBlockExplorer(address, isBsq));
         copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(address));
     }
 
@@ -117,18 +112,5 @@ public class ExplorerAddressTextField extends AnchorPane {
         blockExplorerIcon.setOnMouseClicked(null);
         copyIcon.setOnMouseClicked(null);
         textField.setText("");
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void openBlockExplorer(String address) {
-        if (preferences != null) {
-            BlockChainExplorer blockChainExplorer = isBsq ?
-                    preferences.getBsqBlockChainExplorer() :
-                    preferences.getBlockChainExplorer();
-            GUIUtil.openWebPage(blockChainExplorer.addressUrl + address, false);
-        }
     }
 }

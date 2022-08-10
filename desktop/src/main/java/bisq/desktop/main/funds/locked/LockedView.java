@@ -37,7 +37,6 @@ import bisq.core.offer.OpenOfferManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.bisq_v1.Trade;
-import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
 
@@ -101,7 +100,6 @@ public class LockedView extends ActivatableView<VBox, Void> {
     private final BtcWalletService btcWalletService;
     private final TradeManager tradeManager;
     private final OpenOfferManager openOfferManager;
-    private final Preferences preferences;
     private final CoinFormatter formatter;
     private final OfferDetailsWindow offerDetailsWindow;
     private final TradeDetailsWindow tradeDetailsWindow;
@@ -121,14 +119,12 @@ public class LockedView extends ActivatableView<VBox, Void> {
     private LockedView(BtcWalletService btcWalletService,
                        TradeManager tradeManager,
                        OpenOfferManager openOfferManager,
-                       Preferences preferences,
                        @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                        OfferDetailsWindow offerDetailsWindow,
                        TradeDetailsWindow tradeDetailsWindow) {
         this.btcWalletService = btcWalletService;
         this.tradeManager = tradeManager;
         this.openOfferManager = openOfferManager;
-        this.preferences = preferences;
         this.formatter = formatter;
         this.offerDetailsWindow = offerDetailsWindow;
         this.tradeDetailsWindow = tradeDetailsWindow;
@@ -244,10 +240,6 @@ public class LockedView extends ActivatableView<VBox, Void> {
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList()));
-    }
-
-    private void openBlockExplorer(LockedListItem item) {
-        GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString(), false);
     }
 
     private Optional<Tradable> getTradable(LockedListItem item) {
@@ -387,7 +379,7 @@ public class LockedView extends ActivatableView<VBox, Void> {
                                 if (item != null && !empty) {
                                     String address = item.getAddressString();
                                     hyperlinkWithIcon = new ExternalHyperlink(address);
-                                    hyperlinkWithIcon.setOnAction(event -> openBlockExplorer(item));
+                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openAddressInBlockExplorer(address));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", address)));
                                     setGraphic(hyperlinkWithIcon);
                                 } else {

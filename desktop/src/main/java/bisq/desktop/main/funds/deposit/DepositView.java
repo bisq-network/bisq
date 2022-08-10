@@ -35,7 +35,6 @@ import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
-import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.CoinFormatter;
@@ -117,7 +116,6 @@ public class DepositView extends ActivatableView<VBox, Void> {
     private InputTextField amountTextField;
 
     private final BtcWalletService walletService;
-    private final Preferences preferences;
     private final CoinFormatter formatter;
     private String paymentLabelString;
     private final ObservableList<DepositListItem> observableList = FXCollections.observableArrayList();
@@ -134,10 +132,8 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
     @Inject
     private DepositView(BtcWalletService walletService,
-                        Preferences preferences,
                         @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         this.walletService = walletService;
-        this.preferences = preferences;
         this.formatter = formatter;
     }
 
@@ -313,11 +309,6 @@ public class DepositView extends ActivatableView<VBox, Void> {
         }
     }
 
-    private void openBlockExplorer(DepositListItem item) {
-        if (item.getAddressString() != null)
-            GUIUtil.openWebPage(preferences.getBlockChainExplorer().addressUrl + item.getAddressString(), false);
-    }
-
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -390,7 +381,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
                                     String address = item.getAddressString();
                                     field = new ExternalHyperlink(address);
                                     field.setOnAction(event -> {
-                                        openBlockExplorer(item);
+                                        GUIUtil.openAddressInBlockExplorer(address);
                                         tableView.getSelectionModel().select(item);
                                     });
                                     field.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", address)));

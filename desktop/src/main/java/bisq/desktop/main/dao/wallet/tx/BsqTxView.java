@@ -43,7 +43,6 @@ import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.locale.Res;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
-import bisq.core.user.Preferences;
 import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.Timer;
@@ -105,7 +104,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     private final BsqWalletService bsqWalletService;
     private final BtcWalletService btcWalletService;
     private final BsqBalanceUtil bsqBalanceUtil;
-    private final Preferences preferences;
     private final TradableRepository tradableRepository;
     private final BsqTradeDetailsWindow bsqTradeDetailsWindow;
 
@@ -130,7 +128,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
     private BsqTxView(DaoFacade daoFacade,
                       DaoStateService daoStateService,
                       BsqWalletService bsqWalletService,
-                      Preferences preferences,
                       BtcWalletService btcWalletService,
                       BsqBalanceUtil bsqBalanceUtil,
                       BsqFormatter bsqFormatter,
@@ -140,7 +137,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         this.daoStateService = daoStateService;
         this.bsqFormatter = bsqFormatter;
         this.bsqWalletService = bsqWalletService;
-        this.preferences = preferences;
         this.btcWalletService = btcWalletService;
         this.bsqBalanceUtil = bsqBalanceUtil;
         this.tradableRepository = tradableRepository;
@@ -458,7 +454,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
                                     hyperlinkWithIcon = new ExternalHyperlink(transactionId);
-                                    hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(item));
+                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBlockExplorer(transactionId, true));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);
                                 } else {
@@ -538,7 +534,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             String addressString = item.getAddress();
                                             field = new AddressWithIconAndDirection(item.getDirection(), addressString,
                                                     item.isReceived());
-                                            field.setOnAction(event -> openAddressInBlockExplorer(item));
+                                            field.setOnAction(event -> GUIUtil.openAddressInBlockExplorer(addressString, true));
                                             field.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", addressString)));
                                             setGraphic(field);
                                         }
@@ -773,17 +769,6 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                 });
 
         tableView.getColumns().add(column);
-    }
-
-    private void openTxInBlockExplorer(BsqTxListItem item) {
-        if (item.getTxId() != null)
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + item.getTxId(), false);
-    }
-
-    private void openAddressInBlockExplorer(BsqTxListItem item) {
-        if (item.getAddress() != null) {
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().addressUrl + item.getAddress(), false);
-        }
     }
 }
 

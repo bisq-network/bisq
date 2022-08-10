@@ -23,8 +23,6 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
-import bisq.core.user.BlockChainExplorer;
-import bisq.core.user.Preferences;
 
 import bisq.common.util.Utilities;
 
@@ -46,8 +44,6 @@ import lombok.Setter;
 import javax.annotation.Nullable;
 
 public class TxIdTextField extends AnchorPane {
-    @Setter
-    private static Preferences preferences;
     @Setter
     private static BtcWalletService walletService;
 
@@ -142,8 +138,8 @@ public class TxIdTextField extends AnchorPane {
         updateConfidence(walletService.getConfidenceForTxId(txId));
 
         textField.setText(txId);
-        textField.setOnMouseClicked(mouseEvent -> openBlockExplorer(txId));
-        blockExplorerIcon.setOnMouseClicked(mouseEvent -> openBlockExplorer(txId));
+        textField.setOnMouseClicked(mouseEvent -> GUIUtil.openTxInBlockExplorer(txId, isBsq));
+        blockExplorerIcon.setOnMouseClicked(mouseEvent -> GUIUtil.openTxInBlockExplorer(txId, isBsq));
         copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(txId));
     }
 
@@ -160,15 +156,6 @@ public class TxIdTextField extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void openBlockExplorer(String txId) {
-        if (preferences != null) {
-            BlockChainExplorer blockChainExplorer = isBsq ?
-                    preferences.getBsqBlockChainExplorer() :
-                    preferences.getBlockChainExplorer();
-            GUIUtil.openWebPage(blockChainExplorer.txUrl + txId, false);
-        }
-    }
 
     private void updateConfidence(TransactionConfidence confidence) {
         GUIUtil.updateConfidence(confidence, progressIndicatorTooltip, txConfidenceIndicator);
