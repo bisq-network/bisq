@@ -138,8 +138,8 @@ public class TxIdTextField extends AnchorPane {
         updateConfidence(walletService.getConfidenceForTxId(txId));
 
         textField.setText(txId);
-        textField.setOnMouseClicked(mouseEvent -> GUIUtil.openTxInBlockExplorer(txId, isBsq));
-        blockExplorerIcon.setOnMouseClicked(mouseEvent -> GUIUtil.openTxInBlockExplorer(txId, isBsq));
+        textField.setOnMouseClicked(mouseEvent -> openBlockExplorer(txId));
+        blockExplorerIcon.setOnMouseClicked(mouseEvent -> openBlockExplorer(txId));
         copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(txId));
     }
 
@@ -156,6 +156,14 @@ public class TxIdTextField extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void openBlockExplorer(String txId) {
+        if (isBsq) {
+            GUIUtil.openTxInBsqBlockExplorer(txId);
+        } else {
+            GUIUtil.openTxInBlockExplorer(txId);
+        }
+    }
 
     private void updateConfidence(TransactionConfidence confidence) {
         GUIUtil.updateConfidence(confidence, progressIndicatorTooltip, txConfidenceIndicator);

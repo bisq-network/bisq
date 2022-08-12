@@ -68,7 +68,7 @@ public class BSQTransactionsView extends ActivatableView<GridPane, Void> impleme
         addTitledGroupBg(root, gridRow, 2, Res.get("dao.factsAndFigures.transactions.genesis"));
         String genTxHeight = String.valueOf(daoFacade.getGenesisBlockHeight());
         String genesisTxId = daoFacade.getGenesisTxId();
-        String url = GUIUtil.getTxUrl(genesisTxId, true);
+        String url = GUIUtil.getBsqTxUrl(genesisTxId);
 
         GridPane.setColumnSpan(addTopLabelReadOnlyTextField(root, gridRow, Res.get("dao.factsAndFigures.transactions.genesisBlockHeight"),
                 genTxHeight, Layout.FIRST_ROW_DISTANCE).third, 2);

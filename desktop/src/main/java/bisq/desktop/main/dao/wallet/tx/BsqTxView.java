@@ -454,7 +454,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
                                     hyperlinkWithIcon = new ExternalHyperlink(transactionId);
-                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBlockExplorer(transactionId, true));
+                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(transactionId));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);
                                 } else {
@@ -534,7 +534,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                             String addressString = item.getAddress();
                                             field = new AddressWithIconAndDirection(item.getDirection(), addressString,
                                                     item.isReceived());
-                                            field.setOnAction(event -> GUIUtil.openAddressInBlockExplorer(addressString, true));
+                                            field.setOnAction(event -> GUIUtil.openAddressInBsqBlockExplorer(addressString));
                                             field.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", addressString)));
                                             setGraphic(field);
                                         }

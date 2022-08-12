@@ -133,15 +133,17 @@ public class GUIUtilTest {
         GUIUtil.setPreferences(preferences);
         when(preferences.getBlockChainExplorer()).thenReturn(new BlockChainExplorer(
                 explorerName, txUrlPrefix, addressUrlPrefix));
-        when(preferences.getBsqBlockChainExplorer()).thenReturn(new BlockChainExplorer(
-                bsqExplorerName, bsqTxUrlPrefix, bsqAddressUrlPrefix));
-
         String address = "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa";
         assertEquals(addressUrlPrefix + address, GUIUtil.getAddressUrl(address));
-        assertEquals(addressUrlPrefix + address, GUIUtil.getAddressUrl(address, false));
+    }
 
+    @Test
+    public void testGetBsqAddressUrl() {
+        GUIUtil.setPreferences(preferences);
+        when(preferences.getBsqBlockChainExplorer()).thenReturn(new BlockChainExplorer(
+                bsqExplorerName, bsqTxUrlPrefix, bsqAddressUrlPrefix));
         String bsqAddress = "B17Q6zA7LbEt5je4mtkBtYBfvDfvEwkzde";
-        assertEquals(bsqAddressUrlPrefix + bsqAddress, GUIUtil.getAddressUrl(bsqAddress, true));
+        assertEquals(bsqAddressUrlPrefix + bsqAddress, GUIUtil.getBsqAddressUrl(bsqAddress));
     }
 
     @Test
@@ -149,15 +151,17 @@ public class GUIUtilTest {
         GUIUtil.setPreferences(preferences);
         when(preferences.getBlockChainExplorer()).thenReturn(new BlockChainExplorer(
                 explorerName, txUrlPrefix, addressUrlPrefix));
-        when(preferences.getBsqBlockChainExplorer()).thenReturn(new BlockChainExplorer(
-                bsqExplorerName, bsqTxUrlPrefix, bsqAddressUrlPrefix));
-
         String txId = "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b";
         assertEquals(txUrlPrefix + txId, GUIUtil.getTxUrl(txId));
-        assertEquals(txUrlPrefix + txId, GUIUtil.getTxUrl(txId, false));
+    }
 
+    @Test
+    public void testGetBsqTxUrl() {
+        GUIUtil.setPreferences(preferences);
+        when(preferences.getBsqBlockChainExplorer()).thenReturn(new BlockChainExplorer(
+                bsqExplorerName, bsqTxUrlPrefix, bsqAddressUrlPrefix));
         String bsqTxId = "4b5417ec5ab6112bedf539c3b4f5a806ed539542d8b717e1c4470aa3180edce5";
-        assertEquals(bsqTxUrlPrefix + bsqTxId, GUIUtil.getTxUrl(bsqTxId, true));
+        assertEquals(bsqTxUrlPrefix + bsqTxId, GUIUtil.getBsqTxUrl(bsqTxId));
     }
 
     @Test

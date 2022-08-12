@@ -413,7 +413,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
                                     hyperlinkWithIcon = new ExternalHyperlink(transactionId);
-                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBlockExplorer(transactionId, true));
+                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(transactionId));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);
                                 } else {
@@ -576,7 +576,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
                                     hyperlinkWithIcon = new ExternalHyperlink(transactionId);
-                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBlockExplorer(transactionId, true));
+                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(transactionId));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);
                                 } else {

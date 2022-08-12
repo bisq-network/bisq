@@ -49,7 +49,6 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.txproof.AssetTxProofResult;
-import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -1169,44 +1168,44 @@ public class GUIUtil {
         };
     }
 
-    private static BlockChainExplorer getBlockExplorer(boolean isBsq) {
-        return isBsq ? preferences.getBsqBlockChainExplorer() : preferences.getBlockChainExplorer();
-    }
-
     public static void openAddressInBlockExplorer(String address) {
-        openAddressInBlockExplorer(address, false);
+        if (address != null) {
+            openWebPage(getAddressUrl(address), false);
+        }
     }
 
-    public static void openAddressInBlockExplorer(String address, boolean isBsq) {
+    public static void openAddressInBsqBlockExplorer(String address) {
         if (address != null) {
-            openWebPage(getAddressUrl(address, isBsq), false);
+            openWebPage(getBsqAddressUrl(address), false);
         }
     }
 
     public static void openTxInBlockExplorer(String txId) {
-        openTxInBlockExplorer(txId, false);
+        if (txId != null) {
+            openWebPage(getTxUrl(txId), false);
+        }
     }
 
-    public static void openTxInBlockExplorer(String txId, boolean isBsq) {
+    public static void openTxInBsqBlockExplorer(String txId) {
         if (txId != null) {
-            openWebPage(getTxUrl(txId, isBsq), false);
+            openWebPage(getBsqTxUrl(txId), false);
         }
     }
 
     public static String getAddressUrl(String address) {
-        return getAddressUrl(address, false);
+        return preferences.getBlockChainExplorer().addressUrl + address;
     }
 
-    public static String getAddressUrl(String address, boolean isBsq) {
-        return getBlockExplorer(isBsq).addressUrl + address;
+    public static String getBsqAddressUrl(String address) {
+        return preferences.getBsqBlockChainExplorer().addressUrl + address;
     }
 
     public static String getTxUrl(String txId) {
-        return getTxUrl(txId, false);
+        return preferences.getBlockChainExplorer().txUrl + txId;
     }
 
-    public static String getTxUrl(String txId, boolean isBsq) {
-        return getBlockExplorer(isBsq).txUrl + txId;
+    public static String getBsqTxUrl(String txId) {
+        return preferences.getBsqBlockChainExplorer().txUrl + txId;
     }
 
     public static String getBsqInUsd(Price bsqPrice,

@@ -241,7 +241,7 @@ public class RolesView extends ActivatableView<GridPane, Void> {
                                     String lockupTxId = item.getLockupTxId();
                                     if (lockupTxId != null) {
                                         hyperlinkWithIcon = new ExternalHyperlink(lockupTxId);
-                                        hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBlockExplorer(lockupTxId, true));
+                                        hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(lockupTxId));
                                         hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", lockupTxId)));
                                         setGraphic(hyperlinkWithIcon);
                                     } else {

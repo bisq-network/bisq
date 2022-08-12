@@ -266,7 +266,7 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
                                 if (item != null && !empty) {
                                     String transactionId = item.getBlindVoteTxId();
                                     hyperlinkWithIcon = new ExternalHyperlink(transactionId);
-                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBlockExplorer(transactionId, true));
+                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(transactionId));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);
                                 } else {

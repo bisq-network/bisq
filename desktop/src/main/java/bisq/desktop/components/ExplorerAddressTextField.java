@@ -102,8 +102,8 @@ public class ExplorerAddressTextField extends AnchorPane {
         }
 
         textField.setText(address);
-        textField.setOnMouseClicked(mouseEvent -> GUIUtil.openAddressInBlockExplorer(address, isBsq));
-        blockExplorerIcon.setOnMouseClicked(mouseEvent -> GUIUtil.openAddressInBlockExplorer(address, isBsq));
+        textField.setOnMouseClicked(mouseEvent -> openBlockExplorer(address));
+        blockExplorerIcon.setOnMouseClicked(mouseEvent -> openBlockExplorer(address));
         copyIcon.setOnMouseClicked(e -> Utilities.copyToClipboard(address));
     }
 
@@ -112,5 +112,17 @@ public class ExplorerAddressTextField extends AnchorPane {
         blockExplorerIcon.setOnMouseClicked(null);
         copyIcon.setOnMouseClicked(null);
         textField.setText("");
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void openBlockExplorer(String address) {
+        if (isBsq) {
+            GUIUtil.openAddressInBsqBlockExplorer(address);
+        } else {
+            GUIUtil.openAddressInBlockExplorer(address);
+        }
     }
 }

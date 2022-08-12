@@ -326,7 +326,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
                                 if (item != null && !empty) {
                                     String lockupTxId = item.getLockupTxId();
                                     hyperlinkWithIcon = new ExternalHyperlink(lockupTxId);
-                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBlockExplorer(lockupTxId, true));
+                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(lockupTxId));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", lockupTxId)));
                                     if (item.getLockupDateString().equals("-")) hyperlinkWithIcon.hideIcon();
                                     setGraphic(hyperlinkWithIcon);

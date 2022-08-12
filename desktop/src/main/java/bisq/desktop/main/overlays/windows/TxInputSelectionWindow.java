@@ -224,7 +224,7 @@ public class TxInputSelectionWindow extends Overlay<TxInputSelectionWindow> {
                                     TransactionOutput transactionOutput = item.getTransactionOutput();
                                     String txId = transactionOutput.getParentTransaction().getTxId().toString();
                                     hyperlinkWithIcon = new ExternalHyperlink(txId + ":" + transactionOutput.getIndex());
-                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBlockExplorer(txId, true));
+                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(txId));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", txId)));
                                     setGraphic(hyperlinkWithIcon);
                                 } else {
