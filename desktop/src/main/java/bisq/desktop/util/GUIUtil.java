@@ -1178,8 +1178,9 @@ public class GUIUtil {
     }
 
     public static void openAddressInBlockExplorer(String address, boolean isBsq) {
-        if (address != null)
+        if (address != null) {
             openWebPage(getAddressUrl(address, isBsq), false);
+        }
     }
 
     public static void openTxInBlockExplorer(String txId) {
@@ -1187,8 +1188,9 @@ public class GUIUtil {
     }
 
     public static void openTxInBlockExplorer(String txId, boolean isBsq) {
-        if (txId != null)
+        if (txId != null) {
             openWebPage(getTxUrl(txId, isBsq), false);
+        }
     }
 
     public static String getAddressUrl(String address) {

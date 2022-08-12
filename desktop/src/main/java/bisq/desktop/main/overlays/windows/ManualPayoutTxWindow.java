@@ -313,8 +313,9 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
         AwesomeDude.setIcon(blockExplorerIcon, AwesomeIcon.EXTERNAL_LINK);
         blockExplorerIcon.setMinWidth(20);
         blockExplorerIcon.setOnMouseClicked(mouseEvent -> {
-            if (depositTxHex.getText().length() == HEX_HASH_LENGTH)
+            if (depositTxHex.getText().length() == HEX_HASH_LENGTH) {
                 GUIUtil.openTxInBlockExplorer(depositTxHex.getText());
+            }
         });
         depositTxHex = addInputTextField(inputsGridPane, rowIndexA, "depositTxId");
         HBox hBoxTx = new HBox(12, depositTxHex, blockExplorerIcon);
