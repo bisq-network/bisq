@@ -46,7 +46,8 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 
-import javafx.beans.value.ChangeListener;
+import org.fxmisc.easybind.EasyBind;
+import org.fxmisc.easybind.Subscription;
 
 import java.util.Arrays;
 import java.util.List;
@@ -67,7 +68,7 @@ public class GovernanceView extends ActivatableView<AnchorPane, Void> implements
     private AnchorPane content;
 
     private Class<? extends View> selectedViewClass;
-    private ChangeListener<DaoPhase.Phase> phaseChangeListener;
+    private Subscription phaseChangeSubscription;
     private ToggleGroup toggleGroup;
 
     @Inject
@@ -89,13 +90,6 @@ public class GovernanceView extends ActivatableView<AnchorPane, Void> implements
             loadView(selectedViewClass);
         };
 
-        phaseChangeListener = (observable, oldValue, newValue) -> {
-            if (newValue == DaoPhase.Phase.BLIND_VOTE)
-                open.setLabelText(Res.get("dao.proposal.menuItem.vote"));
-            else
-                open.setLabelText(Res.get("dao.proposal.menuItem.browse"));
-        };
-
         toggleGroup = new ToggleGroup();
         List<Class<? extends View>> baseNavPath = Arrays.asList(MainView.class, DaoView.class, GovernanceView.class);
         dashboard = new MenuItem(navigation, toggleGroup, Res.get("shared.dashboard"),
@@ -113,7 +107,7 @@ public class GovernanceView extends ActivatableView<AnchorPane, Void> implements
     @Override
     protected void activate() {
         if (daoStateService.isParseBlockChainComplete()) {
-            daoFacade.phaseProperty().addListener(phaseChangeListener);
+            phaseChangeSubscription = EasyBind.subscribe(daoFacade.phaseProperty(), this::setupOpenMenuButtonText);
         } else {
             daoStateService.addDaoStateListener(this);
         }
@@ -142,7 +136,10 @@ public class GovernanceView extends ActivatableView<AnchorPane, Void> implements
     @SuppressWarnings("Duplicates")
     @Override
     protected void deactivate() {
-        daoFacade.phaseProperty().removeListener(phaseChangeListener);
+        if (phaseChangeSubscription != null) {
+            phaseChangeSubscription.unsubscribe();
+        }
+
         daoStateService.removeDaoStateListener(this);
 
         navigation.removeListener(navigationListener);
@@ -160,7 +157,7 @@ public class GovernanceView extends ActivatableView<AnchorPane, Void> implements
 
     @Override
     public void onParseBlockChainComplete() {
-        daoFacade.phaseProperty().addListener(phaseChangeListener);
+        phaseChangeSubscription = EasyBind.subscribe(daoFacade.phaseProperty(), this::setupOpenMenuButtonText);
     }
 
 
@@ -176,6 +173,14 @@ public class GovernanceView extends ActivatableView<AnchorPane, Void> implements
         else if (view instanceof MakeProposalView) toggleGroup.selectToggle(make);
         else if (view instanceof ProposalsView) toggleGroup.selectToggle(open);
         else if (view instanceof VoteResultView) toggleGroup.selectToggle(result);
+    }
+
+    private void setupOpenMenuButtonText(DaoPhase.Phase phase) {
+        if (phase == DaoPhase.Phase.BLIND_VOTE) {
+            open.setLabelText(Res.get("dao.proposal.menuItem.vote"));
+        } else {
+            open.setLabelText(Res.get("dao.proposal.menuItem.browse"));
+        }
     }
 }
 
