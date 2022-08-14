@@ -303,40 +303,40 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         }
 
 
-        CompletableFuture<Boolean> task7Done = new CompletableFuture<>();
-        allFutures.add(task7Done);
+        CompletableFuture<Boolean> task15Done = new CompletableFuture<>();
+        allFutures.add(task15Done);
         model.getCompensationAmount()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
                             Optional.ofNullable(data).ifPresent(compensationAmountProperty::set);
-                            task7Done.complete(true);
+                            task15Done.complete(true);
                         }));
 
-        CompletableFuture<Boolean> task8Done = new CompletableFuture<>();
-        allFutures.add(task8Done);
+        CompletableFuture<Boolean> task16Done = new CompletableFuture<>();
+        allFutures.add(task16Done);
         model.getReimbursementAmount()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
                             Optional.ofNullable(data).ifPresent(reimbursementAmountProperty::set);
-                            task8Done.complete(true);
+                            task16Done.complete(true);
                         }));
 
-        CompletableFuture<Boolean> task9Done = new CompletableFuture<>();
-        allFutures.add(task9Done);
+        CompletableFuture<Boolean> task17Done = new CompletableFuture<>();
+        allFutures.add(task17Done);
         model.getBsqTradeFeeAmount()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
                             Optional.ofNullable(data).ifPresent(bsqTradeFeeAmountProperty::set);
-                            task9Done.complete(true);
+                            task17Done.complete(true);
                         }));
 
-        CompletableFuture<Boolean> task10Done = new CompletableFuture<>();
-        allFutures.add(task10Done);
+        CompletableFuture<Boolean> task18Done = new CompletableFuture<>();
+        allFutures.add(task18Done);
         model.getProofOfBurnAmount()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
                             Optional.ofNullable(data).ifPresent(proofOfBurnAmountProperty::set);
-                            task10Done.complete(true);
+                            task18Done.complete(true);
                         }));
 
         return CompletableFutureUtils.allOf(allFutures).thenApply(e -> true);
