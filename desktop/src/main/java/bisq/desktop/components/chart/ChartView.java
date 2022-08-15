@@ -177,28 +177,29 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
 
         // Put all together
         VBox timelineNavigationBox = new VBox();
-        double paddingLeft = 15;
+        double paddingTop = 0;
         double paddingRight = 89;
+        double paddingLeft = 15;
         // Y-axis width depends on data so we register a listener to get correct value
         yAxisWidthListener = (observable, oldValue, newValue) -> {
             double width = newValue.doubleValue();
             if (width > 0) {
                 double rightPadding = width + 14;
-                VBox.setMargin(timeIntervalBox, new Insets(0, rightPadding, 0, paddingLeft));
-                VBox.setMargin(timelineNavigation, new Insets(0, rightPadding, 0, paddingLeft));
-                VBox.setMargin(timelineLabels, new Insets(0, rightPadding, 0, paddingLeft));
+                VBox.setMargin(timeIntervalBox, new Insets(paddingTop, rightPadding, 0, paddingLeft));
+                VBox.setMargin(timelineNavigation, new Insets(paddingTop, rightPadding, 0, paddingLeft));
+                VBox.setMargin(timelineLabels, new Insets(paddingTop, rightPadding, 0, paddingLeft));
                 VBox.setMargin(legendBox1, new Insets(10, rightPadding, 0, paddingLeft));
                 if (legendBox2 != null) {
-                    VBox.setMargin(legendBox2, new Insets(-20, rightPadding, 0, paddingLeft));
+                    VBox.setMargin(legendBox2, new Insets(paddingTop, rightPadding, 0, paddingLeft));
                 }
                 if (legendBox3 != null) {
-                    VBox.setMargin(legendBox3, new Insets(-20, rightPadding, 0, paddingLeft));
+                    VBox.setMargin(legendBox3, new Insets(paddingTop, rightPadding, 0, paddingLeft));
                 }
                 if (legendBox4 != null) {
-                    VBox.setMargin(legendBox4, new Insets(-20, rightPadding, 0, paddingLeft));
+                    VBox.setMargin(legendBox4, new Insets(paddingTop, rightPadding, 0, paddingLeft));
                 }
                 if (legendBox5 != null) {
-                    VBox.setMargin(legendBox5, new Insets(-20, rightPadding, 0, paddingLeft));
+                    VBox.setMargin(legendBox5, new Insets(paddingTop, rightPadding, 0, paddingLeft));
                 }
 
                 if (model.getDividerPositions()[0] == 0 && model.getDividerPositions()[1] == 1) {
@@ -207,25 +208,25 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
             }
         };
 
-        VBox.setMargin(timeIntervalBox, new Insets(0, paddingRight, 0, paddingLeft));
-        VBox.setMargin(timelineNavigation, new Insets(0, paddingRight, 0, paddingLeft));
-        VBox.setMargin(timelineLabels, new Insets(0, paddingRight, 0, paddingLeft));
-        VBox.setMargin(legendBox1, new Insets(0, paddingRight, 0, paddingLeft));
+        VBox.setMargin(timeIntervalBox, new Insets(paddingTop, paddingRight, 0, paddingLeft));
+        VBox.setMargin(timelineNavigation, new Insets(paddingTop, paddingRight, 0, paddingLeft));
+        VBox.setMargin(timelineLabels, new Insets(paddingTop, paddingRight, 0, paddingLeft));
+        VBox.setMargin(legendBox1, new Insets(paddingTop, paddingRight, 0, paddingLeft));
         timelineNavigationBox.getChildren().addAll(timelineNavigation, timelineLabels, legendBox1);
         if (legendBox2 != null) {
-            VBox.setMargin(legendBox2, new Insets(-20, paddingRight, 0, paddingLeft));
+            VBox.setMargin(legendBox2, new Insets(paddingTop, paddingRight, 0, paddingLeft));
             timelineNavigationBox.getChildren().add(legendBox2);
         }
         if (legendBox3 != null) {
-            VBox.setMargin(legendBox3, new Insets(-20, paddingRight, 0, paddingLeft));
+            VBox.setMargin(legendBox3, new Insets(paddingTop, paddingRight, 0, paddingLeft));
             timelineNavigationBox.getChildren().add(legendBox3);
         }
         if (legendBox4 != null) {
-            VBox.setMargin(legendBox4, new Insets(-20, paddingRight, 0, paddingLeft));
+            VBox.setMargin(legendBox4, new Insets(paddingTop, paddingRight, 0, paddingLeft));
             timelineNavigationBox.getChildren().add(legendBox4);
         }
         if (legendBox5 != null) {
-            VBox.setMargin(legendBox5, new Insets(-20, paddingRight, 0, paddingLeft));
+            VBox.setMargin(legendBox5, new Insets(paddingTop, paddingRight, 0, paddingLeft));
             timelineNavigationBox.getChildren().add(legendBox5);
         }
         root.getChildren().addAll(timeIntervalBox, chart, timelineNavigationBox);
@@ -407,6 +408,7 @@ public abstract class ChartView<T extends ChartViewModel<? extends ChartDataMode
             toggle.setText(seriesId);
             toggle.setId("charts-legend-toggle" + seriesIndexMap.get(seriesId));
             toggle.setSelected(false);
+            toggle.setPadding(new Insets(0,0,0,10));
             maybeAddToolTip(toggle, series);
             hBox.getChildren().add(toggle);
         });
