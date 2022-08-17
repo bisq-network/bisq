@@ -21,6 +21,7 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 
 import bisq.core.dao.DaoFacade;
@@ -28,7 +29,6 @@ import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.locale.Res;
-import bisq.core.user.Preferences;
 
 import bisq.common.util.Tuple3;
 
@@ -48,7 +48,6 @@ import static bisq.desktop.util.FormBuilder.addTopLabelReadOnlyTextField;
 public class BSQTransactionsView extends ActivatableView<GridPane, Void> implements DaoStateListener {
 
     private final DaoFacade daoFacade;
-    private final Preferences preferences;
 
     private int gridRow = 0;
     private TextField allTxTextField, burntFeeTxsTextField,
@@ -60,10 +59,8 @@ public class BSQTransactionsView extends ActivatableView<GridPane, Void> impleme
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    private BSQTransactionsView(DaoFacade daoFacade,
-                                Preferences preferences) {
+    private BSQTransactionsView(DaoFacade daoFacade) {
         this.daoFacade = daoFacade;
-        this.preferences = preferences;
     }
 
     @Override
@@ -71,7 +68,7 @@ public class BSQTransactionsView extends ActivatableView<GridPane, Void> impleme
         addTitledGroupBg(root, gridRow, 2, Res.get("dao.factsAndFigures.transactions.genesis"));
         String genTxHeight = String.valueOf(daoFacade.getGenesisBlockHeight());
         String genesisTxId = daoFacade.getGenesisTxId();
-        String url = preferences.getBsqBlockChainExplorer().txUrl + genesisTxId;
+        String url = GUIUtil.getBsqTxUrl(genesisTxId);
 
         GridPane.setColumnSpan(addTopLabelReadOnlyTextField(root, gridRow, Res.get("dao.factsAndFigures.transactions.genesisBlockHeight"),
                 genTxHeight, Layout.FIRST_ROW_DISTANCE).third, 2);

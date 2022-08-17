@@ -56,7 +56,6 @@ import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
-import bisq.core.user.Preferences;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.validation.InputValidator;
 import bisq.core.util.validation.RegexValidator;
@@ -110,7 +109,6 @@ public class ProposalDisplay {
     @Nullable
     private final ChangeParamValidator changeParamValidator;
     private final Navigation navigation;
-    private final Preferences preferences;
 
     @Nullable
     private TextField proposalFeeTextField, comboBoxValueTextField, requiredBondForRoleTextField;
@@ -152,14 +150,12 @@ public class ProposalDisplay {
                            BsqFormatter bsqFormatter,
                            DaoFacade daoFacade,
                            @Nullable ChangeParamValidator changeParamValidator,
-                           Navigation navigation,
-                           @Nullable Preferences preferences) {
+                           Navigation navigation) {
         this.gridPane = gridPane;
         this.bsqFormatter = bsqFormatter;
         this.daoFacade = daoFacade;
         this.changeParamValidator = changeParamValidator;
         this.navigation = navigation;
-        this.preferences = preferences;
 
         // focusOutListener = observable -> inputChangedListeners.forEach(Runnable::run);
 

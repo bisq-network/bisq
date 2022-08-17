@@ -23,8 +23,6 @@ import bisq.desktop.util.GUIUtil;
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
-import bisq.core.user.BlockChainExplorer;
-import bisq.core.user.Preferences;
 
 import bisq.common.util.Utilities;
 
@@ -46,8 +44,6 @@ import lombok.Setter;
 import javax.annotation.Nullable;
 
 public class TxIdTextField extends AnchorPane {
-    @Setter
-    private static Preferences preferences;
     @Setter
     private static BtcWalletService walletService;
 
@@ -162,11 +158,10 @@ public class TxIdTextField extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void openBlockExplorer(String txId) {
-        if (preferences != null) {
-            BlockChainExplorer blockChainExplorer = isBsq ?
-                    preferences.getBsqBlockChainExplorer() :
-                    preferences.getBlockChainExplorer();
-            GUIUtil.openWebPage(blockChainExplorer.txUrl + txId, false);
+        if (isBsq) {
+            GUIUtil.openTxInBsqBlockExplorer(txId);
+        } else {
+            GUIUtil.openTxInBlockExplorer(txId);
         }
     }
 

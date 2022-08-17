@@ -23,6 +23,7 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.util.coin.BsqFormatter;
@@ -53,12 +54,27 @@ import static org.mockito.Mockito.when;
 
 public class GUIUtilTest {
 
+    private Preferences preferences;
+    private String explorerName;
+    private String bsqExplorerName;
+    private String txUrlPrefix;
+    private String bsqTxUrlPrefix;
+    private String addressUrlPrefix;
+    private String bsqAddressUrlPrefix;
+
     @Before
     public void setup() {
         Locale.setDefault(new Locale("en", "US"));
         GlobalSettings.setLocale(new Locale("en", "US"));
         Res.setBaseCurrencyCode("BTC");
         Res.setBaseCurrencyName("Bitcoin");
+        preferences = mock(Preferences.class);
+        explorerName = "Blockstream.info";
+        bsqExplorerName = "mempool.space (@wiz)";
+        txUrlPrefix = "https://blockstream.info/tx/";
+        bsqTxUrlPrefix = "https://mempool.space/bisq/tx/";
+        addressUrlPrefix = "https://blockstream.info/address/";
+        bsqAddressUrlPrefix = "https://mempool.space/bisq/address/";
     }
 
     @Test
@@ -79,7 +95,6 @@ public class GUIUtilTest {
 
     @Test
     public void testOpenURLWithCampaignParameters() {
-        Preferences preferences = mock(Preferences.class);
         DontShowAgainLookup.setPreferences(preferences);
         GUIUtil.setPreferences(preferences);
         when(preferences.showAgain("warnOpenURLWhenTorEnabled")).thenReturn(false);
@@ -100,7 +115,6 @@ public class GUIUtilTest {
 
     @Test
     public void testOpenURLWithoutCampaignParameters() {
-        Preferences preferences = mock(Preferences.class);
         DontShowAgainLookup.setPreferences(preferences);
         GUIUtil.setPreferences(preferences);
         when(preferences.showAgain("warnOpenURLWhenTorEnabled")).thenReturn(false);
@@ -112,6 +126,42 @@ public class GUIUtilTest {
 
         assertEquals("https://www.github.com", captor.getValue().toString());
 */
+    }
+
+    @Test
+    public void testGetAddressUrl() {
+        GUIUtil.setPreferences(preferences);
+        when(preferences.getBlockChainExplorer()).thenReturn(new BlockChainExplorer(
+                explorerName, txUrlPrefix, addressUrlPrefix));
+        String address = "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa";
+        assertEquals(addressUrlPrefix + address, GUIUtil.getAddressUrl(address));
+    }
+
+    @Test
+    public void testGetBsqAddressUrl() {
+        GUIUtil.setPreferences(preferences);
+        when(preferences.getBsqBlockChainExplorer()).thenReturn(new BlockChainExplorer(
+                bsqExplorerName, bsqTxUrlPrefix, bsqAddressUrlPrefix));
+        String bsqAddress = "B17Q6zA7LbEt5je4mtkBtYBfvDfvEwkzde";
+        assertEquals(bsqAddressUrlPrefix + bsqAddress, GUIUtil.getBsqAddressUrl(bsqAddress));
+    }
+
+    @Test
+    public void testGetTxUrl() {
+        GUIUtil.setPreferences(preferences);
+        when(preferences.getBlockChainExplorer()).thenReturn(new BlockChainExplorer(
+                explorerName, txUrlPrefix, addressUrlPrefix));
+        String txId = "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b";
+        assertEquals(txUrlPrefix + txId, GUIUtil.getTxUrl(txId));
+    }
+
+    @Test
+    public void testGetBsqTxUrl() {
+        GUIUtil.setPreferences(preferences);
+        when(preferences.getBsqBlockChainExplorer()).thenReturn(new BlockChainExplorer(
+                bsqExplorerName, bsqTxUrlPrefix, bsqAddressUrlPrefix));
+        String bsqTxId = "4b5417ec5ab6112bedf539c3b4f5a806ed539542d8b717e1c4470aa3180edce5";
+        assertEquals(bsqTxUrlPrefix + bsqTxId, GUIUtil.getBsqTxUrl(bsqTxId));
     }
 
     @Test

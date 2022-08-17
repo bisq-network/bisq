@@ -35,7 +35,6 @@ import bisq.core.dao.state.model.governance.Ballot;
 import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.locale.Res;
-import bisq.core.user.Preferences;
 import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.util.Tuple2;
@@ -78,7 +77,6 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
     private final BsqFormatter bsqFormatter;
     private final DaoFacade daoFacade;
     private final Navigation navigation;
-    private final Preferences preferences;
     private boolean isVoteIncludedInResult;
     private SortedList<VoteListItem> sortedVotes;
     private Tab proposalTab, votesTab;
@@ -90,12 +88,10 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
     @Inject
     public ProposalResultsWindow(BsqFormatter bsqFormatter,
                                  DaoFacade daoFacade,
-                                 Navigation navigation,
-                                 Preferences preferences) {
+                                 Navigation navigation) {
         this.bsqFormatter = bsqFormatter;
         this.daoFacade = daoFacade;
         this.navigation = navigation;
-        this.preferences = preferences;
     }
 
     public void show(EvaluatedProposal evaluatedProposal, Ballot ballot,
@@ -147,8 +143,7 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
 
     private void addContent(EvaluatedProposal evaluatedProposal, Ballot ballot) {
         Proposal proposal = evaluatedProposal.getProposal();
-        ProposalDisplay proposalDisplay = new ProposalDisplay(gridPane, bsqFormatter, daoFacade, null,
-                navigation, preferences);
+        ProposalDisplay proposalDisplay = new ProposalDisplay(gridPane, bsqFormatter, daoFacade, null, navigation);
         proposalDisplay.createAllFields("", rowIndex, -Layout.FIRST_ROW_DISTANCE, proposal.getType(),
                 false, "last");
         proposalDisplay.setEditable(false);
@@ -271,7 +266,7 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
                                 if (item != null && !empty) {
                                     String transactionId = item.getBlindVoteTxId();
                                     hyperlinkWithIcon = new ExternalHyperlink(transactionId);
-                                    hyperlinkWithIcon.setOnAction(event -> openTxInBlockExplorer(item));
+                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(transactionId));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);
                                 } else {
@@ -395,10 +390,5 @@ public class ProposalResultsWindow extends TabbedOverlay<ProposalResultsWindow> 
                 doClose();
             }
         });
-    }
-
-    private void openTxInBlockExplorer(VoteListItem item) {
-        if (item.getBlindVoteTxId() != null)
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + item.getBlindVoteTxId(), false);
     }
 }

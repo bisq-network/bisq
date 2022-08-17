@@ -36,8 +36,6 @@ import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.locale.Res;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.mediation.MediationManager;
-import bisq.core.user.BlockChainExplorer;
-import bisq.core.user.Preferences;
 
 import bisq.network.p2p.P2PService;
 
@@ -110,7 +108,6 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
     private final TradeWalletService tradeWalletService;
     private final P2PService p2PService;
     private final MediationManager mediationManager;
-    private final Preferences preferences;
     private final WalletsSetup walletsSetup;
     private final WalletsManager walletsManager;
     GridPane inputsGridPane;
@@ -149,13 +146,11 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
     public ManualPayoutTxWindow(TradeWalletService tradeWalletService,
                                 P2PService p2PService,
                                 MediationManager mediationManager,
-                                Preferences preferences,
                                 WalletsSetup walletsSetup,
                                 WalletsManager walletsManager) {
         this.tradeWalletService = tradeWalletService;
         this.p2PService = p2PService;
         this.mediationManager = mediationManager;
-        this.preferences = preferences;
         this.walletsSetup = walletsSetup;
         this.walletsManager = walletsManager;
         type = Type.Attention;
@@ -317,7 +312,11 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
         blockExplorerIcon.setTooltip(tooltip);
         AwesomeDude.setIcon(blockExplorerIcon, AwesomeIcon.EXTERNAL_LINK);
         blockExplorerIcon.setMinWidth(20);
-        blockExplorerIcon.setOnMouseClicked(mouseEvent -> openBlockExplorer(depositTxHex.getText()));
+        blockExplorerIcon.setOnMouseClicked(mouseEvent -> {
+            if (depositTxHex.getText().length() == HEX_HASH_LENGTH) {
+                GUIUtil.openTxInBlockExplorer(depositTxHex.getText());
+            }
+        });
         depositTxHex = addInputTextField(inputsGridPane, rowIndexA, "depositTxId");
         HBox hBoxTx = new HBox(12, depositTxHex, blockExplorerIcon);
         hBoxTx.setAlignment(Pos.BASELINE_LEFT);
@@ -623,15 +622,6 @@ public class ManualPayoutTxWindow extends Overlay<ManualPayoutTxWindow> {
             txFee.setText(txFeeValue.toPlainString());
             double feePercent = (double) txFeeValue.value / getInputFieldAsCoin(amountInMultisig).value;
             txFeePct.setText(String.format("%.2f", feePercent * 100));
-        }
-    }
-
-    private void openBlockExplorer(String txId) {
-        if (txId.length() != HEX_HASH_LENGTH)
-            return;
-        if (preferences != null) {
-            BlockChainExplorer blockChainExplorer = preferences.getBlockChainExplorer();
-            GUIUtil.openWebPage(blockChainExplorer.txUrl + txId, false);
         }
     }
 

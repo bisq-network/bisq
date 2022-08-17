@@ -14,7 +14,6 @@ import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.Res;
-import bisq.core.user.Preferences;
 import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.util.Tuple2;
@@ -44,7 +43,6 @@ public class SelectProposalWindow extends Overlay<SelectProposalWindow> {
     private final DaoFacade daoFacade;
     private final ChangeParamValidator changeParamValidator;
     private final Navigation navigation;
-    private final Preferences preferences;
     private Optional<Runnable> acceptHandlerOptional;
     private Optional<Runnable> rejectHandlerOptional;
     private Optional<Runnable> ignoreHandlerOptional;
@@ -60,13 +58,11 @@ public class SelectProposalWindow extends Overlay<SelectProposalWindow> {
 
     @Inject
     public SelectProposalWindow(BsqFormatter bsqFormatter, DaoFacade daoFacade,
-                                ChangeParamValidator changeParamValidator, Navigation navigation,
-                                Preferences preferences) {
+                                ChangeParamValidator changeParamValidator, Navigation navigation) {
         this.bsqFormatter = bsqFormatter;
         this.daoFacade = daoFacade;
         this.changeParamValidator = changeParamValidator;
         this.navigation = navigation;
-        this.preferences = preferences;
     }
 
     public void show(Proposal proposal, EvaluatedProposal evaluatedProposal, Ballot ballot) {
@@ -140,7 +136,7 @@ public class SelectProposalWindow extends Overlay<SelectProposalWindow> {
 
     private void addContent(Proposal proposal, EvaluatedProposal evaluatedProposal, Ballot ballot) {
         ProposalDisplay proposalDisplay = new ProposalDisplay(gridPane, bsqFormatter, daoFacade, changeParamValidator,
-                navigation, preferences);
+                navigation);
 
         proposalDisplay.onNavigate(this::doClose);
 

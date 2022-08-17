@@ -20,7 +20,6 @@ package bisq.desktop.main;
 import bisq.desktop.Navigation;
 import bisq.desktop.app.BisqApp;
 import bisq.desktop.common.model.ViewModel;
-import bisq.desktop.components.ExplorerAddressTextField;
 import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.account.content.backup.BackupView;
@@ -232,9 +231,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         this.corruptedStorageFileHandler = corruptedStorageFileHandler;
         this.clockWatcher = clockWatcher;
         this.navigation = navigation;
-
-        TxIdTextField.setPreferences(preferences);
-        ExplorerAddressTextField.setPreferences(preferences);
 
         TxIdTextField.setWalletService(btcWalletService);
 

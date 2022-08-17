@@ -20,8 +20,6 @@ package bisq.desktop.components;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.Res;
-import bisq.core.user.BlockChainExplorer;
-import bisq.core.user.Preferences;
 
 import bisq.common.util.Utilities;
 
@@ -41,9 +39,6 @@ import lombok.Setter;
 import javax.annotation.Nullable;
 
 public class ExplorerAddressTextField extends AnchorPane {
-    @Setter
-    private static Preferences preferences;
-
     @Getter
     private final TextField textField;
     private final Label copyIcon, blockExplorerIcon, missingAddressWarningIcon;
@@ -124,11 +119,10 @@ public class ExplorerAddressTextField extends AnchorPane {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void openBlockExplorer(String address) {
-        if (preferences != null) {
-            BlockChainExplorer blockChainExplorer = isBsq ?
-                    preferences.getBsqBlockChainExplorer() :
-                    preferences.getBlockChainExplorer();
-            GUIUtil.openWebPage(blockChainExplorer.addressUrl + address, false);
+        if (isBsq) {
+            GUIUtil.openAddressInBsqBlockExplorer(address);
+        } else {
+            GUIUtil.openAddressInBlockExplorer(address);
         }
     }
 }

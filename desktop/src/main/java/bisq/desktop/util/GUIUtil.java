@@ -1168,9 +1168,44 @@ public class GUIUtil {
         };
     }
 
-    public static void openTxInBsqBlockExplorer(String txId, Preferences preferences) {
-        if (txId != null)
-            GUIUtil.openWebPage(preferences.getBsqBlockChainExplorer().txUrl + txId, false);
+    public static void openAddressInBlockExplorer(String address) {
+        if (address != null) {
+            openWebPage(getAddressUrl(address), false);
+        }
+    }
+
+    public static void openAddressInBsqBlockExplorer(String address) {
+        if (address != null) {
+            openWebPage(getBsqAddressUrl(address), false);
+        }
+    }
+
+    public static void openTxInBlockExplorer(String txId) {
+        if (txId != null) {
+            openWebPage(getTxUrl(txId), false);
+        }
+    }
+
+    public static void openTxInBsqBlockExplorer(String txId) {
+        if (txId != null) {
+            openWebPage(getBsqTxUrl(txId), false);
+        }
+    }
+
+    public static String getAddressUrl(String address) {
+        return preferences.getBlockChainExplorer().addressUrl + address;
+    }
+
+    public static String getBsqAddressUrl(String address) {
+        return preferences.getBsqBlockChainExplorer().addressUrl + address;
+    }
+
+    public static String getTxUrl(String txId) {
+        return preferences.getBlockChainExplorer().txUrl + txId;
+    }
+
+    public static String getBsqTxUrl(String txId) {
+        return preferences.getBsqBlockChainExplorer().txUrl + txId;
     }
 
     public static String getBsqInUsd(Price bsqPrice,
