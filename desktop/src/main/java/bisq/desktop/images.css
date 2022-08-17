@@ -21,6 +21,10 @@
     -fx-image: url("../../images/green_circle.png");
 }
 
+#image-yellow_circle {
+    -fx-image: url("../../images/yellow_circle.png");
+}
+
 #image-blue_circle {
     -fx-image: url("../../images/blue_circle.png");
 }

@@ -35,6 +35,7 @@ import bisq.desktop.main.market.offerbook.OfferBookChartView;
 import bisq.desktop.main.offer.BuyOfferView;
 import bisq.desktop.main.offer.SellOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
 import bisq.desktop.main.portfolio.PortfolioView;
 import bisq.desktop.main.settings.SettingsView;
 import bisq.desktop.main.shared.PriceFeedComboBoxItem;
@@ -59,6 +60,10 @@ import javax.inject.Inject;
 import com.jfoenix.controls.JFXBadge;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXProgressBar;
+
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -91,6 +96,8 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
+
+import javafx.util.Duration;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -156,17 +163,20 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
     private Label btcSplashInfo;
     private Popup p2PNetworkWarnMsgPopup, btcNetworkWarnMsgPopup;
     private final DaoStateMonitoringService daoStateMonitoringService;
+    private final TorNetworkSettingsWindow torNetworkSettingsWindow;
 
     @Inject
     public MainView(MainViewModel model,
                     CachingViewLoader viewLoader,
                     Navigation navigation,
                     Transitions transitions,
+                    TorNetworkSettingsWindow torNetworkSettingsWindow,
                     DaoStateMonitoringService daoStateMonitoringService) {
         super(model);
         this.viewLoader = viewLoader;
         this.navigation = navigation;
         MainView.transitions = transitions;
+        this.torNetworkSettingsWindow = torNetworkSettingsWindow;
         this.daoStateMonitoringService = daoStateMonitoringService;
     }
 
@@ -631,6 +641,9 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         splashP2PNetworkIcon.setVisible(false);
         splashP2PNetworkIcon.setManaged(false);
         HBox.setMargin(splashP2PNetworkIcon, new Insets(0, 0, 5, 0));
+        splashP2PNetworkIcon.setOnMouseClicked(e -> {
+            torNetworkSettingsWindow.show();
+        });
 
         Timer showTorNetworkSettingsTimer = UserThread.runAfter(() -> {
             showTorNetworkSettingsButton.setVisible(true);
@@ -772,6 +785,40 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
                 p2PNetworkWarnMsgPopup.hide();
             }
         });
+        p2PNetworkIcon.setOnMouseClicked(e -> {
+            torNetworkSettingsWindow.show();
+        });
+
+        ImageView p2PNetworkStatusIcon = new ImageView();
+        setRightAnchor(p2PNetworkStatusIcon, 30d);
+        setBottomAnchor(p2PNetworkStatusIcon, 7d);
+        Tooltip p2pNetworkStatusToolTip = new Tooltip();
+        Tooltip.install(p2PNetworkStatusIcon, p2pNetworkStatusToolTip);
+        p2PNetworkStatusIcon.setOnMouseEntered(e -> p2pNetworkStatusToolTip.setText(model.getP2pConnectionSummary()));
+        Timeline flasher = new Timeline(
+                new KeyFrame(Duration.seconds(0.5), e -> p2PNetworkStatusIcon.setOpacity(0.2)),
+                new KeyFrame(Duration.seconds(1.0), e -> p2PNetworkStatusIcon.setOpacity(1))
+        );
+        flasher.setCycleCount(Animation.INDEFINITE);
+        model.getP2PNetworkStatusIconId().addListener((ov, oldValue, newValue) -> {
+            if (newValue.equalsIgnoreCase("flashing:image-yellow_circle")) {
+                p2PNetworkStatusIcon.setId("image-yellow_circle");
+                flasher.play();
+            } else {
+                p2PNetworkStatusIcon.setId(newValue);
+                flasher.stop();
+                p2PNetworkStatusIcon.setOpacity(1);
+            }
+        });
+        p2PNetworkStatusIcon.setOnMouseClicked(e -> {
+            if (p2PNetworkStatusIcon.getId().equalsIgnoreCase("image-alert-round")) {
+                new Popup().warning(Res.get("popup.info.p2pStatusIndicator.red", model.getP2pConnectionSummary())).show();
+            } else if (p2PNetworkStatusIcon.getId().equalsIgnoreCase("image-yellow_circle")) {
+                new Popup().information(Res.get("popup.info.p2pStatusIndicator.yellow", model.getP2pConnectionSummary())).show();
+            } else {
+                new Popup().information(Res.get("popup.info.p2pStatusIndicator.green", model.getP2pConnectionSummary())).show();
+            }
+        });
 
         model.getUpdatedDataReceived().addListener((observable, oldValue, newValue) -> {
             p2PNetworkIcon.setOpacity(1);
@@ -785,10 +832,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         VBox vBox = new VBox();
         vBox.setAlignment(Pos.CENTER_RIGHT);
         vBox.getChildren().addAll(p2PNetworkLabel, p2pNetworkProgressBar);
-        setRightAnchor(vBox, 33d);
+        setRightAnchor(vBox, 53d);
         setBottomAnchor(vBox, 5d);
 
-        return new AnchorPane(separator, btcInfoLabel, versionBox, vBox, p2PNetworkIcon) {{
+        return new AnchorPane(separator, btcInfoLabel, versionBox, vBox, p2PNetworkStatusIcon, p2PNetworkIcon) {{
             setId("footer-pane");
             setMinHeight(30);
             setMaxHeight(30);

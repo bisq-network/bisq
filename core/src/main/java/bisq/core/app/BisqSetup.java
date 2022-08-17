@@ -198,9 +198,6 @@ public class BisqSetup {
     private Runnable qubesOSInfoHandler;
     @Setter
     @Nullable
-    private Runnable firewallIssueHandler;
-    @Setter
-    @Nullable
     private Runnable daoRequiresRestartHandler;
     @Setter
     @Nullable
@@ -217,7 +214,6 @@ public class BisqSetup {
     @SuppressWarnings("FieldCanBeLocal")
     private MonadicBinding<Boolean> p2pNetworkAndWalletInitialized;
     private final List<BisqSetupListener> bisqSetupListeners = new ArrayList<>();
-    private int failedSelfPings = 0;
 
     @Inject
     public BisqSetup(DomainInitialisation domainInitialisation,
@@ -338,7 +334,7 @@ public class BisqSetup {
         maybeShowLocalhostRunningInfo();
         maybeShowAccountSigningStateInfo();
         maybeShowTorAddressUpgradeInformation();
-        checkTorFirewall();
+        checkInboundConnections();
     }
 
 
@@ -662,30 +658,34 @@ public class BisqSetup {
     }
 
     /**
+     * Check if we have inbound connections.  If not, try to ping ourselves.
      * If Bisq cannot connect to its own onion address through Tor, display
      * an informative message to let the user know to configure their firewall else
      * their offers will not be reachable.
-     * In rare cases a self ping can fail (thanks Tor), so we retry up to 3 times at random intervals in hope of success.
+     * Repeat this test hourly.
      */
-    private void checkTorFirewall() {
+    private void checkInboundConnections() {
         NodeAddress onionAddress = p2PService.getNetworkNode().nodeAddressProperty().get();
         if (onionAddress == null || !onionAddress.getFullAddress().contains("onion")) {
             return;
         }
-        privateNotificationManager.sendPing(onionAddress, stringResult -> {
-            log.info(stringResult);
-            if (stringResult.contains("failed")) {
-                // the self-ping failed: after 3 failures notify the user and stop trying
-                if (++failedSelfPings >= 3) {
-                    if (firewallIssueHandler != null) {
-                        firewallIssueHandler.run();
-                    }
-                } else {
-                    // retry self ping after a random delay
-                    UserThread.runAfter(this::checkTorFirewall, new Random().nextInt((int) STARTUP_TIMEOUT_MINUTES), TimeUnit.MINUTES);
+
+        if (p2PService.getNetworkNode().upTime() > TimeUnit.HOURS.toMillis(1) &&
+                p2PService.getNetworkNode().getInboundConnectionCount() == 0) {
+            // we've been online a while and did not find any inbound connections; lets try the self-ping check
+            log.info("no recent inbound connections found, starting the self-ping test");
+            privateNotificationManager.sendPing(onionAddress, stringResult -> {
+                log.info(stringResult);
+                if (stringResult.contains("failed")) {
+                    getP2PNetworkStatusIconId().set("flashing:image-yellow_circle");
                 }
-            }
-        });
+            });
+        }
+
+        // schedule another inbound connection check for later
+        int nextCheckInMinutes = 30 + new Random().nextInt(30);
+        log.debug("next inbound connections check in {} minutes", nextCheckInMinutes);
+        UserThread.runAfter(this::checkInboundConnections, nextCheckInMinutes, TimeUnit.MINUTES);
     }
 
     private void maybeShowSecurityRecommendation() {
@@ -826,6 +826,10 @@ public class BisqSetup {
 
     public StringProperty getP2PNetworkIconId() {
         return p2PNetworkSetup.getP2PNetworkIconId();
+    }
+
+    public StringProperty getP2PNetworkStatusIconId() {
+        return p2PNetworkSetup.getP2PNetworkStatusIconId();
     }
 
     public BooleanProperty getUpdatedDataReceived() {

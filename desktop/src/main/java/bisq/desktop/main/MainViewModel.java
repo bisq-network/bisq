@@ -479,15 +479,6 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                         .show();
             }
         });
-        bisqSetup.setFirewallIssueHandler(() -> {
-            String key = "firewallSetupInfo";
-            if (preferences.showAgain(key)) {
-                new Popup().information(Res.get("popup.info.firewallSetupInfo"))
-                        .closeButtonText(Res.get("shared.iUnderstand"))
-                        .dontShowAgainId(key)
-                        .show();
-            }
-        });
 
         bisqSetup.setDownGradePreventionHandler(lastVersion -> {
             new Popup().warning(Res.get("popup.warn.downGradePrevention", lastVersion, Version.VERSION))
@@ -833,6 +824,10 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         return bisqSetup.getP2PNetworkIconId();
     }
 
+    StringProperty getP2PNetworkStatusIconId() {
+        return bisqSetup.getP2PNetworkStatusIconId();
+    }
+
     BooleanProperty getUpdatedDataReceived() {
         return bisqSetup.getUpdatedDataReceived();
     }
@@ -899,5 +894,11 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             });
             overlay.show();
         }
+    }
+
+    public String getP2pConnectionSummary() {
+        return Res.get("mainView.status.connections",
+                p2PService.getNetworkNode().getInboundConnectionCount(),
+                p2PService.getNetworkNode().getOutboundConnectionCount());
     }
 }
