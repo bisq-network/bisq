@@ -38,6 +38,7 @@ import javafx.util.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import lombok.extern.slf4j.Slf4j;
@@ -302,40 +303,40 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         }
 
 
-        CompletableFuture<Boolean> task7Done = new CompletableFuture<>();
-        allFutures.add(task7Done);
+        CompletableFuture<Boolean> task15Done = new CompletableFuture<>();
+        allFutures.add(task15Done);
         model.getCompensationAmount()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
-                            compensationAmountProperty.set(data);
-                            task7Done.complete(true);
+                            Optional.ofNullable(data).ifPresent(compensationAmountProperty::set);
+                            task15Done.complete(true);
                         }));
 
-        CompletableFuture<Boolean> task8Done = new CompletableFuture<>();
-        allFutures.add(task8Done);
+        CompletableFuture<Boolean> task16Done = new CompletableFuture<>();
+        allFutures.add(task16Done);
         model.getReimbursementAmount()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
-                            reimbursementAmountProperty.set(data);
-                            task8Done.complete(true);
+                            Optional.ofNullable(data).ifPresent(reimbursementAmountProperty::set);
+                            task16Done.complete(true);
                         }));
 
-        CompletableFuture<Boolean> task9Done = new CompletableFuture<>();
-        allFutures.add(task9Done);
+        CompletableFuture<Boolean> task17Done = new CompletableFuture<>();
+        allFutures.add(task17Done);
         model.getBsqTradeFeeAmount()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
-                            bsqTradeFeeAmountProperty.set(data);
-                            task9Done.complete(true);
+                            Optional.ofNullable(data).ifPresent(bsqTradeFeeAmountProperty::set);
+                            task17Done.complete(true);
                         }));
 
-        CompletableFuture<Boolean> task10Done = new CompletableFuture<>();
-        allFutures.add(task10Done);
+        CompletableFuture<Boolean> task18Done = new CompletableFuture<>();
+        allFutures.add(task18Done);
         model.getProofOfBurnAmount()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
-                            proofOfBurnAmountProperty.set(data);
-                            task10Done.complete(true);
+                            Optional.ofNullable(data).ifPresent(proofOfBurnAmountProperty::set);
+                            task18Done.complete(true);
                         }));
 
         return CompletableFutureUtils.allOf(allFutures).thenApply(e -> true);
@@ -345,7 +346,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         model.getTotalSupplyChartData()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
-                            seriesTotalSupply.getData().setAll(data);
+                            Optional.ofNullable(data).ifPresent(seriesTotalSupply.getData()::setAll);
                             completeFuture.complete(true);
                         }));
     }
@@ -354,7 +355,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         model.getSupplyChangeChartData()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
-                            seriesSupplyChange.getData().setAll(data);
+                            Optional.ofNullable(data).ifPresent(seriesSupplyChange.getData()::setAll);
                             completeFuture.complete(true);
                         }));
     }
@@ -363,7 +364,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         model.getTotalTradeFeesChartData()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
-                            seriesTotalTradeFees.getData().setAll(data);
+                            Optional.ofNullable(data).ifPresent(seriesTotalTradeFees.getData()::setAll);
                             completeFuture.complete(true);
                         }));
     }
@@ -372,7 +373,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         model.getProofOfBurnFromBtcFeesChartData()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
-                            seriesProofOfBurnFromBtcFees.getData().setAll(data);
+                            Optional.ofNullable(data).ifPresent(seriesProofOfBurnFromBtcFees.getData()::setAll);
                             completeFuture.complete(true);
                         }));
     }
@@ -381,7 +382,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         model.getProofOfBurnFromArbitrationChartData()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
-                            seriesProofOfBurnFromArbitration.getData().setAll(data);
+                            Optional.ofNullable(data).ifPresent(seriesProofOfBurnFromArbitration.getData()::setAll);
                             completeFuture.complete(true);
                         }));
     }
@@ -390,7 +391,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         model.getArbitrationDiffByInterval()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
-                            seriesArbitrationDiff.getData().setAll(data);
+                            Optional.ofNullable(data).ifPresent(seriesArbitrationDiff.getData()::setAll);
                             completeFuture.complete(true);
                         }));
     }
@@ -399,7 +400,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         model.getTotalIssuedChartData()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
-                            seriesTotalIssued.getData().setAll(data);
+                            Optional.ofNullable(data).ifPresent(seriesTotalIssued.getData()::setAll);
                             completeFuture.complete(true);
                         }));
     }
@@ -408,7 +409,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         model.getCompensationChartData()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
-                            seriesCompensation.getData().setAll(data);
+                            Optional.ofNullable(data).ifPresent(seriesCompensation.getData()::setAll);
                             completeFuture.complete(true);
                         }));
     }
@@ -417,7 +418,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         model.getReimbursementChartData()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
-                            seriesReimbursement.getData().setAll(data);
+                            Optional.ofNullable(data).ifPresent(seriesReimbursement.getData()::setAll);
                             completeFuture.complete(true);
                         }));
     }
@@ -426,7 +427,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         model.getTotalBurnedChartData()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
-                            seriesTotalBurned.getData().setAll(data);
+                            Optional.ofNullable(data).ifPresent(seriesTotalBurned.getData()::setAll);
                             completeFuture.complete(true);
                         }));
     }
@@ -435,7 +436,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         model.getBsqTradeFeeChartData()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
-                            seriesBsqTradeFee.getData().setAll(data);
+                            Optional.ofNullable(data).ifPresent(seriesBsqTradeFee.getData()::setAll);
                             completeFuture.complete(true);
                         }));
     }
@@ -444,7 +445,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         model.getProofOfBurnChartData()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
-                            seriesProofOfBurn.getData().setAll(data);
+                            Optional.ofNullable(data).ifPresent(seriesProofOfBurn.getData()::setAll);
                             completeFuture.complete(true);
                         }));
     }
@@ -453,7 +454,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         model.getReimbursementAfterTaggingChartData()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
-                            seriesReimbursementAfterTagging.getData().setAll(data);
+                            Optional.ofNullable(data).ifPresent(seriesReimbursementAfterTagging.getData()::setAll);
                             completeFuture.complete(true);
                         }));
     }
@@ -462,7 +463,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         model.getBsqTradeFeeAfterTaggingChartData()
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
-                            seriesBsqTradeFeeAfterTagging.getData().setAll(data);
+                            Optional.ofNullable(data).ifPresent(seriesBsqTradeFeeAfterTagging.getData()::setAll);
                             completeFuture.complete(true);
                         }));
     }
