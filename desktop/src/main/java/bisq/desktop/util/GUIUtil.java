@@ -795,12 +795,11 @@ public class GUIUtil {
     }
 
     public static boolean isBootstrappedOrShowPopup(P2PService p2PService) {
-        if (!p2PService.isBootstrapped()) {
-            new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
-            return false;
+        if (p2PService.isBootstrapped() && p2PService.getNumConnectedPeers().get() > 0) {
+            return true;
         }
-
-        return true;
+        new Popup().information(Res.get("popup.warning.notFullyConnected")).show();
+        return false;
     }
 
     public static void showDaoNeedsResyncPopup(Navigation navigation) {
