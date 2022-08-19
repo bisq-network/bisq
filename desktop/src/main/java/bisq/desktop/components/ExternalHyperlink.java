@@ -35,7 +35,7 @@ public class ExternalHyperlink extends HyperlinkWithIcon {
         super(text, MaterialDesignIcon.LINK);
         if (setupCopyContextMenu) {
             ContextMenu contextMenu = new ContextMenu();
-            MenuItem copyMenuItem = new MenuItem(Res.get("shared.copy"));
+            MenuItem copyMenuItem = new MenuItem(Res.get("shared.copyToClipboard"));
             copyMenuItem.setOnAction(e -> {
                 Utilities.copyToClipboard(text);
             });
