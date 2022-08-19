@@ -65,6 +65,8 @@ public class P2PNetworkSetup {
     @Getter
     final StringProperty p2PNetworkIconId = new SimpleStringProperty();
     @Getter
+    final StringProperty p2PNetworkStatusIconId = new SimpleStringProperty();
+    @Getter
     final BooleanProperty splashP2PNetworkAnimationVisible = new SimpleBooleanProperty(true);
     @Getter
     final StringProperty p2pNetworkLabelId = new SimpleStringProperty("footer-pane");
@@ -127,10 +129,12 @@ public class P2PNetworkSetup {
         p2PService.getNetworkNode().addConnectionListener(new ConnectionListener() {
             @Override
             public void onConnection(Connection connection) {
+                updateNetworkStatusIndicator();
             }
 
             @Override
             public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
+                updateNetworkStatusIndicator();
                 // We only check at seed nodes as they are running the latest version
                 // Other disconnects might be caused by peers running an older version
                 if (connection.getConnectionState().isSeedNode() &&
@@ -242,5 +246,15 @@ public class P2PNetworkSetup {
                     !filter.isDisablePowMessage() ||
                     !(payload instanceof ProofOfWorkPayload);
         });
+    }
+
+    private void updateNetworkStatusIndicator() {
+        if (p2PService.getNetworkNode().getInboundConnectionCount() > 0) {
+            p2PNetworkStatusIconId.set("image-green_circle");
+        } else if (p2PService.getNetworkNode().getOutboundConnectionCount() > 0) {
+            p2PNetworkStatusIconId.set("image-yellow_circle");
+        } else {
+            p2PNetworkStatusIconId.set("image-alert-round");
+        }
     }
 }

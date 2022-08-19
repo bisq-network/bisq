@@ -123,7 +123,7 @@ public class TorNetworkSettingsWindow extends Overlay<TorNetworkSettingsWindow> 
                 headLine = Res.get("torNetworkSettingWindow.header");
 
             width = 1068;
-
+            rowIndex = 0;
             createGridPane();
             gridPane.getColumnConstraints().get(0).setHalignment(HPos.LEFT);
 

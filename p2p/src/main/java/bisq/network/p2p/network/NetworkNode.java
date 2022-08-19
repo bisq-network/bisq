@@ -45,6 +45,7 @@ import java.net.Socket;
 
 import java.io.IOException;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -512,5 +513,23 @@ public abstract class NetworkNode implements MessageListener {
                 .filter(c -> c.getPeersNodeAddressProperty().get().equals(nodeAddress))
                 .map(Connection::getCapabilities)
                 .findAny();
+    }
+
+    public long upTime() {
+        // how long Bisq has been running with at least one connection
+        // uptime is relative to last all connections lost event
+        long earliestConnection = new Date().getTime();
+        for (Connection connection : outBoundConnections) {
+            earliestConnection = Math.min(earliestConnection, connection.getStatistic().getCreationDate().getTime());
+        }
+        return new Date().getTime() - earliestConnection;
+    }
+
+    public int getInboundConnectionCount() {
+        return inBoundConnections.size();
+    }
+
+    public int getOutboundConnectionCount() {
+        return outBoundConnections.size();
     }
 }
