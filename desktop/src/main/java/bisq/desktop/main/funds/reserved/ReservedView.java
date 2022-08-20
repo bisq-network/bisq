@@ -376,7 +376,7 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
                                 if (item != null && !empty) {
                                     String address = item.getAddressString();
-                                    hyperlinkWithIcon = new ExternalHyperlink(address);
+                                    hyperlinkWithIcon = new ExternalHyperlink(address, true);
                                     hyperlinkWithIcon.setOnAction(event -> GUIUtil.openAddressInBlockExplorer(address));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForAddress", address)));
                                     setGraphic(hyperlinkWithIcon);

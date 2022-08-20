@@ -453,7 +453,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                 //noinspection Duplicates
                                 if (item != null && !empty) {
                                     String transactionId = item.getTxId();
-                                    hyperlinkWithIcon = new ExternalHyperlink(transactionId);
+                                    hyperlinkWithIcon = new ExternalHyperlink(transactionId, true);
                                     hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBsqBlockExplorer(transactionId));
                                     hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openBlockchainForTx", transactionId)));
                                     setGraphic(hyperlinkWithIcon);
