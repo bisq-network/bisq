@@ -154,7 +154,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     private ChangeListener<Number> transactionFeeChangeListener;
     private ToggleGroup feeToggleGroup, inputsToggleGroup;
     private ToggleButton useCustomFee;
-    private final BooleanProperty useAllInputs = new SimpleBooleanProperty(true);
+    private final BooleanProperty useAllInputs = new SimpleBooleanProperty(false);
     private boolean feeExcluded;
     private int rowIndex = 0;
     private final FeeService feeService;
@@ -364,7 +364,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
             feeToggleGroup.selectToggle(feeIncludedRadioButton);
 
         if (inputsToggleGroup.getSelectedToggle() == null)
-            inputsToggleGroup.selectToggle(useAllInputsRadioButton);
+            inputsToggleGroup.selectToggle(useAllInputs.get() ? useAllInputsRadioButton : useCustomInputsRadioButton);
 
         useCustomFee.setSelected(false);
         transactionFeeInputTextField.setEditable(false);
