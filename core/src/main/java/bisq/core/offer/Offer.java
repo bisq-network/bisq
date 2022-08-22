@@ -563,7 +563,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
     }
 
     public boolean isFiatOffer() {
-        return CurrencyUtil.isFiatCurrency(currencyCode);
+        return CurrencyUtil.isFiatCurrency(getCurrencyCode());
     }
 
     public Optional<BsqSwapOfferPayload> getBsqSwapOfferPayload() {
