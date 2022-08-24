@@ -157,19 +157,10 @@ public abstract class ChartViewModel<T extends ChartDataModel> extends Activatab
         }
     }
 
-    void initBounds(List<XYChart.Data<Number, Number>> data1,
-                    List<XYChart.Data<Number, Number>> data2) {
-        Tuple2<Double, Double> xMinMaxTradeFee = getMinMax(data1);
-        Tuple2<Double, Double> xMinMaxCompensationRequest = getMinMax(data2);
-
-        lowerBound = Math.min(xMinMaxTradeFee.first, xMinMaxCompensationRequest.first);
-        upperBound = Math.max(xMinMaxTradeFee.second, xMinMaxCompensationRequest.second);
-    }
-
     void initBounds(List<XYChart.Data<Number, Number>> data) {
-        Tuple2<Double, Double> xMinMaxTradeFee = getMinMax(data);
-        lowerBound = xMinMaxTradeFee.first;
-        upperBound = xMinMaxTradeFee.second;
+        Tuple2<Double, Double> xMinMaxDate = getMinMaxDatesFromSeries(data);
+        lowerBound = xMinMaxDate.first;
+        upperBound = xMinMaxDate.second;
     }
 
 
@@ -246,7 +237,10 @@ public abstract class ChartViewModel<T extends ChartDataModel> extends Activatab
                 .collect(Collectors.toList());
     }
 
-    private Tuple2<Double, Double> getMinMax(List<XYChart.Data<Number, Number>> chartData) {
+    private Tuple2<Double, Double> getMinMaxDatesFromSeries(List<XYChart.Data<Number, Number>> chartData) {
+        if (chartData.size() == 0) {
+            return new Tuple2<>(0D, 0D);
+        }
         long min = Long.MAX_VALUE, max = 0;
         for (XYChart.Data<Number, ?> data : chartData) {
             long value = data.getXValue().longValue();

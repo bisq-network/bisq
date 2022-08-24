@@ -122,7 +122,11 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
 
     @Override
     protected void initBoundsForTimelineNavigation() {
-        setBoundsForTimelineNavigation(seriesTotalBurned.getData());
+        if (seriesSupplyChange.getData().size() > 0) {
+            setBoundsForTimelineNavigation(seriesSupplyChange.getData());
+        } else {
+            setBoundsForTimelineNavigation(seriesTotalBurned.getData());
+        }
     }
 
 
