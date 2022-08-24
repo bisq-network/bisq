@@ -21,6 +21,7 @@ import bisq.desktop.components.chart.ChartDataModel;
 
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
 
@@ -58,7 +59,7 @@ public class DaoChartDataModel extends ChartDataModel {
     private Map<Long, Long> totalSupplyByInterval, supplyChangeByInterval, totalIssuedByInterval, compensationByInterval,
             reimbursementByInterval, reimbursementByIntervalAfterTagging,
             totalBurnedByInterval, bsqTradeFeeByInterval, bsqTradeFeeByIntervalAfterTagging,
-            proofOfBurnByInterval, proofOfBurnFromBtcFeesByInterval, proofOfBurnFromArbitrationByInterval,
+            proofOfBurnByInterval, miscBurnByInterval, proofOfBurnFromBtcFeesByInterval, proofOfBurnFromArbitrationByInterval,
             arbitrationDiffByInterval, totalTradeFeesByInterval;
 
     static {
@@ -94,6 +95,7 @@ public class DaoChartDataModel extends ChartDataModel {
         bsqTradeFeeByInterval = null;
         bsqTradeFeeByIntervalAfterTagging = null;
         proofOfBurnByInterval = null;
+        miscBurnByInterval = null;
         proofOfBurnFromBtcFeesByInterval = null;
         proofOfBurnFromArbitrationByInterval = null;
         arbitrationDiffByInterval = null;
@@ -247,6 +249,25 @@ public class DaoChartDataModel extends ChartDataModel {
 
         proofOfBurnByInterval = getBurntBsqByInterval(daoStateService.getProofOfBurnTxs(), getDateFilter());
         return proofOfBurnByInterval;
+    }
+
+    Map<Long, Long> getMiscBurnByInterval() {
+        if (miscBurnByInterval != null) {
+            return miscBurnByInterval;
+        }
+
+        miscBurnByInterval = daoStateService.getBurntFeeTxs().stream()
+                .filter(e -> e.getTxType() != TxType.PAY_TRADE_FEE)
+                .filter(e -> e.getTxType() != TxType.PROOF_OF_BURN)
+                .collect(Collectors.groupingBy(tx -> toTimeInterval(Instant.ofEpochMilli(tx.getTime()))))
+                .entrySet()
+                .stream()
+                .filter(entry -> dateFilter.test(entry.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        entry -> entry.getValue().stream()
+                                .mapToLong(Tx::getBurntBsq)
+                                .sum()));
+        return miscBurnByInterval;
     }
 
     Map<Long, Long> getProofOfBurnFromBtcFeesByInterval() {

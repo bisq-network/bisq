@@ -52,7 +52,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
 
     private XYChart.Series<Number, Number> seriesBsqTradeFee, seriesProofOfBurn, seriesCompensation,
             seriesReimbursement, seriesTotalSupply, seriesSupplyChange, seriesTotalIssued, seriesTotalBurned,
-            seriesTotalTradeFees, seriesProofOfBurnFromBtcFees,
+            seriesTotalTradeFees, seriesProofOfBurnFromBtcFees, seriesMiscBurn,
             seriesProofOfBurnFromArbitration, seriesArbitrationDiff,
             seriesReimbursementAfterTagging, seriesBsqTradeFeeAfterTagging;
 
@@ -112,7 +112,7 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
     }
 
     protected Collection<XYChart.Series<Number, Number>> getSeriesForLegend5() {
-        return List.of(seriesSupplyChange, seriesTotalSupply);
+        return List.of(seriesSupplyChange, seriesTotalSupply, seriesMiscBurn);
     }
 
 
@@ -191,6 +191,10 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
         seriesSupplyChange = new XYChart.Series<>();
         seriesSupplyChange.setName(Res.get("dao.factsAndFigures.supply.supplyChange"));
         seriesIndexMap.put(getSeriesId(seriesSupplyChange), 13);
+
+        seriesMiscBurn = new XYChart.Series<>();
+        seriesMiscBurn.setName(Res.get("dao.factsAndFigures.supply.miscBurn"));
+        seriesIndexMap.put(getSeriesId(seriesMiscBurn), 14);
     }
 
     @Override
@@ -304,6 +308,11 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
             CompletableFuture<Boolean> future = new CompletableFuture<>();
             allFutures.add(future);
             applyBsqTradeFeeAfterTagging(future);
+        }
+        if (activeSeries.contains(seriesMiscBurn)) {
+            CompletableFuture<Boolean> future = new CompletableFuture<>();
+            allFutures.add(future);
+            applyMiscBurn(future);
         }
 
 
@@ -468,6 +477,15 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
                             Optional.ofNullable(data).ifPresent(seriesBsqTradeFeeAfterTagging.getData()::setAll);
+                            completeFuture.complete(true);
+                        }));
+    }
+
+    private void applyMiscBurn(CompletableFuture<Boolean> completeFuture) {
+        model.getMiscBurnChartData()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            Optional.ofNullable(data).ifPresent(seriesMiscBurn.getData()::setAll);
                             completeFuture.complete(true);
                         }));
     }

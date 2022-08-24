@@ -110,6 +110,10 @@ public class DaoChartViewModel extends ChartViewModel<DaoChartDataModel> {
         return CompletableFuture.supplyAsync(() -> toChartData(dataModel.getBsqTradeFeeByIntervalAfterTagging()));
     }
 
+    CompletableFuture<List<XYChart.Data<Number, Number>>> getMiscBurnChartData() {
+        return CompletableFuture.supplyAsync(() -> toChartData(dataModel.getMiscBurnByInterval()));
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Formatters/Converters
