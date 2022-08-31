@@ -101,7 +101,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     private Timer retryTimer;
     private boolean dataUpdateRequested;
     private boolean stopped;
-
+    private int numRepeatedRequests = 0;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -323,7 +323,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                 RequestDataHandler requestDataHandler = new RequestDataHandler(networkNode, dataStorage, peerManager,
                         new RequestDataHandler.Listener() {
                             @Override
-                            public void onComplete() {
+                            public void onComplete(boolean wasTruncated) {
                                 log.trace("RequestDataHandshake of outbound connection complete. nodeAddress={}",
                                         nodeAddress);
                                 stopRetryTimer();
@@ -347,6 +347,17 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                 }
 
                                 checkNotNull(listener).onDataReceived();
+
+                                if (wasTruncated) {
+                                    if (numRepeatedRequests < 10) {
+                                        log.info("DataResponse did not contain all data, so we repeat request until we got all data");
+                                        UserThread.runAfter(() -> requestData(nodeAddress, remainingNodeAddresses), 2);
+                                    } else {
+                                        log.info("DataResponse still did not contained all data but we requested already 10 times and stop now.");
+                                    }
+                                } else {
+                                    log.info("DataResponse contained all data");
+                                }
                             }
 
                             @Override
@@ -387,6 +398,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                             }
                         });
                 handlerMap.put(nodeAddress, requestDataHandler);
+                numRepeatedRequests++;
                 requestDataHandler.requestData(nodeAddress, isPreliminaryDataRequest);
             } else {
                 log.warn("We have started already a requestDataHandshake to peer. nodeAddress=" + nodeAddress + "\n" +

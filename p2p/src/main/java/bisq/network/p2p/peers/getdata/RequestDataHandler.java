@@ -73,7 +73,7 @@ class RequestDataHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public interface Listener {
-        void onComplete();
+        void onComplete(boolean wasTruncated);
 
         @SuppressWarnings("UnusedParameters")
         void onFault(String errorMessage, @SuppressWarnings("SameParameterValue") @Nullable Connection connection);
@@ -201,8 +201,7 @@ class RequestDataHandler implements MessageListener {
                                 connection.getPeersNodeAddressOptional().get());
 
                         cleanup();
-                        listener.onComplete();
-                        // firstRequest = false;
+                        listener.onComplete(getDataResponse.isWasTruncated());
                     } else {
                         log.warn("Nonce not matching. That can happen rarely if we get a response after a canceled " +
                                         "handshake (timeout causes connection close but peer might have sent a msg before " +
