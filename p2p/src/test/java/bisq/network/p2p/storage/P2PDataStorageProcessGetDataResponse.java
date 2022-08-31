@@ -22,8 +22,8 @@ import bisq.network.p2p.TestUtils;
 import bisq.network.p2p.peers.getdata.messages.GetDataResponse;
 import bisq.network.p2p.storage.mocks.PersistableNetworkPayloadStub;
 import bisq.network.p2p.storage.mocks.ProtectedStoragePayloadStub;
-import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
+import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
@@ -34,14 +34,14 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
+import org.mockito.MockitoAnnotations;
+
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import org.mockito.MockitoAnnotations;
 
 public class P2PDataStorageProcessGetDataResponse {
     private TestState testState;
@@ -71,6 +71,7 @@ public class P2PDataStorageProcessGetDataResponse {
                 new HashSet<>(protectedStorageEntries),
                 new HashSet<>(persistableNetworkPayloads),
                 1,
+                false,
                 false);
     }
 
