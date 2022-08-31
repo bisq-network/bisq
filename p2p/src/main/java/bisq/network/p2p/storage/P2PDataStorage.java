@@ -349,11 +349,13 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         .map(e -> get32ByteHashAsByteArray((e.getProtectedStoragePayload())))
                         .toArray());
 
+        boolean wasTruncated = wasPersistableNetworkPayloadsTruncated.get() || wasProtectedStorageEntriesTruncated.get();
         return new GetDataResponse(
                 filteredProtectedStorageEntries,
                 filteredPersistableNetworkPayloads,
                 getDataRequest.getNonce(),
-                getDataRequest instanceof GetUpdatedDataRequest);
+                getDataRequest instanceof GetUpdatedDataRequest,
+                wasTruncated);
     }
 
 
@@ -428,6 +430,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 int fromIndex = dateSortedTruncatablePayloads.size() - maxItems;
                 int toIndex = dateSortedTruncatablePayloads.size();
                 dateSortedTruncatablePayloads = dateSortedTruncatablePayloads.subList(fromIndex, toIndex);
+                outTruncated.set(true);
                 log.info("Num truncated dateSortedTruncatablePayloads {}", dateSortedTruncatablePayloads.size());
             }
         }
