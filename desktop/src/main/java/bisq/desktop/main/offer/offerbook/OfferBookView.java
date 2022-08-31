@@ -38,6 +38,7 @@ import bisq.desktop.main.funds.FundsView;
 import bisq.desktop.main.funds.withdrawal.WithdrawalView;
 import bisq.desktop.main.offer.OfferView;
 import bisq.desktop.main.offer.OfferViewUtil;
+import bisq.desktop.main.offer.bsq_swap.edit_offer.BsqSwapEditOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.BsqSwapOfferDetailsWindow;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
@@ -734,7 +735,12 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
     private void onEditOpenOffer(Offer offer) {
         OpenOffer openOffer = model.getOpenOffer(offer);
         if (openOffer != null) {
-            navigation.navigateToWithData(openOffer, MainView.class, PortfolioView.class, EditOfferView.class);
+            if (openOffer.getOffer().isBsqSwapOffer()) {
+                navigation.navigateToWithData(openOffer, MainView.class, PortfolioView.class, BsqSwapEditOfferView.class);
+            } else {
+                navigation.navigateToWithData(openOffer, MainView.class, PortfolioView.class, EditOfferView.class);
+
+            }
         }
     }
 

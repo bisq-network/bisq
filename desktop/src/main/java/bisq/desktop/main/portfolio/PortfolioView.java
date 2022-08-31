@@ -23,6 +23,7 @@ import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.common.view.View;
 import bisq.desktop.main.MainView;
+import bisq.desktop.main.offer.bsq_swap.edit_offer.BsqSwapEditOfferView;
 import bisq.desktop.main.portfolio.bsqswaps.UnconfirmedBsqSwapsView;
 import bisq.desktop.main.portfolio.closedtrades.ClosedTradesView;
 import bisq.desktop.main.portfolio.duplicateoffer.DuplicateOfferView;
@@ -58,7 +59,7 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
 
     @FXML
     Tab openOffersTab, pendingTradesTab, closedTradesTab, bsqSwapTradesTab;
-    private Tab editOpenOfferTab, duplicateOfferTab;
+    private Tab editOpenOfferTab, bsqSwapEditOpenOfferTab, duplicateOfferTab;
     private final Tab failedTradesTab = new Tab(Res.get("portfolio.tab.failed").toUpperCase());
     private Tab currentTab;
     private Navigation.Listener navigationListener;
@@ -70,8 +71,10 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
     private final FailedTradesManager failedTradesManager;
     private final OpenOfferManager openOfferManager;
     private EditOfferView editOfferView;
+    private BsqSwapEditOfferView bsqSwapEditOfferView;
     private DuplicateOfferView duplicateOfferView;
     private boolean editOpenOfferViewOpen;
+    private boolean bsqSwapEditOpenOfferViewOpen;
     private OpenOffer openOffer;
     private OpenOffersView openOffersView;
     private int initialTabCount = 0;
@@ -114,12 +117,16 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
                 navigation.navigateTo(MainView.class, PortfolioView.class, FailedTradesView.class);
             else if (newValue == editOpenOfferTab)
                 navigation.navigateTo(MainView.class, PortfolioView.class, EditOfferView.class);
+            else if (newValue == bsqSwapEditOpenOfferTab)
+                navigation.navigateTo(MainView.class, PortfolioView.class, BsqSwapEditOfferView.class);
             else if (newValue == duplicateOfferTab) {
                 navigation.navigateTo(MainView.class, PortfolioView.class, DuplicateOfferView.class);
             }
 
             if (oldValue != null && oldValue == editOpenOfferTab)
                 editOfferView.onTabSelected(false);
+            if (oldValue != null && oldValue == bsqSwapEditOpenOfferTab)
+                bsqSwapEditOfferView.onTabSelected(false);
             if (oldValue != null && oldValue == duplicateOfferTab)
                 duplicateOfferView.onTabSelected(false);
 
@@ -130,6 +137,8 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
             List<? extends Tab> removedTabs = change.getRemoved();
             if (removedTabs.size() == 1 && removedTabs.get(0).equals(editOpenOfferTab))
                 onEditOpenOfferRemoved();
+            if (removedTabs.size() == 1 && removedTabs.get(0).equals(bsqSwapEditOpenOfferTab))
+                onBsqSwapEditOpenOfferRemoved();
             if (removedTabs.size() == 1 && removedTabs.get(0).equals(duplicateOfferTab))
                 onDuplicateOfferRemoved();
         };
@@ -140,6 +149,16 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
         if (editOfferView != null) {
             editOfferView.onClose();
             editOfferView = null;
+        }
+
+        navigation.navigateTo(MainView.class, this.getClass(), OpenOffersView.class);
+    }
+
+    private void onBsqSwapEditOpenOfferRemoved() {
+        bsqSwapEditOpenOfferViewOpen = false;
+        if (bsqSwapEditOfferView != null) {
+            bsqSwapEditOfferView.onClose();
+            bsqSwapEditOfferView = null;
         }
 
         navigation.navigateTo(MainView.class, this.getClass(), OpenOffersView.class);
@@ -180,6 +199,9 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
         else if (root.getSelectionModel().getSelectedItem() == editOpenOfferTab) {
             navigation.navigateTo(MainView.class, PortfolioView.class, EditOfferView.class);
             if (editOfferView != null) editOfferView.onTabSelected(true);
+        } else if (root.getSelectionModel().getSelectedItem() == bsqSwapEditOpenOfferTab) {
+            navigation.navigateTo(MainView.class, PortfolioView.class, BsqSwapEditOfferView.class);
+            if (bsqSwapEditOfferView != null) bsqSwapEditOfferView.onTabSelected(true);
         } else if (root.getSelectionModel().getSelectedItem() == duplicateOfferTab) {
             navigation.navigateTo(MainView.class, PortfolioView.class, DuplicateOfferView.class);
             if (duplicateOfferView != null) duplicateOfferView.onTabSelected(true);
@@ -198,6 +220,9 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
         // we want to get activate/deactivate called, so we remove the old view on tab change
         // TODO Don't understand the check for currentTab != editOpenOfferTab
         if (currentTab != null && currentTab != editOpenOfferTab)
+            currentTab.setContent(null);
+
+        if (currentTab != null && currentTab != bsqSwapEditOpenOfferTab)
             currentTab.setContent(null);
 
         View view = viewLoader.load(viewClass);
@@ -234,6 +259,28 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
                 view = viewLoader.load(OpenOffersView.class);
                 selectOpenOffersView((OpenOffersView) view);
             }
+        } else if (view instanceof BsqSwapEditOfferView) {
+            if (data instanceof OpenOffer) {
+                openOffer = (OpenOffer) data;
+            }
+            if (openOffer != null) {
+                if (bsqSwapEditOfferView == null) {
+                    bsqSwapEditOfferView = (BsqSwapEditOfferView) view;
+                    bsqSwapEditOfferView.applyOpenOffer(openOffer);
+                    bsqSwapEditOpenOfferTab = new Tab(Res.get("portfolio.tab.editBsqSwapOpenOffer").toUpperCase());
+                    bsqSwapEditOfferView.setCloseHandler(() -> {
+                        root.getTabs().remove(bsqSwapEditOpenOfferTab);
+                    });
+                    root.getTabs().add(bsqSwapEditOpenOfferTab);
+                }
+                if (currentTab != bsqSwapEditOpenOfferTab)
+                    bsqSwapEditOfferView.onTabSelected(true);
+
+                currentTab = bsqSwapEditOpenOfferTab;
+            } else {
+                view = viewLoader.load(OpenOffersView.class);
+                selectOpenOffersView((OpenOffersView) view);
+            }
         } else if (view instanceof DuplicateOfferView) {
             if (duplicateOfferView == null && data instanceof OfferPayload) {
                 viewLoader.removeFromCache(viewClass);  // remove cached dialog
@@ -265,10 +312,14 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
         currentTab = openOffersTab;
 
         OpenOfferActionHandler openOfferActionHandler = openOffer -> {
-            if (!editOpenOfferViewOpen) {
+            if (!editOpenOfferViewOpen && !openOffer.getOffer().isBsqSwapOffer()) {
                 editOpenOfferViewOpen = true;
                 PortfolioView.this.openOffer = openOffer;
                 navigation.navigateTo(MainView.class, PortfolioView.this.getClass(), EditOfferView.class);
+            } else if (!bsqSwapEditOpenOfferViewOpen && openOffer.getOffer().isBsqSwapOffer()) {
+                bsqSwapEditOpenOfferViewOpen = true;
+                PortfolioView.this.openOffer = openOffer;
+                navigation.navigateTo(MainView.class, PortfolioView.this.getClass(), BsqSwapEditOfferView.class);
             } else {
                 log.error("You have already a \"Edit Offer\" tab open.");
             }

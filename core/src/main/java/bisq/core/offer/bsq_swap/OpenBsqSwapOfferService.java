@@ -253,6 +253,27 @@ public class OpenBsqSwapOfferService {
         openOfferManager.activateOpenOffer(openOffer, resultHandler, errorMessageHandler);
     }
 
+    public void editOpenOfferStart(OpenOffer openOffer,
+                                   ResultHandler resultHandler,
+                                   ErrorMessageHandler errorMessageHandler) {
+        openOfferManager.editOpenOfferStart(openOffer, resultHandler, errorMessageHandler);
+    }
+
+    public void editOpenOfferCancel(OpenOffer openOffer,
+                                    OpenOffer.State initialState,
+                                    ResultHandler resultHandler,
+                                    ErrorMessageHandler errorMessageHandler) {
+        openOfferManager.editOpenOfferCancel(openOffer, initialState, resultHandler, errorMessageHandler);
+    }
+
+
+    public void editOpenOfferPublish(Offer offer,
+                                     OpenOffer.State initialState,
+                                     ResultHandler resultHandler,
+                                     ErrorMessageHandler errorMessageHandler) {
+        openOfferManager.editOpenOfferPublish(offer, 0L, initialState, resultHandler, errorMessageHandler);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Package scope

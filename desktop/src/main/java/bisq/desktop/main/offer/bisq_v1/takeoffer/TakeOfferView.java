@@ -1119,7 +1119,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         xLabel.getStyleClass().addAll("opaque-icon-character");
 
         // price
-        Tuple3<HBox, TextField, Label> priceValueCurrencyBoxTuple = getNonEditableValueBox();
+        Tuple3<HBox, InputTextField, Label> priceValueCurrencyBoxTuple = getNonEditableValueBox();
         priceValueCurrencyBox = priceValueCurrencyBoxTuple.first;
         priceTextField = priceValueCurrencyBoxTuple.second;
         priceCurrencyLabel = priceValueCurrencyBoxTuple.third;
@@ -1157,7 +1157,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     }
 
     private void addSecondRow() {
-        Tuple3<HBox, TextField, Label> priceAsPercentageTuple = getNonEditableValueBox();
+        Tuple3<HBox, InputTextField, Label> priceAsPercentageTuple = getNonEditableValueBox();
         priceAsPercentageValueCurrencyBox = priceAsPercentageTuple.first;
         priceAsPercentageTextField = priceAsPercentageTuple.second;
         priceAsPercentageLabel = priceAsPercentageTuple.third;
@@ -1171,7 +1171,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         priceAsPercentageLabel.setText("%");
 
-        Tuple3<HBox, TextField, Label> amountValueCurrencyBoxTuple = getNonEditableValueBox();
+        Tuple3<HBox, InputTextField, Label> amountValueCurrencyBoxTuple = getNonEditableValueBox();
         amountRangeTextField = amountValueCurrencyBoxTuple.second;
 
         minAmountValueCurrencyBox = amountValueCurrencyBoxTuple.first;
