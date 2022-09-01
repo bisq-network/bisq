@@ -19,6 +19,7 @@ package bisq.apitest.scenario;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
@@ -46,6 +47,11 @@ import bisq.apitest.method.trade.TakeSellXMROfferTest;
 @Slf4j
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class TradeTest extends AbstractTradeTest {
+
+    @BeforeAll
+    public static void setUp() {
+        setUp(false);
+    }
 
     @BeforeEach
     public void init() {
