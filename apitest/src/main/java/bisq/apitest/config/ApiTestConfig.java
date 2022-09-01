@@ -76,6 +76,7 @@ public class ApiTestConfig {
     static final String CONFIG_FILE = "configFile";
     static final String ROOT_APP_DATA_DIR = "rootAppDataDir";
     static final String API_PASSWORD = "apiPassword";
+    static final String DUMP_STATISTICS = "dumpStatistics";
     static final String RUN_SUBPROJECT_JARS = "runSubprojectJars";
     static final String BISQ_APP_INIT_TIME = "bisqAppInitTime";
     static final String SKIP_TESTS = "skipTests";
@@ -109,6 +110,7 @@ public class ApiTestConfig {
     public final String bitcoinRpcPassword;
     // Daemon instances can use same gRPC password, but each needs a different apiPort.
     public final String apiPassword;
+    public final boolean dumpStatistics;
     public final boolean runSubprojectJars;
     public final long bisqAppInitTime;
     public final boolean skipTests;
@@ -206,6 +208,12 @@ public class ApiTestConfig {
                 parser.accepts(API_PASSWORD, "gRPC API password")
                         .withRequiredArg()
                         .defaultsTo("xyz");
+
+        ArgumentAcceptingOptionSpec<Boolean> dumpStatisticsOpt =
+                parser.accepts(DUMP_STATISTICS, "Dump node statistics")
+                        .withRequiredArg()
+                        .ofType(Boolean.class)
+                        .defaultsTo(false);
 
         ArgumentAcceptingOptionSpec<Boolean> runSubprojectJarsOpt =
                 parser.accepts(RUN_SUBPROJECT_JARS,
@@ -311,6 +319,7 @@ public class ApiTestConfig {
             this.bitcoinRpcUser = options.valueOf(bitcoinRpcUserOpt);
             this.bitcoinRpcPassword = options.valueOf(bitcoinRpcPasswordOpt);
             this.apiPassword = options.valueOf(apiPasswordOpt);
+            this.dumpStatistics = options.valueOf(dumpStatisticsOpt);
             this.runSubprojectJars = options.valueOf(runSubprojectJarsOpt);
             this.bisqAppInitTime = options.valueOf(bisqAppInitTimeOpt);
             this.skipTests = options.valueOf(skipTestsOpt);

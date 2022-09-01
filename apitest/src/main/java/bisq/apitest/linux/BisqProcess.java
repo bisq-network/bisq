@@ -242,6 +242,7 @@ public class BisqProcess extends AbstractLinuxProcess implements LinuxProcess {
                     add("--genesisBlockHeight=" + genesisBlockHeight);
                     add("--genesisTxId=" + genesisTxId);
                     if (bisqAppConfig.mainClassName.equals(BisqDaemonMain.class.getName())) {
+                        add("--dumpStatistics=" + config.dumpStatistics);
                         add("--apiPassword=" + config.apiPassword);
                         add("--apiPort=" + bisqAppConfig.apiPort);
                     }

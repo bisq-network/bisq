@@ -76,7 +76,8 @@ public class MethodTest extends ApiTestCase {
             setUpScaffold(new String[]{
                     "--supportingApps", toNameList.apply(supportingApps),
                     "--callRateMeteringConfigPath", callRateMeteringConfigFile.getAbsolutePath(),
-                    "--enableBisqDebugging", startSupportingAppsInDebugMode ? "true" : "false"
+                    "--enableBisqDebugging", startSupportingAppsInDebugMode ? "true" : "false",
+                    "--dumpStatistics", "true"
             });
             doPostStartup(generateBtcBlock);
         } catch (Exception ex) {
@@ -93,7 +94,8 @@ public class MethodTest extends ApiTestCase {
             setUpScaffold(new String[]{
                     "--supportingApps", toNameList.apply(supportingApps),
                     "--callRateMeteringConfigPath", callRateMeteringConfigFile.getAbsolutePath(),
-                    "--enableBisqDebugging", startSupportingAppsInDebugMode ? "true" : "false"
+                    "--enableBisqDebugging", startSupportingAppsInDebugMode ? "true" : "false",
+                    "--dumpStatistics", "true"
             });
             doPostStartup(generateBtcBlock);
         } catch (Exception ex) {
