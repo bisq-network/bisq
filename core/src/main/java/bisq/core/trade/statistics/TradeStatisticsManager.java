@@ -47,10 +47,12 @@ import java.time.Instant;
 import java.io.File;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -147,6 +149,12 @@ public class TradeStatisticsManager {
         return observableTradeStatisticsSet;
     }
 
+    public Optional<TradeStatistics3> findTradeStatistics3WithHash(byte[] hash) {
+        return observableTradeStatisticsSet.stream()
+                .filter(s -> Arrays.equals(s.getHash(), hash))
+                .findFirst();
+    }
+
     private void maybeDumpStatistics() {
         if (!dumpStatistics) {
             return;
@@ -170,7 +178,7 @@ public class TradeStatisticsManager {
             Instant yearAgo = Instant.ofEpochSecond(Instant.now().getEpochSecond() - TimeUnit.DAYS.toSeconds(365));
             Set<String> activeCurrencies = observableTradeStatisticsSet.stream()
                     .filter(e -> e.getDate().toInstant().isAfter(yearAgo))
-                    .map(p -> p.getCurrency())
+                    .map(TradeStatistics3::getCurrency)
                     .collect(Collectors.toSet());
 
             ArrayList<CurrencyTuple> activeFiatCurrencyList = fiatCurrencyList.stream()
