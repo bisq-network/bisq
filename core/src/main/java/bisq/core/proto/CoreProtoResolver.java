@@ -79,6 +79,7 @@ import bisq.core.payment.payload.VenmoAccountPayload;
 import bisq.core.payment.payload.VerseAccountPayload;
 import bisq.core.payment.payload.WeChatPayAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
+import bisq.core.trade.statistics.ApiTradeStatistics;
 import bisq.core.trade.statistics.TradeStatistics2;
 import bisq.core.trade.statistics.TradeStatistics3;
 
@@ -267,6 +268,8 @@ public class CoreProtoResolver implements ProtoResolver {
                     return SignedWitness.fromProto(proto.getSignedWitness());
                 case TRADE_STATISTICS3:
                     return TradeStatistics3.fromProto(proto.getTradeStatistics3());
+                case API_TRADE_STATISTICS:
+                    return ApiTradeStatistics.fromProto(proto.getApiTradeStatistics());
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case (PB.PersistableNetworkPayload). messageCase=" + proto.getMessageCase());
             }
