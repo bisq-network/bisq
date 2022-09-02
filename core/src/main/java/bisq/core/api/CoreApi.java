@@ -31,6 +31,7 @@ import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
+import bisq.core.trade.statistics.ApiTradeStatisticsManager;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.common.app.Version;
@@ -76,6 +77,7 @@ public class CoreApi {
     private final CoreTradesService coreTradesService;
     private final CoreWalletsService walletsService;
     private final TradeStatisticsManager tradeStatisticsManager;
+    private final ApiTradeStatisticsManager apiTradeStatisticsManager;
 
     @Inject
     public CoreApi(Config config,
@@ -86,7 +88,8 @@ public class CoreApi {
                    CorePriceService corePriceService,
                    CoreTradesService coreTradesService,
                    CoreWalletsService walletsService,
-                   TradeStatisticsManager tradeStatisticsManager) {
+                   TradeStatisticsManager tradeStatisticsManager,
+                   ApiTradeStatisticsManager apiTradeStatisticsManager) {
         this.config = config;
         this.coreDisputeAgentsService = coreDisputeAgentsService;
         this.coreHelpService = coreHelpService;
@@ -96,6 +99,7 @@ public class CoreApi {
         this.corePriceService = corePriceService;
         this.walletsService = walletsService;
         this.tradeStatisticsManager = tradeStatisticsManager;
+        this.apiTradeStatisticsManager = apiTradeStatisticsManager;
     }
 
     @SuppressWarnings("SameReturnValue")
