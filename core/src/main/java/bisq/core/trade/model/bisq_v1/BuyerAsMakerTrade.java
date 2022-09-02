@@ -52,6 +52,7 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
                              @Nullable NodeAddress refundAgentNodeAddress,
                              BtcWalletService btcWalletService,
                              ProcessModel processModel,
+                             boolean isTakerApiUser,
                              String uid) {
         super(offer,
                 txFee,
@@ -62,6 +63,7 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
                 refundAgentNodeAddress,
                 btcWalletService,
                 processModel,
+                isTakerApiUser,
                 uid);
     }
 
@@ -96,6 +98,7 @@ public final class BuyerAsMakerTrade extends BuyerTrade implements MakerTrade {
                 proto.hasRefundAgentNodeAddress() ? NodeAddress.fromProto(proto.getRefundAgentNodeAddress()) : null,
                 btcWalletService,
                 processModel,
+                proto.getIsTakerApiUser(),
                 uid);
 
         trade.setAmountAsLong(proto.getTradeAmountAsLong());

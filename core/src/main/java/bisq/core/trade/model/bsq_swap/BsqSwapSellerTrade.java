@@ -37,6 +37,7 @@ public abstract class BsqSwapSellerTrade extends BsqSwapTrade {
                               long makerFee,
                               long takerFee,
                               BsqSwapProtocolModel bsqSwapProtocolModel,
+                              boolean isTakerApiUser,
                               @Nullable String errorMessage,
                               State state,
                               @Nullable String txId) {
@@ -49,6 +50,7 @@ public abstract class BsqSwapSellerTrade extends BsqSwapTrade {
                 makerFee,
                 takerFee,
                 bsqSwapProtocolModel,
+                isTakerApiUser,
                 errorMessage,
                 state,
                 txId);

@@ -171,6 +171,7 @@ public final class OfferPayload extends OfferPayloadBase {
                         boolean isPrivateOffer,
                         @Nullable String hashOfChallenge,
                         @Nullable Map<String, String> extraDataMap,
+                        boolean isMakerApiUser,
                         int protocolVersion) {
         super(id,
                 date,
@@ -185,6 +186,7 @@ public final class OfferPayload extends OfferPayloadBase {
                 paymentMethodId,
                 makerPaymentAccountId,
                 extraDataMap,
+                isMakerApiUser,
                 versionNr,
                 protocolVersion);
 
@@ -265,7 +267,8 @@ public final class OfferPayload extends OfferPayloadBase {
                 .setLowerClosePrice(lowerClosePrice)
                 .setUpperClosePrice(upperClosePrice)
                 .setIsPrivateOffer(isPrivateOffer)
-                .setProtocolVersion(protocolVersion);
+                .setProtocolVersion(protocolVersion)
+                .setIsMakerApiUser(isMakerApiUser);
 
         builder.setOfferFeePaymentTxId(checkNotNull(offerFeePaymentTxId,
                 "OfferPayload is in invalid state: offerFeePaymentTxID is not set when adding to P2P network."));
@@ -331,6 +334,7 @@ public final class OfferPayload extends OfferPayloadBase {
                 proto.getIsPrivateOffer(),
                 hashOfChallenge,
                 extraDataMapMap,
+                proto.getIsMakerApiUser(),
                 proto.getProtocolVersion());
     }
 
@@ -359,6 +363,7 @@ public final class OfferPayload extends OfferPayloadBase {
                 ",\r\n     lowerClosePrice=" + lowerClosePrice +
                 ",\r\n     upperClosePrice=" + upperClosePrice +
                 ",\r\n     isPrivateOffer=" + isPrivateOffer +
+                ",\r\n     isMakerApiUser=" + isMakerApiUser +
                 ",\r\n     hashOfChallenge='" + hashOfChallenge + '\'' +
                 "\r\n} " + super.toString();
     }
@@ -400,6 +405,8 @@ public final class OfferPayload extends OfferPayloadBase {
             object.add("lowerClosePrice", context.serialize(offerPayload.getLowerClosePrice()));
             object.add("upperClosePrice", context.serialize(offerPayload.getUpperClosePrice()));
             object.add("isPrivateOffer", context.serialize(offerPayload.isPrivateOffer()));
+            // TODO? isMakerApiUser (not backward compatible?)
+            //  @chimp1984, can you review these changes?
             object.add("extraDataMap", context.serialize(offerPayload.getExtraDataMap()));
             object.add("protocolVersion", context.serialize(offerPayload.getProtocolVersion()));
             return object;

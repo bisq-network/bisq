@@ -898,6 +898,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         original.isPrivateOffer(),
                         original.getHashOfChallenge(),
                         updatedExtraDataMap,
+                        original.isMakerApiUser(),
                         protocolVersion);
 
                 // Save states from original data to use for the updated

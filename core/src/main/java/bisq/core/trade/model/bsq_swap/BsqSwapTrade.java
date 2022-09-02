@@ -79,6 +79,8 @@ public abstract class BsqSwapTrade extends TradeModel {
     private final long takerFeeAsLong;
     @Getter
     private final BsqSwapProtocolModel bsqSwapProtocolModel;
+    @Getter
+    protected final boolean isTakerApiUser;
 
     @Getter
     private State state;
@@ -107,6 +109,7 @@ public abstract class BsqSwapTrade extends TradeModel {
                            long makerFeeAsLong,
                            long takerFeeAsLong,
                            BsqSwapProtocolModel bsqSwapProtocolModel,
+                           boolean isTakerApiUser,
                            @Nullable String errorMessage,
                            State state,
                            @Nullable String txId) {
@@ -116,6 +119,7 @@ public abstract class BsqSwapTrade extends TradeModel {
         this.makerFeeAsLong = makerFeeAsLong;
         this.takerFeeAsLong = takerFeeAsLong;
         this.bsqSwapProtocolModel = bsqSwapProtocolModel;
+        this.isTakerApiUser = isTakerApiUser;
         this.state = state;
         this.txId = txId;
 
@@ -138,6 +142,7 @@ public abstract class BsqSwapTrade extends TradeModel {
                 .setMakerFee(makerFeeAsLong)
                 .setTakerFee(takerFeeAsLong)
                 .setBsqSwapProtocolModel(bsqSwapProtocolModel.toProtoMessage())
+                .setIsTakerApiUser(isTakerApiUser)
                 .setState(State.toProtoMessage(state))
                 .setPeerNodeAddress(tradingPeerNodeAddress.toProtoMessage());
         Optional.ofNullable(errorMessage).ifPresent(builder::setErrorMessage);

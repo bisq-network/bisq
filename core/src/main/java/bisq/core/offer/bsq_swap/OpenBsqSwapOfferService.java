@@ -17,6 +17,7 @@
 
 package bisq.core.offer.bsq_swap;
 
+import bisq.core.api.CoreContext;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
@@ -83,6 +84,7 @@ public class OpenBsqSwapOfferService {
     private final OfferUtil offerUtil;
     private final FilterManager filterManager;
     private final PubKeyRing pubKeyRing;
+    private final CoreContext coreContext;
 
     private final Map<String, OpenBsqSwapOffer> openBsqSwapOffersById = new HashMap<>();
     private final ListChangeListener<OpenOffer> offerListChangeListener;
@@ -100,7 +102,8 @@ public class OpenBsqSwapOfferService {
                                    OfferBookService offerBookService,
                                    OfferUtil offerUtil,
                                    FilterManager filterManager,
-                                   PubKeyRing pubKeyRing) {
+                                   PubKeyRing pubKeyRing,
+                                   CoreContext coreContext) {
         this.openOfferManager = openOfferManager;
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
@@ -111,6 +114,7 @@ public class OpenBsqSwapOfferService {
         this.offerUtil = offerUtil;
         this.filterManager = filterManager;
         this.pubKeyRing = pubKeyRing;
+        this.coreContext = coreContext;
 
         offerListChangeListener = c -> {
             c.next();
@@ -219,6 +223,7 @@ public class OpenBsqSwapOfferService {
                                 minAmount.getValue(),
                                 proofOfWork,
                                 null,
+                                coreContext.isApiUser(),
                                 Version.VERSION,
                                 Version.TRADE_PROTOCOL_VERSION);
                         resultHandler.accept(new Offer(bsqSwapOfferPayload));

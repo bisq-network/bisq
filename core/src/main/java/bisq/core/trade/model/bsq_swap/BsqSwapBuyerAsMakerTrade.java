@@ -43,7 +43,8 @@ public final class BsqSwapBuyerAsMakerTrade extends BsqSwapBuyerTrade implements
                                     long txFeePerVbyte,
                                     long makerFee,
                                     long takerFee,
-                                    BsqSwapProtocolModel bsqSwapProtocolModel) {
+                                    BsqSwapProtocolModel bsqSwapProtocolModel,
+                                    boolean isTakerApiUser) {
 
 
         super(UUID.randomUUID().toString(),
@@ -55,6 +56,7 @@ public final class BsqSwapBuyerAsMakerTrade extends BsqSwapBuyerTrade implements
                 makerFee,
                 takerFee,
                 bsqSwapProtocolModel,
+                isTakerApiUser,
                 null,
                 BsqSwapTrade.State.PREPARATION,
                 null);
@@ -74,6 +76,7 @@ public final class BsqSwapBuyerAsMakerTrade extends BsqSwapBuyerTrade implements
                                      long makerFee,
                                      long takerFee,
                                      BsqSwapProtocolModel bsqSwapProtocolModel,
+                                     boolean isTakerApiUser,
                                      @Nullable String errorMessage,
                                      State state,
                                      @Nullable String txId) {
@@ -86,6 +89,7 @@ public final class BsqSwapBuyerAsMakerTrade extends BsqSwapBuyerTrade implements
                 makerFee,
                 takerFee,
                 bsqSwapProtocolModel,
+                isTakerApiUser,
                 errorMessage,
                 state,
                 txId);
@@ -115,6 +119,7 @@ public final class BsqSwapBuyerAsMakerTrade extends BsqSwapBuyerTrade implements
                 proto.getMakerFee(),
                 proto.getTakerFee(),
                 BsqSwapProtocolModel.fromProto(proto.getBsqSwapProtocolModel()),
+                proto.getIsTakerApiUser(),
                 ProtoUtil.stringOrNullFromProto(proto.getErrorMessage()),
                 State.fromProto(proto.getState()),
                 ProtoUtil.stringOrNullFromProto(proto.getTxId()));

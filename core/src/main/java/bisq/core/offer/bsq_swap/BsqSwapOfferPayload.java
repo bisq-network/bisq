@@ -61,6 +61,7 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                 original.getMinAmount(),
                 proofOfWork,
                 original.getExtraDataMap(),
+                original.isMakerApiUser(),
                 original.getVersionNr(),
                 original.getProtocolVersion()
         );
@@ -78,6 +79,7 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                                long minAmount,
                                ProofOfWork proofOfWork,
                                @Nullable Map<String, String> extraDataMap,
+                               boolean isMakerApiUser,
                                String versionNr,
                                int protocolVersion) {
         super(id,
@@ -93,6 +95,7 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                 PaymentMethod.BSQ_SWAP_ID,
                 BsqSwapAccount.ID,
                 extraDataMap,
+                isMakerApiUser,
                 versionNr,
                 protocolVersion);
 
@@ -145,6 +148,7 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                 proto.getMinAmount(),
                 ProofOfWork.fromProto(proto.getProofOfWork()),
                 extraDataMapMap,
+                proto.getIsMakerApiUser(),
                 proto.getVersionNr(),
                 proto.getProtocolVersion()
         );

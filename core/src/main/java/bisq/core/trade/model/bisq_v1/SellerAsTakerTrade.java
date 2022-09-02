@@ -55,6 +55,7 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                               @Nullable NodeAddress refundAgentNodeAddress,
                               BtcWalletService btcWalletService,
                               ProcessModel processModel,
+                              boolean isTakerApiUser,
                               String uid) {
         super(offer,
                 tradeAmount,
@@ -68,6 +69,7 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                 refundAgentNodeAddress,
                 btcWalletService,
                 processModel,
+                isTakerApiUser,
                 uid);
     }
 
@@ -106,6 +108,7 @@ public final class SellerAsTakerTrade extends SellerTrade implements TakerTrade 
                         proto.hasRefundAgentNodeAddress() ? NodeAddress.fromProto(proto.getRefundAgentNodeAddress()) : null,
                         btcWalletService,
                         processModel,
+                        proto.getIsTakerApiUser(),
                         uid),
                 proto,
                 coreProtoResolver);

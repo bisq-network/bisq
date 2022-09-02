@@ -45,6 +45,7 @@ public abstract class SellerTrade extends Trade {
                 @Nullable NodeAddress refundAgentNodeAddress,
                 BtcWalletService btcWalletService,
                 ProcessModel processModel,
+                boolean isTakerApiUser,
                 String uid) {
         super(offer,
                 tradeAmount,
@@ -58,6 +59,7 @@ public abstract class SellerTrade extends Trade {
                 refundAgentNodeAddress,
                 btcWalletService,
                 processModel,
+                isTakerApiUser,
                 uid);
     }
 
@@ -70,6 +72,7 @@ public abstract class SellerTrade extends Trade {
                 @Nullable NodeAddress refundAgentNodeAddress,
                 BtcWalletService btcWalletService,
                 ProcessModel processModel,
+                boolean isTakerApiUser,
                 String uid) {
         super(offer,
                 txFee,
@@ -80,6 +83,7 @@ public abstract class SellerTrade extends Trade {
                 refundAgentNodeAddress,
                 btcWalletService,
                 processModel,
+                isTakerApiUser,
                 uid);
     }
 

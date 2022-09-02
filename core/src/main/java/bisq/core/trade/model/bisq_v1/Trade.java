@@ -441,6 +441,9 @@ public abstract class Trade extends TradeModel {
     @Getter
     transient final private IntegerProperty assetTxProofResultUpdateProperty = new SimpleIntegerProperty();
 
+    // Added at v1.9.6
+    @Getter
+    private final boolean isTakerApiUser;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -456,6 +459,7 @@ public abstract class Trade extends TradeModel {
                     @Nullable NodeAddress refundAgentNodeAddress,
                     BtcWalletService btcWalletService,
                     ProcessModel processModel,
+                    boolean isTakerApiUser,
                     String uid) {
         super(uid, offer);
         this.tradeTxFee = tradeTxFee;
@@ -466,6 +470,7 @@ public abstract class Trade extends TradeModel {
         this.refundAgentNodeAddress = refundAgentNodeAddress;
         this.btcWalletService = btcWalletService;
         this.processModel = processModel;
+        this.isTakerApiUser = isTakerApiUser;
 
         tradeTxFeeAsLong = tradeTxFee.value;
         takerFeeAsLong = takerFee.value;
@@ -486,6 +491,7 @@ public abstract class Trade extends TradeModel {
                     @Nullable NodeAddress refundAgentNodeAddress,
                     BtcWalletService btcWalletService,
                     ProcessModel processModel,
+                    boolean isTakerApiUser,
                     String uid) {
 
         this(offer,
@@ -497,6 +503,7 @@ public abstract class Trade extends TradeModel {
                 refundAgentNodeAddress,
                 btcWalletService,
                 processModel,
+                isTakerApiUser,
                 uid);
         this.priceAsLong = priceAsLong;
 
@@ -518,6 +525,7 @@ public abstract class Trade extends TradeModel {
                 .setTakerFeeAsLong(takerFeeAsLong)
                 .setTakeOfferDate(takeOfferDate)
                 .setProcessModel(processModel.toProtoMessage())
+                .setIsTakerApiUser(isTakerApiUser)
                 .setTradeAmountAsLong(amountAsLong)
                 .setTradePrice(priceAsLong)
                 .setState(Trade.State.toProtoMessage(state))
@@ -1178,6 +1186,7 @@ public abstract class Trade extends TradeModel {
                 ",\n     refundAgentPubKeyRing=" + refundAgentPubKeyRing +
                 ",\n     refundResultState=" + refundResultState +
                 ",\n     refundResultStateProperty=" + refundResultStateProperty +
+                ",\n     isTakerApiUser=" + isTakerApiUser +
                 "\n}";
     }
 }

@@ -118,6 +118,7 @@ public class OfferMaker {
                     false,
                     null,
                     null,
+                    false,
                     lookup.valueOf(protocolVersion, 0)));
 
     public static final Maker<Offer> btcUsdOffer = a(Offer);

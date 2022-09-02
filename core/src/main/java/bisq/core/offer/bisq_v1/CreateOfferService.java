@@ -17,6 +17,7 @@
 
 package bisq.core.offer.bisq_v1;
 
+import bisq.core.api.CoreContext;
 import bisq.core.btc.TxFeeEstimationService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
@@ -67,6 +68,7 @@ public class CreateOfferService {
     private final PubKeyRing pubKeyRing;
     private final User user;
     private final BtcWalletService btcWalletService;
+    private final CoreContext coreContext;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -80,7 +82,8 @@ public class CreateOfferService {
                               P2PService p2PService,
                               PubKeyRing pubKeyRing,
                               User user,
-                              BtcWalletService btcWalletService) {
+                              BtcWalletService btcWalletService,
+                              CoreContext coreContext) {
         this.offerUtil = offerUtil;
         this.txFeeEstimationService = txFeeEstimationService;
         this.priceFeedService = priceFeedService;
@@ -88,6 +91,7 @@ public class CreateOfferService {
         this.pubKeyRing = pubKeyRing;
         this.user = user;
         this.btcWalletService = btcWalletService;
+        this.coreContext = coreContext;
     }
 
 
@@ -216,6 +220,7 @@ public class CreateOfferService {
                 isPrivateOffer,
                 hashOfChallenge,
                 extraDataMap,
+                coreContext.isApiUser(),
                 Version.TRADE_PROTOCOL_VERSION);
         Offer offer = new Offer(offerPayload);
         offer.setPriceFeedService(priceFeedService);

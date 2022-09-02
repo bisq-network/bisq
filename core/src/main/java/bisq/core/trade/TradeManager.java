@@ -17,6 +17,7 @@
 
 package bisq.core.trade;
 
+import bisq.core.api.CoreContext;
 import bisq.core.btc.exceptions.AddressEntryException;
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -166,6 +167,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     @Getter
     private final LongProperty numPendingTrades = new SimpleLongProperty();
     private final ReferralIdService referralIdService;
+    private final CoreContext coreContext;
     private final CorePersistenceProtoResolver corePersistenceProtoResolver;
     private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
     @Getter
@@ -195,6 +197,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                         ClockWatcher clockWatcher,
                         PersistenceManager<TradableList<Trade>> persistenceManager,
                         ReferralIdService referralIdService,
+                        CoreContext coreContext,
                         CorePersistenceProtoResolver corePersistenceProtoResolver,
                         DumpDelayedPayoutTx dumpDelayedPayoutTx,
                         @Named(Config.ALLOW_FAULTY_DELAYED_TXS) boolean allowFaultyDelayedTxs) {
@@ -215,6 +218,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         this.provider = provider;
         this.clockWatcher = clockWatcher;
         this.referralIdService = referralIdService;
+        this.coreContext = coreContext;
         this.corePersistenceProtoResolver = corePersistenceProtoResolver;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
         this.allowFaultyDelayedTxs = allowFaultyDelayedTxs;
@@ -295,6 +299,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                     openOffer.getRefundAgentNodeAddress(),
                     btcWalletService,
                     getNewProcessModel(offer),
+                    coreContext.isApiUser(),
                     UUID.randomUUID().toString());
         } else {
             trade = new SellerAsMakerTrade(offer,
@@ -306,6 +311,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                     openOffer.getRefundAgentNodeAddress(),
                     btcWalletService,
                     getNewProcessModel(offer),
+                    coreContext.isApiUser(),
                     UUID.randomUUID().toString());
         }
 
@@ -347,7 +353,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                     request.getTxFeePerVbyte(),
                     request.getMakerFee(),
                     request.getTakerFee(),
-                    bsqSwapProtocolModel);
+                    bsqSwapProtocolModel,
+                    coreContext.isApiUser());
         } else {
             checkArgument(request instanceof SellersBsqSwapRequest);
             checkArgument(offer.isBuyOffer(),
@@ -360,7 +367,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                     request.getTxFeePerVbyte(),
                     request.getMakerFee(),
                     request.getTakerFee(),
-                    bsqSwapProtocolModel);
+                    bsqSwapProtocolModel,
+                    coreContext.isApiUser());
         }
 
         TradeProtocol tradeProtocol = createTradeProtocol(bsqSwapTrade);
@@ -529,6 +537,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                                     model.getSelectedRefundAgent(),
                                     btcWalletService,
                                     getNewProcessModel(offer),
+                                    coreContext.isApiUser(),
                                     UUID.randomUUID().toString());
                         } else {
                             trade = new BuyerAsTakerTrade(offer,
@@ -543,6 +552,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                                     model.getSelectedRefundAgent(),
                                     btcWalletService,
                                     getNewProcessModel(offer),
+                                    coreContext.isApiUser(),
                                     UUID.randomUUID().toString());
                         }
                         trade.getProcessModel().setUseSavingsWallet(useSavingsWallet);
@@ -589,7 +599,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                                     txFeePerVbyte,
                                     makerFee,
                                     takerFee,
-                                    bsqSwapProtocolModel);
+                                    bsqSwapProtocolModel,
+                                    coreContext.isApiUser());
                         } else {
                             bsqSwapTrade = new BsqSwapBuyerAsTakerTrade(
                                     offer,
@@ -598,7 +609,8 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                                     txFeePerVbyte,
                                     makerFee,
                                     takerFee,
-                                    bsqSwapProtocolModel);
+                                    bsqSwapProtocolModel,
+                                    coreContext.isApiUser());
                         }
 
                         TradeProtocol tradeProtocol = createTradeProtocol(bsqSwapTrade);

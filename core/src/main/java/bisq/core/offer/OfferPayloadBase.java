@@ -64,6 +64,7 @@ public abstract class OfferPayloadBase implements ProtectedStoragePayload, Expir
     protected transient byte[] hash;
     @Nullable
     protected final Map<String, String> extraDataMap;
+    protected final boolean isMakerApiUser;
 
     public OfferPayloadBase(String id,
                             long date,
@@ -78,6 +79,7 @@ public abstract class OfferPayloadBase implements ProtectedStoragePayload, Expir
                             String paymentMethodId,
                             String makerPaymentAccountId,
                             @Nullable Map<String, String> extraDataMap,
+                            boolean isMakerApiUser,
                             String versionNr,
                             int protocolVersion) {
         this.id = id;
@@ -93,6 +95,7 @@ public abstract class OfferPayloadBase implements ProtectedStoragePayload, Expir
         this.paymentMethodId = paymentMethodId;
         this.makerPaymentAccountId = makerPaymentAccountId;
         this.extraDataMap = extraDataMap;
+        this.isMakerApiUser = isMakerApiUser;
         this.versionNr = versionNr;
         this.protocolVersion = protocolVersion;
     }
@@ -142,6 +145,7 @@ public abstract class OfferPayloadBase implements ProtectedStoragePayload, Expir
                 ",\r\n     pubKeyRing=" + pubKeyRing +
                 ",\r\n     hash=" + (hash != null ? Hex.encode(hash) : "null") +
                 ",\r\n     extraDataMap=" + extraDataMap +
+                ",\r\n     isMakerApiUser=" + isMakerApiUser +
                 "\r\n}";
     }
 }

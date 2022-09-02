@@ -452,6 +452,7 @@ public class OfferUtil {
                 original.isPrivateOffer(),
                 original.getHashOfChallenge(),
                 mutableOfferPayloadFields.getExtraDataMap(),
+                original.isMakerApiUser(),
                 original.getProtocolVersion());
     }
 

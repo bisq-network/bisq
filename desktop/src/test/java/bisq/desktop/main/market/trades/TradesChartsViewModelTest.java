@@ -100,6 +100,7 @@ public class TradesChartsViewModelTest {
             false,
             null,
             null,
+            false,
             1
     );
 
