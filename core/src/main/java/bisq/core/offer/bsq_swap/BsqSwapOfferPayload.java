@@ -127,6 +127,7 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                 .setAmount(amount)
                 .setMinAmount(minAmount)
                 .setProofOfWork(proofOfWork.toProtoMessage())
+                .setIsMakerApiUser(isMakerApiUser)
                 .setVersionNr(versionNr)
                 .setProtocolVersion(protocolVersion);
 
