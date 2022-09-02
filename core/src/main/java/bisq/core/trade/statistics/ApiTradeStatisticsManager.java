@@ -58,7 +58,6 @@ public class ApiTradeStatisticsManager {
 
     private final P2PService p2PService;
     private final ApiTradeStatisticsStorageService apiTradeStatisticsStorageService;
-    private final TradeStatistics3StorageService tradeStatistics3StorageService;
     private final TradeStatisticsManager tradeStatisticsManager;
     private final File storageDir;
     private final boolean dumpStatistics;
@@ -69,14 +68,12 @@ public class ApiTradeStatisticsManager {
     @Inject
     public ApiTradeStatisticsManager(P2PService p2PService,
                                      ApiTradeStatisticsStorageService apiTradeStatisticsStorageService,
-                                     TradeStatistics3StorageService tradeStatistics3StorageService,
                                      TradeStatisticsManager tradeStatisticsManager,
                                      AppendOnlyDataStoreService appendOnlyDataStoreService,
                                      @Named(Config.STORAGE_DIR) File storageDir,
                                      @Named(Config.DUMP_STATISTICS) boolean dumpStatistics) {
         this.p2PService = p2PService;
         this.apiTradeStatisticsStorageService = apiTradeStatisticsStorageService;
-        this.tradeStatistics3StorageService = tradeStatistics3StorageService;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.storageDir = storageDir;
         this.dumpStatistics = dumpStatistics;
@@ -105,7 +102,7 @@ public class ApiTradeStatisticsManager {
         Set<ApiTradeStatistics> set = apiTradeStatisticsStorageService.getMapOfAllData().values().stream()
                 .filter(e -> e instanceof ApiTradeStatistics)
                 .map(e -> (ApiTradeStatistics) e)
-                .filter(s -> s.getTradeStatistics3().isValid())
+                .filter(s -> requireNonNull(s.getTradeStatistics3()).isValid())
                 .collect(Collectors.toSet());
         observableApiTradeStatisticsSet.addAll(set);
 
@@ -153,7 +150,7 @@ public class ApiTradeStatisticsManager {
                 item.setTradeStatistics3(tradeStatistics3);
                 fileWriter.append(String.valueOf(item.isMakerApiUser())).append(",");
                 fileWriter.append(String.valueOf(item.isTakerApiUser())).append(",");
-                fileWriter.append(tradeStatistics3.getCurrency()).append(",");
+                fileWriter.append(requireNonNull(tradeStatistics3).getCurrency()).append(",");
                 fileWriter.append(String.valueOf(tradeStatistics3.getPrice())).append(",");
                 fileWriter.append(String.valueOf(tradeStatistics3.getAmount())).append(",");
                 fileWriter.append(String.valueOf(tradeStatistics3.getPaymentMethodId())).append(",");
@@ -180,10 +177,11 @@ public class ApiTradeStatisticsManager {
                 fileWriter.close();
                 FileUtil.renameFile(tempFile, csvFile);
                 if (tempFile.exists()) {
+                    //noinspection ResultOfMethodCallIgnored
                     tempFile.delete();
                 }
             } catch (IOException ex) {
-                throw new RuntimeException(ex);
+                log.error("", ex);
             }
         }
     }
@@ -214,7 +212,7 @@ public class ApiTradeStatisticsManager {
 
         // Sort valid, complete API trading stats by trade creation date.
         orderedStats.sort(comparing(apiTradeStatistics ->
-                apiTradeStatistics.getTradeStatistics3().getDateAsLong()));
+                requireNonNull(apiTradeStatistics.getTradeStatistics3()).getDateAsLong()));
 
         if (observableApiTradeStatisticsSet.size() != orderedStats.size()) {
             log.warn("Could not find {} matching TradeStatistics3 payloads in the set of"
