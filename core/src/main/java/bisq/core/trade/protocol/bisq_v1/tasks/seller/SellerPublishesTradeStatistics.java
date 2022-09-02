@@ -17,8 +17,10 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.seller;
 
+import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.statistics.ApiTradeStatistics;
 import bisq.core.trade.statistics.TradeStatistics3;
 
 import bisq.network.p2p.network.TorNetworkNode;
@@ -26,8 +28,11 @@ import bisq.network.p2p.network.TorNetworkNode;
 import bisq.common.app.Capability;
 import bisq.common.taskrunner.TaskRunner;
 
+import java.util.Optional;
+
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.common.util.Utilities.encodeToHex;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -55,6 +60,23 @@ public class SellerPublishesTradeStatistics extends TradeTask {
                                 if (tradeStatistics.isValid()) {
                                     log.info("Publishing trade statistics");
                                     processModel.getP2PService().addPersistableNetworkPayload(tradeStatistics, true);
+
+                                    // Publish a matching ApiTradeStatistics payload if API was used to make or take offer.
+                                    Optional<OfferPayload> optionalOfferPayload = trade.getOffer().getOfferPayload();
+                                    optionalOfferPayload.ifPresentOrElse(offerPayload -> {
+                                        var apiWasUsed = offerPayload.isMakerApiUser() || trade.isTakerApiUser();
+                                        if (apiWasUsed) {
+                                            // A hash was not broadcast with TradeStatistics3, but
+                                            // it must be broadcast in its joined ApiTradeStatistics.
+                                            byte[] tradeStatisticsHash = tradeStatistics.createHash();
+                                            ApiTradeStatistics apiTradeStatistics = new ApiTradeStatistics(tradeStatisticsHash,
+                                                    offerPayload.isMakerApiUser(),
+                                                    trade.isTakerApiUser());
+                                            log.info("Publishing API trade statistics: {}", encodeToHex(tradeStatisticsHash));
+                                            processModel.getP2PService().addPersistableNetworkPayload(apiTradeStatistics, true);
+                                        }
+                                    }, () -> log.error("Trade {} does not have an offer payload.", trade.getId()));
+
                                 } else {
                                     log.warn("Trade statistics are invalid. We do not publish. {}", tradeStatistics);
                                 }
