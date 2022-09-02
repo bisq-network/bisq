@@ -613,6 +613,7 @@ message PersistableNetworkPayload {
         BlindVotePayload blind_vote_payload = 4;
         SignedWitness signed_witness = 5;
         TradeStatistics3 trade_statistics3 = 6;
+        ApiTradeStatistics api_trade_statistics = 7;
     }
 }
 
@@ -793,6 +794,10 @@ message TradeStatistics3 {
     map<string, string> extra_data = 9;
 }
 
+message ApiTradeStatistics {
+    bytes bytes = 1;
+}
+
 message MailboxStoragePayload {
     PrefixedSealedAndSignedMessage prefixed_sealed_and_signed_message = 1;
     bytes sender_pub_key_for_add_operation_bytes = 2;
@@ -841,6 +846,7 @@ message OfferPayload {
     string hash_of_challenge = 36;
     map<string, string> extra_data = 37;
     int32 protocol_version = 38;
+    bool is_maker_api_user = 39;
 }
 
 enum OfferDirection {
@@ -862,6 +868,7 @@ message BsqSwapOfferPayload {
     map<string, string> extra_data = 10;
     string version_nr = 11;
     int32 protocol_version = 12;
+    bool is_maker_api_user = 13;
 }
 
 message ProofOfWork {
@@ -1487,6 +1494,7 @@ message PersistableEnvelope {
         IgnoredMailboxMap ignored_mailbox_map = 33;
         RemovedPayloadsMap removed_payloads_map = 34;
         BsqBlockStore bsq_block_store = 35;
+        ApiTradeStatisticsStore api_trade_statistics_store = 36;
     }
 }
 
@@ -1531,6 +1539,10 @@ message TradeStatistics2Store {
 
 message TradeStatistics3Store {
     repeated TradeStatistics3 items = 1;
+}
+
+message ApiTradeStatisticsStore {
+    repeated ApiTradeStatistics items = 1;
 }
 
 message PeerList {
@@ -1731,6 +1743,7 @@ message Trade {
     string counter_currency_extra_data = 37;
     string asset_tx_proof_result = 38; // name of AssetTxProofResult enum
     string uid = 39;
+    bool is_taker_api_user = 40;
 }
 
 message BuyerAsMakerTrade {
@@ -1769,6 +1782,7 @@ message BsqSwapTrade {
     string tx_id = 10;
     string error_message = 11;
     State state = 12;
+    bool is_taker_api_user = 13;
 }
 
 message BsqSwapBuyerAsMakerTrade {
