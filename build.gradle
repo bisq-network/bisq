@@ -404,10 +404,18 @@ configure(project(':core')) {
         testImplementation "com.natpryce:make-it-easy:$easyVersion"
         testImplementation "org.hamcrest:hamcrest-all:$hamcrestVersion"
         testImplementation "org.mockito:mockito-core:$mockitoVersion"
+
+        testImplementation "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"
+        testImplementation "org.junit.jupiter:junit-jupiter-params:$jupiterVersion"
+        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
     }
 
     test {
+        useJUnitPlatform()
         systemProperty 'jdk.attach.allowAttachSelf', true
+        testLogging {
+            events "passed", "skipped", "failed"
+        }
     }
 }
 
