@@ -644,6 +644,15 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     // Client API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @VisibleForTesting
+    public boolean addPersistableNetworkPayload(PersistableNetworkPayload payload,
+                                                @Nullable NodeAddress sender,
+                                                boolean allowBroadcast,
+                                                boolean allowReBroadcast) {
+        return addPersistableNetworkPayload(
+                payload, sender, allowBroadcast, allowReBroadcast, false);
+    }
+
     /**
      * Adds a PersistableNetworkPayload to the local P2P data storage. If it does not already exist locally, it will
      * be broadcast to the P2P network.
