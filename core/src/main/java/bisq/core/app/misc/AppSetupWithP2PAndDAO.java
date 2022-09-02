@@ -27,6 +27,7 @@ import bisq.core.dao.governance.myvote.MyVoteListService;
 import bisq.core.dao.governance.proofofburn.MyProofOfBurnListService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.filter.FilterManager;
+import bisq.core.trade.statistics.ApiTradeStatisticsManager;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 
@@ -50,6 +51,7 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
                                  P2PDataStorage p2PDataStorage,
                                  PeerManager peerManager,
                                  TradeStatisticsManager tradeStatisticsManager,
+                                 ApiTradeStatisticsManager apiTradeStatisticsManager,
                                  AccountAgeWitnessService accountAgeWitnessService,
                                  SignedWitnessService signedWitnessService,
                                  FilterManager filterManager,
@@ -66,6 +68,7 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
                 p2PDataStorage,
                 peerManager,
                 tradeStatisticsManager,
+                apiTradeStatisticsManager,
                 accountAgeWitnessService,
                 signedWitnessService,
                 filterManager,

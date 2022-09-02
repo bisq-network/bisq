@@ -53,6 +53,7 @@ import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.bsq_swap.BsqSwapTradeManager;
+import bisq.core.trade.statistics.ApiTradeStatisticsManager;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.trade.txproof.xmr.XmrTxProofService;
 import bisq.core.user.User;
@@ -100,6 +101,7 @@ public class DomainInitialisation {
     private final FeeService feeService;
     private final DaoSetup daoSetup;
     private final TradeStatisticsManager tradeStatisticsManager;
+    private final ApiTradeStatisticsManager apiTradeStatisticsManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final SignedWitnessService signedWitnessService;
     private final PriceFeedService priceFeedService;
@@ -140,6 +142,7 @@ public class DomainInitialisation {
                                 FeeService feeService,
                                 DaoSetup daoSetup,
                                 TradeStatisticsManager tradeStatisticsManager,
+                                ApiTradeStatisticsManager apiTradeStatisticsManager,
                                 AccountAgeWitnessService accountAgeWitnessService,
                                 SignedWitnessService signedWitnessService,
                                 PriceFeedService priceFeedService,
@@ -178,6 +181,7 @@ public class DomainInitialisation {
         this.feeService = feeService;
         this.daoSetup = daoSetup;
         this.tradeStatisticsManager = tradeStatisticsManager;
+        this.apiTradeStatisticsManager = apiTradeStatisticsManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.signedWitnessService = signedWitnessService;
         this.priceFeedService = priceFeedService;
@@ -255,6 +259,7 @@ public class DomainInitialisation {
         }
 
         tradeStatisticsManager.onAllServicesInitialized();
+        apiTradeStatisticsManager.onAllServicesInitialized();
 
         accountAgeWitnessService.onAllServicesInitialized();
         signedWitnessService.onAllServicesInitialized();

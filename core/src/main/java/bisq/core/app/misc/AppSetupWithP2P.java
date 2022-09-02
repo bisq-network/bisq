@@ -20,6 +20,7 @@ package bisq.core.app.misc;
 import bisq.core.account.sign.SignedWitnessService;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.filter.FilterManager;
+import bisq.core.trade.statistics.ApiTradeStatisticsManager;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
 import bisq.network.p2p.P2PService;
@@ -52,6 +53,7 @@ public class AppSetupWithP2P extends AppSetup {
     private final P2PDataStorage p2PDataStorage;
     private final PeerManager peerManager;
     protected final TradeStatisticsManager tradeStatisticsManager;
+    protected final ApiTradeStatisticsManager apiTradeStatisticsManager;
     protected ArrayList<PersistedDataHost> persistedDataHosts;
     protected BooleanProperty p2pNetWorkReady;
 
@@ -60,6 +62,7 @@ public class AppSetupWithP2P extends AppSetup {
                            P2PDataStorage p2PDataStorage,
                            PeerManager peerManager,
                            TradeStatisticsManager tradeStatisticsManager,
+                           ApiTradeStatisticsManager apiTradeStatisticsManager,
                            AccountAgeWitnessService accountAgeWitnessService,
                            SignedWitnessService signedWitnessService,
                            FilterManager filterManager,
@@ -69,6 +72,7 @@ public class AppSetupWithP2P extends AppSetup {
         this.p2PDataStorage = p2PDataStorage;
         this.peerManager = peerManager;
         this.tradeStatisticsManager = tradeStatisticsManager;
+        this.apiTradeStatisticsManager = apiTradeStatisticsManager;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.signedWitnessService = signedWitnessService;
         this.filterManager = filterManager;
@@ -188,6 +192,7 @@ public class AppSetupWithP2P extends AppSetup {
         p2PService.onAllServicesInitialized();
 
         tradeStatisticsManager.onAllServicesInitialized();
+        apiTradeStatisticsManager.onAllServicesInitialized();
 
         accountAgeWitnessService.onAllServicesInitialized();
         signedWitnessService.onAllServicesInitialized();

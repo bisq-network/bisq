@@ -28,6 +28,7 @@ import bisq.core.provider.price.PriceFeedService;
 import bisq.core.setup.CorePersistedDataHost;
 import bisq.core.setup.CoreSetup;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
+import bisq.core.trade.statistics.ApiTradeStatisticsManager;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.trade.txproof.xmr.XmrTxProofService;
 
@@ -252,6 +253,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
             injector.getInstance(PriceFeedService.class).shutDown();
             injector.getInstance(ArbitratorManager.class).shutDown();
             injector.getInstance(TradeStatisticsManager.class).shutDown();
+            injector.getInstance(ApiTradeStatisticsManager.class).shutDown();
             injector.getInstance(XmrTxProofService.class).shutDown();
             injector.getInstance(RpcService.class).shutDown();
             injector.getInstance(DaoSetup.class).shutDown();
