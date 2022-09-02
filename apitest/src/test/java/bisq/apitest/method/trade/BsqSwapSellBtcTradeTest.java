@@ -45,7 +45,6 @@ import static protobuf.BsqSwapTrade.State.PREPARATION;
 
 
 
-import bisq.apitest.method.offer.AbstractOfferTest;
 import bisq.cli.GrpcClient;
 
 @Disabled
@@ -59,7 +58,7 @@ public class BsqSwapSellBtcTradeTest extends AbstractTradeTest {
 
     @BeforeAll
     public static void setUp() {
-        AbstractOfferTest.setUp();
+        setUp(false);
     }
 
     @BeforeEach
@@ -93,12 +92,14 @@ public class BsqSwapSellBtcTradeTest extends AbstractTradeTest {
         assertEquals(1_000_000L, mySwapOffer.getMinAmount());
         assertEquals(BSQ, mySwapOffer.getBaseCurrencyCode());
         assertEquals(BTC, mySwapOffer.getCounterCurrencyCode());
+        assertTrue(mySwapOffer.getIsMakerApiUser());
 
         genBtcBlocksThenWait(1, 2_500);
 
         mySwapOffer = aliceClient.getOffer(newOfferId);
         log.debug("My fetched BsqSwap Buy BSQ (Sell BTC) OFFER:\n{}", toOfferTable.apply(mySwapOffer));
         assertNotEquals(0, mySwapOffer.getMakerFee());
+        assertTrue(mySwapOffer.getIsMakerApiUser());
 
         runCliGetOffer(newOfferId);
     }
@@ -122,6 +123,8 @@ public class BsqSwapSellBtcTradeTest extends AbstractTradeTest {
         tradeId = swapTrade.getTradeId(); // Cache the tradeId for following test case(s).
         log.debug("BsqSwap Trade at PREPARATION:\n{}", toTradeDetailTable.apply(swapTrade));
         assertEquals(PREPARATION.name(), swapTrade.getState());
+        assertTrue(swapTrade.getOffer().getIsMakerApiUser());
+        assertTrue(swapTrade.getIsTakerApiUser());
         genBtcBlocksThenWait(1, 3_000);
 
         swapTrade = getBsqSwapTrade(bobClient, tradeId);
@@ -139,10 +142,14 @@ public class BsqSwapSellBtcTradeTest extends AbstractTradeTest {
         var alicesTrade = getBsqSwapTrade(aliceClient, tradeId);
         log.debug("Alice's BsqSwap Trade at COMPLETION:\n{}", toTradeDetailTable.apply(alicesTrade));
         assertEquals(1, alicesTrade.getBsqSwapTradeInfo().getNumConfirmations());
+        assertTrue(alicesTrade.getOffer().getIsMakerApiUser());
+        assertTrue(alicesTrade.getIsTakerApiUser());
 
         var bobsTrade = getBsqSwapTrade(bobClient, tradeId);
         log.debug("Bob's BsqSwap Trade at COMPLETION:\n{}", toTradeDetailTable.apply(bobsTrade));
         assertEquals(1, bobsTrade.getBsqSwapTradeInfo().getNumConfirmations());
+        assertTrue(bobsTrade.getOffer().getIsMakerApiUser());
+        assertTrue(bobsTrade.getIsTakerApiUser());
 
         genBtcBlocksThenWait(1, 2_000);
 

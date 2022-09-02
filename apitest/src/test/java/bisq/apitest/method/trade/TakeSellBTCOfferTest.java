@@ -71,6 +71,7 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
                     NO_TRIGGER_PRICE);
             var offerId = alicesOffer.getId();
             assertTrue(alicesOffer.getIsCurrencyForMakerFeeBtc());
+            assertTrue(alicesOffer.getIsMakerApiUser());
 
             // Wait for Alice's AddToOfferBook task.
             // Wait times vary;  my logs show >= 2-second delay, but taking sell offers
@@ -91,6 +92,9 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
 
             trade = bobClient.getTrade(tradeId);
             assertEquals(alicesOffer.getAmount(), trade.getTradeAmountAsLong());
+            assertTrue(trade.getIsTakerApiUser());
+            assertTrue(trade.getOffer().getIsMakerApiUser());
+
             verifyTakerDepositNotConfirmed(trade);
             logTrade(log, testInfo, "Alice's Maker/Buyer View", aliceClient.getTrade(tradeId));
             logTrade(log, testInfo, "Bob's Taker/Seller View", bobClient.getTrade(tradeId));
@@ -128,6 +132,8 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
     public void testBobsConfirmPaymentStarted(final TestInfo testInfo) {
         try {
             var trade = bobClient.getTrade(tradeId);
+            assertTrue(trade.getIsTakerApiUser());
+            assertTrue(trade.getOffer().getIsMakerApiUser());
             verifyTakerDepositConfirmed(trade);
             bobClient.confirmPaymentStarted(tradeId);
             sleep(6_000);
@@ -144,6 +150,8 @@ public class TakeSellBTCOfferTest extends AbstractTradeTest {
             waitUntilSellerSeesPaymentStartedMessage(log, testInfo, aliceClient, tradeId);
 
             var trade = aliceClient.getTrade(tradeId);
+            assertTrue(trade.getIsTakerApiUser());
+            assertTrue(trade.getOffer().getIsMakerApiUser());
             aliceClient.confirmPaymentReceived(trade.getTradeId());
             sleep(3_000);
             trade = aliceClient.getTrade(tradeId);

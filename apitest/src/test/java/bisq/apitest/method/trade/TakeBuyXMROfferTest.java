@@ -35,6 +35,7 @@ import static bisq.cli.table.builder.TableType.OFFER_TBL;
 import static bisq.core.trade.model.bisq_v1.Trade.Phase.PAYOUT_PUBLISHED;
 import static bisq.core.trade.model.bisq_v1.Trade.State.BUYER_RECEIVED_PAYOUT_TX_PUBLISHED_MSG;
 import static bisq.core.trade.model.bisq_v1.Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG;
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -81,6 +82,7 @@ public class TakeBuyXMROfferTest extends AbstractTradeTest {
                     alicesXmrAcct.getId(),
                     TRADE_FEE_CURRENCY_CODE);
             log.debug("Alice's BUY XMR (SELL BTC) Offer:\n{}", new TableBuilder(OFFER_TBL, alicesOffer).build());
+            assertTrue(alicesOffer.getIsMakerApiUser());
             genBtcBlocksThenWait(1, 5000);
             var offerId = alicesOffer.getId();
             assertFalse(alicesOffer.getIsCurrencyForMakerFeeBtc());
@@ -98,6 +100,8 @@ public class TakeBuyXMROfferTest extends AbstractTradeTest {
 
             trade = bobClient.getTrade(tradeId);
             assertEquals(intendedTradeAmount, trade.getTradeAmountAsLong());
+            assertTrue(trade.getIsTakerApiUser());
+            assertTrue(trade.getOffer().getIsMakerApiUser());
             verifyTakerDepositNotConfirmed(trade);
             logTrade(log, testInfo, "Alice's Maker/Buyer View", aliceClient.getTrade(tradeId));
             logTrade(log, testInfo, "Bob's Taker/Seller View", bobClient.getTrade(tradeId));
@@ -135,6 +139,8 @@ public class TakeBuyXMROfferTest extends AbstractTradeTest {
     public void testBobsConfirmPaymentStarted(final TestInfo testInfo) {
         try {
             var trade = bobClient.getTrade(tradeId);
+            assertTrue(trade.getIsTakerApiUser());
+            assertTrue(trade.getOffer().getIsMakerApiUser());
 
             verifyTakerDepositConfirmed(trade);
             log.debug("Bob sends XMR payment to Alice for trade {}", tradeId);
@@ -157,6 +163,8 @@ public class TakeBuyXMROfferTest extends AbstractTradeTest {
 
             sleep(2_000);
             var trade = aliceClient.getTrade(tradeId);
+            assertTrue(trade.getIsTakerApiUser());
+            assertTrue(trade.getOffer().getIsMakerApiUser());
             // If we were trading BSQ, Alice would verify payment has been sent to her
             // Bisq / BSQ wallet, but we can do no such checks for XMR payments.
             // All XMR transfers are done outside Bisq.

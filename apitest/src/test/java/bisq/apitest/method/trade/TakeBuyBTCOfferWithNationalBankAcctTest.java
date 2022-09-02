@@ -106,6 +106,7 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
                     NO_TRIGGER_PRICE);
             var offerId = alicesOffer.getId();
             assertFalse(alicesOffer.getIsCurrencyForMakerFeeBtc());
+            assertTrue(alicesOffer.getIsMakerApiUser());
 
             // Wait for Alice's AddToOfferBook task.
             // Wait times vary;  my logs show >= 2 second delay.
@@ -119,6 +120,8 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
                     0L,
                     false);
             assertEquals(alicesOffer.getAmount(), trade.getTradeAmountAsLong());
+            assertTrue(trade.getIsTakerApiUser());
+            assertTrue(trade.getOffer().getIsMakerApiUser());
 
             // Before generating a blk and confirming deposit tx, make sure there
             // are no bank acct details in the either side's contract.
@@ -182,6 +185,8 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
     public void testAlicesConfirmPaymentStarted(final TestInfo testInfo) {
         try {
             var trade = aliceClient.getTrade(tradeId);
+            assertTrue(trade.getIsTakerApiUser());
+            assertTrue(trade.getOffer().getIsMakerApiUser());
             waitForTakerDepositConfirmation(log, testInfo, aliceClient, trade.getTradeId());
             aliceClient.confirmPaymentStarted(trade.getTradeId());
             sleep(6_000);
@@ -201,6 +206,8 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
         try {
             waitUntilSellerSeesPaymentStartedMessage(log, testInfo, bobClient, tradeId);
             var trade = bobClient.getTrade(tradeId);
+            assertTrue(trade.getIsTakerApiUser());
+            assertTrue(trade.getOffer().getIsMakerApiUser());
             bobClient.confirmPaymentReceived(trade.getTradeId());
             sleep(3_000);
             trade = bobClient.getTrade(tradeId);

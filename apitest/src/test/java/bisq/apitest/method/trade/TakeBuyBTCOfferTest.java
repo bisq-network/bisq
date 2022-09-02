@@ -37,6 +37,7 @@ import static bisq.core.trade.model.bisq_v1.Trade.State.BUYER_RECEIVED_PAYOUT_TX
 import static bisq.core.trade.model.bisq_v1.Trade.State.SELLER_SAW_ARRIVED_PAYOUT_TX_PUBLISHED_MSG;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static protobuf.OfferDirection.BUY;
 import static protobuf.OpenOffer.State.AVAILABLE;
@@ -68,6 +69,7 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
                     NO_TRIGGER_PRICE);
             var offerId = alicesOffer.getId();
             assertFalse(alicesOffer.getIsCurrencyForMakerFeeBtc());
+            assertTrue(alicesOffer.getIsMakerApiUser());
 
             // Wait for Alice's AddToOfferBook task.
             // Wait times vary;  my logs show >= 2-second delay.
@@ -88,6 +90,9 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
 
             trade = bobClient.getTrade(tradeId);
             assertEquals(alicesOffer.getAmount(), trade.getTradeAmountAsLong());
+            assertTrue(trade.getIsTakerApiUser());
+            assertTrue(trade.getOffer().getIsMakerApiUser());
+
             verifyTakerDepositNotConfirmed(trade);
             logTrade(log, testInfo, "Alice's Maker/Buyer View", aliceClient.getTrade(tradeId));
             logTrade(log, testInfo, "Bob's Taker/Seller View", bobClient.getTrade(tradeId));
@@ -125,6 +130,8 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
     public void testAlicesConfirmPaymentStarted(final TestInfo testInfo) {
         try {
             var trade = aliceClient.getTrade(tradeId);
+            assertTrue(trade.getIsTakerApiUser());
+            assertTrue(trade.getOffer().getIsMakerApiUser());
             waitForTakerDepositConfirmation(log, testInfo, aliceClient, trade.getTradeId());
             aliceClient.confirmPaymentStarted(trade.getTradeId());
             sleep(6_000);
@@ -140,6 +147,8 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
         try {
             waitUntilSellerSeesPaymentStartedMessage(log, testInfo, bobClient, tradeId);
             var trade = bobClient.getTrade(tradeId);
+            assertTrue(trade.getIsTakerApiUser());
+            assertTrue(trade.getOffer().getIsMakerApiUser());
             bobClient.confirmPaymentReceived(trade.getTradeId());
             sleep(3_000);
             trade = bobClient.getTrade(tradeId);
