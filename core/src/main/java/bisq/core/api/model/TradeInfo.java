@@ -95,6 +95,7 @@ public class TradeInfo implements Payload {
     private final ContractInfo contract;
     // Optional BSQ swap trade protocol details (post v1).
     private BsqSwapTradeInfo bsqSwapTradeInfo;
+    private final boolean isTakerApiUser;
     private final String closingStatus;
 
     public TradeInfo(TradeInfoV1Builder builder) {
@@ -125,6 +126,7 @@ public class TradeInfo implements Payload {
         this.contractAsJson = builder.getContractAsJson();
         this.contract = builder.getContract();
         this.bsqSwapTradeInfo = null;
+        this.isTakerApiUser = builder.isTakerApiUser();
         this.closingStatus = builder.getClosingStatus();
     }
 
@@ -185,6 +187,7 @@ public class TradeInfo implements Payload {
                 // N/A for bsq-swaps: tradePeriodState, isDepositPublished, isDepositConfirmed
                 // N/A for bsq-swaps: isPaymentStartedMessageSent, isPaymentReceivedMessageSent, isPayoutPublished
                 // N/A for bsq-swaps: isCompleted, contractAsJson, contract
+                .withIsTakerApiUser(bsqSwapTrade.isTakerApiUser())
                 .withClosingStatus(closingStatus)
                 .build();
         tradeInfo.bsqSwapTradeInfo = toBsqSwapTradeInfo(bsqSwapTrade, isMyOffer, numConfirmations);
@@ -242,6 +245,7 @@ public class TradeInfo implements Payload {
                 .withIsCompleted(trade.isWithdrawn())
                 .withContractAsJson(trade.getContractAsJson())
                 .withContract(contractInfo)
+                .withIsTakerApiUser(trade.isTakerApiUser())
                 .withClosingStatus(closingStatus)
                 .build();
     }
@@ -278,6 +282,7 @@ public class TradeInfo implements Payload {
                         .setIsPaymentReceivedMessageSent(isPaymentReceivedMessageSent)
                         .setIsPayoutPublished(isPayoutPublished)
                         .setIsCompleted(isCompleted)
+                        .setIsTakerApiUser(isTakerApiUser)
                         .setClosingStatus(closingStatus);
         if (offer.isBsqSwapOffer()) {
             protoBuilder.setBsqSwapTradeInfo(bsqSwapTradeInfo.toProtoMessage());
@@ -317,6 +322,7 @@ public class TradeInfo implements Payload {
                 .withIsCompleted(proto.getIsCompleted())
                 .withContractAsJson(proto.getContractAsJson())
                 .withContract((ContractInfo.fromProto(proto.getContract())))
+                .withIsTakerApiUser(proto.getIsTakerApiUser())
                 .withClosingStatus(proto.getClosingStatus())
                 .build();
 
@@ -356,6 +362,7 @@ public class TradeInfo implements Payload {
                 ", contractAsJson=" + contractAsJson + "\n" +
                 ", contract=" + contract + "\n" +
                 ", bsqSwapTradeInfo=" + bsqSwapTradeInfo + "\n" +
+                ", isTakerApiUser=" + isTakerApiUser + "\n" +
                 ", closingStatus=" + closingStatus + "\n" +
                 '}';
     }

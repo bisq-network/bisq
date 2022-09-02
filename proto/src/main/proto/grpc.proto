@@ -350,6 +350,8 @@ message OfferInfo {
     string version_nr = 30;
     // The bitcoin protocol version used to create the offer.
     int32 protocol_version = 31;
+    // Whether the offer was created with the API or not.
+    bool is_maker_api_user = 32;
 }
 
 // An offer's current availability status.
@@ -653,6 +655,8 @@ message TradeInfo {
     BsqSwapTradeInfo bsq_swap_trade_info = 28;
     // Needed by open/closed/failed trade list items.
     string closing_status = 29;
+    // Whether the offer was taken with the API or not.
+    bool is_taker_api_user = 32;
 }
 
 message ContractInfo {

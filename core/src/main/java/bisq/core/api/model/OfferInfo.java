@@ -78,6 +78,7 @@ public class OfferInfo implements Payload {
     private final String pubKeyRing;
     private final String versionNumber;
     private final int protocolVersion;
+    private final boolean isMakerApiUser;
 
     public OfferInfo(OfferInfoBuilder builder) {
         this.id = builder.getId();
@@ -111,6 +112,7 @@ public class OfferInfo implements Payload {
         this.pubKeyRing = builder.getPubKeyRing();
         this.versionNumber = builder.getVersionNumber();
         this.protocolVersion = builder.getProtocolVersion();
+        this.isMakerApiUser = builder.isMakerApiUser();
     }
 
     public static OfferInfo toMyInactiveOfferInfo(Offer offer) {
@@ -193,7 +195,8 @@ public class OfferInfo implements Payload {
                 .withOwnerNodeAddress(offer.getOfferPayloadBase().getOwnerNodeAddress().getFullAddress())
                 .withPubKeyRing(offer.getOfferPayloadBase().getPubKeyRing().toString())
                 .withVersionNumber(offer.getOfferPayloadBase().getVersionNr())
-                .withProtocolVersion(offer.getOfferPayloadBase().getProtocolVersion());
+                .withProtocolVersion(offer.getOfferPayloadBase().getProtocolVersion())
+                .withIsMakerApiUser(offer.getOfferPayloadBase().isMakerApiUser());
     }
 
     private static long getMakerFee(Offer offer, boolean isMyOffer) {
@@ -245,6 +248,7 @@ public class OfferInfo implements Payload {
                 .setPubKeyRing(pubKeyRing)
                 .setVersionNr(versionNumber)
                 .setProtocolVersion(protocolVersion)
+                .setIsMakerApiUser(isMakerApiUser)
                 .build();
     }
 
@@ -282,6 +286,7 @@ public class OfferInfo implements Payload {
                 .withPubKeyRing(proto.getPubKeyRing())
                 .withVersionNumber(proto.getVersionNr())
                 .withProtocolVersion(proto.getProtocolVersion())
+                .withIsMakerApiUser(proto.getIsMakerApiUser())
                 .build();
     }
 }

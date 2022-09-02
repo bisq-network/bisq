@@ -58,6 +58,7 @@ public final class TradeInfoV1Builder {
     private boolean isCompleted;
     private String contractAsJson;
     private ContractInfo contract;
+    private boolean isTakerApiUser;
     private String closingStatus;
 
     public TradeInfoV1Builder withOffer(OfferInfo offer) {
@@ -187,6 +188,11 @@ public final class TradeInfoV1Builder {
 
     public TradeInfoV1Builder withContract(ContractInfo contract) {
         this.contract = contract;
+        return this;
+    }
+
+    public TradeInfoV1Builder withIsTakerApiUser(boolean isTakerApiUser) {
+        this.isTakerApiUser = isTakerApiUser;
         return this;
     }
 
