@@ -65,7 +65,7 @@ import lombok.extern.slf4j.Slf4j;
 import static bisq.network.utils.Utils.findFreeSystemPort;
 
 /**
- * P2P storage bootstrapper for testing storage file read & write.
+ * P2P storage bootstrapper for testing statistics storage file read & write.
  *
  * TODO Rename, refactor, and move to different pkg when needed by other core test cases.
  */
@@ -84,9 +84,7 @@ class StatisticsTestBootstrapper {
     private final P2PService p2PService;
     private final PriceFeedService priceFeedService;
     private final TradeStatistics3StorageService tradeStatistics3StorageService;
-    // private final TradeStatisticsManager tradeStatisticsManager; // Too hard to bootstrap
     private final ApiTradeStatisticsStorageService apiTradeStatisticsStorageService;
-    // private final ApiTradeStatisticsManager apiTradeStatisticsManager; // Too hard to bootstrap
     private final CorruptedStorageFileHandler corruptedStorageFileHandler;
     private final CoreNetworkProtoResolver coreNetworkProtoResolver;
     private final CorePersistenceProtoResolver corePersistenceProtoResolver;
@@ -188,30 +186,9 @@ class StatisticsTestBootstrapper {
                 keyRing,
                 mailboxMessageService);
 
-        // This is not going to work, statistics managers are too complicated to bootstrap here.
-        /*
-        this.tradeStatisticsManager = new TradeStatisticsManager(p2PService,
-                priceFeedService,
-                tradeStatistics3StorageService,
-                appendOnlyDataStoreService,
-                null,
-                dbStorageDir,
-                false);
-
-        this.apiTradeStatisticsManager = new ApiTradeStatisticsManager(p2PService,
-                apiTradeStatisticsStorageService,
-                tradeStatistics3StorageService,
-                tradeStatisticsManager,
-                appendOnlyDataStoreService,
-                dbStorageDir,
-                false);
-
-        // Set static INSTANCE for TradeStatistics3.isValid checks.
-        DaoState daoState = new DaoState();
-        DaoStateService daoStateService = new DaoStateService(daoState, null, new BsqFormatter());
-        TradeLimits tradeLimits = new TradeLimits(daoStateService, new PeriodService(null));
-        log.info(tradeLimits.toString());
-         */
+        // Wiring up the statistics managers is complicated from here, but
+        // the API test harness can make sure ApiStatisticsManager works
+        // as expected.
     }
 
     public void initializeServices() {
