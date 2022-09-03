@@ -42,8 +42,4 @@ public class PeerInfoIconDispute extends PeerInfoIcon {
         addMouseListener(numTrades, null, null, null, preferences, false,
                 false, accountAge, 0L, null, null, null);
     }
-
-    public void refreshTag() {
-        updatePeerInfoIcon();
-    }
 }

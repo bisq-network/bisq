@@ -55,6 +55,10 @@ import javax.annotation.Nullable;
 @Slf4j
 public class PeerInfoIcon extends Group {
     public interface notify {
+        /**
+         * Callback from one avatar letting us know that the user updated the tag text.
+         * We need to update all avatars, as some could be sharing the same tag.
+         */
         void avatarTagUpdated();
     }
 
@@ -184,7 +188,7 @@ public class PeerInfoIcon extends Group {
                         .position(localToScene(new Point2D(0, 0)))
                         .onSave(newTag -> {
                             preferences.setTagForPeer(fullAddress, newTag);
-                            updatePeerInfoIcon();
+                            refreshTag();
                             if (callback != null) {
                                 callback.avatarTagUpdated();
                             }
@@ -205,20 +209,6 @@ public class PeerInfoIcon extends Group {
     }
 
     protected void updatePeerInfoIcon() {
-        String tag;
-        Map<String, String> peerTagMap = preferences.getPeerTagMap();
-        if (peerTagMap.containsKey(fullAddress)) {
-            tag = peerTagMap.get(fullAddress);
-            final String text = !tag.isEmpty() ? Res.get("peerInfoIcon.tooltip", tooltipText, tag) : tooltipText;
-            Tooltip.install(this, new Tooltip(text));
-        } else {
-            tag = "";
-            Tooltip.install(this, new Tooltip(tooltipText));
-        }
-
-        if (!tag.isEmpty())
-            tagLabel.setText(tag.substring(0, 1));
-
         if (numTrades > 0) {
             numTradesLabel.setText(numTrades > 99 ? "*" : String.valueOf(numTrades));
 
@@ -231,6 +221,25 @@ public class PeerInfoIcon extends Group {
         }
 
         numTradesPane.setVisible(numTrades > 0);
+
+        refreshTag();
+    }
+
+    public void refreshTag() {
+        String tag;
+        Map<String, String> peerTagMap = preferences.getPeerTagMap();
+        if (peerTagMap.containsKey(fullAddress)) {
+            tag = peerTagMap.get(fullAddress);
+            final String text = !tag.isEmpty() ? Res.get("peerInfoIcon.tooltip", tooltipText, tag) : tooltipText;
+            Tooltip.install(this, new Tooltip(text));
+        } else {
+            tag = "";
+            Tooltip.install(this, new Tooltip(tooltipText));
+        }
+
+        if (!tag.isEmpty()) {
+            tagLabel.setText(tag.substring(0, 1));
+        }
 
         tagPane.setVisible(!tag.isEmpty());
     }

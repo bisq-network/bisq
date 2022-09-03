@@ -1495,8 +1495,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
 
     @Override
     public void avatarTagUpdated() {
-        // callback from one avatar letting us know that the user updated the tag text.
-        // we update all avatars, as some could be sharing the same tag
         log.info("Updating avatar tags, the avatarMap size is {}", avatarMap.size());
         avatarMap.forEach((key, avatarIcon) -> {
             avatarIcon.refreshTag();
