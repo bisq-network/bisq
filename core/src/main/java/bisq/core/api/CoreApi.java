@@ -63,6 +63,7 @@ import static bisq.proto.grpc.EditOfferRequest.EditType;
  * Provides high level interface to functionality of core Bisq features.
  * E.g. useful for different APIs to access data of different domains of Bisq.
  */
+@SuppressWarnings("unused")
 @Singleton
 @Slf4j
 public class CoreApi {
