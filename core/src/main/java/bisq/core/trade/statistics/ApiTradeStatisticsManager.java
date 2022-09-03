@@ -95,6 +95,7 @@ public class ApiTradeStatisticsManager {
                 log.warn("Added api stats item # {} to set: {}",
                         observableApiTradeStatisticsSet.size(),
                         apiTradeStatistics);
+                maybeDumpStatistics();
             }
         });
 
@@ -189,26 +190,29 @@ public class ApiTradeStatisticsManager {
     private List<ApiTradeStatistics> getDateOrderedStats() {
         List<ApiTradeStatistics> orderedStats = new ArrayList<>();
 
-        // Find the matching TradeStatistics3 if missing (join on hash).
-        getApiTradeStatistics().stream()
-                .filter(apiStats -> apiStats.getTradeStatistics3() == null)
-                .forEach(apiStats -> {
-                    Optional<TradeStatistics3> tradeStatistics = tradeStatisticsManager.findTradeStatistics3WithHash(
-                            apiStats.getTradeStatistics3Hash());
-                    tradeStatistics.ifPresentOrElse(s -> {
-                        if (s.isValid()) {
-                            apiStats.setTradeStatistics3(s);
-                            orderedStats.add(apiStats);
-                        } else {
-                            log.error("Invalid tradeStatistics3: {}", s);
-                        }
-                    }, () -> {
-                        //  We cannot depend on the matching TradeStatistics3's arrival &
-                        //  storage before the arrival of this ApiTradeStatistics payload.
-                        log.error("TradeStatisticsManager could not find TradeStatistics3 with hash {}",
-                                Utilities.encodeToHex(apiStats.getTradeStatistics3Hash()));
-                    });
+        getApiTradeStatistics().forEach(apiStats -> {
+            if (apiStats.getTradeStatistics3() == null) {
+                // The matching TradeStatistics3 if missing, find it now.
+                Optional<TradeStatistics3> tradeStatistics = tradeStatisticsManager
+                        .findTradeStatistics3WithHash(apiStats.getTradeStatistics3Hash());
+                tradeStatistics.ifPresentOrElse(s -> {
+                    if (s.isValid()) {
+                        apiStats.setTradeStatistics3(s);
+                        orderedStats.add(apiStats);
+                    } else {
+                        log.error("Invalid tradeStatistics3: {}", s);
+                    }
+                }, () -> {
+                    //  We cannot depend on the matching TradeStatistics3's arrival &
+                    //  storage before the arrival of this ApiTradeStatistics payload.
+                    log.debug("TradeStatisticsManager could not find TradeStatistics3 with hash {}",
+                            Utilities.encodeToHex(apiStats.getTradeStatistics3Hash()));
                 });
+            } else {
+                // The valid TradeStatistics3 is already present.
+                orderedStats.add(apiStats);
+            }
+        });
 
         // Sort valid, complete API trading stats by trade creation date.
         orderedStats.sort(comparing(apiTradeStatistics ->
