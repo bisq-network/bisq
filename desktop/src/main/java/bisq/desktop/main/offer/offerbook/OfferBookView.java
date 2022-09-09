@@ -733,7 +733,7 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
 
     private void onEditOpenOffer(Offer offer) {
         OpenOffer openOffer = model.getOpenOffer(offer);
-        if (openOffer != null) {
+        if (model.isBootstrappedOrShowPopup() && openOffer != null) {
             navigation.navigateToWithData(openOffer, MainView.class, PortfolioView.class, EditOfferView.class);
         }
     }
