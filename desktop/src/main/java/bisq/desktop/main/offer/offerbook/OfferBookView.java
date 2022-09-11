@@ -488,6 +488,8 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
         model.priceFeedService.updateCounterProperty().removeListener(priceFeedUpdateCounterListener);
 
         currencySelectionSubscriber.unsubscribe();
+
+        avatarMap.clear();
     }
 
     static class CurrencyStringConverter extends StringConverter<TradeCurrency> {
@@ -1269,7 +1271,7 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
                             public void updateItem(final OfferBookListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
                                 if (newItem != null && !empty) {
-                                    PeerInfoIconTrading peerInfoIcon = findOrCreateAvatar(tableRowProperty().get().getIndex(), newItem.getOffer());
+                                    PeerInfoIconTrading peerInfoIcon = createAvatar(newItem.getOffer());
                                     setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);
@@ -1281,9 +1283,9 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
         return column;
     }
 
-    private PeerInfoIconTrading findOrCreateAvatar(Integer tableRowId, Offer offer) {
+    private PeerInfoIconTrading createAvatar(Offer offer) {
         final NodeAddress makersNodeAddress = offer.getOwnerNodeAddress();
-        String key = tableRowId + makersNodeAddress.getHostNameWithoutPostFix();
+        String key = offer.getId();
         String role = Res.get("peerInfoIcon.tooltip.maker");
         int numTrades = model.getNumTrades(offer);
         PeerInfoIconTrading peerInfoIcon = new PeerInfoIconTrading(makersNodeAddress,

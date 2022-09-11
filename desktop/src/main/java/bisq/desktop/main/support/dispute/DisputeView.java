@@ -369,6 +369,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
         filterTextField.textProperty().removeListener(filterTextFieldListener);
         sortedList.comparatorProperty().unbind();
         selectedDisputeSubscription.unsubscribe();
+        avatarMap.clear();
     }
 
 
@@ -1220,7 +1221,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     setText(getBuyerOnionAddressColumnLabel(item));
-                                    PeerInfoIconDispute peerInfoIconDispute = findOrCreateAvatar(tableRowProperty().get().getIndex(), item.getContract(), true);
+                                    PeerInfoIconDispute peerInfoIconDispute = createAvatar(tableRowProperty().get().getIndex(), item.getContract(), true);
                                     setGraphic(peerInfoIconDispute);
                                 } else {
                                     setText("");
@@ -1250,7 +1251,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     setText(getSellerOnionAddressColumnLabel(item));
-                                    PeerInfoIconDispute peerInfoIconDispute = findOrCreateAvatar(tableRowProperty().get().getIndex(), item.getContract(), false);
+                                    PeerInfoIconDispute peerInfoIconDispute = createAvatar(tableRowProperty().get().getIndex(), item.getContract(), false);
                                     setGraphic(peerInfoIconDispute);
                                 } else {
                                     setText("");
@@ -1477,7 +1478,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
         }
     }
 
-    private PeerInfoIconDispute findOrCreateAvatar(Integer tableRowId, Contract contract, boolean isBuyer) {
+    private PeerInfoIconDispute createAvatar(Integer tableRowId, Contract contract, boolean isBuyer) {
         NodeAddress nodeAddress = isBuyer ? contract.getBuyerNodeAddress() : contract.getSellerNodeAddress();
         String key = tableRowId + nodeAddress.getHostNameWithoutPostFix() + (isBuyer ? "BUYER" : "SELLER");
         Long accountAge = isBuyer ?

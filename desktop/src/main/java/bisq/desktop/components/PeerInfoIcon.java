@@ -188,7 +188,6 @@ public class PeerInfoIcon extends Group {
                         .position(localToScene(new Point2D(0, 0)))
                         .onSave(newTag -> {
                             preferences.setTagForPeer(fullAddress, newTag);
-                            refreshTag();
                             if (callback != null) {
                                 callback.avatarTagUpdated();
                             }
