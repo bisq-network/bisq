@@ -25,9 +25,6 @@ import bisq.common.Payload;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import static bisq.core.offer.OfferDirection.BUY;
-import static bisq.core.offer.OfferDirection.SELL;
-
 @EqualsAndHashCode
 @Getter
 public class BsqSwapTradeInfo implements Payload {
@@ -73,20 +70,12 @@ public class BsqSwapTradeInfo implements Payload {
         var makerBtcAddress = wasMyOffer ? protocolModel.getBtcAddress() : swapPeer.getBtcAddress();
         var takerBsqAddress = wasMyOffer ? swapPeer.getBsqAddress() : protocolModel.getBsqAddress();
         var takerBtcAddress = wasMyOffer ? swapPeer.getBtcAddress() : protocolModel.getBtcAddress();
-        // A BSQ Swap trade fee is paid in full by the BTC buyer (selling BSQ).
-        // The transferred BSQ (payout) is reduced by the fee of the peer.
-        var makerTradeFee = wasMyOffer && trade.getOffer().getDirection().equals(BUY)
-                ? trade.getMakerFeeAsLong()
-                : 0L;
-        var takerTradeFee = !wasMyOffer && trade.getOffer().getDirection().equals(SELL)
-                ? trade.getTakerFeeAsLong()
-                : 0L;
         return new BsqSwapTradeInfoBuilder()
                 .withTxId(trade.getTxId())
                 .withBsqTradeAmount(trade.getBsqTradeAmount())
                 .withBtcTradeAmount(trade.getAmountAsLong())
-                .withBsqMakerTradeFee(makerTradeFee)
-                .withBsqTakerTradeFee(takerTradeFee)
+                .withBsqMakerTradeFee(trade.getMakerFeeAsLong())
+                .withBsqTakerTradeFee(trade.getTakerFeeAsLong())
                 .withTxFeePerVbyte(trade.getTxFeePerVbyte())
                 .withMakerBsqAddress(makerBsqAddress)
                 .withMakerBtcAddress(makerBtcAddress)
