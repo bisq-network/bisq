@@ -31,6 +31,14 @@ public class TakeBsqSwapOfferOptionParser extends OfferIdOptionParser implements
             .withRequiredArg()
             .defaultsTo("0");
 
+    final OptionSpec<String> paymentAccountIdOpt = parser.accepts(OPT_PAYMENT_ACCOUNT_ID, "not used when taking bsq swaps")
+            .withRequiredArg()
+            .defaultsTo("invalid param");
+
+    final OptionSpec<String> takerFeeCurrencyCodeOpt = parser.accepts(OPT_FEE_CURRENCY, "not used when taking bsq swaps")
+            .withOptionalArg()
+            .defaultsTo("invalid param");
+
     public TakeBsqSwapOfferOptionParser(String[] args) {
         super(args, true);
     }
@@ -39,6 +47,16 @@ public class TakeBsqSwapOfferOptionParser extends OfferIdOptionParser implements
         super.parse();
 
         // Super class will short-circuit parsing if help option is present.
+
+        if (options.has(paymentAccountIdOpt)) {
+            throw new IllegalArgumentException("the " + OPT_PAYMENT_ACCOUNT_ID
+                    + " param is not used for swaps; the internal default swap account is always used");
+        }
+
+        if (options.has(takerFeeCurrencyCodeOpt)) {
+            throw new IllegalArgumentException("the " + OPT_FEE_CURRENCY
+                    + " param is not used for swaps; fees are always paid in bsq");
+        }
 
         if (options.has(amountOpt)) {
             if (options.valueOf(amountOpt).isEmpty())

@@ -3,7 +3,6 @@ package bisq.cli.opts;
 import org.junit.jupiter.api.Test;
 
 import static bisq.cli.Method.*;
-import static bisq.cli.Method.takeoffer;
 import static bisq.cli.opts.OptLabel.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -442,6 +441,56 @@ public class OptionParsersTest {
         assertEquals(offerId, parser.getOfferId());
         assertEquals(paymentAccountId, parser.getPaymentAccountId());
         assertEquals(takerFeeCurrencyCode, parser.getTakerFeeCurrencyCode());
+        assertEquals(amount, parser.getAmount());
+    }
+
+    @Test
+    public void testTakeBsqSwapOfferWithInvalidFeeCurrencyParam() {
+        var offerId = "ABC-OFFER-ID";
+        var takerFeeCurrencyCode = "BSQ";
+        var amount = "0.05";
+        String[] args = new String[]{
+                PASSWORD_OPT,
+                takeoffer.name(),
+                "--" + OPT_OFFER_ID + "=" + offerId,
+                "--" + OPT_FEE_CURRENCY + "=" + takerFeeCurrencyCode,
+                "--" + OPT_AMOUNT + "=" + amount
+        };
+        Throwable exception = assertThrows(RuntimeException.class, () ->
+                new TakeBsqSwapOfferOptionParser(args).parse());
+        assertEquals("the fee-currency param is not used for swaps; fees are always paid in bsq", exception.getMessage());
+    }
+
+    @Test
+    public void testTakeBsqSwapOfferWithInvalidPaymentAccountIdParam() {
+        var offerId = "ABC-OFFER-ID";
+        var paymentAccountId = "ABC-ACCT-ID";
+        var amount = "0.05";
+        String[] args = new String[]{
+                PASSWORD_OPT,
+                takeoffer.name(),
+                "--" + OPT_OFFER_ID + "=" + offerId,
+                "--" + OPT_PAYMENT_ACCOUNT_ID + "=" + paymentAccountId,
+                "--" + OPT_AMOUNT + "=" + amount
+        };
+        Throwable exception = assertThrows(RuntimeException.class, () ->
+                new TakeBsqSwapOfferOptionParser(args).parse());
+        assertEquals("the payment-account-id param is not used for swaps; the internal default swap account is always used",
+                exception.getMessage());
+    }
+
+    @Test
+    public void testTakeBsqSwapOffer() {
+        var offerId = "ABC-OFFER-ID";
+        var amount = "0.05";
+        String[] args = new String[]{
+                PASSWORD_OPT,
+                takeoffer.name(),
+                "--" + OPT_OFFER_ID + "=" + offerId,
+                "--" + OPT_AMOUNT + "=" + amount
+        };
+        var parser = new TakeBsqSwapOfferOptionParser(args).parse();
+        assertEquals(offerId, parser.getOfferId());
         assertEquals(amount, parser.getAmount());
     }
 }
