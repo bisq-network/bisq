@@ -514,8 +514,14 @@ service Trades {
 
 message TakeOfferRequest {
     string offer_id = 1;                    // The unique identifier of the offer being taken.
-    string payment_account_id = 2;          // The unique identifier of the payment account used to take offer.
-    string taker_fee_currency_code = 3;     // The code of the currency (BSQ or BTC) used to pay the taker's Bisq trade fee.
+    // The unique identifier of the payment account used to take a Bisq v1 protocol offer.
+    // This payment_account_id request param is not used when taking a BSQ Swap offer;
+    // all BSQ Swap transactions use the daemon's default BsqSwapAccount.
+    string payment_account_id = 2;
+    // The code of the currency (BSQ or BTC) used to pay the taker's Bisq v1 protocol trade fee.
+    // This taker_fee_currency_code request param is not used when taking a BSQ Swap offer;
+    // all BSQ Swap trade fees are paid in BSQ.
+    string taker_fee_currency_code = 3;
     // The trade's intended BTC amount in satoshis.  Ten million satoshis is represented as 10000000.
     // If set, the takeoffer amount value must be >= offer.min_amount and <= offer.amount.
     // If not set (0 default), the taken offer's (max) amount becomes the intended trade amount.
