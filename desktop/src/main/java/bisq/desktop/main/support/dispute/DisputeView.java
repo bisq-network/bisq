@@ -126,7 +126,7 @@ import javax.annotation.Nullable;
 import static bisq.desktop.util.FormBuilder.getIconForLabel;
 import static bisq.desktop.util.FormBuilder.getRegularIconButton;
 
-public abstract class DisputeView extends ActivatableView<VBox, Void> implements PeerInfoIcon.notify, DisputeChatPopup.ChatCallback {
+public abstract class DisputeView extends ActivatableView<VBox, Void> implements DisputeChatPopup.ChatCallback {
     public enum FilterResult {
         NO_MATCH("No Match"),
         NO_FILTER("No filter text"),
@@ -191,7 +191,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     private Map<String, Button> chatButtonByDispute = new HashMap<>();
     private Map<String, JFXBadge> chatBadgeByDispute = new HashMap<>();
     private Map<String, JFXBadge> newBadgeByDispute = new HashMap<>();
-    private Map<String, PeerInfoIconDispute> avatarMap = new HashMap<>();
+    private final Map<String, PeerInfoIcon> avatarMap = new HashMap<>();
     protected DisputeChatPopup chatPopup;
 
 
@@ -1489,17 +1489,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                 disputeManager.getNrOfDisputes(isBuyer, contract),
                 accountAge,
                 preferences);
-        peerInfoIcon.setCallback(this);
-        avatarMap.put(key, peerInfoIcon);
+        peerInfoIcon.setAvatarMapAndKey(avatarMap, key);
         return peerInfoIcon;
-    }
-
-    @Override
-    public void avatarTagUpdated() {
-        log.info("Updating avatar tags, the avatarMap size is {}", avatarMap.size());
-        avatarMap.forEach((key, avatarIcon) -> {
-            avatarIcon.refreshTag();
-        });
     }
 
     @Override

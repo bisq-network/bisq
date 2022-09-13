@@ -121,7 +121,7 @@ import org.jetbrains.annotations.NotNull;
 
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
-abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewModel> extends ActivatableViewAndModel<R, M> implements PeerInfoIcon.notify {
+abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewModel> extends ActivatableViewAndModel<R, M> {
 
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
@@ -154,7 +154,7 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
     private static final int SHOW_ALL = 0;
     private Label disabledCreateOfferButtonTooltip;
     protected VBox currencyComboBoxContainer;
-    private Map<String, PeerInfoIconTrading> avatarMap = new HashMap<>();
+    private final Map<String, PeerInfoIcon> avatarMap = new HashMap<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -1271,7 +1271,20 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
                             public void updateItem(final OfferBookListItem newItem, boolean empty) {
                                 super.updateItem(newItem, empty);
                                 if (newItem != null && !empty) {
-                                    PeerInfoIconTrading peerInfoIcon = createAvatar(newItem.getOffer());
+                                    final Offer offer = newItem.getOffer();
+                                    final NodeAddress makersNodeAddress = offer.getOwnerNodeAddress();
+                                    String role = Res.get("peerInfoIcon.tooltip.maker");
+                                    int numTrades = model.getNumTrades(offer);
+                                    PeerInfoIconTrading peerInfoIcon = new PeerInfoIconTrading(makersNodeAddress,
+                                            role,
+                                            numTrades,
+                                            privateNotificationManager,
+                                            offer,
+                                            model.preferences,
+                                            model.accountAgeWitnessService,
+                                            useDevPrivilegeKeys);
+                                    String key = offer.getId();
+                                    peerInfoIcon.setAvatarMapAndKey(avatarMap, key);
                                     setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);
@@ -1281,32 +1294,6 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
                     }
                 });
         return column;
-    }
-
-    private PeerInfoIconTrading createAvatar(Offer offer) {
-        final NodeAddress makersNodeAddress = offer.getOwnerNodeAddress();
-        String key = offer.getId();
-        String role = Res.get("peerInfoIcon.tooltip.maker");
-        int numTrades = model.getNumTrades(offer);
-        PeerInfoIconTrading peerInfoIcon = new PeerInfoIconTrading(makersNodeAddress,
-                role,
-                numTrades,
-                privateNotificationManager,
-                offer,
-                model.preferences,
-                model.accountAgeWitnessService,
-                useDevPrivilegeKeys);
-        peerInfoIcon.setCallback(this);
-        avatarMap.put(key, peerInfoIcon);
-        return peerInfoIcon;
-    }
-
-    @Override
-    public void avatarTagUpdated() {
-        log.info("Updating avatar tags, the avatarMap size is {}", avatarMap.size());
-        avatarMap.forEach((key, avatarIcon) -> {
-            avatarIcon.refreshTag();
-        });
     }
 
     @NotNull

@@ -22,6 +22,7 @@ import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.components.PeerInfoIcon;
 import bisq.desktop.components.PeerInfoIconTrading;
 import bisq.desktop.components.list.FilterBox;
 import bisq.desktop.main.MainView;
@@ -68,7 +69,6 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
@@ -152,6 +152,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private ChangeListener<Trade.DisputeState> disputeStateListener;
     private ChangeListener<MediationResultState> mediationResultStateListener;
     private ChangeListener<Number> getMempoolStatusListener;
+    private final Map<String, PeerInfoIcon> avatarMap = new HashMap<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -357,6 +358,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         if (scene != null)
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
+
+        avatarMap.clear();
     }
 
     private void removeSelectedSubView() {
@@ -829,7 +832,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     final NodeAddress tradingPeerNodeAddress = trade.getTradingPeerNodeAddress();
                                     int numPastTrades = model.getNumPastTrades(trade);
                                     String role = Res.get("peerInfoIcon.tooltip.tradePeer");
-                                    Node peerInfoIcon = new PeerInfoIconTrading(tradingPeerNodeAddress,
+                                    PeerInfoIconTrading peerInfoIcon = new PeerInfoIconTrading(tradingPeerNodeAddress,
                                             role,
                                             numPastTrades,
                                             privateNotificationManager,
@@ -837,6 +840,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                             preferences,
                                             model.accountAgeWitnessService,
                                             useDevPrivilegeKeys);
+                                    String key = trade.getId();
+                                    peerInfoIcon.setAvatarMapAndKey(avatarMap, key);
                                     setPadding(new Insets(1, 0, 0, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {

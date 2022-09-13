@@ -47,23 +47,13 @@ import java.security.NoSuchAlgorithmException;
 
 import java.util.Map;
 
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
 @Slf4j
 public class PeerInfoIcon extends Group {
-    public interface notify {
-        /**
-         * Callback from one avatar letting us know that the user updated the tag text.
-         * We need to update all avatars, as some could be sharing the same tag.
-         */
-        void avatarTagUpdated();
-    }
 
-    @Setter
-    private notify callback;
     protected Preferences preferences;
     protected final String fullAddress;
     protected String tooltipText;
@@ -72,6 +62,7 @@ public class PeerInfoIcon extends Group {
     protected Pane tagPane;
     protected Pane numTradesPane;
     protected int numTrades = 0;
+    private Map<String, PeerInfoIcon> avatarMap;
 
     public PeerInfoIcon(NodeAddress nodeAddress, Preferences preferences) {
         this.preferences = preferences;
@@ -188,8 +179,11 @@ public class PeerInfoIcon extends Group {
                         .position(localToScene(new Point2D(0, 0)))
                         .onSave(newTag -> {
                             preferences.setTagForPeer(fullAddress, newTag);
-                            if (callback != null) {
-                                callback.avatarTagUpdated();
+                            if (avatarMap != null) {
+                                log.info("Updating avatar tags, the avatarMap size is {}", avatarMap.size());
+                                avatarMap.forEach((key, avatarIcon) -> avatarIcon.refreshTag());
+                            } else {
+                                this.refreshTag();
                             }
                         })
                         .show();
@@ -224,7 +218,7 @@ public class PeerInfoIcon extends Group {
         refreshTag();
     }
 
-    public void refreshTag() {
+    protected void refreshTag() {
         String tag;
         Map<String, String> peerTagMap = preferences.getPeerTagMap();
         if (peerTagMap.containsKey(fullAddress)) {
@@ -241,5 +235,17 @@ public class PeerInfoIcon extends Group {
         }
 
         tagPane.setVisible(!tag.isEmpty());
+    }
+
+    /**
+     * Sets the map where this icon is stored and associates the latter with the specified key.
+     * The map will be traversed later on if the user updates an icon's tag, and all avatars
+     * will be refreshed as some could be sharing the same tag.
+     * @param avatarMap The map to which this avatar is stored
+     * @param key Key that is associated with the avatar
+     */
+    public void setAvatarMapAndKey(Map<String, PeerInfoIcon> avatarMap, String key) {
+        this.avatarMap = avatarMap;
+        avatarMap.put(key, this);
     }
 }

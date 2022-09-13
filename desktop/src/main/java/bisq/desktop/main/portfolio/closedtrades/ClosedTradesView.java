@@ -24,6 +24,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.components.PeerInfoIcon;
 import bisq.desktop.components.PeerInfoIconTrading;
 import bisq.desktop.components.list.FilterBox;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -63,7 +64,6 @@ import javafx.fxml.FXML;
 
 import javafx.stage.Stage;
 
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -92,6 +92,8 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -158,6 +160,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     private SortedList<ClosedTradesListItem> sortedList;
     private FilteredList<ClosedTradesListItem> filteredList;
     private ChangeListener<Number> widthListener;
+    private final Map<String, PeerInfoIcon> avatarMap = new HashMap<>();
 
     @Inject
     public ClosedTradesView(ClosedTradesViewModel model,
@@ -344,6 +347,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
 
         filterBox.deactivate();
         root.widthProperty().removeListener(widthListener);
+
+        avatarMap.clear();
     }
 
     private static <T extends Comparable<T>> Comparator<ClosedTradesListItem> nullsFirstComparing(Function<ClosedTradesListItem, T> keyExtractor) {
@@ -528,7 +533,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                     int numPastTrades = item.getNumPastTrades();
                                     NodeAddress tradingPeerNodeAddress = tradeModel.getTradingPeerNodeAddress();
                                     String role = Res.get("peerInfoIcon.tooltip.tradePeer");
-                                    Node peerInfoIcon = new PeerInfoIconTrading(tradingPeerNodeAddress,
+                                    PeerInfoIconTrading peerInfoIcon = new PeerInfoIconTrading(tradingPeerNodeAddress,
                                             role,
                                             numPastTrades,
                                             privateNotificationManager,
@@ -536,6 +541,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                             preferences,
                                             model.dataModel.accountAgeWitnessService,
                                             useDevPrivilegeKeys);
+                                    String key = tradeModel.getId();
+                                    peerInfoIcon.setAvatarMapAndKey(avatarMap, key);
                                     setPadding(new Insets(1, 15, 0, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {
