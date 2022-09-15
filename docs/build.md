@@ -1,31 +1,6 @@
 ## Building Bisq
 
-1. **Install Git LFS**
-
-   Bisq uses Git LFS (Large File Storage) to track certain large binary files. Follow the instructions at https://git-lfs.github.com to install it, then run the following to command to verify the installation:
-
-   ```sh
-   git lfs version
-   ```
-
-   On some distributions (happens with Xubuntu x64 on VM) this might return an error like:
-   ```
-    git: 'lfs' is not a git command. See 'git --help'.
-    The most similar command is
-	log
-   ```
-    
-   if the above happens, you should first run:
-     `sudo apt install git-lfs`
-   in order to properly install the `lfs` package.
-     
-   You should see the version of Git LFS you installed, for example:
-
-   ```
-   git-lfs/2.10.0 (GitHub; darwin amd64; go 1.13.6)
-   ```
-
-2. **Clone Bisq**
+1. **Clone Bisq**
 
    ```sh
    git clone https://github.com/bisq-network/bisq
@@ -35,13 +10,7 @@
    cd bisq
    ```
 
-3. **Pull LFS data**
-
-   ```sh
-   git lfs pull
-   ```
-
-4. **Build Bisq**
+2. **Build Bisq**
 
    On macOS and Linux, execute:
    ```sh
