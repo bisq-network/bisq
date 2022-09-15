@@ -1,7 +1,6 @@
-import java.time.LocalDateTime
 import org.apache.tools.ant.taskdefs.condition.Os
 
-import static groovy.io.FileType.*
+import java.time.LocalDateTime
 
 task jpackageSanityChecks {
     description 'Interactive sanity checks on the version of the code that will be packaged'
@@ -151,15 +150,6 @@ task packageInstallers {
             )
 
             executeCmd(jPackageFilePath + commonOpts + windowsOpts + " --type exe")
-
-            // Set the necessary permissions before calling signtool
-            executeCmd("\"attrib -R \"${binariesFolderPath}/Bisq-${appVersion}.exe\"\"")
-
-            // In addition to the groovy quotes around the string, the entire Windows command must also be surrounded
-            // by quotes, plus each path inside the command has to be quoted as well
-            // Reason for this is that the path to the called executable contains spaces
-            // See https://stackoverflow.com/questions/6376113/how-do-i-use-spaces-in-the-command-prompt/6378038#6378038
-            executeCmd("\"\"C:\\Program Files (x86)\\Windows Kits\\10\\App Certification Kit\\signtool.exe\" sign /v /fd SHA256 /a \"${binariesFolderPath}/Bisq-${appVersion}.exe\"\"")
         } else if (Os.isFamily(Os.FAMILY_MAC)) {
             // See https://docs.oracle.com/en/java/javase/14/jpackage/override-jpackage-resources.html
             // for details of "--resource-dir"
@@ -168,160 +158,7 @@ task packageInstallers {
                     " --resource-dir \"${project(':desktop').projectDir}/package/macosx\""
             )
 
-            // Env variable can be set by calling "export BISQ_PACKAGE_SIGNING_IDENTITY='Some value'"
-            // See "man codesign" for details about the expected signing identity
-            String envVariableSigningID = "$System.env.BISQ_PACKAGE_SIGNING_IDENTITY"
-            println "Environment variable BISQ_PACKAGE_SIGNING_IDENTITY is: ${envVariableSigningID}"
-            ant.input(message: "Sign the app using the above signing identity? (y=yes, n=no)",
-                    addproperty: "macos-sign-check",
-                    validargs: "y,n")
-            if (ant.properties['macos-sign-check'] == 'y') {
-                // Create a temp folder to extract the macos-specific dylibs that need to be signed
-                File tempDylibFolderPath = new File(tempRootDir, "dylibs-to-sign")
-                tempDylibFolderPath.mkdirs()
-
-                // Dylibs relevant for signing (paths relative to the tempDylibFolderPath)
-                String dylibsToSign = new String(
-                        " libjavafx_iio.dylib" +
-                                " libglass.dylib" +
-                                " libjavafx_font.dylib" +
-                                " libprism_common.dylib" +
-                                " libprism_es2.dylib" +
-                                " libdecora_sse.dylib" +
-                                " libprism_sw.dylib" +
-                                " META-INF/native/libio_grpc_netty_shaded_netty_tcnative_osx_x86_64.jnilib"
-                )
-
-                // macOS step 1: Sign dylibs and replace them in the shadow jar
-                // Extract dylibss for signing
-                executeCmd("cd ${tempDylibFolderPath} &&" +
-                        " jar xf ${fatJarFolderPath}/${mainJarName}" +
-                        dylibsToSign)
-                // Sign them
-                executeCmd("cd ${tempDylibFolderPath} &&" +
-                        " codesign -vvv --options runtime --deep --force --sign \"${envVariableSigningID}\"" +
-                        dylibsToSign)
-
-                // Verify signature
-                executeCmd("cd ${tempDylibFolderPath} &&" +
-                        " codesign -vvv --deep --strict " + dylibsToSign)
-
-                // Replace unsigned files in jar file
-                executeCmd("cd ${tempDylibFolderPath} &&" +
-                        " jar uf ${fatJarFolderPath}/${mainJarName}" +
-                        dylibsToSign)
-
-                // macOS step 2: Build app-image using the shadow jar above (containing signed dylibs)
-                // NOTE: licensing file cannot be added at this point only when creating the dmg later
-                executeCmd(jPackageFilePath +
-                        commonOpts +
-                        macOpts +
-                        " --type app-image")
-
-                // macOS step 3: Sign app (hardened runtime)
-                File bisqAppImageFullPath = new File(binariesFolderPath, "Bisq.app")
-                executeCmd("codesign" +
-                        " --sign \"${envVariableSigningID}\"" +
-                        " --options runtime" +
-                        " --entitlements '${project(':desktop').projectDir}/package/macosx/macos.entitlements'" +
-                        " --force" +
-                        " --verbose" +
-                        " ${bisqAppImageFullPath}/Contents/runtime/Contents/MacOS/libjli.dylib")
-                executeCmd("codesign" +
-                        " --sign \"${envVariableSigningID}\"" +
-                        " --options runtime" +
-                        " --entitlements '${project(':desktop').projectDir}/package/macosx/macos.entitlements'" +
-                        " --force" +
-                        " --verbose" +
-                        " ${bisqAppImageFullPath}/Contents/MacOS/Bisq")
-                executeCmd("codesign" +
-                        " --sign \"${envVariableSigningID}\"" +
-                        " --options runtime" +
-                        " --entitlements '${project(':desktop').projectDir}/package/macosx/macos.entitlements'" +
-                        " --force" +
-                        " --verbose" +
-                        " ${bisqAppImageFullPath}")
-
-                // macOS step 4: Package the app-image into a dmg bundle
-                executeCmd(jPackageFilePath +
-                        " --dest \"${binariesFolderPath}\"" +
-                        " --name ${appNameAndVendor}" +
-                        " --description \"${appDescription}\"" +
-                        " --app-version ${appVersion}" +
-                        " --copyright \"${appCopyright}\"" +
-                        " --vendor ${appNameAndVendor}" +
-                        " --temp \"${jpackageTempDir}\"" +
-                        " --app-image ${bisqAppImageFullPath}" +
-                        " --mac-sign" +
-                        macOpts +
-                        " --type dmg")
-
-                // macOS step 5: Delete unused app image
-                delete(bisqAppImageFullPath)
-
-                // macOS step 6: Sign dmg bundle
-                executeCmd("codesign" +
-                        " --sign \"${envVariableSigningID}\"" +
-                        " --options runtime" +
-                        " --entitlements '${project(':desktop').projectDir}/package/macosx/macos.entitlements'" +
-                        " -vvvv" +
-                        " --deep" +
-                        " '${binariesFolderPath}/Bisq-${appVersion}.dmg'")
-
-                // macOS step 7: Upload for notarization
-                // See https://developer.apple.com/documentation/xcode/notarizing_macos_software_before_distribution/customizing_the_notarization_workflow#3087734
-                String envVariableAcUsername = "$System.env.BISQ_PACKAGE_NOTARIZATION_AC_USERNAME"
-                String envVariableAscProvider = "$System.env.BISQ_PACKAGE_NOTARIZATION_ASC_PROVIDER"
-                // e.g. network.bisq.CAT is used when binaries are built by @ripcurlx
-                String envVariablePrimaryBundleId = "$System.env.BISQ_PRIMARY_BUNDLE_ID"
-                def uploadForNotarizationOutput = executeCmd("xcrun altool --notarize-app" +
-                        " --primary-bundle-id '${envVariablePrimaryBundleId}'" +
-                        " --username '${envVariableAcUsername}'" +
-                        " --password '@keychain:AC_PASSWORD'" +
-                        " --asc-provider '${envVariableAscProvider}'" +
-                        " --file '${binariesFolderPath}/Bisq-${appVersion}.dmg'")
-                // Response:
-                //  No errors uploading '[PATH_TO_BISQ_REPO]/bisq/desktop/build/temp-620637000/binaries/Bisq-1.1.1.dmg'.
-                //  RequestUUID = ea8bba77-97b7-4c15-a53f-8bbccf627190
-                def requestUUID = uploadForNotarizationOutput.split('RequestUUID = ')[1].trim()
-                println "Extracted RequestUUID: " + requestUUID
-
-                // Every 1 minute, check the status
-                def notarizationEndedInSuccess = false
-                def notarizationEndedInFailure = false
-                while (!(notarizationEndedInSuccess || notarizationEndedInFailure)) {
-                    println "Current time is:"
-                    executeCmd('date')
-                    println "Waiting for 1 minute..."
-                    sleep(1 * 60 * 1000)
-
-                    println "Checking notarization status"
-
-                    def checkNotarizationStatusOutput = executeCmd("xcrun altool --notarization-info" +
-                            " '${requestUUID}'" +
-                            " --username '${envVariableAcUsername}'" +
-                            " --password '@keychain:AC_PASSWORD'")
-
-                    notarizationEndedInSuccess = checkNotarizationStatusOutput.contains('success')
-                    notarizationEndedInFailure = checkNotarizationStatusOutput.contains('invalid')
-                }
-
-                if (notarizationEndedInFailure) {
-                    ant.fail('Notarization failed, aborting')
-                }
-
-                if (notarizationEndedInSuccess) {
-                    println "Notarization was successful"
-
-                    // macOS step 8: Staple ticket on dmg
-                    executeCmd("xcrun stapler staple" +
-                            " '${binariesFolderPath}/Bisq-${appVersion}.dmg'")
-                }
-
-            } else {
-                // If user didn't confirm the optional signing step, then generate a plain non-signed dmg
-                executeCmd(jPackageFilePath + commonOpts + macOpts + " --type dmg")
-            }
+            executeCmd(jPackageFilePath + commonOpts + macOpts + " --type dmg")
         } else {
             String linuxOpts = new String(
                     " --icon ${project(':desktop').projectDir}/package/linux/icon.png" +
