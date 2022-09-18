@@ -8,13 +8,8 @@ import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;
 
-import java.util.Map;
-
-import lombok.extern.slf4j.Slf4j;
-
 import javax.annotation.Nullable;
 
-@Slf4j
 public class PeerInfoIconSmall extends PeerInfoIconTrading {
     public PeerInfoIconSmall(NodeAddress nodeAddress,
                              String role,
@@ -57,11 +52,5 @@ public class PeerInfoIconSmall extends PeerInfoIconTrading {
     protected void updatePeerInfoIcon() {
         numTradesPane.setVisible(false);
         tagPane.setVisible(false);
-    }
-
-    @Override
-    public void setAvatarMapAndKey(Map<String, PeerInfoIcon> avatarMap, String key) {
-        // We don't show a tag, so no map needs to be traversed to refresh any tags
-        log.error("setAvatarMapAndKey: method not supported");
     }
 }

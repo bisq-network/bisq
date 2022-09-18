@@ -22,7 +22,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
-import bisq.desktop.components.PeerInfoIcon;
+import bisq.desktop.components.PeerInfoIconMap;
 import bisq.desktop.components.PeerInfoIconTrading;
 import bisq.desktop.components.list.FilterBox;
 import bisq.desktop.main.overlays.windows.BsqTradeDetailsWindow;
@@ -68,8 +68,6 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
 @FxmlView
@@ -131,7 +129,8 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
     private SortedList<UnconfirmedBsqSwapsListItem> sortedList;
     private FilteredList<UnconfirmedBsqSwapsListItem> filteredList;
     private ChangeListener<Number> widthListener;
-    private final Map<String, PeerInfoIcon> avatarMap = new HashMap<>();
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+    private final PeerInfoIconMap avatarMap = new PeerInfoIconMap();
 
     @Inject
     public UnconfirmedBsqSwapsView(UnconfirmedBsqSwapsViewModel model,
@@ -414,7 +413,7 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
                                             accountAgeWitnessService,
                                             useDevPrivilegeKeys);
                                     String key = bsqSwapTrade.getId();
-                                    peerInfoIcon.setAvatarMapAndKey(avatarMap, key);
+                                    avatarMap.put(key, peerInfoIcon);
                                     setPadding(new Insets(1, 15, 0, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {

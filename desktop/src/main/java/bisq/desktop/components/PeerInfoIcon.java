@@ -42,6 +42,9 @@ import javafx.scene.paint.Color;
 
 import javafx.geometry.Point2D;
 
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -62,11 +65,12 @@ public class PeerInfoIcon extends Group {
     protected Pane tagPane;
     protected Pane numTradesPane;
     protected int numTrades = 0;
-    private Map<String, PeerInfoIcon> avatarMap;
+    private final StringProperty tag;
 
     public PeerInfoIcon(NodeAddress nodeAddress, Preferences preferences) {
         this.preferences = preferences;
         this.fullAddress = nodeAddress != null ? nodeAddress.getFullAddress() : "";
+        this.tag = new SimpleStringProperty("");
     }
 
     protected void createAvatar(Color ringColor) {
@@ -179,12 +183,7 @@ public class PeerInfoIcon extends Group {
                         .position(localToScene(new Point2D(0, 0)))
                         .onSave(newTag -> {
                             preferences.setTagForPeer(fullAddress, newTag);
-                            if (avatarMap != null) {
-                                log.info("Updating avatar tags, the avatarMap size is {}", avatarMap.size());
-                                avatarMap.forEach((key, avatarIcon) -> avatarIcon.refreshTag());
-                            } else {
-                                this.refreshTag();
-                            }
+                            tag.set(newTag);
                         })
                         .show();
             }
@@ -212,40 +211,27 @@ public class PeerInfoIcon extends Group {
                 numTradesLabel.relocate(scaleFactor * 5, scaleFactor * 1);
             }
         }
-
         numTradesPane.setVisible(numTrades > 0);
 
         refreshTag();
     }
 
     protected void refreshTag() {
-        String tag;
         Map<String, String> peerTagMap = preferences.getPeerTagMap();
         if (peerTagMap.containsKey(fullAddress)) {
-            tag = peerTagMap.get(fullAddress);
-            final String text = !tag.isEmpty() ? Res.get("peerInfoIcon.tooltip", tooltipText, tag) : tooltipText;
-            Tooltip.install(this, new Tooltip(text));
-        } else {
-            tag = "";
-            Tooltip.install(this, new Tooltip(tooltipText));
+            tag.set(peerTagMap.get(fullAddress));
         }
 
-        if (!tag.isEmpty()) {
-            tagLabel.setText(tag.substring(0, 1));
-        }
+        Tooltip.install(this, new Tooltip(!tag.get().isEmpty() ?
+                Res.get("peerInfoIcon.tooltip", tooltipText, tag.get()) : tooltipText));
 
-        tagPane.setVisible(!tag.isEmpty());
+        if (!tag.get().isEmpty()) {
+            tagLabel.setText(tag.get().substring(0, 1));
+        }
+        tagPane.setVisible(!tag.get().isEmpty());
     }
 
-    /**
-     * Sets the map where this icon is stored and associates the latter with the specified key.
-     * The map will be traversed later on if the user updates an icon's tag, and all avatars
-     * will be refreshed as some could be sharing the same tag.
-     * @param avatarMap The map to which this avatar is stored
-     * @param key Key that is associated with the avatar
-     */
-    public void setAvatarMapAndKey(Map<String, PeerInfoIcon> avatarMap, String key) {
-        this.avatarMap = avatarMap;
-        avatarMap.put(key, this);
+    protected StringProperty tagProperty() {
+        return tag;
     }
 }

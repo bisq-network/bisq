@@ -22,7 +22,7 @@ import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
-import bisq.desktop.components.PeerInfoIcon;
+import bisq.desktop.components.PeerInfoIconMap;
 import bisq.desktop.components.PeerInfoIconTrading;
 import bisq.desktop.components.list.FilterBox;
 import bisq.desktop.main.MainView;
@@ -152,7 +152,8 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private ChangeListener<Trade.DisputeState> disputeStateListener;
     private ChangeListener<MediationResultState> mediationResultStateListener;
     private ChangeListener<Number> getMempoolStatusListener;
-    private final Map<String, PeerInfoIcon> avatarMap = new HashMap<>();
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+    private final PeerInfoIconMap avatarMap = new PeerInfoIconMap();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -841,7 +842,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                             model.accountAgeWitnessService,
                                             useDevPrivilegeKeys);
                                     String key = trade.getId();
-                                    peerInfoIcon.setAvatarMapAndKey(avatarMap, key);
+                                    avatarMap.put(key, peerInfoIcon);
                                     setPadding(new Insets(1, 0, 0, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {

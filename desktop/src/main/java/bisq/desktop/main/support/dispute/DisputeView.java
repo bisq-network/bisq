@@ -23,8 +23,8 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.components.PeerInfoIcon;
 import bisq.desktop.components.PeerInfoIconDispute;
+import bisq.desktop.components.PeerInfoIconMap;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
@@ -191,7 +191,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     private Map<String, Button> chatButtonByDispute = new HashMap<>();
     private Map<String, JFXBadge> chatBadgeByDispute = new HashMap<>();
     private Map<String, JFXBadge> newBadgeByDispute = new HashMap<>();
-    private final Map<String, PeerInfoIcon> avatarMap = new HashMap<>();
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+    private final PeerInfoIconMap avatarMap = new PeerInfoIconMap();
     protected DisputeChatPopup chatPopup;
 
 
@@ -1489,7 +1490,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                 disputeManager.getNrOfDisputes(isBuyer, contract),
                 accountAge,
                 preferences);
-        peerInfoIcon.setAvatarMapAndKey(avatarMap, key);
+        avatarMap.put(key, peerInfoIcon);
         return peerInfoIcon;
     }
 

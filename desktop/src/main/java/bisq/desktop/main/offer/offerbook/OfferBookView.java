@@ -28,7 +28,7 @@ import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InfoAutoTooltipLabel;
-import bisq.desktop.components.PeerInfoIcon;
+import bisq.desktop.components.PeerInfoIconMap;
 import bisq.desktop.components.PeerInfoIconTrading;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
@@ -113,7 +113,6 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -154,7 +153,8 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
     private static final int SHOW_ALL = 0;
     private Label disabledCreateOfferButtonTooltip;
     protected VBox currencyComboBoxContainer;
-    private final Map<String, PeerInfoIcon> avatarMap = new HashMap<>();
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+    private final PeerInfoIconMap avatarMap = new PeerInfoIconMap();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -1284,7 +1284,7 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
                                             model.accountAgeWitnessService,
                                             useDevPrivilegeKeys);
                                     String key = offer.getId();
-                                    peerInfoIcon.setAvatarMapAndKey(avatarMap, key);
+                                    avatarMap.put(key, peerInfoIcon);
                                     setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);

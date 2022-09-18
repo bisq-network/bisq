@@ -24,7 +24,7 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
-import bisq.desktop.components.PeerInfoIcon;
+import bisq.desktop.components.PeerInfoIconMap;
 import bisq.desktop.components.PeerInfoIconTrading;
 import bisq.desktop.components.list.FilterBox;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -92,8 +92,6 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -160,7 +158,8 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
     private SortedList<ClosedTradesListItem> sortedList;
     private FilteredList<ClosedTradesListItem> filteredList;
     private ChangeListener<Number> widthListener;
-    private final Map<String, PeerInfoIcon> avatarMap = new HashMap<>();
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+    private final PeerInfoIconMap avatarMap = new PeerInfoIconMap();
 
     @Inject
     public ClosedTradesView(ClosedTradesViewModel model,
@@ -542,7 +541,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                                             model.dataModel.accountAgeWitnessService,
                                             useDevPrivilegeKeys);
                                     String key = tradeModel.getId();
-                                    peerInfoIcon.setAvatarMapAndKey(avatarMap, key);
+                                    avatarMap.put(key, peerInfoIcon);
                                     setPadding(new Insets(1, 15, 0, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {
