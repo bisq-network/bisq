@@ -438,7 +438,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         boolean isMediationDispute = getDisputeManager(dispute) instanceof MediationManager;
         // At mediation we require a min. payout to the losing party to keep incentive for the trader to accept the
         // mediated payout. For Refund agent cases we do not have that restriction.
-        Coin minRefundAtDispute = isMediationDispute ? Restrictions.getMinRefundAtMediatedDispute() : Coin.ZERO;
+        Coin minRefundAtDispute = isMediationDispute ? Restrictions.getMinRefundAtMediatedDispute(contract.getTradeAmount()) : Coin.ZERO;
 
         Offer offer = new Offer(contract.getOfferPayload());
         Coin totalAvailable = contract.getTradeAmount()
@@ -973,7 +973,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Coin totalPot = tradeAmount.add(buyerSecurityDeposit).add(sellerSecurityDeposit);
         // At mediation we require a min. payout to the losing party to keep incentive for the trader to accept the
         // mediated payout. For Refund agent cases we do not have that restriction.
-        Coin minRefundAtDispute = isMediationDispute() ? Restrictions.getMinRefundAtMediatedDispute() : Coin.ZERO;
+        Coin minRefundAtDispute = isMediationDispute() ? Restrictions.getMinRefundAtMediatedDispute(tradeAmount) : Coin.ZERO;
 
         Coin penalizedPortionOfTradeAmount = Coin.ZERO;
         try {
@@ -1062,7 +1062,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             Coin sellerSecurityDeposit = offer.getSellerSecurityDeposit();
             Coin tradeAmount = contract.getTradeAmount();
             Coin totalPot = tradeAmount.add(buyerSecurityDeposit).add(sellerSecurityDeposit);
-            Coin minRefundAtDispute = isMediationDispute() ? Restrictions.getMinRefundAtMediatedDispute() : Coin.ZERO;
+            Coin minRefundAtDispute = isMediationDispute() ? Restrictions.getMinRefundAtMediatedDispute(tradeAmount) : Coin.ZERO;
             Coin maxPayoutAmount = totalPot.subtract(minRefundAtDispute);
             if (disputeResult.getBuyerPayoutAmount().equals(tradeAmount.add(buyerSecurityDeposit)) &&
                     disputeResult.getSellerPayoutAmount().equals(sellerSecurityDeposit)) {

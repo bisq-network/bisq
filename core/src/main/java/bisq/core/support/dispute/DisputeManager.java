@@ -928,7 +928,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         // The amount we would get if we do a new trade with current price
         Coin potentialAmountAtDisputeOpening = priceAtDisputeOpening.getAmountByVolume(contract.getTradeVolume());
         Coin buyerSecurityDeposit = Coin.valueOf(offerPayload.getBuyerSecurityDeposit());
-        Coin minRefundAtMediatedDispute = Restrictions.getMinRefundAtMediatedDispute();
+        Coin minRefundAtMediatedDispute = Restrictions.getMinRefundAtMediatedDispute(contract.getTradeAmount());
         // minRefundAtMediatedDispute is always larger as buyerSecurityDeposit at mediated payout, we ignore refund agent case here as there it can be 0.
         Coin maxLossSecDeposit = buyerSecurityDeposit.subtract(minRefundAtMediatedDispute);
         Coin tradeAmount = contract.getTradeAmount();
