@@ -22,7 +22,6 @@ jobs:
       with:
         fetch-depth: 0
         ref: ${{ github.event.pull_request.head.sha }}
-        lfs: true
 
     - name: Set up JDK
       uses: actions/setup-java@d854b6da19cdadd9a010605529e522c2393ebd38
