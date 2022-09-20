@@ -85,9 +85,6 @@ Use VirtualBox > 6.1 with following configuration:
 
 #### macOS
 
-To be able to generate a signed and notarized binary you have to have an Apple developer account and create the required
-certificate and provisioning file before running the build.
-
 1. Make sure all version numbers are updated (update version variables and
    run [replace_version_number.sh](https://github.com/bisq-network/bisq/blob/master/desktop/package/macosx/replace_version_number.sh))
    .
@@ -96,16 +93,12 @@ certificate and provisioning file before running the build.
 
 * `BISQ_GPG_USER`: e.g. export BISQ_GPG_USER=manfred@bitsquare.io
 * `BISQ_SHARED_FOLDER`: shared folder that is used between your VM host and client system
-* `BISQ_PACKAGE_SIGNING_IDENTITY`: e.g. "Developer ID Application: Christoph Atteneder (WQT93T6D6C)"
-* `BISQ_PRIMARY_BUNDLE_ID`: e.g. "network.bisq.CAT"
-* `BISQ_PACKAGE_NOTARIZATION_AC_USERNAME`: your Apple developer email address
-* `BISQ_PACKAGE_NOTARIZATION_ASC_PROVIDER`: Your developer ID (e.g. WQT93T6D6C)
 
 3. Run `./gradlew packageInstallers`
 
 Build output expected in shared folder:
 
-1. `Bisq-${NEW_VERSION}.dmg` macOS notarized and signed installer
+1. `Bisq-${NEW_VERSION}.dmg` macOS installer
 2. `desktop-${NEW_VERSION}-all-mac.jar.SHA-256` sha256 sum of fat jar
 3. `jar-lib-for-raspberry-pi-${NEW_VERSION}.zip` Jar libraries for Raspberry Pi
 
@@ -131,8 +124,6 @@ Build output expected:
 
 #### Windows
 
-To be able to generate a signed binary you have to apply and install a developer certificate before running the build.
-
 1. Checkout the release tag in your VM
 
 2. Set environment variables to ~/.profile file or the like... (one time effort)
@@ -142,7 +133,7 @@ To be able to generate a signed binary you have to apply and install a developer
 
 Build output expected:
 
-1. `Bisq-${NEW_VERSION}.exe` Windows signed installer
+1. `Bisq-${NEW_VERSION}.exe` Windows installer
 2. `desktop-${NEW_VERSION}-all-windows.jar.SHA-256` sha256 sum of fat jar
 
 * Install and run generated package
@@ -166,11 +157,11 @@ Build output expected:
 11. `Bisq-64bit-${NEW_VERSION}.exe` Windows installer
 12. `Bisq-64bit-${NEW_VERSION}.exe.asc` Signature for Windows installer
 
-* Run a AV scan over all files on the Windows VM where the files got copied over.
+* Run an AV scan over all files on the Windows VM where the files got copied over.
 
 ### Final test
 
-* Make at least one mainnet test trade with some exotic currency to not interfere with real traders.
+* Make at least one Mainnet test trade with some exotic currency to not interfere with real traders.
 
 ### Tag and push release to master
 
@@ -241,8 +232,5 @@ If all was successful:
 * Twitter
 
 * Optionally reddit /r/Bisq
-
-* Notify @freimair so that he can start
-  updating [the Arch User Repository](https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=bisq-git)
 
 * Celebrate
