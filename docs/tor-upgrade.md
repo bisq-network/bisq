@@ -38,13 +38,13 @@ During this update, you will need to keep track of:
 
 Create a PR for the `master` branch of [tor-binary][2] with the following changes:
 
- - Decide which tor browser version contains the desired tor binary version
-   - The official tor browser releases are here: https://dist.torproject.org/torbrowser/
- - For the chosen tor browser version, get the list of SHA256 checksums and its signature
-   - For example, for tor browser 10.0.12:
-     - https://dist.torproject.org/torbrowser/10.0.12/sha256sums-signed-build.txt
-     - https://dist.torproject.org/torbrowser/10.0.12/sha256sums-signed-build.txt.asc
- - Verify the signature of the checksums list (see [instructions][5])
+- Decide which tor browser version contains the desired tor binary version
+    - The official tor browser releases are here: https://dist.torproject.org/torbrowser/
+- For the chosen tor browser version, get the list of SHA256 checksums and its signature
+    - For example, for tor browser 11.5.3:
+        - https://dist.torproject.org/torbrowser/11.5.3/sha256sums-signed-build.txt
+        - https://dist.torproject.org/torbrowser/11.5.3/sha256sums-signed-build.txt.asc
+- Verify the signature of the checksums list (see [instructions][5])
  - Update the `tor-binary` checksums
    - For each file present in `tor-binary/tor-binary-resources/checksums`:
      - Rename the file such that it reflects the new tor browser version, but preserves the naming scheme
@@ -83,17 +83,14 @@ Create a PR for the `master` branch of [netlayer][1] with the following changes:
    - `netlayer/tor.external/pom.xml`
    - `netlayer/tor.native/pom.xml`
 
-Once the PR is merged, make a note of the commit ID in the `master` branch (for example `32779ac`), as it will be
-needed next.
-
 Create a tag for the new artefact version, having the new tor binary version as description, for example:
 
 ```
 # Create tag locally for new netlayer release, on the master branch
-git tag -s 0.7.0 -m"tor 0.4.5.6"
+git tag -s 0.7.4 -m"tor 0.4.7.8"
 
 # Push it to netlayer repo
-git push origin 0.7.0
+git push origin 0.7.4
 ```
 
 
@@ -101,9 +98,9 @@ git push origin 0.7.0
 
 Create a Bisq PR with the following changes:
 
- - In `bisq/build.gradle` update `netlayerVersion` to the `netlayer` commit ID from above
- - Update the gradle dependency checksums
-     - See instructions in `bisq/gradle/README.md`
+- In `bisq/build.gradle` update `netlayerVersion` to the `netlayer` tag from above
+- Update the gradle verification metadata
+    - See instructions in `bisq/gradle/README.md`
 
 
 
@@ -121,4 +118,4 @@ Thanks to freimair, JesusMcCloud, mrosseel, sschuberth and cedricwalter for thei
 [3]: https://github.com/bisq-network/netlayer/releases "netlayer releases"
 [4]: https://gitweb.torproject.org/tor.git/plain/ChangeLog "tor changelog"
 [5]: https://support.torproject.org/tbb/how-to-verify-signature/ "verify tor signature"
-[6]: https://gitweb.torproject.org/builders/tor-browser-build.git/plain/projects/tor-browser/Bundle-Data/Docs/ChangeLog.txt?h=maint-10.5 "tor browser 10.5.x changelog"
+[6]: https://gitweb.torproject.org/builders/tor-browser-build.git/plain/projects/browser/Bundle-Data/Docs/ChangeLog.txt "tor browser changelog"
