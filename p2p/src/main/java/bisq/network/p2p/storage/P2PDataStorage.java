@@ -515,9 +515,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 // trade stats stats and all account age witness data.
 
                 // We only apply it once from first response
-                if (!initialRequestApplied) {
+                if (!initialRequestApplied || getDataResponse.isWasTruncated()) {
                     addPersistableNetworkPayloadFromInitialRequest(e);
-
                 }
             } else {
                 // We don't broadcast here as we are only connected to the seed node and would be pointless
