@@ -42,24 +42,21 @@ import javafx.scene.paint.Color;
 
 import javafx.geometry.Point2D;
 
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import java.util.Map;
 
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
 @Slf4j
 public class PeerInfoIcon extends Group {
-    public interface notify {
-        void avatarTagUpdated();
-    }
 
-    @Setter
-    private notify callback;
     protected Preferences preferences;
     protected final String fullAddress;
     protected String tooltipText;
@@ -68,10 +65,12 @@ public class PeerInfoIcon extends Group {
     protected Pane tagPane;
     protected Pane numTradesPane;
     protected int numTrades = 0;
+    private final StringProperty tag;
 
     public PeerInfoIcon(NodeAddress nodeAddress, Preferences preferences) {
         this.preferences = preferences;
         this.fullAddress = nodeAddress != null ? nodeAddress.getFullAddress() : "";
+        this.tag = new SimpleStringProperty("");
     }
 
     protected void createAvatar(Color ringColor) {
@@ -184,10 +183,7 @@ public class PeerInfoIcon extends Group {
                         .position(localToScene(new Point2D(0, 0)))
                         .onSave(newTag -> {
                             preferences.setTagForPeer(fullAddress, newTag);
-                            updatePeerInfoIcon();
-                            if (callback != null) {
-                                callback.avatarTagUpdated();
-                            }
+                            tag.set(newTag);
                         })
                         .show();
             }
@@ -205,20 +201,6 @@ public class PeerInfoIcon extends Group {
     }
 
     protected void updatePeerInfoIcon() {
-        String tag;
-        Map<String, String> peerTagMap = preferences.getPeerTagMap();
-        if (peerTagMap.containsKey(fullAddress)) {
-            tag = peerTagMap.get(fullAddress);
-            final String text = !tag.isEmpty() ? Res.get("peerInfoIcon.tooltip", tooltipText, tag) : tooltipText;
-            Tooltip.install(this, new Tooltip(text));
-        } else {
-            tag = "";
-            Tooltip.install(this, new Tooltip(tooltipText));
-        }
-
-        if (!tag.isEmpty())
-            tagLabel.setText(tag.substring(0, 1));
-
         if (numTrades > 0) {
             numTradesLabel.setText(numTrades > 99 ? "*" : String.valueOf(numTrades));
 
@@ -229,9 +211,27 @@ public class PeerInfoIcon extends Group {
                 numTradesLabel.relocate(scaleFactor * 5, scaleFactor * 1);
             }
         }
-
         numTradesPane.setVisible(numTrades > 0);
 
-        tagPane.setVisible(!tag.isEmpty());
+        refreshTag();
+    }
+
+    protected void refreshTag() {
+        Map<String, String> peerTagMap = preferences.getPeerTagMap();
+        if (peerTagMap.containsKey(fullAddress)) {
+            tag.set(peerTagMap.get(fullAddress));
+        }
+
+        Tooltip.install(this, new Tooltip(!tag.get().isEmpty() ?
+                Res.get("peerInfoIcon.tooltip", tooltipText, tag.get()) : tooltipText));
+
+        if (!tag.get().isEmpty()) {
+            tagLabel.setText(tag.get().substring(0, 1));
+        }
+        tagPane.setVisible(!tag.get().isEmpty());
+    }
+
+    protected StringProperty tagProperty() {
+        return tag;
     }
 }

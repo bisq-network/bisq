@@ -28,6 +28,7 @@ import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InfoAutoTooltipLabel;
+import bisq.desktop.components.PeerInfoIconMap;
 import bisq.desktop.components.PeerInfoIconTrading;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.MainView;
@@ -152,6 +153,8 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
     private static final int SHOW_ALL = 0;
     private Label disabledCreateOfferButtonTooltip;
     protected VBox currencyComboBoxContainer;
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+    private final PeerInfoIconMap avatarMap = new PeerInfoIconMap();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -485,6 +488,8 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
         model.priceFeedService.updateCounterProperty().removeListener(priceFeedUpdateCounterListener);
 
         currencySelectionSubscriber.unsubscribe();
+
+        avatarMap.clear();
     }
 
     static class CurrencyStringConverter extends StringConverter<TradeCurrency> {
@@ -1278,6 +1283,8 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
                                             model.preferences,
                                             model.accountAgeWitnessService,
                                             useDevPrivilegeKeys);
+                                    String key = offer.getId();
+                                    avatarMap.put(key, peerInfoIcon);
                                     setGraphic(peerInfoIcon);
                                 } else {
                                     setGraphic(null);

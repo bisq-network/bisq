@@ -23,8 +23,8 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.components.PeerInfoIcon;
 import bisq.desktop.components.PeerInfoIconDispute;
+import bisq.desktop.components.PeerInfoIconMap;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.ContractWindow;
 import bisq.desktop.main.overlays.windows.DisputeSummaryWindow;
@@ -126,7 +126,7 @@ import javax.annotation.Nullable;
 import static bisq.desktop.util.FormBuilder.getIconForLabel;
 import static bisq.desktop.util.FormBuilder.getRegularIconButton;
 
-public abstract class DisputeView extends ActivatableView<VBox, Void> implements PeerInfoIcon.notify, DisputeChatPopup.ChatCallback {
+public abstract class DisputeView extends ActivatableView<VBox, Void> implements DisputeChatPopup.ChatCallback {
     public enum FilterResult {
         NO_MATCH("No Match"),
         NO_FILTER("No filter text"),
@@ -191,7 +191,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     private Map<String, Button> chatButtonByDispute = new HashMap<>();
     private Map<String, JFXBadge> chatBadgeByDispute = new HashMap<>();
     private Map<String, JFXBadge> newBadgeByDispute = new HashMap<>();
-    private Map<String, PeerInfoIconDispute> avatarMap = new HashMap<>();
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+    private final PeerInfoIconMap avatarMap = new PeerInfoIconMap();
     protected DisputeChatPopup chatPopup;
 
 
@@ -369,6 +370,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
         filterTextField.textProperty().removeListener(filterTextFieldListener);
         sortedList.comparatorProperty().unbind();
         selectedDisputeSubscription.unsubscribe();
+        avatarMap.clear();
     }
 
 
@@ -1220,7 +1222,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     setText(getBuyerOnionAddressColumnLabel(item));
-                                    PeerInfoIconDispute peerInfoIconDispute = findOrCreateAvatar(tableRowProperty().get().getIndex(), item.getContract(), true);
+                                    PeerInfoIconDispute peerInfoIconDispute = createAvatar(tableRowProperty().get().getIndex(), item.getContract(), true);
                                     setGraphic(peerInfoIconDispute);
                                 } else {
                                     setText("");
@@ -1250,7 +1252,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
                                     setText(getSellerOnionAddressColumnLabel(item));
-                                    PeerInfoIconDispute peerInfoIconDispute = findOrCreateAvatar(tableRowProperty().get().getIndex(), item.getContract(), false);
+                                    PeerInfoIconDispute peerInfoIconDispute = createAvatar(tableRowProperty().get().getIndex(), item.getContract(), false);
                                     setGraphic(peerInfoIconDispute);
                                 } else {
                                     setText("");
@@ -1477,7 +1479,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
         }
     }
 
-    private PeerInfoIconDispute findOrCreateAvatar(Integer tableRowId, Contract contract, boolean isBuyer) {
+    private PeerInfoIconDispute createAvatar(Integer tableRowId, Contract contract, boolean isBuyer) {
         NodeAddress nodeAddress = isBuyer ? contract.getBuyerNodeAddress() : contract.getSellerNodeAddress();
         String key = tableRowId + nodeAddress.getHostNameWithoutPostFix() + (isBuyer ? "BUYER" : "SELLER");
         Long accountAge = isBuyer ?
@@ -1488,19 +1490,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                 disputeManager.getNrOfDisputes(isBuyer, contract),
                 accountAge,
                 preferences);
-        peerInfoIcon.setCallback(this);
         avatarMap.put(key, peerInfoIcon);
         return peerInfoIcon;
-    }
-
-    @Override
-    public void avatarTagUpdated() {
-        // callback from one avatar letting us know that the user updated the tag text.
-        // we update all avatars, as some could be sharing the same tag
-        log.info("Updating avatar tags, the avatarMap size is {}", avatarMap.size());
-        avatarMap.forEach((key, avatarIcon) -> {
-            avatarIcon.refreshTag();
-        });
     }
 
     @Override

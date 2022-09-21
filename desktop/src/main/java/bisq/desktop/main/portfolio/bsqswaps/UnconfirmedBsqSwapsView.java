@@ -22,6 +22,7 @@ import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.HyperlinkWithIcon;
+import bisq.desktop.components.PeerInfoIconMap;
 import bisq.desktop.components.PeerInfoIconTrading;
 import bisq.desktop.components.list.FilterBox;
 import bisq.desktop.main.overlays.windows.BsqTradeDetailsWindow;
@@ -46,7 +47,6 @@ import javafx.fxml.FXML;
 
 import javafx.stage.Stage;
 
-import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -129,6 +129,8 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
     private SortedList<UnconfirmedBsqSwapsListItem> sortedList;
     private FilteredList<UnconfirmedBsqSwapsListItem> filteredList;
     private ChangeListener<Number> widthListener;
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+    private final PeerInfoIconMap avatarMap = new PeerInfoIconMap();
 
     @Inject
     public UnconfirmedBsqSwapsView(UnconfirmedBsqSwapsViewModel model,
@@ -259,6 +261,8 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
 
         filterBox.deactivate();
         root.widthProperty().removeListener(widthListener);
+
+        avatarMap.clear();
     }
 
     private static <T extends Comparable<T>> Comparator<UnconfirmedBsqSwapsListItem> nullsFirstComparing(
@@ -400,7 +404,7 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
                                     int numPastTrades = newItem.getNumPastTrades();
                                     final NodeAddress tradingPeerNodeAddress = bsqSwapTrade.getTradingPeerNodeAddress();
                                     String role = Res.get("peerInfoIcon.tooltip.tradePeer");
-                                    Node peerInfoIcon = new PeerInfoIconTrading(tradingPeerNodeAddress,
+                                    PeerInfoIconTrading peerInfoIcon = new PeerInfoIconTrading(tradingPeerNodeAddress,
                                             role,
                                             numPastTrades,
                                             privateNotificationManager,
@@ -408,6 +412,8 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
                                             preferences,
                                             accountAgeWitnessService,
                                             useDevPrivilegeKeys);
+                                    String key = bsqSwapTrade.getId();
+                                    avatarMap.put(key, peerInfoIcon);
                                     setPadding(new Insets(1, 15, 0, 0));
                                     setGraphic(peerInfoIcon);
                                 } else {
