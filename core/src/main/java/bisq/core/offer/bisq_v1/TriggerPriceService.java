@@ -202,7 +202,7 @@ public class TriggerPriceService {
             String currencyCode = openOffer.getOffer().getCurrencyCode();
             if (openOffersByCurrency.containsKey(currencyCode)) {
                 Set<OpenOffer> set = openOffersByCurrency.get(currencyCode);
-                set.remove(openOffer);
+                set.removeIf(OpenOffer::isCanceled);
                 if (set.isEmpty()) {
                     openOffersByCurrency.remove(currencyCode);
                 }

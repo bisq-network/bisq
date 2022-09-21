@@ -187,6 +187,10 @@ public final class OpenOffer implements Tradable {
         return state == State.DEACTIVATED;
     }
 
+    public boolean isCanceled() {
+        return state == State.CANCELED;
+    }
+
     public BsqSwapOfferPayload getBsqSwapOfferPayload() {
         checkArgument(getOffer().getBsqSwapOfferPayload().isPresent(),
                 "getBsqSwapOfferPayload must be called only when BsqSwapOfferPayload is the expected payload");
