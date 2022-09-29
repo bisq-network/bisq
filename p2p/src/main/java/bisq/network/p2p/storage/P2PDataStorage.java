@@ -512,7 +512,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 // performance issues.
                 // Processing 82645 items took now 61 ms compared to earlier version where it took ages (> 2min).
                 // Usually we only get about a few hundred or max. a few 1000 items. 82645 is all
-                // trade stats stats and all account age witness data.
+                // trade stats and all account age witness data.
 
                 // We only apply it once from first response
                 if (!initialRequestApplied || getDataResponse.isWasTruncated()) {
