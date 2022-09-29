@@ -144,18 +144,17 @@ Build output expected:
 
 Build output expected:
 
-1. `F379A1C6.asc` Sig key of Manfred Karrer
-2. `5BC5ED73.asc` Sig key of Chris Beams
-3. `29CDFD3B.asc`Sig key of Christoph Atteneder
-4. `signingkey.asc` Fingerprint of key that was used for these builds
-5. `Bisq-${NEW_VERSION}.dmg` macOS installer
-6. `Bisq-${NEW_VERSION}.dmg.asc` Signature for macOS installer
-7. `Bisq-64bit-${NEW_VERSION}.deb` Debian package
-8. `Bisq-64bit-${NEW_VERSION}.deb.asc` Signature for Debian package
-9. `Bisq-64bit-${NEW_VERSION}.rpm` Redhat based distro package
-10. `Bisq-64bit-${NEW_VERSION}.rpm.asc` Signature for Redhat based distro package
-11. `Bisq-64bit-${NEW_VERSION}.exe` Windows installer
-12. `Bisq-64bit-${NEW_VERSION}.exe.asc` Signature for Windows installer
+1. `E222AA02.asc` Sig key of Alejandro García
+2. `4A133008.asc` Sig key of Gabriel Bernard
+3. `signingkey.asc` Fingerprint of key that was used for these builds
+4. `Bisq-${NEW_VERSION}.dmg` macOS installer
+5. `Bisq-${NEW_VERSION}.dmg.asc` Signature for macOS installer
+6. `Bisq-64bit-${NEW_VERSION}.deb` Debian package
+7. `Bisq-64bit-${NEW_VERSION}.deb.asc` Signature for Debian package
+8. `Bisq-64bit-${NEW_VERSION}.rpm` Redhat based distro package
+9. `Bisq-64bit-${NEW_VERSION}.rpm.asc` Signature for Redhat based distro package
+10. `Bisq-64bit-${NEW_VERSION}.exe` Windows installer
+11. `Bisq-64bit-${NEW_VERSION}.exe.asc` Signature for Windows installer
 
 * Run an AV scan over all files on the Windows VM where the files got copied over.
 
@@ -188,8 +187,7 @@ If all was successful:
 
 #### Upload preparations
 
-* Check the fingerprint of the pgp key which was used for signing in signingkey.asc (e.g. 29CDFD3B for Christoph
-  Atteneder)
+* Check the fingerprint of the pgp key which was used for signing in signingkey.asc (e.g. E222AA02 for Alejandro García)
 
 * Add all files including signingkey.asc and the gpg pub keys to GitHub release page
 

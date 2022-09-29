@@ -56,9 +56,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class BisqInstaller {
-    private static final String FINGER_PRINT_MANFRED_KARRER = "F379A1C6";
-    private static final String FINGER_PRINT_CHRIS_BEAMS = "5BC5ED73";
-    private static final String FINGER_PRINT_CHRISTOPH_ATTENEDER = "29CDFD3B";
+    private static final String FINGER_PRINT_GABRIEL_BERNARD = "4A133008";
+    private static final String FINGER_PRINT_ALEJANDRO_GARCIA = "E222AA02";
     private static final String PUB_KEY_HOSTING_URL = "https://bisq.network/pubkey/";
     private static final String DOWNLOAD_HOST_URL = "https://bisq.network/downloads/";
 
@@ -255,14 +254,11 @@ public class BisqInstaller {
     private List<FileDescriptor> getKeyFileDescriptors() {
         List<FileDescriptor> list = new ArrayList<>();
 
-        list.add(getKeyFileDescriptor(FINGER_PRINT_MANFRED_KARRER));
-        list.add(getLocalKeyFileDescriptor(FINGER_PRINT_MANFRED_KARRER));
+        list.add(getKeyFileDescriptor(FINGER_PRINT_ALEJANDRO_GARCIA));
+        list.add(getLocalKeyFileDescriptor(FINGER_PRINT_ALEJANDRO_GARCIA));
 
-        list.add(getKeyFileDescriptor(FINGER_PRINT_CHRIS_BEAMS));
-        list.add(getLocalKeyFileDescriptor(FINGER_PRINT_CHRIS_BEAMS));
-
-        list.add(getKeyFileDescriptor(FINGER_PRINT_CHRISTOPH_ATTENEDER));
-        list.add(getLocalKeyFileDescriptor(FINGER_PRINT_CHRISTOPH_ATTENEDER));
+        list.add(getKeyFileDescriptor(FINGER_PRINT_GABRIEL_BERNARD));
+        list.add(getLocalKeyFileDescriptor(FINGER_PRINT_GABRIEL_BERNARD));
 
         return list;
     }
