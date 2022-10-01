@@ -1886,6 +1886,14 @@ textfield */
     -fx-background-color: -bs-chart-dao-line14, -bs-chart-dao-line14;
 }
 
+#charts-dao .default-color14.chart-series-line {
+    -fx-stroke: -bs-chart-dao-line15;
+}
+
+#charts-dao .default-color14.chart-line-symbol {
+    -fx-background-color: -bs-chart-dao-line15, -bs-chart-dao-line15;
+}
+
 
 #charts-legend-toggle0 {
     -jfx-toggle-color: -bs-chart-dao-line1
@@ -1941,6 +1949,10 @@ textfield */
 
 #charts-legend-toggle13 {
     -jfx-toggle-color: -bs-chart-dao-line14;
+}
+
+#charts-legend-toggle14 {
+    -jfx-toggle-color: -bs-chart-dao-line15;
 }
 
 #charts-dao .chart-series-line {

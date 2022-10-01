@@ -228,6 +228,10 @@ public class DaoChartView extends ChartView<DaoChartViewModel> {
             Tooltip tooltip = new Tooltip(Res.get("dao.factsAndFigures.supply.supplyChange.tooltip"));
             tooltip.setShowDelay(Duration.millis(100));
             Tooltip.install(toggle, tooltip);
+        } else if (series.equals(seriesMiscBurn)) {
+            Tooltip tooltip = new Tooltip(Res.get("dao.factsAndFigures.supply.miscBurn.tooltip"));
+            tooltip.setShowDelay(Duration.millis(100));
+            Tooltip.install(toggle, tooltip);
         }
     }
 
