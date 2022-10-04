@@ -85,10 +85,13 @@ public class Restrictions {
     }
 
     // This value must be lower than MIN_BUYER_SECURITY_DEPOSIT and SELLER_SECURITY_DEPOSIT
-    public static Coin getMinRefundAtMediatedDispute() {
+    public static Coin getMinRefundAtMediatedDispute(Coin tradeAmount) {
         if (MIN_REFUND_AT_MEDIATED_DISPUTE == null)
             MIN_REFUND_AT_MEDIATED_DISPUTE = Coin.parseCoin("0.0005"); // 0.0005 BTC is 30 USD @ 60000 USD/BTC
-        return MIN_REFUND_AT_MEDIATED_DISPUTE;
+        Coin twoPointFivePercentOfTradeAmount = tradeAmount.div(40);
+        if (twoPointFivePercentOfTradeAmount.isLessThan(MIN_REFUND_AT_MEDIATED_DISPUTE))
+            return MIN_REFUND_AT_MEDIATED_DISPUTE;
+        return twoPointFivePercentOfTradeAmount;
     }
 
     public static int getLockTime(boolean isAsset) {
