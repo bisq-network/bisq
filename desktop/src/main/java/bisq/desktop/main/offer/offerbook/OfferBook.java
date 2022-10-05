@@ -255,7 +255,8 @@ public class OfferBook {
     }
 
     private boolean isOfferAllowed(Offer offer) {
-        boolean isBanned = filterManager.isOfferIdBanned(offer.getId());
+        boolean isBanned = filterManager.isOfferIdBanned(offer.getId())
+                || filterManager.isNodeAddressBanned(offer.getMakerNodeAddress());
         boolean isV3NodeAddressCompliant = !OfferRestrictions.requiresNodeAddressUpdate()
                 || Utils.isV3Address(offer.getMakerNodeAddress().getHostName());
         return !isBanned && isV3NodeAddressCompliant;
