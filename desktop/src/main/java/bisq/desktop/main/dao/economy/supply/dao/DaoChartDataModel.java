@@ -21,9 +21,11 @@ import bisq.desktop.components.chart.ChartDataModel;
 
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
 
+import bisq.common.config.Config;
 import bisq.common.util.Hex;
 
 import javax.inject.Inject;
@@ -37,7 +39,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -55,7 +59,7 @@ public class DaoChartDataModel extends ChartDataModel {
     private Map<Long, Long> totalSupplyByInterval, supplyChangeByInterval, totalIssuedByInterval, compensationByInterval,
             reimbursementByInterval, reimbursementByIntervalAfterTagging,
             totalBurnedByInterval, bsqTradeFeeByInterval, bsqTradeFeeByIntervalAfterTagging,
-            proofOfBurnByInterval, proofOfBurnFromBtcFeesByInterval, proofOfBurnFromArbitrationByInterval,
+            proofOfBurnByInterval, miscBurnByInterval, proofOfBurnFromBtcFeesByInterval, proofOfBurnFromArbitrationByInterval,
             arbitrationDiffByInterval, totalTradeFeesByInterval;
 
     static {
@@ -91,6 +95,7 @@ public class DaoChartDataModel extends ChartDataModel {
         bsqTradeFeeByInterval = null;
         bsqTradeFeeByIntervalAfterTagging = null;
         proofOfBurnByInterval = null;
+        miscBurnByInterval = null;
         proofOfBurnFromBtcFeesByInterval = null;
         proofOfBurnFromArbitrationByInterval = null;
         arbitrationDiffByInterval = null;
@@ -213,9 +218,7 @@ public class DaoChartDataModel extends ChartDataModel {
             return totalBurnedByInterval;
         }
 
-        Map<Long, Long> tradeFee = getBsqTradeFeeByInterval();
-        Map<Long, Long> proofOfBurn = getProofOfBurnByInterval();
-        totalBurnedByInterval = getMergedMap(tradeFee, proofOfBurn, Long::sum);
+        totalBurnedByInterval = getBurntBsqByInterval(daoStateService.getBurntFeeTxs(), getDateFilter());
         return totalBurnedByInterval;
     }
 
@@ -246,6 +249,25 @@ public class DaoChartDataModel extends ChartDataModel {
 
         proofOfBurnByInterval = getBurntBsqByInterval(daoStateService.getProofOfBurnTxs(), getDateFilter());
         return proofOfBurnByInterval;
+    }
+
+    Map<Long, Long> getMiscBurnByInterval() {
+        if (miscBurnByInterval != null) {
+            return miscBurnByInterval;
+        }
+
+        miscBurnByInterval = daoStateService.getBurntFeeTxs().stream()
+                .filter(e -> e.getTxType() != TxType.PAY_TRADE_FEE)
+                .filter(e -> e.getTxType() != TxType.PROOF_OF_BURN)
+                .collect(Collectors.groupingBy(tx -> toTimeInterval(Instant.ofEpochMilli(tx.getTime()))))
+                .entrySet()
+                .stream()
+                .filter(entry -> dateFilter.test(entry.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        entry -> entry.getValue().stream()
+                                .mapToLong(Tx::getBurntBsq)
+                                .sum()));
+        return miscBurnByInterval;
     }
 
     Map<Long, Long> getProofOfBurnFromBtcFeesByInterval() {
@@ -285,8 +307,24 @@ public class DaoChartDataModel extends ChartDataModel {
         }
 
         long genesisValue = daoStateService.getGenesisTotalSupply().value;
-        totalSupplyByInterval = getSupplyChangeByInterval().entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> genesisValue + e.getValue()));
+        Collection<Issuance> issuanceSetForType = daoStateService.getIssuanceItems();
+        // get all issued and burnt BSQ, not just the filtered date range
+        Map<Long, Long> tmpIssuedByInterval = getIssuedBsqByInterval(issuanceSetForType, e -> true);
+        Map<Long, Long> tmpBurnedByInterval = new TreeMap<>(getBurntBsqByInterval(daoStateService.getBurntFeeTxs(), e -> true)
+                .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> -e.getValue())));
+        Map<Long, Long> tmpSupplyByInterval = getMergedMap(tmpIssuedByInterval, tmpBurnedByInterval, Long::sum);
+
+        totalSupplyByInterval = new TreeMap<>(tmpSupplyByInterval.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+        AtomicReference<Long> atomicSum = new AtomicReference<>(genesisValue);
+        totalSupplyByInterval.entrySet().forEach(e -> e.setValue(
+                atomicSum.accumulateAndGet(e.getValue(), Long::sum)
+        ));
+        // now apply the requested date filter
+        totalSupplyByInterval = totalSupplyByInterval.entrySet().stream()
+                .filter(e -> dateFilter.test(e.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
         return totalSupplyByInterval;
     }
 
@@ -296,8 +334,9 @@ public class DaoChartDataModel extends ChartDataModel {
         }
 
         Map<Long, Long> issued = getTotalIssuedByInterval();
-        Map<Long, Long> burned = getTotalBurnedByInterval();
-        supplyChangeByInterval = getMergedMap(issued, burned, (a, b) -> a - b);
+        Map<Long, Long> burned = new TreeMap<>(getTotalBurnedByInterval().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> -e.getValue())));
+        supplyChangeByInterval = getMergedMap(issued, burned, Long::sum);
         return supplyChangeByInterval;
     }
 
@@ -305,7 +344,7 @@ public class DaoChartDataModel extends ChartDataModel {
     // Aggregated collection data by interval
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Map<Long, Long> getIssuedBsqByInterval(Set<Issuance> issuanceSet, Predicate<Long> dateFilter) {
+    private Map<Long, Long> getIssuedBsqByInterval(Collection<Issuance> issuanceSet, Predicate<Long> dateFilter) {
         return issuanceSet.stream()
                 .collect(Collectors.groupingBy(issuance ->
                         toTimeInterval(Instant.ofEpochMilli(blockTimeOfIssuanceFunction.apply(issuance)))))
@@ -370,39 +409,41 @@ public class DaoChartDataModel extends ChartDataModel {
         public final static Map<Long, Long> COMPENSATIONS_BY_CYCLE_DATE = new HashMap<>();
 
         static {
-            REIMBURSEMENTS_BY_CYCLE_DATE.put(1571349571L, 60760L);
-            REIMBURSEMENTS_BY_CYCLE_DATE.put(1574180991L, 2621000L);
-            REIMBURSEMENTS_BY_CYCLE_DATE.put(1576966522L, 4769100L);
-            REIMBURSEMENTS_BY_CYCLE_DATE.put(1579613568L, 0L);
-            REIMBURSEMENTS_BY_CYCLE_DATE.put(1582399054L, 9186600L);
-            REIMBURSEMENTS_BY_CYCLE_DATE.put(1585342220L, 12089400L);
-            REIMBURSEMENTS_BY_CYCLE_DATE.put(1588025030L, 5420700L);
-            REIMBURSEMENTS_BY_CYCLE_DATE.put(1591004931L, 9138760L);
-            REIMBURSEMENTS_BY_CYCLE_DATE.put(1593654027L, 10821807L);
-            REIMBURSEMENTS_BY_CYCLE_DATE.put(1596407074L, 2160157L);
-            REIMBURSEMENTS_BY_CYCLE_DATE.put(1599175867L, 8769408L);
-            REIMBURSEMENTS_BY_CYCLE_DATE.put(1601861442L, 4956585L);
-            REIMBURSEMENTS_BY_CYCLE_DATE.put(1604845863L, 2121664L);
+            if (Config.baseCurrencyNetwork().isMainnet()) {
+                REIMBURSEMENTS_BY_CYCLE_DATE.put(1571349571L, 60760L);
+                REIMBURSEMENTS_BY_CYCLE_DATE.put(1574180991L, 2621000L);
+                REIMBURSEMENTS_BY_CYCLE_DATE.put(1576966522L, 4769100L);
+                REIMBURSEMENTS_BY_CYCLE_DATE.put(1579613568L, 0L);
+                REIMBURSEMENTS_BY_CYCLE_DATE.put(1582399054L, 9186600L);
+                REIMBURSEMENTS_BY_CYCLE_DATE.put(1585342220L, 12089400L);
+                REIMBURSEMENTS_BY_CYCLE_DATE.put(1588025030L, 5420700L);
+                REIMBURSEMENTS_BY_CYCLE_DATE.put(1591004931L, 9138760L);
+                REIMBURSEMENTS_BY_CYCLE_DATE.put(1593654027L, 10821807L);
+                REIMBURSEMENTS_BY_CYCLE_DATE.put(1596407074L, 2160157L);
+                REIMBURSEMENTS_BY_CYCLE_DATE.put(1599175867L, 8769408L);
+                REIMBURSEMENTS_BY_CYCLE_DATE.put(1601861442L, 4956585L);
+                REIMBURSEMENTS_BY_CYCLE_DATE.put(1604845863L, 2121664L);
 
-            COMPENSATIONS_BY_CYCLE_DATE.put(1555340856L, 6931863L);
-            COMPENSATIONS_BY_CYCLE_DATE.put(1558083590L, 2287000L);
-            COMPENSATIONS_BY_CYCLE_DATE.put(1560771266L, 2273000L);
-            COMPENSATIONS_BY_CYCLE_DATE.put(1563347672L, 2943772L);
-            COMPENSATIONS_BY_CYCLE_DATE.put(1566009595L, 10040170L);
-            COMPENSATIONS_BY_CYCLE_DATE.put(1568643566L, 8685115L);
-            COMPENSATIONS_BY_CYCLE_DATE.put(1571349571L, 7315879L);
-            COMPENSATIONS_BY_CYCLE_DATE.put(1574180991L, 12508300L);
-            COMPENSATIONS_BY_CYCLE_DATE.put(1576966522L, 5884500L);
-            COMPENSATIONS_BY_CYCLE_DATE.put(1579613568L, 8206000L);
-            COMPENSATIONS_BY_CYCLE_DATE.put(1582399054L, 3518364L);
-            COMPENSATIONS_BY_CYCLE_DATE.put(1585342220L, 6231700L);
-            COMPENSATIONS_BY_CYCLE_DATE.put(1588025030L, 4391400L);
-            COMPENSATIONS_BY_CYCLE_DATE.put(1591004931L, 3636463L);
-            COMPENSATIONS_BY_CYCLE_DATE.put(1593654027L, 6156631L);
-            COMPENSATIONS_BY_CYCLE_DATE.put(1596407074L, 5838368L);
-            COMPENSATIONS_BY_CYCLE_DATE.put(1599175867L, 6086442L);
-            COMPENSATIONS_BY_CYCLE_DATE.put(1601861442L, 5615973L);
-            COMPENSATIONS_BY_CYCLE_DATE.put(1604845863L, 7782667L);
+                COMPENSATIONS_BY_CYCLE_DATE.put(1555340856L, 6931863L);
+                COMPENSATIONS_BY_CYCLE_DATE.put(1558083590L, 2287000L);
+                COMPENSATIONS_BY_CYCLE_DATE.put(1560771266L, 2273000L);
+                COMPENSATIONS_BY_CYCLE_DATE.put(1563347672L, 2943772L);
+                COMPENSATIONS_BY_CYCLE_DATE.put(1566009595L, 10040170L);
+                COMPENSATIONS_BY_CYCLE_DATE.put(1568643566L, 8685115L);
+                COMPENSATIONS_BY_CYCLE_DATE.put(1571349571L, 7315879L);
+                COMPENSATIONS_BY_CYCLE_DATE.put(1574180991L, 12508300L);
+                COMPENSATIONS_BY_CYCLE_DATE.put(1576966522L, 5884500L);
+                COMPENSATIONS_BY_CYCLE_DATE.put(1579613568L, 8206000L);
+                COMPENSATIONS_BY_CYCLE_DATE.put(1582399054L, 3518364L);
+                COMPENSATIONS_BY_CYCLE_DATE.put(1585342220L, 6231700L);
+                COMPENSATIONS_BY_CYCLE_DATE.put(1588025030L, 4391400L);
+                COMPENSATIONS_BY_CYCLE_DATE.put(1591004931L, 3636463L);
+                COMPENSATIONS_BY_CYCLE_DATE.put(1593654027L, 6156631L);
+                COMPENSATIONS_BY_CYCLE_DATE.put(1596407074L, 5838368L);
+                COMPENSATIONS_BY_CYCLE_DATE.put(1599175867L, 6086442L);
+                COMPENSATIONS_BY_CYCLE_DATE.put(1601861442L, 5615973L);
+                COMPENSATIONS_BY_CYCLE_DATE.put(1604845863L, 7782667L);
+            }
         }
     }
 }
