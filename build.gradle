@@ -67,7 +67,7 @@ configure(subprojects) {
         loggingVersion = '1.2'
         lombokVersion = '1.18.22'
         mockitoVersion = '4.0.0'
-        netlayerVersion = '0.7.4'
+        netlayerVersion = '0.7.5'
         protobufVersion = '3.19.1'
         protocVersion = protobufVersion
         qrgenVersion = '1.3'
