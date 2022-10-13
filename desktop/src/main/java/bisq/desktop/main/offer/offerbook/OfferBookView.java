@@ -1083,7 +1083,7 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
     private TableColumn<OfferBookListItem, OfferBookListItem> getActionColumn() {
         TableColumn<OfferBookListItem, OfferBookListItem> column = new AutoTooltipTableColumn<>(Res.get("shared.actions")) {
             {
-                setMinWidth(180);
+                setMinWidth(90);
                 setSortable(false);
             }
         };
