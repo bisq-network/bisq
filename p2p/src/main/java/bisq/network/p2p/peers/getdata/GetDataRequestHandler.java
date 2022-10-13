@@ -43,7 +43,7 @@ import org.jetbrains.annotations.NotNull;
 public class GetDataRequestHandler {
     private static final long TIMEOUT = 180;
 
-    private static final int MAX_ENTRIES = 10000;
+    private static final int MAX_ENTRIES = 5000;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
