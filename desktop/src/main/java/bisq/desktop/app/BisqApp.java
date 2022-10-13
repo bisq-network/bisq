@@ -40,6 +40,8 @@ import bisq.core.dao.governance.voteresult.MissingDataRequestService;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.support.dispute.mediation.MediationManager;
+import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.Cookie;
@@ -369,7 +371,11 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
             if (shutdownStage1) {
                 shutDownByUserCheckOffers().thenAccept(shutdownStage2 -> {
                     if (shutdownStage2) {
-                        stop();
+                        shutDownByUserCheckDisputes().thenAccept(shutdownStage3 -> {
+                            if (shutdownStage3) {
+                                stop();
+                            }
+                        });
                     }
                 });
             }
@@ -377,6 +383,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     }
 
     private CompletableFuture<Boolean> shutDownByUserCheckTrades() {
+        log.info("Checking trades at shutdown");
         final CompletableFuture<Boolean> asyncStatus = new CompletableFuture<>();
         Instant fiveMinutesAgo = Instant.ofEpochSecond(Instant.now().getEpochSecond() - TimeUnit.MINUTES.toSeconds(5));
         String tradeIdsWithOperationsPending = "";
@@ -404,6 +411,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     }
 
     private CompletableFuture<Boolean> shutDownByUserCheckOffers() {
+        log.info("Checking offers at shutdown");
         final CompletableFuture<Boolean> asyncStatus = new CompletableFuture<>();
         boolean hasOpenOffers = false;
         for (OpenOffer openOffer : injector.getInstance(OpenOfferManager.class).getObservableList()) {
@@ -427,6 +435,24 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                     .onAction(() -> asyncStatus.complete(true))
                     .closeButtonText(Res.get("shared.cancel"))
                     .onClose(() -> asyncStatus.complete(false))
+                    .show();
+        } else {
+            asyncStatus.complete(true);
+        }
+        return asyncStatus;
+    }
+
+    private CompletableFuture<Boolean> shutDownByUserCheckDisputes() {
+        log.info("Checking disputes at shutdown");
+        final CompletableFuture<Boolean> asyncStatus = new CompletableFuture<>();
+        if (injector.getInstance(MediationManager.class).hasPendingMessageAtShutdown() ||
+            injector.getInstance(RefundManager.class).hasPendingMessageAtShutdown()) {
+            // We show a popup to inform user that some messages are still being sent.
+            new Popup().warning(Res.get("popup.info.shutDownWithDisputeInit"))
+                    .actionButtonText(Res.get("shared.okWait"))
+                    .onAction(() -> asyncStatus.complete(false))
+                    .closeButtonText(Res.get("shared.closeAnywayDanger"))
+                    .onClose(() -> asyncStatus.complete(true))
                     .show();
         } else {
             asyncStatus.complete(true);
