@@ -140,6 +140,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     private boolean denyApiTaker;
     private boolean notifyOnPreRelease;
     private boolean useFullModeDaoMonitor;
+    private boolean useBitcoinUrisInQrCodes = true;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -209,7 +210,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setShowOffersMatchingMyAccounts(showOffersMatchingMyAccounts)
                 .setDenyApiTaker(denyApiTaker)
                 .setNotifyOnPreRelease(notifyOnPreRelease)
-                .setUseFullModeDaoMonitor(useFullModeDaoMonitor);
+                .setUseFullModeDaoMonitor(useFullModeDaoMonitor)
+                .setUseBitcoinUrisInQrCodes(useBitcoinUrisInQrCodes);
 
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((protobuf.TradeCurrency) e.toProtoMessage()));
@@ -313,7 +315,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getShowOffersMatchingMyAccounts(),
                 proto.getDenyApiTaker(),
                 proto.getNotifyOnPreRelease(),
-                proto.getUseFullModeDaoMonitor()
+                proto.getUseFullModeDaoMonitor(),
+                proto.getUseBitcoinUrisInQrCodes()
         );
     }
 }

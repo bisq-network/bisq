@@ -80,6 +80,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
@@ -97,6 +98,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import javafx.util.Callback;
+import javafx.util.Duration;
 import javafx.util.StringConverter;
 
 import java.io.File;
@@ -122,7 +124,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     private ToggleButton showOwnOffersInOfferBook, useAnimations, useDarkMode, sortMarketCurrenciesNumerically,
             avoidStandbyMode, useCustomFee, autoConfirmXmrToggle, hideNonAccountPaymentMethodsToggle, denyApiTakerToggle,
-            notifyOnPreReleaseToggle, isDaoFullNodeToggleButton, fullModeDaoMonitorToggleButton;
+            notifyOnPreReleaseToggle, isDaoFullNodeToggleButton, fullModeDaoMonitorToggleButton, useBitcoinUrisToggle;
     private int gridRow = 0;
     private int displayCurrenciesGridRowIndex = 0;
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, ignoreDustThresholdInputTextField,
@@ -263,7 +265,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initializeGeneralOptions() {
-        int titledGroupBgRowSpan = displayStandbyModeFeature ? 10 : 9;
+        int titledGroupBgRowSpan = displayStandbyModeFeature ? 11 : 10;
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, titledGroupBgRowSpan, Res.get("setting.preferences.general"));
         GridPane.setColumnSpan(titledGroupBg, 1);
 
@@ -416,6 +418,13 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             avoidStandbyMode = addSlideToggleButton(root, ++gridRow,
                     Res.get("setting.preferences.avoidStandbyMode"));
         }
+
+        useBitcoinUrisToggle = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.useBitcoinUris"));
+        Tooltip tooltip = new Tooltip(Res.get("setting.preferences.useBitcoinUris.tooltip"));
+        tooltip.setShowDuration(Duration.millis(8000));
+        tooltip.setShowDelay(Duration.millis(300));
+        tooltip.setHideDelay(Duration.millis(0));
+        Tooltip.install(useBitcoinUrisToggle, tooltip);
     }
 
     private void initializeSeparator() {
@@ -904,6 +913,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         });
 
+        useBitcoinUrisToggle.setSelected(preferences.isUseBitcoinUrisInQrCodes());
+        useBitcoinUrisToggle.setOnAction(e ->
+                preferences.setUseBitcoinUrisInQrCodes(useBitcoinUrisToggle.isSelected()));
+
         btcExplorerTextField.setText(preferences.getBlockChainExplorer().name);
         bsqExplorerTextField.setText(preferences.getBsqBlockChainExplorer().name);
 
@@ -1172,6 +1185,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         userCountryComboBox.setOnAction(null);
         editCustomBtcExplorer.setOnAction(null);
         editCustomBsqExplorer.setOnAction(null);
+        useBitcoinUrisToggle.setOnAction(null);
         deviationInputTextField.textProperty().removeListener(deviationListener);
         deviationInputTextField.focusedProperty().removeListener(deviationFocusedListener);
         transactionFeeInputTextField.focusedProperty().removeListener(transactionFeeFocusedListener);

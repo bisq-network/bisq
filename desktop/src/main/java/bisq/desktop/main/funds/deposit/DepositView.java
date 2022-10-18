@@ -63,6 +63,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -89,6 +90,7 @@ import java.io.ByteArrayInputStream;
 
 import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -184,7 +186,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
         Tooltip.install(qrCodeImageView, new Tooltip(Res.get("shared.openLargeQRWindow")));
         qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
                 () -> UserThread.runAfter(
-                        () -> new QRCodeWindow(getBitcoinURI()).show(),
+                        () -> new QRCodeWindow(getStringToEncode()).show(),
                         200, TimeUnit.MILLISECONDS)));
         GridPane.setRowIndex(qrCodeImageView, gridRow);
         GridPane.setRowSpan(qrCodeImageView, 4);
@@ -200,6 +202,12 @@ public class DepositView extends ActivatableView<VBox, Void> {
         amountTextField.setMaxWidth(380);
         if (DevEnv.isDevMode())
             amountTextField.setText("10");
+
+        Pattern pattern = Pattern.compile("^\\d+\\.?\\d*");
+        amountTextField.setTextFormatter(new TextFormatter<>(change -> {
+            String newText = change.getControlNewText();
+            return newText.isEmpty() || pattern.matcher(newText).matches() ? change : null;
+        }));
 
         titledGroupBg.setVisible(false);
         titledGroupBg.setManaged(false);
@@ -263,6 +271,15 @@ public class DepositView extends ActivatableView<VBox, Void> {
 
         if (tableView.getSelectionModel().getSelectedItem() == null && !sortedList.isEmpty())
             tableView.getSelectionModel().select(0);
+
+        if (!GUIUtil.getPreferences().isUseBitcoinUrisInQrCodes()) {
+            if (!amountTextField.getText().isEmpty()) {
+                amountTextField.clear();
+            }
+            amountTextField.setDisable(true);
+        } else {
+            amountTextField.setDisable(false);
+        }
     }
 
     @Override
@@ -299,7 +316,7 @@ public class DepositView extends ActivatableView<VBox, Void> {
     private void updateQRCode() {
         if (addressTextField.getAddress() != null && !addressTextField.getAddress().isEmpty()) {
             final byte[] imageBytes = QRCode
-                    .from(getBitcoinURI())
+                    .from(getStringToEncode())
                     .withSize(150, 150) // code has 41 elements 8 px is border with 150 we get 3x scale and min. border
                     .to(ImageType.PNG)
                     .stream()
@@ -329,6 +346,14 @@ public class DepositView extends ActivatableView<VBox, Void> {
         return GUIUtil.getBitcoinURI(addressTextField.getAddress(),
                 getAmountAsCoin(),
                 paymentLabelString);
+    }
+
+    @NotNull
+    private String getStringToEncode() {
+        String address = addressTextField.getAddress() != null ?
+                addressTextField.getAddress() : "";
+        return GUIUtil.getPreferences().isUseBitcoinUrisInQrCodes() ?
+                getBitcoinURI() : address;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
