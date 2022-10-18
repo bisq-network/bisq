@@ -18,7 +18,7 @@
 package bisq.core.trade.protocol.bisq_v1.tasks.seller;
 
 import bisq.core.btc.wallet.TradeWalletService;
-import bisq.core.dao.governance.param.Param;
+import bisq.core.trade.DelayedPayoutAddressProvider;
 import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
@@ -44,7 +44,7 @@ public class SellerCreatesDelayedPayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
-            String donationAddressString = processModel.getDaoFacade().getParamValue(Param.RECIPIENT_BTC_ADDRESS);
+            String donationAddressString = DelayedPayoutAddressProvider.getDelayedPayoutAddress(processModel.getDaoFacade());
             Coin minerFee = trade.getTradeTxFee();
             TradeWalletService tradeWalletService = processModel.getTradeWalletService();
             Transaction depositTx = checkNotNull(processModel.getDepositTx());
