@@ -143,6 +143,7 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
     private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> depositColumn;
     private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> signingStateColumn;
     private AutoTooltipTableColumn<OfferBookListItem, OfferBookListItem> avatarColumn;
+    private TableColumn<OfferBookListItem, OfferBookListItem> actionColumn;
     private TableView<OfferBookListItem> tableView;
 
     private int gridRow = 0;
@@ -261,8 +262,9 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
         tableView.getColumns().add(depositColumn);
         signingStateColumn = getSigningStateColumn();
         tableView.getColumns().add(signingStateColumn);
+        actionColumn = getActionColumn();
+        tableView.getColumns().add(actionColumn);
         avatarColumn = getAvatarColumn();
-        tableView.getColumns().add(getActionColumn());
         tableView.getColumns().add(avatarColumn);
 
         tableView.getSortOrder().add(priceColumn);
@@ -437,6 +439,8 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
 
         currencySelectionSubscriber = currencySelectionBinding.subscribe((observable, oldValue, newValue) -> {
         });
+
+        updateActionColumn();
 
         tableView.setItems(model.getOfferList());
 
@@ -1307,6 +1311,11 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
         createOfferButton.setText(Res.get("offerbook.createNewOffer",
                 model.getDirection() == OfferDirection.BUY ? Res.get("shared.buy") : Res.get("shared.sell"),
                 getTradeCurrencyCode()).toUpperCase());
+    }
+
+    private void updateActionColumn() {
+        boolean hasOwnOffers = model.getOfferList().stream().anyMatch(offerBookListItem -> model.isMyOffer(offerBookListItem.getOffer()));
+        actionColumn.setMinWidth(hasOwnOffers ? 180 : 90);
     }
 
     abstract String getTradeCurrencyCode();
