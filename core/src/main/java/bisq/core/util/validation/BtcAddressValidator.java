@@ -43,6 +43,9 @@ public final class BtcAddressValidator extends InputValidator {
     }
 
     private ValidationResult validateBtcAddress(String input) {
+        if (allowEmpty && (input == null || input.trim().isEmpty())) {
+            return new ValidationResult(true);
+        }
         try {
             Address.fromString(Config.baseCurrencyNetworkParameters(), input);
             return new ValidationResult(true);
