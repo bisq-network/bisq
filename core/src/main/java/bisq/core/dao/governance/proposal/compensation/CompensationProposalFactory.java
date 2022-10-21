@@ -40,17 +40,22 @@ import org.bitcoinj.core.Transaction;
 import javax.inject.Inject;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 /**
  * Creates the CompensationProposal and the transaction.
  */
 @Slf4j
 public class CompensationProposalFactory extends BaseProposalFactory<CompensationProposal> {
-
     private Coin requestedBsq;
     private String bsqAddress;
+    @Nullable
+    private String btcFeeReceiverAddress;
+    private boolean isReducedIssuanceAmount;
 
     @Inject
     public CompensationProposalFactory(BsqWalletService bsqWalletService,
@@ -65,22 +70,34 @@ public class CompensationProposalFactory extends BaseProposalFactory<Compensatio
 
     public ProposalWithTransaction createProposalWithTransaction(String name,
                                                                  String link,
-                                                                 Coin requestedBsq)
+                                                                 Coin requestedBsq,
+                                                                 @Nullable String btcFeeReceiverAddress,
+                                                                 boolean isReducedIssuanceAmount)
             throws ProposalValidationException, InsufficientMoneyException, TxException {
         this.requestedBsq = requestedBsq;
+        this.btcFeeReceiverAddress = btcFeeReceiverAddress;
+        this.isReducedIssuanceAmount = isReducedIssuanceAmount;
         this.bsqAddress = bsqWalletService.getUnusedBsqAddressAsString();
 
-        return super.createProposalWithTransaction(name, link);
+        return createProposalWithTransaction(name, link);
     }
 
     @Override
     protected CompensationProposal createProposalWithoutTxId() {
+        Map<String, String> extraDataMap = btcFeeReceiverAddress != null || isReducedIssuanceAmount ?
+                new HashMap<>() : null;
+        if (btcFeeReceiverAddress != null) {
+            extraDataMap.put("btcFeeReceiverAddress", btcFeeReceiverAddress);
+        }
+        if (isReducedIssuanceAmount) {
+            extraDataMap.put("isReducedIssuanceAmount", "1");
+        }
         return new CompensationProposal(
                 name,
                 link,
                 requestedBsq,
                 bsqAddress,
-                new HashMap<>());
+                extraDataMap);
     }
 
     @Override

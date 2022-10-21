@@ -35,6 +35,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
@@ -42,6 +43,10 @@ import javax.annotation.concurrent.Immutable;
 @EqualsAndHashCode(callSuper = true)
 @Value
 public final class CompensationProposal extends Proposal implements IssuanceProposal, ImmutableDaoStateModel {
+    // Keys for extra map
+    private static final String BTC_FEE_RECEIVER_ADDRESS = "feeAddr";
+    private static final String IS_REDUCED_ISSUANCE_AMOUNT = "isRedu";
+
     private final long requestedBsq;
     private final String bsqAddress;
 
@@ -49,7 +54,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
                                 String link,
                                 Coin requestedBsq,
                                 String bsqAddress,
-                                Map<String, String> extraDataMap) {
+                                @Nullable Map<String, String> extraDataMap) {
         this(name,
                 link,
                 bsqAddress,
@@ -72,7 +77,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
                                  byte version,
                                  long creationDate,
                                  String txId,
-                                 Map<String, String> extraDataMap) {
+                                 @Nullable Map<String, String> extraDataMap) {
         super(name,
                 link,
                 version,
@@ -109,6 +114,17 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // Added at v.1.9.6
+    @Nullable
+    public String getBtcFeeReceiverAddress() {
+        return extraDataMap != null ? extraDataMap.get(BTC_FEE_RECEIVER_ADDRESS) : null;
+    }
+
+    // Added at v.1.9.6
+    public boolean isReducedIssuanceAmount() {
+        return extraDataMap != null && "1".equals(extraDataMap.get(IS_REDUCED_ISSUANCE_AMOUNT));
+    }
 
     @Override
     public Coin getRequestedBsq() {
@@ -152,6 +168,8 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
         return "CompensationProposal{" +
                 "\n     requestedBsq=" + requestedBsq +
                 ",\n     bsqAddress='" + bsqAddress + '\'' +
+                ",\n     btcFeeReceiverAddress='" + getBtcFeeReceiverAddress() + '\'' +
+                ",\n     isReducedIssuanceAmount='" + isReducedIssuanceAmount() + '\'' +
                 "\n} " + super.toString();
     }
 }
