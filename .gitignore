@@ -35,3 +35,4 @@ deploy
 .java-version
 .localnet
 /apitest/src/main/resources/dao-setup*
+.run
