@@ -17,11 +17,13 @@
 
 package bisq.core.util;
 
-import bisq.core.filter.FilterManager;
+import bisq.core.dao.DaoFacade;
+import bisq.core.dao.state.model.blockchain.BaseTxOutput;
+import bisq.core.dao.state.model.governance.CompensationProposal;
+import bisq.core.dao.state.model.governance.IssuanceType;
+import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.common.config.Config;
-
-import org.bitcoinj.core.Coin;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -32,9 +34,13 @@ import java.util.Random;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class FeeReceiverSelector {
     public static final String BTC_FEE_RECEIVER_ADDRESS = "38bZBj5peYS3Husdz7AH3gEUiUbYRD951t";
+    public static final int REDUCED_ISSUANCE_AMOUNT_FACTOR = 2;
+    public static final int MAX_AGE = 76896; // 1.5 years with 144 blocks/day;
 
     public static String getMostRecentAddress() {
         return Config.baseCurrencyNetwork().isMainnet() ? BTC_FEE_RECEIVER_ADDRESS :
@@ -42,45 +48,77 @@ public class FeeReceiverSelector {
                         "2MzBNTJDjjXgViKBGnatDU3yWkJ8pJkEg9w";
     }
 
-    public static String getAddress(FilterManager filterManager) {
-        return getAddress(filterManager, new Random());
-    }
-
-    @VisibleForTesting
-    static String getAddress(FilterManager filterManager, Random rnd) {
-        List<String> feeReceivers = Optional.ofNullable(filterManager.getFilter())
-                .flatMap(f -> Optional.ofNullable(f.getBtcFeeReceiverAddresses()))
-                .orElse(List.of());
-
+    public static String getBtcFeeReceiverAddress(DaoFacade daoFacade) {
+        int height = daoFacade.getChainHeight();
         List<Long> amountList = new ArrayList<>();
         List<String> receiverAddressList = new ArrayList<>();
+        daoFacade.getIssuanceSetForType(IssuanceType.COMPENSATION)
+                .forEach(issuance -> {
+                    Optional<CompensationProposal> compensationProposal = daoFacade.findCompensationProposal(issuance.getTxId());
 
-        feeReceivers.forEach(e -> {
-            try {
-                String[] tokens = e.split("#");
-                amountList.add(Coin.parseCoin(tokens[1]).longValue()); // total amount the victim should receive
-                receiverAddressList.add(tokens[0]);                    // victim's receiver address
-            } catch (RuntimeException ignore) {
-                // If input format is not as expected we ignore entry
-            }
-        });
+                    int issuanceHeight = issuance.getChainHeight();
+                    checkArgument(issuanceHeight <= height,
+                            "issuanceHeight must not be larger as currentChainHeight");
+                    long weightedAmount = getWeightedAmount(issuance.getAmount(), issuanceHeight, height);
+                    boolean isReducedIssuanceAmount = compensationProposal.map(CompensationProposal::isReducedIssuanceAmount).orElse(false);
+                    long amount = isReducedIssuanceAmount ? weightedAmount * 10 * REDUCED_ISSUANCE_AMOUNT_FACTOR : weightedAmount;
 
+                    // We take the btcFeeReceiverAddress from the compensationProposal if set, otherwise we take the
+                    // address from the btc input from the proposal transaction which is at index 1.
+                    Optional<String> address = compensationProposal.filter(proposal -> proposal.getBtcFeeReceiverAddress() != null)
+                            .map(CompensationProposal::getBtcFeeReceiverAddress)
+                            .or(() -> daoFacade.getTx(issuance.getTxId())
+                                    .flatMap(tx -> daoFacade.getTxOutput(tx.getTxInputs().get(1).getConnectedTxOutputKey())
+                                            .map(BaseTxOutput::getAddress)));
+                    if (address.isPresent() && new BtcAddressValidator().validate(address.get()).isValid) {
+                        receiverAddressList.add(address.get());
+                        //  Only if we found a valid address we add the amount
+                        amountList.add(amount);
+                    }
+                });
         if (!amountList.isEmpty()) {
-            return receiverAddressList.get(weightedSelection(amountList, rnd));
+            int index = getRandomIndex(amountList, new Random());
+            return receiverAddressList.get(index);
+        } else {
+            return getMostRecentAddress();
         }
-
-        // If no fee address receiver is defined via filter we use the hard coded recent address
-        return getMostRecentAddress();
     }
 
     @VisibleForTesting
-    static int weightedSelection(List<Long> weights, Random rnd) {
+    static int getRandomIndex(List<Long> weights, Random random) {
         long sum = weights.stream().mapToLong(n -> n).sum();
-        long target = rnd.longs(0, sum).findFirst().orElseThrow();
-        int i;
-        for (i = 0; i < weights.size() && target >= 0; i++) {
-            target -= weights.get(i);
+        long target = random.longs(0, sum).findFirst().orElseThrow() + 1;
+        return findIndex(weights, target);
+    }
+
+    @VisibleForTesting
+    static int findIndex(List<Long> weights, long target) {
+        int currentRange = 0;
+        for (int i = 0; i < weights.size(); i++) {
+            currentRange += weights.get(i);
+            if (currentRange >= target) {
+                return i;
+            }
         }
-        return i - 1;
+        return 0;
+    }
+
+    // Borrowed from MeritConsensus (unit tested there)
+    private static long getWeightedAmount(long amount, int issuanceHeight, int blockHeight) {
+        if (issuanceHeight > blockHeight)
+            throw new IllegalArgumentException("issuanceHeight must not be larger than blockHeight. issuanceHeight=" + issuanceHeight + "; blockHeight=" + blockHeight);
+        if (blockHeight < 0)
+            throw new IllegalArgumentException("blockHeight must not be negative. blockHeight=" + blockHeight);
+        if (amount < 0)
+            throw new IllegalArgumentException("amount must not be negative. amount" + amount);
+        if (issuanceHeight < 0)
+            throw new IllegalArgumentException("issuanceHeight must not be negative. issuanceHeight=" + issuanceHeight);
+
+        long age = Math.min(MAX_AGE, blockHeight - issuanceHeight);
+        long inverseAge = MAX_AGE - age;
+        long weightedAmount = (amount * inverseAge) / MAX_AGE;
+
+        log.debug("getWeightedAmount: age={}, inverseAge={}, weightedAmount={}, amount={}", age, inverseAge, weightedAmount, amount);
+        return weightedAmount;
     }
 }
