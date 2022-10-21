@@ -57,6 +57,7 @@ import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.validation.BtcAddressValidator;
 import bisq.core.util.validation.InputValidator;
 import bisq.core.util.validation.RegexValidator;
 
@@ -72,10 +73,14 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputControl;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
 
 import javafx.beans.value.ChangeListener;
 
@@ -116,7 +121,7 @@ public class ProposalDisplay {
     public InputTextField nameTextField;
     public InputTextField linkInputTextField;
     @Nullable
-    public InputTextField requestedBsqTextField, paramValueTextField;
+    public InputTextField requestedBsqTextField, btcFeeReceiverAddressTextField, paramValueTextField;
     @Nullable
     public ComboBox<Param> paramComboBox;
     @Nullable
@@ -125,6 +130,8 @@ public class ProposalDisplay {
     public ComboBox<BondedRoleType> bondedRoleTypeComboBox;
     @Nullable
     public ComboBox<Asset> assetComboBox;
+    @Nullable
+    public ToggleButton isReducedIssuanceAmountToggle;
 
     @Getter
     private int gridRow;
@@ -188,6 +195,8 @@ public class ProposalDisplay {
 
         switch (proposalType) {
             case COMPENSATION_REQUEST:
+                titledGroupBgRowSpan = 7;
+                break;
             case REIMBURSEMENT_REQUEST:
             case CONFISCATE_BOND:
             case REMOVE_ASSET:
@@ -266,7 +275,6 @@ public class ProposalDisplay {
             case REIMBURSEMENT_REQUEST:
                 requestedBsqTextField = addInputTextField(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.requestedBsq"));
-                checkNotNull(requestedBsqTextField, "requestedBsqTextField must not be null");
                 inputControls.add(requestedBsqTextField);
 
                 if (isMakeProposalScreen) {
@@ -279,6 +287,21 @@ public class ProposalDisplay {
                         bsqValidator.setMaxValue(daoFacade.getMaxReimbursementRequestAmount());
                     }
                     requestedBsqTextField.setValidator(bsqValidator);
+                }
+
+                if (proposalType == ProposalType.COMPENSATION_REQUEST) {
+                    if (isMakeProposalScreen) {
+                        isReducedIssuanceAmountToggle = FormBuilder.addSlideToggleButton(gridPane, ++gridRow,
+                                Res.get("dao.proposal.display.isReducedIssuanceAmount"));
+                        GridPane.setHalignment(isReducedIssuanceAmountToggle, HPos.LEFT);
+                        GridPane.setMargin(isReducedIssuanceAmountToggle, new Insets(-5, 0, -15, -10));
+                    }
+                    btcFeeReceiverAddressTextField = addInputTextField(gridPane, ++gridRow,
+                            Res.get("dao.proposal.display.btcFeeReceiverAddress"));
+                    BtcAddressValidator btcAddressValidator = new BtcAddressValidator();
+                    btcAddressValidator.setAllowEmpty(true);
+                    btcFeeReceiverAddressTextField.setValidator(btcAddressValidator);
+                    inputControls.add(btcFeeReceiverAddressTextField);
                 }
                 break;
             case CHANGE_PARAM:
@@ -529,7 +552,22 @@ public class ProposalDisplay {
         if (proposal instanceof CompensationProposal) {
             CompensationProposal compensationProposal = (CompensationProposal) proposal;
             checkNotNull(requestedBsqTextField, "requestedBsqTextField must not be null");
-            requestedBsqTextField.setText(bsqFormatter.formatCoinWithCode(compensationProposal.getRequestedBsq()));
+
+            String requestedBsq = bsqFormatter.formatCoinWithCode(compensationProposal.getRequestedBsq());
+            if (compensationProposal.isReducedIssuanceAmount()) {
+                requestedBsqTextField.setPromptText(Res.get("dao.proposal.display.reducedBsqLabel"));
+                // Reduced amount is 10% of full amount. For information purpose we show full amount as well,
+                // but for the issuance the requested amount (10%) is used.
+                String fullAmount = bsqFormatter.formatCoinWithCode(compensationProposal.getRequestedBsq().multiply(10));
+                requestedBsqTextField.setText(Res.get("dao.proposal.display.reducedBsq", requestedBsq, fullAmount));
+            } else {
+                requestedBsqTextField.setText(requestedBsq);
+            }
+
+            String btcFeeReceiverAddress = compensationProposal.getBtcFeeReceiverAddress();
+            if (btcFeeReceiverAddressTextField != null && btcFeeReceiverAddress != null) {
+                btcFeeReceiverAddressTextField.setText(btcFeeReceiverAddress);
+            }
         } else if (proposal instanceof ReimbursementProposal) {
             ReimbursementProposal reimbursementProposal = (ReimbursementProposal) proposal;
             checkNotNull(requestedBsqTextField, "requestedBsqTextField must not be null");
@@ -591,9 +629,9 @@ public class ProposalDisplay {
     private void addListeners() {
         inputControls.stream()
                 .filter(Objects::nonNull).forEach(inputControl -> {
-            inputControl.textProperty().addListener(inputListener);
-            inputControl.focusedProperty().addListener(focusOutListener);
-        });
+                    inputControl.textProperty().addListener(inputListener);
+                    inputControl.focusedProperty().addListener(focusOutListener);
+                });
         comboBoxes.stream()
                 .filter(Objects::nonNull)
                 .forEach(comboBox -> comboBox.getSelectionModel().selectedItemProperty().addListener(inputListener));
@@ -602,9 +640,9 @@ public class ProposalDisplay {
     public void removeListeners() {
         inputControls.stream()
                 .filter(Objects::nonNull).forEach(inputControl -> {
-            inputControl.textProperty().removeListener(inputListener);
-            inputControl.focusedProperty().removeListener(focusOutListener);
-        });
+                    inputControl.textProperty().removeListener(inputListener);
+                    inputControl.focusedProperty().removeListener(focusOutListener);
+                });
         comboBoxes.stream()
                 .filter(Objects::nonNull)
                 .forEach(comboBox -> comboBox.getSelectionModel().selectedItemProperty().removeListener(inputListener));

@@ -296,7 +296,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
                 if (requiredBond > availableBalance) {
                     long missing = requiredBond - availableBalance;
                     new Popup().warning(Res.get("dao.proposal.create.missingBsqFundsForBond",
-                            bsqFormatter.formatCoinWithCode(missing)))
+                                    bsqFormatter.formatCoinWithCode(missing)))
                             .actionButtonText(Res.get("dao.proposal.create.publish"))
                             .onAction(() -> showFeeInfoAndPublishMyProposal(proposal, transaction, miningFee, txVsize, fee))
                             .show();
@@ -340,7 +340,11 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         }
     }
 
-    private void showFeeInfoAndPublishMyProposal(Proposal proposal, Transaction transaction, Coin miningFee, int txVsize, Coin fee) {
+    private void showFeeInfoAndPublishMyProposal(Proposal proposal,
+                                                 Transaction transaction,
+                                                 Coin miningFee,
+                                                 int txVsize,
+                                                 Coin fee) {
         if (!DevEnv.isDevMode()) {
             Coin btcForIssuance = null;
 
@@ -394,9 +398,21 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             case COMPENSATION_REQUEST:
                 checkNotNull(proposalDisplay.requestedBsqTextField,
                         "proposalDisplay.requestedBsqTextField must not be null");
+                Coin requestedBsq = ParsingUtils.parseToCoin(proposalDisplay.requestedBsqTextField.getText(), bsqFormatter);
+
+                String btcFeeReceiverAddress = null;
+                if (proposalDisplay.btcFeeReceiverAddressTextField != null &&
+                        proposalDisplay.btcFeeReceiverAddressTextField.getText() != null
+                        && !proposalDisplay.btcFeeReceiverAddressTextField.getText().trim().isEmpty()) {
+                    btcFeeReceiverAddress = proposalDisplay.btcFeeReceiverAddressTextField.getText();
+                }
+                boolean isReducedIssuanceAmount = proposalDisplay.isReducedIssuanceAmountToggle != null &&
+                        proposalDisplay.isReducedIssuanceAmountToggle.isSelected();
                 return daoFacade.getCompensationProposalWithTransaction(name,
                         link,
-                        ParsingUtils.parseToCoin(proposalDisplay.requestedBsqTextField.getText(), bsqFormatter));
+                        requestedBsq,
+                        btcFeeReceiverAddress,
+                        isReducedIssuanceAmount);
             case REIMBURSEMENT_REQUEST:
                 checkNotNull(proposalDisplay.requestedBsqTextField,
                         "proposalDisplay.requestedBsqTextField must not be null");
@@ -504,16 +520,16 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
         if (proposalDisplay != null) {
             proposalDisplay.getInputControls().stream()
                     .filter(Objects::nonNull).forEach(e -> {
-                if (e instanceof InputTextField) {
-                    InputTextField inputTextField = (InputTextField) e;
-                    inputsValid.set(inputsValid.get() &&
-                            inputTextField.getValidator() != null &&
-                            inputTextField.getValidator().validate(e.getText()).isValid);
-                }
-            });
+                        if (e instanceof InputTextField) {
+                            InputTextField inputTextField = (InputTextField) e;
+                            inputsValid.set(inputsValid.get() &&
+                                    inputTextField.getValidator() != null &&
+                                    inputTextField.getValidator().validate(e.getText()).isValid);
+                        }
+                    });
             proposalDisplay.getComboBoxes().stream()
                     .filter(Objects::nonNull).forEach(comboBox -> inputsValid.set(inputsValid.get() &&
-                    comboBox.getSelectionModel().getSelectedItem() != null));
+                            comboBox.getSelectionModel().getSelectedItem() != null));
 
             InputTextField linkInputTextField = proposalDisplay.linkInputTextField;
             inputsValid.set(inputsValid.get() &&
