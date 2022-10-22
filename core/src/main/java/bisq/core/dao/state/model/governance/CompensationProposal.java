@@ -44,8 +44,8 @@ import javax.annotation.concurrent.Immutable;
 @Value
 public final class CompensationProposal extends Proposal implements IssuanceProposal, ImmutableDaoStateModel {
     // Keys for extra map
-    private static final String BTC_FEE_RECEIVER_ADDRESS = "feeAddr";
-    private static final String IS_REDUCED_ISSUANCE_AMOUNT = "isRedu";
+    public static final String BTC_FEE_RECEIVER_ADDRESS = "feeAddr";
+    public static final String IS_REDUCED_ISSUANCE_AMOUNT = "isRedu";
 
     private final long requestedBsq;
     private final String bsqAddress;

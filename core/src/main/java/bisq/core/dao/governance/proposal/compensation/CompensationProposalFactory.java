@@ -87,10 +87,10 @@ public class CompensationProposalFactory extends BaseProposalFactory<Compensatio
         Map<String, String> extraDataMap = btcFeeReceiverAddress != null || isReducedIssuanceAmount ?
                 new HashMap<>() : null;
         if (btcFeeReceiverAddress != null) {
-            extraDataMap.put("btcFeeReceiverAddress", btcFeeReceiverAddress);
+            extraDataMap.put(CompensationProposal.BTC_FEE_RECEIVER_ADDRESS, btcFeeReceiverAddress);
         }
         if (isReducedIssuanceAmount) {
-            extraDataMap.put("isReducedIssuanceAmount", "1");
+            extraDataMap.put(CompensationProposal.IS_REDUCED_ISSUANCE_AMOUNT, "1");
         }
         return new CompensationProposal(
                 name,

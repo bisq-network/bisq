@@ -19,6 +19,7 @@ package bisq.core.util;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.state.model.blockchain.BaseTxOutput;
+import bisq.core.dao.state.model.blockchain.TxInput;
 import bisq.core.dao.state.model.governance.CompensationProposal;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.util.validation.BtcAddressValidator;
@@ -63,13 +64,24 @@ public class FeeReceiverSelector {
                     boolean isReducedIssuanceAmount = compensationProposal.map(CompensationProposal::isReducedIssuanceAmount).orElse(false);
                     long amount = isReducedIssuanceAmount ? weightedAmount * 10 * REDUCED_ISSUANCE_AMOUNT_FACTOR : weightedAmount;
 
-                    // We take the btcFeeReceiverAddress from the compensationProposal if set, otherwise we take the
-                    // address from the btc input from the proposal transaction which is at index 1.
+                    // We take the btcFeeReceiverAddress from the compensationProposal if set, otherwise we
+                    // use the address connected to the first input which is a BSQ input.
+                    // We cannot use the BTC input as we do not have that spending BTC transaction to derive the address from.
+                    // The BTC wallet has access only to our own transactions.
+                    // Only for BSQ we have all transactions. The trade fee will be received as BTC in the BSQ and the contributor can transfer it to their BTC wallet.
                     Optional<String> address = compensationProposal.filter(proposal -> proposal.getBtcFeeReceiverAddress() != null)
                             .map(CompensationProposal::getBtcFeeReceiverAddress)
                             .or(() -> daoFacade.getTx(issuance.getTxId())
-                                    .flatMap(tx -> daoFacade.getTxOutput(tx.getTxInputs().get(1).getConnectedTxOutputKey())
-                                            .map(BaseTxOutput::getAddress)));
+                                    .flatMap(tx -> {
+                                        try {
+                                            checkArgument(!tx.getTxInputs().isEmpty());
+                                            TxInput firstBsqTxInput = tx.getTxInputs().get(0);
+                                            return daoFacade.getTxOutput(firstBsqTxInput.getConnectedTxOutputKey())
+                                                    .map(BaseTxOutput::getAddress);
+                                        } catch (Throwable t) {
+                                            return Optional.empty();
+                                        }
+                                    }));
                     if (address.isPresent() && new BtcAddressValidator().validate(address.get()).isValid) {
                         receiverAddressList.add(address.get());
                         //  Only if we found a valid address we add the amount

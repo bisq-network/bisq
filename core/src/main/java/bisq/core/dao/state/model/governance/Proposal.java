@@ -145,7 +145,7 @@ public abstract class Proposal implements PersistablePayload, NetworkPayload, Co
                 "\n     txId='" + txId + '\'' +
                 ",\n     name='" + name + '\'' +
                 ",\n     link='" + link + '\'' +
-                ",\n     txId='" + txId + '\'' +
+                ",\n     extraDataMap='" + extraDataMap + '\'' +
                 ",\n     version=" + version +
                 ",\n     creationDate=" + new Date(creationDate) +
                 "\n}";
