@@ -26,7 +26,6 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.bonding.BondingView;
 import bisq.desktop.main.dao.bonding.bonds.BondsView;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqValidator;
@@ -291,7 +290,7 @@ public class ProposalDisplay {
 
                 if (proposalType == ProposalType.COMPENSATION_REQUEST) {
                     if (isMakeProposalScreen) {
-                        isReducedIssuanceAmountToggle = FormBuilder.addSlideToggleButton(gridPane, ++gridRow,
+                        isReducedIssuanceAmountToggle = addSlideToggleButton(gridPane, ++gridRow,
                                 Res.get("dao.proposal.display.isReducedIssuanceAmount"));
                         GridPane.setHalignment(isReducedIssuanceAmountToggle, HPos.LEFT);
                         GridPane.setMargin(isReducedIssuanceAmountToggle, new Insets(-5, 0, -15, -10));
@@ -306,7 +305,7 @@ public class ProposalDisplay {
                 break;
             case CHANGE_PARAM:
                 checkNotNull(gridPane, "gridPane must not be null");
-                paramComboBox = FormBuilder.addComboBox(gridPane, ++gridRow,
+                paramComboBox = addComboBox(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.paramComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(paramComboBox, "paramComboBox must not be null");
@@ -345,7 +344,7 @@ public class ProposalDisplay {
                 paramComboBox.getSelectionModel().selectedItemProperty().addListener(paramChangeListener);
                 break;
             case BONDED_ROLE:
-                bondedRoleTypeComboBox = FormBuilder.addComboBox(gridPane, ++gridRow,
+                bondedRoleTypeComboBox = addComboBox(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.bondedRoleComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(bondedRoleTypeComboBox, "bondedRoleTypeComboBox must not be null");
@@ -377,7 +376,7 @@ public class ProposalDisplay {
 
                 break;
             case CONFISCATE_BOND:
-                confiscateBondComboBox = FormBuilder.addComboBox(gridPane, ++gridRow,
+                confiscateBondComboBox = addComboBox(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.confiscateBondComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
@@ -404,7 +403,7 @@ public class ProposalDisplay {
             case GENERIC:
                 break;
             case REMOVE_ASSET:
-                assetComboBox = FormBuilder.addComboBox(gridPane, ++gridRow,
+                assetComboBox = addComboBox(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.assetComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(assetComboBox, "assetComboBox must not be null");
