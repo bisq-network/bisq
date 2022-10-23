@@ -18,8 +18,8 @@
 package bisq.core.util;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.TxInput;
+import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.dao.state.model.governance.CompensationProposal;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.util.validation.BtcAddressValidator;
@@ -30,6 +30,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 
@@ -53,10 +54,11 @@ public class FeeReceiverSelector {
         int height = daoFacade.getChainHeight();
         List<Long> amountList = new ArrayList<>();
         List<String> receiverAddressList = new ArrayList<>();
+        Map<TxOutputKey, Optional<String>> addressByOutputKey = daoFacade.getAddressByOutputKeyMap();
+        // Iteration for about 700 entries takes about 130 ms.
         daoFacade.getIssuanceSetForType(IssuanceType.COMPENSATION)
                 .forEach(issuance -> {
                     Optional<CompensationProposal> compensationProposal = daoFacade.findCompensationProposal(issuance.getTxId());
-
                     int issuanceHeight = issuance.getChainHeight();
                     checkArgument(issuanceHeight <= height,
                             "issuanceHeight must not be larger as currentChainHeight");
@@ -76,18 +78,18 @@ public class FeeReceiverSelector {
                                         try {
                                             checkArgument(!tx.getTxInputs().isEmpty());
                                             TxInput firstBsqTxInput = tx.getTxInputs().get(0);
-                                            return daoFacade.getTxOutput(firstBsqTxInput.getConnectedTxOutputKey())
-                                                    .map(BaseTxOutput::getAddress);
+                                            return addressByOutputKey.get(firstBsqTxInput.getConnectedTxOutputKey());
                                         } catch (Throwable t) {
                                             return Optional.empty();
                                         }
                                     }));
-                    if (address.isPresent() && new BtcAddressValidator().validate(address.get()).isValid) {
+                    if (address.isPresent() && new BtcAddressValidator().validate(address.get()).isValid && amount > 0) {
                         receiverAddressList.add(address.get());
                         //  Only if we found a valid address we add the amount
                         amountList.add(amount);
                     }
                 });
+        addressByOutputKey.clear();
         if (!amountList.isEmpty()) {
             int index = getRandomIndex(amountList, new Random());
             return receiverAddressList.get(index);

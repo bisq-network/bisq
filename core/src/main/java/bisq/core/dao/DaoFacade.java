@@ -655,8 +655,9 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getIssuanceSetForType(issuanceType);
     }
 
-    public Optional<TxOutput> getTxOutput(TxOutputKey txOutputKey) {
-        return daoStateService.getTxOutput(txOutputKey);
+    public Map<TxOutputKey, Optional<String>> getAddressByOutputKeyMap() {
+        return daoStateService.getUnorderedTxOutputStream()
+                .collect(Collectors.toMap(BaseTxOutput::getKey, txOutput -> Optional.ofNullable(txOutput.getAddress())));
     }
 
     public Optional<CompensationProposal> findCompensationProposal(String txId) {

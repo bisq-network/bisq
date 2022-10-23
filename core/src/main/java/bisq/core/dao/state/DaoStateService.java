@@ -440,7 +440,7 @@ public class DaoStateService implements DaoSetupService {
     // TxOutput
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Stream<TxOutput> getUnorderedTxOutputStream() {
+    public Stream<TxOutput> getUnorderedTxOutputStream() {
         return getUnorderedTxStream()
                 .flatMap(tx -> tx.getTxOutputs().stream());
     }
