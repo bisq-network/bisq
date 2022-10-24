@@ -655,12 +655,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void initializeDaoOptions() {
-        int rowSpan = DevEnv.isDaoActivated() ? 6 : 1;
+        int rowSpan = 6;
         daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, rowSpan,
                 Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
-        if (!DevEnv.isDaoActivated()) {
-            return;
-        }
 
         fullModeDaoMonitorToggleButton = addSlideToggleButton(root, ++gridRow,
                 Res.get("setting.preferences.dao.fullModeDaoMonitor"));
@@ -880,8 +877,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
                 if (model.needsSupportLanguageWarning()) {
                     new Popup().warning(Res.get("settings.preferences.supportLanguageWarning",
-                            model.getMediationLanguages(),
-                            model.getArbitrationLanguages()))
+                                    model.getMediationLanguages(),
+                                    model.getArbitrationLanguages()))
                             .closeButtonText(Res.get("shared.ok"))
                             .show();
                 }
@@ -939,7 +936,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             TradeCurrency selectedItem = preferredTradeCurrencyComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null)
                 preferences.setPreferredTradeCurrency(selectedItem);
-                GUIUtil.updateTopAltcoin(preferences);
+            GUIUtil.updateTopAltcoin(preferences);
         });
 
         fiatCurrenciesComboBox.setItems(allFiatCurrencies);
@@ -1044,10 +1041,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void activateDaoPreferences() {
-        if (!DevEnv.isDaoActivated()) {
-            return;
-        }
-
         fullModeDaoMonitorToggleButton.setSelected(preferences.isUseFullModeDaoMonitor());
         fullModeDaoMonitorToggleButton.setOnAction(e -> {
             preferences.setUseFullModeDaoMonitor(fullModeDaoMonitorToggleButton.isSelected());
@@ -1211,10 +1204,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void deactivateDaoPreferences() {
-        if (!DevEnv.isDaoActivated()) {
-            return;
-        }
-
         fullModeDaoMonitorToggleButton.setOnAction(null);
         resyncDaoFromResourcesButton.setOnAction(null);
         resyncDaoFromGenesisButton.setOnAction(null);

@@ -60,7 +60,6 @@ import bisq.core.user.User;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.ClockWatcher;
-import bisq.common.app.DevEnv;
 import bisq.common.persistence.PersistenceManager;
 
 import javax.inject.Inject;
@@ -242,17 +241,15 @@ public class DomainInitialisation {
 
         feeService.onAllServicesInitialized(filterManager);
 
-        if (DevEnv.isDaoActivated()) {
-            daoSetup.onAllServicesInitialized(errorMessage -> {
-                if (daoErrorMessageHandler != null)
-                    daoErrorMessageHandler.accept(errorMessage);
-            }, warningMessage -> {
-                if (daoWarnMessageHandler != null)
-                    daoWarnMessageHandler.accept(warningMessage);
-            });
+        daoSetup.onAllServicesInitialized(errorMessage -> {
+            if (daoErrorMessageHandler != null)
+                daoErrorMessageHandler.accept(errorMessage);
+        }, warningMessage -> {
+            if (daoWarnMessageHandler != null)
+                daoWarnMessageHandler.accept(warningMessage);
+        });
 
-            daoStateSnapshotService.setDaoRequiresRestartHandler(daoRequiresRestartHandler);
-        }
+        daoStateSnapshotService.setDaoRequiresRestartHandler(daoRequiresRestartHandler);
 
         tradeStatisticsManager.onAllServicesInitialized();
 

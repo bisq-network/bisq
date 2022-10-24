@@ -47,7 +47,6 @@ import bisq.core.util.coin.BsqFormatter;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.DevEnv;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
@@ -159,10 +158,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
         chainSyncIndicator = new JFXProgressBar();
         chainSyncIndicator.setPrefWidth(120);
-        if (DevEnv.isDaoActivated())
-            chainSyncIndicator.setProgress(-1);
-        else
-            chainSyncIndicator.setProgress(0);
+        chainSyncIndicator.setProgress(-1);
         chainSyncIndicator.setPadding(new Insets(-6, 0, -10, 5));
 
         chainHeightLabel = FormBuilder.addLabel(root, ++gridRow, "");

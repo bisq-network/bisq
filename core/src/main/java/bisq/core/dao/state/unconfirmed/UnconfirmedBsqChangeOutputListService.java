@@ -19,7 +19,6 @@ package bisq.core.dao.state.unconfirmed;
 
 import bisq.core.dao.state.model.blockchain.TxType;
 
-import bisq.common.app.DevEnv;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
 
@@ -56,15 +55,11 @@ public class UnconfirmedBsqChangeOutputListService implements PersistedDataHost 
 
     @Override
     public void readPersisted(Runnable completeHandler) {
-        if (DevEnv.isDaoActivated()) {
-            persistenceManager.readPersisted(persisted -> {
-                        unconfirmedBsqChangeOutputList.setAll(persisted.getList());
-                        completeHandler.run();
-                    },
-                    completeHandler);
-        } else {
-            completeHandler.run();
-        }
+        persistenceManager.readPersisted(persisted -> {
+                    unconfirmedBsqChangeOutputList.setAll(persisted.getList());
+                    completeHandler.run();
+                },
+                completeHandler);
     }
 
 

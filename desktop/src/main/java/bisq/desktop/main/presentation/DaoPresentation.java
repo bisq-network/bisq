@@ -12,8 +12,6 @@ import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
-import bisq.common.app.DevEnv;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -64,17 +62,12 @@ public class DaoPresentation implements DaoStateListener {
         this.daoStateService = daoStateService;
 
         preferences.getDontShowAgainMapAsObservable().addListener((MapChangeListener<? super String, ? super Boolean>) change -> {
-            if (change.getKey().equals(DAO_NEWS) && DevEnv.isDaoActivated()) {
+            if (change.getKey().equals(DAO_NEWS)) {
                 // devs enable this when a news badge is required
                 // showNotification.set(!change.wasAdded());
                 showNotification.set(false);
             }
         });
-
-        if (!DevEnv.isDaoActivated()) {
-            bsqInfo.set("");
-            bsqSyncProgress.set(0);
-        }
 
         walletChainHeightListener = (observable, oldValue, newValue) -> onUpdateAnyChainHeight();
     }
@@ -84,9 +77,6 @@ public class DaoPresentation implements DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onUpdateAnyChainHeight() {
-        if (!DevEnv.isDaoActivated())
-            return;
-
         final int bsqBlockChainHeight = daoFacade.getChainHeight();
         final int bsqWalletChainHeight = bsqWalletService.getBestChainHeight();
         if (bsqWalletChainHeight > 0) {
