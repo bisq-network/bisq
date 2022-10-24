@@ -18,13 +18,12 @@
 package bisq.core.util;
 
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.model.blockchain.TxInput;
 import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.dao.state.model.governance.CompensationProposal;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.util.validation.BtcAddressValidator;
-
-import bisq.common.config.Config;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -40,15 +39,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class FeeReceiverSelector {
-    public static final String BTC_FEE_RECEIVER_ADDRESS = "38bZBj5peYS3Husdz7AH3gEUiUbYRD951t";
     public static final int REDUCED_ISSUANCE_AMOUNT_FACTOR = 2;
     public static final int MAX_AGE = 76896; // 1.5 years with 144 blocks/day;
-
-    public static String getMostRecentAddress() {
-        return Config.baseCurrencyNetwork().isMainnet() ? BTC_FEE_RECEIVER_ADDRESS :
-                Config.baseCurrencyNetwork().isTestnet() ? "2N4mVTpUZAnhm9phnxB7VrHB4aBhnWrcUrV" :
-                        "2MzBNTJDjjXgViKBGnatDU3yWkJ8pJkEg9w";
-    }
 
     public static String getBtcFeeReceiverAddress(DaoFacade daoFacade) {
         int height = daoFacade.getChainHeight();
@@ -94,7 +86,8 @@ public class FeeReceiverSelector {
             int index = getRandomIndex(amountList, new Random());
             return receiverAddressList.get(index);
         } else {
-            return getMostRecentAddress();
+            // If there are no compensation requests (e.g. at dev testing) we fall back to the default address
+            return Param.RECIPIENT_BTC_ADDRESS.getDefaultValue();
         }
     }
 
