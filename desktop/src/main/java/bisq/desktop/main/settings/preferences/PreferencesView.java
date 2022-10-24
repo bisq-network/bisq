@@ -655,12 +655,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void initializeDaoOptions() {
-        int rowSpan = 6;
+        int rowSpan = 5;
         daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, rowSpan,
                 Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
 
-        fullModeDaoMonitorToggleButton = addSlideToggleButton(root, ++gridRow,
-                Res.get("setting.preferences.dao.fullModeDaoMonitor"));
+        fullModeDaoMonitorToggleButton = addSlideToggleButton(root, gridRow,
+                Res.get("setting.preferences.dao.fullModeDaoMonitor"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
         resyncDaoFromResourcesButton = addButton(root, ++gridRow, Res.get("setting.preferences.dao.resyncFromResources.label"));
         resyncDaoFromResourcesButton.setMaxWidth(Double.MAX_VALUE);
