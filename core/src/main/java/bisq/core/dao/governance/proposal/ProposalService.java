@@ -40,13 +40,9 @@ import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 import bisq.network.p2p.storage.persistence.ProtectedDataStoreService;
 
-import bisq.common.config.Config;
-
 import org.bitcoinj.core.Coin;
 
 import com.google.inject.Inject;
-
-import javax.inject.Named;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -97,19 +93,16 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
                            AppendOnlyDataStoreService appendOnlyDataStoreService,
                            ProtectedDataStoreService protectedDataStoreService,
                            DaoStateService daoStateService,
-                           ProposalValidatorProvider validatorProvider,
-                           @Named(Config.DAO_ACTIVATED) boolean daoActivated) {
+                           ProposalValidatorProvider validatorProvider) {
         this.p2PService = p2PService;
         this.periodService = periodService;
         this.proposalStorageService = proposalStorageService;
         this.daoStateService = daoStateService;
         this.validatorProvider = validatorProvider;
 
-        if (daoActivated) {
-            // We add our stores to the global stores
-            appendOnlyDataStoreService.addService(proposalStorageService);
-            protectedDataStoreService.addService(tempProposalStorageService);
-        }
+        // We add our stores to the global stores
+        appendOnlyDataStoreService.addService(proposalStorageService);
+        protectedDataStoreService.addService(tempProposalStorageService);
     }
 
 
@@ -198,14 +191,14 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
     public Coin getRequiredQuorum(Proposal proposal) {
         int chainHeight = daoStateService.getTx(proposal.getTxId())
                 .map(BaseTx::getBlockHeight).
-                        orElse(daoStateService.getChainHeight());
+                orElse(daoStateService.getChainHeight());
         return daoStateService.getParamValueAsCoin(proposal.getQuorumParam(), chainHeight);
     }
 
     public double getRequiredThreshold(Proposal proposal) {
         int chainHeight = daoStateService.getTx(proposal.getTxId())
                 .map(BaseTx::getBlockHeight).
-                        orElse(daoStateService.getChainHeight());
+                orElse(daoStateService.getChainHeight());
         return daoStateService.getParamValueAsPercentDouble(proposal.getThresholdParam(), chainHeight);
     }
 
@@ -308,7 +301,8 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
         tempProposals.retainAll(tempProposalsWithUpdates);
     }
 
-    private void onAppendOnlyDataAdded(PersistableNetworkPayload persistableNetworkPayload, boolean fromBroadcastMessage) {
+    private void onAppendOnlyDataAdded(PersistableNetworkPayload persistableNetworkPayload,
+                                       boolean fromBroadcastMessage) {
         if (persistableNetworkPayload instanceof ProposalPayload) {
             ProposalPayload proposalPayload = (ProposalPayload) persistableNetworkPayload;
             if (!proposalPayloads.contains(proposalPayload)) {

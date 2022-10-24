@@ -30,8 +30,6 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreListener;
 import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
-import bisq.common.config.Config;
-
 import javax.inject.Inject;
 
 import javafx.collections.FXCollections;
@@ -67,16 +65,14 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, DaoSta
                                 PeriodService periodService,
                                 BlindVoteStorageService blindVoteStorageService,
                                 AppendOnlyDataStoreService appendOnlyDataStoreService,
-                                BlindVoteValidator blindVoteValidator,
-                                Config config) {
+                                BlindVoteValidator blindVoteValidator) {
         this.daoStateService = daoStateService;
         this.p2PService = p2PService;
         this.periodService = periodService;
         this.blindVoteStorageService = blindVoteStorageService;
         this.blindVoteValidator = blindVoteValidator;
 
-        if (config.daoActivated)
-            appendOnlyDataStoreService.addService(blindVoteStorageService);
+        appendOnlyDataStoreService.addService(blindVoteStorageService);
     }
 
 
@@ -151,7 +147,8 @@ public class BlindVoteListService implements AppendOnlyDataStoreListener, DaoSta
         blindVoteStorageService.getMap().values().forEach(e -> onAppendOnlyDataAdded(e, false));
     }
 
-    private void onAppendOnlyDataAdded(PersistableNetworkPayload persistableNetworkPayload, boolean fromBroadcastMessage) {
+    private void onAppendOnlyDataAdded(PersistableNetworkPayload persistableNetworkPayload,
+                                       boolean fromBroadcastMessage) {
         if (persistableNetworkPayload instanceof BlindVotePayload) {
             BlindVotePayload blindVotePayload = (BlindVotePayload) persistableNetworkPayload;
             if (!blindVotePayloads.contains(blindVotePayload)) {

@@ -45,9 +45,7 @@ public class CoreNetworkCapabilities {
                 Capability.BSQ_SWAP_OFFER
         );
 
-        if (config.daoActivated) {
-            maybeApplyDaoFullMode(config);
-        }
+        maybeApplyDaoFullMode(config);
 
         log.info(Capabilities.app.prettyPrint());
     }
