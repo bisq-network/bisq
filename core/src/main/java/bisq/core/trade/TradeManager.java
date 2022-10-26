@@ -644,6 +644,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 user,
                 mediatorManager,
                 tradeStatisticsManager,
+                provider.getDaoFacade(),
                 isTakerApiUser);
     }
 

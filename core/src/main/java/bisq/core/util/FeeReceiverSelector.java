@@ -92,14 +92,14 @@ public class FeeReceiverSelector {
     }
 
     @VisibleForTesting
-    static int getRandomIndex(List<Long> weights, Random random) {
+    public static int getRandomIndex(List<Long> weights, Random random) {
         long sum = weights.stream().mapToLong(n -> n).sum();
         long target = random.longs(0, sum).findFirst().orElseThrow() + 1;
         return findIndex(weights, target);
     }
 
     @VisibleForTesting
-    static int findIndex(List<Long> weights, long target) {
+    public static int findIndex(List<Long> weights, long target) {
         int currentRange = 0;
         for (int i = 0; i < weights.size(); i++) {
             currentRange += weights.get(i);
@@ -111,7 +111,7 @@ public class FeeReceiverSelector {
     }
 
     // Borrowed from MeritConsensus (unit tested there)
-    private static long getWeightedAmount(long amount, int issuanceHeight, int blockHeight) {
+    public static long getWeightedAmount(long amount, int issuanceHeight, int blockHeight) {
         if (issuanceHeight > blockHeight)
             throw new IllegalArgumentException("issuanceHeight must not be larger than blockHeight. issuanceHeight=" + issuanceHeight + "; blockHeight=" + blockHeight);
         if (blockHeight < 0)

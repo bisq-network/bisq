@@ -173,6 +173,7 @@ message OfferAvailabilityRequest {
     repeated int32 supported_capabilities = 4;
     string uid = 5;
     bool is_taker_api_user = 6;
+    optional bytes hash_of_issuance_list = 7;  // Added in v 1.9.6
 }
 
 message OfferAvailabilityResponse {

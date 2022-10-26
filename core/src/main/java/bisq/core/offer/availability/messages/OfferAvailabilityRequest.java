@@ -23,6 +23,8 @@ import bisq.common.app.Capabilities;
 import bisq.common.app.Version;
 import bisq.common.crypto.PubKeyRing;
 
+import com.google.protobuf.ByteString;
+
 import java.util.Optional;
 import java.util.UUID;
 
@@ -44,17 +46,24 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
     private final Capabilities supportedCapabilities;
     private final boolean isTakerApiUser;
 
+    // Added in v 1.9.6
+    @Nullable
+    private final byte[] hashOfIssuanceList;
+
     public OfferAvailabilityRequest(String offerId,
                                     PubKeyRing pubKeyRing,
                                     long takersTradePrice,
-                                    boolean isTakerApiUser) {
+                                    boolean isTakerApiUser,
+                                    byte[] hashOfIssuanceList) {
         this(offerId,
                 pubKeyRing,
                 takersTradePrice,
                 isTakerApiUser,
+                hashOfIssuanceList,
                 Capabilities.app,
                 Version.getP2PMessageVersion(),
-                UUID.randomUUID().toString());
+                UUID.randomUUID().toString()
+        );
     }
 
 
@@ -66,6 +75,7 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
                                      PubKeyRing pubKeyRing,
                                      long takersTradePrice,
                                      boolean isTakerApiUser,
+                                     @Nullable byte[] hashOfIssuanceList,
                                      @Nullable Capabilities supportedCapabilities,
                                      int messageVersion,
                                      @Nullable String uid) {
@@ -73,6 +83,7 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
         this.pubKeyRing = pubKeyRing;
         this.takersTradePrice = takersTradePrice;
         this.isTakerApiUser = isTakerApiUser;
+        this.hashOfIssuanceList = hashOfIssuanceList;
         this.supportedCapabilities = supportedCapabilities;
     }
 
@@ -86,6 +97,7 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
 
         Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities)));
         Optional.ofNullable(uid).ifPresent(e -> builder.setUid(uid));
+        Optional.ofNullable(hashOfIssuanceList).ifPresent(e -> builder.setHashOfIssuanceList(ByteString.copyFrom(hashOfIssuanceList)));
 
         return getNetworkEnvelopeBuilder()
                 .setOfferAvailabilityRequest(builder)
@@ -97,6 +109,7 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
                 proto.getTakersTradePrice(),
                 proto.getIsTakerApiUser(),
+                proto.hasHashOfIssuanceList() ? proto.getHashOfIssuanceList().toByteArray() : null,
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList()),
                 messageVersion,
                 proto.getUid().isEmpty() ? null : proto.getUid());
