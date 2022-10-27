@@ -19,11 +19,17 @@ package bisq.core.trade.bisq_v1;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.state.model.blockchain.TxInput;
+import bisq.core.dao.state.model.blockchain.TxOutputKey;
+import bisq.core.dao.state.model.governance.CompensationProposal;
+import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.offer.Offer;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.trade.DelayedPayoutReceiversUtil;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.util.FeeReceiverSelector;
+import bisq.core.util.validation.BtcAddressValidator;
 import bisq.core.util.validation.RegexValidatorFactory;
 
 import bisq.network.p2p.NodeAddress;
@@ -39,10 +45,12 @@ import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -295,7 +303,39 @@ public class TradeDataValidation {
         }
 
         if (DelayedPayoutReceiversUtil.isActivated()) {
-            //todo add validations
+            // Check if the addresses in the outputs is in our issuance list
+            Set<String> candidateAddresses = new HashSet<>();
+            Map<TxOutputKey, Optional<String>> addressByOutputKey = daoFacade.getAddressByOutputKeyMap();
+            // To avoid that validation fails when used in arbitration case where a few weeks
+            // we increase the age by 100 days (144 blocks is about 1 day).
+            int minBlockHeight = daoFacade.getChainHeight() - FeeReceiverSelector.MAX_AGE - 144 * 100;
+            daoFacade.getIssuanceSetForType(IssuanceType.COMPENSATION).stream()
+                    .filter(issuance -> issuance.getChainHeight() >= minBlockHeight)
+                    .forEach(issuance -> {
+                        Optional<CompensationProposal> compensationProposal = daoFacade.findCompensationProposal(issuance.getTxId());
+                        Optional<String> address = compensationProposal.filter(proposal -> proposal.getBtcFeeReceiverAddress() != null)
+                                .map(CompensationProposal::getBtcFeeReceiverAddress)
+                                .or(() -> daoFacade.getTx(issuance.getTxId())
+                                        .flatMap(tx -> {
+                                            try {
+                                                checkArgument(!tx.getTxInputs().isEmpty());
+                                                TxInput firstBsqTxInput = tx.getTxInputs().get(0);
+                                                return addressByOutputKey.get(firstBsqTxInput.getConnectedTxOutputKey());
+                                            } catch (Throwable t) {
+                                                return Optional.empty();
+                                            }
+                                        }));
+                        if (address.isPresent() && new BtcAddressValidator().validate(address.get()).isValid) {
+                            candidateAddresses.add(address.get());
+                        }
+                    });
+            addressByOutputKey.clear();
+            for (int i = 0; i < delayedPayoutTx.getOutputs().size(); i++) {
+                TransactionOutput output = delayedPayoutTx.getOutputs().get(i);
+                Address address = output.getScriptPubKey().getToAddress(btcWalletService.getParams());
+                checkArgument(candidateAddresses.contains(address.toString()),
+                        "Address in delayedPayoutTx output is not found in potential candidate addresses. Address=" + address);
+            }
             return;
         }
 
@@ -336,6 +376,7 @@ public class TradeDataValidation {
 
         validateDonationAddress(addressAsString, daoFacade);
 
+        //todo
         if (dispute != null) {
             // Verify that address in the dispute matches the one in the trade.
             String donationAddressOfDelayedPayoutTx = dispute.getDonationAddressOfDelayedPayoutTx();
@@ -397,7 +438,10 @@ public class TradeDataValidation {
             for (int i = 0; i < sellersPreparedDelayedPayoutTx.getOutputs().size(); i++) {
                 TransactionOutput sellerTxOutput = sellersPreparedDelayedPayoutTx.getOutputs().get(i);
                 TransactionOutput buyerTxOutput = buyersPreparedDelayedPayoutTx.getOutputs().get(i);
-                checkArgument(sellerTxOutput.equals(buyerTxOutput),
+                // equals check fails, probably because some data (connected output?) in the parent tx are not available at one tx
+                checkArgument(Arrays.equals(sellerTxOutput.getScriptBytes(), buyerTxOutput.getScriptBytes()) &&
+                                sellerTxOutput.getValue().value == buyerTxOutput.getValue().value &&
+                                sellerTxOutput.hashCode() == buyerTxOutput.hashCode(),
                         "Tx output of sellersPreparedDelayedPayoutTx and buyersPreparedDelayedPayoutTx must be the same");
             }
             if (depositTxNonMalleable) {
