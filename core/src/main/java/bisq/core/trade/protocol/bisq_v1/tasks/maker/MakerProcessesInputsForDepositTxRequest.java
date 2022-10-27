@@ -17,9 +17,11 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.maker;
 
+import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.offer.Offer;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
+import bisq.core.trade.DelayedPayoutReceiversUtil;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
@@ -29,11 +31,14 @@ import bisq.core.user.User;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.taskrunner.TaskRunner;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 
 import com.google.common.base.Charsets;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
@@ -78,6 +83,17 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             tradingPeer.setPubKeyRing(checkNotNull(request.getTakerPubKeyRing()));
 
             tradingPeer.setAccountId(nonEmptyStringOf(request.getTakerAccountId()));
+
+            if (DelayedPayoutReceiversUtil.isActivated()) {
+                byte[] takersHashOfIssuanceList = request.getHashOfIssuanceList();
+                checkNotNull(takersHashOfIssuanceList, "takersHashOfIssuanceList must not be null");
+                Tuple2<List<Issuance>, byte[]> tuple = DelayedPayoutReceiversUtil.getIssuanceListAndHashTuple(processModel.getDaoFacade());
+                byte[] makersHashOfIssuanceList = tuple.second;
+                checkNotNull(makersHashOfIssuanceList, "makersHashOfIssuanceList must not be null");
+                checkArgument(Arrays.equals(takersHashOfIssuanceList, makersHashOfIssuanceList),
+                        "takersHashOfIssuanceList does no match makersHashOfIssuanceList");
+                processModel.setIssuanceList(tuple.first);
+            }
 
             // We set the taker fee only in the processModel yet not in the trade as the tx was only created but not
             // published yet. Once it was published we move it to trade. The takerFeeTx should be sent in a later

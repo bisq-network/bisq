@@ -19,14 +19,18 @@ package bisq.core.trade.protocol.bisq_v1.tasks.seller;
 
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.governance.param.Param;
+import bisq.core.trade.DelayedPayoutReceiversUtil;
 import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 
 import bisq.common.taskrunner.TaskRunner;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
+
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,21 +48,33 @@ public class SellerCreatesDelayedPayoutTx extends TradeTask {
         try {
             runInterceptHook();
 
-            String donationAddressString = processModel.getDaoFacade().getParamValue(Param.RECIPIENT_BTC_ADDRESS);
-            Coin minerFee = trade.getTradeTxFee();
+            Transaction preparedDelayedPayoutTx;
             TradeWalletService tradeWalletService = processModel.getTradeWalletService();
+            long lockTime = trade.getLockTime();
             Transaction depositTx = checkNotNull(processModel.getDepositTx());
 
-            long lockTime = trade.getLockTime();
-            Transaction preparedDelayedPayoutTx = tradeWalletService.createDelayedUnsignedPayoutTx(depositTx,
-                    donationAddressString,
-                    minerFee,
-                    lockTime);
+            if (DelayedPayoutReceiversUtil.isActivated()) {
+                long inputAmount = depositTx.getOutput(0).getValue().value;
+                List<Tuple2<Long, String>> receivers = DelayedPayoutReceiversUtil.getReceivers(processModel.getDaoFacade(),
+                        processModel.getIssuanceList(),
+                        inputAmount,
+                        trade.getTradeTxFeeAsLong());
+                preparedDelayedPayoutTx = tradeWalletService.createDelayedUnsignedPayoutTx(depositTx,
+                        receivers,
+                        lockTime);
+            } else {
+                String donationAddressString = processModel.getDaoFacade().getParamValue(Param.RECIPIENT_BTC_ADDRESS);
+                Coin minerFee = trade.getTradeTxFee();
+                preparedDelayedPayoutTx = tradeWalletService.createDelayedUnsignedPayoutTx(depositTx,
+                        donationAddressString,
+                        minerFee,
+                        lockTime);
+            }
+
             TradeDataValidation.validateDelayedPayoutTx(trade,
                     preparedDelayedPayoutTx,
                     processModel.getDaoFacade(),
                     processModel.getBtcWalletService());
-
             processModel.setPreparedDelayedPayoutTx(preparedDelayedPayoutTx);
 
             processModel.getTradeManager().requestPersistence();

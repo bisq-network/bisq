@@ -22,16 +22,22 @@ import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.model.blockchain.TxInput;
 import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.dao.state.model.governance.CompensationProposal;
+import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.util.validation.BtcAddressValidator;
+
+import bisq.common.util.Tuple2;
 
 import com.google.common.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,52 +49,56 @@ public class FeeReceiverSelector {
     public static final int MAX_AGE = 76896; // 1.5 years with 144 blocks/day;
 
     public static String getBtcFeeReceiverAddress(DaoFacade daoFacade) {
-        int height = daoFacade.getChainHeight();
-        List<Long> amountList = new ArrayList<>();
-        List<String> receiverAddressList = new ArrayList<>();
-        Map<TxOutputKey, Optional<String>> addressByOutputKey = daoFacade.getAddressByOutputKeyMap();
-        // Iteration for about 700 entries takes about 130 ms.
-        daoFacade.getIssuanceSetForType(IssuanceType.COMPENSATION)
-                .forEach(issuance -> {
-                    Optional<CompensationProposal> compensationProposal = daoFacade.findCompensationProposal(issuance.getTxId());
-                    int issuanceHeight = issuance.getChainHeight();
-                    checkArgument(issuanceHeight <= height,
-                            "issuanceHeight must not be larger as currentChainHeight");
-                    long weightedAmount = getWeightedAmount(issuance.getAmount(), issuanceHeight, height);
-                    boolean isReducedIssuanceAmount = compensationProposal.map(CompensationProposal::isReducedIssuanceAmount).orElse(false);
-                    long amount = isReducedIssuanceAmount ? weightedAmount * 10 * REDUCED_ISSUANCE_AMOUNT_FACTOR : weightedAmount;
-
-                    // We take the btcFeeReceiverAddress from the compensationProposal if set, otherwise we
-                    // use the address connected to the first input which is a BSQ input.
-                    // We cannot use the BTC input as we do not have that spending BTC transaction to derive the address from.
-                    // The BTC wallet has access only to our own transactions.
-                    // Only for BSQ we have all transactions. The trade fee will be received as BTC in the BSQ and the contributor can transfer it to their BTC wallet.
-                    Optional<String> address = compensationProposal.filter(proposal -> proposal.getBtcFeeReceiverAddress() != null)
-                            .map(CompensationProposal::getBtcFeeReceiverAddress)
-                            .or(() -> daoFacade.getTx(issuance.getTxId())
-                                    .flatMap(tx -> {
-                                        try {
-                                            checkArgument(!tx.getTxInputs().isEmpty());
-                                            TxInput firstBsqTxInput = tx.getTxInputs().get(0);
-                                            return addressByOutputKey.get(firstBsqTxInput.getConnectedTxOutputKey());
-                                        } catch (Throwable t) {
-                                            return Optional.empty();
-                                        }
-                                    }));
-                    if (address.isPresent() && new BtcAddressValidator().validate(address.get()).isValid && amount > 0) {
-                        receiverAddressList.add(address.get());
-                        //  Only if we found a valid address we add the amount
-                        amountList.add(amount);
-                    }
-                });
-        addressByOutputKey.clear();
-        if (!amountList.isEmpty()) {
-            int index = getRandomIndex(amountList, new Random());
-            return receiverAddressList.get(index);
-        } else {
+        Set<Issuance> issuanceSet = daoFacade.getIssuanceSetForType(IssuanceType.COMPENSATION);
+        List<Tuple2<Long, String>> amountAddressList = getAmountAddressList(daoFacade, issuanceSet);
+        if (amountAddressList.isEmpty()) {
             // If there are no compensation requests (e.g. at dev testing) we fall back to the default address
             return Param.RECIPIENT_BTC_ADDRESS.getDefaultValue();
         }
+
+        List<Long> amountList = amountAddressList.stream().map(tuple -> tuple.first).collect(Collectors.toList());
+        int index = getRandomIndex(amountList, new Random());
+        return amountAddressList.get(index).second;
+
+    }
+
+    // Iteration for about 700 entries takes about 130 ms.
+    public static List<Tuple2<Long, String>> getAmountAddressList(DaoFacade daoFacade,
+                                                                  Collection<Issuance> issuanceCollection) {
+        List<Tuple2<Long, String>> amountAddressTuples = new ArrayList<>();
+        Map<TxOutputKey, Optional<String>> addressByOutputKey = daoFacade.getAddressByOutputKeyMap();
+        int height = daoFacade.getChainHeight();
+        issuanceCollection.forEach(issuance -> {
+            Optional<CompensationProposal> compensationProposal = daoFacade.findCompensationProposal(issuance.getTxId());
+            int issuanceHeight = issuance.getChainHeight();
+            long weightedAmount = getWeightedAmount(issuance.getAmount(), issuanceHeight, height);
+            boolean isReducedIssuanceAmount = compensationProposal.map(CompensationProposal::isReducedIssuanceAmount).orElse(false);
+            long amount = isReducedIssuanceAmount ? weightedAmount * 10 * REDUCED_ISSUANCE_AMOUNT_FACTOR : weightedAmount;
+            if (amount > 0) {
+                // We take the btcFeeReceiverAddress from the compensationProposal if set, otherwise we
+                // use the address connected to the first input which is a BSQ input.
+                // We cannot use the BTC input as we do not have that spending BTC transaction to derive the address from.
+                // The BTC wallet has access only to our own transactions.
+                // Only for BSQ we have all transactions. The trade fee will be received as BTC in the BSQ and the contributor can transfer it to their BTC wallet.
+                Optional<String> address = compensationProposal.filter(proposal -> proposal.getBtcFeeReceiverAddress() != null)
+                        .map(CompensationProposal::getBtcFeeReceiverAddress)
+                        .or(() -> daoFacade.getTx(issuance.getTxId())
+                                .flatMap(tx -> {
+                                    try {
+                                        checkArgument(!tx.getTxInputs().isEmpty());
+                                        TxInput firstBsqTxInput = tx.getTxInputs().get(0);
+                                        return addressByOutputKey.get(firstBsqTxInput.getConnectedTxOutputKey());
+                                    } catch (Throwable t) {
+                                        return Optional.empty();
+                                    }
+                                }));
+                if (address.isPresent() && new BtcAddressValidator().validate(address.get()).isValid) {
+                    amountAddressTuples.add(new Tuple2<>(amount, address.get()));
+                }
+            }
+        });
+        addressByOutputKey.clear();
+        return amountAddressTuples;
     }
 
     @VisibleForTesting

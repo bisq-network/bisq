@@ -20,7 +20,7 @@ package bisq.core.offer.availability.tasks;
 import bisq.core.offer.Offer;
 import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.offer.availability.messages.OfferAvailabilityRequest;
-import bisq.core.trade.DelayedPayoutAddressProvider;
+import bisq.core.trade.DelayedPayoutReceiversUtil;
 
 import bisq.network.p2p.SendDirectMessageListener;
 
@@ -40,7 +40,7 @@ public class SendOfferAvailabilityRequest extends Task<OfferAvailabilityModel> {
         try {
             runInterceptHook();
 
-            byte[] hashOfIssuanceList = DelayedPayoutAddressProvider.getHashOfIssuanceList(model.getDaoFacade());
+            byte[] hashOfIssuanceList = DelayedPayoutReceiversUtil.getIssuanceListAndHashTuple(model.getDaoFacade()).second;
             OfferAvailabilityRequest message = new OfferAvailabilityRequest(model.getOffer().getId(),
                     model.getPubKeyRing(),
                     model.getTakersTradePrice(),

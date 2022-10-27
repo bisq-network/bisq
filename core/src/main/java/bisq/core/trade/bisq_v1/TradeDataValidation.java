@@ -22,6 +22,7 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.offer.Offer;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
+import bisq.core.trade.DelayedPayoutReceiversUtil;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.util.validation.RegexValidatorFactory;
 
@@ -274,13 +275,6 @@ public class TradeDataValidation {
             throw new InvalidTxException(errorMsg);
         }
 
-        if (delayedPayoutTx.getOutputs().size() != 1) {
-            errorMsg = "Number of delayedPayoutTx outputs must be 1";
-            log.error(errorMsg);
-            log.error(delayedPayoutTx.toString());
-            throw new InvalidTxException(errorMsg);
-        }
-
         // connectedOutput is null and input.getValue() is null at that point as the tx is not committed to the wallet
         // yet. So we cannot check that the input matches but we did the amount check earlier in the trade protocol.
 
@@ -298,6 +292,18 @@ public class TradeDataValidation {
             log.error(errorMsg);
             log.error(delayedPayoutTx.toString());
             throw new InvalidLockTimeException(errorMsg);
+        }
+
+        if (DelayedPayoutReceiversUtil.isActivated()) {
+            //todo add validations
+            return;
+        }
+
+        if (delayedPayoutTx.getOutputs().size() != 1) {
+            errorMsg = "Number of delayedPayoutTx outputs must be 1";
+            log.error(errorMsg);
+            log.error(delayedPayoutTx.toString());
+            throw new InvalidTxException(errorMsg);
         }
 
         // Check amount
@@ -371,8 +377,8 @@ public class TradeDataValidation {
         if (!makerFirstMatch && !takerFirstMatch) {
             String errMsg = "Maker/Taker txId in contract does not match deposit tx input";
             log.error(errMsg +
-                "\nContract Maker tx=" + contractMakerTxId + " Contract Taker tx=" + contractTakerTxId +
-                "\nDeposit Input0=" + txIdInput0 + " Deposit Input1=" + txIdInput1);
+                    "\nContract Maker tx=" + contractMakerTxId + " Contract Taker tx=" + contractTakerTxId +
+                    "\nDeposit Input0=" + txIdInput0 + " Deposit Input1=" + txIdInput1);
             throw new InvalidTxException(errMsg);
         }
     }

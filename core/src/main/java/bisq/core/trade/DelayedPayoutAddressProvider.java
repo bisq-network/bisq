@@ -19,54 +19,11 @@ package bisq.core.trade;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.param.Param;
-import bisq.core.dao.state.model.governance.Issuance;
-import bisq.core.dao.state.model.governance.IssuanceType;
-import bisq.core.util.FeeReceiverSelector;
-
-import bisq.common.crypto.Hash;
-import bisq.common.util.Utilities;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-
-import java.util.Comparator;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DelayedPayoutAddressProvider {
-    //TODO set date
-    public static final Date ACTIVATION_DATE = Utilities.getUTCDate(2022, GregorianCalendar.OCTOBER, 25);
-
-    public static byte[] getHashOfIssuanceList(DaoFacade daoFacade) {
-        int height = daoFacade.getChainHeight();
-        // We need a deterministic list so we sort by txId
-        List<Issuance> sortedIssuanceList = daoFacade.getIssuanceSetForType(IssuanceType.COMPENSATION).stream()
-                .sorted(Comparator.comparing(Issuance::getTxId))
-                .collect(Collectors.toList());
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        sortedIssuanceList.forEach(issuance -> {
-            try {
-                if (issuance.getChainHeight() >= height - FeeReceiverSelector.MAX_AGE) {
-                    outputStream.write(issuance.toProtoMessage().toByteArray());
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-        byte[] data = outputStream.toByteArray();
-        try {
-            outputStream.close();
-        } catch (IOException ignore) {
-        }
-        return Hash.getSha256Ripemd160hash(data);
-    }
-
-    // TODO old code
     public static final String INITIAL_BM_ADDRESS = "1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7"; // Initial DAO donation address
     public static final String BM2019_ADDRESS = "3EtUWqsGThPtjwUczw27YCo6EWvQdaPUyp"; // burning2019
     public static final String BM2_ADDRESS = "3A8Zc1XioE2HRzYfbb5P8iemCS72M6vRJV";  // burningman2

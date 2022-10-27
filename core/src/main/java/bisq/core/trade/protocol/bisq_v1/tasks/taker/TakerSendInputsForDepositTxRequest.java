@@ -19,6 +19,8 @@ package bisq.core.trade.protocol.bisq_v1.tasks.taker;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dao.state.model.governance.Issuance;
+import bisq.core.trade.DelayedPayoutReceiversUtil;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
@@ -31,6 +33,7 @@ import bisq.network.p2p.SendDirectMessageListener;
 import bisq.common.app.Version;
 import bisq.common.crypto.Sig;
 import bisq.common.taskrunner.TaskRunner;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 
@@ -104,6 +107,10 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
             byte[] signatureOfNonce = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(),
                     offerId.getBytes(Charsets.UTF_8));
 
+            Tuple2<List<Issuance>, byte[]> tuple = DelayedPayoutReceiversUtil.getIssuanceListAndHashTuple(processModel.getDaoFacade());
+            byte[] hashOfIssuanceList = tuple.second;
+            processModel.setIssuanceList(tuple.first);
+
             String takersPaymentMethodId = checkNotNull(processModel.getPaymentAccountPayload(trade)).getPaymentMethodId();
             InputsForDepositTxRequest request = new InputsForDepositTxRequest(
                     offerId,
@@ -133,7 +140,8 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
                     signatureOfNonce,
                     new Date().getTime(),
                     hashOfTakersPaymentAccountPayload,
-                    takersPaymentMethodId);
+                    takersPaymentMethodId,
+                    hashOfIssuanceList);
             log.info("Send {} with offerId {} and uid {} to peer {}",
                     request.getClass().getSimpleName(), request.getTradeId(),
                     request.getUid(), trade.getTradingPeerNodeAddress());

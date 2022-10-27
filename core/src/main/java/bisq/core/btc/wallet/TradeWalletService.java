@@ -697,15 +697,30 @@ public class TradeWalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction createDelayedUnsignedPayoutTx(Transaction depositTx,
+                                                     List<Tuple2<Long, String>> receivers,
+                                                     long lockTime)
+            throws AddressFormatException, TransactionVerificationException {
+        TransactionOutput depositTxOutput = depositTx.getOutput(0);
+        Transaction delayedPayoutTx = new Transaction(params);
+        delayedPayoutTx.addInput(depositTxOutput);
+        applyLockTime(lockTime, delayedPayoutTx);
+        checkArgument(!receivers.isEmpty(), "receivers must not be empty");
+        receivers.forEach(receiver -> delayedPayoutTx.addOutput(Coin.valueOf(receiver.first), Address.fromString(params, receiver.second)));
+        WalletService.printTx("Unsigned delayedPayoutTx ToDonationAddress", delayedPayoutTx);
+        WalletService.verifyTransaction(delayedPayoutTx);
+        return delayedPayoutTx;
+    }
+
+    public Transaction createDelayedUnsignedPayoutTx(Transaction depositTx,
                                                      String donationAddressString,
                                                      Coin minerFee,
                                                      long lockTime)
             throws AddressFormatException, TransactionVerificationException {
-        TransactionOutput hashedMultiSigOutput = depositTx.getOutput(0);
+        TransactionOutput depositTxOutput = depositTx.getOutput(0);
         Transaction delayedPayoutTx = new Transaction(params);
-        delayedPayoutTx.addInput(hashedMultiSigOutput);
+        delayedPayoutTx.addInput(depositTxOutput);
         applyLockTime(lockTime, delayedPayoutTx);
-        Coin outputAmount = hashedMultiSigOutput.getValue().subtract(minerFee);
+        Coin outputAmount = depositTxOutput.getValue().subtract(minerFee);
         delayedPayoutTx.addOutput(outputAmount, Address.fromString(params, donationAddressString));
         WalletService.printTx("Unsigned delayedPayoutTx ToDonationAddress", delayedPayoutTx);
         WalletService.verifyTransaction(delayedPayoutTx);

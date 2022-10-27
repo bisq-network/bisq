@@ -80,6 +80,10 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
     @Nullable
     private final String takersPaymentMethodId;
 
+    // Added in v 1.9.6
+    @Nullable
+    private final byte[] hashOfIssuanceList;
+
     public InputsForDepositTxRequest(String tradeId,
                                      NodeAddress senderNodeAddress,
                                      long tradeAmount,
@@ -107,7 +111,8 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                                      byte[] accountAgeWitnessSignatureOfOfferId,
                                      long currentDate,
                                      @Nullable byte[] hashOfTakersPaymentAccountPayload,
-                                     @Nullable String takersPaymentMethodId) {
+                                     @Nullable String takersPaymentMethodId,
+                                     @Nullable byte[] hashOfIssuanceList) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
         this.tradeAmount = tradeAmount;
@@ -134,6 +139,7 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
         this.currentDate = currentDate;
         this.hashOfTakersPaymentAccountPayload = hashOfTakersPaymentAccountPayload;
         this.takersPaymentMethodId = takersPaymentMethodId;
+        this.hashOfIssuanceList = hashOfIssuanceList;
     }
 
 
@@ -176,6 +182,7 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
         Optional.ofNullable(takerPaymentAccountPayload).ifPresent(e -> builder.setTakerPaymentAccountPayload((protobuf.PaymentAccountPayload) takerPaymentAccountPayload.toProtoMessage()));
         Optional.ofNullable(hashOfTakersPaymentAccountPayload).ifPresent(e -> builder.setHashOfTakersPaymentAccountPayload(ByteString.copyFrom(hashOfTakersPaymentAccountPayload)));
         Optional.ofNullable(takersPaymentMethodId).ifPresent(e -> builder.setTakersPayoutMethodId(takersPaymentMethodId));
+        Optional.ofNullable(hashOfIssuanceList).ifPresent(e -> builder.setHashOfIssuanceList(ByteString.copyFrom(hashOfIssuanceList)));
         return getNetworkEnvelopeBuilder().setInputsForDepositTxRequest(builder).build();
     }
 
@@ -223,7 +230,8 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfOfferId()),
                 proto.getCurrentDate(),
                 hashOfTakersPaymentAccountPayload,
-                ProtoUtil.stringOrNullFromProto(proto.getTakersPayoutMethodId()));
+                ProtoUtil.stringOrNullFromProto(proto.getTakersPayoutMethodId()),
+                proto.hasHashOfIssuanceList() ? proto.getHashOfIssuanceList().toByteArray() : null);
     }
 
     @Override
@@ -253,6 +261,7 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 ",\n     currentDate=" + currentDate +
                 ",\n     hashOfTakersPaymentAccountPayload=" + Utilities.bytesAsHexString(hashOfTakersPaymentAccountPayload) +
                 ",\n     takersPaymentMethodId=" + takersPaymentMethodId +
+                ",\n     hashOfIssuanceList=" + Utilities.bytesAsHexString(hashOfIssuanceList) +
                 "\n} " + super.toString();
     }
 }

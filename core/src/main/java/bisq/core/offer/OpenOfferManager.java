@@ -39,7 +39,7 @@ import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.ClosedTradableManager;
-import bisq.core.trade.DelayedPayoutAddressProvider;
+import bisq.core.trade.DelayedPayoutReceiversUtil;
 import bisq.core.trade.bisq_v1.TransactionResultHandler;
 import bisq.core.trade.model.TradableList;
 import bisq.core.trade.statistics.TradeStatisticsManager;
@@ -82,7 +82,6 @@ import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -666,12 +665,11 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             return;
         }
 
-        boolean isHashOfIssuanceListRequired = new Date().after(DelayedPayoutAddressProvider.ACTIVATION_DATE);
-        if (isHashOfIssuanceListRequired) {
+        if (DelayedPayoutReceiversUtil.isActivated()) {
             try {
                 byte[] takersHashOfIssuanceList = request.getHashOfIssuanceList();
                 checkNotNull(takersHashOfIssuanceList, "takersHashOfIssuanceList must not be null");
-                byte[] makersHashOfIssuanceList = DelayedPayoutAddressProvider.getHashOfIssuanceList(daoFacade);
+                byte[] makersHashOfIssuanceList = DelayedPayoutReceiversUtil.getIssuanceListAndHashTuple(daoFacade).second;
                 checkNotNull(makersHashOfIssuanceList, "makersHashOfIssuanceList must not be null");
                 checkArgument(Arrays.equals(takersHashOfIssuanceList, makersHashOfIssuanceList),
                         "takersHashOfIssuanceList does no match makersHashOfIssuanceList");

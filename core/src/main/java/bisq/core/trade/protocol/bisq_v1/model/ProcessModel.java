@@ -23,6 +23,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.filter.FilterManager;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
@@ -175,6 +176,12 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     // To enable that even after restart we persist the state.
     @Setter
     private ObjectProperty<MessageState> paymentStartedMessageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
+
+    // Added in v 1.9.6
+    @Nullable
+    @Setter
+    @Getter
+    transient private List<Issuance> issuanceList;
 
     public ProcessModel(String offerId, String accountId, PubKeyRing pubKeyRing) {
         this(offerId, accountId, pubKeyRing, new TradingPeer());
