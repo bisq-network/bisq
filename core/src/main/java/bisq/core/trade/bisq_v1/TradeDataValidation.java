@@ -383,6 +383,33 @@ public class TradeDataValidation {
         }
     }
 
+    public static void validateBothPreparedDelayedPayoutTxsAreEqual(Transaction buyersPreparedDelayedPayoutTx,
+                                                                    Transaction sellersPreparedDelayedPayoutTx,
+                                                                    boolean depositTxNonMalleable) throws InvalidTxException {
+        if (!DelayedPayoutReceiversUtil.isActivated()) {
+            return;
+        }
+        try {
+            // preparedDepositTx has an unconnected input, so we only compare the outputs
+
+            checkArgument(sellersPreparedDelayedPayoutTx.getOutputs().size() == buyersPreparedDelayedPayoutTx.getOutputs().size(),
+                    "Tx outputs of sellersPreparedDelayedPayoutTx and buyersPreparedDelayedPayoutTx must have same size");
+            for (int i = 0; i < sellersPreparedDelayedPayoutTx.getOutputs().size(); i++) {
+                TransactionOutput sellerTxOutput = sellersPreparedDelayedPayoutTx.getOutputs().get(i);
+                TransactionOutput buyerTxOutput = buyersPreparedDelayedPayoutTx.getOutputs().get(i);
+                checkArgument(sellerTxOutput.equals(buyerTxOutput),
+                        "Tx output of sellersPreparedDelayedPayoutTx and buyersPreparedDelayedPayoutTx must be the same");
+            }
+            if (depositTxNonMalleable) {
+                // If not malleable we check also the txIds
+                checkArgument(sellersPreparedDelayedPayoutTx.getTxId().equals(buyersPreparedDelayedPayoutTx.getTxId()),
+                        "TxIds of sellersPreparedDelayedPayoutTx and buyersPreparedDelayedPayoutTx must be the same");
+            }
+        } catch (Throwable t) {
+            throw new InvalidTxException(t.toString());
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Exceptions

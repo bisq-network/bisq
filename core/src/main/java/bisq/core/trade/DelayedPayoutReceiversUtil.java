@@ -17,15 +17,21 @@
 
 package bisq.core.trade;
 
+import bisq.core.btc.exceptions.TransactionVerificationException;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
+import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.util.FeeReceiverSelector;
 
 import bisq.common.crypto.Hash;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
+
+import org.bitcoinj.core.Transaction;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -34,6 +40,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -128,6 +135,28 @@ public class DelayedPayoutReceiversUtil {
                 .filter(tuple -> tuple.first >= 500) // In case there are tiny outputs we remove them and the amount gets into miner fees
                 .sorted(Comparator.comparing(tuple -> tuple.first))
                 .collect(Collectors.toList());
+    }
+
+    public static Transaction createPreparedDelayedPayoutTx(TradeWalletService tradeWalletService,
+                                                            BtcWalletService btcWalletService,
+                                                            DaoFacade daoFacade,
+                                                            Trade trade,
+                                                            Optional<Transaction> optionalDepositTx,
+                                                            byte[] preparedDepositTx,
+                                                            List<Issuance> issuanceList)
+            throws TransactionVerificationException {
+        // We create the delayed payout tx the same way as the seller and compare it with the one which we
+        // received from the seller.
+        long lockTime = trade.getLockTime();
+        Transaction depositTx = optionalDepositTx.orElse(btcWalletService.getTxFromSerializedTx(preparedDepositTx));
+        long inputAmount = depositTx.getOutput(0).getValue().value;
+        List<Tuple2<Long, String>> receivers = DelayedPayoutReceiversUtil.getReceivers(daoFacade,
+                issuanceList,
+                inputAmount,
+                trade.getTradeTxFeeAsLong());
+        return tradeWalletService.createDelayedUnsignedPayoutTx(depositTx,
+                receivers,
+                lockTime);
     }
 
     private static double getSatPerWeightUnit(int numOutputs,
