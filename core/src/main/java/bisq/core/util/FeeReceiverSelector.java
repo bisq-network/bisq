@@ -49,7 +49,10 @@ public class FeeReceiverSelector {
     public static final int MAX_AGE = 76896; // 1.5 years with 144 blocks/day;
 
     public static String getBtcFeeReceiverAddress(DaoFacade daoFacade) {
-        Set<Issuance> issuanceSet = daoFacade.getIssuanceSetForType(IssuanceType.COMPENSATION);
+        int minBlockHeight = daoFacade.getChainHeight() - FeeReceiverSelector.MAX_AGE;
+        Set<Issuance> issuanceSet = daoFacade.getIssuanceSetForType(IssuanceType.COMPENSATION).stream()
+                .filter(issuance -> issuance.getChainHeight() >= minBlockHeight)
+                .collect(Collectors.toSet());
         List<Tuple2<Long, String>> amountAddressList = getAmountAddressList(daoFacade, issuanceSet);
         if (amountAddressList.isEmpty()) {
             // If there are no compensation requests (e.g. at dev testing) we fall back to the default address
