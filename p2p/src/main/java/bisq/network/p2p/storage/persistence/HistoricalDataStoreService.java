@@ -83,7 +83,7 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
                             "As our historical store is a newer version we add the data to our result map." :
                             "As the requester version is not older as our historical store we do not " +
                                     "add the data to the result map.";
-                    log.info("The requester had version {}. Our historical data store has version {}.\n{}",
+                    log.trace("The requester had version {}. Our historical data store has version {}.\n{}",
                             requestersVersion, storeVersion, details);
                     return newVersion;
                 })
