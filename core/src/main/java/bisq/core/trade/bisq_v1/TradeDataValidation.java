@@ -19,7 +19,6 @@ package bisq.core.trade.bisq_v1;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.Offer;
-import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
 
@@ -32,7 +31,6 @@ import org.bitcoinj.core.TransactionOutput;
 
 import java.util.function.Consumer;
 
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -162,17 +160,8 @@ public class TradeDataValidation {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static class ValidationException extends Exception {
-        @Nullable
-        @Getter
-        private final Dispute dispute;
-
         ValidationException(String msg) {
-            this(null, msg);
-        }
-
-        ValidationException(@Nullable Dispute dispute, String msg) {
             super(msg);
-            this.dispute = dispute;
         }
     }
 
