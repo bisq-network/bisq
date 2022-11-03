@@ -164,14 +164,12 @@ public class TradeDataValidation {
         if (addressConsumer != null) {
             addressConsumer.accept(delayedPayoutTxOutputAddressAsString);
         }
-
-        validateDonationAddress(dispute, delayedPayoutTx, btcWalletService.getParams(), daoFacade);
     }
 
-    private static void validateDonationAddress(Dispute dispute,
-                                                Transaction delayedPayoutTx,
-                                                NetworkParameters params,
-                                                DaoFacade daoFacade
+    public static void validateDonationAddress(Dispute dispute,
+                                               Transaction delayedPayoutTx,
+                                               NetworkParameters params,
+                                               DaoFacade daoFacade
     )
             throws DisputeValidation.AddressException {
         String delayedPayoutTxOutputAddress = delayedPayoutTx.getOutput(0).getScriptPubKey().getToAddress(params).toString();

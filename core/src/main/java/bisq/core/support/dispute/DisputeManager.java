@@ -70,6 +70,7 @@ import java.time.Instant;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -404,6 +405,10 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                     dispute,
                     daoFacade,
                     btcWalletService);
+            TradeDataValidation.validateDonationAddress(dispute,
+                    Objects.requireNonNull(trade.getDelayedPayoutTx()),
+                    btcWalletService.getParams(),
+                    daoFacade);
         } catch (TradeDataValidation.ValidationException | DisputeValidation.ValidationException e) {
             // The peer sent us an invalid donation address. We do not return here as we don't want to break
             // mediation/arbitration and log only the issue. The dispute agent will run validation as well and will get
