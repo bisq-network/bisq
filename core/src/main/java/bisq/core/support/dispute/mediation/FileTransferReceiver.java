@@ -43,8 +43,12 @@ import javax.annotation.Nullable;
 public class FileTransferReceiver extends FileTransferSession {
     protected final String zipFilePath;
 
-    public FileTransferReceiver(NetworkNode networkNode, NodeAddress peerNodeAddress,
-                                String tradeId, int traderId, String traderRole, @Nullable FileTransferSession.FtpCallback callback) throws IOException {
+    public FileTransferReceiver(NetworkNode networkNode,
+                                NodeAddress peerNodeAddress,
+                                String tradeId,
+                                int traderId,
+                                String traderRole,
+                                @Nullable FileTransferSession.FtpCallback callback) throws IOException {
         super(networkNode, peerNodeAddress, tradeId, traderId, traderRole, callback);
         zipFilePath = ensureReceivingDirectoryExists().getAbsolutePath() + FileSystems.getDefault().getSeparator() + zipId + ".zip";
     }

@@ -373,8 +373,8 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getBuyerNodeAddress(), config);
             TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getSellerNodeAddress(), config);
         } catch (TradeDataValidation.AddressException |
-                TradeDataValidation.DisputeReplayException |
-                TradeDataValidation.NodeAddressException e) {
+                 TradeDataValidation.DisputeReplayException |
+                 TradeDataValidation.NodeAddressException e) {
             log.error(e.toString());
             validationExceptions.add(e);
         }
@@ -577,8 +577,8 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         // message and not skip the system message of the peer as it would be the case if we have created the system msg
         // from the code below.
         UserThread.runAfter(() -> doSendPeerOpenedDisputeMessage(disputeFromOpener,
-                contractFromOpener,
-                pubKeyRing),
+                        contractFromOpener,
+                        pubKeyRing),
                 100, TimeUnit.MILLISECONDS);
     }
 
@@ -1017,6 +1017,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     private void recordPendingMessage(String className) {
         pendingOutgoingMessage = className;
     }
+
     private void clearPendingMessage() {
         pendingOutgoingMessage = "";
     }

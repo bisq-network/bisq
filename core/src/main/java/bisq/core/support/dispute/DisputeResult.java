@@ -79,7 +79,8 @@ public final class DisputeResult implements NetworkPayload {
         CUSTOM_PAYOUT("disputeSummaryWindow.payout.custom", null);
 
         private String suggestionKey;
-        @Nullable private String buyerSellerKey;
+        @Nullable
+        private String buyerSellerKey;
 
         PayoutSuggestion(String suggestionKey, @Nullable String buyerSellerKey) {
             this.suggestionKey = suggestionKey;
@@ -279,9 +280,9 @@ public final class DisputeResult implements NetworkPayload {
 
     public String getPayoutSuggestionText() {
         if (payoutSuggestion.equals(PayoutSuggestion.BUYER_GETS_TRADE_AMOUNT_MINUS_PENALTY)
-            || payoutSuggestion.equals(PayoutSuggestion.BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION)
-            || payoutSuggestion.equals(PayoutSuggestion.SELLER_GETS_TRADE_AMOUNT_MINUS_PENALTY)
-            || payoutSuggestion.equals(PayoutSuggestion.SELLER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION)) {
+                || payoutSuggestion.equals(PayoutSuggestion.BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION)
+                || payoutSuggestion.equals(PayoutSuggestion.SELLER_GETS_TRADE_AMOUNT_MINUS_PENALTY)
+                || payoutSuggestion.equals(PayoutSuggestion.SELLER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION)) {
             return payoutSuggestion + " " + payoutAdjustmentPercent + "%";
         }
         return payoutSuggestion.toString();

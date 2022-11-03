@@ -194,7 +194,7 @@ public abstract class SupportManager {
         PubKeyRing receiverPubKeyRing = getPeerPubKeyRing(message);
         if (peersNodeAddress == null || receiverPubKeyRing == null) {
             UserThread.runAfter(() ->
-                message.setSendMessageError(Res.get("support.receiverNotKnown")), 1);
+                    message.setSendMessageError(Res.get("support.receiverNotKnown")), 1);
         } else {
             log.info("Send {} to peer {}. tradeId={}, uid={}",
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());

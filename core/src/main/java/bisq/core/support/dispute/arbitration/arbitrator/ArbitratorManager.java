@@ -27,8 +27,8 @@ import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import java.util.List;
 

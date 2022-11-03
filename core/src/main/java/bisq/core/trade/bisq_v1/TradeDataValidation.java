@@ -371,8 +371,8 @@ public class TradeDataValidation {
         if (!makerFirstMatch && !takerFirstMatch) {
             String errMsg = "Maker/Taker txId in contract does not match deposit tx input";
             log.error(errMsg +
-                "\nContract Maker tx=" + contractMakerTxId + " Contract Taker tx=" + contractTakerTxId +
-                "\nDeposit Input0=" + txIdInput0 + " Deposit Input1=" + txIdInput1);
+                    "\nContract Maker tx=" + contractMakerTxId + " Contract Taker tx=" + contractTakerTxId +
+                    "\nDeposit Input0=" + txIdInput0 + " Deposit Input1=" + txIdInput1);
             throw new InvalidTxException(errMsg);
         }
     }
