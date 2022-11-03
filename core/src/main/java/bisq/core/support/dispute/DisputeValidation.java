@@ -95,15 +95,9 @@ public class DisputeValidation {
         String delayedPayoutTxOutputAddress = address.toString();
         validateDonationAddressMatchesAnyPastParamValues(dispute, delayedPayoutTxOutputAddress, daoFacade);
 
-        if (dispute != null) {
-            // Verify that address in the dispute matches the one in the trade.
-            String donationAddressOfDelayedPayoutTx = dispute.getDonationAddressOfDelayedPayoutTx();
-            // Old clients don't have it set yet. Can be removed after a forced update
-            if (donationAddressOfDelayedPayoutTx != null) {
-                checkArgument(delayedPayoutTxOutputAddress.equals(donationAddressOfDelayedPayoutTx),
-                        "donationAddressOfDelayedPayoutTx from dispute does not match address from delayed payout tx");
-            }
-        }
+        // Verify that address in the dispute matches the one in the trade.
+        checkArgument(delayedPayoutTxOutputAddress.equals(dispute.getDonationAddressOfDelayedPayoutTx()),
+                "donationAddressOfDelayedPayoutTx from dispute does not match address from delayed payout tx");
     }
 
     public static void testIfAnyDisputeTriedReplay(List<Dispute> disputeList,
