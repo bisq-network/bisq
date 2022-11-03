@@ -23,9 +23,9 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
-import bisq.desktop.main.dao.bonding.BondingViewUtils;
 import bisq.desktop.main.dao.MessageSignatureWindow;
 import bisq.desktop.main.dao.MessageVerificationWindow;
+import bisq.desktop.main.dao.bonding.BondingViewUtils;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 
@@ -92,7 +92,8 @@ public class RolesView extends ActivatableView<GridPane, Void> {
     @Override
     public void initialize() {
         int gridRow = 0;
-        tableView = FormBuilder.addTableViewWithHeader(root, gridRow, Res.get("dao.bond.bondedRoles"), "last");
+        tableView = FormBuilder.<RolesListItem>addTableViewWithHeader(root, gridRow,
+                Res.get("dao.bond.bondedRoles"), "last").first;
         createColumns();
         tableView.setItems(sortedList);
         GridPane.setVgrow(tableView, Priority.ALWAYS);
@@ -294,6 +295,7 @@ public class RolesView extends ActivatableView<GridPane, Void> {
                     public TableCell<RolesListItem, RolesListItem> call(TableColumn<RolesListItem, RolesListItem> column) {
                         return new TableCell<>() {
                             HBox hbox;
+
                             @Override
                             public void updateItem(final RolesListItem item, boolean empty) {
                                 super.updateItem(item, empty);
@@ -315,13 +317,15 @@ public class RolesView extends ActivatableView<GridPane, Void> {
                                         if (item.isLockupButtonVisible()) {
                                             AutoTooltipButton buttonLockup = new AutoTooltipButton(Res.get("dao.bond.table.button.lockup"));
                                             buttonLockup.setMinWidth(70);
-                                            buttonLockup.setOnAction(e -> bondingViewUtils.lockupBondForBondedRole(item.getRole(), txId -> {}));
+                                            buttonLockup.setOnAction(e -> bondingViewUtils.lockupBondForBondedRole(item.getRole(), txId -> {
+                                            }));
                                             hbox.getChildren().add(buttonLockup);
                                         }
                                         if (item.isRevokeButtonVisible()) {
                                             AutoTooltipButton buttonRevoke = new AutoTooltipButton(Res.get("dao.bond.table.button.revoke"));
                                             buttonRevoke.setMinWidth(70);
-                                            buttonRevoke.setOnAction(e -> bondingViewUtils.unLock(item.getLockupTxId(), txId -> {}));
+                                            buttonRevoke.setOnAction(e -> bondingViewUtils.unLock(item.getLockupTxId(), txId -> {
+                                            }));
                                             hbox.getChildren().add(buttonRevoke);
                                         }
                                         hbox.setMinWidth(hbox.getChildren().size() * 70);

@@ -141,7 +141,8 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
 
         lockupButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.bond.reputation.lockupButton"));
 
-        tableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.bond.reputation.table.header"), 20, "last");
+        tableView = FormBuilder.<MyReputationListItem>addTableViewWithHeader(root, ++gridRow,
+                Res.get("dao.bond.reputation.table.header"), 20, "last").first;
         createColumns();
         tableView.setItems(sortedList);
         GridPane.setVgrow(tableView, Priority.ALWAYS);
