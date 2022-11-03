@@ -44,17 +44,23 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
     private final Capabilities supportedCapabilities;
     private final boolean isTakerApiUser;
 
+    // Added in v 1.9.7
+    private final int burningManSelectionHeight;
+
     public OfferAvailabilityRequest(String offerId,
                                     PubKeyRing pubKeyRing,
                                     long takersTradePrice,
-                                    boolean isTakerApiUser) {
+                                    boolean isTakerApiUser,
+                                    int burningManSelectionHeight) {
         this(offerId,
                 pubKeyRing,
                 takersTradePrice,
                 isTakerApiUser,
+                burningManSelectionHeight,
                 Capabilities.app,
                 Version.getP2PMessageVersion(),
-                UUID.randomUUID().toString());
+                UUID.randomUUID().toString()
+        );
     }
 
 
@@ -66,6 +72,7 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
                                      PubKeyRing pubKeyRing,
                                      long takersTradePrice,
                                      boolean isTakerApiUser,
+                                     int burningManSelectionHeight,
                                      @Nullable Capabilities supportedCapabilities,
                                      int messageVersion,
                                      @Nullable String uid) {
@@ -73,6 +80,7 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
         this.pubKeyRing = pubKeyRing;
         this.takersTradePrice = takersTradePrice;
         this.isTakerApiUser = isTakerApiUser;
+        this.burningManSelectionHeight = burningManSelectionHeight;
         this.supportedCapabilities = supportedCapabilities;
     }
 
@@ -82,7 +90,8 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
                 .setOfferId(offerId)
                 .setPubKeyRing(pubKeyRing.toProtoMessage())
                 .setTakersTradePrice(takersTradePrice)
-                .setIsTakerApiUser(isTakerApiUser);
+                .setIsTakerApiUser(isTakerApiUser)
+                .setBurningManSelectionHeight(burningManSelectionHeight);
 
         Optional.ofNullable(supportedCapabilities).ifPresent(e -> builder.addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities)));
         Optional.ofNullable(uid).ifPresent(e -> builder.setUid(uid));
@@ -97,6 +106,7 @@ public final class OfferAvailabilityRequest extends OfferMessage implements Supp
                 PubKeyRing.fromProto(proto.getPubKeyRing()),
                 proto.getTakersTradePrice(),
                 proto.getIsTakerApiUser(),
+                proto.getBurningManSelectionHeight(),
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList()),
                 messageVersion,
                 proto.getUid().isEmpty() ? null : proto.getUid());

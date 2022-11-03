@@ -80,6 +80,9 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
     @Nullable
     private final String takersPaymentMethodId;
 
+    // Added in v 1.9.7
+    private final int burningManSelectionHeight;
+
     public InputsForDepositTxRequest(String tradeId,
                                      NodeAddress senderNodeAddress,
                                      long tradeAmount,
@@ -107,7 +110,8 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                                      byte[] accountAgeWitnessSignatureOfOfferId,
                                      long currentDate,
                                      @Nullable byte[] hashOfTakersPaymentAccountPayload,
-                                     @Nullable String takersPaymentMethodId) {
+                                     @Nullable String takersPaymentMethodId,
+                                     int burningManSelectionHeight) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
         this.tradeAmount = tradeAmount;
@@ -134,6 +138,7 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
         this.currentDate = currentDate;
         this.hashOfTakersPaymentAccountPayload = hashOfTakersPaymentAccountPayload;
         this.takersPaymentMethodId = takersPaymentMethodId;
+        this.burningManSelectionHeight = burningManSelectionHeight;
     }
 
 
@@ -169,7 +174,8 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 .setRefundAgentNodeAddress(refundAgentNodeAddress.toProtoMessage())
                 .setUid(uid)
                 .setAccountAgeWitnessSignatureOfOfferId(ByteString.copyFrom(accountAgeWitnessSignatureOfOfferId))
-                .setCurrentDate(currentDate);
+                .setCurrentDate(currentDate)
+                .setBurningManSelectionHeight(burningManSelectionHeight);
 
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
         Optional.ofNullable(arbitratorNodeAddress).ifPresent(e -> builder.setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage()));
@@ -223,7 +229,8 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignatureOfOfferId()),
                 proto.getCurrentDate(),
                 hashOfTakersPaymentAccountPayload,
-                ProtoUtil.stringOrNullFromProto(proto.getTakersPayoutMethodId()));
+                ProtoUtil.stringOrNullFromProto(proto.getTakersPayoutMethodId()),
+                proto.getBurningManSelectionHeight());
     }
 
     @Override
@@ -253,6 +260,7 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 ",\n     currentDate=" + currentDate +
                 ",\n     hashOfTakersPaymentAccountPayload=" + Utilities.bytesAsHexString(hashOfTakersPaymentAccountPayload) +
                 ",\n     takersPaymentMethodId=" + takersPaymentMethodId +
+                ",\n     burningManSelectionHeight=" + burningManSelectionHeight +
                 "\n} " + super.toString();
     }
 }

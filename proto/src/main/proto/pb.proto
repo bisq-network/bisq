@@ -174,6 +174,7 @@ message OfferAvailabilityRequest {
     repeated int32 supported_capabilities = 4;
     string uid = 5;
     bool is_taker_api_user = 6;
+    int32 burning_man_selection_height = 7;  // Added in v 1.9.7
 }
 
 message OfferAvailabilityResponse {
@@ -260,6 +261,7 @@ message InputsForDepositTxRequest {
     NodeAddress refund_agent_node_address = 25;
     bytes hash_of_takers_payment_account_payload = 26;
     string takers_payout_method_id = 27;
+    int32 burning_man_selection_height = 28;  // Added in v 1.9.7
 }
 
 message InputsForDepositTxResponse {
@@ -1810,6 +1812,7 @@ message ProcessModel {
     int64 buyer_payout_amount_from_mediation = 19;
     int64 seller_payout_amount_from_mediation = 20;
     PaymentAccount payment_account = 21;
+    int32 burning_man_selection_height = 22;  // Added in v 1.9.7
 }
 
 message TradingPeer {
