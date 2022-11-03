@@ -41,15 +41,13 @@ import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.P2PService;
 
-import bisq.common.app.DevEnv;
-
 import com.google.inject.Inject;
 
 import javax.inject.Named;
 
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Domain for that UI element.
@@ -91,8 +89,6 @@ class CreateOfferDataModel extends MutableOfferDataModel {
 
     @Override
     protected Set<PaymentAccount> getUserPaymentAccounts() {
-        return Objects.requireNonNull(user.getPaymentAccounts()).stream()
-                .filter(account -> !account.getPaymentMethod().isBsqSwap() || DevEnv.isDaoActivated())
-                .collect(Collectors.toSet());
+        return new HashSet<>(Objects.requireNonNull(user.getPaymentAccounts()));
     }
 }

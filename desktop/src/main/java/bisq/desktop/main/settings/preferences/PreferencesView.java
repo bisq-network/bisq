@@ -1047,7 +1047,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void activateDaoPreferences() {
-        daoActivatedToggleButton.setSelected(DevEnv.isDaoActivated());
+        daoActivatedToggleButton.setSelected(true);
         daoActivatedToggleButton.setOnAction(e -> {
             // We do not use preferences as we need to handle the value at startup before preferences are loaded,
             // so we write the option to the properties file. If the program argument is set it has higher priority
