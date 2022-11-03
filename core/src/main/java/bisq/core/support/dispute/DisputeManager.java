@@ -98,7 +98,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     protected String pendingOutgoingMessage;
 
     @Getter
-    protected final ObservableList<TradeDataValidation.ValidationException> validationExceptions =
+    protected final ObservableList<DisputeValidation.ValidationException> validationExceptions =
             FXCollections.observableArrayList();
     @Getter
     private final KeyPair signatureKeyPair;
@@ -275,7 +275,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                 TradeDataValidation.validateDonationAddress(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
                 TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getBuyerNodeAddress(), config);
                 TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getSellerNodeAddress(), config);
-            } catch (TradeDataValidation.AddressException | TradeDataValidation.NodeAddressException e) {
+            } catch (DisputeValidation.AddressException | DisputeValidation.NodeAddressException e) {
                 log.error(e.toString());
                 validationExceptions.add(e);
             }
@@ -372,9 +372,9 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             TradeDataValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
             TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getBuyerNodeAddress(), config);
             TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getSellerNodeAddress(), config);
-        } catch (TradeDataValidation.AddressException |
-                 TradeDataValidation.DisputeReplayException |
-                 TradeDataValidation.NodeAddressException e) {
+        } catch (DisputeValidation.AddressException |
+                 DisputeValidation.DisputeReplayException |
+                 DisputeValidation.NodeAddressException e) {
             log.error(e.toString());
             validationExceptions.add(e);
         }
@@ -404,7 +404,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                     dispute,
                     daoFacade,
                     btcWalletService);
-        } catch (TradeDataValidation.ValidationException e) {
+        } catch (TradeDataValidation.ValidationException | DisputeValidation.ValidationException e) {
             // The peer sent us an invalid donation address. We do not return here as we don't want to break
             // mediation/arbitration and log only the issue. The dispute agent will run validation as well and will get
             // a popup displayed to react.

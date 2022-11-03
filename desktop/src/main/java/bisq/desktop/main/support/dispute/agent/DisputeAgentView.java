@@ -31,11 +31,11 @@ import bisq.core.locale.Res;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
+import bisq.core.support.dispute.DisputeValidation;
 import bisq.core.support.dispute.agent.MultipleHolderNameDetection;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
 import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.TradeManager;
-import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.util.coin.CoinFormatter;
@@ -64,13 +64,12 @@ import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
 
-import static bisq.core.trade.bisq_v1.TradeDataValidation.ValidationException;
 import static bisq.desktop.util.FormBuilder.getIconForLabel;
 
 public abstract class DisputeAgentView extends DisputeView implements MultipleHolderNameDetection.Listener {
 
     private final MultipleHolderNameDetection multipleHolderNameDetection;
-    private ListChangeListener<ValidationException> validationExceptionListener;
+    private ListChangeListener<DisputeValidation.ValidationException> validationExceptionListener;
 
     public DisputeAgentView(DisputeManager<? extends DisputeList<Dispute>> disputeManager,
                             KeyRing keyRing,
@@ -136,15 +135,14 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
         };
     }
 
-    protected void showWarningForValidationExceptions(List<? extends ValidationException> exceptions) {
+    protected void showWarningForValidationExceptions(List<? extends DisputeValidation.ValidationException> exceptions) {
         exceptions.stream()
-                .filter(ex -> ex.getDispute() != null)
                 .filter(ex -> !ex.getDispute().isClosed()) // we show warnings only for open cases
                 .filter(ex -> DontShowAgainLookup.showAgain(getKey(ex)))
                 .forEach(ex -> new Popup().width(900).warning(getValidationExceptionMessage(ex)).dontShowAgainId(getKey(ex)).show());
     }
 
-    private String getKey(ValidationException exception) {
+    private String getKey(DisputeValidation.ValidationException exception) {
         Dispute dispute = exception.getDispute();
         if (dispute != null) {
             return "ValExcPopup-" + dispute.getTradeId() + "-" + dispute.getTraderId();
@@ -152,9 +150,9 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
         return "ValExcPopup-" + exception.toString();
     }
 
-    private String getValidationExceptionMessage(ValidationException exception) {
+    private String getValidationExceptionMessage(DisputeValidation.ValidationException exception) {
         Dispute dispute = exception.getDispute();
-        if (dispute != null && exception instanceof TradeDataValidation.AddressException) {
+        if (exception instanceof DisputeValidation.AddressException) {
             return getAddressExceptionMessage(dispute);
         } else if (exception.getMessage() != null && !exception.getMessage().isEmpty()) {
             return exception.getMessage();

@@ -22,6 +22,7 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.offer.Offer;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
+import bisq.core.support.dispute.DisputeValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.util.validation.RegexValidatorFactory;
 
@@ -57,22 +58,22 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class TradeDataValidation {
 
     public static void validateDonationAddress(String addressAsString, DaoFacade daoFacade)
-            throws AddressException {
+            throws DisputeValidation.AddressException {
         validateDonationAddress(null, addressAsString, daoFacade);
     }
 
     public static void validateNodeAddress(Dispute dispute, NodeAddress nodeAddress, Config config)
-            throws NodeAddressException {
+            throws DisputeValidation.NodeAddressException {
         if (!config.useLocalhostForP2P && !RegexValidatorFactory.onionAddressRegexValidator().validate(nodeAddress.getFullAddress()).isValid) {
             String msg = "Node address " + nodeAddress.getFullAddress() + " at dispute with trade ID " +
                     dispute.getShortTradeId() + " is not a valid address";
             log.error(msg);
-            throw new NodeAddressException(dispute, msg);
+            throw new DisputeValidation.NodeAddressException(dispute, msg);
         }
     }
 
     public static void validateDonationAddress(@Nullable Dispute dispute, String addressAsString, DaoFacade daoFacade)
-            throws AddressException {
+            throws DisputeValidation.AddressException {
 
         if (addressAsString == null) {
             log.debug("address is null at validateDonationAddress. This is expected in case of an not updated trader.");
@@ -85,12 +86,12 @@ public class TradeDataValidation {
                     "\nAddress used in the dispute: " + addressAsString +
                     "\nAll DAO param donation addresses:" + allPastParamValues;
             log.error(errorMsg);
-            throw new AddressException(dispute, errorMsg);
+            throw new DisputeValidation.AddressException(dispute, errorMsg);
         }
     }
 
     public static void testIfAnyDisputeTriedReplay(List<Dispute> disputeList,
-                                                   Consumer<DisputeReplayException> exceptionHandler) {
+                                                   Consumer<DisputeValidation.DisputeReplayException> exceptionHandler) {
         var tuple = getTestReplayHashMaps(disputeList);
         Map<String, Set<String>> disputesPerTradeId = tuple.first;
         Map<String, Set<String>> disputesPerDelayedPayoutTxId = tuple.second;
@@ -103,7 +104,7 @@ public class TradeDataValidation {
                         disputesPerDelayedPayoutTxId,
                         disputesPerDepositTxId);
 
-            } catch (DisputeReplayException e) {
+            } catch (DisputeValidation.DisputeReplayException e) {
                 exceptionHandler.accept(e);
             }
         });
@@ -111,7 +112,7 @@ public class TradeDataValidation {
 
 
     public static void testIfDisputeTriesReplay(Dispute dispute,
-                                                List<Dispute> disputeList) throws DisputeReplayException {
+                                                List<Dispute> disputeList) throws DisputeValidation.DisputeReplayException {
         var tuple = TradeDataValidation.getTestReplayHashMaps(disputeList);
         Map<String, Set<String>> disputesPerTradeId = tuple.first;
         Map<String, Set<String>> disputesPerDelayedPayoutTxId = tuple.second;
@@ -159,7 +160,7 @@ public class TradeDataValidation {
                                                  Map<String, Set<String>> disputesPerTradeId,
                                                  Map<String, Set<String>> disputesPerDelayedPayoutTxId,
                                                  Map<String, Set<String>> disputesPerDepositTxId)
-            throws DisputeReplayException {
+            throws DisputeValidation.DisputeReplayException {
 
         try {
             String disputeToTestTradeId = disputeToTest.getTradeId();
@@ -197,13 +198,13 @@ public class TradeDataValidation {
                                 "Trade ID: " + disputeToTestTradeId);
             }
         } catch (IllegalArgumentException e) {
-            throw new DisputeReplayException(disputeToTest, e.getMessage());
+            throw new DisputeValidation.DisputeReplayException(disputeToTest, e.getMessage());
         } catch (NullPointerException e) {
             log.error("NullPointerException at testIfDisputeTriesReplay: " +
                             "disputeToTest={}, disputesPerTradeId={}, disputesPerDelayedPayoutTxId={}, " +
                             "disputesPerDepositTxId={}",
                     disputeToTest, disputesPerTradeId, disputesPerDelayedPayoutTxId, disputesPerDepositTxId);
-            throw new DisputeReplayException(disputeToTest, e.toString() + " at dispute " + disputeToTest.toString());
+            throw new DisputeValidation.DisputeReplayException(disputeToTest, e.toString() + " at dispute " + disputeToTest.toString());
         }
     }
 
@@ -211,7 +212,7 @@ public class TradeDataValidation {
                                                Transaction delayedPayoutTx,
                                                DaoFacade daoFacade,
                                                BtcWalletService btcWalletService)
-            throws AddressException, MissingTxException,
+            throws DisputeValidation.AddressException, MissingTxException,
             InvalidTxException, InvalidLockTimeException, InvalidAmountException {
         validateDelayedPayoutTx(trade,
                 delayedPayoutTx,
@@ -226,7 +227,7 @@ public class TradeDataValidation {
                                                @Nullable Dispute dispute,
                                                DaoFacade daoFacade,
                                                BtcWalletService btcWalletService)
-            throws AddressException, MissingTxException,
+            throws DisputeValidation.AddressException, MissingTxException,
             InvalidTxException, InvalidLockTimeException, InvalidAmountException {
         validateDelayedPayoutTx(trade,
                 delayedPayoutTx,
@@ -241,7 +242,7 @@ public class TradeDataValidation {
                                                DaoFacade daoFacade,
                                                BtcWalletService btcWalletService,
                                                @Nullable Consumer<String> addressConsumer)
-            throws AddressException, MissingTxException,
+            throws DisputeValidation.AddressException, MissingTxException,
             InvalidTxException, InvalidLockTimeException, InvalidAmountException {
         validateDelayedPayoutTx(trade,
                 delayedPayoutTx,
@@ -257,7 +258,7 @@ public class TradeDataValidation {
                                                DaoFacade daoFacade,
                                                BtcWalletService btcWalletService,
                                                @Nullable Consumer<String> addressConsumer)
-            throws AddressException, MissingTxException,
+            throws DisputeValidation.AddressException, MissingTxException,
             InvalidTxException, InvalidLockTimeException, InvalidAmountException {
         String errorMsg;
         if (delayedPayoutTx == null) {
@@ -320,7 +321,7 @@ public class TradeDataValidation {
             errorMsg = "Donation address cannot be resolved (not of type P2PK nor P2SH nor P2WH). Output: " + output;
             log.error(errorMsg);
             log.error(delayedPayoutTx.toString());
-            throw new AddressException(dispute, errorMsg);
+            throw new DisputeValidation.AddressException(dispute, errorMsg);
         }
 
         String addressAsString = address.toString();
@@ -397,12 +398,6 @@ public class TradeDataValidation {
         }
     }
 
-    public static class AddressException extends ValidationException {
-        AddressException(@Nullable Dispute dispute, String msg) {
-            super(dispute, msg);
-        }
-    }
-
     public static class MissingTxException extends ValidationException {
         MissingTxException(String msg) {
             super(msg);
@@ -430,18 +425,6 @@ public class TradeDataValidation {
     public static class InvalidInputException extends ValidationException {
         InvalidInputException(String msg) {
             super(msg);
-        }
-    }
-
-    public static class DisputeReplayException extends ValidationException {
-        DisputeReplayException(Dispute dispute, String msg) {
-            super(dispute, msg);
-        }
-    }
-
-    public static class NodeAddressException extends ValidationException {
-        NodeAddressException(Dispute dispute, String msg) {
-            super(dispute, msg);
         }
     }
 }

@@ -43,6 +43,7 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
+import bisq.core.support.dispute.DisputeValidation;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.bisq_v1.TradeDataValidation;
@@ -817,7 +818,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             TradeDataValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
             TradeDataValidation.testIfDisputeTriesReplay(dispute, disputeManager.getDisputesAsObservableList());
             doClose(closeTicketButton);
-        } catch (TradeDataValidation.AddressException exception) {
+        } catch (DisputeValidation.AddressException exception) {
             String addressAsString = dispute.getDonationAddressOfDelayedPayoutTx();
             String tradeId = dispute.getTradeId();
 
@@ -845,7 +846,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                                 Res.get("support.warning.disputesWithInvalidDonationAddress.refundAgent")))
                         .show();
             }
-        } catch (TradeDataValidation.DisputeReplayException exception) {
+        } catch (DisputeValidation.DisputeReplayException exception) {
             if (disputeManager instanceof MediationManager) {
                 log.error("Closing of ticket failed as mediator", exception);
                 new Popup().width(900)

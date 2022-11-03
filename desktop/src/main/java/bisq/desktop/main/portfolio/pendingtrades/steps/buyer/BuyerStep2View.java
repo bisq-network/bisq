@@ -104,6 +104,7 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.payment.payload.SwiftAccountPayload;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
+import bisq.core.support.dispute.DisputeValidation;
 import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.DontShowAgainLookup;
@@ -724,7 +725,7 @@ public class BuyerStep2View extends TradeStepView {
         } catch (TradeDataValidation.MissingTxException ignore) {
             // We don't react on those errors as a failed trade might get listed initially but getting removed from the
             // trade manager after initPendingTrades which happens after activate might be called.
-        } catch (TradeDataValidation.ValidationException e) {
+        } catch (TradeDataValidation.ValidationException | DisputeValidation.ValidationException e) {
             if (!model.dataModel.tradeManager.isAllowFaultyDelayedTxs()) {
                 new Popup().warning(Res.get("portfolio.pending.invalidTx", e.getMessage())).show();
             }
