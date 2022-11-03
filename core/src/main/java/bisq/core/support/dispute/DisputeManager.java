@@ -281,7 +281,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             }
         });
 
-        TradeDataValidation.testIfAnyDisputeTriedReplay(disputes,
+        DisputeValidation.testIfAnyDisputeTriedReplay(disputes,
                 disputeReplayException -> {
                     log.error(disputeReplayException.toString());
                     validationExceptions.add(disputeReplayException);
@@ -369,7 +369,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
 
         try {
             DisputeValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
-            TradeDataValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
+            DisputeValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
             DisputeValidation.validateNodeAddress(dispute, dispute.getContract().getBuyerNodeAddress(), config);
             DisputeValidation.validateNodeAddress(dispute, dispute.getContract().getSellerNodeAddress(), config);
         } catch (DisputeValidation.AddressException |
