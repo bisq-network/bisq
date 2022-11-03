@@ -42,7 +42,6 @@ import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.persistence.RemovedPayloadsService;
 
-import bisq.common.config.Config;
 import bisq.common.proto.persistable.PersistedDataHost;
 
 import com.google.inject.Injector;
@@ -74,16 +73,13 @@ public class CorePersistedDataHost {
         persistedDataHosts.add(injector.getInstance(MailboxMessageService.class));
         persistedDataHosts.add(injector.getInstance(IgnoredMailboxService.class));
         persistedDataHosts.add(injector.getInstance(RemovedPayloadsService.class));
-
-        if (injector.getInstance(Config.class).daoActivated) {
-            persistedDataHosts.add(injector.getInstance(BallotListService.class));
-            persistedDataHosts.add(injector.getInstance(MyBlindVoteListService.class));
-            persistedDataHosts.add(injector.getInstance(MyVoteListService.class));
-            persistedDataHosts.add(injector.getInstance(MyProposalListService.class));
-            persistedDataHosts.add(injector.getInstance(MyReputationListService.class));
-            persistedDataHosts.add(injector.getInstance(MyProofOfBurnListService.class));
-            persistedDataHosts.add(injector.getInstance(UnconfirmedBsqChangeOutputListService.class));
-        }
+        persistedDataHosts.add(injector.getInstance(BallotListService.class));
+        persistedDataHosts.add(injector.getInstance(MyBlindVoteListService.class));
+        persistedDataHosts.add(injector.getInstance(MyVoteListService.class));
+        persistedDataHosts.add(injector.getInstance(MyProposalListService.class));
+        persistedDataHosts.add(injector.getInstance(MyReputationListService.class));
+        persistedDataHosts.add(injector.getInstance(MyProofOfBurnListService.class));
+        persistedDataHosts.add(injector.getInstance(UnconfirmedBsqChangeOutputListService.class));
         return persistedDataHosts;
     }
 }

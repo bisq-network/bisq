@@ -115,7 +115,6 @@ public class Config {
     public static final String GENESIS_TX_ID = "genesisTxId";
     public static final String GENESIS_BLOCK_HEIGHT = "genesisBlockHeight";
     public static final String GENESIS_TOTAL_SUPPLY = "genesisTotalSupply";
-    public static final String DAO_ACTIVATED = "daoActivated";
     public static final String DUMP_DELAYED_PAYOUT_TXS = "dumpDelayedPayoutTxs";
     public static final String ALLOW_FAULTY_DELAYED_TXS = "allowFaultyDelayedTxs";
     public static final String API_PASSWORD = "apiPassword";
@@ -169,7 +168,6 @@ public class Config {
     public final NetworkParameters networkParameters;
     public final boolean ignoreLocalBtcNode;
     public final String bitcoinRegtestHost;
-    public final boolean daoActivated;
     public final String referralId;
     public final boolean useDevMode;
     public final boolean useDevModeHeader;
@@ -626,12 +624,6 @@ public class Config {
                         .ofType(long.class)
                         .defaultsTo(-1L);
 
-        ArgumentAcceptingOptionSpec<Boolean> daoActivatedOpt =
-                parser.accepts(DAO_ACTIVATED, "If set to true dao is activated.")
-                        .withRequiredArg()
-                        .ofType(boolean.class)
-                        .defaultsTo(true);
-
         ArgumentAcceptingOptionSpec<Boolean> dumpDelayedPayoutTxsOpt =
                 parser.accepts(DUMP_DELAYED_PAYOUT_TXS, "Dump delayed payout transactions to file")
                         .withRequiredArg()
@@ -798,7 +790,6 @@ public class Config {
             this.genesisTxId = options.valueOf(genesisTxIdOpt);
             this.genesisBlockHeight = options.valueOf(genesisBlockHeightOpt);
             this.genesisTotalSupply = options.valueOf(genesisTotalSupplyOpt);
-            this.daoActivated = options.valueOf(daoActivatedOpt);
             this.dumpDelayedPayoutTxs = options.valueOf(dumpDelayedPayoutTxsOpt);
             this.allowFaultyDelayedTxs = options.valueOf(allowFaultyDelayedTxsOpt);
             this.apiPassword = options.valueOf(apiPasswordOpt);
