@@ -516,7 +516,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         try {
             TradeDataValidation.validateDelayedPayoutTx(trade,
                     delayedPayoutTx,
-                    daoFacade,
                     btcWalletService,
                     donationAddressString::set);
         } catch (TradeDataValidation.ValidationException | DisputeValidation.ValidationException e) {

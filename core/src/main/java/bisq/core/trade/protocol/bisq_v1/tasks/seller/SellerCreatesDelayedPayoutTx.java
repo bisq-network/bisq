@@ -56,7 +56,6 @@ public class SellerCreatesDelayedPayoutTx extends TradeTask {
                     lockTime);
             TradeDataValidation.validateDelayedPayoutTx(trade,
                     preparedDelayedPayoutTx,
-                    processModel.getDaoFacade(),
                     processModel.getBtcWalletService());
 
             processModel.setPreparedDelayedPayoutTx(preparedDelayedPayoutTx);

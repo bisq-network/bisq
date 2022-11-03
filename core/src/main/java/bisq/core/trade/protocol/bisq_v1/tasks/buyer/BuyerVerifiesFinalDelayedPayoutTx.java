@@ -45,7 +45,6 @@ public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
             // Check again tx
             TradeDataValidation.validateDelayedPayoutTx(trade,
                     delayedPayoutTx,
-                    processModel.getDaoFacade(),
                     processModel.getBtcWalletService());
 
             // Now as we know the deposit tx we can also verify the input

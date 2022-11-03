@@ -18,7 +18,6 @@
 package bisq.core.trade.bisq_v1;
 
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.DaoFacade;
 import bisq.core.offer.Offer;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeValidation;
@@ -45,14 +44,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class TradeDataValidation {
     public static void validateDelayedPayoutTx(Trade trade,
                                                Transaction delayedPayoutTx,
-                                               DaoFacade daoFacade,
                                                BtcWalletService btcWalletService)
             throws DisputeValidation.AddressException, MissingTxException,
             InvalidTxException, InvalidLockTimeException, InvalidAmountException {
         validateDelayedPayoutTx(trade,
                 delayedPayoutTx,
                 null,
-                daoFacade,
                 btcWalletService,
                 null);
     }
@@ -60,21 +57,18 @@ public class TradeDataValidation {
     public static void validateDelayedPayoutTx(Trade trade,
                                                Transaction delayedPayoutTx,
                                                @Nullable Dispute dispute,
-                                               DaoFacade daoFacade,
                                                BtcWalletService btcWalletService)
             throws DisputeValidation.AddressException, MissingTxException,
             InvalidTxException, InvalidLockTimeException, InvalidAmountException {
         validateDelayedPayoutTx(trade,
                 delayedPayoutTx,
                 dispute,
-                daoFacade,
                 btcWalletService,
                 null);
     }
 
     public static void validateDelayedPayoutTx(Trade trade,
                                                Transaction delayedPayoutTx,
-                                               DaoFacade daoFacade,
                                                BtcWalletService btcWalletService,
                                                @Nullable Consumer<String> addressConsumer)
             throws DisputeValidation.AddressException, MissingTxException,
@@ -82,7 +76,6 @@ public class TradeDataValidation {
         validateDelayedPayoutTx(trade,
                 delayedPayoutTx,
                 null,
-                daoFacade,
                 btcWalletService,
                 addressConsumer);
     }
@@ -90,7 +83,6 @@ public class TradeDataValidation {
     public static void validateDelayedPayoutTx(Trade trade,
                                                Transaction delayedPayoutTx,
                                                @Nullable Dispute dispute,
-                                               DaoFacade daoFacade,
                                                BtcWalletService btcWalletService,
                                                @Nullable Consumer<String> addressConsumer)
             throws DisputeValidation.AddressException, MissingTxException,

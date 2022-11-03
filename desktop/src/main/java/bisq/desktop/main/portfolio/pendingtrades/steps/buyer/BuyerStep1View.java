@@ -85,7 +85,6 @@ public class BuyerStep1View extends TradeStepView {
         try {
             TradeDataValidation.validateDelayedPayoutTx(trade,
                     trade.getDelayedPayoutTx(),
-                    model.dataModel.daoFacade,
                     model.dataModel.btcWalletService);
         } catch (TradeDataValidation.MissingTxException ignore) {
             // We don't react on those errors as a failed trade might get listed initially but getting removed from the
