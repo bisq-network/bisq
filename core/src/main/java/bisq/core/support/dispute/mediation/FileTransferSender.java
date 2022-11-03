@@ -55,8 +55,12 @@ import static bisq.common.file.FileUtil.doesFileContainKeyword;
 public class FileTransferSender extends FileTransferSession {
     protected final String zipFilePath;
 
-    public FileTransferSender(NetworkNode networkNode, NodeAddress peerNodeAddress,
-                              String tradeId, int traderId, String traderRole, @Nullable FileTransferSession.FtpCallback callback) {
+    public FileTransferSender(NetworkNode networkNode,
+                              NodeAddress peerNodeAddress,
+                              String tradeId,
+                              int traderId,
+                              String traderRole,
+                              @Nullable FileTransferSession.FtpCallback callback) {
         super(networkNode, peerNodeAddress, tradeId, traderId, traderRole, callback);
         zipFilePath = Config.appDataDir() + FileSystems.getDefault().getSeparator() + zipId + ".zip";
         updateProgress();

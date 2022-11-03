@@ -26,10 +26,9 @@ import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 
-import javax.inject.Singleton;
-import javax.inject.Named;
-
 import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 import java.util.List;
 

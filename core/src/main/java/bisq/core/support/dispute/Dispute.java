@@ -164,7 +164,9 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
 
     private transient FileTransferReceiver fileTransferSession = null;
 
-    public FileTransferReceiver createOrGetFileTransferReceiver(NetworkNode networkNode, NodeAddress peerNodeAddress, FileTransferSession.FtpCallback callback) throws IOException {
+    public FileTransferReceiver createOrGetFileTransferReceiver(NetworkNode networkNode,
+                                                                NodeAddress peerNodeAddress,
+                                                                FileTransferSession.FtpCallback callback) throws IOException {
         // the receiver stores its state temporarily here in the dispute
         // this method gets called to retrieve the session each time a part of the log files is received
         if (fileTransferSession == null) {
@@ -173,7 +175,9 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
         return fileTransferSession;
     }
 
-    public FileTransferSender createFileTransferSender(NetworkNode networkNode, NodeAddress peerNodeAddress, FileTransferSession.FtpCallback callback) {
+    public FileTransferSender createFileTransferSender(NetworkNode networkNode,
+                                                       NodeAddress peerNodeAddress,
+                                                       FileTransferSession.FtpCallback callback) {
         return new FileTransferSender(networkNode, peerNodeAddress, this.tradeId, this.traderId, this.getRoleStringForLogFile(), callback);
     }
 
@@ -421,9 +425,11 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     public ReadOnlyBooleanProperty isClosedProperty() {
         return isClosedProperty;
     }
+
     public ReadOnlyIntegerProperty getBadgeCountProperty() {
         return badgeCountProperty;
     }
+
     public ReadOnlyObjectProperty<DisputeResult> disputeResultProperty() {
         return disputeResultProperty;
     }

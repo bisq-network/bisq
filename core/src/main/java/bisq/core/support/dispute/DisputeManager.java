@@ -70,6 +70,7 @@ import java.time.Instant;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -98,7 +99,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     protected String pendingOutgoingMessage;
 
     @Getter
-    protected final ObservableList<TradeDataValidation.ValidationException> validationExceptions =
+    protected final ObservableList<DisputeValidation.ValidationException> validationExceptions =
             FXCollections.observableArrayList();
     @Getter
     private final KeyPair signatureKeyPair;
@@ -272,16 +273,15 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         List<Dispute> disputes = getDisputeList().getList();
         disputes.forEach(dispute -> {
             try {
-                TradeDataValidation.validateDonationAddress(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
-                TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getBuyerNodeAddress(), config);
-                TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getSellerNodeAddress(), config);
-            } catch (TradeDataValidation.AddressException | TradeDataValidation.NodeAddressException e) {
+                DisputeValidation.validateDonationAddressMatchesAnyPastParamValues(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+                DisputeValidation.validateNodeAddresses(dispute, config);
+            } catch (DisputeValidation.AddressException | DisputeValidation.NodeAddressException e) {
                 log.error(e.toString());
                 validationExceptions.add(e);
             }
         });
 
-        TradeDataValidation.testIfAnyDisputeTriedReplay(disputes,
+        DisputeValidation.testIfAnyDisputeTriedReplay(disputes,
                 disputeReplayException -> {
                     log.error(disputeReplayException.toString());
                     validationExceptions.add(disputeReplayException);
@@ -368,13 +368,12 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         addMediationResultMessage(dispute);
 
         try {
-            TradeDataValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
-            TradeDataValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
-            TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getBuyerNodeAddress(), config);
-            TradeDataValidation.validateNodeAddress(dispute, dispute.getContract().getSellerNodeAddress(), config);
-        } catch (TradeDataValidation.AddressException |
-                TradeDataValidation.DisputeReplayException |
-                TradeDataValidation.NodeAddressException e) {
+            DisputeValidation.validateDonationAddressMatchesAnyPastParamValues(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+            DisputeValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
+            DisputeValidation.validateNodeAddresses(dispute, config);
+        } catch (DisputeValidation.AddressException |
+                 DisputeValidation.DisputeReplayException |
+                 DisputeValidation.NodeAddressException e) {
             log.error(e.toString());
             validationExceptions.add(e);
         }
@@ -399,12 +398,14 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
 
         Trade trade = optionalTrade.get();
         try {
+            DisputeValidation.validateDonationAddress(dispute,
+                    Objects.requireNonNull(trade.getDelayedPayoutTx()),
+                    btcWalletService.getParams(),
+                    daoFacade);
             TradeDataValidation.validateDelayedPayoutTx(trade,
                     trade.getDelayedPayoutTx(),
-                    dispute,
-                    daoFacade,
                     btcWalletService);
-        } catch (TradeDataValidation.ValidationException e) {
+        } catch (TradeDataValidation.ValidationException | DisputeValidation.ValidationException e) {
             // The peer sent us an invalid donation address. We do not return here as we don't want to break
             // mediation/arbitration and log only the issue. The dispute agent will run validation as well and will get
             // a popup displayed to react.
@@ -577,8 +578,8 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         // message and not skip the system message of the peer as it would be the case if we have created the system msg
         // from the code below.
         UserThread.runAfter(() -> doSendPeerOpenedDisputeMessage(disputeFromOpener,
-                contractFromOpener,
-                pubKeyRing),
+                        contractFromOpener,
+                        pubKeyRing),
                 100, TimeUnit.MILLISECONDS);
     }
 
@@ -1017,6 +1018,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     private void recordPendingMessage(String className) {
         pendingOutgoingMessage = className;
     }
+
     private void clearPendingMessage() {
         pendingOutgoingMessage = "";
     }

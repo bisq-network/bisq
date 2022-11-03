@@ -41,7 +41,6 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
             var preparedDelayedPayoutTx = processModel.getPreparedDelayedPayoutTx();
             TradeDataValidation.validateDelayedPayoutTx(trade,
                     preparedDelayedPayoutTx,
-                    processModel.getDaoFacade(),
                     processModel.getBtcWalletService());
 
             // If the deposit tx is non-malleable, we already know its final ID, so should check that now

@@ -279,11 +279,13 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         tradeManager.requestPersistence();
     }
 
-    public FileTransferSender initLogUpload(FileTransferSession.FtpCallback callback, String tradeId, int traderId) throws IOException {
+    public FileTransferSender initLogUpload(FileTransferSession.FtpCallback callback,
+                                            String tradeId,
+                                            int traderId) throws IOException {
         Dispute dispute = findDispute(tradeId, traderId)
                 .orElseThrow(() -> new IOException("could not locate Dispute for tradeId/traderId"));
         return dispute.createFileTransferSender(p2PService.getNetworkNode(),
-            dispute.getContract().getMediatorNodeAddress(), callback);
+                dispute.getContract().getMediatorNodeAddress(), callback);
     }
 
     private void processFilePartReceived(FileTransferPart ftp) {
@@ -321,11 +323,13 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
     public void onFtpProgress(double progressPct) {
         log.trace("ftp progress: {}", progressPct);
     }
+
     @Override
     public void onFtpComplete(FileTransferSession session) {
         Optional<Dispute> dispute = findDispute(session.getFullTradeId(), session.getTraderId());
         dispute.ifPresent(d -> addMediationLogsReceivedMessage(d, session.getZipId()));
     }
+
     @Override
     public void onFtpTimeout(String statusMsg, FileTransferSession session) {
         session.resetSession();

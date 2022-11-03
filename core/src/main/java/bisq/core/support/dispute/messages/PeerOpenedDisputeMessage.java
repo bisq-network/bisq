@@ -71,7 +71,9 @@ public final class PeerOpenedDisputeMessage extends DisputeMessage {
                 .build();
     }
 
-    public static PeerOpenedDisputeMessage fromProto(protobuf.PeerOpenedDisputeMessage proto, CoreProtoResolver coreProtoResolver, int messageVersion) {
+    public static PeerOpenedDisputeMessage fromProto(protobuf.PeerOpenedDisputeMessage proto,
+                                                     CoreProtoResolver coreProtoResolver,
+                                                     int messageVersion) {
         return new PeerOpenedDisputeMessage(Dispute.fromProto(proto.getDispute(), coreProtoResolver),
                 NodeAddress.fromProto(proto.getSenderNodeAddress()),
                 proto.getUid(),

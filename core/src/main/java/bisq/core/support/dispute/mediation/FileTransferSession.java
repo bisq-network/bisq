@@ -77,8 +77,12 @@ public abstract class FileTransferSession implements MessageListener {
     protected long expectedFileLength;
     protected long lastActivityTime;
 
-    public FileTransferSession(NetworkNode networkNode, NodeAddress peerNodeAddress,
-                               String tradeId, int traderId, String traderRole, @Nullable FileTransferSession.FtpCallback callback) {
+    public FileTransferSession(NetworkNode networkNode,
+                               NodeAddress peerNodeAddress,
+                               String tradeId,
+                               int traderId,
+                               String traderRole,
+                               @Nullable FileTransferSession.FtpCallback callback) {
         this.networkNode = networkNode;
         this.peerNodeAddress = peerNodeAddress;
         this.fullTradeId = tradeId;

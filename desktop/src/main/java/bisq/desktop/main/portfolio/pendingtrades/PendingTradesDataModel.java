@@ -43,6 +43,7 @@ import bisq.core.support.dispute.DisputeAlreadyOpenException;
 import bisq.core.support.dispute.DisputeList;
 import bisq.core.support.dispute.DisputeManager;
 import bisq.core.support.dispute.DisputeResult;
+import bisq.core.support.dispute.DisputeValidation;
 import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.support.messages.ChatMessage;
@@ -515,10 +516,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         try {
             TradeDataValidation.validateDelayedPayoutTx(trade,
                     delayedPayoutTx,
-                    daoFacade,
                     btcWalletService,
                     donationAddressString::set);
-        } catch (TradeDataValidation.ValidationException e) {
+        } catch (TradeDataValidation.ValidationException | DisputeValidation.ValidationException e) {
             // The peer sent us an invalid donation address. We do not return here as we don't want to break
             // mediation/arbitration and log only the issue. The dispute agent will run validation as well and will get
             // a popup displayed to react.
@@ -591,7 +591,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
             if (remainingLockTime > 0) {
                 new Popup().instruction(Res.get("portfolio.pending.timeLockNotOver",
-                        FormattingUtils.getDateFromBlockHeight(remainingLockTime), remainingLockTime))
+                                FormattingUtils.getDateFromBlockHeight(remainingLockTime), remainingLockTime))
                         .show();
                 return;
             }
