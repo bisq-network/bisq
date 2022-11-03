@@ -73,6 +73,7 @@ public class DisputeValidation {
             }
 
             try {
+                // Only the dispute opener has set the signature
                 String makerContractSignature = dispute.getMakerContractSignature();
                 if (makerContractSignature != null) {
                     Sig.verify(contract.getMakerPubKeyRing().getSignaturePubKey(),

@@ -253,7 +253,6 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         return dispute.getContract().getRefundAgentNodeAddress();
     }
 
-
     public CompletableFuture<List<Transaction>> requestBlockchainTransactions(String makerFeeTxId,
                                                                               String takerFeeTxId,
                                                                               String depositTxId,
