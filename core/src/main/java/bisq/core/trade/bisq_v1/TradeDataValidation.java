@@ -152,27 +152,37 @@ public class TradeDataValidation {
         }
 
         NetworkParameters params = btcWalletService.getParams();
-        Address address = output.getScriptPubKey().getToAddress(params);
-        if (address == null) {
+        Address delayedPayoutTxOutputAddress = output.getScriptPubKey().getToAddress(params);
+        if (delayedPayoutTxOutputAddress == null) {
             errorMsg = "Donation address cannot be resolved (not of type P2PK nor P2SH nor P2WH). Output: " + output;
             log.error(errorMsg);
             log.error(delayedPayoutTx.toString());
             throw new DisputeValidation.AddressException(dispute, errorMsg);
         }
 
-        String addressAsString = address.toString();
+        String delayedPayoutTxOutputAddressAsString = delayedPayoutTxOutputAddress.toString();
         if (addressConsumer != null) {
-            addressConsumer.accept(addressAsString);
+            addressConsumer.accept(delayedPayoutTxOutputAddressAsString);
         }
 
-        DisputeValidation.validateDonationAddress(addressAsString, daoFacade);
+        validateDonationAddress(dispute, delayedPayoutTx, btcWalletService.getParams(), daoFacade);
+    }
+
+    private static void validateDonationAddress(Dispute dispute,
+                                                Transaction delayedPayoutTx,
+                                                NetworkParameters params,
+                                                DaoFacade daoFacade
+    )
+            throws DisputeValidation.AddressException {
+        String delayedPayoutTxOutputAddress = delayedPayoutTx.getOutput(0).getScriptPubKey().getToAddress(params).toString();
+        DisputeValidation.validateDonationAddress(delayedPayoutTxOutputAddress, daoFacade);
 
         if (dispute != null) {
             // Verify that address in the dispute matches the one in the trade.
             String donationAddressOfDelayedPayoutTx = dispute.getDonationAddressOfDelayedPayoutTx();
             // Old clients don't have it set yet. Can be removed after a forced update
             if (donationAddressOfDelayedPayoutTx != null) {
-                checkArgument(addressAsString.equals(donationAddressOfDelayedPayoutTx),
+                checkArgument(delayedPayoutTxOutputAddress.equals(donationAddressOfDelayedPayoutTx),
                         "donationAddressOfDelayedPayoutTx from dispute does not match address from delayed payout tx");
             }
         }
