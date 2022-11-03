@@ -830,9 +830,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     delayedPayoutTxId
             ).whenComplete((txList, throwable) -> {
                 UserThread.execute(() -> {
+                    requestingTxsPopup.hide();
+
                     if (throwable == null) {
                         try {
-                            requestingTxsPopup.hide();
                             refundManager.verifyTradeTxChain(txList);
                             doCloseIfValid(closeTicketButton);
                         } catch (Throwable error) {
