@@ -55,6 +55,7 @@ import bisq.core.util.coin.CoinUtil;
 
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
+import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
@@ -692,9 +693,9 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     !peersDisputeOptional.get().isClosed()) {
                 showPayoutTxConfirmation(contract,
                         disputeResult,
-                        () -> doCloseIfValid(closeTicketButton));
+                        () -> doCloseAfterTxsVerified(closeTicketButton));
             } else {
-                doCloseIfValid(closeTicketButton);
+                doCloseAfterTxsVerified(closeTicketButton);
             }
         });
 
@@ -808,6 +809,51 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         } catch (InsufficientMoneyException | WalletException | TransactionVerificationException e) {
             log.error("Exception at doPayout", e);
             new Popup().error(e.toString()).show();
+        }
+    }
+
+    private void doCloseAfterTxsVerified(Button closeTicketButton) {
+        var disputeManager = getDisputeManager(dispute);
+        // Only RefundAgent need to verify transactions to ensure payout is safe
+        if (disputeManager instanceof RefundManager && Config.baseCurrencyNetwork().isMainnet()) {
+            RefundManager refundManager = (RefundManager) disputeManager;
+            Contract contract = dispute.getContract();
+            String makerFeeTxId = contract.getOfferPayload().getOfferFeePaymentTxId();
+            String takerFeeTxId = contract.getTakerFeeTxID();
+            String depositTxId = dispute.getDepositTxId();
+            String delayedPayoutTxId = dispute.getDelayedPayoutTxId();
+            Popup requestingTxsPopup = new Popup().feedback(Res.get("disputeSummaryWindow.requestingTxs"));
+            requestingTxsPopup.show();
+            refundManager.requestBlockchainTransactions(makerFeeTxId,
+                    takerFeeTxId,
+                    depositTxId,
+                    delayedPayoutTxId
+            ).whenComplete((txList, throwable) -> {
+                UserThread.execute(() -> {
+                    if (throwable == null) {
+                        try {
+                            requestingTxsPopup.hide();
+                            refundManager.verifyTradeTxChain(txList);
+                            doCloseIfValid(closeTicketButton);
+                        } catch (Throwable error) {
+                            UserThread.runAfter(() ->
+                                            new Popup().warning(Res.get("disputeSummaryWindow.delayedPayoutTxVerificationFailed", error.getMessage()))
+                                                    .show(),
+                                    100,
+                                    TimeUnit.MILLISECONDS);
+                        }
+                    } else {
+                        UserThread.runAfter(() ->
+                                        new Popup().warning(Res.get("disputeSummaryWindow.requestTransactionsError", throwable.getMessage()))
+                                                .onAction(() -> doCloseIfValid(closeTicketButton))
+                                                .show(),
+                                100,
+                                TimeUnit.MILLISECONDS);
+                    }
+                });
+            });
+        } else {
+            doCloseIfValid(closeTicketButton);
         }
     }
 
