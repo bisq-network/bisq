@@ -64,9 +64,10 @@ public class DisputeValidation {
         }
     }
 
-    public static void validateDonationAddress(Dispute dispute, String addressAsString, DaoFacade daoFacade)
+    public static void validateDonationAddressMatchesAnyPastParamValues(Dispute dispute,
+                                                                        String addressAsString,
+                                                                        DaoFacade daoFacade)
             throws AddressException {
-
         Set<String> allPastParamValues = daoFacade.getAllDonationAddresses();
         if (!allPastParamValues.contains(addressAsString)) {
             String errorMsg = "Donation address is not a valid DAO donation address." +
@@ -92,7 +93,7 @@ public class DisputeValidation {
             throw new DisputeValidation.AddressException(dispute, errorMsg);
         }
         String delayedPayoutTxOutputAddress = address.toString();
-        validateDonationAddress(dispute, delayedPayoutTxOutputAddress, daoFacade);
+        validateDonationAddressMatchesAnyPastParamValues(dispute, delayedPayoutTxOutputAddress, daoFacade);
 
         if (dispute != null) {
             // Verify that address in the dispute matches the one in the trade.
