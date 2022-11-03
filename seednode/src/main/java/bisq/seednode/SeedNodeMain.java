@@ -35,7 +35,6 @@ import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
-import bisq.common.app.DevEnv;
 import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
@@ -111,14 +110,12 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
         seedNode.setInjector(injector);
 
-        if (DevEnv.isDaoActivated()) {
-            injector.getInstance(DaoStateSnapshotService.class).setDaoRequiresRestartHandler(
-                    // We shut down with a deterministic delay per seed to avoid that all seeds shut down at the
-                    // same time in case of a reorg. We use 30 sec. as distance delay between the seeds to be on the
-                    // safe side. We have 12 seeds so that's 6 minutes.
-                    () -> UserThread.runAfter(this::gracefulShutDown, 1 + (getMyIndex() * 30L))
-            );
-        }
+        injector.getInstance(DaoStateSnapshotService.class).setDaoRequiresRestartHandler(
+                // We shut down with a deterministic delay per seed to avoid that all seeds shut down at the
+                // same time in case of a reorg. We use 30 sec. as distance delay between the seeds to be on the
+                // safe side. We have 12 seeds so that's 6 minutes.
+                () -> UserThread.runAfter(this::gracefulShutDown, 1 + (getMyIndex() * 30L))
+        );
     }
 
     private int getMyIndex() {

@@ -19,7 +19,6 @@ package bisq.core.dao.governance.bond.reputation;
 
 import bisq.core.dao.DaoSetupService;
 
-import bisq.common.app.DevEnv;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
 
@@ -56,15 +55,11 @@ public class MyReputationListService implements PersistedDataHost, DaoSetupServi
 
     @Override
     public void readPersisted(Runnable completeHandler) {
-        if (DevEnv.isDaoActivated()) {
-            persistenceManager.readPersisted(persisted -> {
-                        myReputationList.setAll(persisted.getList());
-                        completeHandler.run();
-                    },
-                    completeHandler);
-        } else {
-            completeHandler.run();
-        }
+        persistenceManager.readPersisted(persisted -> {
+                    myReputationList.setAll(persisted.getList());
+                    completeHandler.run();
+                },
+                completeHandler);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

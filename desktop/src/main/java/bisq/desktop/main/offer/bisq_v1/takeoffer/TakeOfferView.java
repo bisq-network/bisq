@@ -247,13 +247,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         };
 
         tradeFeeVisibleListener = (observable, oldValue, newValue) -> {
-            if (DevEnv.isDaoActivated()) {
-                tradeFeeInBtcToggle.setVisible(newValue);
-                tradeFeeInBsqToggle.setVisible(newValue);
-                if (model.isShowBuyBsqHint()) {
-                    buyBsqBox.setVisible(newValue);
-                    buyBsqBox.setManaged(newValue);
-                }
+            tradeFeeInBtcToggle.setVisible(newValue);
+            tradeFeeInBsqToggle.setVisible(newValue);
+            if (model.isShowBuyBsqHint()) {
+                buyBsqBox.setVisible(newValue);
+                buyBsqBox.setManaged(newValue);
             }
         };
 
@@ -262,10 +260,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private void setIsCurrencyForMakerFeeBtc(boolean isCurrencyForMakerFeeBtc) {
         model.setIsCurrencyForTakerFeeBtc(isCurrencyForMakerFeeBtc);
-        if (DevEnv.isDaoActivated()) {
-            tradeFeeInBtcLabel.setOpacity(isCurrencyForMakerFeeBtc ? 1 : 0.3);
-            tradeFeeInBsqLabel.setOpacity(isCurrencyForMakerFeeBtc ? 0.3 : 1);
-        }
+        tradeFeeInBtcLabel.setOpacity(isCurrencyForMakerFeeBtc ? 1 : 0.3);
+        tradeFeeInBsqLabel.setOpacity(isCurrencyForMakerFeeBtc ? 0.3 : 1);
     }
 
     @Override
@@ -496,11 +492,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         model.onShowPayFundsScreen();
 
-        if (DevEnv.isDaoActivated()) {
-            paymentAccountsComboBox.setMouseTransparent(true);
-            paymentAccountsComboBox.setDisable(true);
-            paymentAccountsComboBox.setFocusTraversable(false);
-        }
+        paymentAccountsComboBox.setMouseTransparent(true);
+        paymentAccountsComboBox.setDisable(true);
+        paymentAccountsComboBox.setFocusTraversable(false);
 
         amountTextField.setMouseTransparent(true);
         amountTextField.setDisable(false);

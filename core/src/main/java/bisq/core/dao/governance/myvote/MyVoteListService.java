@@ -23,7 +23,6 @@ import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.governance.Ballot;
 import bisq.core.dao.state.model.governance.BallotList;
 
-import bisq.common.app.DevEnv;
 import bisq.common.crypto.Encryption;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
@@ -70,15 +69,11 @@ public class MyVoteListService implements PersistedDataHost {
 
     @Override
     public void readPersisted(Runnable completeHandler) {
-        if (DevEnv.isDaoActivated()) {
-            persistenceManager.readPersisted(persisted -> {
-                        myVoteList.setAll(persisted.getList());
-                        completeHandler.run();
-                    },
-                    completeHandler);
-        } else {
-            completeHandler.run();
-        }
+        persistenceManager.readPersisted(persisted -> {
+                    myVoteList.setAll(persisted.getList());
+                    completeHandler.run();
+                },
+                completeHandler);
     }
 
 

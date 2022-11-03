@@ -143,32 +143,27 @@ public class DaoView extends ActivatableView<TabPane, Void> {
 
     @Override
     protected void activate() {
-        if (DevEnv.isDaoActivated()) {
+        if (preferences.showAgain(DaoPresentation.DAO_NEWS)) {
+            preferences.dontShowAgain(DaoPresentation.DAO_NEWS, true);
+        }
 
-            if (preferences.showAgain(DaoPresentation.DAO_NEWS)) {
-                preferences.dontShowAgain(DaoPresentation.DAO_NEWS, true);
-            }
+        navigation.addListener(navigationListener);
+        root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
 
-            navigation.addListener(navigationListener);
-            root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
-
-            if (navigation.getCurrentPath().size() == 2 && navigation.getCurrentPath().get(1) == DaoView.class) {
-                Tab selectedItem = root.getSelectionModel().getSelectedItem();
-                if (selectedItem == bsqWalletTab)
-                    navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class);
-                else if (selectedItem == proposalsTab)
-                    navigation.navigateTo(MainView.class, DaoView.class, GovernanceView.class);
-                else if (selectedItem == bondingTab)
-                    navigation.navigateTo(MainView.class, DaoView.class, BondingView.class);
-                else if (selectedItem == burnBsqTab)
-                    navigation.navigateTo(MainView.class, DaoView.class, BurnBsqView.class);
-                else if (selectedItem == factsAndFiguresTab)
-                    navigation.navigateTo(MainView.class, DaoView.class, EconomyView.class);
-                else if (selectedItem == monitorTab)
-                    navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class);
-            }
-        } else {
-            loadView(NewsView.class);
+        if (navigation.getCurrentPath().size() == 2 && navigation.getCurrentPath().get(1) == DaoView.class) {
+            Tab selectedItem = root.getSelectionModel().getSelectedItem();
+            if (selectedItem == bsqWalletTab)
+                navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class);
+            else if (selectedItem == proposalsTab)
+                navigation.navigateTo(MainView.class, DaoView.class, GovernanceView.class);
+            else if (selectedItem == bondingTab)
+                navigation.navigateTo(MainView.class, DaoView.class, BondingView.class);
+            else if (selectedItem == burnBsqTab)
+                navigation.navigateTo(MainView.class, DaoView.class, BurnBsqView.class);
+            else if (selectedItem == factsAndFiguresTab)
+                navigation.navigateTo(MainView.class, DaoView.class, EconomyView.class);
+            else if (selectedItem == monitorTab)
+                navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class);
         }
     }
 
