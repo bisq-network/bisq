@@ -195,7 +195,10 @@ public class FormBuilder {
         return addSimpleMarkdownLabel(gridPane, rowIndex, null, 0);
     }
 
-    public static SimpleMarkdownLabel addSimpleMarkdownLabel(GridPane gridPane, int rowIndex, String markdown, double top) {
+    public static SimpleMarkdownLabel addSimpleMarkdownLabel(GridPane gridPane,
+                                                             int rowIndex,
+                                                             String markdown,
+                                                             double top) {
         SimpleMarkdownLabel label = new SimpleMarkdownLabel(markdown);
 
         GridPane.setRowIndex(label, rowIndex);
@@ -901,7 +904,6 @@ public class FormBuilder {
         GridPane.setMargin(hBox, new Insets(Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
         return new Tuple3<>(topLabelWithVBox.first, inputTextField, toggleButton);
     }
-
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -2384,26 +2386,31 @@ public class FormBuilder {
         }
     }
 
-    public static <T> TableView<T> addTableViewWithHeader(GridPane gridPane, int rowIndex, String headerText) {
+    public static <T> Tuple2<TableView<T>, TitledGroupBg> addTableViewWithHeader(GridPane gridPane,
+                                                                                 int rowIndex,
+                                                                                 String headerText) {
         return addTableViewWithHeader(gridPane, rowIndex, headerText, 0, null);
     }
 
-    public static <T> TableView<T> addTableViewWithHeader(GridPane gridPane,
-                                                          int rowIndex,
-                                                          String headerText,
-                                                          String groupStyle) {
+    public static <T> Tuple2<TableView<T>, TitledGroupBg> addTableViewWithHeader(GridPane gridPane,
+                                                                                 int rowIndex,
+                                                                                 String headerText,
+                                                                                 String groupStyle) {
         return addTableViewWithHeader(gridPane, rowIndex, headerText, 0, groupStyle);
     }
 
-    public static <T> TableView<T> addTableViewWithHeader(GridPane gridPane, int rowIndex, String headerText, int top) {
+    public static <T> Tuple2<TableView<T>, TitledGroupBg> addTableViewWithHeader(GridPane gridPane,
+                                                                                 int rowIndex,
+                                                                                 String headerText,
+                                                                                 int top) {
         return addTableViewWithHeader(gridPane, rowIndex, headerText, top, null);
     }
 
-    public static <T> TableView<T> addTableViewWithHeader(GridPane gridPane,
-                                                          int rowIndex,
-                                                          String headerText,
-                                                          int top,
-                                                          String groupStyle) {
+    public static <T> Tuple2<TableView<T>, TitledGroupBg> addTableViewWithHeader(GridPane gridPane,
+                                                                                 int rowIndex,
+                                                                                 String headerText,
+                                                                                 int top,
+                                                                                 String groupStyle) {
         TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, rowIndex, 1, headerText, top);
 
         if (groupStyle != null) titledGroupBg.getStyleClass().add(groupStyle);
@@ -2414,7 +2421,40 @@ public class FormBuilder {
         gridPane.getChildren().add(tableView);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        return tableView;
+        return new Tuple2<>(tableView, titledGroupBg);
+    }
+
+    public static <T> Tuple3<InputTextField, TableView<T>, HBox> addTableViewWithHeaderAndFilterField(GridPane gridPane,
+                                                                                                      int rowIndex,
+                                                                                                      String headerText,
+                                                                                                      String filterPromptText,
+                                                                                                      int top) {
+        TitledGroupBg titledGroupBg = new TitledGroupBg();
+        titledGroupBg.setText(headerText);
+
+        InputTextField filterField = new InputTextField();
+        filterField.setLabelFloat(true);
+        filterField.setPromptText(filterPromptText);
+        filterField.setMinWidth(200);
+
+        Region spacer = new Region();
+        HBox hBox = new HBox(20, titledGroupBg, spacer, filterField);
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        HBox.setMargin(filterField, new Insets(-12, 2, 0, 0));
+
+        hBox.prefWidthProperty().bind(gridPane.widthProperty());
+        GridPane.setRowIndex(hBox, rowIndex);
+        GridPane.setRowSpan(hBox, 1);
+        GridPane.setMargin(hBox, new Insets(top + 8, -10, -12, -10));
+        gridPane.getChildren().add(hBox);
+
+        TableView<T> tableView = new TableView<>();
+        GridPane.setRowIndex(tableView, rowIndex);
+        GridPane.setMargin(tableView, new Insets(top + 30, -10, 5, -10));
+        gridPane.getChildren().add(tableView);
+        tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noData")));
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        return new Tuple3<>(filterField, tableView, hBox);
     }
 }
 

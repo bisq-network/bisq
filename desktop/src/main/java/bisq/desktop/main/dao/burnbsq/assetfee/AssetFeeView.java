@@ -151,7 +151,8 @@ public class AssetFeeView extends ActivatableView<GridPane, Void> implements Bsq
 
         payFeeButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.burnBsq.payFee"));
 
-        tableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.burnBsq.allAssets"), 20, "last");
+        tableView = FormBuilder.<AssetListItem>addTableViewWithHeader(root, ++gridRow,
+                Res.get("dao.burnBsq.allAssets"), 20, "last").first;
         createColumns();
         tableView.setItems(sortedList);
 
