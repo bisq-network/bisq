@@ -117,8 +117,14 @@ public enum Param {
     // Min required trade volume to not get de-listed. Check starts after trial period and use trial period afterwards to look back for trade activity.
     ASSET_MIN_VOLUME("0.01", ParamType.BTC, 10, 10),
 
+    // LOCK_TIME_TRADE_PAYOUT was never used.
+    // We re-purpose it as value for BTC fee revenue per cycle. This can be added as oracle data by DAO voting.
+    // We cannot change the ParamType as that would break consensus
     LOCK_TIME_TRADE_PAYOUT("4320", ParamType.BLOCK), // 30 days, can be disabled by setting to 0
+
+    // Not used
     ARBITRATOR_FEE("0", ParamType.PERCENT),  // % of trade. For new trade protocol. Arbitration will become optional and we can apply a fee to it. Initially we start with no fee.
+
     MAX_TRADE_LIMIT("2", ParamType.BTC, 2, 2), // max trade limit for lowest risk payment method. Others will get derived from that.
 
     // The base factor to multiply the bonded role amount. E.g. If Twitter admin has 20 as amount and BONDED_ROLE_FACTOR is 1000 we get 20000 BSQ as required bond.
