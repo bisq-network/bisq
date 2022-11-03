@@ -1141,7 +1141,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     private void updateDaoFields() {
         boolean isDaoFullNode = isDaoFullNodeToggleButton.isSelected();
-        GridPane.setRowSpan(daoOptionsTitledGroupBg, isDaoFullNode ? 6 : 3);
+        GridPane.setRowSpan(daoOptionsTitledGroupBg, isDaoFullNode ? 8 : 5);
         rpcUserTextField.setVisible(isDaoFullNode);
         rpcUserTextField.setManaged(isDaoFullNode);
         rpcPwTextField.setVisible(isDaoFullNode);
