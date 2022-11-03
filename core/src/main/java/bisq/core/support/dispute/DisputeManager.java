@@ -368,12 +368,12 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         addMediationResultMessage(dispute);
 
         try {
+            DisputeValidation.validateDisputeData(dispute, btcWalletService);
+            DisputeValidation.validateNodeAddresses(dispute, config);
+            DisputeValidation.validateSenderNodeAddress(dispute, openNewDisputeMessage.getSenderNodeAddress());
             DisputeValidation.validateDonationAddressMatchesAnyPastParamValues(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
             DisputeValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
-            DisputeValidation.validateNodeAddresses(dispute, config);
-        } catch (DisputeValidation.AddressException |
-                 DisputeValidation.DisputeReplayException |
-                 DisputeValidation.NodeAddressException e) {
+        } catch (DisputeValidation.ValidationException e) {
             log.error(e.toString());
             validationExceptions.add(e);
         }
@@ -398,6 +398,9 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
 
         Trade trade = optionalTrade.get();
         try {
+            DisputeValidation.validateDisputeData(dispute, btcWalletService);
+            DisputeValidation.validateNodeAddresses(dispute, config);
+            DisputeValidation.validateTradeAndDispute(dispute, trade);
             DisputeValidation.validateDonationAddress(dispute,
                     Objects.requireNonNull(trade.getDelayedPayoutTx()),
                     btcWalletService.getParams(),
