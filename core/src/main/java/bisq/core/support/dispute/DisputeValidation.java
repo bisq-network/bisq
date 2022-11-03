@@ -81,8 +81,7 @@ public class DisputeValidation {
     public static void validateDonationAddress(Dispute dispute,
                                                Transaction delayedPayoutTx,
                                                NetworkParameters params,
-                                               DaoFacade daoFacade
-    )
+                                               DaoFacade daoFacade)
             throws AddressException {
         TransactionOutput output = delayedPayoutTx.getOutput(0);
         Address address = output.getScriptPubKey().getToAddress(params);
