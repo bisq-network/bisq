@@ -48,10 +48,6 @@ public class DevEnv {
         DevEnv.devMode = devMode;
     }
 
-    public static boolean isDaoActivated() {
-        return true;
-    }
-
     public static void logErrorAndThrowIfDevMode(String msg) {
         log.error(msg);
         if (devMode)

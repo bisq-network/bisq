@@ -61,7 +61,6 @@ import bisq.core.util.validation.RegexValidatorFactory;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
-import bisq.common.config.ConfigFileEditor;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
@@ -123,7 +122,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     private ToggleButton showOwnOffersInOfferBook, useAnimations, useDarkMode, sortMarketCurrenciesNumerically,
             avoidStandbyMode, useCustomFee, autoConfirmXmrToggle, hideNonAccountPaymentMethodsToggle, denyApiTakerToggle,
-            notifyOnPreReleaseToggle, isDaoFullNodeToggleButton, daoActivatedToggleButton, fullModeDaoMonitorToggleButton;
+            notifyOnPreReleaseToggle, isDaoFullNodeToggleButton, fullModeDaoMonitorToggleButton;
     private int gridRow = 0;
     private int displayCurrenciesGridRowIndex = 0;
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, ignoreDustThresholdInputTextField,
@@ -164,7 +163,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private final boolean daoOptionsSet;
     private final boolean displayStandbyModeFeature;
     private ChangeListener<Filter> filterChangeListener;
-    private final ConfigFileEditor configFileEditor;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -199,8 +197,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 !rpcPassword.isEmpty() &&
                 rpcBlockNotificationPort != Config.UNSPECIFIED_PORT;
         this.displayStandbyModeFeature = Utilities.isLinux() || Utilities.isOSX() || Utilities.isWindows();
-
-        this.configFileEditor = new ConfigFileEditor(config.configFile);
     }
 
     @Override
@@ -659,14 +655,11 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void initializeDaoOptions() {
-        int rowSpan = 6;
+        int rowSpan = 5;
         daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, rowSpan,
                 Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
-        daoActivatedToggleButton = addSlideToggleButton(root, gridRow,
-                Res.get("setting.preferences.dao.activated"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-
-        fullModeDaoMonitorToggleButton = addSlideToggleButton(root, ++gridRow,
-                Res.get("setting.preferences.dao.fullModeDaoMonitor"));
+        fullModeDaoMonitorToggleButton = addSlideToggleButton(root, gridRow,
+                Res.get("setting.preferences.dao.fullModeDaoMonitor"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
 
         resyncDaoFromResourcesButton = addButton(root, ++gridRow, Res.get("setting.preferences.dao.resyncFromResources.label"));
         resyncDaoFromResourcesButton.setMaxWidth(Double.MAX_VALUE);
@@ -1047,15 +1040,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void activateDaoPreferences() {
-        daoActivatedToggleButton.setSelected(true);
-        daoActivatedToggleButton.setOnAction(e -> {
-            // We do not use preferences as we need to handle the value at startup before preferences are loaded,
-            // so we write the option to the properties file. If the program argument is set it has higher priority
-            // and the property file value is ignored.
-            configFileEditor.setOption("daoActivated", Boolean.toString(daoActivatedToggleButton.isSelected()));
-            new Popup().information(Res.get("setting.preferences.dao.activated.popup")).useShutDownButton().show();
-        });
-
         fullModeDaoMonitorToggleButton.setSelected(preferences.isUseFullModeDaoMonitor());
         fullModeDaoMonitorToggleButton.setOnAction(e -> {
             preferences.setUseFullModeDaoMonitor(fullModeDaoMonitorToggleButton.isSelected());
@@ -1219,8 +1203,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void deactivateDaoPreferences() {
-        daoActivatedToggleButton.setOnAction(null);
-
         fullModeDaoMonitorToggleButton.setOnAction(null);
         resyncDaoFromResourcesButton.setOnAction(null);
         resyncDaoFromGenesisButton.setOnAction(null);

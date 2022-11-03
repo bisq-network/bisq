@@ -3,20 +3,15 @@ package bisq.desktop.main.dao.news;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.TitledGroupBg;
-import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
-
-import bisq.common.config.Config;
-import bisq.common.config.ConfigFileEditor;
 
 import javax.inject.Inject;
 
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
-import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -26,17 +21,16 @@ import javafx.scene.layout.Priority;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 
-import static bisq.desktop.util.FormBuilder.*;
+import static bisq.desktop.util.FormBuilder.addHyperlinkWithIcon;
+import static bisq.desktop.util.FormBuilder.addLabel;
+import static bisq.desktop.util.FormBuilder.addMultilineLabel;
+import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
 
 @FxmlView
 public class NewsView extends ActivatableView<HBox, Void> {
 
-    private final ConfigFileEditor configFileEditor;
-    private ToggleButton daoActivatedToggleButton;
-
     @Inject
-    private NewsView(Config config) {
-        configFileEditor = new ConfigFileEditor(config.configFile);
+    private NewsView() {
     }
 
     @Override
@@ -110,8 +104,6 @@ public class NewsView extends ActivatableView<HBox, Void> {
         Label contentLabel = addMultilineLabel(gridPane, ++rowIndex, content, -Layout.FLOATING_LABEL_DISTANCE, 370);
         contentLabel.getStyleClass().add("dao-news-section-content");
 
-        daoActivatedToggleButton = addSlideToggleButton(gridPane, ++rowIndex, Res.get("setting.preferences.dao.activated"));
-
         return rowIndex;
     }
 
@@ -139,15 +131,9 @@ public class NewsView extends ActivatableView<HBox, Void> {
 
     @Override
     protected void activate() {
-        daoActivatedToggleButton.setSelected(false);
-        daoActivatedToggleButton.setOnAction(e -> {
-            configFileEditor.setOption("daoActivated", Boolean.toString(daoActivatedToggleButton.isSelected()));
-            new Popup().information(Res.get("setting.preferences.dao.activated.popup")).useShutDownButton().show();
-        });
     }
 
     @Override
     protected void deactivate() {
-        daoActivatedToggleButton.setOnAction(null);
     }
 }

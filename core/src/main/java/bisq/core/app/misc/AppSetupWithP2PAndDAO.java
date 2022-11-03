@@ -74,6 +74,7 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
         this.daoSetup = daoSetup;
         this.preferences = preferences;
 
+        // TODO Should be refactored/removed. In the meantime keep in sync with CorePersistedDataHost
         persistedDataHosts.add(myVoteListService);
         persistedDataHosts.add(ballotListService);
         persistedDataHosts.add(myBlindVoteListService);
