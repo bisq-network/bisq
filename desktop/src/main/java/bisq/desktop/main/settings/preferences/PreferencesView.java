@@ -659,7 +659,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void initializeDaoOptions() {
-        int rowSpan = DevEnv.isDaoActivated() ? 6 : 1;
+        int rowSpan = 6;
         daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, rowSpan,
                 Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
         daoActivatedToggleButton = addSlideToggleButton(root, gridRow,
@@ -883,8 +883,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
                 if (model.needsSupportLanguageWarning()) {
                     new Popup().warning(Res.get("settings.preferences.supportLanguageWarning",
-                            model.getMediationLanguages(),
-                            model.getArbitrationLanguages()))
+                                    model.getMediationLanguages(),
+                                    model.getArbitrationLanguages()))
                             .closeButtonText(Res.get("shared.ok"))
                             .show();
                 }
@@ -942,7 +942,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             TradeCurrency selectedItem = preferredTradeCurrencyComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null)
                 preferences.setPreferredTradeCurrency(selectedItem);
-                GUIUtil.updateTopAltcoin(preferences);
+            GUIUtil.updateTopAltcoin(preferences);
         });
 
         fiatCurrenciesComboBox.setItems(allFiatCurrencies);
