@@ -301,8 +301,6 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         checkArgument(takerFeeTxFoundAtInputs, "takerFeeTx not found at depositTx inputs");
         checkArgument(depositTx.getInputs().size() >= 2,
                 "DepositTx must have at least 2 inputs");
-        checkArgument(depositTx.getOutputs().size() == 1,
-                "DepositTx must have 1 input");
         checkArgument(delayedPayoutTx.getInputs().size() == 1,
                 "DelayedPayoutTx must have 1 input");
         TransactionOutPoint delayedPayoutTxInputOutpoint = delayedPayoutTx.getInputs().get(0).getOutpoint();
