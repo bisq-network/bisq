@@ -33,8 +33,6 @@ import bisq.desktop.main.dao.economy.transactions.BSQTransactionsView;
 
 import bisq.core.locale.Res;
 
-import bisq.common.app.DevEnv;
-
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
@@ -86,12 +84,6 @@ public class EconomyView extends ActivatableView<AnchorPane, Void> {
         transactions = new MenuItem(navigation, toggleGroup, Res.get("dao.factsAndFigures.menuItem.transactions"), BSQTransactionsView.class, baseNavPath);
 
         leftVBox.getChildren().addAll(dashboard, supply, transactions);
-
-        if (!DevEnv.isDaoActivated()) {
-            dashboard.setDisable(true);
-            supply.setDisable(true);
-            transactions.setDisable(true);
-        }
     }
 
     @Override

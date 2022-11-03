@@ -39,8 +39,6 @@ import bisq.core.dao.governance.votereveal.VoteRevealService;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
-import bisq.common.app.DevEnv;
-
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
@@ -96,20 +94,7 @@ public class DaoView extends ActivatableView<TabPane, Void> {
         burnBsqTab.setClosable(false);
         monitorTab.setClosable(false);
 
-        if (!DevEnv.isDaoActivated()) {
-            factsAndFiguresTab.setDisable(true);
-            bsqWalletTab.setDisable(true);
-            proposalsTab.setDisable(true);
-            bondingTab.setDisable(true);
-            burnBsqTab.setDisable(true);
-            monitorTab.setDisable(true);
-
-            daoNewsTab = new Tab(Res.get("dao.tab.news").toUpperCase());
-
-            root.getTabs().add(daoNewsTab);
-        } else {
-            root.getTabs().addAll(factsAndFiguresTab, bsqWalletTab, proposalsTab, bondingTab, burnBsqTab, monitorTab);
-        }
+        root.getTabs().addAll(factsAndFiguresTab, bsqWalletTab, proposalsTab, bondingTab, burnBsqTab, monitorTab);
 
         navigationListener = (viewPath, data) -> {
             if (viewPath.size() == 3 && viewPath.indexOf(DaoView.class) == 1) {

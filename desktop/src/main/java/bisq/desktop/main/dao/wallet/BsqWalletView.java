@@ -33,7 +33,6 @@ import bisq.desktop.main.dao.wallet.tx.BsqTxView;
 
 import bisq.core.locale.Res;
 
-import bisq.common.app.DevEnv;
 import bisq.common.util.Tuple2;
 
 import javax.inject.Inject;
@@ -88,11 +87,6 @@ public class BsqWalletView extends ActivatableView<AnchorPane, Void> {
         receive = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.receive"), BsqReceiveView.class, baseNavPath);
         transactions = new MenuItem(navigation, toggleGroup, Res.get("dao.wallet.menuItem.transactions"), BsqTxView.class, baseNavPath);
         leftVBox.getChildren().addAll(send, receive, transactions);
-
-        if (!DevEnv.isDaoActivated()) {
-            send.setDisable(true);
-            transactions.setDisable(true);
-        }
     }
 
     @Override
@@ -107,9 +101,6 @@ public class BsqWalletView extends ActivatableView<AnchorPane, Void> {
                 viewPath.size() == 2 && viewPath.indexOf(DaoView.class) == 1) {
             if (selectedViewClass == null)
                 selectedViewClass = BsqSendView.class;
-
-            if (!DevEnv.isDaoActivated())
-                selectedViewClass = BsqReceiveView.class;
 
             loadView(selectedViewClass);
         } else if (viewPath.size() == 4 && viewPath.indexOf(BsqWalletView.class) == 2) {

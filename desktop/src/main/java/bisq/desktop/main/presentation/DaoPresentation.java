@@ -71,11 +71,6 @@ public class DaoPresentation implements DaoStateListener {
             }
         });
 
-        if (!DevEnv.isDaoActivated()) {
-            bsqInfo.set("");
-            bsqSyncProgress.set(0);
-        }
-
         walletChainHeightListener = (observable, oldValue, newValue) -> onUpdateAnyChainHeight();
     }
 
@@ -84,9 +79,6 @@ public class DaoPresentation implements DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void onUpdateAnyChainHeight() {
-        if (!DevEnv.isDaoActivated())
-            return;
-
         final int bsqBlockChainHeight = daoFacade.getChainHeight();
         final int bsqWalletChainHeight = bsqWalletService.getBestChainHeight();
         if (bsqWalletChainHeight > 0) {

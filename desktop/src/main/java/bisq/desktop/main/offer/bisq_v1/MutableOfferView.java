@@ -269,17 +269,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             tradeFeeInBtcToggle.setSelected(currencyForMakerFeeBtc);
             tradeFeeInBsqToggle.setSelected(!currencyForMakerFeeBtc);
 
-            if (!DevEnv.isDaoActivated()) {
-                tradeFeeInBtcToggle.setVisible(false);
-                tradeFeeInBtcToggle.setManaged(false);
-                tradeFeeInBsqToggle.setVisible(false);
-                tradeFeeInBsqToggle.setManaged(false);
-                buyBsqBox.setVisible(false);
-                buyBsqBox.setManaged(false);
-            } else {
-                buyBsqBox.setVisible(model.isShowBuyBsqHint());
-                buyBsqBox.setManaged(model.isShowBuyBsqHint());
-            }
+            buyBsqBox.setVisible(model.isShowBuyBsqHint());
+            buyBsqBox.setManaged(model.isShowBuyBsqHint());
 
             Label popOverLabel = OfferViewUtil.createPopOverLabel(Res.get("createOffer.triggerPrice.tooltip"));
             triggerPriceInfoInputTextField.setContentForPopOver(popOverLabel, AwesomeIcon.SHIELD);

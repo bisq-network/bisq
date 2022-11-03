@@ -327,17 +327,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         tradeFeeInBtcToggle.setSelected(currencyForMakerFeeBtc);
         tradeFeeInBsqToggle.setSelected(!currencyForMakerFeeBtc);
 
-        if (!DevEnv.isDaoActivated()) {
-            tradeFeeInBtcToggle.setVisible(false);
-            tradeFeeInBtcToggle.setManaged(false);
-            tradeFeeInBsqToggle.setVisible(false);
-            tradeFeeInBsqToggle.setManaged(false);
-            buyBsqBox.setVisible(false);
-            buyBsqBox.setManaged(false);
-        } else {
-            buyBsqBox.setVisible(model.isShowBuyBsqHint());
-            buyBsqBox.setManaged(model.isShowBuyBsqHint());
-        }
+        buyBsqBox.setVisible(model.isShowBuyBsqHint());
+        buyBsqBox.setManaged(model.isShowBuyBsqHint());
     }
 
     @Override

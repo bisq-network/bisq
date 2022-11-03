@@ -664,9 +664,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
         daoActivatedToggleButton = addSlideToggleButton(root, gridRow,
                 Res.get("setting.preferences.dao.activated"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        if (!DevEnv.isDaoActivated()) {
-            return;
-        }
 
         fullModeDaoMonitorToggleButton = addSlideToggleButton(root, ++gridRow,
                 Res.get("setting.preferences.dao.fullModeDaoMonitor"));
@@ -1059,10 +1056,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             new Popup().information(Res.get("setting.preferences.dao.activated.popup")).useShutDownButton().show();
         });
 
-        if (!DevEnv.isDaoActivated()) {
-            return;
-        }
-
         fullModeDaoMonitorToggleButton.setSelected(preferences.isUseFullModeDaoMonitor());
         fullModeDaoMonitorToggleButton.setOnAction(e -> {
             preferences.setUseFullModeDaoMonitor(fullModeDaoMonitorToggleButton.isSelected());
@@ -1227,9 +1220,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     private void deactivateDaoPreferences() {
         daoActivatedToggleButton.setOnAction(null);
-        if (!DevEnv.isDaoActivated()) {
-            return;
-        }
 
         fullModeDaoMonitorToggleButton.setOnAction(null);
         resyncDaoFromResourcesButton.setOnAction(null);
