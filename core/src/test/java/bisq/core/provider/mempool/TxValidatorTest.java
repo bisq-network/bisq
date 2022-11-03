@@ -22,7 +22,6 @@ import bisq.core.dao.state.DaoStateService;
 import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
 import bisq.core.trade.DelayedPayoutAddressProvider;
-import bisq.core.util.FeeReceiverSelector;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.BsqFormatter;
 
@@ -65,7 +64,7 @@ public class TxValidatorTest {
         btcFeeReceivers.add("13sxMq8mTw7CTSqgGiMPfwo6ZDsVYrHLmR");
         btcFeeReceivers.add("19qA2BVPoyXDfHKVMovKG7SoxGY7xrBV8c");
         btcFeeReceivers.add("19BNi5EpZhgBBWAt5ka7xWpJpX2ZWJEYyq");
-        btcFeeReceivers.add(FeeReceiverSelector.BTC_FEE_RECEIVER_ADDRESS);
+        btcFeeReceivers.add("38bZBj5peYS3Husdz7AH3gEUiUbYRD951t");
         btcFeeReceivers.add(DelayedPayoutAddressProvider.BM2019_ADDRESS);
         btcFeeReceivers.add("1BVxNn3T12veSK6DgqwU4Hdn7QHcDDRag7");
         btcFeeReceivers.add("3A8Zc1XioE2HRzYfbb5P8iemCS72M6vRJV");
