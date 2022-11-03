@@ -272,7 +272,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         List<Dispute> disputes = getDisputeList().getList();
         disputes.forEach(dispute -> {
             try {
-                TradeDataValidation.validateDonationAddress(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+                DisputeValidation.validateDonationAddress(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
                 DisputeValidation.validateNodeAddress(dispute, dispute.getContract().getBuyerNodeAddress(), config);
                 DisputeValidation.validateNodeAddress(dispute, dispute.getContract().getSellerNodeAddress(), config);
             } catch (DisputeValidation.AddressException | DisputeValidation.NodeAddressException e) {
@@ -368,7 +368,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         addMediationResultMessage(dispute);
 
         try {
-            TradeDataValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+            DisputeValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
             TradeDataValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
             DisputeValidation.validateNodeAddress(dispute, dispute.getContract().getBuyerNodeAddress(), config);
             DisputeValidation.validateNodeAddress(dispute, dispute.getContract().getSellerNodeAddress(), config);

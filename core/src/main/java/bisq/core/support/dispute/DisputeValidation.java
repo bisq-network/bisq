@@ -17,14 +17,19 @@
 
 package bisq.core.support.dispute;
 
+import bisq.core.dao.DaoFacade;
 import bisq.core.util.validation.RegexValidatorFactory;
 
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.config.Config;
 
+import java.util.Set;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 @Slf4j
 public class DisputeValidation {
@@ -38,6 +43,30 @@ public class DisputeValidation {
             throw new NodeAddressException(dispute, msg);
         }
     }
+
+    public static void validateDonationAddress(String addressAsString, DaoFacade daoFacade)
+            throws AddressException {
+        validateDonationAddress(null, addressAsString, daoFacade);
+    }
+
+    public static void validateDonationAddress(@Nullable Dispute dispute, String addressAsString, DaoFacade daoFacade)
+            throws AddressException {
+
+        if (addressAsString == null) {
+            log.debug("address is null at validateDonationAddress. This is expected in case of an not updated trader.");
+            return;
+        }
+
+        Set<String> allPastParamValues = daoFacade.getAllDonationAddresses();
+        if (!allPastParamValues.contains(addressAsString)) {
+            String errorMsg = "Donation address is not a valid DAO donation address." +
+                    "\nAddress used in the dispute: " + addressAsString +
+                    "\nAll DAO param donation addresses:" + allPastParamValues;
+            log.error(errorMsg);
+            throw new AddressException(dispute, errorMsg);
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Exceptions

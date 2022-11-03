@@ -815,7 +815,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private void doCloseIfValid(Button closeTicketButton) {
         var disputeManager = checkNotNull(getDisputeManager(dispute));
         try {
-            TradeDataValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+            DisputeValidation.validateDonationAddress(dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
             TradeDataValidation.testIfDisputeTriesReplay(dispute, disputeManager.getDisputesAsObservableList());
             doClose(closeTicketButton);
         } catch (DisputeValidation.AddressException exception) {

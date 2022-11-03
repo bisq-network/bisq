@@ -53,29 +53,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class TradeDataValidation {
 
-    public static void validateDonationAddress(String addressAsString, DaoFacade daoFacade)
-            throws DisputeValidation.AddressException {
-        validateDonationAddress(null, addressAsString, daoFacade);
-    }
-
-    public static void validateDonationAddress(@Nullable Dispute dispute, String addressAsString, DaoFacade daoFacade)
-            throws DisputeValidation.AddressException {
-
-        if (addressAsString == null) {
-            log.debug("address is null at validateDonationAddress. This is expected in case of an not updated trader.");
-            return;
-        }
-
-        Set<String> allPastParamValues = daoFacade.getAllDonationAddresses();
-        if (!allPastParamValues.contains(addressAsString)) {
-            String errorMsg = "Donation address is not a valid DAO donation address." +
-                    "\nAddress used in the dispute: " + addressAsString +
-                    "\nAll DAO param donation addresses:" + allPastParamValues;
-            log.error(errorMsg);
-            throw new DisputeValidation.AddressException(dispute, errorMsg);
-        }
-    }
-
     public static void testIfAnyDisputeTriedReplay(List<Dispute> disputeList,
                                                    Consumer<DisputeValidation.DisputeReplayException> exceptionHandler) {
         var tuple = getTestReplayHashMaps(disputeList);
@@ -315,7 +292,7 @@ public class TradeDataValidation {
             addressConsumer.accept(addressAsString);
         }
 
-        validateDonationAddress(addressAsString, daoFacade);
+        DisputeValidation.validateDonationAddress(addressAsString, daoFacade);
 
         if (dispute != null) {
             // Verify that address in the dispute matches the one in the trade.
