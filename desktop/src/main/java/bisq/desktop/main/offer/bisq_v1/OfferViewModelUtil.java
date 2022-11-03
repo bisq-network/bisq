@@ -26,8 +26,6 @@ import bisq.core.offer.OfferUtil;
 import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.CoinFormatter;
 
-import bisq.common.app.DevEnv;
-
 import org.bitcoinj.core.Coin;
 
 import java.util.Optional;
@@ -38,10 +36,6 @@ public class OfferViewModelUtil {
                                                        Coin tradeFee,
                                                        boolean isCurrencyForMakerFeeBtc,
                                                        CoinFormatter formatter) {
-        if (!isCurrencyForMakerFeeBtc && !DevEnv.isDaoActivated()) {
-            return "";
-        }
-
         Optional<Volume> optionalBtcFeeInFiat = offerUtil.getFeeInUserFiatCurrency(tradeFee,
                 isCurrencyForMakerFeeBtc,
                 formatter);

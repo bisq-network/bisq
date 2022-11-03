@@ -316,13 +316,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         maybeShowAccountWarning(lastPaymentAccount, model.dataModel.isBuyOffer());
         maybeShowCashByMailWarning(lastPaymentAccount, model.dataModel.getOffer());
 
-        if (!DevEnv.isDaoActivated() && !model.isRange()) {
-            nextButton.setVisible(false);
-            cancelButton1.setVisible(false);
-            if (model.isOfferAvailable.get())
-                showNextStepAfterAmountIsSet();
-        }
-
         boolean currencyForMakerFeeBtc = model.dataModel.isCurrencyForTakerFeeBtc();
         tradeFeeInBtcToggle.setSelected(currencyForMakerFeeBtc);
         tradeFeeInBsqToggle.setSelected(!currencyForMakerFeeBtc);
@@ -706,8 +699,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             if (isOfferAvailable) {
                 offerAvailabilityBusyAnimation.stop();
                 offerAvailabilityBusyAnimation.setVisible(false);
-                if (!DevEnv.isDaoActivated() && !model.isRange() && !model.showPayFundsScreenDisplayed.get())
-                    showNextStepAfterAmountIsSet();
             }
 
             offerAvailabilityLabel.setVisible(!isOfferAvailable);
