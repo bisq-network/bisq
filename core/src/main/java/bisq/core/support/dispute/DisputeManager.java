@@ -400,14 +400,13 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
 
         Trade trade = optionalTrade.get();
         try {
-            TradeDataValidation.validateDelayedPayoutTx(trade,
-                    trade.getDelayedPayoutTx(),
-                    dispute,
-                    btcWalletService);
             DisputeValidation.validateDonationAddress(dispute,
                     Objects.requireNonNull(trade.getDelayedPayoutTx()),
                     btcWalletService.getParams(),
                     daoFacade);
+            TradeDataValidation.validateDelayedPayoutTx(trade,
+                    trade.getDelayedPayoutTx(),
+                    btcWalletService);
         } catch (TradeDataValidation.ValidationException | DisputeValidation.ValidationException e) {
             // The peer sent us an invalid donation address. We do not return here as we don't want to break
             // mediation/arbitration and log only the issue. The dispute agent will run validation as well and will get

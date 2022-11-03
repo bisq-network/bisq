@@ -26,8 +26,10 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.config.Config;
 import bisq.common.util.Tuple3;
 
+import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -86,7 +88,15 @@ public class DisputeValidation {
                                                DaoFacade daoFacade
     )
             throws AddressException {
-        String delayedPayoutTxOutputAddress = delayedPayoutTx.getOutput(0).getScriptPubKey().getToAddress(params).toString();
+        TransactionOutput output = delayedPayoutTx.getOutput(0);
+        Address address = output.getScriptPubKey().getToAddress(params);
+        if (address == null) {
+            String errorMsg = "Donation address cannot be resolved (not of type P2PK nor P2SH nor P2WH). Output: " + output;
+            log.error(errorMsg);
+            log.error(delayedPayoutTx.toString());
+            throw new DisputeValidation.AddressException(dispute, errorMsg);
+        }
+        String delayedPayoutTxOutputAddress = address.toString();
         validateDonationAddress(delayedPayoutTxOutputAddress, daoFacade);
 
         if (dispute != null) {

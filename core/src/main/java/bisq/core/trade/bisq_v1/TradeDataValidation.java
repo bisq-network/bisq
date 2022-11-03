@@ -23,7 +23,6 @@ import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
 
-import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
@@ -49,40 +48,12 @@ public class TradeDataValidation {
             InvalidTxException, InvalidLockTimeException, InvalidAmountException {
         validateDelayedPayoutTx(trade,
                 delayedPayoutTx,
-                null,
                 btcWalletService,
                 null);
     }
 
     public static void validateDelayedPayoutTx(Trade trade,
                                                Transaction delayedPayoutTx,
-                                               @Nullable Dispute dispute,
-                                               BtcWalletService btcWalletService)
-            throws DisputeValidation.AddressException, MissingTxException,
-            InvalidTxException, InvalidLockTimeException, InvalidAmountException {
-        validateDelayedPayoutTx(trade,
-                delayedPayoutTx,
-                dispute,
-                btcWalletService,
-                null);
-    }
-
-    public static void validateDelayedPayoutTx(Trade trade,
-                                               Transaction delayedPayoutTx,
-                                               BtcWalletService btcWalletService,
-                                               @Nullable Consumer<String> addressConsumer)
-            throws DisputeValidation.AddressException, MissingTxException,
-            InvalidTxException, InvalidLockTimeException, InvalidAmountException {
-        validateDelayedPayoutTx(trade,
-                delayedPayoutTx,
-                null,
-                btcWalletService,
-                addressConsumer);
-    }
-
-    public static void validateDelayedPayoutTx(Trade trade,
-                                               Transaction delayedPayoutTx,
-                                               @Nullable Dispute dispute,
                                                BtcWalletService btcWalletService,
                                                @Nullable Consumer<String> addressConsumer)
             throws DisputeValidation.AddressException, MissingTxException,
@@ -143,17 +114,9 @@ public class TradeDataValidation {
         }
 
         NetworkParameters params = btcWalletService.getParams();
-        Address delayedPayoutTxOutputAddress = output.getScriptPubKey().getToAddress(params);
-        if (delayedPayoutTxOutputAddress == null) {
-            errorMsg = "Donation address cannot be resolved (not of type P2PK nor P2SH nor P2WH). Output: " + output;
-            log.error(errorMsg);
-            log.error(delayedPayoutTx.toString());
-            throw new DisputeValidation.AddressException(dispute, errorMsg);
-        }
-
-        String delayedPayoutTxOutputAddressAsString = delayedPayoutTxOutputAddress.toString();
+        String delayedPayoutTxOutputAddress = output.getScriptPubKey().getToAddress(params).toString();
         if (addressConsumer != null) {
-            addressConsumer.accept(delayedPayoutTxOutputAddressAsString);
+            addressConsumer.accept(delayedPayoutTxOutputAddress);
         }
     }
 
