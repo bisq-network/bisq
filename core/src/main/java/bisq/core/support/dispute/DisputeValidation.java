@@ -41,8 +41,6 @@ import java.util.function.Consumer;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
-
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -66,12 +64,7 @@ public class DisputeValidation {
         }
     }
 
-    public static void validateDonationAddress(String addressAsString, DaoFacade daoFacade)
-            throws AddressException {
-        validateDonationAddress(null, addressAsString, daoFacade);
-    }
-
-    public static void validateDonationAddress(@Nullable Dispute dispute, String addressAsString, DaoFacade daoFacade)
+    public static void validateDonationAddress(Dispute dispute, String addressAsString, DaoFacade daoFacade)
             throws AddressException {
 
         if (addressAsString == null) {
@@ -104,7 +97,7 @@ public class DisputeValidation {
             throw new DisputeValidation.AddressException(dispute, errorMsg);
         }
         String delayedPayoutTxOutputAddress = address.toString();
-        validateDonationAddress(delayedPayoutTxOutputAddress, daoFacade);
+        validateDonationAddress(dispute, delayedPayoutTxOutputAddress, daoFacade);
 
         if (dispute != null) {
             // Verify that address in the dispute matches the one in the trade.
