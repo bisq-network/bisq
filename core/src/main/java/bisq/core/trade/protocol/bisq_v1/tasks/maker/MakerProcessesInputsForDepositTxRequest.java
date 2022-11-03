@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.maker;
 
+import bisq.core.dao.burningman.BurningManService;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.offer.Offer;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
@@ -78,6 +79,16 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             tradingPeer.setPubKeyRing(checkNotNull(request.getTakerPubKeyRing()));
 
             tradingPeer.setAccountId(nonEmptyStringOf(request.getTakerAccountId()));
+
+            if (BurningManService.isActivated()) {
+                int takersBurningManSelectionHeight = request.getBurningManSelectionHeight();
+                checkArgument(takersBurningManSelectionHeight > 0, "takersBurningManSelectionHeight must not be 0");
+
+                int makersBurningManSelectionHeight = processModel.getBurningManService().getBurningManSelectionHeight();
+                checkArgument(takersBurningManSelectionHeight == makersBurningManSelectionHeight,
+                        "takersBurningManSelectionHeight does no match makersBurningManSelectionHeight");
+                processModel.setBurningManSelectionHeight(makersBurningManSelectionHeight);
+            }
 
             // We set the taker fee only in the processModel yet not in the trade as the tx was only created but not
             // published yet. Once it was published we move it to trade. The takerFeeTx should be sent in a later
