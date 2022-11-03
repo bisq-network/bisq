@@ -34,6 +34,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,10 +67,17 @@ public class MempoolRequest {
                 log.info("Received mempoolData of [{}] from provider", mempoolData);
                 mempoolServiceCallback.set(mempoolData);
             }
+
             public void onFailure(@NotNull Throwable throwable) {
                 mempoolServiceCallback.setException(throwable);
             }
         }, MoreExecutors.directExecutor());
+    }
+
+
+    public CompletableFuture<String> requestTxAsHex(String txId) {
+        mempoolHttpClient.setBaseUrl(getRandomServiceAddress(txBroadcastServices));
+        return mempoolHttpClient.requestTxAsHex(txId);
     }
 
     public boolean switchToAnotherProvider() {

@@ -27,6 +27,8 @@ import javax.inject.Singleton;
 
 import java.io.IOException;
 
+import java.util.concurrent.CompletableFuture;
+
 import javax.annotation.Nullable;
 
 @Singleton
@@ -41,5 +43,19 @@ public class MempoolHttpClient extends HttpClientImpl {
         super.shutDown(); // close any prior incomplete request
         String api = "/" + txId;
         return get(api, "User-Agent", "bisq/" + Version.VERSION);
+    }
+
+
+    public CompletableFuture<String> requestTxAsHex(String txId) {
+        super.shutDown(); // close any prior incomplete request
+
+        return CompletableFuture.supplyAsync(() -> {
+            String api = "/" + txId + "/hex";
+            try {
+                return get(api, "User-Agent", "bisq/" + Version.VERSION);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 }
