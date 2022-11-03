@@ -24,11 +24,7 @@ import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
-import bisq.core.util.validation.RegexValidatorFactory;
 
-import bisq.network.p2p.NodeAddress;
-
-import bisq.common.config.Config;
 import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Address;
@@ -60,16 +56,6 @@ public class TradeDataValidation {
     public static void validateDonationAddress(String addressAsString, DaoFacade daoFacade)
             throws DisputeValidation.AddressException {
         validateDonationAddress(null, addressAsString, daoFacade);
-    }
-
-    public static void validateNodeAddress(Dispute dispute, NodeAddress nodeAddress, Config config)
-            throws DisputeValidation.NodeAddressException {
-        if (!config.useLocalhostForP2P && !RegexValidatorFactory.onionAddressRegexValidator().validate(nodeAddress.getFullAddress()).isValid) {
-            String msg = "Node address " + nodeAddress.getFullAddress() + " at dispute with trade ID " +
-                    dispute.getShortTradeId() + " is not a valid address";
-            log.error(msg);
-            throw new DisputeValidation.NodeAddressException(dispute, msg);
-        }
     }
 
     public static void validateDonationAddress(@Nullable Dispute dispute, String addressAsString, DaoFacade daoFacade)

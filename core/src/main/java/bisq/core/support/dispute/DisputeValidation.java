@@ -17,9 +17,27 @@
 
 package bisq.core.support.dispute;
 
-import lombok.Getter;
+import bisq.core.util.validation.RegexValidatorFactory;
 
+import bisq.network.p2p.NodeAddress;
+
+import bisq.common.config.Config;
+
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class DisputeValidation {
+
+    public static void validateNodeAddress(Dispute dispute, NodeAddress nodeAddress, Config config)
+            throws NodeAddressException {
+        if (!config.useLocalhostForP2P && !RegexValidatorFactory.onionAddressRegexValidator().validate(nodeAddress.getFullAddress()).isValid) {
+            String msg = "Node address " + nodeAddress.getFullAddress() + " at dispute with trade ID " +
+                    dispute.getShortTradeId() + " is not a valid address";
+            log.error(msg);
+            throw new NodeAddressException(dispute, msg);
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Exceptions
