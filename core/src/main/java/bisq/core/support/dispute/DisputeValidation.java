@@ -49,9 +49,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class DisputeValidation {
 
-    public static void validateNodeAddress(Dispute dispute, NodeAddress nodeAddress, Config config)
+    public static void validateNodeAddresses(Dispute dispute, Config config)
             throws NodeAddressException {
-        if (!config.useLocalhostForP2P && !RegexValidatorFactory.onionAddressRegexValidator().validate(nodeAddress.getFullAddress()).isValid) {
+        if (!config.useLocalhostForP2P) {
+            validateNodeAddress(dispute, dispute.getContract().getBuyerNodeAddress());
+            validateNodeAddress(dispute, dispute.getContract().getSellerNodeAddress());
+        }
+    }
+
+    private static void validateNodeAddress(Dispute dispute, NodeAddress nodeAddress) throws NodeAddressException {
+        if (!RegexValidatorFactory.onionAddressRegexValidator().validate(nodeAddress.getFullAddress()).isValid) {
             String msg = "Node address " + nodeAddress.getFullAddress() + " at dispute with trade ID " +
                     dispute.getShortTradeId() + " is not a valid address";
             log.error(msg);
