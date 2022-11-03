@@ -40,6 +40,8 @@ import org.bitcoinj.core.Transaction;
 import javax.inject.Inject;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,9 +50,9 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class CompensationProposalFactory extends BaseProposalFactory<CompensationProposal> {
-
     private Coin requestedBsq;
     private String bsqAddress;
+    private Optional<String> burningManReceiverAddress;
 
     @Inject
     public CompensationProposalFactory(BsqWalletService bsqWalletService,
@@ -65,9 +67,11 @@ public class CompensationProposalFactory extends BaseProposalFactory<Compensatio
 
     public ProposalWithTransaction createProposalWithTransaction(String name,
                                                                  String link,
-                                                                 Coin requestedBsq)
+                                                                 Coin requestedBsq,
+                                                                 Optional<String> burningManReceiverAddress)
             throws ProposalValidationException, InsufficientMoneyException, TxException {
         this.requestedBsq = requestedBsq;
+        this.burningManReceiverAddress = burningManReceiverAddress;
         this.bsqAddress = bsqWalletService.getUnusedBsqAddressAsString();
 
         return super.createProposalWithTransaction(name, link);
@@ -75,12 +79,17 @@ public class CompensationProposalFactory extends BaseProposalFactory<Compensatio
 
     @Override
     protected CompensationProposal createProposalWithoutTxId() {
+        Map<String, String> extraDataMap = null;
+        if (burningManReceiverAddress.isPresent()) {
+            extraDataMap = new HashMap<>();
+            extraDataMap.put(CompensationProposal.BURNING_MAN_RECEIVER_ADDRESS, burningManReceiverAddress.get());
+        }
         return new CompensationProposal(
                 name,
                 link,
                 requestedBsq,
                 bsqAddress,
-                new HashMap<>());
+                extraDataMap);
     }
 
     @Override
