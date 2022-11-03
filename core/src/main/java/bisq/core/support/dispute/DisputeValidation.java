@@ -26,6 +26,9 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.config.Config;
 import bisq.common.util.Tuple3;
 
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Transaction;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -74,6 +77,26 @@ public class DisputeValidation {
                     "\nAll DAO param donation addresses:" + allPastParamValues;
             log.error(errorMsg);
             throw new AddressException(dispute, errorMsg);
+        }
+    }
+
+    public static void validateDonationAddress(Dispute dispute,
+                                               Transaction delayedPayoutTx,
+                                               NetworkParameters params,
+                                               DaoFacade daoFacade
+    )
+            throws AddressException {
+        String delayedPayoutTxOutputAddress = delayedPayoutTx.getOutput(0).getScriptPubKey().getToAddress(params).toString();
+        validateDonationAddress(delayedPayoutTxOutputAddress, daoFacade);
+
+        if (dispute != null) {
+            // Verify that address in the dispute matches the one in the trade.
+            String donationAddressOfDelayedPayoutTx = dispute.getDonationAddressOfDelayedPayoutTx();
+            // Old clients don't have it set yet. Can be removed after a forced update
+            if (donationAddressOfDelayedPayoutTx != null) {
+                checkArgument(delayedPayoutTxOutputAddress.equals(donationAddressOfDelayedPayoutTx),
+                        "donationAddressOfDelayedPayoutTx from dispute does not match address from delayed payout tx");
+            }
         }
     }
 

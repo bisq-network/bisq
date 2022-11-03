@@ -405,7 +405,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                     dispute,
                     daoFacade,
                     btcWalletService);
-            TradeDataValidation.validateDonationAddress(dispute,
+            DisputeValidation.validateDonationAddress(dispute,
                     Objects.requireNonNull(trade.getDelayedPayoutTx()),
                     btcWalletService.getParams(),
                     daoFacade);

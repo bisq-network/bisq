@@ -39,7 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -163,26 +162,6 @@ public class TradeDataValidation {
         String delayedPayoutTxOutputAddressAsString = delayedPayoutTxOutputAddress.toString();
         if (addressConsumer != null) {
             addressConsumer.accept(delayedPayoutTxOutputAddressAsString);
-        }
-    }
-
-    public static void validateDonationAddress(Dispute dispute,
-                                               Transaction delayedPayoutTx,
-                                               NetworkParameters params,
-                                               DaoFacade daoFacade
-    )
-            throws DisputeValidation.AddressException {
-        String delayedPayoutTxOutputAddress = delayedPayoutTx.getOutput(0).getScriptPubKey().getToAddress(params).toString();
-        DisputeValidation.validateDonationAddress(delayedPayoutTxOutputAddress, daoFacade);
-
-        if (dispute != null) {
-            // Verify that address in the dispute matches the one in the trade.
-            String donationAddressOfDelayedPayoutTx = dispute.getDonationAddressOfDelayedPayoutTx();
-            // Old clients don't have it set yet. Can be removed after a forced update
-            if (donationAddressOfDelayedPayoutTx != null) {
-                checkArgument(delayedPayoutTxOutputAddress.equals(donationAddressOfDelayedPayoutTx),
-                        "donationAddressOfDelayedPayoutTx from dispute does not match address from delayed payout tx");
-            }
         }
     }
 
