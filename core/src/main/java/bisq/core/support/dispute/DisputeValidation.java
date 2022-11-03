@@ -69,7 +69,6 @@ public class DisputeValidation {
             if (depositTx.isPresent()) {
                 checkArgument(depositTx.get().getTxId().toString().equals(dispute.getDepositTxId()), "Invalid depositTxId");
                 checkArgument(depositTx.get().getInputs().size() >= 2, "DepositTx must have at least 2 inputs");
-                checkArgument(depositTx.get().getOutputs().size() == 1, "DepositTx must have exactly 1 output");
             }
 
             try {
