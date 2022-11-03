@@ -103,7 +103,7 @@ public class BuyerProcessDepositTxAndDelayedPayoutTxMessage extends TradeTask {
                     trade.setTakerContractSignature(signature);
                 }
 
-                byte[] contractHash = Hash.getSha256Hash(checkNotNull(trade.getContractAsJson()));
+                byte[] contractHash = Hash.getSha256Hash(checkNotNull(contractAsJson));
                 trade.setContractHash(contractHash);
             }
 

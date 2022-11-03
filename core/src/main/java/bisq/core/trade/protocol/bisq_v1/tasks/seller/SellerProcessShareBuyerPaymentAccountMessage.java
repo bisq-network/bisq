@@ -42,6 +42,7 @@ import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.util.JsonUtil;
 
+import bisq.common.crypto.Hash;
 import bisq.common.crypto.Sig;
 import bisq.common.taskrunner.TaskRunner;
 
@@ -90,6 +91,9 @@ public class SellerProcessShareBuyerPaymentAccountMessage extends TradeTask {
             } else {
                 trade.setMakerContractSignature(signature);
             }
+
+            byte[] contractHash = Hash.getSha256Hash(checkNotNull(contractAsJson));
+            trade.setContractHash(contractHash);
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
