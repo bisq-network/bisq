@@ -67,11 +67,6 @@ public class DisputeValidation {
     public static void validateDonationAddress(Dispute dispute, String addressAsString, DaoFacade daoFacade)
             throws AddressException {
 
-        if (addressAsString == null) {
-            log.debug("address is null at validateDonationAddress. This is expected in case of an not updated trader.");
-            return;
-        }
-
         Set<String> allPastParamValues = daoFacade.getAllDonationAddresses();
         if (!allPastParamValues.contains(addressAsString)) {
             String errorMsg = "Donation address is not a valid DAO donation address." +
