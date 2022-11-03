@@ -252,11 +252,13 @@ public class DaoFacade implements DaoSetupService {
     // Creation of Proposal and proposalTransaction
     public ProposalWithTransaction getCompensationProposalWithTransaction(String name,
                                                                           String link,
-                                                                          Coin requestedBsq)
+                                                                          Coin requestedBsq,
+                                                                          Optional<String> burningManReceiverAddress)
             throws ProposalValidationException, InsufficientMoneyException, TxException {
         return compensationProposalFactory.createProposalWithTransaction(name,
                 link,
-                requestedBsq);
+                requestedBsq,
+                burningManReceiverAddress);
     }
 
     public ProposalWithTransaction getReimbursementProposalWithTransaction(String name,
