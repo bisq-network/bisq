@@ -68,7 +68,6 @@ public class BurningManServiceTest {
         assertEquals(63, BurningManService.getDecayedAmount(amount, 1200, currentBlockHeight, genesisBlockHeight, 0.25));
         assertEquals(88, BurningManService.getDecayedAmount(amount, 1200, currentBlockHeight, genesisBlockHeight, 0.75));
 
-
         assertEquals(100, BurningManService.getDecayedAmount(amount, 1000, currentBlockHeight, genesisBlockHeight, 1));
         assertEquals(100, BurningManService.getDecayedAmount(amount, 1200, currentBlockHeight, genesisBlockHeight, 1));
         assertEquals(100, BurningManService.getDecayedAmount(amount, 1400, currentBlockHeight, genesisBlockHeight, 1));
@@ -77,6 +76,13 @@ public class BurningManServiceTest {
     @Test
     public void testGetRandomIndex() {
         Random rnd = new Random(456);
+        assertEquals(4, BurningManService.getRandomIndex(Longs.asList(0, 0, 0, 3, 3), rnd));
+        assertEquals(3, BurningManService.getRandomIndex(Longs.asList(0, 0, 0, 6, 0, 0, 0, 0, 0), rnd));
+
+        assertEquals(-1, BurningManService.getRandomIndex(Longs.asList(), rnd));
+        assertEquals(-1, BurningManService.getRandomIndex(Longs.asList(0), rnd));
+        assertEquals(-1, BurningManService.getRandomIndex(Longs.asList(0, 0), rnd));
+
         int[] selections = new int[3];
         for (int i = 0; i < 6000; i++) {
             selections[BurningManService.getRandomIndex(Longs.asList(1, 2, 3), rnd)]++;
@@ -100,5 +106,16 @@ public class BurningManServiceTest {
         // invalid values return index 0
         assertEquals(0, BurningManService.findIndex(weights, 0));
         assertEquals(0, BurningManService.findIndex(weights, 7));
+
+        assertEquals(0, BurningManService.findIndex(Longs.asList(0, 1, 2, 3), 0));
+        assertEquals(0, BurningManService.findIndex(Longs.asList(1, 2, 3), 0));
+        assertEquals(0, BurningManService.findIndex(Longs.asList(1, 2, 3), 1));
+        assertEquals(1, BurningManService.findIndex(Longs.asList(0, 1, 2, 3), 1));
+        assertEquals(2, BurningManService.findIndex(Longs.asList(0, 1, 2, 3), 2));
+        assertEquals(1, BurningManService.findIndex(Longs.asList(0, 1, 0, 2, 3), 1));
+        assertEquals(3, BurningManService.findIndex(Longs.asList(0, 1, 0, 2, 3), 2));
+        assertEquals(3, BurningManService.findIndex(Longs.asList(0, 0, 0, 1, 2, 3), 1));
+        assertEquals(4, BurningManService.findIndex(Longs.asList(0, 0, 0, 1, 2, 3), 2));
+        assertEquals(6, BurningManService.findIndex(Longs.asList(0, 0, 0, 1, 0, 0, 2, 3), 2));
     }
 }
