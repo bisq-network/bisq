@@ -529,7 +529,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
 
     // Dispute agents might receive disputes created before activation date.
     // By checking if burningManSelectionHeight is > 0 we can detect if the trade was created with
-    // the new burningmen receivers or not.
+    // the new burningmen receivers or with legacy BM.
     public boolean isUsingLegacyBurningMan() {
         return burningManSelectionHeight == 0;
     }

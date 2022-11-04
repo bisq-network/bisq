@@ -125,6 +125,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
 
     private int gridRow = 0;
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -473,7 +474,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         TableColumn<BurningmenListItem, BurningmenListItem> column;
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.name"));
-        column.setMinWidth(80);
+        column.setMinWidth(120);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.getStyleClass().add("first-column");
         column.setCellFactory(new Callback<>() {

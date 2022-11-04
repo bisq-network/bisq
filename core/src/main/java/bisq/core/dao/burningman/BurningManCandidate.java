@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public final class BurningManCandidate implements Comparable<BurningManCandidate> {
+public final class BurningManCandidate {
     private long accumulatedCompensationAmount;
     private long accumulatedDecayedCompensationAmount;
     private long accumulatedBurnAmount;
@@ -39,7 +39,6 @@ public final class BurningManCandidate implements Comparable<BurningManCandidate
     private double boostedIssuanceShare;
     private double burnOutputShare; // share of accumulated decayed burn amounts in relation to total burned amounts
     private double effectiveBurnOutputShare; // limited to boostedIssuanceShare
-
     private final List<CompensationModel> compensationModels = new ArrayList<>();
     private final List<BurnOutputModel> burnOutputModels = new ArrayList<>();
 
@@ -92,21 +91,11 @@ public final class BurningManCandidate implements Comparable<BurningManCandidate
                 .map(CompensationModel::getAddress);
     }
 
-    //todo do sorting where its needed for better control
-    @Override
-    public int compareTo(BurningManCandidate o) {
-        int result = Double.compare(getBurnOutputShare(), o.getBurnOutputShare());
-        if (result == 0 && !compensationModels.isEmpty() && !o.compensationModels.isEmpty()) {
-            result = compensationModels.get(0).getTxId().compareTo(o.compensationModels.get(0).getTxId());
-        }
-        return result;
-    }
-
     @Override
     public String toString() {
         return "BurningManCandidate{" +
-                "\r\n     accumulatedIssuanceAmount=" + accumulatedCompensationAmount +
-                ",\r\n     accumulatedDecayedIssuanceAmount=" + accumulatedDecayedCompensationAmount +
+                "\r\n     accumulatedCompensationAmount=" + accumulatedCompensationAmount +
+                ",\r\n     accumulatedDecayedCompensationAmount=" + accumulatedDecayedCompensationAmount +
                 ",\r\n     accumulatedBurnAmount=" + accumulatedBurnAmount +
                 ",\r\n     accumulatedDecayedBurnAmount=" + accumulatedDecayedBurnAmount +
                 ",\r\n     allowedBurnAmount=" + allowedBurnAmount +

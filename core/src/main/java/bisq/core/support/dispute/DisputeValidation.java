@@ -115,6 +115,7 @@ public class DisputeValidation {
         }
     }
 
+
     public static void validateSenderNodeAddress(Dispute dispute,
                                                  NodeAddress senderNodeAddress) throws NodeAddressException {
         if (!senderNodeAddress.equals(dispute.getContract().getBuyerNodeAddress())
@@ -308,6 +309,7 @@ public class DisputeValidation {
             super(dispute, msg);
         }
     }
+
 
     public static class AddressException extends ValidationException {
         AddressException(Dispute dispute, String msg) {

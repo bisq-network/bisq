@@ -71,6 +71,7 @@ public class TradeDataValidation {
             throw new InvalidTxException(errorMsg);
         }
 
+
         // connectedOutput is null and input.getValue() is null at that point as the tx is not committed to the wallet
         // yet. So we cannot check that the input matches but we did the amount check earlier in the trade protocol.
 
@@ -113,8 +114,8 @@ public class TradeDataValidation {
             }
 
             NetworkParameters params = btcWalletService.getParams();
-            String delayedPayoutTxOutputAddress = output.getScriptPubKey().getToAddress(params).toString();
             if (addressConsumer != null) {
+                String delayedPayoutTxOutputAddress = output.getScriptPubKey().getToAddress(params).toString();
                 addressConsumer.accept(delayedPayoutTxOutputAddress);
             }
         }

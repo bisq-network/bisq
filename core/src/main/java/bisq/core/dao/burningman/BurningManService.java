@@ -456,7 +456,7 @@ public class BurningManService implements DaoStateListener {
     // Legacy BurningMan
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String getBurningManAddressFromParam(int chainHeight) {
+    public String getLegacyBurningManAddress(int chainHeight) {
         return daoStateService.getParamValue(Param.RECIPIENT_BTC_ADDRESS, chainHeight);
     }
 
@@ -469,7 +469,7 @@ public class BurningManService implements DaoStateListener {
         Map<String, BurningManCandidate> burningManCandidatesByName = getCurrentBurningManCandidatesByName();
         if (burningManCandidatesByName.isEmpty()) {
             // If there are no compensation requests (e.g. at dev testing) we fall back to the default address
-            return getBurningManAddressFromParam(currentChainHeight);
+            return getLegacyBurningManAddress(currentChainHeight);
         }
 
         // It might be that we do not reach 100% if some entries had a capped effectiveBurnOutputShare.
@@ -484,14 +484,14 @@ public class BurningManService implements DaoStateListener {
                 .map(effectiveBurnOutputShare -> (long) Math.floor(effectiveBurnOutputShare * 10000))
                 .collect(Collectors.toList());
         if (amountList.isEmpty()) {
-            return getBurningManAddressFromParam(currentChainHeight);
+            return getLegacyBurningManAddress(currentChainHeight);
         }
         int winnerIndex = getRandomIndex(amountList, new Random());
         if (winnerIndex == -1) {
-            return getBurningManAddressFromParam(currentChainHeight);
+            return getLegacyBurningManAddress(currentChainHeight);
         }
         return burningManCandidates.get(winnerIndex).getMostRecentAddress()
-                .orElse(getBurningManAddressFromParam(currentChainHeight));
+                .orElse(getLegacyBurningManAddress(currentChainHeight));
     }
 
 
@@ -513,7 +513,7 @@ public class BurningManService implements DaoStateListener {
         Collection<BurningManCandidate> burningManCandidates = getBurningManCandidatesByName(burningManSelectionHeight).values();
         if (burningManCandidates.isEmpty()) {
             // If there are no compensation requests (e.g. at dev testing) we fall back to the legacy BM
-            return List.of(new Tuple2<>(inputAmount, getBurningManAddressFromParam(burningManSelectionHeight)));
+            return List.of(new Tuple2<>(inputAmount, getLegacyBurningManAddress(burningManSelectionHeight)));
         }
 
         // We need to use the same txFeePerVbyte value for both traders.
@@ -530,15 +530,17 @@ public class BurningManService implements DaoStateListener {
         double txSize = 278;
         long txFeePerVbyte = Math.max(10, Math.round(tradeTxFee / txSize));
         long spendableAmount = getSpendableAmount(burningManCandidates.size(), inputAmount, txFeePerVbyte);
-        // We only use outputs > 500 sat or at least 2 times the cost for the output (32 bytes).
+        // We only use outputs > 1000 sat or at least 2 times the cost for the output (32 bytes).
         // If we remove outputs it will be spent as miner fee.
-        long minOutputAmount = Math.max(500, txFeePerVbyte * 32 * 2);
+        long minOutputAmount = Math.max(1000, txFeePerVbyte * 32 * 2);
+
         List<Tuple2<Long, String>> receivers = burningManCandidates.stream()
                 .filter(candidate -> candidate.getMostRecentAddress().isPresent())
                 .map(candidates -> new Tuple2<>(Math.round(candidates.getEffectiveBurnOutputShare() * spendableAmount),
                         candidates.getMostRecentAddress().get()))
                 .filter(tuple -> tuple.first >= minOutputAmount)
-                .sorted(Comparator.comparing(tuple -> tuple.first))
+                .sorted(Comparator.<Tuple2<Long, String>, Long>comparing(tuple -> tuple.first)
+                        .thenComparing(tuple -> tuple.second))
                 .collect(Collectors.toList());
         long totalOutputValue = receivers.stream().mapToLong(e -> e.first).sum();
         if (totalOutputValue < spendableAmount) {
@@ -546,7 +548,7 @@ public class BurningManService implements DaoStateListener {
             // If the available is larger than 100000 sat (about 20 USD) we send it to legacy BM
             // Otherwise we use it as miner fee
             if (available > 100000) {
-                receivers.add(new Tuple2<>(available, getBurningManAddressFromParam(burningManSelectionHeight)));
+                receivers.add(new Tuple2<>(available, getLegacyBurningManAddress(burningManSelectionHeight)));
             }
         }
         return receivers;
