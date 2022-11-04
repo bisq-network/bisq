@@ -19,7 +19,6 @@ package bisq.core.dao.governance.proofofburn;
 
 import bisq.core.dao.DaoSetupService;
 
-import bisq.common.app.DevEnv;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
 
@@ -56,15 +55,11 @@ public class MyProofOfBurnListService implements PersistedDataHost, DaoSetupServ
 
     @Override
     public void readPersisted(Runnable completeHandler) {
-        if (DevEnv.isDaoActivated()) {
-            persistenceManager.readPersisted(persisted -> {
-                        myProofOfBurnList.setAll(persisted.getList());
-                        completeHandler.run();
-                    },
-                    completeHandler);
-        } else {
-            completeHandler.run();
-        }
+        persistenceManager.readPersisted(persisted -> {
+                    myProofOfBurnList.setAll(persisted.getList());
+                    completeHandler.run();
+                },
+                completeHandler);
     }
 
 

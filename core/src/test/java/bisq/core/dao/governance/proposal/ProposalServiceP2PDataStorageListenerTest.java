@@ -35,13 +35,13 @@ import javafx.collections.ListChangeListener;
 import java.util.Arrays;
 import java.util.Collections;
 
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.mockito.Mockito.*;
-
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 
 /**
@@ -71,8 +71,7 @@ public class ProposalServiceP2PDataStorageListenerTest {
                 mock(AppendOnlyDataStoreService.class),
                 mock(ProtectedDataStoreService.class),
                 this.daoStateService,
-                mock(ProposalValidatorProvider.class),
-                true);
+                mock(ProposalValidatorProvider.class));
 
         // Create a state so that all added/removed Proposals will actually update the tempProposals list.
         when(this.periodService.isInPhase(anyInt(), any(DaoPhase.Phase.class))).thenReturn(true);

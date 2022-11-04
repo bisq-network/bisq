@@ -34,7 +34,6 @@ public class DevEnv {
 
     public static void setup(Config config) {
         DevEnv.setDevMode(config.useDevMode);
-        DevEnv.setDaoActivated(config.daoActivated);
     }
 
     // If set to true we ignore several UI behavior like confirmation popups as well dummy accounts are created and
@@ -47,16 +46,6 @@ public class DevEnv {
 
     public static void setDevMode(boolean devMode) {
         DevEnv.devMode = devMode;
-    }
-
-    private static boolean daoActivated = true;
-
-    public static boolean isDaoActivated() {
-        return daoActivated;
-    }
-
-    public static void setDaoActivated(boolean daoActivated) {
-        DevEnv.daoActivated = daoActivated;
     }
 
     public static void logErrorAndThrowIfDevMode(String msg) {

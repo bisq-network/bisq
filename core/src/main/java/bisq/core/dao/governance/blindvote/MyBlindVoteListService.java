@@ -46,7 +46,6 @@ import bisq.core.dao.state.model.governance.Proposal;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
-import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
 import bisq.common.crypto.CryptoException;
 import bisq.common.handlers.ErrorMessageHandler;
@@ -163,15 +162,11 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
 
     @Override
     public void readPersisted(Runnable completeHandler) {
-        if (DevEnv.isDaoActivated()) {
-            persistenceManager.readPersisted(persisted -> {
-                        myBlindVoteList.setAll(persisted.getList());
-                        completeHandler.run();
-                    },
-                    completeHandler);
-        } else {
-            completeHandler.run();
-        }
+        persistenceManager.readPersisted(persisted -> {
+                    myBlindVoteList.setAll(persisted.getList());
+                    completeHandler.run();
+                },
+                completeHandler);
     }
 
 
@@ -233,7 +228,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
 
             publishTx(resultHandler, exceptionHandler, blindVoteTx);
         } catch (CryptoException | TransactionVerificationException | InsufficientMoneyException |
-                WalletException | IOException exception) {
+                 WalletException | IOException exception) {
             log.error(exception.toString());
             exception.printStackTrace();
             exceptionHandler.handleException(exception);

@@ -269,17 +269,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
             tradeFeeInBtcToggle.setSelected(currencyForMakerFeeBtc);
             tradeFeeInBsqToggle.setSelected(!currencyForMakerFeeBtc);
 
-            if (!DevEnv.isDaoActivated()) {
-                tradeFeeInBtcToggle.setVisible(false);
-                tradeFeeInBtcToggle.setManaged(false);
-                tradeFeeInBsqToggle.setVisible(false);
-                tradeFeeInBsqToggle.setManaged(false);
-                buyBsqBox.setVisible(false);
-                buyBsqBox.setManaged(false);
-            } else {
-                buyBsqBox.setVisible(model.isShowBuyBsqHint());
-                buyBsqBox.setManaged(model.isShowBuyBsqHint());
-            }
+            buyBsqBox.setVisible(model.isShowBuyBsqHint());
+            buyBsqBox.setManaged(model.isShowBuyBsqHint());
 
             Label popOverLabel = OfferViewUtil.createPopOverLabel(Res.get("createOffer.triggerPrice.tooltip"));
             triggerPriceInfoInputTextField.setContentForPopOver(popOverLabel, AwesomeIcon.SHIELD);
@@ -382,7 +373,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                 Offer offer = model.createAndGetOffer();
                 if (!DevEnv.isDevMode()) {
                     offerDetailsWindow.onPlaceOffer(() ->
-                            model.onPlaceOffer(offer, offerDetailsWindow::hide))
+                                    model.onPlaceOffer(offer, offerDetailsWindow::hide))
                             .show(offer);
                 } else {
                     balanceSubscription.unsubscribe();
@@ -918,13 +909,11 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         };
 
         tradeFeeVisibleListener = (observable, oldValue, newValue) -> {
-            if (DevEnv.isDaoActivated()) {
-                tradeFeeInBtcToggle.setVisible(newValue);
-                tradeFeeInBsqToggle.setVisible(newValue);
-                if (model.isShowBuyBsqHint()) {
-                    buyBsqBox.setVisible(newValue);
-                    buyBsqBox.setManaged(newValue);
-                }
+            tradeFeeInBtcToggle.setVisible(newValue);
+            tradeFeeInBsqToggle.setVisible(newValue);
+            if (model.isShowBuyBsqHint()) {
+                buyBsqBox.setVisible(newValue);
+                buyBsqBox.setManaged(newValue);
             }
         };
 
@@ -952,10 +941,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
     private void setIsCurrencyForMakerFeeBtc(boolean isCurrencyForMakerFeeBtc) {
         model.setIsCurrencyForMakerFeeBtc(isCurrencyForMakerFeeBtc);
-        if (DevEnv.isDaoActivated()) {
-            tradeFeeInBtcLabel.setOpacity(isCurrencyForMakerFeeBtc ? 1 : 0.3);
-            tradeFeeInBsqLabel.setOpacity(isCurrencyForMakerFeeBtc ? 0.3 : 1);
-        }
+        tradeFeeInBtcLabel.setOpacity(isCurrencyForMakerFeeBtc ? 1 : 0.3);
+        tradeFeeInBsqLabel.setOpacity(isCurrencyForMakerFeeBtc ? 0.3 : 1);
     }
 
     protected void updatePriceToggle() {
@@ -1529,7 +1516,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         VBox vBox = new VBox();
         vBox.setSpacing(6);
         vBox.setMaxWidth(300);
-        vBox.setAlignment(DevEnv.isDaoActivated() ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+        vBox.setAlignment(Pos.CENTER_RIGHT);
         vBox.getChildren().addAll(tradeFeeInBtcLabel, tradeFeeInBsqLabel);
 
         tradeFeeInBtcToggle = new AutoTooltipSlideToggleButton();

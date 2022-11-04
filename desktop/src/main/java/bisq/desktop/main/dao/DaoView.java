@@ -39,8 +39,6 @@ import bisq.core.dao.governance.votereveal.VoteRevealService;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
-import bisq.common.app.DevEnv;
-
 import javax.inject.Inject;
 
 import javafx.fxml.FXML;
@@ -96,20 +94,7 @@ public class DaoView extends ActivatableView<TabPane, Void> {
         burnBsqTab.setClosable(false);
         monitorTab.setClosable(false);
 
-        if (!DevEnv.isDaoActivated()) {
-            factsAndFiguresTab.setDisable(true);
-            bsqWalletTab.setDisable(true);
-            proposalsTab.setDisable(true);
-            bondingTab.setDisable(true);
-            burnBsqTab.setDisable(true);
-            monitorTab.setDisable(true);
-
-            daoNewsTab = new Tab(Res.get("dao.tab.news").toUpperCase());
-
-            root.getTabs().add(daoNewsTab);
-        } else {
-            root.getTabs().addAll(factsAndFiguresTab, bsqWalletTab, proposalsTab, bondingTab, burnBsqTab, monitorTab);
-        }
+        root.getTabs().addAll(factsAndFiguresTab, bsqWalletTab, proposalsTab, bondingTab, burnBsqTab, monitorTab);
 
         navigationListener = (viewPath, data) -> {
             if (viewPath.size() == 3 && viewPath.indexOf(DaoView.class) == 1) {
@@ -143,32 +128,27 @@ public class DaoView extends ActivatableView<TabPane, Void> {
 
     @Override
     protected void activate() {
-        if (DevEnv.isDaoActivated()) {
+        if (preferences.showAgain(DaoPresentation.DAO_NEWS)) {
+            preferences.dontShowAgain(DaoPresentation.DAO_NEWS, true);
+        }
 
-            if (preferences.showAgain(DaoPresentation.DAO_NEWS)) {
-                preferences.dontShowAgain(DaoPresentation.DAO_NEWS, true);
-            }
+        navigation.addListener(navigationListener);
+        root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
 
-            navigation.addListener(navigationListener);
-            root.getSelectionModel().selectedItemProperty().addListener(tabChangeListener);
-
-            if (navigation.getCurrentPath().size() == 2 && navigation.getCurrentPath().get(1) == DaoView.class) {
-                Tab selectedItem = root.getSelectionModel().getSelectedItem();
-                if (selectedItem == bsqWalletTab)
-                    navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class);
-                else if (selectedItem == proposalsTab)
-                    navigation.navigateTo(MainView.class, DaoView.class, GovernanceView.class);
-                else if (selectedItem == bondingTab)
-                    navigation.navigateTo(MainView.class, DaoView.class, BondingView.class);
-                else if (selectedItem == burnBsqTab)
-                    navigation.navigateTo(MainView.class, DaoView.class, BurnBsqView.class);
-                else if (selectedItem == factsAndFiguresTab)
-                    navigation.navigateTo(MainView.class, DaoView.class, EconomyView.class);
-                else if (selectedItem == monitorTab)
-                    navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class);
-            }
-        } else {
-            loadView(NewsView.class);
+        if (navigation.getCurrentPath().size() == 2 && navigation.getCurrentPath().get(1) == DaoView.class) {
+            Tab selectedItem = root.getSelectionModel().getSelectedItem();
+            if (selectedItem == bsqWalletTab)
+                navigation.navigateTo(MainView.class, DaoView.class, BsqWalletView.class);
+            else if (selectedItem == proposalsTab)
+                navigation.navigateTo(MainView.class, DaoView.class, GovernanceView.class);
+            else if (selectedItem == bondingTab)
+                navigation.navigateTo(MainView.class, DaoView.class, BondingView.class);
+            else if (selectedItem == burnBsqTab)
+                navigation.navigateTo(MainView.class, DaoView.class, BurnBsqView.class);
+            else if (selectedItem == factsAndFiguresTab)
+                navigation.navigateTo(MainView.class, DaoView.class, EconomyView.class);
+            else if (selectedItem == monitorTab)
+                navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class);
         }
     }
 

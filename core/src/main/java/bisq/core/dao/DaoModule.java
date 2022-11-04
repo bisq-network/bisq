@@ -222,7 +222,6 @@ public class DaoModule extends AppModule {
         bindConstant().annotatedWith(named(Config.RPC_BLOCK_NOTIFICATION_HOST)).to(config.rpcBlockNotificationHost);
         bindConstant().annotatedWith(named(Config.DUMP_BLOCKCHAIN_DATA)).to(config.dumpBlockchainData);
         bindConstant().annotatedWith(named(Config.FULL_DAO_NODE)).to(config.fullDaoNode);
-        bindConstant().annotatedWith(named(Config.DAO_ACTIVATED)).to(config.daoActivated);
     }
 }
 

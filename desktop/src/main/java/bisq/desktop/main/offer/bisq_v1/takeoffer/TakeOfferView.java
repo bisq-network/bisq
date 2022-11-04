@@ -247,13 +247,11 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         };
 
         tradeFeeVisibleListener = (observable, oldValue, newValue) -> {
-            if (DevEnv.isDaoActivated()) {
-                tradeFeeInBtcToggle.setVisible(newValue);
-                tradeFeeInBsqToggle.setVisible(newValue);
-                if (model.isShowBuyBsqHint()) {
-                    buyBsqBox.setVisible(newValue);
-                    buyBsqBox.setManaged(newValue);
-                }
+            tradeFeeInBtcToggle.setVisible(newValue);
+            tradeFeeInBsqToggle.setVisible(newValue);
+            if (model.isShowBuyBsqHint()) {
+                buyBsqBox.setVisible(newValue);
+                buyBsqBox.setManaged(newValue);
             }
         };
 
@@ -262,10 +260,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
     private void setIsCurrencyForMakerFeeBtc(boolean isCurrencyForMakerFeeBtc) {
         model.setIsCurrencyForTakerFeeBtc(isCurrencyForMakerFeeBtc);
-        if (DevEnv.isDaoActivated()) {
-            tradeFeeInBtcLabel.setOpacity(isCurrencyForMakerFeeBtc ? 1 : 0.3);
-            tradeFeeInBsqLabel.setOpacity(isCurrencyForMakerFeeBtc ? 0.3 : 1);
-        }
+        tradeFeeInBtcLabel.setOpacity(isCurrencyForMakerFeeBtc ? 1 : 0.3);
+        tradeFeeInBsqLabel.setOpacity(isCurrencyForMakerFeeBtc ? 0.3 : 1);
     }
 
     @Override
@@ -320,28 +316,12 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         maybeShowAccountWarning(lastPaymentAccount, model.dataModel.isBuyOffer());
         maybeShowCashByMailWarning(lastPaymentAccount, model.dataModel.getOffer());
 
-        if (!DevEnv.isDaoActivated() && !model.isRange()) {
-            nextButton.setVisible(false);
-            cancelButton1.setVisible(false);
-            if (model.isOfferAvailable.get())
-                showNextStepAfterAmountIsSet();
-        }
-
         boolean currencyForMakerFeeBtc = model.dataModel.isCurrencyForTakerFeeBtc();
         tradeFeeInBtcToggle.setSelected(currencyForMakerFeeBtc);
         tradeFeeInBsqToggle.setSelected(!currencyForMakerFeeBtc);
 
-        if (!DevEnv.isDaoActivated()) {
-            tradeFeeInBtcToggle.setVisible(false);
-            tradeFeeInBtcToggle.setManaged(false);
-            tradeFeeInBsqToggle.setVisible(false);
-            tradeFeeInBsqToggle.setManaged(false);
-            buyBsqBox.setVisible(false);
-            buyBsqBox.setManaged(false);
-        } else {
-            buyBsqBox.setVisible(model.isShowBuyBsqHint());
-            buyBsqBox.setManaged(model.isShowBuyBsqHint());
-        }
+        buyBsqBox.setVisible(model.isShowBuyBsqHint());
+        buyBsqBox.setManaged(model.isShowBuyBsqHint());
     }
 
     @Override
@@ -496,11 +476,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         model.onShowPayFundsScreen();
 
-        if (DevEnv.isDaoActivated()) {
-            paymentAccountsComboBox.setMouseTransparent(true);
-            paymentAccountsComboBox.setDisable(true);
-            paymentAccountsComboBox.setFocusTraversable(false);
-        }
+        paymentAccountsComboBox.setMouseTransparent(true);
+        paymentAccountsComboBox.setDisable(true);
+        paymentAccountsComboBox.setFocusTraversable(false);
 
         amountTextField.setMouseTransparent(true);
         amountTextField.setDisable(false);
@@ -721,8 +699,6 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
             if (isOfferAvailable) {
                 offerAvailabilityBusyAnimation.stop();
                 offerAvailabilityBusyAnimation.setVisible(false);
-                if (!DevEnv.isDaoActivated() && !model.isRange() && !model.showPayFundsScreenDisplayed.get())
-                    showNextStepAfterAmountIsSet();
             }
 
             offerAvailabilityLabel.setVisible(!isOfferAvailable);
@@ -1208,7 +1184,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         VBox vBox = new VBox();
         vBox.setSpacing(6);
         vBox.setMaxWidth(300);
-        vBox.setAlignment(DevEnv.isDaoActivated() ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+        vBox.setAlignment(Pos.CENTER_RIGHT);
         vBox.getChildren().addAll(tradeFeeInBtcLabel, tradeFeeInBsqLabel);
 
         tradeFeeInBtcToggle = new AutoTooltipSlideToggleButton();

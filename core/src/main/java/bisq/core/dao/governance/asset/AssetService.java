@@ -39,7 +39,6 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.util.coin.BsqFormatter;
 
-import bisq.common.app.DevEnv;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
@@ -189,7 +188,7 @@ public class AssetService implements DaoSetupService, DaoStateListener {
     }
 
     public boolean isActive(String tickerSymbol) {
-        return DevEnv.isDaoActivated() ? findAsset(tickerSymbol).map(StatefulAsset::isActive).orElse(false) : true;
+        return findAsset(tickerSymbol).map(StatefulAsset::isActive).orElse(false);
     }
 
     public Transaction payFee(StatefulAsset statefulAsset,
