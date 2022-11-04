@@ -477,16 +477,19 @@ public class BurningManService implements DaoStateListener {
         // that case.
         // effectiveBurnOutputShare is a % value represented as double. Smallest supported value is 0.01% -> 0.0001.
         // By multiplying it with 10000 and using Math.floor we limit the candidate to 0.01%.
+        // Entries with 0 will be ignored in the selection method.
         List<BurningManCandidate> burningManCandidates = new ArrayList<>(burningManCandidatesByName.values());
         List<Long> amountList = burningManCandidates.stream()
                 .map(BurningManCandidate::getEffectiveBurnOutputShare)
                 .map(effectiveBurnOutputShare -> (long) Math.floor(effectiveBurnOutputShare * 10000))
-                .filter(value -> value > 0)
                 .collect(Collectors.toList());
         if (amountList.isEmpty()) {
             return getBurningManAddressFromParam(currentChainHeight);
         }
         int winnerIndex = getRandomIndex(amountList, new Random());
+        if (winnerIndex == -1) {
+            return getBurningManAddressFromParam(currentChainHeight);
+        }
         return burningManCandidates.get(winnerIndex).getMostRecentAddress()
                 .orElse(getBurningManAddressFromParam(currentChainHeight));
     }
@@ -609,6 +612,9 @@ public class BurningManService implements DaoStateListener {
     @VisibleForTesting
     static int getRandomIndex(List<Long> weights, Random random) {
         long sum = weights.stream().mapToLong(n -> n).sum();
+        if (sum == 0) {
+            return -1;
+        }
         long target = random.longs(0, sum).findFirst().orElseThrow() + 1;
         return findIndex(weights, target);
     }
