@@ -18,6 +18,7 @@
 package bisq.core.trade.bisq_v1;
 
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dao.burningman.BurningManService;
 import bisq.core.offer.Offer;
 import bisq.core.support.dispute.DisputeValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
@@ -71,13 +72,6 @@ public class TradeDataValidation {
             throw new InvalidTxException(errorMsg);
         }
 
-        if (delayedPayoutTx.getOutputs().size() != 1) {
-            errorMsg = "Number of delayedPayoutTx outputs must be 1";
-            log.error(errorMsg);
-            log.error(delayedPayoutTx.toString());
-            throw new InvalidTxException(errorMsg);
-        }
-
         // connectedOutput is null and input.getValue() is null at that point as the tx is not committed to the wallet
         // yet. So we cannot check that the input matches but we did the amount check earlier in the trade protocol.
 
@@ -97,24 +91,33 @@ public class TradeDataValidation {
             throw new InvalidLockTimeException(errorMsg);
         }
 
-        // Check amount
-        TransactionOutput output = delayedPayoutTx.getOutput(0);
-        Offer offer = checkNotNull(trade.getOffer());
-        Coin msOutputAmount = offer.getBuyerSecurityDeposit()
-                .add(offer.getSellerSecurityDeposit())
-                .add(checkNotNull(trade.getAmount()));
+        if (!BurningManService.isActivated()) {
+            if (delayedPayoutTx.getOutputs().size() != 1) {
+                errorMsg = "Number of delayedPayoutTx outputs must be 1";
+                log.error(errorMsg);
+                log.error(delayedPayoutTx.toString());
+                throw new InvalidTxException(errorMsg);
+            }
 
-        if (!output.getValue().equals(msOutputAmount)) {
-            errorMsg = "Output value of deposit tx and delayed payout tx is not matching. Output: " + output + " / msOutputAmount: " + msOutputAmount;
-            log.error(errorMsg);
-            log.error(delayedPayoutTx.toString());
-            throw new InvalidAmountException(errorMsg);
-        }
+            // Check amount
+            TransactionOutput output = delayedPayoutTx.getOutput(0);
+            Offer offer = checkNotNull(trade.getOffer());
+            Coin msOutputAmount = offer.getBuyerSecurityDeposit()
+                    .add(offer.getSellerSecurityDeposit())
+                    .add(checkNotNull(trade.getAmount()));
 
-        NetworkParameters params = btcWalletService.getParams();
-        String delayedPayoutTxOutputAddress = output.getScriptPubKey().getToAddress(params).toString();
-        if (addressConsumer != null) {
-            addressConsumer.accept(delayedPayoutTxOutputAddress);
+            if (!output.getValue().equals(msOutputAmount)) {
+                errorMsg = "Output value of deposit tx and delayed payout tx is not matching. Output: " + output + " / msOutputAmount: " + msOutputAmount;
+                log.error(errorMsg);
+                log.error(delayedPayoutTx.toString());
+                throw new InvalidAmountException(errorMsg);
+            }
+
+            NetworkParameters params = btcWalletService.getParams();
+            String delayedPayoutTxOutputAddress = output.getScriptPubKey().getToAddress(params).toString();
+            if (addressConsumer != null) {
+                addressConsumer.accept(delayedPayoutTxOutputAddress);
+            }
         }
     }
 
