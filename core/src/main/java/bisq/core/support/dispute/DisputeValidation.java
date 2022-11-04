@@ -244,7 +244,6 @@ public class DisputeValidation {
                                                  Map<String, Set<String>> disputesPerDelayedPayoutTxId,
                                                  Map<String, Set<String>> disputesPerDepositTxId)
             throws DisputeReplayException {
-
         try {
             String disputeToTestTradeId = disputeToTest.getTradeId();
             String disputeToTestDelayedPayoutTxId = disputeToTest.getDelayedPayoutTxId();

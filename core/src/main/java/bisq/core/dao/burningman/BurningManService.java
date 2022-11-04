@@ -72,7 +72,7 @@ import lombok.extern.slf4j.Slf4j;
 public class BurningManService implements DaoStateListener {
     public static final Date ACTIVATION_DATE = Utilities.getUTCDate(2022, GregorianCalendar.OCTOBER, 25);
     private static final double GENESIS_OUTPUT_AMOUNT_FACTOR = 0.1;    // Means amounts at genesis height gets reduced to 10%
-    private static final String GENESIS_OUTPUT_PREFIX = "Co-founder-";
+    private static final String GENESIS_OUTPUT_PREFIX = "Bisq co-founder ";
     private static final int MAX_COMP_REQUEST_AGE = 105120;             // 2 years in blocks (2*365*144)     // 312 for regtest with 2*12*13 (13 is block cycle)
     private static final int MAX_BURN_AMOUNT_AGE = 52560;               // 1 years in blocks (365*144)       // 156 for regtest with 12*13 (13 is block cycle)
     private static final int NUM_REIMBURSEMENT_CYCLES = 12;             // We use reimbursements of the past 12 cycles
