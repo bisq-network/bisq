@@ -156,8 +156,7 @@ public class DisputeValidation {
 
     public static void validateDonationAddress(Dispute dispute,
                                                Transaction delayedPayoutTx,
-                                               NetworkParameters params,
-                                               DaoFacade daoFacade)
+                                               NetworkParameters params)
             throws AddressException {
         TransactionOutput output = delayedPayoutTx.getOutput(0);
         Address address = output.getScriptPubKey().getToAddress(params);
@@ -167,10 +166,9 @@ public class DisputeValidation {
             log.error(delayedPayoutTx.toString());
             throw new DisputeValidation.AddressException(dispute, errorMsg);
         }
-        String delayedPayoutTxOutputAddress = address.toString();
-        validateDonationAddressMatchesAnyPastParamValues(dispute, delayedPayoutTxOutputAddress, daoFacade);
 
         // Verify that address in the dispute matches the one in the trade.
+        String delayedPayoutTxOutputAddress = address.toString();
         checkArgument(delayedPayoutTxOutputAddress.equals(dispute.getDonationAddressOfDelayedPayoutTx()),
                 "donationAddressOfDelayedPayoutTx from dispute does not match address from delayed payout tx");
     }

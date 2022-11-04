@@ -18,7 +18,6 @@
 package bisq.core.trade.bisq_v1;
 
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.burningman.BurningManService;
 import bisq.core.offer.Offer;
 import bisq.core.support.dispute.DisputeValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
@@ -91,7 +90,7 @@ public class TradeDataValidation {
             throw new InvalidLockTimeException(errorMsg);
         }
 
-        if (!BurningManService.isActivated()) {
+        if (trade.isUsingLegacyBurningMan()) {
             if (delayedPayoutTx.getOutputs().size() != 1) {
                 errorMsg = "Number of delayedPayoutTx outputs must be 1";
                 log.error(errorMsg);

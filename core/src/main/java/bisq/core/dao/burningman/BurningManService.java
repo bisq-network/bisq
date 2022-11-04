@@ -84,11 +84,6 @@ public class BurningManService implements DaoStateListener {
         return new Date().after(ACTIVATION_DATE);
     }
 
-    //todo maybe we should use value from DAO param
-    public static String getLegacyBurningManAddress() {
-        return Param.RECIPIENT_BTC_ADDRESS.getDefaultValue();
-    }
-
     private final DaoStateService daoStateService;
     private final CycleService cycleService;
     private final ProposalService proposalService;

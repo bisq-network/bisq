@@ -568,6 +568,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 dispute.setDelayedPayoutTxId(delayedPayoutTx.getTxId().toString());
             }
 
+            dispute.setBurningManSelectionHeight(trade.getProcessModel().getBurningManSelectionHeight());
+            dispute.setTradeTxFee(trade.getTradeTxFeeAsLong());
+
             trade.setDisputeState(Trade.DisputeState.MEDIATION_REQUESTED);
             sendOpenDisputeMessage(disputeManager, resultHandler, dispute);
             tradeManager.requestPersistence();
@@ -640,6 +643,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             dispute.setDonationAddressOfDelayedPayoutTx(donationAddressString.get());
             dispute.setDelayedPayoutTxId(delayedPayoutTx.getTxId().toString());
             trade.setDisputeState(Trade.DisputeState.REFUND_REQUESTED);
+
+            dispute.setBurningManSelectionHeight(trade.getProcessModel().getBurningManSelectionHeight());
+            dispute.setTradeTxFee(trade.getTradeTxFeeAsLong());
 
             ((DisputeProtocol) tradeManager.getTradeProtocol(trade)).onPublishDelayedPayoutTx(() -> {
                         log.info("DelayedPayoutTx published and message sent to peer");

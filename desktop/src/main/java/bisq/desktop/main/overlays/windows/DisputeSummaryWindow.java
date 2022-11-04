@@ -844,7 +844,14 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     if (throwable == null) {
                         try {
                             refundManager.verifyTradeTxChain(txList);
-                            doCloseIfValid(closeTicketButton);
+
+                            if (!dispute.isUsingLegacyBurningMan()) {
+                                Transaction delayedPayoutTx = txList.get(3);
+                                refundManager.verifyDelayedPayoutTxReceivers(delayedPayoutTx, dispute);
+                                doCloseIfValid(closeTicketButton);
+                            } else {
+                                doCloseIfValid(closeTicketButton);
+                            }
                         } catch (Throwable error) {
                             UserThread.runAfter(() ->
                                             new Popup().warning(Res.get("disputeSummaryWindow.delayedPayoutTxVerificationFailed", error.getMessage()))
@@ -870,8 +877,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private void doCloseIfValid(Button closeTicketButton) {
         var disputeManager = checkNotNull(getDisputeManager(dispute));
         try {
-            DisputeValidation.validateDonationAddressMatchesAnyPastParamValues(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
             DisputeValidation.testIfDisputeTriesReplay(dispute, disputeManager.getDisputesAsObservableList());
+            if (dispute.isUsingLegacyBurningMan()) {
+                DisputeValidation.validateDonationAddressMatchesAnyPastParamValues(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+            }
             doClose(closeTicketButton);
         } catch (DisputeValidation.AddressException exception) {
             String addressAsString = dispute.getDonationAddressOfDelayedPayoutTx();
