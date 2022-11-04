@@ -267,7 +267,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         selectedContributorBox.setVisible(false);
 
         // BurnOutputs
-        Tuple2<TableView<BurnOutputListItem>, TitledGroupBg> burnOutputTuple = FormBuilder.addTableViewWithHeader(gridPane, ++gridRow,
+        Tuple2<TableView<BurnOutputListItem>, TitledGroupBg> burnOutputTuple = addTableViewWithHeader(gridPane, ++gridRow,
                 Res.get("dao.burningmen.burnOutput.table.header"), 30);
         burnOutputsTableView = burnOutputTuple.first;
         GridPane.setMargin(burnOutputsTableView, new Insets(60, 0, 5, -10));
@@ -281,7 +281,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         burnOutputsTitledGroupBg.setManaged(false);
 
         // Compensations
-        Tuple2<TableView<CompensationListItem>, TitledGroupBg> compensationTuple = FormBuilder.addTableViewWithHeader(gridPane, gridRow,
+        Tuple2<TableView<CompensationListItem>, TitledGroupBg> compensationTuple = addTableViewWithHeader(gridPane, gridRow,
                 Res.get("dao.burningmen.issuance.table.header"), 30);
         compensationTableView = compensationTuple.first;
         GridPane.setMargin(compensationTableView, new Insets(60, -10, 5, 0));
