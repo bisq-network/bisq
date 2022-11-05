@@ -297,6 +297,8 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
 
         amountInputTextField.clear();
         preImageTextField.clear();
+        amountInputTextField.resetValidation();
+        preImageTextField.resetValidation();
     }
 
 

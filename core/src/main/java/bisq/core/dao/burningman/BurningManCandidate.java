@@ -35,6 +35,7 @@ public final class BurningManCandidate {
     private long accumulatedBurnAmount;
     private long accumulatedDecayedBurnAmount;
     private long allowedBurnAmount;
+    private long expectedRevenue;
     private double issuanceShare;   // share of accumulated decayed issuance amounts in relation to total issued amounts
     private double boostedIssuanceShare;
     private double burnOutputShare; // share of accumulated decayed burn amounts in relation to total burned amounts
@@ -68,7 +69,10 @@ public final class BurningManCandidate {
         accumulatedCompensationAmount += compensationModel.getAmount();
     }
 
-    public void calculateShare(double totalIssuanceWeight, double totalBurnOutputWeight, long burnTarget) {
+    public void calculateShare(double totalIssuanceWeight,
+                               double totalBurnOutputWeight,
+                               long burnTarget,
+                               long averageDistributionPerCycle) {
         issuanceShare = totalIssuanceWeight > 0 ? accumulatedDecayedCompensationAmount / totalIssuanceWeight : 0;
         boostedIssuanceShare = issuanceShare * BurningManService.ISSUANCE_BOOST_FACTOR;
 
@@ -83,6 +87,8 @@ public final class BurningManCandidate {
         } else {
             allowedBurnAmount = 0;
         }
+
+        expectedRevenue = Math.round(averageDistributionPerCycle * effectiveBurnOutputShare);
     }
 
     public Optional<String> getMostRecentAddress() {
@@ -99,6 +105,7 @@ public final class BurningManCandidate {
                 ",\r\n     accumulatedBurnAmount=" + accumulatedBurnAmount +
                 ",\r\n     accumulatedDecayedBurnAmount=" + accumulatedDecayedBurnAmount +
                 ",\r\n     allowedBurnAmount=" + allowedBurnAmount +
+                ",\r\n     expectedRevenue=" + expectedRevenue +
                 ",\r\n     issuanceShare=" + issuanceShare +
                 ",\r\n     boostedIssuanceShare=" + boostedIssuanceShare +
                 ",\r\n     burnOutputShare=" + burnOutputShare +
