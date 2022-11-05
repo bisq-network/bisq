@@ -98,14 +98,14 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
     private InputTextField amountInputTextField, burningmenFilterField;
     private ComboBox<BurningmenListItem> contributorComboBox;
     private Button burnButton;
-    private TitledGroupBg burnOutputsTitledGroupBg, compensationTitledGroupBg, selectedContributorTitledGroupBg;
+    private TitledGroupBg burnOutputsTitledGroupBg, compensationsTitledGroupBg, selectedContributorTitledGroupBg;
     private AutoTooltipSlideToggleButton showOnlyActiveBurningmenToggle;
-    private TextField currentBlockHeightField, selectedContributorField, burnTargetField;
-    private VBox selectedContributorBox;
+    private TextField expectedRevenueField, selectedContributorNameField, selectedContributorAddressField, burnTargetField;
+    private VBox selectedContributorNameBox, selectedContributorAddressBox;
     private TableView<BurningmenListItem> burningmenTableView;
     private TableView<BurnOutputListItem> burnOutputsTableView;
-    private TableView<CompensationListItem> compensationTableView;
-    private TableView<ReimbursementListItem> reimbursementTableView;
+    private TableView<CompensationListItem> compensationsTableView;
+    private TableView<ReimbursementListItem> reimbursementsTableView;
 
     private final ObservableList<BurningmenListItem> burningmenObservableList = FXCollections.observableArrayList();
     private final FilteredList<BurningmenListItem> burningmenFilteredList = new FilteredList<>(burningmenObservableList);
@@ -160,18 +160,21 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
             burnOutputsTableView.setManaged(isValueSet);
             burnOutputsTitledGroupBg.setVisible(isValueSet);
             burnOutputsTitledGroupBg.setManaged(isValueSet);
-            compensationTableView.setVisible(isValueSet);
-            compensationTableView.setManaged(isValueSet);
-            compensationTitledGroupBg.setVisible(isValueSet);
-            compensationTitledGroupBg.setManaged(isValueSet);
+            compensationsTableView.setVisible(isValueSet);
+            compensationsTableView.setManaged(isValueSet);
+            compensationsTitledGroupBg.setVisible(isValueSet);
+            compensationsTitledGroupBg.setManaged(isValueSet);
             selectedContributorTitledGroupBg.setManaged(isValueSet);
             selectedContributorTitledGroupBg.setVisible(isValueSet);
-            selectedContributorBox.setManaged(isValueSet);
-            selectedContributorBox.setVisible(isValueSet);
+            selectedContributorNameBox.setManaged(isValueSet);
+            selectedContributorNameBox.setVisible(isValueSet);
+            selectedContributorAddressBox.setManaged(isValueSet);
+            selectedContributorAddressBox.setVisible(isValueSet);
             if (isValueSet) {
                 onBurningManSelected(newValue);
             } else {
-                selectedContributorField.clear();
+                selectedContributorNameField.clear();
+                selectedContributorAddressField.clear();
             }
         };
 
@@ -180,8 +183,8 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         contributorsListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
                 bsqValidator.setMaxValue(Coin.valueOf(newValue.getAllowedBurnAmount()));
+                amountInputTextField.clear();
                 amountInputTextField.resetValidation();
-                burnAmountValidator.validate(amountInputTextField.getText());
                 amountInputTextField.setPromptText(Res.get("dao.burningmen.amount.prompt.max",
                         bsqFormatter.formatCoinWithCode(newValue.getAllowedBurnAmount())));
                 updateButtonState();
@@ -216,8 +219,8 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         burnTargetField = addCompactTopLabelTextField(gridPane, ++gridRow,
                 Res.get("dao.burningmen.burnTarget"), "", Layout.FLOATING_LABEL_DISTANCE).second;
         Tuple3<Label, TextField, VBox> currentBlockHeightTuple = addCompactTopLabelTextField(gridPane, gridRow,
-                Res.get("dao.burningmen.currentBlockHeight"), "", Layout.FLOATING_LABEL_DISTANCE);
-        currentBlockHeightField = currentBlockHeightTuple.second;
+                Res.get("dao.burningmen.expectedRevenue"), "", Layout.FLOATING_LABEL_DISTANCE);
+        expectedRevenueField = currentBlockHeightTuple.second;
         GridPane.setColumnIndex(currentBlockHeightTuple.third, 1);
 
         // Burn inputs
@@ -247,8 +250,8 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         burningmenFilterField = burningmenTuple.first;
         burningmenTableView = burningmenTuple.second;
         GridPane.setColumnSpan(burningmenTableView, 2);
-        burningmenTableView.setItems(burningmenSortedList);
         createBurningmenColumns();
+        burningmenTableView.setItems(burningmenSortedList);
         HBox hBox = burningmenTuple.third;
         GridPane.setColumnSpan(hBox, 2);
         showOnlyActiveBurningmenToggle = new AutoTooltipSlideToggleButton();
@@ -257,22 +260,33 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         hBox.getChildren().add(2, showOnlyActiveBurningmenToggle);
 
         // Selected contributor
-        selectedContributorTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 2, Res.get("dao.burningmen.selectedContributor"), Layout.COMPACT_GROUP_DISTANCE);
+        selectedContributorTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 3,
+                Res.get("dao.burningmen.selectedContributor"), Layout.COMPACT_GROUP_DISTANCE);
         selectedContributorTitledGroupBg.setManaged(false);
         selectedContributorTitledGroupBg.setVisible(false);
-        Tuple3<Label, TextField, VBox> tuple = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("dao.burningmen.selectedContributor.label"), "", Layout.COMPACT_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE);
-        selectedContributorField = tuple.second;
-        selectedContributorBox = tuple.third;
-        GridPane.setColumnSpan(selectedContributorBox, 2);
-        selectedContributorBox.setManaged(false);
-        selectedContributorBox.setVisible(false);
+        Tuple3<Label, TextField, VBox> nameTuple = addCompactTopLabelTextField(gridPane, ++gridRow,
+                Res.get("dao.burningmen.selectedContributorName"), "",
+                Layout.COMPACT_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE);
+        selectedContributorNameField = nameTuple.second;
+        selectedContributorNameBox = nameTuple.third;
+        selectedContributorNameBox.setManaged(false);
+        selectedContributorNameBox.setVisible(false);
+
+        Tuple3<Label, TextField, VBox> addressTuple = addCompactTopLabelTextField(gridPane, gridRow,
+                Res.get("dao.burningmen.selectedContributorAddress"), "",
+                Layout.COMPACT_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE);
+        selectedContributorAddressField = addressTuple.second;
+        selectedContributorAddressBox = addressTuple.third;
+        GridPane.setColumnSpan(selectedContributorAddressBox, 2);
+        GridPane.setColumnIndex(selectedContributorAddressBox, 1);
+        selectedContributorAddressBox.setManaged(false);
+        selectedContributorAddressBox.setVisible(false);
 
         // BurnOutputs
         Tuple2<TableView<BurnOutputListItem>, TitledGroupBg> burnOutputTuple = addTableViewWithHeader(gridPane, ++gridRow,
                 Res.get("dao.burningmen.burnOutput.table.header"), 30);
         burnOutputsTableView = burnOutputTuple.first;
         GridPane.setMargin(burnOutputsTableView, new Insets(60, 0, 5, -10));
-        burnOutputsTableView.setPrefHeight(50);
         createBurnOutputsColumns();
         burnOutputsTableView.setItems(burnOutputsSortedList);
         burnOutputsTableView.setVisible(false);
@@ -283,30 +297,32 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
 
         // Compensations
         Tuple2<TableView<CompensationListItem>, TitledGroupBg> compensationTuple = addTableViewWithHeader(gridPane, gridRow,
-                Res.get("dao.burningmen.issuance.table.header"), 30);
-        compensationTableView = compensationTuple.first;
-        GridPane.setMargin(compensationTableView, new Insets(60, -10, 5, 0));
-        GridPane.setColumnIndex(compensationTableView, 1);
-        compensationTableView.setPrefHeight(50);
+                Res.get("dao.burningmen.compensations.table.header"), 30);
+        compensationsTableView = compensationTuple.first;
+        GridPane.setMargin(compensationsTableView, new Insets(60, -10, 5, 0));
+        GridPane.setColumnIndex(compensationsTableView, 1);
         createCompensationColumns();
-        compensationTableView.setItems(compensationSortedList);
-        compensationTableView.setVisible(false);
-        compensationTableView.setManaged(false);
-        compensationTitledGroupBg = compensationTuple.second;
-        GridPane.setColumnIndex(compensationTitledGroupBg, 1);
-        compensationTitledGroupBg.setVisible(false);
-        compensationTitledGroupBg.setManaged(false);
+        compensationsTableView.setItems(compensationSortedList);
+        compensationsTableView.setVisible(false);
+        compensationsTableView.setManaged(false);
+        compensationsTitledGroupBg = compensationTuple.second;
+        GridPane.setColumnIndex(compensationsTitledGroupBg, 1);
+        compensationsTitledGroupBg.setVisible(false);
+        compensationsTitledGroupBg.setManaged(false);
 
         // Reimbursements
-        reimbursementTableView = FormBuilder.<ReimbursementListItem>addTableViewWithHeader(gridPane, ++gridRow,
+        reimbursementsTableView = FormBuilder.<ReimbursementListItem>addTableViewWithHeader(gridPane, ++gridRow,
                 Res.get("dao.burningmen.reimbursement.table.header"), 30).first;
-        GridPane.setColumnSpan(reimbursementTableView, 2);
+        GridPane.setColumnSpan(reimbursementsTableView, 2);
         createReimbursementColumns();
-        reimbursementTableView.setItems(reimbursementSortedList);
+        reimbursementsTableView.setItems(reimbursementSortedList);
     }
 
     @Override
     protected void activate() {
+        GUIUtil.setFitToRowsForTableView(burningmenTableView, 36, 28, 15, 30);
+        GUIUtil.setFitToRowsForTableView(reimbursementsTableView, 36, 28, 3, 6);
+
         daoFacade.addBsqStateListener(this);
 
         amountInputTextField.textProperty().addListener(amountInputTextFieldListener);
@@ -319,8 +335,8 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
 
         burningmenSortedList.comparatorProperty().bind(burningmenTableView.comparatorProperty());
         burnOutputsSortedList.comparatorProperty().bind(burnOutputsTableView.comparatorProperty());
-        compensationSortedList.comparatorProperty().bind(compensationTableView.comparatorProperty());
-        reimbursementSortedList.comparatorProperty().bind(reimbursementTableView.comparatorProperty());
+        compensationSortedList.comparatorProperty().bind(compensationsTableView.comparatorProperty());
+        reimbursementSortedList.comparatorProperty().bind(reimbursementsTableView.comparatorProperty());
 
         burnButton.setOnAction((event) -> {
             BurningmenListItem selectedItem = contributorComboBox.getSelectionModel().getSelectedItem();
@@ -401,7 +417,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
                 .map(reimbursementModel -> new ReimbursementListItem(reimbursementModel, bsqFormatter))
                 .collect(Collectors.toList()));
 
-        currentBlockHeightField.setText(String.valueOf(daoFacade.getChainHeight()));
+        expectedRevenueField.setText(bsqFormatter.formatCoinWithCode(burningManService.getAverageDistributionPerCycle()));
         burnTargetField.setText(bsqFormatter.formatCoinWithCode(burningManService.getCurrentBurnTarget()));
 
         if (daoFacade.isParseBlockChainComplete()) {
@@ -433,7 +449,8 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
     }
 
     private void onBurningManSelected(BurningmenListItem burningmenListItem) {
-        selectedContributorField.setText(burningmenListItem.getName());
+        selectedContributorNameField.setText(burningmenListItem.getName());
+        selectedContributorAddressField.setText(burningmenListItem.getAddress());
         burnOutputsObservableList.setAll(burningmenListItem.getBurningManCandidate().getBurnOutputModels().stream()
                 .map(burnOutputModel -> new BurnOutputListItem(burnOutputModel, bsqFormatter))
                 .collect(Collectors.toList()));
@@ -441,7 +458,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         compensationObservableList.setAll(burningmenListItem.getBurningManCandidate().getCompensationModels().stream()
                 .map(compensationModel -> new CompensationListItem(compensationModel, bsqFormatter))
                 .collect(Collectors.toList()));
-        GUIUtil.setFitToRowsForTableView(compensationTableView, 36, 28, 4, 6);
+        GUIUtil.setFitToRowsForTableView(compensationsTableView, 36, 28, 4, 6);
     }
 
     private void updateButtonState() {
@@ -463,6 +480,9 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
                 errorMessage -> new Popup().warning(errorMessage).show());
 
         amountInputTextField.clear();
+        amountInputTextField.setPromptText(Res.get("dao.burningmen.amount.prompt"));
+        amountInputTextField.resetValidation();
+        contributorComboBox.getSelectionModel().clearSelection();
     }
 
 
@@ -474,7 +494,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         TableColumn<BurningmenListItem, BurningmenListItem> column;
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.name"));
-        column.setMinWidth(120);
+        column.setMinWidth(140);
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.getStyleClass().add("first-column");
         column.setCellFactory(new Callback<>() {
@@ -498,7 +518,8 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         column.setComparator(Comparator.comparing(e -> e.getName().toLowerCase()));
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.allowedBurnAmount"));
-        column.setMinWidth(80);
+        column.setMinWidth(110);
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -519,9 +540,34 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         burningmenTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurningmenListItem::getAllowedBurnAmount));
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.burnOutputShare"));
-        column.setMinWidth(100);
+        column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.expectedRevenue"));
+        column.setMinWidth(140);
+        column.getStyleClass().add("last-column");
+        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
+        column.setCellFactory(new Callback<>() {
+            @Override
+            public TableCell<BurningmenListItem, BurningmenListItem> call(TableColumn<BurningmenListItem,
+                    BurningmenListItem> column) {
+                return new TableCell<>() {
+                    @Override
+                    public void updateItem(final BurningmenListItem item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (item != null && !empty) {
+                            setText(item.getExpectedRevenueAsBsq());
+                        } else
+                            setText("");
+                    }
+                };
+            }
+        });
+        burningmenTableView.getColumns().add(column);
+        column.setComparator(Comparator.comparing(BurningmenListItem::getExpectedRevenue));
+        column.setSortType(TableColumn.SortType.DESCENDING);
+
+        column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.effectiveBurnOutputShare"));
+        column.setMinWidth(110);
         column.setMaxWidth(column.getMinWidth());
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -545,7 +591,8 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         burningmenTableView.getSortOrder().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.decayedBurnAmount"));
-        column.setMinWidth(80);
+        column.setMinWidth(160);
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -565,9 +612,11 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         });
         burningmenTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurningmenListItem::getAccumulatedDecayedBurnAmount));
+        column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.burnAmount"));
-        column.setMinWidth(80);
+        column.setMinWidth(110);
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -587,10 +636,12 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         });
         burningmenTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurningmenListItem::getAccumulatedBurnAmount));
+        column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.numBurnOutputs"));
-        column.setMinWidth(100);
+        column.setMinWidth(90);
         column.setMaxWidth(column.getMinWidth());
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -610,9 +661,11 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         });
         burningmenTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurningmenListItem::getNumBurnOutputs));
+        column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.issuanceShare"));
-        column.setMinWidth(100);
+        column.setMinWidth(110);
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -632,9 +685,11 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         });
         burningmenTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurningmenListItem::getIssuanceShare));
+        column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.decayedIssuanceAmount"));
-        column.setMinWidth(80);
+        column.setMinWidth(140);
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -654,9 +709,11 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         });
         burningmenTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurningmenListItem::getAccumulatedDecayedCompensationAmount));
+        column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.issuanceAmount"));
-        column.setMinWidth(80);
+        column.setMinWidth(120);
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -676,9 +733,10 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         });
         burningmenTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurningmenListItem::getAccumulatedCompensationAmount));
+        column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.numIssuances"));
-        column.setMinWidth(100);
+        column.setMinWidth(110);
         column.setMaxWidth(column.getMinWidth());
         column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -700,13 +758,14 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         });
         burningmenTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurningmenListItem::getNumIssuances));
+        column.setSortType(TableColumn.SortType.DESCENDING);
     }
 
     private void createBurnOutputsColumns() {
         TableColumn<BurnOutputListItem, BurnOutputListItem> column;
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.shared.table.date"));
-        column.setMinWidth(80);
+        column.setMinWidth(160);
         column.getStyleClass().add("first-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
@@ -732,8 +791,9 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         burnOutputsTableView.getSortOrder().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.shared.table.cycle"));
-        column.setMinWidth(50);
+        column.setMinWidth(60);
         column.setMaxWidth(column.getMinWidth());
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -753,10 +813,12 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         });
         burnOutputsTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurnOutputListItem::getCycleIndex));
+        column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.shared.table.height"));
-        column.setMinWidth(100);
+        column.setMinWidth(90);
         column.setMaxWidth(column.getMinWidth());
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -776,9 +838,11 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         });
         burnOutputsTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurnOutputListItem::getHeight));
+        column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.decayedBurnAmount"));
-        column.setMinWidth(80);
+        column.setMinWidth(160);
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -798,9 +862,10 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         });
         burnOutputsTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurnOutputListItem::getDecayedAmount));
+        column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.burnAmount"));
-        column.setMinWidth(80);
+        column.setMinWidth(140);
         column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
@@ -821,13 +886,14 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         });
         burnOutputsTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurnOutputListItem::getAmount));
+        column.setSortType(TableColumn.SortType.DESCENDING);
     }
 
     private void createCompensationColumns() {
         TableColumn<CompensationListItem, CompensationListItem> column;
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.shared.table.date"));
-        column.setMinWidth(80);
+        column.setMinWidth(160);
         column.getStyleClass().add("first-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
 
@@ -848,14 +914,15 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
                 };
             }
         });
-        compensationTableView.getColumns().add(column);
+        compensationsTableView.getColumns().add(column);
         column.setSortType(TableColumn.SortType.DESCENDING);
         column.setComparator(Comparator.comparing(CompensationListItem::getDate));
-        compensationTableView.getSortOrder().add(column);
+        compensationsTableView.getSortOrder().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.shared.table.cycle"));
-        column.setMinWidth(50);
+        column.setMinWidth(60);
         column.setMaxWidth(column.getMinWidth());
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -873,12 +940,14 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
                 };
             }
         });
-        compensationTableView.getColumns().add(column);
+        compensationsTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(CompensationListItem::getCycleIndex));
+        column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.shared.table.height"));
-        column.setMinWidth(100);
+        column.setMinWidth(90);
         column.setMaxWidth(column.getMinWidth());
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -896,11 +965,13 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
                 };
             }
         });
-        compensationTableView.getColumns().add(column);
+        compensationsTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(CompensationListItem::getHeight));
+        column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.decayedIssuanceAmount"));
-        column.setMinWidth(80);
+        column.setMinWidth(160);
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
 
         column.setCellFactory(new Callback<>() {
@@ -919,11 +990,12 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
                 };
             }
         });
-        compensationTableView.getColumns().add(column);
+        compensationsTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(CompensationListItem::getDecayedAmount));
+        column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.issuanceAmount"));
-        column.setMinWidth(80);
+        column.setMinWidth(140);
         column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
@@ -942,16 +1014,16 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
                 };
             }
         });
-        compensationTableView.getColumns().add(column);
+        compensationsTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(CompensationListItem::getAmount));
+        column.setSortType(TableColumn.SortType.DESCENDING);
     }
-
 
     private void createReimbursementColumns() {
         TableColumn<ReimbursementListItem, ReimbursementListItem> column;
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.shared.table.date"));
-        column.setMinWidth(80);
+        column.setMinWidth(160);
         column.getStyleClass().add("first-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
@@ -971,13 +1043,14 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
                 };
             }
         });
-        reimbursementTableView.getColumns().add(column);
+        reimbursementsTableView.getColumns().add(column);
         column.setSortType(TableColumn.SortType.DESCENDING);
         column.setComparator(Comparator.comparing(ReimbursementListItem::getDate));
-        reimbursementTableView.getSortOrder().add(column);
+        reimbursementsTableView.getSortOrder().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.shared.table.height"));
-        column.setMinWidth(100);
+        column.setMinWidth(90);
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -995,11 +1068,13 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
                 };
             }
         });
-        reimbursementTableView.getColumns().add(column);
+        reimbursementsTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(ReimbursementListItem::getHeight));
+        column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.shared.table.cycle"));
-        column.setMinWidth(50);
+        column.setMinWidth(60);
+        column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
             @Override
@@ -1017,11 +1092,12 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
                 };
             }
         });
-        reimbursementTableView.getColumns().add(column);
+        reimbursementsTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(ReimbursementListItem::getCycleIndex));
+        column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.reimbursedAmount"));
-        column.setMinWidth(80);
+        column.setMinWidth(140);
         column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
@@ -1040,7 +1116,8 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
                 };
             }
         });
-        reimbursementTableView.getColumns().add(column);
+        reimbursementsTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(ReimbursementListItem::getAmount));
+        column.setSortType(TableColumn.SortType.DESCENDING);
     }
 }

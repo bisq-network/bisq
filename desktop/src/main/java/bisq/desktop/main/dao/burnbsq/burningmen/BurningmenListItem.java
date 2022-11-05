@@ -18,6 +18,7 @@
 package bisq.desktop.main.dao.burnbsq.burningmen;
 
 import bisq.core.dao.burningman.BurningManCandidate;
+import bisq.core.locale.Res;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 
@@ -28,11 +29,11 @@ import lombok.Getter;
 @EqualsAndHashCode
 class BurningmenListItem {
     private final BurningManCandidate burningManCandidate;
-    private final String name, burnOutputShareAsString, effectiveBurnOutputShareAsString, issuanceShareAsString,
+    private final String name, address, burnOutputShareAsString, effectiveBurnOutputShareAsString, issuanceShareAsString,
             accumulatedDecayedBurnAmountAsBsq, allowedBurnAmountAsBsq, accumulatedBurnAmountAsBsq,
-            accumulatedDecayedCompensationAmountAsBsq, accumulatedCompensationAmountAsBsq;
+            accumulatedDecayedCompensationAmountAsBsq, accumulatedCompensationAmountAsBsq, expectedRevenueAsBsq;
     private final long allowedBurnAmount, accumulatedDecayedBurnAmount, accumulatedBurnAmount,
-            accumulatedDecayedCompensationAmount, accumulatedCompensationAmount;
+            accumulatedDecayedCompensationAmount, accumulatedCompensationAmount, expectedRevenue;
     private final int numBurnOutputs, numIssuances;
     private final double burnOutputShare, effectiveBurnOutputShare, issuanceShare;
 
@@ -40,6 +41,7 @@ class BurningmenListItem {
         this.burningManCandidate = burningManCandidate;
 
         this.name = name;
+        address = burningManCandidate.getMostRecentAddress().orElse(Res.get("shared.na"));
 
         // Burn
         allowedBurnAmount = burningManCandidate.getAllowedBurnAmount();
@@ -52,6 +54,8 @@ class BurningmenListItem {
         burnOutputShareAsString = FormattingUtils.formatToPercentWithSymbol(burnOutputShare);
         effectiveBurnOutputShare = burningManCandidate.getEffectiveBurnOutputShare();
         effectiveBurnOutputShareAsString = FormattingUtils.formatToPercentWithSymbol(effectiveBurnOutputShare);
+        expectedRevenue = burningManCandidate.getExpectedRevenue();
+        expectedRevenueAsBsq = bsqFormatter.formatCoinWithCode(expectedRevenue);
         numBurnOutputs = burningManCandidate.getBurnOutputModels().size();
 
         // Issuance
