@@ -82,6 +82,8 @@ public final class BurningManCandidate {
         double maxBurnAmount = burnTarget + BurningManService.BURN_TARGET_BOOST_AMOUNT;
         if (issuanceShare > 0 && maxBurnAmount > 0 && effectiveBurnOutputShare < boostedIssuanceShare) {
             long value = Math.round(boostedIssuanceShare * maxBurnAmount);
+            // We reduce it with what he had already burned
+            value -= accumulatedDecayedBurnAmount;
             // If below dust we set value to 0
             allowedBurnAmount = value < 546 ? 0 : value;
         } else {
