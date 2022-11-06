@@ -125,16 +125,16 @@ class BurningManService {
                     getCompensationProposalsForIssuance(issuance).forEach(compensationProposal -> {
                         String name = compensationProposal.getName();
                         burningManCandidatesByName.putIfAbsent(name, new BurningManCandidate());
-                                BurningManCandidate candidate = burningManCandidatesByName.get(name);
+                        BurningManCandidate candidate = burningManCandidatesByName.get(name);
 
-                                // Issuance
-                                compensationProposal.getBurningManReceiverAddress()
-                                        .or(() -> daoStateService.getTx(compensationProposal.getTxId())
-                                                .map(this::getAddressFromCompensationRequest))
-                                        .ifPresent(address -> {
-                                            int issuanceHeight = issuance.getChainHeight();
-                                            long issuanceAmount = getIssuanceAmountForCompensationRequest(issuance);
-                                            int cycleIndex = getCycleIndex(issuanceHeight);
+                        // Issuance
+                        compensationProposal.getBurningManReceiverAddress()
+                                .or(() -> daoStateService.getTx(compensationProposal.getTxId())
+                                        .map(this::getAddressFromCompensationRequest))
+                                .ifPresent(address -> {
+                                    int issuanceHeight = issuance.getChainHeight();
+                                    long issuanceAmount = getIssuanceAmountForCompensationRequest(issuance);
+                                    int cycleIndex = getCycleIndex(issuanceHeight);
                                             if (isValidReimbursement(name, cycleIndex, issuanceAmount)) {
                                                 long decayedIssuanceAmount = getDecayedCompensationAmount(issuanceAmount, issuanceHeight, chainHeight);
                                                 long issuanceDate = daoStateService.getBlockTime(issuanceHeight);
@@ -242,6 +242,10 @@ class BurningManService {
         long reimbursements = getAccumulatedReimbursements(chainHeight, fromBlock);
         long btcTradeFees = getAccumulatedEstimatedBtcTradeFees(chainHeight, 3);
         return Math.round((reimbursements + btcTradeFees) / 3d);
+    }
+
+    String getLegacyBurningManAddress(int chainHeight) {
+        return daoStateService.getParamValue(Param.RECIPIENT_BTC_ADDRESS, chainHeight);
     }
 
 

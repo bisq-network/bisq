@@ -63,10 +63,9 @@ public class BtcFeeReceiverService implements DaoStateListener {
 
     public String getBtcFeeReceiverAddress() {
         Map<String, BurningManCandidate> burningManCandidatesByName = burningManService.getBurningManCandidatesByName(currentChainHeight);
-        int currentChainHeight = daoStateService.getBlockHeightOfLastBlock();
         if (burningManCandidatesByName.isEmpty()) {
             // If there are no compensation requests (e.g. at dev testing) we fall back to the default address
-            return BurningManUtil.getLegacyBurningManAddress(daoStateService, currentChainHeight);
+            return burningManService.getLegacyBurningManAddress(currentChainHeight);
         }
 
         // It might be that we do not reach 100% if some entries had a capped effectiveBurnOutputShare.
@@ -81,14 +80,14 @@ public class BtcFeeReceiverService implements DaoStateListener {
                 .map(effectiveBurnOutputShare -> (long) Math.floor(effectiveBurnOutputShare * 10000))
                 .collect(Collectors.toList());
         if (amountList.isEmpty()) {
-            return BurningManUtil.getLegacyBurningManAddress(daoStateService, currentChainHeight);
+            return burningManService.getLegacyBurningManAddress(currentChainHeight);
         }
         int winnerIndex = getRandomIndex(amountList, new Random());
         if (winnerIndex == -1) {
-            return BurningManUtil.getLegacyBurningManAddress(daoStateService, currentChainHeight);
+            return burningManService.getLegacyBurningManAddress(currentChainHeight);
         }
         return burningManCandidates.get(winnerIndex).getMostRecentAddress()
-                .orElse(BurningManUtil.getLegacyBurningManAddress(daoStateService, currentChainHeight));
+                .orElse(burningManService.getLegacyBurningManAddress(currentChainHeight));
     }
 
     @VisibleForTesting
