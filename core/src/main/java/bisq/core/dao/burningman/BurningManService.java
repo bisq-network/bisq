@@ -106,9 +106,6 @@ public class BurningManService {
 
     @Getter
     @Setter
-    private BurningManInfoService burningManInfoService;
-    @Getter
-    @Setter
     private DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
     @Getter
     @Setter
@@ -208,10 +205,16 @@ public class BurningManService {
                 .sum();
         long burnTarget = getBurnTarget(chainHeight, burningManCandidates);
 
-        //todo avoid burningManInfoService call
         burningManCandidates.forEach(candidate ->
-                candidate.calculateShare(totalDecayedCompensationAmounts, totalDecayedBurnAmounts, burnTarget, burningManInfoService.getAverageDistributionPerCycle()));
+                candidate.calculateShare(totalDecayedCompensationAmounts, totalDecayedBurnAmounts, burnTarget, getAverageDistributionPerCycle(chainHeight)));
         return burningManCandidatesByName;
+    }
+
+    long getAverageDistributionPerCycle(int chainHeight) {
+        int fromBlock = getFirstBlockOfPastCycle(chainHeight, 3);
+        long reimbursements = getAccumulatedReimbursements(chainHeight, fromBlock);
+        long btcTradeFees = getAccumulatedEstimatedBtcTradeFees(chainHeight, 3);
+        return Math.round((reimbursements + btcTradeFees) / 3d);
     }
 
     private String getAddressFromCompensationRequest(Tx tx) {
