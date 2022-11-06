@@ -35,7 +35,6 @@ import bisq.core.dao.state.model.governance.ReimbursementProposal;
 import bisq.network.p2p.storage.P2PDataStorage;
 
 import bisq.common.util.Hex;
-import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -45,8 +44,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Collection;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -55,16 +52,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class BurningManService {
-    // TODO
-    //  public static final Date ACTIVATION_DATE = Utilities.getUTCDate(2022, GregorianCalendar.OCTOBER, 25);
-    public static final Date ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.JANUARY, 1);
+class BurningManService {
     private static final int DAY_AS_BLOCKS = 144;
     private static final int MONTH_AS_BLOCKS = 30 * DAY_AS_BLOCKS; // Ignore 31 days months, as the block time is anyway not exact.
     private static final int YEAR_AS_BLOCKS = 12 * MONTH_AS_BLOCKS;
@@ -103,18 +95,6 @@ public class BurningManService {
     // Burn target gets increased by that amount to give more flexibility.
     // Burn target is calculated from reimbursements + estimated BTC fees - burned amounts.
     static final long BURN_TARGET_BOOST_AMOUNT = 10000000;
-
-    @Getter
-    @Setter
-    private DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
-    @Getter
-    @Setter
-    private BtcFeeReceiverService btcFeeReceiverService;
-
-
-    public static boolean isActivated() {
-        return new Date().after(ACTIVATION_DATE);
-    }
 
     private final DaoStateService daoStateService;
     private final CycleService cycleService;

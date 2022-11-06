@@ -23,7 +23,8 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.burningman.BurningManService;
+import bisq.core.dao.burningman.BtcFeeReceiverService;
+import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.filter.FilterManager;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
@@ -385,8 +386,12 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         return provider.getTradeWalletService();
     }
 
-    public BurningManService getBurningManService() {
-        return provider.getBurningManService();
+    public BtcFeeReceiverService getBtcFeeReceiverService() {
+        return provider.getBtcFeeReceiverService();
+    }
+
+    public DelayedPayoutTxReceiverService getDelayedPayoutTxReceiverService() {
+        return provider.getDelayedPayoutTxReceiverService();
     }
 
     public User getUser() {

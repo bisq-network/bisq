@@ -21,7 +21,7 @@ import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.burningman.BurningManService;
+import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
@@ -77,7 +77,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 @Singleton
 public final class RefundManager extends DisputeManager<RefundDisputeList> {
-    private final BurningManService burningManService;
+    private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
     private final MempoolService mempoolService;
 
 
@@ -94,7 +94,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
                          ClosedTradableManager closedTradableManager,
                          OpenOfferManager openOfferManager,
                          DaoFacade daoFacade,
-                         BurningManService burningManService,
+                         DelayedPayoutTxReceiverService delayedPayoutTxReceiverService,
                          KeyRing keyRing,
                          RefundDisputeListService refundDisputeListService,
                          Config config,
@@ -102,8 +102,8 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
                          MempoolService mempoolService) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
                 openOfferManager, daoFacade, keyRing, refundDisputeListService, config, priceFeedService);
+        this.delayedPayoutTxReceiverService = delayedPayoutTxReceiverService;
 
-        this.burningManService = burningManService;
         this.mempoolService = mempoolService;
     }
 
@@ -319,7 +319,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
     public void verifyDelayedPayoutTxReceivers(Transaction delayedPayoutTx, Dispute dispute) {
         Transaction depositTx = dispute.findDepositTx(btcWalletService).orElseThrow();
         long inputAmount = depositTx.getOutput(0).getValue().value;
-        List<Tuple2<Long, String>> delayedPayoutTxReceivers = burningManService.getDelayedPayoutTxReceiverService().getDelayedPayoutTxReceivers(
+        List<Tuple2<Long, String>> delayedPayoutTxReceivers = delayedPayoutTxReceiverService.getDelayedPayoutTxReceivers(
                 dispute.getBurningManSelectionHeight(),
                 inputAmount,
                 dispute.getTradeTxFee());

@@ -39,7 +39,7 @@ public class SendOfferAvailabilityRequest extends Task<OfferAvailabilityModel> {
         try {
             runInterceptHook();
 
-            int burningManSelectionHeight = model.getBurningManService().getDelayedPayoutTxReceiverService().getBurningManSelectionHeight();
+            int burningManSelectionHeight = model.getDelayedPayoutTxReceiverService().getBurningManSelectionHeight();
             OfferAvailabilityRequest message = new OfferAvailabilityRequest(model.getOffer().getId(),
                     model.getPubKeyRing(),
                     model.getTakersTradePrice(),

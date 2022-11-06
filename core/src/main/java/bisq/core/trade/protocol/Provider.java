@@ -23,7 +23,8 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.WalletsManager;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.burningman.BurningManService;
+import bisq.core.dao.burningman.BtcFeeReceiverService;
+import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.provider.fee.FeeService;
@@ -61,7 +62,8 @@ public class Provider {
     private final RefundAgentManager refundAgentManager;
     private final KeyRing keyRing;
     private final FeeService feeService;
-    private final BurningManService burningManService;
+    private final BtcFeeReceiverService btcFeeReceiverService;
+    private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
 
     @Inject
     public Provider(OpenOfferManager openOfferManager,
@@ -81,7 +83,8 @@ public class Provider {
                     RefundAgentManager refundAgentManager,
                     KeyRing keyRing,
                     FeeService feeService,
-                    BurningManService burningManService) {
+                    BtcFeeReceiverService btcFeeReceiverService,
+                    DelayedPayoutTxReceiverService delayedPayoutTxReceiverService) {
 
         this.openOfferManager = openOfferManager;
         this.p2PService = p2PService;
@@ -100,6 +103,7 @@ public class Provider {
         this.refundAgentManager = refundAgentManager;
         this.keyRing = keyRing;
         this.feeService = feeService;
-        this.burningManService = burningManService;
+        this.btcFeeReceiverService = btcFeeReceiverService;
+        this.delayedPayoutTxReceiverService = delayedPayoutTxReceiverService;
     }
 }

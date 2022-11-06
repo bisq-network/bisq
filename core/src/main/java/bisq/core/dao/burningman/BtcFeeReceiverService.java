@@ -44,10 +44,8 @@ public class BtcFeeReceiverService implements DaoStateListener {
         this.burningManService = burningManService;
 
         daoStateService.addDaoStateListener(this);
-
-        //todo
-        burningManService.setBtcFeeReceiverService(this);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DaoStateListener
