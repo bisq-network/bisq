@@ -30,10 +30,10 @@ public final class ReimbursementModel {
     private final long date;
     private final int cycleIndex;
 
-    public ReimbursementModel(long amount,
-                              int height,
-                              long date,
-                              int cycleIndex) {
+    ReimbursementModel(long amount,
+                       int height,
+                       long date,
+                       int cycleIndex) {
         this.amount = amount;
         this.height = height;
         this.date = date;

@@ -32,12 +32,12 @@ public final class BurnOutputModel {
     private final long date;
     private final int cycleIndex;
 
-    public BurnOutputModel(long amount,
-                           long decayedAmount,
-                           int height,
-                           String txId,
-                           long date,
-                           int cycleIndex) {
+    BurnOutputModel(long amount,
+                    long decayedAmount,
+                    int height,
+                    String txId,
+                    long date,
+                    int cycleIndex) {
 
         this.amount = amount;
         this.decayedAmount = decayedAmount;

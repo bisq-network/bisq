@@ -26,13 +26,13 @@ import lombok.Getter;
 @Getter
 @EqualsAndHashCode
 public final class CompensationModel {
-    public static CompensationModel fromCompensationRequest(String address,
-                                                            long amount,
-                                                            long decayedAmount,
-                                                            int height,
-                                                            String txId,
-                                                            long date,
-                                                            int cycleIndex) {
+    static CompensationModel fromCompensationRequest(String address,
+                                                     long amount,
+                                                     long decayedAmount,
+                                                     int height,
+                                                     String txId,
+                                                     long date,
+                                                     int cycleIndex) {
         return new CompensationModel(address,
                 amount,
                 decayedAmount,
@@ -43,14 +43,14 @@ public final class CompensationModel {
                 cycleIndex);
     }
 
-    public static CompensationModel fromGenesisOutput(String address,
-                                                      long amount,
-                                                      long decayedAmount,
-                                                      int height,
-                                                      String txId,
-                                                      int outputIndex,
-                                                      long date,
-                                                      int cycleIndex) {
+    static CompensationModel fromGenesisOutput(String address,
+                                               long amount,
+                                               long decayedAmount,
+                                               int height,
+                                               String txId,
+                                               int outputIndex,
+                                               long date,
+                                               int cycleIndex) {
         return new CompensationModel(address,
                 amount,
                 decayedAmount,
