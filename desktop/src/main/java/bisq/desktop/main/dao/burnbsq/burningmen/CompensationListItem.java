@@ -30,20 +30,16 @@ import lombok.Getter;
 @Getter
 @EqualsAndHashCode
 class CompensationListItem {
-    private final CompensationModel compensationModel;
-    private final String address, txId, amountAsString, decayedAmountAsString, dateAsString;
+    private final String amountAsString, decayedAmountAsString, dateAsString;
     private final long amount, decayedAmount, date;
     private final int height, cycleIndex;
 
     CompensationListItem(CompensationModel model, BsqFormatter bsqFormatter) {
-        this.compensationModel = model;
 
         height = model.getHeight();
         cycleIndex = model.getCycleIndex();
         date = model.getDate();
         dateAsString = DisplayUtils.formatDateTime(new Date(date));
-        txId = model.getTxId();
-        address = model.getAddress();
         amount = model.getAmount();
         amountAsString = bsqFormatter.formatCoinWithCode(amount);
         decayedAmount = model.getDecayedAmount();

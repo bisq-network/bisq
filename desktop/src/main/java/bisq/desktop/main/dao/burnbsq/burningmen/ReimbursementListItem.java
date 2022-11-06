@@ -30,14 +30,11 @@ import lombok.Getter;
 @Getter
 @EqualsAndHashCode
 class ReimbursementListItem {
-    private final ReimbursementModel reimbursementModel;
     private final String amountAsString, dateAsString;
     private final long amount, date;
     private final int height, cycleIndex;
 
     ReimbursementListItem(ReimbursementModel model, BsqFormatter bsqFormatter) {
-        this.reimbursementModel = model;
-
         height = model.getHeight();
         cycleIndex = model.getCycleIndex();
         date = model.getDate();
