@@ -106,7 +106,7 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
         Collection<BurningManCandidate> burningManCandidates = burningManService.getBurningManCandidatesByName(burningManSelectionHeight).values();
         if (burningManCandidates.isEmpty()) {
             // If there are no compensation requests (e.g. at dev testing) we fall back to the legacy BM
-            return List.of(new Tuple2<>(inputAmount, BurningManUtil.getLegacyBurningManAddress(daoStateService, burningManSelectionHeight)));
+            return List.of(new Tuple2<>(inputAmount, burningManService.getLegacyBurningManAddress(burningManSelectionHeight)));
         }
 
         // We need to use the same txFeePerVbyte value for both traders.
@@ -141,7 +141,7 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
             // If the available is larger than DPT_MIN_REMAINDER_TO_LEGACY_BM we send it to legacy BM
             // Otherwise we use it as miner fee
             if (available > DPT_MIN_REMAINDER_TO_LEGACY_BM) {
-                receivers.add(new Tuple2<>(available, BurningManUtil.getLegacyBurningManAddress(daoStateService, burningManSelectionHeight)));
+                receivers.add(new Tuple2<>(available, burningManService.getLegacyBurningManAddress(burningManSelectionHeight)));
             }
         }
         return receivers;
