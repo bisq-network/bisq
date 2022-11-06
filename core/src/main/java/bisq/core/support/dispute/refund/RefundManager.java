@@ -319,7 +319,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
     public void verifyDelayedPayoutTxReceivers(Transaction delayedPayoutTx, Dispute dispute) {
         Transaction depositTx = dispute.findDepositTx(btcWalletService).orElseThrow();
         long inputAmount = depositTx.getOutput(0).getValue().value;
-        List<Tuple2<Long, String>> delayedPayoutTxReceivers = delayedPayoutTxReceiverService.getDelayedPayoutTxReceivers(
+        List<Tuple2<Long, String>> delayedPayoutTxReceivers = delayedPayoutTxReceiverService.getReceivers(
                 dispute.getBurningManSelectionHeight(),
                 inputAmount,
                 dispute.getTradeTxFee());
