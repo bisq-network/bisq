@@ -54,7 +54,7 @@ public class SellerCreatesDelayedPayoutTx extends TradeTask {
             if (BurningManService.isActivated()) {
                 long inputAmount = depositTx.getOutput(0).getValue().value;
                 long tradeTxFeeAsLong = trade.getTradeTxFeeAsLong();
-                List<Tuple2<Long, String>> delayedPayoutTxReceivers = processModel.getBurningManService().getDelayedPayoutTxReceivers(
+                List<Tuple2<Long, String>> delayedPayoutTxReceivers = processModel.getBurningManService().getDelayedPayoutTxReceiverService().getDelayedPayoutTxReceivers(
                         processModel.getBurningManSelectionHeight(),
                         inputAmount,
                         tradeTxFeeAsLong);

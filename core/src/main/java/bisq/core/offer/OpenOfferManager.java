@@ -673,7 +673,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 int takersBurningManSelectionHeight = request.getBurningManSelectionHeight();
                 checkArgument(takersBurningManSelectionHeight > 0, "takersBurningManSelectionHeight must not be 0");
 
-                int makersBurningManSelectionHeight = burningManService.getBurningManSelectionHeight();
+                int makersBurningManSelectionHeight = burningManService.getDelayedPayoutTxReceiverService().getBurningManSelectionHeight();
                 checkArgument(takersBurningManSelectionHeight == makersBurningManSelectionHeight,
                         "takersBurningManSelectionHeight does no match makersBurningManSelectionHeight");
             } catch (Throwable t) {
