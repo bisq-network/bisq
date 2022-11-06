@@ -75,7 +75,7 @@ public class BtcFeeReceiverService implements DaoStateListener {
         // Entries with 0 will be ignored in the selection method.
         List<BurningManCandidate> burningManCandidates = new ArrayList<>(burningManCandidatesByName.values());
         List<Long> amountList = burningManCandidates.stream()
-                .map(BurningManCandidate::getEffectiveBurnOutputShare)
+                .map(BurningManCandidate::getCappedBurnAmountShare)
                 .map(effectiveBurnOutputShare -> (long) Math.floor(effectiveBurnOutputShare * 10000))
                 .collect(Collectors.toList());
         if (amountList.isEmpty()) {

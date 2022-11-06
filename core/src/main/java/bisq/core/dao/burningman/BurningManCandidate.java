@@ -26,23 +26,26 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Contains all relevant data for a burningman candidate (any contributor who has made a compensation request or was
+ * a receiver of a genesis output).
+ */
 @Slf4j
 @Getter
 @EqualsAndHashCode
 public final class BurningManCandidate {
+    private final List<CompensationModel> compensationModels = new ArrayList<>();
     private long accumulatedCompensationAmount;
     private long accumulatedDecayedCompensationAmount;
+    private double compensationShare;           // Share of accumulated decayed compensation amounts in relation to total issued amounts
+    private double boostedCompensationShare;
+    private Optional<String> mostRecentAddress = Optional.empty();
+
+    private final List<BurnOutputModel> burnOutputModels = new ArrayList<>();
     private long accumulatedBurnAmount;
     private long accumulatedDecayedBurnAmount;
-    private long allowedBurnAmount;
-    private long expectedRevenue;
-    private double issuanceShare;   // share of accumulated decayed issuance amounts in relation to total issued amounts
-    private double boostedIssuanceShare;
-    private double burnOutputShare; // share of accumulated decayed burn amounts in relation to total burned amounts
-    private double effectiveBurnOutputShare; // limited to boostedIssuanceShare
-    private final List<CompensationModel> compensationModels = new ArrayList<>();
-    private final List<BurnOutputModel> burnOutputModels = new ArrayList<>();
-    private Optional<String> mostRecentAddress = Optional.empty();
+    private double burnAmountShare;             // Share of accumulated decayed burn amounts in relation to total burned amounts
+    private double cappedBurnAmountShare;       // Capped burnAmountShare. Cannot be larger than boostedCompensationShare
 
     BurningManCandidate() {
     }
@@ -77,47 +80,28 @@ public final class BurningManCandidate {
                 .map(CompensationModel::getAddress);
     }
 
-    public void calculateIssuanceShare(double totalIssuanceWeight) {
-        issuanceShare = totalIssuanceWeight > 0 ? accumulatedDecayedCompensationAmount / totalIssuanceWeight : 0;
-        boostedIssuanceShare = issuanceShare * BurningManService.ISSUANCE_BOOST_FACTOR;
-    }
+    public void calculateShares(double totalDecayedCompensationAmounts, double totalDecayedBurnAmounts) {
+        compensationShare = totalDecayedCompensationAmounts > 0 ? accumulatedDecayedCompensationAmount / totalDecayedCompensationAmounts : 0;
+        boostedCompensationShare = compensationShare * BurningManService.ISSUANCE_BOOST_FACTOR;
 
-    public void calculateBurnOutputShare(double totalBurnOutputWeight) {
-        burnOutputShare = totalBurnOutputWeight > 0 ? accumulatedDecayedBurnAmount / totalBurnOutputWeight : 0;
-        effectiveBurnOutputShare = Math.min(boostedIssuanceShare, burnOutputShare);
-    }
-
-    public void calculateExpectedRevenue(long averageDistributionPerCycle) {
-        expectedRevenue = Math.round(effectiveBurnOutputShare * averageDistributionPerCycle);
-    }
-
-    public void calculateAllowedBurnAmount(long burnTarget) {
-        double maxBurnAmount = burnTarget + BurningManService.BURN_TARGET_BOOST_AMOUNT;
-        if (issuanceShare > 0 && maxBurnAmount > 0 && effectiveBurnOutputShare < boostedIssuanceShare) {
-            // We reduce it with what he had already burned
-            long value = Math.round(boostedIssuanceShare * maxBurnAmount) - accumulatedDecayedBurnAmount;
-            // If below dust we set value to 0
-            allowedBurnAmount = value < 546 ? 0 : value;
-        } else {
-            allowedBurnAmount = 0;
-        }
+        burnAmountShare = totalDecayedBurnAmounts > 0 ? accumulatedDecayedBurnAmount / totalDecayedBurnAmounts : 0;
+        cappedBurnAmountShare = Math.min(boostedCompensationShare, burnAmountShare);
     }
 
     @Override
     public String toString() {
         return "BurningManCandidate{" +
-                "\r\n     accumulatedCompensationAmount=" + accumulatedCompensationAmount +
+                "\r\n     compensationModels=" + compensationModels +
+                ",\r\n     accumulatedCompensationAmount=" + accumulatedCompensationAmount +
                 ",\r\n     accumulatedDecayedCompensationAmount=" + accumulatedDecayedCompensationAmount +
+                ",\r\n     compensationShare=" + compensationShare +
+                ",\r\n     boostedCompensationShare=" + boostedCompensationShare +
+                ",\r\n     mostRecentAddress=" + mostRecentAddress +
+                ",\r\n     burnOutputModels=" + burnOutputModels +
                 ",\r\n     accumulatedBurnAmount=" + accumulatedBurnAmount +
                 ",\r\n     accumulatedDecayedBurnAmount=" + accumulatedDecayedBurnAmount +
-                ",\r\n     allowedBurnAmount=" + allowedBurnAmount +
-                ",\r\n     expectedRevenue=" + expectedRevenue +
-                ",\r\n     issuanceShare=" + issuanceShare +
-                ",\r\n     boostedIssuanceShare=" + boostedIssuanceShare +
-                ",\r\n     burnOutputShare=" + burnOutputShare +
-                ",\r\n     effectiveBurnOutputShare=" + effectiveBurnOutputShare +
-                ",\r\n     compensationModels=" + compensationModels +
-                ",\r\n     burnOutputModels=" + burnOutputModels +
+                ",\r\n     burnAmountShare=" + burnAmountShare +
+                ",\r\n     cappedBurnAmountShare=" + cappedBurnAmountShare +
                 "\r\n}";
     }
 }

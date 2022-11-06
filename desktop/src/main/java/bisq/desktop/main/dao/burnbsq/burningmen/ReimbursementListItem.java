@@ -36,7 +36,8 @@ class ReimbursementListItem {
 
     ReimbursementListItem(ReimbursementModel model, BsqFormatter bsqFormatter) {
         height = model.getHeight();
-        cycleIndex = model.getCycleIndex();
+        // We show first cycle with index 0 as 1
+        cycleIndex = model.getCycleIndex() + 1;
         date = model.getDate();
         dateAsString = DisplayUtils.formatDateTime(new Date(date));
         amount = model.getAmount();

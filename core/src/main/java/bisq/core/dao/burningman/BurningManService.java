@@ -27,14 +27,10 @@ import bisq.core.dao.state.model.blockchain.BaseTx;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.governance.CompensationProposal;
-import bisq.core.dao.state.model.governance.Cycle;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
-import bisq.core.dao.state.model.governance.ReimbursementProposal;
 
 import bisq.network.p2p.storage.P2PDataStorage;
-
-import bisq.common.util.Hex;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -49,11 +45,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Methods are used by the DelayedPayoutTxReceiverService, which is used in the trade protocol for creating and
+ * verifying the delayed payout transaction. As verification is done by trade peer it requires data to be deterministic.
+ * Parameters listed here must not be changed as they could break verification of the peers
+ * delayed payout transaction in case not both traders are using the same version.
+ */
 @Slf4j
 @Singleton
 class BurningManService {
@@ -77,14 +78,6 @@ class BurningManService {
     // The max. age in blocks for the decay function used for burned amounts.
     private static final int MAX_BURN_AMOUNT_AGE = YEAR_AS_BLOCKS;
 
-    // Number of cycles for accumulating reimbursement amounts. Used for the burn target.
-    private static final int NUM_REIMBURSEMENT_CYCLES = 12;
-
-    // Default value for the estimated BTC trade fees per month as BSQ sat value (100 sat = 1 BSQ).
-    // Default is roughly average of last 12 months at Nov 2022.
-    // Can be changed with DAO parameter voting.
-    private static final long DEFAULT_ESTIMATED_BTC_FEES = 6200000;
-
     // Factor for boosting the issuance share (issuance is compensation requests + genesis output).
     // This will be used for increasing the allowed burn amount. The factor gives more flexibility
     // and compensates for those who do not burn. The burn share is capped by that factor as well.
@@ -92,9 +85,6 @@ class BurningManService {
     // even if they would have burned more and had a higher burn share than 20%.
     static final double ISSUANCE_BOOST_FACTOR = 2;
 
-    // Burn target gets increased by that amount to give more flexibility.
-    // Burn target is calculated from reimbursements + estimated BTC fees - burned amounts.
-    static final long BURN_TARGET_BOOST_AMOUNT = 10000000;
 
     private final DaoStateService daoStateService;
     private final CycleService cycleService;
@@ -122,19 +112,19 @@ class BurningManService {
         daoStateService.getIssuanceSetForType(IssuanceType.COMPENSATION).stream()
                 .filter(issuance -> issuance.getChainHeight() <= chainHeight)
                 .forEach(issuance -> {
-                    getCompensationProposalsForIssuance(issuance).forEach(compensationProposal -> {
-                        String name = compensationProposal.getName();
-                        burningManCandidatesByName.putIfAbsent(name, new BurningManCandidate());
-                        BurningManCandidate candidate = burningManCandidatesByName.get(name);
+                            getCompensationProposalsForIssuance(issuance).forEach(compensationProposal -> {
+                                String name = compensationProposal.getName();
+                                burningManCandidatesByName.putIfAbsent(name, new BurningManCandidate());
+                                BurningManCandidate candidate = burningManCandidatesByName.get(name);
 
-                        // Issuance
-                        compensationProposal.getBurningManReceiverAddress()
-                                .or(() -> daoStateService.getTx(compensationProposal.getTxId())
-                                        .map(this::getAddressFromCompensationRequest))
-                                .ifPresent(address -> {
-                                    int issuanceHeight = issuance.getChainHeight();
-                                    long issuanceAmount = getIssuanceAmountForCompensationRequest(issuance);
-                                    int cycleIndex = getCycleIndex(issuanceHeight);
+                                // Issuance
+                                compensationProposal.getBurningManReceiverAddress()
+                                        .or(() -> daoStateService.getTx(compensationProposal.getTxId())
+                                                .map(this::getAddressFromCompensationRequest))
+                                        .ifPresent(address -> {
+                                            int issuanceHeight = issuance.getChainHeight();
+                                            long issuanceAmount = getIssuanceAmountForCompensationRequest(issuance);
+                                            int cycleIndex = getCycleIndex(issuanceHeight);
                                             if (isValidReimbursement(name, cycleIndex, issuanceAmount)) {
                                                 long decayedIssuanceAmount = getDecayedCompensationAmount(issuanceAmount, issuanceHeight, chainHeight);
                                                 long issuanceDate = daoStateService.getBlockTime(issuanceHeight);
@@ -171,8 +161,7 @@ class BurningManService {
                             issuanceHeight,
                             txOutput.getTxId(),
                             txOutput.getIndex(),
-                            issuanceDate,
-                            0));
+                            issuanceDate));
                     addBurnOutputModel(chainHeight, proofOfBurnOpReturnTxOutputByHash, name, candidate);
                 }));
 
@@ -183,66 +172,10 @@ class BurningManService {
         double totalDecayedBurnAmounts = burningManCandidates.stream()
                 .mapToDouble(BurningManCandidate::getAccumulatedDecayedBurnAmount)
                 .sum();
-        long averageDistributionPerCycle = getAverageDistributionPerCycle(chainHeight);
-        long burnTarget = getBurnTarget(chainHeight, burningManCandidates);
-
-        burningManCandidates.forEach(candidate -> {
-                    candidate.calculateIssuanceShare(totalDecayedCompensationAmounts);
-                    candidate.calculateBurnOutputShare(totalDecayedBurnAmounts);
-                    candidate.calculateExpectedRevenue(averageDistributionPerCycle);
-                    candidate.calculateAllowedBurnAmount(burnTarget);
-                }
-        );
-
+        burningManCandidates.forEach(candidate -> candidate.calculateShares(totalDecayedCompensationAmounts, totalDecayedBurnAmounts));
         return burningManCandidatesByName;
     }
 
-    Set<ReimbursementModel> getReimbursements(int chainHeight) {
-        Set<ReimbursementModel> reimbursements = new HashSet<>();
-        daoStateService.getIssuanceSetForType(IssuanceType.REIMBURSEMENT).stream()
-                .filter(issuance -> issuance.getChainHeight() <= chainHeight)
-                .forEach(issuance -> getReimbursementProposalsForIssuance(issuance)
-                        .forEach(reimbursementProposal -> {
-                            int issuanceHeight = issuance.getChainHeight();
-                            long issuanceAmount = issuance.getAmount();
-                            long issuanceDate = daoStateService.getBlockTime(issuanceHeight);
-                            int cycleIndex = getCycleIndex(issuanceHeight);
-                            reimbursements.add(new ReimbursementModel(
-                                    issuanceAmount,
-                                    issuanceHeight,
-                                    issuanceDate,
-                                    cycleIndex));
-                        }));
-        return reimbursements;
-    }
-
-    long getBurnTarget(int chainHeight, Collection<BurningManCandidate> burningManCandidates) {
-        int fromBlock = getFirstBlockOfPastCycle(chainHeight, NUM_REIMBURSEMENT_CYCLES);
-        long accumulatedReimbursements = getAccumulatedReimbursements(chainHeight, fromBlock);
-        long accumulatedEstimatedBtcTradeFees = getAccumulatedEstimatedBtcTradeFees(chainHeight, NUM_REIMBURSEMENT_CYCLES);
-
-        // Legacy BurningMan
-        Set<Tx> proofOfBurnTxs = getProofOfBurnTxs(chainHeight, fromBlock);
-        long burnedAmountFromLegacyBurningManDPT = getBurnedAmountFromLegacyBurningManDPT(proofOfBurnTxs);
-        long burnedAmountFromLegacyBurningMansBtcFees = getBurnedAmountFromLegacyBurningMansBtcFees(proofOfBurnTxs);
-
-        // Distributed BurningMen
-        // burningManCandidates are already filtered with chainHeight
-        long burnedAmountFromBurningMen = getBurnedAmountFromBurningMen(burningManCandidates, fromBlock);
-
-        return accumulatedReimbursements
-                + accumulatedEstimatedBtcTradeFees
-                - burnedAmountFromLegacyBurningManDPT
-                - burnedAmountFromLegacyBurningMansBtcFees
-                - burnedAmountFromBurningMen;
-    }
-
-    long getAverageDistributionPerCycle(int chainHeight) {
-        int fromBlock = getFirstBlockOfPastCycle(chainHeight, 3);
-        long reimbursements = getAccumulatedReimbursements(chainHeight, fromBlock);
-        long btcTradeFees = getAccumulatedEstimatedBtcTradeFees(chainHeight, 3);
-        return Math.round((reimbursements + btcTradeFees) / 3d);
-    }
 
     String getLegacyBurningManAddress(int chainHeight) {
         return daoStateService.getParamValue(Param.RECIPIENT_BTC_ADDRESS, chainHeight);
@@ -251,11 +184,6 @@ class BurningManService {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // BurningManCandidatesByName
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private Map<P2PDataStorage.ByteArray, Set<TxOutput>> getProofOfBurnOpReturnTxOutputByHash(int chainHeight) {
@@ -385,114 +313,5 @@ class BurningManService {
 
     private long getDecayedGenesisOutputAmount(long amount) {
         return Math.round(amount * GENESIS_OUTPUT_AMOUNT_FACTOR);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Reimbursements
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private Stream<ReimbursementProposal> getReimbursementProposalsForIssuance(Issuance issuance) {
-        return proposalService.getProposalPayloads().stream()
-                .map(ProposalPayload::getProposal)
-                .filter(proposal -> issuance.getTxId().equals(proposal.getTxId()))
-                .filter(proposal -> proposal instanceof ReimbursementProposal)
-                .map(proposal -> (ReimbursementProposal) proposal);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Burn target
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private int getFirstBlockOfPastCycle(int chainHeight, int numPastCycles) {
-        Optional<Cycle> optionalCycle = daoStateService.getCycle(chainHeight);
-        if (optionalCycle.isEmpty()) {
-            return 0;
-        }
-
-        Cycle currentCycle = optionalCycle.get();
-        return daoStateService.getPastCycle(currentCycle, numPastCycles)
-                .map(Cycle::getHeightOfFirstBlock)
-                .orElse(daoStateService.getGenesisBlockHeight());
-    }
-
-    private long getAccumulatedReimbursements(int chainHeight, int fromBlock) {
-        return getReimbursements(chainHeight).stream()
-                .filter(reimbursementModel -> reimbursementModel.getHeight() >= fromBlock)
-                .mapToLong(ReimbursementModel::getAmount)
-                .sum();
-    }
-
-    private long getAccumulatedEstimatedBtcTradeFees(int chainHeight, int numCycles) {
-        Optional<Cycle> optionalCycle = daoStateService.getCycle(chainHeight);
-        if (optionalCycle.isEmpty()) {
-            return 0;
-        }
-        long accumulatedEstimatedBtcTradeFees = 0;
-        Cycle candidateCycle = optionalCycle.get();
-        for (int i = 0; i < numCycles; i++) {
-            //  LOCK_TIME_TRADE_PAYOUT was never used. We re-purpose it as value for BTC fee revenue per cycle. This can be added as oracle data by DAO voting.
-            // We cannot change the ParamType to BSQ as that would break consensus
-            long estimatedBtcTradeFeesPerCycle = getBtcTradeFeeFromParam(candidateCycle);
-            accumulatedEstimatedBtcTradeFees += estimatedBtcTradeFeesPerCycle;
-            Optional<Cycle> previousCycle = daoStateService.getPreviousCycle(candidateCycle);
-            if (previousCycle.isPresent()) {
-                candidateCycle = previousCycle.get();
-            } else {
-                break;
-            }
-        }
-        return accumulatedEstimatedBtcTradeFees;
-    }
-
-    private long getBtcTradeFeeFromParam(Cycle cycle) {
-        int value = daoStateService.getParamValueAsBlock(Param.LOCK_TIME_TRADE_PAYOUT, cycle.getHeightOfFirstBlock());
-        // Ignore default value (4320)
-        return value != 4320 ? value : DEFAULT_ESTIMATED_BTC_FEES;
-    }
-
-    private Set<Tx> getProofOfBurnTxs(int chainHeight, int fromBlock) {
-        return daoStateService.getProofOfBurnTxs().stream()
-                .filter(tx -> tx.getBlockHeight() <= chainHeight)
-                .filter(tx -> tx.getBlockHeight() >= fromBlock)
-                .collect(Collectors.toSet());
-    }
-
-
-    private long getBurnedAmountFromLegacyBurningManDPT(Set<Tx> proofOfBurnTxs) {
-        // Burningman
-        // Legacy burningman use those opReturn data to mark their burn transactions from delayed payout transaction cases.
-        // opReturn data from delayed payout txs when BM traded with the refund agent: 1701e47e5d8030f444c182b5e243871ebbaeadb5e82f
-        // opReturn data from delayed payout txs when BM traded with traders who got reimbursed by the DAO: 1701293c488822f98e70e047012f46f5f1647f37deb7
-        return proofOfBurnTxs.stream()
-                .filter(e -> {
-                    String hash = Hex.encode(e.getLastTxOutput().getOpReturnData());
-                    return "1701e47e5d8030f444c182b5e243871ebbaeadb5e82f".equals(hash) ||
-                            "1701293c488822f98e70e047012f46f5f1647f37deb7".equals(hash);
-                })
-                .mapToLong(Tx::getBurntBsq)
-                .sum();
-    }
-
-    private long getBurnedAmountFromLegacyBurningMansBtcFees(Set<Tx> proofOfBurnTxs) {
-        // Burningman
-        // Legacy burningman use those opReturn data to mark their burn transactions from delayed payout transaction cases.
-        // opReturn data from delayed payout txs when BM traded with the refund agent: 1701e47e5d8030f444c182b5e243871ebbaeadb5e82f
-        // opReturn data from delayed payout txs when BM traded with traders who got reimbursed by the DAO: 1701293c488822f98e70e047012f46f5f1647f37deb7
-        return proofOfBurnTxs.stream()
-                .filter(e -> "1701721206fe6b40777763de1c741f4fd2706d94775d".equals(Hex.encode(e.getLastTxOutput().getOpReturnData())))
-                .mapToLong(Tx::getBurntBsq)
-                .sum();
-    }
-
-    private long getBurnedAmountFromBurningMen(Collection<BurningManCandidate> burningManCandidates, int fromBlock) {
-        return burningManCandidates.stream()
-                .map(burningManCandidate -> burningManCandidate.getBurnOutputModels().stream()
-                        .filter(burnOutputModel -> burnOutputModel.getHeight() >= fromBlock)
-                        .mapToLong(BurnOutputModel::getAmount)
-                        .sum())
-                .mapToLong(e -> e)
-                .sum();
     }
 }

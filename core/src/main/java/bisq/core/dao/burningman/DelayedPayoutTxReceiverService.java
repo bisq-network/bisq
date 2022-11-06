@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 /**
  * Used in the trade protocol for creating and verifying the delayed payout transaction.
  * Requires to be deterministic.
- * Changes in the parameters related to the delayedPayoutTxReceivers list could break verification of the peers
+ * Changes in the parameters related to the receivers list could break verification of the peers
  * delayed payout transaction in case not both are using the same version.
  */
 @Singleton
@@ -134,8 +134,8 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
 
         List<Tuple2<Long, String>> receivers = burningManCandidates.stream()
                 .filter(candidate -> candidate.getMostRecentAddress().isPresent())
-                .map(candidates -> new Tuple2<>(Math.round(candidates.getEffectiveBurnOutputShare() * spendableAmount),
-                        candidates.getMostRecentAddress().get()))
+                .map(candidate -> new Tuple2<>(Math.round(candidate.getCappedBurnAmountShare() * spendableAmount),
+                        candidate.getMostRecentAddress().get()))
                 .filter(tuple -> tuple.first >= minOutputAmount)
                 .sorted(Comparator.<Tuple2<Long, String>, Long>comparing(tuple -> tuple.first)
                         .thenComparing(tuple -> tuple.second))
