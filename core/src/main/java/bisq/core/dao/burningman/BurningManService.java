@@ -184,10 +184,17 @@ class BurningManService {
         double totalDecayedBurnAmounts = burningManCandidates.stream()
                 .mapToDouble(BurningManCandidate::getAccumulatedDecayedBurnAmount)
                 .sum();
+        long averageDistributionPerCycle = getAverageDistributionPerCycle(chainHeight);
         long burnTarget = getBurnTarget(chainHeight, burningManCandidates);
 
-        burningManCandidates.forEach(candidate ->
-                candidate.calculateShare(totalDecayedCompensationAmounts, totalDecayedBurnAmounts, burnTarget, getAverageDistributionPerCycle(chainHeight)));
+        burningManCandidates.forEach(candidate -> {
+                    candidate.calculateIssuanceShare(totalDecayedCompensationAmounts);
+                    candidate.calculateBurnOutputShare(totalDecayedBurnAmounts);
+                    candidate.calculateExpectedRevenue(averageDistributionPerCycle);
+                    candidate.calculateAllowedBurnAmount(burnTarget);
+                }
+        );
+
         return burningManCandidatesByName;
     }
 

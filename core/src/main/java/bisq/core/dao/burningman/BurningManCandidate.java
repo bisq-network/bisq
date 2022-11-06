@@ -42,8 +42,9 @@ public final class BurningManCandidate {
     private double effectiveBurnOutputShare; // limited to boostedIssuanceShare
     private final List<CompensationModel> compensationModels = new ArrayList<>();
     private final List<BurnOutputModel> burnOutputModels = new ArrayList<>();
+    private Optional<String> mostRecentAddress = Optional.empty();
 
-    public BurningManCandidate() {
+    BurningManCandidate() {
     }
 
     public void addBurnOutputModel(BurnOutputModel burnOutputModel) {
@@ -70,18 +71,27 @@ public final class BurningManCandidate {
 
         accumulatedDecayedCompensationAmount += compensationModel.getDecayedAmount();
         accumulatedCompensationAmount += compensationModel.getAmount();
+
+        mostRecentAddress = compensationModels.stream()
+                .max(Comparator.comparing(CompensationModel::getHeight))
+                .map(CompensationModel::getAddress);
     }
 
-    public void calculateShare(double totalIssuanceWeight,
-                               double totalBurnOutputWeight,
-                               long burnTarget,
-                               long averageDistributionPerCycle) {
+    public void calculateIssuanceShare(double totalIssuanceWeight) {
         issuanceShare = totalIssuanceWeight > 0 ? accumulatedDecayedCompensationAmount / totalIssuanceWeight : 0;
         boostedIssuanceShare = issuanceShare * BurningManService.ISSUANCE_BOOST_FACTOR;
+    }
 
+    public void calculateBurnOutputShare(double totalBurnOutputWeight) {
         burnOutputShare = totalBurnOutputWeight > 0 ? accumulatedDecayedBurnAmount / totalBurnOutputWeight : 0;
         effectiveBurnOutputShare = Math.min(boostedIssuanceShare, burnOutputShare);
+    }
 
+    public void calculateExpectedRevenue(long averageDistributionPerCycle) {
+        expectedRevenue = Math.round(effectiveBurnOutputShare * averageDistributionPerCycle);
+    }
+
+    public void calculateAllowedBurnAmount(long burnTarget) {
         double maxBurnAmount = burnTarget + BurningManService.BURN_TARGET_BOOST_AMOUNT;
         if (issuanceShare > 0 && maxBurnAmount > 0 && effectiveBurnOutputShare < boostedIssuanceShare) {
             // We reduce it with what he had already burned
@@ -91,14 +101,6 @@ public final class BurningManCandidate {
         } else {
             allowedBurnAmount = 0;
         }
-
-        expectedRevenue = Math.round(averageDistributionPerCycle * effectiveBurnOutputShare);
-    }
-
-    public Optional<String> getMostRecentAddress() {
-        return compensationModels.stream()
-                .max(Comparator.comparing(CompensationModel::getHeight))
-                .map(CompensationModel::getAddress);
     }
 
     @Override
