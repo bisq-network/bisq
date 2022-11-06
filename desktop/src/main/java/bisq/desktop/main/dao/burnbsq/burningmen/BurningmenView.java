@@ -410,15 +410,15 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateData() {
-        burningmenObservableList.setAll(burningManInfoService.getCurrentBurningManCandidatesByName().entrySet().stream()
+        burningmenObservableList.setAll(burningManInfoService.getBurningManCandidatesByName().entrySet().stream()
                 .map(entry -> new BurningmenListItem(entry.getKey(), entry.getValue(), bsqFormatter))
                 .collect(Collectors.toList()));
-        reimbursementObservableList.setAll(burningManInfoService.getCurrentReimbursements().stream()
+        reimbursementObservableList.setAll(burningManInfoService.getReimbursements().stream()
                 .map(reimbursementModel -> new ReimbursementListItem(reimbursementModel, bsqFormatter))
                 .collect(Collectors.toList()));
 
         expectedRevenueField.setText(bsqFormatter.formatCoinWithCode(burningManInfoService.getAverageDistributionPerCycle()));
-        burnTargetField.setText(bsqFormatter.formatCoinWithCode(burningManInfoService.getCurrentBurnTarget()));
+        burnTargetField.setText(bsqFormatter.formatCoinWithCode(burningManInfoService.getBurnTarget()));
 
         if (daoFacade.isParseBlockChainComplete()) {
             Set<String> myContributorNames = burningManInfoService.getMyCompensationRequestNames();
