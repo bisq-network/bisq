@@ -84,7 +84,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
                 int takersBurningManSelectionHeight = request.getBurningManSelectionHeight();
                 checkArgument(takersBurningManSelectionHeight > 0, "takersBurningManSelectionHeight must not be 0");
 
-                int makersBurningManSelectionHeight = processModel.getBurningManService().getBurningManSelectionHeight();
+                int makersBurningManSelectionHeight = processModel.getBurningManService().getDelayedPayoutTxReceiverService().getBurningManSelectionHeight();
                 checkArgument(takersBurningManSelectionHeight == makersBurningManSelectionHeight,
                         "takersBurningManSelectionHeight does no match makersBurningManSelectionHeight");
                 processModel.setBurningManSelectionHeight(makersBurningManSelectionHeight);

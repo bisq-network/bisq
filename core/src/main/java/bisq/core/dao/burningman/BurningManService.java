@@ -17,30 +17,24 @@
 
 package bisq.core.dao.burningman;
 
-import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.governance.proofofburn.ProofOfBurnConsensus;
-import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
-import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.BaseTx;
-import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.governance.CompensationProposal;
 import bisq.core.dao.state.model.governance.Cycle;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
-import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.ReimbursementProposal;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 
 import bisq.common.util.Hex;
-import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -50,26 +44,24 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class BurningManService implements DaoStateListener {
+public class BurningManService {
     // TODO
     //  public static final Date ACTIVATION_DATE = Utilities.getUTCDate(2022, GregorianCalendar.OCTOBER, 25);
     public static final Date ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.JANUARY, 1);
@@ -82,7 +74,7 @@ public class BurningManService implements DaoStateListener {
 
     // Prefix for generic names for the genesis outputs. Appended with output index.
     // Used as pre-image for burning.
-    private static final String GENESIS_OUTPUT_PREFIX = "Bisq co-founder ";
+    static final String GENESIS_OUTPUT_PREFIX = "Bisq co-founder ";
 
     // Factor for weighting the genesis output amounts.
     private static final double GENESIS_OUTPUT_AMOUNT_FACTOR = 0.05;
@@ -112,22 +104,15 @@ public class BurningManService implements DaoStateListener {
     // Burn target is calculated from reimbursements + estimated BTC fees - burned amounts.
     static final long BURN_TARGET_BOOST_AMOUNT = 10000000;
 
-    // One part of the limit for the min. amount to be included in the DPT outputs.
-    // The miner fee rate multiplied by 2 times the output size is the other factor.
-    // The higher one of both is used. 1000 sat is about 2 USD @ 20k price.
-    private static final long DPT_MIN_OUTPUT_AMOUNT = 1000;
-
-    // If at DPT there is some leftover amount due to capping of some receivers (burn share is
-    // max. ISSUANCE_BOOST_FACTOR times the issuance share) we send it to legacy BM if it is larger
-    // than DPT_MIN_REMAINDER_TO_LEGACY_BM, otherwise we spend it as miner fee.
-    // 50000 sat is about 10 USD @ 20k price. We use a rather high value as we want to avoid that the legacy BM
-    // gets still payouts.
-    private static final long DPT_MIN_REMAINDER_TO_LEGACY_BM = 50000;
-
-    // Min. fee rate for DPT. If fee rate used at take offer time was higher we use that.
-    // We prefer a rather high fee rate to not risk that the DPT gets stuck if required fee rate would
-    // spike when opening arbitration.
-    private static final long DPT_MIN_TX_FEE_RATE = 10;
+    @Getter
+    @Setter
+    private BurningManInfoService burningManInfoService;
+    @Getter
+    @Setter
+    private DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
+    @Getter
+    @Setter
+    private BtcFeeReceiverService btcFeeReceiverService;
 
 
     public static boolean isActivated() {
@@ -137,57 +122,20 @@ public class BurningManService implements DaoStateListener {
     private final DaoStateService daoStateService;
     private final CycleService cycleService;
     private final ProposalService proposalService;
-    private final MyProposalListService myProposalListService;
-    private final BsqWalletService bsqWalletService;
-
-    private final Map<String, BurningManCandidate> burningManCandidatesByName = new HashMap<>();
-    private final Set<ReimbursementModel> reimbursements = new HashSet<>();
-    private int currentChainHeight;
-    private Optional<Long> burnTarget = Optional.empty();
 
     @Inject
     public BurningManService(DaoStateService daoStateService,
                              CycleService cycleService,
-                             ProposalService proposalService,
-                             MyProposalListService myProposalListService,
-                             BsqWalletService bsqWalletService) {
+                             ProposalService proposalService) {
         this.daoStateService = daoStateService;
         this.cycleService = cycleService;
         this.proposalService = proposalService;
-        this.myProposalListService = myProposalListService;
-        this.bsqWalletService = bsqWalletService;
-
-        daoStateService.addDaoStateListener(this);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // DaoStateListener
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
-        burningManCandidatesByName.clear();
-        reimbursements.clear();
-        currentChainHeight = block.getHeight();
-        burnTarget = Optional.empty();
     }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // BurningManCandidates
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // Based on current block height
-    public Map<String, BurningManCandidate> getCurrentBurningManCandidatesByName() {
-        // Cached value is only used for currentChainHeight
-        if (!burningManCandidatesByName.isEmpty()) {
-            return burningManCandidatesByName;
-        }
-
-        burningManCandidatesByName.putAll(getBurningManCandidatesByName(currentChainHeight));
-        return burningManCandidatesByName;
-    }
 
     // Allows recreation of data model for the given chainHeight
     public Map<String, BurningManCandidate> getBurningManCandidatesByName(int chainHeight) {
@@ -259,8 +207,10 @@ public class BurningManService implements DaoStateListener {
                 .mapToDouble(BurningManCandidate::getAccumulatedDecayedBurnAmount)
                 .sum();
         long burnTarget = getBurnTarget(chainHeight, burningManCandidates);
+
+        //todo avoid burningManInfoService call
         burningManCandidates.forEach(candidate ->
-                candidate.calculateShare(totalDecayedCompensationAmounts, totalDecayedBurnAmounts, burnTarget, getAverageDistributionPerCycle()));
+                candidate.calculateShare(totalDecayedCompensationAmounts, totalDecayedBurnAmounts, burnTarget, burningManInfoService.getAverageDistributionPerCycle()));
         return burningManCandidatesByName;
     }
 
@@ -352,16 +302,6 @@ public class BurningManService implements DaoStateListener {
     // Burn target, average distribution/cycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // Burn target using current chain height
-    public long getCurrentBurnTarget() {
-        // cached value is only used for currentChainHeight
-        if (burnTarget.isPresent()) {
-            return burnTarget.get();
-        }
-
-        burnTarget = Optional.of(getBurnTarget(currentChainHeight, getCurrentBurningManCandidatesByName().values()));
-        return burnTarget.get();
-    }
 
     // Burn target using given chain height. Can be historical state.
     public long getBurnTarget(int chainHeight, Collection<BurningManCandidate> burningManCandidates) {
@@ -385,14 +325,7 @@ public class BurningManService implements DaoStateListener {
                 - burnedAmountFromBurningMen;
     }
 
-    public long getAverageDistributionPerCycle() {
-        int fromBlock = getFirstBlockOfPastCycle(currentChainHeight, 3);
-        long reimbursements = getAccumulatedReimbursements(currentChainHeight, fromBlock);
-        long btcTradeFees = getAccumulatedEstimatedBtcTradeFees(currentChainHeight, 3);
-        return Math.round((reimbursements + btcTradeFees) / 3d);
-    }
-
-    private long getAccumulatedEstimatedBtcTradeFees(int chainHeight, int numCycles) {
+    long getAccumulatedEstimatedBtcTradeFees(int chainHeight, int numCycles) {
         Optional<Cycle> optionalCycle = daoStateService.getCycle(chainHeight);
         if (optionalCycle.isEmpty()) {
             return 0;
@@ -420,7 +353,7 @@ public class BurningManService implements DaoStateListener {
         return value != 4320 ? value : DEFAULT_ESTIMATED_BTC_FEES;
     }
 
-    private int getFirstBlockOfPastCycle(int chainHeight, int numPastCycles) {
+    int getFirstBlockOfPastCycle(int chainHeight, int numPastCycles) {
         Optional<Cycle> optionalCycle = daoStateService.getCycle(chainHeight);
         if (optionalCycle.isEmpty()) {
             return 0;
@@ -480,18 +413,7 @@ public class BurningManService implements DaoStateListener {
     // Reimbursements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Set<ReimbursementModel> getCurrentReimbursements() {
-        // cached value is only used for currentChainHeight
-        if (!reimbursements.isEmpty()) {
-            return reimbursements;
-        }
-
-        Set<ReimbursementModel> set = getReimbursements(currentChainHeight);
-        reimbursements.addAll(set);
-        return reimbursements;
-    }
-
-    private Set<ReimbursementModel> getReimbursements(int chainHeight) {
+    Set<ReimbursementModel> getReimbursements(int chainHeight) {
         Set<ReimbursementModel> reimbursements = new HashSet<>();
         daoStateService.getIssuanceSetForType(IssuanceType.REIMBURSEMENT).stream()
                 .filter(issuance -> issuance.getChainHeight() <= chainHeight)
@@ -510,7 +432,7 @@ public class BurningManService implements DaoStateListener {
         return reimbursements;
     }
 
-    private long getAccumulatedReimbursements(int chainHeight, int fromBlock) {
+    long getAccumulatedReimbursements(int chainHeight, int fromBlock) {
         return getReimbursements(chainHeight).stream()
                 .filter(reimbursementModel -> reimbursementModel.getHeight() >= fromBlock)
                 .mapToLong(ReimbursementModel::getAmount)
@@ -527,145 +449,11 @@ public class BurningManService implements DaoStateListener {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Contributor names
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public Optional<Set<String>> findMyGenesisOutputNames() {
-        return daoStateService.getGenesisTx()
-                .flatMap(tx -> Optional.ofNullable(bsqWalletService.getTransaction(tx.getId()))
-                        .map(genesisTransaction -> genesisTransaction.getOutputs().stream()
-                                .filter(transactionOutput -> transactionOutput.isMine(bsqWalletService.getWallet()))
-                                .map(transactionOutput -> BurningManService.GENESIS_OUTPUT_PREFIX + transactionOutput.getIndex())
-                                .collect(Collectors.toSet())
-                        )
-                );
-    }
-
-    public Set<String> getMyCompensationRequestNames() {
-        return myProposalListService.getList().stream()
-                .filter(proposal -> proposal instanceof CompensationProposal)
-                .map(Proposal::getName)
-                .collect(Collectors.toSet());
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Legacy BurningMan
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public String getLegacyBurningManAddress(int chainHeight) {
-        return daoStateService.getParamValue(Param.RECIPIENT_BTC_ADDRESS, chainHeight);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // BTC Trade fees
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public String getBtcFeeReceiverAddress() {
-        Map<String, BurningManCandidate> burningManCandidatesByName = getCurrentBurningManCandidatesByName();
-        if (burningManCandidatesByName.isEmpty()) {
-            // If there are no compensation requests (e.g. at dev testing) we fall back to the default address
-            return getLegacyBurningManAddress(currentChainHeight);
-        }
-
-        // It might be that we do not reach 100% if some entries had a capped effectiveBurnOutputShare.
-        // We ignore that here as there is no risk for abuse. Each entry in the group would have a higher chance in
-        // that case.
-        // effectiveBurnOutputShare is a % value represented as double. Smallest supported value is 0.01% -> 0.0001.
-        // By multiplying it with 10000 and using Math.floor we limit the candidate to 0.01%.
-        // Entries with 0 will be ignored in the selection method.
-        List<BurningManCandidate> burningManCandidates = new ArrayList<>(burningManCandidatesByName.values());
-        List<Long> amountList = burningManCandidates.stream()
-                .map(BurningManCandidate::getEffectiveBurnOutputShare)
-                .map(effectiveBurnOutputShare -> (long) Math.floor(effectiveBurnOutputShare * 10000))
-                .collect(Collectors.toList());
-        if (amountList.isEmpty()) {
-            return getLegacyBurningManAddress(currentChainHeight);
-        }
-        int winnerIndex = getRandomIndex(amountList, new Random());
-        if (winnerIndex == -1) {
-            return getLegacyBurningManAddress(currentChainHeight);
-        }
-        return burningManCandidates.get(winnerIndex).getMostRecentAddress()
-                .orElse(getLegacyBurningManAddress(currentChainHeight));
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Delayed payout transactions
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    // We use a snapshot blockHeight to avoid failed trades in case maker and taker have different block heights.
-    // The selection is deterministic based on DAO data.
-    // The block height is the last mod(10) height from the range of the last 10-20 blocks (139 -> 120; 140 -> 130, 141 -> 130).
-    // We do not have the latest dao state by that but can ensure maker and taker have the same block.
-    public int getBurningManSelectionHeight() {
-        return getSnapshotHeight(daoStateService.getGenesisBlockHeight(), currentChainHeight, 10);
-    }
-
-    public List<Tuple2<Long, String>> getDelayedPayoutTxReceivers(int burningManSelectionHeight,
-                                                                  long inputAmount,
-                                                                  long tradeTxFee) {
-        Collection<BurningManCandidate> burningManCandidates = getBurningManCandidatesByName(burningManSelectionHeight).values();
-        if (burningManCandidates.isEmpty()) {
-            // If there are no compensation requests (e.g. at dev testing) we fall back to the legacy BM
-            return List.of(new Tuple2<>(inputAmount, getLegacyBurningManAddress(burningManSelectionHeight)));
-        }
-
-        // We need to use the same txFeePerVbyte value for both traders.
-        // We use the tradeTxFee value which is calculated from the average of taker fee tx size and deposit tx size.
-        // Otherwise, we would need to sync the fee rate of both traders.
-        // In case of very large taker fee tx we would get a too high fee, but as fee rate is anyway rather
-        // arbitrary and volatile we are on the safer side. The delayed payout tx is published long after the
-        // take offer event and the recommended fee at that moment might be very different to actual
-        // recommended fee. To avoid that the delayed payout tx would get stuck due too low fees we use a
-        // min. fee rate of 10 sat/vByte.
-
-        // Deposit tx has a clearly defined structure, so we know the size. It is only one optional output if range amount offer was taken.
-        // Smallest tx size is 246. With additional change output we add 32. To be safe we use the largest expected size.
-        double txSize = 278;
-        long txFeePerVbyte = Math.max(DPT_MIN_TX_FEE_RATE, Math.round(tradeTxFee / txSize));
-        long spendableAmount = getSpendableAmount(burningManCandidates.size(), inputAmount, txFeePerVbyte);
-        // We only use outputs > 1000 sat or at least 2 times the cost for the output (32 bytes).
-        // If we remove outputs it will be spent as miner fee.
-        long minOutputAmount = Math.max(DPT_MIN_OUTPUT_AMOUNT, txFeePerVbyte * 32 * 2);
-
-        List<Tuple2<Long, String>> receivers = burningManCandidates.stream()
-                .filter(candidate -> candidate.getMostRecentAddress().isPresent())
-                .map(candidates -> new Tuple2<>(Math.round(candidates.getEffectiveBurnOutputShare() * spendableAmount),
-                        candidates.getMostRecentAddress().get()))
-                .filter(tuple -> tuple.first >= minOutputAmount)
-                .sorted(Comparator.<Tuple2<Long, String>, Long>comparing(tuple -> tuple.first)
-                        .thenComparing(tuple -> tuple.second))
-                .collect(Collectors.toList());
-        long totalOutputValue = receivers.stream().mapToLong(e -> e.first).sum();
-        if (totalOutputValue < spendableAmount) {
-            long available = spendableAmount - totalOutputValue;
-            // If the available is larger than DPT_MIN_REMAINDER_TO_LEGACY_BM we send it to legacy BM
-            // Otherwise we use it as miner fee
-            if (available > DPT_MIN_REMAINDER_TO_LEGACY_BM) {
-                receivers.add(new Tuple2<>(available, getLegacyBurningManAddress(burningManSelectionHeight)));
-            }
-        }
-        return receivers;
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private int getCycleIndex(int height) {
         return daoStateService.getCycle(height).map(cycleService::getCycleIndex).orElse(0);
-    }
-
-    private static long getSpendableAmount(int numOutputs, long inputAmount, long txFeePerVbyte) {
-        // Output size: 32 bytes
-        // Tx size without outputs: 51 bytes
-        int txSize = 51 + numOutputs * 32;
-        long minerFee = txFeePerVbyte * txSize;
-        return inputAmount - minerFee;
     }
 
     private long getDecayedCompensationAmount(long amount, int issuanceHeight, int chainHeight) {
@@ -706,33 +494,5 @@ public class BurningManService implements DaoStateListener {
         double factorWithOffset = firstBlockOffset + factor * (1 - firstBlockOffset);
         long weighted = Math.round(amount * factorWithOffset);
         return Math.max(0, weighted);
-    }
-
-    @VisibleForTesting
-    static int getRandomIndex(List<Long> weights, Random random) {
-        long sum = weights.stream().mapToLong(n -> n).sum();
-        if (sum == 0) {
-            return -1;
-        }
-        long target = random.longs(0, sum).findFirst().orElseThrow() + 1;
-        return findIndex(weights, target);
-    }
-
-    @VisibleForTesting
-    static int findIndex(List<Long> weights, long target) {
-        int currentRange = 0;
-        for (int i = 0; i < weights.size(); i++) {
-            currentRange += weights.get(i);
-            if (currentRange >= target) {
-                return i;
-            }
-        }
-        return 0;
-    }
-
-    // Borrowed from DaoStateSnapshotService. We prefer to not reuse to avoid dependency to an unrelated domain.
-    @VisibleForTesting
-    static int getSnapshotHeight(int genesisHeight, int height, int grid) {
-        return Math.round(Math.max(genesisHeight + 3 * grid, height) / grid) * grid - grid;
     }
 }
