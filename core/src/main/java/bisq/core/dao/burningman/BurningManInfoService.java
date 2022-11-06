@@ -62,9 +62,6 @@ public class BurningManInfoService implements DaoStateListener {
         this.burningManService = burningManService;
 
         daoStateService.addDaoStateListener(this);
-
-        //todo
-        burningManService.setBurningManInfoService(this);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -100,10 +97,7 @@ public class BurningManInfoService implements DaoStateListener {
             return averageDistributionPerCycle.get();
         }
 
-        int fromBlock = burningManService.getFirstBlockOfPastCycle(currentChainHeight, 3);
-        long reimbursements = burningManService.getAccumulatedReimbursements(currentChainHeight, fromBlock);
-        long btcTradeFees = burningManService.getAccumulatedEstimatedBtcTradeFees(currentChainHeight, 3);
-        averageDistributionPerCycle = Optional.of(Math.round((reimbursements + btcTradeFees) / 3d));
+        averageDistributionPerCycle = Optional.of(burningManService.getAverageDistributionPerCycle(currentChainHeight));
         return averageDistributionPerCycle.get();
     }
 
