@@ -34,13 +34,12 @@ import java.util.stream.Collectors;
 
 @Singleton
 public class BtcFeeReceiverService implements DaoStateListener {
-    private final DaoStateService daoStateService;
     private final BurningManService burningManService;
+
     private int currentChainHeight;
 
     @Inject
     public BtcFeeReceiverService(DaoStateService daoStateService, BurningManService burningManService) {
-        this.daoStateService = daoStateService;
         this.burningManService = burningManService;
 
         daoStateService.addDaoStateListener(this);
@@ -61,7 +60,7 @@ public class BtcFeeReceiverService implements DaoStateListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public String getBtcFeeReceiverAddress() {
+    public String getAddress() {
         Map<String, BurningManCandidate> burningManCandidatesByName = burningManService.getBurningManCandidatesByName(currentChainHeight);
         if (burningManCandidatesByName.isEmpty()) {
             // If there are no compensation requests (e.g. at dev testing) we fall back to the default address
