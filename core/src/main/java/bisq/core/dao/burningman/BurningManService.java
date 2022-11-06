@@ -139,7 +139,7 @@ class BurningManService {
                                             if (isValidReimbursement(name, cycleIndex, issuanceAmount)) {
                                                 long decayedIssuanceAmount = getDecayedCompensationAmount(issuanceAmount, issuanceHeight, chainHeight);
                                                 long issuanceDate = daoStateService.getBlockTime(issuanceHeight);
-                                                candidate.addCompensationModel(new CompensationModel(address,
+                                                candidate.addCompensationModel(CompensationModel.fromCompensationRequest(address,
                                                         issuanceAmount,
                                                         decayedIssuanceAmount,
                                                         issuanceHeight,
@@ -166,11 +166,12 @@ class BurningManService {
                     long issuanceAmount = txOutput.getValue();
                     long decayedAmount = getDecayedGenesisOutputAmount(issuanceAmount);
                     long issuanceDate = daoStateService.getBlockTime(issuanceHeight);
-                    candidate.addCompensationModel(new CompensationModel(txOutput.getAddress(),
+                    candidate.addCompensationModel(CompensationModel.fromGenesisOutput(txOutput.getAddress(),
                             issuanceAmount,
                             decayedAmount,
                             issuanceHeight,
                             txOutput.getTxId(),
+                            txOutput.getIndex(),
                             issuanceDate,
                             0));
                     addBurnOutputModel(chainHeight, proofOfBurnOpReturnTxOutputByHash, name, candidate);

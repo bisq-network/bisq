@@ -63,7 +63,10 @@ public final class BurningManCandidate {
         }
 
         compensationModels.add(compensationModel);
-        compensationModels.sort(Comparator.comparing(CompensationModel::getTxId));
+        // For genesis outputs we have same txId, so we use also output index to ensure deterministic sort order.
+        // For normal comp requests its Optional.empty.
+        compensationModels.sort(Comparator.comparing(CompensationModel::getTxId)
+                .thenComparing(model -> model.getOutputIndex().orElse(-1)));
 
         accumulatedDecayedCompensationAmount += compensationModel.getDecayedAmount();
         accumulatedCompensationAmount += compensationModel.getAmount();
