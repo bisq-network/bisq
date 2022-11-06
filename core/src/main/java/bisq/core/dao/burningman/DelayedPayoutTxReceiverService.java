@@ -36,6 +36,12 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Used in the trade protocol for creating and verifying the delayed payout transaction.
+ * Requires to be deterministic.
+ * Changes in the parameters related to the delayedPayoutTxReceivers list could break verification of the peers
+ * delayed payout transaction in case not both are using the same version.
+ */
 @Singleton
 public class DelayedPayoutTxReceiverService implements DaoStateListener {
     // TODO
@@ -91,7 +97,6 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-
     // We use a snapshot blockHeight to avoid failed trades in case maker and taker have different block heights.
     // The selection is deterministic based on DAO data.
     // The block height is the last mod(10) height from the range of the last 10-20 blocks (139 -> 120; 140 -> 130, 141 -> 130).
@@ -100,9 +105,9 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
         return getSnapshotHeight(daoStateService.getGenesisBlockHeight(), currentChainHeight, 10);
     }
 
-    public List<Tuple2<Long, String>> getDelayedPayoutTxReceivers(int burningManSelectionHeight,
-                                                                  long inputAmount,
-                                                                  long tradeTxFee) {
+    public List<Tuple2<Long, String>> getReceivers(int burningManSelectionHeight,
+                                                   long inputAmount,
+                                                   long tradeTxFee) {
         Collection<BurningManCandidate> burningManCandidates = burningManService.getBurningManCandidatesByName(burningManSelectionHeight).values();
         if (burningManCandidates.isEmpty()) {
             // If there are no compensation requests (e.g. at dev testing) we fall back to the legacy BM
