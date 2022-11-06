@@ -30,19 +30,16 @@ import lombok.Getter;
 @Getter
 @EqualsAndHashCode
 class BurnOutputListItem {
-    private final BurnOutputModel burnOutputModel;
-    private final String dateAsString, txId, amountAsString, decayedAmountAsString;
+    private final String dateAsString, amountAsString, decayedAmountAsString;
     private final long date, amount, decayedAmount;
     private final int cycleIndex, height;
 
     BurnOutputListItem(BurnOutputModel model, BsqFormatter bsqFormatter) {
-        this.burnOutputModel = model;
 
         height = model.getHeight();
         cycleIndex = model.getCycleIndex();
         date = model.getDate();
         dateAsString = DisplayUtils.formatDateTime(new Date(date));
-        txId = model.getTxId();
         amount = model.getAmount();
         amountAsString = bsqFormatter.formatCoinWithCode(amount);
         decayedAmount = model.getDecayedAmount();

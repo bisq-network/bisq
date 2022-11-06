@@ -29,13 +29,13 @@ import lombok.Getter;
 @EqualsAndHashCode
 class BurningmenListItem {
     private final BurningManCandidate burningManCandidate;
-    private final String name, address, burnOutputShareAsString, effectiveBurnOutputShareAsString, issuanceShareAsString,
+    private final String name, address, effectiveBurnOutputShareAsString, issuanceShareAsString,
             accumulatedDecayedBurnAmountAsBsq, allowedBurnAmountAsBsq, accumulatedBurnAmountAsBsq,
             accumulatedDecayedCompensationAmountAsBsq, accumulatedCompensationAmountAsBsq, expectedRevenueAsBsq;
     private final long allowedBurnAmount, accumulatedDecayedBurnAmount, accumulatedBurnAmount,
             accumulatedDecayedCompensationAmount, accumulatedCompensationAmount, expectedRevenue;
     private final int numBurnOutputs, numIssuances;
-    private final double burnOutputShare, effectiveBurnOutputShare, issuanceShare;
+    private final double effectiveBurnOutputShare, issuanceShare;
 
     BurningmenListItem(String name, BurningManCandidate burningManCandidate, BsqFormatter bsqFormatter) {
         this.burningManCandidate = burningManCandidate;
@@ -50,8 +50,6 @@ class BurningmenListItem {
         accumulatedBurnAmountAsBsq = bsqFormatter.formatCoinWithCode(accumulatedBurnAmount);
         accumulatedDecayedBurnAmount = burningManCandidate.getAccumulatedDecayedBurnAmount();
         accumulatedDecayedBurnAmountAsBsq = bsqFormatter.formatCoinWithCode(accumulatedDecayedBurnAmount);
-        burnOutputShare = burningManCandidate.getBurnOutputShare();
-        burnOutputShareAsString = FormattingUtils.formatToPercentWithSymbol(burnOutputShare);
         effectiveBurnOutputShare = burningManCandidate.getEffectiveBurnOutputShare();
         effectiveBurnOutputShareAsString = FormattingUtils.formatToPercentWithSymbol(effectiveBurnOutputShare);
         expectedRevenue = burningManCandidate.getExpectedRevenue();
