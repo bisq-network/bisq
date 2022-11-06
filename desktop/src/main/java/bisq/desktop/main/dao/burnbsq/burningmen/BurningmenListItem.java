@@ -18,6 +18,7 @@
 package bisq.desktop.main.dao.burnbsq.burningmen;
 
 import bisq.core.dao.burningman.BurningManCandidate;
+import bisq.core.dao.burningman.BurningManPresentationService;
 import bisq.core.locale.Res;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
@@ -29,30 +30,33 @@ import lombok.Getter;
 @EqualsAndHashCode
 class BurningmenListItem {
     private final BurningManCandidate burningManCandidate;
-    private final String name, address, effectiveBurnOutputShareAsString, issuanceShareAsString,
+    private final String name, address, cappedBurnOutputShareAsString, compensationShareAsString,
             accumulatedDecayedBurnAmountAsBsq, allowedBurnAmountAsBsq, accumulatedBurnAmountAsBsq,
             accumulatedDecayedCompensationAmountAsBsq, accumulatedCompensationAmountAsBsq, expectedRevenueAsBsq;
     private final long allowedBurnAmount, accumulatedDecayedBurnAmount, accumulatedBurnAmount,
             accumulatedDecayedCompensationAmount, accumulatedCompensationAmount, expectedRevenue;
     private final int numBurnOutputs, numIssuances;
-    private final double effectiveBurnOutputShare, issuanceShare;
+    private final double cappedBurnOutputShare, compensationShare;
 
-    BurningmenListItem(String name, BurningManCandidate burningManCandidate, BsqFormatter bsqFormatter) {
+    BurningmenListItem(BurningManPresentationService burningManPresentationService,
+                       String name,
+                       BurningManCandidate burningManCandidate,
+                       BsqFormatter bsqFormatter) {
         this.burningManCandidate = burningManCandidate;
 
         this.name = name;
         address = burningManCandidate.getMostRecentAddress().orElse(Res.get("shared.na"));
 
         // Burn
-        allowedBurnAmount = burningManCandidate.getAllowedBurnAmount();
+        allowedBurnAmount = burningManPresentationService.getAllowedBurnAmount(burningManCandidate);
         allowedBurnAmountAsBsq = bsqFormatter.formatCoinWithCode(allowedBurnAmount);
         accumulatedBurnAmount = burningManCandidate.getAccumulatedBurnAmount();
         accumulatedBurnAmountAsBsq = bsqFormatter.formatCoinWithCode(accumulatedBurnAmount);
         accumulatedDecayedBurnAmount = burningManCandidate.getAccumulatedDecayedBurnAmount();
         accumulatedDecayedBurnAmountAsBsq = bsqFormatter.formatCoinWithCode(accumulatedDecayedBurnAmount);
-        effectiveBurnOutputShare = burningManCandidate.getEffectiveBurnOutputShare();
-        effectiveBurnOutputShareAsString = FormattingUtils.formatToPercentWithSymbol(effectiveBurnOutputShare);
-        expectedRevenue = burningManCandidate.getExpectedRevenue();
+        cappedBurnOutputShare = burningManCandidate.getCappedBurnAmountShare();
+        cappedBurnOutputShareAsString = FormattingUtils.formatToPercentWithSymbol(cappedBurnOutputShare);
+        expectedRevenue = burningManPresentationService.getExpectedRevenue(burningManCandidate);
         expectedRevenueAsBsq = bsqFormatter.formatCoinWithCode(expectedRevenue);
         numBurnOutputs = burningManCandidate.getBurnOutputModels().size();
 
@@ -61,8 +65,8 @@ class BurningmenListItem {
         accumulatedCompensationAmountAsBsq = bsqFormatter.formatCoinWithCode(accumulatedCompensationAmount);
         accumulatedDecayedCompensationAmount = burningManCandidate.getAccumulatedDecayedCompensationAmount();
         accumulatedDecayedCompensationAmountAsBsq = bsqFormatter.formatCoinWithCode(accumulatedDecayedCompensationAmount);
-        issuanceShare = burningManCandidate.getIssuanceShare();
-        issuanceShareAsString = FormattingUtils.formatToPercentWithSymbol(issuanceShare);
+        compensationShare = burningManCandidate.getCompensationShare();
+        compensationShareAsString = FormattingUtils.formatToPercentWithSymbol(compensationShare);
         numIssuances = burningManCandidate.getCompensationModels().size();
     }
 }

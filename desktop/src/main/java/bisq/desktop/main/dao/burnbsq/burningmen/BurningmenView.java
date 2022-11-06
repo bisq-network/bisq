@@ -30,7 +30,7 @@ import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqValidator;
 
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.burningman.BurningManInfoService;
+import bisq.core.dao.burningman.BurningManPresentationService;
 import bisq.core.dao.governance.proofofburn.ProofOfBurnService;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.state.DaoStateListener;
@@ -89,7 +89,7 @@ import static bisq.desktop.util.FormBuilder.*;
 @FxmlView
 public class BurningmenView extends ActivatableView<ScrollPane, Void> implements DaoStateListener {
     private final DaoFacade daoFacade;
-    private final BurningManInfoService burningManInfoService;
+    private final BurningManPresentationService burningManPresentationService;
     private final ProofOfBurnService proofOfBurnService;
     private final BsqFormatter bsqFormatter;
     private final CoinFormatter btcFormatter;
@@ -132,13 +132,13 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
 
     @Inject
     private BurningmenView(DaoFacade daoFacade,
-                           BurningManInfoService burningManInfoService,
+                           BurningManPresentationService burningManPresentationService,
                            ProofOfBurnService proofOfBurnService,
                            BsqFormatter bsqFormatter,
                            @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                            BsqValidator bsqValidator) {
         this.daoFacade = daoFacade;
-        this.burningManInfoService = burningManInfoService;
+        this.burningManPresentationService = burningManPresentationService;
         this.proofOfBurnService = proofOfBurnService;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
@@ -410,19 +410,19 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateData() {
-        burningmenObservableList.setAll(burningManInfoService.getBurningManCandidatesByName().entrySet().stream()
-                .map(entry -> new BurningmenListItem(entry.getKey(), entry.getValue(), bsqFormatter))
+        burningmenObservableList.setAll(burningManPresentationService.getBurningManCandidatesByName().entrySet().stream()
+                .map(entry -> new BurningmenListItem(burningManPresentationService, entry.getKey(), entry.getValue(), bsqFormatter))
                 .collect(Collectors.toList()));
-        reimbursementObservableList.setAll(burningManInfoService.getReimbursements().stream()
+        reimbursementObservableList.setAll(burningManPresentationService.getReimbursements().stream()
                 .map(reimbursementModel -> new ReimbursementListItem(reimbursementModel, bsqFormatter))
                 .collect(Collectors.toList()));
 
-        expectedRevenueField.setText(bsqFormatter.formatCoinWithCode(burningManInfoService.getAverageDistributionPerCycle()));
-        burnTargetField.setText(bsqFormatter.formatCoinWithCode(burningManInfoService.getBurnTarget()));
+        expectedRevenueField.setText(bsqFormatter.formatCoinWithCode(burningManPresentationService.getAverageDistributionPerCycle()));
+        burnTargetField.setText(bsqFormatter.formatCoinWithCode(burningManPresentationService.getBurnTarget()));
 
         if (daoFacade.isParseBlockChainComplete()) {
-            Set<String> myContributorNames = burningManInfoService.getMyCompensationRequestNames();
-            burningManInfoService.findMyGenesisOutputNames().ifPresent(myContributorNames::addAll);
+            Set<String> myContributorNames = burningManPresentationService.getMyCompensationRequestNames();
+            burningManPresentationService.findMyGenesisOutputNames().ifPresent(myContributorNames::addAll);
 
             Map<String, BurningmenListItem> burningmenListItemByName = burningmenObservableList.stream()
                     .collect(Collectors.toMap(BurningmenListItem::getName, e -> e));
@@ -439,7 +439,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         burningmenFilteredList.setPredicate(burningmenListItem -> {
             boolean showOnlyActiveBurningmen = showOnlyActiveBurningmenToggle.isSelected();
             String filterText = burningmenFilterField.getText();
-            boolean activeBurnerOrShowAll = !showOnlyActiveBurningmen || burningmenListItem.getEffectiveBurnOutputShare() > 0;
+            boolean activeBurnerOrShowAll = !showOnlyActiveBurningmen || burningmenListItem.getCappedBurnOutputShare() > 0;
             if (filterText == null || filterText.trim().isEmpty()) {
                 return activeBurnerOrShowAll;
             } else {
@@ -578,7 +578,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
                     public void updateItem(final BurningmenListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            setText(item.getEffectiveBurnOutputShareAsString());
+                            setText(item.getCappedBurnOutputShareAsString());
                         } else
                             setText("");
                     }
@@ -587,7 +587,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         });
         burningmenTableView.getColumns().add(column);
         column.setSortType(TableColumn.SortType.DESCENDING);
-        column.setComparator(Comparator.comparing(BurningmenListItem::getEffectiveBurnOutputShare));
+        column.setComparator(Comparator.comparing(BurningmenListItem::getCappedBurnOutputShare));
         burningmenTableView.getSortOrder().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.decayedBurnAmount"));
@@ -676,7 +676,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
                     public void updateItem(final BurningmenListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            setText(item.getIssuanceShareAsString());
+                            setText(item.getCompensationShareAsString());
                         } else
                             setText("");
                     }
@@ -684,7 +684,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         burningmenTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(BurningmenListItem::getIssuanceShare));
+        column.setComparator(Comparator.comparing(BurningmenListItem::getCompensationShare));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.decayedIssuanceAmount"));

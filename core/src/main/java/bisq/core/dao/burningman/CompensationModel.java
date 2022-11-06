@@ -49,8 +49,7 @@ public final class CompensationModel {
                                                int height,
                                                String txId,
                                                int outputIndex,
-                                               long date,
-                                               int cycleIndex) {
+                                               long date) {
         return new CompensationModel(address,
                 amount,
                 decayedAmount,
@@ -58,7 +57,7 @@ public final class CompensationModel {
                 txId,
                 Optional.of(outputIndex),
                 date,
-                cycleIndex);
+                0);
     }
 
 

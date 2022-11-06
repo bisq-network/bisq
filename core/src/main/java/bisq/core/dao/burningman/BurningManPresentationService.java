@@ -36,11 +36,16 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Singleton
-public class BurningManInfoService implements DaoStateListener {
+public class BurningManPresentationService implements DaoStateListener {
+    // Burn target gets increased by that amount to give more flexibility.
+    // Burn target is calculated from reimbursements + estimated BTC fees - burned amounts.
+    static final long BURN_TARGET_BOOST_AMOUNT = 10000000;
+
     private final DaoStateService daoStateService;
     private final MyProposalListService myProposalListService;
     private final BsqWalletService bsqWalletService;
     private final BurningManService burningManService;
+    private final BurnTargetService burnTargetService;
 
     private int currentChainHeight;
     private Optional<Long> burnTarget;
@@ -51,14 +56,16 @@ public class BurningManInfoService implements DaoStateListener {
     private Optional<Set<String>> myGenesisOutputNames;
 
     @Inject
-    public BurningManInfoService(DaoStateService daoStateService,
-                                 MyProposalListService myProposalListService,
-                                 BsqWalletService bsqWalletService,
-                                 BurningManService burningManService) {
+    public BurningManPresentationService(DaoStateService daoStateService,
+                                         MyProposalListService myProposalListService,
+                                         BsqWalletService bsqWalletService,
+                                         BurningManService burningManService,
+                                         BurnTargetService burnTargetService) {
         this.daoStateService = daoStateService;
         this.myProposalListService = myProposalListService;
         this.bsqWalletService = bsqWalletService;
         this.burningManService = burningManService;
+        this.burnTargetService = burnTargetService;
 
         daoStateService.addDaoStateListener(this);
     }
@@ -75,6 +82,9 @@ public class BurningManInfoService implements DaoStateListener {
         burnTarget = Optional.empty();
         myCompensationRequestNames = null;
         averageDistributionPerCycle = Optional.empty();
+
+        //  averageDistributionPerCycle = getAverageDistributionPerCycle(currentChainHeight);
+        // burnTarget = getBurnTarget(currentChainHeight, burningManCandidatesByName.values());
     }
 
 
@@ -87,7 +97,7 @@ public class BurningManInfoService implements DaoStateListener {
             return burnTarget.get();
         }
 
-        burnTarget = Optional.of(burningManService.getBurnTarget(currentChainHeight, getBurningManCandidatesByName().values()));
+        burnTarget = Optional.of(burnTargetService.getBurnTarget(currentChainHeight, getBurningManCandidatesByName().values()));
         return burnTarget.get();
     }
 
@@ -96,8 +106,28 @@ public class BurningManInfoService implements DaoStateListener {
             return averageDistributionPerCycle.get();
         }
 
-        averageDistributionPerCycle = Optional.of(burningManService.getAverageDistributionPerCycle(currentChainHeight));
+        averageDistributionPerCycle = Optional.of(burnTargetService.getAverageDistributionPerCycle(currentChainHeight));
         return averageDistributionPerCycle.get();
+    }
+
+    public long getExpectedRevenue(BurningManCandidate burningManCandidate) {
+        return Math.round(burningManCandidate.getCappedBurnAmountShare() * getAverageDistributionPerCycle());
+    }
+
+    public long getAllowedBurnAmount(BurningManCandidate burningManCandidate) {
+        double maxBurnAmount = getBurnTarget() + BURN_TARGET_BOOST_AMOUNT;
+        double issuanceShare = burningManCandidate.getCompensationShare();
+        double boostedIssuanceShare = burningManCandidate.getBoostedCompensationShare();
+        long accumulatedDecayedBurnAmount = burningManCandidate.getAccumulatedDecayedBurnAmount();
+        double effectiveBurnOutputShare = burningManCandidate.getCappedBurnAmountShare();
+        if (issuanceShare > 0 && maxBurnAmount > 0 && effectiveBurnOutputShare < boostedIssuanceShare) {
+            // We reduce it with what he had already burned
+            long value = Math.round(boostedIssuanceShare * maxBurnAmount) - accumulatedDecayedBurnAmount;
+            // If below dust we set value to 0
+            return value < 546 ? 0 : value;
+        } else {
+            return 0;
+        }
     }
 
     public Set<ReimbursementModel> getReimbursements() {
@@ -105,7 +135,7 @@ public class BurningManInfoService implements DaoStateListener {
             return reimbursements;
         }
 
-        reimbursements.addAll(burningManService.getReimbursements(currentChainHeight));
+        reimbursements.addAll(burnTargetService.getReimbursements(currentChainHeight));
         return reimbursements;
     }
 
