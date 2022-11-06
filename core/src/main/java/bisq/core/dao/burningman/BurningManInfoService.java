@@ -48,7 +48,6 @@ public class BurningManInfoService implements DaoStateListener {
     private final Set<ReimbursementModel> reimbursements = new HashSet<>();
     private Optional<Long> averageDistributionPerCycle = Optional.empty();
     private Set<String> myCompensationRequestNames;
-
     private Optional<Set<String>> myGenesisOutputNames;
 
     @Inject
@@ -83,12 +82,12 @@ public class BurningManInfoService implements DaoStateListener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public long getCurrentBurnTarget() {
+    public long getBurnTarget() {
         if (burnTarget.isPresent()) {
             return burnTarget.get();
         }
 
-        burnTarget = Optional.of(burningManService.getBurnTarget(currentChainHeight, getCurrentBurningManCandidatesByName().values()));
+        burnTarget = Optional.of(burningManService.getBurnTarget(currentChainHeight, getBurningManCandidatesByName().values()));
         return burnTarget.get();
     }
 
@@ -101,7 +100,7 @@ public class BurningManInfoService implements DaoStateListener {
         return averageDistributionPerCycle.get();
     }
 
-    public Set<ReimbursementModel> getCurrentReimbursements() {
+    public Set<ReimbursementModel> getReimbursements() {
         if (!reimbursements.isEmpty()) {
             return reimbursements;
         }
@@ -141,7 +140,7 @@ public class BurningManInfoService implements DaoStateListener {
         return myCompensationRequestNames;
     }
 
-    public Map<String, BurningManCandidate> getCurrentBurningManCandidatesByName() {
+    public Map<String, BurningManCandidate> getBurningManCandidatesByName() {
         // Cached value is only used for currentChainHeight
         if (!burningManCandidatesByName.isEmpty()) {
             return burningManCandidatesByName;
