@@ -21,7 +21,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
-import bisq.core.dao.burningman.BurningManService;
+import bisq.core.dao.burningman.BtcFeeReceiverService;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferBookService;
@@ -52,7 +52,7 @@ public class PlaceOfferModel implements Model {
     private final ArbitratorManager arbitratorManager;
     private final TradeStatisticsManager tradeStatisticsManager;
     private final DaoFacade daoFacade;
-    private final BurningManService burningManService;
+    private final BtcFeeReceiverService btcFeeReceiverService;
     private final User user;
     @Getter
     private final FilterManager filterManager;
@@ -73,7 +73,7 @@ public class PlaceOfferModel implements Model {
                            ArbitratorManager arbitratorManager,
                            TradeStatisticsManager tradeStatisticsManager,
                            DaoFacade daoFacade,
-                           BurningManService burningManService,
+                           BtcFeeReceiverService btcFeeReceiverService,
                            User user,
                            FilterManager filterManager) {
         this.offer = offer;
@@ -86,7 +86,7 @@ public class PlaceOfferModel implements Model {
         this.arbitratorManager = arbitratorManager;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.daoFacade = daoFacade;
-        this.burningManService = burningManService;
+        this.btcFeeReceiverService = btcFeeReceiverService;
         this.user = user;
         this.filterManager = filterManager;
     }

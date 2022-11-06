@@ -22,6 +22,7 @@ import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 
 import bisq.common.util.Tuple2;
+import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -30,11 +31,16 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Singleton
 public class DelayedPayoutTxReceiverService implements DaoStateListener {
+    // TODO
+    //  public static final Date ACTIVATION_DATE = Utilities.getUTCDate(2022, GregorianCalendar.OCTOBER, 25);
+    public static final Date ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.JANUARY, 1);
 
     // One part of the limit for the min. amount to be included in the DPT outputs.
     // The miner fee rate multiplied by 2 times the output size is the other factor.
@@ -53,6 +59,10 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     // spike when opening arbitration.
     private static final long DPT_MIN_TX_FEE_RATE = 10;
 
+    public static boolean isActivated() {
+        return new Date().after(ACTIVATION_DATE);
+    }
+
 
     private final DaoStateService daoStateService;
     private final BurningManService burningManService;
@@ -64,10 +74,8 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
         this.burningManService = burningManService;
 
         daoStateService.addDaoStateListener(this);
-
-        //todo
-        burningManService.setDelayedPayoutTxReceiverService(this);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DaoStateListener

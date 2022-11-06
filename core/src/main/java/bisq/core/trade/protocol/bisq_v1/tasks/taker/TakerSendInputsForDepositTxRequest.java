@@ -104,7 +104,7 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
             byte[] signatureOfNonce = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(),
                     offerId.getBytes(Charsets.UTF_8));
 
-            int burningManSelectionHeight = processModel.getBurningManService().getDelayedPayoutTxReceiverService().getBurningManSelectionHeight();
+            int burningManSelectionHeight = processModel.getDelayedPayoutTxReceiverService().getBurningManSelectionHeight();
             processModel.setBurningManSelectionHeight(burningManSelectionHeight);
 
             String takersPaymentMethodId = checkNotNull(processModel.getPaymentAccountPayload(trade)).getPaymentMethodId();

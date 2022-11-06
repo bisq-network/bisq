@@ -18,7 +18,7 @@
 package bisq.core.trade.protocol.bisq_v1.tasks.seller;
 
 import bisq.core.btc.wallet.TradeWalletService;
-import bisq.core.dao.burningman.BurningManService;
+import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
@@ -51,10 +51,10 @@ public class SellerCreatesDelayedPayoutTx extends TradeTask {
             TradeWalletService tradeWalletService = processModel.getTradeWalletService();
             Transaction depositTx = checkNotNull(processModel.getDepositTx());
             Transaction preparedDelayedPayoutTx;
-            if (BurningManService.isActivated()) {
+            if (DelayedPayoutTxReceiverService.isActivated()) {
                 long inputAmount = depositTx.getOutput(0).getValue().value;
                 long tradeTxFeeAsLong = trade.getTradeTxFeeAsLong();
-                List<Tuple2<Long, String>> delayedPayoutTxReceivers = processModel.getBurningManService().getDelayedPayoutTxReceiverService().getDelayedPayoutTxReceivers(
+                List<Tuple2<Long, String>> delayedPayoutTxReceivers = processModel.getDelayedPayoutTxReceiverService().getDelayedPayoutTxReceivers(
                         processModel.getBurningManSelectionHeight(),
                         inputAmount,
                         tradeTxFeeAsLong);

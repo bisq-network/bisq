@@ -644,7 +644,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 user,
                 mediatorManager,
                 tradeStatisticsManager,
-                provider.getBurningManService(),
+                provider.getDelayedPayoutTxReceiverService(),
                 isTakerApiUser);
     }
 

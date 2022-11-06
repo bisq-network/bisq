@@ -18,7 +18,7 @@
 package bisq.core.trade.protocol.bisq_v1.tasks.buyer;
 
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.burningman.BurningManService;
+import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
@@ -60,10 +60,10 @@ public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
             // Now as we know the deposit tx we can also verify the input
             TradeDataValidation.validatePayoutTxInput(depositTx, finalDelayedPayoutTx);
 
-            if (BurningManService.isActivated()) {
+            if (DelayedPayoutTxReceiverService.isActivated()) {
                 long inputAmount = depositTx.getOutput(0).getValue().value;
                 long tradeTxFeeAsLong = trade.getTradeTxFeeAsLong();
-                List<Tuple2<Long, String>> delayedPayoutTxReceivers = processModel.getBurningManService().getDelayedPayoutTxReceiverService().getDelayedPayoutTxReceivers(
+                List<Tuple2<Long, String>> delayedPayoutTxReceivers = processModel.getDelayedPayoutTxReceiverService().getDelayedPayoutTxReceivers(
                         processModel.getBurningManSelectionHeight(),
                         inputAmount,
                         tradeTxFeeAsLong);
