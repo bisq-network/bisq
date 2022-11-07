@@ -29,6 +29,8 @@ import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqValidator;
 
+import bisq.core.btc.listeners.BsqBalanceListener;
+import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.burningman.BurningManPresentationService;
 import bisq.core.dao.governance.proofofburn.ProofOfBurnService;
@@ -87,10 +89,11 @@ import java.util.stream.Collectors;
 import static bisq.desktop.util.FormBuilder.*;
 
 @FxmlView
-public class BurningmenView extends ActivatableView<ScrollPane, Void> implements DaoStateListener {
+public class BurningmenView extends ActivatableView<ScrollPane, Void> implements DaoStateListener, BsqBalanceListener {
     private final DaoFacade daoFacade;
     private final BurningManPresentationService burningManPresentationService;
     private final ProofOfBurnService proofOfBurnService;
+    private final BsqWalletService bsqWalletService;
     private final BsqFormatter bsqFormatter;
     private final CoinFormatter btcFormatter;
     private final BsqValidator burnAmountValidator;
@@ -134,12 +137,14 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
     private BurningmenView(DaoFacade daoFacade,
                            BurningManPresentationService burningManPresentationService,
                            ProofOfBurnService proofOfBurnService,
+                           BsqWalletService bsqWalletService,
                            BsqFormatter bsqFormatter,
                            @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                            BsqValidator bsqValidator) {
         this.daoFacade = daoFacade;
         this.burningManPresentationService = burningManPresentationService;
         this.proofOfBurnService = proofOfBurnService;
+        this.bsqWalletService = bsqWalletService;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
         this.burnAmountValidator = bsqValidator;
@@ -324,6 +329,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         GUIUtil.setFitToRowsForTableView(reimbursementsTableView, 36, 28, 3, 6);
 
         daoFacade.addBsqStateListener(this);
+        bsqWalletService.addBsqBalanceListener(this);
 
         amountInputTextField.textProperty().addListener(amountInputTextFieldListener);
         amountInputTextField.focusedProperty().addListener(amountFocusOutListener);
@@ -369,6 +375,8 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
             updateData();
         }
 
+        onUpdateAvailableBalance(bsqWalletService.getAvailableBalance());
+
         updateButtonState();
         updateBurningmenPredicate();
     }
@@ -376,6 +384,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
     @Override
     protected void deactivate() {
         daoFacade.removeBsqStateListener(this);
+        bsqWalletService.removeBsqBalanceListener(this);
 
         amountInputTextField.textProperty().removeListener(amountInputTextFieldListener);
         amountInputTextField.focusedProperty().removeListener(amountFocusOutListener);
@@ -402,6 +411,27 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
     @Override
     public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         updateData();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // BsqBalanceListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onUpdateBalances(Coin availableBalance,
+                                 Coin availableNonBsqBalance,
+                                 Coin unverifiedBalance,
+                                 Coin unconfirmedChangeBalance,
+                                 Coin lockedForVotingBalance,
+                                 Coin lockupBondsBalance,
+                                 Coin unlockingBondsBalance) {
+        onUpdateAvailableBalance(availableBalance);
+    }
+
+    private void onUpdateAvailableBalance(Coin availableBalance) {
+        burnAmountValidator.setAvailableBalance(availableBalance);
+        updateButtonState();
     }
 
 
