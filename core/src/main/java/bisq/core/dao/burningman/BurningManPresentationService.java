@@ -35,6 +35,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Singleton
 public class BurningManPresentationService implements DaoStateListener {
     // Burn target gets increased by that amount to give more flexibility.
@@ -48,12 +51,12 @@ public class BurningManPresentationService implements DaoStateListener {
     private final BurnTargetService burnTargetService;
 
     private int currentChainHeight;
-    private Optional<Long> burnTarget;
+    private Optional<Long> burnTarget = Optional.empty();
     private final Map<String, BurningManCandidate> burningManCandidatesByName = new HashMap<>();
     private final Set<ReimbursementModel> reimbursements = new HashSet<>();
     private Optional<Long> averageDistributionPerCycle = Optional.empty();
     private Set<String> myCompensationRequestNames;
-    private Optional<Set<String>> myGenesisOutputNames;
+    private Optional<Set<String>> myGenesisOutputNames = Optional.empty();
 
     @Inject
     public BurningManPresentationService(DaoStateService daoStateService,
@@ -68,6 +71,7 @@ public class BurningManPresentationService implements DaoStateListener {
         this.burnTargetService = burnTargetService;
 
         daoStateService.addDaoStateListener(this);
+        daoStateService.getLastBlock().ifPresent(this::applyBlock);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -76,15 +80,16 @@ public class BurningManPresentationService implements DaoStateListener {
 
     @Override
     public void onParseBlockCompleteAfterBatchProcessing(Block block) {
+        applyBlock(block);
+    }
+
+    private void applyBlock(Block block) {
         currentChainHeight = block.getHeight();
         burningManCandidatesByName.clear();
         reimbursements.clear();
         burnTarget = Optional.empty();
         myCompensationRequestNames = null;
         averageDistributionPerCycle = Optional.empty();
-
-        //  averageDistributionPerCycle = getAverageDistributionPerCycle(currentChainHeight);
-        // burnTarget = getBurnTarget(currentChainHeight, burningManCandidatesByName.values());
     }
 
 
@@ -118,11 +123,10 @@ public class BurningManPresentationService implements DaoStateListener {
         double maxBurnAmount = getBurnTarget() + BURN_TARGET_BOOST_AMOUNT;
         double issuanceShare = burningManCandidate.getCompensationShare();
         double boostedIssuanceShare = burningManCandidate.getBoostedCompensationShare();
-        long accumulatedDecayedBurnAmount = burningManCandidate.getAccumulatedDecayedBurnAmount();
         double effectiveBurnOutputShare = burningManCandidate.getCappedBurnAmountShare();
         if (issuanceShare > 0 && maxBurnAmount > 0 && effectiveBurnOutputShare < boostedIssuanceShare) {
             // We reduce it with what he had already burned
-            long value = Math.round(boostedIssuanceShare * maxBurnAmount) - accumulatedDecayedBurnAmount;
+            long value = Math.round(boostedIssuanceShare * maxBurnAmount);
             // If below dust we set value to 0
             return value < 546 ? 0 : value;
         } else {

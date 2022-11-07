@@ -43,6 +43,7 @@ public class BtcFeeReceiverService implements DaoStateListener {
         this.burningManService = burningManService;
 
         daoStateService.addDaoStateListener(this);
+        daoStateService.getLastBlock().ifPresent(this::applyBlock);
     }
 
 
@@ -52,6 +53,10 @@ public class BtcFeeReceiverService implements DaoStateListener {
 
     @Override
     public void onParseBlockCompleteAfterBatchProcessing(Block block) {
+        applyBlock(block);
+    }
+
+    private void applyBlock(Block block) {
         currentChainHeight = block.getHeight();
     }
 

@@ -59,8 +59,8 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 class BurningManService {
     private static final int DAY_AS_BLOCKS = 144;
-    private static final int MONTH_AS_BLOCKS = 30 * DAY_AS_BLOCKS; // Ignore 31 days months, as the block time is anyway not exact.
-    private static final int YEAR_AS_BLOCKS = 12 * MONTH_AS_BLOCKS;
+    static final int MONTH_AS_BLOCKS = 30 * DAY_AS_BLOCKS; // Ignore 31 days months, as the block time is anyway not exact.
+    static final int YEAR_AS_BLOCKS = 12 * MONTH_AS_BLOCKS;
 
     // Parameters
     // Cannot be changed after release as it would break trade protocol verification of DPT receivers.
