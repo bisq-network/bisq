@@ -171,7 +171,9 @@ public class DisputeValidation {
         // Verify that address in the dispute matches the one in the trade.
         String delayedPayoutTxOutputAddress = address.toString();
         checkArgument(delayedPayoutTxOutputAddress.equals(dispute.getDonationAddressOfDelayedPayoutTx()),
-                "donationAddressOfDelayedPayoutTx from dispute does not match address from delayed payout tx");
+                "donationAddressOfDelayedPayoutTx from dispute does not match address from delayed payout tx. " +
+                        "delayedPayoutTxOutputAddress=" + delayedPayoutTxOutputAddress +
+                        "; dispute.getDonationAddressOfDelayedPayoutTx()=" + dispute.getDonationAddressOfDelayedPayoutTx());
     }
 
     public static void testIfAnyDisputeTriedReplay(List<Dispute> disputeList,
