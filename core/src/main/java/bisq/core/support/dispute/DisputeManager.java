@@ -624,6 +624,8 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         dispute.setExtraDataMap(disputeFromOpener.getExtraDataMap());
         dispute.setDelayedPayoutTxId(disputeFromOpener.getDelayedPayoutTxId());
         dispute.setDonationAddressOfDelayedPayoutTx(disputeFromOpener.getDonationAddressOfDelayedPayoutTx());
+        dispute.setBurningManSelectionHeight(disputeFromOpener.getBurningManSelectionHeight());
+        dispute.setTradeTxFee(disputeFromOpener.getTradeTxFee());
 
         Optional<Dispute> storedDisputeOptional = findDispute(dispute);
 
