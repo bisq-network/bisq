@@ -511,7 +511,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         boolean useRefundAgent = disputeState == Trade.DisputeState.MEDIATION_CLOSED ||
                 disputeState == Trade.DisputeState.REFUND_REQUESTED || remainingLockTime <= 0;
 
-        AtomicReference<String> donationAddressString = new AtomicReference<>("");
+        AtomicReference<String> donationAddressString = new AtomicReference<>(null);
         Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
         try {
             TradeDataValidation.validateDelayedPayoutTx(trade,
