@@ -28,6 +28,7 @@ import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.dao.state.model.governance.ReimbursementProposal;
 
+import bisq.common.app.DevEnv;
 import bisq.common.util.Hex;
 
 import javax.inject.Inject;
@@ -55,7 +56,7 @@ class BurnTargetService {
     // Default value for the estimated BTC trade fees per month as BSQ sat value (100 sat = 1 BSQ).
     // Default is roughly average of last 12 months at Nov 2022.
     // Can be changed with DAO parameter voting.
-    private static final long DEFAULT_ESTIMATED_BTC_FEES = 6200000;
+    private static final long DEFAULT_ESTIMATED_BTC_FEES = DevEnv.isDevMode() ? 100000 : 6200000;
 
     private final DaoStateService daoStateService;
     private final CycleService cycleService;
@@ -113,7 +114,7 @@ class BurnTargetService {
                 - burnedAmountFromLegacyBurningMansBtcFees
                 - burnedAmountFromBurningMen;
 
-        log.debug("accumulatedReimbursements: {}\n" +
+        log.info("accumulatedReimbursements: {}\n" +
                         "+ accumulatedEstimatedBtcTradeFees: {}\n" +
                         "- burnedAmountFromLegacyBurningManDPT: {}\n" +
                         "- burnedAmountFromLegacyBurningMansBtcFees: {}\n" +
