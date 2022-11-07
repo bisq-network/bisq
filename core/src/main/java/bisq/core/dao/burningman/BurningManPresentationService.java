@@ -55,8 +55,8 @@ public class BurningManPresentationService implements DaoStateListener {
     private final Map<String, BurningManCandidate> burningManCandidatesByName = new HashMap<>();
     private final Set<ReimbursementModel> reimbursements = new HashSet<>();
     private Optional<Long> averageDistributionPerCycle = Optional.empty();
-    private Set<String> myCompensationRequestNames;
-    private Optional<Set<String>> myGenesisOutputNames = Optional.empty();
+    private Set<String> myCompensationRequestNames = null;
+    private Optional<Set<String>> myGenesisOutputNames = null;
 
     @Inject
     public BurningManPresentationService(DaoStateService daoStateService,
