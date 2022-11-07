@@ -65,7 +65,7 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     private static final long DPT_MIN_TX_FEE_RATE = 10;
 
     public static boolean isActivated() {
-        return DevEnv.isDevMode() || new Date().after(ACTIVATION_DATE);
+        return DevEnv.isDevTesting() || new Date().after(ACTIVATION_DATE);
     }
 
 

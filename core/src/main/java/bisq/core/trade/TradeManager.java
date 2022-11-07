@@ -77,6 +77,7 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.TorNetworkNode;
 
 import bisq.common.ClockWatcher;
+import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
@@ -730,6 +731,9 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         clockWatcher.addListener(new ClockWatcher.Listener() {
             @Override
             public void onSecondTick() {
+                if (DevEnv.isDevTesting()) {
+                    updateTradePeriodState();
+                }
             }
 
             @Override
@@ -744,6 +748,9 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
             if (!trade.isPayoutPublished()) {
                 Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
                 Date halfTradePeriodDate = trade.getHalfTradePeriodDate();
+                if (DevEnv.isDevTesting()) {
+                    trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
+                }
                 if (maxTradePeriodDate != null && halfTradePeriodDate != null) {
                     Date now = new Date();
                     if (now.after(maxTradePeriodDate)) {
