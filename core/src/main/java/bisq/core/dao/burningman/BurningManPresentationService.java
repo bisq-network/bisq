@@ -25,6 +25,8 @@ import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.CompensationProposal;
 import bisq.core.dao.state.model.governance.Proposal;
 
+import bisq.common.app.DevEnv;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -42,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 public class BurningManPresentationService implements DaoStateListener {
     // Burn target gets increased by that amount to give more flexibility.
     // Burn target is calculated from reimbursements + estimated BTC fees - burned amounts.
-    static final long BURN_TARGET_BOOST_AMOUNT = 10000000;
+    static final long BURN_TARGET_BOOST_AMOUNT = DevEnv.isDevTesting() ? 1000000 : 10000000;
 
     private final DaoStateService daoStateService;
     private final MyProposalListService myProposalListService;

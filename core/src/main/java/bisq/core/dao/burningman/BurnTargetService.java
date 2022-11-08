@@ -107,7 +107,6 @@ class BurnTargetService {
         // Distributed BurningMen
         long burnedAmountFromBurningMen = getBurnedAmountFromBurningMen(burningManCandidates, chainHeight, fromBlock);
 
-
         long burnTarget = accumulatedReimbursements
                 + accumulatedEstimatedBtcTradeFees
                 - burnedAmountFromLegacyBurningManDPT
