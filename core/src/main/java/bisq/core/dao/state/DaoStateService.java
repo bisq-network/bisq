@@ -223,6 +223,10 @@ public class DaoStateService implements DaoSetupService {
         return previous;
     }
 
+    public Cycle getCycleAtIndex(int index) {
+        return getCycles().get(index);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Block
