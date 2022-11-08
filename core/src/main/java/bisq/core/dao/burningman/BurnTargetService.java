@@ -17,8 +17,8 @@
 
 package bisq.core.dao.burningman;
 
+import bisq.core.dao.CyclesInDaoStateService;
 import bisq.core.dao.governance.param.Param;
-import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 import bisq.core.dao.state.DaoStateService;
@@ -50,26 +50,27 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 class BurnTargetService {
     // Number of cycles for accumulating reimbursement amounts. Used for the burn target.
-    private static final int NUM_MONTHS_BURN_TARGET = 12;
-    private static final int NUM_MONTHS_AVERAGE_DISTRIBUTION = 3;
+    private static final int NUM_CYCLES_BURN_TARGET = 12;
+    private static final int NUM_CYCLES_AVERAGE_DISTRIBUTION = 3;
 
     // Default value for the estimated BTC trade fees per month as BSQ sat value (100 sat = 1 BSQ).
     // Default is roughly average of last 12 months at Nov 2022.
     // Can be changed with DAO parameter voting.
-    private static final long DEFAULT_ESTIMATED_BTC_FEES = DevEnv.isDevTesting() ? 100000 : 6200000;
+    private static final long DEFAULT_ESTIMATED_BTC_TRADE_FEE_REVENUE_PER_CYCLE = DevEnv.isDevTesting() ? 100000 : 6200000;
 
     private final DaoStateService daoStateService;
-    private final CycleService cycleService;
+    private final CyclesInDaoStateService cyclesInDaoStateService;
     private final ProposalService proposalService;
 
     @Inject
     public BurnTargetService(DaoStateService daoStateService,
-                             CycleService cycleService,
+                             CyclesInDaoStateService cyclesInDaoStateService,
                              ProposalService proposalService) {
         this.daoStateService = daoStateService;
-        this.cycleService = cycleService;
+        this.cyclesInDaoStateService = cyclesInDaoStateService;
         this.proposalService = proposalService;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
@@ -84,7 +85,7 @@ class BurnTargetService {
                             int issuanceHeight = issuance.getChainHeight();
                             long issuanceAmount = issuance.getAmount();
                             long issuanceDate = daoStateService.getBlockTime(issuanceHeight);
-                            int cycleIndex = getCycleIndex(issuanceHeight);
+                            int cycleIndex = cyclesInDaoStateService.getCycleIndexAtChainHeight(issuanceHeight);
                             reimbursements.add(new ReimbursementModel(
                                     issuanceAmount,
                                     issuanceHeight,
@@ -95,7 +96,7 @@ class BurnTargetService {
     }
 
     long getBurnTarget(int chainHeight, Collection<BurningManCandidate> burningManCandidates) {
-        int fromBlock = chainHeight - NUM_MONTHS_BURN_TARGET * BurningManService.MONTH_AS_BLOCKS;
+        int fromBlock = cyclesInDaoStateService.getHeightOfFirstBlockOfPastCycle(chainHeight, NUM_CYCLES_BURN_TARGET);
         long accumulatedReimbursements = getAccumulatedReimbursements(chainHeight, fromBlock);
         long accumulatedEstimatedBtcTradeFees = getAccumulatedEstimatedBtcTradeFees(chainHeight, fromBlock);
 
@@ -129,10 +130,10 @@ class BurnTargetService {
     }
 
     long getAverageDistributionPerCycle(int chainHeight) {
-        int fromBlock = chainHeight - NUM_MONTHS_AVERAGE_DISTRIBUTION * BurningManService.MONTH_AS_BLOCKS;
+        int fromBlock = cyclesInDaoStateService.getHeightOfFirstBlockOfPastCycle(chainHeight, NUM_CYCLES_AVERAGE_DISTRIBUTION);
         long reimbursements = getAccumulatedReimbursements(chainHeight, fromBlock);
         long btcTradeFees = getAccumulatedEstimatedBtcTradeFees(chainHeight, fromBlock);
-        return Math.round((reimbursements + btcTradeFees) / (double) NUM_MONTHS_AVERAGE_DISTRIBUTION);
+        return Math.round((reimbursements + btcTradeFees) / (double) NUM_CYCLES_AVERAGE_DISTRIBUTION);
     }
 
 
@@ -146,10 +147,6 @@ class BurnTargetService {
                 .filter(proposal -> issuance.getTxId().equals(proposal.getTxId()))
                 .filter(proposal -> proposal instanceof ReimbursementProposal)
                 .map(proposal -> (ReimbursementProposal) proposal);
-    }
-
-    private int getCycleIndex(int height) {
-        return daoStateService.getCycle(height).map(cycleService::getCycleIndex).orElse(0);
     }
 
     private long getAccumulatedReimbursements(int chainHeight, int fromBlock) {
@@ -170,7 +167,7 @@ class BurnTargetService {
     private long getBtcTradeFeeFromParam(Cycle cycle) {
         int value = daoStateService.getParamValueAsBlock(Param.LOCK_TIME_TRADE_PAYOUT, cycle.getHeightOfFirstBlock());
         // Ignore default value (4320)
-        return value != 4320 ? value : DEFAULT_ESTIMATED_BTC_FEES;
+        return value != 4320 ? value : DEFAULT_ESTIMATED_BTC_TRADE_FEE_REVENUE_PER_CYCLE;
     }
 
     private Set<Tx> getProofOfBurnTxs(int chainHeight, int fromBlock) {
