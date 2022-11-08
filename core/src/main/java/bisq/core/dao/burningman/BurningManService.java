@@ -17,8 +17,8 @@
 
 package bisq.core.dao.burningman;
 
+import bisq.core.dao.CyclesInDaoStateService;
 import bisq.core.dao.governance.param.Param;
-import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.governance.proofofburn.ProofOfBurnConsensus;
 import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
@@ -31,8 +31,6 @@ import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
 
 import bisq.network.p2p.storage.P2PDataStorage;
-
-import bisq.common.app.DevEnv;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -60,10 +58,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 class BurningManService {
-    private static final int DAY_AS_BLOCKS = 144;
-    static final int MONTH_AS_BLOCKS = DevEnv.isDevTesting() ? 13 : 30 * DAY_AS_BLOCKS; // Ignore 31 days months, as the block time is anyway not exact.
-    static final int YEAR_AS_BLOCKS = 12 * MONTH_AS_BLOCKS;
-
     // Parameters
     // Cannot be changed after release as it would break trade protocol verification of DPT receivers.
 
@@ -74,11 +68,11 @@ class BurningManService {
     // Factor for weighting the genesis output amounts.
     private static final double GENESIS_OUTPUT_AMOUNT_FACTOR = 0.05;
 
-    // The max. age in blocks for the decay function used for compensation request amounts.
-    private static final int MAX_COMP_REQUEST_AGE = 2 * YEAR_AS_BLOCKS;
+    // The number of cycles we go back for the decay function used for compensation request amounts.
+    private static final int NUM_CYCLES_COMP_REQUEST_DECAY = 24;
 
-    // The max. age in blocks for the decay function used for burned amounts.
-    private static final int MAX_BURN_AMOUNT_AGE = YEAR_AS_BLOCKS;
+    // The number of cycles we go back for the decay function used for burned amounts.
+    private static final int NUM_CYCLES_BURN_AMOUNT_DECAY = 12;
 
     // Factor for boosting the issuance share (issuance is compensation requests + genesis output).
     // This will be used for increasing the allowed burn amount. The factor gives more flexibility
@@ -89,15 +83,15 @@ class BurningManService {
 
 
     private final DaoStateService daoStateService;
-    private final CycleService cycleService;
+    private final CyclesInDaoStateService cyclesInDaoStateService;
     private final ProposalService proposalService;
 
     @Inject
     public BurningManService(DaoStateService daoStateService,
-                             CycleService cycleService,
+                             CyclesInDaoStateService cyclesInDaoStateService,
                              ProposalService proposalService) {
         this.daoStateService = daoStateService;
-        this.cycleService = cycleService;
+        this.cyclesInDaoStateService = cyclesInDaoStateService;
         this.proposalService = proposalService;
     }
 
@@ -126,7 +120,7 @@ class BurningManService {
                                         .ifPresent(address -> {
                                             int issuanceHeight = issuance.getChainHeight();
                                             long issuanceAmount = getIssuanceAmountForCompensationRequest(issuance);
-                                            int cycleIndex = getCycleIndex(issuanceHeight);
+                                            int cycleIndex = cyclesInDaoStateService.getCycleIndexAtChainHeight(issuanceHeight);
                                             if (isValidReimbursement(name, cycleIndex, issuanceAmount)) {
                                                 long decayedIssuanceAmount = getDecayedCompensationAmount(issuanceAmount, issuanceHeight, chainHeight);
                                                 long issuanceDate = daoStateService.getBlockTime(issuanceHeight);
@@ -232,11 +226,6 @@ class BurningManService {
         }
     }
 
-    private int getCycleIndex(int height) {
-        return daoStateService.getCycle(height).map(cycleService::getCycleIndex).orElse(0);
-    }
-
-
     private boolean isValidReimbursement(String name, int cycleIndex, long issuanceAmount) {
         // Up to cycle 15 the RefundAgent made reimbursement requests as compensation requests. We filter out those entries.
         // As it is mixed with RefundAgents real compensation requests we take out all above 3500 BSQ.
@@ -245,7 +234,8 @@ class BurningManService {
     }
 
     private long getDecayedCompensationAmount(long amount, int issuanceHeight, int chainHeight) {
-        return getDecayedAmount(amount, issuanceHeight, chainHeight, chainHeight - MAX_COMP_REQUEST_AGE, 0);
+        int fromHeight = cyclesInDaoStateService.getHeightOfFirstBlockOfPastCycle(chainHeight, NUM_CYCLES_COMP_REQUEST_DECAY);
+        return getDecayedAmount(amount, issuanceHeight, chainHeight, fromHeight, 0);
     }
 
     // Linear decay between currentBlockHeight (100% of amount) and issuanceHeight (firstBlockOffset % of amount)
@@ -283,7 +273,7 @@ class BurningManService {
                     long burnOutputAmount = optionalTx.map(Tx::getBurntBsq).orElse(0L);
                     long decayedBurnOutputAmount = getDecayedBurnedAmount(burnOutputAmount, burnOutputHeight, chainHeight);
                     long date = optionalTx.map(BaseTx::getTime).orElse(0L);
-                    int cycleIndex = getCycleIndex(burnOutputHeight);
+                    int cycleIndex = cyclesInDaoStateService.getCycleIndexAtChainHeight(burnOutputHeight);
                     candidate.addBurnOutputModel(new BurnOutputModel(burnOutputAmount,
                             decayedBurnOutputAmount,
                             burnOutputHeight,
@@ -306,10 +296,11 @@ class BurningManService {
     }
 
     private long getDecayedBurnedAmount(long amount, int issuanceHeight, int chainHeight) {
+        int fromHeight = cyclesInDaoStateService.getHeightOfFirstBlockOfPastCycle(chainHeight, NUM_CYCLES_BURN_AMOUNT_DECAY);
         return getDecayedAmount(amount,
                 issuanceHeight,
                 chainHeight,
-                chainHeight - MAX_BURN_AMOUNT_AGE,
+                fromHeight,
                 0);
     }
 
