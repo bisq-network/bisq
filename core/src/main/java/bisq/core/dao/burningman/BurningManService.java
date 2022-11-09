@@ -234,7 +234,7 @@ class BurningManService {
     }
 
     private long getDecayedCompensationAmount(long amount, int issuanceHeight, int chainHeight) {
-        int fromHeight = cyclesInDaoStateService.getHeightOfFirstBlockOfPastCycle(chainHeight, NUM_CYCLES_COMP_REQUEST_DECAY);
+        int fromHeight = cyclesInDaoStateService.getChainHeightOfPastCycle(chainHeight, NUM_CYCLES_COMP_REQUEST_DECAY);
         return getDecayedAmount(amount, issuanceHeight, chainHeight, fromHeight, 0);
     }
 
@@ -296,7 +296,7 @@ class BurningManService {
     }
 
     private long getDecayedBurnedAmount(long amount, int issuanceHeight, int chainHeight) {
-        int fromHeight = cyclesInDaoStateService.getHeightOfFirstBlockOfPastCycle(chainHeight, NUM_CYCLES_BURN_AMOUNT_DECAY);
+        int fromHeight = cyclesInDaoStateService.getChainHeightOfPastCycle(chainHeight, NUM_CYCLES_BURN_AMOUNT_DECAY);
         return getDecayedAmount(amount,
                 issuanceHeight,
                 chainHeight,

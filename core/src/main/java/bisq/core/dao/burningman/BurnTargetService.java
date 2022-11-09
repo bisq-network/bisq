@@ -96,17 +96,21 @@ class BurnTargetService {
     }
 
     long getBurnTarget(int chainHeight, Collection<BurningManCandidate> burningManCandidates) {
-        int fromBlock = cyclesInDaoStateService.getHeightOfFirstBlockOfPastCycle(chainHeight, NUM_CYCLES_BURN_TARGET);
-        long accumulatedReimbursements = getAccumulatedReimbursements(chainHeight, fromBlock);
-        long accumulatedEstimatedBtcTradeFees = getAccumulatedEstimatedBtcTradeFees(chainHeight, fromBlock);
+        // Reimbursements are taken into account at result vote block
+        int chainHeightOfPastCycle = cyclesInDaoStateService.getChainHeightOfPastCycle(chainHeight, NUM_CYCLES_BURN_TARGET);
+        long accumulatedReimbursements = getAccumulatedReimbursements(chainHeight, chainHeightOfPastCycle);
+
+        // Param changes are taken into account at first block at next cycle after voting
+        int heightOfFirstBlockOfPastCycle = cyclesInDaoStateService.getHeightOfFirstBlockOfPastCycle(chainHeight, NUM_CYCLES_BURN_TARGET - 1);
+        long accumulatedEstimatedBtcTradeFees = getAccumulatedEstimatedBtcTradeFees(chainHeight, heightOfFirstBlockOfPastCycle);
 
         // Legacy BurningMan
-        Set<Tx> proofOfBurnTxs = getProofOfBurnTxs(chainHeight, fromBlock);
-        long burnedAmountFromLegacyBurningManDPT = getBurnedAmountFromLegacyBurningManDPT(proofOfBurnTxs, chainHeight, fromBlock);
-        long burnedAmountFromLegacyBurningMansBtcFees = getBurnedAmountFromLegacyBurningMansBtcFees(proofOfBurnTxs, chainHeight, fromBlock);
+        Set<Tx> proofOfBurnTxs = getProofOfBurnTxs(chainHeight, chainHeightOfPastCycle);
+        long burnedAmountFromLegacyBurningManDPT = getBurnedAmountFromLegacyBurningManDPT(proofOfBurnTxs, chainHeight, chainHeightOfPastCycle);
+        long burnedAmountFromLegacyBurningMansBtcFees = getBurnedAmountFromLegacyBurningMansBtcFees(proofOfBurnTxs, chainHeight, chainHeightOfPastCycle);
 
         // Distributed BurningMen
-        long burnedAmountFromBurningMen = getBurnedAmountFromBurningMen(burningManCandidates, chainHeight, fromBlock);
+        long burnedAmountFromBurningMen = getBurnedAmountFromBurningMen(burningManCandidates, chainHeight, chainHeightOfPastCycle);
 
         long burnTarget = accumulatedReimbursements
                 + accumulatedEstimatedBtcTradeFees
@@ -130,9 +134,14 @@ class BurnTargetService {
     }
 
     long getAverageDistributionPerCycle(int chainHeight) {
-        int fromBlock = cyclesInDaoStateService.getHeightOfFirstBlockOfPastCycle(chainHeight, NUM_CYCLES_AVERAGE_DISTRIBUTION);
-        long reimbursements = getAccumulatedReimbursements(chainHeight, fromBlock);
-        long btcTradeFees = getAccumulatedEstimatedBtcTradeFees(chainHeight, fromBlock);
+        // Reimbursements are taken into account at result vote block
+        int chainHeightOfPastCycle = cyclesInDaoStateService.getChainHeightOfPastCycle(chainHeight, NUM_CYCLES_AVERAGE_DISTRIBUTION);
+        long reimbursements = getAccumulatedReimbursements(chainHeight, chainHeightOfPastCycle);
+
+        // Param changes are taken into account at first block at next cycle after voting
+        int firstBlockOfPastCycle = cyclesInDaoStateService.getHeightOfFirstBlockOfPastCycle(chainHeight, NUM_CYCLES_AVERAGE_DISTRIBUTION - 1);
+        long btcTradeFees = getAccumulatedEstimatedBtcTradeFees(chainHeight, firstBlockOfPastCycle);
+
         return Math.round((reimbursements + btcTradeFees) / (double) NUM_CYCLES_AVERAGE_DISTRIBUTION);
     }
 
@@ -151,11 +160,13 @@ class BurnTargetService {
 
     private long getAccumulatedReimbursements(int chainHeight, int fromBlock) {
         return getReimbursements(chainHeight).stream()
-                .filter(reimbursementModel -> reimbursementModel.getHeight() >= fromBlock)
+                .filter(reimbursementModel -> reimbursementModel.getHeight() > fromBlock)
+                .filter(reimbursementModel -> reimbursementModel.getHeight() <= chainHeight)
                 .mapToLong(ReimbursementModel::getAmount)
                 .sum();
     }
 
+    // The BTC fees are set by parameter and becomes active at first block of the next cycle after voting.
     private long getAccumulatedEstimatedBtcTradeFees(int chainHeight, int fromBlock) {
         return daoStateService.getCycles().stream()
                 .filter(cycle -> cycle.getHeightOfFirstBlock() >= fromBlock)
@@ -172,7 +183,7 @@ class BurnTargetService {
 
     private Set<Tx> getProofOfBurnTxs(int chainHeight, int fromBlock) {
         return daoStateService.getProofOfBurnTxs().stream()
-                .filter(tx -> tx.getBlockHeight() >= fromBlock)
+                .filter(tx -> tx.getBlockHeight() > fromBlock)
                 .filter(tx -> tx.getBlockHeight() <= chainHeight)
                 .collect(Collectors.toSet());
     }
@@ -184,7 +195,7 @@ class BurnTargetService {
         // opReturn data from delayed payout txs when BM traded with the refund agent: 1701e47e5d8030f444c182b5e243871ebbaeadb5e82f
         // opReturn data from delayed payout txs when BM traded with traders who got reimbursed by the DAO: 1701293c488822f98e70e047012f46f5f1647f37deb7
         return proofOfBurnTxs.stream()
-                .filter(tx -> tx.getBlockHeight() >= fromBlock)
+                .filter(tx -> tx.getBlockHeight() > fromBlock)
                 .filter(tx -> tx.getBlockHeight() <= chainHeight)
                 .filter(tx -> {
                     String hash = Hex.encode(tx.getLastTxOutput().getOpReturnData());
@@ -201,7 +212,7 @@ class BurnTargetService {
         // opReturn data from delayed payout txs when BM traded with the refund agent: 1701e47e5d8030f444c182b5e243871ebbaeadb5e82f
         // opReturn data from delayed payout txs when BM traded with traders who got reimbursed by the DAO: 1701293c488822f98e70e047012f46f5f1647f37deb7
         return proofOfBurnTxs.stream()
-                .filter(tx -> tx.getBlockHeight() >= fromBlock)
+                .filter(tx -> tx.getBlockHeight() > fromBlock)
                 .filter(tx -> tx.getBlockHeight() <= chainHeight)
                 .filter(tx -> "1701721206fe6b40777763de1c741f4fd2706d94775d".equals(Hex.encode(tx.getLastTxOutput().getOpReturnData())))
                 .mapToLong(Tx::getBurntBsq)
@@ -213,7 +224,7 @@ class BurnTargetService {
                                                int fromBlock) {
         return burningManCandidates.stream()
                 .map(burningManCandidate -> burningManCandidate.getBurnOutputModels().stream()
-                        .filter(burnOutputModel -> burnOutputModel.getHeight() >= fromBlock)
+                        .filter(burnOutputModel -> burnOutputModel.getHeight() > fromBlock)
                         .filter(burnOutputModel -> burnOutputModel.getHeight() <= chainHeight)
                         .mapToLong(BurnOutputModel::getAmount)
                         .sum())
