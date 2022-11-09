@@ -20,6 +20,7 @@ package bisq.core.dao;
 import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.governance.Cycle;
+import bisq.core.dao.state.model.governance.DaoPhase;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -57,6 +58,33 @@ public class CyclesInDaoStateService {
                 .orElse(-1);
     }
 
+    public int getHeightOfFirstBlockOfResultPhaseOfPastCycle(int chainHeight, int numPastCycles) {
+        return findCycleAtHeight(chainHeight)
+                .map(cycle -> {
+                    int cycleIndex = getIndexForCycle(cycle);
+                    int targetIndex = Math.max(0, (cycleIndex - numPastCycles));
+                    return getCycleAtIndex(targetIndex);
+                })
+                .map(cycle -> cycle.getFirstBlockOfPhase(DaoPhase.Phase.RESULT))
+                .orElse(daoStateService.getGenesisBlockHeight());
+    }
+
+    /**
+     *
+     * @param chainHeight       Chain height from where we start
+     * @param numPastCycles     Number of past cycles
+     * @return The height at the same offset from the first block of the cycle as in the current cycle minus the past cycles.
+     */
+    public int getChainHeightOfPastCycle(int chainHeight, int numPastCycles) {
+        return getHeightOfFirstBlockOfPastCycle(chainHeight, numPastCycles) + getOffsetFromFirstBlockInCycle(chainHeight);
+    }
+
+    public Integer getOffsetFromFirstBlockInCycle(int chainHeight) {
+        return daoStateService.getCycle(chainHeight)
+                .map(c -> chainHeight - c.getHeightOfFirstBlock())
+                .orElse(0);
+    }
+
     public int getHeightOfFirstBlockOfPastCycle(int chainHeight, int numPastCycles) {
         return findCycleAtHeight(chainHeight)
                 .map(cycle -> {
@@ -68,7 +96,7 @@ public class CyclesInDaoStateService {
                 .orElse(daoStateService.getGenesisBlockHeight());
     }
 
-    private Cycle getCycleAtIndex(int index) {
+    public Cycle getCycleAtIndex(int index) {
         int cycleIndex = Math.max(0, index);
         return Optional.ofNullable(cyclesByIndex.get(cycleIndex))
                 .orElseGet(() -> {
@@ -78,7 +106,7 @@ public class CyclesInDaoStateService {
                 });
     }
 
-    private int getIndexForCycle(Cycle cycle) {
+    public int getIndexForCycle(Cycle cycle) {
         return Optional.ofNullable(indexByCycle.get(cycle))
                 .orElseGet(() -> {
                     int index = cycleService.getCycleIndex(cycle);
@@ -87,7 +115,7 @@ public class CyclesInDaoStateService {
                 });
     }
 
-    private Optional<Cycle> findCycleAtHeight(int chainHeight) {
+    public Optional<Cycle> findCycleAtHeight(int chainHeight) {
         return Optional.ofNullable(cyclesByHeight.get(chainHeight))
                 .or(() -> {
                     Optional<Cycle> optionalCycle = daoStateService.getCycle(chainHeight);
