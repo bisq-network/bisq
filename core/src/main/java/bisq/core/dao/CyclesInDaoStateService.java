@@ -61,7 +61,7 @@ public class CyclesInDaoStateService {
         return findCycleAtHeight(chainHeight)
                 .map(cycle -> {
                     int cycleIndex = getIndexForCycle(cycle);
-                    int targetIndex = cycleIndex - numPastCycles;
+                    int targetIndex = Math.max(0, (cycleIndex - numPastCycles));
                     return getCycleAtIndex(targetIndex);
                 })
                 .map(Cycle::getHeightOfFirstBlock)
@@ -69,10 +69,11 @@ public class CyclesInDaoStateService {
     }
 
     private Cycle getCycleAtIndex(int index) {
-        return Optional.ofNullable(cyclesByIndex.get(index))
+        int cycleIndex = Math.max(0, index);
+        return Optional.ofNullable(cyclesByIndex.get(cycleIndex))
                 .orElseGet(() -> {
-                    Cycle cycle = daoStateService.getCycleAtIndex(index);
-                    cyclesByIndex.put(index, cycle);
+                    Cycle cycle = daoStateService.getCycleAtIndex(cycleIndex);
+                    cyclesByIndex.put(cycleIndex, cycle);
                     return cycle;
                 });
     }
