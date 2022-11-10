@@ -96,7 +96,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
     private final BsqWalletService bsqWalletService;
     private final BsqFormatter bsqFormatter;
     private final CoinFormatter btcFormatter;
-    private final BsqValidator burnAmountValidator;
+    private final BsqValidator bsqValidator;
 
     private InputTextField amountInputTextField, burningmenFilterField;
     private ComboBox<BurningmenListItem> contributorComboBox;
@@ -147,7 +147,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         this.bsqWalletService = bsqWalletService;
         this.bsqFormatter = bsqFormatter;
         this.btcFormatter = btcFormatter;
-        this.burnAmountValidator = bsqValidator;
+        this.bsqValidator = bsqValidator;
 
         amountFocusOutListener = (observable, oldValue, newValue) -> {
             if (!newValue) {
@@ -187,11 +187,12 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
 
         contributorsListener = (observable, oldValue, newValue) -> {
             if (newValue != null) {
-                bsqValidator.setMaxValue(Coin.valueOf(newValue.getAllowedBurnAmount()));
+                bsqValidator.setMaxValue(Coin.valueOf(newValue.getMaxBurnTarget()));
                 amountInputTextField.clear();
                 amountInputTextField.resetValidation();
-                amountInputTextField.setPromptText(Res.get("dao.burningmen.amount.prompt.max",
-                        bsqFormatter.formatCoinWithCode(newValue.getAllowedBurnAmount())));
+                String burnTarget = bsqFormatter.formatCoin(newValue.getBurnTarget());
+                String maxBurnTarget = bsqFormatter.formatCoin(newValue.getMaxBurnTarget());
+                amountInputTextField.setPromptText(Res.get("dao.burningmen.amount.prompt.max", burnTarget, maxBurnTarget));
                 updateButtonState();
             }
         };
@@ -222,7 +223,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         TitledGroupBg targetTitledGroupBg = addTitledGroupBg(gridPane, gridRow, 2, Res.get("dao.burningmen.target.header"));
         GridPane.setColumnSpan(targetTitledGroupBg, 2);
         burnTargetField = addCompactTopLabelTextField(gridPane, ++gridRow,
-                Res.get("dao.burningmen.burnTarget"), "", Layout.FLOATING_LABEL_DISTANCE).second;
+                Res.get("dao.burningmen.burnTarget.label"), "", Layout.FLOATING_LABEL_DISTANCE).second;
         Tuple3<Label, TextField, VBox> currentBlockHeightTuple = addCompactTopLabelTextField(gridPane, gridRow,
                 Res.get("dao.burningmen.expectedRevenue"), "", Layout.FLOATING_LABEL_DISTANCE);
         expectedRevenueField = currentBlockHeightTuple.second;
@@ -369,7 +370,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
 
         showOnlyActiveBurningmenToggle.setOnAction(e -> updateBurningmenPredicate());
 
-        amountInputTextField.setValidator(burnAmountValidator);
+        amountInputTextField.setValidator(bsqValidator);
 
         if (daoFacade.isParseBlockChainComplete()) {
             updateData();
@@ -430,7 +431,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
     }
 
     private void onUpdateAvailableBalance(Coin availableBalance) {
-        burnAmountValidator.setAvailableBalance(availableBalance);
+        bsqValidator.setAvailableBalance(availableBalance);
         updateButtonState();
     }
 
@@ -448,7 +449,10 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
                 .collect(Collectors.toList()));
 
         expectedRevenueField.setText(bsqFormatter.formatCoinWithCode(burningManPresentationService.getAverageDistributionPerCycle()));
-        burnTargetField.setText(bsqFormatter.formatCoinWithCode(burningManPresentationService.getBurnTarget()));
+
+        String burnTarget = bsqFormatter.formatCoin(burningManPresentationService.getBurnTarget());
+        String boostedBurnTarget = bsqFormatter.formatCoin(burningManPresentationService.getBoostedBurnTarget());
+        burnTargetField.setText(Res.get("dao.burningmen.burnTarget.fromTo", burnTarget, boostedBurnTarget));
 
         if (daoFacade.isParseBlockChainComplete()) {
             Set<String> myContributorNames = burningManPresentationService.getMyCompensationRequestNames();
@@ -469,7 +473,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         burningmenFilteredList.setPredicate(burningmenListItem -> {
             boolean showOnlyActiveBurningmen = showOnlyActiveBurningmenToggle.isSelected();
             String filterText = burningmenFilterField.getText();
-            boolean activeBurnerOrShowAll = !showOnlyActiveBurningmen || burningmenListItem.getCappedBurnOutputShare() > 0;
+            boolean activeBurnerOrShowAll = !showOnlyActiveBurningmen || burningmenListItem.getCappedBurnAmountShare() > 0;
             if (filterText == null || filterText.trim().isEmpty()) {
                 return activeBurnerOrShowAll;
             } else {
@@ -492,7 +496,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
     }
 
     private void updateButtonState() {
-        boolean isValid = burnAmountValidator.validate(amountInputTextField.getText()).isValid &&
+        boolean isValid = bsqValidator.validate(amountInputTextField.getText()).isValid &&
                 contributorComboBox.getSelectionModel().getSelectedItem() != null;
         burnButton.setDisable(!isValid);
     }
@@ -547,8 +551,8 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         burningmenTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(e -> e.getName().toLowerCase()));
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.allowedBurnAmount"));
-        column.setMinWidth(110);
+        column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.burnTarget"));
+        column.setMinWidth(200);
         column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
@@ -560,7 +564,9 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
                     public void updateItem(final BurningmenListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            setText(item.getAllowedBurnAmountAsBsq());
+                            setText(Res.get("dao.burningmen.burnTarget.fromTo",
+                                    item.getBurnTargetAsBsq(),
+                                    item.getMaxBurnTargetAsBsq()));
                         } else
                             setText("");
                     }
@@ -568,7 +574,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         burningmenTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(BurningmenListItem::getAllowedBurnAmount));
+        column.setComparator(Comparator.comparing(BurningmenListItem::getBurnTarget));
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.expectedRevenue"));
         column.setMinWidth(140);
@@ -594,8 +600,8 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         column.setComparator(Comparator.comparing(BurningmenListItem::getExpectedRevenue));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.effectiveBurnOutputShare"));
-        column.setMinWidth(110);
+        column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.burnAmountShare.label"));
+        column.setMinWidth(220);
         column.setMaxWidth(column.getMinWidth());
         column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
@@ -608,7 +614,13 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
                     public void updateItem(final BurningmenListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            setText(item.getCappedBurnOutputShareAsString());
+                            if (item.getBurnAmountShare() != item.getCappedBurnAmountShare()) {
+                                setText(Res.get("dao.burningmen.table.burnAmountShare.capped",
+                                        item.getCappedBurnAmountShareAsString(),
+                                        item.getBurnAmountShareAsString()));
+                            } else {
+                                setText(item.getBurnAmountShareAsString());
+                            }
                         } else
                             setText("");
                     }
@@ -617,7 +629,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         });
         burningmenTableView.getColumns().add(column);
         column.setSortType(TableColumn.SortType.DESCENDING);
-        column.setComparator(Comparator.comparing(BurningmenListItem::getCappedBurnOutputShare));
+        column.setComparator(Comparator.comparing(BurningmenListItem::getCappedBurnAmountShare));
         burningmenTableView.getSortOrder().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.decayedBurnAmount"));

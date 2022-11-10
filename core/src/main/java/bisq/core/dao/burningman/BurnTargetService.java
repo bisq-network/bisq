@@ -56,7 +56,7 @@ class BurnTargetService {
     // Default value for the estimated BTC trade fees per month as BSQ sat value (100 sat = 1 BSQ).
     // Default is roughly average of last 12 months at Nov 2022.
     // Can be changed with DAO parameter voting.
-    private static final long DEFAULT_ESTIMATED_BTC_TRADE_FEE_REVENUE_PER_CYCLE = DevEnv.isDevTesting() ? 100000 : 6200000;
+    private static final long DEFAULT_ESTIMATED_BTC_TRADE_FEE_REVENUE_PER_CYCLE = DevEnv.isDevTesting() ? 1000000 : 6200000;
 
     private final DaoStateService daoStateService;
     private final CyclesInDaoStateService cyclesInDaoStateService;
@@ -90,7 +90,8 @@ class BurnTargetService {
                                     issuanceAmount,
                                     issuanceHeight,
                                     issuanceDate,
-                                    cycleIndex));
+                                    cycleIndex,
+                                    reimbursementProposal.getTxId()));
                         }));
         return reimbursements;
     }
@@ -227,6 +228,24 @@ class BurnTargetService {
                         .filter(burnOutputModel -> burnOutputModel.getHeight() > fromBlock)
                         .filter(burnOutputModel -> burnOutputModel.getHeight() <= chainHeight)
                         .mapToLong(BurnOutputModel::getAmount)
+                        .sum())
+                .mapToLong(e -> e)
+                .sum();
+    }
+
+    long getAccumulatedDecayedBurnedAmount(Collection<BurningManCandidate> burningManCandidates, int chainHeight) {
+        int fromBlock = cyclesInDaoStateService.getChainHeightOfPastCycle(chainHeight, NUM_CYCLES_BURN_TARGET);
+        return getAccumulatedDecayedBurnedAmount(burningManCandidates, chainHeight, fromBlock);
+    }
+
+    private long getAccumulatedDecayedBurnedAmount(Collection<BurningManCandidate> burningManCandidates,
+                                                   int chainHeight,
+                                                   int fromBlock) {
+        return burningManCandidates.stream()
+                .map(burningManCandidate -> burningManCandidate.getBurnOutputModels().stream()
+                        .filter(burnOutputModel -> burnOutputModel.getHeight() > fromBlock)
+                        .filter(burnOutputModel -> burnOutputModel.getHeight() <= chainHeight)
+                        .mapToLong(BurnOutputModel::getDecayedAmount)
                         .sum())
                 .mapToLong(e -> e)
                 .sum();

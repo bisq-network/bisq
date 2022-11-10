@@ -29,15 +29,18 @@ public final class ReimbursementModel {
     private final int height;
     private final long date;
     private final int cycleIndex;
+    private final String txId;
 
     ReimbursementModel(long amount,
                        int height,
                        long date,
-                       int cycleIndex) {
+                       int cycleIndex,
+                       String txId) {
         this.amount = amount;
         this.height = height;
         this.date = date;
         this.cycleIndex = cycleIndex;
+        this.txId = txId;
     }
 
     @Override
@@ -47,6 +50,7 @@ public final class ReimbursementModel {
                 ",\r\n               height=" + height +
                 ",\r\n               date=" + new Date(date) +
                 ",\r\n               cycleIndex=" + cycleIndex +
+                ",\r\n               txId=" + txId +
                 "\r\n          }";
     }
 }
