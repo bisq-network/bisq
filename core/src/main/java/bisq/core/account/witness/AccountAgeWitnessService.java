@@ -32,6 +32,7 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.support.dispute.Dispute;
 import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.arbitration.TraderDataItem;
+import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
@@ -143,6 +144,7 @@ public class AccountAgeWitnessService {
     private final ChargeBackRisk chargeBackRisk;
     private final AccountAgeWitnessStorageService accountAgeWitnessStorageService;
     private final Clock clock;
+    private final ClosedTradableManager closedTradableManager;
     private final FilterManager filterManager;
     @Getter
     private final AccountAgeWitnessUtils accountAgeWitnessUtils;
@@ -169,6 +171,7 @@ public class AccountAgeWitnessService {
                                     AccountAgeWitnessStorageService accountAgeWitnessStorageService,
                                     AppendOnlyDataStoreService appendOnlyDataStoreService,
                                     Clock clock,
+                                    ClosedTradableManager closedTradableManager,
                                     FilterManager filterManager) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
@@ -177,6 +180,7 @@ public class AccountAgeWitnessService {
         this.chargeBackRisk = chargeBackRisk;
         this.accountAgeWitnessStorageService = accountAgeWitnessStorageService;
         this.clock = clock;
+        this.closedTradableManager = closedTradableManager;
         this.filterManager = filterManager;
 
         accountAgeWitnessUtils = new AccountAgeWitnessUtils(
@@ -514,6 +518,10 @@ public class AccountAgeWitnessService {
 
         AccountAgeWitness accountAgeWitness = getMyWitness(paymentAccount.getPaymentAccountPayload());
         Coin maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode);
+        if (closedTradableManager.getClosedTrades().size() < 1) {
+            // GH proposal #391 Do not allow new traders to trade higher amounts
+            maxTradeLimit = paymentAccount.getPaymentMethod().getFirstTradeMaxLimit();
+        }
         if (hasTradeLimitException(accountAgeWitness)) {
             return maxTradeLimit.value;
         }

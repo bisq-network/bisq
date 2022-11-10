@@ -376,6 +376,10 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
                 .findFirst();
     }
 
+    public Coin getFirstTradeMaxLimit() {
+        return DEFAULT_TRADE_LIMIT_MID_RISK;
+    }
+
     public Coin getMaxTradeLimitAsCoin(String currencyCode) {
         // Hack for SF as the smallest unit is 1 SF ;-( and price is about 3 BTC!
         if (currencyCode.equals("SF"))
