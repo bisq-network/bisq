@@ -63,11 +63,12 @@ public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
             if (DelayedPayoutTxReceiverService.isActivated()) {
                 long inputAmount = depositTx.getOutput(0).getValue().value;
                 long tradeTxFeeAsLong = trade.getTradeTxFeeAsLong();
+                int selectionHeight = processModel.getBurningManSelectionHeight();
                 List<Tuple2<Long, String>> delayedPayoutTxReceivers = processModel.getDelayedPayoutTxReceiverService().getReceivers(
-                        processModel.getBurningManSelectionHeight(),
+                        selectionHeight,
                         inputAmount,
                         tradeTxFeeAsLong);
-
+                log.info("Verify delayedPayoutTx using selectionHeight {} and receivers {}", selectionHeight, delayedPayoutTxReceivers);
                 long lockTime = trade.getLockTime();
                 Transaction buyersDelayedPayoutTx = processModel.getTradeWalletService().createDelayedUnsignedPayoutTx(
                         depositTx,
