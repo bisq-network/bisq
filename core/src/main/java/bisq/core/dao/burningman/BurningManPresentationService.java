@@ -131,37 +131,37 @@ public class BurningManPresentationService implements DaoStateListener {
 
     public Tuple2<Long, Long> getCandidateBurnTarget(BurningManCandidate burningManCandidate) {
         long burnTarget = getBurnTarget();
-        long boostedBurnAmount = burnTarget + BURN_TARGET_BOOST_AMOUNT;
-        double issuanceShare = burningManCandidate.getCompensationShare();
-        double boostedIssuanceShare = burningManCandidate.getBoostedCompensationShare();
-        long totalBurnedAmount = burnTargetService.getAccumulatedDecayedBurnedAmount(getBurningManCandidatesByName().values(), currentChainHeight);
+        double compensationShare = burningManCandidate.getCompensationShare();
+        if (burnTarget == 0 || compensationShare == 0) {
+            return new Tuple2<>(0L, 0L);
+        }
 
-        long lowerBaseTarget = Math.round(burnTarget * issuanceShare);
-        long upperBaseTarget = Math.round(boostedBurnAmount * boostedIssuanceShare);
+        double maxCompensationShare = Math.min(BurningManService.MAX_BURN_SHARE, compensationShare);
+        long lowerBaseTarget = Math.round(burnTarget * maxCompensationShare);
+        long boostedBurnAmount = burnTarget + BURN_TARGET_BOOST_AMOUNT;
+        double maxBoostedCompensationShare = Math.min(BurningManService.MAX_BURN_SHARE, compensationShare * BurningManService.ISSUANCE_BOOST_FACTOR);
+        long upperBaseTarget = Math.round(boostedBurnAmount * maxBoostedCompensationShare);
+        long totalBurnedAmount = burnTargetService.getAccumulatedDecayedBurnedAmount(getBurningManCandidatesByName().values(), currentChainHeight);
         if (totalBurnedAmount == 0) {
             return new Tuple2<>(lowerBaseTarget, upperBaseTarget);
         }
 
-        double cappedBurnAmountShare = burningManCandidate.getCappedBurnAmountShare();
+        double burnAmountShare = burningManCandidate.getBurnAmountShare();
         long candidatesBurnAmount = burningManCandidate.getAccumulatedDecayedBurnAmount();
+        if (burnAmountShare < maxBoostedCompensationShare) {
+            long myBurnAmount = getMissingAmountToReachTargetShare(totalBurnedAmount, candidatesBurnAmount, maxCompensationShare);
+            long myMaxBurnAmount = getMissingAmountToReachTargetShare(totalBurnedAmount, candidatesBurnAmount, maxBoostedCompensationShare);
 
-        if (issuanceShare > 0 && boostedBurnAmount > 0 && cappedBurnAmountShare < boostedIssuanceShare) {
-            long myBurnAmount = getMissingAmountToReachTargetShare(totalBurnedAmount, candidatesBurnAmount, issuanceShare);
-            long myMaxBurnAmount = getMissingAmountToReachTargetShare(totalBurnedAmount, candidatesBurnAmount, boostedIssuanceShare);
-
-            // We limit to max burn amount
+            // We limit to base targets
             myBurnAmount = Math.min(myBurnAmount, lowerBaseTarget);
             myMaxBurnAmount = Math.min(myMaxBurnAmount, upperBaseTarget);
 
             // If below dust we set value to 0
             myBurnAmount = myBurnAmount < 546 ? 0 : myBurnAmount;
             myMaxBurnAmount = myMaxBurnAmount < 546 ? 0 : myMaxBurnAmount;
-            if (myBurnAmount < myMaxBurnAmount) {
-                return new Tuple2<>(myMaxBurnAmount, myBurnAmount);
-            } else {
-                return new Tuple2<>(myBurnAmount, myMaxBurnAmount);
-            }
+            return new Tuple2<>(myBurnAmount, myMaxBurnAmount);
         } else {
+            // We have reached out cap so no reason to burn more.
             return new Tuple2<>(0L, 0L);
         }
     }

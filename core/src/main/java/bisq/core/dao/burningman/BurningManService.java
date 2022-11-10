@@ -81,6 +81,12 @@ class BurningManService {
     // even if they would have burned more and had a higher burn share than 20%.
     static final double ISSUANCE_BOOST_FACTOR = 2;
 
+    // The max amount the burn share can reach. This value is derived from the min. security deposit in a trade and
+    // ensures that an attack where a BM would take all sell offers cannot be economically profitable as they would
+    // lose their deposit and cannot gain more than 11% of the DPT payout. As the total amount in a trade is 2 times
+    // that deposit plus the trade amount the limiting factor here is 11% (0.15 / 1.3).
+    static final double MAX_BURN_SHARE = 0.11;
+
 
     private final DaoStateService daoStateService;
     private final CyclesInDaoStateService cyclesInDaoStateService;
