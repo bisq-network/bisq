@@ -29,16 +29,32 @@ import static org.junit.Assert.assertEquals;
 public class DelayedPayoutTxReceiverServiceTest {
     @Test
     public void testGetSnapshotHeight() {
-        assertEquals(120, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 0, 10));
-        assertEquals(120, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 100, 10));
-        assertEquals(120, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 102, 10));
-        assertEquals(120, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 119, 10));
-        assertEquals(120, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 120, 10));
-        assertEquals(120, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 121, 10));
-        assertEquals(120, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 130, 10));
-        assertEquals(120, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 139, 10));
+        // up to genesis + 3* grid we use genesis
+        assertEquals(102, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 0, 10));
+        assertEquals(102, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 100, 10));
+        assertEquals(102, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 102, 10));
+        assertEquals(102, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 119, 10));
+        assertEquals(102, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 120, 10));
+        assertEquals(102, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 121, 10));
+        assertEquals(102, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 130, 10));
+        assertEquals(102, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 131, 10));
+        assertEquals(102, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 132, 10));
+
+        assertEquals(120, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 133, 10));
+        assertEquals(120, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 134, 10));
+
+        assertEquals(130, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 135, 10));
+        assertEquals(130, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 136, 10));
+        assertEquals(130, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 139, 10));
         assertEquals(130, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 140, 10));
         assertEquals(130, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 141, 10));
+
+        assertEquals(140, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 149, 10));
+        assertEquals(140, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 150, 10));
+        assertEquals(140, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 151, 10));
+
+        assertEquals(150, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 159, 10));
+
         assertEquals(990, DelayedPayoutTxReceiverService.getSnapshotHeight(102, 1000, 10));
     }
 }
