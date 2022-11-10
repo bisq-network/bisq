@@ -76,7 +76,11 @@ public class CyclesInDaoStateService {
      * @return The height at the same offset from the first block of the cycle as in the current cycle minus the past cycles.
      */
     public int getChainHeightOfPastCycle(int chainHeight, int numPastCycles) {
-        return getHeightOfFirstBlockOfPastCycle(chainHeight, numPastCycles) + getOffsetFromFirstBlockInCycle(chainHeight);
+        int firstBlockOfPastCycle = getHeightOfFirstBlockOfPastCycle(chainHeight, numPastCycles);
+        if (firstBlockOfPastCycle == daoStateService.getGenesisBlockHeight()) {
+            return firstBlockOfPastCycle;
+        }
+        return firstBlockOfPastCycle + getOffsetFromFirstBlockInCycle(chainHeight);
     }
 
     public Integer getOffsetFromFirstBlockInCycle(int chainHeight) {
@@ -87,12 +91,9 @@ public class CyclesInDaoStateService {
 
     public int getHeightOfFirstBlockOfPastCycle(int chainHeight, int numPastCycles) {
         return findCycleAtHeight(chainHeight)
-                .map(cycle -> {
-                    int cycleIndex = getIndexForCycle(cycle);
-                    int targetIndex = Math.max(0, (cycleIndex - numPastCycles));
-                    return getCycleAtIndex(targetIndex);
-                })
-                .map(Cycle::getHeightOfFirstBlock)
+                .map(cycle -> getIndexForCycle(cycle) - numPastCycles)
+                .filter(targetIndex -> targetIndex > 0)
+                .map(targetIndex -> getCycleAtIndex(targetIndex).getHeightOfFirstBlock())
                 .orElse(daoStateService.getGenesisBlockHeight());
     }
 

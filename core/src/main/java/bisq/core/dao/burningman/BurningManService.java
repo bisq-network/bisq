@@ -79,7 +79,7 @@ class BurningManService {
     // and compensates for those who do not burn. The burn share is capped by that factor as well.
     // E.g. a contributor with 10% issuance share will be able to receive max 20% of the BTC fees or DPT output
     // even if they would have burned more and had a higher burn share than 20%.
-    static final double ISSUANCE_BOOST_FACTOR = 3;
+    static final double ISSUANCE_BOOST_FACTOR = 2;
 
 
     private final DaoStateService daoStateService;
@@ -255,6 +255,10 @@ class BurningManService {
             throw new IllegalArgumentException("amount must not be negative. amount" + amount);
         if (issuanceHeight < 0)
             throw new IllegalArgumentException("issuanceHeight must not be negative. issuanceHeight=" + issuanceHeight);
+
+        if (currentBlockHeight <= firstBlockHeight) {
+            return amount;
+        }
 
         double factor = Math.max(0, (issuanceHeight - firstBlockHeight) / (double) (currentBlockHeight - firstBlockHeight));
         double factorWithOffset = firstBlockOffset + factor * (1 - firstBlockOffset);

@@ -23,6 +23,8 @@ import bisq.core.locale.Res;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 
+import bisq.common.util.Tuple2;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -30,13 +32,13 @@ import lombok.Getter;
 @EqualsAndHashCode
 class BurningmenListItem {
     private final BurningManCandidate burningManCandidate;
-    private final String name, address, cappedBurnOutputShareAsString, compensationShareAsString,
-            accumulatedDecayedBurnAmountAsBsq, allowedBurnAmountAsBsq, accumulatedBurnAmountAsBsq,
+    private final String name, address, burnAmountShareAsString, cappedBurnAmountShareAsString, compensationShareAsString,
+            accumulatedDecayedBurnAmountAsBsq, burnTargetAsBsq, maxBurnTargetAsBsq, accumulatedBurnAmountAsBsq,
             accumulatedDecayedCompensationAmountAsBsq, accumulatedCompensationAmountAsBsq, expectedRevenueAsBsq;
-    private final long allowedBurnAmount, accumulatedDecayedBurnAmount, accumulatedBurnAmount,
+    private final long burnTarget, maxBurnTarget, accumulatedDecayedBurnAmount, accumulatedBurnAmount,
             accumulatedDecayedCompensationAmount, accumulatedCompensationAmount, expectedRevenue;
     private final int numBurnOutputs, numIssuances;
-    private final double cappedBurnOutputShare, compensationShare;
+    private final double cappedBurnAmountShare, burnAmountShare, compensationShare;
 
     BurningmenListItem(BurningManPresentationService burningManPresentationService,
                        String name,
@@ -48,14 +50,19 @@ class BurningmenListItem {
         address = burningManCandidate.getMostRecentAddress().orElse(Res.get("shared.na"));
 
         // Burn
-        allowedBurnAmount = burningManPresentationService.getAllowedBurnAmount(burningManCandidate);
-        allowedBurnAmountAsBsq = bsqFormatter.formatCoinWithCode(allowedBurnAmount);
+        Tuple2<Long, Long> burnTargetTuple = burningManPresentationService.getCandidateBurnTarget(burningManCandidate);
+        burnTarget = burnTargetTuple.first;
+        burnTargetAsBsq = bsqFormatter.formatCoin(burnTarget);
+        maxBurnTarget = burnTargetTuple.second;
+        maxBurnTargetAsBsq = bsqFormatter.formatCoin(maxBurnTarget);
         accumulatedBurnAmount = burningManCandidate.getAccumulatedBurnAmount();
         accumulatedBurnAmountAsBsq = bsqFormatter.formatCoinWithCode(accumulatedBurnAmount);
         accumulatedDecayedBurnAmount = burningManCandidate.getAccumulatedDecayedBurnAmount();
         accumulatedDecayedBurnAmountAsBsq = bsqFormatter.formatCoinWithCode(accumulatedDecayedBurnAmount);
-        cappedBurnOutputShare = burningManCandidate.getCappedBurnAmountShare();
-        cappedBurnOutputShareAsString = FormattingUtils.formatToPercentWithSymbol(cappedBurnOutputShare);
+        burnAmountShare = burningManCandidate.getBurnAmountShare();
+        burnAmountShareAsString = FormattingUtils.formatToPercentWithSymbol(burnAmountShare);
+        cappedBurnAmountShare = burningManCandidate.getCappedBurnAmountShare();
+        cappedBurnAmountShareAsString = FormattingUtils.formatToPercentWithSymbol(cappedBurnAmountShare);
         expectedRevenue = burningManPresentationService.getExpectedRevenue(burningManCandidate);
         expectedRevenueAsBsq = bsqFormatter.formatCoinWithCode(expectedRevenue);
         numBurnOutputs = burningManCandidate.getBurnOutputModels().size();

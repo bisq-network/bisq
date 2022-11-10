@@ -26,9 +26,12 @@ import bisq.core.dao.state.model.governance.CompensationProposal;
 import bisq.core.dao.state.model.governance.Proposal;
 
 import bisq.common.app.DevEnv;
+import bisq.common.util.Tuple2;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,6 +61,7 @@ public class BurningManPresentationService implements DaoStateListener {
     private final Set<ReimbursementModel> reimbursements = new HashSet<>();
     private Optional<Long> averageDistributionPerCycle = Optional.empty();
     private Set<String> myCompensationRequestNames = null;
+    @SuppressWarnings("OptionalAssignedToNull")
     private Optional<Set<String>> myGenesisOutputNames = null;
 
     @Inject
@@ -108,6 +112,10 @@ public class BurningManPresentationService implements DaoStateListener {
         return burnTarget.get();
     }
 
+    public long getBoostedBurnTarget() {
+        return getBurnTarget() + BURN_TARGET_BOOST_AMOUNT;
+    }
+
     public long getAverageDistributionPerCycle() {
         if (averageDistributionPerCycle.isPresent()) {
             return averageDistributionPerCycle.get();
@@ -121,19 +129,49 @@ public class BurningManPresentationService implements DaoStateListener {
         return Math.round(burningManCandidate.getCappedBurnAmountShare() * getAverageDistributionPerCycle());
     }
 
-    public long getAllowedBurnAmount(BurningManCandidate burningManCandidate) {
-        double maxBurnAmount = getBurnTarget() + BURN_TARGET_BOOST_AMOUNT;
+    public Tuple2<Long, Long> getCandidateBurnTarget(BurningManCandidate burningManCandidate) {
+        long burnTarget = getBurnTarget();
+        long boostedBurnAmount = burnTarget + BURN_TARGET_BOOST_AMOUNT;
         double issuanceShare = burningManCandidate.getCompensationShare();
         double boostedIssuanceShare = burningManCandidate.getBoostedCompensationShare();
-        double effectiveBurnOutputShare = burningManCandidate.getCappedBurnAmountShare();
-        if (issuanceShare > 0 && maxBurnAmount > 0 && effectiveBurnOutputShare < boostedIssuanceShare) {
-            // We reduce it with what he had already burned
-            long value = Math.round(boostedIssuanceShare * maxBurnAmount);
-            // If below dust we set value to 0
-            return value < 546 ? 0 : value;
-        } else {
-            return 0;
+        long totalBurnedAmount = burnTargetService.getAccumulatedDecayedBurnedAmount(getBurningManCandidatesByName().values(), currentChainHeight);
+
+        long lowerBaseTarget = Math.round(burnTarget * issuanceShare);
+        long upperBaseTarget = Math.round(boostedBurnAmount * boostedIssuanceShare);
+        if (totalBurnedAmount == 0) {
+            return new Tuple2<>(lowerBaseTarget, upperBaseTarget);
         }
+
+        double cappedBurnAmountShare = burningManCandidate.getCappedBurnAmountShare();
+        long candidatesBurnAmount = burningManCandidate.getAccumulatedDecayedBurnAmount();
+
+        if (issuanceShare > 0 && boostedBurnAmount > 0 && cappedBurnAmountShare < boostedIssuanceShare) {
+            long myBurnAmount = getMissingAmountToReachTargetShare(totalBurnedAmount, candidatesBurnAmount, issuanceShare);
+            long myMaxBurnAmount = getMissingAmountToReachTargetShare(totalBurnedAmount, candidatesBurnAmount, boostedIssuanceShare);
+
+            // We limit to max burn amount
+            myBurnAmount = Math.min(myBurnAmount, lowerBaseTarget);
+            myMaxBurnAmount = Math.min(myMaxBurnAmount, upperBaseTarget);
+
+            // If below dust we set value to 0
+            myBurnAmount = myBurnAmount < 546 ? 0 : myBurnAmount;
+            myMaxBurnAmount = myMaxBurnAmount < 546 ? 0 : myMaxBurnAmount;
+            if (myBurnAmount < myMaxBurnAmount) {
+                return new Tuple2<>(myMaxBurnAmount, myBurnAmount);
+            } else {
+                return new Tuple2<>(myBurnAmount, myMaxBurnAmount);
+            }
+        } else {
+            return new Tuple2<>(0L, 0L);
+        }
+    }
+
+    @VisibleForTesting
+    static long getMissingAmountToReachTargetShare(long total, long myAmount, double myTargetShare) {
+        long others = total - myAmount;
+        double shareTargetOthers = 1 - myTargetShare;
+        double targetAmount = shareTargetOthers > 0 ? myTargetShare / shareTargetOthers * others : 0;
+        return Math.round(targetAmount) - myAmount;
     }
 
     public Set<ReimbursementModel> getReimbursements() {
