@@ -37,12 +37,15 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Used in the trade protocol for creating and verifying the delayed payout transaction.
  * Requires to be deterministic.
  * Changes in the parameters related to the receivers list could break verification of the peers
  * delayed payout transaction in case not both are using the same version.
  */
+@Slf4j
 @Singleton
 public class DelayedPayoutTxReceiverService implements DaoStateListener {
     private static final Date ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.JANUARY, 1);
@@ -167,6 +170,12 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     // Borrowed from DaoStateSnapshotService. We prefer to not reuse to avoid dependency to an unrelated domain.
     @VisibleForTesting
     static int getSnapshotHeight(int genesisHeight, int height, int grid) {
-        return Math.round(Math.max(genesisHeight + 3 * grid, height) / grid) * grid - grid;
+        int minSnapshotHeight = genesisHeight + 3 * grid;
+        if (height > minSnapshotHeight) {
+            int ratio = (int) Math.round(height / (double) grid);
+            return ratio * grid - grid;
+        } else {
+            return genesisHeight;
+        }
     }
 }
