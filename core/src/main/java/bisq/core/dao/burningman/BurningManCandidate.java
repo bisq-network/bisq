@@ -38,7 +38,6 @@ public final class BurningManCandidate {
     private long accumulatedCompensationAmount;
     private long accumulatedDecayedCompensationAmount;
     private double compensationShare;           // Share of accumulated decayed compensation amounts in relation to total issued amounts
-    private double boostedCompensationShare;
     private Optional<String> mostRecentAddress = Optional.empty();
 
     private final List<BurnOutputModel> burnOutputModels = new ArrayList<>();
@@ -82,10 +81,10 @@ public final class BurningManCandidate {
 
     public void calculateShares(double totalDecayedCompensationAmounts, double totalDecayedBurnAmounts) {
         compensationShare = totalDecayedCompensationAmounts > 0 ? accumulatedDecayedCompensationAmount / totalDecayedCompensationAmounts : 0;
-        boostedCompensationShare = compensationShare * BurningManService.ISSUANCE_BOOST_FACTOR;
+        double maxBoostedCompensationShare = Math.min(BurningManService.MAX_BURN_SHARE, compensationShare * BurningManService.ISSUANCE_BOOST_FACTOR);
 
         burnAmountShare = totalDecayedBurnAmounts > 0 ? accumulatedDecayedBurnAmount / totalDecayedBurnAmounts : 0;
-        cappedBurnAmountShare = Math.min(boostedCompensationShare, burnAmountShare);
+        cappedBurnAmountShare = Math.min(maxBoostedCompensationShare, burnAmountShare);
     }
 
     @Override
@@ -95,7 +94,6 @@ public final class BurningManCandidate {
                 ",\r\n     accumulatedCompensationAmount=" + accumulatedCompensationAmount +
                 ",\r\n     accumulatedDecayedCompensationAmount=" + accumulatedDecayedCompensationAmount +
                 ",\r\n     compensationShare=" + compensationShare +
-                ",\r\n     boostedCompensationShare=" + boostedCompensationShare +
                 ",\r\n     mostRecentAddress=" + mostRecentAddress +
                 ",\r\n     burnOutputModels=" + burnOutputModels +
                 ",\r\n     accumulatedBurnAmount=" + accumulatedBurnAmount +
