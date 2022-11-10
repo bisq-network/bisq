@@ -32,6 +32,9 @@ import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Singleton
 public class BtcFeeReceiverService implements DaoStateListener {
     private final BurningManService burningManService;
@@ -72,22 +75,27 @@ public class BtcFeeReceiverService implements DaoStateListener {
             return burningManService.getLegacyBurningManAddress(currentChainHeight);
         }
 
-        // It might be that we do not reach 100% if some entries had a capped effectiveBurnOutputShare.
-        // We ignore that here as there is no risk for abuse. Each entry in the group would have a higher chance in
-        // that case.
-        // effectiveBurnOutputShare is a % value represented as double. Smallest supported value is 0.01% -> 0.0001.
+        // It might be that we do not reach 100% if some entries had a cappedBurnAmountShare.
+        // In that case we fill up the gap to 100% with the legacy BM.
+        // cappedBurnAmountShare is a % value represented as double. Smallest supported value is 0.01% -> 0.0001.
         // By multiplying it with 10000 and using Math.floor we limit the candidate to 0.01%.
-        // Entries with 0 will be ignored in the selection method.
+        // Entries with 0 will be ignored in the selection method, so we do not need to filter them out.
         List<BurningManCandidate> burningManCandidates = new ArrayList<>(burningManCandidatesByName.values());
+        int ceiling = 10000;
         List<Long> amountList = burningManCandidates.stream()
                 .map(BurningManCandidate::getCappedBurnAmountShare)
-                .map(effectiveBurnOutputShare -> (long) Math.floor(effectiveBurnOutputShare * 10000))
+                .map(cappedBurnAmountShare -> (long) Math.floor(cappedBurnAmountShare * ceiling))
                 .collect(Collectors.toList());
-        if (amountList.isEmpty()) {
-            return burningManService.getLegacyBurningManAddress(currentChainHeight);
+        long sum = amountList.stream().mapToLong(e -> e).sum();
+        // If we have not reached the 100% we fill the missing gap with the legacy BM
+        if (sum < ceiling) {
+            amountList.add(ceiling - sum);
         }
+
         int winnerIndex = getRandomIndex(amountList, new Random());
-        if (winnerIndex == -1) {
+        if (winnerIndex == burningManCandidates.size()) {
+            // If we have filled up the missing gap to 100% with the legacy BM we would get an index out of bounds of
+            // the burningManCandidates as we added for the legacy BM an entry at the end.
             return burningManService.getLegacyBurningManAddress(currentChainHeight);
         }
         return burningManCandidates.get(winnerIndex).getMostRecentAddress()
