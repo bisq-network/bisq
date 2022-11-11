@@ -32,7 +32,9 @@ import bisq.desktop.util.validation.BsqValidator;
 import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.burningman.BurningManCandidate;
 import bisq.core.dao.burningman.BurningManPresentationService;
+import bisq.core.dao.burningman.LegacyBurningMan;
 import bisq.core.dao.governance.proofofburn.ProofOfBurnService;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.state.DaoStateListener;
@@ -489,11 +491,13 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
     private void onBurningManSelected(BurningmenListItem burningmenListItem) {
         selectedContributorNameField.setText(burningmenListItem.getName());
         selectedContributorAddressField.setText(burningmenListItem.getAddress());
-        burnOutputsObservableList.setAll(burningmenListItem.getBurningManCandidate().getBurnOutputModels().stream()
-                .map(burnOutputModel -> new BurnOutputListItem(burnOutputModel, bsqFormatter))
+        BurningManCandidate burningManCandidate = burningmenListItem.getBurningManCandidate();
+        boolean isLegacyBurningMan = burningManCandidate instanceof LegacyBurningMan;
+        burnOutputsObservableList.setAll(burningManCandidate.getBurnOutputModels().stream()
+                .map(burnOutputModel -> new BurnOutputListItem(burnOutputModel, bsqFormatter, isLegacyBurningMan))
                 .collect(Collectors.toList()));
         GUIUtil.setFitToRowsForTableView(burnOutputsTableView, 36, 28, 4, 6);
-        compensationObservableList.setAll(burningmenListItem.getBurningManCandidate().getCompensationModels().stream()
+        compensationObservableList.setAll(burningManCandidate.getCompensationModels().stream()
                 .map(compensationModel -> new CompensationListItem(compensationModel, bsqFormatter))
                 .collect(Collectors.toList()));
         GUIUtil.setFitToRowsForTableView(compensationsTableView, 36, 28, 4, 6);

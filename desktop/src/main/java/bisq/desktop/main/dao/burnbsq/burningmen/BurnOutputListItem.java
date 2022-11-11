@@ -34,15 +34,14 @@ class BurnOutputListItem {
     private final long date, amount, decayedAmount;
     private final int cycleIndex, height;
 
-    BurnOutputListItem(BurnOutputModel model, BsqFormatter bsqFormatter) {
-
+    BurnOutputListItem(BurnOutputModel model, BsqFormatter bsqFormatter, boolean isLegacyBurningMan) {
         height = model.getHeight();
         cycleIndex = model.getCycleIndex();
         date = model.getDate();
         dateAsString = DisplayUtils.formatDateTime(new Date(date));
         amount = model.getAmount();
         amountAsString = bsqFormatter.formatCoinWithCode(amount);
-        decayedAmount = model.getDecayedAmount();
-        decayedAmountAsString = bsqFormatter.formatCoinWithCode(decayedAmount);
+        decayedAmount = isLegacyBurningMan ? 0 : model.getDecayedAmount();
+        decayedAmountAsString = isLegacyBurningMan ? "" : bsqFormatter.formatCoinWithCode(decayedAmount);
     }
 }
