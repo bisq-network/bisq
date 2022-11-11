@@ -178,7 +178,6 @@ class BurningManService {
         return burningManCandidatesByName;
     }
 
-
     String getLegacyBurningManAddress(int chainHeight) {
         return daoStateService.getParamValue(Param.RECIPIENT_BTC_ADDRESS, chainHeight);
     }
@@ -188,7 +187,7 @@ class BurningManService {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Map<P2PDataStorage.ByteArray, Set<TxOutput>> getProofOfBurnOpReturnTxOutputByHash(int chainHeight) {
+    Map<P2PDataStorage.ByteArray, Set<TxOutput>> getProofOfBurnOpReturnTxOutputByHash(int chainHeight) {
         Map<P2PDataStorage.ByteArray, Set<TxOutput>> map = new HashMap<>();
         daoStateService.getProofOfBurnOpReturnTxOutputs().stream()
                 .filter(txOutput -> txOutput.getBlockHeight() <= chainHeight)

@@ -444,6 +444,10 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         burningmenObservableList.setAll(burningManPresentationService.getBurningManCandidatesByName().entrySet().stream()
                 .map(entry -> new BurningmenListItem(burningManPresentationService, entry.getKey(), entry.getValue(), bsqFormatter))
                 .collect(Collectors.toList()));
+        burningmenObservableList.add(new BurningmenListItem(burningManPresentationService,
+                BurningManPresentationService.LEGACY_BURNING_MAN_NAME,
+                burningManPresentationService.getLegacyBurningMan(),
+                bsqFormatter));
         reimbursementObservableList.setAll(burningManPresentationService.getReimbursements().stream()
                 .map(reimbursementModel -> new ReimbursementListItem(reimbursementModel, bsqFormatter))
                 .collect(Collectors.toList()));
@@ -564,9 +568,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
                     public void updateItem(final BurningmenListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            setText(Res.get("dao.burningmen.burnTarget.fromTo",
-                                    item.getBurnTargetAsBsq(),
-                                    item.getMaxBurnTargetAsBsq()));
+                            setText(item.getBurnTargetAsBsq());
                         } else
                             setText("");
                     }
@@ -614,13 +616,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
                     public void updateItem(final BurningmenListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            if (item.getBurnAmountShare() != item.getCappedBurnAmountShare()) {
-                                setText(Res.get("dao.burningmen.table.burnAmountShare.capped",
-                                        item.getCappedBurnAmountShareAsString(),
-                                        item.getBurnAmountShareAsString()));
-                            } else {
-                                setText(item.getBurnAmountShareAsString());
-                            }
+                            setText(item.getCappedBurnAmountShareAsString());
                         } else
                             setText("");
                     }
@@ -657,7 +653,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
         column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningmen.table.burnAmount"));
-        column.setMinWidth(110);
+        column.setMinWidth(130);
         column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
@@ -791,7 +787,7 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
                     public void updateItem(final BurningmenListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            setText(String.valueOf(item.getNumIssuances()));
+                            setText(item.getNumIssuancesAsString());
                         } else
                             setText("");
                     }
