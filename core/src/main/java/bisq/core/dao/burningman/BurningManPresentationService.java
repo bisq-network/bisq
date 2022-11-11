@@ -18,14 +18,21 @@
 package bisq.core.dao.burningman;
 
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.CyclesInDaoStateService;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.BaseTx;
 import bisq.core.dao.state.model.blockchain.Block;
+import bisq.core.dao.state.model.blockchain.Tx;
+import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.governance.CompensationProposal;
 import bisq.core.dao.state.model.governance.Proposal;
 
+import bisq.network.p2p.storage.P2PDataStorage;
+
 import bisq.common.app.DevEnv;
+import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
 
 import javax.inject.Inject;
@@ -48,8 +55,10 @@ public class BurningManPresentationService implements DaoStateListener {
     // Burn target gets increased by that amount to give more flexibility.
     // Burn target is calculated from reimbursements + estimated BTC fees - burned amounts.
     static final long BURN_TARGET_BOOST_AMOUNT = DevEnv.isDevTesting() ? 1000000 : 10000000;
+    public static final String LEGACY_BURNING_MAN_NAME = "Legacy Burningman";
 
     private final DaoStateService daoStateService;
+    private final CyclesInDaoStateService cyclesInDaoStateService;
     private final MyProposalListService myProposalListService;
     private final BsqWalletService bsqWalletService;
     private final BurningManService burningManService;
@@ -63,14 +72,18 @@ public class BurningManPresentationService implements DaoStateListener {
     private Set<String> myCompensationRequestNames = null;
     @SuppressWarnings("OptionalAssignedToNull")
     private Optional<Set<String>> myGenesisOutputNames = null;
+    private Optional<LegacyBurningMan> legacyBurningMan = Optional.empty();
+    private final Map<P2PDataStorage.ByteArray, Set<TxOutput>> proofOfBurnOpReturnTxOutputByHash = new HashMap<>();
 
     @Inject
     public BurningManPresentationService(DaoStateService daoStateService,
+                                         CyclesInDaoStateService cyclesInDaoStateService,
                                          MyProposalListService myProposalListService,
                                          BsqWalletService bsqWalletService,
                                          BurningManService burningManService,
                                          BurnTargetService burnTargetService) {
         this.daoStateService = daoStateService;
+        this.cyclesInDaoStateService = cyclesInDaoStateService;
         this.myProposalListService = myProposalListService;
         this.bsqWalletService = bsqWalletService;
         this.burningManService = burningManService;
@@ -96,6 +109,8 @@ public class BurningManPresentationService implements DaoStateListener {
         burnTarget = Optional.empty();
         myCompensationRequestNames = null;
         averageDistributionPerCycle = Optional.empty();
+        legacyBurningMan = Optional.empty();
+        proofOfBurnOpReturnTxOutputByHash.clear();
     }
 
 
@@ -222,5 +237,50 @@ public class BurningManPresentationService implements DaoStateListener {
 
         burningManCandidatesByName.putAll(burningManService.getBurningManCandidatesByName(currentChainHeight));
         return burningManCandidatesByName;
+    }
+
+    public LegacyBurningMan getLegacyBurningMan() {
+        if (legacyBurningMan.isPresent()) {
+            return legacyBurningMan.get();
+        }
+
+        if (proofOfBurnOpReturnTxOutputByHash.isEmpty()) {
+            proofOfBurnOpReturnTxOutputByHash.putAll(burningManService.getProofOfBurnOpReturnTxOutputByHash(currentChainHeight));
+        }
+
+        // We do not add the legacy burningman to the list but keep it as class field only to avoid that it
+        // interferes with usage of the burningManCandidatesByName map.
+        LegacyBurningMan legacyBurningMan = new LegacyBurningMan(burningManService.getLegacyBurningManAddress(currentChainHeight));
+        // Those are the hashes used by legacy BM for burning
+        Set<String> hashes = Set.of("1701e47e5d8030f444c182b5e243871ebbaeadb5e82f",
+                "1701293c488822f98e70e047012f46f5f1647f37deb7",
+                "1701721206fe6b40777763de1c741f4fd2706d94775d");
+        proofOfBurnOpReturnTxOutputByHash.values().stream()
+                .flatMap(txOutputs -> txOutputs.stream()
+                        .filter(txOutput -> {
+                            String hash = Hex.encode(txOutput.getOpReturnData());
+                            return hashes.stream().anyMatch(e -> e.equals(hash));
+                        }))
+                .forEach(burnOutput -> {
+                    int burnOutputHeight = burnOutput.getBlockHeight();
+                    Optional<Tx> optionalTx = daoStateService.getTx(burnOutput.getTxId());
+                    long burnOutputAmount = optionalTx.map(Tx::getBurntBsq).orElse(0L);
+                    long date = optionalTx.map(BaseTx::getTime).orElse(0L);
+                    int cycleIndex = cyclesInDaoStateService.getCycleIndexAtChainHeight(burnOutputHeight);
+                    legacyBurningMan.addBurnOutputModel(new BurnOutputModel(burnOutputAmount,
+                            burnOutputAmount,
+                            burnOutputHeight,
+                            burnOutput.getTxId(),
+                            date,
+                            cycleIndex));
+                });
+        // Set remaining share if the sum of all capped shares does not reach 100%.
+        double burnAmountShareOfOthers = getBurningManCandidatesByName().values().stream()
+                .mapToDouble(BurningManCandidate::getCappedBurnAmountShare)
+                .sum();
+        legacyBurningMan.applyBurnAmountShare(1 - burnAmountShareOfOthers);
+
+        this.legacyBurningMan = Optional.of(legacyBurningMan);
+        return legacyBurningMan;
     }
 }

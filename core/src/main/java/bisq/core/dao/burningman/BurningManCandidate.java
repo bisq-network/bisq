@@ -33,18 +33,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public final class BurningManCandidate {
+public class BurningManCandidate {
     private final List<CompensationModel> compensationModels = new ArrayList<>();
     private long accumulatedCompensationAmount;
     private long accumulatedDecayedCompensationAmount;
     private double compensationShare;           // Share of accumulated decayed compensation amounts in relation to total issued amounts
-    private Optional<String> mostRecentAddress = Optional.empty();
+    protected Optional<String> mostRecentAddress = Optional.empty();
 
     private final List<BurnOutputModel> burnOutputModels = new ArrayList<>();
     private long accumulatedBurnAmount;
     private long accumulatedDecayedBurnAmount;
-    private double burnAmountShare;             // Share of accumulated decayed burn amounts in relation to total burned amounts
-    private double cappedBurnAmountShare;       // Capped burnAmountShare. Cannot be larger than boostedCompensationShare
+    protected double burnAmountShare;             // Share of accumulated decayed burn amounts in relation to total burned amounts
+    protected double cappedBurnAmountShare;       // Capped burnAmountShare. Cannot be larger than boostedCompensationShare
 
     BurningManCandidate() {
     }
