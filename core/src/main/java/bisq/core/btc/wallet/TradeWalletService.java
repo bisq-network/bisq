@@ -76,7 +76,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class TradeWalletService {
     private static final Logger log = LoggerFactory.getLogger(TradeWalletService.class);
-    private static final Coin MIN_DELAYED_PAYOUT_TX_FEE = Coin.valueOf(1000);
+    public static final Coin MIN_DELAYED_PAYOUT_TX_FEE = Coin.valueOf(1000);
 
     private final WalletsSetup walletsSetup;
     private final Preferences preferences;
