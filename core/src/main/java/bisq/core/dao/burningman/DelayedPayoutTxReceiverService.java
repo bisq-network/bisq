@@ -17,6 +17,7 @@
 
 package bisq.core.dao.burningman;
 
+import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
@@ -162,8 +163,10 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     private static long getSpendableAmount(int numOutputs, long inputAmount, long txFeePerVbyte) {
         // Output size: 32 bytes
         // Tx size without outputs: 51 bytes
-        int txSize = 51 + numOutputs * 32;
-        long minerFee = txFeePerVbyte * txSize;
+        int txSize = 51 + numOutputs * 32; // min value: txSize=83
+        long minerFee = txFeePerVbyte * txSize; // min value: minerFee=830
+        // We need to make sure we have at least 1000 sat as defined in TradeWalletService
+        minerFee = Math.max(TradeWalletService.MIN_DELAYED_PAYOUT_TX_FEE.value, minerFee);
         return inputAmount - minerFee;
     }
 
