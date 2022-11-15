@@ -118,6 +118,7 @@ message GetDataResponse {
     repeated StorageEntryWrapper data_set = 3;
     repeated int32 supported_capabilities = 4;
     repeated PersistableNetworkPayload persistable_network_payload_items = 5;
+    bool was_truncated = 6;
 }
 
 message GetUpdatedDataRequest {
