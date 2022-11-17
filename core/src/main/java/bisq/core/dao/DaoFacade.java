@@ -53,7 +53,6 @@ import bisq.core.dao.governance.proposal.reimbursement.ReimbursementConsensus;
 import bisq.core.dao.governance.proposal.reimbursement.ReimbursementProposalFactory;
 import bisq.core.dao.governance.proposal.removeAsset.RemoveAssetProposalFactory;
 import bisq.core.dao.governance.proposal.role.RoleProposalFactory;
-import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
@@ -66,10 +65,8 @@ import bisq.core.dao.state.model.blockchain.TxOutputKey;
 import bisq.core.dao.state.model.blockchain.TxType;
 import bisq.core.dao.state.model.governance.Ballot;
 import bisq.core.dao.state.model.governance.BondedRoleType;
-import bisq.core.dao.state.model.governance.CompensationProposal;
 import bisq.core.dao.state.model.governance.Cycle;
 import bisq.core.dao.state.model.governance.DaoPhase;
-import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Role;
@@ -647,24 +644,6 @@ public class DaoFacade implements DaoSetupService {
 
     public int getNumIssuanceTransactions(IssuanceType issuanceType) {
         return daoStateService.getIssuanceSetForType(issuanceType).size();
-    }
-
-    public Set<Issuance> getIssuanceSetForType(IssuanceType issuanceType) {
-        return daoStateService.getIssuanceSetForType(issuanceType);
-    }
-
-    public Map<TxOutputKey, Optional<String>> getAddressByOutputKeyMap() {
-        return daoStateService.getUnorderedTxOutputStream()
-                .collect(Collectors.toMap(BaseTxOutput::getKey, txOutput -> Optional.ofNullable(txOutput.getAddress())));
-    }
-
-    public Optional<CompensationProposal> findCompensationProposal(String txId) {
-        return proposalService.getProposalPayloads().stream()
-                .map(ProposalPayload::getProposal)
-                .filter(proposal -> txId.equals(proposal.getTxId()))
-                .filter(proposal -> proposal instanceof CompensationProposal)
-                .map(proposal -> (CompensationProposal) proposal)
-                .findAny();
     }
 
     public Set<Tx> getBurntFeeTxs() {
