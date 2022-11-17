@@ -19,6 +19,10 @@ package bisq.core.dao.burningman;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.dao.CyclesInDaoStateService;
+import bisq.core.dao.burningman.model.BurnOutputModel;
+import bisq.core.dao.burningman.model.BurningManCandidate;
+import bisq.core.dao.burningman.model.LegacyBurningMan;
+import bisq.core.dao.burningman.model.ReimbursementModel;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;

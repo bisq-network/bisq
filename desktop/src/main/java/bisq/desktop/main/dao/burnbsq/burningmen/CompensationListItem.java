@@ -19,7 +19,7 @@ package bisq.desktop.main.dao.burnbsq.burningmen;
 
 import bisq.desktop.util.DisplayUtils;
 
-import bisq.core.dao.burningman.CompensationModel;
+import bisq.core.dao.burningman.model.CompensationModel;
 import bisq.core.util.coin.BsqFormatter;
 
 import java.util.Date;

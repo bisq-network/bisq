@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.burningman;
+package bisq.core.dao.burningman.model;
 
 import java.util.Date;
 import java.util.Optional;
@@ -26,13 +26,13 @@ import lombok.Getter;
 @Getter
 @EqualsAndHashCode
 public final class CompensationModel {
-    static CompensationModel fromCompensationRequest(String address,
-                                                     long amount,
-                                                     long decayedAmount,
-                                                     int height,
-                                                     String txId,
-                                                     long date,
-                                                     int cycleIndex) {
+    public static CompensationModel fromCompensationRequest(String address,
+                                                            long amount,
+                                                            long decayedAmount,
+                                                            int height,
+                                                            String txId,
+                                                            long date,
+                                                            int cycleIndex) {
         return new CompensationModel(address,
                 amount,
                 decayedAmount,
@@ -43,13 +43,13 @@ public final class CompensationModel {
                 cycleIndex);
     }
 
-    static CompensationModel fromGenesisOutput(String address,
-                                               long amount,
-                                               long decayedAmount,
-                                               int height,
-                                               String txId,
-                                               int outputIndex,
-                                               long date) {
+    public static CompensationModel fromGenesisOutput(String address,
+                                                      long amount,
+                                                      long decayedAmount,
+                                                      int height,
+                                                      String txId,
+                                                      int outputIndex,
+                                                      long date) {
         return new CompensationModel(address,
                 amount,
                 decayedAmount,
