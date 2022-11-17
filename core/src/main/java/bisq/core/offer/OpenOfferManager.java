@@ -23,6 +23,7 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.burningman.BtcFeeReceiverService;
+import bisq.core.dao.burningman.BurningManService;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.filter.FilterManager;
@@ -672,7 +673,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             return;
         }
 
-        if (DelayedPayoutTxReceiverService.isActivated()) {
+        if (BurningManService.isActivated()) {
             try {
                 int takersBurningManSelectionHeight = request.getBurningManSelectionHeight();
                 checkArgument(takersBurningManSelectionHeight > 0, "takersBurningManSelectionHeight must not be 0");
