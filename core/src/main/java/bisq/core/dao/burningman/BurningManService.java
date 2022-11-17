@@ -35,7 +35,7 @@ import bisq.core.dao.state.model.governance.IssuanceType;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 
-import bisq.common.app.DevEnv;
+import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -69,7 +69,7 @@ public class BurningManService {
     private static final Date ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.JANUARY, 1);
 
     public static boolean isActivated() {
-        return DevEnv.isDevTesting() || new Date().after(ACTIVATION_DATE);
+        return Config.baseCurrencyNetwork().isRegtest() || new Date().after(ACTIVATION_DATE);
     }
 
     // Parameters

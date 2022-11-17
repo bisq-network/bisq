@@ -35,7 +35,7 @@ import bisq.core.dao.state.model.governance.Proposal;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 
-import bisq.common.app.DevEnv;
+import bisq.common.config.Config;
 import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
 
@@ -58,7 +58,7 @@ import lombok.extern.slf4j.Slf4j;
 public class BurningManPresentationService implements DaoStateListener {
     // Burn target gets increased by that amount to give more flexibility.
     // Burn target is calculated from reimbursements + estimated BTC fees - burned amounts.
-    static final long BURN_TARGET_BOOST_AMOUNT = DevEnv.isDevTesting() ? 1000000 : 10000000;
+    static final long BURN_TARGET_BOOST_AMOUNT = Config.baseCurrencyNetwork().isRegtest() ? 1000000 : 10000000;
     public static final String LEGACY_BURNING_MAN_NAME = "Legacy Burningman";
 
     private final DaoStateService daoStateService;
