@@ -101,6 +101,8 @@ import bisq.core.payment.payload.HalCashAccountPayload;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.payment.payload.SepaAccountPayload;
+import bisq.core.payment.payload.SepaInstantAccountPayload;
 import bisq.core.payment.payload.SwiftAccountPayload;
 import bisq.core.payment.payload.USPostalMoneyOrderAccountPayload;
 import bisq.core.payment.payload.WesternUnionAccountPayload;
@@ -243,9 +245,17 @@ public class BuyerStep2View extends TradeStepView {
         int rowSpanStart = gridRow;
 
         PaymentAccountPayload paymentAccountPayload = model.dataModel.getSellersPaymentAccountPayload();
+        PaymentAccountPayload buyersPaymentAccountPayload = model.dataModel.getBuyersPaymentAccountPayload();
         String paymentMethodId = paymentAccountPayload != null ? paymentAccountPayload.getPaymentMethodId() : "";
+
+        // consider special case where we might need to show buyer's (instead of seller's) payment method ID
+        String paymentMethodIdToDisplay = buyersPaymentAccountPayload instanceof SepaAccountPayload
+                && paymentAccountPayload instanceof SepaInstantAccountPayload ?
+                buyersPaymentAccountPayload.getPaymentMethodId() :
+                paymentMethodId;
+
         TitledGroupBg accountTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 4,
-                Res.get("portfolio.pending.step2_buyer.startPaymentUsing", Res.get(paymentMethodId)),
+                Res.get("portfolio.pending.step2_buyer.startPaymentUsing", Res.get(paymentMethodIdToDisplay)),
                 Layout.COMPACT_GROUP_DISTANCE);
         GridPane.setColumnSpan(accountTitledGroupBg, 2);
 
@@ -425,7 +435,6 @@ public class BuyerStep2View extends TradeStepView {
             Offer offer = trade.getOffer();
             List<PaymentAccount> possiblePaymentAccounts = PaymentAccountUtil.getPossiblePaymentAccounts(offer,
                     model.getUser().getPaymentAccounts(), model.dataModel.getAccountAgeWitnessService());
-            PaymentAccountPayload buyersPaymentAccountPayload = model.dataModel.getBuyersPaymentAccountPayload();
             if (buyersPaymentAccountPayload != null && possiblePaymentAccounts.size() > 1) {
                 String id = buyersPaymentAccountPayload.getId();
                 possiblePaymentAccounts.stream()
