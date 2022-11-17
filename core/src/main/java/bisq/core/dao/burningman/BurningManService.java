@@ -93,7 +93,7 @@ public class BurningManService {
     // This will be used for increasing the allowed burn amount. The factor gives more flexibility
     // and compensates for those who do not burn. The burn share is capped by that factor as well.
     // E.g. a contributor with 10% issuance share will be able to receive max 20% of the BTC fees or DPT output
-    // even if they would have burned more and had a higher burn share than 20%.
+    // even if they had burned more and had a higher burn share than 20%.
     public static final double ISSUANCE_BOOST_FACTOR = 2;
 
     // The max amount the burn share can reach. This value is derived from the min. security deposit in a trade and

@@ -53,6 +53,9 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Provides APIs for burningman data representation in the UI.
+ */
 @Slf4j
 @Singleton
 public class BurningManPresentationService implements DaoStateListener {

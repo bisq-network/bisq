@@ -194,7 +194,6 @@ class BurnTargetService {
 
 
     private long getBurnedAmountFromLegacyBurningManDPT(Set<Tx> proofOfBurnTxs, int chainHeight, int fromBlock) {
-        // Burningman
         // Legacy burningman use those opReturn data to mark their burn transactions from delayed payout transaction cases.
         // opReturn data from delayed payout txs when BM traded with the refund agent: 1701e47e5d8030f444c182b5e243871ebbaeadb5e82f
         // opReturn data from delayed payout txs when BM traded with traders who got reimbursed by the DAO: 1701293c488822f98e70e047012f46f5f1647f37deb7
@@ -211,10 +210,7 @@ class BurnTargetService {
     }
 
     private long getBurnedAmountFromLegacyBurningMansBtcFees(Set<Tx> proofOfBurnTxs, int chainHeight, int fromBlock) {
-        // Burningman
-        // Legacy burningman use those opReturn data to mark their burn transactions from delayed payout transaction cases.
-        // opReturn data from delayed payout txs when BM traded with the refund agent: 1701e47e5d8030f444c182b5e243871ebbaeadb5e82f
-        // opReturn data from delayed payout txs when BM traded with traders who got reimbursed by the DAO: 1701293c488822f98e70e047012f46f5f1647f37deb7
+        // Legacy burningman use the below opReturn data to mark their burn transactions from Btc trade fees.
         return proofOfBurnTxs.stream()
                 .filter(tx -> tx.getBlockHeight() > fromBlock)
                 .filter(tx -> tx.getBlockHeight() <= chainHeight)
