@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.burningman;
+package bisq.core.dao.burningman.model;
 
 import java.util.Optional;
 
@@ -27,11 +27,11 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class LegacyBurningMan extends BurningManCandidate {
-    LegacyBurningMan(String address) {
+    public LegacyBurningMan(String address) {
         mostRecentAddress = Optional.of(address);
     }
 
-    void applyBurnAmountShare(double burnAmountShare) {
+    public void applyBurnAmountShare(double burnAmountShare) {
         this.burnAmountShare = burnAmountShare;
         this.cappedBurnAmountShare = burnAmountShare;
     }

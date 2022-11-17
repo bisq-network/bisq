@@ -15,7 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.burningman;
+package bisq.core.dao.burningman.model;
+
+import bisq.core.dao.burningman.BurningManService;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -46,7 +48,7 @@ public class BurningManCandidate {
     protected double burnAmountShare;             // Share of accumulated decayed burn amounts in relation to total burned amounts
     protected double cappedBurnAmountShare;       // Capped burnAmountShare. Cannot be larger than boostedCompensationShare
 
-    BurningManCandidate() {
+    public BurningManCandidate() {
     }
 
     public void addBurnOutputModel(BurnOutputModel burnOutputModel) {

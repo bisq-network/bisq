@@ -18,6 +18,9 @@
 package bisq.core.dao.burningman;
 
 import bisq.core.dao.CyclesInDaoStateService;
+import bisq.core.dao.burningman.model.BurnOutputModel;
+import bisq.core.dao.burningman.model.BurningManCandidate;
+import bisq.core.dao.burningman.model.CompensationModel;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proofofburn.ProofOfBurnConsensus;
 import bisq.core.dao.governance.proposal.ProposalService;
@@ -57,13 +60,13 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Singleton
-class BurningManService {
+public class BurningManService {
     // Parameters
     // Cannot be changed after release as it would break trade protocol verification of DPT receivers.
 
     // Prefix for generic names for the genesis outputs. Appended with output index.
     // Used as pre-image for burning.
-    static final String GENESIS_OUTPUT_PREFIX = "Bisq co-founder ";
+    public static final String GENESIS_OUTPUT_PREFIX = "Bisq co-founder ";
 
     // Factor for weighting the genesis output amounts.
     private static final double GENESIS_OUTPUT_AMOUNT_FACTOR = 0.05;
@@ -79,13 +82,13 @@ class BurningManService {
     // and compensates for those who do not burn. The burn share is capped by that factor as well.
     // E.g. a contributor with 10% issuance share will be able to receive max 20% of the BTC fees or DPT output
     // even if they would have burned more and had a higher burn share than 20%.
-    static final double ISSUANCE_BOOST_FACTOR = 2;
+    public static final double ISSUANCE_BOOST_FACTOR = 2;
 
     // The max amount the burn share can reach. This value is derived from the min. security deposit in a trade and
     // ensures that an attack where a BM would take all sell offers cannot be economically profitable as they would
     // lose their deposit and cannot gain more than 11% of the DPT payout. As the total amount in a trade is 2 times
     // that deposit plus the trade amount the limiting factor here is 11% (0.15 / 1.3).
-    static final double MAX_BURN_SHARE = 0.11;
+    public static final double MAX_BURN_SHARE = 0.11;
 
 
     private final DaoStateService daoStateService;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.burningman;
+package bisq.core.dao.burningman.model;
 
 import java.util.Date;
 
@@ -31,11 +31,11 @@ public final class ReimbursementModel {
     private final int cycleIndex;
     private final String txId;
 
-    ReimbursementModel(long amount,
-                       int height,
-                       long date,
-                       int cycleIndex,
-                       String txId) {
+    public ReimbursementModel(long amount,
+                              int height,
+                              long date,
+                              int cycleIndex,
+                              String txId) {
         this.amount = amount;
         this.height = height;
         this.date = date;

@@ -18,6 +18,9 @@
 package bisq.core.dao.burningman;
 
 import bisq.core.dao.CyclesInDaoStateService;
+import bisq.core.dao.burningman.model.BurnOutputModel;
+import bisq.core.dao.burningman.model.BurningManCandidate;
+import bisq.core.dao.burningman.model.ReimbursementModel;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.governance.proposal.storage.appendonly.ProposalPayload;

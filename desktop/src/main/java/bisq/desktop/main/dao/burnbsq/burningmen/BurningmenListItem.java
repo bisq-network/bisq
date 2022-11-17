@@ -17,9 +17,9 @@
 
 package bisq.desktop.main.dao.burnbsq.burningmen;
 
-import bisq.core.dao.burningman.BurningManCandidate;
 import bisq.core.dao.burningman.BurningManPresentationService;
-import bisq.core.dao.burningman.LegacyBurningMan;
+import bisq.core.dao.burningman.model.BurningManCandidate;
+import bisq.core.dao.burningman.model.LegacyBurningMan;
 import bisq.core.locale.Res;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;

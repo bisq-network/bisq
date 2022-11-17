@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.dao.burningman;
+package bisq.core.dao.burningman.model;
 
 import java.util.Date;
 
@@ -32,12 +32,12 @@ public final class BurnOutputModel {
     private final long date;
     private final int cycleIndex;
 
-    BurnOutputModel(long amount,
-                    long decayedAmount,
-                    int height,
-                    String txId,
-                    long date,
-                    int cycleIndex) {
+    public BurnOutputModel(long amount,
+                           long decayedAmount,
+                           int height,
+                           String txId,
+                           long date,
+                           int cycleIndex) {
 
         this.amount = amount;
         this.decayedAmount = decayedAmount;

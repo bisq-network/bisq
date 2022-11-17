@@ -18,6 +18,7 @@
 package bisq.core.dao.burningman;
 
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.dao.burningman.model.BurningManCandidate;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
