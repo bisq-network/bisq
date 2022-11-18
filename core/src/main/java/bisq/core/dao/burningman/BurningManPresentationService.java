@@ -62,7 +62,9 @@ public class BurningManPresentationService implements DaoStateListener {
     // Burn target gets increased by that amount to give more flexibility.
     // Burn target is calculated from reimbursements + estimated BTC fees - burned amounts.
     static final long BURN_TARGET_BOOST_AMOUNT = Config.baseCurrencyNetwork().isRegtest() ? 1000000 : 10000000;
-    public static final String LEGACY_BURNING_MAN_NAME = "Legacy Burningman";
+    public static final String LEGACY_BURNING_MAN_DPT_NAME = "Legacy Burningman (DPT)";
+    public static final String LEGACY_BURNING_MAN_BTC_FEES_NAME = "Legacy Burningman (BTC fees)";
+    public static final String LEGACY_BURNING_MAN_BTC_FEES_ADDRESS = "38bZBj5peYS3Husdz7AH3gEUiUbYRD951t";
 
     private final DaoStateService daoStateService;
     private final CyclesInDaoStateService cyclesInDaoStateService;
@@ -79,7 +81,8 @@ public class BurningManPresentationService implements DaoStateListener {
     private Set<String> myCompensationRequestNames = null;
     @SuppressWarnings("OptionalAssignedToNull")
     private Optional<Set<String>> myGenesisOutputNames = null;
-    private Optional<LegacyBurningMan> legacyBurningMan = Optional.empty();
+    private Optional<LegacyBurningMan> legacyBurningManDPT = Optional.empty();
+    private Optional<LegacyBurningMan> legacyBurningManBtcFees = Optional.empty();
     private final Map<P2PDataStorage.ByteArray, Set<TxOutput>> proofOfBurnOpReturnTxOutputByHash = new HashMap<>();
 
     @Inject
@@ -116,7 +119,8 @@ public class BurningManPresentationService implements DaoStateListener {
         burnTarget = Optional.empty();
         myCompensationRequestNames = null;
         averageDistributionPerCycle = Optional.empty();
-        legacyBurningMan = Optional.empty();
+        legacyBurningManDPT = Optional.empty();
+        legacyBurningManBtcFees = Optional.empty();
         proofOfBurnOpReturnTxOutputByHash.clear();
     }
 
@@ -246,23 +250,41 @@ public class BurningManPresentationService implements DaoStateListener {
         return burningManCandidatesByName;
     }
 
-    public LegacyBurningMan getLegacyBurningMan() {
-        if (legacyBurningMan.isPresent()) {
-            return legacyBurningMan.get();
-        }
-
-        if (proofOfBurnOpReturnTxOutputByHash.isEmpty()) {
-            proofOfBurnOpReturnTxOutputByHash.putAll(burningManService.getProofOfBurnOpReturnTxOutputByHash(currentChainHeight));
+    public LegacyBurningMan getLegacyBurningManForDPT() {
+        if (legacyBurningManDPT.isPresent()) {
+            return legacyBurningManDPT.get();
         }
 
         // We do not add the legacy burningman to the list but keep it as class field only to avoid that it
         // interferes with usage of the burningManCandidatesByName map.
-        LegacyBurningMan legacyBurningMan = new LegacyBurningMan(burningManService.getLegacyBurningManAddress(currentChainHeight));
-        // Those are the hashes used by legacy BM for burning
+        // Those are the hashes used by legacy BM for burning BTC received from DPT.
         Set<String> hashes = Set.of("1701e47e5d8030f444c182b5e243871ebbaeadb5e82f",
-                "1701293c488822f98e70e047012f46f5f1647f37deb7",
-                "1701721206fe6b40777763de1c741f4fd2706d94775d");
-        proofOfBurnOpReturnTxOutputByHash.values().stream()
+                "1701293c488822f98e70e047012f46f5f1647f37deb7");
+        LegacyBurningMan legacyBurningManDPT = getLegacyBurningMan(burningManService.getLegacyBurningManAddress(currentChainHeight), hashes);
+
+        this.legacyBurningManDPT = Optional.of(legacyBurningManDPT);
+        return legacyBurningManDPT;
+    }
+
+    public LegacyBurningMan getLegacyBurningManForBtcFees() {
+        if (legacyBurningManBtcFees.isPresent()) {
+            return legacyBurningManBtcFees.get();
+        }
+
+        // We do not add the legacy burningman to the list but keep it as class field only to avoid that it
+        // interferes with usage of the burningManCandidatesByName map.
+        // The hash used by legacy BM for burning BTC received from BTC trade fees.
+        Set<String> hashes = Set.of("1701721206fe6b40777763de1c741f4fd2706d94775d");
+        LegacyBurningMan legacyBurningManBtcFees = getLegacyBurningMan(LEGACY_BURNING_MAN_BTC_FEES_ADDRESS, hashes);
+
+        this.legacyBurningManBtcFees = Optional.of(legacyBurningManBtcFees);
+        return legacyBurningManBtcFees;
+    }
+
+    private LegacyBurningMan getLegacyBurningMan(String address, Set<String> hashes) {
+        LegacyBurningMan legacyBurningMan = new LegacyBurningMan(address);
+        // The hashes used by legacy BM at burning BSQ.
+        getProofOfBurnOpReturnTxOutputByHash().values().stream()
                 .flatMap(txOutputs -> txOutputs.stream()
                         .filter(txOutput -> {
                             String hash = Hex.encode(txOutput.getOpReturnData());
@@ -286,8 +308,15 @@ public class BurningManPresentationService implements DaoStateListener {
                 .mapToDouble(BurningManCandidate::getCappedBurnAmountShare)
                 .sum();
         legacyBurningMan.applyBurnAmountShare(1 - burnAmountShareOfOthers);
-
-        this.legacyBurningMan = Optional.of(legacyBurningMan);
         return legacyBurningMan;
+    }
+
+    private Map<P2PDataStorage.ByteArray, Set<TxOutput>> getProofOfBurnOpReturnTxOutputByHash() {
+        if (!proofOfBurnOpReturnTxOutputByHash.isEmpty()) {
+            return proofOfBurnOpReturnTxOutputByHash;
+        }
+
+        proofOfBurnOpReturnTxOutputByHash.putAll(burningManService.getProofOfBurnOpReturnTxOutputByHash(currentChainHeight));
+        return proofOfBurnOpReturnTxOutputByHash;
     }
 }
