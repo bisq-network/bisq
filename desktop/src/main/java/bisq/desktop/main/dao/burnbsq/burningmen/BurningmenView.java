@@ -447,8 +447,12 @@ public class BurningmenView extends ActivatableView<ScrollPane, Void> implements
                 .map(entry -> new BurningmenListItem(burningManPresentationService, entry.getKey(), entry.getValue(), bsqFormatter))
                 .collect(Collectors.toList()));
         burningmenObservableList.add(new BurningmenListItem(burningManPresentationService,
-                BurningManPresentationService.LEGACY_BURNING_MAN_NAME,
-                burningManPresentationService.getLegacyBurningMan(),
+                BurningManPresentationService.LEGACY_BURNING_MAN_BTC_FEES_NAME,
+                burningManPresentationService.getLegacyBurningManForBtcFees(),
+                bsqFormatter));
+        burningmenObservableList.add(new BurningmenListItem(burningManPresentationService,
+                BurningManPresentationService.LEGACY_BURNING_MAN_DPT_NAME,
+                burningManPresentationService.getLegacyBurningManForDPT(),
                 bsqFormatter));
         reimbursementObservableList.setAll(burningManPresentationService.getReimbursements().stream()
                 .map(reimbursementModel -> new ReimbursementListItem(reimbursementModel, bsqFormatter))
