@@ -57,6 +57,7 @@ public class FullNode extends BsqNode {
     private boolean addBlockHandlerAdded;
     private int blocksToParseInBatch;
     private long parseInBatchStartTime;
+    private int parseBlocksOnHeadHeightCounter;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -206,12 +207,19 @@ public class FullNode extends BsqNode {
                         parseBlocksIfNewBlockAvailable(chainHeight);
                     }, this::handleError);
         } else {
-            log.warn("We are trying to start with a block which is above the chain height of Bitcoin Core. " +
-                    "We need probably wait longer until Bitcoin Core has fully synced. " +
-                    "We try again after a delay of 1 min.");
-            UserThread.runAfter(() -> rpcService.requestChainHeadHeight(chainHeight1 ->
-                            parseBlocksOnHeadHeight(startBlockHeight, chainHeight1),
-                    this::handleError), 60);
+            parseBlocksOnHeadHeightCounter++;
+            if (parseBlocksOnHeadHeightCounter <= 5) {
+                log.warn("We are trying to start with a block which is above the chain height of Bitcoin Core. " +
+                        "We need to wait longer until Bitcoin Core has fully synced. " +
+                        "We try again after a delay of {} min.", parseBlocksOnHeadHeightCounter * parseBlocksOnHeadHeightCounter);
+                UserThread.runAfter(() -> rpcService.requestChainHeadHeight(height ->
+                                parseBlocksOnHeadHeight(startBlockHeight, height),
+                        this::handleError), parseBlocksOnHeadHeightCounter * parseBlocksOnHeadHeightCounter * 60L);
+            } else {
+                log.warn("We tried {} times to start with startBlockHeight {} which is above the chain height {} of Bitcoin Core. " +
+                                "It might be that Bitcoin Core has not fully synced. We give up now.",
+                        parseBlocksOnHeadHeightCounter, startBlockHeight, chainHeight);
+            }
         }
     }
 
