@@ -245,7 +245,7 @@ public abstract class BsqNode implements DaoSetupService {
                 // We received an older block. We compare if we have it in our chain.
                 Optional<Block> existingBlockAsSameHeight = daoStateService.getBlockAtHeight(rawBlock.getHeight());
                 if (existingBlockAsSameHeight.isPresent()) {
-                    if (existingBlockAsSameHeight.get().getHash().equals(rawBlock.getPreviousBlockHash())) {
+                    if (existingBlockAsSameHeight.get().getHash().equals(rawBlock.getHash())) {
                         log.info("We received an old block we have already parsed and added. We ignore it.");
                     } else {
                         log.info("We received an old block with a different hash. We ignore it. Hash={}", rawBlock.getHash());
