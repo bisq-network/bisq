@@ -108,8 +108,6 @@ public class FullNode extends BsqNode {
         int startBlockHeight = daoStateService.getChainHeight();
         log.info("startParseBlocks: startBlockHeight={}", startBlockHeight);
         rpcService.requestChainHeadHeight(chainHeight -> {
-                    // If our persisted block is equal to the chain height we have startBlockHeight 1 block higher,
-                    // so we do not call parseBlocksOnHeadHeight
                     log.info("startParseBlocks: chainHeight={}", chainHeight);
                     if (startBlockHeight <= chainHeight) {
                         parseBlocksOnHeadHeight(startBlockHeight, chainHeight);
@@ -203,11 +201,8 @@ public class FullNode extends BsqNode {
                     chainHeight,
                     this::onNewBlock,
                     () -> {
-                        // We are done but it might be that new blocks have arrived in the meantime,
+                        // We are done, but it might be that new blocks have arrived in the meantime,
                         // so we try again with startBlockHeight set to current chainHeight
-                        // We also set up the listener in the else main branch where we check
-                        // if we are at chainTip, so do not include here another check as it would
-                        // not trigger the listener registration.
                         parseBlocksIfNewBlockAvailable(chainHeight);
                     }, this::handleError);
         } else {
