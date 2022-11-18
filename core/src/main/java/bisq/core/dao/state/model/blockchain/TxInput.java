@@ -83,9 +83,9 @@ public final class TxInput implements PersistablePayload, ImmutableDaoStateModel
     @Override
     public String toString() {
         return "TxInput{" +
-                "\n     connectedTxOutputTxId='" + connectedTxOutputTxId + '\'' +
-                ",\n     connectedTxOutputIndex=" + connectedTxOutputIndex +
-                ",\n     pubKey=" + pubKey +
-                "\n}";
+                "\n                    connectedTxOutputTxId='" + connectedTxOutputTxId + '\'' +
+                ",\n                    connectedTxOutputIndex=" + connectedTxOutputIndex +
+                ",\n                    pubKey=" + pubKey +
+                "\n               }";
     }
 }

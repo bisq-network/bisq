@@ -173,7 +173,7 @@ public class ConnectionState implements MessageListener {
                 ",\n     numInitialDataResponses=" + numInitialDataResponses +
                 ",\n     lastInitialDataMsgTimeStamp=" + lastInitialDataMsgTimeStamp +
                 ",\n     isSeedNode=" + isSeedNode +
-                ",\n     expectedRequests=" + expectedInitialDataResponses +
+                ",\n     expectedInitialDataResponses=" + expectedInitialDataResponses +
                 "\n}";
     }
 }
