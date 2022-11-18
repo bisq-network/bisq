@@ -30,7 +30,6 @@ import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.core.dao.state.model.blockchain.Block;
 
 import bisq.network.p2p.P2PService;
-import bisq.network.p2p.network.ConnectionState;
 
 import bisq.common.UserThread;
 import bisq.common.handlers.ResultHandler;
@@ -76,7 +75,6 @@ public class FullNode extends BsqNode {
         this.rpcService = rpcService;
 
         this.fullNodeNetworkService = fullNodeNetworkService;
-        ConnectionState.setExpectedRequests(5);
     }
 
 
