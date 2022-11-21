@@ -19,10 +19,10 @@ package bisq.core.dao.burningman.model;
 
 import bisq.core.dao.burningman.BurningManService;
 
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -36,13 +36,13 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode
 public class BurningManCandidate {
-    private final List<CompensationModel> compensationModels = new ArrayList<>();
+    private final Set<CompensationModel> compensationModels = new HashSet<>();
     private long accumulatedCompensationAmount;
     private long accumulatedDecayedCompensationAmount;
     private double compensationShare;           // Share of accumulated decayed compensation amounts in relation to total issued amounts
     protected Optional<String> mostRecentAddress = Optional.empty();
 
-    private final List<BurnOutputModel> burnOutputModels = new ArrayList<>();
+    private final Set<BurnOutputModel> burnOutputModels = new HashSet<>();
     private long accumulatedBurnAmount;
     private long accumulatedDecayedBurnAmount;
     protected double burnAmountShare;             // Share of accumulated decayed burn amounts in relation to total burned amounts
@@ -56,7 +56,6 @@ public class BurningManCandidate {
             return;
         }
         burnOutputModels.add(burnOutputModel);
-        burnOutputModels.sort(Comparator.comparing(BurnOutputModel::getTxId));
 
         accumulatedDecayedBurnAmount += burnOutputModel.getDecayedAmount();
         accumulatedBurnAmount += burnOutputModel.getAmount();
@@ -68,10 +67,6 @@ public class BurningManCandidate {
         }
 
         compensationModels.add(compensationModel);
-        // For genesis outputs we have same txId, so we use also output index to ensure deterministic sort order.
-        // For normal comp requests its Optional.empty.
-        compensationModels.sort(Comparator.comparing(CompensationModel::getTxId)
-                .thenComparing(model -> model.getOutputIndex().orElse(-1)));
 
         accumulatedDecayedCompensationAmount += compensationModel.getDecayedAmount();
         accumulatedCompensationAmount += compensationModel.getAmount();
