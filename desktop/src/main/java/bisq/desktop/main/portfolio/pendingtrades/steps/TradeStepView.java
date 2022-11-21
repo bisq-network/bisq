@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.portfolio.pendingtrades.steps;
 
+import bisq.desktop.components.BisqScrollPane;
 import bisq.desktop.components.InfoTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.TxIdTextField;
@@ -120,7 +121,7 @@ public abstract class TradeStepView extends AnchorPane {
         trade = model.dataModel.getTrade();
         checkNotNull(trade, "Trade must not be null at TradeStepView");
 
-        ScrollPane scrollPane = new ScrollPane();
+        ScrollPane scrollPane = new BisqScrollPane();
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.setFitToHeight(true);

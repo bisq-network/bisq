@@ -20,6 +20,7 @@ package bisq.desktop.util;
 import bisq.desktop.Navigation;
 import bisq.desktop.app.BisqApp;
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.BisqScrollPane;
 import bisq.desktop.components.BisqTextArea;
 import bisq.desktop.components.InfoAutoTooltipLabel;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
@@ -1264,8 +1265,8 @@ public class GUIUtil {
         }
     }
 
-    public static ScrollPane createScrollPane() {
-        ScrollPane scrollPane = new ScrollPane();
+    public static BisqScrollPane createScrollPane() {
+        BisqScrollPane scrollPane = new BisqScrollPane();
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setFitToWidth(true);

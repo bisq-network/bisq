@@ -18,6 +18,7 @@
 package bisq.desktop.main.overlays.windows;
 
 import bisq.desktop.components.AutoTooltipButton;
+import bisq.desktop.components.BisqScrollPane;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -97,7 +98,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
 
         createGridPane();
 
-        scrollPane = new ScrollPane();
+        scrollPane = new BisqScrollPane();
         scrollPane.setContent(gridPane);
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
