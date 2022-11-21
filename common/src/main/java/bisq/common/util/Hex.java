@@ -28,4 +28,8 @@ public class Hex {
     public static String encode(byte[] bytes) {
         return BaseEncoding.base16().lowerCase().encode(bytes);
     }
+
+    public static byte[] decodeLast4Bytes(String hex) {
+        return decode(hex.substring(hex.length() - 8));
+    }
 }
