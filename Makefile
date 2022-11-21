@@ -150,6 +150,8 @@ localnet: .localnet
 # user, you'll need to manually run each of the targets listed below
 # commands manually in a separate terminal or as background jobs.
 deploy: setup
+	# ensure localnet is not already deployed
+	if screen -ls localnet | grep Detached; then false; fi
 	# create a new screen session named 'localnet'
 	screen -dmS localnet
 	# deploy each node in its own named screen window
@@ -175,6 +177,8 @@ undeploy:
 	screen -S localnet -X at "#" stuff "^C"
 	# quit all screen windows which results in killing the session
 	screen -S localnet -X at "#" kill
+	# remove dead screens
+	screen -wipe || true
 
 bitcoind: .localnet
 	bitcoind \
