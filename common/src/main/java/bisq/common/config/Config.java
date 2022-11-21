@@ -129,6 +129,9 @@ public class Config {
     public static final String BYPASS_MEMPOOL_VALIDATION = "bypassMempoolValidation";
     public static final String DAO_NODE_API_URL = "daoNodeApiUrl";
     public static final String DAO_NODE_API_PORT = "daoNodeApiPort";
+    public static final String IS_BM_FULL_NODE = "isBmFullNode";
+    public static final String BM_ORACLE_NODE_PUB_KEY = "bmOracleNodePubKey";
+    public static final String BM_ORACLE_NODE_PRIV_KEY = "bmOracleNodePrivKey";
     public static final String SEED_NODE_REPORTING_SERVER_URL = "seedNodeReportingServerUrl";
 
     // Default values for certain options
@@ -221,6 +224,9 @@ public class Config {
     public final boolean bypassMempoolValidation;
     public final String daoNodeApiUrl;
     public final int daoNodeApiPort;
+    public final boolean isBmFullNode;
+    public final String bmOracleNodePubKey;
+    public final String bmOracleNodePrivKey;
     public final String seedNodeReportingServerUrl;
 
     // Properties derived from options but not exposed as options themselves
@@ -681,6 +687,23 @@ public class Config {
                         .withRequiredArg()
                         .ofType(Integer.class)
                         .defaultsTo(8082);
+
+        ArgumentAcceptingOptionSpec<Boolean> isBmFullNode =
+                parser.accepts(IS_BM_FULL_NODE, "Run as Burningman full node")
+                        .withRequiredArg()
+                        .ofType(boolean.class)
+                        .defaultsTo(false);
+
+        ArgumentAcceptingOptionSpec<String> bmOracleNodePubKey =
+                parser.accepts(BM_ORACLE_NODE_PUB_KEY, "Burningman oracle node public key")
+                        .withRequiredArg()
+                        .defaultsTo("");
+
+        ArgumentAcceptingOptionSpec<String> bmOracleNodePrivKey =
+                parser.accepts(BM_ORACLE_NODE_PRIV_KEY, "Burningman oracle node private key")
+                        .withRequiredArg()
+                        .defaultsTo("");
+
         ArgumentAcceptingOptionSpec<String> seedNodeReportingServerUrlOpt =
                 parser.accepts(SEED_NODE_REPORTING_SERVER_URL, "URL of seed node reporting server")
                         .withRequiredArg()
@@ -806,6 +829,9 @@ public class Config {
             this.bypassMempoolValidation = options.valueOf(bypassMempoolValidationOpt);
             this.daoNodeApiUrl = options.valueOf(daoNodeApiUrlOpt);
             this.daoNodeApiPort = options.valueOf(daoNodeApiPortOpt);
+            this.isBmFullNode = options.valueOf(isBmFullNode);
+            this.bmOracleNodePubKey = options.valueOf(bmOracleNodePubKey);
+            this.bmOracleNodePrivKey = options.valueOf(bmOracleNodePrivKey);
             this.seedNodeReportingServerUrl = options.valueOf(seedNodeReportingServerUrlOpt);
         } catch (OptionException ex) {
             throw new ConfigException("problem parsing option '%s': %s",
