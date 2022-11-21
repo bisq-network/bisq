@@ -42,11 +42,26 @@ public class AveragePriceUtil {
     public static Tuple2<Price, Price> getAveragePriceTuple(Preferences preferences,
                                                             TradeStatisticsManager tradeStatisticsManager,
                                                             int days) {
+        return getAveragePriceTuple(preferences, tradeStatisticsManager, days, new Date());
+    }
+
+    public static Tuple2<Price, Price> getAveragePriceTuple(Preferences preferences,
+                                                            TradeStatisticsManager tradeStatisticsManager,
+                                                            int days,
+                                                            Date date) {
+        Date pastXDays = getPastDate(days, date);
+        return getAveragePriceTuple(preferences, tradeStatisticsManager, pastXDays, date);
+    }
+
+    public static Tuple2<Price, Price> getAveragePriceTuple(Preferences preferences,
+                                                            TradeStatisticsManager tradeStatisticsManager,
+                                                            Date pastXDays,
+                                                            Date date) {
         double percentToTrim = Math.max(0, Math.min(49, preferences.getBsqAverageTrimThreshold() * 100));
-        Date pastXDays = getPastDate(days);
         List<TradeStatistics3> bsqAllTradePastXDays = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
                 .filter(e -> e.getCurrency().equals("BSQ"))
                 .filter(e -> e.getDate().after(pastXDays))
+                .filter(e -> e.getDate().before(date))
                 .collect(Collectors.toList());
         List<TradeStatistics3> bsqTradePastXDays = percentToTrim > 0 ?
                 removeOutliers(bsqAllTradePastXDays, percentToTrim) :
@@ -55,6 +70,7 @@ public class AveragePriceUtil {
         List<TradeStatistics3> usdAllTradePastXDays = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
                 .filter(e -> e.getCurrency().equals("USD"))
                 .filter(e -> e.getDate().after(pastXDays))
+                .filter(e -> e.getDate().before(date))
                 .collect(Collectors.toList());
         List<TradeStatistics3> usdTradePastXDays = percentToTrim > 0 ?
                 removeOutliers(usdAllTradePastXDays, percentToTrim) :
@@ -103,7 +119,7 @@ public class AveragePriceUtil {
         var usdBTCPrice = 10000d; // Default to 10000 USD per BTC if there is no USD feed at all
 
         for (TradeStatistics3 item : bsqList) {
-            // Find usdprice for trade item
+            // Find usd price for trade item
             usdBTCPrice = usdList.stream()
                     .filter(usd -> usd.getDateAsLong() > item.getDateAsLong())
                     .map(usd -> MathUtils.scaleDownByPowerOf10((double) usd.getTradePrice().getValue(),
@@ -130,9 +146,9 @@ public class AveragePriceUtil {
         return averagePrice;
     }
 
-    private static Date getPastDate(int days) {
+    private static Date getPastDate(int days, Date date) {
         Calendar cal = new GregorianCalendar();
-        cal.setTime(new Date());
+        cal.setTime(date);
         cal.add(Calendar.DAY_OF_MONTH, -1 * days);
         return cal.getTime();
     }
