@@ -837,17 +837,12 @@ public abstract class WalletService {
                                                  Wallet wallet,
                                                  TransactionConfidence.Source source) throws VerificationException {
         Transaction tx = new Transaction(wallet.getParams(), serializedTransaction);
-        Transaction walletTransaction = wallet.getTransaction(tx.getTxId());
-
-        if (walletTransaction == null) {
+        if (wallet.getTransaction(tx.getTxId()) == null) {
             // We need to recreate the transaction otherwise we get a null pointer...
             tx.getConfidence(Context.get()).setSource(source);
-            //wallet.maybeCommitTx(tx);
             wallet.receivePending(tx, null, true);
-            return tx;
-        } else {
-            return walletTransaction;
         }
+        return wallet.getTransaction(tx.getTxId());
     }
 
     public static Transaction maybeAddNetworkTxToWallet(byte[] serializedTransaction,
