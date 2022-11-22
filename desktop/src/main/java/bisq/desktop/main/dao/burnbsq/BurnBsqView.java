@@ -28,7 +28,7 @@ import bisq.desktop.components.MenuItem;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.burnbsq.assetfee.AssetFeeView;
-import bisq.desktop.main.dao.burnbsq.burningmen.BurningmenView;
+import bisq.desktop.main.dao.burnbsq.burningman.BurningManView;
 import bisq.desktop.main.dao.burnbsq.proofofburn.ProofOfBurnView;
 
 import bisq.core.locale.Res;
@@ -50,7 +50,7 @@ public class BurnBsqView extends ActivatableView<AnchorPane, Void> {
     private final ViewLoader viewLoader;
     private final Navigation navigation;
 
-    private MenuItem proofOfBurn, burningmen, assetFee;
+    private MenuItem proofOfBurn, burningMan, assetFee;
     private Navigation.Listener listener;
 
     @FXML
@@ -81,17 +81,17 @@ public class BurnBsqView extends ActivatableView<AnchorPane, Void> {
         List<Class<? extends View>> baseNavPath = Arrays.asList(MainView.class, DaoView.class, BurnBsqView.class);
         proofOfBurn = new MenuItem(navigation, toggleGroup, Res.get("dao.burnBsq.menuItem.proofOfBurn"),
                 ProofOfBurnView.class, baseNavPath);
-        burningmen = new MenuItem(navigation, toggleGroup, Res.get("dao.burnBsq.menuItem.burningMan"),
-                BurningmenView.class, baseNavPath);
+        burningMan = new MenuItem(navigation, toggleGroup, Res.get("dao.burnBsq.menuItem.burningMan"),
+                BurningManView.class, baseNavPath);
         assetFee = new MenuItem(navigation, toggleGroup, Res.get("dao.burnBsq.menuItem.assetFee"),
                 AssetFeeView.class, baseNavPath);
-        leftVBox.getChildren().addAll(burningmen, proofOfBurn, assetFee);
+        leftVBox.getChildren().addAll(burningMan, proofOfBurn, assetFee);
     }
 
     @Override
     protected void activate() {
         proofOfBurn.activate();
-        burningmen.activate();
+        burningMan.activate();
         assetFee.activate();
 
         navigation.addListener(listener);
@@ -99,7 +99,7 @@ public class BurnBsqView extends ActivatableView<AnchorPane, Void> {
         if (viewPath.size() == 3 && viewPath.indexOf(BurnBsqView.class) == 2 ||
                 viewPath.size() == 2 && viewPath.indexOf(DaoView.class) == 1) {
             if (selectedViewClass == null)
-                selectedViewClass = BurningmenView.class;
+                selectedViewClass = BurningManView.class;
 
             loadView(selectedViewClass);
 
@@ -115,7 +115,7 @@ public class BurnBsqView extends ActivatableView<AnchorPane, Void> {
         navigation.removeListener(listener);
 
         proofOfBurn.deactivate();
-        burningmen.deactivate();
+        burningMan.deactivate();
         assetFee.deactivate();
     }
 
@@ -124,7 +124,7 @@ public class BurnBsqView extends ActivatableView<AnchorPane, Void> {
         content.getChildren().setAll(view.getRoot());
 
         if (view instanceof ProofOfBurnView) toggleGroup.selectToggle(proofOfBurn);
-        else if (view instanceof BurningmenView) toggleGroup.selectToggle(burningmen);
+        else if (view instanceof BurningManView) toggleGroup.selectToggle(burningMan);
         else if (view instanceof AssetFeeView) toggleGroup.selectToggle(assetFee);
     }
 }

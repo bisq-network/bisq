@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.burnbsq.burningmen;
+package bisq.desktop.main.dao.burnbsq.burningman;
 
 import bisq.desktop.util.DisplayUtils;
 

@@ -15,11 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.burnbsq.burningmen;
+package bisq.desktop.main.dao.burnbsq.burningman;
 
 import bisq.desktop.util.DisplayUtils;
 
-import bisq.core.dao.burningman.model.BurnOutputModel;
+import bisq.core.dao.burningman.model.ReimbursementModel;
 import bisq.core.util.coin.BsqFormatter;
 
 import java.util.Date;
@@ -29,19 +29,17 @@ import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-class BurnOutputListItem {
-    private final String dateAsString, amountAsString, decayedAmountAsString;
-    private final long date, amount, decayedAmount;
-    private final int cycleIndex, height;
+class ReimbursementListItem {
+    private final String amountAsString, dateAsString;
+    private final long amount, date;
+    private final int height, cycleIndex;
 
-    BurnOutputListItem(BurnOutputModel model, BsqFormatter bsqFormatter, boolean isLegacyBurningMan) {
+    ReimbursementListItem(ReimbursementModel model, BsqFormatter bsqFormatter) {
         height = model.getHeight();
         cycleIndex = model.getCycleIndex();
         date = model.getDate();
         dateAsString = DisplayUtils.formatDateTime(new Date(date));
         amount = model.getAmount();
         amountAsString = bsqFormatter.formatCoinWithCode(amount);
-        decayedAmount = isLegacyBurningMan ? 0 : model.getDecayedAmount();
-        decayedAmountAsString = isLegacyBurningMan ? "" : bsqFormatter.formatCoinWithCode(decayedAmount);
     }
 }

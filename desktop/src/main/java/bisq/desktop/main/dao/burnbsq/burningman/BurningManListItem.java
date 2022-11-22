@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.dao.burnbsq.burningmen;
+package bisq.desktop.main.dao.burnbsq.burningman;
 
 import bisq.core.dao.burningman.BurningManPresentationService;
 import bisq.core.dao.burningman.model.BurningManCandidate;
@@ -31,7 +31,7 @@ import lombok.Getter;
 
 @Getter
 @EqualsAndHashCode
-class BurningmenListItem {
+class BurningManListItem {
     private final BurningManCandidate burningManCandidate;
     private final String name, address, cappedBurnAmountShareAsString, compensationShareAsString,
             accumulatedDecayedBurnAmountAsBsq, burnTargetAsBsq, accumulatedBurnAmountAsBsq,
@@ -41,7 +41,7 @@ class BurningmenListItem {
     private final int numBurnOutputs, numIssuances;
     private final double cappedBurnAmountShare, burnAmountShare, compensationShare;
 
-    BurningmenListItem(BurningManPresentationService burningManPresentationService,
+    BurningManListItem(BurningManPresentationService burningManPresentationService,
                        String name,
                        BurningManCandidate burningManCandidate,
                        BsqFormatter bsqFormatter) {
@@ -61,10 +61,17 @@ class BurningmenListItem {
             accumulatedDecayedBurnAmountAsBsq = "";
 
             burnAmountShare = burningManCandidate.getBurnAmountShare();
-            cappedBurnAmountShareAsString = FormattingUtils.formatToPercentWithSymbol(burnAmountShare);
+
             cappedBurnAmountShare = burningManCandidate.getCappedBurnAmountShare();
 
-            expectedRevenue = burningManPresentationService.getExpectedRevenue(burningManCandidate);
+            // LegacyBurningManForDPT is the one defined by DAO voting, so only that would receive BTC if new BM do not cover 100%.
+            if (burningManPresentationService.getLegacyBurningManForDPT().equals(burningManCandidate)) {
+                expectedRevenue = burningManPresentationService.getExpectedRevenue(burningManCandidate);
+                cappedBurnAmountShareAsString = FormattingUtils.formatToPercentWithSymbol(burnAmountShare);
+            } else {
+                expectedRevenue = 0;
+                cappedBurnAmountShareAsString = FormattingUtils.formatToPercentWithSymbol(0);
+            }
             expectedRevenueAsBsq = bsqFormatter.formatCoinWithCode(expectedRevenue);
             numBurnOutputs = burningManCandidate.getBurnOutputModels().size();
 
@@ -82,7 +89,7 @@ class BurningmenListItem {
             Tuple2<Long, Long> burnTargetTuple = burningManPresentationService.getCandidateBurnTarget(burningManCandidate);
             burnTarget = burnTargetTuple.first;
             maxBurnTarget = burnTargetTuple.second;
-            burnTargetAsBsq = Res.get("dao.burningmen.burnTarget.fromTo", bsqFormatter.formatCoin(burnTarget), bsqFormatter.formatCoin(maxBurnTarget));
+            burnTargetAsBsq = Res.get("dao.burningman.burnTarget.fromTo", bsqFormatter.formatCoin(burnTarget), bsqFormatter.formatCoin(maxBurnTarget));
             accumulatedBurnAmount = burningManCandidate.getAccumulatedBurnAmount();
             accumulatedBurnAmountAsBsq = bsqFormatter.formatCoinWithCode(accumulatedBurnAmount);
             accumulatedDecayedBurnAmount = burningManCandidate.getAccumulatedDecayedBurnAmount();
@@ -90,7 +97,7 @@ class BurningmenListItem {
             burnAmountShare = burningManCandidate.getBurnAmountShare();
             cappedBurnAmountShare = burningManCandidate.getCappedBurnAmountShare();
             if (burnAmountShare != cappedBurnAmountShare) {
-                cappedBurnAmountShareAsString = Res.get("dao.burningmen.table.burnAmountShare.capped",
+                cappedBurnAmountShareAsString = Res.get("dao.burningman.table.burnAmountShare.capped",
                         FormattingUtils.formatToPercentWithSymbol(cappedBurnAmountShare),
                         FormattingUtils.formatToPercentWithSymbol(burnAmountShare));
             } else {

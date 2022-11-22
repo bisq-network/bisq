@@ -20,7 +20,7 @@
 
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.AnchorPane?>
-<ScrollPane fx:id="root" fx:controller="bisq.desktop.main.dao.burnbsq.burningmen.BurningmenView"
+<ScrollPane fx:id="root" fx:controller="bisq.desktop.main.dao.burnbsq.burningman.BurningManView"
             AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="20.0"
             AnchorPane.rightAnchor="25.0" AnchorPane.topAnchor="20.0"
             xmlns:fx="http://javafx.com/fxml">
