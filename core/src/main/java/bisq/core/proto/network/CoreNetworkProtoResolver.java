@@ -19,6 +19,9 @@ package bisq.core.proto.network;
 
 import bisq.core.alert.Alert;
 import bisq.core.alert.PrivateNotificationMessage;
+import bisq.core.dao.burningman.accounting.node.messages.GetAccountingBlocksRequest;
+import bisq.core.dao.burningman.accounting.node.messages.GetAccountingBlocksResponse;
+import bisq.core.dao.burningman.accounting.node.messages.NewAccountingBlockBroadcastMessage;
 import bisq.core.dao.governance.blindvote.network.messages.RepublishGovernanceDataRequest;
 import bisq.core.dao.governance.proposal.storage.temp.TempProposalPayload;
 import bisq.core.dao.monitoring.network.messages.GetBlindVoteStateHashesRequest;
@@ -253,6 +256,13 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return GetInventoryRequest.fromProto(proto.getGetInventoryRequest(), messageVersion);
                 case GET_INVENTORY_RESPONSE:
                     return GetInventoryResponse.fromProto(proto.getGetInventoryResponse(), messageVersion);
+
+                case GET_ACCOUNTING_BLOCKS_REQUEST:
+                    return GetAccountingBlocksRequest.fromProto(proto.getGetAccountingBlocksRequest(), messageVersion);
+                case GET_ACCOUNTING_BLOCKS_RESPONSE:
+                    return GetAccountingBlocksResponse.fromProto(proto.getGetAccountingBlocksResponse(), messageVersion);
+                case NEW_ACCOUNTING_BLOCK_BROADCAST_MESSAGE:
+                    return NewAccountingBlockBroadcastMessage.fromProto(proto.getNewAccountingBlockBroadcastMessage(), messageVersion);
 
                 default:
                     throw new ProtobufferException("Unknown proto message case (PB.NetworkEnvelope). messageCase=" +
