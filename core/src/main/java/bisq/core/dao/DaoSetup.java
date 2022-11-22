@@ -17,6 +17,9 @@
 
 package bisq.core.dao;
 
+import bisq.core.dao.burningman.accounting.BurningManAccountingService;
+import bisq.core.dao.burningman.accounting.node.AccountingNode;
+import bisq.core.dao.burningman.accounting.node.AccountingNodeProvider;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.BlindVoteListService;
@@ -54,9 +57,11 @@ import java.util.function.Consumer;
 public class DaoSetup {
     private final BsqNode bsqNode;
     private final List<DaoSetupService> daoSetupServices = new ArrayList<>();
+    private final AccountingNode accountingNode;
 
     @Inject
     public DaoSetup(BsqNodeProvider bsqNodeProvider,
+                    AccountingNodeProvider accountingNodeProvider,
                     DaoStateService daoStateService,
                     CycleService cycleService,
                     BallotListService ballotListService,
@@ -79,9 +84,11 @@ public class DaoSetup {
                     DaoStateMonitoringService daoStateMonitoringService,
                     ProposalStateMonitoringService proposalStateMonitoringService,
                     BlindVoteStateMonitoringService blindVoteStateMonitoringService,
-                    DaoStateSnapshotService daoStateSnapshotService) {
+                    DaoStateSnapshotService daoStateSnapshotService,
+                    BurningManAccountingService burningManAccountingService) {
 
         bsqNode = bsqNodeProvider.getBsqNode();
+        accountingNode = accountingNodeProvider.getAccountingNode();
 
         // We need to take care of order of execution.
         daoSetupServices.add(daoStateService);
@@ -107,14 +114,19 @@ public class DaoSetup {
         daoSetupServices.add(proposalStateMonitoringService);
         daoSetupServices.add(blindVoteStateMonitoringService);
         daoSetupServices.add(daoStateSnapshotService);
+        daoSetupServices.add(burningManAccountingService);
 
-        daoSetupServices.add(bsqNodeProvider.getBsqNode());
+        daoSetupServices.add(bsqNode);
+        daoSetupServices.add(accountingNode);
     }
 
     public void onAllServicesInitialized(Consumer<String> errorMessageHandler,
                                          Consumer<String> warnMessageHandler) {
         bsqNode.setErrorMessageHandler(errorMessageHandler);
         bsqNode.setWarnMessageHandler(warnMessageHandler);
+
+        accountingNode.setErrorMessageHandler(errorMessageHandler);
+        accountingNode.setWarnMessageHandler(warnMessageHandler);
 
         // We add first all listeners at all services and then call the start methods.
         // Some services are listening on others so we need to make sure that the
@@ -126,5 +138,6 @@ public class DaoSetup {
 
     public void shutDown() {
         bsqNode.shutDown();
+        accountingNode.shutDown();
     }
 }

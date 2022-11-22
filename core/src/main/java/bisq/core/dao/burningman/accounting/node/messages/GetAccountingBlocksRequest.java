@@ -33,6 +33,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+// Taken from GetBlocksRequest
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @Slf4j
