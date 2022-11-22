@@ -17,7 +17,9 @@
 
 package bisq.core.dao.burningman.model;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -39,5 +41,10 @@ public final class LegacyBurningMan extends BurningManCandidate {
     @Override
     public void calculateShares(double totalDecayedCompensationAmounts, double totalDecayedBurnAmounts) {
         // do nothing
+    }
+
+    @Override
+    public Set<String> getAllAddresses() {
+        return mostRecentAddress.map(Set::of).orElse(new HashSet<>());
     }
 }

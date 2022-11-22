@@ -84,6 +84,7 @@ public class BurningManPresentationService implements DaoStateListener {
     private Optional<LegacyBurningMan> legacyBurningManDPT = Optional.empty();
     private Optional<LegacyBurningMan> legacyBurningManBtcFees = Optional.empty();
     private final Map<P2PDataStorage.ByteArray, Set<TxOutput>> proofOfBurnOpReturnTxOutputByHash = new HashMap<>();
+    private final Map<String, String> burningManNameByAddress = new HashMap<>();
 
     @Inject
     public BurningManPresentationService(DaoStateService daoStateService,
@@ -122,6 +123,7 @@ public class BurningManPresentationService implements DaoStateListener {
         legacyBurningManDPT = Optional.empty();
         legacyBurningManBtcFees = Optional.empty();
         proofOfBurnOpReturnTxOutputByHash.clear();
+        burningManNameByAddress.clear();
     }
 
 
@@ -309,6 +311,34 @@ public class BurningManPresentationService implements DaoStateListener {
                 .sum();
         legacyBurningMan.applyBurnAmountShare(1 - burnAmountShareOfOthers);
         return legacyBurningMan;
+    }
+
+    public Map<String, String> getBurningManNameByAddress() {
+        if (!burningManNameByAddress.isEmpty()) {
+            return burningManNameByAddress;
+        }
+        // clone to not alter source map. We do not store legacy BM in the source map.
+        Map<String, BurningManCandidate> burningManCandidatesByName = new HashMap<>(getBurningManCandidatesByName());
+        burningManCandidatesByName.put(LEGACY_BURNING_MAN_DPT_NAME, getLegacyBurningManForDPT());
+        burningManCandidatesByName.put(LEGACY_BURNING_MAN_BTC_FEES_NAME, getLegacyBurningManForBtcFees());
+
+        Map<String, Set<String>> receiverAddressesByBurningManName = new HashMap<>();
+        burningManCandidatesByName.forEach((name, burningManCandidate) -> {
+            receiverAddressesByBurningManName.putIfAbsent(name, new HashSet<>());
+            receiverAddressesByBurningManName.get(name).addAll(burningManCandidate.getAllAddresses());
+        });
+
+
+        Map<String, String> map = new HashMap<>();
+        receiverAddressesByBurningManName
+                .forEach((name, addresses) -> addresses
+                        .forEach(address -> map.putIfAbsent(address, name)));
+        burningManNameByAddress.putAll(map);
+        return burningManNameByAddress;
+    }
+
+    public String getGenesisTxId() {
+        return daoStateService.getGenesisTxId();
     }
 
     private Map<P2PDataStorage.ByteArray, Set<TxOutput>> getProofOfBurnOpReturnTxOutputByHash() {

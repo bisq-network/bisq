@@ -19,10 +19,16 @@ package bisq.core.dao.burningman.model;
 
 import bisq.core.dao.burningman.BurningManService;
 
+import bisq.common.util.DateUtil;
+
 import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -43,6 +49,7 @@ public class BurningManCandidate {
     protected Optional<String> mostRecentAddress = Optional.empty();
 
     private final Set<BurnOutputModel> burnOutputModels = new HashSet<>();
+    private final Map<Date, Set<BurnOutputModel>> burnOutputModelsByMonth = new HashMap<>();
     private long accumulatedBurnAmount;
     private long accumulatedDecayedBurnAmount;
     protected double burnAmountShare;             // Share of accumulated decayed burn amounts in relation to total burned amounts
@@ -56,6 +63,10 @@ public class BurningManCandidate {
             return;
         }
         burnOutputModels.add(burnOutputModel);
+
+        Date month = DateUtil.getStartOfMonth(new Date(burnOutputModel.getDate()));
+        burnOutputModelsByMonth.putIfAbsent(month, new HashSet<>());
+        burnOutputModelsByMonth.get(month).add(burnOutputModel);
 
         accumulatedDecayedBurnAmount += burnOutputModel.getDecayedAmount();
         accumulatedBurnAmount += burnOutputModel.getAmount();
@@ -74,6 +85,10 @@ public class BurningManCandidate {
         mostRecentAddress = compensationModels.stream()
                 .max(Comparator.comparing(CompensationModel::getHeight))
                 .map(CompensationModel::getAddress);
+    }
+
+    public Set<String> getAllAddresses() {
+        return compensationModels.stream().map(CompensationModel::getAddress).collect(Collectors.toSet());
     }
 
     public void calculateShares(double totalDecayedCompensationAmounts, double totalDecayedBurnAmounts) {
