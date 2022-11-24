@@ -381,7 +381,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         balanceEntryTableView.setVisible(false);
         balanceEntryTableView.setManaged(false);
 
-        exportBalanceEntriesButton = FormBuilder.addButton(gridPane, ++gridRow, Res.get("shared.exportCSV"));
+        exportBalanceEntriesButton = addButton(gridPane, ++gridRow, Res.get("shared.exportCSV"));
         GridPane.setColumnIndex(exportBalanceEntriesButton, 1);
         GridPane.setHalignment(exportBalanceEntriesButton, HPos.RIGHT);
         exportBalanceEntriesButton.setVisible(false);
