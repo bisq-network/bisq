@@ -64,7 +64,7 @@ public abstract class BsqNode implements DaoSetupService {
     protected Consumer<String> errorMessageHandler;
     @Nullable
     protected Consumer<String> warnMessageHandler;
-    private final List<RawBlock> pendingBlocks = new ArrayList<>();
+    protected final List<RawBlock> pendingBlocks = new ArrayList<>();
 
     // The chain height of the latest Block we either get reported by Bitcoin Core or from the seed node
     // This property should not be used in consensus code but only for retrieving blocks as it is not in sync with the
