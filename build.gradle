@@ -93,7 +93,6 @@ configure(subprojects) {
 configure([project(':cli'),
            project(':daemon'),
            project(':desktop'),
-           project(':monitor'),
            project(':seednode'),
            project(':statsnode'),
            project(':apitest')]) {
@@ -502,52 +501,6 @@ configure(project(':desktop')) {
 
     test {
         systemProperty 'jdk.attach.allowAttachSelf', true
-    }
-}
-
-
-configure(project(':monitor')) {
-    apply plugin: 'org.openjfx.javafxplugin'
-
-    javafx {
-        version = "$javafxVersion"
-        modules = ['javafx.base']
-    }
-
-    mainClassName = 'bisq.monitor.Monitor'
-
-    test {
-        useJUnitPlatform()
-        testLogging {
-            events "passed", "skipped", "failed"
-        }
-    }
-
-    dependencies {
-        implementation project(':assets')
-        implementation project(':common')
-        implementation project(':core')
-        implementation project(':p2p')
-        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        compileOnly "org.projectlombok:lombok:$lombokVersion"
-        implementation "ch.qos.logback:logback-classic:$logbackVersion"
-        implementation "ch.qos.logback:logback-core:$logbackVersion"
-        implementation "com.google.guava:guava:$guavaVersion"
-        implementation "org.slf4j:slf4j-api:$slf4jVersion"
-        implementation("com.github.bisq-network.netlayer:tor.external:$netlayerVersion") {
-            exclude(module: 'slf4j-api')
-        }
-        implementation("com.github.bisq-network.netlayer:tor.native:$netlayerVersion") {
-            exclude(module: 'slf4j-api')
-        }
-        implementation("com.google.inject:guice:$guiceVersion") {
-            exclude(module: 'guava')
-        }
-        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
-        testImplementation "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"
-        testImplementation "org.junit.jupiter:junit-jupiter-params:$jupiterVersion"
-        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
     }
 }
 

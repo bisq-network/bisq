@@ -30,8 +30,6 @@ desktop.ini
 *.class
 deploy
 */releases/*
-/monitor/TorHiddenServiceStartupTimeTests/*
-/monitor/monitor-tor/*
 .java-version
 .localnet
 /apitest/src/main/resources/dao-setup*
