@@ -22,7 +22,6 @@ import bisq.network.utils.Utils;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.Log;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.util.Utilities;
 
@@ -210,7 +209,7 @@ public class TorNetworkNode extends NetworkNode {
         torStartupFuture = executorService.submit(() -> {
             try {
                 // temporarily switch tor to debug logging
-                String savedLogLevel = Log.pushCustomLogLevel("org.berndpruenster.netlayer", "DEBUG");
+                // String savedLogLevel = Log.pushCustomLogLevel("org.berndpruenster.netlayer", "DEBUG");
                 // get tor
                 Tor.setDefault(torMode.getTor());
 
@@ -226,7 +225,7 @@ public class TorNetworkNode extends NetworkNode {
                                         "################################################################",
                                 (new Date().getTime() - ts2), socket); //takes usually 30-40 sec
                         // tor has started, revert from debug to original log level
-                        Log.pushCustomLogLevel("org.berndpruenster.netlayer", savedLogLevel);
+                        // Log.pushCustomLogLevel("org.berndpruenster.netlayer", savedLogLevel);
                         new Thread() {
                             @Override
                             public void run() {
