@@ -47,6 +47,7 @@ import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.persistable.PersistedDataHost;
+import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -79,6 +80,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -160,9 +162,8 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
     @Override
     public void readPersisted(Runnable completeHandler) {
         persistenceManager.readPersisted(persisted -> {
-                    log.trace("## readPersisted persisted {}", persisted.size());
-                    Map<String, Long> numItemsPerDay = new HashMap<>();
-                    // We sort by creation date and limit to max 3000 entries, so oldest items get skipped even if TTL
+                    Map<String, Tuple2<AtomicLong, List<Integer>>> numItemsPerDay = new HashMap<>();
+                    // We sort by creation date and limit to max 3000 entries, so the oldest items get skipped even if TTL
                     // is not reached to cap the memory footprint. 3000 items is about 10 MB.
                     persisted.stream()
                             .sorted(Comparator.comparingLong(o -> ((MailboxItem) o).getProtectedMailboxStorageEntry().getCreationTimeStamp()).reversed())
@@ -174,36 +175,46 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
                                 int serializedSize = protectedMailboxStorageEntry.toProtoMessage().getSerializedSize();
                                 // Usual size is 3-4kb. A few are about 15kb and very few are larger and about 100kb or
                                 // more (probably attachments in disputes)
-                                // We ignore those large data to reduce memory footprint.
-                                if (serializedSize < 20000) {
-                                    String date = new Date(protectedMailboxStorageEntry.getCreationTimeStamp()).toString();
-                                    String day = date.substring(4, 10);
-                                    numItemsPerDay.putIfAbsent(day, 0L);
-                                    numItemsPerDay.put(day, numItemsPerDay.get(day) + 1);
-
-                                    String uid = mailboxItem.getUid();
-                                    mailboxItemsByUid.put(uid, mailboxItem);
-                                    mailboxMessageList.add(mailboxItem);
-
-                                    // We add it to our map so that it get added to the excluded key set we send for
-                                    // the initial data requests. So that helps to lower the load for mailbox messages at
-                                    // initial data requests.
-                                    //todo check if listeners are called too early
-                                    p2PDataStorage.addProtectedMailboxStorageEntryToMap(protectedMailboxStorageEntry);
-
-                                    log.trace("## readPersisted uid={}\nhash={}\nisMine={}\ndate={}\nsize={}",
-                                            uid,
-                                            P2PDataStorage.get32ByteHashAsByteArray(protectedMailboxStorageEntry.getProtectedStoragePayload()),
-                                            mailboxItem.isMine(),
-                                            date,
-                                            serializedSize);
+                                String date = new Date(protectedMailboxStorageEntry.getCreationTimeStamp()).toString();
+                                if (serializedSize > 20000) {
+                                    log.warn("Large mailboxItem: size={}; date={}; sender={}", Utilities.readableFileSize(serializedSize), date,
+                                            mailboxItem.getProtectedMailboxStorageEntry().getMailboxStoragePayload().getPrefixedSealedAndSignedMessage().getSenderNodeAddress());
                                 }
+
+                                String day = date.substring(4, 10);
+                                numItemsPerDay.putIfAbsent(day, new Tuple2<>(new AtomicLong(0), new ArrayList<>()));
+                                Tuple2<AtomicLong, List<Integer>> tuple = numItemsPerDay.get(day);
+                                tuple.first.getAndIncrement();
+                                tuple.second.add(serializedSize);
+                                String uid = mailboxItem.getUid();
+                                mailboxItemsByUid.put(uid, mailboxItem);
+                                mailboxMessageList.add(mailboxItem);
+
+                                // We add it to our map so that it get added to the excluded key set we send for
+                                // the initial data requests. So that helps to lower the load for mailbox messages at
+                                // initial data requests.
+                                p2PDataStorage.addProtectedMailboxStorageEntryToMap(protectedMailboxStorageEntry);
                             });
 
-                    List<Map.Entry<String, Long>> perDay = numItemsPerDay.entrySet().stream()
+                    List<String> perDay = numItemsPerDay.entrySet().stream()
                             .sorted(Map.Entry.comparingByKey())
+                            .map(entry -> {
+                                Tuple2<AtomicLong, List<Integer>> tuple = entry.getValue();
+                                List<Integer> sizes = tuple.second;
+                                long sum = sizes.stream().mapToLong(s -> s).sum();
+                                List<String> largeItems = sizes.stream()
+                                        .filter(s -> s > 20000)
+                                        .map(Utilities::readableFileSize)
+                                        .collect(Collectors.toList());
+                                return entry.getKey() + ": Num messages: " + tuple.first + "; total size: " +
+                                        Utilities.readableFileSize(sum) + "; large messages: " + largeItems;
+                            })
                             .collect(Collectors.toList());
-                    log.info("We loaded {} persisted mailbox messages.\nPer day distribution:\n{}", mailboxMessageList.size(), Joiner.on("\n").join(perDay));
+
+                    log.info("We loaded {} persisted mailbox messages.\nPer day distribution:\n{}",
+                            mailboxMessageList.size(),
+                            Joiner.on("\n").join(perDay));
+
                     requestPersistence();
                     completeHandler.run();
                 },
