@@ -59,10 +59,14 @@ class ProtoOutputStream {
     }
 
     private void writeEnvelopeOrThrow(NetworkEnvelope envelope) throws IOException {
+        long ts = System.currentTimeMillis();
         protobuf.NetworkEnvelope proto = envelope.toProtoNetworkEnvelope();
         proto.writeDelimitedTo(delegate);
         delegate.flush();
-
+        long duration = System.currentTimeMillis() - ts;
+        if (duration > 10000) {
+            log.info("Sending {} to peer took {} sec.", envelope.getClass().getSimpleName(), duration / 1000d);
+        }
         statistic.addSentBytes(proto.getSerializedSize());
         statistic.addSentMessage(envelope);
 

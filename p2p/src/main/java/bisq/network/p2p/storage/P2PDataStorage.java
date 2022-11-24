@@ -284,18 +284,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // PersistedStoragePayload items don't get removed, so we don't have an issue with the case that
         // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
         // miss that event if we do not load the full set or use some delta handling.
-
         Map<ByteArray, PersistableNetworkPayload> mapForDataRequest = getMapForDataRequest();
         Set<byte[]> excludedKeys = getKeysAsByteSet(mapForDataRequest);
-       /* log.trace("## getKnownPayloadHashes map of PersistableNetworkPayloads={}, excludedKeys={}",
-                printPersistableNetworkPayloadMap(mapForDataRequest),
-                excludedKeys.stream().map(Utilities::encodeToHex).toArray());*/
-
         Set<byte[]> excludedKeysFromProtectedStorageEntryMap = getKeysAsByteSet(map);
-        /*log.trace("## getKnownPayloadHashes map of ProtectedStorageEntrys={}, excludedKeys={}",
-                printMap(),
-                excludedKeysFromProtectedStorageEntryMap.stream().map(Utilities::encodeToHex).toArray());*/
-
         excludedKeys.addAll(excludedKeysFromProtectedStorageEntryMap);
         return excludedKeys;
     }
