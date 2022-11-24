@@ -38,7 +38,6 @@
 #     $ ls -1 bisq-*
 #     bisq-desktop
 #     bisq-monitor
-#     bisq-pricenode
 #     bisq-relay
 #     bisq-seednode
 #     bisq-statsnode

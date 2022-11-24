@@ -61,7 +61,6 @@ configure(subprojects) {
         junitVersion = '4.12'
         jupiterVersion = '5.7.0'
         kotlinVersion = '1.3.41'
-        knowmXchangeVersion = '5.0.13'
         langVersion = '3.11'
         logbackVersion = '1.1.11'
         loggingVersion = '1.2'
@@ -72,7 +71,6 @@ configure(subprojects) {
         protocVersion = protobufVersion
         qrgenVersion = '1.3'
         slf4jVersion = '1.7.30'
-        springBootVersion = '2.5.6'
 
         os = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
     }
@@ -98,7 +96,6 @@ configure([project(':cli'),
            project(':monitor'),
            project(':seednode'),
            project(':statsnode'),
-           project(':pricenode'),
            project(':apitest')]) {
 
     apply plugin: 'application'
@@ -554,80 +551,6 @@ configure(project(':monitor')) {
     }
 }
 
-
-configure(project(':pricenode')) {
-    apply plugin: "org.springframework.boot"
-
-    apply plugin: 'io.spring.dependency-management'
-
-    mainClassName = 'bisq.price.Main'
-
-    version = file("src/main/resources/version.txt").text.trim()
-
-    jar.manifest.attributes(
-        "Implementation-Title": project.name,
-        "Implementation-Version": version)
-
-    ext['log4j2.version'] = '2.17.0'
-
-    dependencies {
-        implementation project(":common")
-        implementation project(":core")
-        annotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        compileOnly "org.projectlombok:lombok:$lombokVersion"
-        implementation "com.google.code.gson:gson:$gsonVersion"
-        implementation "com.google.guava:guava:$guavaVersion"
-        implementation "commons-codec:commons-codec:$codecVersion"
-        implementation "org.apache.httpcomponents:httpcore:$httpcoreVersion"
-        implementation("org.apache.httpcomponents:httpclient:$httpclientVersion") {
-            exclude(module: 'commons-codec')
-        }
-        implementation("org.knowm.xchange:xchange-binance:$knowmXchangeVersion")
-        implementation("org.knowm.xchange:xchange-bitbay:$knowmXchangeVersion")
-        implementation("org.knowm.xchange:xchange-bitfinex:$knowmXchangeVersion")
-        implementation("org.knowm.xchange:xchange-bitflyer:$knowmXchangeVersion")
-        implementation("org.knowm.xchange:xchange-bitstamp:$knowmXchangeVersion")
-        implementation("org.knowm.xchange:xchange-btcmarkets:$knowmXchangeVersion")
-        implementation("org.knowm.xchange:xchange-cexio:$knowmXchangeVersion")
-        implementation("org.knowm.xchange:xchange-coinbasepro:$knowmXchangeVersion")
-        implementation("org.knowm.xchange:xchange-coinmarketcap:$knowmXchangeVersion")
-        implementation("org.knowm.xchange:xchange-coinmate:$knowmXchangeVersion")
-        implementation("org.knowm.xchange:xchange-coinone:$knowmXchangeVersion")
-        implementation("org.knowm.xchange:xchange-exmo:$knowmXchangeVersion")
-        implementation("org.knowm.xchange:xchange-hitbtc:$knowmXchangeVersion")
-        implementation("org.knowm.xchange:xchange-huobi:$knowmXchangeVersion")
-        implementation("org.knowm.xchange:xchange-independentreserve:$knowmXchangeVersion")
-        implementation("org.knowm.xchange:xchange-kraken:$knowmXchangeVersion")
-        implementation("org.knowm.xchange:xchange-luno:$knowmXchangeVersion")
-        implementation("org.knowm.xchange:xchange-mercadobitcoin:$knowmXchangeVersion")
-        implementation("org.knowm.xchange:xchange-paribu:$knowmXchangeVersion")
-        implementation("org.knowm.xchange:xchange-poloniex:$knowmXchangeVersion")
-        implementation("org.knowm.xchange:xchange-quoine:$knowmXchangeVersion")
-        implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
-        testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
-        testCompileOnly "org.projectlombok:lombok:$lombokVersion"
-        testImplementation "org.junit.jupiter:junit-jupiter-api:$jupiterVersion"
-        testImplementation "org.junit.jupiter:junit-jupiter-params:$jupiterVersion"
-        testImplementation "org.mockito:mockito-core:$mockitoVersion"
-        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$jupiterVersion")
-    }
-
-    test {
-        useJUnitPlatform()
-
-        // Disabled by default, since spot provider tests include connections to external API endpoints
-        // Can be enabled by adding -Dtest.pricenode.includeSpotProviderTests=true to the gradle command:
-        // ./gradlew test -Dtest.pricenode.includeSpotProviderTests=true
-        if (System.properties['test.pricenode.includeSpotProviderTests'] != 'true') {
-            project.logger.lifecycle('Pricenode: Skipping spot provider tests')
-            exclude 'bisq/price/spot/providers/**'
-        }
-    }
-
-    task stage {
-        dependsOn assemble
-    }
-}
 
 configure(project(':seednode')) {
     apply plugin: 'com.github.johnrengelman.shadow'
