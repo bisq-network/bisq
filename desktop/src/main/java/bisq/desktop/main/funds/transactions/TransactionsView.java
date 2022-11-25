@@ -393,15 +393,9 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                         hyperlinkWithIcon.setOnAction(event -> openDetailPopup(item));
                                         hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
                                         setGraphic(hyperlinkWithIcon);
-                                        // If details are available its a trade tx and we don't expect any dust attack tx
+                                        // its a trade tx and we don't expect any dust attack tx
                                     } else {
-                                        if (item.isDustAttackTx()) {
-                                            hyperlinkWithIcon = new HyperlinkWithIcon(item.getTradable().getId(), AwesomeIcon.WARNING_SIGN);
-                                            hyperlinkWithIcon.setOnAction(event -> new Popup().warning(Res.get("funds.tx.dustAttackTx.popup")).show());
-                                            setGraphic(hyperlinkWithIcon);
-                                        } else {
-                                            setGraphic(null);
-                                        }
+                                        setGraphic(null);
                                     }
                                 } else {
                                     setGraphic(null);
@@ -431,7 +425,13 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
-                                    setGraphic(new AutoTooltipLabel(item.getDetails()));
+                                    if (item.isDustAttackTx()) {
+                                        hyperlinkWithIcon = new HyperlinkWithIcon(item.getDetails(), AwesomeIcon.WARNING_SIGN);
+                                        hyperlinkWithIcon.setOnAction(event -> new Popup().warning(Res.get("funds.tx.dustAttackTx.popup")).show());
+                                        setGraphic(hyperlinkWithIcon);
+                                    } else {
+                                        setGraphic(new AutoTooltipLabel(item.getDetails()));
+                                    }
                                 } else {
                                     setGraphic(null);
                                 }
