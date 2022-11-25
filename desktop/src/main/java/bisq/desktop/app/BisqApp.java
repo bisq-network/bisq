@@ -26,7 +26,7 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.BsqEmptyWalletWindow;
 import bisq.desktop.main.overlays.windows.BtcEmptyWalletWindow;
 import bisq.desktop.main.overlays.windows.FilterWindow;
-import bisq.desktop.main.overlays.windows.ManualPayoutTxWindow;
+import bisq.desktop.main.overlays.windows.supporttool.SupportToolWindow;
 import bisq.desktop.main.overlays.windows.SendAlertMessageWindow;
 import bisq.desktop.main.overlays.windows.ShowWalletDataWindow;
 import bisq.desktop.main.overlays.windows.WalletPasswordWindow;
@@ -354,7 +354,7 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
                         new Popup().warning(Res.get("popup.warning.walletNotInitialized")).show();
                 } else if (Utilities.isAltOrCtrlPressed(KeyCode.G, keyEvent)) {
                     if (injector.getInstance(BtcWalletService.class).isWalletReady())
-                        injector.getInstance(ManualPayoutTxWindow.class).show();
+                        injector.getInstance(SupportToolWindow.class).show();
                     else
                         new Popup().warning(Res.get("popup.warning.walletNotInitialized")).show();
                 } else if (DevEnv.isDevMode()) {
