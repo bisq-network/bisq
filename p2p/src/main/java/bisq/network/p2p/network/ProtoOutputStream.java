@@ -33,11 +33,11 @@ import javax.annotation.concurrent.NotThreadSafe;
 class ProtoOutputStream {
     private static final Logger log = LoggerFactory.getLogger(ProtoOutputStream.class);
 
-    private final OutputStream delegate;
+    private final OutputStream outputStream;
     private final Statistic statistic;
 
-    ProtoOutputStream(OutputStream delegate, Statistic statistic) {
-        this.delegate = delegate;
+    ProtoOutputStream(OutputStream outputStream, Statistic statistic) {
+        this.outputStream = outputStream;
         this.statistic = statistic;
     }
 
@@ -52,17 +52,21 @@ class ProtoOutputStream {
 
     void onConnectionShutdown() {
         try {
-            delegate.close();
+            outputStream.close();
         } catch (Throwable t) {
             log.error("Failed to close connection", t);
         }
     }
 
     private void writeEnvelopeOrThrow(NetworkEnvelope envelope) throws IOException {
+        long ts = System.currentTimeMillis();
         protobuf.NetworkEnvelope proto = envelope.toProtoNetworkEnvelope();
-        proto.writeDelimitedTo(delegate);
-        delegate.flush();
-
+        proto.writeDelimitedTo(outputStream);
+        outputStream.flush();
+        long duration = System.currentTimeMillis() - ts;
+        if (duration > 10000) {
+            log.info("Sending {} to peer took {} sec.", envelope.getClass().getSimpleName(), duration / 1000d);
+        }
         statistic.addSentBytes(proto.getSerializedSize());
         statistic.addSentMessage(envelope);
 

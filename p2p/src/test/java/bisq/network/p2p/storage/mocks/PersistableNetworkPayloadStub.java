@@ -19,6 +19,8 @@ package bisq.network.p2p.storage.mocks;
 
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
+import static org.mockito.Mockito.mock;
+
 /**
  * Stub implementation of a PersistableNetworkPayload that can be used in tests
  * to provide canned answers to calls. Useful if the tests don't care about the implementation
@@ -29,9 +31,10 @@ import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 public class PersistableNetworkPayloadStub implements PersistableNetworkPayload {
     private final boolean hashSizeValid;
     private final byte[] hash;
+    private final protobuf.PersistableNetworkPayload mockPayload;
 
     public PersistableNetworkPayloadStub(boolean hashSizeValid) {
-        this(hashSizeValid, new byte[] { 1 });
+        this(hashSizeValid, new byte[]{1});
     }
 
     public PersistableNetworkPayloadStub(byte[] hash) {
@@ -41,11 +44,12 @@ public class PersistableNetworkPayloadStub implements PersistableNetworkPayload 
     private PersistableNetworkPayloadStub(boolean hashSizeValid, byte[] hash) {
         this.hashSizeValid = hashSizeValid;
         this.hash = hash;
+        mockPayload = mock(protobuf.PersistableNetworkPayload.class);
     }
 
     @Override
     public protobuf.PersistableNetworkPayload toProtoMessage() {
-        throw new UnsupportedOperationException("Stub does not support protobuf");
+        return mockPayload;
     }
 
     @Override

@@ -71,6 +71,7 @@ import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Message;
 
 import com.google.inject.name.Named;
 
@@ -105,6 +106,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -283,18 +285,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // PersistedStoragePayload items don't get removed, so we don't have an issue with the case that
         // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
         // miss that event if we do not load the full set or use some delta handling.
-
         Map<ByteArray, PersistableNetworkPayload> mapForDataRequest = getMapForDataRequest();
         Set<byte[]> excludedKeys = getKeysAsByteSet(mapForDataRequest);
-       /* log.trace("## getKnownPayloadHashes map of PersistableNetworkPayloads={}, excludedKeys={}",
-                printPersistableNetworkPayloadMap(mapForDataRequest),
-                excludedKeys.stream().map(Utilities::encodeToHex).toArray());*/
-
         Set<byte[]> excludedKeysFromProtectedStorageEntryMap = getKeysAsByteSet(map);
-        /*log.trace("## getKnownPayloadHashes map of ProtectedStorageEntrys={}, excludedKeys={}",
-                printMap(),
-                excludedKeysFromProtectedStorageEntryMap.stream().map(Utilities::encodeToHex).toArray());*/
-
         excludedKeys.addAll(excludedKeysFromProtectedStorageEntryMap);
         return excludedKeys;
     }
@@ -317,6 +310,12 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // mapForDataResponse contains the filtered by version data from HistoricalDataStoreService as well as all other
         // maps of the remaining appendOnlyDataStoreServices.
         Map<ByteArray, PersistableNetworkPayload> mapForDataResponse = getMapForDataResponse(getDataRequest.getVersion());
+
+        // Give a bit of tolerance for message overhead
+        double maxSize = Connection.getMaxPermittedMessageSize() * 0.9;
+
+        // 25% of space is allocated for PersistableNetworkPayloads
+        long limit = Math.round(maxSize * 0.25);
         Set<PersistableNetworkPayload> filteredPersistableNetworkPayloads =
                 filterKnownHashes(
                         mapForDataResponse,
@@ -324,6 +323,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         excludedKeysAsByteArray,
                         peerCapabilities,
                         maxEntriesPerType,
+                        limit,
                         wasPersistableNetworkPayloadsTruncated);
         log.info("{} PersistableNetworkPayload entries remained after filtered by excluded keys. " +
                         "Original map had {} entries.",
@@ -333,6 +333,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         .map(e -> Utilities.encodeToHex(e.getHash()))
                         .toArray());
 
+        // We give 75% space to ProtectedStorageEntries as they contain MailBoxMessages and those can be larger.
+        limit = Math.round(maxSize * 0.75);
         Set<ProtectedStorageEntry> filteredProtectedStorageEntries =
                 filterKnownHashes(
                         map,
@@ -340,6 +342,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         excludedKeysAsByteArray,
                         peerCapabilities,
                         maxEntriesPerType,
+                        limit,
                         wasProtectedStorageEntriesTruncated);
         log.info("{} ProtectedStorageEntry entries remained after filtered by excluded keys. " +
                         "Original map had {} entries.",
@@ -411,16 +414,50 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             Set<ByteArray> knownHashes,
             Capabilities peerCapabilities,
             int maxEntries,
+            long limit,
             AtomicBoolean outTruncated) {
 
         log.info("Num knownHashes {}", knownHashes.size());
 
+        AtomicLong totalSize = new AtomicLong();
+        AtomicBoolean exceededSizeLimit = new AtomicBoolean();
+
+        // We start with the non-DateSortedTruncatablePayload as they have higher priority. In case we would exceed our
+        // size limit the following DateSortedTruncatablePayload items would not get added at all.
         Set<Map.Entry<ByteArray, T>> entries = toFilter.entrySet();
+        List<T> filteredResults = entries.stream()
+                .filter(entry -> !(entry.getValue() instanceof DateSortedTruncatablePayload))
+                .filter(entry -> !knownHashes.contains(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .filter(payload -> shouldTransmitPayloadToPeer(peerCapabilities, objToPayload.apply(payload)))
+                .filter(payload -> {
+                    Message message = payload.toProtoMessage();
+                    if (message == null) {
+                        return true;
+                    }
+                    if (exceededSizeLimit.get() || totalSize.addAndGet(message.getSerializedSize()) > limit) {
+                        exceededSizeLimit.set(true);
+                    }
+                    return !exceededSizeLimit.get();
+                })
+                .collect(Collectors.toList());
+        log.info("Num filtered non-dateSortedTruncatablePayloads {}", filteredResults.size());
+
         List<T> dateSortedTruncatablePayloads = entries.stream()
                 .filter(entry -> entry.getValue() instanceof DateSortedTruncatablePayload)
                 .filter(entry -> !knownHashes.contains(entry.getKey()))
                 .map(Map.Entry::getValue)
                 .filter(payload -> shouldTransmitPayloadToPeer(peerCapabilities, objToPayload.apply(payload)))
+                .filter(payload -> {
+                    Message message = payload.toProtoMessage();
+                    if (message == null) {
+                        return true;
+                    }
+                    if (exceededSizeLimit.get() || totalSize.addAndGet(message.getSerializedSize()) > limit) {
+                        exceededSizeLimit.set(true);
+                    }
+                    return !exceededSizeLimit.get();
+                })
                 .sorted(Comparator.comparing(payload -> ((DateSortedTruncatablePayload) payload).getDate()))
                 .collect(Collectors.toList());
         log.info("Num filtered dateSortedTruncatablePayloads {}", dateSortedTruncatablePayloads.size());
@@ -435,14 +472,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             }
         }
 
-        List<T> filteredResults = entries.stream()
-                .filter(entry -> !(entry.getValue() instanceof DateSortedTruncatablePayload))
-                .filter(entry -> !knownHashes.contains(entry.getKey()))
-                .map(Map.Entry::getValue)
-                .filter(payload -> shouldTransmitPayloadToPeer(peerCapabilities, objToPayload.apply(payload)))
-                .collect(Collectors.toList());
-        log.info("Num filtered non-dateSortedTruncatablePayloads {}", filteredResults.size());
-
         // The non-dateSortedTruncatablePayloads have higher prio, so we added dateSortedTruncatablePayloads
         // after those so in case we need to truncate we first truncate the dateSortedTruncatablePayloads.
         filteredResults.addAll(dateSortedTruncatablePayloads);
@@ -454,6 +483,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         } else {
             log.info("Num filteredResults {}", filteredResults.size());
         }
+
+        outTruncated.set(outTruncated.get() || exceededSizeLimit.get());
 
         return new HashSet<>(filteredResults);
     }
