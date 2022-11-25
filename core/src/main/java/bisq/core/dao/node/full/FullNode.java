@@ -58,6 +58,7 @@ public class FullNode extends BsqNode {
     private int blocksToParseInBatch;
     private long parseInBatchStartTime;
     private int parseBlocksOnHeadHeightCounter;
+    private int numExceptions;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -109,6 +110,8 @@ public class FullNode extends BsqNode {
         int startBlockHeight = daoStateService.getChainHeight();
         log.info("startParseBlocks: startBlockHeight={}", startBlockHeight);
         rpcService.requestChainHeadHeight(chainHeight -> {
+                    // If our persisted block is equal to the chain height we have startBlockHeight 1 block higher,
+                    // so we do not call parseBlocksOnHeadHeight
                     log.info("startParseBlocks: chainHeight={}", chainHeight);
                     if (startBlockHeight <= chainHeight) {
                         parseBlocksOnHeadHeight(startBlockHeight, chainHeight);
@@ -257,7 +260,24 @@ public class FullNode extends BsqNode {
     }
 
     private void handleError(Throwable throwable) {
-        if (throwable instanceof BlockHashNotConnectingException || throwable instanceof BlockHeightNotConnectingException) {
+        if (throwable instanceof com.googlecode.jsonrpc4j.HttpException) {
+            numExceptions++;
+            if (numExceptions > 10) {
+                log.warn("We got {} RPC HttpExceptions at our block handler.", numExceptions);
+                pendingBlocks.clear();
+                startReOrgFromLastSnapshot();
+                startParseBlocks();
+                numExceptions = 0;
+            }
+            int delayInSec = Math.min(60, numExceptions * numExceptions);
+            log.warn("We got a RPC HttpException at our block handler. Last persisted block height: {}. " +
+                            "We try after a delay of {} sec to request from the last height. error={}",
+                    daoStateService.getBlockHeightOfLastBlock(), delayInSec, throwable.toString());
+            UserThread.runAfter(() -> rpcService.requestChainHeadHeight(
+                            chainHeight -> parseBlocksOnHeadHeight(daoStateService.getBlockHeightOfLastBlock(), chainHeight),
+                            this::handleError),
+                    delayInSec);
+        } else if (throwable instanceof BlockHashNotConnectingException || throwable instanceof BlockHeightNotConnectingException) {
             // We do not escalate that exception as it is handled with the snapshot manager to recover its state.
             log.warn(throwable.toString());
         } else {
@@ -277,6 +297,7 @@ public class FullNode extends BsqNode {
                     } else if (cause instanceof NotificationHandlerException) {
                         log.error("Error from within block notification daemon: {}", cause.getCause().toString());
                         startReOrgFromLastSnapshot();
+                        startParseBlocks();
                         return;
                     } else if (cause instanceof Error) {
                         throw (Error) cause;

@@ -226,8 +226,9 @@ public class RpcService {
 
                 var block = getBlockFromRawDtoBlock(rawDtoBlock);
                 UserThread.execute(() -> dtoBlockHandler.accept(block));
-            } catch (Throwable t) {
-                errorHandler.accept(t);
+            } catch (Throwable throwable) {
+                log.error("Error at BlockHandler", throwable);
+                errorHandler.accept(throwable);
             }
         });
     }
@@ -241,12 +242,13 @@ public class RpcService {
                 }
 
                 public void onFailure(@NotNull Throwable throwable) {
+                    log.error("Error at requestChainHeadHeight", throwable);
                     UserThread.execute(() -> errorHandler.accept(throwable));
                 }
             }, MoreExecutors.directExecutor());
         } catch (Exception e) {
             if (!isShutDown || !(e instanceof RejectedExecutionException)) {
-                log.warn(e.toString(), e);
+                log.error("Exception at requestChainHeadHeight", e);
                 throw e;
             }
         }
@@ -274,11 +276,12 @@ public class RpcService {
 
                 @Override
                 public void onFailure(@NotNull Throwable throwable) {
-                    log.error("Error at requestDtoBlock: blockHeight={}", blockHeight);
+                    log.error("Error at requestDtoBlock: blockHeight={}, error={}", blockHeight, throwable);
                     UserThread.execute(() -> errorHandler.accept(throwable));
                 }
             }, MoreExecutors.directExecutor());
         } catch (Exception e) {
+            log.error("Exception at requestDtoBlock", e);
             if (!isShutDown || !(e instanceof RejectedExecutionException)) {
                 log.warn(e.toString(), e);
                 throw e;

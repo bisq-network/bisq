@@ -268,6 +268,7 @@ public abstract class BsqNode implements DaoSetupService {
 
             pendingBlocks.clear();
             startReOrgFromLastSnapshot();
+            startParseBlocks();
             throw new RequiredReorgFromSnapshotException(rawBlock);
         }
         return Optional.empty();
