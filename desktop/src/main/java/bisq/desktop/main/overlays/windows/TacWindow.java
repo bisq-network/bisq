@@ -85,17 +85,16 @@ public class TacWindow extends Overlay<TacWindow> {
                 "The language to be used in the arbitration proceedings shall be English if not otherwise stated.\n\n" +
 
                 "6. The user confirms that they have read and agreed to the rules regarding the dispute process:\n" +
-                "    - You must complete trades within the maximum duration specified for each payment method.\n" +
-                "    - Leave the \"reason for payment\" field empty. DO NOT put the trade ID or any other text like 'bitcoin', 'BTC', or 'Bisq'.\n" +
+                "    - You must complete trades within the trading window.\n" +
+                "    - By default, leave the \"reason for payment\" field empty. NEVER put the trade ID or any other text like 'bitcoin', 'BTC', or 'Bisq'.\n" +
                 "    - If the bank of the fiat sender charges fees, the sender (BTC buyer) has to cover the fees.\n" +
-                "    - You must cooperate with the mediator during the mediation process, and respond to each mediator message within 48 hours.\n" +
+                "    - In case of mediation, you must cooperate with the mediator and respond to each message within 48 hours.\n" +
                 "    - If either (or both) traders do not accept the mediator's suggested payout, traders can open arbitration after 10 days in case of altcoin trades and after 20 days for fiat trades.\n" +
                 "    - You should only open arbitration if you think the mediator's suggested payout is unfair, or if your trading peer is unresponsive.\n" +
                 "    - By opening arbitration the trader publishes the delayed payout transaction, sending all funds from the deposit transaction to the distributed Bisq Burningmen who have burned BSQ upfront\n" +
                 "      which authorizes them for that role.\n" +
-                "    - The arbitrator will re-investigate the case and decides how the trader(s) should be refunded.\n" +
-                "    - The arbitrator may charge a small fee (max. the traders security deposit) as compensation for their work.\n" +
-                "    - The refund agent will take the payout suggestion from the arbitrator and refund the trader(s) from they own pocket to avoid the extra effort for the traders to do the reimbursement request at\n" +
+                "    - The arbitrator will re-investigate the case and decide how the trader(s) should be refunded.\n" +
+                "    - The refund agent will take the payout suggestion from the arbitrator and refund the trader(s) from their own pocket to avoid the extra effort for the traders to do the reimbursement request at\n" +
                 "      the Bisq DAO. The refund agent will make the reimbursement request on behalf of those traders who got refunded directly by them. It is up to the discretion of the refund agent to which\n" +
                 "      amounts they provide this service.\n" +
                 "    - In case a trader is not satisfied with the arbitration result or if the refund agent could not refund directly the trader, they can make a reimbursement request to the Bisq DAO by themself.\n";
