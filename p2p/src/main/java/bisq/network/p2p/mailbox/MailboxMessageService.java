@@ -128,6 +128,8 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
     private final Map<String, MailboxItem> mailboxItemsByUid = new HashMap<>();
 
     private boolean isBootstrapped;
+    private boolean allServicesInitialized;
+    private boolean initAfterBootstrapped;
 
     @Inject
     public MailboxMessageService(NetworkNode networkNode,
@@ -215,6 +217,12 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // We wait until all services are ready to avoid some edge cases as in https://github.com/bisq-network/bisq/issues/6367
+    public void onAllServicesInitialized() {
+        allServicesInitialized = true;
+        init();
+    }
+
     // We don't listen on requestDataManager directly as we require the correct
     // order of execution. The p2pService is handling the correct order of execution and we get called
     // directly from there.
@@ -226,11 +234,18 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
 
     // second stage starup for MailboxMessageService ... apply existing messages to their modules
     public void initAfterBootstrapped() {
-        // Only now we start listening and processing. The p2PDataStorage is our cache for data we have received
-        // after the hidden service was ready.
-        addHashMapChangedListener();
-        onAdded(p2PDataStorage.getMap().values());
-        maybeRepublishMailBoxMessages();
+        initAfterBootstrapped = true;
+        init();
+    }
+
+    private void init() {
+        if (allServicesInitialized && initAfterBootstrapped) {
+            // Only now we start listening and processing. The p2PDataStorage is our cache for data we have received
+            // after the hidden service was ready.
+            addHashMapChangedListener();
+            onAdded(p2PDataStorage.getMap().values());
+            maybeRepublishMailBoxMessages();
+        }
     }
 
 
@@ -477,7 +492,7 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
                 mailboxMessage.getClass().getSimpleName(), uid, sender);
         decryptedMailboxListeners.forEach(e -> e.onMailboxMessageAdded(decryptedMessageWithPubKey, sender));
 
-        if (isBootstrapped) {
+        if (allServicesInitialized && isBootstrapped) {     // GH ISSUE 6367 only remove after fully initialized
             // After we notified our listeners we remove the data immediately from the network.
             // In case the client has not been ready it need to take it via getMailBoxMessages.
             // We do not remove the data from our local map at that moment. This has to be called explicitely from the

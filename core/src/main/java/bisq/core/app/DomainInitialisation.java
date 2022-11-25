@@ -58,6 +58,7 @@ import bisq.core.trade.txproof.xmr.XmrTxProofService;
 import bisq.core.user.User;
 
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.mailbox.MailboxMessageService;
 
 import bisq.common.ClockWatcher;
 import bisq.common.persistence.PersistenceManager;
@@ -115,6 +116,7 @@ public class DomainInitialisation {
     private final TriggerPriceService triggerPriceService;
     private final MempoolService mempoolService;
     private final OpenBsqSwapOfferService openBsqSwapOfferService;
+    private final MailboxMessageService mailboxMessageService;
 
     @Inject
     public DomainInitialisation(ClockWatcher clockWatcher,
@@ -154,7 +156,8 @@ public class DomainInitialisation {
                                 DaoStateSnapshotService daoStateSnapshotService,
                                 TriggerPriceService triggerPriceService,
                                 MempoolService mempoolService,
-                                OpenBsqSwapOfferService openBsqSwapOfferService) {
+                                OpenBsqSwapOfferService openBsqSwapOfferService,
+                                MailboxMessageService mailboxMessageService) {
         this.clockWatcher = clockWatcher;
         this.tradeLimits = tradeLimits;
         this.arbitrationManager = arbitrationManager;
@@ -193,6 +196,7 @@ public class DomainInitialisation {
         this.triggerPriceService = triggerPriceService;
         this.mempoolService = mempoolService;
         this.openBsqSwapOfferService = openBsqSwapOfferService;
+        this.mailboxMessageService = mailboxMessageService;
     }
 
     public void initDomainServices(Consumer<String> rejectedTxErrorMessageHandler,
@@ -276,6 +280,8 @@ public class DomainInitialisation {
         marketAlerts.onAllServicesInitialized();
         triggerPriceService.onAllServicesInitialized();
         mempoolService.onAllServicesInitialized();
+
+        mailboxMessageService.onAllServicesInitialized();
 
         if (revolutAccountsUpdateHandler != null) {
             revolutAccountsUpdateHandler.accept(user.getPaymentAccountsAsObservable().stream()
