@@ -29,7 +29,6 @@ import bisq.core.filter.FilterManager;
 import bisq.core.network.p2p.inventory.messages.GetInventoryRequest;
 import bisq.core.network.p2p.inventory.messages.GetInventoryResponse;
 import bisq.core.network.p2p.inventory.model.InventoryItem;
-import bisq.core.network.p2p.inventory.model.RequestInfo;
 
 import bisq.network.p2p.network.Connection;
 import bisq.network.p2p.network.MessageListener;
@@ -151,7 +150,7 @@ public class GetInventoryRequestHandler implements MessageListener {
 
             // node
             inventory.put(InventoryItem.version, Version.VERSION);
-            inventory.put(InventoryItem.commitHash, RequestInfo.COMMIT_HASH);
+            inventory.put(InventoryItem.commitHash, new Version().readCommitHash());
             inventory.put(InventoryItem.usedMemory, String.valueOf(Profiler.getUsedMemoryInBytes()));
             inventory.put(InventoryItem.jvmStartTime, String.valueOf(ManagementFactory.getRuntimeMXBean().getStartTime()));
 

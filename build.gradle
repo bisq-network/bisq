@@ -237,6 +237,15 @@ configure(project(':common')) {
         modules = ['javafx.graphics']
     }
 
+    ext.getHash = {
+        def p1 = 'git rev-parse HEAD'.execute()
+        p1.waitFor()
+        return p1.text.substring(0,7)
+    }
+
+    jar.manifest.attributes(
+        "Implementation-Version": getHash())
+
     dependencies {
         implementation project(':proto')
         annotationProcessor "org.projectlombok:lombok:$lombokVersion"
