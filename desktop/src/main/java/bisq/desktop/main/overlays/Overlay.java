@@ -762,7 +762,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                 copyIcon.getStyleClass().add("popup-icon-information");
                 copyIcon.setManaged(true);
                 copyIcon.setVisible(true);
-                FormBuilder.getIconForLabel(AwesomeIcon.COPY, copyIcon, "1.5em");
+                FormBuilder.getIconForLabel(AwesomeIcon.COPY, copyIcon, "1.1em");
                 copyIcon.addEventHandler(MOUSE_CLICKED, mouseEvent -> {
                     if (message != null) {
                         String forClipboard = headLineLabel.getText() + System.lineSeparator() + message
