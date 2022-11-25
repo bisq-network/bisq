@@ -17,13 +17,20 @@
 
 package bisq.core.support.dispute;
 
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.support.SupportType;
+import bisq.core.trade.model.bisq_v1.Contract;
+import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.util.JsonUtil;
 import bisq.core.util.validation.RegexValidatorFactory;
 
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.config.Config;
+import bisq.common.crypto.CryptoException;
+import bisq.common.crypto.Hash;
+import bisq.common.crypto.Sig;
 import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Address;
@@ -31,10 +38,13 @@ import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -46,6 +56,72 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class DisputeValidation {
+    public static void validateDisputeData(Dispute dispute,
+                                           BtcWalletService btcWalletService) throws ValidationException {
+        try {
+            Contract contract = dispute.getContract();
+            checkArgument(contract.getOfferPayload().getId().equals(dispute.getTradeId()), "Invalid tradeId");
+            checkArgument(dispute.getContractAsJson().equals(JsonUtil.objectToJson(contract)), "Invalid contractAsJson");
+            checkArgument(Arrays.equals(Objects.requireNonNull(dispute.getContractHash()), Hash.getSha256Hash(checkNotNull(dispute.getContractAsJson()))),
+                    "Invalid contractHash");
+
+            Optional<Transaction> depositTx = dispute.findDepositTx(btcWalletService);
+            if (depositTx.isPresent()) {
+                checkArgument(depositTx.get().getTxId().toString().equals(dispute.getDepositTxId()), "Invalid depositTxId");
+                checkArgument(depositTx.get().getInputs().size() >= 2, "DepositTx must have at least 2 inputs");
+            }
+
+            try {
+                // Only the dispute opener has set the signature
+                String makerContractSignature = dispute.getMakerContractSignature();
+                if (makerContractSignature != null) {
+                    Sig.verify(contract.getMakerPubKeyRing().getSignaturePubKey(),
+                            dispute.getContractAsJson(),
+                            makerContractSignature);
+                }
+                String takerContractSignature = dispute.getTakerContractSignature();
+                if (takerContractSignature != null) {
+                    Sig.verify(contract.getTakerPubKeyRing().getSignaturePubKey(),
+                            dispute.getContractAsJson(),
+                            takerContractSignature);
+                }
+            } catch (CryptoException e) {
+                throw new ValidationException(dispute, e.getMessage());
+            }
+        } catch (Throwable t) {
+            throw new ValidationException(dispute, t.getMessage());
+        }
+    }
+
+    public static void validateTradeAndDispute(Dispute dispute, Trade trade)
+            throws ValidationException {
+        try {
+            checkArgument(dispute.getContract().equals(trade.getContract()),
+                    "contract must match contract from trade");
+
+            checkNotNull(trade.getDelayedPayoutTx(), "trade.getDelayedPayoutTx() must not be null");
+            checkNotNull(dispute.getDelayedPayoutTxId(), "delayedPayoutTxId must not be null");
+            checkArgument(dispute.getDelayedPayoutTxId().equals(trade.getDelayedPayoutTx().getTxId().toString()),
+                    "delayedPayoutTxId must match delayedPayoutTxId from trade");
+
+            checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
+            checkNotNull(dispute.getDepositTxId(), "depositTxId must not be null");
+            checkArgument(dispute.getDepositTxId().equals(trade.getDepositTx().getTxId().toString()),
+                    "depositTx must match depositTx from trade");
+
+            checkNotNull(dispute.getDepositTxSerialized(), "depositTxSerialized must not be null");
+        } catch (Throwable t) {
+            throw new ValidationException(dispute, t.getMessage());
+        }
+    }
+
+    public static void validateSenderNodeAddress(Dispute dispute,
+                                                 NodeAddress senderNodeAddress) throws NodeAddressException {
+        if (!senderNodeAddress.equals(dispute.getContract().getBuyerNodeAddress())
+                && !senderNodeAddress.equals(dispute.getContract().getSellerNodeAddress())) {
+            throw new NodeAddressException(dispute, "senderNodeAddress not matching any of the traders node addresses");
+        }
+    }
 
     public static void validateNodeAddresses(Dispute dispute, Config config)
             throws NodeAddressException {
@@ -81,8 +157,7 @@ public class DisputeValidation {
     public static void validateDonationAddress(Dispute dispute,
                                                Transaction delayedPayoutTx,
                                                NetworkParameters params,
-                                               DaoFacade daoFacade
-    )
+                                               DaoFacade daoFacade)
             throws AddressException {
         TransactionOutput output = delayedPayoutTx.getOutput(0);
         Address address = output.getScriptPubKey().getToAddress(params);
@@ -225,26 +300,26 @@ public class DisputeValidation {
         @Getter
         private final Dispute dispute;
 
-        public ValidationException(Dispute dispute, String msg) {
+        ValidationException(Dispute dispute, String msg) {
             super(msg);
             this.dispute = dispute;
         }
     }
 
     public static class NodeAddressException extends ValidationException {
-        public NodeAddressException(Dispute dispute, String msg) {
+        NodeAddressException(Dispute dispute, String msg) {
             super(dispute, msg);
         }
     }
 
     public static class AddressException extends ValidationException {
-        public AddressException(Dispute dispute, String msg) {
+        AddressException(Dispute dispute, String msg) {
             super(dispute, msg);
         }
     }
 
     public static class DisputeReplayException extends ValidationException {
-        public DisputeReplayException(Dispute dispute, String msg) {
+        DisputeReplayException(Dispute dispute, String msg) {
             super(dispute, msg);
         }
     }

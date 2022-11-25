@@ -24,6 +24,7 @@ import bisq.core.dao.DaoFacade;
 import bisq.core.locale.Res;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.provider.mempool.MempoolService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.SupportType;
 import bisq.core.support.dispute.Dispute;
@@ -48,22 +49,32 @@ import bisq.common.UserThread;
 import bisq.common.app.Version;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
+import bisq.common.util.Hex;
+
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionInput;
+import org.bitcoinj.core.TransactionOutPoint;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @Singleton
 public final class RefundManager extends DisputeManager<RefundDisputeList> {
-
+    private final MempoolService mempoolService;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -81,9 +92,12 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
                          KeyRing keyRing,
                          RefundDisputeListService refundDisputeListService,
                          Config config,
-                         PriceFeedService priceFeedService) {
+                         PriceFeedService priceFeedService,
+                         MempoolService mempoolService) {
         super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
                 openOfferManager, daoFacade, keyRing, refundDisputeListService, config, priceFeedService);
+
+        this.mempoolService = mempoolService;
     }
 
 
@@ -237,5 +251,61 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
     @Override
     public NodeAddress getAgentNodeAddress(Dispute dispute) {
         return dispute.getContract().getRefundAgentNodeAddress();
+    }
+
+    public CompletableFuture<List<Transaction>> requestBlockchainTransactions(String makerFeeTxId,
+                                                                              String takerFeeTxId,
+                                                                              String depositTxId,
+                                                                              String delayedPayoutTxId) {
+        NetworkParameters params = btcWalletService.getParams();
+        List<Transaction> txs = new ArrayList<>();
+        return mempoolService.requestTxAsHex(makerFeeTxId)
+                .thenCompose(txAsHex -> {
+                    txs.add(new Transaction(params, Hex.decode(txAsHex)));
+                    return mempoolService.requestTxAsHex(takerFeeTxId);
+                }).thenCompose(txAsHex -> {
+                    txs.add(new Transaction(params, Hex.decode(txAsHex)));
+                    return mempoolService.requestTxAsHex(depositTxId);
+                }).thenCompose(txAsHex -> {
+                    txs.add(new Transaction(params, Hex.decode(txAsHex)));
+                    return mempoolService.requestTxAsHex(delayedPayoutTxId);
+                })
+                .thenApply(txAsHex -> {
+                    txs.add(new Transaction(params, Hex.decode(txAsHex)));
+                    return txs;
+                });
+    }
+
+    public void verifyTradeTxChain(List<Transaction> txs) {
+        Transaction makerFeeTx = txs.get(0);
+        Transaction takerFeeTx = txs.get(1);
+        Transaction depositTx = txs.get(2);
+        Transaction delayedPayoutTx = txs.get(3);
+
+        // The order and number of buyer and seller inputs are not part of the trade protocol consensus.
+        // In the current implementation buyer inputs come before seller inputs at depositTx and there is
+        // only 1 input per trader, but we do not want to rely on that.
+        // So we just check that both fee txs are found in the inputs.
+        boolean makerFeeTxFoundAtInputs = false;
+        boolean takerFeeTxFoundAtInputs = false;
+        for (TransactionInput transactionInput : depositTx.getInputs()) {
+            String fundingTxId = transactionInput.getOutpoint().getHash().toString();
+            if (!makerFeeTxFoundAtInputs) {
+                makerFeeTxFoundAtInputs = fundingTxId.equals(makerFeeTx.getTxId().toString());
+            }
+            if (!takerFeeTxFoundAtInputs) {
+                takerFeeTxFoundAtInputs = fundingTxId.equals(takerFeeTx.getTxId().toString());
+            }
+        }
+        checkArgument(makerFeeTxFoundAtInputs, "makerFeeTx not found at depositTx inputs");
+        checkArgument(takerFeeTxFoundAtInputs, "takerFeeTx not found at depositTx inputs");
+        checkArgument(depositTx.getInputs().size() >= 2,
+                "DepositTx must have at least 2 inputs");
+        checkArgument(delayedPayoutTx.getInputs().size() == 1,
+                "DelayedPayoutTx must have 1 input");
+        TransactionOutPoint delayedPayoutTxInputOutpoint = delayedPayoutTx.getInputs().get(0).getOutpoint();
+        String fundingTxId = delayedPayoutTxInputOutpoint.getHash().toString();
+        checkArgument(fundingTxId.equals(depositTx.getTxId().toString()),
+                "First input at delayedPayoutTx does not connect to depositTx");
     }
 }

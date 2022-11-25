@@ -17,6 +17,7 @@
 
 package bisq.core.support.dispute;
 
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.locale.Res;
 import bisq.core.proto.CoreProtoResolver;
 import bisq.core.support.SupportType;
@@ -38,6 +39,8 @@ import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
+
+import org.bitcoinj.core.Transaction;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
@@ -100,7 +103,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     private final PubKeyRing traderPubKeyRing;
     private final long tradeDate;
     private final long tradePeriodEnd;
-    private Contract contract;
+    private final Contract contract;
     @Nullable
     private final byte[] contractHash;
     @Nullable
@@ -163,6 +166,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     private transient final IntegerProperty badgeCountProperty = new SimpleIntegerProperty();
 
     private transient FileTransferReceiver fileTransferSession = null;
+    private transient Optional<Transaction> cachedDepositTx = Optional.empty();
 
     public FileTransferReceiver createOrGetFileTransferReceiver(NetworkNode networkNode,
                                                                 NodeAddress peerNodeAddress,
@@ -180,6 +184,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
                                                        FileTransferSession.FtpCallback callback) {
         return new FileTransferSender(networkNode, peerNodeAddress, this.tradeId, this.traderId, this.getRoleStringForLogFile(), callback);
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -501,6 +506,16 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
                 + (disputeOpenerIsMaker ? "MAKER" : "TAKER");
     }
 
+    public Optional<Transaction> findDepositTx(BtcWalletService btcWalletService) {
+        if (cachedDepositTx.isPresent() || depositTxSerialized == null) {
+            return cachedDepositTx;
+        }
+
+        Transaction tx = new Transaction(btcWalletService.getParams(), depositTxSerialized);
+        cachedDepositTx = Optional.of(tx);
+        return cachedDepositTx;
+    }
+
     @Override
     public String toString() {
         return "Dispute{" +
@@ -534,6 +549,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
                 ",\n     mediatorsDisputeResult='" + mediatorsDisputeResult + '\'' +
                 ",\n     delayedPayoutTxId='" + delayedPayoutTxId + '\'' +
                 ",\n     donationAddressOfDelayedPayoutTx='" + donationAddressOfDelayedPayoutTx + '\'' +
+                ",\n     cachedDepositTx='" + cachedDepositTx + '\'' +
                 "\n}";
     }
 }

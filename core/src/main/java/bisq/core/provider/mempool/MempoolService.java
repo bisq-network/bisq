@@ -43,6 +43,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 import lombok.Getter;
@@ -129,7 +130,12 @@ public class MempoolService {
         mempoolRequest.getTxStatus(future, txId);
     }
 
-    // ///////////////////////////
+    public CompletableFuture<String> requestTxAsHex(String txId) {
+        outstandingRequests++;
+        return new MempoolRequest(preferences, socks5ProxyProvider)
+                .requestTxAsHex(txId)
+                .whenComplete((result, throwable) -> outstandingRequests--);
+    }
 
     private void validateOfferMakerTx(MempoolRequest mempoolRequest,
                                       TxValidator txValidator,
