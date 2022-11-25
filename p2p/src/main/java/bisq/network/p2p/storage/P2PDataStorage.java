@@ -71,6 +71,7 @@ import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.Message;
 
 import com.google.inject.name.Named;
 
@@ -430,7 +431,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 .map(Map.Entry::getValue)
                 .filter(payload -> shouldTransmitPayloadToPeer(peerCapabilities, objToPayload.apply(payload)))
                 .filter(payload -> {
-                    if (exceededSizeLimit.get() || totalSize.addAndGet(payload.toProtoMessage().getSerializedSize()) > limit) {
+                    Message message = payload.toProtoMessage();
+                    if (message == null) {
+                        return true;
+                    }
+                    if (exceededSizeLimit.get() || totalSize.addAndGet(message.getSerializedSize()) > limit) {
                         exceededSizeLimit.set(true);
                     }
                     return !exceededSizeLimit.get();
@@ -444,7 +449,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 .map(Map.Entry::getValue)
                 .filter(payload -> shouldTransmitPayloadToPeer(peerCapabilities, objToPayload.apply(payload)))
                 .filter(payload -> {
-                    if (exceededSizeLimit.get() || totalSize.addAndGet(payload.toProtoMessage().getSerializedSize()) > limit) {
+                    Message message = payload.toProtoMessage();
+                    if (message == null) {
+                        return true;
+                    }
+                    if (exceededSizeLimit.get() || totalSize.addAndGet(message.getSerializedSize()) > limit) {
                         exceededSizeLimit.set(true);
                     }
                     return !exceededSizeLimit.get();
