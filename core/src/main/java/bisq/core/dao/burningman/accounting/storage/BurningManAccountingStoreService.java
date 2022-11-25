@@ -19,11 +19,17 @@ package bisq.core.dao.burningman.accounting.storage;
 
 import bisq.core.dao.burningman.accounting.blockchain.AccountingBlock;
 
+import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
+import bisq.network.p2p.storage.persistence.StoreService;
+
+import bisq.common.config.Config;
 import bisq.common.persistence.PersistenceManager;
-import bisq.common.proto.persistable.PersistedDataHost;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
+
+import java.io.File;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,29 +39,16 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class BurningManAccountingStoreService implements PersistedDataHost {
-    private final PersistenceManager<BurningManAccountingStore> persistenceManager;
-    private final BurningManAccountingStore burningManAccountingStore = new BurningManAccountingStore(new ArrayList<>());
+public class BurningManAccountingStoreService extends StoreService<BurningManAccountingStore> {
+    private static final String FILE_NAME = "BurningManAccountingStore";
 
     @Inject
-    public BurningManAccountingStoreService(PersistenceManager<BurningManAccountingStore> persistenceManager) {
-        this.persistenceManager = persistenceManager;
+    public BurningManAccountingStoreService(ResourceDataStoreService resourceDataStoreService,
+                                            @Named(Config.STORAGE_DIR) File storageDir,
+                                            PersistenceManager<BurningManAccountingStore> persistenceManager) {
+        super(storageDir, persistenceManager);
 
-        this.persistenceManager.initialize(burningManAccountingStore, PersistenceManager.Source.PRIVATE_LOW_PRIO);
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // PersistedDataHost implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void readPersisted(Runnable completeHandler) {
-        persistenceManager.readPersisted(persisted -> {
-                    burningManAccountingStore.getBlocks().addAll(persisted.getBlocks());
-                    completeHandler.run();
-                },
-                completeHandler);
+        resourceDataStoreService.addService(this);
     }
 
 
@@ -68,16 +61,16 @@ public class BurningManAccountingStoreService implements PersistedDataHost {
     }
 
     public List<AccountingBlock> getBlocks() {
-        return Collections.unmodifiableList(burningManAccountingStore.getBlocks());
+        return Collections.unmodifiableList(store.getBlocks());
     }
 
     public void addBlock(AccountingBlock block) {
-        burningManAccountingStore.getBlocks().add(block);
+        store.getBlocks().add(block);
         requestPersistence();
     }
 
     public void purgeLastTenBlocks() {
-        List<AccountingBlock> blocks = burningManAccountingStore.getBlocks();
+        List<AccountingBlock> blocks = store.getBlocks();
         if (blocks.size() <= 10) {
             blocks.clear();
             requestPersistence();
@@ -88,5 +81,25 @@ public class BurningManAccountingStoreService implements PersistedDataHost {
         blocks.clear();
         blocks.addAll(purged);
         requestPersistence();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Protected
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected BurningManAccountingStore createStore() {
+        return new BurningManAccountingStore(new ArrayList<>());
+    }
+
+    @Override
+    protected void initializePersistenceManager() {
+        persistenceManager.initialize(store, PersistenceManager.Source.NETWORK);
+    }
+
+    @Override
+    public String getFileName() {
+        return FILE_NAME;
     }
 }

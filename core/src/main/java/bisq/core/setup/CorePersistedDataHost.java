@@ -18,7 +18,6 @@
 package bisq.core.setup;
 
 import bisq.core.btc.model.AddressEntryList;
-import bisq.core.dao.burningman.accounting.storage.BurningManAccountingStoreService;
 import bisq.core.dao.governance.ballot.BallotListService;
 import bisq.core.dao.governance.blindvote.MyBlindVoteListService;
 import bisq.core.dao.governance.bond.reputation.MyReputationListService;
@@ -81,7 +80,6 @@ public class CorePersistedDataHost {
         persistedDataHosts.add(injector.getInstance(MyReputationListService.class));
         persistedDataHosts.add(injector.getInstance(MyProofOfBurnListService.class));
         persistedDataHosts.add(injector.getInstance(UnconfirmedBsqChangeOutputListService.class));
-        persistedDataHosts.add(injector.getInstance(BurningManAccountingStoreService.class));
         return persistedDataHosts;
     }
 }
