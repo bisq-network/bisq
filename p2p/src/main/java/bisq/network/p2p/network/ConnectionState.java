@@ -45,10 +45,15 @@ public class ConnectionState implements MessageListener {
     private static final long PEER_RESET_TIMER_DELAY_SEC = TimeUnit.MINUTES.toSeconds(4);
     private static final long COMPLETED_TIMER_DELAY_SEC = 10;
 
-    // Number of expected requests in standard case. Can be different according to network conditions.
-    // Is different for LiteDaoNodes and FullDaoNodes
-    @Setter
-    private static int expectedRequests = 6;
+    // We have 2 GetDataResponses and 3 GetHashResponses. If node is a lite node it also has a GetBlocksResponse if
+    // blocks are missing.
+    private static final int MIN_EXPECTED_RESPONSES = 5;
+    private static int expectedInitialDataResponses = MIN_EXPECTED_RESPONSES;
+
+    // If app runs in LiteNode mode there is one more expected request for the getBlocks request, so we increment standard value.
+    public static void incrementExpectedInitialDataResponses() {
+        expectedInitialDataResponses += 1;
+    }
 
     private final Connection connection;
 
@@ -124,7 +129,7 @@ public class ConnectionState implements MessageListener {
     }
 
     private void maybeResetInitialDataExchangeType() {
-        if (numInitialDataResponses >= expectedRequests) {
+        if (numInitialDataResponses >= expectedInitialDataResponses) {
             // We have received the expected messages from initial data requests. We delay a bit the reset
             // to give time for processing the response and more tolerance to edge cases where we expect more responses.
             // Reset to PEER does not mean disconnection as well, but just that this connection has lower priority and
@@ -168,7 +173,7 @@ public class ConnectionState implements MessageListener {
                 ",\n     numInitialDataResponses=" + numInitialDataResponses +
                 ",\n     lastInitialDataMsgTimeStamp=" + lastInitialDataMsgTimeStamp +
                 ",\n     isSeedNode=" + isSeedNode +
-                ",\n     expectedRequests=" + expectedRequests +
+                ",\n     expectedInitialDataResponses=" + expectedInitialDataResponses +
                 "\n}";
     }
 }

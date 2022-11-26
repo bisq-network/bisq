@@ -99,7 +99,11 @@ public final class RawBlock extends BaseBlock implements NetworkPayload {
     @Override
     public String toString() {
         return "RawBlock{" +
-                "\n     rawTxs=" + rawTxs +
-                "\n} " + super.toString();
+                "\n     height=" + height +
+                ",\n     time=" + time +
+                ",\n     hash='" + hash + '\'' +
+                ",\n     previousBlockHash='" + previousBlockHash + '\'' +
+                ",\n     rawTxs=" + rawTxs +
+                "\n}";
     }
 }

@@ -32,6 +32,7 @@ import bisq.core.dao.state.DaoStateSnapshotService;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.Connection;
+import bisq.network.p2p.network.ConnectionState;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
@@ -190,6 +191,9 @@ public class LiteNode extends BsqNode {
             onParseBlockChainComplete();
             return;
         }
+
+        // If we request blocks we increment the ConnectionState counter.
+        ConnectionState.incrementExpectedInitialDataResponses();
 
         if (chainHeight == daoStateService.getGenesisBlockHeight()) {
             liteNodeNetworkService.requestBlocks(chainHeight);

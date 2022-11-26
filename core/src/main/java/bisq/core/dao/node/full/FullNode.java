@@ -30,7 +30,6 @@ import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.core.dao.state.model.blockchain.Block;
 
 import bisq.network.p2p.P2PService;
-import bisq.network.p2p.network.ConnectionState;
 
 import bisq.common.UserThread;
 import bisq.common.handlers.ResultHandler;
@@ -58,6 +57,7 @@ public class FullNode extends BsqNode {
     private boolean addBlockHandlerAdded;
     private int blocksToParseInBatch;
     private long parseInBatchStartTime;
+    private int parseBlocksOnHeadHeightCounter;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -76,7 +76,6 @@ public class FullNode extends BsqNode {
         this.rpcService = rpcService;
 
         this.fullNodeNetworkService = fullNodeNetworkService;
-        ConnectionState.setExpectedRequests(5);
     }
 
 
@@ -110,8 +109,6 @@ public class FullNode extends BsqNode {
         int startBlockHeight = daoStateService.getChainHeight();
         log.info("startParseBlocks: startBlockHeight={}", startBlockHeight);
         rpcService.requestChainHeadHeight(chainHeight -> {
-                    // If our persisted block is equal to the chain height we have startBlockHeight 1 block higher,
-                    // so we do not call parseBlocksOnHeadHeight
                     log.info("startParseBlocks: chainHeight={}", chainHeight);
                     if (startBlockHeight <= chainHeight) {
                         parseBlocksOnHeadHeight(startBlockHeight, chainHeight);
@@ -205,20 +202,24 @@ public class FullNode extends BsqNode {
                     chainHeight,
                     this::onNewBlock,
                     () -> {
-                        // We are done but it might be that new blocks have arrived in the meantime,
+                        // We are done, but it might be that new blocks have arrived in the meantime,
                         // so we try again with startBlockHeight set to current chainHeight
-                        // We also set up the listener in the else main branch where we check
-                        // if we are at chainTip, so do not include here another check as it would
-                        // not trigger the listener registration.
                         parseBlocksIfNewBlockAvailable(chainHeight);
                     }, this::handleError);
         } else {
-            log.warn("We are trying to start with a block which is above the chain height of Bitcoin Core. " +
-                    "We need probably wait longer until Bitcoin Core has fully synced. " +
-                    "We try again after a delay of 1 min.");
-            UserThread.runAfter(() -> rpcService.requestChainHeadHeight(chainHeight1 ->
-                            parseBlocksOnHeadHeight(startBlockHeight, chainHeight1),
-                    this::handleError), 60);
+            parseBlocksOnHeadHeightCounter++;
+            if (parseBlocksOnHeadHeightCounter <= 5) {
+                log.warn("We are trying to start with a block which is above the chain height of Bitcoin Core. " +
+                        "We need to wait longer until Bitcoin Core has fully synced. " +
+                        "We try again after a delay of {} min.", parseBlocksOnHeadHeightCounter * parseBlocksOnHeadHeightCounter);
+                UserThread.runAfter(() -> rpcService.requestChainHeadHeight(height ->
+                                parseBlocksOnHeadHeight(startBlockHeight, height),
+                        this::handleError), parseBlocksOnHeadHeightCounter * parseBlocksOnHeadHeightCounter * 60L);
+            } else {
+                log.warn("We tried {} times to start with startBlockHeight {} which is above the chain height {} of Bitcoin Core. " +
+                                "It might be that Bitcoin Core has not fully synced. We give up now.",
+                        parseBlocksOnHeadHeightCounter, startBlockHeight, chainHeight);
+            }
         }
     }
 

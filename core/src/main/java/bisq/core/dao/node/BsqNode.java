@@ -232,6 +232,7 @@ public abstract class BsqNode implements DaoSetupService {
 
             int heightForNextBlock = daoStateService.getChainHeight() + 1;
             if (rawBlock.getHeight() > heightForNextBlock) {
+                // rawBlock is not at expected next height but further in the future
                 if (!pendingBlocks.contains(rawBlock)) {
                     pendingBlocks.add(rawBlock);
                     log.info("We received a block with a future block height. We store it as pending and try to apply " +
@@ -240,16 +241,17 @@ public abstract class BsqNode implements DaoSetupService {
                     log.warn("We received a block with a future block height but we had it already added to our pendingBlocks.");
                 }
             } else if (rawBlock.getHeight() >= daoStateService.getGenesisBlockHeight()) {
+                // rawBlock is not expected next height but either same height as chainHead or in the past
                 // We received an older block. We compare if we have it in our chain.
-                Optional<Block> optionalBlock = daoStateService.getBlockAtHeight(rawBlock.getHeight());
-                if (optionalBlock.isPresent()) {
-                    if (optionalBlock.get().getHash().equals(rawBlock.getPreviousBlockHash())) {
+                Optional<Block> existingBlockAsSameHeight = daoStateService.getBlockAtHeight(rawBlock.getHeight());
+                if (existingBlockAsSameHeight.isPresent()) {
+                    if (existingBlockAsSameHeight.get().getHash().equals(rawBlock.getHash())) {
                         log.info("We received an old block we have already parsed and added. We ignore it.");
                     } else {
                         log.info("We received an old block with a different hash. We ignore it. Hash={}", rawBlock.getHash());
                     }
                 } else {
-                    log.info("In case we have reset from genesis height we would not find the block");
+                    log.info("In case we have reset from genesis height we would not find the existingBlockAsSameHeight");
                 }
             } else {
                 log.info("We ignore it as it was before genesis height");

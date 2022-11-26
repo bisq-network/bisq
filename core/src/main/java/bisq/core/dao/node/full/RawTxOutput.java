@@ -22,6 +22,7 @@ import bisq.core.dao.state.model.blockchain.PubKeyScript;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 
 import bisq.common.proto.network.NetworkPayload;
+import bisq.common.util.Utilities;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -88,6 +89,14 @@ public final class RawTxOutput extends BaseTxOutput implements NetworkPayload {
 
     @Override
     public String toString() {
-        return "RawTxOutput{} " + super.toString();
+        return "RawTxOutput{" +
+                "\n                    index=" + index +
+                ",\n                    value=" + value +
+                ",\n                    txId='" + txId + '\'' +
+                ",\n                    pubKeyScript=" + pubKeyScript +
+                ",\n                    address='" + address + '\'' +
+                ",\n                    opReturnData=" + Utilities.bytesAsHexString(opReturnData) +
+                ",\n                    blockHeight=" + blockHeight +
+                "\n               }";
     }
 }
