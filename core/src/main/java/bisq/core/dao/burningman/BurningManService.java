@@ -141,7 +141,7 @@ public class BurningManService {
                                             int issuanceHeight = issuance.getChainHeight();
                                             long issuanceAmount = getIssuanceAmountForCompensationRequest(issuance);
                                             int cycleIndex = cyclesInDaoStateService.getCycleIndexAtChainHeight(issuanceHeight);
-                                            if (isValidReimbursement(name, cycleIndex, issuanceAmount)) {
+                                            if (isValidCompensationRequest(name, cycleIndex, issuanceAmount)) {
                                                 long decayedIssuanceAmount = getDecayedCompensationAmount(issuanceAmount, issuanceHeight, chainHeight);
                                                 long issuanceDate = daoStateService.getBlockTime(issuanceHeight);
                                                 candidate.addCompensationModel(CompensationModel.fromCompensationRequest(address,
@@ -237,7 +237,6 @@ public class BurningManService {
 
     private long getIssuanceAmountForCompensationRequest(Issuance issuance) {
         // There was a reimbursement for a conference sponsorship with 44776 BSQ. We remove that as well.
-        // TODO Maybe remove in final version if we stick with 2 years going back for comp. requests (its older than 2 years)
         // See https://github.com/bisq-network/compensation/issues/498
         if (issuance.getTxId().equals("01455fc4c88fca0665a5f56a90ff03fb9e3e88c3430ffc5217246e32d180aa64")) {
             return 119400; // That was the compensation part
@@ -246,8 +245,7 @@ public class BurningManService {
         }
     }
 
-    private boolean isValidReimbursement(String name, int cycleIndex, long issuanceAmount) {
-        // TODO Maybe remove in final version if we stick with 2 years going back for comp. requests (its older than 2 years)
+    private boolean isValidCompensationRequest(String name, int cycleIndex, long issuanceAmount) {
         // Up to cycle 15 the RefundAgent made reimbursement requests as compensation requests. We filter out those entries.
         // As it is mixed with RefundAgents real compensation requests we take out all above 3500 BSQ.
         boolean isReimbursementOfRefundAgent = name.equals("RefundAgent") && cycleIndex <= 15 && issuanceAmount > 350000;
