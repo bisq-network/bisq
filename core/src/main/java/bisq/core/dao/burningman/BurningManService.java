@@ -237,6 +237,7 @@ public class BurningManService {
 
     private long getIssuanceAmountForCompensationRequest(Issuance issuance) {
         // There was a reimbursement for a conference sponsorship with 44776 BSQ. We remove that as well.
+        // TODO Maybe remove in final version if we stick with 2 years going back for comp. requests (its older than 2 years)
         // See https://github.com/bisq-network/compensation/issues/498
         if (issuance.getTxId().equals("01455fc4c88fca0665a5f56a90ff03fb9e3e88c3430ffc5217246e32d180aa64")) {
             return 119400; // That was the compensation part
@@ -246,6 +247,7 @@ public class BurningManService {
     }
 
     private boolean isValidReimbursement(String name, int cycleIndex, long issuanceAmount) {
+        // TODO Maybe remove in final version if we stick with 2 years going back for comp. requests (its older than 2 years)
         // Up to cycle 15 the RefundAgent made reimbursement requests as compensation requests. We filter out those entries.
         // As it is mixed with RefundAgents real compensation requests we take out all above 3500 BSQ.
         boolean isReimbursementOfRefundAgent = name.equals("RefundAgent") && cycleIndex <= 15 && issuanceAmount > 350000;
@@ -253,19 +255,18 @@ public class BurningManService {
     }
 
     private long getDecayedCompensationAmount(long amount, int issuanceHeight, int chainHeight) {
-        int fromHeight = cyclesInDaoStateService.getChainHeightOfPastCycle(chainHeight, NUM_CYCLES_COMP_REQUEST_DECAY);
-        return getDecayedAmount(amount, issuanceHeight, chainHeight, fromHeight, 0);
+        int chainHeightOfPastCycle = cyclesInDaoStateService.getChainHeightOfPastCycle(chainHeight, NUM_CYCLES_COMP_REQUEST_DECAY);
+        return getDecayedAmount(amount, issuanceHeight, chainHeight, chainHeightOfPastCycle);
     }
 
-    // Linear decay between currentBlockHeight (100% of amount) and issuanceHeight (firstBlockOffset % of amount)
-    // Values below firstBlockHeight will use the firstBlockOffset as factor for the amount.
-    // E.g. if firstBlockOffset is 0.1 the decay goes to 10% and earlier values stay at 10%.
+    // Linear decay between currentBlockHeight (100% of amount) and issuanceHeight
+    // chainHeightOfPastCycle is currentBlockHeight - numCycles*cycleDuration. It changes with each block and
+    // distance to currentBlockHeight is the same if cycle durations have not changed (possible via DAo voting but never done).
     @VisibleForTesting
     static long getDecayedAmount(long amount,
                                  int issuanceHeight,
                                  int currentBlockHeight,
-                                 int firstBlockHeight,
-                                 double firstBlockOffset) {
+                                 int chainHeightOfPastCycle) {
         if (issuanceHeight > currentBlockHeight)
             throw new IllegalArgumentException("issuanceHeight must not be larger than currentBlockHeight. issuanceHeight=" + issuanceHeight + "; currentBlockHeight=" + currentBlockHeight);
         if (currentBlockHeight < 0)
@@ -275,13 +276,12 @@ public class BurningManService {
         if (issuanceHeight < 0)
             throw new IllegalArgumentException("issuanceHeight must not be negative. issuanceHeight=" + issuanceHeight);
 
-        if (currentBlockHeight <= firstBlockHeight) {
+        if (currentBlockHeight <= chainHeightOfPastCycle) {
             return amount;
         }
 
-        double factor = Math.max(0, (issuanceHeight - firstBlockHeight) / (double) (currentBlockHeight - firstBlockHeight));
-        double factorWithOffset = firstBlockOffset + factor * (1 - firstBlockOffset);
-        long weighted = Math.round(amount * factorWithOffset);
+        double factor = Math.max(0, (issuanceHeight - chainHeightOfPastCycle) / (double) (currentBlockHeight - chainHeightOfPastCycle));
+        long weighted = Math.round(amount * factor);
         return Math.max(0, weighted);
     }
 
@@ -319,12 +319,11 @@ public class BurningManService {
     }
 
     private long getDecayedBurnedAmount(long amount, int issuanceHeight, int chainHeight) {
-        int fromHeight = cyclesInDaoStateService.getChainHeightOfPastCycle(chainHeight, NUM_CYCLES_BURN_AMOUNT_DECAY);
+        int chainHeightOfPastCycle = cyclesInDaoStateService.getChainHeightOfPastCycle(chainHeight, NUM_CYCLES_BURN_AMOUNT_DECAY);
         return getDecayedAmount(amount,
                 issuanceHeight,
                 chainHeight,
-                fromHeight,
-                0);
+                chainHeightOfPastCycle);
     }
 
     private long getDecayedGenesisOutputAmount(long amount) {
