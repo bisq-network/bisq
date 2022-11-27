@@ -130,11 +130,24 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
         // We only use outputs > 1000 sat or at least 2 times the cost for the output (32 bytes).
         // If we remove outputs it will be spent as miner fee.
         long minOutputAmount = Math.max(DPT_MIN_OUTPUT_AMOUNT, txFeePerVbyte * 32 * 2);
+        // We accumulate small amounts which gets filtered out and subtract it from 1 to get an adjustment factor
+        // used later to be applied to the remaining burningmen share.
+        double adjustment = 1 - burningManCandidates.stream()
+                .filter(candidate -> candidate.getMostRecentAddress().isPresent())
+                .mapToDouble(candidate -> {
+                    double cappedBurnAmountShare = candidate.getCappedBurnAmountShare();
+                    long amount = Math.round(cappedBurnAmountShare * spendableAmount);
+                    return amount < minOutputAmount ? cappedBurnAmountShare : 0d;
+                })
+                .sum();
 
         List<Tuple2<Long, String>> receivers = burningManCandidates.stream()
                 .filter(candidate -> candidate.getMostRecentAddress().isPresent())
-                .map(candidate -> new Tuple2<>(Math.round(candidate.getCappedBurnAmountShare() * spendableAmount),
-                        candidate.getMostRecentAddress().get()))
+                .map(candidate -> {
+                    double cappedBurnAmountShare = candidate.getCappedBurnAmountShare() / adjustment;
+                    return new Tuple2<>(Math.round(cappedBurnAmountShare * spendableAmount),
+                            candidate.getMostRecentAddress().get());
+                })
                 .filter(tuple -> tuple.first >= minOutputAmount)
                 .sorted(Comparator.<Tuple2<Long, String>, Long>comparing(tuple -> tuple.first)
                         .thenComparing(tuple -> tuple.second))
