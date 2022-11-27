@@ -31,24 +31,23 @@ public class BurningManServiceTest {
     public void testGetDecayedAmount() {
         long amount = 100;
         int currentBlockHeight = 1400;
-        int genesisBlockHeight = 1000;
-        assertEquals(0, BurningManService.getDecayedAmount(amount, 1000, currentBlockHeight, genesisBlockHeight, 0));
-        assertEquals(25, BurningManService.getDecayedAmount(amount, 1100, currentBlockHeight, genesisBlockHeight, 0));
-        assertEquals(50, BurningManService.getDecayedAmount(amount, 1200, currentBlockHeight, genesisBlockHeight, 0));
-        assertEquals(75, BurningManService.getDecayedAmount(amount, 1300, currentBlockHeight, genesisBlockHeight, 0));
+        int fromBlockHeight = 1000;
+        int heightOfFirstBlockOfCurrentCycle = 1400;
+        assertEquals(0, BurningManService.getDecayedAmount(amount, 1000, currentBlockHeight, fromBlockHeight));
+        assertEquals(25, BurningManService.getDecayedAmount(amount, 1100, currentBlockHeight, fromBlockHeight));
+        assertEquals(50, BurningManService.getDecayedAmount(amount, 1200, currentBlockHeight, fromBlockHeight));
+        assertEquals(75, BurningManService.getDecayedAmount(amount, 1300, currentBlockHeight, fromBlockHeight));
 
-        // let genesis have an offset. e.g. 0.5 means an amount at genesis has 50% decay
-        assertEquals(50, BurningManService.getDecayedAmount(amount, 1000, currentBlockHeight, genesisBlockHeight, 0.5));
-        assertEquals(75, BurningManService.getDecayedAmount(amount, 1200, currentBlockHeight, genesisBlockHeight, 0.5));
-        assertEquals(100, BurningManService.getDecayedAmount(amount, 1400, currentBlockHeight, genesisBlockHeight, 0.5));
+        // cycles with 100 blocks, issuance at block 20, look-back period 3 cycles
+        assertEquals(40, BurningManService.getDecayedAmount(amount, 120, 300, 0));
+        assertEquals(33, BurningManService.getDecayedAmount(amount, 120, 320, 20));
+        assertEquals(27, BurningManService.getDecayedAmount(amount, 120, 340, 40));
+        assertEquals(20, BurningManService.getDecayedAmount(amount, 120, 360, 60));
+        assertEquals(13, BurningManService.getDecayedAmount(amount, 120, 380, 80));
+        assertEquals(7, BurningManService.getDecayedAmount(amount, 120, 399, 99));
+        assertEquals(7, BurningManService.getDecayedAmount(amount, 120, 400, 100));
+        assertEquals(3, BurningManService.getDecayedAmount(amount, 120, 410, 110));
+        assertEquals(40, BurningManService.getDecayedAmount(amount, 220, 400, 100));
 
-        assertEquals(50, BurningManService.getDecayedAmount(amount, 1200, currentBlockHeight, genesisBlockHeight, 0));
-        assertEquals(75, BurningManService.getDecayedAmount(amount, 1200, currentBlockHeight, genesisBlockHeight, 0.5));
-        assertEquals(63, BurningManService.getDecayedAmount(amount, 1200, currentBlockHeight, genesisBlockHeight, 0.25));
-        assertEquals(88, BurningManService.getDecayedAmount(amount, 1200, currentBlockHeight, genesisBlockHeight, 0.75));
-
-        assertEquals(100, BurningManService.getDecayedAmount(amount, 1000, currentBlockHeight, genesisBlockHeight, 1));
-        assertEquals(100, BurningManService.getDecayedAmount(amount, 1200, currentBlockHeight, genesisBlockHeight, 1));
-        assertEquals(100, BurningManService.getDecayedAmount(amount, 1400, currentBlockHeight, genesisBlockHeight, 1));
     }
 }
