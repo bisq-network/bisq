@@ -22,6 +22,7 @@ import bisq.desktop.common.view.ActivatableViewAndModel;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
+import bisq.desktop.components.AutoTooltipSlideToggleButton;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PasswordTextField;
 import bisq.desktop.components.TitledGroupBg;
@@ -46,6 +47,7 @@ import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.TradeLimits;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.DontShowAgainLookup;
@@ -84,12 +86,14 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 
 import javafx.beans.value.ChangeListener;
@@ -112,6 +116,7 @@ import java.util.stream.Collectors;
 
 import static bisq.desktop.util.FormBuilder.*;
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @FxmlView
 public class PreferencesView extends ActivatableViewAndModel<GridPane, PreferencesViewModel> {
@@ -124,12 +129,13 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     private ToggleButton showOwnOffersInOfferBook, useAnimations, useDarkMode, sortMarketCurrenciesNumerically,
             avoidStandbyMode, useCustomFee, autoConfirmXmrToggle, hideNonAccountPaymentMethodsToggle, denyApiTakerToggle,
-            notifyOnPreReleaseToggle, isDaoFullNodeToggleButton, fullModeDaoMonitorToggleButton, useBitcoinUrisToggle;
+            notifyOnPreReleaseToggle, isDaoFullNodeToggleButton,
+            fullModeDaoMonitorToggleButton, useBitcoinUrisToggle, tradeLimitToggle;
     private int gridRow = 0;
     private int displayCurrenciesGridRowIndex = 0;
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, ignoreDustThresholdInputTextField,
             autoConfRequiredConfirmationsTf, autoConfServiceAddressTf, autoConfTradeLimitTf, clearDataAfterDaysInputTextField,
-            rpcUserTextField, blockNotifyPortTextField;
+            rpcUserTextField, blockNotifyPortTextField, tradeLimitTf;
     private PasswordTextField rpcPwTextField;
     private TitledGroupBg daoOptionsTitledGroupBg;
 
@@ -158,7 +164,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private InputTextField deviationInputTextField, bsqAverageTrimThresholdTextField;
     private ChangeListener<String> deviationListener, bsqAverageTrimThresholdListener, ignoreTradersListListener, ignoreDustThresholdListener,
             rpcUserListener, rpcPwListener, blockNotifyPortListener, clearDataAfterDaysListener,
-            autoConfTradeLimitListener, autoConfServiceAddressListener;
+            autoConfTradeLimitListener, autoConfServiceAddressListener, userDefinedTradeLimitListener;
     private ChangeListener<Boolean> deviationFocusedListener, bsqAverageTrimThresholdFocusedListener;
     private ChangeListener<Boolean> useCustomFeeCheckboxListener;
     private ChangeListener<Number> transactionFeeChangeListener;
@@ -217,6 +223,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         initializeDaoOptions();
         initializeSeparator();
         initializeAutoConfirmOptions();
+        initializeTradeLimitOptions();
         initializeDisplayCurrencies();
     }
 
@@ -248,6 +255,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         activateDisplayCurrencies();
         activateDisplayPreferences();
         activateAutoConfirmPreferences();
+        activateTradeLimitPreferences();
         activateDaoPreferences();
     }
 
@@ -257,6 +265,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         deactivateDisplayCurrencies();
         deactivateDisplayPreferences();
         deactivateAutoConfirmPreferences();
+        deactivateTradeLimitPreferences();
         deactivateDaoPreferences();
     }
 
@@ -440,13 +449,13 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private void initializeDisplayCurrencies() {
 
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, displayCurrenciesGridRowIndex, 8,
-                Res.get("setting.preferences.currenciesInList"), Layout.GROUP_DISTANCE);
+                Res.get("setting.preferences.currenciesInList"));
         GridPane.setColumnIndex(titledGroupBg, 2);
         GridPane.setColumnSpan(titledGroupBg, 2);
 
         preferredTradeCurrencyComboBox = addComboBox(root, displayCurrenciesGridRowIndex++,
                 Res.get("setting.preferences.prefCurrency"),
-                Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+                Layout.FIRST_ROW_DISTANCE);
         GridPane.setColumnIndex(preferredTradeCurrencyComboBox, 2);
 
         preferredTradeCurrencyComboBox.setConverter(new StringConverter<>() {
@@ -841,6 +850,39 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         autoConfirmGridPane.setDisable(filterManager.getFilter() != null && filterManager.getFilter().isDisableAutoConf());
     }
 
+    private void initializeTradeLimitOptions() {
+        GridPane tradeLimitGridPane = new GridPane();
+        GridPane.setHgrow(tradeLimitGridPane, Priority.ALWAYS);
+        root.add(tradeLimitGridPane, 2, displayCurrenciesGridRowIndex, 2, 4);
+        addTitledGroupBg(tradeLimitGridPane, 0, 4, Res.get("setting.preferences.tradeLimits"), 0);
+
+        tradeLimitToggle = new AutoTooltipSlideToggleButton();
+        tradeLimitToggle.setText(Res.get("setting.preferences.tradeLimitsEnabled"));
+        tradeLimitTf = new InputTextField();
+        tradeLimitTf.setLabelFloat(true);
+        tradeLimitTf.setPromptText(Res.get("setting.preferences.tradeLimitMax"));
+        tradeLimitTf.setPrefWidth(200);
+
+        HBox hBox = new HBox(12, tradeLimitToggle, tradeLimitTf);
+        hBox.setAlignment(Pos.CENTER_LEFT);
+        tradeLimitGridPane.add(hBox, 0, 0);
+        GridPane.setMargin(hBox, new Insets(Layout.FIRST_ROW_DISTANCE, 0, 0, 0));
+
+        BtcValidator btcValidator = new BtcValidator(formatter);
+        btcValidator.setMinValue(Coin.valueOf(Preferences.INITIAL_TRADE_LIMIT));
+        TradeLimits tradeLimits = TradeLimits.getINSTANCE();
+        checkNotNull(tradeLimits, "tradeLimits must not be null");
+        btcValidator.setMaxValue(tradeLimits.getMaxTradeLimit());
+        tradeLimitTf.setValidator(btcValidator);
+        displayCurrenciesGridRowIndex++;
+
+        userDefinedTradeLimitListener = (observable, oldValue, newValue) -> {
+            if (!newValue.equals(oldValue) && tradeLimitTf.getValidator().validate(newValue).isValid) {
+                Coin amountAsCoin = ParsingUtils.parseToCoin(newValue, formatter);
+                preferences.setUserDefinedTradeLimit(amountAsCoin.value);
+            }
+        };
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Activate
@@ -1152,6 +1194,27 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         });
     }
 
+    private void activateTradeLimitPreferences() {
+        tradeLimitToggle.setSelected(preferences.isUserHasRaisedTradeLimit());
+        tradeLimitTf.setEditable(preferences.isUserHasRaisedTradeLimit());
+        tradeLimitTf.setText(formatter.formatCoin(Coin.valueOf(preferences.getUserDefinedTradeLimit())));
+        tradeLimitTf.textProperty().addListener(userDefinedTradeLimitListener);
+
+        tradeLimitToggle.setOnAction(e -> {
+            if (tradeLimitToggle.isSelected()) {
+                new Popup()
+                        .information(Res.get("setting.preferences.tradeLimitBlurb"))
+                        .width(800)
+                        .show();
+            } else {
+                // no increased limits, resetting back to default
+                tradeLimitTf.setText(Coin.valueOf(Preferences.INITIAL_TRADE_LIMIT).toPlainString());
+            }
+            preferences.setUserHasRaisedTradeLimit(tradeLimitToggle.isSelected());
+            tradeLimitTf.setEditable(tradeLimitToggle.isSelected());
+        });
+    }
+
     private void updateDaoFields() {
         boolean isDaoFullNode = isDaoFullNodeToggleButton.isSelected();
         GridPane.setRowSpan(daoOptionsTitledGroupBg, isDaoFullNode ? 8 : 5);
@@ -1237,5 +1300,9 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             autoConfRequiredConfirmationsTf.focusedProperty().removeListener(autoConfRequiredConfirmationsFocusOutListener);
             filterManager.filterProperty().removeListener(filterChangeListener);
         });
+    }
+
+    private void deactivateTradeLimitPreferences() {
+        tradeLimitTf.textProperty().removeListener(userDefinedTradeLimitListener);
     }
 }

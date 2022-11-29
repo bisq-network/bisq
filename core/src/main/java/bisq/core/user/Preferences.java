@@ -147,6 +147,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     public static final boolean USE_SYMMETRIC_SECURITY_DEPOSIT = true;
     public static final int CLEAR_DATA_AFTER_DAYS_INITIAL = 99999; // feature effectively disabled until user agrees to settings notification
     public static final int CLEAR_DATA_AFTER_DAYS_DEFAULT = 60; // used when user has agreed to settings notification
+    public static final long INITIAL_TRADE_LIMIT = 10000000L;
 
     // payload is initialized so the default values are available for Property initialization.
     @Setter
@@ -835,6 +836,16 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         requestPersistence();
     }
 
+    public void setUserHasRaisedTradeLimit(boolean value) {
+        prefPayload.setUserHasRaisedTradeLimit(value);
+        requestPersistence();
+    }
+
+    public void setUserDefinedTradeLimit(long value) {
+        prefPayload.setUserDefinedTradeLimit(value);
+        requestPersistence();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -1160,5 +1171,9 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setBuyScreenCryptoCurrencyCode(String buyScreenCurrencyCode);
 
         void setSellScreenCryptoCurrencyCode(String sellScreenCurrencyCode);
+
+        void setUserDefinedTradeLimit(long userDefinedTradeLimit);
+
+        void setUserHasRaisedTradeLimit(boolean userHasRaisedTradeLimit);
     }
 }
