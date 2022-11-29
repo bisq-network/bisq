@@ -555,7 +555,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         }
 
         final byte[] imageBytes = QRCode
-                .from(getBitcoinURI())
+                .from(getStringToEncode())
                 .withSize(98, 98) // code has 41 elements 8 px is border with 98 we get double scale and min. border
                 .to(ImageType.PNG)
                 .stream()
@@ -973,7 +973,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         Tooltip.install(qrCodeImageView, new Tooltip(Res.get("shared.openLargeQRWindow")));
         qrCodeImageView.setOnMouseClicked(e -> GUIUtil.showFeeInfoBeforeExecute(
                 () -> UserThread.runAfter(
-                        () -> new QRCodeWindow(getBitcoinURI()).show(),
+                        () -> new QRCodeWindow(getStringToEncode()).show(),
                         200, TimeUnit.MILLISECONDS)));
         GridPane.setRowIndex(qrCodeImageView, gridRow);
         GridPane.setColumnIndex(qrCodeImageView, 1);
@@ -1077,6 +1077,14 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         return GUIUtil.getBitcoinURI(model.dataModel.getAddressEntry().getAddressString(),
                 model.dataModel.getMissingCoin().get(),
                 model.getPaymentLabel());
+    }
+
+    @NotNull
+    private String getStringToEncode() {
+        String address = addressTextField.getAddress() != null ?
+                addressTextField.getAddress() : "";
+        return GUIUtil.getPreferences().isUseBitcoinUrisInQrCodes() ?
+                getBitcoinURI() : address;
     }
 
     private void addAmountPriceFields() {

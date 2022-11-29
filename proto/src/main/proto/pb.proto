@@ -1956,6 +1956,7 @@ message PreferencesPayload {
     int32 clear_data_after_days = 63;
     string buy_screen_crypto_currency_code = 64;
     string sell_screen_crypto_currency_code = 65;
+    bool use_bitcoin_uris_in_qr_codes = 66;
 }
 
 message AutoConfirmSettings {

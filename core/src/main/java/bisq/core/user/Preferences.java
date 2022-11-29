@@ -830,6 +830,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         requestPersistence();
     }
 
+    public void setUseBitcoinUrisInQrCodes(boolean value) {
+        prefPayload.setUseBitcoinUrisInQrCodes(value);
+        requestPersistence();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -1147,6 +1152,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setNotifyOnPreRelease(boolean value);
 
         void setUseFullModeDaoMonitor(boolean value);
+
+        void setUseBitcoinUrisInQrCodes(boolean value);
 
         void setClearDataAfterDays(int value);
 

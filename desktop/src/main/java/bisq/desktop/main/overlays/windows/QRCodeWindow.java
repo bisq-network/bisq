@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.overlays.windows;
 
-import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.main.overlays.Overlay;
 
 import bisq.core.locale.Res;
@@ -25,14 +24,11 @@ import bisq.core.locale.Res;
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
 
-import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
 
 import javafx.geometry.HPos;
-import javafx.geometry.Insets;
 
 import java.io.ByteArrayInputStream;
 
@@ -42,12 +38,12 @@ import org.slf4j.LoggerFactory;
 public class QRCodeWindow extends Overlay<QRCodeWindow> {
     private static final Logger log = LoggerFactory.getLogger(QRCodeWindow.class);
     private final ImageView qrCodeImageView;
-    private final String bitcoinURI;
+    private final String bitcoinAddressOrURI;
 
-    public QRCodeWindow(String bitcoinURI) {
-        this.bitcoinURI = bitcoinURI;
+    public QRCodeWindow(String bitcoinAddressOrURI) {
+        this.bitcoinAddressOrURI = bitcoinAddressOrURI;
         final byte[] imageBytes = QRCode
-                .from(bitcoinURI)
+                .from(bitcoinAddressOrURI)
                 .withSize(250, 250)
                 .to(ImageType.PNG)
                 .stream()
@@ -71,10 +67,11 @@ public class QRCodeWindow extends Overlay<QRCodeWindow> {
         GridPane.setHalignment(qrCodeImageView, HPos.CENTER);
         gridPane.getChildren().add(qrCodeImageView);
 
-        message = bitcoinURI.replace("%20", " ").replace("?", "\n?").replace("&", "\n&");
+        message = bitcoinAddressOrURI.replace("%20", " ").replace("?", "\n?").replace("&", "\n&");
         setTruncatedMessage();
-
         addMessage();
+        GridPane.setHalignment(messageLabel, HPos.CENTER);
+
         addButtons();
         applyStyles();
         display();
