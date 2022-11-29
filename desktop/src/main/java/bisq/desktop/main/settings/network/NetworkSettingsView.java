@@ -502,9 +502,11 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         bitcoinNetworkListItems.setAll(walletsSetup.getPeerGroup().getConnectedPeers().stream()
                 .map(BitcoinNetworkListItem::new)
                 .collect(Collectors.toList()));
-        chainHeightTextField.textProperty().setValue(Res.get("settings.net.chainHeight",
-                walletsSetup.chainHeightProperty().get(),
-                PeerGroup.getMostCommonChainHeight(walletsSetup.connectedPeersProperty().get())));
+        if (walletsSetup.connectedPeersProperty().get() != null) {
+            chainHeightTextField.textProperty().setValue(Res.get("settings.net.chainHeight",
+                    walletsSetup.chainHeightProperty().get(),
+                    PeerGroup.getMostCommonChainHeight(walletsSetup.connectedPeersProperty().get())));
+        }
     }
 }
 
