@@ -18,6 +18,7 @@
 package bisq.desktop.main.dao.governance;
 
 import bisq.desktop.Navigation;
+import bisq.desktop.components.BisqScrollPane;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
@@ -69,7 +70,6 @@ import org.bitcoinj.core.Coin;
 
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.layout.AnchorPane;
@@ -670,8 +670,8 @@ public class ProposalDisplay {
     }
 
     @SuppressWarnings("Duplicates")
-    public ScrollPane getView() {
-        ScrollPane scrollPane = new ScrollPane();
+    public BisqScrollPane getView() {
+        BisqScrollPane scrollPane = new BisqScrollPane();
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
 

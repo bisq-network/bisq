@@ -18,24 +18,24 @@
   -->
 
 <?import com.jfoenix.controls.JFXTabPane?>
-<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import bisq.desktop.components.BisqScrollPane?>
 <JFXTabPane fx:id="root" fx:controller="bisq.desktop.main.market.MarketView"
             AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
             AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
             xmlns:fx="http://javafx.com/fxml">
 
     <Tab fx:id="offerBookTab" closable="false">
-        <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
-                    AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                    AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
+        <BisqScrollPane fitToWidth="true" hbarPolicy="NEVER"
+                        AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+                        AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
     </Tab>
     <Tab fx:id="spreadTab" closable="false"/>
     <Tab fx:id="spreadTabPaymentMethod" closable="false"/>
     <Tab fx:id="tradesTab" closable="false">
-        <ScrollPane fitToWidth="true" hbarPolicy="NEVER"
-                    AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-                    AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
+        <BisqScrollPane fitToWidth="true" hbarPolicy="NEVER"
+                        AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+                        AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
     </Tab>
 </JFXTabPane>
