@@ -48,7 +48,7 @@ public class OfferFilterService {
     private final FilterManager filterManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final Map<String, Boolean> insufficientCounterpartyTradeLimitCache = new HashMap<>();
-    private final Map<String, Boolean> myInsufficientTradeLimitCache = new HashMap<>();
+    private Map<String, Boolean> myInsufficientTradeLimitCache = new HashMap<>();
 
     @Inject
     public OfferFilterService(User user,
@@ -200,10 +200,12 @@ public class OfferFilterService {
                 accountOptional.isPresent() ? accountOptional.get().getAccountName() : "null",
                 Coin.valueOf(myTradeLimit).toFriendlyString(),
                 Coin.valueOf(offerMinAmount).toFriendlyString());
-        boolean result = offer.isFiatOffer() &&
-                accountOptional.isPresent() &&
-                myTradeLimit < offerMinAmount;
+        boolean result = accountOptional.isPresent() && myTradeLimit < offerMinAmount;
         myInsufficientTradeLimitCache.put(offerId, result);
         return result;
+    }
+
+    public void resetTradeLimitCache() {
+        myInsufficientTradeLimitCache = new HashMap<>();
     }
 }
