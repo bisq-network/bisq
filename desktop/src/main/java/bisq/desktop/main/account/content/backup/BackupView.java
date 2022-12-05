@@ -23,12 +23,14 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
+import bisq.core.support.dispute.mediation.FileTransferSender;
 import bisq.core.user.Preferences;
 
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -43,6 +45,7 @@ import javafx.beans.value.ChangeListener;
 
 import java.text.SimpleDateFormat;
 
+import java.nio.file.FileSystems;
 import java.nio.file.Paths;
 
 import java.io.File;
@@ -52,10 +55,7 @@ import java.util.Date;
 
 import javax.annotation.Nullable;
 
-import static bisq.desktop.util.FormBuilder.add2Buttons;
-import static bisq.desktop.util.FormBuilder.add2ButtonsAfterGroup;
-import static bisq.desktop.util.FormBuilder.addInputTextField;
-import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.*;
 
 @FxmlView
 public class BackupView extends ActivatableView<GridPane, Void> {
@@ -64,7 +64,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
     private final Preferences preferences;
     private Button selectBackupDir, backupNow;
     private TextField backUpLocationTextField;
-    private Button openDataDirButton, openLogsButton;
+    private Button openDataDirButton, openLogsButton, zipLogsButton;
     private ChangeListener<Boolean> backUpLocationTextFieldFocusListener;
 
 
@@ -102,11 +102,15 @@ public class BackupView extends ActivatableView<GridPane, Void> {
 
         addTitledGroupBg(root, ++gridRow, 2, Res.get("account.backup.appDir"), Layout.GROUP_DISTANCE);
 
-        final Tuple2<Button, Button> applicationDataDirTuple2 = add2Buttons(root, gridRow, Res.get("account.backup.openDirectory"),
-                Res.get("account.backup.openLogFile"), Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE, false);
+        final Tuple3<Button, Button, Button> applicationDataDirTuple2 = add3Buttons(root, gridRow,
+                Res.get("account.backup.openDirectory"),
+                Res.get("account.backup.openLogFile"),
+                Res.get("account.backup.zipLogFiles"),
+                Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
 
         openDataDirButton = applicationDataDirTuple2.first;
         openLogsButton = applicationDataDirTuple2.second;
+        zipLogsButton = applicationDataDirTuple2.third;
     }
 
     @Override
@@ -149,6 +153,19 @@ public class BackupView extends ActivatableView<GridPane, Void> {
                         showWrongPathWarningAndReset(e);
                     }
                 });
+            }
+        });
+        zipLogsButton.setOnAction(event -> {
+            String zipId = "BisqLogsArchive_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            String zipFilePath = Utilities.getSystemHomeDirectory() + FileSystems.getDefault().getSeparator() + zipId + ".zip";
+            String tradeId = null;
+            FileTransferSender.createZipFileOfLogs(zipFilePath, zipId, tradeId);
+            try {
+                Utilities.openFile(new File(Utilities.getSystemHomeDirectory()));
+            } catch (IOException e) {
+                e.printStackTrace();
+                log.error(e.getMessage());
+                showWrongPathWarningAndReset(e);
             }
         });
     }
