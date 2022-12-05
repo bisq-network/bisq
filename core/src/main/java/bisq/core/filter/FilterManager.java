@@ -159,7 +159,7 @@ public class FilterManager {
 
         // On mainNet we expect to have received a filter object, if not show a popup to the user to inform the
         // Bisq devs.
-        if (Config.baseCurrencyNetwork().isMainnet() && getFilter() == null) {
+        if (Config.baseCurrencyNetwork().isMainnet() && getFilter() == null && filterWarningHandler != null) {
             filterWarningHandler.accept(Res.get("popup.warning.noFilter"));
         }
 
