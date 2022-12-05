@@ -97,6 +97,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.common.crypto.Hash.getSha256Hash;
+import static bisq.common.util.Utilities.encodeToHex;
 import static bisq.desktop.util.Layout.INITIAL_WINDOW_HEIGHT;
 import static bisq.desktop.util.Layout.INITIAL_WINDOW_WIDTH;
 import static bisq.desktop.util.Layout.MIN_WINDOW_HEIGHT;
@@ -366,93 +368,74 @@ public class BisqApp extends Application implements UncaughtExceptionHandler {
     }
 
     private void shutDownByUser() {
-        // two potential popup prompts to user before shutting down, each step can possibly abort the shutdown
-        shutDownByUserCheckTrades().thenAccept(shutdownStage1 -> {
-            if (shutdownStage1) {
-                shutDownByUserCheckOffers().thenAccept(shutdownStage2 -> {
-                    if (shutdownStage2) {
-                        shutDownByUserCheckDisputes().thenAccept(shutdownStage3 -> {
-                            if (shutdownStage3) {
-                                stop();
-                            }
-                        });
-                    }
-                });
+        String potentialIssues = checkTradesAtShutdown() + checkDisputesAtShutdown() + checkOffersAtShutdown();
+        promptUserAtShutdown(potentialIssues).thenAccept(asyncOkToShutDown -> {
+            if (asyncOkToShutDown) {
+                stop();
             }
         });
     }
 
-    private CompletableFuture<Boolean> shutDownByUserCheckTrades() {
+    private String checkTradesAtShutdown() {
         log.info("Checking trades at shutdown");
-        final CompletableFuture<Boolean> asyncStatus = new CompletableFuture<>();
         Instant fiveMinutesAgo = Instant.ofEpochSecond(Instant.now().getEpochSecond() - TimeUnit.MINUTES.toSeconds(5));
-        String tradeIdsWithOperationsPending = "";
         for (Trade trade : injector.getInstance(TradeManager.class).getObservableList()) {
             if (trade.getTradePhase().equals(Trade.Phase.TAKER_FEE_PUBLISHED) &&
                     new Date(trade.getTakeOfferDate()).toInstant().isAfter(fiveMinutesAgo)) {
                 String tradeDateString = DisplayUtils.formatDateTime(new Date(trade.getTakeOfferDate()));
-                tradeIdsWithOperationsPending += Res.get("shared.tradeId") + ": " + trade.getShortId() + " " +
-                        Res.get("shared.dateTime") + ": " + tradeDateString + System.lineSeparator();
-                break;
+                String tradeInfo = Res.get("shared.tradeId") + ": " + trade.getShortId() + " " +
+                        Res.get("shared.dateTime") + ": " + tradeDateString;
+                return Res.get("popup.info.shutDownWithTradeInit", tradeInfo) + System.lineSeparator() + System.lineSeparator();
             }
         }
-        if (tradeIdsWithOperationsPending.length() > 0) {
-            // We show a popup to inform user that some trades are still being initialised.
-            new Popup().warning(Res.get("popup.info.shutDownWithTradeInit", tradeIdsWithOperationsPending))
-                    .actionButtonText(Res.get("shared.okWait"))
-                    .onAction(() -> asyncStatus.complete(false))
-                    .closeButtonText(Res.get("shared.closeAnywayDanger"))
-                    .onClose(() -> asyncStatus.complete(true))
-                    .show();
-        } else {
-            asyncStatus.complete(true);
-        }
-        return asyncStatus;
+        return "";
     }
 
-    private CompletableFuture<Boolean> shutDownByUserCheckOffers() {
+    private String checkDisputesAtShutdown() {
+        log.info("Checking disputes at shutdown");
+        if (injector.getInstance(MediationManager.class).hasPendingMessageAtShutdown() ||
+                injector.getInstance(RefundManager.class).hasPendingMessageAtShutdown()) {
+            return Res.get("popup.info.shutDownWithDisputeInit") + System.lineSeparator() + System.lineSeparator();
+        }
+        return "";
+    }
+
+    private String checkOffersAtShutdown() {
         log.info("Checking offers at shutdown");
-        final CompletableFuture<Boolean> asyncStatus = new CompletableFuture<>();
-        boolean hasOpenOffers = false;
         for (OpenOffer openOffer : injector.getInstance(OpenOfferManager.class).getObservableList()) {
             if (openOffer.getState().equals(OpenOffer.State.AVAILABLE)) {
-                hasOpenOffers = true;
-                break;
+                return Res.get("popup.info.shutDownWithOpenOffers") + System.lineSeparator() + System.lineSeparator();
             }
         }
-        if (!hasOpenOffers) {
-            // No open offers, so no need to show the popup.
-            asyncStatus.complete(true);
-            return asyncStatus;
-        }
-
-        // We show a popup to inform user that open offers will be removed if Bisq is not running.
-        String key = "showOpenOfferWarnPopupAtShutDown";
-        if (injector.getInstance(Preferences.class).showAgain(key) && !DevEnv.isDevMode()) {
-            new Popup().information(Res.get("popup.info.shutDownWithOpenOffers"))
-                    .dontShowAgainId(key)
-                    .useShutDownButton()
-                    .onAction(() -> asyncStatus.complete(true))
-                    .closeButtonText(Res.get("shared.cancel"))
-                    .onClose(() -> asyncStatus.complete(false))
-                    .show();
-        } else {
-            asyncStatus.complete(true);
-        }
-        return asyncStatus;
+        return "";
     }
 
-    private CompletableFuture<Boolean> shutDownByUserCheckDisputes() {
-        log.info("Checking disputes at shutdown");
+    private CompletableFuture<Boolean> promptUserAtShutdown(String issueInfo) {
         final CompletableFuture<Boolean> asyncStatus = new CompletableFuture<>();
-        if (injector.getInstance(MediationManager.class).hasPendingMessageAtShutdown() ||
-            injector.getInstance(RefundManager.class).hasPendingMessageAtShutdown()) {
-            // We show a popup to inform user that some messages are still being sent.
-            new Popup().warning(Res.get("popup.info.shutDownWithDisputeInit"))
-                    .actionButtonText(Res.get("shared.okWait"))
-                    .onAction(() -> asyncStatus.complete(false))
-                    .closeButtonText(Res.get("shared.closeAnywayDanger"))
-                    .onClose(() -> asyncStatus.complete(true))
+        if (issueInfo.length() > 0) {
+            // We maybe show a popup to inform user that some issues are pending
+            String key = encodeToHex(getSha256Hash(issueInfo));
+            if (injector.getInstance(Preferences.class).showAgain(key) && !DevEnv.isDevMode()) {
+                new Popup().warning(issueInfo)
+                        .actionButtonText(Res.get("shared.okWait"))
+                        .onAction(() -> asyncStatus.complete(false))
+                        .closeButtonText(Res.get("shared.closeAnywayDanger"))
+                        .onClose(() -> asyncStatus.complete(true))
+                        .dontShowAgainId(key)
+                        .width(800)
+                        .show();
+                return asyncStatus;
+            }
+        }
+        // if no warning popup has been shown yet, prompt user if they really intend to shut down
+        String key = "popup.info.shutDownQuery";
+        if (injector.getInstance(Preferences.class).showAgain(key) && !DevEnv.isDevMode()) {
+            new Popup().headLine(Res.get("popup.info.shutDownQuery"))
+                    .actionButtonText(Res.get("shared.yes"))
+                    .onAction(() -> asyncStatus.complete(true))
+                    .closeButtonText(Res.get("shared.no"))
+                    .onClose(() -> asyncStatus.complete(false))
+                    .dontShowAgainId(key)
                     .show();
         } else {
             asyncStatus.complete(true);
