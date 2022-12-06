@@ -23,6 +23,7 @@ import bisq.network.p2p.network.NetworkNode;
 
 import bisq.common.UserThread;
 import bisq.common.config.Config;
+import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 
@@ -62,11 +63,15 @@ public class FileTransferSender extends FileTransferSession {
                               String traderRole,
                               @Nullable FileTransferSession.FtpCallback callback) {
         super(networkNode, peerNodeAddress, tradeId, traderId, traderRole, callback);
-        zipFilePath = Config.appDataDir() + FileSystems.getDefault().getSeparator() + zipId + ".zip";
+        zipFilePath = Utilities.getUserDataDir() + FileSystems.getDefault().getSeparator() + zipId + ".zip";
         updateProgress();
     }
 
     public void createZipFileToSend() {
+        createZipFileOfLogs(zipFilePath, zipId, fullTradeId);
+    }
+
+    public static void createZipFileOfLogs(String zipFilePath, String zipId, String fullTradeId) {
         try {
             Map<String, String> env = new HashMap<>();
             env.put("create", "true");
@@ -80,6 +85,7 @@ public class FileTransferSender extends FileTransferSession {
                 try {
                     // always include bisq.log; and other .log files if they contain the TradeId
                     if (externalTxtFile.getFileName().toString().equals("bisq.log") ||
+                            (fullTradeId == null && externalTxtFile.getFileName().toString().matches(".*.log")) ||
                             (externalTxtFile.getFileName().toString().matches(".*.log") &&
                                     doesFileContainKeyword(externalTxtFile.toFile(), fullTradeId))) {
                         Path pathInZipfile = zipfs.getPath(zipId + "/" + externalTxtFile.getFileName().toString());
