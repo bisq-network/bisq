@@ -182,7 +182,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     public FileTransferSender createFileTransferSender(NetworkNode networkNode,
                                                        NodeAddress peerNodeAddress,
                                                        FileTransferSession.FtpCallback callback) {
-        return new FileTransferSender(networkNode, peerNodeAddress, this.tradeId, this.traderId, this.getRoleStringForLogFile(), callback);
+        return new FileTransferSender(networkNode, peerNodeAddress, this.tradeId, this.traderId, this.getRoleStringForLogFile(), false, callback);
     }
 
 

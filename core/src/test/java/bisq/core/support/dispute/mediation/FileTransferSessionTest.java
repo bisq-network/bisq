@@ -55,20 +55,21 @@ public class FileTransferSessionTest implements FileTransferSession.FtpCallback 
 
     @Test
     public void testSendCreate() {
-        new FileTransferSender(networkNode, counterpartyNodeAddress, testTradeId, testTraderId, testClientId, this);
+        new FileTransferSender(networkNode, counterpartyNodeAddress, testTradeId, testTraderId, testClientId, true, this);
         Assert.assertEquals(0.0, notedProgressPct, 0.0);
         Assert.assertEquals(1, progressInvocations);
     }
 
     @Test
     public void testCreateZip() {
-        FileTransferSender sender = new FileTransferSender(networkNode, counterpartyNodeAddress, testTradeId, testTraderId, testClientId, this);
+        FileTransferSender sender = new FileTransferSender(networkNode, counterpartyNodeAddress, testTradeId, testTraderId, testClientId, true, this);
         Assert.assertEquals(0.0, notedProgressPct, 0.0);
         Assert.assertEquals(1, progressInvocations);
         sender.createZipFileToSend();
         File file = new File(sender.zipFilePath);
-        Assert.assertTrue(file.exists());
-        Assert.assertTrue(file.length() > 0);
+        Assert.assertTrue(file.getAbsoluteFile().exists());
+        Assert.assertTrue(file.getAbsoluteFile().length() > 0);
+        file.deleteOnExit();
     }
 
     @Test
@@ -192,7 +193,7 @@ public class FileTransferSessionTest implements FileTransferSession.FtpCallback 
 
     private FileTransferSender initializeSession(int testSize) {
         try {
-            FileTransferSender session = new FileTransferSender(networkNode, counterpartyNodeAddress, testTradeId, testTraderId, testClientId, this);
+            FileTransferSender session = new FileTransferSender(networkNode, counterpartyNodeAddress, testTradeId, testTraderId, testClientId, true, this);
             // simulate a file for sending
             FileWriter fileWriter = new FileWriter(session.zipFilePath);
             char[] buf = new char[testSize];
