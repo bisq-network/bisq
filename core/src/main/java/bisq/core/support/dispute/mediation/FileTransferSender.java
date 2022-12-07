@@ -55,15 +55,18 @@ import static bisq.common.file.FileUtil.doesFileContainKeyword;
 @Slf4j
 public class FileTransferSender extends FileTransferSession {
     protected final String zipFilePath;
+    private final boolean isTest;
 
     public FileTransferSender(NetworkNode networkNode,
                               NodeAddress peerNodeAddress,
                               String tradeId,
                               int traderId,
                               String traderRole,
+                              boolean isTest,
                               @Nullable FileTransferSession.FtpCallback callback) {
         super(networkNode, peerNodeAddress, tradeId, traderId, traderRole, callback);
         zipFilePath = Utilities.getUserDataDir() + FileSystems.getDefault().getSeparator() + zipId + ".zip";
+        this.isTest = isTest;
         updateProgress();
     }
 
@@ -172,6 +175,9 @@ public class FileTransferSender extends FileTransferSession {
         dataAwaitingAck = Optional.empty();
         checkpointLastActivity();
         updateProgress();
+        if (isTest) {
+            return true;
+        }
         UserThread.runAfter(() -> {        // to trigger continuing the file transfer
             try {
                 sendNextBlock();
