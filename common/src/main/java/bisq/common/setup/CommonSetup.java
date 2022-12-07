@@ -98,6 +98,7 @@ public class CommonSetup {
     private static void setupLog(Config config) {
         String logPath = Paths.get(config.appDataDir.getPath(), "bisq").toString();
         Log.setup(logPath);
+        log.info("Log file at: {}.log", logPath);
         Utilities.printSysInfo();
         Log.setLevel(Level.toLevel(config.logLevel));
     }
