@@ -2489,3 +2489,29 @@ message MockPayload {
     string message_version = 1;
     string message = 2;
 }
+
+message ReportingItem {
+    string key = 1;
+    string group = 2;
+    oneof message {
+        StringValueItem string_value_item = 3;
+        IntegerValueItem integer_value_item = 4;
+        DoubleValueItem double_value_item = 5;
+    }
+}
+message StringValueItem {
+    string value = 1;
+}
+
+message IntegerValueItem {
+    uint32 value = 1;
+}
+
+message DoubleValueItem {
+    double value = 1;
+}
+
+message ReportingItems {
+    string address = 1;
+    repeated ReportingItem reporting_item = 2;
+}
