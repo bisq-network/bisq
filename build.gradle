@@ -101,6 +101,7 @@ configure([project(':cli'),
     build.dependsOn installDist
     installDist.destinationDir = file('build/app')
     distZip.enabled = false
+    distTar.enabled = false
 
     // the 'installDist' and 'startScripts' blocks below configure bisq executables to put
     // generated shell scripts in the root project directory, such that users can easily
