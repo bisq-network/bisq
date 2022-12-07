@@ -102,6 +102,6 @@ public enum IntegerValueItem implements ReportingItem {
 
     @Override
     public String toString() {
-        return name() + "= " + value;
+        return name() + "=" + value;
     }
 }

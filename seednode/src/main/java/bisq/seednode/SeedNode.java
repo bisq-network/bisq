@@ -21,7 +21,11 @@ import bisq.core.app.misc.AppSetup;
 import bisq.core.app.misc.AppSetupWithP2PAndDAO;
 import bisq.core.network.p2p.inventory.GetInventoryRequestHandler;
 
+import bisq.common.config.Config;
+
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +36,7 @@ public class SeedNode {
     private Injector injector;
     private AppSetup appSetup;
     private GetInventoryRequestHandler getInventoryRequestHandler;
+    private SeedNodeReportingService seedNodeReportingService;
 
     public SeedNode() {
     }
@@ -41,9 +46,19 @@ public class SeedNode {
         appSetup.start();
 
         getInventoryRequestHandler = injector.getInstance(GetInventoryRequestHandler.class);
+
+        String seedNodeReportingServerUrl = injector.getInstance(Key.get(String.class, Names.named(Config.SEED_NODE_REPORTING_SERVER_URL)));
+        if (seedNodeReportingServerUrl != null && !seedNodeReportingServerUrl.trim().isEmpty()) {
+            seedNodeReportingService = injector.getInstance(SeedNodeReportingService.class);
+        }
     }
 
     public void shutDown() {
-        getInventoryRequestHandler.shutDown();
+        if (getInventoryRequestHandler != null) {
+            getInventoryRequestHandler.shutDown();
+        }
+        if (seedNodeReportingService != null) {
+            seedNodeReportingService.shutDown();
+        }
     }
 }
