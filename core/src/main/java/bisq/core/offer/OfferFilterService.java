@@ -48,7 +48,7 @@ public class OfferFilterService {
     private final FilterManager filterManager;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final Map<String, Boolean> insufficientCounterpartyTradeLimitCache = new HashMap<>();
-    private Map<String, Boolean> myInsufficientTradeLimitCache = new HashMap<>();
+    private final Map<String, Boolean> myInsufficientTradeLimitCache = new HashMap<>();
 
     @Inject
     public OfferFilterService(User user,
@@ -206,6 +206,6 @@ public class OfferFilterService {
     }
 
     public void resetTradeLimitCache() {
-        myInsufficientTradeLimitCache = new HashMap<>();
+        myInsufficientTradeLimitCache.clear();
     }
 }
