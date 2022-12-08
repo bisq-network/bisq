@@ -60,7 +60,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -98,7 +98,7 @@ public class SeedNodeReportingService {
 
     private Timer dataReportTimer;
     private final Timer heartBeatTimer;
-    private final ThreadPoolExecutor executor;
+    private final ExecutorService executor;
 
     @Inject
     public SeedNodeReportingService(P2PService p2PService,
@@ -123,7 +123,7 @@ public class SeedNodeReportingService {
         this.maxConnections = maxConnections;
         this.seedNodeReportingServerUrl = seedNodeReportingServerUrl;
 
-        executor = Utilities.getThreadPoolExecutor("SeedNodeReportingService", 2, 4, 30);
+        executor = Utilities.newCachedThreadPool(5);
         httpClient = HttpClient.newHttpClient();
 
         heartBeatTimer = UserThread.runPeriodically(this::sendHeartBeat, HEART_BEAT_DELAY_SEC);
