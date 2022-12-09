@@ -61,10 +61,23 @@ import lombok.extern.slf4j.Slf4j;
 public class BurningManPresentationService implements DaoStateListener {
     // Burn target gets increased by that amount to give more flexibility.
     // Burn target is calculated from reimbursements + estimated BTC fees - burned amounts.
-    static final long BURN_TARGET_BOOST_AMOUNT = Config.baseCurrencyNetwork().isRegtest() ? 1000000 : 10000000;
+    private static final long BURN_TARGET_BOOST_AMOUNT = Config.baseCurrencyNetwork().isRegtest() ? 1000000 : 10000000;
     public static final String LEGACY_BURNING_MAN_DPT_NAME = "Legacy Burningman (DPT)";
     public static final String LEGACY_BURNING_MAN_BTC_FEES_NAME = "Legacy Burningman (BTC fees)";
-    public static final String LEGACY_BURNING_MAN_BTC_FEES_ADDRESS = "38bZBj5peYS3Husdz7AH3gEUiUbYRD951t";
+    static final String LEGACY_BURNING_MAN_BTC_FEES_ADDRESS = "38bZBj5peYS3Husdz7AH3gEUiUbYRD951t";
+    // Those are the opReturn data used by legacy BM for burning BTC received from DPT.
+    // For regtest testing burn bsq and use the pre-image `dpt` which has the hash 14af04ea7e34bd7378b034ddf90da53b7c27a277.
+    // The opReturn data gets additionally prefixed with 1701
+    private static final Set<String> OP_RETURN_DATA_LEGACY_BM_DPT = Config.baseCurrencyNetwork().isRegtest() ?
+            Set.of("170114af04ea7e34bd7378b034ddf90da53b7c27a277") :
+            Set.of("1701e47e5d8030f444c182b5e243871ebbaeadb5e82f",
+                    "1701293c488822f98e70e047012f46f5f1647f37deb7");
+    // The opReturn data used by legacy BM for burning BTC received from BTC trade fees.
+    // For regtest testing burn bsq and use the pre-image `fee` which has the hash b3253b7b92bb7f0916b05f10d4fa92be8e48f5e6.
+    // The opReturn data gets additionally prefixed with 1701
+    private static final Set<String> OP_RETURN_DATA_LEGACY_BM_FEES = Config.baseCurrencyNetwork().isRegtest() ?
+            Set.of("1701b3253b7b92bb7f0916b05f10d4fa92be8e48f5e6") :
+            Set.of("1701721206fe6b40777763de1c741f4fd2706d94775d");
 
     private final DaoStateService daoStateService;
     private final CyclesInDaoStateService cyclesInDaoStateService;
@@ -259,11 +272,7 @@ public class BurningManPresentationService implements DaoStateListener {
 
         // We do not add the legacy burningman to the list but keep it as class field only to avoid that it
         // interferes with usage of the burningManCandidatesByName map.
-        // Those are the hashes used by legacy BM for burning BTC received from DPT.
-        Set<String> hashes = Set.of("1701e47e5d8030f444c182b5e243871ebbaeadb5e82f",
-                "1701293c488822f98e70e047012f46f5f1647f37deb7");
-        LegacyBurningMan legacyBurningManDPT = getLegacyBurningMan(burningManService.getLegacyBurningManAddress(currentChainHeight), hashes);
-
+        LegacyBurningMan legacyBurningManDPT = getLegacyBurningMan(burningManService.getLegacyBurningManAddress(currentChainHeight), OP_RETURN_DATA_LEGACY_BM_DPT);
         this.legacyBurningManDPT = Optional.of(legacyBurningManDPT);
         return legacyBurningManDPT;
     }
@@ -275,22 +284,20 @@ public class BurningManPresentationService implements DaoStateListener {
 
         // We do not add the legacy burningman to the list but keep it as class field only to avoid that it
         // interferes with usage of the burningManCandidatesByName map.
-        // The hash used by legacy BM for burning BTC received from BTC trade fees.
-        Set<String> hashes = Set.of("1701721206fe6b40777763de1c741f4fd2706d94775d");
-        LegacyBurningMan legacyBurningManBtcFees = getLegacyBurningMan(LEGACY_BURNING_MAN_BTC_FEES_ADDRESS, hashes);
+        LegacyBurningMan legacyBurningManBtcFees = getLegacyBurningMan(LEGACY_BURNING_MAN_BTC_FEES_ADDRESS, OP_RETURN_DATA_LEGACY_BM_FEES);
 
         this.legacyBurningManBtcFees = Optional.of(legacyBurningManBtcFees);
         return legacyBurningManBtcFees;
     }
 
-    private LegacyBurningMan getLegacyBurningMan(String address, Set<String> hashes) {
+    private LegacyBurningMan getLegacyBurningMan(String address, Set<String> opReturnData) {
         LegacyBurningMan legacyBurningMan = new LegacyBurningMan(address);
-        // The hashes used by legacy BM at burning BSQ.
+        // The opReturnData used by legacy BM at burning BSQ.
         getProofOfBurnOpReturnTxOutputByHash().values().stream()
                 .flatMap(txOutputs -> txOutputs.stream()
                         .filter(txOutput -> {
-                            String hash = Hex.encode(txOutput.getOpReturnData());
-                            return hashes.stream().anyMatch(e -> e.equals(hash));
+                            String opReturnAsHex = Hex.encode(txOutput.getOpReturnData());
+                            return opReturnData.stream().anyMatch(e -> e.equals(opReturnAsHex));
                         }))
                 .forEach(burnOutput -> {
                     int burnOutputHeight = burnOutput.getBlockHeight();
