@@ -35,6 +35,7 @@ import bisq.core.support.dispute.arbitration.TraderDataItem;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
+import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
 import bisq.network.p2p.BootstrapListener;
@@ -143,6 +144,7 @@ public class AccountAgeWitnessService {
     private final ChargeBackRisk chargeBackRisk;
     private final AccountAgeWitnessStorageService accountAgeWitnessStorageService;
     private final Clock clock;
+    private final Preferences preferences;
     private final FilterManager filterManager;
     @Getter
     private final AccountAgeWitnessUtils accountAgeWitnessUtils;
@@ -169,6 +171,7 @@ public class AccountAgeWitnessService {
                                     AccountAgeWitnessStorageService accountAgeWitnessStorageService,
                                     AppendOnlyDataStoreService appendOnlyDataStoreService,
                                     Clock clock,
+                                    Preferences preferences,
                                     FilterManager filterManager) {
         this.keyRing = keyRing;
         this.p2PService = p2PService;
@@ -177,6 +180,7 @@ public class AccountAgeWitnessService {
         this.chargeBackRisk = chargeBackRisk;
         this.accountAgeWitnessStorageService = accountAgeWitnessStorageService;
         this.clock = clock;
+        this.preferences = preferences;
         this.filterManager = filterManager;
 
         accountAgeWitnessUtils = new AccountAgeWitnessUtils(
@@ -513,7 +517,10 @@ public class AccountAgeWitnessService {
             return 0;
 
         AccountAgeWitness accountAgeWitness = getMyWitness(paymentAccount.getPaymentAccountPayload());
-        Coin maxTradeLimit = paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode);
+        // maxTradeLimit is the smaller of the payment method and the user preference setting  (GH proposal #398)
+        Coin maxTradeLimit = Coin.valueOf(Math.min(
+                paymentAccount.getPaymentMethod().getMaxTradeLimitAsCoin(currencyCode).value,
+                preferences.getUserDefinedTradeLimit()));
         if (hasTradeLimitException(accountAgeWitness)) {
             return maxTradeLimit.value;
         }

@@ -110,7 +110,7 @@ public class AccountAgeWitnessServiceTest {
         AppendOnlyDataStoreService appendOnlyDataStoreService = mock(AppendOnlyDataStoreService.class);
         filterManager = mock(FilterManager.class);
         signedWitnessService = new SignedWitnessService(keyRing, p2pService, arbitratorManager, null, appendOnlyDataStoreService, null, filterManager);
-        service = new AccountAgeWitnessService(null, null, null, signedWitnessService, chargeBackRisk, null, dataStoreService, null, filterManager);
+        service = new AccountAgeWitnessService(null, null, null, signedWitnessService, chargeBackRisk, null, dataStoreService, null, null, filterManager);
     }
 
     private File makeDir(String name) throws IOException {

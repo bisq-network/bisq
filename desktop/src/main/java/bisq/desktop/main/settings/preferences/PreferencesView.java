@@ -46,6 +46,7 @@ import bisq.core.locale.FiatCurrency;
 import bisq.core.locale.LanguageUtil;
 import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
+import bisq.core.offer.OfferFilterService;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.TradeLimits;
 import bisq.core.payment.payload.PaymentMethod;
@@ -142,8 +143,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ChangeListener<Boolean> transactionFeeFocusedListener, autoConfServiceAddressFocusOutListener, autoConfRequiredConfirmationsFocusOutListener;
     private final Preferences preferences;
     private final FeeService feeService;
-    //private final ReferralIdService referralIdService;
     private final AssetService assetService;
+    private final OfferFilterService offerFilterService;
     private final FilterManager filterManager;
     private final DaoFacade daoFacade;
     private final File storageDir;
@@ -182,6 +183,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                            Preferences preferences,
                            FeeService feeService,
                            AssetService assetService,
+                           OfferFilterService offerFilterService,
                            FilterManager filterManager,
                            DaoFacade daoFacade,
                            Config config,
@@ -197,6 +199,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         this.preferences = preferences;
         this.feeService = feeService;
         this.assetService = assetService;
+        this.offerFilterService = offerFilterService;
         this.filterManager = filterManager;
         this.daoFacade = daoFacade;
         this.storageDir = storageDir;
@@ -880,6 +883,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             if (!newValue.equals(oldValue) && tradeLimitTf.getValidator().validate(newValue).isValid) {
                 Coin amountAsCoin = ParsingUtils.parseToCoin(newValue, formatter);
                 preferences.setUserDefinedTradeLimit(amountAsCoin.value);
+                offerFilterService.resetTradeLimitCache();
             }
         };
     }

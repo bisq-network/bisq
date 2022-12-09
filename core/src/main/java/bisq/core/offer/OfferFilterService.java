@@ -200,10 +200,12 @@ public class OfferFilterService {
                 accountOptional.isPresent() ? accountOptional.get().getAccountName() : "null",
                 Coin.valueOf(myTradeLimit).toFriendlyString(),
                 Coin.valueOf(offerMinAmount).toFriendlyString());
-        boolean result = offer.isFiatOffer() &&
-                accountOptional.isPresent() &&
-                myTradeLimit < offerMinAmount;
+        boolean result = accountOptional.isPresent() && myTradeLimit < offerMinAmount;
         myInsufficientTradeLimitCache.put(offerId, result);
         return result;
+    }
+
+    public void resetTradeLimitCache() {
+        myInsufficientTradeLimitCache.clear();
     }
 }
