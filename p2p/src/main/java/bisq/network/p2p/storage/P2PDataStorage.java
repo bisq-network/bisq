@@ -380,7 +380,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         serviceMap = service.getMap();
                     }
                     map.putAll(serviceMap);
-                    log.info("We added {} entries from {} to the excluded key set of our request",
+                    log.debug("We added {} entries from {} to the excluded key set of our request",
                             serviceMap.size(), service.getClass().getSimpleName());
                 });
         return map;
@@ -489,6 +489,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return new HashSet<>(filteredResults);
     }
 
+    public Collection<PersistableNetworkPayload> getPersistableNetworkPayloadCollection() {
+        return getMapForDataRequest().values();
+    }
 
     private Set<byte[]> getKeysAsByteSet(Map<ByteArray, ? extends PersistablePayload> map) {
         return map.keySet().stream()

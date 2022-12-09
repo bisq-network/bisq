@@ -129,6 +129,7 @@ public class Config {
     public static final String BYPASS_MEMPOOL_VALIDATION = "bypassMempoolValidation";
     public static final String DAO_NODE_API_URL = "daoNodeApiUrl";
     public static final String DAO_NODE_API_PORT = "daoNodeApiPort";
+    public static final String SEED_NODE_REPORTING_SERVER_URL = "seedNodeReportingServerUrl";
 
     // Default values for certain options
     public static final int UNSPECIFIED_PORT = -1;
@@ -220,6 +221,7 @@ public class Config {
     public final boolean bypassMempoolValidation;
     public final String daoNodeApiUrl;
     public final int daoNodeApiPort;
+    public final String seedNodeReportingServerUrl;
 
     // Properties derived from options but not exposed as options themselves
     public final File torDir;
@@ -679,6 +681,11 @@ public class Config {
                         .withRequiredArg()
                         .ofType(Integer.class)
                         .defaultsTo(8082);
+        ArgumentAcceptingOptionSpec<String> seedNodeReportingServerUrlOpt =
+                parser.accepts(SEED_NODE_REPORTING_SERVER_URL, "URL of seed node reporting server")
+                        .withRequiredArg()
+                        .ofType(String.class)
+                        .defaultsTo("");
 
         try {
             CompositeOptionSet options = new CompositeOptionSet();
@@ -799,6 +806,7 @@ public class Config {
             this.bypassMempoolValidation = options.valueOf(bypassMempoolValidationOpt);
             this.daoNodeApiUrl = options.valueOf(daoNodeApiUrlOpt);
             this.daoNodeApiPort = options.valueOf(daoNodeApiPortOpt);
+            this.seedNodeReportingServerUrl = options.valueOf(seedNodeReportingServerUrlOpt);
         } catch (OptionException ex) {
             throw new ConfigException("problem parsing option '%s': %s",
                     ex.options().get(0),

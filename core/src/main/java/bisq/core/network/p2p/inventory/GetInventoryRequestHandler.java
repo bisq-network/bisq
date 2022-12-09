@@ -150,7 +150,7 @@ public class GetInventoryRequestHandler implements MessageListener {
 
             // node
             inventory.put(InventoryItem.version, Version.VERSION);
-            inventory.put(InventoryItem.commitHash, new Version().readCommitHash());
+            Version.findCommitHash().ifPresent(commitHash -> inventory.put(InventoryItem.commitHash, commitHash));
             inventory.put(InventoryItem.usedMemory, String.valueOf(Profiler.getUsedMemoryInBytes()));
             inventory.put(InventoryItem.jvmStartTime, String.valueOf(ManagementFactory.getRuntimeMXBean().getStartTime()));
 

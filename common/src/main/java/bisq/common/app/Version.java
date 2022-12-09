@@ -21,6 +21,8 @@ import java.net.URL;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
@@ -140,14 +142,15 @@ public class Version {
                 '}');
     }
 
-    public String readCommitHash() {
+    public static Optional<String> findCommitHash() {
         try {
-            String pth = getClass().getResource(getClass().getSimpleName() + ".class").toString();
+            String pth = Objects.requireNonNull(Version.class.getResource(Version.class.getSimpleName() + ".class")).toString();
             String mnf = pth.substring(0, pth.lastIndexOf("!") + 1) + "/META-INF/MANIFEST.MF";
             Attributes attr = new Manifest(new URL(mnf).openStream()).getMainAttributes();
-            return attr.getValue("Implementation-Version");
-        } catch (Exception ignored) { }
-        return "unknown";
+            return Optional.of(attr.getValue("Implementation-Version"));
+        } catch (Exception ignored) {
+            return Optional.empty();
+        }
     }
 
     public static final byte COMPENSATION_REQUEST = (byte) 0x01;

@@ -101,6 +101,7 @@ configure([project(':cli'),
     build.dependsOn installDist
     installDist.destinationDir = file('build/app')
     distZip.enabled = false
+    distTar.enabled = false
 
     // the 'installDist' and 'startScripts' blocks below configure bisq executables to put
     // generated shell scripts in the root project directory, such that users can easily
@@ -235,7 +236,7 @@ configure(project(':common')) {
     ext.getHash = {
         def p1 = 'git rev-parse HEAD'.execute()
         p1.waitFor()
-        return p1.text.substring(0,7)
+        return p1.text
     }
 
     jar.manifest.attributes(
@@ -515,6 +516,10 @@ configure(project(':desktop')) {
 
 configure(project(':seednode')) {
     apply plugin: 'com.github.johnrengelman.shadow'
+
+    jar.manifest.attributes(
+        "Implementation-Title": project.name,
+        "Implementation-Version": version)
 
     mainClassName = 'bisq.seednode.SeedNodeMain'
 

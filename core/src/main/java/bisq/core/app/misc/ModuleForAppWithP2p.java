@@ -85,6 +85,7 @@ public class ModuleForAppWithP2p extends AppModule {
         bindConstant().annotatedWith(named(USE_DEV_MODE_HEADER)).to(config.useDevModeHeader);
         bindConstant().annotatedWith(named(REFERRAL_ID)).to(config.referralId);
         bindConstant().annotatedWith(named(PREVENT_PERIODIC_SHUTDOWN_AT_SEED_NODE)).to(config.preventPeriodicShutdownAtSeedNode);
+        bindConstant().annotatedWith(named(SEED_NODE_REPORTING_SERVER_URL)).to(config.seedNodeReportingServerUrl);
 
         // ordering is used for shut down sequence
         install(new TradeModule(config));

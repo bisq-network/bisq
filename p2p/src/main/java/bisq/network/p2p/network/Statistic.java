@@ -238,6 +238,30 @@ public class Statistic {
         return roundTripTime;
     }
 
+    public static long getTotalSentBytes() {
+        return totalSentBytes.get();
+    }
+
+    public static double getTotalSentBytesPerSec() {
+        return totalSentBytesPerSec.get();
+    }
+
+    public static long getTotalReceivedBytes() {
+        return totalReceivedBytes.get();
+    }
+
+    public static double getTotalReceivedBytesPerSec() {
+        return totalReceivedBytesPerSec.get();
+    }
+
+    public static double numTotalReceivedMessagesPerSec() {
+        return numTotalReceivedMessagesPerSec.get();
+    }
+
+    public static double getNumTotalSentMessagesPerSec() {
+        return numTotalSentMessagesPerSec.get();
+    }
+
     @Override
     public String toString() {
         return "Statistic{" +

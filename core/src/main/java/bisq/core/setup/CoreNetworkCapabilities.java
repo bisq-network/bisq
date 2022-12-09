@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CoreNetworkCapabilities {
 
-    static void setSupportedCapabilities(Config config) {
+    public static void setSupportedCapabilities(Config config) {
         Capabilities.app.addAll(
                 Capability.TRADE_STATISTICS,
                 Capability.TRADE_STATISTICS_2,

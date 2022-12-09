@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
 
 @Slf4j
 public class ProvidersRepository {
-    private static final List<String> DEFAULT_NODES = Arrays.asList(
+    public static final List<String> DEFAULT_NODES = Arrays.asList(
             "http://wizpriceje6q5tdrxkyiazsgu7irquiqjy2dptezqhrtu7l2qelqktid.onion/", // @wiz
             "http://emzypricpidesmyqg2hc6dkwitqzaxrqnpkdg3ae2wef5znncu2ambqd.onion/", // @emzy
             "http://aprcndeiwdrkbf4fq7iozxbd27dl72oeo76n7zmjwdi4z34agdrnheyd.onion/", // @mrosseel

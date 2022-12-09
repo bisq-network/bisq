@@ -64,6 +64,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -133,6 +134,12 @@ public class Utilities {
         executor.allowCoreThreadTimeOut(true);
         executor.setRejectedExecutionHandler((r, e) -> log.debug("RejectedExecutionHandler called"));
         return executor;
+    }
+
+    public static ExecutorService newCachedThreadPool(int maximumPoolSize) {
+        return new ThreadPoolExecutor(0, maximumPoolSize,
+                60, TimeUnit.SECONDS,
+                new SynchronousQueue<>());
     }
 
     @SuppressWarnings("SameParameterValue")
