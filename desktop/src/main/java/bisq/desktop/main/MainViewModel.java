@@ -274,7 +274,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                                     break;
                                 case TRADE_PERIOD_OVER:
                                     key = "displayTradePeriodOver" + trade.getId();
-                                    if (DontShowAgainLookup.showAgain(key) && !DevEnv.isDevTesting()) {
+                                    if (DontShowAgainLookup.showAgain(key)) {
                                         DontShowAgainLookup.dontShowAgain(key, true);
                                         new Popup().warning(Res.get("popup.warning.tradePeriod.ended",
                                                         trade.getShortId(),

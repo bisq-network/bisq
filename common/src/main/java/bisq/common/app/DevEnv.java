@@ -44,10 +44,6 @@ public class DevEnv {
         return devMode;
     }
 
-    public static boolean isDevTesting() {
-        return false;
-    }
-
     public static void setDevMode(boolean devMode) {
         DevEnv.devMode = devMode;
     }

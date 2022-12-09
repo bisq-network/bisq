@@ -731,7 +731,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         clockWatcher.addListener(new ClockWatcher.Listener() {
             @Override
             public void onSecondTick() {
-                if (DevEnv.isDevTesting()) {
+                if (DevEnv.isDevMode()) {
                     updateTradePeriodState();
                 }
             }
@@ -748,8 +748,11 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
             if (!trade.isPayoutPublished()) {
                 Date maxTradePeriodDate = trade.getMaxTradePeriodDate();
                 Date halfTradePeriodDate = trade.getHalfTradePeriodDate();
-                if (DevEnv.isDevTesting()) {
-                    trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
+                if (DevEnv.isDevMode()) {
+                    TransactionConfidence confidenceForTxId = btcWalletService.getConfidenceForTxId(trade.getDepositTxId());
+                    if (confidenceForTxId != null && confidenceForTxId.getDepthInBlocks() > 4) {
+                        trade.setTradePeriodState(Trade.TradePeriodState.TRADE_PERIOD_OVER);
+                    }
                 }
                 if (maxTradePeriodDate != null && halfTradePeriodDate != null) {
                     Date now = new Date();
