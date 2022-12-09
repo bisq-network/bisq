@@ -32,7 +32,6 @@ public class BurningManServiceTest {
         long amount = 100;
         int currentBlockHeight = 1400;
         int fromBlockHeight = 1000;
-        int heightOfFirstBlockOfCurrentCycle = 1400;
         assertEquals(0, BurningManService.getDecayedAmount(amount, 1000, currentBlockHeight, fromBlockHeight));
         assertEquals(25, BurningManService.getDecayedAmount(amount, 1100, currentBlockHeight, fromBlockHeight));
         assertEquals(50, BurningManService.getDecayedAmount(amount, 1200, currentBlockHeight, fromBlockHeight));
