@@ -62,6 +62,9 @@ public class BurningManPresentationService implements DaoStateListener {
     // Burn target gets increased by that amount to give more flexibility.
     // Burn target is calculated from reimbursements + estimated BTC fees - burned amounts.
     private static final long BURN_TARGET_BOOST_AMOUNT = Config.baseCurrencyNetwork().isRegtest() ? 1000000 : 10000000;
+    // To avoid that the BM get locked in small total burn amounts we allow to burn up to 1000 BSQ more than the
+    // calculation to not exceed the cap would suggest.
+    private static final long MAX_BURN_TARGET_LOWER_FLOOR = 100000;
     public static final String LEGACY_BURNING_MAN_DPT_NAME = "Legacy Burningman (DPT)";
     public static final String LEGACY_BURNING_MAN_BTC_FEES_NAME = "Legacy Burningman (BTC fees)";
     static final String LEGACY_BURNING_MAN_BTC_FEES_ADDRESS = "38bZBj5peYS3Husdz7AH3gEUiUbYRD951t";
@@ -183,6 +186,7 @@ public class BurningManPresentationService implements DaoStateListener {
         double maxBoostedCompensationShare = Math.min(BurningManService.MAX_BURN_SHARE, compensationShare * BurningManService.ISSUANCE_BOOST_FACTOR);
         long upperBaseTarget = Math.round(boostedBurnAmount * maxBoostedCompensationShare);
         long totalBurnedAmount = burnTargetService.getAccumulatedDecayedBurnedAmount(getBurningManCandidatesByName().values(), currentChainHeight);
+
         if (totalBurnedAmount == 0) {
             return new Tuple2<>(lowerBaseTarget, upperBaseTarget);
         }
@@ -197,13 +201,16 @@ public class BurningManPresentationService implements DaoStateListener {
             myBurnAmount = Math.min(myBurnAmount, lowerBaseTarget);
             myMaxBurnAmount = Math.min(myMaxBurnAmount, upperBaseTarget);
 
+            // We allow at least MAX_BURN_TARGET_LOWER_FLOOR (1000 BSQ) to burn, even if that means to hit the cap to give more flexibility
+            // when low amounts are burned and the 11% cap would lock in BM to small increments per burn iteration.
+            myMaxBurnAmount = Math.max(myMaxBurnAmount, MAX_BURN_TARGET_LOWER_FLOOR);
+
             // If below dust we set value to 0
             myBurnAmount = myBurnAmount < 546 ? 0 : myBurnAmount;
-            myMaxBurnAmount = myMaxBurnAmount < 546 ? 0 : myMaxBurnAmount;
             return new Tuple2<>(myBurnAmount, myMaxBurnAmount);
         } else {
-            // We have reached out cap so no reason to burn more.
-            return new Tuple2<>(0L, 0L);
+            // We have reached our cap.
+            return new Tuple2<>(0L, MAX_BURN_TARGET_LOWER_FLOOR);
         }
     }
 
