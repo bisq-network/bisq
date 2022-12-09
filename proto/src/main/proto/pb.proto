@@ -2495,7 +2495,7 @@ message ReportingItem {
     string group = 2;
     oneof message {
         StringValueItem string_value_item = 3;
-        IntegerValueItem integer_value_item = 4;
+        LongValueItem long_value_item = 4;
         DoubleValueItem double_value_item = 5;
     }
 }
@@ -2503,8 +2503,8 @@ message StringValueItem {
     string value = 1;
 }
 
-message IntegerValueItem {
-    uint32 value = 1;
+message LongValueItem {
+    uint64 value = 1;
 }
 
 message DoubleValueItem {

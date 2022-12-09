@@ -21,7 +21,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 
-public enum IntegerValueItem implements ReportingItem {
+public enum LongValueItem implements ReportingItem {
     Unspecified("", "Unspecified"),
     OfferPayload("data", "OfferPayload"),
     MailboxStoragePayload("data", "MailboxStoragePayload"),
@@ -59,24 +59,24 @@ public enum IntegerValueItem implements ReportingItem {
     private String group;
     @Getter
     @Setter
-    private int value;
+    private long value;
 
-    IntegerValueItem(String group, String key) {
+    LongValueItem(String group, String key) {
         this.group = group;
         this.key = key;
     }
 
-    public IntegerValueItem withValue(int value) {
+    public LongValueItem withValue(long value) {
         setValue(value);
         return this;
     }
 
-    public static IntegerValueItem from(String key, int value) {
-        IntegerValueItem item;
+    public static LongValueItem from(String key, long value) {
+        LongValueItem item;
         try {
-            item = IntegerValueItem.valueOf(key);
+            item = LongValueItem.valueOf(key);
         } catch (Throwable t) {
-            item = IntegerValueItem.Unspecified;
+            item = LongValueItem.Unspecified;
             item.setKey(key);
         }
 
@@ -86,13 +86,13 @@ public enum IntegerValueItem implements ReportingItem {
 
     @Override
     public protobuf.ReportingItem toProtoMessage() {
-        return getBuilder().setIntegerValueItem(protobuf.IntegerValueItem.newBuilder()
+        return getBuilder().setLongValueItem(protobuf.LongValueItem.newBuilder()
                         .setValue(value))
                 .build();
     }
 
-    public static IntegerValueItem fromProto(protobuf.ReportingItem baseProto, protobuf.IntegerValueItem proto) {
-        return IntegerValueItem.from(baseProto.getKey(), proto.getValue());
+    public static LongValueItem fromProto(protobuf.ReportingItem baseProto, protobuf.LongValueItem proto) {
+        return LongValueItem.from(baseProto.getKey(), proto.getValue());
     }
 
     @Override

@@ -27,7 +27,7 @@ import bisq.core.dao.monitoring.model.ProposalStateBlock;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.monitor.DoubleValueItem;
-import bisq.core.monitor.IntegerValueItem;
+import bisq.core.monitor.LongValueItem;
 import bisq.core.monitor.ReportingItems;
 import bisq.core.monitor.StringValueItem;
 
@@ -171,7 +171,7 @@ public class SeedNodeReportingService {
             return;
         }
         ReportingItems reportingItems = new ReportingItems(getMyAddress());
-        reportingItems.add(IntegerValueItem.usedMemoryInMB.withValue((int) Profiler.getUsedMemoryInMB()));
+        reportingItems.add(LongValueItem.usedMemoryInMB.withValue(Profiler.getUsedMemoryInMB()));
         sendReportingItems(reportingItems);
     }
 
@@ -182,9 +182,9 @@ public class SeedNodeReportingService {
 
         ReportingItems reportingItems = new ReportingItems(getMyAddress());
         int daoStateChainHeight = daoStateService.getChainHeight();
-        reportingItems.add(IntegerValueItem.daoStateChainHeight.withValue(daoStateChainHeight));
-        daoStateService.getLastBlock().map(block -> (int) (block.getTime() / 1000))
-                .ifPresent(blockTime -> reportingItems.add(IntegerValueItem.blockTimeIsSec.withValue(blockTime)));
+        reportingItems.add(LongValueItem.daoStateChainHeight.withValue(daoStateChainHeight));
+        daoStateService.getLastBlock().map(block -> (block.getTime() / 1000))
+                .ifPresent(blockTime -> reportingItems.add(LongValueItem.blockTimeIsSec.withValue(blockTime)));
         LinkedList<DaoStateBlock> daoStateBlockChain = daoStateMonitoringService.getDaoStateBlockChain();
         if (!daoStateBlockChain.isEmpty()) {
             String daoStateHash = Utilities.bytesAsHexString(daoStateBlockChain.getLast().getMyStateHash().getHash());
@@ -224,24 +224,24 @@ public class SeedNodeReportingService {
                     numItemsByType.putIfAbsent(className, 0);
                     numItemsByType.put(className, numItemsByType.get(className) + 1);
                 });
-        numItemsByType.forEach((key, value) -> reportingItems.add(IntegerValueItem.from(key, value)));
+        numItemsByType.forEach((key, value) -> reportingItems.add(LongValueItem.from(key, value)));
 
         // Network
-        reportingItems.add(IntegerValueItem.numConnections.withValue(networkNode.getAllConnections().size()));
-        reportingItems.add(IntegerValueItem.peakNumConnections.withValue(peerManager.getPeakNumConnections()));
-        reportingItems.add(IntegerValueItem.numAllConnectionsLostEvents.withValue(peerManager.getNumAllConnectionsLostEvents()));
-        reportingItems.add(IntegerValueItem.sentBytes.withValue((int) Statistic.getTotalSentBytes()));
-        reportingItems.add(IntegerValueItem.receivedBytes.withValue((int) Statistic.getTotalReceivedBytes()));
+        reportingItems.add(LongValueItem.numConnections.withValue(networkNode.getAllConnections().size()));
+        reportingItems.add(LongValueItem.peakNumConnections.withValue(peerManager.getPeakNumConnections()));
+        reportingItems.add(LongValueItem.numAllConnectionsLostEvents.withValue(peerManager.getNumAllConnectionsLostEvents()));
+        reportingItems.add(LongValueItem.sentBytes.withValue(Statistic.getTotalSentBytes()));
+        reportingItems.add(LongValueItem.receivedBytes.withValue(Statistic.getTotalReceivedBytes()));
         reportingItems.add(DoubleValueItem.sentBytesPerSec.withValue(Statistic.getTotalSentBytesPerSec()));
         reportingItems.add(DoubleValueItem.sentMessagesPerSec.withValue(Statistic.getNumTotalSentMessagesPerSec()));
         reportingItems.add(DoubleValueItem.receivedBytesPerSec.withValue(Statistic.getTotalReceivedBytesPerSec()));
         reportingItems.add(DoubleValueItem.receivedMessagesPerSec.withValue(Statistic.numTotalReceivedMessagesPerSec()));
 
         // Node
-        reportingItems.add(IntegerValueItem.usedMemoryInMB.withValue((int) Profiler.getUsedMemoryInMB()));
-        reportingItems.add(IntegerValueItem.totalMemoryInMB.withValue((int) Profiler.getTotalMemoryInMB()));
-        reportingItems.add(IntegerValueItem.jvmStartTimeInSec.withValue((int) (ManagementFactory.getRuntimeMXBean().getStartTime() / 1000)));
-        reportingItems.add(IntegerValueItem.maxConnections.withValue(maxConnections));
+        reportingItems.add(LongValueItem.usedMemoryInMB.withValue(Profiler.getUsedMemoryInMB()));
+        reportingItems.add(LongValueItem.totalMemoryInMB.withValue(Profiler.getTotalMemoryInMB()));
+        reportingItems.add(LongValueItem.jvmStartTimeInSec.withValue((ManagementFactory.getRuntimeMXBean().getStartTime() / 1000)));
+        reportingItems.add(LongValueItem.maxConnections.withValue(maxConnections));
         reportingItems.add(StringValueItem.version.withValue(Version.VERSION));
 
         // If no commit hash is found we use 0 in hex format

@@ -39,8 +39,8 @@ public interface ReportingItem extends NetworkPayload {
         switch (proto.getMessageCase()) {
             case STRING_VALUE_ITEM:
                 return StringValueItem.fromProto(proto, proto.getStringValueItem());
-            case INTEGER_VALUE_ITEM:
-                return IntegerValueItem.fromProto(proto, proto.getIntegerValueItem());
+            case LONG_VALUE_ITEM:
+                return LongValueItem.fromProto(proto, proto.getLongValueItem());
             case DOUBLE_VALUE_ITEM:
                 return DoubleValueItem.fromProto(proto, proto.getDoubleValueItem());
             case MESSAGE_NOT_SET:
