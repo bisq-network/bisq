@@ -15,12 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.seednode;
-
-import bisq.seednode.reporting.DoubleValueItem;
-import bisq.seednode.reporting.LongValueItem;
-import bisq.seednode.reporting.ReportingItems;
-import bisq.seednode.reporting.StringValueItem;
+package bisq.seednode.reporting;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.monitoring.BlindVoteStateMonitoringService;
