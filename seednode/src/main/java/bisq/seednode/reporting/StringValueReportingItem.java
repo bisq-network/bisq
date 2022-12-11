@@ -21,7 +21,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 
-public enum StringValueItem implements ReportingItem {
+public enum StringValueReportingItem implements ReportingItem {
     Unspecified("", "Unspecified"),
 
     daoStateHash("dao", "daoStateHash"),
@@ -39,20 +39,20 @@ public enum StringValueItem implements ReportingItem {
     @Setter
     private String value;
 
-    StringValueItem(String group, String key) {
+    StringValueReportingItem(String group, String key) {
         this.group = group;
         this.key = key;
     }
 
-    public StringValueItem withValue(String value) {
+    public StringValueReportingItem withValue(String value) {
         setValue(value);
         return this;
     }
 
-    public static StringValueItem from(String key, String value) {
-        StringValueItem item;
+    public static StringValueReportingItem from(String key, String value) {
+        StringValueReportingItem item;
         try {
-            item = StringValueItem.valueOf(key);
+            item = StringValueReportingItem.valueOf(key);
         } catch (Throwable t) {
             item = Unspecified;
         }
@@ -68,13 +68,14 @@ public enum StringValueItem implements ReportingItem {
 
     @Override
     public protobuf.ReportingItem toProtoMessage() {
-        return getBuilder().setStringValueItem(protobuf.StringValueItem.newBuilder()
+        return getBuilder().setStringValueReportingItem(protobuf.StringValueReportingItem.newBuilder()
                         .setValue(value))
                 .build();
     }
 
-    public static StringValueItem fromProto(protobuf.ReportingItem baseProto, protobuf.StringValueItem proto) {
-        return StringValueItem.from(baseProto.getKey(), proto.getValue());
+    public static StringValueReportingItem fromProto(protobuf.ReportingItem baseProto,
+                                                     protobuf.StringValueReportingItem proto) {
+        return StringValueReportingItem.from(baseProto.getKey(), proto.getValue());
     }
 
     @Override

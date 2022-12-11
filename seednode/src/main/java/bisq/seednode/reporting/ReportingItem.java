@@ -37,13 +37,13 @@ public interface ReportingItem extends NetworkPayload {
 
     static ReportingItem fromProto(protobuf.ReportingItem proto) {
         switch (proto.getMessageCase()) {
-            case MessageCase.STRING_VALUE_ITEM:
-                return StringValueItem.fromProto(proto, proto.getStringValueItem());
-            case MessageCase.LONG_VALUE_ITEM:
-                return LongValueItem.fromProto(proto, proto.getLongValueItem());
-            case MessageCase.DOUBLE_VALUE_ITEM:
-                return DoubleValueItem.fromProto(proto, proto.getDoubleValueItem());
-            case MessageCase.MESSAGE_NOT_SET:
+            case STRING_VALUE_REPORTING_ITEM:
+                return StringValueReportingItem.fromProto(proto, proto.getStringValueReportingItem());
+            case LONG_VALUE_REPORTING_ITEM:
+                return LongValueReportingItem.fromProto(proto, proto.getLongValueReportingItem());
+            case DOUBLE_VALUE_REPORTING_ITEM:
+                return DoubleValueReportingItem.fromProto(proto, proto.getDoubleValueReportingItem());
+            case MESSAGE_NOT_SET:
             default:
                 throw new ProtobufferRuntimeException("Unknown message case: " + proto);
         }

@@ -21,7 +21,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 
-public enum DoubleValueItem implements ReportingItem {
+public enum DoubleValueReportingItem implements ReportingItem {
     Unspecified("", "Unspecified"),
     sentBytesPerSec("network", "sentBytesPerSec"),
     receivedBytesPerSec("network", "receivedBytesPerSec"),
@@ -30,7 +30,6 @@ public enum DoubleValueItem implements ReportingItem {
 
 
     @Getter
-    @Setter
     private final String key;
     @Getter
     private final String group;
@@ -38,20 +37,20 @@ public enum DoubleValueItem implements ReportingItem {
     @Setter
     private double value;
 
-    DoubleValueItem(String group, String key) {
+    DoubleValueReportingItem(String group, String key) {
         this.group = group;
         this.key = key;
     }
 
-    public DoubleValueItem withValue(double value) {
+    public DoubleValueReportingItem withValue(double value) {
         setValue(value);
         return this;
     }
 
-    public static DoubleValueItem from(String key, double value) {
-        DoubleValueItem item;
+    public static DoubleValueReportingItem from(String key, double value) {
+        DoubleValueReportingItem item;
         try {
-            item = DoubleValueItem.valueOf(key);
+            item = DoubleValueReportingItem.valueOf(key);
         } catch (Throwable t) {
             item = Unspecified;
         }
@@ -62,13 +61,14 @@ public enum DoubleValueItem implements ReportingItem {
 
     @Override
     public protobuf.ReportingItem toProtoMessage() {
-        return getBuilder().setDoubleValueItem(protobuf.DoubleValueItem.newBuilder()
+        return getBuilder().setDoubleValueReportingItem(protobuf.DoubleValueReportingItem.newBuilder()
                         .setValue(value))
                 .build();
     }
 
-    public static DoubleValueItem fromProto(protobuf.ReportingItem baseProto, protobuf.DoubleValueItem proto) {
-        return DoubleValueItem.from(baseProto.getKey(), proto.getValue());
+    public static DoubleValueReportingItem fromProto(protobuf.ReportingItem baseProto,
+                                                     protobuf.DoubleValueReportingItem proto) {
+        return DoubleValueReportingItem.from(baseProto.getKey(), proto.getValue());
     }
 
     @Override
