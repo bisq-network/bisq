@@ -88,10 +88,10 @@ public class Restrictions {
     public static Coin getMinRefundAtMediatedDispute(Coin tradeAmount) {
         if (MIN_REFUND_AT_MEDIATED_DISPUTE == null)
             MIN_REFUND_AT_MEDIATED_DISPUTE = Coin.parseCoin("0.0005"); // 0.0005 BTC is 30 USD @ 60000 USD/BTC
-        Coin twoPointFivePercentOfTradeAmount = tradeAmount.div(40);
-        if (twoPointFivePercentOfTradeAmount.isLessThan(MIN_REFUND_AT_MEDIATED_DISPUTE))
+        Coin fivePercentOfTradeAmount = tradeAmount.div(20);
+        if (fivePercentOfTradeAmount.isLessThan(MIN_REFUND_AT_MEDIATED_DISPUTE))
             return MIN_REFUND_AT_MEDIATED_DISPUTE;
-        return twoPointFivePercentOfTradeAmount;
+        return fivePercentOfTradeAmount;
     }
 
     public static int getLockTime(boolean isAsset) {
