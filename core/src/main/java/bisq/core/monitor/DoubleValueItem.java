@@ -31,10 +31,9 @@ public enum DoubleValueItem implements ReportingItem {
 
     @Getter
     @Setter
-    private String key;
+    private final String key;
     @Getter
-    @Setter
-    private String group;
+    private final String group;
     @Getter
     @Setter
     private double value;
@@ -54,8 +53,7 @@ public enum DoubleValueItem implements ReportingItem {
         try {
             item = DoubleValueItem.valueOf(key);
         } catch (Throwable t) {
-            item = DoubleValueItem.Unspecified;
-            item.setKey(key);
+            item = Unspecified;
         }
 
         item.setValue(value);

@@ -32,11 +32,9 @@ public enum StringValueItem implements ReportingItem {
     commitHash("node", "commitHash");
 
     @Getter
-    @Setter
-    private String key;
+    private final String key;
     @Getter
-    @Setter
-    private String group;
+    private final String group;
     @Getter
     @Setter
     private String value;
@@ -56,8 +54,7 @@ public enum StringValueItem implements ReportingItem {
         try {
             item = StringValueItem.valueOf(key);
         } catch (Throwable t) {
-            item = StringValueItem.Unspecified;
-            item.setKey(key);
+            item = Unspecified;
         }
 
         item.setValue(value);

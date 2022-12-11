@@ -52,11 +52,9 @@ public enum LongValueItem implements ReportingItem {
     jvmStartTimeInSec("node", "jvmStartTimeInSec");
 
     @Getter
-    @Setter
-    private String key;
+    private final String key;
     @Getter
-    @Setter
-    private String group;
+    private final String group;
     @Getter
     @Setter
     private long value;
@@ -76,8 +74,7 @@ public enum LongValueItem implements ReportingItem {
         try {
             item = LongValueItem.valueOf(key);
         } catch (Throwable t) {
-            item = LongValueItem.Unspecified;
-            item.setKey(key);
+            item = Unspecified;
         }
 
         item.setValue(value);
