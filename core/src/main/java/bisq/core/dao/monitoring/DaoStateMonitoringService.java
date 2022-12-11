@@ -89,9 +89,14 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         DaoStateNetworkService.Listener<NewDaoStateHashMessage, GetDaoStateHashesRequest, DaoStateHash> {
 
     public interface Listener {
-        void onDaoStateHashesChanged();
+        default void onDaoStateHashesChanged() {
+        }
 
-        void onCheckpointFail();
+        default void onCheckpointFail() {
+        }
+
+        default void onDaoStateBlockCreated() {
+        }
     }
 
     private final DaoStateService daoStateService;
@@ -347,7 +352,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         // We only broadcast after parsing of blockchain is complete
         if (parseBlockChainComplete) {
             // We delay broadcast to give peers enough time to have received the block.
-            // Otherwise they would ignore our data if received block is in future to their local blockchain.
+            // Otherwise, they would ignore our data if received block is in future to their local blockchain.
             int delayInSec = 5 + new Random().nextInt(10);
             if (Config.baseCurrencyNetwork().isRegtest()) {
                 delayInSec = 1;
@@ -361,6 +366,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                 duration);
         accumulatedDuration += duration;
         numCalls++;
+        listeners.forEach(Listener::onDaoStateBlockCreated);
         return Optional.of(daoStateBlock);
     }
 
@@ -371,15 +377,14 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
             // If we do not add own hashes during initial parsing we fill the missing hashes from the peer and create
             // at the last block our own hash.
             int height = peersHash.getHeight();
-            if (!useDaoMonitor &&
-                    !findDaoStateBlock(height).isPresent()) {
+            if (!useDaoMonitor && findDaoStateBlock(height).isEmpty()) {
                 if (daoStateService.getChainHeight() == height) {
                     // At the most recent block we create our own hash
                     optionalDaoStateBlock = daoStateService.getLastBlock()
                             .map(this::createDaoStateBlock)
                             .orElse(findDaoStateBlock(height));
                 } else {
-                    // Otherwise we create a block from the peers daoStateHash
+                    // Otherwise, we create a block from the peers daoStateHash
                     DaoStateHash daoStateHash = new DaoStateHash(height, peersHash.getHash(), false);
                     DaoStateBlock daoStateBlock = new DaoStateBlock(daoStateHash);
                     daoStateBlockChain.add(daoStateBlock);
