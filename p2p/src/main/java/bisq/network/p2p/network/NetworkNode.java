@@ -162,7 +162,9 @@ public abstract class NetworkNode implements MessageListener {
                         try {
                             socket.close();
                         } catch (Throwable throwable) {
-                            log.error("Error at closing socket " + throwable);
+                            if (!shutDownInProgress) {
+                                log.error("Error at closing socket " + throwable);
+                            }
                         }
                         existingConnection.sendMessage(networkEnvelope);
                         return existingConnection;
@@ -188,7 +190,9 @@ public abstract class NetworkNode implements MessageListener {
 
                             @Override
                             public void onError(Throwable throwable) {
-                                log.error("new OutboundConnection.ConnectionListener.onError " + throwable.getMessage());
+                                if (!shutDownInProgress) {
+                                    log.error("new OutboundConnection.ConnectionListener.onError " + throwable.getMessage());
+                                }
                                 connectionListeners.forEach(e -> e.onError(throwable));
                             }
                         };
