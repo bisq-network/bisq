@@ -95,10 +95,9 @@ public class SeedNodeReportingService {
     private final String seedNodeReportingServerUrl;
     private final DaoStateListener daoStateListener;
     private final HttpClient httpClient;
-
-    private Timer dataReportTimer;
-    private final Timer heartBeatTimer;
     private final ExecutorService executor;
+    private final Timer heartBeatTimer;
+    private Timer dataReportTimer;
 
     @Inject
     public SeedNodeReportingService(P2PService p2PService,
@@ -128,28 +127,22 @@ public class SeedNodeReportingService {
 
         heartBeatTimer = UserThread.runPeriodically(this::sendHeartBeat, HEART_BEAT_DELAY_SEC);
 
-        // We send each time when a new block is received and the DAO hash has been provided (which
-        // takes a bit after the block arrives).
-        daoStateMonitoringService.addListener(new DaoStateMonitoringService.Listener() {
-            @Override
-            public void onDaoStateHashesChanged() {
-                sendBlockRelatedData();
-            }
-
-            @Override
-            public void onCheckpointFail() {
-            }
-        });
-
-        // Independent of the block
         daoStateListener = new DaoStateListener() {
             @Override
             public void onParseBlockChainComplete() {
                 daoFacade.removeBsqStateListener(daoStateListener);
                 dataReportTimer = UserThread.runPeriodically(() -> sendDataReport(), REPORT_DELAY_SEC);
                 sendDataReport();
-
                 sendBlockRelatedData();
+
+                // We send each time when a new block is received and the DAO hash has been provided (which
+                // takes a bit after the block arrives).
+                daoStateMonitoringService.addListener(new DaoStateMonitoringService.Listener() {
+                    @Override
+                    public void onDaoStateBlockCreated() {
+                        sendBlockRelatedData();
+                    }
+                });
             }
         };
         daoFacade.addBsqStateListener(daoStateListener);
