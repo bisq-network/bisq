@@ -489,8 +489,10 @@ configure(project(':seednode')) {
 
     dependencies {
         implementation project(':common')
+        implementation project(':proto')
         implementation project(':p2p')
         implementation project(':core')
+        implementation libs.protobuf.java
         annotationProcessor libs.lombok
         compileOnly libs.lombok
         implementation libs.google.guava
