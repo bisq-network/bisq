@@ -39,10 +39,10 @@ rm -v create-daemon-dist.sh
 # Done building cli and daemon zip files;  return to the original current working directory.
 cd "$script_working_directory"
 
-# sig key mkarrer
-cp "$target_dir/../../package/F379A1C6.asc" "$target_dir/"
-# sig key cbeams
-cp "$target_dir/../../package/5BC5ED73.asc" "$target_dir/"
+# sig key Alejandro García
+cp "$target_dir/../../package/E222AA02.asc" "$target_dir/"
+# sig key Gabriel Bernard
+cp "$target_dir/../../package/4A133008.asc" "$target_dir/"
 # sig key Christoph Atteneder
 cp "$target_dir/../../package/29CDFD3B.asc" "$target_dir/"
 # signing key
