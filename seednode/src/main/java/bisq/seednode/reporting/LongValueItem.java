@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.monitor;
+package bisq.seednode.reporting;
 
 import lombok.Getter;
 import lombok.Setter;

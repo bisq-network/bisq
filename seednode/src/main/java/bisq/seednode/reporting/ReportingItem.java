@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.monitor;
+package bisq.seednode.reporting;
 
 import bisq.common.proto.ProtobufferRuntimeException;
 import bisq.common.proto.network.NetworkPayload;
@@ -37,13 +37,13 @@ public interface ReportingItem extends NetworkPayload {
 
     static ReportingItem fromProto(protobuf.ReportingItem proto) {
         switch (proto.getMessageCase()) {
-            case STRING_VALUE_ITEM:
+            case MessageCase.STRING_VALUE_ITEM:
                 return StringValueItem.fromProto(proto, proto.getStringValueItem());
-            case LONG_VALUE_ITEM:
+            case MessageCase.LONG_VALUE_ITEM:
                 return LongValueItem.fromProto(proto, proto.getLongValueItem());
-            case DOUBLE_VALUE_ITEM:
+            case MessageCase.DOUBLE_VALUE_ITEM:
                 return DoubleValueItem.fromProto(proto, proto.getDoubleValueItem());
-            case MESSAGE_NOT_SET:
+            case MessageCase.MESSAGE_NOT_SET:
             default:
                 throw new ProtobufferRuntimeException("Unknown message case: " + proto);
         }

@@ -17,6 +17,11 @@
 
 package bisq.seednode;
 
+import bisq.seednode.reporting.DoubleValueItem;
+import bisq.seednode.reporting.LongValueItem;
+import bisq.seednode.reporting.ReportingItems;
+import bisq.seednode.reporting.StringValueItem;
+
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.monitoring.BlindVoteStateMonitoringService;
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
@@ -26,10 +31,6 @@ import bisq.core.dao.monitoring.model.DaoStateBlock;
 import bisq.core.dao.monitoring.model.ProposalStateBlock;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.monitor.DoubleValueItem;
-import bisq.core.monitor.LongValueItem;
-import bisq.core.monitor.ReportingItems;
-import bisq.core.monitor.StringValueItem;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.NetworkNode;

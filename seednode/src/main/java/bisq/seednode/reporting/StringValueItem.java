@@ -15,43 +15,44 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.monitor;
+package bisq.seednode.reporting;
 
 import lombok.Getter;
 import lombok.Setter;
 
 
-public enum DoubleValueItem implements ReportingItem {
+public enum StringValueItem implements ReportingItem {
     Unspecified("", "Unspecified"),
-    sentBytesPerSec("network", "sentBytesPerSec"),
-    receivedBytesPerSec("network", "receivedBytesPerSec"),
-    receivedMessagesPerSec("network", "receivedMessagesPerSec"),
-    sentMessagesPerSec("network", "sentMessagesPerSec");
 
+    daoStateHash("dao", "daoStateHash"),
+    proposalHash("dao", "proposalHash"),
+    blindVoteHash("dao", "blindVoteHash"),
+
+    version("node", "version"),
+    commitHash("node", "commitHash");
 
     @Getter
-    @Setter
     private final String key;
     @Getter
     private final String group;
     @Getter
     @Setter
-    private double value;
+    private String value;
 
-    DoubleValueItem(String group, String key) {
+    StringValueItem(String group, String key) {
         this.group = group;
         this.key = key;
     }
 
-    public DoubleValueItem withValue(double value) {
+    public StringValueItem withValue(String value) {
         setValue(value);
         return this;
     }
 
-    public static DoubleValueItem from(String key, double value) {
-        DoubleValueItem item;
+    public static StringValueItem from(String key, String value) {
+        StringValueItem item;
         try {
-            item = DoubleValueItem.valueOf(key);
+            item = StringValueItem.valueOf(key);
         } catch (Throwable t) {
             item = Unspecified;
         }
@@ -61,21 +62,20 @@ public enum DoubleValueItem implements ReportingItem {
     }
 
     @Override
-    public protobuf.ReportingItem toProtoMessage() {
-        return getBuilder().setDoubleValueItem(protobuf.DoubleValueItem.newBuilder()
-                        .setValue(value))
-                .build();
-    }
-
-    public static DoubleValueItem fromProto(protobuf.ReportingItem baseProto, protobuf.DoubleValueItem proto) {
-        return DoubleValueItem.from(baseProto.getKey(), proto.getValue());
-    }
-
-    @Override
     public String getPath() {
         return group + "." + key;
     }
 
+    @Override
+    public protobuf.ReportingItem toProtoMessage() {
+        return getBuilder().setStringValueItem(protobuf.StringValueItem.newBuilder()
+                        .setValue(value))
+                .build();
+    }
+
+    public static StringValueItem fromProto(protobuf.ReportingItem baseProto, protobuf.StringValueItem proto) {
+        return StringValueItem.from(baseProto.getKey(), proto.getValue());
+    }
 
     @Override
     public String toString() {
