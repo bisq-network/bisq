@@ -245,26 +245,30 @@ public class SeedNodeReportingService {
     }
 
     private void sendReportingItems(ReportingItems reportingItems) {
-        CompletableFuture.runAsync(() -> {
-            log.info("Send report to monitor server: {}", reportingItems.toString());
-            // We send the data as hex encoded protobuf data. We do not use the envelope as it is not part of the p2p system.
-            byte[] protoMessageAsBytes = reportingItems.toProtoMessageAsBytes();
-            try {
-                HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(seedNodeReportingServerUrl))
-                        .POST(HttpRequest.BodyPublishers.ofByteArray(protoMessageAsBytes))
-                        .header("User-Agent", getMyAddress())
-                        .build();
-                HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-                if (response.statusCode() != 200) {
-                    log.error("Response error message: {}", response);
+        try {
+            CompletableFuture.runAsync(() -> {
+                log.info("Send report to monitor server: {}", reportingItems.toString());
+                // We send the data as hex encoded protobuf data. We do not use the envelope as it is not part of the p2p system.
+                byte[] protoMessageAsBytes = reportingItems.toProtoMessageAsBytes();
+                try {
+                    HttpRequest request = HttpRequest.newBuilder()
+                            .uri(URI.create(seedNodeReportingServerUrl))
+                            .POST(HttpRequest.BodyPublishers.ofByteArray(protoMessageAsBytes))
+                            .header("User-Agent", getMyAddress())
+                            .build();
+                    HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+                    if (response.statusCode() != 200) {
+                        log.error("Response error message: {}", response);
+                    }
+                } catch (IOException e) {
+                    log.warn("IOException at sending reporting. {}", e.getMessage());
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
-            } catch (IOException e) {
-                log.warn("IOException at sending reporting. {}", e.getMessage());
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }, executor);
+            }, executor);
+        } catch (Throwable t) {
+            log.error("Did not send reportingItems {} because of exception {}", reportingItems, t.toString());
+        }
     }
 
     private String getMyAddress() {
