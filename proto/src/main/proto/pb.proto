@@ -2494,20 +2494,20 @@ message ReportingItem {
     string key = 1;
     string group = 2;
     oneof message {
-        StringValueItem string_value_item = 3;
-        LongValueItem long_value_item = 4;
-        DoubleValueItem double_value_item = 5;
+        StringValueReportingItem string_value_reporting_item = 3;
+        LongValueReportingItem long_value_reporting_item = 4;
+        DoubleValueReportingItem double_value_reporting_item = 5;
     }
 }
-message StringValueItem {
+message StringValueReportingItem {
     string value = 1;
 }
 
-message LongValueItem {
+message LongValueReportingItem {
     uint64 value = 1;
 }
 
-message DoubleValueItem {
+message DoubleValueReportingItem {
     double value = 1;
 }
 

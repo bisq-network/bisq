@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.seednode;
+package bisq.seednode.reporting;
 
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.monitoring.BlindVoteStateMonitoringService;
@@ -26,10 +26,6 @@ import bisq.core.dao.monitoring.model.DaoStateBlock;
 import bisq.core.dao.monitoring.model.ProposalStateBlock;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-import bisq.core.monitor.DoubleValueItem;
-import bisq.core.monitor.LongValueItem;
-import bisq.core.monitor.ReportingItems;
-import bisq.core.monitor.StringValueItem;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.NetworkNode;
@@ -54,12 +50,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-import java.io.IOException;
-
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -122,8 +115,11 @@ public class SeedNodeReportingService {
         this.maxConnections = maxConnections;
         this.seedNodeReportingServerUrl = seedNodeReportingServerUrl;
 
-        executor = Utilities.newCachedThreadPool(5);
-        httpClient = HttpClient.newHttpClient();
+        executor = Utilities.newCachedThreadPool(5,
+                8,
+                TimeUnit.MINUTES,
+                (runnable, executor) -> log.error("Execution was rejected. We skip the {} task.", runnable.toString()));
+        httpClient = HttpClient.newBuilder().executor(executor).build();
 
         heartBeatTimer = UserThread.runPeriodically(this::sendHeartBeat, HEART_BEAT_DELAY_SEC);
 
@@ -164,7 +160,7 @@ public class SeedNodeReportingService {
             return;
         }
         ReportingItems reportingItems = new ReportingItems(getMyAddress());
-        reportingItems.add(LongValueItem.usedMemoryInMB.withValue(Profiler.getUsedMemoryInMB()));
+        reportingItems.add(LongValueReportingItem.usedMemoryInMB.withValue(Profiler.getUsedMemoryInMB()));
         sendReportingItems(reportingItems);
     }
 
@@ -175,25 +171,25 @@ public class SeedNodeReportingService {
 
         ReportingItems reportingItems = new ReportingItems(getMyAddress());
         int daoStateChainHeight = daoStateService.getChainHeight();
-        reportingItems.add(LongValueItem.daoStateChainHeight.withValue(daoStateChainHeight));
+        reportingItems.add(LongValueReportingItem.daoStateChainHeight.withValue(daoStateChainHeight));
         daoStateService.getLastBlock().map(block -> (block.getTime() / 1000))
-                .ifPresent(blockTime -> reportingItems.add(LongValueItem.blockTimeIsSec.withValue(blockTime)));
+                .ifPresent(blockTime -> reportingItems.add(LongValueReportingItem.blockTimeIsSec.withValue(blockTime)));
         LinkedList<DaoStateBlock> daoStateBlockChain = daoStateMonitoringService.getDaoStateBlockChain();
         if (!daoStateBlockChain.isEmpty()) {
             String daoStateHash = Utilities.bytesAsHexString(daoStateBlockChain.getLast().getMyStateHash().getHash());
-            reportingItems.add(StringValueItem.daoStateHash.withValue(daoStateHash));
+            reportingItems.add(StringValueReportingItem.daoStateHash.withValue(daoStateHash));
         }
 
         LinkedList<ProposalStateBlock> proposalStateBlockChain = proposalStateMonitoringService.getProposalStateBlockChain();
         if (!proposalStateBlockChain.isEmpty()) {
             String proposalHash = Utilities.bytesAsHexString(proposalStateBlockChain.getLast().getMyStateHash().getHash());
-            reportingItems.add(StringValueItem.proposalHash.withValue(proposalHash));
+            reportingItems.add(StringValueReportingItem.proposalHash.withValue(proposalHash));
         }
 
         LinkedList<BlindVoteStateBlock> blindVoteStateBlockChain = blindVoteStateMonitoringService.getBlindVoteStateBlockChain();
         if (!blindVoteStateBlockChain.isEmpty()) {
             String blindVoteHash = Utilities.bytesAsHexString(blindVoteStateBlockChain.getLast().getMyStateHash().getHash());
-            reportingItems.add(StringValueItem.blindVoteHash.withValue(blindVoteHash));
+            reportingItems.add(StringValueReportingItem.blindVoteHash.withValue(blindVoteHash));
         }
 
         sendReportingItems(reportingItems);
@@ -217,56 +213,53 @@ public class SeedNodeReportingService {
                     numItemsByType.putIfAbsent(className, 0);
                     numItemsByType.put(className, numItemsByType.get(className) + 1);
                 });
-        numItemsByType.forEach((key, value) -> reportingItems.add(LongValueItem.from(key, value)));
+        numItemsByType.forEach((key, value) -> reportingItems.add(LongValueReportingItem.from(key, value)));
 
         // Network
-        reportingItems.add(LongValueItem.numConnections.withValue(networkNode.getAllConnections().size()));
-        reportingItems.add(LongValueItem.peakNumConnections.withValue(peerManager.getPeakNumConnections()));
-        reportingItems.add(LongValueItem.numAllConnectionsLostEvents.withValue(peerManager.getNumAllConnectionsLostEvents()));
-        reportingItems.add(LongValueItem.sentBytes.withValue(Statistic.getTotalSentBytes()));
-        reportingItems.add(LongValueItem.receivedBytes.withValue(Statistic.getTotalReceivedBytes()));
-        reportingItems.add(DoubleValueItem.sentBytesPerSec.withValue(Statistic.getTotalSentBytesPerSec()));
-        reportingItems.add(DoubleValueItem.sentMessagesPerSec.withValue(Statistic.getNumTotalSentMessagesPerSec()));
-        reportingItems.add(DoubleValueItem.receivedBytesPerSec.withValue(Statistic.getTotalReceivedBytesPerSec()));
-        reportingItems.add(DoubleValueItem.receivedMessagesPerSec.withValue(Statistic.numTotalReceivedMessagesPerSec()));
+        reportingItems.add(LongValueReportingItem.numConnections.withValue(networkNode.getAllConnections().size()));
+        reportingItems.add(LongValueReportingItem.peakNumConnections.withValue(peerManager.getPeakNumConnections()));
+        reportingItems.add(LongValueReportingItem.numAllConnectionsLostEvents.withValue(peerManager.getNumAllConnectionsLostEvents()));
+        reportingItems.add(LongValueReportingItem.sentBytes.withValue(Statistic.getTotalSentBytes()));
+        reportingItems.add(LongValueReportingItem.receivedBytes.withValue(Statistic.getTotalReceivedBytes()));
+        reportingItems.add(DoubleValueReportingItem.sentBytesPerSec.withValue(Statistic.getTotalSentBytesPerSec()));
+        reportingItems.add(DoubleValueReportingItem.sentMessagesPerSec.withValue(Statistic.getNumTotalSentMessagesPerSec()));
+        reportingItems.add(DoubleValueReportingItem.receivedBytesPerSec.withValue(Statistic.getTotalReceivedBytesPerSec()));
+        reportingItems.add(DoubleValueReportingItem.receivedMessagesPerSec.withValue(Statistic.numTotalReceivedMessagesPerSec()));
 
         // Node
-        reportingItems.add(LongValueItem.usedMemoryInMB.withValue(Profiler.getUsedMemoryInMB()));
-        reportingItems.add(LongValueItem.totalMemoryInMB.withValue(Profiler.getTotalMemoryInMB()));
-        reportingItems.add(LongValueItem.jvmStartTimeInSec.withValue((ManagementFactory.getRuntimeMXBean().getStartTime() / 1000)));
-        reportingItems.add(LongValueItem.maxConnections.withValue(maxConnections));
-        reportingItems.add(StringValueItem.version.withValue(Version.VERSION));
+        reportingItems.add(LongValueReportingItem.usedMemoryInMB.withValue(Profiler.getUsedMemoryInMB()));
+        reportingItems.add(LongValueReportingItem.totalMemoryInMB.withValue(Profiler.getTotalMemoryInMB()));
+        reportingItems.add(LongValueReportingItem.jvmStartTimeInSec.withValue((ManagementFactory.getRuntimeMXBean().getStartTime() / 1000)));
+        reportingItems.add(LongValueReportingItem.maxConnections.withValue(maxConnections));
+        reportingItems.add(StringValueReportingItem.version.withValue(Version.VERSION));
 
         // If no commit hash is found we use 0 in hex format
         String commitHash = Version.findCommitHash().orElse("00");
-        reportingItems.add(StringValueItem.commitHash.withValue(commitHash));
+        reportingItems.add(StringValueReportingItem.commitHash.withValue(commitHash));
 
         sendReportingItems(reportingItems);
     }
 
     private void sendReportingItems(ReportingItems reportingItems) {
         try {
-            CompletableFuture.runAsync(() -> {
-                log.info("Send report to monitor server: {}", reportingItems.toString());
-                // We send the data as hex encoded protobuf data. We do not use the envelope as it is not part of the p2p system.
-                byte[] protoMessageAsBytes = reportingItems.toProtoMessageAsBytes();
-                try {
-                    HttpRequest request = HttpRequest.newBuilder()
-                            .uri(URI.create(seedNodeReportingServerUrl))
-                            .POST(HttpRequest.BodyPublishers.ofByteArray(protoMessageAsBytes))
-                            .header("User-Agent", getMyAddress())
-                            .build();
-                    HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-                    if (response.statusCode() != 200) {
-                        log.error("Response error message: {}", response);
-                    }
-                } catch (IOException e) {
-                    log.warn("IOException at sending reporting. {}", e.getMessage());
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+            log.info("Send report to monitor server: {}", reportingItems.toString());
+            // We send the data as hex encoded protobuf data. We do not use the envelope as it is not part of the p2p system.
+            byte[] protoMessageAsBytes = reportingItems.toProtoMessageAsBytes();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(seedNodeReportingServerUrl))
+                    .POST(HttpRequest.BodyPublishers.ofByteArray(protoMessageAsBytes))
+                    .header("User-Agent", getMyAddress())
+                    .header("Connection", "keep-alive")
+                    .build();
+            httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString()).whenComplete((response, throwable) -> {
+                if (throwable != null) {
+                    log.warn("Exception at sending reporting data. {}", throwable.getMessage());
+                } else if (response.statusCode() != 200) {
+                    log.error("Response error message: {}", response);
                 }
-            }, executor);
+            });
         } catch (Throwable t) {
+            // RejectedExecutionException is thrown if we exceed our pool size.
             log.error("Did not send reportingItems {} because of exception {}", reportingItems, t.toString());
         }
     }

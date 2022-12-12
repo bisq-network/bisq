@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.monitor;
+package bisq.seednode.reporting;
 
 import lombok.Getter;
 import lombok.Setter;
 
 
-public enum LongValueItem implements ReportingItem {
+public enum LongValueReportingItem implements ReportingItem {
     Unspecified("", "Unspecified"),
     OfferPayload("data", "OfferPayload"),
     MailboxStoragePayload("data", "MailboxStoragePayload"),
@@ -52,32 +52,29 @@ public enum LongValueItem implements ReportingItem {
     jvmStartTimeInSec("node", "jvmStartTimeInSec");
 
     @Getter
-    @Setter
-    private String key;
+    private final String key;
     @Getter
-    @Setter
-    private String group;
+    private final String group;
     @Getter
     @Setter
     private long value;
 
-    LongValueItem(String group, String key) {
+    LongValueReportingItem(String group, String key) {
         this.group = group;
         this.key = key;
     }
 
-    public LongValueItem withValue(long value) {
+    public LongValueReportingItem withValue(long value) {
         setValue(value);
         return this;
     }
 
-    public static LongValueItem from(String key, long value) {
-        LongValueItem item;
+    public static LongValueReportingItem from(String key, long value) {
+        LongValueReportingItem item;
         try {
-            item = LongValueItem.valueOf(key);
+            item = LongValueReportingItem.valueOf(key);
         } catch (Throwable t) {
-            item = LongValueItem.Unspecified;
-            item.setKey(key);
+            item = Unspecified;
         }
 
         item.setValue(value);
@@ -86,13 +83,14 @@ public enum LongValueItem implements ReportingItem {
 
     @Override
     public protobuf.ReportingItem toProtoMessage() {
-        return getBuilder().setLongValueItem(protobuf.LongValueItem.newBuilder()
+        return getBuilder().setLongValueReportingItem(protobuf.LongValueReportingItem.newBuilder()
                         .setValue(value))
                 .build();
     }
 
-    public static LongValueItem fromProto(protobuf.ReportingItem baseProto, protobuf.LongValueItem proto) {
-        return LongValueItem.from(baseProto.getKey(), proto.getValue());
+    public static LongValueReportingItem fromProto(protobuf.ReportingItem baseProto,
+                                                   protobuf.LongValueReportingItem proto) {
+        return LongValueReportingItem.from(baseProto.getKey(), proto.getValue());
     }
 
     @Override

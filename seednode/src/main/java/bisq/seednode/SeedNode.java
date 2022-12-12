@@ -17,6 +17,8 @@
 
 package bisq.seednode;
 
+import bisq.seednode.reporting.SeedNodeReportingService;
+
 import bisq.core.app.misc.AppSetup;
 import bisq.core.app.misc.AppSetupWithP2PAndDAO;
 import bisq.core.network.p2p.inventory.GetInventoryRequestHandler;
