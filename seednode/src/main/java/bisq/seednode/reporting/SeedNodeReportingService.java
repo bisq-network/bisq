@@ -249,7 +249,6 @@ public class SeedNodeReportingService {
                     .uri(URI.create(seedNodeReportingServerUrl))
                     .POST(HttpRequest.BodyPublishers.ofByteArray(protoMessageAsBytes))
                     .header("User-Agent", getMyAddress())
-                    .header("Connection", "keep-alive")
                     .build();
             httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString()).whenComplete((response, throwable) -> {
                 if (throwable != null) {
