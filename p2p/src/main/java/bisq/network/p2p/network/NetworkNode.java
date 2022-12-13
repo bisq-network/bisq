@@ -39,7 +39,6 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
-import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -134,7 +133,7 @@ public abstract class NetworkNode implements MessageListener {
                     log.warn("We are sending a message to ourselves");
                 }
 
-                OutboundConnection outboundConnection = null;
+                OutboundConnection outboundConnection;
                 try {
                     // can take a while when using tor
                     long startTs = System.currentTimeMillis();
@@ -149,8 +148,8 @@ public abstract class NetworkNode implements MessageListener {
                     if (duration > CREATE_SOCKET_TIMEOUT)
                         throw new TimeoutException("A timeout occurred when creating a socket.");
 
-                    // Tor needs sometimes quite long to create a connection. To avoid that we get too many double
-                    // sided connections we check again if we still don't have any connection for that node address.
+                    // Tor needs sometimes quite long to create a connection. To avoid that we get too many
+                    // connections with the same peer we check again if we still don't have any connection for that node address.
                     Connection existingConnection = getInboundConnection(peersNodeAddress);
                     if (existingConnection == null)
                         existingConnection = getOutboundConnection(peersNodeAddress);
@@ -172,7 +171,7 @@ public abstract class NetworkNode implements MessageListener {
                         existingConnection.sendMessage(networkEnvelope);
                         return existingConnection;
                     } else {
-                        final ConnectionListener connectionListener = new ConnectionListener() {
+                        ConnectionListener connectionListener = new ConnectionListener() {
                             @Override
                             public void onConnection(Connection connection) {
                                 if (!connection.isStopped()) {
@@ -220,8 +219,7 @@ public abstract class NetworkNode implements MessageListener {
                         return outboundConnection;
                     }
                 } catch (Throwable throwable) {
-                    if (!(throwable instanceof ConnectException ||
-                            throwable instanceof IOException ||
+                    if (!(throwable instanceof IOException ||
                             throwable instanceof TimeoutException)) {
                         log.warn("Executing task failed. " + throwable.getMessage());
                     }
@@ -294,8 +292,8 @@ public abstract class NetworkNode implements MessageListener {
             connection.sendMessage(networkEnvelope);
             return connection;
         });
-        final SettableFuture<Connection> resultFuture = SettableFuture.create();
-        Futures.addCallback(future, new FutureCallback<Connection>() {
+        SettableFuture<Connection> resultFuture = SettableFuture.create();
+        Futures.addCallback(future, new FutureCallback<>() {
             public void onSuccess(Connection connection) {
                 UserThread.execute(() -> resultFuture.set(connection));
             }
@@ -445,7 +443,7 @@ public abstract class NetworkNode implements MessageListener {
     }
 
     void startServer(ServerSocket serverSocket) {
-        final ConnectionListener connectionListener = new ConnectionListener() {
+        ConnectionListener connectionListener = new ConnectionListener() {
             @Override
             public void onConnection(Connection connection) {
                 if (!connection.isStopped()) {

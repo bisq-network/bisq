@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import org.jetbrains.annotations.Nullable;
 
-// Runs in UserThread
 class Server implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(Server.class);
 
@@ -42,7 +41,6 @@ class Server implements Runnable {
     @Nullable
     private final NetworkFilter networkFilter;
 
-    // accessed from different threads
     private final ServerSocket serverSocket;
     private final Set<Connection> connections = new CopyOnWriteArraySet<>();
     private volatile boolean stopped;
