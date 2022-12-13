@@ -49,6 +49,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -71,13 +72,14 @@ public abstract class NetworkNode implements MessageListener {
     private final NetworkProtoResolver networkProtoResolver;
     @Nullable
     private final NetworkFilter networkFilter;
-    private final int maxConnections;
 
     private final CopyOnWriteArraySet<InboundConnection> inBoundConnections = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<ConnectionListener> connectionListeners = new CopyOnWriteArraySet<>();
     final CopyOnWriteArraySet<SetupListener> setupListeners = new CopyOnWriteArraySet<>();
-    private final ListeningExecutorService executorService;
+    private final ListeningExecutorService connectionExecutor;
+    private final ListeningExecutorService sendMessageExecutor;
+    private final ExecutorService serverExecutor;
     private Server server;
 
     private volatile boolean shutDownInProgress;
@@ -97,9 +99,10 @@ public abstract class NetworkNode implements MessageListener {
         this.servicePort = servicePort;
         this.networkProtoResolver = networkProtoResolver;
         this.networkFilter = networkFilter;
-        this.maxConnections = maxConnections;
 
-        executorService = MoreExecutors.listeningDecorator(Utilities.newCachedThreadPool(maxConnections * 4, 3, TimeUnit.MINUTES));
+        connectionExecutor = MoreExecutors.listeningDecorator(Utilities.newCachedThreadPool(maxConnections * 2, 1, TimeUnit.MINUTES));
+        sendMessageExecutor = MoreExecutors.listeningDecorator(Utilities.newCachedThreadPool(maxConnections * 2, 3, TimeUnit.MINUTES));
+        serverExecutor = Utilities.getSingleThreadExecutor("NetworkNode.server-" + servicePort);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -128,7 +131,7 @@ public abstract class NetworkNode implements MessageListener {
                     "We will create a new outbound connection.", peersNodeAddress);
 
             final SettableFuture<Connection> resultFuture = SettableFuture.create();
-            ListenableFuture<Connection> future = executorService.submit(() -> {
+            ListenableFuture<Connection> future = connectionExecutor.submit(() -> {
                 Thread.currentThread().setName("NetworkNode:SendMessage-to-" + peersNodeAddress.getFullAddress());
 
                 if (peersNodeAddress.equals(getNodeAddress())) {
@@ -288,7 +291,7 @@ public abstract class NetworkNode implements MessageListener {
 
     public SettableFuture<Connection> sendMessage(Connection connection, NetworkEnvelope networkEnvelope) {
         // connection.sendMessage might take a bit (compression, write to stream), so we use a thread to not block
-        ListenableFuture<Connection> future = executorService.submit(() -> {
+        ListenableFuture<Connection> future = sendMessageExecutor.submit(() -> {
             String id = connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get().getFullAddress() : connection.getUid();
             Thread.currentThread().setName("NetworkNode:SendMessage-to-" + id);
             connection.sendMessage(networkEnvelope);
@@ -342,6 +345,7 @@ public abstract class NetworkNode implements MessageListener {
             if (server != null) {
                 server.shutDown();
                 server = null;
+                serverExecutor.shutdownNow();
             }
 
             Set<Connection> allConnections = getAllConnections();
@@ -372,7 +376,8 @@ public abstract class NetworkNode implements MessageListener {
                         if (shutdownCompleted.get() == numConnections) {
                             log.info("Shutdown completed with all connections closed");
                             timeoutHandler.stop();
-                            executorService.shutdownNow();
+                            connectionExecutor.shutdownNow();
+                            sendMessageExecutor.shutdownNow();
                             if (shutDownCompleteHandler != null) {
                                 shutDownCompleteHandler.run();
                             }
@@ -470,7 +475,7 @@ public abstract class NetworkNode implements MessageListener {
                 connectionListener,
                 networkProtoResolver,
                 networkFilter);
-        executorService.submit(server);
+        serverExecutor.submit(server);
     }
 
     private Optional<OutboundConnection> lookupOutBoundConnection(NodeAddress peersNodeAddress) {
