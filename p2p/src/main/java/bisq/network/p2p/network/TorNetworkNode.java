@@ -39,19 +39,16 @@ import java.net.Socket;
 import java.io.IOException;
 
 import java.util.Base64;
-import java.util.Date;
 import java.util.concurrent.ExecutorService;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 public class TorNetworkNode extends NetworkNode {
-    private static final Logger log = LoggerFactory.getLogger(TorNetworkNode.class);
-
     private static final int MAX_RESTART_ATTEMPTS = 5;
     private static final long SHUT_DOWN_TIMEOUT = 2;
 
@@ -95,7 +92,6 @@ public class TorNetworkNode extends NetworkNode {
         if (setupListener != null)
             addSetupListener(setupListener);
 
-        // Create the tor node (takes about 6 sec.)
         createTorAndHiddenService(Utils.findFreeSystemPort(), servicePort);
     }
 
@@ -107,30 +103,22 @@ public class TorNetworkNode extends NetworkNode {
         return new TorSocket(peerNodeAddress.getHostName(), peerNodeAddress.getPort(), null);
     }
 
-    // TODO handle failure more cleanly
     public Socks5Proxy getSocksProxy() {
         try {
             String stream = null;
             if (streamIsolation) {
-                // create a random string
-                byte[] bytes = new byte[512]; // note that getProxy does Sha256 that string anyways
+                byte[] bytes = new byte[512]; // tor.getProxy creates a Sha256 hash
                 new SecureRandom().nextBytes(bytes);
                 stream = Base64.getEncoder().encodeToString(bytes);
             }
 
             if (socksProxy == null || streamIsolation) {
                 tor = Tor.getDefault();
-
-                // ask for the connection
                 socksProxy = tor != null ? tor.getProxy(stream) : null;
             }
             return socksProxy;
-        } catch (TorCtlException e) {
-            log.error("TorCtlException at getSocksProxy: " + e.toString());
-            e.printStackTrace();
-            return null;
         } catch (Throwable t) {
-            log.error("Error at getSocksProxy: " + t.toString());
+            log.error("Error at getSocksProxy", t);
             return null;
         }
     }
@@ -151,7 +139,6 @@ public class TorNetworkNode extends NetworkNode {
             executor.shutdownNow();
         }, SHUT_DOWN_TIMEOUT);
 
-        // Shutdown networkNode first
         super.shutDown(() -> {
             try {
                 tor = Tor.getDefault();
@@ -202,13 +189,8 @@ public class TorNetworkNode extends NetworkNode {
     private void createTorAndHiddenService(int localPort, int servicePort) {
         executor.submit(() -> {
             try {
-                // temporarily switch tor to debug logging
-                // String savedLogLevel = Log.pushCustomLogLevel("org.berndpruenster.netlayer", "DEBUG");
-                // get tor
                 Tor.setDefault(torMode.getTor());
-
-                // start hidden service
-                long ts2 = new Date().getTime();
+                long ts = System.currentTimeMillis();
                 hiddenServiceSocket = new HiddenServiceSocket(localPort, torMode.getHiddenServiceDirectory(), servicePort);
                 nodeAddressProperty.set(new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort()));
                 UserThread.execute(() -> setupListeners.forEach(SetupListener::onTorNodeReady));
@@ -217,9 +199,7 @@ public class TorNetworkNode extends NetworkNode {
                         log.info("\n################################################################\n" +
                                         "Tor hidden service published after {} ms. Socket={}\n" +
                                         "################################################################",
-                                (new Date().getTime() - ts2), socket); //takes usually 30-40 sec
-                        // tor has started, revert from debug to original log level
-                        // Log.pushCustomLogLevel("org.berndpruenster.netlayer", savedLogLevel);
+                                System.currentTimeMillis() - ts, socket);
                         new Thread() {
                             @Override
                             public void run() {
@@ -241,24 +221,17 @@ public class TorNetworkNode extends NetworkNode {
                 });
             } catch (TorCtlException e) {
                 String msg = e.getCause() != null ? e.getCause().toString() : e.toString();
-                log.error("Tor node creation failed: {}", msg);
+                log.error("Starting tor node failed", e);
                 if (e.getCause() instanceof IOException) {
-                    // Since we cannot connect to Tor, we cannot do nothing.
-                    // Furthermore, we have no hidden services started yet, so there is no graceful
-                    // shutdown needed either
                     UserThread.execute(() -> setupListeners.forEach(s -> s.onSetupFailed(new RuntimeException(msg))));
                 } else {
                     restartTor(e.getMessage());
                 }
             } catch (IOException e) {
                 log.error("Could not connect to running Tor: {}", e.getMessage());
-                // Since we cannot connect to Tor, we cannot do nothing.
-                // Furthermore, we have no hidden services started yet, so there is no graceful
-                // shutdown needed either
                 UserThread.execute(() -> setupListeners.forEach(s -> s.onSetupFailed(new RuntimeException(e.getMessage()))));
             } catch (Throwable ignore) {
             }
-
             return null;
         });
     }
