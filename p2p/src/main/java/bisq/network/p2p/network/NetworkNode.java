@@ -77,7 +77,7 @@ public abstract class NetworkNode implements MessageListener {
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<ConnectionListener> connectionListeners = new CopyOnWriteArraySet<>();
     final CopyOnWriteArraySet<SetupListener> setupListeners = new CopyOnWriteArraySet<>();
-    ListeningExecutorService executorService;
+    protected final ListeningExecutorService executorService;
     private Server server;
 
     private volatile boolean shutDownInProgress;
@@ -98,6 +98,8 @@ public abstract class NetworkNode implements MessageListener {
         this.networkProtoResolver = networkProtoResolver;
         this.networkFilter = networkFilter;
         this.maxConnections = maxConnections;
+
+        executorService = MoreExecutors.listeningDecorator(Utilities.newCachedThreadPool(maxConnections * 4, 3, TimeUnit.MINUTES));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -435,12 +437,6 @@ public abstract class NetworkNode implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    void createExecutorService() {
-        if (executorService == null) {
-            executorService = MoreExecutors.listeningDecorator(Utilities.newCachedThreadPool(maxConnections * 4, 3, TimeUnit.MINUTES));
-        }
-    }
 
     void startServer(ServerSocket serverSocket) {
         ConnectionListener connectionListener = new ConnectionListener() {
