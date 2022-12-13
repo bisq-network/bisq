@@ -49,12 +49,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class TorNetworkNode extends NetworkNode {
-    private static final int MAX_RESTART_ATTEMPTS = 5;
     private static final long SHUT_DOWN_TIMEOUT = 2;
 
     private HiddenServiceSocket hiddenServiceSocket;
     private Timer shutDownTimeoutTimer;
-    private int restartCounter;
     private Tor tor;
     private TorMode torMode;
     private boolean streamIsolation;
@@ -160,30 +158,7 @@ public class TorNetworkNode extends NetworkNode {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // shutdown, restart
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private void restartTor(String errorMessage) {
-        log.info("Restarting Tor");
-        restartCounter++;
-        if (restartCounter <= MAX_RESTART_ATTEMPTS) {
-            UserThread.execute(() -> {
-                setupListeners.forEach(SetupListener::onRequestCustomBridges);
-            });
-            log.warn("We stop tor as starting tor with the default bridges failed. We request user to add custom bridges.");
-            shutDown(null);
-        } else {
-            String msg = "We tried to restart Tor " + restartCounter +
-                    " times, but it continued to fail with error message:\n" +
-                    errorMessage + "\n\n" +
-                    "Please check your internet connection and firewall and try to start again.";
-            log.error(msg);
-            throw new RuntimeException(msg);
-        }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // create tor
+    // Create tor and hidden service
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void createTorAndHiddenService(int localPort, int servicePort) {
@@ -199,7 +174,6 @@ public class TorNetworkNode extends NetworkNode {
                                     "Tor hidden service published after {} ms. Socket={}\n" +
                                     "################################################################",
                             System.currentTimeMillis() - ts, socket);
-
                     UserThread.execute(() -> {
                         nodeAddressProperty.set(new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort()));
                         startServer(socket);
@@ -208,15 +182,16 @@ public class TorNetworkNode extends NetworkNode {
                     return null;
                 });
             } catch (TorCtlException e) {
-                String msg = e.getCause() != null ? e.getCause().toString() : e.toString();
                 log.error("Starting tor node failed", e);
                 if (e.getCause() instanceof IOException) {
-                    UserThread.execute(() -> setupListeners.forEach(s -> s.onSetupFailed(new RuntimeException(msg))));
+                    UserThread.execute(() -> setupListeners.forEach(s -> s.onSetupFailed(new RuntimeException(e.getMessage()))));
                 } else {
-                    restartTor(e.getMessage());
+                    UserThread.execute(() -> setupListeners.forEach(SetupListener::onRequestCustomBridges));
+                    log.warn("We shutdown as starting tor with the default bridges failed. We request user to add custom bridges.");
+                    shutDown(null);
                 }
             } catch (IOException e) {
-                log.error("Could not connect to running Tor: {}", e.getMessage());
+                log.error("Could not connect to running Tor", e);
                 UserThread.execute(() -> setupListeners.forEach(s -> s.onSetupFailed(new RuntimeException(e.getMessage()))));
             } catch (Throwable ignore) {
             }
