@@ -32,10 +32,6 @@ import org.berndpruenster.netlayer.tor.TorSocket;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
-
 import java.security.SecureRandom;
 
 import java.net.Socket;
@@ -44,7 +40,7 @@ import java.io.IOException;
 
 import java.util.Base64;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutorService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,8 +62,8 @@ public class TorNetworkNode extends NetworkNode {
     private TorMode torMode;
     private boolean streamIsolation;
     private Socks5Proxy socksProxy;
-    private ListenableFuture<Void> torStartupFuture;
     private boolean shutDownInProgress;
+    private final ExecutorService executor;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -83,6 +79,8 @@ public class TorNetworkNode extends NetworkNode {
         super(servicePort, networkProtoResolver, networkFilter, maxConnections);
         this.torMode = torMode;
         this.streamIsolation = useStreamIsolation;
+
+        executor = Utilities.getSingleThreadExecutor("StartTor");
     }
 
 
@@ -149,6 +147,8 @@ public class TorNetworkNode extends NetworkNode {
             log.error("A timeout occurred at shutDown");
             if (shutDownCompleteHandler != null)
                 shutDownCompleteHandler.run();
+
+            executor.shutdownNow();
         }, SHUT_DOWN_TIMEOUT);
 
         // Shutdown networkNode first
@@ -159,14 +159,8 @@ public class TorNetworkNode extends NetworkNode {
                     tor.shutdown();
                     tor = null;
                     log.info("Tor shutdown completed");
-                } else {
-                    log.info("Tor has not been created yet. We cancel the torStartupFuture.");
-                    if (torStartupFuture != null) {
-                        torStartupFuture.cancel(true);
-                    }
-                    log.info("torStartupFuture cancelled");
                 }
-                MoreExecutors.shutdownAndAwaitTermination(executorService, 100, TimeUnit.MILLISECONDS);
+                executor.shutdownNow();
             } catch (Throwable e) {
                 log.error("Shutdown torNetworkNode failed with exception", e);
             } finally {
@@ -206,7 +200,7 @@ public class TorNetworkNode extends NetworkNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void createTorAndHiddenService(int localPort, int servicePort) {
-        torStartupFuture = executorService.submit(() -> {
+        executor.submit(() -> {
             try {
                 // temporarily switch tor to debug logging
                 // String savedLogLevel = Log.pushCustomLogLevel("org.berndpruenster.netlayer", "DEBUG");
@@ -267,8 +261,5 @@ public class TorNetworkNode extends NetworkNode {
 
             return null;
         });
-        Futures.addCallback(torStartupFuture, Utilities.failureCallback(throwable ->
-                UserThread.execute(() -> log.error("Hidden service creation failed: " + throwable))
-        ), MoreExecutors.directExecutor());
     }
 }

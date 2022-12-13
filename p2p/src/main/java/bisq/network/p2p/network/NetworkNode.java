@@ -77,7 +77,7 @@ public abstract class NetworkNode implements MessageListener {
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<ConnectionListener> connectionListeners = new CopyOnWriteArraySet<>();
     final CopyOnWriteArraySet<SetupListener> setupListeners = new CopyOnWriteArraySet<>();
-    protected final ListeningExecutorService executorService;
+    private final ListeningExecutorService executorService;
     private Server server;
 
     private volatile boolean shutDownInProgress;
@@ -372,6 +372,7 @@ public abstract class NetworkNode implements MessageListener {
                         if (shutdownCompleted.get() == numConnections) {
                             log.info("Shutdown completed with all connections closed");
                             timeoutHandler.stop();
+                            executorService.shutdownNow();
                             if (shutDownCompleteHandler != null) {
                                 shutDownCompleteHandler.run();
                             }
