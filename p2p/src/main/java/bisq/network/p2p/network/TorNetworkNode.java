@@ -195,28 +195,16 @@ public class TorNetworkNode extends NetworkNode {
                 nodeAddressProperty.set(new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort()));
                 UserThread.execute(() -> setupListeners.forEach(SetupListener::onTorNodeReady));
                 hiddenServiceSocket.addReadyListener(socket -> {
-                    try {
-                        log.info("\n################################################################\n" +
-                                        "Tor hidden service published after {} ms. Socket={}\n" +
-                                        "################################################################",
-                                System.currentTimeMillis() - ts, socket);
-                        new Thread() {
-                            @Override
-                            public void run() {
-                                try {
-                                    nodeAddressProperty.set(new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort()));
-                                    startServer(socket);
-                                    UserThread.execute(() -> setupListeners.forEach(SetupListener::onHiddenServicePublished));
-                                } catch (final Exception e1) {
-                                    log.error(e1.toString());
-                                    e1.printStackTrace();
-                                }
-                            }
-                        }.start();
-                    } catch (final Exception e) {
-                        log.error(e.toString());
-                        e.printStackTrace();
-                    }
+                    log.info("\n################################################################\n" +
+                                    "Tor hidden service published after {} ms. Socket={}\n" +
+                                    "################################################################",
+                            System.currentTimeMillis() - ts, socket);
+
+                    UserThread.execute(() -> {
+                        nodeAddressProperty.set(new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort()));
+                        startServer(socket);
+                        setupListeners.forEach(SetupListener::onHiddenServicePublished);
+                    });
                     return null;
                 });
             } catch (TorCtlException e) {
