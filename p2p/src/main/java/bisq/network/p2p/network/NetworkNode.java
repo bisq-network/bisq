@@ -439,11 +439,9 @@ public abstract class NetworkNode implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     void createExecutorService() {
-        if (executorService == null)
-            executorService = Utilities.getListeningExecutorService("NetworkNode-" + servicePort,
-                    maxConnections * 2,
-                    maxConnections * 4,
-                    60);
+        if (executorService == null) {
+            executorService = MoreExecutors.listeningDecorator(Utilities.newCachedThreadPool(maxConnections * 4, 3, TimeUnit.MINUTES));
+        }
     }
 
     void startServer(ServerSocket serverSocket) {
