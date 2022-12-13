@@ -54,6 +54,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -115,10 +116,9 @@ public class SeedNodeReportingService {
         this.maxConnections = maxConnections;
         this.seedNodeReportingServerUrl = seedNodeReportingServerUrl;
 
-        executor = Utilities.newCachedThreadPool(5,
-                8,
-                TimeUnit.MINUTES,
-                (runnable, executor) -> log.error("Execution was rejected. We skip the {} task.", runnable.toString()));
+        // The pool size must be larger as the expected parallel sends because HttpClient use it
+        // internally for asynchronous and dependent tasks.
+        executor = Utilities.newCachedThreadPool(20, 8, TimeUnit.MINUTES);
         httpClient = HttpClient.newBuilder().executor(executor).build();
 
         heartBeatTimer = UserThread.runPeriodically(this::sendHeartBeat, HEART_BEAT_DELAY_SEC);
@@ -257,9 +257,10 @@ public class SeedNodeReportingService {
                     log.error("Response error message: {}", response);
                 }
             });
+        } catch (RejectedExecutionException t) {
+            log.warn("Did not send reportingItems {} because of RejectedExecutionException {}", reportingItems, t.toString());
         } catch (Throwable t) {
-            // RejectedExecutionException is thrown if we exceed our pool size.
-            log.error("Did not send reportingItems {} because of exception {}", reportingItems, t.toString());
+            log.warn("Did not send reportingItems {} because of exception {}", reportingItems, t.toString());
         }
     }
 
