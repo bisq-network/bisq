@@ -72,6 +72,7 @@ public abstract class NetworkNode implements MessageListener {
     private final NetworkProtoResolver networkProtoResolver;
     @Nullable
     private final NetworkFilter networkFilter;
+    private final int maxConnections;
 
     private final CopyOnWriteArraySet<InboundConnection> inBoundConnections = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
@@ -92,10 +93,12 @@ public abstract class NetworkNode implements MessageListener {
 
     NetworkNode(int servicePort,
                 NetworkProtoResolver networkProtoResolver,
-                @Nullable NetworkFilter networkFilter) {
+                @Nullable NetworkFilter networkFilter,
+                int maxConnections) {
         this.servicePort = servicePort;
         this.networkProtoResolver = networkProtoResolver;
         this.networkFilter = networkFilter;
+        this.maxConnections = maxConnections;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -437,7 +440,10 @@ public abstract class NetworkNode implements MessageListener {
 
     void createExecutorService() {
         if (executorService == null)
-            executorService = Utilities.getListeningExecutorService("NetworkNode-" + servicePort, 15, 30, 60);
+            executorService = Utilities.getListeningExecutorService("NetworkNode-" + servicePort,
+                    maxConnections * 2,
+                    maxConnections * 4,
+                    60);
     }
 
     void startServer(ServerSocket serverSocket) {

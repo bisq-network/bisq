@@ -56,8 +56,9 @@ public class LocalhostNetworkNode extends NetworkNode {
 
     public LocalhostNetworkNode(int port,
                                 NetworkProtoResolver networkProtoResolver,
-                                @Nullable NetworkFilter networkFilter) {
-        super(port, networkProtoResolver, networkFilter);
+                                @Nullable NetworkFilter networkFilter,
+                                int maxConnections) {
+        super(port, networkProtoResolver, networkFilter, maxConnections);
     }
 
     @Override
