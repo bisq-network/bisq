@@ -118,7 +118,7 @@ public class SeedNodeReportingService {
 
         // The pool size must be larger as the expected parallel sends because HttpClient use it
         // internally for asynchronous and dependent tasks.
-        executor = Utilities.newCachedThreadPool(20, 8, TimeUnit.MINUTES);
+        executor = Utilities.newCachedThreadPool("SeedNodeReportingService", 20, 8, TimeUnit.MINUTES);
         httpClient = HttpClient.newBuilder().executor(executor).build();
 
         heartBeatTimer = UserThread.runPeriodically(this::sendHeartBeat, HEART_BEAT_DELAY_SEC);

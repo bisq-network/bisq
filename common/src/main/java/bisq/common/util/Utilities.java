@@ -125,8 +125,8 @@ public class Utilities {
                                                             int maximumPoolSize,
                                                             long keepAliveTimeInSec,
                                                             BlockingQueue<Runnable> workQueue) {
-        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(name)
+        ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat(name + "-%d")
                 .setDaemon(true)
                 .build();
         ThreadPoolExecutor executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTimeInSec,
@@ -136,14 +136,20 @@ public class Utilities {
         return executor;
     }
 
-    public static ExecutorService newCachedThreadPool(int maximumPoolSize,
+    public static ExecutorService newCachedThreadPool(String name,
+                                                      int maximumPoolSize,
                                                       long keepAliveTime,
                                                       TimeUnit timeUnit) {
+        ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat(name + "-%d")
+                .setDaemon(true)
+                .build();
         return new ThreadPoolExecutor(0,
                 maximumPoolSize,
                 keepAliveTime,
                 timeUnit,
-                new SynchronousQueue<>());
+                new SynchronousQueue<>(),
+                threadFactory);
     }
 
     @SuppressWarnings("SameParameterValue")

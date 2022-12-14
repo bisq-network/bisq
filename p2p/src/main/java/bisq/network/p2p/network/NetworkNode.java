@@ -100,8 +100,8 @@ public abstract class NetworkNode implements MessageListener {
         this.networkProtoResolver = networkProtoResolver;
         this.networkFilter = networkFilter;
 
-        connectionExecutor = MoreExecutors.listeningDecorator(Utilities.newCachedThreadPool(maxConnections * 2, 1, TimeUnit.MINUTES));
-        sendMessageExecutor = MoreExecutors.listeningDecorator(Utilities.newCachedThreadPool(maxConnections * 2, 3, TimeUnit.MINUTES));
+        connectionExecutor = MoreExecutors.listeningDecorator(Utilities.newCachedThreadPool("NetworkNode.connection", maxConnections * 2, 1, TimeUnit.MINUTES));
+        sendMessageExecutor = MoreExecutors.listeningDecorator(Utilities.newCachedThreadPool("NetworkNode.sendMessage", maxConnections * 2, 3, TimeUnit.MINUTES));
         serverExecutor = Utilities.getSingleThreadExecutor("NetworkNode.server-" + servicePort);
     }
 
