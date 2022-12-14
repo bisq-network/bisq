@@ -409,6 +409,9 @@ configure(project(':desktop')) {
     apply plugin: 'org.openjfx.javafxplugin'
     apply from: 'package/package.gradle'
 
+    shadowDistTar.enabled = false
+    shadowDistZip.enabled = false
+
     javafx {
         version = "$javafxVersion"
         modules = ['javafx.controls', 'javafx.fxml']
@@ -480,6 +483,9 @@ configure(project(':desktop')) {
 
 configure(project(':seednode')) {
     apply plugin: 'com.github.johnrengelman.shadow'
+
+    shadowDistTar.enabled = false
+    shadowDistZip.enabled = false
 
     jar.manifest.attributes(
         "Implementation-Title": project.name,
