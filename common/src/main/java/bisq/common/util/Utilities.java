@@ -132,7 +132,6 @@ public class Utilities {
         ThreadPoolExecutor executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTimeInSec,
                 TimeUnit.SECONDS, workQueue, threadFactory);
         executor.allowCoreThreadTimeOut(true);
-        executor.setRejectedExecutionHandler((r, e) -> log.debug("RejectedExecutionHandler called"));
         return executor;
     }
 
@@ -167,7 +166,6 @@ public class Utilities {
         executor.allowCoreThreadTimeOut(true);
         executor.setMaximumPoolSize(maximumPoolSize);
         executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-        executor.setRejectedExecutionHandler((r, e) -> log.debug("RejectedExecutionHandler called"));
         return executor;
     }
 
