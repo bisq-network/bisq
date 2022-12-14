@@ -220,8 +220,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         return capabilities;
     }
 
-    // Called from various threads
-    public void sendMessage(NetworkEnvelope networkEnvelope) {
+    void sendMessage(NetworkEnvelope networkEnvelope) {
         long ts = System.currentTimeMillis();
         log.debug(">> Send networkEnvelope of type: {}", networkEnvelope.getClass().getSimpleName());
 
@@ -264,6 +263,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             }
         } catch (Throwable t) {
             handleException(t);
+            throw new RuntimeException(t);
         }
     }
 
@@ -658,7 +658,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     socket.toString(),
                     this.peersNodeAddressOptional,
                     e.toString());
-            e.printStackTrace();
         }
         shutDown(closeConnectionReason);
     }

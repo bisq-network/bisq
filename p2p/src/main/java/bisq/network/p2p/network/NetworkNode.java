@@ -39,7 +39,6 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
-import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -50,6 +49,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -77,7 +77,9 @@ public abstract class NetworkNode implements MessageListener {
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<ConnectionListener> connectionListeners = new CopyOnWriteArraySet<>();
     final CopyOnWriteArraySet<SetupListener> setupListeners = new CopyOnWriteArraySet<>();
-    ListeningExecutorService executorService;
+    private final ListeningExecutorService connectionExecutor;
+    private final ListeningExecutorService sendMessageExecutor;
+    private final ExecutorService serverExecutor;
     private Server server;
 
     private volatile boolean shutDownInProgress;
@@ -92,10 +94,15 @@ public abstract class NetworkNode implements MessageListener {
 
     NetworkNode(int servicePort,
                 NetworkProtoResolver networkProtoResolver,
-                @Nullable NetworkFilter networkFilter) {
+                @Nullable NetworkFilter networkFilter,
+                int maxConnections) {
         this.servicePort = servicePort;
         this.networkProtoResolver = networkProtoResolver;
         this.networkFilter = networkFilter;
+
+        connectionExecutor = MoreExecutors.listeningDecorator(Utilities.newCachedThreadPool("NetworkNode.connection", maxConnections * 2, 1, TimeUnit.MINUTES));
+        sendMessageExecutor = MoreExecutors.listeningDecorator(Utilities.newCachedThreadPool("NetworkNode.sendMessage", maxConnections * 2, 3, TimeUnit.MINUTES));
+        serverExecutor = Utilities.getSingleThreadExecutor("NetworkNode.server-" + servicePort);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -124,14 +131,14 @@ public abstract class NetworkNode implements MessageListener {
                     "We will create a new outbound connection.", peersNodeAddress);
 
             final SettableFuture<Connection> resultFuture = SettableFuture.create();
-            ListenableFuture<Connection> future = executorService.submit(() -> {
+            ListenableFuture<Connection> future = connectionExecutor.submit(() -> {
                 Thread.currentThread().setName("NetworkNode:SendMessage-to-" + peersNodeAddress.getFullAddress());
 
                 if (peersNodeAddress.equals(getNodeAddress())) {
                     log.warn("We are sending a message to ourselves");
                 }
 
-                OutboundConnection outboundConnection = null;
+                OutboundConnection outboundConnection;
                 try {
                     // can take a while when using tor
                     long startTs = System.currentTimeMillis();
@@ -146,8 +153,8 @@ public abstract class NetworkNode implements MessageListener {
                     if (duration > CREATE_SOCKET_TIMEOUT)
                         throw new TimeoutException("A timeout occurred when creating a socket.");
 
-                    // Tor needs sometimes quite long to create a connection. To avoid that we get too many double
-                    // sided connections we check again if we still don't have any connection for that node address.
+                    // Tor needs sometimes quite long to create a connection. To avoid that we get too many
+                    // connections with the same peer we check again if we still don't have any connection for that node address.
                     Connection existingConnection = getInboundConnection(peersNodeAddress);
                     if (existingConnection == null)
                         existingConnection = getOutboundConnection(peersNodeAddress);
@@ -169,7 +176,7 @@ public abstract class NetworkNode implements MessageListener {
                         existingConnection.sendMessage(networkEnvelope);
                         return existingConnection;
                     } else {
-                        final ConnectionListener connectionListener = new ConnectionListener() {
+                        ConnectionListener connectionListener = new ConnectionListener() {
                             @Override
                             public void onConnection(Connection connection) {
                                 if (!connection.isStopped()) {
@@ -216,12 +223,8 @@ public abstract class NetworkNode implements MessageListener {
                         outboundConnection.sendMessage(networkEnvelope);
                         return outboundConnection;
                     }
-                } catch (Throwable throwable) {
-                    if (!(throwable instanceof ConnectException ||
-                            throwable instanceof IOException ||
-                            throwable instanceof TimeoutException)) {
-                        log.warn("Executing task failed. " + throwable.getMessage());
-                    }
+                } catch (IOException | TimeoutException throwable) {
+                    log.warn("Executing task failed. " + throwable.getMessage());
                     throw throwable;
                 }
             });
@@ -285,14 +288,14 @@ public abstract class NetworkNode implements MessageListener {
 
     public SettableFuture<Connection> sendMessage(Connection connection, NetworkEnvelope networkEnvelope) {
         // connection.sendMessage might take a bit (compression, write to stream), so we use a thread to not block
-        ListenableFuture<Connection> future = executorService.submit(() -> {
+        ListenableFuture<Connection> future = sendMessageExecutor.submit(() -> {
             String id = connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get().getFullAddress() : connection.getUid();
             Thread.currentThread().setName("NetworkNode:SendMessage-to-" + id);
             connection.sendMessage(networkEnvelope);
             return connection;
         });
-        final SettableFuture<Connection> resultFuture = SettableFuture.create();
-        Futures.addCallback(future, new FutureCallback<Connection>() {
+        SettableFuture<Connection> resultFuture = SettableFuture.create();
+        Futures.addCallback(future, new FutureCallback<>() {
             public void onSuccess(Connection connection) {
                 UserThread.execute(() -> resultFuture.set(connection));
             }
@@ -339,6 +342,7 @@ public abstract class NetworkNode implements MessageListener {
             if (server != null) {
                 server.shutDown();
                 server = null;
+                serverExecutor.shutdownNow();
             }
 
             Set<Connection> allConnections = getAllConnections();
@@ -369,6 +373,8 @@ public abstract class NetworkNode implements MessageListener {
                         if (shutdownCompleted.get() == numConnections) {
                             log.info("Shutdown completed with all connections closed");
                             timeoutHandler.stop();
+                            connectionExecutor.shutdownNow();
+                            sendMessageExecutor.shutdownNow();
                             if (shutDownCompleteHandler != null) {
                                 shutDownCompleteHandler.run();
                             }
@@ -435,13 +441,8 @@ public abstract class NetworkNode implements MessageListener {
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    void createExecutorService() {
-        if (executorService == null)
-            executorService = Utilities.getListeningExecutorService("NetworkNode-" + servicePort, 15, 30, 60);
-    }
-
     void startServer(ServerSocket serverSocket) {
-        final ConnectionListener connectionListener = new ConnectionListener() {
+        ConnectionListener connectionListener = new ConnectionListener() {
             @Override
             public void onConnection(Connection connection) {
                 if (!connection.isStopped()) {
@@ -471,7 +472,7 @@ public abstract class NetworkNode implements MessageListener {
                 connectionListener,
                 networkProtoResolver,
                 networkFilter);
-        executorService.submit(server);
+        serverExecutor.submit(server);
     }
 
     private Optional<OutboundConnection> lookupOutBoundConnection(NodeAddress peersNodeAddress) {

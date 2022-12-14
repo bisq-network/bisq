@@ -145,7 +145,7 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage,
         Res getStateHashesResponse = getGetStateHashesResponse(nonce, stateHashes);
         log.info("Send {} with {} stateHashes to peer {}", getStateHashesResponse.getClass().getSimpleName(),
                 stateHashes.size(), connection.getPeersNodeAddressOptional());
-        connection.sendMessage(getStateHashesResponse);
+        networkNode.sendMessage(connection, getStateHashesResponse);
     }
 
     public void requestHashesFromAllConnectedSeedNodes(int fromHeight) {

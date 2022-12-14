@@ -63,7 +63,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
@@ -126,27 +125,30 @@ public class Utilities {
                                                             int maximumPoolSize,
                                                             long keepAliveTimeInSec,
                                                             BlockingQueue<Runnable> workQueue) {
-        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(name)
+        ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat(name + "-%d")
                 .setDaemon(true)
                 .build();
         ThreadPoolExecutor executor = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTimeInSec,
                 TimeUnit.SECONDS, workQueue, threadFactory);
         executor.allowCoreThreadTimeOut(true);
-        executor.setRejectedExecutionHandler((r, e) -> log.debug("RejectedExecutionHandler called"));
         return executor;
     }
 
-    public static ExecutorService newCachedThreadPool(int maximumPoolSize,
+    public static ExecutorService newCachedThreadPool(String name,
+                                                      int maximumPoolSize,
                                                       long keepAliveTime,
-                                                      TimeUnit timeUnit,
-                                                      RejectedExecutionHandler rejectedExecutionHandler) {
+                                                      TimeUnit timeUnit) {
+        ThreadFactory threadFactory = new ThreadFactoryBuilder()
+                .setNameFormat(name + "-%d")
+                .setDaemon(true)
+                .build();
         return new ThreadPoolExecutor(0,
                 maximumPoolSize,
                 keepAliveTime,
                 timeUnit,
                 new SynchronousQueue<>(),
-                rejectedExecutionHandler);
+                threadFactory);
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -164,7 +166,6 @@ public class Utilities {
         executor.allowCoreThreadTimeOut(true);
         executor.setMaximumPoolSize(maximumPoolSize);
         executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-        executor.setRejectedExecutionHandler((r, e) -> log.debug("RejectedExecutionHandler called"));
         return executor;
     }
 
