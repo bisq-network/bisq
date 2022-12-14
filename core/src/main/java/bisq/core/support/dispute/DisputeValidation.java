@@ -115,6 +115,7 @@ public class DisputeValidation {
         }
     }
 
+
     public static void validateSenderNodeAddress(Dispute dispute,
                                                  NodeAddress senderNodeAddress) throws NodeAddressException {
         if (!senderNodeAddress.equals(dispute.getContract().getBuyerNodeAddress())
@@ -156,8 +157,7 @@ public class DisputeValidation {
 
     public static void validateDonationAddress(Dispute dispute,
                                                Transaction delayedPayoutTx,
-                                               NetworkParameters params,
-                                               DaoFacade daoFacade)
+                                               NetworkParameters params)
             throws AddressException {
         TransactionOutput output = delayedPayoutTx.getOutput(0);
         Address address = output.getScriptPubKey().getToAddress(params);
@@ -167,12 +167,13 @@ public class DisputeValidation {
             log.error(delayedPayoutTx.toString());
             throw new DisputeValidation.AddressException(dispute, errorMsg);
         }
-        String delayedPayoutTxOutputAddress = address.toString();
-        validateDonationAddressMatchesAnyPastParamValues(dispute, delayedPayoutTxOutputAddress, daoFacade);
 
         // Verify that address in the dispute matches the one in the trade.
+        String delayedPayoutTxOutputAddress = address.toString();
         checkArgument(delayedPayoutTxOutputAddress.equals(dispute.getDonationAddressOfDelayedPayoutTx()),
-                "donationAddressOfDelayedPayoutTx from dispute does not match address from delayed payout tx");
+                "donationAddressOfDelayedPayoutTx from dispute does not match address from delayed payout tx. " +
+                        "delayedPayoutTxOutputAddress=" + delayedPayoutTxOutputAddress +
+                        "; dispute.getDonationAddressOfDelayedPayoutTx()=" + dispute.getDonationAddressOfDelayedPayoutTx());
     }
 
     public static void testIfAnyDisputeTriedReplay(List<Dispute> disputeList,
@@ -244,7 +245,6 @@ public class DisputeValidation {
                                                  Map<String, Set<String>> disputesPerDelayedPayoutTxId,
                                                  Map<String, Set<String>> disputesPerDepositTxId)
             throws DisputeReplayException {
-
         try {
             String disputeToTestTradeId = disputeToTest.getTradeId();
             String disputeToTestDelayedPayoutTxId = disputeToTest.getDelayedPayoutTxId();
@@ -311,6 +311,7 @@ public class DisputeValidation {
             super(dispute, msg);
         }
     }
+
 
     public static class AddressException extends ValidationException {
         AddressException(Dispute dispute, String msg) {

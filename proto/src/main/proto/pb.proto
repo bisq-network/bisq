@@ -98,6 +98,10 @@ message NetworkEnvelope {
         BsqSwapFinalizedTxMessage bsq_swap_finalized_tx_message = 59;
 
         FileTransferPart file_transfer_part = 60;
+
+        GetAccountingBlocksRequest get_accounting_blocks_request = 61;
+        GetAccountingBlocksResponse get_accounting_blocks_response = 62;
+        NewAccountingBlockBroadcastMessage new_accounting_block_broadcast_message = 63;
     }
 }
 
@@ -174,6 +178,7 @@ message OfferAvailabilityRequest {
     repeated int32 supported_capabilities = 4;
     string uid = 5;
     bool is_taker_api_user = 6;
+    int32 burning_man_selection_height = 7;  // Added in v 1.9.7
 }
 
 message OfferAvailabilityResponse {
@@ -260,6 +265,7 @@ message InputsForDepositTxRequest {
     NodeAddress refund_agent_node_address = 25;
     bytes hash_of_takers_payment_account_payload = 26;
     string takers_payout_method_id = 27;
+    int32 burning_man_selection_height = 28;  // Added in v 1.9.7
 }
 
 message InputsForDepositTxResponse {
@@ -934,6 +940,8 @@ message Dispute {
     State state = 28;
     int64 trade_period_end = 29;
     map<string, string> extra_data = 30;
+    int32 burning_man_selection_height = 31;  // Added in v 1.9.7
+    int64 trade_tx_fee = 32;  // Added in v 1.9.7
 }
 
 message Attachment {
@@ -1488,6 +1496,7 @@ message PersistableEnvelope {
         IgnoredMailboxMap ignored_mailbox_map = 33;
         RemovedPayloadsMap removed_payloads_map = 34;
         BsqBlockStore bsq_block_store = 35;
+        BurningManAccountingStore burning_man_accounting_store = 36;
     }
 }
 
@@ -1810,6 +1819,7 @@ message ProcessModel {
     int64 buyer_payout_amount_from_mediation = 19;
     int64 seller_payout_amount_from_mediation = 20;
     PaymentAccount payment_account = 21;
+    int32 burning_man_selection_height = 22;  // Added in v 1.9.7
 }
 
 message TradingPeer {
@@ -1994,6 +2004,51 @@ message SubAccountMapEntry {
     repeated PaymentAccount value = 2;
 }
 
+// Burningman accounting data
+message AccountingTxOutput {
+    uint32 value = 1;
+    string name = 2;
+}
+
+message AccountingTx {
+    uint32 type = 1;
+    repeated AccountingTxOutput outputs = 2;
+    bytes truncated_tx_id = 3;
+}
+
+message AccountingBlock {
+    uint32 height = 1;
+    uint32 time_in_sec = 2;
+    bytes truncated_hash = 3;
+    bytes truncated_previous_block_hash = 4;
+    repeated AccountingTx txs = 5;
+}
+
+message BurningManAccountingStore {
+    repeated AccountingBlock blocks = 1;
+}
+
+message GetAccountingBlocksRequest {
+    int32 from_block_height = 1;
+    int32 nonce = 2;
+    NodeAddress sender_node_address = 3;
+    repeated int32 supported_capabilities = 4;
+}
+
+message GetAccountingBlocksResponse {
+    repeated AccountingBlock blocks = 1;
+    int32 request_nonce = 2;
+    string pub_key = 3;
+    bytes signature = 4;
+}
+
+message NewAccountingBlockBroadcastMessage {
+    AccountingBlock block = 1;
+    string pub_key = 2;
+    bytes signature = 3;
+}
+
+// DAO
 message BaseBlock {
     int32 height = 1;
     int64 time = 2;

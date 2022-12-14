@@ -5,6 +5,8 @@ import org.bitcoinj.core.Coin;
 public interface CoinFormatter {
     String formatCoin(Coin coin);
 
+    String formatCoin(long value);
+
     String formatCoin(Coin coin, boolean appendCode);
 
     String formatCoin(Coin coin, int decimalPlaces);

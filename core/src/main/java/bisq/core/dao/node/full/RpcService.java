@@ -56,6 +56,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -91,6 +93,14 @@ public class RpcService {
     // Keep that for optimization after measuring performance differences
     private final ListeningExecutorService executor = Utilities.getSingleThreadListeningExecutor("RpcService");
     private volatile boolean isShutDown;
+    private final Set<ResultHandler> setupResultHandlers = new CopyOnWriteArraySet<>();
+    private final Set<Consumer<Throwable>> setupErrorHandlers = new CopyOnWriteArraySet<>();
+    private volatile boolean setupComplete;
+    private Consumer<RawDtoBlock> rawDtoBlockHandler;
+    private Consumer<Throwable> rawDtoBlockErrorHandler;
+    private Consumer<RawBlock> rawBlockHandler;
+    private Consumer<Throwable> rawBlockErrorHandler;
+    private volatile boolean isBlockHandlerSet;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -139,7 +149,20 @@ public class RpcService {
         executor.shutdown();
     }
 
-    void setup(ResultHandler resultHandler, Consumer<Throwable> errorHandler) {
+    public void setup(ResultHandler resultHandler, Consumer<Throwable> errorHandler) {
+        if (setupComplete) {
+            // Setup got already called and has finished.
+            resultHandler.handleResult();
+            return;
+        } else {
+            setupResultHandlers.add(resultHandler);
+            setupErrorHandlers.add(errorHandler);
+            if (setupResultHandlers.size() > 1) {
+                // Setup got already called but has not finished yet.
+                return;
+            }
+        }
+
         try {
             ListenableFuture<Void> future = executor.submit(() -> {
                 try {
@@ -159,7 +182,11 @@ public class RpcService {
                     daemon = new BitcoindDaemon(rpcBlockHost, rpcBlockPort, throwable -> {
                         log.error(throwable.toString());
                         throwable.printStackTrace();
-                        UserThread.execute(() -> errorHandler.accept(new RpcException(throwable)));
+                        UserThread.execute(() -> {
+                            setupErrorHandlers.forEach(handler -> handler.accept(new RpcException(throwable)));
+                            setupErrorHandlers.clear();
+                            setupResultHandlers.clear();
+                        });
                     });
 
                     log.info("Setup took {} ms", System.currentTimeMillis() - startTs);
@@ -173,11 +200,20 @@ public class RpcService {
 
             Futures.addCallback(future, new FutureCallback<>() {
                 public void onSuccess(Void ignore) {
-                    UserThread.execute(resultHandler::handleResult);
+                    setupComplete = true;
+                    UserThread.execute(() -> {
+                        setupResultHandlers.forEach(ResultHandler::handleResult);
+                        setupResultHandlers.clear();
+                        setupErrorHandlers.clear();
+                    });
                 }
 
                 public void onFailure(@NotNull Throwable throwable) {
-                    UserThread.execute(() -> errorHandler.accept(throwable));
+                    UserThread.execute(() -> {
+                        setupErrorHandlers.forEach(handler -> handler.accept(throwable));
+                        setupErrorHandlers.clear();
+                        setupResultHandlers.clear();
+                    });
                 }
             }, MoreExecutors.directExecutor());
         } catch (Exception e) {
@@ -219,21 +255,49 @@ public class RpcService {
 
     void addNewDtoBlockHandler(Consumer<RawBlock> dtoBlockHandler,
                                Consumer<Throwable> errorHandler) {
+        this.rawBlockHandler = dtoBlockHandler;
+        this.rawBlockErrorHandler = errorHandler;
+        if (!isBlockHandlerSet) {
+            setupBlockHandler();
+        }
+    }
+
+    public void addNewRawDtoBlockHandler(Consumer<RawDtoBlock> rawDtoBlockHandler,
+                                         Consumer<Throwable> errorHandler) {
+        this.rawDtoBlockHandler = rawDtoBlockHandler;
+        this.rawDtoBlockErrorHandler = errorHandler;
+        if (!isBlockHandlerSet) {
+            setupBlockHandler();
+        }
+    }
+
+    private void setupBlockHandler() {
+        isBlockHandlerSet = true;
         daemon.setBlockListener(blockHash -> {
             try {
-                var rawDtoBlock = client.getBlock(blockHash, 2);
-                log.info("New block received: height={}, id={}", rawDtoBlock.getHeight(), rawDtoBlock.getHash());
+                RawDtoBlock rawDtoBlock = client.getBlock(blockHash, 2);
+                log.info("New rawDtoBlock received: height={}, hash={}", rawDtoBlock.getHeight(), rawDtoBlock.getHash());
 
-                var block = getBlockFromRawDtoBlock(rawDtoBlock);
-                UserThread.execute(() -> dtoBlockHandler.accept(block));
+                if (rawBlockHandler != null) {
+                    RawBlock rawBlock = getRawBlockFromRawDtoBlock(rawDtoBlock);
+                    UserThread.execute(() -> rawBlockHandler.accept(rawBlock));
+                }
+                if (rawDtoBlockHandler != null) {
+                    UserThread.execute(() -> rawDtoBlockHandler.accept(rawDtoBlock));
+                }
             } catch (Throwable throwable) {
                 log.error("Error at BlockHandler", throwable);
-                errorHandler.accept(throwable);
+                if (rawBlockErrorHandler != null) {
+                    rawBlockErrorHandler.accept(throwable);
+                }
+                if (rawDtoBlockErrorHandler != null) {
+                    rawDtoBlockErrorHandler.accept(throwable);
+                }
             }
         });
     }
 
-    void requestChainHeadHeight(Consumer<Integer> resultHandler, Consumer<Throwable> errorHandler) {
+    public void requestChainHeadHeight(Consumer<Integer> resultHandler, Consumer<Throwable> errorHandler) {
         try {
             ListenableFuture<Integer> future = executor.submit(client::getBlockCount);
             Futures.addCallback(future, new FutureCallback<>() {
@@ -262,7 +326,7 @@ public class RpcService {
                 long startTs = System.currentTimeMillis();
                 String blockHash = client.getBlockHash(blockHeight);
                 var rawDtoBlock = client.getBlock(blockHash, 2);
-                var block = getBlockFromRawDtoBlock(rawDtoBlock);
+                var block = getRawBlockFromRawDtoBlock(rawDtoBlock);
                 log.info("requestDtoBlock from bitcoind at blockHeight {} with {} txs took {} ms",
                         blockHeight, block.getRawTxs().size(), System.currentTimeMillis() - startTs);
                 return block;
@@ -289,12 +353,47 @@ public class RpcService {
         }
     }
 
+    public void requestRawDtoBlock(int blockHeight,
+                                   Consumer<RawDtoBlock> rawDtoBlockHandler,
+                                   Consumer<Throwable> errorHandler) {
+        try {
+            ListenableFuture<RawDtoBlock> future = executor.submit(() -> {
+                long startTs = System.currentTimeMillis();
+                String blockHash = client.getBlockHash(blockHeight);
+
+                // getBlock with about 2000 tx takes about 500 ms on a 4GHz Intel Core i7 CPU.
+                var rawDtoBlock = client.getBlock(blockHash, 2);
+                log.info("requestRawDtoBlock from bitcoind at blockHeight {} with {} txs took {} ms",
+                        blockHeight, rawDtoBlock.getTx().size(), System.currentTimeMillis() - startTs);
+                return rawDtoBlock;
+            });
+
+            Futures.addCallback(future, new FutureCallback<>() {
+                @Override
+                public void onSuccess(RawDtoBlock rawDtoBlock) {
+                    UserThread.execute(() -> rawDtoBlockHandler.accept(rawDtoBlock));
+                }
+
+                @Override
+                public void onFailure(@NotNull Throwable throwable) {
+                    log.error("Error at requestRawDtoBlock: blockHeight={}", blockHeight);
+                    UserThread.execute(() -> errorHandler.accept(throwable));
+                }
+            }, MoreExecutors.directExecutor());
+        } catch (Exception e) {
+            if (!isShutDown || !(e instanceof RejectedExecutionException)) {
+                log.warn(e.toString(), e);
+                throw e;
+            }
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static RawBlock getBlockFromRawDtoBlock(RawDtoBlock rawDtoBlock) {
+    private static RawBlock getRawBlockFromRawDtoBlock(RawDtoBlock rawDtoBlock) {
         List<RawTx> txList = rawDtoBlock.getTx().stream()
                 .map(e -> getTxFromRawTransaction(e, rawDtoBlock))
                 .collect(Collectors.toList());

@@ -24,7 +24,11 @@ import java.math.BigInteger;
 import java.util.Objects;
 import java.util.function.Function;
 
+import lombok.Setter;
+
 public class InputValidator {
+    @Setter
+    public boolean allowEmpty;
 
     public ValidationResult validate(String input) {
         return validateIfNotEmpty(input);
@@ -32,10 +36,13 @@ public class InputValidator {
 
     protected ValidationResult validateIfNotEmpty(String input) {
         //trim added to avoid empty input
-        if (input == null || input.trim().length() == 0)
-            return new ValidationResult(false, Res.get("validation.empty"));
-        else
+        if (allowEmpty) {
             return new ValidationResult(true);
+        } else if (input == null || input.trim().length() == 0) {
+            return new ValidationResult(false, Res.get("validation.empty"));
+        } else {
+            return new ValidationResult(true);
+        }
     }
 
     public static class ValidationResult {

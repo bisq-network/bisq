@@ -201,6 +201,32 @@ public class DaoStateService implements DaoSetupService {
         return getCycle(blockHeight).map(cycle -> cycle.getHeightOfFirstBlock());
     }
 
+    public Optional<Cycle> getNextCycle(Cycle cycle) {
+        return getCycle(cycle.getHeightOfLastBlock() + 1);
+    }
+
+    public Optional<Cycle> getPreviousCycle(Cycle cycle) {
+        return getCycle(cycle.getHeightOfFirstBlock() - 1);
+    }
+
+    public Optional<Cycle> getPastCycle(Cycle cycle, int numPastCycles) {
+        Optional<Cycle> previous = Optional.empty();
+        Cycle current = cycle;
+        for (int i = 0; i < numPastCycles; i++) {
+            previous = getPreviousCycle(current);
+            if (previous.isPresent()) {
+                current = previous.get();
+            } else {
+                break;
+            }
+        }
+        return previous;
+    }
+
+    public Cycle getCycleAtIndex(int index) {
+        return getCycles().get(index);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Block
@@ -440,7 +466,7 @@ public class DaoStateService implements DaoSetupService {
     // TxOutput
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Stream<TxOutput> getUnorderedTxOutputStream() {
+    public Stream<TxOutput> getUnorderedTxOutputStream() {
         return getUnorderedTxStream()
                 .flatMap(tx -> tx.getTxOutputs().stream());
     }

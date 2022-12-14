@@ -39,8 +39,12 @@ public class SendOfferAvailabilityRequest extends Task<OfferAvailabilityModel> {
         try {
             runInterceptHook();
 
+            int burningManSelectionHeight = model.getDelayedPayoutTxReceiverService().getBurningManSelectionHeight();
             OfferAvailabilityRequest message = new OfferAvailabilityRequest(model.getOffer().getId(),
-                    model.getPubKeyRing(), model.getTakersTradePrice(), model.isTakerApiUser());
+                    model.getPubKeyRing(),
+                    model.getTakersTradePrice(),
+                    model.isTakerApiUser(),
+                    burningManSelectionHeight);
             log.info("Send {} with offerId {} and uid {} to peer {}",
                     message.getClass().getSimpleName(), message.getOfferId(),
                     message.getUid(), model.getPeerNodeAddress());

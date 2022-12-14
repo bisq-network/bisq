@@ -27,7 +27,6 @@ import bisq.desktop.main.MainView;
 import bisq.desktop.main.dao.DaoView;
 import bisq.desktop.main.dao.bonding.BondingView;
 import bisq.desktop.main.dao.bonding.bonds.BondsView;
-import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.BsqValidator;
@@ -58,6 +57,7 @@ import bisq.core.dao.state.model.governance.Vote;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.util.coin.BsqFormatter;
+import bisq.core.util.validation.BtcAddressValidator;
 import bisq.core.util.validation.InputValidator;
 import bisq.core.util.validation.RegexValidator;
 
@@ -116,7 +116,7 @@ public class ProposalDisplay {
     public InputTextField nameTextField;
     public InputTextField linkInputTextField;
     @Nullable
-    public InputTextField requestedBsqTextField, paramValueTextField;
+    public InputTextField requestedBsqTextField, burningManReceiverAddressTextField, paramValueTextField;
     @Nullable
     public ComboBox<Param> paramComboBox;
     @Nullable
@@ -133,9 +133,9 @@ public class ProposalDisplay {
     private int gridRowStartIndex;
     private final List<Runnable> inputChangedListeners = new ArrayList<>();
     @Getter
-    private List<TextInputControl> inputControls = new ArrayList<>();
+    private final List<TextInputControl> inputControls = new ArrayList<>();
     @Getter
-    private List<ComboBox<?>> comboBoxes = new ArrayList<>();
+    private final List<ComboBox<?>> comboBoxes = new ArrayList<>();
     private final ChangeListener<Boolean> focusOutListener;
     private final ChangeListener<Object> inputListener;
     private ChangeListener<Param> paramChangeListener;
@@ -143,7 +143,6 @@ public class ProposalDisplay {
     private TitledGroupBg myVoteTitledGroup;
     private VBox linkWithIconContainer, comboBoxValueContainer, myVoteBox, voteResultBox;
     private int votingBoxRowSpan;
-
     private Optional<Runnable> navigateHandlerOptional = Optional.empty();
 
     public ProposalDisplay(GridPane gridPane,
@@ -188,6 +187,8 @@ public class ProposalDisplay {
 
         switch (proposalType) {
             case COMPENSATION_REQUEST:
+                titledGroupBgRowSpan = 6;
+                break;
             case REIMBURSEMENT_REQUEST:
             case CONFISCATE_BOND:
             case REMOVE_ASSET:
@@ -266,7 +267,6 @@ public class ProposalDisplay {
             case REIMBURSEMENT_REQUEST:
                 requestedBsqTextField = addInputTextField(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.requestedBsq"));
-                checkNotNull(requestedBsqTextField, "requestedBsqTextField must not be null");
                 inputControls.add(requestedBsqTextField);
 
                 if (isMakeProposalScreen) {
@@ -280,10 +280,19 @@ public class ProposalDisplay {
                     }
                     requestedBsqTextField.setValidator(bsqValidator);
                 }
+
+                if (proposalType == ProposalType.COMPENSATION_REQUEST) {
+                    burningManReceiverAddressTextField = addInputTextField(gridPane, ++gridRow,
+                            Res.get("dao.proposal.display.burningManReceiverAddress"));
+                    BtcAddressValidator btcAddressValidator = new BtcAddressValidator();
+                    btcAddressValidator.setAllowEmpty(true);
+                    burningManReceiverAddressTextField.setValidator(btcAddressValidator);
+                    inputControls.add(burningManReceiverAddressTextField);
+                }
                 break;
             case CHANGE_PARAM:
                 checkNotNull(gridPane, "gridPane must not be null");
-                paramComboBox = FormBuilder.addComboBox(gridPane, ++gridRow,
+                paramComboBox = addComboBox(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.paramComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(paramComboBox, "paramComboBox must not be null");
@@ -322,7 +331,7 @@ public class ProposalDisplay {
                 paramComboBox.getSelectionModel().selectedItemProperty().addListener(paramChangeListener);
                 break;
             case BONDED_ROLE:
-                bondedRoleTypeComboBox = FormBuilder.addComboBox(gridPane, ++gridRow,
+                bondedRoleTypeComboBox = addComboBox(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.bondedRoleComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(bondedRoleTypeComboBox, "bondedRoleTypeComboBox must not be null");
@@ -354,7 +363,7 @@ public class ProposalDisplay {
 
                 break;
             case CONFISCATE_BOND:
-                confiscateBondComboBox = FormBuilder.addComboBox(gridPane, ++gridRow,
+                confiscateBondComboBox = addComboBox(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.confiscateBondComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(confiscateBondComboBox, "confiscateBondComboBox must not be null");
@@ -381,7 +390,7 @@ public class ProposalDisplay {
             case GENERIC:
                 break;
             case REMOVE_ASSET:
-                assetComboBox = FormBuilder.addComboBox(gridPane, ++gridRow,
+                assetComboBox = addComboBox(gridPane, ++gridRow,
                         Res.get("dao.proposal.display.assetComboBox.label"));
                 comboBoxValueTextFieldIndex = gridRow;
                 checkNotNull(assetComboBox, "assetComboBox must not be null");
@@ -530,6 +539,16 @@ public class ProposalDisplay {
             CompensationProposal compensationProposal = (CompensationProposal) proposal;
             checkNotNull(requestedBsqTextField, "requestedBsqTextField must not be null");
             requestedBsqTextField.setText(bsqFormatter.formatCoinWithCode(compensationProposal.getRequestedBsq()));
+            if (burningManReceiverAddressTextField != null) {
+                Optional<String> burningManReceiverAddress = compensationProposal.getBurningManReceiverAddress();
+                boolean isPresent = burningManReceiverAddress.isPresent();
+                burningManReceiverAddressTextField.setVisible(isPresent);
+                burningManReceiverAddressTextField.setManaged(isPresent);
+                if (isPresent) {
+                    burningManReceiverAddressTextField.setText(burningManReceiverAddress.get());
+                }
+            }
+
         } else if (proposal instanceof ReimbursementProposal) {
             ReimbursementProposal reimbursementProposal = (ReimbursementProposal) proposal;
             checkNotNull(requestedBsqTextField, "requestedBsqTextField must not be null");
@@ -591,9 +610,9 @@ public class ProposalDisplay {
     private void addListeners() {
         inputControls.stream()
                 .filter(Objects::nonNull).forEach(inputControl -> {
-            inputControl.textProperty().addListener(inputListener);
-            inputControl.focusedProperty().addListener(focusOutListener);
-        });
+                    inputControl.textProperty().addListener(inputListener);
+                    inputControl.focusedProperty().addListener(focusOutListener);
+                });
         comboBoxes.stream()
                 .filter(Objects::nonNull)
                 .forEach(comboBox -> comboBox.getSelectionModel().selectedItemProperty().addListener(inputListener));
@@ -602,9 +621,9 @@ public class ProposalDisplay {
     public void removeListeners() {
         inputControls.stream()
                 .filter(Objects::nonNull).forEach(inputControl -> {
-            inputControl.textProperty().removeListener(inputListener);
-            inputControl.focusedProperty().removeListener(focusOutListener);
-        });
+                    inputControl.textProperty().removeListener(inputListener);
+                    inputControl.focusedProperty().removeListener(focusOutListener);
+                });
         comboBoxes.stream()
                 .filter(Objects::nonNull)
                 .forEach(comboBox -> comboBox.getSelectionModel().selectedItemProperty().removeListener(inputListener));

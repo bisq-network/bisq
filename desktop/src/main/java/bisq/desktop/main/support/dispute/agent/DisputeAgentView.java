@@ -151,9 +151,8 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
     }
 
     private String getValidationExceptionMessage(DisputeValidation.ValidationException exception) {
-        Dispute dispute = exception.getDispute();
         if (exception instanceof DisputeValidation.AddressException) {
-            return getAddressExceptionMessage(dispute);
+            return getAddressExceptionMessage(exception.getDispute());
         } else if (exception.getMessage() != null && !exception.getMessage().isEmpty()) {
             return exception.getMessage();
         } else {

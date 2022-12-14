@@ -221,6 +221,10 @@ public class BsqFormatter implements CoinFormatter {
         }
     }
 
+    public String formatCoin(long value) {
+        return formatCoin(Coin.valueOf(value));
+    }
+
     public String formatCoin(Coin coin) {
         return formatCoin(coin, false);
     }

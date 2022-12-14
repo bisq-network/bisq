@@ -21,6 +21,7 @@ import bisq.core.account.sign.SignedWitnessStore;
 import bisq.core.account.witness.AccountAgeWitnessStore;
 import bisq.core.btc.model.AddressEntryList;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.dao.burningman.accounting.storage.BurningManAccountingStore;
 import bisq.core.dao.governance.blindvote.MyBlindVoteList;
 import bisq.core.dao.governance.blindvote.storage.BlindVoteStore;
 import bisq.core.dao.governance.bond.reputation.MyReputationList;
@@ -141,6 +142,8 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return RemovedPayloadsMap.fromProto(proto.getRemovedPayloadsMap());
                 case BSQ_BLOCK_STORE:
                     return BsqBlockStore.fromProto(proto.getBsqBlockStore());
+                case BURNING_MAN_ACCOUNTING_STORE:
+                    return BurningManAccountingStore.fromProto(proto.getBurningManAccountingStore());
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case(PB.PersistableEnvelope). " +
                             "messageCase=" + proto.getMessageCase() + "; proto raw data=" + proto.toString());

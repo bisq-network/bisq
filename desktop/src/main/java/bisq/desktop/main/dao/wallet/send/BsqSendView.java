@@ -61,8 +61,11 @@ import bisq.core.util.validation.BtcAddressValidator;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
+import bisq.common.crypto.Hash;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
+import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
@@ -72,8 +75,13 @@ import org.bitcoinj.core.TransactionOutput;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import com.google.common.base.Charsets;
+
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 
 import javafx.beans.value.ChangeListener;
 
@@ -87,6 +95,7 @@ import javax.annotation.Nullable;
 
 import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addTitledGroupBg;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 
 @FxmlView
 public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqBalanceListener {
@@ -106,12 +115,15 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
     private final WalletPasswordWindow walletPasswordWindow;
 
     private int gridRow = 0;
-    private InputTextField amountInputTextField, btcAmountInputTextField;
-    private Button sendBsqButton, sendBtcButton, bsqInputControlButton, btcInputControlButton;
+    private InputTextField amountInputTextField, btcAmountInputTextField, preImageTextField;
+    private TextField opReturnDataAsHexTextField;
+    private VBox opReturnDataAsHexBox;
+    private Label opReturnDataAsHexLabel;
+    private Button sendBsqButton, sendBtcButton, bsqInputControlButton, btcInputControlButton, btcOpReturnButton;
     private InputTextField receiversAddressInputTextField, receiversBtcAddressInputTextField;
     private ChangeListener<Boolean> focusOutListener;
     private TitledGroupBg btcTitledGroupBg;
-    private ChangeListener<String> inputTextFieldListener;
+    private ChangeListener<String> inputTextFieldListener, preImageInputTextFieldListener;
     @Nullable
     private Set<TransactionOutput> bsqUtxoCandidates;
     @Nullable
@@ -166,6 +178,8 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         };
         inputTextFieldListener = (observable, oldValue, newValue) -> onUpdateBalances();
 
+        preImageInputTextFieldListener = (observable, oldValue, newValue) -> opReturnDataAsHexTextField.setText(getOpReturnDataAsHexFromPreImage(newValue));
+
         setSendBtcGroupVisibleState(false);
     }
 
@@ -183,6 +197,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         bsqInputControlButton.setOnAction((event) -> onBsqInputControl());
         sendBtcButton.setOnAction((event) -> onSendBtc());
         btcInputControlButton.setOnAction((event) -> onBtcInputControl());
+        btcOpReturnButton.setOnAction((event) -> onShowPreImageField());
 
         receiversAddressInputTextField.focusedProperty().addListener(focusOutListener);
         amountInputTextField.focusedProperty().addListener(focusOutListener);
@@ -193,6 +208,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         amountInputTextField.textProperty().addListener(inputTextFieldListener);
         receiversBtcAddressInputTextField.textProperty().addListener(inputTextFieldListener);
         btcAmountInputTextField.textProperty().addListener(inputTextFieldListener);
+        preImageTextField.textProperty().addListener(preImageInputTextFieldListener);
 
         bsqWalletService.addBsqBalanceListener(this);
 
@@ -228,11 +244,13 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         amountInputTextField.textProperty().removeListener(inputTextFieldListener);
         receiversBtcAddressInputTextField.textProperty().removeListener(inputTextFieldListener);
         btcAmountInputTextField.textProperty().removeListener(inputTextFieldListener);
+        preImageTextField.textProperty().removeListener(preImageInputTextFieldListener);
 
         bsqWalletService.removeBsqBalanceListener(this);
 
         sendBsqButton.setOnAction(null);
         btcInputControlButton.setOnAction(null);
+        btcOpReturnButton.setOnAction(null);
         sendBtcButton.setOnAction(null);
         bsqInputControlButton.setOnAction(null);
     }
@@ -367,12 +385,14 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         btcAmountInputTextField.setVisible(visible);
         sendBtcButton.setVisible(visible);
         btcInputControlButton.setVisible(visible);
+        btcOpReturnButton.setVisible(visible);
 
         btcTitledGroupBg.setManaged(visible);
         receiversBtcAddressInputTextField.setManaged(visible);
         btcAmountInputTextField.setManaged(visible);
         sendBtcButton.setManaged(visible);
         btcInputControlButton.setManaged(visible);
+        btcOpReturnButton.setManaged(visible);
     }
 
     private void addSendBtcGroup() {
@@ -387,10 +407,24 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         btcAmountInputTextField.setValidator(btcValidator);
         GridPane.setColumnSpan(btcAmountInputTextField, 3);
 
-        Tuple2<Button, Button> tuple = FormBuilder.add2ButtonsAfterGroup(root, ++gridRow,
-                Res.get("dao.wallet.send.sendBtc"), Res.get("dao.wallet.send.inputControl"));
+        preImageTextField = addInputTextField(root, ++gridRow, Res.get("dao.wallet.send.preImage"));
+        GridPane.setColumnSpan(preImageTextField, 3);
+        preImageTextField.setVisible(false);
+        preImageTextField.setManaged(false);
+
+        Tuple3<Label, TextField, VBox> opReturnDataAsHexTuple = addTopLabelTextField(root, ++gridRow, Res.get("dao.wallet.send.opReturnAsHex"), -10);
+        opReturnDataAsHexLabel = opReturnDataAsHexTuple.first;
+        opReturnDataAsHexTextField = opReturnDataAsHexTuple.second;
+        opReturnDataAsHexBox = opReturnDataAsHexTuple.third;
+        GridPane.setColumnSpan(opReturnDataAsHexBox, 3);
+        opReturnDataAsHexBox.setVisible(false);
+        opReturnDataAsHexBox.setManaged(false);
+
+        Tuple3<Button, Button, Button> tuple = FormBuilder.add3ButtonsAfterGroup(root, ++gridRow,
+                Res.get("dao.wallet.send.sendBtc"), Res.get("dao.wallet.send.inputControl"), Res.get("dao.wallet.send.addOpReturn"));
         sendBtcButton = tuple.first;
         btcInputControlButton = tuple.second;
+        btcOpReturnButton = tuple.third;
     }
 
     private void onBtcInputControl() {
@@ -408,6 +442,15 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                 btcFormatter);
         txInputSelectionWindow.onAction(() -> setBtcUtxoCandidates(txInputSelectionWindow.getCandidates())).
                 show();
+    }
+
+    private void onShowPreImageField() {
+        btcOpReturnButton.setDisable(true);
+        preImageTextField.setManaged(true);
+        preImageTextField.setVisible(true);
+        opReturnDataAsHexBox.setManaged(true);
+        opReturnDataAsHexBox.setVisible(true);
+        GridPane.setRowSpan(btcTitledGroupBg, 4);
     }
 
     private void setBtcUtxoCandidates(Set<TransactionOutput> candidates) {
@@ -430,8 +473,12 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         String receiversAddressString = receiversBtcAddressInputTextField.getText();
         Coin receiverAmount = bsqFormatter.parseToBTC(btcAmountInputTextField.getText());
         try {
+            byte[] opReturnData = null;
+            if (preImageTextField.isVisible() && !preImageTextField.getText().trim().isEmpty()) {
+                opReturnData = getOpReturnData(preImageTextField.getText());
+            }
             Transaction preparedSendTx = bsqWalletService.getPreparedSendBtcTx(receiversAddressString, receiverAmount, btcUtxoCandidates);
-            Transaction txWithBtcFee = btcWalletService.completePreparedSendBsqTx(preparedSendTx);
+            Transaction txWithBtcFee = btcWalletService.completePreparedBsqTx(preparedSendTx, opReturnData);
             Transaction signedTx = bsqWalletService.signTxAndVerifyNoDustOutputs(txWithBtcFee);
             Coin miningFee = signedTx.getFee();
 
@@ -449,6 +496,7 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
                         () -> {
                             receiversBtcAddressInputTextField.setText("");
                             btcAmountInputTextField.setText("");
+                            preImageTextField.clear();
 
                             receiversBtcAddressInputTextField.resetValidation();
                             btcAmountInputTextField.resetValidation();
@@ -461,6 +509,30 @@ public class BsqSendView extends ActivatableView<GridPane, Void> implements BsqB
         } catch (Throwable t) {
             handleError(t);
         }
+    }
+
+    private byte[] getOpReturnData(String preImageAsString) {
+        byte[] opReturnData;
+        try {
+            // If preImage is hex encoded we use it directly
+            opReturnData = Hex.decode(preImageAsString);
+        } catch (Throwable ignore) {
+            opReturnData = preImageAsString.getBytes(Charsets.UTF_8);
+        }
+
+        // If too long for OpReturn we hash it
+        if (opReturnData.length > 80) {
+            opReturnData = Hash.getSha256Ripemd160hash(opReturnData);
+            opReturnDataAsHexLabel.setText(Res.get("dao.wallet.send.opReturnAsHash"));
+        } else {
+            opReturnDataAsHexLabel.setText(Res.get("dao.wallet.send.opReturnAsHex"));
+        }
+
+        return opReturnData;
+    }
+
+    private String getOpReturnDataAsHexFromPreImage(String preImage) {
+        return Hex.encode(getOpReturnData(preImage));
     }
 
     private void handleError(Throwable t) {

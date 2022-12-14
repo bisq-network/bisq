@@ -273,8 +273,10 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         List<Dispute> disputes = getDisputeList().getList();
         disputes.forEach(dispute -> {
             try {
-                DisputeValidation.validateDonationAddressMatchesAnyPastParamValues(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
                 DisputeValidation.validateNodeAddresses(dispute, config);
+                if (dispute.isUsingLegacyBurningMan()) {
+                    DisputeValidation.validateDonationAddressMatchesAnyPastParamValues(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+                }
             } catch (DisputeValidation.AddressException | DisputeValidation.NodeAddressException e) {
                 log.error(e.toString());
                 validationExceptions.add(e);
@@ -371,8 +373,10 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             DisputeValidation.validateDisputeData(dispute, btcWalletService);
             DisputeValidation.validateNodeAddresses(dispute, config);
             DisputeValidation.validateSenderNodeAddress(dispute, openNewDisputeMessage.getSenderNodeAddress());
-            DisputeValidation.validateDonationAddressMatchesAnyPastParamValues(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
             DisputeValidation.testIfDisputeTriesReplay(dispute, disputeList.getList());
+            if (dispute.isUsingLegacyBurningMan()) {
+                DisputeValidation.validateDonationAddressMatchesAnyPastParamValues(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+            }
         } catch (DisputeValidation.ValidationException e) {
             log.error(e.toString());
             validationExceptions.add(e);
@@ -401,13 +405,15 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             DisputeValidation.validateDisputeData(dispute, btcWalletService);
             DisputeValidation.validateNodeAddresses(dispute, config);
             DisputeValidation.validateTradeAndDispute(dispute, trade);
-            DisputeValidation.validateDonationAddress(dispute,
-                    Objects.requireNonNull(trade.getDelayedPayoutTx()),
-                    btcWalletService.getParams(),
-                    daoFacade);
             TradeDataValidation.validateDelayedPayoutTx(trade,
                     trade.getDelayedPayoutTx(),
                     btcWalletService);
+            if (dispute.isUsingLegacyBurningMan()) {
+                DisputeValidation.validateDonationAddress(dispute,
+                        Objects.requireNonNull(trade.getDelayedPayoutTx()),
+                        btcWalletService.getParams());
+                DisputeValidation.validateDonationAddressMatchesAnyPastParamValues(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+            }
         } catch (TradeDataValidation.ValidationException | DisputeValidation.ValidationException e) {
             // The peer sent us an invalid donation address. We do not return here as we don't want to break
             // mediation/arbitration and log only the issue. The dispute agent will run validation as well and will get
@@ -618,6 +624,8 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         dispute.setExtraDataMap(disputeFromOpener.getExtraDataMap());
         dispute.setDelayedPayoutTxId(disputeFromOpener.getDelayedPayoutTxId());
         dispute.setDonationAddressOfDelayedPayoutTx(disputeFromOpener.getDonationAddressOfDelayedPayoutTx());
+        dispute.setBurningManSelectionHeight(disputeFromOpener.getBurningManSelectionHeight());
+        dispute.setTradeTxFee(disputeFromOpener.getTradeTxFee());
 
         Optional<Dispute> storedDisputeOptional = findDispute(dispute);
 

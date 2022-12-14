@@ -54,6 +54,11 @@ public class ImmutableCoinFormatter implements CoinFormatter {
     }
 
     @Override
+    public String formatCoin(long value) {
+        return formatCoin(Coin.valueOf(value));
+    }
+
+    @Override
     public String formatCoin(Coin coin, boolean appendCode) {
         return appendCode ? formatCoinWithCode(coin) : formatCoin(coin);
     }

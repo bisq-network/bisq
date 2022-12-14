@@ -23,6 +23,8 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.burningman.BtcFeeReceiverService;
+import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.filter.FilterManager;
 import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
@@ -176,6 +178,11 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     @Setter
     private ObjectProperty<MessageState> paymentStartedMessageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
 
+    // Added in v 1.9.7
+    @Setter
+    @Getter
+    private int burningManSelectionHeight;
+
     public ProcessModel(String offerId, String accountId, PubKeyRing pubKeyRing) {
         this(offerId, accountId, pubKeyRing, new TradingPeer());
     }
@@ -217,7 +224,8 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
                 .setFundsNeededForTradeAsLong(fundsNeededForTradeAsLong)
                 .setPaymentStartedMessageState(paymentStartedMessageStateProperty.get().name())
                 .setBuyerPayoutAmountFromMediation(buyerPayoutAmountFromMediation)
-                .setSellerPayoutAmountFromMediation(sellerPayoutAmountFromMediation);
+                .setSellerPayoutAmountFromMediation(sellerPayoutAmountFromMediation)
+                .setBurningManSelectionHeight(burningManSelectionHeight);
 
         Optional.ofNullable(takeOfferFeeTxId).ifPresent(builder::setTakeOfferFeeTxId);
         Optional.ofNullable(payoutTxSignature).ifPresent(e -> builder.setPayoutTxSignature(ByteString.copyFrom(payoutTxSignature)));
@@ -259,6 +267,7 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         String paymentStartedMessageStateString = ProtoUtil.stringOrNullFromProto(proto.getPaymentStartedMessageState());
         MessageState paymentStartedMessageState = ProtoUtil.enumFromProto(MessageState.class, paymentStartedMessageStateString);
         processModel.setPaymentStartedMessageState(paymentStartedMessageState);
+        processModel.setBurningManSelectionHeight(proto.getBurningManSelectionHeight());
 
         if (proto.hasPaymentAccount()) {
             processModel.setPaymentAccount(PaymentAccount.fromProto(proto.getPaymentAccount(), coreProtoResolver));
@@ -375,6 +384,14 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
 
     public TradeWalletService getTradeWalletService() {
         return provider.getTradeWalletService();
+    }
+
+    public BtcFeeReceiverService getBtcFeeReceiverService() {
+        return provider.getBtcFeeReceiverService();
+    }
+
+    public DelayedPayoutTxReceiverService getDelayedPayoutTxReceiverService() {
+        return provider.getDelayedPayoutTxReceiverService();
     }
 
     public User getUser() {

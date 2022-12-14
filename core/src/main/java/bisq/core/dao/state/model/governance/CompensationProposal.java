@@ -30,11 +30,13 @@ import org.bitcoinj.core.Coin;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 @Immutable
@@ -42,6 +44,9 @@ import javax.annotation.concurrent.Immutable;
 @EqualsAndHashCode(callSuper = true)
 @Value
 public final class CompensationProposal extends Proposal implements IssuanceProposal, ImmutableDaoStateModel {
+    // Keys for extra map
+    public static final String BURNING_MAN_RECEIVER_ADDRESS = "burningManReceiverAddress";
+
     private final long requestedBsq;
     private final String bsqAddress;
 
@@ -49,7 +54,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
                                 String link,
                                 Coin requestedBsq,
                                 String bsqAddress,
-                                Map<String, String> extraDataMap) {
+                                @Nullable Map<String, String> extraDataMap) {
         this(name,
                 link,
                 bsqAddress,
@@ -72,7 +77,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
                                  byte version,
                                  long creationDate,
                                  String txId,
-                                 Map<String, String> extraDataMap) {
+                                 @Nullable Map<String, String> extraDataMap) {
         super(name,
                 link,
                 version,
@@ -135,6 +140,11 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
         return TxType.COMPENSATION_REQUEST;
     }
 
+    // Added at v.1.9.7
+    public Optional<String> getBurningManReceiverAddress() {
+        return Optional.ofNullable(extraDataMap).flatMap(map -> Optional.ofNullable(map.get(BURNING_MAN_RECEIVER_ADDRESS)));
+    }
+
     @Override
     public Proposal cloneProposalAndAddTxId(String txId) {
         return new CompensationProposal(getName(),
@@ -152,6 +162,7 @@ public final class CompensationProposal extends Proposal implements IssuanceProp
         return "CompensationProposal{" +
                 "\n     requestedBsq=" + requestedBsq +
                 ",\n     bsqAddress='" + bsqAddress + '\'' +
+                ",\n     burningManReceiverAddress='" + getBurningManReceiverAddress() + '\'' +
                 "\n} " + super.toString();
     }
 }

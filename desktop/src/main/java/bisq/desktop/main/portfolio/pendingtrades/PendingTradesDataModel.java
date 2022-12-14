@@ -511,7 +511,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         boolean useRefundAgent = disputeState == Trade.DisputeState.MEDIATION_CLOSED ||
                 disputeState == Trade.DisputeState.REFUND_REQUESTED || remainingLockTime <= 0;
 
-        AtomicReference<String> donationAddressString = new AtomicReference<>("");
+        AtomicReference<String> donationAddressString = new AtomicReference<>(null);
         Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
         try {
             TradeDataValidation.validateDelayedPayoutTx(trade,
@@ -567,6 +567,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             if (delayedPayoutTx != null) {
                 dispute.setDelayedPayoutTxId(delayedPayoutTx.getTxId().toString());
             }
+
+            dispute.setBurningManSelectionHeight(trade.getProcessModel().getBurningManSelectionHeight());
+            dispute.setTradeTxFee(trade.getTradeTxFeeAsLong());
 
             trade.setDisputeState(Trade.DisputeState.MEDIATION_REQUESTED);
             sendOpenDisputeMessage(disputeManager, resultHandler, dispute);
@@ -640,6 +643,9 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             dispute.setDonationAddressOfDelayedPayoutTx(donationAddressString.get());
             dispute.setDelayedPayoutTxId(delayedPayoutTx.getTxId().toString());
             trade.setDisputeState(Trade.DisputeState.REFUND_REQUESTED);
+
+            dispute.setBurningManSelectionHeight(trade.getProcessModel().getBurningManSelectionHeight());
+            dispute.setTradeTxFee(trade.getTradeTxFeeAsLong());
 
             ((DisputeProtocol) tradeManager.getTradeProtocol(trade)).onPublishDelayedPayoutTx(() -> {
                         log.info("DelayedPayoutTx published and message sent to peer");

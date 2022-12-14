@@ -17,6 +17,7 @@
 
 package bisq.core.offer.availability;
 
+import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.offer.Offer;
 import bisq.core.offer.availability.messages.OfferAvailabilityResponse;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
@@ -70,12 +71,17 @@ public class OfferAvailabilityModel implements Model {
     @Getter
     private final boolean isTakerApiUser;
 
+    // Added in v 1.9.7
+    @Getter
+    private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
+
     public OfferAvailabilityModel(Offer offer,
                                   PubKeyRing pubKeyRing,
                                   P2PService p2PService,
                                   User user,
                                   MediatorManager mediatorManager,
                                   TradeStatisticsManager tradeStatisticsManager,
+                                  DelayedPayoutTxReceiverService delayedPayoutTxReceiverService,
                                   boolean isTakerApiUser) {
         this.offer = offer;
         this.pubKeyRing = pubKeyRing;
@@ -83,6 +89,7 @@ public class OfferAvailabilityModel implements Model {
         this.user = user;
         this.mediatorManager = mediatorManager;
         this.tradeStatisticsManager = tradeStatisticsManager;
+        this.delayedPayoutTxReceiverService = delayedPayoutTxReceiverService;
         this.isTakerApiUser = isTakerApiUser;
     }
 

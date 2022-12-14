@@ -143,11 +143,13 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
         hashTextField = addTopLabelTextField(root, ++gridRow, Res.get("dao.proofOfBurn.hash")).second;
         burnButton = addButtonAfterGroup(root, ++gridRow, Res.get("dao.proofOfBurn.burn"));
 
-        myItemsTableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.proofOfBurn.myItems"), 30);
+        myItemsTableView = FormBuilder.<MyProofOfBurnListItem>addTableViewWithHeader(root, ++gridRow,
+                Res.get("dao.proofOfBurn.myItems"), 30).first;
         createColumnsForMyItems();
         myItemsTableView.setItems(myItemsSortedList);
 
-        allTxsTableView = FormBuilder.addTableViewWithHeader(root, ++gridRow, Res.get("dao.proofOfBurn.allTxs"), 30, "last");
+        allTxsTableView = FormBuilder.<ProofOfBurnListItem>addTableViewWithHeader(root, ++gridRow,
+                Res.get("dao.proofOfBurn.allTxs"), 30, "last").first;
         createColumnsForAllTxs();
         allTxsTableView.setItems(allItemsSortedList);
 
@@ -295,6 +297,8 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
 
         amountInputTextField.clear();
         preImageTextField.clear();
+        amountInputTextField.resetValidation();
+        preImageTextField.resetValidation();
     }
 
 

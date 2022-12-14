@@ -22,6 +22,9 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.burningman.BtcFeeReceiverService;
+import bisq.core.dao.burningman.BurningManService;
+import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
@@ -122,6 +125,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final RefundAgentManager refundAgentManager;
     private final DaoFacade daoFacade;
     private final FilterManager filterManager;
+    private final BtcFeeReceiverService btcFeeReceiverService;
+    private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
     private final Broadcaster broadcaster;
     private final PersistenceManager<TradableList<OpenOffer>> persistenceManager;
     private final Map<String, OpenOffer> offersToBeEdited = new HashMap<>();
@@ -155,6 +160,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             RefundAgentManager refundAgentManager,
                             DaoFacade daoFacade,
                             FilterManager filterManager,
+                            BtcFeeReceiverService btcFeeReceiverService,
+                            DelayedPayoutTxReceiverService delayedPayoutTxReceiverService,
                             Broadcaster broadcaster,
                             PersistenceManager<TradableList<OpenOffer>> persistenceManager) {
         this.coreContext = coreContext;
@@ -175,6 +182,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.refundAgentManager = refundAgentManager;
         this.daoFacade = daoFacade;
         this.filterManager = filterManager;
+        this.btcFeeReceiverService = btcFeeReceiverService;
+        this.delayedPayoutTxReceiverService = delayedPayoutTxReceiverService;
         this.broadcaster = broadcaster;
         this.persistenceManager = persistenceManager;
 
@@ -389,6 +398,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 arbitratorManager,
                 tradeStatisticsManager,
                 daoFacade,
+                btcFeeReceiverService,
                 user,
                 filterManager);
         PlaceOfferProtocol placeOfferProtocol = new PlaceOfferProtocol(
@@ -661,6 +671,22 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             log.warn(errorMessage);
             sendAckMessage(request, peer, false, errorMessage);
             return;
+        }
+
+        if (BurningManService.isActivated()) {
+            try {
+                int takersBurningManSelectionHeight = request.getBurningManSelectionHeight();
+                checkArgument(takersBurningManSelectionHeight > 0, "takersBurningManSelectionHeight must not be 0");
+
+                int makersBurningManSelectionHeight = delayedPayoutTxReceiverService.getBurningManSelectionHeight();
+                checkArgument(takersBurningManSelectionHeight == makersBurningManSelectionHeight,
+                        "takersBurningManSelectionHeight does no match makersBurningManSelectionHeight");
+            } catch (Throwable t) {
+                errorMessage = "Message validation failed. Error=" + t + ", Message=" + request;
+                log.warn(errorMessage);
+                sendAckMessage(request, peer, false, errorMessage);
+                return;
+            }
         }
 
         try {

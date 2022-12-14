@@ -104,6 +104,9 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
             byte[] signatureOfNonce = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(),
                     offerId.getBytes(Charsets.UTF_8));
 
+            int burningManSelectionHeight = processModel.getDelayedPayoutTxReceiverService().getBurningManSelectionHeight();
+            processModel.setBurningManSelectionHeight(burningManSelectionHeight);
+
             String takersPaymentMethodId = checkNotNull(processModel.getPaymentAccountPayload(trade)).getPaymentMethodId();
             InputsForDepositTxRequest request = new InputsForDepositTxRequest(
                     offerId,
@@ -133,7 +136,8 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
                     signatureOfNonce,
                     new Date().getTime(),
                     hashOfTakersPaymentAccountPayload,
-                    takersPaymentMethodId);
+                    takersPaymentMethodId,
+                    burningManSelectionHeight);
             log.info("Send {} with offerId {} and uid {} to peer {}",
                     request.getClass().getSimpleName(), request.getTradeId(),
                     request.getUid(), trade.getTradingPeerNodeAddress());

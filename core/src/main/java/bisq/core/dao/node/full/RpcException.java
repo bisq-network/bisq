@@ -17,7 +17,7 @@
 
 package bisq.core.dao.node.full;
 
-class RpcException extends Exception {
+public class RpcException extends Exception {
     RpcException(String message, Throwable cause) {
         super(message, cause);
     }
