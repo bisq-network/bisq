@@ -223,11 +223,8 @@ public abstract class NetworkNode implements MessageListener {
                         outboundConnection.sendMessage(networkEnvelope);
                         return outboundConnection;
                     }
-                } catch (Throwable throwable) {
-                    if (!(throwable instanceof IOException ||
-                            throwable instanceof TimeoutException)) {
-                        log.warn("Executing task failed. " + throwable.getMessage());
-                    }
+                } catch (IOException | TimeoutException throwable) {
+                    log.warn("Executing task failed. " + throwable.getMessage());
                     throw throwable;
                 }
             });
