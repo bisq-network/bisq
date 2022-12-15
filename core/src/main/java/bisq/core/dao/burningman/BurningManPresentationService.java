@@ -69,14 +69,14 @@ public class BurningManPresentationService implements DaoStateListener {
     // Those are the opReturn data used by legacy BM for burning BTC received from DPT.
     // For regtest testing burn bsq and use the pre-image `dpt` which has the hash 14af04ea7e34bd7378b034ddf90da53b7c27a277.
     // The opReturn data gets additionally prefixed with 1701
-    private static final Set<String> OP_RETURN_DATA_LEGACY_BM_DPT = Config.baseCurrencyNetwork().isRegtest() ?
+    static final Set<String> OP_RETURN_DATA_LEGACY_BM_DPT = Config.baseCurrencyNetwork().isRegtest() ?
             Set.of("170114af04ea7e34bd7378b034ddf90da53b7c27a277") :
             Set.of("1701e47e5d8030f444c182b5e243871ebbaeadb5e82f",
                     "1701293c488822f98e70e047012f46f5f1647f37deb7");
     // The opReturn data used by legacy BM for burning BTC received from BTC trade fees.
     // For regtest testing burn bsq and use the pre-image `fee` which has the hash b3253b7b92bb7f0916b05f10d4fa92be8e48f5e6.
     // The opReturn data gets additionally prefixed with 1701
-    private static final Set<String> OP_RETURN_DATA_LEGACY_BM_FEES = Config.baseCurrencyNetwork().isRegtest() ?
+    static final Set<String> OP_RETURN_DATA_LEGACY_BM_FEES = Config.baseCurrencyNetwork().isRegtest() ?
             Set.of("1701b3253b7b92bb7f0916b05f10d4fa92be8e48f5e6") :
             Set.of("1701721206fe6b40777763de1c741f4fd2706d94775d");
 
