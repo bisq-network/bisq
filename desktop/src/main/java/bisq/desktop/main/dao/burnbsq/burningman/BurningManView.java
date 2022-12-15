@@ -756,8 +756,9 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         burningManTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(e -> e.getName().toLowerCase()));
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.burnTarget"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.burnTarget"), Res.get("dao.burningman.table.burnTarget.help"));
         column.setMinWidth(200);
+        column.getGraphic().setStyle("-fx-alignment: center-right; -fx-padding: 2 10 2 0");
         column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
