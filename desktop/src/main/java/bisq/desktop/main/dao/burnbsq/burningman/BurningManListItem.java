@@ -39,7 +39,7 @@ class BurningManListItem {
     private final long burnTarget, maxBurnTarget, accumulatedDecayedBurnAmount, accumulatedBurnAmount,
             accumulatedDecayedCompensationAmount, accumulatedCompensationAmount, expectedRevenue;
     private final int numBurnOutputs, numIssuances;
-    private final double cappedBurnAmountShare, burnAmountShare, compensationShare;
+    private final double cappedBurnAmountShare, adjustedBurnAmountShare, compensationShare;
 
     BurningManListItem(BurningManPresentationService burningManPresentationService,
                        String name,
@@ -60,14 +60,14 @@ class BurningManListItem {
             accumulatedDecayedBurnAmount = 0;
             accumulatedDecayedBurnAmountAsBsq = "";
 
-            burnAmountShare = burningManCandidate.getBurnAmountShare();
+            adjustedBurnAmountShare = burningManCandidate.getAdjustedBurnAmountShare();
 
             cappedBurnAmountShare = burningManCandidate.getCappedBurnAmountShare();
 
             // LegacyBurningManForDPT is the one defined by DAO voting, so only that would receive BTC if new BM do not cover 100%.
             if (burningManPresentationService.getLegacyBurningManForDPT().equals(burningManCandidate)) {
                 expectedRevenue = burningManPresentationService.getExpectedRevenue(burningManCandidate);
-                cappedBurnAmountShareAsString = FormattingUtils.formatToPercentWithSymbol(burnAmountShare);
+                cappedBurnAmountShareAsString = FormattingUtils.formatToPercentWithSymbol(adjustedBurnAmountShare);
             } else {
                 expectedRevenue = 0;
                 cappedBurnAmountShareAsString = FormattingUtils.formatToPercentWithSymbol(0);
@@ -94,12 +94,12 @@ class BurningManListItem {
             accumulatedBurnAmountAsBsq = bsqFormatter.formatCoinWithCode(accumulatedBurnAmount);
             accumulatedDecayedBurnAmount = burningManCandidate.getAccumulatedDecayedBurnAmount();
             accumulatedDecayedBurnAmountAsBsq = bsqFormatter.formatCoinWithCode(accumulatedDecayedBurnAmount);
-            burnAmountShare = burningManCandidate.getBurnAmountShare();
+            adjustedBurnAmountShare = burningManCandidate.getAdjustedBurnAmountShare();
             cappedBurnAmountShare = burningManCandidate.getCappedBurnAmountShare();
-            if (burnAmountShare != cappedBurnAmountShare) {
+            if (adjustedBurnAmountShare != cappedBurnAmountShare) {
                 cappedBurnAmountShareAsString = Res.get("dao.burningman.table.burnAmountShare.capped",
                         FormattingUtils.formatToPercentWithSymbol(cappedBurnAmountShare),
-                        FormattingUtils.formatToPercentWithSymbol(burnAmountShare));
+                        FormattingUtils.formatToPercentWithSymbol(adjustedBurnAmountShare));
             } else {
                 cappedBurnAmountShareAsString = FormattingUtils.formatToPercentWithSymbol(cappedBurnAmountShare);
             }

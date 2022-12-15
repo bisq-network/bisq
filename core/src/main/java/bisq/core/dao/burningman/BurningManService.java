@@ -189,6 +189,17 @@ public class BurningManService {
                 .mapToDouble(BurningManCandidate::getAccumulatedDecayedBurnAmount)
                 .sum();
         burningManCandidates.forEach(candidate -> candidate.calculateShares(totalDecayedCompensationAmounts, totalDecayedBurnAmounts));
+
+        double sumAllCappedBurnAmountShares = burningManCandidates.stream()
+                .filter(candidate -> candidate.getBurnAmountShare() >= candidate.getMaxBoostedCompensationShare())
+                .mapToDouble(BurningManCandidate::getMaxBoostedCompensationShare)
+                .sum();
+        double sumAllNonCappedBurnAmountShares = burningManCandidates.stream()
+                .filter(candidate -> candidate.getBurnAmountShare() < candidate.getMaxBoostedCompensationShare())
+                .mapToDouble(BurningManCandidate::getBurnAmountShare)
+                .sum();
+        burningManCandidates.forEach(candidate -> candidate.calculateCappedBurnAmountShare(sumAllCappedBurnAmountShares, sumAllNonCappedBurnAmountShares));
+
         return burningManCandidatesByName;
     }
 
