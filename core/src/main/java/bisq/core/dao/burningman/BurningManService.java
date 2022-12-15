@@ -80,7 +80,7 @@ public class BurningManService {
     static final String GENESIS_OUTPUT_PREFIX = "Bisq co-founder ";
 
     // Factor for weighting the genesis output amounts.
-    private static final double GENESIS_OUTPUT_AMOUNT_FACTOR = 0.05;
+    private static final double GENESIS_OUTPUT_AMOUNT_FACTOR = 0.1;
 
     // The number of cycles we go back for the decay function used for compensation request amounts.
     private static final int NUM_CYCLES_COMP_REQUEST_DECAY = 24;
@@ -91,9 +91,9 @@ public class BurningManService {
     // Factor for boosting the issuance share (issuance is compensation requests + genesis output).
     // This will be used for increasing the allowed burn amount. The factor gives more flexibility
     // and compensates for those who do not burn. The burn share is capped by that factor as well.
-    // E.g. a contributor with 2% issuance share will be able to receive max 8% of the BTC fees or DPT output
-    // even if they had burned more and had a higher burn share than 8%.
-    public static final double ISSUANCE_BOOST_FACTOR = 4;
+    // E.g. a contributor with 1% issuance share will be able to receive max 10% of the BTC fees or DPT output
+    // even if they had burned more and had a higher burn share than 10%.
+    public static final double ISSUANCE_BOOST_FACTOR = 10;
 
     // The max amount the burn share can reach. This value is derived from the min. security deposit in a trade and
     // ensures that an attack where a BM would take all sell offers cannot be economically profitable as they would
