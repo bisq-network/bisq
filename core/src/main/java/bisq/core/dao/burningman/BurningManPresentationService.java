@@ -203,6 +203,9 @@ public class BurningManPresentationService implements DaoStateListener {
             // If below dust we set value to 0
             myBurnAmount = myBurnAmount < 546 ? 0 : myBurnAmount;
 
+            // In case the myBurnAmount would be larger than the upperBaseTarget we use the upperBaseTarget.
+            myBurnAmount = Math.min(myBurnAmount, upperBaseTarget);
+
             return new Tuple2<>(myBurnAmount, upperBaseTarget);
         } else {
             // We have reached our cap.
