@@ -198,7 +198,7 @@ public class BurningManService {
                 .filter(candidate -> candidate.getBurnAmountShare() < candidate.getMaxBoostedCompensationShare())
                 .mapToDouble(BurningManCandidate::getBurnAmountShare)
                 .sum();
-        burningManCandidates.forEach(candidate -> candidate.calculateCappedBurnAmountShare(sumAllCappedBurnAmountShares, sumAllNonCappedBurnAmountShares));
+        burningManCandidates.forEach(candidate -> candidate.calculateCappedAndAdjustedShares(sumAllCappedBurnAmountShares, sumAllNonCappedBurnAmountShares));
 
         return burningManCandidatesByName;
     }

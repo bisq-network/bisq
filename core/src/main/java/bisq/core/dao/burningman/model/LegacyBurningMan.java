@@ -35,11 +35,22 @@ public final class LegacyBurningMan extends BurningManCandidate {
 
     public void applyBurnAmountShare(double burnAmountShare) {
         this.burnAmountShare = burnAmountShare;
+
+        // We do not adjust burnAmountShare for legacy BM from capped BM
+        this.adjustedBurnAmountShare = burnAmountShare;
+
+        // We do not cap burnAmountShare for legacy BM
         this.cappedBurnAmountShare = burnAmountShare;
     }
 
     @Override
     public void calculateShares(double totalDecayedCompensationAmounts, double totalDecayedBurnAmounts) {
+        // do nothing
+    }
+
+    @Override
+    public void calculateCappedAndAdjustedShares(double sumAllCappedBurnAmountShares,
+                                                 double sumAllNonCappedBurnAmountShares) {
         // do nothing
     }
 
