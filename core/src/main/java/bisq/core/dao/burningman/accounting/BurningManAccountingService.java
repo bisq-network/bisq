@@ -67,13 +67,14 @@ public class BurningManAccountingService implements DaoSetupService {
     public static final int EARLIEST_BLOCK_HEIGHT = Config.baseCurrencyNetwork().isRegtest() ? 111 : 656035;
     public static final int EARLIEST_DATE_YEAR = 2020;
     public static final int EARLIEST_DATE_MONTH = 10;
+    public static final int HIST_BSQ_PRICE_LAST_DATE_YEAR = 2022;
+    public static final int HIST_BSQ_PRICE_LAST_DATE_MONTH = 10;
 
     private final BurningManAccountingStoreService burningManAccountingStoreService;
     private final BurningManPresentationService burningManPresentationService;
     private final TradeStatisticsManager tradeStatisticsManager;
     private final Preferences preferences;
 
-    @Getter
     private final Map<Date, Price> averageBsqPriceByMonth = new HashMap<>(getHistoricalAverageBsqPriceByMonth());
     @Getter
     private final Map<String, BalanceModel> balanceModelByBurningManName = new HashMap<>();
@@ -161,6 +162,12 @@ public class BurningManAccountingService implements DaoSetupService {
         return getBlocks().stream().filter(block -> block.getHeight() == height).findAny();
     }
 
+    public Map<Date, Price> getAverageBsqPriceByMonth() {
+        getAverageBsqPriceByMonth(new Date(), HIST_BSQ_PRICE_LAST_DATE_YEAR, HIST_BSQ_PRICE_LAST_DATE_MONTH)
+                .forEach((key, value) -> averageBsqPriceByMonth.put(new Date(key.getTime()), Price.valueOf("BSQ", value.getValue())));
+        return averageBsqPriceByMonth;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Delegates
@@ -210,7 +217,7 @@ public class BurningManAccountingService implements DaoSetupService {
         });
     }
 
-    private Map<Date, Price> getAverageBsqPriceByMonth(Date from, int toYear, int toMonth) {
+    private Map<Date, Price> getAverageBsqPriceByMonth(Date from, int backToYear, int backToMonth) {
         Map<Date, Price> averageBsqPriceByMonth = new HashMap<>();
         Calendar calendar = new GregorianCalendar();
         calendar.setTime(from);
@@ -218,7 +225,7 @@ public class BurningManAccountingService implements DaoSetupService {
         int month = calendar.get(Calendar.MONTH);
         do {
             for (; month >= 0; month--) {
-                if (year == toYear && month == toMonth) {
+                if (year == backToYear && month == backToMonth) {
                     break;
                 }
                 Date date = DateUtil.getStartOfMonth(year, month);
@@ -227,7 +234,7 @@ public class BurningManAccountingService implements DaoSetupService {
             }
             year--;
             month = 11;
-        } while (year >= toYear);
+        } while (year >= backToYear);
         return averageBsqPriceByMonth;
     }
 

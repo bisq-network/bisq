@@ -635,12 +635,9 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
 
             Map<Date, Price> averageBsqPriceByMonth = burningManAccountingService.getAverageBsqPriceByMonth();
-            long ts = System.currentTimeMillis();
             balanceEntryObservableList.setAll(balanceEntries.stream()
                     .map(balanceEntry -> new BalanceEntryItem(balanceEntry, averageBsqPriceByMonth, bsqFormatter, btcFormatter))
                     .collect(Collectors.toList()));
-            // 108869: 617 - 1878, 640-1531
-            log.error("balanceEntryObservableList setAll took {} ms size={}", System.currentTimeMillis() - ts, balanceEntryObservableList.size());
         } else {
             balanceEntryObservableList.clear();
         }
