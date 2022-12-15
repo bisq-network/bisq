@@ -45,6 +45,9 @@ import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.dao.burningman.BurningManPresentationService.OP_RETURN_DATA_LEGACY_BM_DPT;
+import static bisq.core.dao.burningman.BurningManPresentationService.OP_RETURN_DATA_LEGACY_BM_FEES;
+
 /**
  * Burn target related API. Not touching trade protocol aspects and parameters can be changed here without risking to
  * break trade protocol validations.
@@ -225,8 +228,7 @@ class BurnTargetService {
                 .filter(tx -> tx.getBlockHeight() <= chainHeight)
                 .filter(tx -> {
                     String hash = Hex.encode(tx.getLastTxOutput().getOpReturnData());
-                    return "1701e47e5d8030f444c182b5e243871ebbaeadb5e82f".equals(hash) ||
-                            "1701293c488822f98e70e047012f46f5f1647f37deb7".equals(hash);
+                    return OP_RETURN_DATA_LEGACY_BM_DPT.contains(hash);
                 })
                 .mapToLong(Tx::getBurntBsq)
                 .sum();
@@ -237,7 +239,7 @@ class BurnTargetService {
         return proofOfBurnTxs.stream()
                 .filter(tx -> tx.getBlockHeight() > fromBlock)
                 .filter(tx -> tx.getBlockHeight() <= chainHeight)
-                .filter(tx -> "1701721206fe6b40777763de1c741f4fd2706d94775d".equals(Hex.encode(tx.getLastTxOutput().getOpReturnData())))
+                .filter(tx -> OP_RETURN_DATA_LEGACY_BM_FEES.contains(Hex.encode(tx.getLastTxOutput().getOpReturnData())))
                 .mapToLong(Tx::getBurntBsq)
                 .sum();
     }
