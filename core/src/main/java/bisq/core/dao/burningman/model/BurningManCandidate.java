@@ -93,10 +93,13 @@ public class BurningManCandidate {
 
     public void calculateShares(double totalDecayedCompensationAmounts, double totalDecayedBurnAmounts) {
         compensationShare = totalDecayedCompensationAmounts > 0 ? accumulatedDecayedCompensationAmount / totalDecayedCompensationAmounts : 0;
-        double maxBoostedCompensationShare = Math.min(BurningManService.MAX_BURN_SHARE, compensationShare * BurningManService.ISSUANCE_BOOST_FACTOR);
 
         burnAmountShare = totalDecayedBurnAmounts > 0 ? accumulatedDecayedBurnAmount / totalDecayedBurnAmounts : 0;
-        cappedBurnAmountShare = Math.min(maxBoostedCompensationShare, burnAmountShare);
+        cappedBurnAmountShare = Math.min(getMaxBoostedCompensationShare(), burnAmountShare);
+    }
+
+    public double getMaxBoostedCompensationShare() {
+        return Math.min(BurningManService.MAX_BURN_SHARE, compensationShare * BurningManService.ISSUANCE_BOOST_FACTOR);
     }
 
     @Override
