@@ -878,7 +878,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         column.setComparator(Comparator.comparing(BurningManListItem::getAccumulatedBurnAmount));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.numBurnOutputs"));
+       /* column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.numBurnOutputs"));
         column.setMinWidth(90);
         column.setMaxWidth(column.getMinWidth());
         column.getStyleClass().add("last-column");
@@ -901,7 +901,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         });
         burningManTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurningManListItem::getNumBurnOutputs));
-        column.setSortType(TableColumn.SortType.DESCENDING);
+        column.setSortType(TableColumn.SortType.DESCENDING);*/
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.issuanceShare"));
         column.setMinWidth(110);
@@ -975,7 +975,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         column.setComparator(Comparator.comparing(BurningManListItem::getAccumulatedCompensationAmount));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.numIssuances"));
+       /* column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.numIssuances"));
         column.setMinWidth(110);
         column.setMaxWidth(column.getMinWidth());
         column.getStyleClass().add("last-column");
@@ -998,7 +998,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         });
         burningManTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurningManListItem::getNumIssuances));
-        column.setSortType(TableColumn.SortType.DESCENDING);
+        column.setSortType(TableColumn.SortType.DESCENDING);*/
     }
 
     private void createBurnOutputsColumns() {
