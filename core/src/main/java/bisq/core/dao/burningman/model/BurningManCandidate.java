@@ -58,7 +58,7 @@ public class BurningManCandidate {
     protected double cappedBurnAmountShare;
     // The burnAmountShare adjusted in case there are cappedBurnAmountShare.
     // We redistribute the over-burned amounts to the group of not capped candidates.
-    private double adjustedBurnAmountShare;
+    protected double adjustedBurnAmountShare;
 
     public BurningManCandidate() {
     }
@@ -101,8 +101,8 @@ public class BurningManCandidate {
         burnAmountShare = totalDecayedBurnAmounts > 0 ? accumulatedDecayedBurnAmount / totalDecayedBurnAmounts : 0;
     }
 
-    public void calculateCappedBurnAmountShare(double sumAllCappedBurnAmountShares,
-                                               double sumAllNonCappedBurnAmountShares) {
+    public void calculateCappedAndAdjustedShares(double sumAllCappedBurnAmountShares,
+                                                 double sumAllNonCappedBurnAmountShares) {
         double maxBoostedCompensationShare = getMaxBoostedCompensationShare();
         adjustedBurnAmountShare = burnAmountShare;
         if (burnAmountShare < maxBoostedCompensationShare) {

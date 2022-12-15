@@ -44,6 +44,7 @@ import javax.inject.Singleton;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -187,7 +188,8 @@ public class BurningManPresentationService implements DaoStateListener {
         long lowerBaseTarget = Math.round(burnTarget * maxCompensationShare);
         double maxBoostedCompensationShare = burningManCandidate.getMaxBoostedCompensationShare();
         long upperBaseTarget = Math.round(boostedBurnTarget * maxBoostedCompensationShare);
-        long totalBurnedAmount = burnTargetService.getAccumulatedDecayedBurnedAmount(getBurningManCandidatesByName().values(), currentChainHeight);
+        Collection<BurningManCandidate> burningManCandidates = getBurningManCandidatesByName().values();
+        long totalBurnedAmount = burnTargetService.getAccumulatedDecayedBurnedAmount(burningManCandidates, currentChainHeight);
 
         if (totalBurnedAmount == 0) {
             // The first BM would reach their max burn share by 5.46 BSQ already. But we suggest the lowerBaseTarget
@@ -195,9 +197,10 @@ public class BurningManPresentationService implements DaoStateListener {
             return new Tuple2<>(lowerBaseTarget, upperBaseTarget);
         }
 
-        double burnAmountShare = burningManCandidate.getBurnAmountShare();
-        if (burnAmountShare < maxBoostedCompensationShare) {
+        if (burningManCandidate.getAdjustedBurnAmountShare() < maxBoostedCompensationShare) {
             long candidatesBurnAmount = burningManCandidate.getAccumulatedDecayedBurnAmount();
+
+            // TODO We do not consider adjustedBurnAmountShare. This could lead to slight over burn. Atm we ignore that.
             long myBurnAmount = getMissingAmountToReachTargetShare(totalBurnedAmount, candidatesBurnAmount, maxBoostedCompensationShare);
 
             // If below dust we set value to 0
@@ -214,11 +217,11 @@ public class BurningManPresentationService implements DaoStateListener {
     }
 
     @VisibleForTesting
-    static long getMissingAmountToReachTargetShare(long total, long myAmount, double myTargetShare) {
-        long others = total - myAmount;
+    static long getMissingAmountToReachTargetShare(long totalBurnedAmount, long myBurnAmount, double myTargetShare) {
+        long others = totalBurnedAmount - myBurnAmount;
         double shareTargetOthers = 1 - myTargetShare;
         double targetAmount = shareTargetOthers > 0 ? myTargetShare / shareTargetOthers * others : 0;
-        return Math.round(targetAmount) - myAmount;
+        return Math.round(targetAmount) - myBurnAmount;
     }
 
     public Set<ReimbursementModel> getReimbursements() {
