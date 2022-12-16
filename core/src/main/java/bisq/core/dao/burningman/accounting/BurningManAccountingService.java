@@ -21,6 +21,7 @@ import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.burningman.BurningManPresentationService;
 import bisq.core.dao.burningman.accounting.balance.BalanceEntry;
 import bisq.core.dao.burningman.accounting.balance.BalanceModel;
+import bisq.core.dao.burningman.accounting.balance.BaseBalanceEntry;
 import bisq.core.dao.burningman.accounting.balance.ReceivedBtcBalanceEntry;
 import bisq.core.dao.burningman.accounting.blockchain.AccountingBlock;
 import bisq.core.dao.burningman.accounting.blockchain.AccountingTx;
@@ -35,6 +36,9 @@ import bisq.core.util.AveragePriceUtil;
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.util.DateUtil;
+import bisq.common.util.MathUtils;
+
+import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -166,6 +170,35 @@ public class BurningManAccountingService implements DaoSetupService {
         getAverageBsqPriceByMonth(new Date(), HIST_BSQ_PRICE_LAST_DATE_YEAR, HIST_BSQ_PRICE_LAST_DATE_MONTH)
                 .forEach((key, value) -> averageBsqPriceByMonth.put(new Date(key.getTime()), Price.valueOf("BSQ", value.getValue())));
         return averageBsqPriceByMonth;
+    }
+
+    public long getTotalAmountOfDistributedBtc() {
+        return balanceModelByBurningManName.values().stream()
+                .flatMap(balanceModel -> balanceModel.getReceivedBtcBalanceEntries().stream())
+                .mapToLong(BaseBalanceEntry::getAmount)
+                .sum();
+    }
+
+    public long getTotalAmountOfDistributedBsq() {
+        Map<Date, Price> averageBsqPriceByMonth = getAverageBsqPriceByMonth();
+        return balanceModelByBurningManName.values().stream()
+                .flatMap(balanceModel -> balanceModel.getReceivedBtcBalanceEntries().stream())
+                .map(balanceEntry -> {
+                    Date month = balanceEntry.getMonth();
+                    Optional<Price> price = Optional.ofNullable(averageBsqPriceByMonth.get(month));
+                    long receivedBtc = balanceEntry.getAmount();
+                    Optional<Long> receivedBtcAsBsq;
+                    if (price.isEmpty() || price.get().getValue() == 0) {
+                        receivedBtcAsBsq = Optional.empty();
+                    } else {
+                        long volume = price.get().getVolumeByAmount(Coin.valueOf(receivedBtc)).getValue();
+                        receivedBtcAsBsq = Optional.of(MathUtils.roundDoubleToLong(MathUtils.scaleDownByPowerOf10(volume, 6)));
+                    }
+                    return receivedBtcAsBsq;
+                })
+                .filter(Optional::isPresent)
+                .mapToLong(Optional::get)
+                .sum();
     }
 
 
