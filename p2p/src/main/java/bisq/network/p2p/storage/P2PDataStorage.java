@@ -312,7 +312,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         Map<ByteArray, PersistableNetworkPayload> mapForDataResponse = getMapForDataResponse(getDataRequest.getVersion());
 
         // Give a bit of tolerance for message overhead
-        double maxSize = Connection.getMaxPermittedMessageSize() * 0.9;
+        double maxSize = Connection.getMaxPermittedMessageSize() * 0.6;
 
         // 25% of space is allocated for PersistableNetworkPayloads
         long limit = Math.round(maxSize * 0.25);
