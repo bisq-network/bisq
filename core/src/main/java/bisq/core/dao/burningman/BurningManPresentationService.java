@@ -353,6 +353,12 @@ public class BurningManPresentationService implements DaoStateListener {
         return burningManNameByAddress;
     }
 
+    public long getTotalAmountOfBurnedBsq() {
+        return getBurningManCandidatesByName().values().stream()
+                .mapToLong(BurningManCandidate::getAccumulatedBurnAmount)
+                .sum();
+    }
+
     public String getGenesisTxId() {
         return daoStateService.getGenesisTxId();
     }

@@ -130,7 +130,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
     private Button burnButton, exportBalanceEntriesButton;
     private TitledGroupBg burnOutputsTitledGroupBg, compensationsTitledGroupBg, selectedContributorTitledGroupBg;
     private AutoTooltipSlideToggleButton showOnlyActiveBurningmenToggle, showMonthlyBalanceEntryToggle;
-    private TextField expectedRevenueField, selectedContributorNameField, selectedContributorAddressField, burnTargetField;
+    private TextField expectedRevenueField, daoBalanceTotalBurnedField, daoBalanceTotalDistributedField, selectedContributorNameField, selectedContributorAddressField, burnTargetField;
     private ToggleGroup balanceEntryToggleGroup;
     private HBox balanceEntryHBox;
     private VBox selectedContributorNameBox, selectedContributorAddressBox;
@@ -311,6 +311,20 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         showOnlyActiveBurningmenToggle.setText(Res.get("dao.burningman.toggle"));
         HBox.setMargin(showOnlyActiveBurningmenToggle, new Insets(-21, 0, 0, 0));
         hBox.getChildren().add(2, showOnlyActiveBurningmenToggle);
+
+        // DAO balance
+        addTitledGroupBg(gridPane, ++gridRow, 4,
+                Res.get("dao.burningman.daoBalance"), Layout.COMPACT_GROUP_DISTANCE);
+        daoBalanceTotalBurnedField = addCompactTopLabelTextField(gridPane, ++gridRow,
+                Res.get("dao.burningman.daoBalanceTotalBurned"), "",
+                Layout.COMPACT_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE).second;
+        Tuple3<Label, TextField, VBox> daoBalanceTotalDistributedTuple = addCompactTopLabelTextField(gridPane, gridRow,
+                Res.get("dao.burningman.daoBalanceTotalDistributed"), "",
+                Layout.COMPACT_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE);
+        daoBalanceTotalDistributedField = daoBalanceTotalDistributedTuple.second;
+        VBox daoBalanceTotalDistributedBox = daoBalanceTotalDistributedTuple.third;
+        GridPane.setColumnSpan(daoBalanceTotalDistributedBox, 2);
+        GridPane.setColumnIndex(daoBalanceTotalDistributedBox, 1);
 
         // Selected contributor
         selectedContributorTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 4,
@@ -569,6 +583,10 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
                     .sorted(Comparator.comparing(BurningManListItem::getName))
                     .collect(Collectors.toList());
             contributorComboBox.setItems(FXCollections.observableArrayList(myBurningManListItems));
+
+            daoBalanceTotalBurnedField.setText(bsqFormatter.formatCoinWithCode(burningManPresentationService.getTotalAmountOfBurnedBsq()));
+            daoBalanceTotalDistributedField.setText(btcFormatter.formatCoinWithCode(burningManAccountingService.getTotalAmountOfDistributedBtc()) + " / " +
+                    bsqFormatter.formatCoinWithCode(burningManAccountingService.getTotalAmountOfDistributedBsq()));
         }
     }
 
