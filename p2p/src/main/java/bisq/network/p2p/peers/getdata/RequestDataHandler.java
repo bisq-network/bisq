@@ -54,7 +54,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Slf4j
 class RequestDataHandler implements MessageListener {
-    private static final long TIMEOUT = 180;
+    private static final long TIMEOUT = 240;
 
     private NodeAddress peersNodeAddress;
     private String getDataRequestType;
