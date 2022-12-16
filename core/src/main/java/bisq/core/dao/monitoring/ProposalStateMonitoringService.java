@@ -24,6 +24,7 @@ import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.monitoring.model.ProposalStateBlock;
 import bisq.core.dao.monitoring.model.ProposalStateHash;
 import bisq.core.dao.monitoring.network.ProposalStateNetworkService;
+import bisq.core.dao.monitoring.network.StateNetworkService;
 import bisq.core.dao.monitoring.network.messages.GetProposalStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.NewProposalStateHashMessage;
 import bisq.core.dao.state.DaoStateListener;
@@ -232,6 +233,10 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
         proposalStateNetworkService.requestHashes(genesisTxInfo.getGenesisBlockHeight(), peersAddress);
     }
 
+    public void addResponseListener(StateNetworkService.ResponseListener responseListener) {
+        proposalStateNetworkService.addResponseListener(responseListener);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listeners
@@ -294,7 +299,9 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
         return true;
     }
 
-    private boolean processPeersProposalStateHash(ProposalStateHash proposalStateHash, Optional<NodeAddress> peersNodeAddress, boolean notifyListeners) {
+    private boolean processPeersProposalStateHash(ProposalStateHash proposalStateHash,
+                                                  Optional<NodeAddress> peersNodeAddress,
+                                                  boolean notifyListeners) {
         AtomicBoolean changed = new AtomicBoolean(false);
         AtomicBoolean inConflictWithNonSeedNode = new AtomicBoolean(this.isInConflictWithNonSeedNode);
         AtomicBoolean inConflictWithSeedNode = new AtomicBoolean(this.isInConflictWithSeedNode);

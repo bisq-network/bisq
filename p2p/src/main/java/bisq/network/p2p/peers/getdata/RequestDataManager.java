@@ -43,6 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -63,6 +64,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     private static int NUM_ADDITIONAL_SEEDS_FOR_UPDATE_REQUEST = 1;
     private boolean isPreliminaryDataRequest = true;
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -81,6 +83,12 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         }
     }
 
+    public interface ResponseListener {
+        void onSuccess(int serializedSize);
+
+        void onFault();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Class fields
@@ -90,6 +98,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     private final P2PDataStorage dataStorage;
     private final PeerManager peerManager;
     private final List<NodeAddress> seedNodeAddresses;
+    private final List<ResponseListener> responseListeners = new CopyOnWriteArrayList<>();
 
     // As we use Guice injection we cannot set the listener in our constructor but the P2PService calls the setListener
     // in it's constructor so we can guarantee it is not null.
@@ -205,6 +214,10 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         return nodeAddressOfPreliminaryDataRequest;
     }
 
+    public void addResponseListener(ResponseListener responseListener) {
+        responseListeners.add(responseListener);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // ConnectionListener implementation
@@ -276,9 +289,11 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                     GetDataRequestHandler getDataRequestHandler = new GetDataRequestHandler(networkNode, dataStorage,
                             new GetDataRequestHandler.Listener() {
                                 @Override
-                                public void onComplete() {
+                                public void onComplete(int serializedSize) {
                                     getDataRequestHandlers.remove(uid);
                                     log.trace("requestDataHandshake completed.\n\tConnection={}", connection);
+
+                                    responseListeners.forEach(listener -> listener.onSuccess(serializedSize));
                                 }
 
                                 @Override
@@ -288,6 +303,8 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                         log.trace("GetDataRequestHandler failed.\n\tConnection={}\n\t" +
                                                 "ErrorMessage={}", connection, errorMessage);
                                         peerManager.handleConnectionFault(connection);
+
+                                        responseListeners.forEach(ResponseListener::onFault);
                                     } else {
                                         log.warn("We have stopped already. We ignore that getDataRequestHandler.handle.onFault call.");
                                     }

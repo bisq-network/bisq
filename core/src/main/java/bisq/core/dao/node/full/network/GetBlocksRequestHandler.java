@@ -57,7 +57,7 @@ class GetBlocksRequestHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public interface Listener {
-        void onComplete();
+        void onComplete(int serializedSize);
 
         void onFault(String errorMessage, Connection connection);
     }
@@ -120,7 +120,7 @@ class GetBlocksRequestHandler {
                     log.info("Send DataResponse to {} succeeded. getBlocksResponse.getBlocks().size()={}",
                             connection.getPeersNodeAddressOptional(), getBlocksResponse.getBlocks().size());
                     cleanup();
-                    listener.onComplete();
+                    listener.onComplete(getBlocksResponse.toProtoNetworkEnvelope().getSerializedSize());
                 } else {
                     log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call.");
                 }

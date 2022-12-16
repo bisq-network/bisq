@@ -50,7 +50,7 @@ public class GetDataRequestHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public interface Listener {
-        void onComplete();
+        void onComplete(int serializedSize);
 
         void onFault(String errorMessage, Connection connection);
     }
@@ -126,8 +126,8 @@ public class GetDataRequestHandler {
                 if (!stopped) {
                     log.trace("Send DataResponse to {} succeeded. getDataResponse={}",
                             connection.getPeersNodeAddressOptional(), getDataResponse);
+                    listener.onComplete(getDataResponse.toProtoNetworkEnvelope().getSerializedSize());
                     cleanup();
-                    listener.onComplete();
                 } else {
                     log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call.");
                 }
