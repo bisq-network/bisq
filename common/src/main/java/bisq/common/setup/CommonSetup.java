@@ -76,6 +76,11 @@ public class CommonSetup {
             if (throwable.getCause() != null && throwable.getCause().getCause() != null &&
                     throwable.getCause().getCause() instanceof BlockStoreException) {
                 log.error("Uncaught BlockStoreException ", throwable);
+            } else if (throwable instanceof OutOfMemoryError) {
+                Profiler.printSystemLoad();
+                log.error("OutOfMemoryError occurred. We shut down.", throwable);
+                // Leave it to the handleUncaughtException to shut down or not.
+                UserThread.execute(() -> uncaughtExceptionHandler.handleUncaughtException(throwable, false));
             } else if (throwable instanceof ClassCastException &&
                     "sun.awt.image.BufImgSurfaceData cannot be cast to sun.java2d.xr.XRSurfaceData".equals(throwable.getMessage())) {
                 log.warn(throwable.getMessage());
