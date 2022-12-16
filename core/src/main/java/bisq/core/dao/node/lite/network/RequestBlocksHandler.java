@@ -51,7 +51,7 @@ import org.jetbrains.annotations.Nullable;
  */
 @Slf4j
 public class RequestBlocksHandler implements MessageListener {
-    private static final long TIMEOUT_MIN = 3;
+    private static final long TIMEOUT_MIN = 4;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
