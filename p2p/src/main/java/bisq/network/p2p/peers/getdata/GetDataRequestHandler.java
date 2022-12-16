@@ -136,7 +136,7 @@ public class GetDataRequestHandler {
             @Override
             public void onFailure(@NotNull Throwable throwable) {
                 if (!stopped) {
-                    String errorMessage = "Sending getDataRequest to " + connection +
+                    String errorMessage = "Sending getDataResponse to " + connection +
                             " failed. That is expected if the peer is offline. getDataResponse=" + getDataResponse + "." +
                             "Exception: " + throwable.getMessage();
                     handleFault(errorMessage, CloseConnectionReason.SEND_MSG_FAILURE, connection);
