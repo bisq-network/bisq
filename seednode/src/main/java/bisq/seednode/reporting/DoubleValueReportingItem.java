@@ -17,12 +17,14 @@
 
 package bisq.seednode.reporting;
 
+import java.util.Optional;
+
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
-
+@Slf4j
 public enum DoubleValueReportingItem implements ReportingItem {
-    Unspecified("", "Unspecified"),
     sentBytesPerSec("network", "sentBytesPerSec"),
     receivedBytesPerSec("network", "receivedBytesPerSec"),
     receivedMessagesPerSec("network", "receivedMessagesPerSec"),
@@ -47,16 +49,15 @@ public enum DoubleValueReportingItem implements ReportingItem {
         return this;
     }
 
-    public static DoubleValueReportingItem from(String key, double value) {
-        DoubleValueReportingItem item;
+    public static Optional<DoubleValueReportingItem> from(String key, double value) {
         try {
-            item = DoubleValueReportingItem.valueOf(key);
+            DoubleValueReportingItem item = DoubleValueReportingItem.valueOf(key);
+            item.setValue(value);
+            return Optional.of(item);
         } catch (Throwable t) {
-            item = Unspecified;
+            log.warn("No enum value with {}", key);
+            return Optional.empty();
         }
-
-        item.setValue(value);
-        return item;
     }
 
     @Override
@@ -66,8 +67,8 @@ public enum DoubleValueReportingItem implements ReportingItem {
                 .build();
     }
 
-    public static DoubleValueReportingItem fromProto(protobuf.ReportingItem baseProto,
-                                                     protobuf.DoubleValueReportingItem proto) {
+    public static Optional<DoubleValueReportingItem> fromProto(protobuf.ReportingItem baseProto,
+                                                               protobuf.DoubleValueReportingItem proto) {
         return DoubleValueReportingItem.from(baseProto.getKey(), proto.getValue());
     }
 

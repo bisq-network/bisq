@@ -17,13 +17,14 @@
 
 package bisq.seednode.reporting;
 
+import java.util.Optional;
+
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
-
+@Slf4j
 public enum StringValueReportingItem implements ReportingItem {
-    Unspecified("", "Unspecified"),
-
     daoStateHash("dao", "daoStateHash"),
     proposalHash("dao", "proposalHash"),
     blindVoteHash("dao", "blindVoteHash"),
@@ -49,16 +50,15 @@ public enum StringValueReportingItem implements ReportingItem {
         return this;
     }
 
-    public static StringValueReportingItem from(String key, String value) {
-        StringValueReportingItem item;
+    public static Optional<StringValueReportingItem> from(String key, String value) {
         try {
-            item = StringValueReportingItem.valueOf(key);
+            StringValueReportingItem item = StringValueReportingItem.valueOf(key);
+            item.setValue(value);
+            return Optional.of(item);
         } catch (Throwable t) {
-            item = Unspecified;
+            log.warn("No enum value with {}", key);
+            return Optional.empty();
         }
-
-        item.setValue(value);
-        return item;
     }
 
     @Override
@@ -73,8 +73,8 @@ public enum StringValueReportingItem implements ReportingItem {
                 .build();
     }
 
-    public static StringValueReportingItem fromProto(protobuf.ReportingItem baseProto,
-                                                     protobuf.StringValueReportingItem proto) {
+    public static Optional<StringValueReportingItem> fromProto(protobuf.ReportingItem baseProto,
+                                                               protobuf.StringValueReportingItem proto) {
         return StringValueReportingItem.from(baseProto.getKey(), proto.getValue());
     }
 
