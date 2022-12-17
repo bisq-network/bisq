@@ -97,7 +97,8 @@ public class ClosedTradableFormatter {
     }
 
     public String getTotalTxFeeAsString(Coin totalTradeAmount, Coin totalTxFee) {
-        double percentage = ((double) totalTxFee.value) / totalTradeAmount.value;
+        double percentage = Math.abs(totalTradeAmount.value) > 0 ?          // protect from divide-by-zero
+            ((double) totalTxFee.value) / totalTradeAmount.value : 0;
         return Res.get(I18N_KEY_TOTAL_TX_FEE,
                 btcFormatter.formatCoin(totalTxFee, true),
                 formatToPercentWithSymbol(percentage));
@@ -116,7 +117,8 @@ public class ClosedTradableFormatter {
     public String getTotalTradeFeeInBsqAsString(Coin totalTradeFee,
                                                 Volume tradeAmountVolume,
                                                 Volume bsqVolumeInUsd) {
-        double percentage = ((double) bsqVolumeInUsd.getValue()) / tradeAmountVolume.getValue();
+        double percentage = Math.abs(tradeAmountVolume.getValue()) > 0 ?          // protect from divide-by-zero
+            ((double) bsqVolumeInUsd.getValue()) / tradeAmountVolume.getValue() : 0;
         return Res.get(I18N_KEY_TOTAL_TRADE_FEE_BSQ,
                 bsqFormatter.formatCoin(totalTradeFee, true),
                 formatToPercentWithSymbol(percentage));
@@ -132,7 +134,8 @@ public class ClosedTradableFormatter {
     }
 
     public String getTotalTradeFeeInBtcAsString(Coin totalTradeAmount, Coin totalTradeFee) {
-        double percentage = ((double) totalTradeFee.value) / totalTradeAmount.value;
+        double percentage = Math.abs(totalTradeAmount.value) > 0 ?          // protect from divide-by-zero
+            ((double) totalTradeFee.value) / totalTradeAmount.value : 0;
         return Res.get(I18N_KEY_TOTAL_TRADE_FEE_BTC,
                 btcFormatter.formatCoin(totalTradeFee, true),
                 formatToPercentWithSymbol(percentage));
