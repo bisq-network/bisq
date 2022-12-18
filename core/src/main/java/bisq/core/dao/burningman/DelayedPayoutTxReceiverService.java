@@ -50,7 +50,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Singleton
 public class DelayedPayoutTxReceiverService implements DaoStateListener {
     // We don't allow to get further back than 767950 (the block height from Dec. 18th 2022).
-    static final int MIN_SNAPSHOT_HEIGHT = Config.baseCurrencyNetwork().isRegtest() ? 111 : 767950;
+    static final int MIN_SNAPSHOT_HEIGHT = Config.baseCurrencyNetwork().isRegtest() ? 0 : 767950;
 
     // One part of the limit for the min. amount to be included in the DPT outputs.
     // The miner fee rate multiplied by 2 times the output size is the other factor.
@@ -185,15 +185,18 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
         return inputAmount - minerFee;
     }
 
+    private static int getSnapshotHeight(int genesisHeight, int height, int grid) {
+        return getSnapshotHeight(genesisHeight, height, grid, MIN_SNAPSHOT_HEIGHT);
+    }
+
     // Borrowed from DaoStateSnapshotService. We prefer to not reuse to avoid dependency to an unrelated domain.
     @VisibleForTesting
-    static int getSnapshotHeight(int genesisHeight, int height, int grid) {
-        int minSnapshotHeight = genesisHeight + 3 * grid;
-        if (height > minSnapshotHeight) {
+    static int getSnapshotHeight(int genesisHeight, int height, int grid, int minSnapshotHeight) {
+        if (height > (genesisHeight + 3 * grid)) {
             int ratio = (int) Math.round(height / (double) grid);
-            return Math.max(MIN_SNAPSHOT_HEIGHT, ratio * grid - grid);
+            return Math.max(minSnapshotHeight, ratio * grid - grid);
         } else {
-            return Math.max(MIN_SNAPSHOT_HEIGHT, genesisHeight);
+            return Math.max(minSnapshotHeight, genesisHeight);
         }
     }
 }
