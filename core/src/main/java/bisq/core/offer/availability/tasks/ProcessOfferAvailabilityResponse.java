@@ -51,7 +51,7 @@ public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityMode
 
             if (offerAvailabilityResponse.getAvailabilityResult() != AvailabilityResult.AVAILABLE) {
                 offer.setState(Offer.State.NOT_AVAILABLE);
-                failed("Take offer attempt rejected because of: " + offerAvailabilityResponse.getAvailabilityResult());
+                failed(offerAvailabilityResponse.getAvailabilityResult().getDescription());
                 return;
             }
 

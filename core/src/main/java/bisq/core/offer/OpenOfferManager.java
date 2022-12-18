@@ -673,22 +673,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             return;
         }
 
-        if (BurningManService.isActivated()) {
-            try {
-                int takersBurningManSelectionHeight = request.getBurningManSelectionHeight();
-                checkArgument(takersBurningManSelectionHeight > 0, "takersBurningManSelectionHeight must not be 0");
-
-                int makersBurningManSelectionHeight = delayedPayoutTxReceiverService.getBurningManSelectionHeight();
-                checkArgument(takersBurningManSelectionHeight == makersBurningManSelectionHeight,
-                        "takersBurningManSelectionHeight does no match makersBurningManSelectionHeight");
-            } catch (Throwable t) {
-                errorMessage = "Message validation failed. Error=" + t + ", Message=" + request;
-                log.warn(errorMessage);
-                sendAckMessage(request, peer, false, errorMessage);
-                return;
-            }
-        }
-
         try {
             Optional<OpenOffer> openOfferOptional = getOpenOfferById(request.offerId);
             AvailabilityResult availabilityResult;
@@ -721,11 +705,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                                 availabilityResult = AvailabilityResult.MARKET_PRICE_NOT_AVAILABLE;
                             } catch (Throwable e) {
                                 log.warn("Trade price check failed. " + e.getMessage());
-                                if (coreContext.isApiUser())
-                                    // Give api user something more than 'unknown_failure'.
-                                    availabilityResult = AvailabilityResult.PRICE_CHECK_FAILED;
-                                else
-                                    availabilityResult = AvailabilityResult.UNKNOWN_FAILURE;
+                                availabilityResult = AvailabilityResult.PRICE_CHECK_FAILED;
                             }
                         } else {
                             availabilityResult = AvailabilityResult.USER_IGNORED;
@@ -745,6 +725,22 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 errorMessage = Res.get("shared.unconfirmedTransactionsLimitReached");
                 log.warn(errorMessage);
                 availabilityResult = AvailabilityResult.UNCONF_TX_LIMIT_HIT;
+            }
+
+            if (BurningManService.isActivated()) {
+                try {
+                    int takersBurningManSelectionHeight = request.getBurningManSelectionHeight();
+                    checkArgument(takersBurningManSelectionHeight > 0, "takersBurningManSelectionHeight must not be 0");
+
+                    int makersBurningManSelectionHeight = delayedPayoutTxReceiverService.getBurningManSelectionHeight();
+                    checkArgument(takersBurningManSelectionHeight == makersBurningManSelectionHeight,
+                            "takersBurningManSelectionHeight does no match makersBurningManSelectionHeight. " +
+                                    "takersBurningManSelectionHeight=" + takersBurningManSelectionHeight + "; makersBurningManSelectionHeight=" + makersBurningManSelectionHeight);
+                } catch (Throwable t) {
+                    errorMessage = "Message validation failed. Error=" + t + ", Message=" + request;
+                    log.warn(errorMessage);
+                    availabilityResult = AvailabilityResult.INVALID_SNAPSHOT_HEIGHT;
+                }
             }
 
             OfferAvailabilityResponse offerAvailabilityResponse = new OfferAvailabilityResponse(request.offerId,
