@@ -23,6 +23,7 @@ import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 
+import bisq.common.config.Config;
 import bisq.common.util.Tuple2;
 
 import javax.inject.Inject;
@@ -37,6 +38,8 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * Used in the trade protocol for creating and verifying the delayed payout transaction.
  * Requires to be deterministic.
@@ -46,6 +49,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class DelayedPayoutTxReceiverService implements DaoStateListener {
+    // We don't allow to get further back than 767950 (the block height from Dec. 18th 2022).
+    static final int MIN_SNAPSHOT_HEIGHT = Config.baseCurrencyNetwork().isRegtest() ? 111 : 767950;
+
     // One part of the limit for the min. amount to be included in the DPT outputs.
     // The miner fee rate multiplied by 2 times the output size is the other factor.
     // The higher one of both is used. 1000 sat is about 2 USD @ 20k price.
@@ -107,6 +113,8 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     public List<Tuple2<Long, String>> getReceivers(int burningManSelectionHeight,
                                                    long inputAmount,
                                                    long tradeTxFee) {
+
+        checkArgument(burningManSelectionHeight >= MIN_SNAPSHOT_HEIGHT, "Selection height must be >= " + MIN_SNAPSHOT_HEIGHT);
         Collection<BurningManCandidate> burningManCandidates = burningManService.getBurningManCandidatesByName(burningManSelectionHeight).values();
         if (burningManCandidates.isEmpty()) {
             // If there are no compensation requests (e.g. at dev testing) we fall back to the legacy BM
@@ -183,9 +191,9 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
         int minSnapshotHeight = genesisHeight + 3 * grid;
         if (height > minSnapshotHeight) {
             int ratio = (int) Math.round(height / (double) grid);
-            return ratio * grid - grid;
+            return Math.max(MIN_SNAPSHOT_HEIGHT, ratio * grid - grid);
         } else {
-            return genesisHeight;
+            return Math.max(MIN_SNAPSHOT_HEIGHT, genesisHeight);
         }
     }
 }
