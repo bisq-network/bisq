@@ -54,6 +54,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -173,16 +174,14 @@ public class BurningManAccountingService implements DaoSetupService {
     }
 
     public long getTotalAmountOfDistributedBtc() {
-        return balanceModelByBurningManName.values().stream()
-                .flatMap(balanceModel -> balanceModel.getReceivedBtcBalanceEntries().stream())
+        return getReceivedBtcBalanceEntryStreamExcludingLegacyBurningmen()
                 .mapToLong(BaseBalanceEntry::getAmount)
                 .sum();
     }
 
     public long getTotalAmountOfDistributedBsq() {
         Map<Date, Price> averageBsqPriceByMonth = getAverageBsqPriceByMonth();
-        return balanceModelByBurningManName.values().stream()
-                .flatMap(balanceModel -> balanceModel.getReceivedBtcBalanceEntries().stream())
+        return getReceivedBtcBalanceEntryStreamExcludingLegacyBurningmen()
                 .map(balanceEntry -> {
                     Date month = balanceEntry.getMonth();
                     Optional<Price> price = Optional.ofNullable(averageBsqPriceByMonth.get(month));
@@ -199,6 +198,14 @@ public class BurningManAccountingService implements DaoSetupService {
                 .filter(Optional::isPresent)
                 .mapToLong(Optional::get)
                 .sum();
+    }
+
+    private Stream<ReceivedBtcBalanceEntry> getReceivedBtcBalanceEntryStreamExcludingLegacyBurningmen() {
+        return balanceModelByBurningManName.entrySet().stream()
+                .filter(e -> !e.getKey().equals(BurningManPresentationService.LEGACY_BURNING_MAN_DPT_NAME) &&
+                        !e.getKey().equals(BurningManPresentationService.LEGACY_BURNING_MAN_BTC_FEES_NAME))
+                .map(Map.Entry::getValue)
+                .flatMap(balanceModel -> balanceModel.getReceivedBtcBalanceEntries().stream());
     }
 
 
