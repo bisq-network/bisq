@@ -128,47 +128,6 @@ configure([project(':cli'),
     }
 }
 
-configure(project(':proto')) {
-    apply plugin: 'com.google.protobuf'
-
-    dependencies {
-        annotationProcessor libs.lombok
-        compileOnly libs.javax.annotation
-        compileOnly libs.lombok
-        implementation libs.logback.classic
-        implementation libs.logback.core
-        implementation libs.google.guava
-        implementation libs.protobuf.java
-        implementation libs.slf4j.api
-        implementation(libs.grpc.protobuf) {
-            exclude(module: 'animal-sniffer-annotations')
-            exclude(module: 'guava')
-        }
-        implementation(libs.grpc.stub) {
-            exclude(module: 'animal-sniffer-annotations')
-            exclude(module: 'guava')
-        }
-    }
-
-    sourceSets.main.java.srcDirs += [
-        'build/generated/source/proto/main/grpc',
-        'build/generated/source/proto/main/java'
-    ]
-
-    protobuf {
-        protoc {
-            artifact = "com.google.protobuf:protoc:${protocVersion}"
-        }
-        plugins {
-            grpc {
-                artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
-            }
-        }
-        generateProtoTasks {
-            all()*.plugins { grpc {} }
-        }
-    }
-}
 
 configure(project(':assets')) {
     dependencies {
