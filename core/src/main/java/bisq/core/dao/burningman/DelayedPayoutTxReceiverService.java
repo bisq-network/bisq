@@ -130,6 +130,8 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
         // We only use outputs > 1000 sat or at least 2 times the cost for the output (32 bytes).
         // If we remove outputs it will be spent as miner fee.
         long minOutputAmount = Math.max(DPT_MIN_OUTPUT_AMOUNT, txFeePerVbyte * 32 * 2);
+        // Sanity check that max share of a non-legacy BM is 20% over MAX_BURN_SHARE (taking into account potential increase due adjustment)
+        long maxOutputAmount = Math.round(inputAmount * (BurningManService.MAX_BURN_SHARE * 1.2));
         // We accumulate small amounts which gets filtered out and subtract it from 1 to get an adjustment factor
         // used later to be applied to the remaining burningmen share.
         double adjustment = 1 - burningManCandidates.stream()
@@ -149,6 +151,7 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
                             candidate.getMostRecentAddress().get());
                 })
                 .filter(tuple -> tuple.first >= minOutputAmount)
+                .filter(tuple -> tuple.first <= maxOutputAmount)
                 .sorted(Comparator.<Tuple2<Long, String>, Long>comparing(tuple -> tuple.first)
                         .thenComparing(tuple -> tuple.second))
                 .collect(Collectors.toList());
