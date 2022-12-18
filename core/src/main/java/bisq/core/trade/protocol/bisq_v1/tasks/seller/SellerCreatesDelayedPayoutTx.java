@@ -59,7 +59,7 @@ public class SellerCreatesDelayedPayoutTx extends TradeTask {
                         selectionHeight,
                         inputAmount,
                         tradeTxFeeAsLong);
-                log.info("Verify delayedPayoutTx using selectionHeight {} and receivers {}", selectionHeight, delayedPayoutTxReceivers);
+                log.info("Create delayedPayoutTx using selectionHeight {} and receivers {}", selectionHeight, delayedPayoutTxReceivers);
                 long lockTime = trade.getLockTime();
                 preparedDelayedPayoutTx = tradeWalletService.createDelayedUnsignedPayoutTx(
                         depositTx,
