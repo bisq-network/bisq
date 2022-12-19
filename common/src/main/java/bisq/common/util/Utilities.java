@@ -64,7 +64,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -101,7 +100,15 @@ public class Utilities {
                                                                        int corePoolSize,
                                                                        int maximumPoolSize,
                                                                        long keepAliveTimeInSec) {
-        return MoreExecutors.listeningDecorator(getThreadPoolExecutor(name, corePoolSize, maximumPoolSize, keepAliveTimeInSec));
+        return getListeningExecutorService(name, corePoolSize, maximumPoolSize, maximumPoolSize, keepAliveTimeInSec);
+    }
+
+    public static ListeningExecutorService getListeningExecutorService(String name,
+                                                                       int corePoolSize,
+                                                                       int maximumPoolSize,
+                                                                       int queueCapacity,
+                                                                       long keepAliveTimeInSec) {
+        return MoreExecutors.listeningDecorator(getThreadPoolExecutor(name, corePoolSize, maximumPoolSize, queueCapacity, keepAliveTimeInSec));
     }
 
     public static ListeningExecutorService getListeningExecutorService(String name,
@@ -116,8 +123,17 @@ public class Utilities {
                                                            int corePoolSize,
                                                            int maximumPoolSize,
                                                            long keepAliveTimeInSec) {
+        return getThreadPoolExecutor(name, corePoolSize, maximumPoolSize, maximumPoolSize, keepAliveTimeInSec);
+    }
+
+
+    public static ThreadPoolExecutor getThreadPoolExecutor(String name,
+                                                           int corePoolSize,
+                                                           int maximumPoolSize,
+                                                           int queueCapacity,
+                                                           long keepAliveTimeInSec) {
         return getThreadPoolExecutor(name, corePoolSize, maximumPoolSize, keepAliveTimeInSec,
-                new ArrayBlockingQueue<>(maximumPoolSize));
+                new ArrayBlockingQueue<>(queueCapacity));
     }
 
     private static ThreadPoolExecutor getThreadPoolExecutor(String name,
@@ -133,22 +149,6 @@ public class Utilities {
                 TimeUnit.SECONDS, workQueue, threadFactory);
         executor.allowCoreThreadTimeOut(true);
         return executor;
-    }
-
-    public static ExecutorService newCachedThreadPool(String name,
-                                                      int maximumPoolSize,
-                                                      long keepAliveTime,
-                                                      TimeUnit timeUnit) {
-        ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(name + "-%d")
-                .setDaemon(true)
-                .build();
-        return new ThreadPoolExecutor(0,
-                maximumPoolSize,
-                keepAliveTime,
-                timeUnit,
-                new SynchronousQueue<>(),
-                threadFactory);
     }
 
     @SuppressWarnings("SameParameterValue")
