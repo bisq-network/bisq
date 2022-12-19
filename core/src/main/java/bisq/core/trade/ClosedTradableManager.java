@@ -53,6 +53,7 @@ import javafx.collections.ObservableList;
 import java.time.Instant;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -127,6 +128,7 @@ public class ClosedTradableManager implements PersistedDataHost {
     public void onAllServicesInitialized() {
         cleanupMailboxMessagesService.handleTrades(getClosedTrades());
         maybeClearSensitiveData();
+        maybeIncreaseTradeLimit();
     }
 
     public void add(Tradable tradable) {
@@ -170,6 +172,24 @@ public class ClosedTradableManager implements PersistedDataHost {
 
     public Optional<Tradable> getTradableById(String id) {
         return closedTradables.stream().filter(e -> e.getId().equals(id)).findFirst();
+    }
+
+    // if user has closed trades of greater size to the default trade limit and has never customized their
+    // trade limit, then set the limit to the largest amount traded previously.
+    public void maybeIncreaseTradeLimit() {
+        if (!preferences.isUserHasRaisedTradeLimit()) {
+            Optional<Trade> maxTradeSize = closedTradables.stream()
+                    .filter(e -> e instanceof Trade)
+                    .map(e -> (Trade) e)
+                    .max(Comparator.comparing(Trade::getAmountAsLong));
+            maxTradeSize.ifPresent(trade -> {
+                if (trade.getAmountAsLong() > preferences.getUserDefinedTradeLimit()) {
+                    log.info("Increasing user trade limit to size of max completed trade: {}", trade.getAmount());
+                    preferences.setUserDefinedTradeLimit(trade.getAmountAsLong());
+                    preferences.setUserHasRaisedTradeLimit(true);
+                }
+            });
+        }
     }
 
     public void maybeClearSensitiveData() {
