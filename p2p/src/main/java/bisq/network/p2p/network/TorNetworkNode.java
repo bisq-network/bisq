@@ -22,6 +22,7 @@ import bisq.network.utils.Utils;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.app.Log;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.util.Utilities;
 
@@ -174,6 +175,8 @@ public class TorNetworkNode extends NetworkNode {
                                     "Tor hidden service published after {} ms. Socket={}\n" +
                                     "################################################################",
                             System.currentTimeMillis() - ts, socket);
+                    // tor has started, reduce logging from BitcoinJ, see bisq/issues/5996
+                    Log.pushCustomLogLevel("core.src.main.java.org.bitcoinj.core.PeerGroup", "ERROR");
                     UserThread.execute(() -> {
                         nodeAddressProperty.set(new NodeAddress(hiddenServiceSocket.getServiceName() + ":" + hiddenServiceSocket.getHiddenServicePort()));
                         startServer(socket);
