@@ -104,7 +104,7 @@ class BalanceEntryItem {
             type = Optional.of(baseBalanceEntry.getType());
         }
 
-        if (price.isEmpty() || receivedBtc.isEmpty()) {
+        if (price.isEmpty() || price.get().getValue() == 0 || receivedBtc.isEmpty()) {
             receivedBtcAsBsq = Optional.empty();
         } else {
             long volume = price.get().getVolumeByAmount(Coin.valueOf(receivedBtc.get())).getValue();

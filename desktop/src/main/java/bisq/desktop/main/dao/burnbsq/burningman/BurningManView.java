@@ -130,7 +130,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
     private Button burnButton, exportBalanceEntriesButton;
     private TitledGroupBg burnOutputsTitledGroupBg, compensationsTitledGroupBg, selectedContributorTitledGroupBg;
     private AutoTooltipSlideToggleButton showOnlyActiveBurningmenToggle, showMonthlyBalanceEntryToggle;
-    private TextField expectedRevenueField, selectedContributorNameField, selectedContributorAddressField, burnTargetField;
+    private TextField expectedRevenueField, daoBalanceTotalBurnedField, daoBalanceTotalDistributedField, selectedContributorNameField, selectedContributorAddressField, burnTargetField;
     private ToggleGroup balanceEntryToggleGroup;
     private HBox balanceEntryHBox;
     private VBox selectedContributorNameBox, selectedContributorAddressBox;
@@ -311,6 +311,20 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         showOnlyActiveBurningmenToggle.setText(Res.get("dao.burningman.toggle"));
         HBox.setMargin(showOnlyActiveBurningmenToggle, new Insets(-21, 0, 0, 0));
         hBox.getChildren().add(2, showOnlyActiveBurningmenToggle);
+
+        // DAO balance
+        addTitledGroupBg(gridPane, ++gridRow, 4,
+                Res.get("dao.burningman.daoBalance"), Layout.COMPACT_GROUP_DISTANCE);
+        daoBalanceTotalBurnedField = addCompactTopLabelTextField(gridPane, ++gridRow,
+                Res.get("dao.burningman.daoBalanceTotalBurned"), "",
+                Layout.COMPACT_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE).second;
+        Tuple3<Label, TextField, VBox> daoBalanceTotalDistributedTuple = addCompactTopLabelTextField(gridPane, gridRow,
+                Res.get("dao.burningman.daoBalanceTotalDistributed"), "",
+                Layout.COMPACT_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE);
+        daoBalanceTotalDistributedField = daoBalanceTotalDistributedTuple.second;
+        VBox daoBalanceTotalDistributedBox = daoBalanceTotalDistributedTuple.third;
+        GridPane.setColumnSpan(daoBalanceTotalDistributedBox, 2);
+        GridPane.setColumnIndex(daoBalanceTotalDistributedBox, 1);
 
         // Selected contributor
         selectedContributorTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 4,
@@ -569,6 +583,10 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
                     .sorted(Comparator.comparing(BurningManListItem::getName))
                     .collect(Collectors.toList());
             contributorComboBox.setItems(FXCollections.observableArrayList(myBurningManListItems));
+
+            daoBalanceTotalBurnedField.setText(bsqFormatter.formatCoinWithCode(burningManPresentationService.getTotalAmountOfBurnedBsq()));
+            daoBalanceTotalDistributedField.setText(btcFormatter.formatCoinWithCode(burningManAccountingService.getTotalAmountOfDistributedBtc()) + " / " +
+                    bsqFormatter.formatCoinWithCode(burningManAccountingService.getTotalAmountOfDistributedBsq()));
         }
     }
 
@@ -635,12 +653,9 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
 
             Map<Date, Price> averageBsqPriceByMonth = burningManAccountingService.getAverageBsqPriceByMonth();
-            long ts = System.currentTimeMillis();
             balanceEntryObservableList.setAll(balanceEntries.stream()
                     .map(balanceEntry -> new BalanceEntryItem(balanceEntry, averageBsqPriceByMonth, bsqFormatter, btcFormatter))
                     .collect(Collectors.toList()));
-            // 108869: 617 - 1878, 640-1531
-            log.error("balanceEntryObservableList setAll took {} ms size={}", System.currentTimeMillis() - ts, balanceEntryObservableList.size());
         } else {
             balanceEntryObservableList.clear();
         }
@@ -756,8 +771,9 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         burningManTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(e -> e.getName().toLowerCase()));
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.burnTarget"));
+        column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.burnTarget"), Res.get("dao.burningman.table.burnTarget.help"));
         column.setMinWidth(200);
+        column.getGraphic().setStyle("-fx-alignment: center-right; -fx-padding: 2 10 2 0");
         column.getStyleClass().add("last-column");
         column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
         column.setCellFactory(new Callback<>() {
@@ -877,7 +893,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         column.setComparator(Comparator.comparing(BurningManListItem::getAccumulatedBurnAmount));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.numBurnOutputs"));
+       /* column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.numBurnOutputs"));
         column.setMinWidth(90);
         column.setMaxWidth(column.getMinWidth());
         column.getStyleClass().add("last-column");
@@ -900,7 +916,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         });
         burningManTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurningManListItem::getNumBurnOutputs));
-        column.setSortType(TableColumn.SortType.DESCENDING);
+        column.setSortType(TableColumn.SortType.DESCENDING);*/
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.issuanceShare"));
         column.setMinWidth(110);
@@ -974,7 +990,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         column.setComparator(Comparator.comparing(BurningManListItem::getAccumulatedCompensationAmount));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
-        column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.numIssuances"));
+       /* column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.numIssuances"));
         column.setMinWidth(110);
         column.setMaxWidth(column.getMinWidth());
         column.getStyleClass().add("last-column");
@@ -997,7 +1013,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         });
         burningManTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurningManListItem::getNumIssuances));
-        column.setSortType(TableColumn.SortType.DESCENDING);
+        column.setSortType(TableColumn.SortType.DESCENDING);*/
     }
 
     private void createBurnOutputsColumns() {

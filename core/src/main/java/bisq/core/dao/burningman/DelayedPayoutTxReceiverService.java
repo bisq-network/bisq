@@ -23,6 +23,7 @@ import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 
+import bisq.common.config.Config;
 import bisq.common.util.Tuple2;
 
 import javax.inject.Inject;
@@ -37,6 +38,8 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * Used in the trade protocol for creating and verifying the delayed payout transaction.
  * Requires to be deterministic.
@@ -46,6 +49,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class DelayedPayoutTxReceiverService implements DaoStateListener {
+    // We don't allow to get further back than 767950 (the block height from Dec. 18th 2022).
+    static final int MIN_SNAPSHOT_HEIGHT = Config.baseCurrencyNetwork().isRegtest() ? 0 : 767950;
+
     // One part of the limit for the min. amount to be included in the DPT outputs.
     // The miner fee rate multiplied by 2 times the output size is the other factor.
     // The higher one of both is used. 1000 sat is about 2 USD @ 20k price.
@@ -107,6 +113,8 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     public List<Tuple2<Long, String>> getReceivers(int burningManSelectionHeight,
                                                    long inputAmount,
                                                    long tradeTxFee) {
+
+        checkArgument(burningManSelectionHeight >= MIN_SNAPSHOT_HEIGHT, "Selection height must be >= " + MIN_SNAPSHOT_HEIGHT);
         Collection<BurningManCandidate> burningManCandidates = burningManService.getBurningManCandidatesByName(burningManSelectionHeight).values();
         if (burningManCandidates.isEmpty()) {
             // If there are no compensation requests (e.g. at dev testing) we fall back to the legacy BM
@@ -130,6 +138,8 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
         // We only use outputs > 1000 sat or at least 2 times the cost for the output (32 bytes).
         // If we remove outputs it will be spent as miner fee.
         long minOutputAmount = Math.max(DPT_MIN_OUTPUT_AMOUNT, txFeePerVbyte * 32 * 2);
+        // Sanity check that max share of a non-legacy BM is 20% over MAX_BURN_SHARE (taking into account potential increase due adjustment)
+        long maxOutputAmount = Math.round(inputAmount * (BurningManService.MAX_BURN_SHARE * 1.2));
         // We accumulate small amounts which gets filtered out and subtract it from 1 to get an adjustment factor
         // used later to be applied to the remaining burningmen share.
         double adjustment = 1 - burningManCandidates.stream()
@@ -149,6 +159,7 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
                             candidate.getMostRecentAddress().get());
                 })
                 .filter(tuple -> tuple.first >= minOutputAmount)
+                .filter(tuple -> tuple.first <= maxOutputAmount)
                 .sorted(Comparator.<Tuple2<Long, String>, Long>comparing(tuple -> tuple.first)
                         .thenComparing(tuple -> tuple.second))
                 .collect(Collectors.toList());
@@ -174,15 +185,18 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
         return inputAmount - minerFee;
     }
 
+    private static int getSnapshotHeight(int genesisHeight, int height, int grid) {
+        return getSnapshotHeight(genesisHeight, height, grid, MIN_SNAPSHOT_HEIGHT);
+    }
+
     // Borrowed from DaoStateSnapshotService. We prefer to not reuse to avoid dependency to an unrelated domain.
     @VisibleForTesting
-    static int getSnapshotHeight(int genesisHeight, int height, int grid) {
-        int minSnapshotHeight = genesisHeight + 3 * grid;
-        if (height > minSnapshotHeight) {
+    static int getSnapshotHeight(int genesisHeight, int height, int grid, int minSnapshotHeight) {
+        if (height > (genesisHeight + 3 * grid)) {
             int ratio = (int) Math.round(height / (double) grid);
-            return ratio * grid - grid;
+            return Math.max(minSnapshotHeight, ratio * grid - grid);
         } else {
-            return genesisHeight;
+            return Math.max(minSnapshotHeight, genesisHeight);
         }
     }
 }

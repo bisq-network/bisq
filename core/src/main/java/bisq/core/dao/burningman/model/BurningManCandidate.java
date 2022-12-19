@@ -52,8 +52,13 @@ public class BurningManCandidate {
     private final Map<Date, Set<BurnOutputModel>> burnOutputModelsByMonth = new HashMap<>();
     private long accumulatedBurnAmount;
     private long accumulatedDecayedBurnAmount;
-    protected double burnAmountShare;             // Share of accumulated decayed burn amounts in relation to total burned amounts
-    protected double cappedBurnAmountShare;       // Capped burnAmountShare. Cannot be larger than boostedCompensationShare
+    // Share of accumulated decayed burn amounts in relation to total burned amounts
+    protected double burnAmountShare;
+    // Capped burnAmountShare. Cannot be larger than boostedCompensationShare
+    protected double cappedBurnAmountShare;
+    // The burnAmountShare adjusted in case there are cappedBurnAmountShare.
+    // We redistribute the over-burned amounts to the group of not capped candidates.
+    protected double adjustedBurnAmountShare;
 
     public BurningManCandidate() {
     }
@@ -93,10 +98,44 @@ public class BurningManCandidate {
 
     public void calculateShares(double totalDecayedCompensationAmounts, double totalDecayedBurnAmounts) {
         compensationShare = totalDecayedCompensationAmounts > 0 ? accumulatedDecayedCompensationAmount / totalDecayedCompensationAmounts : 0;
-        double maxBoostedCompensationShare = Math.min(BurningManService.MAX_BURN_SHARE, compensationShare * BurningManService.ISSUANCE_BOOST_FACTOR);
-
         burnAmountShare = totalDecayedBurnAmounts > 0 ? accumulatedDecayedBurnAmount / totalDecayedBurnAmounts : 0;
-        cappedBurnAmountShare = Math.min(maxBoostedCompensationShare, burnAmountShare);
+    }
+
+    public void calculateCappedAndAdjustedShares(double sumAllCappedBurnAmountShares,
+                                                 double sumAllNonCappedBurnAmountShares) {
+        double maxBoostedCompensationShare = getMaxBoostedCompensationShare();
+        adjustedBurnAmountShare = burnAmountShare;
+        if (burnAmountShare < maxBoostedCompensationShare) {
+            if (sumAllCappedBurnAmountShares == 0) {
+                // If no one is capped we do not need to do any adjustment
+                cappedBurnAmountShare = burnAmountShare;
+            } else {
+                // The difference of the cappedBurnAmountShare and burnAmountShare will get redistributed to all
+                // non-capped candidates.
+                double distributionBase = 1 - sumAllCappedBurnAmountShares;
+                if (sumAllNonCappedBurnAmountShares == 0) {
+                    // In case we get sumAllNonCappedBurnAmountShares our burnAmountShare is also 0.
+                    cappedBurnAmountShare = burnAmountShare;
+                } else {
+                    double adjustment = distributionBase / sumAllNonCappedBurnAmountShares;
+                    adjustedBurnAmountShare = burnAmountShare * adjustment;
+                    if (adjustedBurnAmountShare < maxBoostedCompensationShare) {
+                        cappedBurnAmountShare = adjustedBurnAmountShare;
+                    } else {
+                        // We exceeded the cap by the adjustment. This will lead to the legacy BM getting the
+                        // difference of the adjusted amount and the maxBoostedCompensationShare.
+                        cappedBurnAmountShare = maxBoostedCompensationShare;
+                    }
+                }
+            }
+        } else {
+            cappedBurnAmountShare = maxBoostedCompensationShare;
+        }
+    }
+
+
+    public double getMaxBoostedCompensationShare() {
+        return Math.min(BurningManService.MAX_BURN_SHARE, compensationShare * BurningManService.ISSUANCE_BOOST_FACTOR);
     }
 
     @Override
@@ -112,6 +151,7 @@ public class BurningManCandidate {
                 ",\r\n     accumulatedDecayedBurnAmount=" + accumulatedDecayedBurnAmount +
                 ",\r\n     burnAmountShare=" + burnAmountShare +
                 ",\r\n     cappedBurnAmountShare=" + cappedBurnAmountShare +
+                ",\r\n     adjustedBurnAmountShare=" + adjustedBurnAmountShare +
                 "\r\n}";
     }
 }

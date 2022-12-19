@@ -44,6 +44,7 @@ import javax.inject.Singleton;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -61,24 +62,21 @@ import lombok.extern.slf4j.Slf4j;
 public class BurningManPresentationService implements DaoStateListener {
     // Burn target gets increased by that amount to give more flexibility.
     // Burn target is calculated from reimbursements + estimated BTC fees - burned amounts.
-    private static final long BURN_TARGET_BOOST_AMOUNT = Config.baseCurrencyNetwork().isRegtest() ? 1000000 : 10000000;
-    // To avoid that the BM get locked in small total burn amounts we allow to burn up to 1000 BSQ more than the
-    // calculation to not exceed the cap would suggest.
-    private static final long MAX_BURN_TARGET_LOWER_FLOOR = 100000;
+    private static final long BURN_TARGET_BOOST_AMOUNT = 10000000;
     public static final String LEGACY_BURNING_MAN_DPT_NAME = "Legacy Burningman (DPT)";
     public static final String LEGACY_BURNING_MAN_BTC_FEES_NAME = "Legacy Burningman (BTC fees)";
     static final String LEGACY_BURNING_MAN_BTC_FEES_ADDRESS = "38bZBj5peYS3Husdz7AH3gEUiUbYRD951t";
     // Those are the opReturn data used by legacy BM for burning BTC received from DPT.
     // For regtest testing burn bsq and use the pre-image `dpt` which has the hash 14af04ea7e34bd7378b034ddf90da53b7c27a277.
     // The opReturn data gets additionally prefixed with 1701
-    private static final Set<String> OP_RETURN_DATA_LEGACY_BM_DPT = Config.baseCurrencyNetwork().isRegtest() ?
+    static final Set<String> OP_RETURN_DATA_LEGACY_BM_DPT = Config.baseCurrencyNetwork().isRegtest() ?
             Set.of("170114af04ea7e34bd7378b034ddf90da53b7c27a277") :
             Set.of("1701e47e5d8030f444c182b5e243871ebbaeadb5e82f",
                     "1701293c488822f98e70e047012f46f5f1647f37deb7");
     // The opReturn data used by legacy BM for burning BTC received from BTC trade fees.
     // For regtest testing burn bsq and use the pre-image `fee` which has the hash b3253b7b92bb7f0916b05f10d4fa92be8e48f5e6.
     // The opReturn data gets additionally prefixed with 1701
-    private static final Set<String> OP_RETURN_DATA_LEGACY_BM_FEES = Config.baseCurrencyNetwork().isRegtest() ?
+    static final Set<String> OP_RETURN_DATA_LEGACY_BM_FEES = Config.baseCurrencyNetwork().isRegtest() ?
             Set.of("1701b3253b7b92bb7f0916b05f10d4fa92be8e48f5e6") :
             Set.of("1701721206fe6b40777763de1c741f4fd2706d94775d");
 
@@ -173,53 +171,57 @@ public class BurningManPresentationService implements DaoStateListener {
         return Math.round(burningManCandidate.getCappedBurnAmountShare() * getAverageDistributionPerCycle());
     }
 
+    // Left side in tuple is the amount to burn to reach the max. burn share based on the total burned amount.
+    // This value is safe to not burn more than needed and to avoid to get capped.
+    // The right side is the amount to burn to reach the max. burn share based on the boosted burn target.
+    // This can lead to burning too much and getting capped.
     public Tuple2<Long, Long> getCandidateBurnTarget(BurningManCandidate burningManCandidate) {
         long burnTarget = getBurnTarget();
+        long boostedBurnTarget = burnTarget + BURN_TARGET_BOOST_AMOUNT;
         double compensationShare = burningManCandidate.getCompensationShare();
-        if (burnTarget == 0 || compensationShare == 0) {
+
+        if (boostedBurnTarget <= 0 || compensationShare == 0) {
             return new Tuple2<>(0L, 0L);
         }
 
         double maxCompensationShare = Math.min(BurningManService.MAX_BURN_SHARE, compensationShare);
         long lowerBaseTarget = Math.round(burnTarget * maxCompensationShare);
-        long boostedBurnAmount = burnTarget + BURN_TARGET_BOOST_AMOUNT;
-        double maxBoostedCompensationShare = Math.min(BurningManService.MAX_BURN_SHARE, compensationShare * BurningManService.ISSUANCE_BOOST_FACTOR);
-        long upperBaseTarget = Math.round(boostedBurnAmount * maxBoostedCompensationShare);
-        long totalBurnedAmount = burnTargetService.getAccumulatedDecayedBurnedAmount(getBurningManCandidatesByName().values(), currentChainHeight);
+        double maxBoostedCompensationShare = burningManCandidate.getMaxBoostedCompensationShare();
+        long upperBaseTarget = Math.round(boostedBurnTarget * maxBoostedCompensationShare);
+        Collection<BurningManCandidate> burningManCandidates = getBurningManCandidatesByName().values();
+        long totalBurnedAmount = burnTargetService.getAccumulatedDecayedBurnedAmount(burningManCandidates, currentChainHeight);
 
         if (totalBurnedAmount == 0) {
+            // The first BM would reach their max burn share by 5.46 BSQ already. But we suggest the lowerBaseTarget
+            // as lower target to speed up the bootstrapping.
             return new Tuple2<>(lowerBaseTarget, upperBaseTarget);
         }
 
-        double burnAmountShare = burningManCandidate.getBurnAmountShare();
-        long candidatesBurnAmount = burningManCandidate.getAccumulatedDecayedBurnAmount();
-        if (burnAmountShare < maxBoostedCompensationShare) {
-            long myBurnAmount = getMissingAmountToReachTargetShare(totalBurnedAmount, candidatesBurnAmount, maxCompensationShare);
-            long myMaxBurnAmount = getMissingAmountToReachTargetShare(totalBurnedAmount, candidatesBurnAmount, maxBoostedCompensationShare);
+        if (burningManCandidate.getAdjustedBurnAmountShare() < maxBoostedCompensationShare) {
+            long candidatesBurnAmount = burningManCandidate.getAccumulatedDecayedBurnAmount();
 
-            // We limit to base targets
-            myBurnAmount = Math.min(myBurnAmount, lowerBaseTarget);
-            myMaxBurnAmount = Math.min(myMaxBurnAmount, upperBaseTarget);
-
-            // We allow at least MAX_BURN_TARGET_LOWER_FLOOR (1000 BSQ) to burn, even if that means to hit the cap to give more flexibility
-            // when low amounts are burned and the 11% cap would lock in BM to small increments per burn iteration.
-            myMaxBurnAmount = Math.max(myMaxBurnAmount, MAX_BURN_TARGET_LOWER_FLOOR);
+            // TODO We do not consider adjustedBurnAmountShare. This could lead to slight over burn. Atm we ignore that.
+            long myBurnAmount = getMissingAmountToReachTargetShare(totalBurnedAmount, candidatesBurnAmount, maxBoostedCompensationShare);
 
             // If below dust we set value to 0
             myBurnAmount = myBurnAmount < 546 ? 0 : myBurnAmount;
-            return new Tuple2<>(myBurnAmount, myMaxBurnAmount);
+
+            // In case the myBurnAmount would be larger than the upperBaseTarget we use the upperBaseTarget.
+            myBurnAmount = Math.min(myBurnAmount, upperBaseTarget);
+
+            return new Tuple2<>(myBurnAmount, upperBaseTarget);
         } else {
             // We have reached our cap.
-            return new Tuple2<>(0L, MAX_BURN_TARGET_LOWER_FLOOR);
+            return new Tuple2<>(0L, upperBaseTarget);
         }
     }
 
     @VisibleForTesting
-    static long getMissingAmountToReachTargetShare(long total, long myAmount, double myTargetShare) {
-        long others = total - myAmount;
+    static long getMissingAmountToReachTargetShare(long totalBurnedAmount, long myBurnAmount, double myTargetShare) {
+        long others = totalBurnedAmount - myBurnAmount;
         double shareTargetOthers = 1 - myTargetShare;
         double targetAmount = shareTargetOthers > 0 ? myTargetShare / shareTargetOthers * others : 0;
-        return Math.round(targetAmount) - myAmount;
+        return Math.round(targetAmount) - myBurnAmount;
     }
 
     public Set<ReimbursementModel> getReimbursements() {
@@ -349,6 +351,12 @@ public class BurningManPresentationService implements DaoStateListener {
                         .forEach(address -> map.putIfAbsent(address, name)));
         burningManNameByAddress.putAll(map);
         return burningManNameByAddress;
+    }
+
+    public long getTotalAmountOfBurnedBsq() {
+        return getBurningManCandidatesByName().values().stream()
+                .mapToLong(BurningManCandidate::getAccumulatedBurnAmount)
+                .sum();
     }
 
     public String getGenesisTxId() {

@@ -45,6 +45,9 @@ import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.core.dao.burningman.BurningManPresentationService.OP_RETURN_DATA_LEGACY_BM_DPT;
+import static bisq.core.dao.burningman.BurningManPresentationService.OP_RETURN_DATA_LEGACY_BM_FEES;
+
 /**
  * Burn target related API. Not touching trade protocol aspects and parameters can be changed here without risking to
  * break trade protocol validations.
@@ -56,10 +59,13 @@ class BurnTargetService {
     private static final int NUM_CYCLES_BURN_TARGET = 12;
     private static final int NUM_CYCLES_AVERAGE_DISTRIBUTION = 3;
 
+    // Estimated block at activation date
+    private static final int ACTIVATION_BLOCK = Config.baseCurrencyNetwork().isRegtest() ? 111 : 769845;
+
     // Default value for the estimated BTC trade fees per month as BSQ sat value (100 sat = 1 BSQ).
     // Default is roughly average of last 12 months at Nov 2022.
     // Can be changed with DAO parameter voting.
-    private static final long DEFAULT_ESTIMATED_BTC_TRADE_FEE_REVENUE_PER_CYCLE = Config.baseCurrencyNetwork().isRegtest() ? 1000000 : 6200000;
+    private static final long DEFAULT_ESTIMATED_BTC_TRADE_FEE_REVENUE_PER_CYCLE = 6200000;
 
     private final DaoStateService daoStateService;
     private final CyclesInDaoStateService cyclesInDaoStateService;
@@ -102,7 +108,7 @@ class BurnTargetService {
     long getBurnTarget(int chainHeight, Collection<BurningManCandidate> burningManCandidates) {
         // Reimbursements are taken into account at result vote block
         int chainHeightOfPastCycle = cyclesInDaoStateService.getChainHeightOfPastCycle(chainHeight, NUM_CYCLES_BURN_TARGET);
-        long accumulatedReimbursements = getAccumulatedReimbursements(chainHeight, chainHeightOfPastCycle);
+        long accumulatedReimbursements = getAdjustedAccumulatedReimbursements(chainHeight, chainHeightOfPastCycle);
 
         // Param changes are taken into account at first block at next cycle after voting
         int heightOfFirstBlockOfPastCycle = cyclesInDaoStateService.getHeightOfFirstBlockOfPastCycle(chainHeight, NUM_CYCLES_BURN_TARGET - 1);
@@ -140,7 +146,7 @@ class BurnTargetService {
     long getAverageDistributionPerCycle(int chainHeight) {
         // Reimbursements are taken into account at result vote block
         int chainHeightOfPastCycle = cyclesInDaoStateService.getChainHeightOfPastCycle(chainHeight, NUM_CYCLES_AVERAGE_DISTRIBUTION);
-        long reimbursements = getAccumulatedReimbursements(chainHeight, chainHeightOfPastCycle);
+        long reimbursements = getAdjustedAccumulatedReimbursements(chainHeight, chainHeightOfPastCycle);
 
         // Param changes are taken into account at first block at next cycle after voting
         int firstBlockOfPastCycle = cyclesInDaoStateService.getHeightOfFirstBlockOfPastCycle(chainHeight, NUM_CYCLES_AVERAGE_DISTRIBUTION - 1);
@@ -162,11 +168,31 @@ class BurnTargetService {
                 .map(proposal -> (ReimbursementProposal) proposal);
     }
 
-    private long getAccumulatedReimbursements(int chainHeight, int fromBlock) {
+    private long getAdjustedAccumulatedReimbursements(int chainHeight, int fromBlock) {
         return getReimbursements(chainHeight).stream()
                 .filter(reimbursementModel -> reimbursementModel.getHeight() > fromBlock)
                 .filter(reimbursementModel -> reimbursementModel.getHeight() <= chainHeight)
-                .mapToLong(ReimbursementModel::getAmount)
+                .mapToLong(reimbursementModel -> {
+                    long amount = reimbursementModel.getAmount();
+                    if (reimbursementModel.getHeight() > ACTIVATION_BLOCK) {
+                        // As we do not pay out the losing party's security deposit we adjust this here.
+                        // We use 15% as the min. security deposit as we do not have the detail data.
+                        // A trade with 1 BTC has 1.3 BTC in the DPT which goes to BM. The reimbursement is
+                        // only BSQ equivalent to 1.15 BTC. So we map back  the 1.15 BTC to 1.3 BTC to account for
+                        // that what the BM received.
+                        // There are multiple unknowns included:
+                        // - Real security deposit can be higher
+                        // - Refund agent can make a custom payout, paying out more or less than expected
+                        // - BSQ/BTC volatility
+                        // - Delay between DPT and reimbursement
+                        long adjusted = Math.round(amount * 1.3 / 1.15);
+                        return adjusted;
+                    } else {
+                        // For old reimbursements we do not apply the adjustment as we had a different policy for
+                        // reimbursing out 100% of the DPT.
+                        return amount;
+                    }
+                })
                 .sum();
     }
 
@@ -202,8 +228,7 @@ class BurnTargetService {
                 .filter(tx -> tx.getBlockHeight() <= chainHeight)
                 .filter(tx -> {
                     String hash = Hex.encode(tx.getLastTxOutput().getOpReturnData());
-                    return "1701e47e5d8030f444c182b5e243871ebbaeadb5e82f".equals(hash) ||
-                            "1701293c488822f98e70e047012f46f5f1647f37deb7".equals(hash);
+                    return OP_RETURN_DATA_LEGACY_BM_DPT.contains(hash);
                 })
                 .mapToLong(Tx::getBurntBsq)
                 .sum();
@@ -214,7 +239,7 @@ class BurnTargetService {
         return proofOfBurnTxs.stream()
                 .filter(tx -> tx.getBlockHeight() > fromBlock)
                 .filter(tx -> tx.getBlockHeight() <= chainHeight)
-                .filter(tx -> "1701721206fe6b40777763de1c741f4fd2706d94775d".equals(Hex.encode(tx.getLastTxOutput().getOpReturnData())))
+                .filter(tx -> OP_RETURN_DATA_LEGACY_BM_FEES.contains(Hex.encode(tx.getLastTxOutput().getOpReturnData())))
                 .mapToLong(Tx::getBurntBsq)
                 .sum();
     }

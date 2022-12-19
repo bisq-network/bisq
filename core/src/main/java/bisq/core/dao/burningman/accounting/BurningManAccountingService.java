@@ -21,6 +21,7 @@ import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.burningman.BurningManPresentationService;
 import bisq.core.dao.burningman.accounting.balance.BalanceEntry;
 import bisq.core.dao.burningman.accounting.balance.BalanceModel;
+import bisq.core.dao.burningman.accounting.balance.BaseBalanceEntry;
 import bisq.core.dao.burningman.accounting.balance.ReceivedBtcBalanceEntry;
 import bisq.core.dao.burningman.accounting.blockchain.AccountingBlock;
 import bisq.core.dao.burningman.accounting.blockchain.AccountingTx;
@@ -35,6 +36,9 @@ import bisq.core.util.AveragePriceUtil;
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.util.DateUtil;
+import bisq.common.util.MathUtils;
+
+import org.bitcoinj.core.Coin;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -50,6 +54,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -67,13 +72,14 @@ public class BurningManAccountingService implements DaoSetupService {
     public static final int EARLIEST_BLOCK_HEIGHT = Config.baseCurrencyNetwork().isRegtest() ? 111 : 656035;
     public static final int EARLIEST_DATE_YEAR = 2020;
     public static final int EARLIEST_DATE_MONTH = 10;
+    public static final int HIST_BSQ_PRICE_LAST_DATE_YEAR = 2022;
+    public static final int HIST_BSQ_PRICE_LAST_DATE_MONTH = 10;
 
     private final BurningManAccountingStoreService burningManAccountingStoreService;
     private final BurningManPresentationService burningManPresentationService;
     private final TradeStatisticsManager tradeStatisticsManager;
     private final Preferences preferences;
 
-    @Getter
     private final Map<Date, Price> averageBsqPriceByMonth = new HashMap<>(getHistoricalAverageBsqPriceByMonth());
     @Getter
     private final Map<String, BalanceModel> balanceModelByBurningManName = new HashMap<>();
@@ -161,6 +167,47 @@ public class BurningManAccountingService implements DaoSetupService {
         return getBlocks().stream().filter(block -> block.getHeight() == height).findAny();
     }
 
+    public Map<Date, Price> getAverageBsqPriceByMonth() {
+        getAverageBsqPriceByMonth(new Date(), HIST_BSQ_PRICE_LAST_DATE_YEAR, HIST_BSQ_PRICE_LAST_DATE_MONTH)
+                .forEach((key, value) -> averageBsqPriceByMonth.put(new Date(key.getTime()), Price.valueOf("BSQ", value.getValue())));
+        return averageBsqPriceByMonth;
+    }
+
+    public long getTotalAmountOfDistributedBtc() {
+        return getReceivedBtcBalanceEntryStreamExcludingLegacyBurningmen()
+                .mapToLong(BaseBalanceEntry::getAmount)
+                .sum();
+    }
+
+    public long getTotalAmountOfDistributedBsq() {
+        Map<Date, Price> averageBsqPriceByMonth = getAverageBsqPriceByMonth();
+        return getReceivedBtcBalanceEntryStreamExcludingLegacyBurningmen()
+                .map(balanceEntry -> {
+                    Date month = balanceEntry.getMonth();
+                    Optional<Price> price = Optional.ofNullable(averageBsqPriceByMonth.get(month));
+                    long receivedBtc = balanceEntry.getAmount();
+                    Optional<Long> receivedBtcAsBsq;
+                    if (price.isEmpty() || price.get().getValue() == 0) {
+                        receivedBtcAsBsq = Optional.empty();
+                    } else {
+                        long volume = price.get().getVolumeByAmount(Coin.valueOf(receivedBtc)).getValue();
+                        receivedBtcAsBsq = Optional.of(MathUtils.roundDoubleToLong(MathUtils.scaleDownByPowerOf10(volume, 6)));
+                    }
+                    return receivedBtcAsBsq;
+                })
+                .filter(Optional::isPresent)
+                .mapToLong(Optional::get)
+                .sum();
+    }
+
+    private Stream<ReceivedBtcBalanceEntry> getReceivedBtcBalanceEntryStreamExcludingLegacyBurningmen() {
+        return balanceModelByBurningManName.entrySet().stream()
+                .filter(e -> !e.getKey().equals(BurningManPresentationService.LEGACY_BURNING_MAN_DPT_NAME) &&
+                        !e.getKey().equals(BurningManPresentationService.LEGACY_BURNING_MAN_BTC_FEES_NAME))
+                .map(Map.Entry::getValue)
+                .flatMap(balanceModel -> balanceModel.getReceivedBtcBalanceEntries().stream());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Delegates
@@ -210,7 +257,7 @@ public class BurningManAccountingService implements DaoSetupService {
         });
     }
 
-    private Map<Date, Price> getAverageBsqPriceByMonth(Date from, int toYear, int toMonth) {
+    private Map<Date, Price> getAverageBsqPriceByMonth(Date from, int backToYear, int backToMonth) {
         Map<Date, Price> averageBsqPriceByMonth = new HashMap<>();
         Calendar calendar = new GregorianCalendar();
         calendar.setTime(from);
@@ -218,7 +265,7 @@ public class BurningManAccountingService implements DaoSetupService {
         int month = calendar.get(Calendar.MONTH);
         do {
             for (; month >= 0; month--) {
-                if (year == toYear && month == toMonth) {
+                if (year == backToYear && month == backToMonth) {
                     break;
                 }
                 Date date = DateUtil.getStartOfMonth(year, month);
@@ -227,7 +274,7 @@ public class BurningManAccountingService implements DaoSetupService {
             }
             year--;
             month = 11;
-        } while (year >= toYear);
+        } while (year >= backToYear);
         return averageBsqPriceByMonth;
     }
 
