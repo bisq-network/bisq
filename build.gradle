@@ -324,6 +324,8 @@ configure(project(':core')) {
 }
 
 configure(project(':cli')) {
+    distTar.enabled = true
+
     mainClassName = 'bisq.cli.CliMain'
 
     dependencies {
@@ -486,6 +488,8 @@ configure(project(':statsnode')) {
 }
 
 configure(project(':daemon')) {
+    distTar.enabled = true
+
     mainClassName = 'bisq.daemon.app.BisqDaemonMain'
 
     dependencies {
