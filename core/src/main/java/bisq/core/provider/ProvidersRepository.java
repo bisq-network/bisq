@@ -38,7 +38,6 @@ public class ProvidersRepository {
     public static final List<String> DEFAULT_NODES = Arrays.asList(
             "http://wizpriceje6q5tdrxkyiazsgu7irquiqjy2dptezqhrtu7l2qelqktid.onion/", // @wiz
             "http://emzypricpidesmyqg2hc6dkwitqzaxrqnpkdg3ae2wef5znncu2ambqd.onion/", // @emzy
-            "http://aprcndeiwdrkbf4fq7iozxbd27dl72oeo76n7zmjwdi4z34agdrnheyd.onion/", // @mrosseel
             "http://devinpndvdwll4wiqcyq5e7itezmarg7rzicrvf6brzkwxdm374kmmyd.onion/", // @devinbileck
             "http://ro7nv73awqs3ga2qtqeqawrjpbxwarsazznszvr6whv7tes5ehffopid.onion/" // @alexej996
     );
