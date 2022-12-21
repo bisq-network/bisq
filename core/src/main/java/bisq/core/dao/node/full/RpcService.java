@@ -219,11 +219,14 @@ public class RpcService {
                     });
                 }
             }, MoreExecutors.directExecutor());
-        } catch (Exception e) {
-            if (!shutdownInProgress || !(e instanceof RejectedExecutionException)) {
+        } catch (RejectedExecutionException e) {
+            if (!shutdownInProgress) {
                 log.warn(e.toString(), e);
                 throw e;
             }
+        } catch (Exception e) {
+            log.warn(e.toString(), e);
+            throw e;
         }
     }
 
