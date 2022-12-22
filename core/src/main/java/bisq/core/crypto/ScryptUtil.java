@@ -49,7 +49,7 @@ public class ScryptUtil {
     }
 
     public static void deriveKeyWithScrypt(KeyCrypterScrypt keyCrypterScrypt, String password, DeriveKeyResultHandler resultHandler) {
-        Utilities.getThreadPoolExecutor("ScryptUtil:deriveKeyWithScrypt-%d", 1, 2, 5L).submit(() -> {
+        Utilities.getThreadPoolExecutor("ScryptUtil:deriveKeyWithScrypt", 1, 2, 5L).submit(() -> {
             try {
                 log.debug("Doing key derivation");
                 long start = System.currentTimeMillis();
