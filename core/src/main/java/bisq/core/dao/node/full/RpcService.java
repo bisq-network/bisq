@@ -221,11 +221,11 @@ public class RpcService {
             }, MoreExecutors.directExecutor());
         } catch (RejectedExecutionException e) {
             if (!shutdownInProgress) {
-                log.warn(e.toString(), e);
+                log.error(e.toString(), e);
                 throw e;
             }
         } catch (Exception e) {
-            log.warn(e.toString(), e);
+            log.error(e.toString(), e);
             throw e;
         }
     }
@@ -316,11 +316,14 @@ public class RpcService {
                     UserThread.execute(() -> errorHandler.accept(throwable));
                 }
             }, MoreExecutors.directExecutor());
-        } catch (Exception e) {
-            if (!shutdownInProgress || !(e instanceof RejectedExecutionException)) {
+        } catch (RejectedExecutionException e) {
+            if (!shutdownInProgress) {
                 log.error("Exception at requestChainHeadHeight", e);
                 throw e;
             }
+        } catch (Exception e) {
+            log.error("Exception at requestChainHeadHeight", e);
+            throw e;
         }
     }
 
@@ -350,12 +353,14 @@ public class RpcService {
                     UserThread.execute(() -> errorHandler.accept(throwable));
                 }
             }, MoreExecutors.directExecutor());
-        } catch (Exception e) {
-            log.error("Exception at requestDtoBlock", e);
-            if (!shutdownInProgress || !(e instanceof RejectedExecutionException)) {
-                log.warn(e.toString(), e);
+        } catch (RejectedExecutionException e) {
+            if (!shutdownInProgress) {
+                log.error("Exception at requestDtoBlock", e);
                 throw e;
             }
+        } catch (Exception e) {
+            log.error("Exception at requestDtoBlock", e);
+            throw e;
         }
     }
 
@@ -386,11 +391,14 @@ public class RpcService {
                     UserThread.execute(() -> errorHandler.accept(throwable));
                 }
             }, MoreExecutors.directExecutor());
-        } catch (Exception e) {
-            if (!shutdownInProgress || !(e instanceof RejectedExecutionException)) {
-                log.warn(e.toString(), e);
+        } catch (RejectedExecutionException e) {
+            if (!shutdownInProgress) {
+                log.error(e.toString(), e);
                 throw e;
             }
+        } catch (Exception e) {
+            log.error(e.toString(), e);
+            throw e;
         }
     }
 
