@@ -23,13 +23,20 @@ import bisq.network.p2p.storage.messages.BroadcastMessage;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
+import bisq.common.config.Config;
+import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
+import javax.inject.Named;
+
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -49,6 +56,7 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     private Timer timer;
     private boolean shutDownRequested;
     private Runnable shutDownResultHandler;
+    private final ListeningExecutorService executor;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -56,9 +64,18 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public Broadcaster(NetworkNode networkNode, PeerManager peerManager) {
+    public Broadcaster(NetworkNode networkNode,
+                       PeerManager peerManager,
+                       @Named(Config.MAX_CONNECTIONS) int maxConnections) {
         this.networkNode = networkNode;
         this.peerManager = peerManager;
+
+        ThreadPoolExecutor threadPoolExecutor = Utilities.getThreadPoolExecutor("Broadcaster",
+                maxConnections,
+                maxConnections * 2,
+                30,
+                30);
+        executor = MoreExecutors.listeningDecorator(threadPoolExecutor);
     }
 
     public void shutDown(Runnable resultHandler) {
@@ -119,7 +136,7 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
                     broadcastRequests.stream().map(e -> e.getMessage().getClass().getSimpleName()).collect(Collectors.toList()));
             BroadcastHandler broadcastHandler = new BroadcastHandler(networkNode, peerManager, this);
             broadcastHandlers.add(broadcastHandler);
-            broadcastHandler.broadcast(new ArrayList<>(broadcastRequests), shutDownRequested);
+            broadcastHandler.broadcast(new ArrayList<>(broadcastRequests), shutDownRequested, executor);
             broadcastRequests.clear();
 
             if (timer != null) {
