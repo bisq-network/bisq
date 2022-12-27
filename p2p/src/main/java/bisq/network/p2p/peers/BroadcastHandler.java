@@ -28,6 +28,7 @@ import bisq.common.UserThread;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
@@ -94,7 +95,9 @@ public class BroadcastHandler implements PeerManager.Listener {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void broadcast(List<Broadcaster.BroadcastRequest> broadcastRequests, boolean shutDownRequested) {
+    public void broadcast(List<Broadcaster.BroadcastRequest> broadcastRequests,
+                          boolean shutDownRequested,
+                          ListeningExecutorService executor) {
         List<Connection> confirmedConnections = new ArrayList<>(networkNode.getConfirmedConnections());
         Collections.shuffle(confirmedConnections);
 
@@ -153,7 +156,7 @@ public class BroadcastHandler implements PeerManager.Listener {
                     return;
                 }
 
-                sendToPeer(connection, broadcastRequestsForConnection);
+                sendToPeer(connection, broadcastRequestsForConnection, executor);
             }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
         }
     }
@@ -235,10 +238,12 @@ public class BroadcastHandler implements PeerManager.Listener {
                 .collect(Collectors.toList());
     }
 
-    private void sendToPeer(Connection connection, List<Broadcaster.BroadcastRequest> broadcastRequestsForConnection) {
+    private void sendToPeer(Connection connection,
+                            List<Broadcaster.BroadcastRequest> broadcastRequestsForConnection,
+                            ListeningExecutorService executor) {
         // Can be BundleOfEnvelopes or a single BroadcastMessage
         BroadcastMessage broadcastMessage = getMessage(broadcastRequestsForConnection);
-        SettableFuture<Connection> future = networkNode.sendMessage(connection, broadcastMessage);
+        SettableFuture<Connection> future = networkNode.sendMessage(connection, broadcastMessage, executor);
 
         Futures.addCallback(future, new FutureCallback<>() {
             @Override
