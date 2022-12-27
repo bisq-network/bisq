@@ -105,12 +105,12 @@ public abstract class NetworkNode implements MessageListener {
                 maxConnections * 2,
                 maxConnections * 3,
                 30,
-                60);
+                30);
         sendMessageExecutor = Utilities.getListeningExecutorService("NetworkNode.sendMessage",
                 maxConnections * 2,
                 maxConnections * 3,
                 30,
-                60);
+                30);
         serverExecutor = Utilities.getSingleThreadExecutor("NetworkNode.server-" + servicePort);
     }
 
