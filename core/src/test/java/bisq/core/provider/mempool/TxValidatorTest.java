@@ -209,7 +209,7 @@ public class TxValidatorTest {
         knownValuesList.forEach(offerData -> {
             TxValidator txValidator = createTxValidator(offerData);
             log.warn("TESTING {}", txValidator.getTxId());
-            if (txValidator.getIsFeeCurrencyBtc()) {
+            if (txValidator.getIsFeeCurrencyBtc() != null && txValidator.getIsFeeCurrencyBtc()) {
                 String jsonTxt = mempoolData.get(txValidator.getTxId());
                 if (jsonTxt == null || jsonTxt.isEmpty()) {
                     log.warn("{} was not found in the mempool", txValidator.getTxId());

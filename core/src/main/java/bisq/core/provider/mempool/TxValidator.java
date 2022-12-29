@@ -61,7 +61,8 @@ public class TxValidator {
     private final List<String> errorList;
     private final String txId;
     private Coin amount;
-    private Boolean isFeeCurrencyBtc = true;
+    @Nullable
+    private Boolean isFeeCurrencyBtc;
     @Nullable
     private Long chainHeight;
     @Setter
@@ -70,21 +71,7 @@ public class TxValidator {
     public TxValidator(DaoStateService daoStateService,
                        String txId,
                        Coin amount,
-                       @Nullable Boolean isFeeCurrencyBtc,
-                       FilterManager filterManager) {
-        this.daoStateService = daoStateService;
-        this.txId = txId;
-        this.amount = amount;
-        this.isFeeCurrencyBtc = isFeeCurrencyBtc;
-        this.filterManager = filterManager;
-        this.errorList = new ArrayList<>();
-        this.jsonTxt = "";
-    }
-
-    public TxValidator(DaoStateService daoStateService,
-                       String txId,
-                       Coin amount,
-                       @Nullable Boolean isFeeCurrencyBtc,
+                       boolean isFeeCurrencyBtc,
                        long feePaymentBlockHeight,
                        FilterManager filterManager) {
         this.daoStateService = daoStateService;
