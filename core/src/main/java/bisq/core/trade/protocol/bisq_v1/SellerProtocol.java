@@ -167,10 +167,10 @@ public abstract class SellerProtocol extends DisputeProtocol {
 
     @Override
     protected void onTradeMessage(TradeMessage message, NodeAddress peer) {
-        super.onTradeMessage(message, peer);
-
         log.info("Received {} from {} with tradeId {} and uid {}",
                 message.getClass().getSimpleName(), peer, message.getTradeId(), message.getUid());
+
+        super.onTradeMessage(message, peer);
 
         if (message instanceof DelayedPayoutTxSignatureResponse) {
             handle((DelayedPayoutTxSignatureResponse) message, peer);

@@ -96,6 +96,12 @@ public abstract class TradeProtocol implements DecryptedDirectMessageListener, D
         cleanup();
     }
 
+    // Resets a potentially pending protocol
+    public void reset() {
+        tradeModel.setErrorMessage("Outdated pending protocol got reset.");
+        protocolModel.getP2PService().removeDecryptedDirectMessageListener(this);
+    }
+
     protected void onMailboxMessage(TradeMessage message, NodeAddress peerNodeAddress) {
         log.info("Received {} as MailboxMessage from {} with tradeId {} and uid {}",
                 message.getClass().getSimpleName(), peerNodeAddress, message.getTradeId(), message.getUid());
