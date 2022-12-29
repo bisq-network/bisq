@@ -29,9 +29,15 @@ import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.peers.Broadcaster;
 import bisq.network.p2p.peers.PeerManager;
 
+import bisq.common.UserThread;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import javax.inject.Inject;
+
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.HashMap;
 import java.util.List;
@@ -41,6 +47,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
@@ -59,6 +67,12 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage,
         void onPeersStateHashes(List<StH> stateHashes, Optional<NodeAddress> peersNodeAddress);
     }
 
+    public interface ResponseListener {
+        void onSuccess(int serializedSize);
+
+        void onFault();
+    }
+
     protected final NetworkNode networkNode;
     protected final PeerManager peerManager;
     private final Broadcaster broadcaster;
@@ -67,6 +81,7 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage,
     private final Map<NodeAddress, Han> requestStateHashHandlerMap = new HashMap<>();
     private final List<Listener<Msg, Req, StH>> listeners = new CopyOnWriteArrayList<>();
     private boolean messageListenerAdded;
+    private final List<ResponseListener> responseListeners = new CopyOnWriteArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -145,7 +160,20 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage,
         Res getStateHashesResponse = getGetStateHashesResponse(nonce, stateHashes);
         log.info("Send {} with {} stateHashes to peer {}", getStateHashesResponse.getClass().getSimpleName(),
                 stateHashes.size(), connection.getPeersNodeAddressOptional());
-        networkNode.sendMessage(connection, getStateHashesResponse);
+        SettableFuture<Connection> future = networkNode.sendMessage(connection, getStateHashesResponse);
+        Futures.addCallback(future, new FutureCallback<>() {
+            @Override
+            public void onSuccess(Connection connection) {
+                UserThread.execute(() -> responseListeners.forEach(listeners -> listeners.onSuccess(getStateHashesResponse.toProtoMessage().getSerializedSize()))
+                );
+            }
+
+            @Override
+            public void onFailure(@NotNull Throwable throwable) {
+                UserThread.execute(() -> responseListeners.forEach(StateNetworkService.ResponseListener::onFault)
+                );
+            }
+        }, MoreExecutors.directExecutor());
     }
 
     public void requestHashesFromAllConnectedSeedNodes(int fromHeight) {
@@ -169,6 +197,10 @@ public abstract class StateNetworkService<Msg extends NewStateHashMessage,
 
     public boolean isSeedNode(NodeAddress nodeAddress) {
         return peerManager.isSeedNode(nodeAddress);
+    }
+
+    public void addResponseListener(ResponseListener responseListener) {
+        responseListeners.add(responseListener);
     }
 
 

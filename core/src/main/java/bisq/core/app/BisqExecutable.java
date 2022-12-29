@@ -74,7 +74,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
     protected Injector injector;
     protected AppModule module;
     protected Config config;
-    private boolean isShutdownInProgress;
+    protected volatile boolean isShutdownInProgress;
     private boolean hasDowngraded;
 
     public BisqExecutable(String fullName, String scriptName, String appName, String version) {
@@ -281,7 +281,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
         }
     }
 
-    private void flushAndExit(ResultHandler resultHandler, int status) {
+    protected void flushAndExit(ResultHandler resultHandler, int status) {
         if (!hasDowngraded) {
             // If user tried to downgrade we do not write the persistable data to avoid data corruption
             log.info("PersistenceManager flushAllDataToDiskAtShutdown started");

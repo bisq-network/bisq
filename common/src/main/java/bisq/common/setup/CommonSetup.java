@@ -35,6 +35,7 @@ import java.net.URISyntaxException;
 
 import java.nio.file.Paths;
 
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import ch.qos.logback.classic.Level;
@@ -72,13 +73,19 @@ public class CommonSetup {
 
     public static void setupUncaughtExceptionHandler(UncaughtExceptionHandler uncaughtExceptionHandler) {
         Thread.UncaughtExceptionHandler handler = (thread, throwable) -> {
-            // Might come from another thread
             if (throwable.getCause() != null && throwable.getCause().getCause() != null &&
                     throwable.getCause().getCause() instanceof BlockStoreException) {
-                log.error(throwable.getMessage());
+                log.error("Uncaught BlockStoreException ", throwable);
+            } else if (throwable instanceof OutOfMemoryError) {
+                Profiler.printSystemLoad();
+                log.error("OutOfMemoryError occurred. We shut down.", throwable);
+                // Leave it to the handleUncaughtException to shut down or not.
+                UserThread.execute(() -> uncaughtExceptionHandler.handleUncaughtException(throwable, false));
             } else if (throwable instanceof ClassCastException &&
                     "sun.awt.image.BufImgSurfaceData cannot be cast to sun.java2d.xr.XRSurfaceData".equals(throwable.getMessage())) {
                 log.warn(throwable.getMessage());
+            } else if (throwable instanceof RejectedExecutionException) {
+                log.error("Uncaught RejectedExecutionException ", throwable);
             } else if (throwable instanceof UnsupportedOperationException &&
                     "The system tray is not supported on the current platform.".equals(throwable.getMessage())) {
                 log.warn(throwable.getMessage());

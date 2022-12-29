@@ -92,7 +92,7 @@ public class RpcService {
     // We could use multiple threads, but then we need to support ordering of results in a queue
     // Keep that for optimization after measuring performance differences
     private final ListeningExecutorService executor = Utilities.getSingleThreadListeningExecutor("RpcService");
-    private volatile boolean isShutDown;
+    private volatile boolean shutdownInProgress;
     private final Set<ResultHandler> setupResultHandlers = new CopyOnWriteArraySet<>();
     private final Set<Consumer<Throwable>> setupErrorHandlers = new CopyOnWriteArraySet<>();
     private volatile boolean setupComplete;
@@ -139,14 +139,17 @@ public class RpcService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void shutDown() {
-        isShutDown = true;
+        if (shutdownInProgress) {
+            return;
+        }
+        shutdownInProgress = true;
         if (daemon != null) {
             daemon.shutdown();
             log.info("daemon shut down");
         }
 
         // A hard shutdown is justified for the RPC service.
-        executor.shutdown();
+        executor.shutdownNow();
     }
 
     public void setup(ResultHandler resultHandler, Consumer<Throwable> errorHandler) {
@@ -216,11 +219,14 @@ public class RpcService {
                     });
                 }
             }, MoreExecutors.directExecutor());
-        } catch (Exception e) {
-            if (!isShutDown || !(e instanceof RejectedExecutionException)) {
-                log.warn(e.toString(), e);
+        } catch (RejectedExecutionException e) {
+            if (!shutdownInProgress) {
+                log.error(e.toString(), e);
                 throw e;
             }
+        } catch (Exception e) {
+            log.error(e.toString(), e);
+            throw e;
         }
     }
 
@@ -310,11 +316,14 @@ public class RpcService {
                     UserThread.execute(() -> errorHandler.accept(throwable));
                 }
             }, MoreExecutors.directExecutor());
-        } catch (Exception e) {
-            if (!isShutDown || !(e instanceof RejectedExecutionException)) {
+        } catch (RejectedExecutionException e) {
+            if (!shutdownInProgress) {
                 log.error("Exception at requestChainHeadHeight", e);
                 throw e;
             }
+        } catch (Exception e) {
+            log.error("Exception at requestChainHeadHeight", e);
+            throw e;
         }
     }
 
@@ -344,12 +353,14 @@ public class RpcService {
                     UserThread.execute(() -> errorHandler.accept(throwable));
                 }
             }, MoreExecutors.directExecutor());
-        } catch (Exception e) {
-            log.error("Exception at requestDtoBlock", e);
-            if (!isShutDown || !(e instanceof RejectedExecutionException)) {
-                log.warn(e.toString(), e);
+        } catch (RejectedExecutionException e) {
+            if (!shutdownInProgress) {
+                log.error("Exception at requestDtoBlock", e);
                 throw e;
             }
+        } catch (Exception e) {
+            log.error("Exception at requestDtoBlock", e);
+            throw e;
         }
     }
 
@@ -380,11 +391,14 @@ public class RpcService {
                     UserThread.execute(() -> errorHandler.accept(throwable));
                 }
             }, MoreExecutors.directExecutor());
-        } catch (Exception e) {
-            if (!isShutDown || !(e instanceof RejectedExecutionException)) {
-                log.warn(e.toString(), e);
+        } catch (RejectedExecutionException e) {
+            if (!shutdownInProgress) {
+                log.error(e.toString(), e);
                 throw e;
             }
+        } catch (Exception e) {
+            log.error(e.toString(), e);
+            throw e;
         }
     }
 

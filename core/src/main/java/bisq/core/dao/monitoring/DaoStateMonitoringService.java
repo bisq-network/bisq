@@ -23,6 +23,7 @@ import bisq.core.dao.monitoring.model.DaoStateHash;
 import bisq.core.dao.monitoring.model.UtxoMismatch;
 import bisq.core.dao.monitoring.network.Checkpoint;
 import bisq.core.dao.monitoring.network.DaoStateNetworkService;
+import bisq.core.dao.monitoring.network.StateNetworkService;
 import bisq.core.dao.monitoring.network.messages.GetDaoStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.NewDaoStateHashMessage;
 import bisq.core.dao.state.DaoStateListener;
@@ -287,6 +288,10 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
 
     public void setCreateSnapshotHandler(Runnable handler) {
         createSnapshotHandler = handler;
+    }
+
+    public void addResponseListener(StateNetworkService.ResponseListener responseListener) {
+        daoStateNetworkService.addResponseListener(responseListener);
     }
 
 

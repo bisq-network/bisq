@@ -50,7 +50,7 @@ public class GetDataRequestHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public interface Listener {
-        void onComplete();
+        void onComplete(int serializedSize);
 
         void onFault(String errorMessage, Connection connection);
     }
@@ -126,8 +126,8 @@ public class GetDataRequestHandler {
                 if (!stopped) {
                     log.trace("Send DataResponse to {} succeeded. getDataResponse={}",
                             connection.getPeersNodeAddressOptional(), getDataResponse);
+                    listener.onComplete(getDataResponse.toProtoNetworkEnvelope().getSerializedSize());
                     cleanup();
-                    listener.onComplete();
                 } else {
                     log.trace("We have stopped already. We ignore that networkNode.sendMessage.onSuccess call.");
                 }
@@ -136,7 +136,7 @@ public class GetDataRequestHandler {
             @Override
             public void onFailure(@NotNull Throwable throwable) {
                 if (!stopped) {
-                    String errorMessage = "Sending getDataRequest to " + connection +
+                    String errorMessage = "Sending getDataResponse to " + connection +
                             " failed. That is expected if the peer is offline. getDataResponse=" + getDataResponse + "." +
                             "Exception: " + throwable.getMessage();
                     handleFault(errorMessage, CloseConnectionReason.SEND_MSG_FAILURE, connection);

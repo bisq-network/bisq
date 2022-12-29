@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -63,8 +64,7 @@ public class ExportJsonFilesService implements DaoSetupService {
     private final File storageDir;
     private final boolean dumpBlockchainData;
 
-    private final ListeningExecutorService executor = Utilities.getListeningExecutorService("JsonExporter",
-            1, 1, 1200);
+    private final ListeningExecutorService executor;
     private JsonFileManager txFileManager, txOutputFileManager, bsqStateFileManager;
 
     @Inject
@@ -74,6 +74,9 @@ public class ExportJsonFilesService implements DaoSetupService {
         this.daoStateService = daoStateService;
         this.storageDir = storageDir;
         this.dumpBlockchainData = dumpBlockchainData;
+
+        ThreadPoolExecutor threadPoolExecutor = Utilities.getThreadPoolExecutor("JsonExporter", 1, 1, 20, 60);
+        executor = MoreExecutors.listeningDecorator(threadPoolExecutor);
     }
 
 
