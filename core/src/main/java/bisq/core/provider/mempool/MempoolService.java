@@ -96,26 +96,36 @@ public class MempoolService {
     }
 
     public void validateOfferMakerTx(TxValidator txValidator, Consumer<TxValidator> resultHandler) {
-        if (!isServiceSupported()) {
-            UserThread.runAfter(() -> resultHandler.accept(txValidator.endResult("mempool request not supported, bypassing", true)), 1);
-            return;
+        if (txValidator.getIsFeeCurrencyBtc() != null && txValidator.getIsFeeCurrencyBtc()) {
+            if (!isServiceSupported()) {
+                UserThread.runAfter(() -> resultHandler.accept(txValidator.endResult("mempool request not supported, bypassing", true)), 1);
+                return;
+            }
+            MempoolRequest mempoolRequest = new MempoolRequest(preferences, socks5ProxyProvider);
+            validateOfferMakerTx(mempoolRequest, txValidator, resultHandler);
+        } else {
+            // using BSQ for fees
+            UserThread.runAfter(() -> resultHandler.accept(txValidator.validateBsqFeeTx(true)), 1);
         }
-        MempoolRequest mempoolRequest = new MempoolRequest(preferences, socks5ProxyProvider);
-        validateOfferMakerTx(mempoolRequest, txValidator, resultHandler);
     }
 
     public void validateOfferTakerTx(Trade trade, Consumer<TxValidator> resultHandler) {
         validateOfferTakerTx(new TxValidator(daoStateService, trade.getTakerFeeTxId(), trade.getAmount(),
-                trade.isCurrencyForTakerFeeBtc(), filterManager), resultHandler);
+                trade.isCurrencyForTakerFeeBtc(), trade.getLockTime(), filterManager), resultHandler);
     }
 
     public void validateOfferTakerTx(TxValidator txValidator, Consumer<TxValidator> resultHandler) {
-        if (!isServiceSupported()) {
-            UserThread.runAfter(() -> resultHandler.accept(txValidator.endResult("mempool request not supported, bypassing", true)), 1);
-            return;
+        if (txValidator.getIsFeeCurrencyBtc() != null && txValidator.getIsFeeCurrencyBtc()) {
+            if (!isServiceSupported()) {
+                UserThread.runAfter(() -> resultHandler.accept(txValidator.endResult("mempool request not supported, bypassing", true)), 1);
+                return;
+            }
+            MempoolRequest mempoolRequest = new MempoolRequest(preferences, socks5ProxyProvider);
+            validateOfferTakerTx(mempoolRequest, txValidator, resultHandler);
+        } else {
+            // using BSQ for fees
+            resultHandler.accept(txValidator.validateBsqFeeTx(false));
         }
-        MempoolRequest mempoolRequest = new MempoolRequest(preferences, socks5ProxyProvider);
-        validateOfferTakerTx(mempoolRequest, txValidator, resultHandler);
     }
 
     public void checkTxIsConfirmed(String txId, Consumer<TxValidator> resultHandler) {

@@ -211,26 +211,29 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     public void checkTakerFeeTx(Trade trade) {
         mempoolStatus.setValue(-1);
-        mempoolService.validateOfferTakerTx(trade, (txValidator -> {
-            mempoolStatus.setValue(txValidator.isFail() ? 0 : 1);
-            if (txValidator.isFail()) {
-                String errorMessage = "Validation of Taker Tx returned: " + txValidator.toString();
-                log.warn(errorMessage);
-                // prompt user to open mediation
-                if (trade.getDisputeState() == Trade.DisputeState.NO_DISPUTE) {
-                    UserThread.runAfter(() -> {
-                        Popup popup = new Popup();
-                        popup.headLine(Res.get("portfolio.pending.openSupportTicket.headline"))
-                                .message(Res.get("portfolio.pending.invalidTx", errorMessage))
-                                .actionButtonText(Res.get("portfolio.pending.openSupportTicket.headline"))
-                                .onAction(dataModel::onOpenSupportTicket)
-                                .closeButtonText(Res.get("shared.cancel"))
-                                .onClose(popup::hide)
-                                .show();
-                    }, 100, TimeUnit.MILLISECONDS);
+        UserThread.runAfter(() -> {
+            mempoolService.validateOfferTakerTx(trade, (txValidator -> {
+                mempoolStatus.setValue(txValidator.isFail() ? 0 : 1);
+                if (txValidator.isFail()) {
+                    String errorMessage = "Validation of Taker Tx returned: " + txValidator.toString();
+                    log.warn(errorMessage);
+                    // prompt user to open mediation
+                    if (trade.getDisputeState() == Trade.DisputeState.NO_DISPUTE) {
+                        UserThread.runAfter(() -> {
+                            Popup popup = new Popup();
+                            popup.headLine(Res.get("portfolio.pending.openSupportTicket.headline"))
+                                    .message(Res.get("portfolio.pending.invalidTx", errorMessage))
+                                    .actionButtonText(Res.get("portfolio.pending.openSupportTicket.headline"))
+                                    .onAction(dataModel::onOpenSupportTicket)
+                                    .closeButtonText(Res.get("shared.cancel"))
+                                    .onClose(popup::hide)
+                                    .show();
+                        }, 100, TimeUnit.MILLISECONDS);
+                    }
                 }
-            }
-        }));
+            }));
+        }, Math.max(5000 - trade.getTradeAge(), 100), TimeUnit.MILLISECONDS);
+        // we wait until the trade has confirmed for at least 5 seconds to allow for DAO to process the block
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
