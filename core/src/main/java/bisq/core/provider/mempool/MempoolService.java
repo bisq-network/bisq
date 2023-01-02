@@ -18,6 +18,7 @@
 package bisq.core.provider.mempool;
 
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.burningman.BurningManPresentationService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.filter.FilterManager;
 import bisq.core.offer.bisq_v1.OfferPayload;
@@ -43,8 +44,10 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -60,6 +63,7 @@ public class MempoolService {
     private final FilterManager filterManager;
     private final DaoFacade daoFacade;
     private final DaoStateService daoStateService;
+    private final BurningManPresentationService burningManPresentationService;
     @Getter
     private int outstandingRequests = 0;
 
@@ -69,13 +73,15 @@ public class MempoolService {
                           Preferences preferences,
                           FilterManager filterManager,
                           DaoFacade daoFacade,
-                          DaoStateService daoStateService) {
+                          DaoStateService daoStateService,
+                          BurningManPresentationService burningManPresentationService) {
         this.socks5ProxyProvider = socks5ProxyProvider;
         this.config = config;
         this.preferences = preferences;
         this.filterManager = filterManager;
         this.daoFacade = daoFacade;
         this.daoStateService = daoStateService;
+        this.burningManPresentationService = burningManPresentationService;
     }
 
     public void onAllServicesInitialized() {
@@ -266,7 +272,17 @@ public class MempoolService {
             }
         });
         btcFeeReceivers.addAll(daoFacade.getAllDonationAddresses());
-        log.debug("Known BTC fee receivers: {}", btcFeeReceivers.toString());
+
+        // We use all BM who had ever had burned BSQ to avoid if a BM just got "deactivated" due decayed burn amounts
+        // that it would trigger a failure here. There is still a small risk that new BM used for the trade fee payment
+        // is not yet visible to the other peer, but that should be very unlikely.
+        // We also get all addresses related to comp. requests, so this list is still rather long, but much shorter
+        // than if we would use all addresses of all BM.
+        Set<String> distributedBMAddresses = burningManPresentationService.getBurningManCandidatesByName().values().stream()
+                .filter(burningManCandidate -> burningManCandidate.getAccumulatedBurnAmount() > 0)
+                .flatMap(burningManCandidate -> burningManCandidate.getAllAddresses().stream())
+                .collect(Collectors.toSet());
+        btcFeeReceivers.addAll(distributedBMAddresses);
 
         return btcFeeReceivers;
     }
