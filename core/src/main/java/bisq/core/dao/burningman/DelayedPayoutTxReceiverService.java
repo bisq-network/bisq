@@ -25,6 +25,7 @@ import bisq.core.dao.state.model.blockchain.Block;
 
 import bisq.common.config.Config;
 import bisq.common.util.Tuple2;
+import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -33,6 +34,8 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,6 +52,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Singleton
 public class DelayedPayoutTxReceiverService implements DaoStateListener {
+    private static final Date HOTFIX_ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.JANUARY, 10);
+
+    public static boolean isHotfixActivated() {
+        return new Date().after(HOTFIX_ACTIVATION_DATE);
+    }
+
     // We don't allow to get further back than 767950 (the block height from Dec. 18th 2022).
     static final int MIN_SNAPSHOT_HEIGHT = Config.baseCurrencyNetwork().isRegtest() ? 0 : 767950;
 
@@ -113,9 +122,12 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     public List<Tuple2<Long, String>> getReceivers(int burningManSelectionHeight,
                                                    long inputAmount,
                                                    long tradeTxFee) {
-
         checkArgument(burningManSelectionHeight >= MIN_SNAPSHOT_HEIGHT, "Selection height must be >= " + MIN_SNAPSHOT_HEIGHT);
-        Collection<BurningManCandidate> burningManCandidates = burningManService.getBurningManCandidatesByName(burningManSelectionHeight).values();
+        Collection<BurningManCandidate> burningManCandidates = isHotfixActivated() ?
+                burningManService.getActiveBurningManCandidates(burningManSelectionHeight) :
+                burningManService.getBurningManCandidatesByName(burningManSelectionHeight).values();
+
+
         if (burningManCandidates.isEmpty()) {
             // If there are no compensation requests (e.g. at dev testing) we fall back to the legacy BM
             return List.of(new Tuple2<>(inputAmount, burningManService.getLegacyBurningManAddress(burningManSelectionHeight)));
