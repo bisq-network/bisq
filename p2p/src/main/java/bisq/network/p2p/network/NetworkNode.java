@@ -50,6 +50,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -104,12 +105,12 @@ public abstract class NetworkNode implements MessageListener {
                 maxConnections * 2,
                 maxConnections * 3,
                 30,
-                60);
+                30);
         sendMessageExecutor = Utilities.getListeningExecutorService("NetworkNode.sendMessage",
                 maxConnections * 2,
                 maxConnections * 3,
                 30,
-                60);
+                30);
         serverExecutor = Utilities.getSingleThreadExecutor("NetworkNode.server-" + servicePort);
     }
 
@@ -140,7 +141,7 @@ public abstract class NetworkNode implements MessageListener {
 
             SettableFuture<Connection> resultFuture = SettableFuture.create();
             ListenableFuture<Connection> future = connectionExecutor.submit(() -> {
-                Thread.currentThread().setName("NetworkNode:SendMessage-to-" + peersNodeAddress.getFullAddress());
+                Thread.currentThread().setName("NetworkNode.connectionExecutor:SendMessage-to-" + peersNodeAddress.getFullAddress());
 
                 if (peersNodeAddress.equals(getNodeAddress())) {
                     log.warn("We are sending a message to ourselves");
@@ -288,25 +289,36 @@ public abstract class NetworkNode implements MessageListener {
         return null;
     }
 
-
     public SettableFuture<Connection> sendMessage(Connection connection, NetworkEnvelope networkEnvelope) {
-        // connection.sendMessage might take a bit (compression, write to stream), so we use a thread to not block
-        ListenableFuture<Connection> future = sendMessageExecutor.submit(() -> {
-            String id = connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get().getFullAddress() : connection.getUid();
-            Thread.currentThread().setName("NetworkNode:SendMessage-to-" + id);
-            connection.sendMessage(networkEnvelope);
-            return connection;
-        });
-        SettableFuture<Connection> resultFuture = SettableFuture.create();
-        Futures.addCallback(future, new FutureCallback<>() {
-            public void onSuccess(Connection connection) {
-                UserThread.execute(() -> resultFuture.set(connection));
-            }
+        return sendMessage(connection, networkEnvelope, sendMessageExecutor);
+    }
 
-            public void onFailure(@NotNull Throwable throwable) {
-                UserThread.execute(() -> resultFuture.setException(throwable));
-            }
-        }, MoreExecutors.directExecutor());
+    public SettableFuture<Connection> sendMessage(Connection connection,
+                                                  NetworkEnvelope networkEnvelope,
+                                                  ListeningExecutorService executor) {
+        SettableFuture<Connection> resultFuture = SettableFuture.create();
+        try {
+            ListenableFuture<Connection> future = executor.submit(() -> {
+                String id = connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get().getFullAddress() : connection.getUid();
+                Thread.currentThread().setName("NetworkNode:SendMessage-to-" + id);
+                connection.sendMessage(networkEnvelope);
+                return connection;
+            });
+
+            Futures.addCallback(future, new FutureCallback<>() {
+                public void onSuccess(Connection connection) {
+                    UserThread.execute(() -> resultFuture.set(connection));
+                }
+
+                public void onFailure(@NotNull Throwable throwable) {
+                    UserThread.execute(() -> resultFuture.setException(throwable));
+                }
+            }, MoreExecutors.directExecutor());
+
+        } catch (RejectedExecutionException exception) {
+            log.error("RejectedExecutionException at sendMessage: ", exception);
+            resultFuture.setException(exception);
+        }
         return resultFuture;
     }
 
