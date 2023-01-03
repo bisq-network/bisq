@@ -29,7 +29,6 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -75,8 +74,8 @@ public class BtcFeeReceiverService implements DaoStateListener {
             return BurningManPresentationService.LEGACY_BURNING_MAN_BTC_FEES_ADDRESS;
         }
 
-        Map<String, BurningManCandidate> burningManCandidatesByName = burningManService.getBurningManCandidatesByName(currentChainHeight);
-        if (burningManCandidatesByName.isEmpty()) {
+        List<BurningManCandidate> activeBurningManCandidates = new ArrayList<>(burningManService.getActiveBurningManCandidates(currentChainHeight));
+        if (activeBurningManCandidates.isEmpty()) {
             // If there are no compensation requests (e.g. at dev testing) we fall back to the default address
             return burningManService.getLegacyBurningManAddress(currentChainHeight);
         }
@@ -86,9 +85,9 @@ public class BtcFeeReceiverService implements DaoStateListener {
         // cappedBurnAmountShare is a % value represented as double. Smallest supported value is 0.01% -> 0.0001.
         // By multiplying it with 10000 and using Math.floor we limit the candidate to 0.01%.
         // Entries with 0 will be ignored in the selection method, so we do not need to filter them out.
-        List<BurningManCandidate> burningManCandidates = new ArrayList<>(burningManCandidatesByName.values());
+        // List<BurningManCandidate> burningManCandidates = new ArrayList<>(burningManCandidatesByName.values());
         int ceiling = 10000;
-        List<Long> amountList = burningManCandidates.stream()
+        List<Long> amountList = activeBurningManCandidates.stream()
                 .map(BurningManCandidate::getCappedBurnAmountShare)
                 .map(cappedBurnAmountShare -> (long) Math.floor(cappedBurnAmountShare * ceiling))
                 .collect(Collectors.toList());
@@ -99,12 +98,12 @@ public class BtcFeeReceiverService implements DaoStateListener {
         }
 
         int winnerIndex = getRandomIndex(amountList, new Random());
-        if (winnerIndex == burningManCandidates.size()) {
+        if (winnerIndex == activeBurningManCandidates.size()) {
             // If we have filled up the missing gap to 100% with the legacy BM we would get an index out of bounds of
             // the burningManCandidates as we added for the legacy BM an entry at the end.
             return burningManService.getLegacyBurningManAddress(currentChainHeight);
         }
-        return burningManCandidates.get(winnerIndex).getMostRecentAddress()
+        return activeBurningManCandidates.get(winnerIndex).getMostRecentAddress()
                 .orElse(burningManService.getLegacyBurningManAddress(currentChainHeight));
     }
 
