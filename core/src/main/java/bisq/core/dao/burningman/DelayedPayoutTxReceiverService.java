@@ -25,6 +25,7 @@ import bisq.core.dao.state.model.blockchain.Block;
 
 import bisq.common.config.Config;
 import bisq.common.util.Tuple2;
+import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -33,6 +34,8 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,6 +52,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Singleton
 public class DelayedPayoutTxReceiverService implements DaoStateListener {
+    private static final Date HOTFIX_ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.JANUARY, 10);
+
+    public static boolean isHotfixActivated() {
+        return new Date().after(HOTFIX_ACTIVATION_DATE);
+    }
+
     // We don't allow to get further back than 767950 (the block height from Dec. 18th 2022).
     static final int MIN_SNAPSHOT_HEIGHT = Config.baseCurrencyNetwork().isRegtest() ? 0 : 767950;
 
@@ -60,9 +69,9 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     // If at DPT there is some leftover amount due to capping of some receivers (burn share is
     // max. ISSUANCE_BOOST_FACTOR times the issuance share) we send it to legacy BM if it is larger
     // than DPT_MIN_REMAINDER_TO_LEGACY_BM, otherwise we spend it as miner fee.
-    // 50000 sat is about 10 USD @ 20k price. We use a rather high value as we want to avoid that the legacy BM
+    // 25000 sat is about 5 USD @ 20k price. We use a rather high value as we want to avoid that the legacy BM
     // gets still payouts.
-    private static final long DPT_MIN_REMAINDER_TO_LEGACY_BM = 50000;
+    private static final long DPT_MIN_REMAINDER_TO_LEGACY_BM = 25000;
 
     // Min. fee rate for DPT. If fee rate used at take offer time was higher we use that.
     // We prefer a rather high fee rate to not risk that the DPT gets stuck if required fee rate would
@@ -113,9 +122,12 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     public List<Tuple2<Long, String>> getReceivers(int burningManSelectionHeight,
                                                    long inputAmount,
                                                    long tradeTxFee) {
-
         checkArgument(burningManSelectionHeight >= MIN_SNAPSHOT_HEIGHT, "Selection height must be >= " + MIN_SNAPSHOT_HEIGHT);
-        Collection<BurningManCandidate> burningManCandidates = burningManService.getBurningManCandidatesByName(burningManSelectionHeight).values();
+        Collection<BurningManCandidate> burningManCandidates = isHotfixActivated() ?
+                burningManService.getActiveBurningManCandidates(burningManSelectionHeight) :
+                burningManService.getBurningManCandidatesByName(burningManSelectionHeight).values();
+
+
         if (burningManCandidates.isEmpty()) {
             // If there are no compensation requests (e.g. at dev testing) we fall back to the legacy BM
             return List.of(new Tuple2<>(inputAmount, burningManService.getLegacyBurningManAddress(burningManSelectionHeight)));

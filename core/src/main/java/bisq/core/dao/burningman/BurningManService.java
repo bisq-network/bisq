@@ -53,6 +53,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
@@ -205,6 +206,13 @@ public class BurningManService {
 
     String getLegacyBurningManAddress(int chainHeight) {
         return daoStateService.getParamValue(Param.RECIPIENT_BTC_ADDRESS, chainHeight);
+    }
+
+    Set<BurningManCandidate> getActiveBurningManCandidates(int chainHeight) {
+        return getBurningManCandidatesByName(chainHeight).values().stream()
+                .filter(burningManCandidate -> burningManCandidate.getCappedBurnAmountShare() > 0)
+                .filter(candidate -> candidate.getMostRecentAddress().isPresent())
+                .collect(Collectors.toSet());
     }
 
 
