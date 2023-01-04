@@ -35,7 +35,10 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -44,6 +47,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @Slf4j
 public class BroadcastHandler implements PeerManager.Listener {
@@ -79,8 +83,9 @@ public class BroadcastHandler implements PeerManager.Listener {
     private final AtomicInteger numOfCompletedBroadcasts = new AtomicInteger();
     private final AtomicInteger numOfFailedBroadcasts = new AtomicInteger();
     private final AtomicInteger numPeersForBroadcast = new AtomicInteger();
-
+    @Nullable
     private Timer timeoutTimer;
+    private final Set<SettableFuture<Connection>> sendMessageFutures = new CopyOnWriteArraySet<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -104,6 +109,10 @@ public class BroadcastHandler implements PeerManager.Listener {
     public void broadcast(List<Broadcaster.BroadcastRequest> broadcastRequests,
                           boolean shutDownRequested,
                           ListeningExecutorService executor) {
+        if (broadcastRequests.isEmpty()) {
+            return;
+        }
+
         List<Connection> confirmedConnections = new ArrayList<>(networkNode.getConfirmedConnections());
         Collections.shuffle(confirmedConnections);
 
@@ -162,7 +171,12 @@ public class BroadcastHandler implements PeerManager.Listener {
                     return;
                 }
 
-                sendToPeer(connection, broadcastRequestsForConnection, executor);
+                try {
+                    sendToPeer(connection, broadcastRequestsForConnection, executor);
+                } catch (RejectedExecutionException e) {
+                    log.error("RejectedExecutionException at broadcast ", e);
+                    cleanup();
+                }
             }, minDelay, maxDelay, TimeUnit.MILLISECONDS);
         }
     }
@@ -250,7 +264,7 @@ public class BroadcastHandler implements PeerManager.Listener {
         // Can be BundleOfEnvelopes or a single BroadcastMessage
         BroadcastMessage broadcastMessage = getMessage(broadcastRequestsForConnection);
         SettableFuture<Connection> future = networkNode.sendMessage(connection, broadcastMessage, executor);
-
+        sendMessageFutures.add(future);
         Futures.addCallback(future, new FutureCallback<>() {
             @Override
             public void onSuccess(Connection connection) {
@@ -324,11 +338,22 @@ public class BroadcastHandler implements PeerManager.Listener {
     }
 
     private void cleanup() {
+        if (stopped.get()) {
+            return;
+        }
+
         stopped.set(true);
+
         if (timeoutTimer != null) {
             timeoutTimer.stop();
             timeoutTimer = null;
         }
+
+        sendMessageFutures.stream()
+                .filter(future -> !future.isCancelled() && !future.isDone())
+                .forEach(future -> future.cancel(true));
+        sendMessageFutures.clear();
+
         peerManager.removeListener(this);
         resultHandler.onCompleted(this);
     }
