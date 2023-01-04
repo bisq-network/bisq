@@ -215,6 +215,7 @@ public class BroadcastHandler implements PeerManager.Listener {
             }
 
             timeoutTriggered.set(true);
+            numOfFailedBroadcasts.incrementAndGet();
 
             log.warn("Broadcast did not complete after {} sec.\n" +
                             "numPeersForBroadcast={}\n" +
