@@ -27,6 +27,7 @@ import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.crypto.Hash;
 import bisq.common.proto.ProtoUtil;
+import bisq.common.proto.network.GetDataResponsePriority;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
@@ -136,6 +137,11 @@ public class SignedWitness implements ProcessOncePersistableNetworkPayload, Pers
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public GetDataResponsePriority getGetDataResponsePriority() {
+        return GetDataResponsePriority.MID;
+    }
 
     @Override
     public boolean isDateInTolerance(Clock clock) {

@@ -22,6 +22,7 @@ import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.proto.network.GetDataResponsePriority;
 import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.Utilities;
 
@@ -84,6 +85,11 @@ public abstract class DisputeAgent implements ProtectedStoragePayload, Expirable
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public GetDataResponsePriority getGetDataResponsePriority() {
+        return GetDataResponsePriority.HIGH;
+    }
 
     @Override
     public long getTTL() {

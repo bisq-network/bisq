@@ -22,6 +22,7 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.Sig;
 import bisq.common.proto.ProtoUtil;
+import bisq.common.proto.network.GetDataResponsePriority;
 import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.Utilities;
@@ -444,6 +445,11 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public GetDataResponsePriority getGetDataResponsePriority() {
+        return GetDataResponsePriority.HIGH;
+    }
 
     @Override
     public long getTTL() {
