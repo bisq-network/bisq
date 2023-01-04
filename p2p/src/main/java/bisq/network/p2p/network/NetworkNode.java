@@ -240,7 +240,12 @@ public abstract class NetworkNode implements MessageListener {
 
                 public void onFailure(@NotNull Throwable throwable) {
                     log.debug("onFailure at sendMessage: peersNodeAddress={}\n\tmessage={}\n\tthrowable={}", peersNodeAddress, networkEnvelope.getClass().getSimpleName(), throwable.toString());
-                    UserThread.execute(() -> resultFuture.setException(throwable));
+                    UserThread.execute(() -> {
+                        if (!resultFuture.setException(throwable)) {
+                            // In case the setException returns false we need to cancel the future.
+                            resultFuture.cancel(true);
+                        }
+                    });
                 }
             }, MoreExecutors.directExecutor());
 
@@ -311,13 +316,23 @@ public abstract class NetworkNode implements MessageListener {
                 }
 
                 public void onFailure(@NotNull Throwable throwable) {
-                    UserThread.execute(() -> resultFuture.setException(throwable));
+                    UserThread.execute(() -> {
+                        if (!resultFuture.setException(throwable)) {
+                            // In case the setException returns false we need to cancel the future.
+                            resultFuture.cancel(true);
+                        }
+                    });
                 }
             }, MoreExecutors.directExecutor());
 
         } catch (RejectedExecutionException exception) {
             log.error("RejectedExecutionException at sendMessage: ", exception);
-            resultFuture.setException(exception);
+            UserThread.execute(() -> {
+                if (!resultFuture.setException(exception)) {
+                    // In case the setException returns false we need to cancel the future.
+                    resultFuture.cancel(true);
+                }
+            });
         }
         return resultFuture;
     }
