@@ -69,7 +69,10 @@ public class MempoolRequest {
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                mempoolServiceCallback.setException(throwable);
+                if (!mempoolServiceCallback.setException(throwable)) {
+                    // In case the setException returns false we need to cancel the future.
+                    mempoolServiceCallback.cancel(true);
+                }
             }
         }, MoreExecutors.directExecutor());
     }
