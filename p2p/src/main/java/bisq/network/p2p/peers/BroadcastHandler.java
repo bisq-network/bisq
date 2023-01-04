@@ -168,7 +168,6 @@ public class BroadcastHandler implements PeerManager.Listener {
     }
 
     public void cancel() {
-        stopped.set(true);
         cleanup();
     }
 
