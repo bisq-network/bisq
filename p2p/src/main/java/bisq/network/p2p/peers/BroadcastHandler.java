@@ -280,8 +280,7 @@ public class BroadcastHandler implements PeerManager.Listener {
 
             @Override
             public void onFailure(@NotNull Throwable throwable) {
-                log.warn("Broadcast to {} failed. ErrorMessage={}", connection.getPeersNodeAddressOptional(),
-                        throwable.getMessage());
+                log.warn("Broadcast to " + connection.getPeersNodeAddressOptional() + " failed. ", throwable);
                 numOfFailedBroadcasts.incrementAndGet();
 
                 if (stopped.get()) {
