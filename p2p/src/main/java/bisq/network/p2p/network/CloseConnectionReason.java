@@ -44,7 +44,7 @@ public enum CloseConnectionReason {
 
     // illegal requests
     RULE_VIOLATION(true, false),
-    PEER_BANNED(true, false),
+    PEER_BANNED(false, false),
     INVALID_CLASS_RECEIVED(false, false),
     MANDATORY_CAPABILITIES_NOT_SUPPORTED(false, false);
 
