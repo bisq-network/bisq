@@ -32,7 +32,6 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -66,8 +65,12 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
                         preparedDepositTx,
                         delayedPayoutTxReceivers,
                         lockTime);
-                checkArgument(buyersPreparedDelayedPayoutTx.getTxId().equals(sellersPreparedDelayedPayoutTx.getTxId()),
-                        "TxIds of buyersPreparedDelayedPayoutTx and sellersPreparedDelayedPayoutTx must be the same");
+                if (!buyersPreparedDelayedPayoutTx.getTxId().equals(sellersPreparedDelayedPayoutTx.getTxId())) {
+                    String errorMsg = "TxIds of buyersPreparedDelayedPayoutTx and sellersPreparedDelayedPayoutTx must be the same.";
+                    log.error("{} \nbuyersPreparedDelayedPayoutTx={}, \nsellersPreparedDelayedPayoutTx={}",
+                            errorMsg, buyersPreparedDelayedPayoutTx, sellersPreparedDelayedPayoutTx);
+                    throw new IllegalArgumentException(errorMsg);
+                }
             }
 
             // If the deposit tx is non-malleable, we already know its final ID, so should check that now
