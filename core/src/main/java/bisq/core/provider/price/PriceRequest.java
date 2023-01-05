@@ -60,15 +60,12 @@ public class PriceRequest {
                 if (!shutDownRequested) {
                     resultFuture.set(marketPriceTuple);
                 }
-
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                if (!shutDownRequested) {
-                    if (!resultFuture.setException(new PriceRequestException(throwable, baseUrl))) {
-                        // In case the setException returns false we need to cancel the future.
-                        resultFuture.cancel(true);
-                    }
+                if (!shutDownRequested && !resultFuture.setException(new PriceRequestException(throwable, baseUrl))) {
+                    // In case the setException returns false we need to cancel the future.
+                    resultFuture.cancel(true);
                 }
             }
         }, MoreExecutors.directExecutor());
