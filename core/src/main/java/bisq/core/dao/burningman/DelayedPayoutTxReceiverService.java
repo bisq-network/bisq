@@ -52,7 +52,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Singleton
 public class DelayedPayoutTxReceiverService implements DaoStateListener {
-    private static final Date HOTFIX_ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.JANUARY, 10);
+    private static final Date HOTFIX_ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.JANUARY, 4);
 
     public static boolean isHotfixActivated() {
         return new Date().after(HOTFIX_ACTIVATION_DATE);
