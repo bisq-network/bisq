@@ -109,14 +109,16 @@ public class DaoPresentation implements DaoStateListener, DaoStateMonitoringServ
 
     @Override
     public void onDaoStateHashesChanged() {
-        if (daoStateService.isParseBlockChainComplete()) {
-            if (daoStateMonitoringService.isInConflictWithSeedNode() ||
-                    daoStateMonitoringService.isDaoStateBlockChainNotConnecting()) {
-                new Popup().warning(Res.get("popup.warning.daoNeedsResync"))
-                        .actionButtonTextWithGoTo("navigation.dao.networkMonitor")
-                        .onAction(() -> navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class, DaoStateMonitorView.class))
-                        .show();
-            }
+        if (!daoStateService.isParseBlockChainComplete()) {
+            return;
+        }
+
+        if (daoStateMonitoringService.isInConflictWithSeedNode() ||
+                daoStateMonitoringService.isDaoStateBlockChainNotConnecting()) {
+            new Popup().warning(Res.get("popup.warning.daoNeedsResync"))
+                    .actionButtonTextWithGoTo("navigation.dao.networkMonitor")
+                    .onAction(() -> navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class, DaoStateMonitorView.class))
+                    .show();
         }
     }
 
