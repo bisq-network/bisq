@@ -74,7 +74,7 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
                             errorMsg, buyersPreparedDelayedPayoutTx, sellersPreparedDelayedPayoutTx,
                             processModel.getBtcWalletService().getBestChainHeight(),
                             processModel.getDaoFacade().getChainHeight(),
-                            processModel.getDaoFacade().isDaoStateIsInSync());
+                            processModel.getDaoFacade().isDaoStateReadyAndInSync());
                     throw new IllegalArgumentException(errorMsg);
                 }
             }

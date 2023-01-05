@@ -75,7 +75,6 @@ public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
                         lockTime);
 
                 if (!buyersDelayedPayoutTx.getTxId().equals(finalDelayedPayoutTx.getTxId())) {
-
                     String errorMsg = "TxIds of buyersDelayedPayoutTx and finalDelayedPayoutTx must be the same.";
                     log.error("{} \nbuyersDelayedPayoutTx={}, \nfinalDelayedPayoutTx={}, " +
                                     "\nBtcWalletService.chainHeight={}, " +
@@ -84,8 +83,7 @@ public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
                             errorMsg, buyersDelayedPayoutTx, finalDelayedPayoutTx,
                             processModel.getBtcWalletService().getBestChainHeight(),
                             processModel.getDaoFacade().getChainHeight(),
-                            processModel.getDaoFacade().isDaoStateIsInSync());
-
+                            processModel.getDaoFacade().isDaoStateReadyAndInSync());
                     throw new IllegalArgumentException(errorMsg);
                 }
             }
