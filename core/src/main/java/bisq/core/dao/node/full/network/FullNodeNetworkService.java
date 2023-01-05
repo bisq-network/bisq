@@ -206,7 +206,7 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
     }
 
     private void handleRepublishGovernanceDataRequest() {
-        log.warn("We received a RepublishGovernanceDataRequest and re-published all proposalPayloads and " +
+        log.info("We received a RepublishGovernanceDataRequest and re-published all proposalPayloads and " +
                 "blindVotePayloads to the P2P network.");
         missingDataRequestService.reRepublishAllGovernanceData();
     }
