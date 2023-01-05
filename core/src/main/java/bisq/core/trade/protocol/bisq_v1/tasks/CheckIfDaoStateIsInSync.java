@@ -36,7 +36,7 @@ public class CheckIfDaoStateIsInSync extends TradeTask {
         try {
             runInterceptHook();
 
-            checkArgument(processModel.getDaoFacade().isDaoStateIsInSync(), "DAO state is not in sync with seed nodes");
+            checkArgument(processModel.getDaoFacade().isDaoStateReadyAndInSync(), "DAO state is not in sync with seed nodes");
         } catch (Throwable t) {
             failed(t);
         }
