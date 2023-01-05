@@ -56,7 +56,10 @@ public class FeeRequest {
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                resultFuture.setException(throwable);
+                if (!resultFuture.setException(throwable)) {
+                    // In case the setException returns false we need to cancel the future.
+                    resultFuture.cancel(true);
+                }
             }
         }, MoreExecutors.directExecutor());
 
