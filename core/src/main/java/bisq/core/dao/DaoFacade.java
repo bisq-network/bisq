@@ -531,9 +531,12 @@ public class DaoFacade implements DaoSetupService {
         return daoStateService.getBlockAtHeight(chainHeight);
     }
 
-    public boolean daoStateNeedsRebuilding() {
-        return daoStateMonitoringService.isInConflictWithSeedNode() || daoStateMonitoringService.isDaoStateBlockChainNotConnecting();
+    public boolean isDaoStateReadyAndInSync() {
+        return daoStateService.isParseBlockChainComplete() &&
+                !daoStateMonitoringService.isInConflictWithSeedNode() &&
+                !daoStateMonitoringService.isDaoStateBlockChainNotConnecting();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Use case: Bonding
@@ -812,11 +815,5 @@ public class DaoFacade implements DaoSetupService {
 
     public boolean isParseBlockChainComplete() {
         return daoStateService.isParseBlockChainComplete();
-    }
-
-    public boolean isDaoStateReadyAndInSync() {
-        return daoStateService.isParseBlockChainComplete() &&
-                !daoStateMonitoringService.isInConflictWithSeedNode() &&
-                !daoStateMonitoringService.isDaoStateBlockChainNotConnecting();
     }
 }
