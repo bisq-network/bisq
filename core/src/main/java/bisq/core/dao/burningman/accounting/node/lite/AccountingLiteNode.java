@@ -48,6 +48,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -191,35 +193,44 @@ public class AccountingLiteNode extends AccountingNode implements AccountingLite
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void processAccountingBlocks(List<AccountingBlock> blocks) {
-        log.info("We received blocks from height {} to {}",
-                blocks.get(0).getHeight(),
-                blocks.get(blocks.size() - 1).getHeight());
+        CompletableFuture.runAsync(() -> {
+            long ts = System.currentTimeMillis();
+            log.info("We received blocks from height {} to {}",
+                    blocks.get(0).getHeight(),
+                    blocks.get(blocks.size() - 1).getHeight());
 
-        boolean requiresReOrg = false;
-        for (AccountingBlock block : blocks) {
-            try {
-                burningManAccountingService.addBlock(block);
-            } catch (BlockHeightNotConnectingException e) {
-                log.info("Height not connecting. This could happen if we received multiple responses and had already applied a previous one. {}", e.toString());
-            } catch (BlockHashNotConnectingException e) {
-                log.warn("Interrupt loop because a reorg is required. {}", e.toString());
-                requiresReOrg = true;
-                break;
+            AtomicBoolean requiresReOrg = new AtomicBoolean(false);
+            for (AccountingBlock block : blocks) {
+                try {
+                    burningManAccountingService.addBlock(block);
+                } catch (BlockHeightNotConnectingException e) {
+                    log.info("Height not connecting. This could happen if we received multiple responses and had already applied a previous one. {}", e.toString());
+                } catch (BlockHashNotConnectingException e) {
+                    log.warn("Interrupt loop because a reorg is required. {}", e.toString());
+                    requiresReOrg.set(true);
+                    break;
+                }
             }
-        }
-        if (requiresReOrg) {
-            applyReOrg();
-            return;
-        }
 
-        int heightOfLastBlock = burningManAccountingService.getBlockHeightOfLastBlock();
-        if (walletsSetup.isDownloadComplete() && heightOfLastBlock < bsqWalletService.getBestChainHeight()) {
-            accountingLiteNodeNetworkService.requestBlocks(heightOfLastBlock + 1);
-        } else {
-            if (!initialBlockRequestsComplete) {
-                onInitialBlockRequestsComplete();
-            }
-        }
+            UserThread.execute(() -> {
+                if (requiresReOrg.get()) {
+                    applyReOrg();
+                    return;
+                }
+
+                int heightOfLastBlock = burningManAccountingService.getBlockHeightOfLastBlock();
+                if (walletsSetup.isDownloadComplete() && heightOfLastBlock < bsqWalletService.getBestChainHeight()) {
+                    accountingLiteNodeNetworkService.requestBlocks(heightOfLastBlock + 1);
+                } else {
+                    if (!initialBlockRequestsComplete) {
+                        onInitialBlockRequestsComplete();
+                    }
+                }
+
+                // 2833 blocks takes about 24 sec
+                log.info("processAccountingBlocksAsync for {} blocks took {} ms", blocks.size(), System.currentTimeMillis() - ts);
+            });
+        });
     }
 
     private void processNewAccountingBlock(AccountingBlock accountingBlock) {
