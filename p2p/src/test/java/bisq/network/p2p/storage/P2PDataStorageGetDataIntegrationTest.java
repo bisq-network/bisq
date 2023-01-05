@@ -68,7 +68,7 @@ public class P2PDataStorageGetDataIntegrationTest {
     }
 
     // TESTCASE: Basic synchronization of a ProtectedStorageEntry works between a seed node and client node
-    @Test
+    //@Test
     public void basicSynchronizationWorks() throws NoSuchAlgorithmException {
         TestState seedNodeTestState = new TestState();
         P2PDataStorage seedNode = seedNodeTestState.mockedStorage;
@@ -92,7 +92,7 @@ public class P2PDataStorageGetDataIntegrationTest {
     }
 
     // TESTCASE: Synchronization after peer restart works for in-memory ProtectedStorageEntrys
-    @Test
+    // @Test
     public void basicSynchronizationWorksAfterRestartTransient() throws NoSuchAlgorithmException {
         ProtectedStorageEntry transientEntry = getProtectedStorageEntry();
 

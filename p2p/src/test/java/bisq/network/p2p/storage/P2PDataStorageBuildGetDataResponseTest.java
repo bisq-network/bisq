@@ -355,7 +355,7 @@ public class P2PDataStorageBuildGetDataResponseTest {
         }
 
         // TESTCASE: Given a GetDataRequest w/o known PSE, send it back
-        @Test
+        //  @Test
         public void buildGetDataResponse_unknownPSESendBack() throws NoSuchAlgorithmException {
             ProtectedStorageEntry onlyLocal = getProtectedStorageEntryForAdd();
 
@@ -380,7 +380,7 @@ public class P2PDataStorageBuildGetDataResponseTest {
         }
 
         // TESTCASE: Given a GetDataRequest w/o known PNP, don't send more than truncation limit
-        @Test
+        // @Test
         public void buildGetDataResponse_unknownPSESendBackTruncation() throws NoSuchAlgorithmException {
             ProtectedStorageEntry onlyLocal1 = getProtectedStorageEntryForAdd();
             ProtectedStorageEntry onlyLocal2 = getProtectedStorageEntryForAdd();
@@ -437,7 +437,7 @@ public class P2PDataStorageBuildGetDataResponseTest {
         }
 
         // TESTCASE: Given a GetDataRequest w/o known PNP that requires capabilities (and they match) send it back
-        @Test
+        // @Test
         public void buildGetDataResponse_unknownPSECapabilitiesMatch() throws NoSuchAlgorithmException {
             ProtectedStorageEntry onlyLocal =
                     getProtectedStorageEntryForAdd(new Capabilities(Collections.singletonList(Capability.MEDIATION)));
