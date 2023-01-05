@@ -291,7 +291,8 @@ public abstract class WalletService {
                 continue;
             }
             if (!connectedOutput.isMine(wallet)) {
-                log.error("connectedOutput is not mine");
+                log.info("ConnectedOutput is not mine. This can be the case for BSQ transactions where the " +
+                        "input gets signed by the other wallet. connectedOutput={}", connectedOutput);
                 continue;
             }
 
