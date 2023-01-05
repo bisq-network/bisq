@@ -75,12 +75,16 @@ public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
                         lockTime);
 
                 if (!buyersDelayedPayoutTx.getTxId().equals(finalDelayedPayoutTx.getTxId())) {
+
                     String errorMsg = "TxIds of buyersDelayedPayoutTx and finalDelayedPayoutTx must be the same.";
                     log.error("{} \nbuyersDelayedPayoutTx={}, \nfinalDelayedPayoutTx={}, " +
-                                    "\nBtcWalletService.chainHeight={}, \nDaoState.chainHeight={}",
+                                    "\nBtcWalletService.chainHeight={}, " +
+                                    "\nDaoState.chainHeight={}, " +
+                                    "\nisDaoStateIsInSync={}",
                             errorMsg, buyersDelayedPayoutTx, finalDelayedPayoutTx,
                             processModel.getBtcWalletService().getBestChainHeight(),
-                            processModel.getDaoFacade().getChainHeight());
+                            processModel.getDaoFacade().getChainHeight(),
+                            processModel.getDaoFacade().isDaoStateIsInSync());
 
                     throw new IllegalArgumentException(errorMsg);
                 }
