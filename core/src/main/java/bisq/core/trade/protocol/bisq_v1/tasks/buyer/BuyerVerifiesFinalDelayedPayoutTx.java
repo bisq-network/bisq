@@ -32,7 +32,6 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -74,8 +73,19 @@ public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
                         depositTx,
                         delayedPayoutTxReceivers,
                         lockTime);
-                checkArgument(buyersDelayedPayoutTx.getTxId().equals(finalDelayedPayoutTx.getTxId()),
-                        "TxIds of buyersDelayedPayoutTx and finalDelayedPayoutTx must be the same");
+
+                if (!buyersDelayedPayoutTx.getTxId().equals(finalDelayedPayoutTx.getTxId())) {
+                    String errorMsg = "TxIds of buyersDelayedPayoutTx and finalDelayedPayoutTx must be the same.";
+                    log.error("{} \nbuyersDelayedPayoutTx={}, \nfinalDelayedPayoutTx={}, " +
+                                    "\nBtcWalletService.chainHeight={}, " +
+                                    "\nDaoState.chainHeight={}, " +
+                                    "\nisDaoStateIsInSync={}",
+                            errorMsg, buyersDelayedPayoutTx, finalDelayedPayoutTx,
+                            processModel.getBtcWalletService().getBestChainHeight(),
+                            processModel.getDaoFacade().getChainHeight(),
+                            processModel.getDaoFacade().isDaoStateReadyAndInSync());
+                    throw new IllegalArgumentException(errorMsg);
+                }
             }
 
             complete();

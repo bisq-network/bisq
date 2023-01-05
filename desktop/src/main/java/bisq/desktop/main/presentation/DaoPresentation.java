@@ -1,11 +1,15 @@
 package bisq.desktop.main.presentation;
 
 import bisq.desktop.Navigation;
-import bisq.desktop.util.GUIUtil;
+import bisq.desktop.main.MainView;
+import bisq.desktop.main.dao.DaoView;
+import bisq.desktop.main.dao.monitor.MonitorView;
+import bisq.desktop.main.dao.monitor.daostate.DaoStateMonitorView;
+import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.DaoFacade;
+import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
@@ -28,24 +32,21 @@ import javafx.collections.MapChangeListener;
 import lombok.Getter;
 
 @Singleton
-public class DaoPresentation implements DaoStateListener {
+public class DaoPresentation implements DaoStateListener, DaoStateMonitoringService.Listener {
     public static final String DAO_NEWS = "daoNews";
 
-    private final Preferences preferences;
     private final Navigation navigation;
     private final BtcWalletService btcWalletService;
-    private final DaoFacade daoFacade;
+    private final DaoStateMonitoringService daoStateMonitoringService;
     private final BsqWalletService bsqWalletService;
     private final DaoStateService daoStateService;
 
     private final ChangeListener<Number> walletChainHeightListener;
-
     @Getter
-    private final DoubleProperty bsqSyncProgress = new SimpleDoubleProperty(-1);
+    private final DoubleProperty daoStateSyncProgress = new SimpleDoubleProperty(-1);
     @Getter
-    private final StringProperty bsqInfo = new SimpleStringProperty("");
+    private final StringProperty daoStateInfo = new SimpleStringProperty("");
     private final SimpleBooleanProperty showNotification = new SimpleBooleanProperty(false);
-    private boolean daoConflictWarningShown = false;    // allow only one conflict warning per session
 
     @Inject
     public DaoPresentation(Preferences preferences,
@@ -53,12 +54,11 @@ public class DaoPresentation implements DaoStateListener {
                            BtcWalletService btcWalletService,
                            BsqWalletService bsqWalletService,
                            DaoStateService daoStateService,
-                           DaoFacade daoFacade) {
-        this.preferences = preferences;
+                           DaoStateMonitoringService daoStateMonitoringService) {
         this.navigation = navigation;
         this.btcWalletService = btcWalletService;
         this.bsqWalletService = bsqWalletService;
-        this.daoFacade = daoFacade;
+        this.daoStateMonitoringService = daoStateMonitoringService;
         this.daoStateService = daoStateService;
 
         preferences.getDontShowAgainMapAsObservable().addListener((MapChangeListener<? super String, ? super Boolean>) change -> {
@@ -69,37 +69,29 @@ public class DaoPresentation implements DaoStateListener {
             }
         });
 
+        daoStateService.addDaoStateListener(this);
+        daoStateMonitoringService.addListener(this);
+
         walletChainHeightListener = (observable, oldValue, newValue) -> onUpdateAnyChainHeight();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
+    // Public
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void onUpdateAnyChainHeight() {
-        final int bsqBlockChainHeight = daoFacade.getChainHeight();
-        final int bsqWalletChainHeight = bsqWalletService.getBestChainHeight();
-        if (bsqWalletChainHeight > 0) {
-            final boolean synced = bsqWalletChainHeight == bsqBlockChainHeight;
-            if (bsqBlockChainHeight != bsqWalletChainHeight) {
-                bsqSyncProgress.set(-1);
-            } else {
-                bsqSyncProgress.set(0);
-            }
+    public void init() {
+        showNotification.set(false);
 
-            if (synced) {
-                bsqInfo.set("");
-                if (daoFacade.daoStateNeedsRebuilding() && !daoConflictWarningShown) {
-                    daoConflictWarningShown = true;     // only warn max 1 time per session so as not to annoy
-                    GUIUtil.showDaoNeedsResyncPopup(navigation);
-                }
-            } else {
-                bsqInfo.set(Res.get("mainView.footer.bsqInfo.synchronizing"));
-            }
-        } else {
-            bsqInfo.set(Res.get("mainView.footer.bsqInfo.synchronizing"));
-        }
+        btcWalletService.getChainHeightProperty().addListener(walletChainHeightListener);
+        daoStateService.addDaoStateListener(this);
+
+        onUpdateAnyChainHeight();
     }
+
+    public BooleanProperty getShowDaoUpdatesNotification() {
+        return showNotification;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DaoStateListener
@@ -110,22 +102,37 @@ public class DaoPresentation implements DaoStateListener {
         onUpdateAnyChainHeight();
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // Public
+    // DaoStateMonitoringService.Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BooleanProperty getShowDaoUpdatesNotification() {
-        return showNotification;
+    @Override
+    public void onDaoStateHashesChanged() {
+        if (!daoStateService.isParseBlockChainComplete()) {
+            return;
+        }
+
+        if (daoStateMonitoringService.isInConflictWithSeedNode() ||
+                daoStateMonitoringService.isDaoStateBlockChainNotConnecting()) {
+            new Popup().warning(Res.get("popup.warning.daoNeedsResync"))
+                    .actionButtonTextWithGoTo("navigation.dao.networkMonitor")
+                    .onAction(() -> navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class, DaoStateMonitorView.class))
+                    .show();
+        }
     }
 
-    public void setup() {
-        // devs enable this when a news badge is required
-        //showNotification.set(DevEnv.isDaoActivated() && preferences.showAgain(DAO_NEWS));
-        showNotification.set(false);
 
-        this.btcWalletService.getChainHeightProperty().addListener(walletChainHeightListener);
-        daoStateService.addDaoStateListener(this);
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
-        onUpdateAnyChainHeight();
+    private void onUpdateAnyChainHeight() {
+        int bsqWalletChainHeight = bsqWalletService.getBestChainHeight();
+        int daoStateChainHeight = daoStateService.getChainHeight();
+        boolean chainHeightsInSync = bsqWalletChainHeight > 0 && bsqWalletChainHeight == daoStateChainHeight;
+        boolean isDaoStateReady = chainHeightsInSync && daoStateService.isParseBlockChainComplete();
+        daoStateSyncProgress.set(isDaoStateReady ? 0 : -1);
+        daoStateInfo.set(isDaoStateReady ? "" : Res.get("mainView.footer.bsqInfo.synchronizing"));
     }
 }
