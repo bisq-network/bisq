@@ -21,6 +21,7 @@ import bisq.network.p2p.storage.P2PDataStorage;
 
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Sig;
+import bisq.common.proto.network.GetDataResponsePriority;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.network.NetworkProtoResolver;
 import bisq.common.proto.persistable.PersistablePayload;
@@ -145,6 +146,10 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
     public boolean isExpired(Clock clock) {
         return protectedStoragePayload instanceof ExpirablePayload &&
                 (clock.millis() - creationTimeStamp) > ((ExpirablePayload) protectedStoragePayload).getTTL();
+    }
+
+    public GetDataResponsePriority getGetDataResponsePriority() {
+        return protectedStoragePayload.getGetDataResponsePriority();
     }
 
     /*

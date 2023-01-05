@@ -62,6 +62,7 @@ import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.Sig;
 import bisq.common.persistence.PersistenceManager;
+import bisq.common.proto.network.GetDataResponsePriority;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
@@ -71,7 +72,6 @@ import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.Message;
 
 import com.google.inject.name.Named;
 
@@ -106,6 +106,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -324,7 +325,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         peerCapabilities,
                         maxEntriesPerType,
                         limit,
-                        wasPersistableNetworkPayloadsTruncated);
+                        wasPersistableNetworkPayloadsTruncated,
+                        true);
         log.info("{} PersistableNetworkPayload entries remained after filtered by excluded keys. " +
                         "Original map had {} entries.",
                 filteredPersistableNetworkPayloads.size(), mapForDataResponse.size());
@@ -343,7 +345,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         peerCapabilities,
                         maxEntriesPerType,
                         limit,
-                        wasProtectedStorageEntriesTruncated);
+                        wasProtectedStorageEntriesTruncated,
+                        false);
         log.info("{} ProtectedStorageEntry entries remained after filtered by excluded keys. " +
                         "Original map had {} entries.",
                 filteredProtectedStorageEntries.size(), map.size());
@@ -410,83 +413,130 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      */
     static private <T extends NetworkPayload> Set<T> filterKnownHashes(
             Map<ByteArray, T> toFilter,
-            Function<T, ? extends NetworkPayload> objToPayload,
+            Function<T, ? extends NetworkPayload> asPayload,
             Set<ByteArray> knownHashes,
             Capabilities peerCapabilities,
             int maxEntries,
             long limit,
-            AtomicBoolean outTruncated) {
-
-        log.info("Num knownHashes {}", knownHashes.size());
+            AtomicBoolean outTruncated,
+            boolean isPersistableNetworkPayload) {
+        log.info("Filter {} data based on {} knownHashes",
+                isPersistableNetworkPayload ? "PersistableNetworkPayload" : "ProtectedStorageEntry",
+                knownHashes.size());
 
         AtomicLong totalSize = new AtomicLong();
         AtomicBoolean exceededSizeLimit = new AtomicBoolean();
 
-        // We start with the non-DateSortedTruncatablePayload as they have higher priority. In case we would exceed our
-        // size limit the following DateSortedTruncatablePayload items would not get added at all.
         Set<Map.Entry<ByteArray, T>> entries = toFilter.entrySet();
-        List<T> filteredResults = entries.stream()
-                .filter(entry -> !(entry.getValue() instanceof DateSortedTruncatablePayload))
-                .filter(entry -> !knownHashes.contains(entry.getKey()))
-                .map(Map.Entry::getValue)
-                .filter(payload -> shouldTransmitPayloadToPeer(peerCapabilities, objToPayload.apply(payload)))
-                .filter(payload -> {
-                    Message message = payload.toProtoMessage();
-                    if (message == null) {
-                        return true;
-                    }
-                    if (exceededSizeLimit.get() || totalSize.addAndGet(message.getSerializedSize()) > limit) {
-                        exceededSizeLimit.set(true);
-                    }
-                    return !exceededSizeLimit.get();
-                })
-                .collect(Collectors.toList());
-        log.info("Num filtered non-dateSortedTruncatablePayloads {}", filteredResults.size());
+        Map<String, AtomicInteger> numItemsByClassName = new HashMap<>();
+        entries.forEach(entry -> {
+            String name = asPayload.apply(entry.getValue()).getClass().getSimpleName();
+            numItemsByClassName.putIfAbsent(name, new AtomicInteger());
+            numItemsByClassName.get(name).incrementAndGet();
+        });
+        log.info("numItemsByClassName: {}", numItemsByClassName);
 
-        List<T> dateSortedTruncatablePayloads = entries.stream()
-                .filter(entry -> entry.getValue() instanceof DateSortedTruncatablePayload)
+        // Map.Entry.value can be ProtectedStorageEntry or PersistableNetworkPayload. We call it item in the steam iterations.
+        List<T> filteredItems = entries.stream()
                 .filter(entry -> !knownHashes.contains(entry.getKey()))
                 .map(Map.Entry::getValue)
-                .filter(payload -> shouldTransmitPayloadToPeer(peerCapabilities, objToPayload.apply(payload)))
-                .filter(payload -> {
-                    Message message = payload.toProtoMessage();
-                    if (message == null) {
-                        return true;
-                    }
-                    if (exceededSizeLimit.get() || totalSize.addAndGet(message.getSerializedSize()) > limit) {
-                        exceededSizeLimit.set(true);
-                    }
-                    return !exceededSizeLimit.get();
-                })
-                .sorted(Comparator.comparing(payload -> ((DateSortedTruncatablePayload) payload).getDate()))
+                .filter(item -> shouldTransmitPayloadToPeer(peerCapabilities, asPayload.apply(item)))
                 .collect(Collectors.toList());
-        log.info("Num filtered dateSortedTruncatablePayloads {}", dateSortedTruncatablePayloads.size());
-        if (!dateSortedTruncatablePayloads.isEmpty()) {
-            int maxItems = ((DateSortedTruncatablePayload) dateSortedTruncatablePayloads.get(0)).maxItems();
-            if (dateSortedTruncatablePayloads.size() > maxItems) {
-                int fromIndex = dateSortedTruncatablePayloads.size() - maxItems;
-                int toIndex = dateSortedTruncatablePayloads.size();
-                dateSortedTruncatablePayloads = dateSortedTruncatablePayloads.subList(fromIndex, toIndex);
-                outTruncated.set(true);
-                log.info("Num truncated dateSortedTruncatablePayloads {}", dateSortedTruncatablePayloads.size());
+        List<T> resultItems = new ArrayList<>();
+
+        // Truncation follows this rules
+        // 1. Add all payloads with GetDataResponsePriority.MID
+        // 2. Add all payloads with GetDataResponsePriority.LOW && !DateSortedTruncatablePayload until exceededSizeLimit is reached
+        // 3. if(!exceededSizeLimit) Add all payloads with GetDataResponsePriority.LOW && DateSortedTruncatablePayload until
+        //    exceededSizeLimit is reached and truncate by maxItems (sorted by date). We add the sublist to our resultItems in
+        //    reverse order so in case we cut off at next step we cut off oldest items.
+        // 4. We truncate list if resultList size > maxEntries
+        // 5. Add all payloads with GetDataResponsePriority.HIGH
+
+
+        // 1. Add all payloads with GetDataResponsePriority.MID
+        List<T> midPrioItems = filteredItems.stream()
+                .filter(item -> item.getGetDataResponsePriority() == GetDataResponsePriority.MID)
+                .collect(Collectors.toList());
+        resultItems.addAll(midPrioItems);
+        log.info("Number of items with GetDataResponsePriority.MID: {}", midPrioItems.size());
+
+        // 2. Add all payloads with GetDataResponsePriority.LOW && !DateSortedTruncatablePayload until exceededSizeLimit is reached
+        List<T> lowPrioItems = filteredItems.stream()
+                .filter(item -> item.getGetDataResponsePriority() == GetDataResponsePriority.LOW)
+                .filter(item -> !(asPayload.apply(item) instanceof DateSortedTruncatablePayload))
+                .filter(item -> {
+                    if (exceededSizeLimit.get()) {
+                        return false;
+                    }
+                    if (totalSize.addAndGet(item.toProtoMessage().getSerializedSize()) > limit) {
+                        exceededSizeLimit.set(true);
+                        return false;
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList());
+        resultItems.addAll(lowPrioItems);
+        log.info("Number of items with GetDataResponsePriority.LOW and !DateSortedTruncatablePayload: {}. Exceeded size limit: {}", lowPrioItems.size(), exceededSizeLimit.get());
+
+        // 3. if(!exceededSizeLimit) Add all payloads with GetDataResponsePriority.LOW && DateSortedTruncatablePayload until
+        //    exceededSizeLimit is reached and truncate by maxItems (sorted by date). We add the sublist to our resultItems in
+        //    reverse order so in case we cut off at next step we cut off oldest items.
+        if (!exceededSizeLimit.get()) {
+            List<T> dateSortedItems = filteredItems.stream()
+                    .filter(item -> item.getGetDataResponsePriority() == GetDataResponsePriority.LOW)
+                    .filter(item -> asPayload.apply(item) instanceof DateSortedTruncatablePayload)
+                    .filter(item -> {
+                        if (exceededSizeLimit.get()) {
+                            return false;
+                        }
+                        if (totalSize.addAndGet(item.toProtoMessage().getSerializedSize()) > limit) {
+                            exceededSizeLimit.set(true);
+                            return false;
+                        }
+                        return true;
+                    })
+                    .sorted(Comparator.comparing(item -> ((DateSortedTruncatablePayload) asPayload.apply(item)).getDate()))
+                    .collect(Collectors.toList());
+            if (!dateSortedItems.isEmpty()) {
+                int maxItems = ((DateSortedTruncatablePayload) asPayload.apply(dateSortedItems.get(0))).maxItems();
+                int size = dateSortedItems.size();
+                if (size > maxItems) {
+                    int fromIndex = size - maxItems;
+                    dateSortedItems = dateSortedItems.subList(fromIndex, size);
+                    outTruncated.set(true);
+                    log.info("Num truncated dateSortedItems {}", size);
+                    log.info("Removed oldest {} dateSortedItems as we exceeded {}", fromIndex, maxItems);
+                }
             }
+            log.info("Number of items with GetDataResponsePriority.LOW and DateSortedTruncatablePayload: {}. Was truncated: {}", dateSortedItems.size(), outTruncated.get());
+
+            // We reverse sorting so in case we get truncated we cut off the older items
+            Comparator<T> comparator = Comparator.comparing(item -> ((DateSortedTruncatablePayload) asPayload.apply(item)).getDate());
+            dateSortedItems.sort(comparator.reversed());
+            resultItems.addAll(dateSortedItems);
+        } else {
+            log.info("No dateSortedItems added as we exceeded already the exceededSizeLimit of {}", limit);
         }
 
-        // The non-dateSortedTruncatablePayloads have higher prio, so we added dateSortedTruncatablePayloads
-        // after those so in case we need to truncate we first truncate the dateSortedTruncatablePayloads.
-        filteredResults.addAll(dateSortedTruncatablePayloads);
-
-        if (filteredResults.size() > maxEntries) {
-            filteredResults = filteredResults.subList(0, maxEntries);
+        // 4. We truncate list if resultList size > maxEntries
+        int size = resultItems.size();
+        if (size > maxEntries) {
+            resultItems = resultItems.subList(0, maxEntries);
             outTruncated.set(true);
-            log.info("Num truncated filteredResults {}", filteredResults.size());
-        } else {
-            log.info("Num filteredResults {}", filteredResults.size());
+            log.info("Removed last {} items as we exceeded {}", size - maxEntries, maxEntries);
         }
 
         outTruncated.set(outTruncated.get() || exceededSizeLimit.get());
 
-        return new HashSet<>(filteredResults);
+        // 5. Add all payloads with GetDataResponsePriority.HIGH
+        List<T> highPrioItems = filteredItems.stream()
+                .filter(item -> item.getGetDataResponsePriority() == GetDataResponsePriority.HIGH)
+                .collect(Collectors.toList());
+        resultItems.addAll(highPrioItems);
+        log.info("Number of items with GetDataResponsePriority.HIGH: {}", highPrioItems.size());
+        log.info("Number of result items we send to requester: {}", resultItems.size());
+        return new HashSet<>(resultItems);
     }
 
     public Collection<PersistableNetworkPayload> getPersistableNetworkPayloadCollection() {
@@ -528,18 +578,25 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      * or domain listeners.
      */
     public void processGetDataResponse(GetDataResponse getDataResponse, NodeAddress sender) {
-        final Set<ProtectedStorageEntry> dataSet = getDataResponse.getDataSet();
+        Set<ProtectedStorageEntry> protectedStorageEntries = getDataResponse.getDataSet();
         Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
+        long ts = System.currentTimeMillis();
+        protectedStorageEntries.forEach(protectedStorageEntry -> {
+            // We rebroadcast high priority data after a delay for better resilience
+            if (protectedStorageEntry.getProtectedStoragePayload().getGetDataResponsePriority() == GetDataResponsePriority.HIGH) {
+                UserThread.runAfter(() -> {
+                    log.info("Rebroadcast {}", protectedStorageEntry.getProtectedStoragePayload().getClass().getSimpleName());
+                    broadcaster.broadcast(new AddDataMessage(protectedStorageEntry), sender, null);
+                }, 60);
+            }
 
-        long ts2 = System.currentTimeMillis();
-        dataSet.forEach(e -> {
             // We don't broadcast here (last param) as we are only connected to the seed node and would be pointless
-            addProtectedStorageEntry(e, sender, null, false);
+            addProtectedStorageEntry(protectedStorageEntry, sender, null, false);
 
         });
-        log.info("Processing {} protectedStorageEntries took {} ms.", dataSet.size(), this.clock.millis() - ts2);
+        log.info("Processing {} protectedStorageEntries took {} ms.", protectedStorageEntries.size(), this.clock.millis() - ts);
 
-        ts2 = this.clock.millis();
+        ts = this.clock.millis();
         persistableNetworkPayloadSet.forEach(e -> {
             if (e instanceof ProcessOncePersistableNetworkPayload) {
                 // We use an optimized method as many checks are not required in that case to avoid
@@ -558,7 +615,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             }
         });
         log.info("Processing {} persistableNetworkPayloads took {} ms.",
-                persistableNetworkPayloadSet.size(), this.clock.millis() - ts2);
+                persistableNetworkPayloadSet.size(), this.clock.millis() - ts);
 
         // We only process PersistableNetworkPayloads implementing ProcessOncePersistableNetworkPayload once. It can cause performance
         // issues and since the data is rarely out of sync it is not worth it to apply them from multiple peers during
