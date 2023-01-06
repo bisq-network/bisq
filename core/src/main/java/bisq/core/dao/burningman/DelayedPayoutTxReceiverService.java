@@ -71,7 +71,7 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     // than DPT_MIN_REMAINDER_TO_LEGACY_BM, otherwise we spend it as miner fee.
     // 25000 sat is about 5 USD @ 20k price. We use a rather high value as we want to avoid that the legacy BM
     // gets still payouts.
-    private static final long DPT_MIN_REMAINDER_TO_LEGACY_BM = 25000;
+    private static final long DPT_MIN_REMAINDER_TO_LEGACY_BM = isHotfixActivated() ? 25000 : 50000;
 
     // Min. fee rate for DPT. If fee rate used at take offer time was higher we use that.
     // We prefer a rather high fee rate to not risk that the DPT gets stuck if required fee rate would
@@ -151,7 +151,9 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
         // If we remove outputs it will be spent as miner fee.
         long minOutputAmount = Math.max(DPT_MIN_OUTPUT_AMOUNT, txFeePerVbyte * 32 * 2);
         // Sanity check that max share of a non-legacy BM is 20% over MAX_BURN_SHARE (taking into account potential increase due adjustment)
-        long maxOutputAmount = Math.round(spendableAmount * (BurningManService.MAX_BURN_SHARE * 1.2));
+        long maxOutputAmount = isHotfixActivated() ?
+                Math.round(spendableAmount * (BurningManService.MAX_BURN_SHARE * 1.2)) :
+                Math.round(inputAmount * (BurningManService.MAX_BURN_SHARE * 1.2));
         // We accumulate small amounts which gets filtered out and subtract it from 1 to get an adjustment factor
         // used later to be applied to the remaining burningmen share.
         double adjustment = 1 - burningManCandidates.stream()
