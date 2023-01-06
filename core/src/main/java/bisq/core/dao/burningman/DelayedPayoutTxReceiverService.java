@@ -52,7 +52,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Singleton
 public class DelayedPayoutTxReceiverService implements DaoStateListener {
-    private static final Date HOTFIX_ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.JANUARY, 10);
+    public static final Date HOTFIX_ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.JANUARY, 10);
 
     public static boolean isHotfixActivated() {
         return new Date().after(HOTFIX_ACTIVATION_DATE);
@@ -121,8 +121,15 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     public List<Tuple2<Long, String>> getReceivers(int burningManSelectionHeight,
                                                    long inputAmount,
                                                    long tradeTxFee) {
+        return getReceivers(burningManSelectionHeight, inputAmount, tradeTxFee, isHotfixActivated());
+    }
+
+    public List<Tuple2<Long, String>> getReceivers(int burningManSelectionHeight,
+                                                   long inputAmount,
+                                                   long tradeTxFee,
+                                                   boolean isHotfixActivated) {
         checkArgument(burningManSelectionHeight >= MIN_SNAPSHOT_HEIGHT, "Selection height must be >= " + MIN_SNAPSHOT_HEIGHT);
-        Collection<BurningManCandidate> burningManCandidates = isHotfixActivated() ?
+        Collection<BurningManCandidate> burningManCandidates = isHotfixActivated ?
                 burningManService.getActiveBurningManCandidates(burningManSelectionHeight) :
                 burningManService.getBurningManCandidatesByName(burningManSelectionHeight).values();
 
@@ -151,7 +158,9 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
         // If we remove outputs it will be spent as miner fee.
         long minOutputAmount = Math.max(DPT_MIN_OUTPUT_AMOUNT, txFeePerVbyte * 32 * 2);
         // Sanity check that max share of a non-legacy BM is 20% over MAX_BURN_SHARE (taking into account potential increase due adjustment)
-        long maxOutputAmount = Math.round(spendableAmount * (BurningManService.MAX_BURN_SHARE * 1.2));
+        long maxOutputAmount = isHotfixActivated ?
+                Math.round(spendableAmount * (BurningManService.MAX_BURN_SHARE * 1.2)) :
+                Math.round(inputAmount * (BurningManService.MAX_BURN_SHARE * 1.2));
         // We accumulate small amounts which gets filtered out and subtract it from 1 to get an adjustment factor
         // used later to be applied to the remaining burningmen share.
         double adjustment = 1 - burningManCandidates.stream()
@@ -180,7 +189,8 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
             long available = spendableAmount - totalOutputValue;
             // If the available is larger than DPT_MIN_REMAINDER_TO_LEGACY_BM we send it to legacy BM
             // Otherwise we use it as miner fee
-            if (available > DPT_MIN_REMAINDER_TO_LEGACY_BM) {
+            long dptMinRemainderToLegacyBm = isHotfixActivated ? DPT_MIN_REMAINDER_TO_LEGACY_BM : 50000;
+            if (available > dptMinRemainderToLegacyBm) {
                 receivers.add(new Tuple2<>(available, burningManService.getLegacyBurningManAddress(burningManSelectionHeight)));
             }
         }
@@ -190,8 +200,8 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     private static long getSpendableAmount(int numOutputs, long inputAmount, long txFeePerVbyte) {
         // Output size: 32 bytes
         // Tx size without outputs: 51 bytes
-        int txSize = 51 + numOutputs * 32; // min value: txSize=83
-        long minerFee = txFeePerVbyte * txSize; // min value: minerFee=830
+        int txSize = 51 + numOutputs * 32; // Min value: txSize=83
+        long minerFee = txFeePerVbyte * txSize; // Min value: minerFee=830
         // We need to make sure we have at least 1000 sat as defined in TradeWalletService
         minerFee = Math.max(TradeWalletService.MIN_DELAYED_PAYOUT_TX_FEE.value, minerFee);
         return inputAmount - minerFee;
