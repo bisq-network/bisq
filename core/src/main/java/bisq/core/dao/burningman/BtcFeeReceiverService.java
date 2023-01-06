@@ -85,7 +85,6 @@ public class BtcFeeReceiverService implements DaoStateListener {
         // cappedBurnAmountShare is a % value represented as double. Smallest supported value is 0.01% -> 0.0001.
         // By multiplying it with 10000 and using Math.floor we limit the candidate to 0.01%.
         // Entries with 0 will be ignored in the selection method, so we do not need to filter them out.
-        // List<BurningManCandidate> burningManCandidates = new ArrayList<>(burningManCandidatesByName.values());
         int ceiling = 10000;
         List<Long> amountList = activeBurningManCandidates.stream()
                 .map(BurningManCandidate::getCappedBurnAmountShare)
