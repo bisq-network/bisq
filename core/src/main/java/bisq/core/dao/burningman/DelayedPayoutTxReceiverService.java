@@ -78,7 +78,6 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     // spike when opening arbitration.
     private static final long DPT_MIN_TX_FEE_RATE = 10;
 
-
     private final DaoStateService daoStateService;
     private final BurningManService burningManService;
     private int currentChainHeight;
@@ -127,12 +126,6 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
                 burningManService.getActiveBurningManCandidates(burningManSelectionHeight) :
                 burningManService.getBurningManCandidatesByName(burningManSelectionHeight).values();
 
-
-        if (burningManCandidates.isEmpty()) {
-            // If there are no compensation requests (e.g. at dev testing) we fall back to the legacy BM
-            return List.of(new Tuple2<>(inputAmount, burningManService.getLegacyBurningManAddress(burningManSelectionHeight)));
-        }
-
         // We need to use the same txFeePerVbyte value for both traders.
         // We use the tradeTxFee value which is calculated from the average of taker fee tx size and deposit tx size.
         // Otherwise, we would need to sync the fee rate of both traders.
@@ -146,12 +139,19 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
         // Smallest tx size is 246. With additional change output we add 32. To be safe we use the largest expected size.
         double txSize = 278;
         long txFeePerVbyte = Math.max(DPT_MIN_TX_FEE_RATE, Math.round(tradeTxFee / txSize));
+
+        if (burningManCandidates.isEmpty()) {
+            // If there are no compensation requests (e.g. at dev testing) we fall back to the legacy BM
+            long spendableAmount = getSpendableAmount(1, inputAmount, txFeePerVbyte);
+            return List.of(new Tuple2<>(spendableAmount, burningManService.getLegacyBurningManAddress(burningManSelectionHeight)));
+        }
+
         long spendableAmount = getSpendableAmount(burningManCandidates.size(), inputAmount, txFeePerVbyte);
         // We only use outputs > 1000 sat or at least 2 times the cost for the output (32 bytes).
         // If we remove outputs it will be spent as miner fee.
         long minOutputAmount = Math.max(DPT_MIN_OUTPUT_AMOUNT, txFeePerVbyte * 32 * 2);
         // Sanity check that max share of a non-legacy BM is 20% over MAX_BURN_SHARE (taking into account potential increase due adjustment)
-        long maxOutputAmount = Math.round(inputAmount * (BurningManService.MAX_BURN_SHARE * 1.2));
+        long maxOutputAmount = Math.round(spendableAmount * (BurningManService.MAX_BURN_SHARE * 1.2));
         // We accumulate small amounts which gets filtered out and subtract it from 1 to get an adjustment factor
         // used later to be applied to the remaining burningmen share.
         double adjustment = 1 - burningManCandidates.stream()

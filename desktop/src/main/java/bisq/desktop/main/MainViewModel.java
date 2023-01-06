@@ -310,7 +310,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         setupClockWatcherPopup();
 
         marketPricePresentation.setup();
-        daoPresentation.setup();
+        daoPresentation.init();
         accountPresentation.setup();
         settingsPresentation.setup();
 
@@ -505,7 +505,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                 .show());
 
         bisqSetup.getBtcSyncProgress().addListener((observable, oldValue, newValue) -> updateBtcSyncProgress());
-        daoPresentation.getBsqSyncProgress().addListener((observable, oldValue, newValue) -> updateBtcSyncProgress());
+        daoPresentation.getDaoStateSyncProgress().addListener((observable, oldValue, newValue) -> updateBtcSyncProgress());
 
         bisqSetup.setFilterWarningHandler(warning -> new Popup().warning(warning).show());
 
@@ -704,7 +704,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         if (btcSyncProgress.doubleValue() < 1) {
             combinedSyncProgress.set(btcSyncProgress.doubleValue());
         } else {
-            combinedSyncProgress.set(daoPresentation.getBsqSyncProgress().doubleValue());
+            combinedSyncProgress.set(daoPresentation.getDaoStateSyncProgress().doubleValue());
         }
     }
 
@@ -783,7 +783,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
     StringProperty getCombinedFooterInfo() {
         final StringProperty combinedInfo = new SimpleStringProperty();
-        combinedInfo.bind(Bindings.concat(this.footerVersionInfo, " ", daoPresentation.getBsqInfo()));
+        combinedInfo.bind(Bindings.concat(this.footerVersionInfo, " ", daoPresentation.getDaoStateInfo()));
         return combinedInfo;
     }
 
