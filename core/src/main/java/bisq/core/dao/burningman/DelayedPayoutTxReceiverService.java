@@ -78,7 +78,6 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     // spike when opening arbitration.
     private static final long DPT_MIN_TX_FEE_RATE = 10;
 
-
     private final DaoStateService daoStateService;
     private final BurningManService burningManService;
     private int currentChainHeight;
