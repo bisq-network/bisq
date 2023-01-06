@@ -52,7 +52,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Singleton
 public class DelayedPayoutTxReceiverService implements DaoStateListener {
-    private static final Date HOTFIX_ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.JANUARY, 4);
+    public static final Date HOTFIX_ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.JANUARY, 4);
 
     public static boolean isHotfixActivated() {
         return new Date().after(HOTFIX_ACTIVATION_DATE);
@@ -121,8 +121,15 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     public List<Tuple2<Long, String>> getReceivers(int burningManSelectionHeight,
                                                    long inputAmount,
                                                    long tradeTxFee) {
+        return getReceivers(burningManSelectionHeight, inputAmount, tradeTxFee, isHotfixActivated());
+    }
+
+    public List<Tuple2<Long, String>> getReceivers(int burningManSelectionHeight,
+                                                   long inputAmount,
+                                                   long tradeTxFee,
+                                                   boolean isHotfixActivated) {
         checkArgument(burningManSelectionHeight >= MIN_SNAPSHOT_HEIGHT, "Selection height must be >= " + MIN_SNAPSHOT_HEIGHT);
-        Collection<BurningManCandidate> burningManCandidates = isHotfixActivated() ?
+        Collection<BurningManCandidate> burningManCandidates = isHotfixActivated ?
                 burningManService.getActiveBurningManCandidates(burningManSelectionHeight) :
                 burningManService.getBurningManCandidatesByName(burningManSelectionHeight).values();
 
@@ -151,7 +158,7 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
         // If we remove outputs it will be spent as miner fee.
         long minOutputAmount = Math.max(DPT_MIN_OUTPUT_AMOUNT, txFeePerVbyte * 32 * 2);
         // Sanity check that max share of a non-legacy BM is 20% over MAX_BURN_SHARE (taking into account potential increase due adjustment)
-        long maxOutputAmount = isHotfixActivated() ?
+        long maxOutputAmount = isHotfixActivated ?
                 Math.round(spendableAmount * (BurningManService.MAX_BURN_SHARE * 1.2)) :
                 Math.round(inputAmount * (BurningManService.MAX_BURN_SHARE * 1.2));
         // We accumulate small amounts which gets filtered out and subtract it from 1 to get an adjustment factor
