@@ -35,6 +35,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -311,7 +312,7 @@ public class BroadcastHandler implements PeerManager.Listener {
             // We have heard back from 3 peers (or all peers if numPeers is lower) so we consider the message was sufficiently broadcast.
             broadcastRequests.stream()
                     .map(Broadcaster.BroadcastRequest::getListener)
-                    .filter(listener -> listener != null)
+                    .filter(Objects::nonNull)
                     .forEach(listener -> listener.onSufficientlyBroadcast(broadcastRequests));
         } else {
             // We check if number of open requests to peers is less than we need to reach numOfCompletedBroadcastsTarget.
@@ -324,7 +325,7 @@ public class BroadcastHandler implements PeerManager.Listener {
             if (notEnoughSucceededOrOpen || timeoutAndNotEnoughSucceeded) {
                 broadcastRequests.stream()
                         .map(Broadcaster.BroadcastRequest::getListener)
-                        .filter(listener -> listener != null)
+                        .filter(Objects::nonNull)
                         .forEach(listener -> listener.onNotSufficientlyBroadcast(numOfCompletedBroadcasts.get(), numOfFailedBroadcasts.get()));
             }
         }
