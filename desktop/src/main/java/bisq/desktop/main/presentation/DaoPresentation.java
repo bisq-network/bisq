@@ -69,9 +69,6 @@ public class DaoPresentation implements DaoStateListener, DaoStateMonitoringServ
             }
         });
 
-        daoStateService.addDaoStateListener(this);
-        daoStateMonitoringService.addListener(this);
-
         walletChainHeightListener = (observable, oldValue, newValue) -> onUpdateAnyChainHeight();
     }
 
@@ -84,6 +81,7 @@ public class DaoPresentation implements DaoStateListener, DaoStateMonitoringServ
 
         btcWalletService.getChainHeightProperty().addListener(walletChainHeightListener);
         daoStateService.addDaoStateListener(this);
+        daoStateMonitoringService.addListener(this);
 
         onUpdateAnyChainHeight();
     }
