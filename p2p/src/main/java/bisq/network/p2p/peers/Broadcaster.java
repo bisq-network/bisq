@@ -71,8 +71,8 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
         this.peerManager = peerManager;
 
         ThreadPoolExecutor threadPoolExecutor = Utilities.getThreadPoolExecutor("Broadcaster",
-                maxConnections * 2,
                 maxConnections * 3,
+                maxConnections * 4,
                 30,
                 30);
         executor = MoreExecutors.listeningDecorator(threadPoolExecutor);

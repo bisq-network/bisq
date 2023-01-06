@@ -595,7 +595,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
 
     public boolean reportInvalidRequest(RuleViolation ruleViolation) {
-        log.info("We got reported the ruleViolation {} at connection with address{} and uid {}", ruleViolation, this.getPeersNodeAddressProperty(), this.getUid());
+        log.warn("We got reported the ruleViolation {} at connection {}", ruleViolation, this);
         int numRuleViolations;
         numRuleViolations = ruleViolations.getOrDefault(ruleViolation, 0);
 
@@ -603,11 +603,11 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         ruleViolations.put(ruleViolation, numRuleViolations);
 
         if (numRuleViolations >= ruleViolation.maxTolerance) {
-            log.warn("We close connection as we received too many corrupt requests. " +
-                    "numRuleViolations={} " +
-                    "corruptRequest={} " +
-                    "corruptRequests={} " +
-                    "connection with address{} and uid {}", numRuleViolations, ruleViolation, ruleViolations, this.getPeersNodeAddressProperty(), this.getUid());
+            log.warn("We close connection as we received too many corrupt requests.\n" +
+                    "numRuleViolations={}\n\t" +
+                    "corruptRequest={}\n\t" +
+                    "corruptRequests={}\n\t" +
+                    "connection={}", numRuleViolations, ruleViolation, ruleViolations, this);
             this.ruleViolation = ruleViolation;
             if (ruleViolation == RuleViolation.PEER_BANNED) {
                 log.warn("We close connection due RuleViolation.PEER_BANNED. peersNodeAddress={}", getPeersNodeAddressOptional());
