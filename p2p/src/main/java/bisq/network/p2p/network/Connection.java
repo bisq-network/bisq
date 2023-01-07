@@ -854,7 +854,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     reportInvalidRequest(RuleViolation.INVALID_CLASS);
                 } catch (ProtobufferException | NoClassDefFoundError | InvalidProtocolBufferException e) {
                     log.error(e.getMessage());
-                    e.printStackTrace();
                     reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
                 } catch (Throwable t) {
                     handleException(t);
