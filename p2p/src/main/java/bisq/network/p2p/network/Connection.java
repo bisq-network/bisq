@@ -202,6 +202,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             if (peersNodeAddress != null) {
                 setPeersNodeAddress(peersNodeAddress);
                 if (networkFilter != null && networkFilter.isPeerBanned(peersNodeAddress)) {
+                    log.warn("We created an outbound connection with a banned peer");
                     reportInvalidRequest(RuleViolation.PEER_BANNED);
                 }
             }
@@ -232,6 +233,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         if (networkFilter != null &&
                 peersNodeAddressOptional.isPresent() &&
                 networkFilter.isPeerBanned(peersNodeAddressOptional.get())) {
+            log.warn("We tried to send a message to a banned peer. message={}", networkEnvelope.getClass().getSimpleName());
             reportInvalidRequest(RuleViolation.PEER_BANNED);
             return;
         }
@@ -678,6 +680,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         }
 
         if (networkFilter != null && networkFilter.isPeerBanned(senderNodeAddress)) {
+            log.warn("We got a message from a banned peer. message={}", sendersNodeAddressMessage.getClass().getSimpleName());
             reportInvalidRequest(RuleViolation.PEER_BANNED);
             return false;
         }
@@ -743,6 +746,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     if (networkFilter != null &&
                             peersNodeAddressOptional.isPresent() &&
                             networkFilter.isPeerBanned(peersNodeAddressOptional.get())) {
+
+                        log.warn("We got a message from a banned peer. proto={}", proto);
                         reportInvalidRequest(RuleViolation.PEER_BANNED);
                         return;
                     }
@@ -751,7 +756,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     long now = System.currentTimeMillis();
                     long elapsed = now - lastReadTimeStamp;
                     if (elapsed < 10) {
-                        log.debug("We got 2 network_messages received in less than 10 ms. We set the thread to sleep " +
+                        log.info("We got 2 network_messages received in less than 10 ms. We set the thread to sleep " +
                                         "for 20 ms to avoid getting flooded by our peer. lastReadTimeStamp={}, now={}, elapsed={}",
                                 lastReadTimeStamp, now, elapsed);
                         Thread.sleep(20);
@@ -831,6 +836,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         if (networkEnvelope instanceof SendersNodeAddressMessage &&
                                 !processSendersNodeAddressMessage((SendersNodeAddressMessage) networkEnvelope)) {
                             return;
+                        }
+
+                        if (!(networkEnvelope instanceof SendersNodeAddressMessage) && peersNodeAddressOptional.isEmpty()) {
+                            log.info("We got a {} from a peer with yet unknown address on connection with uid={}", networkEnvelope.getClass().getSimpleName(), uid);
                         }
 
                         onMessage(networkEnvelope, this);
