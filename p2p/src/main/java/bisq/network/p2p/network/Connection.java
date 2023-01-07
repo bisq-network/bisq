@@ -609,13 +609,11 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
         if (numRuleViolations >= ruleViolation.maxTolerance) {
             log.warn("We close connection as we received too many corrupt requests. " +
-                    "numRuleViolations={} " +
-                    "corruptRequest={} " +
-                    "corruptRequests={} " +
-                    "connection with address{} and uid {}", numRuleViolations, ruleViolation, ruleViolations, this.getPeersNodeAddressProperty(), this.getUid());
+                    "ruleViolations={} " +
+                    "connection with address{} and uid {}", ruleViolations, peersNodeAddressProperty, uid);
             this.ruleViolation = ruleViolation;
             if (ruleViolation == RuleViolation.PEER_BANNED) {
-                log.warn("We close connection due RuleViolation.PEER_BANNED. peersNodeAddress={}", getPeersNodeAddressOptional());
+                log.debug("We close connection due RuleViolation.PEER_BANNED. peersNodeAddress={}", getPeersNodeAddressOptional());
                 shutDown(CloseConnectionReason.PEER_BANNED);
             } else if (ruleViolation == RuleViolation.INVALID_CLASS) {
                 log.warn("We close connection due RuleViolation.INVALID_CLASS");
@@ -759,7 +757,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     long now = System.currentTimeMillis();
                     long elapsed = now - lastReadTimeStamp;
                     if (elapsed < 10) {
-                        log.info("We got 2 network_messages received in less than 10 ms. We set the thread to sleep " +
+                        log.debug("We got 2 network_messages received in less than 10 ms. We set the thread to sleep " +
                                         "for 20 ms to avoid getting flooded by our peer. lastReadTimeStamp={}, now={}, elapsed={}",
                                 lastReadTimeStamp, now, elapsed);
                         Thread.sleep(20);
@@ -839,7 +837,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         if (networkEnvelope instanceof SendersNodeAddressMessage) {
                             boolean isValid = processSendersNodeAddressMessage((SendersNodeAddressMessage) networkEnvelope);
                             if (!isValid) {
-                                log.warn("Received invalid {}", networkEnvelope.getClass().getSimpleName());
                                 return;
                             }
                         }
