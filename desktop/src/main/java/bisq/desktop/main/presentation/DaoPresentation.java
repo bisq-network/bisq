@@ -16,6 +16,8 @@ import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
+import bisq.common.UserThread;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -30,7 +32,11 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.MapChangeListener;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+import org.jetbrains.annotations.Nullable;
+
+@Slf4j
 @Singleton
 public class DaoPresentation implements DaoStateListener, DaoStateMonitoringService.Listener {
     public static final String DAO_NEWS = "daoNews";
@@ -47,6 +53,8 @@ public class DaoPresentation implements DaoStateListener, DaoStateMonitoringServ
     @Getter
     private final StringProperty daoStateInfo = new SimpleStringProperty("");
     private final SimpleBooleanProperty showNotification = new SimpleBooleanProperty(false);
+    @Nullable
+    private Popup popup;
 
     @Inject
     public DaoPresentation(Preferences preferences,
@@ -107,17 +115,31 @@ public class DaoPresentation implements DaoStateListener, DaoStateMonitoringServ
 
     @Override
     public void onDaoStateHashesChanged() {
-        if (!daoStateService.isParseBlockChainComplete()) {
+        if (!daoStateService.isParseBlockChainComplete() || bsqWalletService.getBestChainHeight() != daoStateService.getChainHeight()) {
             return;
         }
 
-        if (daoStateMonitoringService.isInConflictWithSeedNode() ||
-                daoStateMonitoringService.isDaoStateBlockChainNotConnecting()) {
-            new Popup().warning(Res.get("popup.warning.daoNeedsResync"))
+        // We might get multiple times called onDaoStateHashesChanged. To avoid multiple popups we
+        // check against null and set it back to null after a 30 sec delay once the user closed it.
+        if (popup == null &&
+                (daoStateMonitoringService.isInConflictWithSeedNode() ||
+                        daoStateMonitoringService.isDaoStateBlockChainNotConnecting())) {
+            popup = new Popup().warning(Res.get("popup.warning.daoNeedsResync"))
                     .actionButtonTextWithGoTo("navigation.dao.networkMonitor")
-                    .onAction(() -> navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class, DaoStateMonitorView.class))
-                    .show();
+                    .onAction(() -> {
+                        navigation.navigateTo(MainView.class, DaoView.class, MonitorView.class, DaoStateMonitorView.class);
+                        resetPopupAndCheckAgain();
+                    })
+                    .onClose(this::resetPopupAndCheckAgain);
+            popup.show();
         }
+    }
+
+    private void resetPopupAndCheckAgain() {
+        UserThread.runAfter(() -> {
+            popup = null;
+            onDaoStateHashesChanged();
+        }, 30);
     }
 
 
