@@ -707,10 +707,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     @Override
     public void run() {
         try {
-            Thread.currentThread().setName("InputHandler");
+            Thread.currentThread().setName("InputHandler-" + Utilities.toTruncatedString(uid, 10));
             while (!stopped && !Thread.currentThread().isInterrupted()) {
                 if (!threadNameSet && getPeersNodeAddressOptional().isPresent()) {
-                    Thread.currentThread().setName("InputHandler-" + getPeersNodeAddressOptional().get().getFullAddress());
+                    Thread.currentThread().setName("InputHandler-" + Utilities.toTruncatedString(getPeersNodeAddressOptional().get().getFullAddress(), 10));
                     threadNameSet = true;
                 }
                 try {
