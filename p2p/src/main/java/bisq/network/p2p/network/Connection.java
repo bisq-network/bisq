@@ -400,9 +400,12 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         List<NetworkEnvelope> networkEnvelopes = bundleOfEnvelopes.getEnvelopes();
         for (NetworkEnvelope networkEnvelope : networkEnvelopes) {
             // If SendersNodeAddressMessage we do some verifications and apply if successful, otherwise we return false.
-            if (networkEnvelope instanceof SendersNodeAddressMessage &&
-                    !processSendersNodeAddressMessage((SendersNodeAddressMessage) networkEnvelope)) {
-                continue;
+            if (networkEnvelope instanceof SendersNodeAddressMessage) {
+                boolean isValid = processSendersNodeAddressMessage((SendersNodeAddressMessage) networkEnvelope);
+                if (!isValid) {
+                    log.warn("Received an invalid {} at processing BundleOfEnvelopes", networkEnvelope.getClass().getSimpleName());
+                    continue;
+                }
             }
 
             if (networkEnvelope instanceof AddPersistableNetworkPayloadMessage) {
@@ -833,9 +836,12 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
                         // If SendersNodeAddressMessage we do some verifications and apply if successful,
                         // otherwise we return false.
-                        if (networkEnvelope instanceof SendersNodeAddressMessage &&
-                                !processSendersNodeAddressMessage((SendersNodeAddressMessage) networkEnvelope)) {
-                            return;
+                        if (networkEnvelope instanceof SendersNodeAddressMessage) {
+                            boolean isValid = processSendersNodeAddressMessage((SendersNodeAddressMessage) networkEnvelope);
+                            if (!isValid) {
+                                log.warn("Received invalid {}", networkEnvelope.getClass().getSimpleName());
+                                return;
+                            }
                         }
 
                         if (!(networkEnvelope instanceof SendersNodeAddressMessage) && peersNodeAddressOptional.isEmpty()) {
