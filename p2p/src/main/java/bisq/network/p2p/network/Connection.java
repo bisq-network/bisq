@@ -748,7 +748,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                             peersNodeAddressOptional.isPresent() &&
                             networkFilter.isPeerBanned(peersNodeAddressOptional.get())) {
 
-                        log.warn("We got a message from a banned peer. proto={}", proto);
+                        log.warn("We got a message from a banned peer. proto={}", Utilities.toTruncatedString(proto));
                         reportInvalidRequest(RuleViolation.PEER_BANNED);
                         return;
                     }
