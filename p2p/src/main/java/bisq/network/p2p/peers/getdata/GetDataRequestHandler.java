@@ -98,11 +98,11 @@ public class GetDataRequestHandler {
                 connection.getCapabilities());
 
         if (wasPersistableNetworkPayloadsTruncated.get()) {
-            log.warn("The getDataResponse for peer {} got truncated.", connectionInfo);
+            log.info("The getDataResponse for peer {} got truncated.", connectionInfo);
         }
 
         if (wasProtectedStorageEntriesTruncated.get()) {
-            log.warn("The getDataResponse for peer {} got truncated.", connectionInfo);
+            log.info("The getDataResponse for peer {} got truncated.", connectionInfo);
         }
 
         log.info("The getDataResponse to peer with {} contains {} ProtectedStorageEntries and {} PersistableNetworkPayloads",
