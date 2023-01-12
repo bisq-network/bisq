@@ -37,7 +37,9 @@ import bisq.common.proto.network.NetworkEnvelope;
 import javax.inject.Inject;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,6 +52,12 @@ import org.jetbrains.annotations.Nullable;
 public class FullNodeNetworkService implements MessageListener, PeerManager.Listener {
 
     private static final long CLEANUP_TIMER = 120;
+
+    public interface ResponseListener {
+        void onSuccess(int serializedSize);
+
+        void onFault();
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -65,6 +73,7 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
     // Key is connection UID
     private final Map<String, GetBlocksRequestHandler> getBlocksRequestHandlers = new HashMap<>();
     private boolean stopped;
+    private final List<ResponseListener> responseListeners = new CopyOnWriteArrayList<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -105,6 +114,10 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
         RawBlock rawBlock = RawBlock.fromBlock(block);
         NewBlockBroadcastMessage newBlockBroadcastMessage = new NewBlockBroadcastMessage(rawBlock);
         broadcaster.broadcast(newBlockBroadcastMessage, networkNode.getNodeAddress());
+    }
+
+    public void addResponseListener(ResponseListener responseListener) {
+        responseListeners.add(responseListener);
     }
 
 
@@ -166,8 +179,10 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
                 daoStateService,
                 new GetBlocksRequestHandler.Listener() {
                     @Override
-                    public void onComplete() {
+                    public void onComplete(int serializedSize) {
                         getBlocksRequestHandlers.remove(uid);
+
+                        responseListeners.forEach(listener -> listener.onSuccess(serializedSize));
                     }
 
                     @Override
@@ -179,6 +194,8 @@ public class FullNodeNetworkService implements MessageListener, PeerManager.List
                             if (connection != null) {
                                 peerManager.handleConnectionFault(connection);
                             }
+
+                            responseListeners.forEach(ResponseListener::onFault);
                         } else {
                             log.warn("We have stopped already. We ignore that getDataRequestHandler.handle.onFault call.");
                         }

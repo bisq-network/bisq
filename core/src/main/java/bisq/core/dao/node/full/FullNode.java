@@ -97,6 +97,7 @@ public class FullNode extends BsqNode {
 
     public void shutDown() {
         super.shutDown();
+        rpcService.shutDown();
         fullNodeNetworkService.shutDown();
     }
 
@@ -239,6 +240,9 @@ public class FullNode extends BsqNode {
                                        Consumer<Block> newBlockHandler,
                                        ResultHandler resultHandler,
                                        Consumer<Throwable> errorHandler) {
+        if (shutdownInProgress) {
+            return;
+        }
         rpcService.requestDtoBlock(blockHeight,
                 rawBlock -> {
                     try {

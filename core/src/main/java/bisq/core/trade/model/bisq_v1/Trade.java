@@ -897,6 +897,10 @@ public abstract class Trade extends TradeModel {
         return new Date(getTradeStartTime() + getMaxTradePeriod());
     }
 
+    public long getTradeAge() {
+        return System.currentTimeMillis() - getTradeStartTime();
+    }
+
     private long getMaxTradePeriod() {
         return offer.getPaymentMethod().getMaxTradePeriod();
     }

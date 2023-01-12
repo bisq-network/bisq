@@ -248,6 +248,9 @@ public class LiteNode extends BsqNode {
     }
 
     private void runDelayedBatchProcessing(List<RawBlock> blocks, Runnable resultHandler) {
+        if (shutdownInProgress) {
+            return;
+        }
         UserThread.execute(() -> {
             if (blocks.isEmpty()) {
                 resultHandler.run();

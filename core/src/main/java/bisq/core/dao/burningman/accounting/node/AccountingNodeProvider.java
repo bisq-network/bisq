@@ -48,10 +48,10 @@ public class AccountingNodeProvider {
                 && preferences.getRpcPw() != null &&
                 !preferences.getRpcPw().isEmpty() &&
                 preferences.getBlockNotifyPort() > 0;
-        if (BurningManService.isActivated()) {
-            accountingNode = isBmFullNode && rpcDataSet ? fullNode : liteNode;
+        if (isBmFullNode && rpcDataSet) {
+            accountingNode = fullNode;
         } else {
-            accountingNode = inActiveAccountingNode;
+            accountingNode = BurningManService.isActivated() ? liteNode : inActiveAccountingNode;
         }
     }
 }

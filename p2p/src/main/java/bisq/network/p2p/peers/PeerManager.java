@@ -84,6 +84,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
     private static final boolean PRINT_REPORTED_PEERS_DETAILS = true;
     private Timer printStatisticsTimer;
     private boolean shutDownRequested;
+    private int numOnConnections;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -216,6 +217,8 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
 
         doHouseKeeping();
 
+        numOnConnections++;
+
         if (lostAllConnections) {
             lostAllConnections = false;
             stopped = false;
@@ -238,7 +241,8 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
         boolean previousLostAllConnections = lostAllConnections;
         lostAllConnections = networkNode.getAllConnections().isEmpty();
 
-        if (lostAllConnections) {
+        // At start-up we ignore if we would lose a connection and would fall back to no connections
+        if (lostAllConnections && numOnConnections > 2) {
             stopped = true;
 
             if (!shutDownRequested) {
@@ -562,7 +566,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
 
         if (!candidates.isEmpty()) {
             Connection connection = candidates.remove(0);
-            log.info("checkMaxConnections: Num candidates for shut down={}. We close oldest connection to peer {}",
+            log.info("checkMaxConnections: Num candidates (inbound/peer) for shut down={}. We close oldest connection to peer {}",
                     candidates.size(), connection.getPeersNodeAddressOptional());
             if (!connection.isStopped()) {
                 connection.shutDown(CloseConnectionReason.TOO_MANY_CONNECTIONS_OPEN,

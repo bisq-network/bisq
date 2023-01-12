@@ -24,6 +24,12 @@ import bisq.core.dao.monitoring.ProposalStateMonitoringService;
 import bisq.core.dao.monitoring.model.BlindVoteStateBlock;
 import bisq.core.dao.monitoring.model.DaoStateBlock;
 import bisq.core.dao.monitoring.model.ProposalStateBlock;
+import bisq.core.dao.monitoring.network.StateNetworkService;
+import bisq.core.dao.monitoring.network.messages.GetBlindVoteStateHashesRequest;
+import bisq.core.dao.monitoring.network.messages.GetDaoStateHashesRequest;
+import bisq.core.dao.monitoring.network.messages.GetProposalStateHashesRequest;
+import bisq.core.dao.node.full.network.FullNodeNetworkService;
+import bisq.core.dao.node.messages.GetBlocksRequest;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 
@@ -31,6 +37,9 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.NetworkNode;
 import bisq.network.p2p.network.Statistic;
 import bisq.network.p2p.peers.PeerManager;
+import bisq.network.p2p.peers.getdata.RequestDataManager;
+import bisq.network.p2p.peers.getdata.messages.GetUpdatedDataRequest;
+import bisq.network.p2p.peers.getdata.messages.PreliminaryGetDataRequest;
 import bisq.network.p2p.storage.P2PDataStorage;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
@@ -103,6 +112,8 @@ public class SeedNodeReportingService {
                                     DaoStateMonitoringService daoStateMonitoringService,
                                     ProposalStateMonitoringService proposalStateMonitoringService,
                                     BlindVoteStateMonitoringService blindVoteStateMonitoringService,
+                                    RequestDataManager requestDataManager,
+                                    FullNodeNetworkService fullNodeNetworkService,
                                     @Named(Config.MAX_CONNECTIONS) int maxConnections,
                                     @Named(Config.SEED_NODE_REPORTING_SERVER_URL) String seedNodeReportingServerUrl) {
         this.p2PService = p2PService;
@@ -142,6 +153,106 @@ public class SeedNodeReportingService {
             }
         };
         daoFacade.addBsqStateListener(daoStateListener);
+
+        p2PService.getNetworkNode().addMessageListener((networkEnvelope, connection) -> {
+            if (networkEnvelope instanceof PreliminaryGetDataRequest ||
+                    networkEnvelope instanceof GetUpdatedDataRequest ||
+                    networkEnvelope instanceof GetBlocksRequest ||
+                    networkEnvelope instanceof GetDaoStateHashesRequest ||
+                    networkEnvelope instanceof GetProposalStateHashesRequest ||
+                    networkEnvelope instanceof GetBlindVoteStateHashesRequest) {
+                ReportingItems reportingItems = new ReportingItems(getMyAddress());
+                int serializedSize = networkEnvelope.toProtoNetworkEnvelope().getSerializedSize();
+                String simpleName = networkEnvelope.getClass().getSimpleName();
+                try {
+                    LongValueReportingItem reportingItem = LongValueReportingItem.valueOf(simpleName);
+                    reportingItems.add(reportingItem.withValue(serializedSize));
+                    sendReportingItems(reportingItems);
+                } catch (Throwable t) {
+                    log.warn("Could not find enum for {}. Error={}", simpleName, t);
+                }
+            }
+        });
+
+        requestDataManager.addResponseListener(new RequestDataManager.ResponseListener() {
+            @Override
+            public void onSuccess(int serializedSize) {
+                ReportingItems reportingItems = new ReportingItems(getMyAddress());
+                reportingItems.add(LongValueReportingItem.GetDataResponse.withValue(serializedSize));
+                sendReportingItems(reportingItems);
+            }
+
+            @Override
+            public void onFault() {
+                ReportingItems reportingItems = new ReportingItems(getMyAddress());
+                reportingItems.add(LongValueReportingItem.GetDataResponse.withValue(-1));
+                sendReportingItems(reportingItems);
+            }
+        });
+
+        fullNodeNetworkService.addResponseListener(new FullNodeNetworkService.ResponseListener() {
+            @Override
+            public void onSuccess(int serializedSize) {
+                ReportingItems reportingItems = new ReportingItems(getMyAddress());
+                reportingItems.add(LongValueReportingItem.GetBlocksResponse.withValue(serializedSize));
+                sendReportingItems(reportingItems);
+            }
+
+            @Override
+            public void onFault() {
+                ReportingItems reportingItems = new ReportingItems(getMyAddress());
+                reportingItems.add(LongValueReportingItem.GetBlocksResponse.withValue(-1));
+                sendReportingItems(reportingItems);
+            }
+        });
+
+        daoStateMonitoringService.addResponseListener(new StateNetworkService.ResponseListener() {
+            @Override
+            public void onSuccess(int serializedSize) {
+                ReportingItems reportingItems = new ReportingItems(getMyAddress());
+                reportingItems.add(LongValueReportingItem.GetDaoStateHashesResponse.withValue(serializedSize));
+                sendReportingItems(reportingItems);
+            }
+
+            @Override
+            public void onFault() {
+                ReportingItems reportingItems = new ReportingItems(getMyAddress());
+                reportingItems.add(LongValueReportingItem.GetDaoStateHashesResponse.withValue(-1));
+                sendReportingItems(reportingItems);
+            }
+        });
+
+        proposalStateMonitoringService.addResponseListener(new StateNetworkService.ResponseListener() {
+            @Override
+            public void onSuccess(int serializedSize) {
+                ReportingItems reportingItems = new ReportingItems(getMyAddress());
+                reportingItems.add(LongValueReportingItem.GetProposalStateHashesResponse.withValue(serializedSize));
+                sendReportingItems(reportingItems);
+            }
+
+            @Override
+            public void onFault() {
+                ReportingItems reportingItems = new ReportingItems(getMyAddress());
+                reportingItems.add(LongValueReportingItem.GetProposalStateHashesResponse.withValue(-1));
+                sendReportingItems(reportingItems);
+            }
+        });
+
+        blindVoteStateMonitoringService.addResponseListener(new StateNetworkService.ResponseListener() {
+            @Override
+            public void onSuccess(int serializedSize) {
+                ReportingItems reportingItems = new ReportingItems(getMyAddress());
+                reportingItems.add(LongValueReportingItem.GetBlindVoteStateHashesResponse.withValue(serializedSize));
+                sendReportingItems(reportingItems);
+            }
+
+            @Override
+            public void onFault() {
+                ReportingItems reportingItems = new ReportingItems(getMyAddress());
+                reportingItems.add(LongValueReportingItem.GetBlindVoteStateHashesResponse.withValue(-1));
+                sendReportingItems(reportingItems);
+            }
+        });
     }
 
     public void shutDown() {
@@ -213,7 +324,7 @@ public class SeedNodeReportingService {
                     numItemsByType.putIfAbsent(className, 0);
                     numItemsByType.put(className, numItemsByType.get(className) + 1);
                 });
-        numItemsByType.forEach((key, value) -> reportingItems.add(LongValueReportingItem.from(key, value)));
+        numItemsByType.forEach((key, value) -> LongValueReportingItem.from(key, value).ifPresent(reportingItems::add));
 
         // Network
         reportingItems.add(LongValueReportingItem.numConnections.withValue(networkNode.getAllConnections().size()));
@@ -233,16 +344,15 @@ public class SeedNodeReportingService {
         reportingItems.add(LongValueReportingItem.maxConnections.withValue(maxConnections));
         reportingItems.add(StringValueReportingItem.version.withValue(Version.VERSION));
 
-        // If no commit hash is found we use 0 in hex format
-        String commitHash = Version.findCommitHash().orElse("00");
-        reportingItems.add(StringValueReportingItem.commitHash.withValue(commitHash));
+        Version.findCommitHash().ifPresent(commitHash -> reportingItems.add(StringValueReportingItem.commitHash.withValue(commitHash)));
 
         sendReportingItems(reportingItems);
     }
 
     private void sendReportingItems(ReportingItems reportingItems) {
+        String truncated = Utilities.toTruncatedString(reportingItems.toString());
         try {
-            log.info("Send report to monitor server: {}", reportingItems.toString());
+            log.info("Going to send report to monitor server: {}", truncated);
             // We send the data as hex encoded protobuf data. We do not use the envelope as it is not part of the p2p system.
             byte[] protoMessageAsBytes = reportingItems.toProtoMessageAsBytes();
             HttpRequest request = HttpRequest.newBuilder()
@@ -253,14 +363,16 @@ public class SeedNodeReportingService {
             httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString()).whenComplete((response, throwable) -> {
                 if (throwable != null) {
                     log.warn("Exception at sending reporting data. {}", throwable.getMessage());
-                } else if (response.statusCode() != 200) {
-                    log.error("Response error message: {}", response);
+                } else if (response.statusCode() == 200) {
+                    log.info("Sent successfully report to monitor server with {} items", reportingItems.size());
+                } else {
+                    log.warn("Server responded with error. Response={}", response);
                 }
             });
         } catch (RejectedExecutionException t) {
-            log.warn("Did not send reportingItems {} because of RejectedExecutionException {}", reportingItems, t.toString());
+            log.warn("Did not send reportingItems {} because of RejectedExecutionException {}", truncated, t.toString());
         } catch (Throwable t) {
-            log.warn("Did not send reportingItems {} because of exception {}", reportingItems, t.toString());
+            log.warn("Did not send reportingItems {} because of exception {}", truncated, t.toString());
         }
     }
 

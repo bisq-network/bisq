@@ -20,6 +20,8 @@ package bisq.seednode.reporting;
 import bisq.common.proto.ProtobufferRuntimeException;
 import bisq.common.proto.network.NetworkPayload;
 
+import java.util.Optional;
+
 public interface ReportingItem extends NetworkPayload {
     String getKey();
 
@@ -35,7 +37,7 @@ public interface ReportingItem extends NetworkPayload {
 
     protobuf.ReportingItem toProtoMessage();
 
-    static ReportingItem fromProto(protobuf.ReportingItem proto) {
+    static Optional<? extends ReportingItem> fromProto(protobuf.ReportingItem proto) {
         switch (proto.getMessageCase()) {
             case STRING_VALUE_REPORTING_ITEM:
                 return StringValueReportingItem.fromProto(proto, proto.getStringValueReportingItem());

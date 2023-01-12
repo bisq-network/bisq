@@ -96,6 +96,19 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // UncaughtExceptionHandler implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void handleUncaughtException(Throwable throwable, boolean doShutDown) {
+        if (throwable instanceof OutOfMemoryError || doShutDown) {
+            log.error("We got an OutOfMemoryError and shut down");
+            gracefulShutDown(() -> log.info("gracefulShutDown complete"));
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // We continue with a series of synchronous execution tasks
     ///////////////////////////////////////////////////////////////////////////////////////////
 

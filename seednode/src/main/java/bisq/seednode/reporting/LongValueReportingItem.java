@@ -17,13 +17,16 @@
 
 package bisq.seednode.reporting;
 
+import java.util.Optional;
+
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
-
+@Slf4j
 public enum LongValueReportingItem implements ReportingItem {
-    Unspecified("", "Unspecified"),
     OfferPayload("data", "OfferPayload"),
+    BsqSwapOfferPayload("data", "BsqSwapOfferPayload"),
     MailboxStoragePayload("data", "MailboxStoragePayload"),
     TradeStatistics3("data", "TradeStatistics3"),
     AccountAgeWitness("data", "AccountAgeWitness"),
@@ -47,6 +50,21 @@ public enum LongValueReportingItem implements ReportingItem {
     sentBytes("network", "sentBytes"),
     receivedBytes("network", "receivedBytes"),
 
+    PreliminaryGetDataRequest("network", "PreliminaryGetDataRequest"),
+    GetUpdatedDataRequest("network", "GetUpdatedDataRequest"),
+    GetBlocksRequest("network", "GetBlocksRequest"),
+    GetDaoStateHashesRequest("network", "GetDaoStateHashesRequest"),
+    GetProposalStateHashesRequest("network", "GetProposalStateHashesRequest"),
+    GetBlindVoteStateHashesRequest("network", "GetBlindVoteStateHashesRequest"),
+
+    GetDataResponse("network", "GetDataResponse"),
+    GetBlocksResponse("network", "GetBlocksResponse"),
+    GetDaoStateHashesResponse("network", "GetDaoStateHashesResponse"),
+    GetProposalStateHashesResponse("network", "GetProposalStateHashesResponse"),
+    GetBlindVoteStateHashesResponse("network", "GetBlindVoteStateHashesResponse"),
+
+    failedResponseClassName("network", "failedResponseClassName"),
+
     usedMemoryInMB("node", "usedMemoryInMB"),
     totalMemoryInMB("node", "totalMemoryInMB"),
     jvmStartTimeInSec("node", "jvmStartTimeInSec");
@@ -69,16 +87,15 @@ public enum LongValueReportingItem implements ReportingItem {
         return this;
     }
 
-    public static LongValueReportingItem from(String key, long value) {
-        LongValueReportingItem item;
+    public static Optional<LongValueReportingItem> from(String key, long value) {
         try {
-            item = LongValueReportingItem.valueOf(key);
+            LongValueReportingItem item = LongValueReportingItem.valueOf(key);
+            item.setValue(value);
+            return Optional.of(item);
         } catch (Throwable t) {
-            item = Unspecified;
+            log.warn("No enum value with {}", key);
+            return Optional.empty();
         }
-
-        item.setValue(value);
-        return item;
     }
 
     @Override
@@ -88,8 +105,8 @@ public enum LongValueReportingItem implements ReportingItem {
                 .build();
     }
 
-    public static LongValueReportingItem fromProto(protobuf.ReportingItem baseProto,
-                                                   protobuf.LongValueReportingItem proto) {
+    public static Optional<LongValueReportingItem> fromProto(protobuf.ReportingItem baseProto,
+                                                             protobuf.LongValueReportingItem proto) {
         return LongValueReportingItem.from(baseProto.getKey(), proto.getValue());
     }
 

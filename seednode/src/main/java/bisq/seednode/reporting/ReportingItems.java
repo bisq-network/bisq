@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -50,7 +51,10 @@ public class ReportingItems extends ArrayList<ReportingItem> implements NetworkP
     public static ReportingItems fromProto(protobuf.ReportingItems proto) {
         ReportingItems reportingItems = new ReportingItems(proto.getAddress());
         reportingItems.addAll(proto.getReportingItemList().stream()
-                .map(ReportingItem::fromProto).collect(Collectors.toList()));
+                .map(ReportingItem::fromProto)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toList()));
         return reportingItems;
     }
 

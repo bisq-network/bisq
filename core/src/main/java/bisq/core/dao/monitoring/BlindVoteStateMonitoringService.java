@@ -25,6 +25,7 @@ import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.monitoring.model.BlindVoteStateBlock;
 import bisq.core.dao.monitoring.model.BlindVoteStateHash;
 import bisq.core.dao.monitoring.network.BlindVoteStateNetworkService;
+import bisq.core.dao.monitoring.network.StateNetworkService;
 import bisq.core.dao.monitoring.network.messages.GetBlindVoteStateHashesRequest;
 import bisq.core.dao.monitoring.network.messages.NewBlindVoteStateHashMessage;
 import bisq.core.dao.state.DaoStateListener;
@@ -228,6 +229,10 @@ public class BlindVoteStateMonitoringService implements DaoSetupService, DaoStat
 
     public void requestHashesFromGenesisBlockHeight(String peersAddress) {
         blindVoteStateNetworkService.requestHashes(genesisTxInfo.getGenesisBlockHeight(), peersAddress);
+    }
+
+    public void addResponseListener(StateNetworkService.ResponseListener responseListener) {
+        blindVoteStateNetworkService.addResponseListener(responseListener);
     }
 
 

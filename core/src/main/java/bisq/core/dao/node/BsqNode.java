@@ -72,6 +72,7 @@ public abstract class BsqNode implements DaoSetupService {
     // (not parsed) block.
     @Getter
     protected int chainTipHeight;
+    protected volatile boolean shutdownInProgress;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -156,6 +157,7 @@ public abstract class BsqNode implements DaoSetupService {
     }
 
     public void shutDown() {
+        shutdownInProgress = true;
         exportJsonFilesService.shutDown();
         daoStateSnapshotService.shutDown();
     }
@@ -200,6 +202,10 @@ public abstract class BsqNode implements DaoSetupService {
 
 
     protected Optional<Block> doParseBlock(RawBlock rawBlock) throws RequiredReorgFromSnapshotException {
+        if (shutdownInProgress) {
+            return Optional.empty();
+        }
+
         // We check if we have a block with that height. If so we return. We do not use the chainHeight as with genesis
         // height we have no block but chainHeight is initially set to genesis height (bad design ;-( but a bit tricky
         // to change now as it used in many areas.)
