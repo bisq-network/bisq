@@ -46,7 +46,7 @@ import org.jetbrains.annotations.Nullable;
 
 @Slf4j
 abstract class RequestStateHashesHandler<Req extends GetStateHashesRequest, Res extends GetStateHashesResponse> implements MessageListener {
-    private static final long TIMEOUT = 120;
+    private static final long TIMEOUT = 180;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

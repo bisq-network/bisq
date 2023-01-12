@@ -141,8 +141,7 @@ public abstract class NetworkNode implements MessageListener {
 
             SettableFuture<Connection> resultFuture = SettableFuture.create();
             ListenableFuture<Connection> future = connectionExecutor.submit(() -> {
-                Thread.currentThread().setName("NetworkNode.connectionExecutor:SendMessage-to-" + peersNodeAddress.getFullAddress());
-
+                Thread.currentThread().setName("NetworkNode.connectionExecutor:SendMessage-to-" + Utilities.toTruncatedString(peersNodeAddress.getFullAddress(), 15));
                 if (peersNodeAddress.equals(getNodeAddress())) {
                     log.warn("We are sending a message to ourselves");
                 }
@@ -305,7 +304,8 @@ public abstract class NetworkNode implements MessageListener {
         try {
             ListenableFuture<Connection> future = executor.submit(() -> {
                 String id = connection.getPeersNodeAddressOptional().isPresent() ? connection.getPeersNodeAddressOptional().get().getFullAddress() : connection.getUid();
-                Thread.currentThread().setName("NetworkNode:SendMessage-to-" + id);
+                Thread.currentThread().setName("NetworkNode:SendMessage-to-" + Utilities.toTruncatedString(id, 15));
+
                 connection.sendMessage(networkEnvelope);
                 return connection;
             });

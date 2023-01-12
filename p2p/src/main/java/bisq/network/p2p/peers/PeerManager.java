@@ -234,7 +234,7 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
 
     @Override
     public void onDisconnect(CloseConnectionReason closeConnectionReason, Connection connection) {
-        log.info("onDisconnect called: nodeAddress={}, closeConnectionReason={}",
+        log.debug("onDisconnect called: nodeAddress={}, closeConnectionReason={}",
                 connection.getPeersNodeAddressOptional(), closeConnectionReason);
         handleConnectionFault(connection);
 

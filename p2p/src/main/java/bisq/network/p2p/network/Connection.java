@@ -202,6 +202,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             if (peersNodeAddress != null) {
                 setPeersNodeAddress(peersNodeAddress);
                 if (networkFilter != null && networkFilter.isPeerBanned(peersNodeAddress)) {
+                    log.warn("We created an outbound connection with a banned peer");
                     reportInvalidRequest(RuleViolation.PEER_BANNED);
                 }
             }
@@ -232,6 +233,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         if (networkFilter != null &&
                 peersNodeAddressOptional.isPresent() &&
                 networkFilter.isPeerBanned(peersNodeAddressOptional.get())) {
+            log.warn("We tried to send a message to a banned peer. message={}", networkEnvelope.getClass().getSimpleName());
             reportInvalidRequest(RuleViolation.PEER_BANNED);
             return;
         }
@@ -398,9 +400,12 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         List<NetworkEnvelope> networkEnvelopes = bundleOfEnvelopes.getEnvelopes();
         for (NetworkEnvelope networkEnvelope : networkEnvelopes) {
             // If SendersNodeAddressMessage we do some verifications and apply if successful, otherwise we return false.
-            if (networkEnvelope instanceof SendersNodeAddressMessage &&
-                    !processSendersNodeAddressMessage((SendersNodeAddressMessage) networkEnvelope)) {
-                continue;
+            if (networkEnvelope instanceof SendersNodeAddressMessage) {
+                boolean isValid = processSendersNodeAddressMessage((SendersNodeAddressMessage) networkEnvelope);
+                if (!isValid) {
+                    log.warn("Received an invalid {} at processing BundleOfEnvelopes", networkEnvelope.getClass().getSimpleName());
+                    continue;
+                }
             }
 
             if (networkEnvelope instanceof AddPersistableNetworkPayloadMessage) {
@@ -604,13 +609,11 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
         if (numRuleViolations >= ruleViolation.maxTolerance) {
             log.warn("We close connection as we received too many corrupt requests. " +
-                    "numRuleViolations={} " +
-                    "corruptRequest={} " +
-                    "corruptRequests={} " +
-                    "connection with address{} and uid {}", numRuleViolations, ruleViolation, ruleViolations, this.getPeersNodeAddressProperty(), this.getUid());
+                    "ruleViolations={} " +
+                    "connection with address{} and uid {}", ruleViolations, peersNodeAddressProperty, uid);
             this.ruleViolation = ruleViolation;
             if (ruleViolation == RuleViolation.PEER_BANNED) {
-                log.warn("We close connection due RuleViolation.PEER_BANNED. peersNodeAddress={}", getPeersNodeAddressOptional());
+                log.debug("We close connection due RuleViolation.PEER_BANNED. peersNodeAddress={}", getPeersNodeAddressOptional());
                 shutDown(CloseConnectionReason.PEER_BANNED);
             } else if (ruleViolation == RuleViolation.INVALID_CLASS) {
                 log.warn("We close connection due RuleViolation.INVALID_CLASS");
@@ -678,6 +681,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         }
 
         if (networkFilter != null && networkFilter.isPeerBanned(senderNodeAddress)) {
+            log.warn("We got a message from a banned peer. message={}", sendersNodeAddressMessage.getClass().getSimpleName());
             reportInvalidRequest(RuleViolation.PEER_BANNED);
             return false;
         }
@@ -701,10 +705,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     @Override
     public void run() {
         try {
-            Thread.currentThread().setName("InputHandler");
+            Thread.currentThread().setName("InputHandler-" + Utilities.toTruncatedString(uid, 15));
             while (!stopped && !Thread.currentThread().isInterrupted()) {
                 if (!threadNameSet && getPeersNodeAddressOptional().isPresent()) {
-                    Thread.currentThread().setName("InputHandler-" + getPeersNodeAddressOptional().get().getFullAddress());
+                    Thread.currentThread().setName("InputHandler-" + Utilities.toTruncatedString(getPeersNodeAddressOptional().get().getFullAddress(), 15));
                     threadNameSet = true;
                 }
                 try {
@@ -743,6 +747,8 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     if (networkFilter != null &&
                             peersNodeAddressOptional.isPresent() &&
                             networkFilter.isPeerBanned(peersNodeAddressOptional.get())) {
+
+                        log.warn("We got a message from a banned peer. proto={}", Utilities.toTruncatedString(proto));
                         reportInvalidRequest(RuleViolation.PEER_BANNED);
                         return;
                     }
@@ -828,9 +834,15 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
                         // If SendersNodeAddressMessage we do some verifications and apply if successful,
                         // otherwise we return false.
-                        if (networkEnvelope instanceof SendersNodeAddressMessage &&
-                                !processSendersNodeAddressMessage((SendersNodeAddressMessage) networkEnvelope)) {
-                            return;
+                        if (networkEnvelope instanceof SendersNodeAddressMessage) {
+                            boolean isValid = processSendersNodeAddressMessage((SendersNodeAddressMessage) networkEnvelope);
+                            if (!isValid) {
+                                return;
+                            }
+                        }
+
+                        if (!(networkEnvelope instanceof SendersNodeAddressMessage) && peersNodeAddressOptional.isEmpty()) {
+                            log.info("We got a {} from a peer with yet unknown address on connection with uid={}", networkEnvelope.getClass().getSimpleName(), uid);
                         }
 
                         onMessage(networkEnvelope, this);
@@ -842,7 +854,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                     reportInvalidRequest(RuleViolation.INVALID_CLASS);
                 } catch (ProtobufferException | NoClassDefFoundError | InvalidProtocolBufferException e) {
                     log.error(e.getMessage());
-                    e.printStackTrace();
                     reportInvalidRequest(RuleViolation.INVALID_DATA_TYPE);
                 } catch (Throwable t) {
                     handleException(t);
