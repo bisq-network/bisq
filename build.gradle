@@ -323,48 +323,6 @@ configure(project(':core')) {
     }
 }
 
-configure(project(':cli')) {
-    distTar.enabled = true
-
-    mainClassName = 'bisq.cli.CliMain'
-
-    dependencies {
-        implementation project(':proto')
-        annotationProcessor libs.lombok
-        compileOnly libs.lombok
-        implementation libs.logback.classic
-        implementation libs.logback.core
-        implementation libs.google.guava
-        implementation libs.protobuf.java
-        implementation libs.jopt
-        implementation libs.slf4j.api
-        implementation(libs.grpc.core) {
-            exclude(module: 'animal-sniffer-annotations')
-            exclude(module: 'guava')
-        }
-        implementation(libs.grpc.stub) {
-            exclude(module: 'animal-sniffer-annotations')
-            exclude(module: 'guava')
-        }
-        runtimeOnly(libs.grpc.netty.shaded) {
-            exclude(module: 'animal-sniffer-annotations')
-            exclude(module: 'guava')
-        }
-        testAnnotationProcessor libs.lombok
-        testCompileOnly libs.lombok
-        testImplementation libs.cowwoc.diff.match.patch
-
-        testImplementation libs.junit.jupiter.api
-        testImplementation libs.junit.jupiter.params
-        testRuntimeOnly libs.javax.annotation
-        testRuntimeOnly libs.junit.jupiter.engine
-    }
-
-    test {
-        useJUnitPlatform()
-    }
-}
-
 configure(project(':desktop')) {
     apply plugin: 'com.github.johnrengelman.shadow'
     apply plugin: 'org.openjfx.javafxplugin'
