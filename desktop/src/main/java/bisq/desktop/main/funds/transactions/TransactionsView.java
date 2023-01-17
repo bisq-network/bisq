@@ -176,7 +176,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-        filterBox.initialize(filteredList, tableView);
         dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
         tradeIdColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.tradeId")));
         detailsColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.details")));
@@ -231,15 +230,18 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         HBox.setHgrow(spacer, Priority.ALWAYS);
         numItems.setId("num-offers");
         numItems.setPadding(new Insets(-5, 0, 0, 10));
+
         exportButton.updateText(Res.get("shared.exportCSV"));
     }
 
     @Override
     protected void activate() {
-        filterBox.activate();
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
         updateList();
+        filterBox.initializeWithCallback(filteredList, tableView, () ->
+                numItems.setText(Res.get("shared.numItemsLabel", sortedList.size())));
+        filterBox.activate();
 
         btcWalletService.addChangeEventListener(walletChangeEventListener);
 
@@ -247,7 +249,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         if (scene != null)
             scene.addEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);
 
-        numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
         exportButton.setOnAction(event -> {
             final ObservableList<TableColumn<TransactionsListItem, ?>> tableColumns = tableView.getColumns();
             final int reportColumns = tableColumns.size() - 1;    // CSV report excludes the last column (an icon)

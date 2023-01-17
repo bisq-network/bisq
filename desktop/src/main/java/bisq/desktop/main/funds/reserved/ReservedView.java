@@ -132,7 +132,6 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-        filterBox.initialize(filteredList, tableView);
         dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
         offerIdColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.offerId")));
         detailsColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.details")));
@@ -173,16 +172,17 @@ public class ReservedView extends ActivatableView<VBox, Void> {
 
     @Override
     protected void activate() {
-        filterBox.activate();
         openOfferManager.getObservableList().addListener(openOfferListChangeListener);
         tradeManager.getObservableList().addListener(tradeListChangeListener);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
         updateList();
+        filterBox.initializeWithCallback(filteredList, tableView, () ->
+                numItems.setText(Res.get("shared.numItemsLabel", sortedList.size())));
+        filterBox.activate();
 
         btcWalletService.addBalanceListener(balanceListener);
 
-        numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
         exportButton.setOnAction(event -> {
             ObservableList<TableColumn<ReservedListItem, ?>> tableColumns = tableView.getColumns();
             int reportColumns = tableColumns.size();
