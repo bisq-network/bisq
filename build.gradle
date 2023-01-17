@@ -427,59 +427,6 @@ configure(project(':statsnode')) {
     }
 }
 
-configure(project(':daemon')) {
-    distTar.enabled = true
-
-    mainClassName = 'bisq.daemon.app.BisqDaemonMain'
-
-    dependencies {
-        implementation project(':proto')
-        implementation project(':common')
-        implementation project(':p2p')
-        implementation project(':core')
-        annotationProcessor libs.lombok
-        compileOnly libs.javax.annotation
-        compileOnly libs.lombok
-        implementation libs.logback.classic
-        implementation libs.logback.core
-        implementation libs.google.gson
-        implementation libs.google.guava
-        implementation libs.protobuf.java
-        implementation libs.apache.commons.lang3
-        implementation libs.jetbrains.annotations
-        implementation libs.slf4j.api
-        implementation(libs.bitcoinj) {
-            exclude(module: 'bcprov-jdk15on')
-            exclude(module: 'guava')
-            exclude(module: 'jsr305')
-            exclude(module: 'okhttp')
-            exclude(module: 'okio')
-            exclude(module: 'protobuf-java')
-            exclude(module: 'slf4j-api')
-        }
-        implementation(libs.google.guice) {
-            exclude(module: 'guava')
-        }
-        implementation(libs.grpc.protobuf) {
-            exclude(module: 'animal-sniffer-annotations')
-            exclude(module: 'guava')
-        }
-        implementation(libs.grpc.stub) {
-            exclude(module: 'animal-sniffer-annotations')
-            exclude(module: 'guava')
-        }
-        runtimeOnly(libs.grpc.netty.shaded) {
-            exclude(module: 'animal-sniffer-annotations')
-            exclude(module: 'guava')
-        }
-        testAnnotationProcessor libs.lombok
-        testCompileOnly libs.lombok
-        testImplementation libs.junit.jupiter.api
-        testImplementation libs.junit.jupiter.params
-        testRuntimeOnly(libs.junit.jupiter.engine)
-    }
-}
-
 configure(project(':apitest')) {
     mainClassName = 'bisq.apitest.ApiTestMain'
 
