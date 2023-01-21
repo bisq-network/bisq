@@ -132,7 +132,6 @@ public class LockedView extends ActivatableView<VBox, Void> {
 
     @Override
     public void initialize() {
-        filterBox.initialize(filteredList, tableView);
         dateColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.dateTime")));
         tradeIdColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.tradeId")));
         detailsColumn.setGraphic(new AutoTooltipLabel(Res.get("shared.details")));
@@ -168,6 +167,8 @@ public class LockedView extends ActivatableView<VBox, Void> {
         HBox.setHgrow(spacer, Priority.ALWAYS);
         numItems.setId("num-offers");
         numItems.setPadding(new Insets(-5, 0, 0, 10));
+        filterBox.initializeWithCallback(filteredList, tableView, () ->
+                numItems.setText(Res.get("shared.numItemsLabel", sortedList.size())));
         exportButton.updateText(Res.get("shared.exportCSV"));
     }
 
@@ -182,7 +183,6 @@ public class LockedView extends ActivatableView<VBox, Void> {
 
         btcWalletService.addBalanceListener(balanceListener);
 
-        numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
         exportButton.setOnAction(event -> {
             ObservableList<TableColumn<LockedListItem, ?>> tableColumns = tableView.getColumns();
             int reportColumns = tableColumns.size();

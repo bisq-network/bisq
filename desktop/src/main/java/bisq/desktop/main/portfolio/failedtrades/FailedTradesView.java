@@ -181,10 +181,10 @@ public class FailedTradesView extends ActivatableViewAndModel<VBox, FailedTrades
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
 
-        filterBox.initialize(filteredList, tableView); // here because filteredList is instantiated here
+        filterBox.initializeWithCallback(filteredList, tableView, () ->
+                numItems.setText(Res.get("shared.numItemsLabel", sortedList.size())));
         filterBox.activate();
 
-        numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
         exportButton.setOnAction(event -> {
             ObservableList<TableColumn<FailedTradesListItem, ?>> tableColumns = tableView.getColumns();
             int reportColumns = tableColumns.size() - 1;    // CSV report excludes the last column (an icon)

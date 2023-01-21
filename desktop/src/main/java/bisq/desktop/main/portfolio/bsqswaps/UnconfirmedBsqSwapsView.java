@@ -219,10 +219,10 @@ public class UnconfirmedBsqSwapsView extends ActivatableViewAndModel<VBox, Uncon
 
         tableView.setItems(sortedList);
 
-        filterBox.initialize(filteredList, tableView); // here because filteredList is instantiated here
+        filterBox.initializeWithCallback(filteredList, tableView, () ->
+                numItems.setText(Res.get("shared.numItemsLabel", sortedList.size())));
         filterBox.activate();
 
-        numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
         exportButton.setOnAction(event -> {
             CSVEntryConverter<UnconfirmedBsqSwapsListItem> headerConverter = item -> {
                 String[] columns = new String[ColumnNames.values().length];

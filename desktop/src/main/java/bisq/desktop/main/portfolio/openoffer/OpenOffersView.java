@@ -245,7 +245,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         sortedList.addListener(sortedListeChangedListener);
         tableView.setItems(sortedList);
 
-        filterBox.initialize(filteredList, tableView); // here because filteredList is instantiated here
+        filterBox.initializeWithCallback(filteredList, tableView, this::updateNumberOfOffers);
         filterBox.activate();
 
         updateSelectToggleButtonState();
@@ -261,7 +261,6 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             tableView.refresh();
         });
 
-        updateNumberOfOffers();
         exportButton.setOnAction(event -> {
             CSVEntryConverter<OpenOfferListItem> headerConverter = item -> {
                 String[] columns = new String[ColumnNames.values().length];
