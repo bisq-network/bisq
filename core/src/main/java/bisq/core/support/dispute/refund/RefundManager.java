@@ -264,6 +264,14 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
                                                                               String takerFeeTxId,
                                                                               String depositTxId,
                                                                               String delayedPayoutTxId) {
+        // in regtest mode, simulate a delay & failure obtaining the blockchain transactions
+        // since we cannot request them in regtest anyway.  this is useful for checking failure scenarios
+        if (!Config.baseCurrencyNetwork().isMainnet()) {
+            CompletableFuture<List<Transaction>> retFuture = new CompletableFuture<>();
+            UserThread.runAfter(() -> retFuture.complete(new ArrayList<>()), 5);
+            return retFuture;
+        }
+
         NetworkParameters params = btcWalletService.getParams();
         List<Transaction> txs = new ArrayList<>();
         return mempoolService.requestTxAsHex(makerFeeTxId)
