@@ -27,6 +27,7 @@ import bisq.desktop.main.overlays.Overlay;
 import bisq.desktop.main.overlays.notifications.Notification;
 import bisq.desktop.main.overlays.notifications.NotificationCenter;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.popups.PopupManager;
 import bisq.desktop.main.overlays.windows.DisplayAlertMessageWindow;
 import bisq.desktop.main.overlays.windows.TacWindow;
 import bisq.desktop.main.overlays.windows.TorNetworkSettingsWindow;
@@ -392,7 +393,13 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         bisqSetup.setChainFileLockedExceptionHandler(msg -> new Popup().warning(msg)
                 .useShutDownButton()
                 .show());
-        bisqSetup.setDiskSpaceWarningHandler(msg -> new Popup().warning(msg).show());
+
+        bisqSetup.setDiskSpaceWarningHandler(msg -> {
+            if (PopupManager.isNoPopupDisplayed()) {
+                new Popup().warning(msg).show();
+            }
+        });
+
         bisqSetup.setLockedUpFundsHandler(msg -> {
             // repeated popups of the same message text can be stopped by selecting the "Dont show again" checkbox
             String key = Hex.encode(Hash.getSha256Ripemd160hash(msg.getBytes(Charsets.UTF_8)));

@@ -552,10 +552,10 @@ public class BisqSetup {
     }
 
     private void checkFreeDiskSpace() {
-        long REQUIRED_FREE_DISK_SPACE = 2147483648L;
+        long TWO_GIGABYTES = 2147483648L;
         long usableSpace = new File(Config.appDataDir(), VERSION_FILE_NAME).getUsableSpace();
-        if (usableSpace < REQUIRED_FREE_DISK_SPACE) {
-            String message = Res.get("popup.warning.diskSpace", formatBytes(usableSpace), formatBytes(REQUIRED_FREE_DISK_SPACE));
+        if (usableSpace < TWO_GIGABYTES) {
+            String message = Res.get("popup.warning.diskSpace", formatBytes(usableSpace), formatBytes(TWO_GIGABYTES));
             log.warn(message);
             if (diskSpaceWarningHandler != null) {
                 diskSpaceWarningHandler.accept(message);
