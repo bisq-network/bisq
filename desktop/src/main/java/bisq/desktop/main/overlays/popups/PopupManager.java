@@ -40,6 +40,10 @@ public class PopupManager {
         displayNext();
     }
 
+    public static boolean isNoPopupDisplayed() {
+        return displayedPopup == null;
+    }
+
     public static void onHidden(Popup popup) {
         if (displayedPopup == null || displayedPopup == popup) {
             displayedPopup = null;

@@ -78,6 +78,7 @@ public class BisqHeadlessApp implements HeadlessApp {
         bisqSetup.setDisplayTorNetworkSettingsHandler(show -> log.info("onDisplayTorNetworkSettingsHandler: show={}", show));
         bisqSetup.setSpvFileCorruptedHandler(msg -> log.error("onSpvFileCorruptedHandler: msg={}", msg));
         bisqSetup.setChainFileLockedExceptionHandler(msg -> log.error("onChainFileLockedExceptionHandler: msg={}", msg));
+        bisqSetup.setDiskSpaceWarningHandler(msg -> log.error("onDiskSpaceWarningHandler: msg={}", msg));
         bisqSetup.setLockedUpFundsHandler(msg -> log.info("onLockedUpFundsHandler: msg={}", msg));
         bisqSetup.setShowFirstPopupIfResyncSPVRequestedHandler(() -> log.info("onShowFirstPopupIfResyncSPVRequestedHandler"));
         bisqSetup.setRequestWalletPasswordHandler(aesKeyHandler -> log.info("onRequestWalletPasswordHandler"));

@@ -107,6 +107,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+import static bisq.core.util.FormattingUtils.formatBytes;
+
 @Slf4j
 @Singleton
 public class BisqSetup {
@@ -162,7 +164,7 @@ public class BisqSetup {
             filterWarningHandler, displaySecurityRecommendationHandler, displayLocalhostHandler,
             wrongOSArchitectureHandler, displaySignedByArbitratorHandler,
             displaySignedByPeerHandler, displayPeerLimitLiftedHandler, displayPeerSignerHandler,
-            rejectedTxErrorMessageHandler;
+            rejectedTxErrorMessageHandler, diskSpaceWarningHandler;
     @Setter
     @Nullable
     private Consumer<Boolean> displayTorNetworkSettingsHandler;
@@ -462,8 +464,10 @@ public class BisqSetup {
                 walletPasswordHandler,
                 () -> {
                     if (allBasicServicesInitialized) {
+                        // the following are called each time a block is received
                         checkForLockedUpFunds();
                         checkForInvalidMakerFeeTxs();
+                        checkFreeDiskSpace();
                     }
                 },
                 () -> walletInitialized.set(true));
@@ -545,6 +549,18 @@ public class BisqSetup {
                 }
             }
         });
+    }
+
+    private void checkFreeDiskSpace() {
+        long TWO_GIGABYTES = 2147483648L;
+        long usableSpace = new File(Config.appDataDir(), VERSION_FILE_NAME).getUsableSpace();
+        if (usableSpace < TWO_GIGABYTES) {
+            String message = Res.get("popup.warning.diskSpace", formatBytes(usableSpace), formatBytes(TWO_GIGABYTES));
+            log.warn(message);
+            if (diskSpaceWarningHandler != null) {
+                diskSpaceWarningHandler.accept(message);
+            }
+        }
     }
 
     @Nullable
