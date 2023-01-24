@@ -134,12 +134,11 @@ public class BuyerStep4View extends TradeStepView {
                     .autoClose()
                     .show();
         }
+        model.dataModel.btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
     }
 
     private void handleTradeCompleted() {
         closeButton.setDisable(true);
-        model.dataModel.btcWalletService.swapTradeEntryToAvailableEntry(trade.getId(), AddressEntry.Context.TRADE_PAYOUT);
-
         openTradeFeedbackWindow();
     }
 
