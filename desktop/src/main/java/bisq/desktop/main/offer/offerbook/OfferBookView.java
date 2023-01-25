@@ -723,11 +723,11 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
 
     private void onRemoveOpenOffer(Offer offer) {
         if (model.isBootstrappedOrShowPopup()) {
-            String key = "RemoveOfferWarning";
+            String key = (offer.isBsqSwapOffer() ? "RemoveBsqSwapWarning" : "RemoveOfferWarning");
             if (DontShowAgainLookup.showAgain(key)) {
-                String message = offer.getMakerFee().isPositive() ?
-                        Res.get("popup.warning.removeOffer", model.getMakerFeeAsString(offer)) :
-                        Res.get("popup.warning.removeNoFeeOffer");
+                String message = offer.isBsqSwapOffer() ?
+                        Res.get("popup.warning.removeNoFeeOffer") :
+                        Res.get("popup.warning.removeOffer", model.getMakerFeeAsString(offer));
                 new Popup().warning(message)
                         .actionButtonText(Res.get("shared.removeOffer"))
                         .onAction(() -> doRemoveOffer(offer))
