@@ -58,21 +58,17 @@ public class TextFieldWithCopyIcon extends AnchorPane {
         copyIcon.setOnMouseClicked(e -> {
             String text = getText();
             if (text != null && text.length() > 0) {
-                String copyText;
+                String copyText = text;
                 if (copyWithoutCurrencyPostFix) {
                     String[] strings = text.split(" ");
-                    if (strings.length > 1)
+                    if (strings.length > 1) {
                         copyText = strings[0]; // exclude the BTC postfix
-                    else
-                        copyText = text;
+                    }
                 } else if (copyTextAfterDelimiter) {
-                    String[] strings = text.split(" ");
-                    if (strings.length > 1)
-                        copyText = strings[2]; // exclude the part before / (slash included)
-                    else
-                        copyText = text;
-                } else {
-                    copyText = text;
+                    String[] strings = text.split("/");
+                    if (strings.length == 2) {
+                        copyText = strings[1].stripLeading(); // exclude the part before / (slash included)
+                    }
                 }
                 Utilities.copyToClipboard(copyText);
             }
