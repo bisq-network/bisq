@@ -109,6 +109,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     private static final int MAX_PERMITTED_MESSAGE_SIZE = 10 * 1024 * 1024;             // 10 MB (425 offers resulted in about 660 kb, mailbox msg will add more to it) offer has usually 2 kb, mailbox 3kb.
     //TODO decrease limits again after testing
     private static final int SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(240);
+    private static final int SHUTDOWN_TIMEOUT = 100;
 
     public static int getPermittedMessageSize() {
         return PERMITTED_MESSAGE_SIZE;
@@ -534,7 +535,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             }
 
             //noinspection UnstableApiUsage
-            MoreExecutors.shutdownAndAwaitTermination(singleThreadExecutor, 100, TimeUnit.MILLISECONDS);
+            MoreExecutors.shutdownAndAwaitTermination(singleThreadExecutor, SHUTDOWN_TIMEOUT, TimeUnit.MILLISECONDS);
 
             log.debug("Connection shutdown complete {}", this);
             // Use UserThread.execute as it's not clear if that is called from a non-UserThread
