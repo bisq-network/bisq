@@ -128,7 +128,6 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     }
 
     public void shutDown() {
-        executorService.shutdown();
         // noinspection UnstableApiUsage
         MoreExecutors.shutdownAndAwaitTermination(executorService, 10, TimeUnit.SECONDS);
     }
