@@ -289,6 +289,7 @@ class CoreWalletsService {
             //  See WithdrawalView # onWithdraw (and refactor).
             Transaction feeEstimationTransaction =
                     btcWalletService.getFeeEstimationTransactionForMultipleAddresses(fromAddresses,
+                            address,
                             receiverAmount,
                             txFeePerVbyte);
             if (feeEstimationTransaction == null)
