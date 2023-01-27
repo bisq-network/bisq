@@ -18,12 +18,12 @@
 package bisq.network.p2p.network;
 
 import bisq.common.proto.network.NetworkEnvelope;
+import bisq.common.util.Utilities;
 
 import java.io.OutputStream;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
@@ -39,7 +39,7 @@ class SynchronizedProtoOutputStream extends ProtoOutputStream {
 
     SynchronizedProtoOutputStream(OutputStream delegate, Statistic statistic) {
         super(delegate, statistic);
-        this.executorService = Executors.newSingleThreadExecutor();
+        this.executorService = Utilities.getSingleThreadExecutor(this.getClass());
     }
 
     @Override
