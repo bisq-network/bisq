@@ -19,12 +19,15 @@ package bisq.network.p2p.network;
 
 import bisq.common.proto.network.NetworkEnvelope;
 
+import com.google.common.util.concurrent.MoreExecutors;
+
 import java.io.OutputStream;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,8 +65,18 @@ class SynchronizedProtoOutputStream extends ProtoOutputStream {
 
     void onConnectionShutdown() {
         try {
-            executorService.shutdownNow();
-            super.onConnectionShutdown();
+            // ProtoOutputStream is not thread-safe that's why try to close the stream
+            // on the same thread first.
+            executorService.submit(super::onConnectionShutdown);
+
+            //noinspection UnstableApiUsage
+            boolean terminatedSuccessfully = MoreExecutors.shutdownAndAwaitTermination(
+                    executorService, Connection.getShutdownTimeout() * 2L, TimeUnit.MILLISECONDS);
+
+            if (!terminatedSuccessfully) {
+                super.onConnectionShutdown();
+            }
+
         } catch (Throwable t) {
             log.error("Failed to handle connection shutdown. Throwable={}", t.toString());
         }

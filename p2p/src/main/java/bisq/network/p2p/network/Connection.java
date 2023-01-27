@@ -119,6 +119,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         return MAX_PERMITTED_MESSAGE_SIZE;
     }
 
+    public static int getShutdownTimeout() {
+        return SHUTDOWN_TIMEOUT;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Class fields
