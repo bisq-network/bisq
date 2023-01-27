@@ -88,6 +88,8 @@ public class PriceFeedService {
     @Nullable
     private Timer requestTimer;
     @Nullable
+    private Timer retryWithNewProviderTime;
+    @Nullable
     private PriceRequest priceRequest;
 
 
@@ -116,6 +118,10 @@ public class PriceFeedService {
         if (requestTimer != null) {
             requestTimer.stop();
             requestTimer = null;
+        }
+        if (retryWithNewProviderTime != null) {
+            retryWithNewProviderTime.stop();
+            retryWithNewProviderTime = null;
         }
         if (priceRequest != null) {
             priceRequest.shutDown();
@@ -227,7 +233,13 @@ public class PriceFeedService {
 
     private void retryWithNewProvider() {
         // We increase retry delay each time until we reach PERIOD_SEC to not exceed requests.
-        UserThread.runAfter(() -> {
+
+        if (retryWithNewProviderTime != null) {
+            // If we have a retry timer already running we keep the old one and return.
+            return;
+        }
+
+        retryWithNewProviderTime = UserThread.runAfter(() -> {
             retryDelay = Math.min(retryDelay + 5, PERIOD_SEC);
 
             String oldBaseUrl = priceProvider.getBaseUrl();
@@ -236,6 +248,7 @@ public class PriceFeedService {
                     "We select the new provider {} and use that for a new request. retryDelay was {} sec.", oldBaseUrl, priceProvider.getBaseUrl(), retryDelay);
 
             request(true);
+            retryWithNewProviderTime = null;
         }, retryDelay);
     }
 
@@ -376,7 +389,7 @@ public class PriceFeedService {
 
     private void requestAllPrices(PriceProvider provider, Runnable resultHandler, FaultHandler faultHandler) {
         if (httpClient.hasPendingRequest()) {
-            log.warn("We have a pending request open. We ignore that request. httpClient {}", httpClient);
+            log.debug("We have a pending request open. This is expected when we got repeated calls. We ignore that request. httpClient {}", httpClient);
             return;
         }
 
