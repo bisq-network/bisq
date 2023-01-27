@@ -515,6 +515,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         // Use UserThread.execute as it's not clear if that is called from a non-UserThread
         UserThread.execute(() -> connectionListener.onDisconnect(closeConnectionReason, this));
         try {
+            protoOutputStream.onConnectionShutdown();
             socket.close();
         } catch (SocketException e) {
             log.trace("SocketException at shutdown might be expected {}", e.getMessage());
@@ -522,8 +523,6 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             log.error("Exception at shutdown. " + e.getMessage());
             e.printStackTrace();
         } finally {
-            protoOutputStream.onConnectionShutdown();
-
             capabilitiesListeners.clear();
 
             try {
