@@ -24,11 +24,9 @@ import bisq.core.app.CoreModule;
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.util.Utilities;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ExecutorService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,11 +49,8 @@ public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.Bis
 
     @Override
     protected void configUserThread() {
-        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(this.getClass().getSimpleName())
-                .setDaemon(true)
-                .build();
-        UserThread.setExecutor(Executors.newSingleThreadExecutor(threadFactory));
+        ExecutorService executorService = Utilities.getSingleThreadExecutor(this.getClass());
+        UserThread.setExecutor(executorService);
     }
 
     @Override

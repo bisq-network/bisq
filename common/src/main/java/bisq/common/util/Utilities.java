@@ -84,12 +84,26 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class Utilities {
 
+    public static ExecutorService getSingleThreadExecutor(Class<?> aClass) {
+        String name = aClass.getSimpleName();
+        return getSingleThreadExecutor(name);
+    }
+
     public static ExecutorService getSingleThreadExecutor(String name) {
         final ThreadFactory threadFactory = new ThreadFactoryBuilder()
                 .setNameFormat(name)
                 .setDaemon(true)
                 .build();
         return Executors.newSingleThreadExecutor(threadFactory);
+    }
+
+    public static ExecutorService getSingleThreadExecutor(ThreadFactory threadFactory) {
+        return Executors.newSingleThreadExecutor(threadFactory);
+    }
+
+    public static ExecutorService getFixedThreadPoolExecutor(int nThreads,
+                                                             ThreadFactory threadFactory) {
+        return Executors.newFixedThreadPool(nThreads, threadFactory);
     }
 
     public static ListeningExecutorService getSingleThreadListeningExecutor(String name) {

@@ -22,11 +22,9 @@ import bisq.core.payment.TradeLimits;
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Version;
+import bisq.common.util.Utilities;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ExecutorService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,11 +60,8 @@ public class BisqHeadlessAppMain extends BisqExecutable {
 
     @Override
     protected void configUserThread() {
-        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(this.getClass().getSimpleName())
-                .setDaemon(true)
-                .build();
-        UserThread.setExecutor(Executors.newSingleThreadExecutor(threadFactory));
+        ExecutorService executorService = Utilities.getSingleThreadExecutor(this.getClass());
+        UserThread.setExecutor(executorService);
     }
 
     @Override

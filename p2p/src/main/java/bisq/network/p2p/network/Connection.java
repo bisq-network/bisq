@@ -74,7 +74,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -129,7 +128,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     private final NetworkFilter networkFilter;
     @Getter
     private final String uid;
-    private final ExecutorService singleThreadExecutor = Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "Connection.java executor-service"));
+    private final ExecutorService singleThreadExecutor = Utilities.getSingleThreadExecutor(runnable -> new Thread(runnable, "Connection.java executor-service"));
     @Getter
     private final Statistic statistic;
     @Getter

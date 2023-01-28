@@ -40,8 +40,7 @@ import bisq.common.handlers.ResultHandler;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.setup.GracefulShutDownHandler;
 import bisq.common.util.Profiler;
-
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import bisq.common.util.Utilities;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -50,8 +49,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -71,11 +69,8 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
 
     @Override
     protected void configUserThread() {
-        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(this.getClass().getSimpleName())
-                .setDaemon(true)
-                .build();
-        UserThread.setExecutor(Executors.newSingleThreadExecutor(threadFactory));
+        ExecutorService executorService = Utilities.getSingleThreadExecutor(this.getClass());
+        UserThread.setExecutor(executorService);
     }
 
     @Override
