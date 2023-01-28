@@ -1056,13 +1056,7 @@ public class BtcWalletService extends WalletService {
     }
 
     public Transaction getFeeEstimationTransactionForMultipleAddresses(Set<String> fromAddresses,
-                                                                       Coin amount)
-            throws AddressFormatException, AddressEntryException, InsufficientFundsException {
-        Coin txFeeForWithdrawalPerVbyte = getTxFeeForWithdrawalPerVbyte();
-        return getFeeEstimationTransactionForMultipleAddresses(fromAddresses, amount, txFeeForWithdrawalPerVbyte);
-    }
-
-    public Transaction getFeeEstimationTransactionForMultipleAddresses(Set<String> fromAddresses,
+                                                                       String toAddress,
                                                                        Coin amount,
                                                                        Coin txFeeForWithdrawalPerVbyte)
             throws AddressFormatException, AddressEntryException, InsufficientFundsException {
@@ -1090,11 +1084,7 @@ public class BtcWalletService extends WalletService {
             do {
                 counter++;
                 fee = txFeeForWithdrawalPerVbyte.multiply(txVsize);
-                // We use a dummy address for the output
-                // We don't know here whether the output is segwit or not but we don't care too much because the size of
-                // a segwit ouput is just 3 byte smaller than the size of a legacy ouput.
-                final String dummyReceiver = SegwitAddress.fromKey(params, new ECKey()).toString();
-                SendRequest sendRequest = getSendRequestForMultipleAddresses(fromAddresses, dummyReceiver, amount, fee, null, aesKey);
+                SendRequest sendRequest = getSendRequestForMultipleAddresses(fromAddresses, toAddress, amount, fee, null, aesKey);
                 wallet.completeTx(sendRequest);
                 tx = sendRequest.tx;
                 txVsize = tx.getVsize();
@@ -1113,14 +1103,14 @@ public class BtcWalletService extends WalletService {
     }
 
     private boolean feeEstimationNotSatisfied(int counter, Transaction tx) {
-        return feeEstimationNotSatisfied(counter, tx, getTxFeeForWithdrawalPerVbyte());
+        return feeEstimationNotSatisfied(counter, tx.getFee().value, tx.getVsize(), getTxFeeForWithdrawalPerVbyte());
     }
 
-    private boolean feeEstimationNotSatisfied(int counter, Transaction tx, Coin txFeeForWithdrawalPerVbyte) {
-        long targetFee = txFeeForWithdrawalPerVbyte.multiply(tx.getVsize()).value;
+    private boolean feeEstimationNotSatisfied(int counter, long txFee, long txVsize, Coin txFeeForWithdrawalPerVbyte) {
+        long targetFee = txFeeForWithdrawalPerVbyte.multiply(txVsize).value;
+        long higherThanTargetFee = txFee - targetFee;
         return counter < 10 &&
-                (tx.getFee().value < targetFee ||
-                        tx.getFee().value - targetFee > 1000);
+                (txFee < targetFee || higherThanTargetFee > 1000);
     }
 
     public int getEstimatedFeeTxVsize(List<Coin> outputValues, Coin txFee)
