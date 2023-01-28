@@ -359,11 +359,11 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     private void onRemoveOpenOffer(OpenOfferListItem item) {
         OpenOffer openOffer = item.getOpenOffer();
         if (model.isBootstrappedOrShowPopup()) {
-            String key = "RemoveOfferWarning";
+            String key = (openOffer.getOffer().isBsqSwapOffer() ? "RemoveBsqSwapWarning" : "RemoveOfferWarning");
             if (DontShowAgainLookup.showAgain(key)) {
-                String message = item.hasMakerFee() ?
-                        Res.get("popup.warning.removeOffer", item.getMakerFeeAsString()) :
-                        Res.get("popup.warning.removeNoFeeOffer");
+                String message = openOffer.getOffer().isBsqSwapOffer() ?
+                        Res.get("popup.warning.removeNoFeeOffer") :
+                        Res.get("popup.warning.removeOffer", item.getMakerFeeAsString());
                 new Popup().warning(message)
                         .actionButtonText(Res.get("shared.removeOffer"))
                         .onAction(() -> doRemoveOpenOffer(openOffer))
