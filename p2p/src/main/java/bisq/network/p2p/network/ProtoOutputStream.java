@@ -24,17 +24,25 @@ import bisq.common.proto.network.NetworkEnvelope;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.concurrent.NotThreadSafe;
+import javax.annotation.concurrent.ThreadSafe;
 
-@NotThreadSafe
+@ThreadSafe
 class ProtoOutputStream {
     private static final Logger log = LoggerFactory.getLogger(ProtoOutputStream.class);
 
     private final OutputStream outputStream;
     private final Statistic statistic;
+
+    private final AtomicBoolean isConnectionActive = new AtomicBoolean(true);
+    private final Lock lock = new ReentrantLock();
 
     ProtoOutputStream(OutputStream outputStream, Statistic statistic) {
         this.outputStream = outputStream;
@@ -42,19 +50,39 @@ class ProtoOutputStream {
     }
 
     void writeEnvelope(NetworkEnvelope envelope) {
+        lock.lock();
+
         try {
             writeEnvelopeOrThrow(envelope);
         } catch (IOException e) {
+            if (!isConnectionActive.get()) {
+                // Connection was closed by us.
+                return;
+            }
+
             log.error("Failed to write envelope", e);
             throw new BisqRuntimeException("Failed to write envelope", e);
+
+        } finally {
+            lock.unlock();
         }
     }
 
     void onConnectionShutdown() {
+        isConnectionActive.set(false);
+
+        boolean acquiredLock = tryToAcquireLock();
+        if (!acquiredLock) {
+            return;
+        }
+
         try {
             outputStream.close();
         } catch (Throwable t) {
             log.error("Failed to close connection", t);
+
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -72,6 +100,15 @@ class ProtoOutputStream {
 
         if (!(envelope instanceof KeepAliveMessage)) {
             statistic.updateLastActivityTimestamp();
+        }
+    }
+
+    private boolean tryToAcquireLock() {
+        long shutdownTimeout = Connection.getShutdownTimeout();
+        try {
+            return lock.tryLock(shutdownTimeout, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            return false;
         }
     }
 }

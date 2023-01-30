@@ -142,7 +142,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     private final ConnectionStatistics connectionStatistics;
 
     // set in init
-    private SynchronizedProtoOutputStream protoOutputStream;
+    private ProtoOutputStream protoOutputStream;
 
     // mutable data, set from other threads but not changed internally.
     @Getter
@@ -198,7 +198,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             // When you construct an ObjectInputStream, in the constructor the class attempts to read a header that
             // the associated ObjectOutputStream on the other end of the connection has written.
             // It will not return until that header has been read.
-            protoOutputStream = new SynchronizedProtoOutputStream(socket.getOutputStream(), statistic);
+            protoOutputStream = new ProtoOutputStream(socket.getOutputStream(), statistic);
             protoInputStream = socket.getInputStream();
             // We create a thread for handling inputStream data
             singleThreadExecutor.submit(this);
