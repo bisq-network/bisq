@@ -164,7 +164,7 @@ public class BisqSetup {
             filterWarningHandler, displaySecurityRecommendationHandler, displayLocalhostHandler,
             wrongOSArchitectureHandler, displaySignedByArbitratorHandler,
             displaySignedByPeerHandler, displayPeerLimitLiftedHandler, displayPeerSignerHandler,
-            rejectedTxErrorMessageHandler, diskSpaceWarningHandler;
+            rejectedTxErrorMessageHandler, diskSpaceWarningHandler, chainNotSyncedHandler;
     @Setter
     @Nullable
     private Consumer<Boolean> displayTorNetworkSettingsHandler;
@@ -481,6 +481,7 @@ public class BisqSetup {
                 daoErrorMessageHandler,
                 daoWarnMessageHandler,
                 filterWarningHandler,
+                chainNotSyncedHandler,
                 voteResultExceptionHandler,
                 revolutAccountsUpdateHandler,
                 amazonGiftCardAccountsUpdateHandler,
