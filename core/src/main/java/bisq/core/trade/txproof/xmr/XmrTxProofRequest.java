@@ -275,6 +275,7 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
 
     @Override
     public void terminate() {
+        executorService.shutdown();
         terminated = true;
     }
 
