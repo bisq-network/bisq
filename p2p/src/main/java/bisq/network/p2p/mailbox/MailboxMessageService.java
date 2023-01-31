@@ -430,15 +430,21 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
     // We run the batch processing of all mailbox messages we have received at startup in a thread to not block the UI.
     // For about 1000 messages decryption takes about 1 sec.
     private void threadedBatchProcessMailboxEntries(Collection<ProtectedMailboxStorageEntry> protectedMailboxStorageEntries) {
-        ListeningExecutorService executor = Utilities.getSingleThreadListeningExecutor("processMailboxEntry-" + new Random().nextInt(1000));
         long ts = System.currentTimeMillis();
-        ListenableFuture<Set<MailboxItem>> future = executor.submit(() -> {
-            var mailboxItems = getMailboxItems(protectedMailboxStorageEntries);
-            log.info("Batch processing of {} mailbox entries took {} ms",
-                    protectedMailboxStorageEntries.size(),
-                    System.currentTimeMillis() - ts);
-            return mailboxItems;
-        });
+        SettableFuture<Set<MailboxItem>> future = SettableFuture.create();
+
+        new Thread(() -> {
+            try {
+                var mailboxItems = getMailboxItems(protectedMailboxStorageEntries);
+                log.info("Batch processing of {} mailbox entries took {} ms",
+                        protectedMailboxStorageEntries.size(),
+                        System.currentTimeMillis() - ts);
+                future.set(mailboxItems);
+
+            } catch (Throwable throwable) {
+                future.setException(throwable);
+            }
+        }, "processMailboxEntry-" + new Random().nextInt(1000)).start();
 
         Futures.addCallback(future, new FutureCallback<>() {
             public void onSuccess(Set<MailboxItem> decryptedMailboxMessageWithEntries) {
