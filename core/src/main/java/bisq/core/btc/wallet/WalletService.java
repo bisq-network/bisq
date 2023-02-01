@@ -440,15 +440,15 @@ public abstract class WalletService {
     public TransactionConfidence getConfidenceForAddress(Address address) {
         List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
         if (wallet != null) {
-            Set<Transaction> transactions = getAddressToMatchingTxSetMultiset().get(address);
+            Set<Transaction> transactions = getAddressToMatchingTxSetMultimap().get(address);
             transactionConfidenceList.addAll(transactions.stream().map(tx ->
                     getTransactionConfidence(tx, address)).collect(Collectors.toList()));
         }
         return getMostRecentConfidence(transactionConfidenceList);
     }
 
-    private SetMultimap<Address, Transaction> getAddressToMatchingTxSetMultiset() {
-        return addressToMatchingTxSetCache.updateAndGet(set -> set != null ? set : computeAddressToMatchingTxSetMultimap());
+    private SetMultimap<Address, Transaction> getAddressToMatchingTxSetMultimap() {
+        return addressToMatchingTxSetCache.updateAndGet(map -> map != null ? map : computeAddressToMatchingTxSetMultimap());
     }
 
     private SetMultimap<Address, Transaction> computeAddressToMatchingTxSetMultimap() {
