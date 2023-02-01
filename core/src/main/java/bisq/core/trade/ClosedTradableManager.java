@@ -29,7 +29,6 @@ import bisq.core.trade.bsq_swap.BsqSwapTradeManager;
 import bisq.core.trade.model.MakerTrade;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradableList;
-import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
@@ -47,6 +46,8 @@ import org.bitcoinj.utils.Fiat;
 import com.google.inject.Inject;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultiset;
+import com.google.common.collect.Multiset;
 
 import javafx.collections.ObservableList;
 
@@ -62,6 +63,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 import static bisq.core.offer.OpenOffer.State.CANCELED;
 import static bisq.core.trade.ClosedTradableUtil.castToTrade;
@@ -88,6 +91,8 @@ public class ClosedTradableManager implements PersistedDataHost {
     private final DumpDelayedPayoutTx dumpDelayedPayoutTx;
 
     private final TradableList<Tradable> closedTradables = new TradableList<>();
+    @Nullable
+    private Multiset<NodeAddress> closedTradeNodeAddressCache;
 
     @Inject
     public ClosedTradableManager(KeyRing keyRing,
@@ -108,6 +113,8 @@ public class ClosedTradableManager implements PersistedDataHost {
         this.cleanupMailboxMessagesService = cleanupMailboxMessagesService;
         this.dumpDelayedPayoutTx = dumpDelayedPayoutTx;
         this.persistenceManager = persistenceManager;
+
+        closedTradables.addListener(c -> closedTradeNodeAddressCache = null);
 
         this.persistenceManager.initialize(closedTradables, "ClosedTrades", PersistenceManager.Source.PRIVATE);
     }
@@ -206,8 +213,7 @@ public class ClosedTradableManager implements PersistedDataHost {
         Instant safeDate = getSafeDateForSensitiveDataClearing();
         return closedTradables.stream()
                 .filter(e -> e.getId().equals(tradeId))
-                .filter(e -> e.getDate().toInstant().isBefore(safeDate))
-                .count() > 0;
+                .anyMatch(e -> e.getDate().toInstant().isBefore(safeDate));
     }
 
     public Instant getSafeDateForSensitiveDataClearing() {
@@ -220,8 +226,16 @@ public class ClosedTradableManager implements PersistedDataHost {
                 .filter(Trade::isFundsLockedIn);
     }
 
-    public Stream<TradeModel> getTradeModelStream() {
-        return Stream.concat(bsqSwapTradeManager.getConfirmedBsqSwapTrades(), getClosedTrades().stream());
+    private Multiset<NodeAddress> getClosedTradeNodeAddresses() {
+        var addresses = closedTradeNodeAddressCache;
+        if (addresses == null) {
+            closedTradeNodeAddressCache = addresses = closedTradables.stream()
+                    .filter(t -> t instanceof Trade)
+                    .map(t -> ((Trade) t).getTradingPeerNodeAddress())
+                    .filter(Objects::nonNull)
+                    .collect(ImmutableMultiset.toImmutableMultiset());
+        }
+        return addresses;
     }
 
     public int getNumPastTrades(Tradable tradable) {
@@ -229,11 +243,8 @@ public class ClosedTradableManager implements PersistedDataHost {
             return 0;
         }
         NodeAddress addressInTrade = castToTradeModel(tradable).getTradingPeerNodeAddress();
-        return (int) getTradeModelStream()
-                .map(TradeModel::getTradingPeerNodeAddress)
-                .filter(Objects::nonNull)
-                .filter(address -> address.equals(addressInTrade))
-                .count();
+        return bsqSwapTradeManager.getConfirmedBsqSwapNodeAddresses().count(addressInTrade) +
+                getClosedTradeNodeAddresses().count(addressInTrade);
     }
 
     public boolean isCurrencyForTradeFeeBtc(Tradable tradable) {

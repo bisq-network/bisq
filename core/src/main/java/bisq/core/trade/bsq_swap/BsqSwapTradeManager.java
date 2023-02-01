@@ -22,7 +22,10 @@ import bisq.core.offer.Offer;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradableList;
+import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
+
+import bisq.network.p2p.NodeAddress;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.persistence.PersistenceManager;
@@ -34,6 +37,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultiset;
+import com.google.common.collect.Multiset;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -42,20 +47,25 @@ import javafx.collections.ObservableList;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 @Slf4j
 @Singleton
 public class BsqSwapTradeManager implements PersistedDataHost {
+    private final KeyRing keyRing;
+    private final PriceFeedService priceFeedService;
     private final BsqWalletService bsqWalletService;
     private final PersistenceManager<TradableList<BsqSwapTrade>> persistenceManager;
     private final TradableList<BsqSwapTrade> bsqSwapTrades = new TradableList<>();
-    private final KeyRing keyRing;
-    private final PriceFeedService priceFeedService;
+    @Nullable
+    private Multiset<NodeAddress> confirmedBsqSwapNodeAddressCache;
 
     // Used for listening for notifications in the UI
     @Getter
@@ -70,6 +80,9 @@ public class BsqSwapTradeManager implements PersistedDataHost {
         this.priceFeedService = priceFeedService;
         this.bsqWalletService = bsqWalletService;
         this.persistenceManager = persistenceManager;
+
+        bsqWalletService.addWalletTransactionsChangeListener(() -> confirmedBsqSwapNodeAddressCache = null);
+        bsqSwapTrades.addListener(c -> confirmedBsqSwapNodeAddressCache = null);
 
         this.persistenceManager.initialize(bsqSwapTrades, "BsqSwapTrades", PersistenceManager.Source.PRIVATE);
     }
@@ -131,6 +144,18 @@ public class BsqSwapTradeManager implements PersistedDataHost {
 
     public Stream<BsqSwapTrade> getConfirmedBsqSwapTrades() {
         return getObservableList().stream().filter(this::isConfirmed);
+    }
+
+    public Multiset<NodeAddress> getConfirmedBsqSwapNodeAddresses() {
+        var addresses = confirmedBsqSwapNodeAddressCache;
+        if (addresses == null) {
+            confirmedBsqSwapNodeAddressCache = addresses = bsqSwapTrades.stream()
+                    .filter(this::isConfirmed)
+                    .map(TradeModel::getTradingPeerNodeAddress)
+                    .filter(Objects::nonNull)
+                    .collect(ImmutableMultiset.toImmutableMultiset());
+        }
+        return addresses;
     }
 
     private boolean isUnconfirmed(BsqSwapTrade bsqSwapTrade) {
