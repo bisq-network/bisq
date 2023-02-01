@@ -72,6 +72,7 @@ import org.bitcoinj.wallet.listeners.WalletReorganizeEventListener;
 
 import javax.inject.Inject;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultiset;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multiset;
@@ -87,6 +88,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -122,6 +124,7 @@ public abstract class WalletService {
     private final WalletChangeEventListener cacheInvalidationListener;
     private final AtomicReference<Multiset<Address>> txOutputAddressCache = new AtomicReference<>();
     private final AtomicReference<SetMultimap<Address, Transaction>> addressToMatchingTxSetCache = new AtomicReference<>();
+    private final AtomicReference<Map<Sha256Hash, Transaction>> txByIdCache = new AtomicReference<>();
     @Getter
     protected Wallet wallet;
     @Getter
@@ -147,6 +150,7 @@ public abstract class WalletService {
         cacheInvalidationListener = wallet -> {
             txOutputAddressCache.set(null);
             addressToMatchingTxSetCache.set(null);
+            txByIdCache.set(null);
         };
     }
 
@@ -463,15 +467,23 @@ public abstract class WalletService {
     }
 
     @Nullable
-    public TransactionConfidence getConfidenceForTxId(String txId) {
-        if (wallet != null) {
-            Set<Transaction> transactions = wallet.getTransactions(false);
-            for (Transaction tx : transactions) {
-                if (tx.getTxId().toString().equals(txId))
-                    return tx.getConfidence();
+    public TransactionConfidence getConfidenceForTxId(@Nullable String txId) {
+        if (wallet != null && txId != null) {
+            Transaction tx = getTxByIdMap().get(Sha256Hash.wrap(txId));
+            if (tx != null) {
+                return tx.getConfidence();
             }
         }
         return null;
+    }
+
+    private Map<Sha256Hash, Transaction> getTxByIdMap() {
+        return txByIdCache.updateAndGet(map -> map != null ? map : computeTxByIdMap());
+    }
+
+    private Map<Sha256Hash, Transaction> computeTxByIdMap() {
+        return wallet.getTransactions(false).stream()
+                .collect(ImmutableMap.toImmutableMap(Transaction::getTxId, tx -> tx));
     }
 
     @Nullable
@@ -761,7 +773,7 @@ public abstract class WalletService {
     }
 
     @Nullable
-    public Transaction getTransaction(String txId) {
+    public Transaction getTransaction(@Nullable String txId) {
         if (txId == null) {
             return null;
         }
