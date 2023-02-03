@@ -45,7 +45,6 @@ import javax.inject.Singleton;
 
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -113,7 +112,7 @@ public class BurningManAccountingService implements DaoSetupService {
         CompletableFuture.runAsync(() -> {
             Map<String, BalanceModel> map = new HashMap<>();
             // addAccountingBlockToBalanceModel takes about 500ms for 100k items, so we run it in a non UI thread.
-            getBlocks().forEach(block -> addAccountingBlockToBalanceModel(map, block));
+            burningManAccountingStoreService.forEachBlock(block -> addAccountingBlockToBalanceModel(map, block));
             UserThread.execute(() -> balanceModelByBurningManName.putAll(map));
         });
     }
@@ -125,7 +124,7 @@ public class BurningManAccountingService implements DaoSetupService {
 
     public void onInitialBlockRequestsComplete() {
         updateBalanceModelByAddress();
-        getBlocks().forEach(this::addAccountingBlockToBalanceModel);
+        burningManAccountingStoreService.forEachBlock(this::addAccountingBlockToBalanceModel);
     }
 
     public void onNewBlockReceived(AccountingBlock accountingBlock) {
@@ -134,25 +133,7 @@ public class BurningManAccountingService implements DaoSetupService {
     }
 
     public void addBlock(AccountingBlock block) throws BlockHashNotConnectingException, BlockHeightNotConnectingException {
-        if (!getBlocks().contains(block)) {
-            Optional<AccountingBlock> optionalLastBlock = getLastBlock();
-            if (optionalLastBlock.isPresent()) {
-                AccountingBlock lastBlock = optionalLastBlock.get();
-                if (block.getHeight() != lastBlock.getHeight() + 1) {
-                    throw new BlockHeightNotConnectingException();
-                }
-                if (!Arrays.equals(block.getTruncatedPreviousBlockHash(), lastBlock.getTruncatedHash())) {
-                    throw new BlockHashNotConnectingException();
-                }
-            } else if (block.getHeight() != EARLIEST_BLOCK_HEIGHT) {
-                throw new BlockHeightNotConnectingException();
-            }
-            log.info("Add new accountingBlock at height {} at {} with {} txs", block.getHeight(),
-                    new Date(block.getDate()), block.getTxs().size());
-            burningManAccountingStoreService.addBlock(block);
-        } else {
-            log.info("We have that block already. Height: {}", block.getHeight());
-        }
+            burningManAccountingStoreService.addIfNewBlock(block);
     }
 
     public int getBlockHeightOfLastBlock() {
@@ -160,11 +141,11 @@ public class BurningManAccountingService implements DaoSetupService {
     }
 
     public Optional<AccountingBlock> getLastBlock() {
-        return getBlocks().stream().max(Comparator.comparing(AccountingBlock::getHeight));
+        return burningManAccountingStoreService.getLastBlock();
     }
 
     public Optional<AccountingBlock> getBlockAtHeight(int height) {
-        return getBlocks().stream().filter(block -> block.getHeight() == height).findAny();
+        return burningManAccountingStoreService.getBlockAtHeight(height);
     }
 
     public Map<Date, Price> getAverageBsqPriceByMonth() {
@@ -213,8 +194,8 @@ public class BurningManAccountingService implements DaoSetupService {
     // Delegates
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public List<AccountingBlock> getBlocks() {
-        return burningManAccountingStoreService.getBlocks();
+    public List<AccountingBlock> getBlocksAtLeastWithHeight(int minHeight) {
+        return burningManAccountingStoreService.getBlocksAtLeastWithHeight(minHeight);
     }
 
     public Map<String, String> getBurningManNameByAddress() {

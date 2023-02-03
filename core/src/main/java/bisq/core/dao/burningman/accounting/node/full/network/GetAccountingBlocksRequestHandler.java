@@ -39,7 +39,6 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -92,9 +91,7 @@ class GetAccountingBlocksRequestHandler {
 
     public void onGetBlocksRequest(GetAccountingBlocksRequest request, Connection connection) {
         long ts = System.currentTimeMillis();
-        List<AccountingBlock> blocks = burningManAccountingService.getBlocks().stream()
-                .filter(block -> block.getHeight() >= request.getFromBlockHeight())
-                .collect(Collectors.toList());
+        List<AccountingBlock> blocks = burningManAccountingService.getBlocksAtLeastWithHeight(request.getFromBlockHeight());
         byte[] signature = AccountingNode.getSignature(AccountingNode.getSha256Hash(blocks), bmOracleNodePrivKey);
         GetAccountingBlocksResponse getBlocksResponse = new GetAccountingBlocksResponse(blocks, request.getNonce(), bmOracleNodePubKey, signature);
         log.info("Received GetAccountingBlocksRequest from {} for blocks from height {}. " +
