@@ -34,8 +34,6 @@ import bisq.common.util.Utilities;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import com.google.common.util.concurrent.MoreExecutors;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -44,7 +42,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -58,7 +55,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     private final BsqBlocksStorageService bsqBlocksStorageService;
     private final File storageDir;
     private final LinkedList<Block> blocks = new LinkedList<>();
-    private final ExecutorService executorService = Utilities.getSingleThreadExecutor(this.getClass());
+    private final ExecutorService executorService = Utilities.getNonDaemonSingleThreadExecutor(this.getClass());
     private Optional<Future<?>> future = Optional.empty();
 
 
@@ -128,8 +125,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     }
 
     public void shutDown() {
-        // noinspection UnstableApiUsage
-        MoreExecutors.shutdownAndAwaitTermination(executorService, 10, TimeUnit.SECONDS);
+        executorService.shutdown();
     }
 
     @Override
