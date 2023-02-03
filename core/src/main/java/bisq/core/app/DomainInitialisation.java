@@ -204,6 +204,7 @@ public class DomainInitialisation {
                                    Consumer<String> daoErrorMessageHandler,
                                    Consumer<String> daoWarnMessageHandler,
                                    Consumer<String> filterWarningHandler,
+                                   Consumer<String> chainNotSyncedHandler,
                                    Consumer<VoteResultException> voteResultExceptionHandler,
                                    Consumer<List<RevolutAccount>> revolutAccountsUpdateHandler,
                                    Consumer<List<AmazonGiftCardAccount>> amazonGiftCardAccountsUpdateHandler,
@@ -225,6 +226,7 @@ public class DomainInitialisation {
         failedTradesManager.onAllServicesInitialized();
         xmrTxProofService.onAllServicesInitialized();
 
+        openOfferManager.setChainNotSyncedHandler(chainNotSyncedHandler);
         openOfferManager.onAllServicesInitialized();
         openBsqSwapOfferService.onAllServicesInitialized();
 

@@ -89,9 +89,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
@@ -133,6 +135,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final TradableList<OpenOffer> openOffers = new TradableList<>();
     private boolean stopped;
     private Timer periodicRepublishOffersTimer, periodicRefreshOffersTimer, retryRepublishOffersTimer;
+    @Setter
+    private Consumer<String> chainNotSyncedHandler;
     @Getter
     private final ObservableList<Tuple2<OpenOffer, String>> invalidOffers = FXCollections.observableArrayList();
 
@@ -653,6 +657,20 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             errorMessage = "We got a handleOfferAvailabilityRequest but our chain is not synced.";
             log.info(errorMessage);
             sendAckMessage(request, peer, false, errorMessage);
+            if (chainNotSyncedHandler != null) {
+                chainNotSyncedHandler.accept(Res.get("popup.warning.chainNotSynced"));
+            }
+            return;
+        }
+
+        // Don't allow trade start if DAO is not fully synced
+        if (!daoFacade.isDaoStateReadyAndInSync()) {
+            errorMessage = "We got a handleOfferAvailabilityRequest but our DAO is not synced.";
+            log.info(errorMessage);
+            sendAckMessage(request, peer, false, errorMessage);
+            if (chainNotSyncedHandler != null) {
+                chainNotSyncedHandler.accept(Res.get("popup.warning.daoNeedsResync"));
+            }
             return;
         }
 

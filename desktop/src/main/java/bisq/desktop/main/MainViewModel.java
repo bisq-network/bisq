@@ -399,7 +399,11 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                 new Popup().warning(msg).show();
             }
         });
-
+        bisqSetup.setChainNotSyncedHandler(msg -> {
+            if (PopupManager.isNoPopupDisplayed()) {
+                new Popup().warning(msg).show();
+            }
+        });
         bisqSetup.setLockedUpFundsHandler(msg -> {
             // repeated popups of the same message text can be stopped by selecting the "Dont show again" checkbox
             String key = Hex.encode(Hash.getSha256Ripemd160hash(msg.getBytes(Charsets.UTF_8)));
