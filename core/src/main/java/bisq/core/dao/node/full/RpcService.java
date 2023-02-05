@@ -31,7 +31,7 @@ import bisq.core.user.Preferences;
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.util.Utilities;
+import bisq.common.util.SingleThreadExecutorUtils;
 
 import org.bitcoinj.core.Utils;
 
@@ -91,7 +91,7 @@ public class RpcService {
 
     // We could use multiple threads, but then we need to support ordering of results in a queue
     // Keep that for optimization after measuring performance differences
-    private final ListeningExecutorService executor = Utilities.getSingleThreadListeningExecutor("RpcService");
+    private final ListeningExecutorService executor = SingleThreadExecutorUtils.getSingleThreadListeningExecutor("RpcService");
     private volatile boolean shutdownInProgress;
     private final Set<ResultHandler> setupResultHandlers = new CopyOnWriteArraySet<>();
     private final Set<Consumer<Throwable>> setupErrorHandlers = new CopyOnWriteArraySet<>();

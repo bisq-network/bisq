@@ -28,7 +28,7 @@ import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
-import bisq.common.util.Utilities;
+import bisq.common.util.SingleThreadExecutorUtils;
 
 import com.google.inject.Inject;
 
@@ -71,7 +71,7 @@ public class TradeStatisticsConverter {
                 if (!tradeStatistics2Store.exists()) {
                     return;
                 }
-                executor = Utilities.getSingleThreadExecutor("TradeStatisticsConverter");
+                executor = SingleThreadExecutorUtils.getSingleThreadExecutor("TradeStatisticsConverter");
                 executor.submit(() -> {
                     // We convert early once tor is initialized but still not ready to receive data
                     Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> tempMap = new HashMap<>();

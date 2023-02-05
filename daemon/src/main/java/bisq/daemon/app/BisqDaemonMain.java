@@ -24,7 +24,7 @@ import bisq.core.app.CoreModule;
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.util.Utilities;
+import bisq.common.util.SingleThreadExecutorUtils;
 
 import java.util.concurrent.ExecutorService;
 
@@ -49,7 +49,7 @@ public class BisqDaemonMain extends BisqHeadlessAppMain implements BisqSetup.Bis
 
     @Override
     protected void configUserThread() {
-        ExecutorService executorService = Utilities.getSingleThreadExecutor(this.getClass());
+        ExecutorService executorService = SingleThreadExecutorUtils.getSingleThreadExecutor(this.getClass());
         UserThread.setExecutor(executorService);
     }
 

@@ -40,6 +40,7 @@ import bisq.common.config.Config;
 import bisq.common.proto.ProtobufferException;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
+import bisq.common.util.SingleThreadExecutorUtils;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -133,7 +134,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     private final NetworkFilter networkFilter;
     @Getter
     private final String uid;
-    private final ExecutorService singleThreadExecutor = Utilities.getSingleThreadExecutor(runnable -> new Thread(runnable, "Connection.java executor-service"));
+    private final ExecutorService singleThreadExecutor = SingleThreadExecutorUtils.getSingleThreadExecutor(runnable -> new Thread(runnable, "Connection.java executor-service"));
     @Getter
     private final Statistic statistic;
     @Getter

@@ -22,7 +22,7 @@ import bisq.core.payment.TradeLimits;
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.Version;
-import bisq.common.util.Utilities;
+import bisq.common.util.SingleThreadExecutorUtils;
 
 import java.util.concurrent.ExecutorService;
 
@@ -60,7 +60,7 @@ public class BisqHeadlessAppMain extends BisqExecutable {
 
     @Override
     protected void configUserThread() {
-        ExecutorService executorService = Utilities.getSingleThreadExecutor(this.getClass());
+        ExecutorService executorService = SingleThreadExecutorUtils.getSingleThreadExecutor(this.getClass());
         UserThread.setExecutor(executorService);
     }
 

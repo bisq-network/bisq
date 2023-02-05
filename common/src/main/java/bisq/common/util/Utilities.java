@@ -84,43 +84,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class Utilities {
 
-    public static ExecutorService getSingleThreadExecutor(Class<?> aClass) {
-        String name = aClass.getSimpleName();
-        return getSingleThreadExecutor(name);
-    }
-
-    public static ExecutorService getNonDaemonSingleThreadExecutor(Class<?> aClass) {
-        String name = aClass.getSimpleName();
-        return getSingleThreadExecutor(name, false);
-    }
-
-    public static ExecutorService getSingleThreadExecutor(String name) {
-        return getSingleThreadExecutor(name, true);
-    }
-
-    private static ExecutorService getSingleThreadExecutor(String name, boolean isDaemonThread) {
-        final ThreadFactory threadFactory = getThreadFactory(name, isDaemonThread);
-        return Executors.newSingleThreadExecutor(threadFactory);
-    }
-
-    private static ThreadFactory getThreadFactory(String name, boolean isDaemonThread) {
-        return new ThreadFactoryBuilder()
-                .setNameFormat(name)
-                .setDaemon(isDaemonThread)
-                .build();
-    }
-
-    public static ExecutorService getSingleThreadExecutor(ThreadFactory threadFactory) {
-        return Executors.newSingleThreadExecutor(threadFactory);
-    }
-
     public static ExecutorService getFixedThreadPoolExecutor(int nThreads,
                                                              ThreadFactory threadFactory) {
         return Executors.newFixedThreadPool(nThreads, threadFactory);
-    }
-
-    public static ListeningExecutorService getSingleThreadListeningExecutor(String name) {
-        return MoreExecutors.listeningDecorator(getSingleThreadExecutor(name));
     }
 
     public static ListeningExecutorService getListeningExecutorService(String name,

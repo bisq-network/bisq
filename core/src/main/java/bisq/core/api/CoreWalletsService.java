@@ -49,7 +49,7 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.handlers.ResultHandler;
-import bisq.common.util.Utilities;
+import bisq.common.util.SingleThreadExecutorUtils;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Coin;
@@ -116,7 +116,7 @@ class CoreWalletsService {
     @Nullable
     private KeyParameter tempAesKey;
 
-    private final ListeningExecutorService executor = Utilities.getSingleThreadListeningExecutor("CoreWalletsService");
+    private final ListeningExecutorService executor = SingleThreadExecutorUtils.getSingleThreadListeningExecutor("CoreWalletsService");
 
     @Inject
     public CoreWalletsService(AppStartupState appStartupState,

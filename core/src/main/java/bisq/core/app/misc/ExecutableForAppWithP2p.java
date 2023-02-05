@@ -39,8 +39,8 @@ import bisq.common.file.JsonFileManager;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.setup.GracefulShutDownHandler;
+import bisq.common.util.SingleThreadExecutorUtils;
 import bisq.common.util.Profiler;
-import bisq.common.util.Utilities;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -69,7 +69,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
 
     @Override
     protected void configUserThread() {
-        ExecutorService executorService = Utilities.getSingleThreadExecutor(this.getClass());
+        ExecutorService executorService = SingleThreadExecutorUtils.getSingleThreadExecutor(this.getClass());
         UserThread.setExecutor(executorService);
     }
 
