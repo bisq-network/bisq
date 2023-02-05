@@ -133,6 +133,7 @@ public class ExportJsonFilesService implements DaoSetupService {
             txOutputFileManager.shutDown();
             bsqStateFileManager.shutDown();
         }
+        executor.shutdown();
     }
 
     public void maybeExportToJson() {
