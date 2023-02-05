@@ -19,9 +19,6 @@ jobs:
     name: Test Java ${{ matrix.Java }}, ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3.3.0
-      with:
-        fetch-depth: 0
-        ref: ${{ github.event.pull_request.head.sha }}
 
     - name: Set up JDK
       uses: actions/setup-java@1df8dbefe2a8cbc99770194893dd902763bee34b
