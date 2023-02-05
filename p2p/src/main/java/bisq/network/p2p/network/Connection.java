@@ -536,8 +536,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                 e.printStackTrace();
             }
 
-            //noinspection UnstableApiUsage
-            MoreExecutors.shutdownAndAwaitTermination(singleThreadExecutor, SHUTDOWN_TIMEOUT, TimeUnit.MILLISECONDS);
+            Utilities.shutdownAndAwaitTermination(singleThreadExecutor, SHUTDOWN_TIMEOUT, TimeUnit.MILLISECONDS);
 
             log.debug("Connection shutdown complete {}", this);
             // Use UserThread.execute as it's not clear if that is called from a non-UserThread
