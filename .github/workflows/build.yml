@@ -29,16 +29,7 @@ jobs:
         java-version: ${{ matrix.java }}
         distribution: 'zulu'
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-
-    - name: Validate Gradle Wrapper JAR files
-      uses: gradle/wrapper-validation-action@55e685c48d84285a5b0418cd094606e199cca3b6
-
     - name: Build with Gradle
-      run: ./gradlew build
-
-    - name: Print Dependency Verification Report
-      if: ${{ failure() }}
-      run: cat build/reports/dependency-verification/*/*.html
-      shell: bash
+      uses: gradle/gradle-build-action@v2.3.3
+      with:
+        arguments: build
