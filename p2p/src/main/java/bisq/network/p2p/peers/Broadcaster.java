@@ -88,6 +88,7 @@ public class Broadcaster implements BroadcastHandler.ResultHandler {
             // so we can expect that we get onCompleted called very fast and trigger the doShutDown from there.
             maybeBroadcastBundle();
         }
+        executor.shutdown();
     }
 
     public void flush() {
