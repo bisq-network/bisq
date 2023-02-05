@@ -17,6 +17,7 @@
 
 package bisq.core.dao.node.full.rpc;
 
+import bisq.common.util.SingleThreadExecutorUtils;
 import bisq.common.util.Utilities;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -43,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BitcoindDaemon {
-    private final ListeningExecutorService executor = Utilities.getSingleThreadListeningExecutor("block-notification-server");
+    private final ListeningExecutorService executor = SingleThreadExecutorUtils.getSingleThreadListeningExecutor("block-notification-server");
     private final ListeningExecutorService workerPool = Utilities.getListeningExecutorService("block-notification-worker",
             1, 10, 60, new ArrayBlockingQueue<>(100));
     private final ServerSocket serverSocket;

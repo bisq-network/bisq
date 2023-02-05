@@ -17,6 +17,7 @@
 
 package bisq.network;
 
+import bisq.common.util.SingleThreadExecutorUtils;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.NetworkParameters;
@@ -86,7 +87,7 @@ public class Socks5DnsDiscovery extends MultiplexingDiscovery {
         // Attempted workaround for reported bugs on Linux in which gethostbyname does not appear to be properly
         // thread safe and can cause segfaults on some libc versions.
         if (Utilities.isLinux())
-            return Utilities.getSingleThreadExecutor(new ContextPropagatingThreadFactory("DNS seed lookups"));
+            return SingleThreadExecutorUtils.getSingleThreadExecutor(new ContextPropagatingThreadFactory("DNS seed lookups"));
         else
             return Utilities.getFixedThreadPoolExecutor(seeds.size(), new DaemonThreadFactory("DNS seed lookups"));
     }

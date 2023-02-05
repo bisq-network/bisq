@@ -23,7 +23,7 @@ import bisq.network.utils.Utils;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.proto.network.NetworkProtoResolver;
-import bisq.common.util.Utilities;
+import bisq.common.util.SingleThreadExecutorUtils;
 
 import org.berndpruenster.netlayer.tor.HiddenServiceSocket;
 import org.berndpruenster.netlayer.tor.Tor;
@@ -75,7 +75,7 @@ public class TorNetworkNode extends NetworkNode {
         this.torMode = torMode;
         this.streamIsolation = useStreamIsolation;
 
-        executor = Utilities.getSingleThreadExecutor("StartTor");
+        executor = SingleThreadExecutorUtils.getSingleThreadExecutor("StartTor");
     }
 
 

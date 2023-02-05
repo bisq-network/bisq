@@ -24,6 +24,7 @@ import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
+import bisq.common.util.SingleThreadExecutorUtils;
 import bisq.common.util.Utilities;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
@@ -111,7 +112,7 @@ public abstract class NetworkNode implements MessageListener {
                 maxConnections * 3,
                 30,
                 30);
-        serverExecutor = Utilities.getSingleThreadExecutor("NetworkNode.server-" + servicePort);
+        serverExecutor = SingleThreadExecutorUtils.getSingleThreadExecutor("NetworkNode.server-" + servicePort);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

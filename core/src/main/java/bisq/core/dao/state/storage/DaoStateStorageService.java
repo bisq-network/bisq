@@ -28,8 +28,8 @@ import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
 import bisq.common.persistence.PersistenceManager;
+import bisq.common.util.SingleThreadExecutorUtils;
 import bisq.common.util.GcUtil;
-import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -55,7 +55,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     private final BsqBlocksStorageService bsqBlocksStorageService;
     private final File storageDir;
     private final LinkedList<Block> blocks = new LinkedList<>();
-    private final ExecutorService executorService = Utilities.getNonDaemonSingleThreadExecutor(this.getClass());
+    private final ExecutorService executorService = SingleThreadExecutorUtils.getNonDaemonSingleThreadExecutor(this.getClass());
     private Optional<Future<?>> future = Optional.empty();
 
 

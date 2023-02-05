@@ -26,8 +26,8 @@ import bisq.common.file.FileUtil;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.proto.persistable.PersistableEnvelope;
 import bisq.common.proto.persistable.PersistenceProtoResolver;
+import bisq.common.util.SingleThreadExecutorUtils;
 import bisq.common.util.GcUtil;
-import bisq.common.util.Utilities;
 
 import com.google.inject.Inject;
 
@@ -517,7 +517,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
     private ExecutorService getWriteToDiskExecutor() {
         if (writeToDiskExecutor == null) {
             String name = "Write-" + fileName + "_to-disk";
-            writeToDiskExecutor = Utilities.getSingleThreadExecutor(name);
+            writeToDiskExecutor = SingleThreadExecutorUtils.getSingleThreadExecutor(name);
         }
         return writeToDiskExecutor;
     }
