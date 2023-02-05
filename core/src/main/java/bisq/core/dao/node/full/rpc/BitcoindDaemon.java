@@ -110,8 +110,8 @@ public class BitcoindDaemon {
         } catch (IOException e) {
             log.error("Error closing block notification server socket", e);
         } finally {
-            Utilities.shutdownAndAwaitTermination(executor, 1, TimeUnit.SECONDS);
-            Utilities.shutdownAndAwaitTermination(workerPool, 5, TimeUnit.SECONDS);
+            Utilities.shutdownAndAwaitTermination(executor, 2, TimeUnit.SECONDS);
+            Utilities.shutdownAndAwaitTermination(workerPool, 10, TimeUnit.SECONDS);
         }
     }
 
