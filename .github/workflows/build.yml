@@ -18,7 +18,7 @@ jobs:
             java: [ '11', '11.0.3', '15', '15.0.5']
     name: Test Java ${{ matrix.Java }}, ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+    - uses: actions/checkout@v3.3.0
       with:
         fetch-depth: 0
         ref: ${{ github.event.pull_request.head.sha }}
