@@ -263,7 +263,7 @@ public class SeedNodeReportingService {
             dataReportTimer.stop();
         }
 
-        Utilities.shutdownAndAwaitTermination(executor, 2, TimeUnit.SECONDS);
+        Utilities.shutdownAndAwaitTermination(executor, 4, TimeUnit.SECONDS);
     }
 
     private void sendHeartBeat() {

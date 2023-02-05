@@ -178,16 +178,9 @@ public class Utilities {
         return executor;
     }
 
-    // TODO: Can some/all of the uses of this be replaced by guava MoreExecutors.shutdownAndAwaitTermination(..)?
     public static void shutdownAndAwaitTermination(ExecutorService executor, long timeout, TimeUnit unit) {
-        executor.shutdown();
-        try {
-            if (!executor.awaitTermination(timeout, unit)) {
-                executor.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            executor.shutdownNow();
-        }
+        //noinspection UnstableApiUsage
+        MoreExecutors.shutdownAndAwaitTermination(executor, timeout, unit);
     }
 
     public static <V> FutureCallback<V> failureCallback(Consumer<Throwable> errorHandler) {
