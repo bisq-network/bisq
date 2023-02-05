@@ -178,24 +178,6 @@ public class Utilities {
         return executor;
     }
 
-    @SuppressWarnings("SameParameterValue")
-    public static ScheduledThreadPoolExecutor getScheduledThreadPoolExecutor(String name,
-                                                                             int corePoolSize,
-                                                                             int maximumPoolSize,
-                                                                             long keepAliveTimeInSec) {
-        final ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(name)
-                .setDaemon(true)
-                .setPriority(Thread.MIN_PRIORITY)
-                .build();
-        ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(corePoolSize, threadFactory);
-        executor.setKeepAliveTime(keepAliveTimeInSec, TimeUnit.SECONDS);
-        executor.allowCoreThreadTimeOut(true);
-        executor.setMaximumPoolSize(maximumPoolSize);
-        executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-        return executor;
-    }
-
     // TODO: Can some/all of the uses of this be replaced by guava MoreExecutors.shutdownAndAwaitTermination(..)?
     public static void shutdownAndAwaitTermination(ExecutorService executor, long timeout, TimeUnit unit) {
         executor.shutdown();
