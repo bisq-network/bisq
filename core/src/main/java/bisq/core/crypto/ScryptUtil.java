@@ -18,7 +18,6 @@
 package bisq.core.crypto;
 
 import bisq.common.UserThread;
-import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 
@@ -49,7 +48,7 @@ public class ScryptUtil {
     }
 
     public static void deriveKeyWithScrypt(KeyCrypterScrypt keyCrypterScrypt, String password, DeriveKeyResultHandler resultHandler) {
-        Utilities.getThreadPoolExecutor("ScryptUtil:deriveKeyWithScrypt", 1, 2, 5L).submit(() -> {
+        new Thread(() -> {
             try {
                 log.debug("Doing key derivation");
                 long start = System.currentTimeMillis();
@@ -70,6 +69,6 @@ public class ScryptUtil {
                 log.error("Executing task failed. " + t.getMessage());
                 throw t;
             }
-        });
+        }, "ScryptUtil:deriveKeyWithScrypt").start();
     }
 }
