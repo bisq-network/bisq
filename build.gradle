@@ -23,11 +23,7 @@ configure(rootProject) {
 }
 
 configure(subprojects) {
-    apply plugin: 'java'
     apply plugin: 'com.google.osdetector'
-
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
 
     ext { // in alphabetical order
         grpcVersion = '1.42.1'
@@ -35,19 +31,6 @@ configure(subprojects) {
         protocVersion = '3.19.1'
 
         os = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
-    }
-
-    repositories {
-        mavenCentral()
-        maven { url 'https://jitpack.io' }
-    }
-
-    dependencies {
-        testImplementation libs.junit
-    }
-
-    tasks.withType(JavaCompile) {
-        options.encoding = 'UTF-8'
     }
 }
 
