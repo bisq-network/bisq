@@ -1,3 +1,10 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+    }
+    includeBuild('build-logic')
+}
+
 include 'proto'
 include 'assets'
 include 'common'
