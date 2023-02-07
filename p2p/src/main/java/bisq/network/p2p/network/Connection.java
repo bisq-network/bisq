@@ -133,7 +133,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     private final NetworkFilter networkFilter;
     @Getter
     private final String uid;
-    private final ExecutorService singleThreadExecutor;
+    private final ExecutorService executorService;
     @Getter
     private final Statistic statistic;
     @Getter
@@ -181,7 +181,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
         this.networkFilter = networkFilter;
 
         this.uid = UUID.randomUUID().toString();
-        this.singleThreadExecutor = SingleThreadExecutorUtils.getSingleThreadExecutor("Executor service for connection with uid " + uid);
+        this.executorService = SingleThreadExecutorUtils.getSingleThreadExecutor("Executor service for connection with uid " + uid);
 
         statistic = new Statistic();
 
@@ -204,7 +204,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             protoOutputStream = new ProtoOutputStream(socket.getOutputStream(), statistic);
             protoInputStream = socket.getInputStream();
             // We create a thread for handling inputStream data
-            singleThreadExecutor.submit(this);
+            executorService.submit(this);
 
             if (peersNodeAddress != null) {
                 setPeersNodeAddress(peersNodeAddress);
@@ -539,7 +539,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                 e.printStackTrace();
             }
 
-            Utilities.shutdownAndAwaitTermination(singleThreadExecutor, SHUTDOWN_TIMEOUT, TimeUnit.MILLISECONDS);
+            Utilities.shutdownAndAwaitTermination(executorService, SHUTDOWN_TIMEOUT, TimeUnit.MILLISECONDS);
 
             log.debug("Connection shutdown complete {}", this);
             // Use UserThread.execute as it's not clear if that is called from a non-UserThread
