@@ -29,6 +29,7 @@ import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Sha256Hash;
@@ -49,6 +50,9 @@ class TransactionAwareTrade implements TransactionAwareTradable {
     private final BtcWalletService btcWalletService;
     private final PubKeyRing pubKeyRing;
 
+    // As Sha256Hash.toString() is expensive, cache the last result, which will usually be next one needed.
+    private static Tuple2<Sha256Hash, String> lastTxIdTuple;
+
     TransactionAwareTrade(TradeModel tradeModel,
                           ArbitrationManager arbitrationManager,
                           RefundManager refundManager,
@@ -64,7 +68,11 @@ class TransactionAwareTrade implements TransactionAwareTradable {
     @Override
     public boolean isRelatedToTransaction(Transaction transaction) {
         Sha256Hash hash = transaction.getTxId();
-        String txId = hash.toString();
+        var txIdTuple = lastTxIdTuple;
+        if (txIdTuple == null || !txIdTuple.first.equals(hash)) {
+            lastTxIdTuple = txIdTuple = new Tuple2<>(hash, hash.toString());
+        }
+        String txId = txIdTuple.second;
 
         boolean tradeRelated = false;
         if (tradeModel instanceof Trade) {
