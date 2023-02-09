@@ -288,11 +288,11 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     }
 
     private void updateList() {
+        Set<Tradable> tradables = tradableRepository.getAll();
+
         List<TransactionsListItem> transactionsListItems = btcWalletService.getTransactions(false)
                 .stream()
                 .map(transaction -> {
-                    Set<Tradable> tradables = tradableRepository.getAll();
-
                     TransactionAwareTradable maybeTradable = tradables.stream()
                             .map(tradable -> {
                                 if (tradable instanceof OpenOffer) {
