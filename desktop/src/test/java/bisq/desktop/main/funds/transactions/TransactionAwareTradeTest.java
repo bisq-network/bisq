@@ -66,13 +66,13 @@ public class TransactionAwareTradeTest {
 
     @Test
     public void testIsRelatedToTransactionWhenPayoutTx() {
-        when(delegate.getPayoutTx().getTxId()).thenReturn(XID);
+        when(delegate.getPayoutTxId()).thenReturn(XID.toString());
         assertTrue(trade.isRelatedToTransaction(transaction));
     }
 
     @Test
     public void testIsRelatedToTransactionWhenDepositTx() {
-        when(delegate.getDepositTx().getTxId()).thenReturn(XID);
+        when(delegate.getDepositTxId()).thenReturn(XID.toString());
         assertTrue(trade.isRelatedToTransaction(transaction));
     }
 
