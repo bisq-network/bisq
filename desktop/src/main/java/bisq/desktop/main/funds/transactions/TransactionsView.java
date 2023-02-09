@@ -201,7 +201,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
         dateColumn.setComparator(Comparator.comparing(TransactionsListItem::getDate));
         tradeIdColumn.setComparator(Comparator.comparing(o -> o.getTradable() != null ? o.getTradable().getId() : ""));
-        detailsColumn.setComparator(Comparator.comparing(o -> o.getDetails()));
+        detailsColumn.setComparator(Comparator.comparing(TransactionsListItem::getDetails));
         addressColumn.setComparator(Comparator.comparing(item -> item.getDirection() + item.getAddressString()));
         transactionColumn.setComparator(Comparator.comparing(TransactionsListItem::getTxId));
         amountColumn.setComparator(Comparator.comparing(TransactionsListItem::getAmountAsCoin));
@@ -211,9 +211,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
 
-        walletChangeEventListener = wallet -> {
-            updateList();
-        };
+        walletChangeEventListener = wallet -> updateList();
 
         keyEventEventHandler = event -> {
             // Not intended to be public to users as the feature is not well tested
@@ -419,15 +417,13 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                             TransactionsListItem> column) {
                         return new TableCell<>() {
 
-                            private HyperlinkWithIcon hyperlinkWithIcon;
-
                             @Override
                             public void updateItem(final TransactionsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
                                     if (item.isDustAttackTx()) {
-                                        hyperlinkWithIcon = new HyperlinkWithIcon(item.getDetails(), AwesomeIcon.WARNING_SIGN);
+                                        var hyperlinkWithIcon = new HyperlinkWithIcon(item.getDetails(), AwesomeIcon.WARNING_SIGN);
                                         hyperlinkWithIcon.setOnAction(event -> new Popup().warning(Res.get("funds.tx.dustAttackTx.popup")).show());
                                         setGraphic(hyperlinkWithIcon);
                                     } else {
