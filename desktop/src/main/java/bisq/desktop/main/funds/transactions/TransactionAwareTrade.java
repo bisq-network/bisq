@@ -38,8 +38,11 @@ import org.bitcoinj.core.TransactionOutput;
 
 import javafx.collections.ObservableList;
 
+import java.util.stream.IntStream;
+
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.desktop.main.funds.transactions.TransactionAwareTradable.bucketIndex;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -128,7 +131,7 @@ class TransactionAwareTrade implements TransactionAwareTradable {
         String delegateId = tradeModel.getId();
         ObservableList<Dispute> disputes = arbitrationManager.getDisputesAsObservableList();
 
-        boolean isAnyDisputeRelatedToThis = arbitrationManager.getDisputedTradeIds().contains(tradeModel.getId());
+        boolean isAnyDisputeRelatedToThis = arbitrationManager.getDisputedTradeIds().contains(delegateId);
 
         return isAnyDisputeRelatedToThis && disputes.stream()
                 .anyMatch(dispute -> {
@@ -215,5 +218,28 @@ class TransactionAwareTrade implements TransactionAwareTradable {
     @Override
     public Tradable asTradable() {
         return tradeModel;
+    }
+
+    @Override
+    public IntStream getRelatedTransactionFilter() {
+        if (tradeModel instanceof Trade && !arbitrationManager.getDisputedTradeIds().contains(tradeModel.getId()) &&
+                !refundManager.getDisputedTradeIds().contains(tradeModel.getId())) {
+            Trade trade = (Trade) tradeModel;
+            String takerFeeTxId = trade.getTakerFeeTxId();
+            String offerFeeTxId = trade.getOffer() != null ? trade.getOffer().getOfferFeePaymentTxId() : null;
+            String depositTxId = trade.getDepositTxId();
+            String payoutTxId = trade.getPayoutTxId();
+            return IntStream.of(DELAYED_PAYOUT_TX_BUCKET_INDEX, bucketIndex(takerFeeTxId), bucketIndex(offerFeeTxId),
+                            bucketIndex(depositTxId), bucketIndex(payoutTxId))
+                    .filter(i -> i >= 0);
+        } else if (tradeModel instanceof BsqSwapTrade) {
+            BsqSwapTrade trade = (BsqSwapTrade) tradeModel;
+            String swapTxId = trade.getTxId();
+            return IntStream.of(bucketIndex(swapTxId))
+                    .filter(i -> i >= 0);
+        } else {
+            // We are involved in a dispute (rare) - don't do any initial tx filtering.
+            return IntStream.range(0, TX_FILTER_SIZE);
+        }
     }
 }

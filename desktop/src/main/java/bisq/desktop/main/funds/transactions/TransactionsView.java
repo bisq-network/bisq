@@ -95,6 +95,7 @@ import javafx.util.Callback;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -289,27 +290,29 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
     private void updateList() {
         Set<Tradable> tradables = tradableRepository.getAll();
+        var filterSlices = new RelatedTransactionFilterSlices(tradables.stream()
+                .map(tradable -> {
+                    if (tradable instanceof OpenOffer) {
+                        return new TransactionAwareOpenOffer((OpenOffer) tradable);
+                    } else if (tradable instanceof TradeModel) {
+                        return new TransactionAwareTrade(
+                                (TradeModel) tradable,
+                                arbitrationManager,
+                                refundManager,
+                                btcWalletService,
+                                pubKeyRing
+                        );
+                    } else {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toUnmodifiableList()));
 
         List<TransactionsListItem> transactionsListItems = btcWalletService.getTransactions(false)
                 .stream()
                 .map(transaction -> {
-                    TransactionAwareTradable maybeTradable = tradables.stream()
-                            .map(tradable -> {
-                                if (tradable instanceof OpenOffer) {
-                                    return new TransactionAwareOpenOffer((OpenOffer) tradable);
-                                } else if (tradable instanceof TradeModel) {
-                                    return new TransactionAwareTrade(
-                                            (TradeModel) tradable,
-                                            arbitrationManager,
-                                            refundManager,
-                                            btcWalletService,
-                                            pubKeyRing
-                                    );
-                                } else {
-                                    return null;
-                                }
-                            })
-                            .filter(tradable -> tradable != null && tradable.isRelatedToTransaction(transaction))
+                    TransactionAwareTradable maybeTradable = filterSlices.getAllRelatedTradables(transaction)
                             .findAny()
                             .orElse(null);
 

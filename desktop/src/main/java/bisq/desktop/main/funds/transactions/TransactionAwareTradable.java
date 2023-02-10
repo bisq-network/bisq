@@ -19,10 +19,35 @@ package bisq.desktop.main.funds.transactions;
 
 import bisq.core.trade.model.Tradable;
 
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 
+import java.util.stream.IntStream;
+
+import javax.annotation.Nullable;
+
 interface TransactionAwareTradable {
+    int TX_FILTER_SIZE = 64;
+    int DELAYED_PAYOUT_TX_BUCKET_INDEX = TX_FILTER_SIZE - 1;
+
     boolean isRelatedToTransaction(Transaction transaction);
 
     Tradable asTradable();
+
+    /** Returns a list of bucket indices of all transactions which might be related to this Tradable. */
+    IntStream getRelatedTransactionFilter();
+
+    static int bucketIndex(Transaction tx) {
+        return tx.getLockTime() == 0 ? bucketIndex(tx.getTxId()) : DELAYED_PAYOUT_TX_BUCKET_INDEX;
+    }
+
+    static int bucketIndex(Sha256Hash hash) {
+        int i = hash.getBytes()[31] & 255;
+        return i % TX_FILTER_SIZE != DELAYED_PAYOUT_TX_BUCKET_INDEX ?
+                i % TX_FILTER_SIZE : i / TX_FILTER_SIZE;
+    }
+
+    static int bucketIndex(@Nullable String txId) {
+        return txId != null ? bucketIndex(Sha256Hash.wrap(txId)) : -1;
+    }
 }
