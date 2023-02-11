@@ -22,7 +22,6 @@ import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.filtering.FilterableListItem;
 
-import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.WalletService;
@@ -59,7 +58,6 @@ import javax.annotation.Nullable;
 
 @Slf4j
 class TransactionsListItem implements FilterableListItem {
-    private final BtcWalletService btcWalletService;
     private final CoinFormatter formatter;
     private String dateString;
     private final Date date;
@@ -69,7 +67,6 @@ class TransactionsListItem implements FilterableListItem {
     private String details = "";
     private String addressString = "";
     private String direction = "";
-    private TxConfidenceListener txConfidenceListener;
     private boolean received;
     private Coin amountAsCoin = Coin.ZERO;
     private String memo = "";
@@ -91,7 +88,6 @@ class TransactionsListItem implements FilterableListItem {
     // used at exportCSV
     TransactionsListItem() {
         date = null;
-        btcWalletService = null;
         txId = null;
         formatter = null;
         isDustAttackTx = false;
@@ -105,7 +101,6 @@ class TransactionsListItem implements FilterableListItem {
                          DaoFacade daoFacade,
                          CoinFormatter formatter,
                          long ignoreDustThreshold) {
-        this.btcWalletService = btcWalletService;
         this.formatter = formatter;
         this.memo = transaction.getMemo();
 
@@ -303,19 +298,6 @@ class TransactionsListItem implements FilterableListItem {
             GUIUtil.updateConfidence(confidence, tooltip, txConfidenceIndicator);
             confirmations = confidence.getDepthInBlocks();
         }});
-
-        txConfidenceListener = new TxConfidenceListener(txId) {
-            @Override
-            public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                GUIUtil.updateConfidence(confidence, lazy().tooltip, lazy().txConfidenceIndicator);
-                confirmations = confidence.getDepthInBlocks();
-            }
-        };
-        btcWalletService.addTxConfidenceListener(txConfidenceListener);
-    }
-
-    public void cleanup() {
-        btcWalletService.removeTxConfidenceListener(txConfidenceListener);
     }
 
 

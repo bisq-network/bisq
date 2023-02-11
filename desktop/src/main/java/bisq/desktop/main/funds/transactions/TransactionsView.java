@@ -279,7 +279,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     protected void deactivate() {
         filterBox.deactivate();
         sortedList.comparatorProperty().unbind();
-        observableList.forEach(TransactionsListItem::cleanup);
         btcWalletService.removeChangeEventListener(walletChangeEventListener);
 
         if (scene != null)
@@ -328,7 +327,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                 })
                 .collect(Collectors.toList());
         // are sorted by getRecentTransactions
-        transactionsListItems.forEach(TransactionsListItem::cleanup);
         observableList.setAll(transactionsListItems);
     }
 
