@@ -72,11 +72,11 @@ class Server implements Runnable {
     public void run() {
         try {
             try {
-                while (!isStopped.get() && !Thread.currentThread().isInterrupted()) {
+                while (isServerActive()) {
                     log.debug("Ready to accept new clients on port " + localPort);
                     final Socket socket = serverSocket.accept();
 
-                    if (!isStopped.get() && !Thread.currentThread().isInterrupted()) {
+                    if (isServerActive()) {
                         log.debug("Accepted new client on localPort/port " + socket.getLocalPort() + "/" + socket.getPort());
                         InboundConnection connection = new InboundConnection(socket,
                                 messageListener,
@@ -90,7 +90,7 @@ class Server implements Runnable {
                                 + "\nconnection.uid={}", serverSocket.getLocalPort(), socket.getPort(), connection.getUid()
                                 + "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
 
-                        if (!isStopped.get())
+                        if (isServerActive())
                             connections.add(connection);
                         else
                             connection.shutDown(CloseConnectionReason.APP_SHUT_DOWN);
@@ -129,5 +129,9 @@ class Server implements Runnable {
         } else {
             log.warn("stopped already called ast shutdown");
         }
+    }
+
+    private boolean isServerActive() {
+        return !isStopped.get() && !Thread.currentThread().isInterrupted();
     }
 }
