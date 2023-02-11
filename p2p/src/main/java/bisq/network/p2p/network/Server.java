@@ -42,9 +42,11 @@ class Server implements Runnable {
     private final NetworkFilter networkFilter;
 
     private final ServerSocket serverSocket;
+    private final int localPort;
     private final Set<Connection> connections = new CopyOnWriteArraySet<>();
     private volatile boolean stopped;
     private final NetworkProtoResolver networkProtoResolver;
+    private final Thread serverThread = new Thread(this);
 
 
     public Server(ServerSocket serverSocket,
@@ -54,19 +56,23 @@ class Server implements Runnable {
                   @Nullable NetworkFilter networkFilter) {
         this.networkProtoResolver = networkProtoResolver;
         this.serverSocket = serverSocket;
+        this.localPort = serverSocket.getLocalPort();
         this.messageListener = messageListener;
         this.connectionListener = connectionListener;
         this.networkFilter = networkFilter;
     }
 
+    public void start() {
+        serverThread.setName("Server-" + localPort);
+        serverThread.start();
+    }
+
     @Override
     public void run() {
         try {
-            // Thread created by NetworkNode
-            Thread.currentThread().setName("Server-" + serverSocket.getLocalPort());
             try {
                 while (!stopped && !Thread.currentThread().isInterrupted()) {
-                    log.debug("Ready to accept new clients on port " + serverSocket.getLocalPort());
+                    log.debug("Ready to accept new clients on port " + localPort);
                     final Socket socket = serverSocket.accept();
                     if (!stopped && !Thread.currentThread().isInterrupted()) {
                         log.debug("Accepted new client on localPort/port " + socket.getLocalPort() + "/" + socket.getPort());
@@ -106,8 +112,11 @@ class Server implements Runnable {
             connections.forEach(connection -> connection.shutDown(CloseConnectionReason.APP_SHUT_DOWN));
 
             try {
-                if (!serverSocket.isClosed())
+                if (!serverSocket.isClosed()) {
                     serverSocket.close();
+                }
+                serverThread.interrupt();
+
             } catch (SocketException e) {
                 log.debug("SocketException at shutdown might be expected " + e.getMessage());
             } catch (IOException e) {
