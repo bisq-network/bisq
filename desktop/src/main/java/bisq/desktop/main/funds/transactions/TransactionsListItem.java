@@ -17,10 +17,10 @@
 
 package bisq.desktop.main.funds.transactions;
 
-import bisq.desktop.util.filtering.FilterableListItem;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
+import bisq.desktop.util.filtering.FilterableListItem;
 
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.wallet.BsqWalletService;
@@ -197,7 +197,6 @@ class TransactionsListItem implements FilterableListItem {
 
         if (optionalTradable.isPresent()) {
             tradable = optionalTradable.get();
-            String tradeId = tradable.getShortId();
             if (tradable instanceof OpenOffer) {
                 details = Res.get("funds.tx.createOfferFee");
             } else if (tradable instanceof Trade) {
