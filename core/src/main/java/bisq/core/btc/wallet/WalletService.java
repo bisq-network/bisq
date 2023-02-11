@@ -468,7 +468,7 @@ public abstract class WalletService {
 
     @Nullable
     public TransactionConfidence getConfidenceForTxId(@Nullable String txId) {
-        if (wallet != null && txId != null) {
+        if (wallet != null && txId != null && !txId.isEmpty()) {
             Transaction tx = getTxByIdMap().get(Sha256Hash.wrap(txId));
             if (tx != null) {
                 return tx.getConfidence();
