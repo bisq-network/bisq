@@ -364,10 +364,6 @@ public class P2PService implements SetupListener, MessageListener, ConnectionLis
         UserThread.runAfter(() -> numConnectedPeers.set(networkNode.getAllConnections().size()), 3);
     }
 
-    @Override
-    public void onError(Throwable throwable) {
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // MessageListener implementation

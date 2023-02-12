@@ -534,10 +534,6 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
             @Override
             public void onConnection(Connection connection) {
             }
-
-            @Override
-            public void onError(Throwable throwable) {
-            }
         };
     }
 

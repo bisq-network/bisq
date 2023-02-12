@@ -143,10 +143,6 @@ public class P2PNetworkSetup {
                             closeConnectionReason, connection);
                 }
             }
-
-            @Override
-            public void onError(Throwable throwable) {
-            }
         });
 
         final BooleanProperty p2pNetworkInitialized = new SimpleBooleanProperty();

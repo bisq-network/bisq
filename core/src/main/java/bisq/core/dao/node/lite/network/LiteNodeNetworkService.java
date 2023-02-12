@@ -189,10 +189,6 @@ public class LiteNodeNetworkService implements MessageListener, ConnectionListen
         }
     }
 
-    @Override
-    public void onError(Throwable throwable) {
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PeerManager.Listener implementation
