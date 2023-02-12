@@ -27,6 +27,7 @@ import java.io.IOException;
 
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,7 @@ class Server implements Runnable {
     private final ServerSocket serverSocket;
     private final int localPort;
     private final Set<Connection> connections = new CopyOnWriteArraySet<>();
-    private volatile boolean stopped;
+    private final AtomicBoolean isStopped = new AtomicBoolean(false);
     private final NetworkProtoResolver networkProtoResolver;
     private final Thread serverThread = new Thread(this);
 
@@ -71,10 +72,11 @@ class Server implements Runnable {
     public void run() {
         try {
             try {
-                while (!stopped && !Thread.currentThread().isInterrupted()) {
+                while (!isStopped.get() && !Thread.currentThread().isInterrupted()) {
                     log.debug("Ready to accept new clients on port " + localPort);
                     final Socket socket = serverSocket.accept();
-                    if (!stopped && !Thread.currentThread().isInterrupted()) {
+
+                    if (!isStopped.get() && !Thread.currentThread().isInterrupted()) {
                         log.debug("Accepted new client on localPort/port " + socket.getLocalPort() + "/" + socket.getPort());
                         InboundConnection connection = new InboundConnection(socket,
                                 messageListener,
@@ -88,14 +90,14 @@ class Server implements Runnable {
                                 + "\nconnection.uid={}", serverSocket.getLocalPort(), socket.getPort(), connection.getUid()
                                 + "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n");
 
-                        if (!stopped)
+                        if (!isStopped.get())
                             connections.add(connection);
                         else
                             connection.shutDown(CloseConnectionReason.APP_SHUT_DOWN);
                     }
                 }
             } catch (IOException e) {
-                if (!stopped)
+                if (!isStopped.get())
                     e.printStackTrace();
             }
         } catch (Throwable t) {
@@ -106,9 +108,9 @@ class Server implements Runnable {
 
     public void shutDown() {
         log.info("Server shutdown started");
-        if (!stopped) {
-            stopped = true;
+        boolean isServerStopped = isStopped.getAndSet(true);
 
+        if (!isServerStopped) {
             connections.forEach(connection -> connection.shutDown(CloseConnectionReason.APP_SHUT_DOWN));
 
             try {
