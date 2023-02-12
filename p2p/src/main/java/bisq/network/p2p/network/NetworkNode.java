@@ -24,7 +24,6 @@ import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
 import bisq.common.proto.network.NetworkEnvelope;
 import bisq.common.proto.network.NetworkProtoResolver;
-import bisq.common.util.SingleThreadExecutorUtils;
 import bisq.common.util.Utilities;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
@@ -50,7 +49,6 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -81,7 +79,6 @@ public abstract class NetworkNode implements MessageListener {
     final CopyOnWriteArraySet<SetupListener> setupListeners = new CopyOnWriteArraySet<>();
     private final ListeningExecutorService connectionExecutor;
     private final ListeningExecutorService sendMessageExecutor;
-    private final ExecutorService serverExecutor;
     private Server server;
 
     private volatile boolean shutDownInProgress;
@@ -112,7 +109,6 @@ public abstract class NetworkNode implements MessageListener {
                 maxConnections * 3,
                 30,
                 30);
-        serverExecutor = SingleThreadExecutorUtils.getSingleThreadExecutor("NetworkNode.server-" + servicePort);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -373,7 +369,6 @@ public abstract class NetworkNode implements MessageListener {
             if (server != null) {
                 server.shutDown();
                 server = null;
-                serverExecutor.shutdownNow();
             }
 
             Set<Connection> allConnections = getAllConnections();
@@ -503,7 +498,7 @@ public abstract class NetworkNode implements MessageListener {
                 connectionListener,
                 networkProtoResolver,
                 networkFilter);
-        serverExecutor.submit(server);
+        server.start();
     }
 
     private Optional<OutboundConnection> lookupOutBoundConnection(NodeAddress peersNodeAddress) {
