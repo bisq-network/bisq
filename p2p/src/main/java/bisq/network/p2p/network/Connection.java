@@ -130,7 +130,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
     private final Socket socket;
     private final ConnectionListener connectionListener;
     @Nullable
-    private final NetworkFilter networkFilter;
+    private final BanFilter banFilter;
     @Getter
     private final String uid;
     private final ExecutorService executorService;
@@ -175,10 +175,10 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                ConnectionListener connectionListener,
                @Nullable NodeAddress peersNodeAddress,
                NetworkProtoResolver networkProtoResolver,
-               @Nullable NetworkFilter networkFilter) {
+               @Nullable BanFilter banFilter) {
         this.socket = socket;
         this.connectionListener = connectionListener;
-        this.networkFilter = networkFilter;
+        this.banFilter = banFilter;
 
         this.uid = UUID.randomUUID().toString();
         this.executorService = SingleThreadExecutorUtils.getSingleThreadExecutor("Executor service for connection with uid " + uid);
@@ -208,7 +208,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
 
             if (peersNodeAddress != null) {
                 setPeersNodeAddress(peersNodeAddress);
-                if (networkFilter != null && networkFilter.isPeerBanned(peersNodeAddress)) {
+                if (banFilter != null && banFilter.isPeerBanned(peersNodeAddress)) {
                     log.warn("We created an outbound connection with a banned peer");
                     reportInvalidRequest(RuleViolation.PEER_BANNED);
                 }
@@ -237,9 +237,9 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             return;
         }
 
-        if (networkFilter != null &&
+        if (banFilter != null &&
                 peersNodeAddressOptional.isPresent() &&
-                networkFilter.isPeerBanned(peersNodeAddressOptional.get())) {
+                banFilter.isPeerBanned(peersNodeAddressOptional.get())) {
             log.warn("We tried to send a message to a banned peer. message={}", networkEnvelope.getClass().getSimpleName());
             reportInvalidRequest(RuleViolation.PEER_BANNED);
             return;
@@ -685,7 +685,7 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
             setPeersNodeAddress(senderNodeAddress);
         }
 
-        if (networkFilter != null && networkFilter.isPeerBanned(senderNodeAddress)) {
+        if (banFilter != null && banFilter.isPeerBanned(senderNodeAddress)) {
             log.warn("We got a message from a banned peer. message={}", sendersNodeAddressMessage.getClass().getSimpleName());
             reportInvalidRequest(RuleViolation.PEER_BANNED);
             return false;
@@ -749,9 +749,9 @@ public class Connection implements HasCapabilities, Runnable, MessageListener {
                         return;
                     }
 
-                    if (networkFilter != null &&
+                    if (banFilter != null &&
                             peersNodeAddressOptional.isPresent() &&
-                            networkFilter.isPeerBanned(peersNodeAddressOptional.get())) {
+                            banFilter.isPeerBanned(peersNodeAddressOptional.get())) {
 
                         log.warn("We got a message from a banned peer. proto={}", Utilities.toTruncatedString(proto));
                         reportInvalidRequest(RuleViolation.PEER_BANNED);

@@ -29,7 +29,7 @@ import bisq.core.user.User;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.P2PServiceListener;
-import bisq.network.p2p.network.NetworkFilter;
+import bisq.network.p2p.network.BanFilter;
 import bisq.network.p2p.storage.HashMapChangedListener;
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
@@ -121,7 +121,7 @@ public class FilterManager {
                          Preferences preferences,
                          Config config,
                          ProvidersRepository providersRepository,
-                         NetworkFilter networkFilter,
+                         BanFilter banFilter,
                          @Named(Config.IGNORE_DEV_MSG) boolean ignoreDevMsg,
                          @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
         this.p2PService = p2PService;
@@ -138,7 +138,7 @@ public class FilterManager {
                         "029340c3e7d4bb0f9e651b5f590b434fecb6175aeaa57145c7804ff05d210e534f",
                         "034dc7530bf66ffd9580aa98031ea9a18ac2d269f7c56c0e71eca06105b9ed69f9");
 
-        networkFilter.setBannedNodePredicate(this::isNodeAddressBannedFromNetwork);
+        banFilter.setBannedNodePredicate(this::isNodeAddressBannedFromNetwork);
     }
 
 

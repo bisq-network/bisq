@@ -71,7 +71,7 @@ public abstract class NetworkNode implements MessageListener {
     final int servicePort;
     private final NetworkProtoResolver networkProtoResolver;
     @Nullable
-    private final NetworkFilter networkFilter;
+    private final BanFilter banFilter;
 
     private final CopyOnWriteArraySet<InboundConnection> inBoundConnections = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<MessageListener> messageListeners = new CopyOnWriteArraySet<>();
@@ -93,11 +93,11 @@ public abstract class NetworkNode implements MessageListener {
 
     NetworkNode(int servicePort,
                 NetworkProtoResolver networkProtoResolver,
-                @Nullable NetworkFilter networkFilter,
+                @Nullable BanFilter banFilter,
                 int maxConnections) {
         this.servicePort = servicePort;
         this.networkProtoResolver = networkProtoResolver;
-        this.networkFilter = networkFilter;
+        this.banFilter = banFilter;
 
         connectionExecutor = Utilities.getListeningExecutorService("NetworkNode.connection",
                 maxConnections * 2,
@@ -212,7 +212,7 @@ public abstract class NetworkNode implements MessageListener {
                             connectionListener,
                             peersNodeAddress,
                             networkProtoResolver,
-                            networkFilter);
+                            banFilter);
 
                     if (log.isDebugEnabled()) {
                         log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
@@ -497,7 +497,7 @@ public abstract class NetworkNode implements MessageListener {
                 NetworkNode.this,
                 connectionListener,
                 networkProtoResolver,
-                networkFilter);
+                banFilter);
         server.start();
     }
 

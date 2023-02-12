@@ -18,7 +18,7 @@
 package bisq.core.network;
 
 import bisq.network.p2p.NodeAddress;
-import bisq.network.p2p.network.NetworkFilter;
+import bisq.network.p2p.network.BanFilter;
 
 import bisq.common.config.Config;
 
@@ -33,7 +33,7 @@ import java.util.function.Predicate;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CoreNetworkFilter implements NetworkFilter {
+public class CoreBanFilter implements BanFilter {
     private final Set<NodeAddress> bannedPeersFromOptions = new HashSet<>();
     private Predicate<NodeAddress> bannedNodePredicate;
 
@@ -41,7 +41,7 @@ public class CoreNetworkFilter implements NetworkFilter {
      * @param banList  List of banned peers from program argument
      */
     @Inject
-    public CoreNetworkFilter(@Named(Config.BAN_LIST) List<String> banList) {
+    public CoreBanFilter(@Named(Config.BAN_LIST) List<String> banList) {
         banList.stream().map(NodeAddress::new).forEach(bannedPeersFromOptions::add);
     }
 
