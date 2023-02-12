@@ -29,18 +29,23 @@ import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
 
 import bisq.common.crypto.PubKeyRing;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
+import com.google.common.collect.ImmutableSet;
+
 import javafx.collections.ObservableList;
 
-import java.util.Optional;
+import java.util.Set;
+import java.util.stream.IntStream;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.desktop.main.funds.transactions.TransactionAwareTradable.bucketIndex;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -50,6 +55,11 @@ class TransactionAwareTrade implements TransactionAwareTradable {
     private final RefundManager refundManager;
     private final BtcWalletService btcWalletService;
     private final PubKeyRing pubKeyRing;
+
+    // As Sha256Hash.toString() is expensive, cache the last result, which will usually be next one needed.
+    private static Tuple2<Sha256Hash, String> lastTxIdTuple;
+    // Similarly, cache the last computed set of tx receiver addresses, to speed up 'isRefundPayoutTx'.
+    private static Tuple2<String, Set<String>> lastReceiverAddressStringsTuple;
 
     TransactionAwareTrade(TradeModel tradeModel,
                           ArbitrationManager arbitrationManager,
@@ -66,15 +76,19 @@ class TransactionAwareTrade implements TransactionAwareTradable {
     @Override
     public boolean isRelatedToTransaction(Transaction transaction) {
         Sha256Hash hash = transaction.getTxId();
-        String txId = hash.toString();
+        var txIdTuple = lastTxIdTuple;
+        if (txIdTuple == null || !txIdTuple.first.equals(hash)) {
+            lastTxIdTuple = txIdTuple = new Tuple2<>(hash, hash.toString());
+        }
+        String txId = txIdTuple.second;
 
         boolean tradeRelated = false;
         if (tradeModel instanceof Trade) {
             Trade trade = (Trade) tradeModel;
             boolean isTakerOfferFeeTx = txId.equals(trade.getTakerFeeTxId());
             boolean isOfferFeeTx = isOfferFeeTx(txId);
-            boolean isDepositTx = isDepositTx(hash);
-            boolean isPayoutTx = isPayoutTx(hash);
+            boolean isDepositTx = isDepositTx(txId);
+            boolean isPayoutTx = isPayoutTx(txId);
             boolean isDisputedPayoutTx = isDisputedPayoutTx(txId);
             boolean isDelayedPayoutTx = transaction.getLockTime() != 0 && isDelayedPayoutTx(txId);
             boolean isRefundPayoutTx = isRefundPayoutTx(trade, txId);
@@ -91,36 +105,28 @@ class TransactionAwareTrade implements TransactionAwareTradable {
         return tradeRelated || isBsqSwapTrade;
     }
 
-    private boolean isPayoutTx(Sha256Hash txId) {
+    private boolean isPayoutTx(String txId) {
         if (isBsqSwapTrade())
             return false;
 
         Trade trade = (Trade) tradeModel;
-        return Optional.ofNullable(trade.getPayoutTx())
-                .map(Transaction::getTxId)
-                .map(hash -> hash.equals(txId))
-                .orElse(false);
+        return txId.equals(trade.getPayoutTxId());
     }
 
-    private boolean isDepositTx(Sha256Hash txId) {
+    private boolean isDepositTx(String txId) {
         if (isBsqSwapTrade())
             return false;
 
         Trade trade = (Trade) tradeModel;
-        return Optional.ofNullable(trade.getDepositTx())
-                .map(Transaction::getTxId)
-                .map(hash -> hash.equals(txId))
-                .orElse(false);
+        return txId.equals(trade.getDepositTxId());
     }
 
     private boolean isOfferFeeTx(String txId) {
         if (isBsqSwapTrade())
             return false;
 
-        return Optional.ofNullable(tradeModel.getOffer())
-                .map(Offer::getOfferFeePaymentTxId)
-                .map(paymentTxId -> paymentTxId.equals(txId))
-                .orElse(false);
+        Offer offer = tradeModel.getOffer();
+        return offer != null && txId.equals(offer.getOfferFeePaymentTxId());
     }
 
     private boolean isDisputedPayoutTx(String txId) {
@@ -130,7 +136,7 @@ class TransactionAwareTrade implements TransactionAwareTradable {
         String delegateId = tradeModel.getId();
         ObservableList<Dispute> disputes = arbitrationManager.getDisputesAsObservableList();
 
-        boolean isAnyDisputeRelatedToThis = arbitrationManager.getDisputedTradeIds().contains(tradeModel.getId());
+        boolean isAnyDisputeRelatedToThis = arbitrationManager.getDisputedTradeIds().contains(delegateId);
 
         return isAnyDisputeRelatedToThis && disputes.stream()
                 .anyMatch(dispute -> {
@@ -155,7 +161,7 @@ class TransactionAwareTrade implements TransactionAwareTradable {
         if (transaction.getLockTime() == 0)
             return false;
 
-        if (transaction.getInputs() == null)
+        if (transaction.getInputs() == null || transaction.getInputs().size() != 1)
             return false;
 
         return transaction.getInputs().stream()
@@ -168,7 +174,7 @@ class TransactionAwareTrade implements TransactionAwareTradable {
                     if (parentTransaction == null) {
                         return false;
                     }
-                    return isDepositTx(parentTransaction.getTxId());
+                    return isDepositTx(parentTransaction.getTxId().toString());
                 });
     }
 
@@ -177,31 +183,43 @@ class TransactionAwareTrade implements TransactionAwareTradable {
             return false;
 
         String tradeId = tradeModel.getId();
-        ObservableList<Dispute> disputes = refundManager.getDisputesAsObservableList();
-
         boolean isAnyDisputeRelatedToThis = refundManager.getDisputedTradeIds().contains(tradeId);
 
         if (isAnyDisputeRelatedToThis) {
-            Transaction tx = btcWalletService.getTransaction(txId);
-            if (tx != null) {
-                for (TransactionOutput txo : tx.getOutputs()) {
-                    if (btcWalletService.isTransactionOutputMine(txo)) {
-                        try {
-                            Address receiverAddress = txo.getScriptPubKey().getToAddress(btcWalletService.getParams());
-                            Contract contract = checkNotNull(trade.getContract());
-                            String myPayoutAddressString = contract.isMyRoleBuyer(pubKeyRing) ?
-                                    contract.getBuyerPayoutAddressString() :
-                                    contract.getSellerPayoutAddressString();
-                            if (receiverAddress != null && myPayoutAddressString.equals(receiverAddress.toString())) {
-                                return true;
-                            }
-                        } catch (RuntimeException ignore) {
-                        }
-                    }
-                }
+            try {
+                Contract contract = checkNotNull(trade.getContract());
+                String myPayoutAddressString = contract.isMyRoleBuyer(pubKeyRing) ?
+                        contract.getBuyerPayoutAddressString() :
+                        contract.getSellerPayoutAddressString();
+
+                return getReceiverAddressStrings(txId).contains(myPayoutAddressString);
+            } catch (RuntimeException ignore) {
             }
         }
         return false;
+    }
+
+    private Set<String> getReceiverAddressStrings(String txId) {
+        var tuple = lastReceiverAddressStringsTuple;
+        if (tuple == null || !tuple.first.equals(txId)) {
+            lastReceiverAddressStringsTuple = tuple = computeReceiverAddressStringsTuple(txId);
+        }
+        return tuple != null ? tuple.second : ImmutableSet.of();
+    }
+
+    private Tuple2<String, Set<String>> computeReceiverAddressStringsTuple(String txId) {
+        Transaction tx = btcWalletService.getTransaction(txId);
+        if (tx == null) {
+            // Clear cache if the tx isn't found, as theoretically it could be added to the wallet later.
+            return null;
+        }
+        Set<String> addressStrings = tx.getOutputs().stream()
+                .filter(btcWalletService::isTransactionOutputMine)
+                .map(txo -> txo.getScriptPubKey().getToAddress(btcWalletService.getParams()))
+                .map(Address::toString)
+                .collect(ImmutableSet.toImmutableSet());
+
+        return new Tuple2<>(txId, addressStrings);
     }
 
     private boolean isBsqSwapTrade() {
@@ -218,5 +236,28 @@ class TransactionAwareTrade implements TransactionAwareTradable {
     @Override
     public Tradable asTradable() {
         return tradeModel;
+    }
+
+    @Override
+    public IntStream getRelatedTransactionFilter() {
+        if (tradeModel instanceof Trade && !arbitrationManager.getDisputedTradeIds().contains(tradeModel.getId()) &&
+                !refundManager.getDisputedTradeIds().contains(tradeModel.getId())) {
+            Trade trade = (Trade) tradeModel;
+            String takerFeeTxId = trade.getTakerFeeTxId();
+            String offerFeeTxId = trade.getOffer() != null ? trade.getOffer().getOfferFeePaymentTxId() : null;
+            String depositTxId = trade.getDepositTxId();
+            String payoutTxId = trade.getPayoutTxId();
+            return IntStream.of(DELAYED_PAYOUT_TX_BUCKET_INDEX, bucketIndex(takerFeeTxId), bucketIndex(offerFeeTxId),
+                            bucketIndex(depositTxId), bucketIndex(payoutTxId))
+                    .filter(i -> i >= 0);
+        } else if (tradeModel instanceof BsqSwapTrade) {
+            BsqSwapTrade trade = (BsqSwapTrade) tradeModel;
+            String swapTxId = trade.getTxId();
+            return IntStream.of(bucketIndex(swapTxId))
+                    .filter(i -> i >= 0);
+        } else {
+            // We are involved in a dispute (rare) - don't do any initial tx filtering.
+            return IntStream.range(0, TX_FILTER_SIZE);
+        }
     }
 }

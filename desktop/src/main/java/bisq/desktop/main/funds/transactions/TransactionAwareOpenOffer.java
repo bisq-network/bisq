@@ -23,6 +23,8 @@ import bisq.core.trade.model.Tradable;
 
 import org.bitcoinj.core.Transaction;
 
+import java.util.stream.IntStream;
+
 class TransactionAwareOpenOffer implements TransactionAwareTradable {
     private final OpenOffer delegate;
 
@@ -34,12 +36,18 @@ class TransactionAwareOpenOffer implements TransactionAwareTradable {
         Offer offer = delegate.getOffer();
         String paymentTxId = offer.getOfferFeePaymentTxId();
 
-        String txId = transaction.getTxId().toString();
-
-        return paymentTxId != null && paymentTxId.equals(txId);
+        return paymentTxId != null && paymentTxId.equals(transaction.getTxId().toString());
     }
 
     public Tradable asTradable() {
         return delegate;
+    }
+
+    @Override
+    public IntStream getRelatedTransactionFilter() {
+        Offer offer = delegate.getOffer();
+        String paymentTxId = offer.getOfferFeePaymentTxId();
+        return IntStream.of(TransactionAwareTradable.bucketIndex(paymentTxId))
+                .filter(i -> i >= 0);
     }
 }

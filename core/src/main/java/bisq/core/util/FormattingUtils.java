@@ -7,6 +7,7 @@ import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 
 import bisq.common.util.MathUtils;
+import bisq.common.util.Tuple3;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Monetary;
@@ -33,11 +34,14 @@ import org.jetbrains.annotations.NotNull;
 public class FormattingUtils {
     public static final String BTC_FORMATTER_KEY = "BTC";
 
-    public final static String RANGE_SEPARATOR = " - ";
+    public static final String RANGE_SEPARATOR = " - ";
 
     private static final MonetaryFormat fiatPriceFormat = new MonetaryFormat().shift(0).minDecimals(4).repeatOptionalDecimals(0, 0);
     private static final MonetaryFormat altcoinFormat = new MonetaryFormat().shift(0).minDecimals(8).repeatOptionalDecimals(0, 0);
     private static final DecimalFormat decimalFormat = new DecimalFormat("#.#");
+
+    private static final ThreadLocal<Tuple3<Locale, DateFormat, DateFormat>> cachedUtcDateTimeFormatters = new ThreadLocal<>();
+    private static final ThreadLocal<Tuple3<Locale, DateFormat, DateFormat>> cachedLocalDateTimeFormatters = new ThreadLocal<>();
 
     public static String formatCoinWithCode(long value, MonetaryFormat coinFormat) {
         return formatCoinWithCode(Coin.valueOf(value), coinFormat);
@@ -183,12 +187,25 @@ public class FormattingUtils {
 
     public static String formatDateTime(Date date, boolean useLocaleAndLocalTimezone) {
         Locale locale = useLocaleAndLocalTimezone ? GlobalSettings.getLocale() : Locale.US;
-        DateFormat dateInstance = DateFormat.getDateInstance(DateFormat.DEFAULT, locale);
-        DateFormat timeInstance = DateFormat.getTimeInstance(DateFormat.DEFAULT, locale);
-        if (!useLocaleAndLocalTimezone) {
-            dateInstance.setTimeZone(TimeZone.getTimeZone("UTC"));
-            timeInstance.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        var formatterTuple = (useLocaleAndLocalTimezone ?
+                cachedLocalDateTimeFormatters : cachedUtcDateTimeFormatters).get();
+        if (formatterTuple == null || !formatterTuple.first.equals(locale)) {
+            formatterTuple = new Tuple3<>(locale,
+                    DateFormat.getDateInstance(DateFormat.DEFAULT, locale),
+                    DateFormat.getTimeInstance(DateFormat.DEFAULT, locale));
+
+            if (useLocaleAndLocalTimezone) {
+                cachedLocalDateTimeFormatters.set(formatterTuple);
+            } else {
+                formatterTuple.second.setTimeZone(TimeZone.getTimeZone("UTC"));
+                formatterTuple.third.setTimeZone(TimeZone.getTimeZone("UTC"));
+                cachedUtcDateTimeFormatters.set(formatterTuple);
+            }
         }
+        DateFormat dateInstance = formatterTuple.second;
+        DateFormat timeInstance = formatterTuple.third;
+
         return formatDateTime(date, dateInstance, timeInstance);
     }
 
@@ -288,7 +305,8 @@ public class FormattingUtils {
     }
 
     @NotNull
-    public static String fillUpPlacesWithEmptyStrings(String formattedNumber, @SuppressWarnings("unused") int maxNumberOfDigits) {
+    public static String fillUpPlacesWithEmptyStrings(String formattedNumber,
+                                                      @SuppressWarnings("unused") int maxNumberOfDigits) {
         //FIXME: temporary deactivate adding spaces in front of numbers as we don't use a monospace font right now.
         /*int numberOfPlacesToFill = maxNumberOfDigits - formattedNumber.length();
         for (int i = 0; i < numberOfPlacesToFill; i++) {

@@ -95,6 +95,7 @@ import javafx.util.Callback;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -201,7 +202,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
 
         dateColumn.setComparator(Comparator.comparing(TransactionsListItem::getDate));
         tradeIdColumn.setComparator(Comparator.comparing(o -> o.getTradable() != null ? o.getTradable().getId() : ""));
-        detailsColumn.setComparator(Comparator.comparing(o -> o.getDetails()));
+        detailsColumn.setComparator(Comparator.comparing(TransactionsListItem::getDetails));
         addressColumn.setComparator(Comparator.comparing(item -> item.getDirection() + item.getAddressString()));
         transactionColumn.setComparator(Comparator.comparing(TransactionsListItem::getTxId));
         amountColumn.setComparator(Comparator.comparing(TransactionsListItem::getAmountAsCoin));
@@ -211,9 +212,7 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
 
-        walletChangeEventListener = wallet -> {
-            updateList();
-        };
+        walletChangeEventListener = wallet -> updateList();
 
         keyEventEventHandler = event -> {
             // Not intended to be public to users as the feature is not well tested
@@ -280,7 +279,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     protected void deactivate() {
         filterBox.deactivate();
         sortedList.comparatorProperty().unbind();
-        observableList.forEach(TransactionsListItem::cleanup);
         btcWalletService.removeChangeEventListener(walletChangeEventListener);
 
         if (scene != null)
@@ -290,28 +288,30 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
     }
 
     private void updateList() {
+        Set<Tradable> tradables = tradableRepository.getAll();
+        var filterSlices = new RelatedTransactionFilterSlices(tradables.stream()
+                .map(tradable -> {
+                    if (tradable instanceof OpenOffer) {
+                        return new TransactionAwareOpenOffer((OpenOffer) tradable);
+                    } else if (tradable instanceof TradeModel) {
+                        return new TransactionAwareTrade(
+                                (TradeModel) tradable,
+                                arbitrationManager,
+                                refundManager,
+                                btcWalletService,
+                                pubKeyRing
+                        );
+                    } else {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toUnmodifiableList()));
+
         List<TransactionsListItem> transactionsListItems = btcWalletService.getTransactions(false)
                 .stream()
                 .map(transaction -> {
-                    Set<Tradable> tradables = tradableRepository.getAll();
-
-                    TransactionAwareTradable maybeTradable = tradables.stream()
-                            .map(tradable -> {
-                                if (tradable instanceof OpenOffer) {
-                                    return new TransactionAwareOpenOffer((OpenOffer) tradable);
-                                } else if (tradable instanceof TradeModel) {
-                                    return new TransactionAwareTrade(
-                                            (TradeModel) tradable,
-                                            arbitrationManager,
-                                            refundManager,
-                                            btcWalletService,
-                                            pubKeyRing
-                                    );
-                                } else {
-                                    return null;
-                                }
-                            })
-                            .filter(tradable -> tradable != null && tradable.isRelatedToTransaction(transaction))
+                    TransactionAwareTradable maybeTradable = filterSlices.getAllRelatedTradables(transaction)
                             .findAny()
                             .orElse(null);
 
@@ -327,7 +327,6 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                 })
                 .collect(Collectors.toList());
         // are sorted by getRecentTransactions
-        transactionsListItems.forEach(TransactionsListItem::cleanup);
         observableList.setAll(transactionsListItems);
     }
 
@@ -419,15 +418,13 @@ public class TransactionsView extends ActivatableView<VBox, Void> {
                             TransactionsListItem> column) {
                         return new TableCell<>() {
 
-                            private HyperlinkWithIcon hyperlinkWithIcon;
-
                             @Override
                             public void updateItem(final TransactionsListItem item, boolean empty) {
                                 super.updateItem(item, empty);
 
                                 if (item != null && !empty) {
                                     if (item.isDustAttackTx()) {
-                                        hyperlinkWithIcon = new HyperlinkWithIcon(item.getDetails(), AwesomeIcon.WARNING_SIGN);
+                                        var hyperlinkWithIcon = new HyperlinkWithIcon(item.getDetails(), AwesomeIcon.WARNING_SIGN);
                                         hyperlinkWithIcon.setOnAction(event -> new Popup().warning(Res.get("funds.tx.dustAttackTx.popup")).show());
                                         setGraphic(hyperlinkWithIcon);
                                     } else {
