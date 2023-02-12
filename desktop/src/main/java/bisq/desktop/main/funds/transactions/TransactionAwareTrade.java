@@ -36,8 +36,11 @@ import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
+import com.google.common.collect.ImmutableSet;
+
 import javafx.collections.ObservableList;
 
+import java.util.Set;
 import java.util.stream.IntStream;
 
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +58,8 @@ class TransactionAwareTrade implements TransactionAwareTradable {
 
     // As Sha256Hash.toString() is expensive, cache the last result, which will usually be next one needed.
     private static Tuple2<Sha256Hash, String> lastTxIdTuple;
+    // Similarly, cache the last computed set of tx receiver addresses, to speed up 'isRefundPayoutTx'.
+    private static Tuple2<String, Set<String>> lastReceiverAddressStringsTuple;
 
     TransactionAwareTrade(TradeModel tradeModel,
                           ArbitrationManager arbitrationManager,
@@ -156,7 +161,7 @@ class TransactionAwareTrade implements TransactionAwareTradable {
         if (transaction.getLockTime() == 0)
             return false;
 
-        if (transaction.getInputs() == null)
+        if (transaction.getInputs() == null || transaction.getInputs().size() != 1)
             return false;
 
         return transaction.getInputs().stream()
@@ -178,30 +183,43 @@ class TransactionAwareTrade implements TransactionAwareTradable {
             return false;
 
         String tradeId = tradeModel.getId();
-
         boolean isAnyDisputeRelatedToThis = refundManager.getDisputedTradeIds().contains(tradeId);
 
         if (isAnyDisputeRelatedToThis) {
-            Transaction tx = btcWalletService.getTransaction(txId);
-            if (tx != null) {
-                for (TransactionOutput txo : tx.getOutputs()) {
-                    if (btcWalletService.isTransactionOutputMine(txo)) {
-                        try {
-                            Address receiverAddress = txo.getScriptPubKey().getToAddress(btcWalletService.getParams());
-                            Contract contract = checkNotNull(trade.getContract());
-                            String myPayoutAddressString = contract.isMyRoleBuyer(pubKeyRing) ?
-                                    contract.getBuyerPayoutAddressString() :
-                                    contract.getSellerPayoutAddressString();
-                            if (receiverAddress != null && myPayoutAddressString.equals(receiverAddress.toString())) {
-                                return true;
-                            }
-                        } catch (RuntimeException ignore) {
-                        }
-                    }
-                }
+            try {
+                Contract contract = checkNotNull(trade.getContract());
+                String myPayoutAddressString = contract.isMyRoleBuyer(pubKeyRing) ?
+                        contract.getBuyerPayoutAddressString() :
+                        contract.getSellerPayoutAddressString();
+
+                return getReceiverAddressStrings(txId).contains(myPayoutAddressString);
+            } catch (RuntimeException ignore) {
             }
         }
         return false;
+    }
+
+    private Set<String> getReceiverAddressStrings(String txId) {
+        var tuple = lastReceiverAddressStringsTuple;
+        if (tuple == null || !tuple.first.equals(txId)) {
+            lastReceiverAddressStringsTuple = tuple = computeReceiverAddressStringsTuple(txId);
+        }
+        return tuple != null ? tuple.second : ImmutableSet.of();
+    }
+
+    private Tuple2<String, Set<String>> computeReceiverAddressStringsTuple(String txId) {
+        Transaction tx = btcWalletService.getTransaction(txId);
+        if (tx == null) {
+            // Clear cache if the tx isn't found, as theoretically it could be added to the wallet later.
+            return null;
+        }
+        Set<String> addressStrings = tx.getOutputs().stream()
+                .filter(btcWalletService::isTransactionOutputMine)
+                .map(txo -> txo.getScriptPubKey().getToAddress(btcWalletService.getParams()))
+                .map(Address::toString)
+                .collect(ImmutableSet.toImmutableSet());
+
+        return new Tuple2<>(txId, addressStrings);
     }
 
     private boolean isBsqSwapTrade() {
