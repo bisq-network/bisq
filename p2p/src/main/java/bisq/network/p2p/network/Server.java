@@ -27,7 +27,6 @@ import java.io.IOException;
 
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +44,6 @@ class Server implements Runnable {
     private final ServerSocket serverSocket;
     private final int localPort;
     private final Set<Connection> connections = new CopyOnWriteArraySet<>();
-    private final AtomicBoolean isStopped = new AtomicBoolean(false);
     private final NetworkProtoResolver networkProtoResolver;
     private final Thread serverThread = new Thread(this);
 
@@ -97,7 +95,7 @@ class Server implements Runnable {
                     }
                 }
             } catch (IOException e) {
-                if (!isStopped.get())
+                if (isServerActive())
                     e.printStackTrace();
             }
         } catch (Throwable t) {
@@ -108,17 +106,14 @@ class Server implements Runnable {
 
     public void shutDown() {
         log.info("Server shutdown started");
-        boolean isServerStopped = isStopped.getAndSet(true);
-
-        if (!isServerStopped) {
+        if (isServerActive()) {
+            serverThread.interrupt();
             connections.forEach(connection -> connection.shutDown(CloseConnectionReason.APP_SHUT_DOWN));
 
             try {
                 if (!serverSocket.isClosed()) {
                     serverSocket.close();
                 }
-                serverThread.interrupt();
-
             } catch (SocketException e) {
                 log.debug("SocketException at shutdown might be expected " + e.getMessage());
             } catch (IOException e) {
@@ -132,6 +127,6 @@ class Server implements Runnable {
     }
 
     private boolean isServerActive() {
-        return !isStopped.get() && !Thread.currentThread().isInterrupted();
+        return !serverThread.isInterrupted();
     }
 }
