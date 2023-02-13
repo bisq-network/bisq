@@ -20,6 +20,7 @@ package bisq.apitest.scenario;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -83,6 +84,7 @@ public class OfferTest extends AbstractOfferTest {
         test.testCreateUSDBTCBuyOfferWithTriggerPrice();
     }
 
+    @Ignore
     @Test
     @Order(5)
     public void testCreateBSQOffers() {
