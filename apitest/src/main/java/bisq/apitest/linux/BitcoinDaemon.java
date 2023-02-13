@@ -52,6 +52,9 @@ public class BitcoinDaemon extends AbstractLinuxProcess implements LinuxProcess 
                 + " -daemon"
                 + " -regtest=1"
                 + " -server=1"
+                // If using bitcoind v0.19 - v22, you must use (uncomment)
+                // the '-txindex=1' below to generate regtest BSQ.
+                // + " -txindex=1"
                 + " -peerbloomfilters=1"
                 + " -debug=net"
                 + " -fallbackfee=0.0002"

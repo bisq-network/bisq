@@ -48,7 +48,7 @@ import bisq.apitest.config.ApiTestConfig;
  *
  * All method, scenario and end-to-end tests are found in the test sources folder.
  *
- * Requires bitcoind v0.19 - v22.
+ * Requires bitcoind v0.19 - v23.
  */
 @Slf4j
 public class ApiTestMain {

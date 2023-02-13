@@ -48,7 +48,6 @@ public class BisqProcess extends AbstractLinuxProcess implements LinuxProcess {
     private final String genesisTxId;
     private final int genesisBlockHeight;
     private final String seedNodes;
-    private final boolean daoActivated;
     private final boolean fullDaoNode;
     private final boolean useLocalhostForP2P;
     public final boolean useDevPrivilegeKeys;
@@ -62,7 +61,6 @@ public class BisqProcess extends AbstractLinuxProcess implements LinuxProcess {
         this.genesisTxId = "30af0050040befd8af25068cc697e418e09c2d8ebd8d411d2240591b9ec203cf";
         this.genesisBlockHeight = 111;
         this.seedNodes = "localhost:2002";
-        this.daoActivated = true;
         this.fullDaoNode = true;
         this.useLocalhostForP2P = true;
         this.useDevPrivilegeKeys = true;
@@ -224,7 +222,6 @@ public class BisqProcess extends AbstractLinuxProcess implements LinuxProcess {
             add("--rpcUser=" + config.bitcoinRpcUser);
             add("--rpcPassword=" + config.bitcoinRpcPassword);
             add("--rpcPort=" + config.bitcoinRpcPort);
-            add("--daoActivated=" + daoActivated);
             add("--fullDaoNode=" + fullDaoNode);
             add("--seedNodes=" + seedNodes);
             add("--baseCurrencyNetwork=" + baseCurrencyNetwork);
