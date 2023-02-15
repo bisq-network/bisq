@@ -447,7 +447,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
 
     @Override
     protected void activate() {
-        GUIUtil.setFitToRowsForTableView(burningManTableView, 36, 28, 10, 10);
+        GUIUtil.setFitToRowsForTableView(burningManTableView, 36, 28, 5, 5);
         GUIUtil.setFitToRowsForTableView(reimbursementsTableView, 36, 28, 3, 6);
 
         daoFacade.addBsqStateListener(this);
