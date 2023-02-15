@@ -22,7 +22,7 @@ import bisq.core.app.TorSetup;
 import bisq.core.btc.BitcoinModule;
 import bisq.core.dao.DaoModule;
 import bisq.core.filter.FilterModule;
-import bisq.core.network.CoreNetworkFilter;
+import bisq.core.network.CoreBanFilter;
 import bisq.core.network.p2p.seed.DefaultSeedNodeRepository;
 import bisq.core.offer.OfferModule;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
@@ -34,7 +34,7 @@ import bisq.core.user.User;
 import bisq.network.crypto.EncryptionServiceModule;
 import bisq.network.p2p.P2PModule;
 import bisq.network.p2p.network.BridgeAddressProvider;
-import bisq.network.p2p.network.NetworkFilter;
+import bisq.network.p2p.network.BanFilter;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.ClockWatcher;
@@ -75,7 +75,7 @@ public class ModuleForAppWithP2p extends AppModule {
         bind(TorSetup.class).in(Singleton.class);
 
         bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class).in(Singleton.class);
-        bind(NetworkFilter.class).to(CoreNetworkFilter.class).in(Singleton.class);
+        bind(BanFilter.class).to(CoreBanFilter.class).in(Singleton.class);
 
         bind(File.class).annotatedWith(named(STORAGE_DIR)).toInstance(config.storageDir);
         bind(File.class).annotatedWith(named(KEY_STORAGE_DIR)).toInstance(config.keyStorageDir);

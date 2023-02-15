@@ -40,7 +40,7 @@ class Server implements Runnable {
     private final MessageListener messageListener;
     private final ConnectionListener connectionListener;
     @Nullable
-    private final NetworkFilter networkFilter;
+    private final BanFilter banFilter;
 
     private final ServerSocket serverSocket;
     private final int localPort;
@@ -54,13 +54,13 @@ class Server implements Runnable {
                   MessageListener messageListener,
                   ConnectionListener connectionListener,
                   NetworkProtoResolver networkProtoResolver,
-                  @Nullable NetworkFilter networkFilter) {
+                  @Nullable BanFilter banFilter) {
         this.networkProtoResolver = networkProtoResolver;
         this.serverSocket = serverSocket;
         this.localPort = serverSocket.getLocalPort();
         this.messageListener = messageListener;
         this.connectionListener = connectionListener;
-        this.networkFilter = networkFilter;
+        this.banFilter = banFilter;
     }
 
     public void start() {
@@ -82,7 +82,7 @@ class Server implements Runnable {
                                 messageListener,
                                 connectionListener,
                                 networkProtoResolver,
-                                networkFilter);
+                                banFilter);
 
                         log.debug("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                 "Server created new inbound connection:"

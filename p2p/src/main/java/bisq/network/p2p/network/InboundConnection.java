@@ -28,7 +28,7 @@ public class InboundConnection extends Connection {
                              MessageListener messageListener,
                              ConnectionListener connectionListener,
                              NetworkProtoResolver networkProtoResolver,
-                             @Nullable NetworkFilter networkFilter) {
-        super(socket, messageListener, connectionListener, null, networkProtoResolver, networkFilter);
+                             @Nullable BanFilter banFilter) {
+        super(socket, messageListener, connectionListener, null, networkProtoResolver, banFilter);
     }
 }

@@ -21,7 +21,7 @@ import bisq.network.p2p.NodeAddress;
 
 import java.util.function.Predicate;
 
-public interface NetworkFilter {
+public interface BanFilter {
     boolean isPeerBanned(NodeAddress nodeAddress);
 
     void setBannedNodePredicate(Predicate<NodeAddress> isNodeAddressBanned);

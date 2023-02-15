@@ -69,9 +69,9 @@ public class TorNetworkNode extends NetworkNode {
                           NetworkProtoResolver networkProtoResolver,
                           boolean useStreamIsolation,
                           TorMode torMode,
-                          @Nullable NetworkFilter networkFilter,
+                          @Nullable BanFilter banFilter,
                           int maxConnections) {
-        super(servicePort, networkProtoResolver, networkFilter, maxConnections);
+        super(servicePort, networkProtoResolver, banFilter, maxConnections);
         this.torMode = torMode;
         this.streamIsolation = useStreamIsolation;
 
