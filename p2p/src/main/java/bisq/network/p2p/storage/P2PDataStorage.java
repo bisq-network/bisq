@@ -727,11 +727,6 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                 });
     }
 
-    @Override
-    public void onError(Throwable throwable) {
-
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Client API

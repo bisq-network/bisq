@@ -238,10 +238,6 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         }
     }
 
-    @Override
-    public void onError(Throwable throwable) {
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PeerManager.Listener implementation

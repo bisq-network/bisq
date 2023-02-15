@@ -115,8 +115,4 @@ public class GetInventoryRequester implements MessageListener, ConnectionListene
             }
         });
     }
-
-    @Override
-    public void onError(Throwable throwable) {
-    }
 }

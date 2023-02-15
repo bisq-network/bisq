@@ -176,10 +176,6 @@ public class AccountingLiteNodeNetworkService implements MessageListener, Connec
         }
     }
 
-    @Override
-    public void onError(Throwable throwable) {
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PeerManager.Listener implementation

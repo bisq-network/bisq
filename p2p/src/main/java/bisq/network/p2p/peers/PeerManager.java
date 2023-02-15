@@ -261,10 +261,6 @@ public final class PeerManager implements ConnectionListener, PersistedDataHost 
         maybeRemoveBannedPeer(closeConnectionReason, connection);
     }
 
-    @Override
-    public void onError(Throwable throwable) {
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Connection

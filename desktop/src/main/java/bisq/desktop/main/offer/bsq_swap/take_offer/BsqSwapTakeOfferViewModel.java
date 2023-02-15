@@ -269,10 +269,6 @@ class BsqSwapTakeOfferViewModel extends BsqSwapOfferViewModel<BsqSwapTakeOfferDa
             @Override
             public void onConnection(Connection connection) {
             }
-
-            @Override
-            public void onError(Throwable throwable) {
-            }
         };
     }
 

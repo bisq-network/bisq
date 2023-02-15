@@ -198,14 +198,6 @@ public abstract class NetworkNode implements MessageListener {
                             printOutBoundConnections();
                             connectionListeners.forEach(e -> e.onDisconnect(closeConnectionReason, connection));
                         }
-
-                        @Override
-                        public void onError(Throwable throwable) {
-                            if (!shutDownInProgress) {
-                                log.error("new OutboundConnection.ConnectionListener.onError " + throwable.getMessage());
-                            }
-                            connectionListeners.forEach(e -> e.onError(throwable));
-                        }
                     };
                     outboundConnection = new OutboundConnection(socket,
                             NetworkNode.this,
@@ -485,12 +477,6 @@ public abstract class NetworkNode implements MessageListener {
                 inBoundConnections.remove(connection);
                 printInboundConnections();
                 connectionListeners.stream().forEach(e -> e.onDisconnect(closeConnectionReason, connection));
-            }
-
-            @Override
-            public void onError(Throwable throwable) {
-                log.error("server.ConnectionListener.onError " + throwable.getMessage());
-                connectionListeners.stream().forEach(e -> e.onError(throwable));
             }
         };
         server = new Server(serverSocket,
