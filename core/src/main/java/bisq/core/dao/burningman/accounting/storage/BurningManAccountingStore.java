@@ -94,6 +94,7 @@ public class BurningManAccountingStore implements PersistableEnvelope {
 
     public Optional<AccountingBlock> getBlockAtHeight(int height) {
         Lock readLock = readWriteLock.readLock();
+        readLock.lock();
         try {
             return blocks.stream()
                     .filter(block -> block.getHeight() == height)
