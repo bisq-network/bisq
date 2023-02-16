@@ -44,6 +44,7 @@ import bisq.core.offer.availability.messages.OfferAvailabilityResponse;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.offer.bsq_swap.BsqSwapOfferPayload;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.support.DelayedPayoutRecoveryPayload;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.arbitration.messages.PeerPublishedDisputePayoutTxMessage;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
@@ -312,6 +313,8 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return BsqSwapOfferPayload.fromProto(proto.getBsqSwapOfferPayload());
                 case TEMP_PROPOSAL_PAYLOAD:
                     return TempProposalPayload.fromProto(proto.getTempProposalPayload());
+                case DELAYED_PAYOUT_RECOVERY_PAYLOAD:
+                    return DelayedPayoutRecoveryPayload.fromProto(proto.getDelayedPayoutRecoveryPayload());
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case (PB.StoragePayload). messageCase="
                             + proto.getMessageCase() + "; proto raw data=" + proto.toString());

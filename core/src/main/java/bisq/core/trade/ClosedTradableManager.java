@@ -18,11 +18,14 @@
 package bisq.core.trade;
 
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.support.DelayedPayoutRecoveryPayload;
+import bisq.core.support.DelayedPayoutRecoveryStorageService;
 import bisq.core.trade.bisq_v1.CleanupMailboxMessagesService;
 import bisq.core.trade.bisq_v1.DumpDelayedPayoutTx;
 import bisq.core.trade.bsq_swap.BsqSwapTradeManager;
@@ -34,11 +37,13 @@ import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;
+import bisq.network.p2p.P2PService;
 
 import bisq.common.crypto.KeyRing;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.util.Tuple2;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.utils.Fiat;
@@ -84,6 +89,9 @@ public class ClosedTradableManager implements PersistedDataHost {
     private final PriceFeedService priceFeedService;
     private final BsqSwapTradeManager bsqSwapTradeManager;
     private final BsqWalletService bsqWalletService;
+    private final BtcWalletService btcWalletService;
+    private final P2PService p2PService;
+    private final DelayedPayoutRecoveryStorageService delayedPayoutRecoveryStorageService;
     private final Preferences preferences;
     private final TradeStatisticsManager tradeStatisticsManager;
     private final PersistenceManager<TradableList<Tradable>> persistenceManager;
@@ -99,6 +107,9 @@ public class ClosedTradableManager implements PersistedDataHost {
                                  PriceFeedService priceFeedService,
                                  BsqSwapTradeManager bsqSwapTradeManager,
                                  BsqWalletService bsqWalletService,
+                                 BtcWalletService btcWalletService,
+                                 P2PService p2PService,
+                                 DelayedPayoutRecoveryStorageService delayedPayoutRecoveryStorageService,
                                  Preferences preferences,
                                  TradeStatisticsManager tradeStatisticsManager,
                                  PersistenceManager<TradableList<Tradable>> persistenceManager,
@@ -108,6 +119,9 @@ public class ClosedTradableManager implements PersistedDataHost {
         this.priceFeedService = priceFeedService;
         this.bsqSwapTradeManager = bsqSwapTradeManager;
         this.bsqWalletService = bsqWalletService;
+        this.btcWalletService = btcWalletService;
+        this.p2PService = p2PService;
+        this.delayedPayoutRecoveryStorageService = delayedPayoutRecoveryStorageService;
         this.preferences = preferences;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.cleanupMailboxMessagesService = cleanupMailboxMessagesService;
@@ -140,6 +154,9 @@ public class ClosedTradableManager implements PersistedDataHost {
 
     public void add(Tradable tradable) {
         if (closedTradables.add(tradable)) {
+            if (tradable instanceof Trade) {
+                removeTradeDptBackup(castToTrade(tradable));
+            }
             maybeClearSensitiveData();
             requestPersistence();
         }
@@ -207,6 +224,24 @@ public class ClosedTradableManager implements PersistedDataHost {
                 .filter(e -> canTradeHaveSensitiveDataCleared(e.getId()))
                 .forEach(Trade::maybeClearSensitiveData);
         requestPersistence();
+    }
+
+    private void removeTradeDptBackup(Trade trade) {
+        if (trade.getDelayedPayoutTxBytes() == null) {
+            return;
+        }
+        List<DelayedPayoutRecoveryPayload> myDptBackups = delayedPayoutRecoveryStorageService.
+                getDptBackupsDecrypted(
+                        (int) trade.getLockTime(), (int) trade.getLockTime(),
+                        btcWalletService.getHashOfRecoveryPhrase());
+        for (DelayedPayoutRecoveryPayload dpt : myDptBackups) {
+            String s1 = Utilities.encodeToHex(trade.getDelayedPayoutTxBytes());
+            String s2 = Utilities.encodeToHex(dpt.getDecryptedTxBytes());
+            if (s1.equals(s2)) {
+                log.warn("Removing DPT backup from closed trade: {}", trade.getShortId());
+                p2PService.removeData(dpt);
+            }
+        }
     }
 
     public boolean canTradeHaveSensitiveDataCleared(String tradeId) {

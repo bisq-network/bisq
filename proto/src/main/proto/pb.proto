@@ -609,6 +609,7 @@ message StoragePayload {
         TempProposalPayload temp_proposal_payload = 8;
         RefundAgent refund_agent = 9;
         BsqSwapOfferPayload bsq_swap_offer_payload = 10;
+        DelayedPayoutRecoveryPayload delayed_payout_recovery_payload = 11;
     }
 }
 
@@ -869,6 +870,14 @@ message BsqSwapOfferPayload {
     map<string, string> extra_data = 10;
     string version_nr = 11;
     int32 protocol_version = 12;
+}
+
+message DelayedPayoutRecoveryPayload {
+    int32 block_height = 1;
+    bytes encrypted_tx_bytes = 2;
+    bytes initialization_vector = 3;
+    bytes owner_pub_key_encoded = 4;
+    map<string, string> extra_data = 5;
 }
 
 message ProofOfWork {
@@ -1498,6 +1507,7 @@ message PersistableEnvelope {
         RemovedPayloadsMap removed_payloads_map = 34;
         BsqBlockStore bsq_block_store = 35;
         BurningManAccountingStore burning_man_accounting_store = 36;
+        DelayedPayoutRecoveryStore delayed_payout_recovery_store = 37;
     }
 }
 
@@ -2335,6 +2345,10 @@ message ProposalStore {
 }
 
 message TempProposalStore {
+    repeated ProtectedStorageEntry items = 1;
+}
+
+message DelayedPayoutRecoveryStore {
     repeated ProtectedStorageEntry items = 1;
 }
 

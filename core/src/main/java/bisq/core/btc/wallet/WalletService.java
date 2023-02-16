@@ -28,8 +28,10 @@ import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 
 import bisq.common.config.Config;
+import bisq.common.crypto.Hash;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -714,6 +716,14 @@ public abstract class WalletService {
 
     public DeterministicSeed getKeyChainSeed() {
         return wallet.getKeyChainSeed();
+    }
+
+    public byte[] getHashOfRecoveryPhrase() {
+        DeterministicSeed keyChainSeed = getKeyChainSeed();
+        if (keyChainSeed.isEncrypted()) {
+            keyChainSeed = keyChainSeed.decrypt(Objects.requireNonNull(getKeyCrypter()), "", getAesKey());
+        }
+        return Hash.getSha256Hash(Objects.requireNonNull(keyChainSeed.getMnemonicCode()).toString());
     }
 
     @Nullable

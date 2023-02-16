@@ -26,6 +26,7 @@ import bisq.core.trade.protocol.bisq_v1.messages.CounterCurrencyTransferStartedM
 import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureResponse;
 import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
+import bisq.core.trade.protocol.bisq_v1.tasks.MakeBackupOfDelayedPayoutTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.trade.protocol.bisq_v1.tasks.VerifyPeersAccountAgeWitness;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerBroadcastPayoutTx;
@@ -82,6 +83,7 @@ public abstract class SellerProtocol extends DisputeProtocol {
                 .from(peer))
                 .setup(tasks(SellerProcessDelayedPayoutTxSignatureResponse.class,
                         SellerFinalizesDelayedPayoutTx.class,
+                        MakeBackupOfDelayedPayoutTx.class,
                         SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
                         SellerPublishesDepositTx.class,
                         SellerPublishesTradeStatistics.class))

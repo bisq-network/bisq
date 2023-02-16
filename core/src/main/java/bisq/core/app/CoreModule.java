@@ -27,6 +27,8 @@ import bisq.core.offer.OfferModule;
 import bisq.core.presentation.CorePresentationModule;
 import bisq.core.proto.network.CoreNetworkProtoResolver;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
+import bisq.core.support.DelayedPayoutRecoveryStorageService;
+import bisq.core.support.DelayedPayoutRecoveryStore;
 import bisq.core.trade.TradeModule;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
@@ -67,6 +69,8 @@ public class CoreModule extends AppModule {
 
         bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class);
         bind(BanFilter.class).to(CoreBanFilter.class).in(Singleton.class);
+        bind(DelayedPayoutRecoveryStore.class).in(Singleton.class);
+        bind(DelayedPayoutRecoveryStorageService.class).in(Singleton.class);
 
         bind(File.class).annotatedWith(named(STORAGE_DIR)).toInstance(config.storageDir);
 

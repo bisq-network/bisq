@@ -36,6 +36,7 @@ import bisq.core.dao.state.storage.DaoStateStore;
 import bisq.core.dao.state.unconfirmed.UnconfirmedBsqChangeOutputList;
 import bisq.core.payment.PaymentAccountList;
 import bisq.core.proto.CoreProtoResolver;
+import bisq.core.support.DelayedPayoutRecoveryStore;
 import bisq.core.support.dispute.arbitration.ArbitrationDisputeList;
 import bisq.core.support.dispute.mediation.MediationDisputeList;
 import bisq.core.support.dispute.refund.RefundDisputeList;
@@ -114,6 +115,8 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
                     return ProposalStore.fromProto(proto.getProposalStore());
                 case TEMP_PROPOSAL_STORE:
                     return TempProposalStore.fromProto(proto.getTempProposalStore(), networkProtoResolver);
+                case DELAYED_PAYOUT_RECOVERY_STORE:
+                    return DelayedPayoutRecoveryStore.fromProto(proto.getDelayedPayoutRecoveryStore(), networkProtoResolver);
                 case MY_PROPOSAL_LIST:
                     return MyProposalList.fromProto(proto.getMyProposalList());
                 case BALLOT_LIST:

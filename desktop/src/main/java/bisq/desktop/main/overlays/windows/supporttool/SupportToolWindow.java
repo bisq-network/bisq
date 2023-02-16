@@ -21,8 +21,10 @@ import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.main.overlays.Overlay;
 
 import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.btc.wallet.WalletsManager;
+import bisq.core.support.DelayedPayoutRecoveryStorageService;
 import bisq.core.support.dispute.mediation.MediationManager;
 
 import bisq.network.p2p.P2PService;
@@ -51,9 +53,11 @@ public class SupportToolWindow extends Overlay<SupportToolWindow> {
 
     private final TradeWalletService tradeWalletService;
     private final P2PService p2PService;
+    private final DelayedPayoutRecoveryStorageService delayedPayoutRecoveryStorageService;
     private final MediationManager mediationManager;
     private final WalletsSetup walletsSetup;
     private final WalletsManager walletsManager;
+    private final BtcWalletService btcWalletService;
 
     // one gridpane for each "tab"
     List<CommonPane> subPanes = new ArrayList<>();
@@ -62,14 +66,18 @@ public class SupportToolWindow extends Overlay<SupportToolWindow> {
     @Inject
     public SupportToolWindow(TradeWalletService tradeWalletService,
                              P2PService p2PService,
+                             DelayedPayoutRecoveryStorageService delayedPayoutRecoveryStorageService,
                              MediationManager mediationManager,
                              WalletsSetup walletsSetup,
-                             WalletsManager walletsManager) {
+                             WalletsManager walletsManager,
+                             BtcWalletService btcWalletService) {
         this.tradeWalletService = tradeWalletService;
         this.p2PService = p2PService;
+        this.delayedPayoutRecoveryStorageService = delayedPayoutRecoveryStorageService;
         this.mediationManager = mediationManager;
         this.walletsSetup = walletsSetup;
         this.walletsManager = walletsManager;
+        this.btcWalletService = btcWalletService;
         type = Type.Attention;
     }
 
@@ -132,6 +140,7 @@ public class SupportToolWindow extends Overlay<SupportToolWindow> {
         subPanes.add(new SignPane(walletsManager, tradeWalletService, inputsGridPane));
         subPanes.add(new BuildPane(tradeWalletService, p2PService, walletsSetup, inputsGridPane));
         subPanes.add(new SignVerifyPane(walletsManager));
+        subPanes.add(new DelayedPayoutsPane(delayedPayoutRecoveryStorageService, tradeWalletService, p2PService, walletsSetup, btcWalletService));
         for (CommonPane pane : subPanes) {
             gridPane.add(pane, 1, rowIndex);    // all panes share the same position
         }
