@@ -156,6 +156,7 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends SendMailboxM
         }
         if (listener != null) {
             processModel.getPaymentStartedMessageStateProperty().removeListener(listener);
+            listener = null;
         }
     }
 
@@ -174,7 +175,7 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends SendMailboxM
         }
         timer = UserThread.runAfter(this::run, delayInMin, TimeUnit.MINUTES);
 
-        if (resendCounter == 0) {
+        if (listener == null) {
             // We want to register listener only once
             listener = (observable, oldValue, newValue) -> onMessageStateChange(newValue);
             processModel.getPaymentStartedMessageStateProperty().addListener(listener);
@@ -192,8 +193,7 @@ public class BuyerSendCounterCurrencyTransferStartedMessage extends SendMailboxM
             trade.setStateIfValidTransitionTo(Trade.State.BUYER_SAW_ARRIVED_FIAT_PAYMENT_INITIATED_MSG);
 
             processModel.getTradeManager().requestPersistence();
-
-            cleanup();
+            UserThread.execute(this::cleanup);
             super.complete();   // received AckMessage, complete this task
         }
     }
