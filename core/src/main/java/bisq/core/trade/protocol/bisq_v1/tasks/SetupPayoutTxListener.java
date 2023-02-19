@@ -32,6 +32,8 @@ import org.bitcoinj.core.TransactionConfidence;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
+import java.util.Objects;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -56,7 +58,9 @@ public abstract class SetupPayoutTxListener extends TradeTask {
                 String id = processModel.getOffer().getId();
                 Address address = walletService.getOrCreateAddressEntry(id, AddressEntry.Context.TRADE_PAYOUT).getAddress();
 
-                TransactionConfidence confidence = walletService.getConfidenceForAddress(address);
+                // check if the payout already happened (ensuring it was > deposit block height, see GH #5725)
+                TransactionConfidence confidence = walletService.getConfidenceForAddressFromBlockHeight(address,
+                    Objects.requireNonNull(trade.getDepositTx()).getConfidence().getAppearedAtChainHeight());
                 if (isInNetwork(confidence)) {
                     applyConfidence(confidence);
                 } else {

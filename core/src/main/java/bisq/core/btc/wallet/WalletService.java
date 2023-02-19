@@ -451,6 +451,23 @@ public abstract class WalletService {
         return getMostRecentConfidence(transactionConfidenceList);
     }
 
+    @Nullable
+    public TransactionConfidence getConfidenceForAddressFromBlockHeight(Address address, long targetHeight) {
+        List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
+        if (wallet != null) {
+            Set<Transaction> transactions = getAddressToMatchingTxSetMultimap().get(address);
+            // "acceptable confidence" is either a new (pending) Tx, or a Tx confirmed after target block height
+            transactionConfidenceList.addAll(transactions.stream()
+                    .map(tx -> getTransactionConfidence(tx, address))
+                    .filter(Objects::nonNull)
+                    .filter(con -> con.getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING ||
+                        (con.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING &&
+                            con.getAppearedAtChainHeight() > targetHeight))
+                    .collect(Collectors.toList()));
+        }
+        return getMostRecentConfidence(transactionConfidenceList);
+    }
+
     private SetMultimap<Address, Transaction> getAddressToMatchingTxSetMultimap() {
         return addressToMatchingTxSetCache.updateAndGet(map -> map != null ? map : computeAddressToMatchingTxSetMultimap());
     }
