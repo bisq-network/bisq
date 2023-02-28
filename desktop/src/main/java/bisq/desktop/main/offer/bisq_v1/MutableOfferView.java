@@ -1149,7 +1149,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         });
 
         nextButton.setOnAction(e -> {
-            if (model.isPriceInRange()) {
+            if (model.isPriceInRange() && model.areAmountsInRange()) {
                 if (DevEnv.isDaoTradingActivated())
                     showFeeOption();
                 else
