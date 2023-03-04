@@ -76,10 +76,8 @@ public class MediationClientView extends DisputeClientView {
     @Override
     public void initialize() {
         super.initialize();
-        reOpenButton.setVisible(true);
-        reOpenButton.setManaged(true);
-        closeButton.setVisible(true);
-        closeButton.setManaged(true);
+        openOrCloseButton.setVisible(true);
+        openOrCloseButton.setManaged(true);
         setupReOpenDisputeListener();
     }
 

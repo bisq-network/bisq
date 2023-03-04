@@ -265,7 +265,7 @@ public class NotificationCenter {
                     message = Res.get("notification.trade.peerOpenedDispute", disputeOrTicket);
                     break;
                 case MEDIATION_CLOSED:
-                    message = Res.get("notification.trade.disputeClosed", disputeOrTicket);
+                    message = Res.get("notification.trade.disputeResolved", disputeOrTicket);
                     break;
                 default:
 //                    if (DevEnv.isDevMode()) {

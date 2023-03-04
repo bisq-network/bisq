@@ -42,15 +42,14 @@ import com.google.protobuf.ByteString;
 
 import org.bitcoinj.core.Transaction;
 
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -82,7 +81,8 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
         NEW,
         OPEN,
         REOPENED,
-        CLOSED;
+        CLOSED,
+        RESULT_PROPOSED;
 
         public static Dispute.State fromProto(protobuf.Dispute.State state) {
             return ProtoUtil.enumFromProto(Dispute.State.class, state.name());
@@ -168,7 +168,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     @Setter
     private transient boolean payoutDone = false;
 
-    private transient final BooleanProperty isClosedProperty = new SimpleBooleanProperty();
+    private transient final StringProperty disputeStateProperty = new SimpleStringProperty();
     private transient final IntegerProperty badgeCountProperty = new SimpleIntegerProperty();
 
     private transient FileTransferReceiver fileTransferSession = null;
@@ -239,6 +239,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
 
         id = tradeId + "_" + traderId;
         uid = UUID.randomUUID().toString();
+        setState(State.NEW);
         refreshAlertLevel(true);
     }
 
@@ -413,7 +414,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
 
     public void setState(Dispute.State disputeState) {
         this.disputeState = disputeState;
-        this.isClosedProperty.set(disputeState == State.CLOSED);
+        this.disputeStateProperty.set(disputeState.toString());
     }
 
     public void setDisputeResult(DisputeResult disputeResult) {
@@ -436,10 +437,6 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
 
     public String getShortTradeId() {
         return Utilities.getShortId(tradeId);
-    }
-
-    public ReadOnlyBooleanProperty isClosedProperty() {
-        return isClosedProperty;
     }
 
     public ReadOnlyIntegerProperty getBadgeCountProperty() {
@@ -468,6 +465,10 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
 
     public boolean isClosed() {
         return this.disputeState == State.CLOSED;
+    }
+
+    public boolean isResultProposed() {
+        return this.disputeState == State.RESULT_PROPOSED;
     }
 
     public void refreshAlertLevel(boolean senderFlag) {
@@ -559,7 +560,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
                 ",\n     agentPubKeyRing=" + agentPubKeyRing +
                 ",\n     isSupportTicket=" + isSupportTicket +
                 ",\n     chatMessages=" + chatMessages +
-                ",\n     isClosedProperty=" + isClosedProperty +
+                ",\n     disputeStateProperty=" + disputeStateProperty +
                 ",\n     disputeResultProperty=" + disputeResultProperty +
                 ",\n     disputePayoutTxId='" + disputePayoutTxId + '\'' +
                 ",\n     openingDate=" + openingDate +

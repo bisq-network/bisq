@@ -257,7 +257,8 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
     private TableColumn<Dispute, Dispute> getAlertColumn() {
         TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>("Alert") {
             {
-                setMinWidth(50);
+                setMinWidth(20);
+                setPrefWidth(20);
             }
         };
         column.getStyleClass().add("last-column");

@@ -94,12 +94,12 @@ public class DisputeMsgEvents {
             log.debug("We got a ChatMessage added. id={}, tradeId={}", dispute.getId(), dispute.getTradeId());
             c.next();
             if (c.wasAdded()) {
-                c.getAddedSubList().forEach(chatMessage -> onChatMessage(chatMessage, dispute));
+                c.getAddedSubList().forEach(this::onChatMessage);
             }
         });
     }
 
-    private void onChatMessage(ChatMessage chatMessage, Dispute dispute) {
+    private void onChatMessage(ChatMessage chatMessage) {
         if (chatMessage.getSenderNodeAddress().equals(p2PService.getAddress())) {
             return;
         }
@@ -115,23 +115,6 @@ public class DisputeMsgEvents {
         } catch (Exception e) {
             log.error(e.toString());
             e.printStackTrace();
-        }
-
-        // We check at every new message if it might be a message sent after the dispute had been closed. If that is the
-        // case we revert the isClosed flag so that the UI can reopen the dispute and indicate that a new dispute
-        // message arrived.
-        Optional<ChatMessage> newestChatMessage = dispute.getChatMessages().stream().
-                sorted(Comparator.comparingLong(ChatMessage::getDate).reversed()).findFirst();
-        // If last message is not a result message we re-open as we might have received a new message from the
-        // trader/mediator/arbitrator who has reopened the case
-        if (dispute.isClosed() && newestChatMessage.isPresent() && !newestChatMessage.get().isResultMessage(dispute)) {
-            log.info("Reopening dispute {} due to new chat message received {}", dispute.getTradeId(), newestChatMessage.get().getUid());
-            dispute.reOpen();
-            if (dispute.getSupportType() == SupportType.MEDIATION) {
-                mediationManager.requestPersistence();
-            } else if (dispute.getSupportType() == SupportType.REFUND) {
-                refundManager.requestPersistence();
-            }
         }
     }
 }

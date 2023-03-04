@@ -644,33 +644,41 @@ public abstract class TradeStepView extends AnchorPane {
                 .headLine(headLine)
                 .instruction(message)
                 .actionButtonText(actionButtonText)
-                .onAction(() -> {
-                    model.dataModel.mediationManager.onAcceptMediationResult(trade,
-                            () -> {
-                                log.info("onAcceptMediationResult completed");
-                                acceptMediationResultPopup = null;
-                            },
-                            errorMessage -> {
-                                UserThread.execute(() -> {
-                                    new Popup().error(errorMessage).show();
-                                    if (acceptMediationResultPopup != null) {
-                                        acceptMediationResultPopup.hide();
-                                        acceptMediationResultPopup = null;
-                                    }
-                                });
-                            });
-                })
-                .secondaryActionButtonText(Res.get("portfolio.pending.mediationResult.popup.openArbitration"))
-                .onSecondaryAction(() -> {
-                    model.dataModel.mediationManager.rejectMediationResult(trade);
-                    model.dataModel.onOpenDispute();
-                    acceptMediationResultPopup = null;
-                })
-                .onClose(() -> {
-                    acceptMediationResultPopup = null;
-                });
-
+                .onAction(this::acceptProposal)
+                .secondaryActionButtonText(Res.get("portfolio.pending.mediationResult.popup.reject"))
+                .onSecondaryAction(this::rejectProposal)
+                .tertiaryActionButtonText(Res.get("portfolio.pending.mediationResult.popup.openArbitration"))
+                .onTertiaryAction(this::startArbitration)
+                .setTertiaryButtonDisabledState(remaining > 0)
+                .onClose(() -> acceptMediationResultPopup = null);
         acceptMediationResultPopup.show();
+    }
+
+    private void acceptProposal() {
+        model.dataModel.mediationManager.onAcceptMediationResult(trade,
+                () -> {
+                    log.info("onAcceptMediationResult completed");
+                    acceptMediationResultPopup = null;
+                },
+                errorMessage -> {
+                    UserThread.execute(() -> {
+                        new Popup().error(errorMessage).show();
+                        if (acceptMediationResultPopup != null) {
+                            acceptMediationResultPopup.hide();
+                            acceptMediationResultPopup = null;
+                        }
+                    });
+                });
+    }
+
+    private void rejectProposal() {
+        model.dataModel.mediationManager.rejectMediationResult(trade);
+        acceptMediationResultPopup = null;
+    }
+
+    private void startArbitration() {
+        model.dataModel.onOpenDispute();
+        acceptMediationResultPopup = null;
     }
 
     protected String getCurrencyName(Trade trade) {

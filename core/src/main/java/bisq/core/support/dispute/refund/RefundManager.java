@@ -158,7 +158,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         String roleContextMsg = Res.get("support.initialArbitratorMsg",
                 DisputeAgentLookupMap.getMatrixLinkForAgent(getAgentNodeAddress(dispute).getFullAddress()));
         String link = "https://bisq.wiki/Dispute_resolution#Level_3:_Arbitration";
-        return Res.get("support.initialInfo", role, roleContextMsg, role, link);
+        return Res.get("support.initialInfoRefundAgent", role, roleContextMsg, role, link);
     }
 
     @Override

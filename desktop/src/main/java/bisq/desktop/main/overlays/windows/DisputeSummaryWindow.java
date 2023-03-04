@@ -240,8 +240,9 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         addPayoutAmountTextFields();
         addReasonControls();
         applyDisputeResultToUiControls();
-
-        boolean applyPeersDisputeResult = peersDisputeOptional.isPresent() && peersDisputeOptional.get().isClosed();
+        boolean applyPeersDisputeResult = peersDisputeOptional.isPresent() && (
+                peersDisputeOptional.get().getDisputeState() == Dispute.State.RESULT_PROPOSED ||
+                peersDisputeOptional.get().getDisputeState() == Dispute.State.CLOSED);
         if (applyPeersDisputeResult) {
             // If the other peers dispute has been closed we apply the result to ourselves
             DisputeResult peersDisputeResult = peersDisputeOptional.get().getDisputeResultProperty().get();
@@ -697,7 +698,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     }
 
                     if (peersDisputeOptional.isPresent() && peersDisputeOptional.get().isClosed()) {
-                        closeTicket(closeTicketButton); // all checks done already on peers ticket
+                        applyDisputeResult(closeTicketButton); // all checks done already on peers ticket
                     } else {
                         maybeCheckTransactions().thenAccept(continue1 -> {
                             if (continue1) {
@@ -705,7 +706,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                                     if (continue2) {
                                         maybeMakePayout().thenAccept(continue3 -> {
                                             if (continue3) {
-                                                closeTicket(closeTicketButton);
+                                                applyDisputeResult(closeTicketButton);
                                             }
                                         });
                                     }
@@ -964,17 +965,16 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         return asyncStatus;
     }
 
-    private void closeTicket(Button closeTicketButton) {
+    private void applyDisputeResult(Button closeTicketButton) {
         DisputeManager<? extends DisputeList<Dispute>> disputeManager = getDisputeManager(dispute);
         if (disputeManager == null) {
             return;
         }
-
         boolean isRefundAgent = disputeManager instanceof RefundManager;
         disputeResult.setLoserPublisher(false); // field no longer used per pazza / leo816
         disputeResult.setCloseDate(new Date());
         dispute.setDisputeResult(disputeResult);
-        dispute.setIsClosed();
+        dispute.setState(isRefundAgent ? Dispute.State.CLOSED : Dispute.State.RESULT_PROPOSED);
         DisputeResult.Reason reason = disputeResult.getReason();
 
         summaryNotesTextArea.textProperty().unbindBidirectional(disputeResult.summaryNotesProperty());
@@ -992,8 +992,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 Res.get("disputeSummaryWindow.reason." + reason.name()),
                 disputeResult.getPayoutSuggestionText(),
                 amount,
-                formatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount()),
-                formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()),
+                formatter.formatCoinWithCode(disputeResult.getBuyerPayoutAmount()) +
+                        (isRefundAgent ? "" : " " + disputeResult.getPayoutSuggestionCustomizedToBuyerOrSeller(true)),
+                formatter.formatCoinWithCode(disputeResult.getSellerPayoutAmount()) +
+                        (isRefundAgent ? "" : " " + disputeResult.getPayoutSuggestionCustomizedToBuyerOrSeller(false)),
                 disputeResult.summaryNotesProperty().get()
         );
 
@@ -1013,12 +1015,14 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
         disputeManager.sendDisputeResultMessage(disputeResult, dispute, summaryText);
 
-        if (peersDisputeOptional.isPresent() && !peersDisputeOptional.get().isClosed() && !DevEnv.isDevMode()) {
-            UserThread.runAfter(() -> new Popup()
-                            .attention(Res.get("disputeSummaryWindow.close.closePeer"))
-                            .show(),
-                    200, TimeUnit.MILLISECONDS);
-        }
+        peersDisputeOptional.ifPresent(peersDispute -> {
+            if (!peersDispute.isResultProposed() && !peersDispute.isClosed()) {
+                UserThread.runAfter(() -> new Popup()
+                                .attention(Res.get("disputeSummaryWindow.close.closePeer"))
+                                .show(),
+                        200, TimeUnit.MILLISECONDS);
+            }
+        });
 
         finalizeDisputeHandlerOptional.ifPresent(Runnable::run);
 
