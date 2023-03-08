@@ -53,10 +53,11 @@ class DepositListItem implements FilterableListItem {
     private Coin balanceAsCoin;
     private final String addressString;
     private String usage = "-";
-    private TxConfidenceListener txConfidenceListener;
-    private BalanceListener balanceListener;
+    private final TxConfidenceListener txConfidenceListener;
+    private final BalanceListener balanceListener;
     private int numTxOutputs = 0;
     private final Supplier<LazyFields> lazyFieldsSupplier;
+    private volatile LazyFields lazyFields;
 
     private static class LazyFields {
         TxConfidenceIndicator txConfidenceIndicator;
@@ -82,19 +83,21 @@ class DepositListItem implements FilterableListItem {
             tooltip = new Tooltip(Res.get("shared.notUsedYet"));
             txConfidenceIndicator.setProgress(0);
             txConfidenceIndicator.setTooltip(tooltip);
-            if (confidence != null) {
-                GUIUtil.updateConfidence(confidence, tooltip, txConfidenceIndicator);
-            }
+
+            lazyFields = this;
+            updateConfidence(confidence);
         }});
 
         if (confidence != null) {
             txConfidenceListener = new TxConfidenceListener(confidence.getTransactionHash().toString()) {
                 @Override
                 public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                    GUIUtil.updateConfidence(confidence, lazy().tooltip, lazy().txConfidenceIndicator);
+                    updateConfidence(confidence);
                 }
             };
             walletService.addTxConfidenceListener(txConfidenceListener);
+        } else {
+            txConfidenceListener = null;
         }
 
         balanceListener = new BalanceListener(address) {
@@ -102,8 +105,7 @@ class DepositListItem implements FilterableListItem {
             public void onBalanceChanged(Coin balanceAsCoin, Transaction tx) {
                 DepositListItem.this.balanceAsCoin = balanceAsCoin;
                 DepositListItem.this.balance.set(formatter.formatCoin(balanceAsCoin));
-                var confidence = walletService.getConfidenceForTxId(tx.getTxId().toString());
-                GUIUtil.updateConfidence(confidence, lazy().tooltip, lazy().txConfidenceIndicator);
+                updateConfidence(walletService.getConfidenceForTxId(tx.getTxId().toString()));
                 updateUsage(address);
             }
         };
@@ -113,6 +115,12 @@ class DepositListItem implements FilterableListItem {
         balance.set(formatter.formatCoin(balanceAsCoin));
 
         updateUsage(address);
+    }
+
+    private void updateConfidence(TransactionConfidence confidence) {
+        if (confidence != null && lazyFields != null) {
+            GUIUtil.updateConfidence(confidence, lazyFields.tooltip, lazyFields.txConfidenceIndicator);
+        }
     }
 
     private void updateUsage(Address address) {
