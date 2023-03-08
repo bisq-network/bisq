@@ -23,6 +23,7 @@ import bisq.core.dao.burningman.model.BurningManCandidate;
 import bisq.common.util.DateUtil;
 
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -59,6 +60,14 @@ public class BalanceModel {
 
     public Set<ReceivedBtcBalanceEntry> getReceivedBtcBalanceEntries() {
         return receivedBtcBalanceEntries;
+    }
+
+    public Set<ReceivedBtcBalanceEntry> getReceivedBtcBalanceEntriesByMonth(Date month) {
+        return receivedBtcBalanceEntriesByMonth.entrySet().stream()
+                        .filter(e -> e.getKey().equals(month))
+                        .map(Map.Entry::getValue)
+                        .flatMap(Collection::stream)
+                        .collect(Collectors.toSet());
     }
 
     public Stream<BurnedBsqBalanceEntry> getBurnedBsqBalanceEntries(Set<BurnOutputModel> burnOutputModels) {
