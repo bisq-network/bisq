@@ -87,6 +87,7 @@ import javafx.util.Callback;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -351,17 +352,21 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         observableList.forEach(BsqTxListItem::cleanup);
 
         List<Transaction> walletTransactions = bsqWalletService.getClonedWalletTransactions();
+        Map<String, BsqSwapTrade> swapTradeByTxIdMap = tradableRepository.getAll().stream()
+                .filter(tradable -> tradable instanceof BsqSwapTrade)
+                .map(t -> (BsqSwapTrade) t)
+                .collect(Collectors.toMap(BsqSwapTrade::getTxId, t -> t));
+
         List<BsqTxListItem> items = walletTransactions.stream()
-                .map(transaction -> {
-                    return new BsqTxListItem(transaction,
-                            bsqWalletService,
-                            btcWalletService,
-                            daoFacade,
-                            // Use tx.getIncludedInBestChainAt() when available, otherwise use tx.getUpdateTime()
-                            transaction.getIncludedInBestChainAt() != null ? transaction.getIncludedInBestChainAt() : transaction.getUpdateTime(),
-                            bsqFormatter,
-                            tradableRepository);
-                })
+                .map(transaction -> new BsqTxListItem(transaction,
+                        bsqWalletService,
+                        btcWalletService,
+                        daoFacade,
+                        // Use tx.getIncludedInBestChainAt() when available, otherwise use tx.getUpdateTime()
+                        transaction.getIncludedInBestChainAt() != null ? transaction.getIncludedInBestChainAt() : transaction.getUpdateTime(),
+                        bsqFormatter,
+                        swapTradeByTxIdMap)
+                )
                 .collect(Collectors.toList());
         observableList.setAll(items);
     }
