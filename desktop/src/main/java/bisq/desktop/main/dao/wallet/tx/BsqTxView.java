@@ -235,7 +235,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                 columns[3] = item.getAddress();
                 columns[4] = String.valueOf(item.isReceived());
                 columns[5] = item.getAmountAsString();
-                columns[6] = String.valueOf(item.getConfirmations());
+                columns[6] = String.valueOf(item.getNumConfirmations());
                 columns[7] = item.getTxType().name();
                 return columns;
             };
@@ -490,7 +490,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                     TxType txType = item.getTxType();
                                     String labelString = Res.get("dao.tx.type.enum." + txType.name());
                                     Label label;
-                                    if (item.getConfirmations() > 0 && isValidType(txType)) {
+                                    if (item.getNumConfirmations() > 0 && isValidType(txType)) {
                                         if (item.getOptionalBsqTrade().isPresent()) {
                                             if (field != null)
                                                 field.setOnAction(null);
@@ -578,7 +578,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
                             String bsqAmount = Res.get("shared.na");
 
-                            if (item.getConfirmations() > 0) {
+                            if (item.getNumConfirmations() > 0) {
                                 if (isValidType(txType))
                                     bsqAmount = item.getAmountAsString();
                                 else if (item.isWithdrawalToBTCWallet())

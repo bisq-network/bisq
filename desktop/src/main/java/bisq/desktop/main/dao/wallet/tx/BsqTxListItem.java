@@ -151,7 +151,7 @@ class BsqTxListItem extends TxConfidenceListItem {
     TxType getTxType() {
         return daoFacade.getTx(txId)
                 .flatMap(tx -> daoFacade.getOptionalTxType(tx.getId()))
-                .orElse(confirmations == 0 ? TxType.UNVERIFIED : TxType.UNDEFINED_TX_TYPE);
+                .orElse(getNumConfirmations() == 0 ? TxType.UNVERIFIED : TxType.UNDEFINED_TX_TYPE);
     }
 
     boolean isWithdrawalToBTCWallet() {
