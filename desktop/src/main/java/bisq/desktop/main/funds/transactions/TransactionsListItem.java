@@ -70,13 +70,13 @@ class TransactionsListItem implements FilterableListItem {
     private boolean received;
     private Coin amountAsCoin = Coin.ZERO;
     private String memo = "";
-    private int confirmations = 0;
     @Getter
     private final boolean isDustAttackTx;
     private boolean initialTxConfidenceVisibility = true;
     private final Supplier<LazyFields> lazyFieldsSupplier;
 
     private static class LazyFields {
+        int confirmations;
         TxConfidenceIndicator txConfidenceIndicator;
         Tooltip tooltip;
     }
@@ -349,7 +349,7 @@ class TransactionsListItem implements FilterableListItem {
     }
 
     public String getNumConfirmations() {
-        return String.valueOf(confirmations);
+        return String.valueOf(lazy().confirmations);
     }
 
     public String getMemo() {
