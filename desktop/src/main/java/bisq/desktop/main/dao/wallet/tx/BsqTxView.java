@@ -202,14 +202,13 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
         daoFacade.addBsqStateListener(this);
 
-        updateList();
-
         walletChainHeight = bsqWalletService.getBestChainHeight();
         blockHeightBeforeProcessing = daoFacade.getChainHeight();
         missingBlocks = walletChainHeight - blockHeightBeforeProcessing;
         if (!daoStateService.isParseBlockChainComplete()) {
             updateAnyChainHeightTimer = UserThread.runPeriodically(this::onUpdateAnyChainHeight, 100, TimeUnit.MILLISECONDS);
         }
+        // This indirectly calls updateList(), as required:
         onUpdateAnyChainHeight();
 
         exportButton.setOnAction(event -> {
