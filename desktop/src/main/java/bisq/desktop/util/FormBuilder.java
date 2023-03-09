@@ -65,6 +65,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.Control;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -681,42 +682,13 @@ public class FormBuilder {
                                                                   String title,
                                                                   double top) {
         DatePicker datePicker = new JFXDatePicker();
+        // fix display issue from github.com/bisq-network/bisq/issues/6216 and github.com/sshahine/JFoenix/issues/1245
+        datePicker.getEditor().setMinWidth(250);
+        datePicker.getEditor().setMaxWidth(Control.USE_PREF_SIZE);
+        datePicker.getEditor().setPrefWidth(Control.USE_PREF_SIZE);
         Tuple2<Label, VBox> topLabelWithVBox = addTopLabelWithVBox(gridPane, rowIndex, columnIndex, title, datePicker, top);
         return new Tuple2<>(topLabelWithVBox.first, datePicker);
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // 2 DatePickers
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    public static Tuple2<DatePicker, DatePicker> add2TopLabelDatePicker(GridPane gridPane,
-                                                                        int rowIndex,
-                                                                        int columnIndex,
-                                                                        String title1,
-                                                                        String title2,
-                                                                        double top) {
-        DatePicker datePicker1 = new JFXDatePicker();
-        Tuple2<Label, VBox> topLabelWithVBox1 = getTopLabelWithVBox(title1, datePicker1);
-        VBox vBox1 = topLabelWithVBox1.second;
-
-        DatePicker datePicker2 = new JFXDatePicker();
-        Tuple2<Label, VBox> topLabelWithVBox2 = getTopLabelWithVBox(title2, datePicker2);
-        VBox vBox2 = topLabelWithVBox2.second;
-
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        HBox hBox = new HBox();
-        hBox.setSpacing(10);
-        hBox.getChildren().addAll(spacer, vBox1, vBox2);
-
-        GridPane.setRowIndex(hBox, rowIndex);
-        GridPane.setColumnIndex(hBox, columnIndex);
-        GridPane.setMargin(hBox, new Insets(top, 0, 0, 0));
-        gridPane.getChildren().add(hBox);
-        return new Tuple2<>(datePicker1, datePicker2);
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Label  + TxIdTextField
