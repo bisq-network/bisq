@@ -965,6 +965,27 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
     // Getters
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public boolean areAmountsInRange() {
+        // Limit the minimum trade amount when creating an offer to 50% of the max amount.
+        // github.com/bisq-network/projects/issues/67
+        if (dataModel.getMinAmount().get().isLessThan(dataModel.getAmount().get().divide(2))) {
+            displayAmountsOutOfRangePopup();
+            return false;
+        }
+        return true;
+    }
+
+    private void displayAmountsOutOfRangePopup() {
+        Popup popup = new Popup();
+        popup.warning(Res.get("createOffer.amountsOutSideOfDeviation",
+                dataModel.getMinAmount().get().toPlainString(),
+                dataModel.getAmount().get().toPlainString()))
+                .actionButtonText(Res.get("createOffer.changeAmount"))
+                .onAction(popup::hide)
+                .hideCloseButton()
+                .show();
+    }
+
     public boolean isPriceInRange() {
         if (marketPriceMargin.get() != null && !marketPriceMargin.get().isEmpty()) {
             if (Math.abs(ParsingUtils.parsePercentStringToDouble(marketPriceMargin.get())) > preferences.getMaxPriceDistanceInPercent()) {
