@@ -18,7 +18,6 @@
 package bisq.desktop.main.dao.wallet.tx;
 
 import bisq.desktop.components.TxConfidenceListItem;
-import bisq.desktop.main.funds.transactions.TradableRepository;
 import bisq.desktop.util.DisplayUtils;
 
 import bisq.core.btc.wallet.BsqWalletService;
@@ -36,6 +35,7 @@ import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
@@ -66,7 +66,7 @@ class BsqTxListItem extends TxConfidenceListItem {
                   DaoFacade daoFacade,
                   Date date,
                   BsqFormatter bsqFormatter,
-                  TradableRepository tradableRepository) {
+                  Map<String, BsqSwapTrade> swapTradeByTxIdMap) {
         super(transaction, bsqWalletService);
 
         this.daoFacade = daoFacade;
@@ -133,12 +133,7 @@ class BsqTxListItem extends TxConfidenceListItem {
         else
             address = "";
 
-
-        optionalBsqTrade = tradableRepository.getAll().stream()
-                .filter(tradable -> tradable instanceof BsqSwapTrade)
-                .map(tradable -> (BsqSwapTrade) tradable)
-                .filter(tradable -> txId.equals(tradable.getTxId()))
-                .findFirst();
+        optionalBsqTrade = Optional.ofNullable(swapTradeByTxIdMap.get(txId));
     }
 
     BsqTxListItem() {
@@ -156,7 +151,7 @@ class BsqTxListItem extends TxConfidenceListItem {
     TxType getTxType() {
         return daoFacade.getTx(txId)
                 .flatMap(tx -> daoFacade.getOptionalTxType(tx.getId()))
-                .orElse(confirmations == 0 ? TxType.UNVERIFIED : TxType.UNDEFINED_TX_TYPE);
+                .orElse(getNumConfirmations() == 0 ? TxType.UNVERIFIED : TxType.UNDEFINED_TX_TYPE);
     }
 
     boolean isWithdrawalToBTCWallet() {

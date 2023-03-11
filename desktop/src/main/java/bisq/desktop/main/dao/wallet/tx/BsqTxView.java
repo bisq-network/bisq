@@ -87,6 +87,7 @@ import javafx.util.Callback;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -202,14 +203,13 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
         daoFacade.addBsqStateListener(this);
 
-        updateList();
-
         walletChainHeight = bsqWalletService.getBestChainHeight();
         blockHeightBeforeProcessing = daoFacade.getChainHeight();
         missingBlocks = walletChainHeight - blockHeightBeforeProcessing;
         if (!daoStateService.isParseBlockChainComplete()) {
             updateAnyChainHeightTimer = UserThread.runPeriodically(this::onUpdateAnyChainHeight, 100, TimeUnit.MILLISECONDS);
         }
+        // This indirectly calls updateList(), as required:
         onUpdateAnyChainHeight();
 
         exportButton.setOnAction(event -> {
@@ -235,7 +235,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                 columns[3] = item.getAddress();
                 columns[4] = String.valueOf(item.isReceived());
                 columns[5] = item.getAmountAsString();
-                columns[6] = String.valueOf(item.getConfirmations());
+                columns[6] = String.valueOf(item.getNumConfirmations());
                 columns[7] = item.getTxType().name();
                 return columns;
             };
@@ -352,17 +352,21 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
         observableList.forEach(BsqTxListItem::cleanup);
 
         List<Transaction> walletTransactions = bsqWalletService.getClonedWalletTransactions();
+        Map<String, BsqSwapTrade> swapTradeByTxIdMap = tradableRepository.getAll().stream()
+                .filter(tradable -> tradable instanceof BsqSwapTrade)
+                .map(t -> (BsqSwapTrade) t)
+                .collect(Collectors.toMap(BsqSwapTrade::getTxId, t -> t));
+
         List<BsqTxListItem> items = walletTransactions.stream()
-                .map(transaction -> {
-                    return new BsqTxListItem(transaction,
-                            bsqWalletService,
-                            btcWalletService,
-                            daoFacade,
-                            // Use tx.getIncludedInBestChainAt() when available, otherwise use tx.getUpdateTime()
-                            transaction.getIncludedInBestChainAt() != null ? transaction.getIncludedInBestChainAt() : transaction.getUpdateTime(),
-                            bsqFormatter,
-                            tradableRepository);
-                })
+                .map(transaction -> new BsqTxListItem(transaction,
+                        bsqWalletService,
+                        btcWalletService,
+                        daoFacade,
+                        // Use tx.getIncludedInBestChainAt() when available, otherwise use tx.getUpdateTime()
+                        transaction.getIncludedInBestChainAt() != null ? transaction.getIncludedInBestChainAt() : transaction.getUpdateTime(),
+                        bsqFormatter,
+                        swapTradeByTxIdMap)
+                )
                 .collect(Collectors.toList());
         observableList.setAll(items);
     }
@@ -486,7 +490,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
                                     TxType txType = item.getTxType();
                                     String labelString = Res.get("dao.tx.type.enum." + txType.name());
                                     Label label;
-                                    if (item.getConfirmations() > 0 && isValidType(txType)) {
+                                    if (item.getNumConfirmations() > 0 && isValidType(txType)) {
                                         if (item.getOptionalBsqTrade().isPresent()) {
                                             if (field != null)
                                                 field.setOnAction(null);
@@ -574,7 +578,7 @@ public class BsqTxView extends ActivatableView<GridPane, Void> implements BsqBal
 
                             String bsqAmount = Res.get("shared.na");
 
-                            if (item.getConfirmations() > 0) {
+                            if (item.getNumConfirmations() > 0) {
                                 if (isValidType(txType))
                                     bsqAmount = item.getAmountAsString();
                                 else if (item.isWithdrawalToBTCWallet())
