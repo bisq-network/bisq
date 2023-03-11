@@ -189,6 +189,14 @@ public class BurningManAccountingService implements DaoSetupService {
                 .flatMap(balanceModel -> balanceModel.getReceivedBtcBalanceEntries().stream());
     }
 
+    public Stream<ReceivedBtcBalanceEntry> getDistributedBtcBalanceByMonth(Date month) {
+        return balanceModelByBurningManName.entrySet().stream()
+                .filter(e -> !e.getKey().equals(BurningManPresentationService.LEGACY_BURNING_MAN_DPT_NAME) &&
+                        !e.getKey().equals(BurningManPresentationService.LEGACY_BURNING_MAN_BTC_FEES_NAME))
+                .map(Map.Entry::getValue)
+                .flatMap(balanceModel -> balanceModel.getReceivedBtcBalanceEntriesByMonth(month).stream());
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Delegates
