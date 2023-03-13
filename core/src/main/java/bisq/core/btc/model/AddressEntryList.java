@@ -210,7 +210,17 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
 
         log.info("swapToAvailable addressEntry to swap={}", addressEntry);
         boolean setChangedByRemove = entrySet.remove(addressEntry);
-        boolean setChangedByAdd = entrySet.add(new AddressEntry(addressEntry.getKeyPair(),
+
+        // check if the ADDRESS still has any existing entries, only if not do the add to available.
+        boolean entryWithSameContextAlreadyExist = entrySet.stream().anyMatch(e -> {
+            if (addressEntry.getAddressString() != null) {
+                return addressEntry.getAddressString().equals(e.getAddressString()) &&
+                    addressEntry.getContext() == addressEntry.getContext();
+            }
+            return false;
+        });
+        boolean setChangedByAdd = !entryWithSameContextAlreadyExist && entrySet.add(
+            new AddressEntry(addressEntry.getKeyPair(),
                 AddressEntry.Context.AVAILABLE,
                 addressEntry.isSegwit()));
         if (setChangedByRemove || setChangedByAdd) {

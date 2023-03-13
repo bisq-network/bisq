@@ -381,20 +381,30 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     public void placeOffer(Offer offer,
                            double buyerSecurityDeposit,
                            boolean useSavingsWallet,
+                           boolean useOco,
                            long triggerPrice,
                            TransactionResultHandler resultHandler,
                            ErrorMessageHandler errorMessageHandler) {
         checkNotNull(offer.getMakerFee(), "makerFee must not be null");
         checkArgument(!offer.isBsqSwapOffer());
 
+        int numClones = getOpenOffersByMakerFeeTxId(offer.getOfferFeePaymentTxId()).size();
+        if (numClones > 10) {
+            errorMessageHandler.handleErrorMessage("PlaceOffer prevented because cloned OCO offers count is " + numClones);
+            return;
+        }
+
         Coin reservedFundsForOffer = createOfferService.getReservedFundsForOffer(offer.getDirection(),
                 offer.getAmount(),
                 buyerSecurityDeposit,
                 createOfferService.getSellerSecurityDepositAsDouble(buyerSecurityDeposit));
 
+        offer.setPriceFeedService(priceFeedService);
+
         PlaceOfferModel model = new PlaceOfferModel(offer,
                 reservedFundsForOffer,
                 useSavingsWallet,
+                useOco,
                 btcWalletService,
                 tradeWalletService,
                 bsqWalletService,
@@ -409,6 +419,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 model,
                 transaction -> {
                     OpenOffer openOffer = new OpenOffer(offer, triggerPrice);
+                    openOffer.setState(useOco ? OpenOffer.State.DEACTIVATED : OpenOffer.State.AVAILABLE);
                     addOpenOfferToList(openOffer);
                     if (!stopped) {
                         startPeriodicRepublishOffersTimer();
@@ -462,6 +473,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             openOffer.setState(OpenOffer.State.AVAILABLE);
             requestPersistence();
             resultHandler.handleResult();
+            return;
+        }
+
+        if (isSpam(openOffer)) {
             return;
         }
 
@@ -585,7 +600,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         offer.setState(Offer.State.REMOVED);
         openOffer.setState(OpenOffer.State.CANCELED);
         removeOpenOfferFromList(openOffer);
-        if (!openOffer.getOffer().isBsqSwapOffer()) {
+
+        if (!openOffer.getOffer().isBsqSwapOffer() && !safeRemovalOfOcoClone(openOffer)) {
             closedTradableManager.add(openOffer);
             btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
         }
@@ -595,13 +611,27 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     // Close openOffer after deposit published
     public void closeOpenOffer(Offer offer) {
-        getOpenOfferById(offer.getId()).ifPresent(openOffer -> {
-            removeOpenOfferFromList(openOffer);
-            openOffer.setState(OpenOffer.State.CLOSED);
-            offerBookService.removeOffer(openOffer.getOffer().getOfferPayloadBase(),
-                    () -> log.trace("Successful removed offer"),
-                    log::error);
-        });
+        if (offer.isBsqSwapOffer()) {
+            getOpenOfferById(offer.getId()).ifPresent(openOffer -> {
+                removeOpenOfferFromList(openOffer);
+                openOffer.setState(OpenOffer.State.CLOSED);
+                offerBookService.removeOffer(openOffer.getOffer().getOfferPayloadBase(),
+                        () -> log.trace("Successfully removed offer"),
+                        log::error);
+            });
+        } else {
+            // offer taken may have been OCO, in which case all its clones need to be removed
+            getOpenOffersByMakerFeeTxId(offer.getOfferFeePaymentTxId()).forEach(openOffer -> {
+                removeOpenOfferFromList(openOffer);
+                openOffer.setState(OpenOffer.State.CLOSED);
+                if (!offer.getId().equalsIgnoreCase(openOffer.getId())) {
+                    btcWalletService.resetAddressEntriesForOpenOffer(openOffer.getId());    // cleanup OCO clone
+                }
+                offerBookService.removeOffer(openOffer.getOffer().getOfferPayloadBase(),
+                        () -> log.trace("Successfully removed offer"),
+                        log::error);
+            });
+        }
     }
 
     public void reserveOpenOffer(OpenOffer openOffer) {
@@ -624,6 +654,11 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     public Optional<OpenOffer> getOpenOfferById(String offerId) {
         return openOffers.stream().filter(e -> e.getId().equals(offerId)).findFirst();
+    }
+
+    public List<OpenOffer> getOpenOffersByMakerFeeTxId(String makerFeeTxId) {
+        String safeSearch = makerFeeTxId == null ? "" : makerFeeTxId;
+        return openOffers.stream().filter(e -> !e.getOffer().isBsqSwapOffer() && e.getOffer().getOfferFeePaymentTxId().equals(safeSearch)).collect(Collectors.toList());
     }
 
 
@@ -1143,7 +1178,33 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 openOffer.isBsqSwapOfferHasMissingFunds();
     }
 
+    public boolean isSpam(OpenOffer newOffer) {
+        // an offer is spam if the user has another open offer on the same ccy, payment method, and reserved UTXO
+        long matchingOffers = openOffers.stream()
+                .filter((openOffer -> !openOffer.getOffer().isBsqSwapOffer()))
+                .filter(openOffer -> !openOffer.isDeactivated())
+                .filter(openOffer -> !openOffer.getShortId().equalsIgnoreCase(newOffer.getShortId()))
+                .filter(openOffer1 -> {
+                    Offer newOffer1 = newOffer.getOffer();
+                    Offer offer1 = openOffer1.getOffer();
+                    return
+                        offer1.getOfferFeePaymentTxId().equalsIgnoreCase(newOffer1.getOfferFeePaymentTxId()) &&
+                        offer1.getPaymentMethodId().equalsIgnoreCase(newOffer1.getPaymentMethodId()) &&
+                        offer1.getCounterCurrencyCode().equalsIgnoreCase(newOffer1.getCounterCurrencyCode()) &&
+                        offer1.getBaseCurrencyCode().equalsIgnoreCase(newOffer1.getBaseCurrencyCode());
+                })
+                .count();
+        if (matchingOffers > 0) {
+            log.info("{} is considered spam", newOffer.getShortId());
+        }
+        return matchingOffers > 0;
+    }
+
+    public boolean safeRemovalOfOcoClone(OpenOffer openOffer) {
+        return getOpenOffersByMakerFeeTxId(openOffer.getOffer().getOfferFeePaymentTxId()).size() > 1;
+    }
+
     private boolean preventedFromPublishing(OpenOffer openOffer) {
-        return openOffer.isDeactivated() || openOffer.isBsqSwapOfferHasMissingFunds();
+        return openOffer.isDeactivated() || openOffer.isBsqSwapOfferHasMissingFunds() || isSpam(openOffer);
     }
 }

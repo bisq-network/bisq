@@ -42,6 +42,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ListChangeListener;
 
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.Getter;
@@ -110,11 +111,11 @@ public class Balances {
     }
 
     private void updateReservedBalance() {
-        long sum = openOfferManager.getObservableList().stream()
-                .map(openOffer -> btcWalletService.getAddressEntry(openOffer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE)
-                        .orElse(null))
-                .filter(Objects::nonNull)
-                .mapToLong(addressEntry -> btcWalletService.getBalanceForAddress(addressEntry.getAddress()).value)
+        long sum = btcWalletService.getAddressEntriesForOpenOffer().stream()
+                .collect(Collectors.toMap(AddressEntry::getAddress, p -> p, (p, q) -> p))
+                .keySet()
+                .stream()
+                .mapToLong(address -> btcWalletService.getBalanceForAddress(address).value)
                 .sum();
         reservedBalance.set(Coin.valueOf(sum));
     }
