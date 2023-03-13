@@ -50,6 +50,7 @@
             <TableColumn fx:id="volumeColumn" minWidth="110"/>
             <TableColumn fx:id="paymentMethodColumn" minWidth="120" maxWidth="170"/>
             <TableColumn fx:id="directionColumn" minWidth="70"/>
+            <TableColumn fx:id="groupColumn" minWidth="50"/>
             <TableColumn fx:id="deactivateItemColumn" minWidth="60" maxWidth="60" sortable="false"/>
             <TableColumn fx:id="editItemColumn" minWidth="30" maxWidth="30" sortable="false"/>
             <TableColumn fx:id="triggerIconColumn" minWidth="30" maxWidth="30" sortable="false"/>

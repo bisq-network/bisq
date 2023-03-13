@@ -447,6 +447,7 @@ class CoreOffersService {
         openOfferManager.placeOffer(offer,
                 buyerSecurityDepositPct,
                 useSavingsWallet,
+                false,
                 triggerPriceAsLong,
                 resultHandler::accept,
                 log::error);
