@@ -30,6 +30,7 @@ public class WalletAddressTest {
         WalletAddress walletAddress = new WalletAddress(mainAddress);
 
         String privateViewKeyHex = "7b37d8922245a07244fd31855d1e705a590a9bd2881825f0542ad99cdaba090a";
+        String publicViewKeyHex = "3cd5a3079e8b4cff3630ce16bfda6eebb2da86169accdb93206a92a58d586faa";
 
         System.out.println("subaddress for account index 0, subaddress index 1: "
                 + walletAddress.getSubaddressBase58(privateViewKeyHex, 0, 1));
@@ -46,5 +47,24 @@ public class WalletAddressTest {
         assertEquals(walletAddress.getSubaddressBase58(privateViewKeyHex, 0, 1), addr01);
         assertEquals(walletAddress.getSubaddressBase58(privateViewKeyHex, 1, 0), addr10);
         assertEquals(walletAddress.getSubaddressBase58(privateViewKeyHex, 1, 1), addr11);
+
+        assertEquals(walletAddress.checkPrivateViewKey(privateViewKeyHex), true);
+        assertEquals(WalletAddress.arePubPrivKeysRelated(publicViewKeyHex, privateViewKeyHex), true);
+        assertEquals(WalletAddress.arePubPrivKeysRelated(privateViewKeyHex, privateViewKeyHex), false);
+
+        assertEquals(WalletAddress.arePubPrivKeysRelated(
+                "bdc158199c8933353627d54edb4bbae547dbbde3130860d7940313210edca0a6",
+                "a82a9017a1d259c71f5392ad9091b743b86dac7a21f5e402ea0a55e5c8a6750f"),
+                true);
+
+        assertEquals(WalletAddress.arePubPrivKeysRelated(
+                "d17698d07fe9edbc41552299b90a93de73bb1bd4b94b8083af0bbe3a1931e2ec",
+                "dae1bceeb2563b8c376f8e0456e5fe7aa3d6291b38ace18c6ad5647424a3b104"),
+                true);
+
+        assertEquals(WalletAddress.arePubPrivKeysRelated(
+                "0000111122223333444455556666777788889999AAAABBBBCCCCDDDDEEEEFFFF",
+                "0000111122223333444455556666777788889999AAAABBBBCCCCDDDDEEEEFFFF"),
+                false);
     }
 }
