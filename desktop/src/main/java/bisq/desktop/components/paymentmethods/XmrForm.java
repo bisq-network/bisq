@@ -251,6 +251,7 @@ public class XmrForm extends AssetsForm {
             xmrAccountDelegate.setPrivateViewKey(privateViewKeyInputTextField.getText());
             xmrAccountDelegate.setAccountIndex(accountIndex.getText());
             xmrAccountDelegate.setSubAddressIndex(subAddressIndex.getText());
+            subAddressTextField.getStyleClass().remove("error-text");
             if (accountIndex.validate() && subAddressIndex.validate()
                     && mainAddressTextField.validate()
                     && privateViewKeyInputTextField.validate()
@@ -258,10 +259,13 @@ public class XmrForm extends AssetsForm {
                     && privateViewKeyInputTextField.getText().length() > 0) {
                 try {
                     xmrAccountDelegate.createAndSetNewSubAddress();
+                    subAddressTextField.setText(xmrAccountDelegate.getSubAddress());
                 } catch (Exception ex) {
-                    log.warn(ex.toString());
+                    log.warn(ex.getMessage());
+                    String[] parts = ex.getMessage().split(":");
+                    subAddressTextField.setText(parts.length > 0 ? parts[parts.length-1] : ex.getMessage());
+                    subAddressTextField.getStyleClass().add("error-text");
                 }
-                subAddressTextField.setText(xmrAccountDelegate.getSubAddress());
             } else {
                 xmrAccountDelegate.setSubAddress("");
                 subAddressTextField.setText("");
