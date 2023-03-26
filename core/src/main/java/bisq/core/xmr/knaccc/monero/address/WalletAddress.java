@@ -131,7 +131,13 @@ public class WalletAddress {
     }
 
     public boolean checkPrivateViewKey(String privateViewKey) {
-        return arePubPrivKeysRelated(this.publicViewKeyHex, privateViewKey);
+        return isPrivateKeyValid(privateViewKey) && arePubPrivKeysRelated(this.publicViewKeyHex, privateViewKey);
+    }
+
+    public static boolean isPrivateKeyValid(String privateKey) {
+        byte[] input = hexToBytes(privateKey);
+        byte[] reduced = CryptoUtil.scReduce32(input);
+        return Arrays.equals(input, reduced);
     }
 
     public static boolean arePubPrivKeysRelated(String publicKey, String privateKey) {

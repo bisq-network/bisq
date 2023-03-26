@@ -66,5 +66,9 @@ public class WalletAddressTest {
                 "0000111122223333444455556666777788889999AAAABBBBCCCCDDDDEEEEFFFF",
                 "0000111122223333444455556666777788889999AAAABBBBCCCCDDDDEEEEFFFF"),
                 false);
+
+        String nonReducedPrivateKey = "42594aba0e809490dec97b2dfaf64f7ae5bef1c2d19af636eb84544773df5b5f";
+        assertEquals(WalletAddress.isPrivateKeyValid(nonReducedPrivateKey), false);
+        assertEquals(WalletAddress.isPrivateKeyValid(privateViewKeyHex), true);
     }
 }
