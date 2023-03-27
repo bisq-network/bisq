@@ -38,15 +38,20 @@ import bisq.common.config.Config;
 
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.crypto.ChildNumber;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.wallet.DeterministicKeyChain;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import com.google.common.base.Joiner;
+
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+
+import java.util.List;
 
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
@@ -97,18 +102,15 @@ public class WalletInfoView extends ActivatableView<GridPane, Void> {
         bsqTextField = addTopLabelTextField(root, ++gridRow, "BSQ", -Layout.FLOATING_LABEL_DISTANCE).second;
 
         addTitledGroupBg(root, ++gridRow, 4, Res.get("account.menu.walletInfo.xpub.headLine"), Layout.GROUP_DISTANCE);
-        addXpubKeys(btcWalletService, "BTC", gridRow, Layout.FIRST_ROW_AND_GROUP_DISTANCE);
-        ++gridRow; // update gridRow
-        addXpubKeys(bsqWalletService, "BSQ", ++gridRow, -Layout.FLOATING_LABEL_DISTANCE);
-        ++gridRow; // update gridRow
+        addXpubKeys(btcWalletService, "BTC", Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+        addXpubKeys(bsqWalletService, "BSQ", -Layout.FLOATING_LABEL_DISTANCE);
 
-        addTitledGroupBg(root, ++gridRow, 4, Res.get("account.menu.walletInfo.path.headLine"), Layout.GROUP_DISTANCE);
-        addMultilineLabel(root, gridRow, Res.get("account.menu.walletInfo.path.info"), Layout.FIRST_ROW_AND_GROUP_DISTANCE, Double.MAX_VALUE);
-        addTopLabelTextField(root, ++gridRow, Res.get("account.menu.walletInfo.walletSelector", "BTC", "legacy"), "44'/0'/0'", -Layout.FLOATING_LABEL_DISTANCE);
-        addTopLabelTextField(root, ++gridRow, Res.get("account.menu.walletInfo.walletSelector", "BTC", "segwit"), "44'/0'/1'", -Layout.FLOATING_LABEL_DISTANCE);
-        addTopLabelTextField(root, ++gridRow, Res.get("account.menu.walletInfo.walletSelector", "BSQ", ""), "44'/142'/0'", -Layout.FLOATING_LABEL_DISTANCE);
+        addTitledGroupBg(root, gridRow, 4, Res.get("account.menu.walletInfo.path.headLine"), Layout.GROUP_DISTANCE);
+        addMultilineLabel(root, gridRow++, Res.get("account.menu.walletInfo.path.info"), Layout.FIRST_ROW_AND_GROUP_DISTANCE, Double.MAX_VALUE);
+        addAccountPaths(btcWalletService, "BTC");
+        addAccountPaths(bsqWalletService, "BSQ");
 
-        openDetailsButton = addButtonAfterGroup(root, ++gridRow, Res.get("account.menu.walletInfo.openDetails"));
+        openDetailsButton = addButtonAfterGroup(root, gridRow, Res.get("account.menu.walletInfo.openDetails"));
 
         btcWalletBalanceListener = new BalanceListener() {
             @Override
@@ -148,19 +150,30 @@ public class WalletInfoView extends ActivatableView<GridPane, Void> {
         openDetailsButton.setOnAction(null);
     }
 
-    private void addXpubKeys(WalletService walletService, String currency, int gridRow, double top) {
-        int row = gridRow;
+    private void addXpubKeys(WalletService walletService, String currency, double top) {
         double topDist = top;
         for (DeterministicKeyChain chain : walletService.getWallet().getActiveKeyChains()) {
             Script.ScriptType outputScriptType = chain.getOutputScriptType();
             String type = outputScriptType == Script.ScriptType.P2WPKH ? "segwit" : "legacy";
             String key = chain.getWatchingKey().serializePubB58(Config.baseCurrencyNetworkParameters(), outputScriptType);
-            addTopLabelTextField(root, row,
-                    Res.get("account.menu.walletInfo.walletSelector", currency, type),
+            addTopLabelTextField(root, gridRow++, Res.get("account.menu.walletInfo.walletSelector", currency, type),
                     key, topDist);
-            row++;
             topDist = -Layout.FLOATING_LABEL_DISTANCE;
         }
+    }
+
+    private void addAccountPaths(WalletService walletService, String currency) {
+        for (DeterministicKeyChain chain : walletService.getWallet().getActiveKeyChains()) {
+            Script.ScriptType outputScriptType = chain.getOutputScriptType();
+            String type = outputScriptType == Script.ScriptType.P2WPKH ? "segwit" : "legacy";
+            String path = formatAccountPath(chain.getAccountPath());
+            addTopLabelTextField(root, gridRow++, Res.get("account.menu.walletInfo.walletSelector", currency, type),
+                    path, -Layout.FLOATING_LABEL_DISTANCE);
+        }
+    }
+
+    private String formatAccountPath(List<ChildNumber> path) {
+        return Joiner.on('/').join(path).replace('H', '\'');
     }
 
     private void updateBalances(WalletService walletService) {
@@ -170,6 +183,4 @@ public class WalletInfoView extends ActivatableView<GridPane, Void> {
             bsqTextField.setText(bsqFormatter.formatCoinWithCode(walletService.getBalance(ESTIMATED_SPENDABLE)));
         }
     }
-
 }
-
