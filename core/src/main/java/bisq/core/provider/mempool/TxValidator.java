@@ -63,7 +63,6 @@ public class TxValidator {
     private Coin amount;
     @Nullable
     private Boolean isFeeCurrencyBtc;
-    @Nullable
     private Long chainHeight;
     @Setter
     private String jsonTxt;
@@ -79,6 +78,7 @@ public class TxValidator {
         this.amount = amount;
         this.isFeeCurrencyBtc = isFeeCurrencyBtc;
         this.feePaymentBlockHeight = feePaymentBlockHeight;
+        this.chainHeight = (long) daoStateService.getChainHeight();
         this.filterManager = filterManager;
         this.errorList = new ArrayList<>();
         this.jsonTxt = "";
@@ -119,10 +119,19 @@ public class TxValidator {
 
     public TxValidator validateBsqFeeTx(boolean isMaker) {
         Optional<Tx> tx = daoStateService.getTx(txId);
-        String statusStr = isMaker ? "Maker" : "Taker" + " tx validation";
+        String statusStr = (isMaker ? "Maker" : "Taker") + " tx validation";
         if (tx.isEmpty()) {
-            log.info("DAO does not yet have the tx {}, bypassing check of burnt BSQ amount.", txId);
-            return endResult(statusStr, true);
+            long txAge = this.chainHeight - this.feePaymentBlockHeight;
+            if (txAge > 48) {
+                // still unconfirmed after 8 hours grace period we assume there may be SPV wallet issue.
+                // see github.com/bisq-network/bisq/issues/6603
+                statusStr = String.format("BSQ tx %s not found, age=%d: FAIL.", txId, txAge);
+                log.warn(statusStr);
+                return endResult(statusStr, false);
+            } else {
+                log.info("DAO does not yet have the tx {} (age={}), bypassing check of burnt BSQ amount.", txId, txAge);
+                return endResult(statusStr, true);
+            }
         } else {
             return endResult(statusStr, checkFeeAmountBSQ(tx.get(), amount, isMaker, feePaymentBlockHeight));
         }
