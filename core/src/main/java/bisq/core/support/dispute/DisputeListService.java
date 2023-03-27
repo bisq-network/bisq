@@ -99,7 +99,7 @@ public abstract class DisputeListService<T extends DisputeList<Dispute>> impleme
     public void cleanupDisputes(@Nullable Consumer<String> closedDisputeHandler) {
         disputeList.stream().forEach(dispute -> {
             String tradeId = dispute.getTradeId();
-            if (dispute.isClosed() && closedDisputeHandler != null) {
+            if (dispute.isResultProposed() && closedDisputeHandler != null) {
                 closedDisputeHandler.accept(tradeId);
             }
         });

@@ -94,8 +94,8 @@ import javafx.geometry.Pos;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.value.ChangeListener;
 
 import javafx.collections.ListChangeListener;
@@ -181,7 +181,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     protected FilteredList<Dispute> filteredList;
     protected InputTextField filterTextField;
     private ChangeListener<String> filterTextFieldListener;
-    protected AutoTooltipButton sigCheckButton, reOpenButton, closeButton, sendPrivateNotificationButton, reportButton, fullReportButton;
+    protected AutoTooltipButton sigCheckButton, openOrCloseButton, sendPrivateNotificationButton, reportButton, fullReportButton;
     private final Map<String, ListChangeListener<ChatMessage>> disputeChatMessagesListeners = new HashMap<>();
     @Nullable
     private ListChangeListener<Dispute> disputesListener; // Only set in mediation cases
@@ -256,22 +256,17 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
         alertIconLabel.setVisible(false);
         alertIconLabel.setManaged(false);
 
-        reOpenButton = new AutoTooltipButton(Res.get("support.reOpenButton.label"));
-        reOpenButton.setDisable(true);
-        reOpenButton.setVisible(false);
-        reOpenButton.setManaged(false);
-        HBox.setHgrow(reOpenButton, Priority.NEVER);
-        reOpenButton.setOnAction(e -> {
-            reOpenDisputeFromButton();
-        });
-
-        closeButton = new AutoTooltipButton(Res.get("support.closeTicket"));
-        closeButton.setDisable(true);
-        closeButton.setVisible(false);
-        closeButton.setManaged(false);
-        HBox.setHgrow(closeButton, Priority.NEVER);
-        closeButton.setOnAction(e -> {
-            closeDisputeFromButton();
+        openOrCloseButton = new AutoTooltipButton(Res.get("support.reOpenButton.label"));
+        openOrCloseButton.setDisable(true);
+        openOrCloseButton.setVisible(false);
+        openOrCloseButton.setManaged(false);
+        HBox.setHgrow(openOrCloseButton, Priority.NEVER);
+        openOrCloseButton.setOnAction(e -> {
+            if (openOrCloseButton.getText().equalsIgnoreCase(Res.get("support.closeTicket"))) {
+                closeDisputeFromButton();
+            } else {
+                reOpenDisputeFromButton();
+            }
         });
 
         sendPrivateNotificationButton = new AutoTooltipButton(Res.get("support.sendNotificationButton.label"));
@@ -314,8 +309,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                 filterTextField,
                 alertIconLabel,
                 spacer,
-                reOpenButton,
-                closeButton,
+                openOrCloseButton,
                 sendPrivateNotificationButton,
                 reportButton,
                 fullReportButton,
@@ -449,7 +443,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
 
         // For open filter we do not want to continue further as json data would cause a match
         if (filter.equalsIgnoreCase("open")) {
-            return !dispute.isClosed() ? FilterResult.OPEN_DISPUTES : FilterResult.NO_MATCH;
+            return !dispute.isClosed() || dispute.unreadMessageCount(senderFlag()) > 0 ?
+                    FilterResult.OPEN_DISPUTES : FilterResult.NO_MATCH;
         }
 
         if (dispute.getTradeId().toLowerCase().contains(filter)) {
@@ -509,18 +504,14 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     }
 
     // a derived version in the ClientView for users pops up an "Are you sure" box first.
-    // this version includes the sending of an automatic message to the user, see addMediationReOpenedMessage
     protected void reOpenDisputeFromButton() {
-        if (reOpenDispute()) {
-            disputeManager.addMediationReOpenedMessage(selectedDispute, false);
-        }
+        reOpenDispute();
     }
 
-    // only applicable to traders
-    // only allow them to close the dispute if the trade is paid out
+    // traders -> only allow them to close the dispute if the trade is paid out
     // the reason for having this is that sometimes traders end up with closed disputes that are not "closed" @pazza
     protected void closeDisputeFromButton() {
-        disputeManager.findTrade(selectedDispute).ifPresent(
+        disputeManager.findTrade(selectedDispute).ifPresentOrElse(
                 (trade) -> {
                     if (trade.isFundsLockedIn()) {
                         new Popup().warning(Res.get("support.warning.traderCloseOwnDisputeWarning")).show();
@@ -529,6 +520,11 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                         disputeManager.requestPersistence();
                         onSelectDispute(selectedDispute);
                     }
+                },
+                () -> {
+                    selectedDispute.setIsClosed();
+                    disputeManager.requestPersistence();
+                    onSelectDispute(selectedDispute);
                 });
     }
 
@@ -542,7 +538,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                 isNodeAddressOk(selectedDispute,
                         !disputeManager.isTrader(selectedDispute))) {
             selectedDispute.reOpen();
-            handleOnProcessDispute(selectedDispute);
             disputeManager.requestPersistence();
             onSelectDispute(selectedDispute);
             return true;
@@ -580,9 +575,15 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
             selectedDispute = dispute;
         }
 
-        reOpenButton.setDisable(selectedDispute == null || !selectedDispute.isClosed());
-        closeButton.setDisable(selectedDispute == null || selectedDispute.isClosed());
-        sendPrivateNotificationButton.setDisable(selectedDispute == null);
+        if (selectedDispute == null) {
+            openOrCloseButton.setDisable(true);
+            sendPrivateNotificationButton.setDisable(true);
+        } else {
+            openOrCloseButton.setDisable(false);
+            sendPrivateNotificationButton.setDisable(false);
+            openOrCloseButton.setText(selectedDispute.isClosed() ?
+                    Res.get("support.reOpenButton.label").toUpperCase() : Res.get("support.closeTicket").toUpperCase());
+        }
     }
 
 
@@ -1140,7 +1141,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     private TableColumn<Dispute, Dispute> getDateColumn() {
         TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("shared.date")) {
             {
-                setMinWidth(180);
+                setMinWidth(100);
+                setPrefWidth(150);
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
@@ -1166,7 +1168,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     private TableColumn<Dispute, Dispute> getTradeIdColumn() {
         TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("shared.tradeId")) {
             {
-                setMinWidth(110);
+                setMinWidth(50);
+                setPrefWidth(100);
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
@@ -1303,7 +1306,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     private TableColumn<Dispute, Dispute> getMarketColumn() {
         TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("shared.market")) {
             {
-                setMinWidth(80);
+                setMinWidth(60);
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
@@ -1329,7 +1332,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     private TableColumn<Dispute, Dispute> getRoleColumn() {
         TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("support.role")) {
             {
-                setMinWidth(130);
+                setMinWidth(80);
             }
         };
         column.setCellValueFactory((dispute) -> new ReadOnlyObjectWrapper<>(dispute.getValue()));
@@ -1390,7 +1393,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     private TableColumn<Dispute, Dispute> getStateColumn() {
         TableColumn<Dispute, Dispute> column = new AutoTooltipTableColumn<>(Res.get("support.state")) {
             {
-                setMinWidth(50);
+                setMinWidth(75);
+                setPrefWidth(100);
             }
         };
         column.getStyleClass().add("last-column");
@@ -1402,8 +1406,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                         return new TableCell<>() {
 
 
-                            ReadOnlyBooleanProperty closedProperty;
-                            ChangeListener<Boolean> listener;
+                            ReadOnlyStringProperty closedProperty;
+                            ChangeListener<String> listener;
 
                             @Override
                             public void updateItem(final Dispute item, boolean empty) {
@@ -1414,16 +1418,16 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                                     }
 
                                     listener = (observable, oldValue, newValue) -> {
-                                        setText(newValue ? Res.get("support.closed") : Res.get("support.open"));
+                                        setText(newValue);
                                         if (getTableRow() != null)
-                                            getTableRow().setOpacity(newValue && item.getBadgeCountProperty().get() == 0 ? 0.4 : 1);
+                                            getTableRow().setOpacity(newValue.equalsIgnoreCase("CLOSED") && item.getBadgeCountProperty().get() == 0 ? 0.4 : 1);
                                         if (item.isClosed() && item == chatPopup.getSelectedDispute())
                                             chatPopup.closeChat(); // close the chat popup when the associated ticket is closed
                                     };
-                                    closedProperty = item.isClosedProperty();
+                                    closedProperty = item.getDisputeStateProperty();
                                     closedProperty.addListener(listener);
                                     boolean isClosed = item.isClosed();
-                                    setText(isClosed ? Res.get("support.closed") : Res.get("support.open"));
+                                    setText(closedProperty.get());
                                     if (getTableRow() != null)
                                         getTableRow().setOpacity(isClosed && item.getBadgeCountProperty().get() == 0  ? 0.4 : 1);
                                 } else {
@@ -1496,7 +1500,11 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
 
     @Override
     public void onCloseDisputeFromChatWindow(Dispute dispute) {
-        handleOnProcessDispute(dispute);
+        if (dispute.getDisputeState() == Dispute.State.NEW || dispute.getDisputeState() == Dispute.State.OPEN) {
+            handleOnProcessDispute(dispute);
+        } else {
+            closeDisputeFromButton();
+        }
     }
 
     @Override

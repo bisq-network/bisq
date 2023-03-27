@@ -22,6 +22,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.BisqTextArea;
 import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.components.TableGroupHeadline;
+import bisq.desktop.main.overlays.notifications.Notification;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
@@ -214,6 +215,10 @@ public class ChatView extends AnchorPane {
 
         Button uploadButton = new AutoTooltipButton(Res.get("support.addAttachments"));
         uploadButton.setOnAction(e -> onRequestUpload());
+        Button clipboardButton = new AutoTooltipButton(Res.get("shared.copyToClipboard"));
+        clipboardButton.setOnAction(e -> copyChatMessagesToClipboard(clipboardButton));
+        uploadButton.setStyle("-fx-pref-width: 66; -fx-padding: 3 3 3 3;");
+        clipboardButton.setStyle("-fx-pref-width: 50; -fx-padding: 3 3 3 3;");
 
         sendMsgInfoLabel = new AutoTooltipLabel();
         sendMsgInfoLabel.setVisible(false);
@@ -229,7 +234,7 @@ public class ChatView extends AnchorPane {
             HBox buttonBox = new HBox();
             buttonBox.setSpacing(10);
             if (allowAttachments)
-                buttonBox.getChildren().addAll(sendButton, uploadButton, sendMsgBusyAnimation, sendMsgInfoLabel);
+                buttonBox.getChildren().addAll(sendButton, uploadButton, clipboardButton, sendMsgBusyAnimation, sendMsgInfoLabel);
             else
                 buttonBox.getChildren().addAll(sendButton, sendMsgBusyAnimation, sendMsgInfoLabel);
 
@@ -589,6 +594,24 @@ public class ChatView extends AnchorPane {
             log.error(e.toString());
             e.printStackTrace();
         }
+    }
+
+    private void copyChatMessagesToClipboard(Button sourceBtn) {
+        optionalSupportSession.ifPresent(session -> {
+            StringBuilder stringBuilder = new StringBuilder();
+            chatMessages.forEach(i -> {
+                String metaData = DisplayUtils.formatDateTime(new Date(i.getDate()));
+                metaData = metaData + (i.isSystemMessage() ? " (System message)" :
+                        (i.isSenderIsTrader() ? " (from Trader)" : " (from Agent)"));
+                stringBuilder.append(metaData).append("\n").append(i.getMessage()).append("\n\n");
+            });
+            Utilities.copyToClipboard(stringBuilder.toString());
+            new Notification()
+                    .notification(Res.get("shared.copiedToClipboard"))
+                    .hideCloseButton()
+                    .autoClose()
+                    .show();
+        });
     }
 
     private void onOpenAttachment(Attachment attachment) {

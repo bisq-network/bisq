@@ -909,6 +909,7 @@ message Dispute {
         OPEN = 2;
         REOPENED = 3;
         CLOSED = 4;
+        RESULT_PROPOSED = 5;
     }
     string trade_id = 1;
     string id = 2;

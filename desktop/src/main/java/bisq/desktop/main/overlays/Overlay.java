@@ -163,6 +163,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected boolean hideCloseButton;
     protected boolean isDisplayed;
     protected boolean disableActionButton;
+    protected boolean disableTertiaryActionButton;
 
     @Getter
     protected BooleanProperty isHiddenProperty = new SimpleBooleanProperty();
@@ -176,11 +177,11 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     protected Label headlineIcon, copyIcon, headLineLabel, messageLabel;
     protected String headLine, message, closeButtonText, actionButtonText,
-            secondaryActionButtonText, dontShowAgainId, dontShowAgainText,
+            secondaryActionButtonText, tertiaryActionButtonText, dontShowAgainId, dontShowAgainText,
             truncatedMessage;
     private ArrayList<String> messageHyperlinks;
     private String headlineStyle;
-    protected Button actionButton, secondaryActionButton;
+    protected Button actionButton, secondaryActionButton, tertiaryActionButton;
     private HBox buttonBox;
     protected AutoTooltipButton closeButton;
 
@@ -189,6 +190,7 @@ public abstract class Overlay<T extends Overlay<T>> {
     protected Optional<Runnable> closeHandlerOptional = Optional.<Runnable>empty();
     protected Optional<Runnable> actionHandlerOptional = Optional.empty();
     protected Optional<Runnable> secondaryActionHandlerOptional = Optional.<Runnable>empty();
+    protected Optional<Runnable> tertiaryActionHandlerOptional = Optional.<Runnable>empty();
     protected ChangeListener<Number> positionListener;
 
     protected Timer centerTime;
@@ -298,6 +300,11 @@ public abstract class Overlay<T extends Overlay<T>> {
 
     public T onSecondaryAction(Runnable secondaryActionHandlerOptional) {
         this.secondaryActionHandlerOptional = Optional.of(secondaryActionHandlerOptional);
+        return cast();
+    }
+
+    public T onTertiaryAction(Runnable actionHandlerOptional) {
+        this.tertiaryActionHandlerOptional = Optional.of(actionHandlerOptional);
         return cast();
     }
 
@@ -433,6 +440,11 @@ public abstract class Overlay<T extends Overlay<T>> {
         return cast();
     }
 
+    public T tertiaryActionButtonText(String text) {
+        this.tertiaryActionButtonText = text;
+        return cast();
+    }
+
     public T useShutDownButton() {
         this.actionButtonText = Res.get("shared.shutDown");
         this.actionHandlerOptional = Optional.ofNullable(BisqApp.getShutDownHandler());
@@ -489,6 +501,10 @@ public abstract class Overlay<T extends Overlay<T>> {
         return cast();
     }
 
+    public T setTertiaryButtonDisabledState(boolean disableState) {
+        this.disableTertiaryActionButton = disableState;
+        return cast();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Protected
@@ -1004,6 +1020,17 @@ public abstract class Overlay<T extends Overlay<T>> {
                 });
 
                 buttonBox.getChildren().add(secondaryActionButton);
+            }
+
+            if (tertiaryActionButtonText != null && tertiaryActionHandlerOptional.isPresent()) {
+                tertiaryActionButton = new AutoTooltipButton(tertiaryActionButtonText);
+                tertiaryActionButton.setOnAction(event -> {
+                    hide();
+                    tertiaryActionHandlerOptional.ifPresent(Runnable::run);
+                });
+
+                buttonBox.getChildren().add(tertiaryActionButton);
+                tertiaryActionButton.setDisable(disableTertiaryActionButton);
             }
 
             if (!hideCloseButton)

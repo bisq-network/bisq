@@ -288,6 +288,47 @@ public final class DisputeResult implements NetworkPayload {
         return payoutSuggestion.toString();
     }
 
+    public String getPayoutSuggestionCustomizedToBuyerOrSeller(boolean isBuyer) {
+        // see github.com/bisq-network/proposals/issues/407
+        if (isBuyer) {
+            switch (payoutSuggestion) {
+                case BUYER_GETS_TRADE_AMOUNT:
+                    return Res.get("disputeSummaryWindow.result.buyerGetsTradeAmount");
+                case BUYER_GETS_TRADE_AMOUNT_MINUS_PENALTY:
+                    return Res.get("disputeSummaryWindow.result.buyerGetsTradeAmountMinusPenalty");
+                case BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION:
+                    return Res.get("disputeSummaryWindow.result.buyerGetsTradeAmountPlusCompensation");
+                case SELLER_GETS_TRADE_AMOUNT:
+                    return Res.get("disputeSummaryWindow.result.buyerGetsHisDeposit");
+                case SELLER_GETS_TRADE_AMOUNT_MINUS_PENALTY:
+                    return Res.get("disputeSummaryWindow.result.buyerGetsHisDepositPlusPenaltyFromSeller");
+                case SELLER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION:
+                    return Res.get("disputeSummaryWindow.result.buyerGetsHisDepositMinusPenalty");
+                case CUSTOM_PAYOUT:
+                    return Res.get("disputeSummaryWindow.result.customPayout");
+                default:
+            }
+        } else {
+            switch (payoutSuggestion) {
+                    case SELLER_GETS_TRADE_AMOUNT:
+                        return Res.get("disputeSummaryWindow.result.sellerGetsTradeAmount");
+                    case SELLER_GETS_TRADE_AMOUNT_MINUS_PENALTY:
+                        return Res.get("disputeSummaryWindow.result.sellerGetsTradeAmountMinusPenalty");
+                    case SELLER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION:
+                        return Res.get("disputeSummaryWindow.result.sellerGetsTradeAmountPlusCompensation");
+                    case BUYER_GETS_TRADE_AMOUNT:
+                        return Res.get("disputeSummaryWindow.result.sellerGetsHisDeposit");
+                    case BUYER_GETS_TRADE_AMOUNT_MINUS_PENALTY:
+                        return Res.get("disputeSummaryWindow.result.sellerGetsHisDepositPlusPenaltyFromBuyer");
+                    case BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION:
+                        return Res.get("disputeSummaryWindow.result.sellerGetsHisDepositMinusPenalty");
+                    case CUSTOM_PAYOUT:
+                        return Res.get("disputeSummaryWindow.result.customPayout");
+                default:
+            }
+        }
+        return Res.get("popup.headline.error");
+    }
 
     @Override
     public String toString() {

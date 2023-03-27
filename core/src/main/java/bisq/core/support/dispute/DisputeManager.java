@@ -31,6 +31,7 @@ import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.SupportManager;
+import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.support.dispute.messages.DisputeResultMessage;
 import bisq.core.support.dispute.messages.OpenNewDisputeMessage;
 import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
@@ -254,6 +255,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
             @Override
             public void onUpdatedDataReceived() {
                 tryApplyMessages();
+                checkDisputesForUpdates();
             }
         });
 
@@ -263,8 +265,9 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         });
 
         walletsSetup.numPeersProperty().addListener((observable, oldValue, newValue) -> {
-            if (walletsSetup.hasSufficientPeersForBroadcast())
+            if (walletsSetup.hasSufficientPeersForBroadcast()) {
                 tryApplyMessages();
+            }
         });
 
         tryApplyMessages();
@@ -290,6 +293,46 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                 });
 
         maybeClearSensitiveData();
+    }
+
+    private void checkDisputesForUpdates() {
+        List<Dispute> disputes = getDisputeList().getList();
+        disputes.forEach(dispute -> {
+            if (dispute.isResultProposed()) {
+                // an open dispute where the mediator has proposed a result.  has the trade moved on?
+                // if so, dispute can close and the mediator needs to be informed so they can close their ticket.
+                tradeManager.getTradeById(dispute.getTradeId()).ifPresentOrElse(
+                        t -> checkForMediatedTradePayout(t, dispute),
+                        () -> closedTradableManager.getTradableById(dispute.getTradeId()).ifPresent(
+                                t -> checkForMediatedTradePayout((Trade) t, dispute)));
+            }
+        });
+    }
+
+    protected void checkForMediatedTradePayout(Trade trade, Dispute dispute) {
+        if (trade.disputeStateProperty().get().isArbitrated() || trade.getTradePhase() == Trade.Phase.PAYOUT_PUBLISHED) {
+            disputedTradeUpdate(trade.getDisputeState().toString(), dispute, true);
+        } else {
+            // user accepted/rejected mediation proposal (before lockup period has expired)
+            trade.mediationResultStateProperty().addListener((observable, oldValue, newValue) -> {
+                if (newValue == MediationResultState.MEDIATION_RESULT_ACCEPTED ||
+                        newValue == MediationResultState.MEDIATION_RESULT_REJECTED) {
+                    disputedTradeUpdate(newValue.toString(), dispute, false);
+                }
+            });
+            // user rejected mediation after lockup period: opening arbitration
+            trade.disputeStateProperty().addListener((observable, oldValue, newValue) -> {
+                if (newValue.isArbitrated()) {
+                    disputedTradeUpdate(newValue.toString(), dispute, true);
+                }
+            });
+            // trade paid out through mediation
+            trade.statePhaseProperty().addListener((observable, oldValue, newValue) -> {
+                if (newValue == Trade.Phase.PAYOUT_PUBLISHED) {
+                    disputedTradeUpdate(newValue.toString(), dispute, true);
+                }
+            });
+        }
     }
 
     public boolean isTrader(Dispute dispute) {
@@ -650,8 +693,6 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         chatMessage.setSystemMessage(true);
         dispute.addAndPersistChatMessage(chatMessage);
 
-        addPriceInfoMessage(dispute, 0);
-
         disputeList.add(dispute);
 
         // We mirrored dispute already!
@@ -719,6 +760,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                     }
                 }
         );
+        addPriceInfoMessage(dispute, 0);
         requestPersistence();
     }
 
@@ -897,17 +939,23 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         }
     }
 
-    public void addMediationReOpenedMessage(Dispute dispute, boolean senderIsTrader) {
+    // when a mediated trade changes, send a system message informing the mediator, so they can maybe close their ticket.
+    public void disputedTradeUpdate(String message, Dispute dispute, boolean close) {
+        if (dispute.isClosed()) {
+            return;
+        }
         ChatMessage chatMessage = new ChatMessage(
                 getSupportType(),
                 dispute.getTradeId(),
                 dispute.getTraderId(),
-                senderIsTrader,
-                Res.get("support.info.disputeReOpened"),
+                true,
+                Res.get("support.info.disputedTradeUpdate", message),
                 p2PService.getAddress());
-        chatMessage.setSystemMessage(false);
-        dispute.addAndPersistChatMessage(chatMessage);
-        this.sendChatMessage(chatMessage);
+        chatMessage.setSystemMessage(true);
+        this.sendChatMessage(chatMessage);  // inform the mediator
+        if (close) {
+            dispute.setIsClosed();              // close the trader's ticket
+        }
         requestPersistence();
     }
 

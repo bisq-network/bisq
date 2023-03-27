@@ -141,8 +141,12 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
 
     @Override
     public void cleanupDisputes() {
+        // closes any trades/disputes which paid out while Bisq was not in use
         disputeListService.cleanupDisputes(tradeId -> tradeManager.getTradeById(tradeId).filter(trade -> trade.getPayoutTx() != null)
-                .ifPresent(trade -> tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.MEDIATION_CLOSED)));
+                .ifPresent(trade -> {
+                    tradeManager.closeDisputedTrade(tradeId, Trade.DisputeState.MEDIATION_CLOSED);
+                    findOwnDispute(tradeId).ifPresent(Dispute::setIsClosed);
+                }));
     }
 
     @Override
@@ -201,7 +205,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
         } else {
             log.warn("We got a dispute mail msg what we have already stored. TradeId = " + chatMessage.getTradeId());
         }
-        dispute.setIsClosed();
+        dispute.setState(Dispute.State.RESULT_PROPOSED);
 
         dispute.setDisputeResult(disputeResult);
 
@@ -216,6 +220,7 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
                 trade.setDisputeState(Trade.DisputeState.MEDIATION_CLOSED);
 
                 tradeManager.requestPersistence();
+                checkForMediatedTradePayout(trade, dispute);
             }
         } else {
             Optional<OpenOffer> openOfferOptional = openOfferManager.getOpenOfferById(tradeId);
