@@ -63,7 +63,7 @@ public class CloneMakerFeeOco extends Task<PlaceOfferModel> {
 
     // AddressEntry and TxId are not linked, so do a reverse lookup
     private Optional<String> getTxIdFromAddress(BtcWalletService walletService, Address address) {
-        List<Transaction> txns = walletService.getRecentTransactions(10, false);
+        List<Transaction> txns = walletService.getRecentTransactions(0, false);
         for (Transaction txn : txns) {
             for (TransactionOutput output : txn.getOutputs()) {
                 if (walletService.isTransactionOutputMine(output) && WalletService.isOutputScriptConvertibleToAddress(output)) {
