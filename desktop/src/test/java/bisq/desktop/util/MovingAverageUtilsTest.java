@@ -20,8 +20,10 @@ package bisq.desktop.util;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class MovingAverageUtilsTest {
 
@@ -50,7 +52,7 @@ public class MovingAverageUtilsTest {
 
     private static void testMA(int period, int[] input, int[] expected) {
         var output = calcMA(period, input);
-        Assert.assertArrayEquals(output, expected);
+        assertArrayEquals(output, expected);
     }
 
     @Test
@@ -107,24 +109,26 @@ public class MovingAverageUtilsTest {
         );
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void nonsensicalPeriod1() {
         var impossible = new int[]{};
-        testMA(
-                0,
-                new int[]{10, 20},
-                impossible
-        );
+        assertThrows(IllegalArgumentException.class, () ->
+                testMA(
+                        0,
+                        new int[]{10, 20},
+                        impossible
+                ));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void nonsensicalPeriod2() {
         var impossible = new int[]{};
-        testMA(
-                -1,
-                new int[]{10, 20},
-                impossible
-        );
+        assertThrows(IllegalArgumentException.class, () ->
+                testMA(
+                        -1,
+                        new int[]{10, 20},
+                        impossible
+                ));
     }
 
     @Test

@@ -29,10 +29,10 @@ import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -49,7 +49,7 @@ public class CurrencyListTest {
     private List<CurrencyListItem> delegate;
     private CurrencyList testedEntity;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         Locale.setDefault(locale);
 

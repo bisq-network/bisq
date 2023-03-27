@@ -33,14 +33,15 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import static bisq.network.p2p.storage.TestState.SavedTestState;
+import static bisq.network.p2p.storage.TestState.getTestNodeAddress;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import static bisq.network.p2p.storage.TestState.*;
 
 /**
  * Tests of the P2PDataStore ConnectionListener interface.
@@ -69,12 +70,12 @@ public class P2PDataStoreDisconnectTest {
                 false, false, false, false);
 
         if (wasTTLReduced)
-            Assert.assertTrue(protectedStorageEntry.getCreationTimeStamp() < beforeState.creationTimestampBeforeUpdate);
+            assertTrue(protectedStorageEntry.getCreationTimeStamp() < beforeState.creationTimestampBeforeUpdate);
         else
-            Assert.assertEquals(protectedStorageEntry.getCreationTimeStamp(), beforeState.creationTimestampBeforeUpdate);
+            assertEquals(protectedStorageEntry.getCreationTimeStamp(), beforeState.creationTimestampBeforeUpdate);
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         this.mockedConnection = mock(Connection.class);
         this.testState = new TestState();

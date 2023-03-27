@@ -31,18 +31,18 @@ import java.util.Random;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SigTest {
     private static final Logger log = LoggerFactory.getLogger(SigTest.class);
     private KeyRing keyRing;
     private File dir;
 
-    @Before
+    @BeforeEach
     public void setup() throws IOException {
 
         dir = File.createTempFile("temp_tests", "");
@@ -54,7 +54,7 @@ public class SigTest {
         keyRing = new KeyRing(keyStorage);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws IOException {
         FileUtil.deleteDirectory(dir);
     }

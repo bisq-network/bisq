@@ -27,10 +27,13 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -45,7 +48,7 @@ public class FileTransferSessionTest implements FileTransferSession.FtpCallback 
     NetworkNode networkNode;
     NodeAddress counterpartyNodeAddress;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         new Config();   // static methods like Config.appDataDir() require config to be created once
         networkNode = mock(NetworkNode.class);
@@ -56,19 +59,19 @@ public class FileTransferSessionTest implements FileTransferSession.FtpCallback 
     @Test
     public void testSendCreate() {
         new FileTransferSender(networkNode, counterpartyNodeAddress, testTradeId, testTraderId, testClientId, true, this);
-        Assert.assertEquals(0.0, notedProgressPct, 0.0);
-        Assert.assertEquals(1, progressInvocations);
+        assertEquals(0.0, notedProgressPct, 0.0);
+        assertEquals(1, progressInvocations);
     }
 
     @Test
     public void testCreateZip() {
         FileTransferSender sender = new FileTransferSender(networkNode, counterpartyNodeAddress, testTradeId, testTraderId, testClientId, true, this);
-        Assert.assertEquals(0.0, notedProgressPct, 0.0);
-        Assert.assertEquals(1, progressInvocations);
+        assertEquals(0.0, notedProgressPct, 0.0);
+        assertEquals(1, progressInvocations);
         sender.createZipFileToSend();
         File file = new File(sender.zipFilePath);
-        Assert.assertTrue(file.getAbsoluteFile().exists());
-        Assert.assertTrue(file.getAbsoluteFile().length() > 0);
+        assertTrue(file.getAbsoluteFile().exists());
+        assertTrue(file.getAbsoluteFile().length() > 0);
         file.deleteOnExit();
     }
 
@@ -80,16 +83,16 @@ public class FileTransferSessionTest implements FileTransferSession.FtpCallback 
             FileTransferSender session = initializeSession(testVerifyDataSize);
             session.initSend();
             FileTransferPart ftp = session.dataAwaitingAck.get();
-            Assert.assertEquals(ftp.tradeId, testTradeId);
-            Assert.assertTrue(ftp.uid.length() > 0);
-            Assert.assertEquals(0, ftp.messageData.size());
-            Assert.assertEquals(ftp.seqNumOrFileLength, testVerifyDataSize);
-            Assert.assertEquals(-1, session.currentBlockSeqNum);
+            assertEquals(ftp.tradeId, testTradeId);
+            assertTrue(ftp.uid.length() > 0);
+            assertEquals(0, ftp.messageData.size());
+            assertEquals(ftp.seqNumOrFileLength, testVerifyDataSize);
+            assertEquals(-1, session.currentBlockSeqNum);
             return;
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Assert.fail();
+        fail();
     }
 
     @Test
@@ -105,13 +108,13 @@ public class FileTransferSessionTest implements FileTransferSession.FtpCallback 
             simulateAckFromPeerAndVerify(session, testVerifyDataSize, 1, 3);
             // the final invocation sends no data, and wraps up the session
             session.sendNextBlock();
-            Assert.assertEquals(1, session.currentBlockSeqNum);
-            Assert.assertEquals(3, progressInvocations);
-            Assert.assertEquals(1.0, notedProgressPct, 0.0);
-            Assert.assertTrue(ftpCompleteStatus);
+            assertEquals(1, session.currentBlockSeqNum);
+            assertEquals(3, progressInvocations);
+            assertEquals(1.0, notedProgressPct, 0.0);
+            assertTrue(ftpCompleteStatus);
         } catch (IOException ioe) {
             ioe.printStackTrace();
-            Assert.fail();
+            fail();
         }
     }
 
@@ -128,13 +131,13 @@ public class FileTransferSessionTest implements FileTransferSession.FtpCallback 
             simulateAckFromPeerAndVerify(session, testVerifyDataSize, 1, 3);
             // the final invocation sends no data, and wraps up the session
             session.sendNextBlock();
-            Assert.assertEquals(1, session.currentBlockSeqNum);
-            Assert.assertEquals(3, progressInvocations);
-            Assert.assertEquals(1.0, notedProgressPct, 0.0);
-            Assert.assertTrue(ftpCompleteStatus);
+            assertEquals(1, session.currentBlockSeqNum);
+            assertEquals(3, progressInvocations);
+            assertEquals(1.0, notedProgressPct, 0.0);
+            assertTrue(ftpCompleteStatus);
         } catch (IOException ioe) {
             ioe.printStackTrace();
-            Assert.fail();
+            fail();
         }
     }
 
@@ -154,13 +157,13 @@ public class FileTransferSessionTest implements FileTransferSession.FtpCallback 
             simulateAckFromPeerAndVerify(session, testVerifyDataSize / 2, 2, 4);
             // the final invocation sends no data, and wraps up the session
             session.sendNextBlock();
-            Assert.assertEquals(2, session.currentBlockSeqNum);
-            Assert.assertEquals(4, progressInvocations);
-            Assert.assertEquals(1.0, notedProgressPct, 0.0);
-            Assert.assertTrue(ftpCompleteStatus);
+            assertEquals(2, session.currentBlockSeqNum);
+            assertEquals(4, progressInvocations);
+            assertEquals(1.0, notedProgressPct, 0.0);
+            assertTrue(ftpCompleteStatus);
         } catch (IOException ioe) {
             ioe.printStackTrace();
-            Assert.fail();
+            fail();
         }
     }
 
@@ -181,13 +184,13 @@ public class FileTransferSessionTest implements FileTransferSession.FtpCallback 
             simulateAckFromPeerAndVerify(session, 1, 3, 5);
             // the final invocation sends no data, and wraps up the session
             session.sendNextBlock();
-            Assert.assertEquals(3, session.currentBlockSeqNum);
-            Assert.assertEquals(5, progressInvocations);
-            Assert.assertEquals(1.0, notedProgressPct, 0.0);
-            Assert.assertTrue(ftpCompleteStatus);
+            assertEquals(3, session.currentBlockSeqNum);
+            assertEquals(5, progressInvocations);
+            assertEquals(1.0, notedProgressPct, 0.0);
+            assertTrue(ftpCompleteStatus);
         } catch (IOException ioe) {
             ioe.printStackTrace();
-            Assert.fail();
+            fail();
         }
     }
 
@@ -201,24 +204,24 @@ public class FileTransferSessionTest implements FileTransferSession.FtpCallback 
                 buf[x] = 'A';
             fileWriter.write(buf);
             fileWriter.close();
-            Assert.assertFalse(ftpCompleteStatus);
-            Assert.assertEquals(1, progressInvocations);
-            Assert.assertEquals(0.0, notedProgressPct, 0.0);
-            Assert.assertFalse(session.processAckForFilePart("not_expected_uid"));
+            assertFalse(ftpCompleteStatus);
+            assertEquals(1, progressInvocations);
+            assertEquals(0.0, notedProgressPct, 0.0);
+            assertFalse(session.processAckForFilePart("not_expected_uid"));
             return session;
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Assert.fail();
+        fail();
         return null;
     }
 
     private void simulateAckFromPeerAndVerify(FileTransferSender session, int expectedDataSize, long expectedSeqNum, int expectedProgressInvocations) {
         FileTransferPart ftp = session.dataAwaitingAck.get();
-        Assert.assertEquals(expectedDataSize, ftp.messageData.size());
-        Assert.assertTrue(session.processAckForFilePart(ftp.uid));
-        Assert.assertEquals(expectedSeqNum, session.currentBlockSeqNum);
-        Assert.assertEquals(expectedProgressInvocations, progressInvocations);
+        assertEquals(expectedDataSize, ftp.messageData.size());
+        assertTrue(session.processAckForFilePart(ftp.uid));
+        assertEquals(expectedSeqNum, session.currentBlockSeqNum);
+        assertEquals(expectedProgressInvocations, progressInvocations);
     }
 
     @Override

@@ -16,7 +16,7 @@
  */
 package bisq.asset.coins;
 import bisq.asset.AbstractAssetTest;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 public class BitDaricTest extends AbstractAssetTest {
     public BitDaricTest() {
         super(new BitDaric());

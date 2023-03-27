@@ -23,7 +23,7 @@ package bisq.asset.coins;
 
 import bisq.asset.AbstractAssetTest;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class NdauTest extends AbstractAssetTest {
     public NdauTest() {super(new Ndau());}

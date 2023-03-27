@@ -37,15 +37,15 @@ import org.slf4j.LoggerFactory;
 
 import org.jetbrains.annotations.NotNull;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 // TorNode created. Took 6 sec.
 // Hidden service created. Took 40-50 sec.
 // Connection establishment takes about 4 sec.
 //TODO P2P network tests are outdated
 @SuppressWarnings("ConstantConditions")
-@Ignore
+@Disabled
 public class TorNetworkNodeTest {
     private static final Logger log = LoggerFactory.getLogger(TorNetworkNodeTest.class);
     private CountDownLatch latch;

@@ -17,12 +17,12 @@
 
 package bisq.core.locale;
 
-import bisq.common.config.BaseCurrencyNetwork;
-
 import bisq.asset.Asset;
 import bisq.asset.AssetRegistry;
 import bisq.asset.Coin;
 import bisq.asset.coins.Ether;
+
+import bisq.common.config.BaseCurrencyNetwork;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,17 +31,17 @@ import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.stream.Stream;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class CurrencyUtilTest {
 
-    @Before
+    @BeforeEach
     public void setup() {
 
         Locale.setDefault(new Locale("en", "US"));
@@ -57,7 +57,7 @@ public class CurrencyUtilTest {
 
         assertTrue(euro.isPresent());
         assertTrue(naira.isPresent());
-        assertFalse("Fake currency shouldn't exist", fake.isPresent());
+        assertFalse(fake.isPresent(), "Fake currency shouldn't exist");
     }
 
     @Test
@@ -67,7 +67,7 @@ public class CurrencyUtilTest {
         // test if code is matching
         boolean daoTradingActivated = false;
         // Test if BSQ on mainnet is failing
-        Assert.assertFalse(CurrencyUtil.findAsset(assetRegistry, "BSQ",
+        assertFalse(CurrencyUtil.findAsset(assetRegistry, "BSQ",
                 BaseCurrencyNetwork.BTC_MAINNET, daoTradingActivated).isPresent());
 
         // on testnet/regtest it is allowed
@@ -81,7 +81,7 @@ public class CurrencyUtilTest {
                 BaseCurrencyNetwork.BTC_MAINNET, daoTradingActivated).get().getTickerSymbol(), "BSQ");
 
         // Test if not matching ticker is failing
-        Assert.assertFalse(CurrencyUtil.findAsset(assetRegistry, "BSQ1",
+        assertFalse(CurrencyUtil.findAsset(assetRegistry, "BSQ1",
                 BaseCurrencyNetwork.BTC_MAINNET, daoTradingActivated).isPresent());
 
         // Add a mock coin which has no mainnet version, needs to fail if we are on mainnet
@@ -90,11 +90,11 @@ public class CurrencyUtilTest {
             assetRegistry.addAsset(mockTestnetCoin);
             CurrencyUtil.findAsset(assetRegistry, "MOCK_COIN",
                     BaseCurrencyNetwork.BTC_MAINNET, daoTradingActivated);
-            Assert.fail("Expected an IllegalArgumentException");
+            fail("Expected an IllegalArgumentException");
         } catch (IllegalArgumentException e) {
             String wantMessage = "We are on mainnet and we could not find an asset with network type mainnet";
-            Assert.assertTrue("Unexpected exception, want message starting with " +
-                    "'" + wantMessage + "', got '" + e.getMessage() + "'", e.getMessage().startsWith(wantMessage));
+            assertTrue(e.getMessage().startsWith(wantMessage), "Unexpected exception, want message starting with " +
+                                "'" + wantMessage + "', got '" + e.getMessage() + "'");
         }
 
         // For testnet its ok

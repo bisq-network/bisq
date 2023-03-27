@@ -21,7 +21,7 @@ import bisq.desktop.common.view.AbstractView;
 import bisq.desktop.common.view.CachingViewLoader;
 import bisq.desktop.common.view.ViewLoader;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.mock;

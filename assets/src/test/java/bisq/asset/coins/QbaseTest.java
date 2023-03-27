@@ -2,7 +2,7 @@ package bisq.asset.coins;
 
 import bisq.asset.AbstractAssetTest;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class QbaseTest extends AbstractAssetTest {
     public QbaseTest() {

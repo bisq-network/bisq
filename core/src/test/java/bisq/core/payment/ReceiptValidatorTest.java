@@ -19,24 +19,21 @@ package bisq.core.payment;
 
 import bisq.core.offer.Offer;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.StrictStubs.class)
 public class ReceiptValidatorTest {
     private ReceiptValidator validator;
     private PaymentAccount account;
     private Offer offer;
     private ReceiptPredicates predicates;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         this.predicates = mock(ReceiptPredicates.class);
         this.account = mock(CountryBasedPaymentAccount.class);
@@ -44,7 +41,7 @@ public class ReceiptValidatorTest {
         this.validator = new ReceiptValidator(offer, account, predicates);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         verifyNoMoreInteractions(offer);
     }

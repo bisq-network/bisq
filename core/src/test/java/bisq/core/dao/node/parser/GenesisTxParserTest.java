@@ -32,14 +32,17 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class GenesisTxParserTest {
 
     @Test
     public void testIsGenesis() {
-        // fixme(chirhonul): Assert.assertEquals(2, 3);
+        // fixme(chirhonul): assertEquals(2, 3);
 
         int blockHeight = 200;
         String blockHash = "abc123";
@@ -73,7 +76,7 @@ public class GenesisTxParserTest {
         // With mismatch in block height and tx id, we should not get genesis tx back.
         boolean result = GenesisTxParser.isGenesis(rawTx, genesisTxId, genesisBlockHeight);
         boolean want = false;
-        Assert.assertEquals(want, result);
+        assertEquals(want, result);
 
         // With correct block height but mismatch in tx id, we should still not get genesis tx back.
         blockHeight = 150;
@@ -87,7 +90,7 @@ public class GenesisTxParserTest {
         );
         result = GenesisTxParser.isGenesis(rawTx, genesisTxId, genesisBlockHeight);
         want = false;
-        Assert.assertEquals(want, result);
+        assertEquals(want, result);
 
     }
 
@@ -130,7 +133,7 @@ public class GenesisTxParserTest {
         }
         TempTx wantTempTx = tempTx;
 
-        Assert.assertEquals(wantTempTx, resultTempTx);
+        assertEquals(wantTempTx, resultTempTx);
 
         // With correct tx id and block height, but too low sum of outputs (lower than genesisTotalSupply), we
         // should see an exception raised.
@@ -153,11 +156,11 @@ public class GenesisTxParserTest {
         );
         try {
             GenesisTxParser.getGenesisTempTx(rawTx, genesisTotalSupply);
-            Assert.fail("Expected an InvalidGenesisTxException to be thrown when outputs are too low");
+            fail("Expected an InvalidGenesisTxException to be thrown when outputs are too low");
         } catch (InvalidGenesisTxException igtxe) {
             String wantMessage = "Genesis tx is invalid; not using all available inputs. Remaining input value is 1 sat";
-            Assert.assertTrue("Unexpected exception, want message starting with " +
-                    "'" + wantMessage + "', got '" + igtxe.getMessage() + "'", igtxe.getMessage().startsWith(wantMessage));
+            assertTrue(igtxe.getMessage().startsWith(wantMessage), "Unexpected exception, want message starting with " +
+                                "'" + wantMessage + "', got '" + igtxe.getMessage() + "'");
         }
 
         // With correct tx id and block height, but too high sum of outputs (higher than from genesisTotalSupply), we
@@ -190,11 +193,11 @@ public class GenesisTxParserTest {
         );
         try {
             GenesisTxParser.getGenesisTempTx(rawTx, genesisTotalSupply);
-            Assert.fail("Expected an InvalidGenesisTxException to be thrown when outputs are too high");
+            fail("Expected an InvalidGenesisTxException to be thrown when outputs are too high");
         } catch (InvalidGenesisTxException igtxe) {
             String wantMessage = "Genesis tx is invalid; using more than available inputs. Remaining input value is 2 sat";
-            Assert.assertTrue("Unexpected exception, want message starting with " +
-                    "'" + wantMessage + "', got '" + igtxe.getMessage() + "'", igtxe.getMessage().startsWith(wantMessage));
+            assertTrue(igtxe.getMessage().startsWith(wantMessage), "Unexpected exception, want message starting with " +
+                                "'" + wantMessage + "', got '" + igtxe.getMessage() + "'");
         }
     }
 }

@@ -34,22 +34,17 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 public class EncryptionServiceTests {
     private static final Logger log = LoggerFactory.getLogger(EncryptionServiceTests.class);
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     private PubKeyRing pubKeyRing;
     private KeyRing keyRing;
     private File dir;
 
-    @Before
+    @BeforeEach
     public void setup() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, CryptoException {
 
         dir = File.createTempFile("temp_tests", "");
@@ -62,7 +57,7 @@ public class EncryptionServiceTests {
         pubKeyRing = keyRing.getPubKeyRing();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws IOException {
         FileUtil.deleteDirectory(dir);
     }

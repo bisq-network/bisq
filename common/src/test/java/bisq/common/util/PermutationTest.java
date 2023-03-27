@@ -23,9 +23,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.BiPredicate;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PermutationTest {
 

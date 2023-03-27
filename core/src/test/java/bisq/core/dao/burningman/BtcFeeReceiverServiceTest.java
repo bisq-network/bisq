@@ -23,14 +23,10 @@ import com.google.common.primitives.Longs;
 import java.util.List;
 import java.util.Random;
 
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import static org.junit.Assert.assertEquals;
-
-@RunWith(MockitoJUnitRunner.class)
 public class BtcFeeReceiverServiceTest {
     @Test
     public void testGetRandomIndex() {

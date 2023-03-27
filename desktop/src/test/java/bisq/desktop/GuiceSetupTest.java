@@ -61,18 +61,18 @@ import bisq.common.proto.persistable.PersistenceProtoResolver;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static junit.framework.TestCase.assertNotSame;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class GuiceSetupTest {
 
     private Injector injector;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         Res.setup();
         CurrencyUtil.setup();

@@ -19,10 +19,10 @@ package bisq.core.xmr.knaccc.monero.address;
 
 import bisq.core.xmr.knaccc.monero.crypto.CryptoUtil;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public class CryptoUtilTest {
     @Test
@@ -33,6 +33,6 @@ public class CryptoUtilTest {
 
         // key with 1 above l value (created with HexEncoder.getString(ensure32BytesAndConvertToLittleEndian(l.add(BigInteger.ONE).toByteArray())))
         txKey = "eed3f55c1a631258d69cf7a2def9de1400000000000000000000000000000010";
-        assertFalse(txKey.equals(CryptoUtil.toCanonicalTxKey(txKey)));
+        assertNotEquals(txKey, CryptoUtil.toCanonicalTxKey(txKey));
     }
 }

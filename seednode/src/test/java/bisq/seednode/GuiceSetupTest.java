@@ -9,7 +9,7 @@ import bisq.common.config.Config;
 
 import com.google.inject.Guice;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class GuiceSetupTest {
     @Test

@@ -10,25 +10,22 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.UncheckedIOException;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import static bisq.common.config.Config.*;
 import static java.lang.String.format;
-import static org.hamcrest.CoreMatchers.containsString;
+import static java.lang.System.getProperty;
+import static java.nio.file.Files.createTempFile;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.isEmptyString;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ConfigTests {
-
-    @Rule
-    public ExpectedException exceptionRule = ExpectedException.none();
 
     // Note: "DataDirProperties" in the test method names below represent the group of
     // configuration options that influence the location of a Bisq node's data directory.
@@ -39,8 +36,8 @@ public class ConfigTests {
         Config config = new Config();
         String defaultAppName = config.defaultAppName;
         String regex = "Bisq\\d{2,}Temp";
-        assertTrue(format("Temp app name '%s' failed to match '%s'", defaultAppName, regex),
-                defaultAppName.matches(regex));
+        assertTrue(defaultAppName.matches(regex),
+                format("Temp app name '%s' failed to match '%s'", defaultAppName, regex));
     }
 
     @Test
@@ -110,9 +107,12 @@ public class ConfigTests {
 
     @Test
     public void whenUnrecognizedOptionIsSet_thenConfigExceptionIsThrown() {
-        exceptionRule.expect(ConfigException.class);
-        exceptionRule.expectMessage("problem parsing option 'bogus': bogus is not a recognized option");
-        configWithOpts(opt("bogus"));
+        Exception exception = assertThrows(ConfigException.class, () -> configWithOpts(opt("bogus")));
+
+        String expectedMessage = "problem parsing option 'bogus': bogus is not a recognized option";
+        String actualMessage = exception.getMessage();
+
+        assertTrue(actualMessage.contains(expectedMessage));
     }
 
     @Test
@@ -128,24 +128,24 @@ public class ConfigTests {
 
     @Test
     public void whenOptionFileArgumentDoesNotExist_thenConfigExceptionIsThrown() {
-        String filepath = "/does/not/exist";
-        if (System.getProperty("os.name").startsWith("Windows")) {
-            filepath = "C:\\does\\not\\exist";
-        }
-        exceptionRule.expect(ConfigException.class);
-        exceptionRule.expectMessage(format("problem parsing option 'torrcFile': File [%s] does not exist", filepath));
-        configWithOpts(opt(TORRC_FILE, filepath));
+        String filepath = getProperty("os.name").startsWith("Windows") ? "C:\\does\\not\\exist" : "/does/not/exist";
+        Exception exception = assertThrows(ConfigException.class, () -> configWithOpts(opt(TORRC_FILE, filepath)));
+
+        String expectedMessage = format("problem parsing option 'torrcFile': File [%s] does not exist", filepath);
+        String actualMessage = exception.getMessage();
+
+        assertTrue(actualMessage.contains(expectedMessage));
     }
 
     @Test
     public void whenConfigFileOptionIsSetToNonExistentFile_thenConfigExceptionIsThrown() {
-        String filepath = "/no/such/bisq.properties";
-        if (System.getProperty("os.name").startsWith("Windows")) {
-            filepath = "C:\\no\\such\\bisq.properties";
-        }
-        exceptionRule.expect(ConfigException.class);
-        exceptionRule.expectMessage(format("The specified config file '%s' does not exist", filepath));
-        configWithOpts(opt(CONFIG_FILE, filepath));
+        String filepath = getProperty("os.name").startsWith("Windows") ? "C:\\no\\such\\bisq.properties" : "/no/such/bisq.properties";
+        Exception exception = assertThrows(ConfigException.class, () -> configWithOpts(opt(CONFIG_FILE, filepath)));
+
+        String expectedMessage = format("The specified config file '%s' does not exist", filepath);
+        String actualMessage = exception.getMessage();
+
+        assertTrue(actualMessage.contains(expectedMessage));
     }
 
     @Test
@@ -154,9 +154,12 @@ public class ConfigTests {
         try (PrintWriter writer = new PrintWriter(configFile)) {
             writer.println(new ConfigFileOption(CONFIG_FILE, "/tmp/other.bisq.properties"));
         }
-        exceptionRule.expect(ConfigException.class);
-        exceptionRule.expectMessage(format("The '%s' option is disallowed in config files", CONFIG_FILE));
-        configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath()));
+        Exception exception = assertThrows(ConfigException.class, () -> configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath())));
+
+        String expectedMessage = format("The '%s' option is disallowed in config files", CONFIG_FILE);
+        String actualMessage = exception.getMessage();
+
+        assertTrue(actualMessage.contains(expectedMessage));
     }
 
     @Test
@@ -168,7 +171,7 @@ public class ConfigTests {
 
     @Test
     public void whenConfigFileOptionIsSetToRelativePath_thenThePathIsPrefixedByAppDataDir() throws IOException {
-        File configFile = Files.createTempFile("my-bisq", ".properties").toFile();
+        File configFile = createTempFile("my-bisq", ".properties").toFile();
         File appDataDir = configFile.getParentFile();
         String relativeConfigFilePath = configFile.getName();
         Config config = configWithOpts(opt(APP_DATA_DIR, appDataDir), opt(CONFIG_FILE, relativeConfigFilePath));
@@ -232,11 +235,15 @@ public class ConfigTests {
     @Test
     public void whenAppDataDirCannotBeCreated_thenUncheckedIoExceptionIsThrown() throws IOException {
         // set a userDataDir that is actually a file so appDataDir cannot be created
-        File aFile = Files.createTempFile("A", "File").toFile();
-        exceptionRule.expect(UncheckedIOException.class);
-        exceptionRule.expectMessage(containsString("Application data directory"));
-        exceptionRule.expectMessage(containsString("could not be created"));
-        configWithOpts(opt(USER_DATA_DIR, aFile));
+        Exception exception = assertThrows(UncheckedIOException.class, () -> {
+            File aFile = createTempFile("A", "File").toFile();
+            configWithOpts(opt(USER_DATA_DIR, aFile));
+        });
+
+        String expectedMessage = "could not be created";
+        String actualMessage = exception.getMessage();
+
+        assertTrue(actualMessage.contains(expectedMessage));
     }
 
     @Test

@@ -17,7 +17,7 @@
 
 package bisq.asset.coins;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import bisq.asset.AbstractAssetTest;
 
 public class DoichainTest extends AbstractAssetTest {
@@ -35,8 +35,8 @@ public class DoichainTest extends AbstractAssetTest {
 
     @Test
     public void testInvalidAddresses() {
-        assertInvalidAddress("NGHV9LstnZfrkGx5QJmYhEepbzc66W7LN5x"); 
-        assertInvalidAddress("16iWWt1uoG8Dct56Cq6eKHFxvGSDha46Lo"); 
-        assertInvalidAddress("38BFQkc9CdyJUxQK8PhebnDcA1tRRwLDW4"); 
+        assertInvalidAddress("NGHV9LstnZfrkGx5QJmYhEepbzc66W7LN5x");
+        assertInvalidAddress("16iWWt1uoG8Dct56Cq6eKHFxvGSDha46Lo");
+        assertInvalidAddress("38BFQkc9CdyJUxQK8PhebnDcA1tRRwLDW4");
     }
 }

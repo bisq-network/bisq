@@ -19,7 +19,7 @@ package bisq.asset.coins;
 
 import bisq.asset.AbstractAssetTest;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class PENGTest extends AbstractAssetTest {
 
@@ -42,4 +42,4 @@ public class PENGTest extends AbstractAssetTest {
         assertInvalidAddress("P8Efabj5DzRj6WBpc3jtVDorsVM5nddDxie");
         assertInvalidAddress("P9AvXbSUAdCyd9MEtDPYYSmezmeLGL1HcjG");
     }
-} 
+}

@@ -24,12 +24,12 @@ import org.bitcoinj.core.InsufficientMoneyException;
 
 import java.util.List;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -57,7 +57,7 @@ public class TxFeeEstimationServiceTest {
 
     // FIXME @Bernard could you have a look?
     @Test
-    @Ignore
+    @Disabled
     public void testGetEstimatedTxVsize_withLargeTx() throws InsufficientMoneyException {
         List<Coin> outputValues = List.of(Coin.valueOf(2000), Coin.valueOf(3000));
         int initialEstimatedTxVsize;
@@ -81,7 +81,7 @@ public class TxFeeEstimationServiceTest {
 
     // FIXME @Bernard could you have a look?
     @Test
-    @Ignore
+    @Disabled
     public void testGetEstimatedTxVsize_withSmallTx() throws InsufficientMoneyException {
         List<Coin> outputValues = List.of(Coin.valueOf(2000), Coin.valueOf(3000));
         int initialEstimatedTxVsize;

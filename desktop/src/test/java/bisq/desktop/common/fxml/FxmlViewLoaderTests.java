@@ -28,28 +28,26 @@ import javafx.fxml.LoadException;
 
 import java.util.ResourceBundle;
 
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 // TODO Some refactorings seem to have broken those tests. Investigate and remove @Ignore as soon its fixed.
-@Ignore
+@Disabled
 public class FxmlViewLoaderTests {
 
     private ViewLoader viewLoader;
     private ViewFactory viewFactory;
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
-    @Before
+    @BeforeEach
     public void setUp() {
         viewFactory = mock(ViewFactory.class);
         ResourceBundle resourceBundle = mock(ResourceBundle.class);
@@ -75,9 +73,8 @@ public class FxmlViewLoaderTests {
 
     @Test
     public void fxmlFileMissingFxControllerAttributeShouldThrow() {
-        thrown.expect(ViewfxException.class);
-        thrown.expectMessage("Does it declare an fx:controller attribute?");
-        viewLoader.load(MissingFxController.class);
+        Throwable exception = assertThrows(ViewfxException.class, () -> viewLoader.load(MissingFxController.class));
+        assertEquals("Does it declare an fx:controller attribute?", exception.getMessage());
     }
 
 
@@ -98,10 +95,9 @@ public class FxmlViewLoaderTests {
 
     @Test
     public void malformedFxmlFileShouldThrow() {
-        thrown.expect(ViewfxException.class);
-        thrown.expectMessage("Failed to load view from FXML file");
-        thrown.expectCause(instanceOf(LoadException.class));
-        viewLoader.load(Malformed.class);
+        Throwable exception = assertThrows(ViewfxException.class, () -> viewLoader.load(Malformed.class));
+        assertTrue(exception.getCause() instanceof LoadException);
+        assertEquals("Failed to load view from FXML file", exception.getMessage());
     }
 
 
@@ -111,9 +107,8 @@ public class FxmlViewLoaderTests {
 
     @Test
     public void missingFxmlFileShouldThrow() {
-        thrown.expect(ViewfxException.class);
-        thrown.expectMessage("Does it exist?");
-        viewLoader.load(MissingFxmlFile.class);
+        Throwable exception = assertThrows(ViewfxException.class, () -> viewLoader.load(MissingFxmlFile.class));
+        assertEquals("Does it exist?", exception.getMessage());
     }
 
 
@@ -123,11 +118,10 @@ public class FxmlViewLoaderTests {
 
     @Test
     public void customFxmlFileLocationShouldOverrideDefaultConvention() {
-        thrown.expect(ViewfxException.class);
-        thrown.expectMessage("Failed to load view class");
-        thrown.expectMessage("CustomLocation");
-        thrown.expectMessage("[unconventionally/located.fxml] could not be loaded");
-        viewLoader.load(CustomLocation.class);
+        Throwable exception = assertThrows(ViewfxException.class, () -> viewLoader.load(CustomLocation.class));
+        assertTrue(exception.getMessage().contains("Failed to load view class"));
+        assertTrue(exception.getMessage().contains("CustomLocation"));
+        assertTrue(exception.getMessage().contains("[unconventionally/located.fxml] could not be loaded"));
     }
 }
 

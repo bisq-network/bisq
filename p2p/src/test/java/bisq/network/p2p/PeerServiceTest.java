@@ -28,10 +28,10 @@ import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 // TorNode created. Took 6 sec.
 // Hidden service created. Took 40-50 sec.
@@ -42,7 +42,7 @@ import org.junit.Test;
 
 // TODO deactivated because outdated
 @SuppressWarnings({"UnusedAssignment", "EmptyMethod"})
-@Ignore
+@Disabled
 public class PeerServiceTest {
     private static final Logger log = LoggerFactory.getLogger(PeerServiceTest.class);
     private static final int MAX_CONNECTIONS = 100;
@@ -55,7 +55,7 @@ public class PeerServiceTest {
     private final List<DummySeedNode> seedNodes = new ArrayList<>();
     private final String test_dummy_dir = "test_dummy_dir";
 
-    @Before
+    @BeforeEach
     public void setup() throws InterruptedException {
         LocalhostNetworkNode.setSimulateTorDelayTorNode(50);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(8);
@@ -75,7 +75,7 @@ public class PeerServiceTest {
         }
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws InterruptedException {
         Thread.sleep(sleepTime);
 

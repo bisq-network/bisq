@@ -36,8 +36,8 @@ import java.util.List;
 
 import org.mockito.MockitoAnnotations;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -48,7 +48,7 @@ public class P2PDataStorageProcessGetDataResponse {
 
     private NodeAddress peerNodeAddress;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         this.testState = new TestState();

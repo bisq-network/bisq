@@ -37,8 +37,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static bisq.desktop.maker.TradeCurrencyMakers.bitcoin;
 import static bisq.desktop.maker.TradeCurrencyMakers.euro;
@@ -47,7 +47,7 @@ import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
 import static org.bitcoinj.core.CoinMaker.oneBitcoin;
 import static org.bitcoinj.core.CoinMaker.satoshis;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -62,7 +62,7 @@ public class GUIUtilTest {
     private String addressUrlPrefix;
     private String bsqAddressUrlPrefix;
 
-    @Before
+    @BeforeEach
     public void setup() {
         Locale.setDefault(new Locale("en", "US"));
         GlobalSettings.setLocale(new Locale("en", "US"));

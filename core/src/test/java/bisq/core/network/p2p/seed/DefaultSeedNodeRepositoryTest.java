@@ -21,18 +21,20 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.config.Config;
 
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import static java.lang.String.format;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DefaultSeedNodeRepositoryTest {
 
     @Test
     public void getSeedNodes() {
         DefaultSeedNodeRepository DUT = new DefaultSeedNodeRepository(new Config());
-        Assert.assertFalse(DUT.getSeedNodeAddresses().isEmpty());
+        assertFalse(DUT.getSeedNodeAddresses().isEmpty());
     }
 
     @Test
@@ -41,10 +43,10 @@ public class DefaultSeedNodeRepositoryTest {
         String seed2 = "fdsa:6001";
         String seedNodesOption = format("--%s=%s,%s", Config.SEED_NODES, seed1, seed2);
         DefaultSeedNodeRepository DUT = new DefaultSeedNodeRepository(new Config(seedNodesOption));
-        Assert.assertFalse(DUT.getSeedNodeAddresses().isEmpty());
-        Assert.assertEquals(2, DUT.getSeedNodeAddresses().size());
-        Assert.assertTrue(DUT.getSeedNodeAddresses().contains(new NodeAddress(seed1)));
-        Assert.assertTrue(DUT.getSeedNodeAddresses().contains(new NodeAddress(seed2)));
+        assertFalse(DUT.getSeedNodeAddresses().isEmpty());
+        assertEquals(2, DUT.getSeedNodeAddresses().size());
+        assertTrue(DUT.getSeedNodeAddresses().contains(new NodeAddress(seed1)));
+        assertTrue(DUT.getSeedNodeAddresses().contains(new NodeAddress(seed2)));
     }
 
     @Test
@@ -55,10 +57,10 @@ public class DefaultSeedNodeRepositoryTest {
         String bannedSeedNodesOption = format("--%s=%s,%s", Config.BANNED_SEED_NODES, seed1, seed2);
         Config config = new Config(baseCurrencyNetwork, bannedSeedNodesOption);
         DefaultSeedNodeRepository DUT = new DefaultSeedNodeRepository(config);
-        Assert.assertFalse(DUT.getSeedNodeAddresses().contains(new NodeAddress(seed2)));
+        assertFalse(DUT.getSeedNodeAddresses().contains(new NodeAddress(seed2)));
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         //restore default Config
         new Config();

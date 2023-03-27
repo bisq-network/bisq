@@ -19,7 +19,7 @@ package bisq.asset.coins;
 
 import bisq.asset.AbstractAssetTest;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class CroatTest extends AbstractAssetTest {
 
@@ -35,7 +35,7 @@ public class CroatTest extends AbstractAssetTest {
     }
 
     @Test
-    public void testInvalidAddresses() { 
+    public void testInvalidAddresses() {
         assertInvalidAddress("ZsZ46x2mzB3GhjrC2Lt7oZ4Efmj8USUjVM7Bdz8B8EF6bQwN84NzSti7RwLZcFoZG5NR1iaiZY8GP2KwumVc1jGzHLvBzAv");
         assertInvalidAddress("");
         assertInvalidAddress("CjxZDcoWCsx1wmYkmJcFpSTgqpjoFGRW9dQT8JqgwvkBaU6Q3X4MJ4QjV#NUM7GHp6NjYaTrKeH4bSRTK3mCYsHf2818vzv");
