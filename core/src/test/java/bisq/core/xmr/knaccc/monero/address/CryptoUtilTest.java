@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package knaccc.monero.address;
+package bisq.core.xmr.knaccc.monero.address;
 
 import bisq.core.xmr.knaccc.monero.crypto.CryptoUtil;
 

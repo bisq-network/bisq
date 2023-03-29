@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package knaccc.monero.address;
-
-import bisq.core.xmr.knaccc.monero.address.WalletAddress;
+package bisq.core.xmr.knaccc.monero.address;
 
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 public class WalletAddressTest {
     @Test
@@ -48,27 +48,24 @@ public class WalletAddressTest {
         assertEquals(walletAddress.getSubaddressBase58(privateViewKeyHex, 1, 0), addr10);
         assertEquals(walletAddress.getSubaddressBase58(privateViewKeyHex, 1, 1), addr11);
 
-        assertEquals(walletAddress.checkPrivateViewKey(privateViewKeyHex), true);
-        assertEquals(WalletAddress.arePubPrivKeysRelated(publicViewKeyHex, privateViewKeyHex), true);
-        assertEquals(WalletAddress.arePubPrivKeysRelated(privateViewKeyHex, privateViewKeyHex), false);
+        assertTrue(walletAddress.checkPrivateViewKey(privateViewKeyHex));
+        assertTrue(WalletAddress.doesPrivateKeyResolveToPublicKey(privateViewKeyHex, publicViewKeyHex));
+        assertFalse(WalletAddress.doesPrivateKeyResolveToPublicKey(privateViewKeyHex, privateViewKeyHex));
 
-        assertEquals(WalletAddress.arePubPrivKeysRelated(
-                "bdc158199c8933353627d54edb4bbae547dbbde3130860d7940313210edca0a6",
-                "a82a9017a1d259c71f5392ad9091b743b86dac7a21f5e402ea0a55e5c8a6750f"),
-                true);
+        assertTrue(WalletAddress.doesPrivateKeyResolveToPublicKey(
+                "a82a9017a1d259c71f5392ad9091b743b86dac7a21f5e402ea0a55e5c8a6750f",
+                "bdc158199c8933353627d54edb4bbae547dbbde3130860d7940313210edca0a6"));
 
-        assertEquals(WalletAddress.arePubPrivKeysRelated(
-                "d17698d07fe9edbc41552299b90a93de73bb1bd4b94b8083af0bbe3a1931e2ec",
-                "dae1bceeb2563b8c376f8e0456e5fe7aa3d6291b38ace18c6ad5647424a3b104"),
-                true);
+        assertTrue(WalletAddress.doesPrivateKeyResolveToPublicKey(
+                "dae1bceeb2563b8c376f8e0456e5fe7aa3d6291b38ace18c6ad5647424a3b104",
+                "d17698d07fe9edbc41552299b90a93de73bb1bd4b94b8083af0bbe3a1931e2ec"));
 
-        assertEquals(WalletAddress.arePubPrivKeysRelated(
+        assertFalse(WalletAddress.doesPrivateKeyResolveToPublicKey(
                 "0000111122223333444455556666777788889999AAAABBBBCCCCDDDDEEEEFFFF",
-                "0000111122223333444455556666777788889999AAAABBBBCCCCDDDDEEEEFFFF"),
-                false);
+                "0000111122223333444455556666777788889999AAAABBBBCCCCDDDDEEEEFFFF"));
 
-        String nonReducedPrivateKey = "42594aba0e809490dec97b2dfaf64f7ae5bef1c2d19af636eb84544773df5b5f";
-        assertEquals(WalletAddress.isPrivateKeyValid(nonReducedPrivateKey), false);
-        assertEquals(WalletAddress.isPrivateKeyValid(privateViewKeyHex), true);
+        String nonReducedPrivateKey = "680bceef3ca8b2ca1a9a29283c184f6f590a9bd2881825f0542ad99cdaba091a";
+        assertFalse(WalletAddress.isPrivateKeyReduced(nonReducedPrivateKey));
+        assertTrue(WalletAddress.isPrivateKeyReduced(privateViewKeyHex));
     }
 }

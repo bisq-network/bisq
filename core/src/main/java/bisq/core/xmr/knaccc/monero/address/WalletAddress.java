@@ -7,6 +7,8 @@ import bisq.core.xmr.org.nem.core.crypto.ed25519.arithmetic.Ed25519EncodedGroupE
 import bisq.core.xmr.org.nem.core.crypto.ed25519.arithmetic.Ed25519Group;
 import bisq.core.xmr.org.nem.core.crypto.ed25519.arithmetic.Ed25519GroupElement;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.util.Arrays;
 
 import static bisq.core.xmr.knaccc.monero.address.ByteUtil.concat;
@@ -130,17 +132,20 @@ public class WalletAddress {
         return getSubaddressBase58(new Scalar(privateViewKeyHex), hexToBytes(getPublicSpendKeyHex()), accountId, subaddressId);
     }
 
-    public boolean checkPrivateViewKey(String privateViewKey) {
-        return isPrivateKeyValid(privateViewKey) && arePubPrivKeysRelated(this.publicViewKeyHex, privateViewKey);
+    @VisibleForTesting
+    boolean checkPrivateViewKey(String privateViewKey) {
+        return isPrivateKeyReduced(privateViewKey) && doesPrivateKeyResolveToPublicKey(privateViewKey, this.publicViewKeyHex);
     }
 
-    public static boolean isPrivateKeyValid(String privateKey) {
+    @VisibleForTesting
+    static boolean isPrivateKeyReduced(String privateKey) {
         byte[] input = hexToBytes(privateKey);
         byte[] reduced = CryptoUtil.scReduce32(input);
         return Arrays.equals(input, reduced);
     }
 
-    public static boolean arePubPrivKeysRelated(String publicKey, String privateKey) {
+    @VisibleForTesting
+    static boolean doesPrivateKeyResolveToPublicKey(String privateKey, String publicKey) {
         Scalar m = new Scalar(privateKey);
         Ed25519GroupElement M = G.scalarMultiply(new Ed25519EncodedFieldElement(m.bytes));
         byte[] generatedPubKey = M.encode().getRaw();
