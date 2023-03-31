@@ -68,7 +68,7 @@ class BalanceEntryItem {
     @Getter
     private final Optional<Long> burnedBsq;
     @Getter
-    private final Optional<Long> revenue;
+    private final long revenue;
 
     // We create the strings on demand and cache them. For large data sets it would be a bit slow otherwise.
     private String monthAsString, dateAsString, receivedBtcAsString, receivedBtcAsBsqAsString, burnedBsqAsString, revenueAsString,
@@ -111,11 +111,7 @@ class BalanceEntryItem {
             receivedBtcAsBsq = Optional.of(MathUtils.roundDoubleToLong(MathUtils.scaleDownByPowerOf10(volume, 6)));
         }
 
-        if (balanceEntry instanceof MonthlyBalanceEntry) {
-            revenue = Optional.of(receivedBtcAsBsq.orElse(0L) + burnedBsq.get());
-        } else {
-            revenue = Optional.empty();
-        }
+        revenue = receivedBtcAsBsq.orElse(0L) + burnedBsq.orElse(0L);
     }
 
     String getMonthAsString() {
@@ -168,7 +164,8 @@ class BalanceEntryItem {
             return revenueAsString;
         }
 
-        revenueAsString = revenue.filter(e -> e != 0).map(bsqFormatter::formatCoin).orElse("");
+        revenueAsString = balanceEntry instanceof MonthlyBalanceEntry ?
+                bsqFormatter.formatCoin(revenue) : "";
         return revenueAsString;
     }
 
@@ -214,6 +211,6 @@ class BalanceEntryItem {
         receivedBtc = null;
         receivedBtcAsBsq = null;
         burnedBsq = null;
-        revenue = null;
+        revenue = 0L;
     }
 }
