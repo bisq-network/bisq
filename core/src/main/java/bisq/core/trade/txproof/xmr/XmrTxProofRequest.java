@@ -37,6 +37,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import java.io.IOException;
+
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -101,6 +103,7 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
         NO_MATCH_FOUND,
         AMOUNT_NOT_MATCHING,
         TRADE_DATE_NOT_MATCHING,
+        INVALID_UNLOCK_TIME,
         NO_RESULTS_TIMEOUT;
 
         @Getter
@@ -143,7 +146,8 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
     private final ListeningExecutorService executorService = Utilities.getListeningExecutorService(
             "XmrTransferProofRequester", 3, 5, 10 * 60);
 
-    private final AssetTxProofParser<XmrTxProofRequest.Result, XmrTxProofModel> parser;
+    private final AssetTxProofParser<XmrTxProofRequest.Result, XmrTxProofModel> txProofParser;
+    private final AssetTxProofParser<XmrTxProofRequest.Result, XmrTxProofModel> rawTxParser;
     private final XmrTxProofModel model;
     private final AssetTxProofHttpClient httpClient;
     private final long firstRequest;
@@ -160,7 +164,8 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
 
     XmrTxProofRequest(Socks5ProxyProvider socks5ProxyProvider,
                       XmrTxProofModel model) {
-        this.parser = new XmrTxProofParser();
+        txProofParser = new XmrTxProofParser();
+        rawTxParser = new XmrRawTxParser();
         this.model = model;
 
         httpClient = new XmrTxProofHttpClient(socks5ProxyProvider);
@@ -206,24 +211,20 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
 
         ListenableFuture<Result> future = executorService.submit(() -> {
             Thread.currentThread().setName("XmrTransferProofRequest-" + this.getShortId());
-            // The API use the viewkey param for txKey if txprove is true
-            // https://github.com/moneroexamples/onion-monero-blockchain-explorer/blob/9a37839f37abef0b8b94ceeba41ab51a41f3fbd8/src/page.h#L5254
-            String param = "/api/outputs?txhash=" + model.getTxHash() +
-                    "&address=" + model.getRecipientAddress() +
-                    "&viewkey=" + model.getTxKey() +
-                    "&txprove=1";
-            log.info("Param {} for {}", param, this);
-            String json = httpClient.get(param, "User-Agent", "bisq/" + Version.VERSION);
-            try {
-                String prettyJson = new GsonBuilder().setPrettyPrinting().create().toJson(new JsonParser().parse(json));
-                log.info("Response json from {}\n{}", this, prettyJson);
-            } catch (Throwable error) {
-                log.error("Pretty print caused a {}: raw json={}", error, json);
+
+            Result result = getResultFromRawTxRequest();
+            if (result != Result.SUCCESS) {
+                return result;
             }
 
-            Result result = parser.parse(model, json);
-            log.info("Result from {}\n{}", this, result);
-            return result;
+            if (terminated) {
+                return null;
+            }
+
+            // Only if the rawTx request succeeded we go on to the tx proof request.
+            // The result from the rawTx request does not contain any detail data in the
+            // success case, so we drop it.
+            return getResultFromTxProofRequest();
         });
 
         Futures.addCallback(future, new FutureCallback<>() {
@@ -265,12 +266,51 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
             }
 
             public void onFailure(@NotNull Throwable throwable) {
-                String errorMessage = this + " failed with error " + throwable.toString();
+                String errorMessage = this + " failed with error " + throwable;
                 faultHandler.handleFault(errorMessage, throwable);
                 UserThread.execute(() ->
                         resultHandler.accept(XmrTxProofRequest.Result.ERROR.with(Detail.CONNECTION_FAILURE.error(errorMessage))));
             }
         }, MoreExecutors.directExecutor());
+    }
+
+    private Result getResultFromRawTxRequest() throws IOException {
+        // The rawtransaction endpoint is not documented in explorer docs.
+        // Example request: https://xmrblocks.bisq.services/api/rawtransaction/5e665addf6d7c6300670e8a89564ed12b5c1a21c336408e2835668f9a6a0d802
+        String param = "/api/rawtransaction/" + model.getTxHash();
+        log.info("Param {} for rawtransaction request {}", param, this);
+        String json = httpClient.get(param, "User-Agent", "bisq/" + Version.VERSION);
+        try {
+            String prettyJson = new GsonBuilder().setPrettyPrinting().create().toJson(new JsonParser().parse(json));
+            log.info("Response json from rawtransaction request {}\n{}", this, prettyJson);
+        } catch (Throwable error) {
+            log.error("Pretty print caused a {}: raw json={}", error, json);
+        }
+
+        Result result = rawTxParser.parse(json);
+        log.info("Result from rawtransaction request {}\n{}", this, result);
+        return result;
+    }
+
+    private Result getResultFromTxProofRequest() throws IOException {
+        // The API use the viewkey param for txKey if txprove is true
+        // https://github.com/moneroexamples/onion-monero-blockchain-explorer/blob/9a37839f37abef0b8b94ceeba41ab51a41f3fbd8/src/page.h#L5254
+        String param = "/api/outputs?txhash=" + model.getTxHash() +
+                "&address=" + model.getRecipientAddress() +
+                "&viewkey=" + model.getTxKey() +
+                "&txprove=1";
+        log.info("Param {} for {}", param, this);
+        String json = httpClient.get(param, "User-Agent", "bisq/" + Version.VERSION);
+        try {
+            String prettyJson = new GsonBuilder().setPrettyPrinting().create().toJson(new JsonParser().parse(json));
+            log.info("Response json from {}\n{}", this, prettyJson);
+        } catch (Throwable error) {
+            log.error("Pretty print caused a {}: raw json={}", error, json);
+        }
+
+        Result result = txProofParser.parse(model, json);
+        log.info("Result from {}\n{}", this, result);
+        return result;
     }
 
     @Override
