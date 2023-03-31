@@ -19,4 +19,6 @@ package bisq.core.trade.txproof;
 
 public interface AssetTxProofParser<R extends AssetTxProofRequest.Result, T extends AssetTxProofModel> {
     R parse(T model, String jsonTxt);
+
+    R parse(String jsonTxt);
 }

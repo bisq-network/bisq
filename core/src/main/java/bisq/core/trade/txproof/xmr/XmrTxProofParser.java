@@ -45,6 +45,11 @@ public class XmrTxProofParser implements AssetTxProofParser<XmrTxProofRequest.Re
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
+    public XmrTxProofRequest.Result parse(String jsonTxt) {
+        throw new UnsupportedOperationException("This method is not supported for this parser");
+    }
+
     @SuppressWarnings("SpellCheckingInspection")
     @Override
     public XmrTxProofRequest.Result parse(XmrTxProofModel model, String jsonTxt) {

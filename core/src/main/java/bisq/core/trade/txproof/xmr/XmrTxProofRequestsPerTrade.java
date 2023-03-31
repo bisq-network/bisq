@@ -156,7 +156,7 @@ class XmrTxProofRequestsPerTrade implements AssetTxProofRequestsPerTrade {
 
             request.requestFromService(result -> {
                         // If we ever received an error or failed result we terminate and do not process any
-                        // future result anymore to avoid that we overwrite out state with success.
+                        // future result anymore to avoid that we overwrite our state with success.
                         if (wasTerminated()) {
                             return;
                         }
