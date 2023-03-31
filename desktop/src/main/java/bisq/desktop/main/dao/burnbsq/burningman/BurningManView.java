@@ -24,6 +24,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipRadioButton;
 import bisq.desktop.components.AutoTooltipSlideToggleButton;
 import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.components.BisqTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -136,10 +137,12 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
     private Button burnButton, exportBalanceEntriesButton;
     private TitledGroupBg burnOutputsTitledGroupBg, compensationsTitledGroupBg, selectedContributorTitledGroupBg;
     private AutoTooltipSlideToggleButton showOnlyActiveBurningmenToggle, showMonthlyBalanceEntryToggle;
-    private TextField expectedRevenueField, daoBalanceTotalBurnedField, daoBalanceTotalDistributedField, selectedContributorNameField, selectedContributorAddressField, burnTargetField;
+    private TextField expectedRevenueField, daoBalanceTotalBurnedField, daoBalanceTotalDistributedField,
+            selectedContributorNameField, selectedContributorTotalRevenueField, selectedContributorAddressField,
+            burnTargetField;
     private ToggleGroup balanceEntryToggleGroup;
     private HBox balanceEntryHBox;
-    private VBox selectedContributorNameBox, selectedContributorAddressBox;
+    private VBox selectedContributorNameBox, selectedContributorTotalRevenueBox, selectedContributorAddressBox;
     private TableView<BurningManListItem> burningManTableView;
     private TableView<BalanceEntryItem> balanceEntryTableView;
     private TableView<BurnOutputListItem> burnOutputsTableView;
@@ -224,12 +227,15 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             selectedContributorTitledGroupBg.setVisible(isValueSet);
             selectedContributorNameBox.setManaged(isValueSet);
             selectedContributorNameBox.setVisible(isValueSet);
+            selectedContributorTotalRevenueBox.setManaged(isValueSet);
+            selectedContributorTotalRevenueBox.setVisible(isValueSet);
             selectedContributorAddressBox.setManaged(isValueSet);
             selectedContributorAddressBox.setVisible(isValueSet);
             if (isValueSet) {
                 onBurningManSelected(newValue);
             } else {
                 selectedContributorNameField.clear();
+                selectedContributorTotalRevenueField.clear();
                 selectedContributorAddressField.clear();
             }
         };
@@ -324,7 +330,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         Tuple3<Label, TextField, VBox> daoBalanceTotalBurnedTuple = addCompactTopLabelTextField(gridPane, ++gridRow,
                 Res.get("dao.burningman.daoBalanceTotalBurned"), "",
                 Layout.COMPACT_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE);
-        daoBalanceTotalBurnedField =daoBalanceTotalBurnedTuple.second;
+        daoBalanceTotalBurnedField = daoBalanceTotalBurnedTuple.second;
         Tuple3<Label, TextField, VBox> daoBalanceTotalDistributedTuple = addCompactTopLabelTextField(gridPane, gridRow,
                 Res.get("dao.burningman.daoBalanceTotalDistributed"), "",
                 Layout.COMPACT_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE);
@@ -355,15 +361,31 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         selectedContributorNameBox.setManaged(false);
         selectedContributorNameBox.setVisible(false);
 
-        Tuple3<Label, TextField, VBox> addressTuple = addCompactTopLabelTextField(gridPane, gridRow,
-                Res.get("dao.burningman.selectedContributorAddress"), "",
-                Layout.COMPACT_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE);
-        selectedContributorAddressField = addressTuple.second;
-        selectedContributorAddressBox = addressTuple.third;
-        GridPane.setColumnSpan(selectedContributorAddressBox, 2);
-        GridPane.setColumnIndex(selectedContributorAddressBox, 1);
+        selectedContributorTotalRevenueField = new BisqTextField();
+        selectedContributorTotalRevenueField.setEditable(false);
+        selectedContributorTotalRevenueField.setFocusTraversable(false);
+        selectedContributorTotalRevenueBox = getTopLabelWithVBox(Res.get("dao.burningman.selectedContributorTotalRevenue"),
+                selectedContributorTotalRevenueField).second;
+        selectedContributorTotalRevenueBox.setManaged(false);
+        selectedContributorTotalRevenueBox.setVisible(false);
+
+        selectedContributorAddressField = new BisqTextField();
+        selectedContributorAddressField.setEditable(false);
+        selectedContributorAddressField.setFocusTraversable(false);
+        selectedContributorAddressBox = getTopLabelWithVBox(Res.get("dao.burningman.selectedContributorAddress"),
+                selectedContributorAddressField).second;
         selectedContributorAddressBox.setManaged(false);
         selectedContributorAddressBox.setVisible(false);
+
+        HBox rightHBox = new HBox(5, selectedContributorTotalRevenueBox, selectedContributorAddressBox);
+        HBox.setHgrow(selectedContributorTotalRevenueBox, Priority.ALWAYS);
+        HBox.setHgrow(selectedContributorAddressBox, Priority.ALWAYS);
+
+        GridPane.setRowIndex(rightHBox, gridRow);
+        GridPane.setColumnIndex(rightHBox, 1);
+        GridPane.setMargin(rightHBox, new Insets(Layout.COMPACT_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
+        gridPane.getChildren().add(rightHBox);
+        GridPane.setColumnSpan(rightHBox, 2);
 
         // BalanceEntry
         TitledGroupBg balanceEntryTitledGroupBg = new TitledGroupBg();
@@ -461,7 +483,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         CSVEntryConverter<String> contentConverter = item -> item.split(separator);
         int year = 2022;
         int month = 11;
-        while(true) {
+        while (true) {
             Date date = DateUtil.getStartOfMonth(year, month);
             long feeAmount = burningManAccountingService.getDistributedBtcBalanceByMonth(date)
                     .filter(ee -> ee.getType() == BalanceEntry.Type.BTC_TRADE_FEE_TX).mapToLong(BaseBalanceEntry::getAmount).sum();
@@ -703,8 +725,16 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             balanceEntryObservableList.setAll(balanceEntries.stream()
                     .map(balanceEntry -> new BalanceEntryItem(balanceEntry, averageBsqPriceByMonth, bsqFormatter, btcFormatter))
                     .collect(Collectors.toList()));
+
+            long totalRevenue = balanceEntryObservableList.stream()
+                    .filter(item -> item.getRevenue().isPresent())
+                    .mapToLong(item -> item.getRevenue().get())
+                    .sum();
+            String totalRevenueAsBsq = bsqFormatter.formatCoinWithCode(totalRevenue);
+            selectedContributorTotalRevenueField.setText(totalRevenueAsBsq);
         } else {
             balanceEntryObservableList.clear();
+            selectedContributorTotalRevenueField.clear();
         }
         GUIUtil.setFitToRowsForTableView(balanceEntryTableView, 36, 28, 4, 6);
 
