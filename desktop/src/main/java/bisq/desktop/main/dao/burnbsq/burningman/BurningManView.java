@@ -945,6 +945,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         burningManTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurningManListItem::getAccumulatedDecayedBurnAmount));
         column.setSortType(TableColumn.SortType.DESCENDING);
+        column.setVisible(false);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.burnAmount"));
         column.setMinWidth(130);
@@ -969,31 +970,6 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         burningManTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurningManListItem::getAccumulatedBurnAmount));
         column.setSortType(TableColumn.SortType.DESCENDING);
-
-       /* column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.numBurnOutputs"));
-        column.setMinWidth(90);
-        column.setMaxWidth(column.getMinWidth());
-        column.getStyleClass().add("last-column");
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<>() {
-            @Override
-            public TableCell<BurningManListItem, BurningManListItem> call(TableColumn<BurningManListItem,
-                    BurningManListItem> column) {
-                return new TableCell<>() {
-                    @Override
-                    public void updateItem(final BurningManListItem item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null && !empty) {
-                            setText(String.valueOf(item.getNumBurnOutputs()));
-                        } else
-                            setText("");
-                    }
-                };
-            }
-        });
-        burningManTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(BurningManListItem::getNumBurnOutputs));
-        column.setSortType(TableColumn.SortType.DESCENDING);*/
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.issuanceShare"));
         column.setMinWidth(110);
@@ -1042,6 +1018,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         burningManTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurningManListItem::getAccumulatedDecayedCompensationAmount));
         column.setSortType(TableColumn.SortType.DESCENDING);
+        column.setVisible(false);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.issuanceAmount"));
         column.setMinWidth(120);
@@ -1066,31 +1043,6 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         burningManTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurningManListItem::getAccumulatedCompensationAmount));
         column.setSortType(TableColumn.SortType.DESCENDING);
-
-       /* column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.numIssuances"));
-        column.setMinWidth(110);
-        column.setMaxWidth(column.getMinWidth());
-        column.getStyleClass().add("last-column");
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<>() {
-            @Override
-            public TableCell<BurningManListItem, BurningManListItem> call(TableColumn<BurningManListItem,
-                    BurningManListItem> column) {
-                return new TableCell<>() {
-                    @Override
-                    public void updateItem(final BurningManListItem item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null && !empty) {
-                            setText(item.getNumIssuancesAsString());
-                        } else
-                            setText("");
-                    }
-                };
-            }
-        });
-        burningManTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(BurningManListItem::getNumIssuances));
-        column.setSortType(TableColumn.SortType.DESCENDING);*/
     }
 
     private void createBurnOutputsColumns() {
