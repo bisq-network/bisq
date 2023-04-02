@@ -630,10 +630,19 @@ public class BtcWalletService extends WalletService {
                 .findAny();
     }
 
-    public AddressEntry createAddressEntryForOcoOffer(AddressEntry orgAddressEntry, String offerId) {
-        AddressEntry newEntry = new AddressEntry(orgAddressEntry.getKeyPair(), orgAddressEntry.getContext(), offerId, true);
-        addressEntryList.addAddressEntry(newEntry);
-        return newEntry;
+    // when a new offer needs to share the reserved amount info from parent offer's address entry
+    public AddressEntry getOrCreateAddressEntry(AddressEntry orgAddressEntry, String offerId) {
+        Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
+                .filter(e -> offerId.equals(e.getOfferId()))
+                .filter(e -> orgAddressEntry.getContext() == e.getContext())
+                .findAny();
+        if (addressEntry.isPresent()) {
+            return addressEntry.get();
+        } else {
+            AddressEntry newEntry = new AddressEntry(orgAddressEntry.getKeyPair(), orgAddressEntry.getContext(), offerId, true);
+            addressEntryList.addAddressEntry(newEntry);
+            return newEntry;
+        }
     }
 
     public AddressEntry getOrCreateAddressEntry(String offerId, AddressEntry.Context context) {

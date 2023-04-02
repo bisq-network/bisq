@@ -107,7 +107,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         VOLUME(Res.get("shared.amountMinMax")),
         PAYMENT_METHOD(Res.get("shared.paymentMethod")),
         DIRECTION(Res.get("shared.offerType")),
-        GROUP("Group"),
+        GROUP(Res.get("shared.group")),
         STATUS(Res.get("shared.state"));
 
         private final String text;
@@ -209,7 +209,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         deviationColumn.setComparator(Comparator.comparing(OpenOfferListItem::getPriceDeviationAsDouble, Comparator.nullsFirst(Comparator.naturalOrder())));
         triggerPriceColumn.setComparator(Comparator.comparing(o -> o.getOpenOffer().getTriggerPrice(),
                 Comparator.nullsFirst(Comparator.naturalOrder())));
-        groupColumn.setComparator(Comparator.comparing(OpenOfferListItem::getOcoGroupAsString));
+        groupColumn.setComparator(Comparator.comparing(OpenOfferListItem::getOcoGroupForSorting));
         volumeColumn.setComparator(Comparator.comparing(o -> o.getOffer().getVolume(), Comparator.nullsFirst(Comparator.naturalOrder())));
         dateColumn.setComparator(Comparator.comparing(o -> o.getOffer().getDate()));
         paymentMethodColumn.setComparator(Comparator.comparing(o -> Res.get(o.getOffer().getPaymentMethod().getId())));
@@ -223,9 +223,9 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     final ContextMenu rowMenu = new ContextMenu();
                     MenuItem duplicateItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
                     duplicateItem.setOnAction((event) -> onDuplicateOffer(row.getItem()));
-                    MenuItem duplicateItemOco1 = new MenuItem("Duplicate as OCO");
+                    MenuItem duplicateItemOco1 = new MenuItem(Res.get("shared.duplicateOcoOffer"));
                     duplicateItemOco1.setOnAction((event) -> onDuplicateOfferOco(row.getItem(), 1));
-                    MenuItem duplicateItemOco5 = new MenuItem("Duplicate as OCO x5");
+                    MenuItem duplicateItemOco5 = new MenuItem(Res.get("shared.duplicateOcoOffer") + " x5");
                     duplicateItemOco5.setOnAction((event) -> onDuplicateOfferOco(row.getItem(), 5));
                     rowMenu.getItems().add(duplicateItem);
                     rowMenu.getItems().add(duplicateItemOco1);
@@ -252,6 +252,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             c.next();
             if (c.wasAdded() || c.wasRemoved()) {
                 updateNumberOfOffers();
+                updateGroupColumn();
             }
         };
     }
@@ -266,7 +267,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
         filterBox.initializeWithCallback(filteredList, tableView, this::updateNumberOfOffers);
         filterBox.activate();
-
+        updateGroupColumn();
         updateSelectToggleButtonState();
 
         selectToggleButton.setOnAction(event -> {
@@ -300,7 +301,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                 columns[ColumnNames.VOLUME.ordinal()] = item.getVolumeAsString();
                 columns[ColumnNames.PAYMENT_METHOD.ordinal()] = item.getPaymentMethodAsString();
                 columns[ColumnNames.DIRECTION.ordinal()] = item.getDirectionLabel();
-                columns[ColumnNames.GROUP.ordinal()] = item.getOcoGroupAsString();
+                columns[ColumnNames.GROUP.ordinal()] = item.getOcoGroupForDisplay();
                 columns[ColumnNames.STATUS.ordinal()] = String.valueOf(!item.getOpenOffer().isDeactivated());
                 return columns;
             };
@@ -319,14 +320,12 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
     private void updateNumberOfOffers() {
         numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
-        groupColumn.setVisible(ocoIsInUse());
     }
 
-    private boolean ocoIsInUse()
-    {
-        return sortedList.stream()
-                .collect(Collectors.groupingBy(OpenOfferListItem::getOcoGroupAsString, Collectors.counting()))
-                .values().stream().anyMatch(i -> i > 1);
+    private void updateGroupColumn() {
+        groupColumn.setVisible(sortedList.stream()
+                .collect(Collectors.groupingBy(OpenOfferListItem::getOcoGroupForSorting, Collectors.counting()))
+                .values().stream().anyMatch(i -> i > 1));
     }
 
     @Override
@@ -687,11 +686,11 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 getStyleClass().removeAll("offer-disabled");
                                 if (item != null) {
                                     if (item.isNotPublished()) getStyleClass().add("offer-disabled");
-                                    Label label = new AutoTooltipLabel(item.getOcoGroupAsString());
-                                    if (openOfferManager.isSpam(item.getOpenOffer())) {
+                                    Label label = new AutoTooltipLabel(item.getOcoGroupForDisplay());
+                                    if (!openOfferManager.canBeEnabled(item.getOpenOffer().getOffer())) {
                                         Text icon = getRegularIconForLabel(MaterialDesignIcon.EYE_OFF, label, "opaque-icon");
                                         label.setContentDisplay(ContentDisplay.RIGHT);
-                                        Tooltip.install(icon, new Tooltip("Change ccy or payment method to enable offer."));
+                                        Tooltip.install(icon, new Tooltip(Res.get("offerbook.toEnableOffer")));
                                     }
                                     setGraphic(label);
                                 } else {

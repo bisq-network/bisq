@@ -78,7 +78,7 @@ public class PlaceOfferProtocol {
                 }
         );
 
-        if (model.isUseOco()) {
+        if (model.isUseBatchOfferOco()) {
             taskRunner.addTasks(
                     ValidateOffer.class,
                     CloneMakerFeeOco.class

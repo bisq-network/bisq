@@ -49,7 +49,7 @@ public class CloneMakerFeeOco extends Task<PlaceOfferModel> {
         for (AddressEntry potentialOcoSource : walletService.getAddressEntries(AddressEntry.Context.RESERVED_FOR_TRADE)) {
             getTxIdFromAddress(walletService, potentialOcoSource.getAddress()).ifPresent(txId -> {
                 if (txId.equalsIgnoreCase(newOcoOffer.getOfferFeePaymentTxId())) {
-                    walletService.createAddressEntryForOcoOffer(potentialOcoSource, newOcoOffer.getId());
+                    walletService.getOrCreateAddressEntry(potentialOcoSource, newOcoOffer.getId());
                     newOcoOffer.setState(Offer.State.OFFER_FEE_PAID);
                     complete();
                 }

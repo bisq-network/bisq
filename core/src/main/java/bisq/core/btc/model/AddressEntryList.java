@@ -209,21 +209,25 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
         }
 
         log.info("swapToAvailable addressEntry to swap={}", addressEntry);
-        boolean setChangedByRemove = entrySet.remove(addressEntry);
-
-        // check if the ADDRESS still has any existing entries, only if not do the add to available.
-        boolean entryWithSameContextAlreadyExist = entrySet.stream().anyMatch(e -> {
+        if (entrySet.remove(addressEntry)) {
+            requestPersistence();
+        }
+        // check if the address still has any existing entries, which would be OCO offers sharing the UTXO
+        boolean entryWithSameContextStillExists = entrySet.stream().anyMatch(e -> {
             if (addressEntry.getAddressString() != null) {
                 return addressEntry.getAddressString().equals(e.getAddressString()) &&
-                    addressEntry.getContext() == addressEntry.getContext();
+                        addressEntry.getContext() == e.getContext();
             }
             return false;
         });
-        boolean setChangedByAdd = !entryWithSameContextAlreadyExist && entrySet.add(
+        if (entryWithSameContextStillExists) {
+            return;
+        }
+        // no other uses of the address context remain, so make it available
+        if (entrySet.add(
             new AddressEntry(addressEntry.getKeyPair(),
                 AddressEntry.Context.AVAILABLE,
-                addressEntry.isSegwit()));
-        if (setChangedByRemove || setChangedByAdd) {
+                addressEntry.isSegwit()))) {
             requestPersistence();
         }
     }
