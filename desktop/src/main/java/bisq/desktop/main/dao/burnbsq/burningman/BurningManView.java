@@ -24,6 +24,7 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipRadioButton;
 import bisq.desktop.components.AutoTooltipSlideToggleButton;
 import bisq.desktop.components.AutoTooltipTableColumn;
+import bisq.desktop.components.BisqTextField;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
@@ -136,10 +137,13 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
     private Button burnButton, exportBalanceEntriesButton;
     private TitledGroupBg burnOutputsTitledGroupBg, compensationsTitledGroupBg, selectedContributorTitledGroupBg;
     private AutoTooltipSlideToggleButton showOnlyActiveBurningmenToggle, showMonthlyBalanceEntryToggle;
-    private TextField expectedRevenueField, daoBalanceTotalBurnedField, daoBalanceTotalDistributedField, selectedContributorNameField, selectedContributorAddressField, burnTargetField;
+    private TextField expectedRevenueField, daoBalanceTotalBurnedField, daoBalanceTotalDistributedField,
+            selectedContributorNameField, selectedContributorTotalRevenueField, selectedContributorTotalReceivedField,
+            selectedContributorAddressField, burnTargetField;
     private ToggleGroup balanceEntryToggleGroup;
     private HBox balanceEntryHBox;
-    private VBox selectedContributorNameBox, selectedContributorAddressBox;
+    private VBox selectedContributorNameBox, selectedContributorTotalReceivedBox, selectedContributorTotalRevenueBox,
+            selectedContributorAddressBox;
     private TableView<BurningManListItem> burningManTableView;
     private TableView<BalanceEntryItem> balanceEntryTableView;
     private TableView<BurnOutputListItem> burnOutputsTableView;
@@ -224,12 +228,17 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             selectedContributorTitledGroupBg.setVisible(isValueSet);
             selectedContributorNameBox.setManaged(isValueSet);
             selectedContributorNameBox.setVisible(isValueSet);
+            selectedContributorTotalReceivedBox.setManaged(isValueSet);
+            selectedContributorTotalReceivedBox.setVisible(isValueSet);
+            selectedContributorTotalRevenueBox.setManaged(isValueSet);
+            selectedContributorTotalRevenueBox.setVisible(isValueSet);
             selectedContributorAddressBox.setManaged(isValueSet);
             selectedContributorAddressBox.setVisible(isValueSet);
             if (isValueSet) {
                 onBurningManSelected(newValue);
             } else {
                 selectedContributorNameField.clear();
+                selectedContributorTotalRevenueField.clear();
                 selectedContributorAddressField.clear();
             }
         };
@@ -324,7 +333,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         Tuple3<Label, TextField, VBox> daoBalanceTotalBurnedTuple = addCompactTopLabelTextField(gridPane, ++gridRow,
                 Res.get("dao.burningman.daoBalanceTotalBurned"), "",
                 Layout.COMPACT_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE);
-        daoBalanceTotalBurnedField =daoBalanceTotalBurnedTuple.second;
+        daoBalanceTotalBurnedField = daoBalanceTotalBurnedTuple.second;
         Tuple3<Label, TextField, VBox> daoBalanceTotalDistributedTuple = addCompactTopLabelTextField(gridPane, gridRow,
                 Res.get("dao.burningman.daoBalanceTotalDistributed"), "",
                 Layout.COMPACT_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE);
@@ -347,23 +356,57 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
                 Res.get("dao.burningman.selectedContributor"), Layout.COMPACT_GROUP_DISTANCE);
         selectedContributorTitledGroupBg.setManaged(false);
         selectedContributorTitledGroupBg.setVisible(false);
-        Tuple3<Label, TextField, VBox> nameTuple = addCompactTopLabelTextField(gridPane, ++gridRow,
-                Res.get("dao.burningman.selectedContributorName"), "",
-                Layout.COMPACT_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE);
-        selectedContributorNameField = nameTuple.second;
-        selectedContributorNameBox = nameTuple.third;
+
+        // left box
+        selectedContributorNameField = new BisqTextField();
+        selectedContributorNameField.setEditable(false);
+        selectedContributorNameField.setFocusTraversable(false);
+        selectedContributorNameBox = getTopLabelWithVBox(Res.get("dao.burningman.selectedContributorName"),
+                selectedContributorNameField).second;
         selectedContributorNameBox.setManaged(false);
         selectedContributorNameBox.setVisible(false);
 
-        Tuple3<Label, TextField, VBox> addressTuple = addCompactTopLabelTextField(gridPane, gridRow,
-                Res.get("dao.burningman.selectedContributorAddress"), "",
-                Layout.COMPACT_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE);
-        selectedContributorAddressField = addressTuple.second;
-        selectedContributorAddressBox = addressTuple.third;
-        GridPane.setColumnSpan(selectedContributorAddressBox, 2);
-        GridPane.setColumnIndex(selectedContributorAddressBox, 1);
+        selectedContributorTotalRevenueField = new BisqTextField();
+        selectedContributorTotalRevenueField.setEditable(false);
+        selectedContributorTotalRevenueField.setFocusTraversable(false);
+        selectedContributorTotalRevenueBox = getTopLabelWithVBox(Res.get("dao.burningman.selectedContributorTotalRevenue"),
+                selectedContributorTotalRevenueField).second;
+        selectedContributorTotalRevenueBox.setManaged(false);
+        selectedContributorTotalRevenueBox.setVisible(false);
+
+        HBox leftHBox = new HBox(5, selectedContributorNameBox, selectedContributorTotalRevenueBox);
+        HBox.setHgrow(selectedContributorNameBox, Priority.ALWAYS);
+        HBox.setHgrow(selectedContributorTotalRevenueBox, Priority.ALWAYS);
+
+        GridPane.setRowIndex(leftHBox, ++gridRow);
+        GridPane.setMargin(leftHBox, new Insets(Layout.COMPACT_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
+        gridPane.getChildren().add(leftHBox);
+
+        // right box
+        selectedContributorTotalReceivedField = new BisqTextField();
+        selectedContributorTotalReceivedField.setEditable(false);
+        selectedContributorTotalReceivedField.setFocusTraversable(false);
+        selectedContributorTotalReceivedBox = getTopLabelWithVBox(Res.get("dao.burningman.selectedContributorTotalReceived"),
+                selectedContributorTotalReceivedField).second;
+        selectedContributorTotalReceivedBox.setManaged(false);
+        selectedContributorTotalReceivedBox.setVisible(false);
+
+        selectedContributorAddressField = new BisqTextField();
+        selectedContributorAddressField.setEditable(false);
+        selectedContributorAddressField.setFocusTraversable(false);
+        selectedContributorAddressBox = getTopLabelWithVBox(Res.get("dao.burningman.selectedContributorAddress"),
+                selectedContributorAddressField).second;
         selectedContributorAddressBox.setManaged(false);
         selectedContributorAddressBox.setVisible(false);
+
+        HBox rightHBox = new HBox(5, selectedContributorTotalReceivedBox, selectedContributorAddressBox);
+        HBox.setHgrow(selectedContributorTotalReceivedBox, Priority.ALWAYS);
+        HBox.setHgrow(selectedContributorAddressBox, Priority.ALWAYS);
+
+        GridPane.setRowIndex(rightHBox, gridRow);
+        GridPane.setColumnIndex(rightHBox, 1);
+        GridPane.setMargin(rightHBox, new Insets(Layout.COMPACT_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
+        gridPane.getChildren().add(rightHBox);
 
         // BalanceEntry
         TitledGroupBg balanceEntryTitledGroupBg = new TitledGroupBg();
@@ -461,7 +504,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         CSVEntryConverter<String> contentConverter = item -> item.split(separator);
         int year = 2022;
         int month = 11;
-        while(true) {
+        while (true) {
             Date date = DateUtil.getStartOfMonth(year, month);
             long feeAmount = burningManAccountingService.getDistributedBtcBalanceByMonth(date)
                     .filter(ee -> ee.getType() == BalanceEntry.Type.BTC_TRADE_FEE_TX).mapToLong(BaseBalanceEntry::getAmount).sum();
@@ -703,8 +746,21 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             balanceEntryObservableList.setAll(balanceEntries.stream()
                     .map(balanceEntry -> new BalanceEntryItem(balanceEntry, averageBsqPriceByMonth, bsqFormatter, btcFormatter))
                     .collect(Collectors.toList()));
+
+            long totalRevenueAsBsq = balanceEntryObservableList.stream()
+                    .mapToLong(item -> item.getRevenue())
+                    .sum();
+            selectedContributorTotalRevenueField.setText(bsqFormatter.formatCoinWithCode(totalRevenueAsBsq));
+
+            long totalReceivedAsBtc = balanceEntryObservableList.stream()
+                    .filter(item -> item.getReceivedBtc().isPresent())
+                    .mapToLong(item -> item.getReceivedBtc().get())
+                    .sum();
+            selectedContributorTotalReceivedField.setText(btcFormatter.formatCoinWithCode(totalReceivedAsBtc));
         } else {
             balanceEntryObservableList.clear();
+            selectedContributorTotalRevenueField.clear();
+            selectedContributorTotalReceivedField.clear();
         }
         GUIUtil.setFitToRowsForTableView(balanceEntryTableView, 36, 28, 4, 6);
 
@@ -915,6 +971,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         burningManTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurningManListItem::getAccumulatedDecayedBurnAmount));
         column.setSortType(TableColumn.SortType.DESCENDING);
+        column.setVisible(false);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.burnAmount"));
         column.setMinWidth(130);
@@ -939,31 +996,6 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         burningManTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurningManListItem::getAccumulatedBurnAmount));
         column.setSortType(TableColumn.SortType.DESCENDING);
-
-       /* column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.numBurnOutputs"));
-        column.setMinWidth(90);
-        column.setMaxWidth(column.getMinWidth());
-        column.getStyleClass().add("last-column");
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<>() {
-            @Override
-            public TableCell<BurningManListItem, BurningManListItem> call(TableColumn<BurningManListItem,
-                    BurningManListItem> column) {
-                return new TableCell<>() {
-                    @Override
-                    public void updateItem(final BurningManListItem item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null && !empty) {
-                            setText(String.valueOf(item.getNumBurnOutputs()));
-                        } else
-                            setText("");
-                    }
-                };
-            }
-        });
-        burningManTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(BurningManListItem::getNumBurnOutputs));
-        column.setSortType(TableColumn.SortType.DESCENDING);*/
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.issuanceShare"));
         column.setMinWidth(110);
@@ -1012,6 +1044,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         burningManTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurningManListItem::getAccumulatedDecayedCompensationAmount));
         column.setSortType(TableColumn.SortType.DESCENDING);
+        column.setVisible(false);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.issuanceAmount"));
         column.setMinWidth(120);
@@ -1036,31 +1069,6 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         burningManTableView.getColumns().add(column);
         column.setComparator(Comparator.comparing(BurningManListItem::getAccumulatedCompensationAmount));
         column.setSortType(TableColumn.SortType.DESCENDING);
-
-       /* column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.numIssuances"));
-        column.setMinWidth(110);
-        column.setMaxWidth(column.getMinWidth());
-        column.getStyleClass().add("last-column");
-        column.setCellValueFactory((item) -> new ReadOnlyObjectWrapper<>(item.getValue()));
-        column.setCellFactory(new Callback<>() {
-            @Override
-            public TableCell<BurningManListItem, BurningManListItem> call(TableColumn<BurningManListItem,
-                    BurningManListItem> column) {
-                return new TableCell<>() {
-                    @Override
-                    public void updateItem(final BurningManListItem item, boolean empty) {
-                        super.updateItem(item, empty);
-                        if (item != null && !empty) {
-                            setText(item.getNumIssuancesAsString());
-                        } else
-                            setText("");
-                    }
-                };
-            }
-        });
-        burningManTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(BurningManListItem::getNumIssuances));
-        column.setSortType(TableColumn.SortType.DESCENDING);*/
     }
 
     private void createBurnOutputsColumns() {
@@ -1339,7 +1347,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         balanceEntryTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(e -> e.getRevenue().orElse(null)));
+        column.setComparator(Comparator.comparing(BalanceEntryItem::getRevenue));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.balanceEntry.type"));
