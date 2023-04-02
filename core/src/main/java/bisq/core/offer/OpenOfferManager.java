@@ -381,7 +381,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     public void placeOffer(Offer offer,
                            double buyerSecurityDeposit,
                            boolean useSavingsWallet,
-                           boolean useOco,
+                           boolean useBatchOfferOco,
                            long triggerPrice,
                            TransactionResultHandler resultHandler,
                            ErrorMessageHandler errorMessageHandler) {
@@ -399,12 +399,14 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 buyerSecurityDeposit,
                 createOfferService.getSellerSecurityDepositAsDouble(buyerSecurityDeposit));
 
-        offer.setPriceFeedService(priceFeedService);
+        if (useBatchOfferOco) {
+            offer.setPriceFeedService(priceFeedService);
+        }
 
         PlaceOfferModel model = new PlaceOfferModel(offer,
                 reservedFundsForOffer,
                 useSavingsWallet,
-                useOco,
+                useBatchOfferOco,
                 btcWalletService,
                 tradeWalletService,
                 bsqWalletService,
@@ -419,7 +421,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 model,
                 transaction -> {
                     OpenOffer openOffer = new OpenOffer(offer, triggerPrice);
-                    openOffer.setState(useOco ? OpenOffer.State.DEACTIVATED : OpenOffer.State.AVAILABLE);
+                    if (useBatchOfferOco) {
+                        openOffer.setState(OpenOffer.State.DEACTIVATED);
+                    }
                     addOpenOfferToList(openOffer);
                     if (!stopped) {
                         startPeriodicRepublishOffersTimer();
@@ -476,7 +480,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             return;
         }
 
-        if (isSpam(openOffer)) {
+        if (!canBeEnabled(openOffer.getOffer())) {
+            log.info("{} cannot be enabled, as it has duplicate characteristics with another open offer", openOffer.getShortId());
             return;
         }
 
@@ -624,7 +629,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             getOpenOffersByMakerFeeTxId(offer.getOfferFeePaymentTxId()).forEach(openOffer -> {
                 removeOpenOfferFromList(openOffer);
                 openOffer.setState(OpenOffer.State.CLOSED);
-                if (!offer.getId().equalsIgnoreCase(openOffer.getId())) {
+                if (!offer.getId().equals(openOffer.getId())) {
                     btcWalletService.resetAddressEntriesForOpenOffer(openOffer.getId());    // cleanup OCO clone
                 }
                 offerBookService.removeOffer(openOffer.getOffer().getOfferPayloadBase(),
@@ -657,8 +662,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     public List<OpenOffer> getOpenOffersByMakerFeeTxId(String makerFeeTxId) {
-        String safeSearch = makerFeeTxId == null ? "" : makerFeeTxId;
-        return openOffers.stream().filter(e -> !e.getOffer().isBsqSwapOffer() && e.getOffer().getOfferFeePaymentTxId().equals(safeSearch)).collect(Collectors.toList());
+        return openOffers.stream()
+                .filter(e -> !e.getOffer().isBsqSwapOffer() && e.getOffer().getOfferFeePaymentTxId()
+                        .equals(makerFeeTxId == null ? "" : makerFeeTxId))
+                .collect(Collectors.toList());
     }
 
 
@@ -1178,26 +1185,16 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 openOffer.isBsqSwapOfferHasMissingFunds();
     }
 
-    public boolean isSpam(OpenOffer newOffer) {
-        // an offer is spam if the user has another open offer on the same ccy, payment method, and reserved UTXO
-        long matchingOffers = openOffers.stream()
-                .filter((openOffer -> !openOffer.getOffer().isBsqSwapOffer()))
-                .filter(openOffer -> !openOffer.isDeactivated())
-                .filter(openOffer -> !openOffer.getShortId().equalsIgnoreCase(newOffer.getShortId()))
-                .filter(openOffer1 -> {
-                    Offer newOffer1 = newOffer.getOffer();
-                    Offer offer1 = openOffer1.getOffer();
-                    return
-                        offer1.getOfferFeePaymentTxId().equalsIgnoreCase(newOffer1.getOfferFeePaymentTxId()) &&
-                        offer1.getPaymentMethodId().equalsIgnoreCase(newOffer1.getPaymentMethodId()) &&
-                        offer1.getCounterCurrencyCode().equalsIgnoreCase(newOffer1.getCounterCurrencyCode()) &&
-                        offer1.getBaseCurrencyCode().equalsIgnoreCase(newOffer1.getBaseCurrencyCode());
-                })
-                .count();
-        if (matchingOffers > 0) {
-            log.info("{} is considered spam", newOffer.getShortId());
-        }
-        return matchingOffers > 0;
+    public boolean canBeEnabled(Offer newOffer) {
+        // does the user have another open offer on the same currency, payment method, and reserved UTXO?
+        return openOffers.stream().noneMatch(e ->
+                        !e.getOffer().isBsqSwapOffer() &&
+                        !e.isDeactivated() &&
+                        !e.getId().equals(newOffer.getId()) &&
+                        e.getOffer().getOfferFeePaymentTxId().equals(newOffer.getOfferFeePaymentTxId()) &&
+                        e.getOffer().getPaymentMethodId().equalsIgnoreCase(newOffer.getPaymentMethodId()) &&
+                        e.getOffer().getCounterCurrencyCode().equalsIgnoreCase(newOffer.getCounterCurrencyCode()) &&
+                        e.getOffer().getBaseCurrencyCode().equalsIgnoreCase(newOffer.getBaseCurrencyCode()));
     }
 
     public boolean safeRemovalOfOcoClone(OpenOffer openOffer) {
@@ -1205,6 +1202,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     private boolean preventedFromPublishing(OpenOffer openOffer) {
-        return openOffer.isDeactivated() || openOffer.isBsqSwapOfferHasMissingFunds() || isSpam(openOffer);
+        return openOffer.isDeactivated() || openOffer.isBsqSwapOfferHasMissingFunds() || !canBeEnabled(openOffer.getOffer());
     }
 }

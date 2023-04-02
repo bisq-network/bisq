@@ -134,12 +134,16 @@ class OpenOfferListItem implements FilterableListItem {
         }
     }
 
-    public String getOcoGroupAsString() {
+    public String getOcoGroupForSorting() {
         Offer offer = getOffer();
         if (offer.isBsqSwapOffer()) {
-            return "";
+            return "    ";
         }
-        return offer.getOfferFeePaymentTxId().substring(0, 4);
+        return offer.getOfferFeePaymentTxId();
+    }
+
+    public String getOcoGroupForDisplay() {
+        return getOcoGroupForSorting().substring(0, 4);
     }
 
     @Override

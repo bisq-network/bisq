@@ -45,7 +45,7 @@ public class PlaceOfferModel implements Model {
     private final Offer offer;
     private final Coin reservedFundsForOffer;
     private final boolean useSavingsWallet;
-    private final boolean useOco;
+    private final boolean useBatchOfferOco;
     private final BtcWalletService walletService;
     private final TradeWalletService tradeWalletService;
     private final BsqWalletService bsqWalletService;
@@ -67,7 +67,7 @@ public class PlaceOfferModel implements Model {
     public PlaceOfferModel(Offer offer,
                            Coin reservedFundsForOffer,
                            boolean useSavingsWallet,
-                           boolean useOco,
+                           boolean useBatchOfferOco,
                            BtcWalletService walletService,
                            TradeWalletService tradeWalletService,
                            BsqWalletService bsqWalletService,
@@ -81,7 +81,7 @@ public class PlaceOfferModel implements Model {
         this.offer = offer;
         this.reservedFundsForOffer = reservedFundsForOffer;
         this.useSavingsWallet = useSavingsWallet;
-        this.useOco = useOco;
+        this.useBatchOfferOco = useBatchOfferOco;
         this.walletService = walletService;
         this.tradeWalletService = tradeWalletService;
         this.bsqWalletService = bsqWalletService;
