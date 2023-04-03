@@ -7,6 +7,10 @@ import bisq.core.xmr.org.nem.core.crypto.ed25519.arithmetic.Ed25519EncodedGroupE
 import bisq.core.xmr.org.nem.core.crypto.ed25519.arithmetic.Ed25519Group;
 import bisq.core.xmr.org.nem.core.crypto.ed25519.arithmetic.Ed25519GroupElement;
 
+import com.google.common.annotations.VisibleForTesting;
+
+import java.util.Arrays;
+
 import static bisq.core.xmr.knaccc.monero.address.ByteUtil.concat;
 import static bisq.core.xmr.knaccc.monero.address.ByteUtil.hexToBytes;
 import static bisq.core.xmr.knaccc.monero.address.ByteUtil.longToLittleEndianUint32ByteArray;
@@ -121,7 +125,30 @@ public class WalletAddress {
 
     }
 
-    public String getSubaddressBase58(String privateViewKeyHex, long accountId, long subaddressId) {
+    public String getSubaddressBase58(String privateViewKeyHex, long accountId, long subaddressId) throws InvalidWalletAddressException {
+        if (!checkPrivateViewKey(privateViewKeyHex)) {
+            throw new InvalidWalletAddressException("Wrong private view key for main address");
+        }
         return getSubaddressBase58(new Scalar(privateViewKeyHex), hexToBytes(getPublicSpendKeyHex()), accountId, subaddressId);
+    }
+
+    @VisibleForTesting
+    boolean checkPrivateViewKey(String privateViewKey) {
+        return isPrivateKeyReduced(privateViewKey) && doesPrivateKeyResolveToPublicKey(privateViewKey, this.publicViewKeyHex);
+    }
+
+    @VisibleForTesting
+    static boolean isPrivateKeyReduced(String privateKey) {
+        byte[] input = hexToBytes(privateKey);
+        byte[] reduced = CryptoUtil.scReduce32(input);
+        return Arrays.equals(input, reduced);
+    }
+
+    @VisibleForTesting
+    static boolean doesPrivateKeyResolveToPublicKey(String privateKey, String publicKey) {
+        Scalar m = new Scalar(privateKey);
+        Ed25519GroupElement M = G.scalarMultiply(new Ed25519EncodedFieldElement(m.bytes));
+        byte[] generatedPubKey = M.encode().getRaw();
+        return Arrays.equals(generatedPubKey, hexToBytes(publicKey));
     }
 }
