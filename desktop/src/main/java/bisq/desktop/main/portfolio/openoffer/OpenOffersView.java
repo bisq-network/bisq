@@ -223,13 +223,13 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     final ContextMenu rowMenu = new ContextMenu();
                     MenuItem duplicateItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
                     duplicateItem.setOnAction((event) -> onDuplicateOffer(row.getItem()));
-                    MenuItem duplicateItemOco1 = new MenuItem(Res.get("shared.duplicateOcoOffer"));
-                    duplicateItemOco1.setOnAction((event) -> onDuplicateOfferOco(row.getItem(), 1));
-                    MenuItem duplicateItemOco5 = new MenuItem(Res.get("shared.duplicateOcoOffer") + " x5");
-                    duplicateItemOco5.setOnAction((event) -> onDuplicateOfferOco(row.getItem(), 5));
+                    MenuItem cloneGroupedOfferOco1 = new MenuItem(Res.get("shared.cloneGroupedOfferOco"));
+                    cloneGroupedOfferOco1.setOnAction((event) -> onDuplicateOfferOco(row.getItem(), 1));
+                    MenuItem cloneGroupedOfferOco5 = new MenuItem(Res.get("shared.cloneGroupedOfferOco") + " x5");
+                    cloneGroupedOfferOco5.setOnAction((event) -> onDuplicateOfferOco(row.getItem(), 5));
                     rowMenu.getItems().add(duplicateItem);
-                    rowMenu.getItems().add(duplicateItemOco1);
-                    rowMenu.getItems().add(duplicateItemOco5);
+                    rowMenu.getItems().add(cloneGroupedOfferOco1);
+                    rowMenu.getItems().add(cloneGroupedOfferOco5);
                     row.contextMenuProperty().bind(
                             Bindings.when(Bindings.isNotNull(row.itemProperty()))
                                     .then(rowMenu)
@@ -449,9 +449,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     }
 
     private void onDuplicateOfferOco(OpenOfferListItem item, int numDuplicates) {
-        try {
-            for (int i=0; i< numDuplicates; i++) {
-                OfferPayload original = item.getOffer().getOfferPayload().orElseThrow();
+        for (int i=0; i< numDuplicates; i++) {
+            item.getOffer().getOfferPayload().ifPresent(original -> {
                 log.info("Duplicating offer as OCO: {}", original.getId());
                 String newOfferId = getRandomOfferId();
                 OfferPayload offerPayload = new OfferPayload(newOfferId,
@@ -501,9 +500,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                         transaction -> {
                         },
                         log::error);
-            }
-        } catch (NullPointerException e) {
-            log.warn("Unable to get offerPayload - {}", e.toString());
+            });
         }
     }
 
