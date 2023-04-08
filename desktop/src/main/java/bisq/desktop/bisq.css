@@ -1734,12 +1734,12 @@ textfield */
     -fx-background-color: -bs-background-color;
 }
 
-#charts .chart-legend, #charts-dao .chart-legend {
+#charts-offer-book .chart-legend, #charts-dao .chart-legend {
     -fx-font-size: 1.077em;
     -fx-alignment: center;
 }
 
-#charts .axis, #price-chart .axis, #volume-chart .axis, #charts-dao .axis {
+#charts-offer-book .axis, #price-chart .axis, #volume-chart .axis, #charts-dao .axis {
     -fx-tick-label-fill: -bs-rd-font-lighter;
     -fx-tick-label-font-size: 0.769em;
     -fx-font-size: 0.880em;
@@ -1751,23 +1751,23 @@ textfield */
     -fx-text-alignment: center;
 }
 
-#charts .chart-plot-background, #charts-dao .chart-plot-background {
+#charts-offer-book .chart-plot-background, #charts-dao .chart-plot-background {
     -fx-background-color: -bs-background-color;
 }
 
-#charts .default-color0.chart-area-symbol {
+#charts-offer-book .default-color0.chart-area-symbol {
     -fx-background-color: -bs-buy, -bs-background-color;
 }
 
-#charts .default-color1.chart-area-symbol, #charts-dao .default-color0.chart-area-symbol {
+#charts-offer-book .default-color1.chart-area-symbol, #charts-dao .default-color0.chart-area-symbol {
     -fx-background-color: -bs-sell, -bs-background-color;
 }
 
-#charts .default-color0.chart-series-area-line {
+#charts-offer-book .default-color0.chart-series-area-line {
     -fx-stroke: -bs-buy;
 }
 
-#charts .default-color1.chart-series-area-line, #charts-dao .default-color0.chart-series-area-line {
+#charts-offer-book .default-color1.chart-series-area-line, #charts-dao .default-color0.chart-series-area-line {
     -fx-stroke: -bs-sell;
 }
 
@@ -1959,11 +1959,11 @@ textfield */
     -fx-stroke-width: 2px;
 }
 
-#charts .default-color0.chart-series-area-fill {
+#charts-offer-book .default-color0.chart-series-area-fill {
     -fx-fill: -bs-buy-transparent;
 }
 
-#charts .default-color1.chart-series-area-fill, #charts-dao .default-color0.chart-series-area-fill {
+#charts-offer-book .default-color1.chart-series-area-fill, #charts-dao .default-color0.chart-series-area-fill {
     -fx-fill: -bs-sell-transparent;
 }
 
@@ -1971,12 +1971,12 @@ textfield */
     -fx-stroke: transparent;
 }
 
-#charts .axis-label {
+#charts-offer-book .axis-label {
     -fx-font-size: 0.769em;
     -fx-alignment: center-left;
 }
 
-#charts .axisy .axis-label {
+#charts-offer-book .axisy .axis-label {
     -fx-alignment: center;
 }
 

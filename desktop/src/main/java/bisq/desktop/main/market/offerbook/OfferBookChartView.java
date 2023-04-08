@@ -335,7 +335,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         areaChart = new AreaChart<>(xAxis, yAxis);
         areaChart.setLegendVisible(false);
         areaChart.setAnimated(false);
-        areaChart.setId("charts");
+        areaChart.setId("charts-offer-book");
         areaChart.setMinHeight(270);
         areaChart.setPrefHeight(270);
         areaChart.setCreateSymbols(true);

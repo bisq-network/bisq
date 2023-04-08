@@ -255,14 +255,14 @@
 }
 
 .chart-pane, .chart-plot-background,
-#charts .chart-plot-background,
+#charts-offer-book .chart-plot-background,
 #charts-dao .chart-plot-background {
     -fx-background-color: transparent;
 }
 .axis:top, .axis:right, .axis:bottom, .axis:left {
     -fx-border-color: transparent transparent transparent transparent;
 }
-#charts .axis, #price-chart .axis, #volume-chart .axis, #charts-dao .axis {
+#charts-offer-book .axis, #price-chart .axis, #volume-chart .axis, #charts-dao .axis {
     -fx-tick-label-fill: -bs-chart-tick;
 }
 .chart-horizontal-grid-lines,
