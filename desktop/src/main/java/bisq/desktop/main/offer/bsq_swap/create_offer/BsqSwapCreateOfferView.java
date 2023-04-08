@@ -315,7 +315,7 @@ public class BsqSwapCreateOfferView extends BsqSwapOfferView<BsqSwapCreateOfferV
                                     .dontShowAgainId(key)
                                     .actionButtonTextWithGoTo("navigation.portfolio.myOpenOffers")
                                     .onAction(this::closeAndGoToOpenOffers)
-                                    .onClose(this::closeAndGoToOpenOffers)
+                                    .onClose(this::close)
                                     .show(),
                             1, TimeUnit.SECONDS);
                 } else {
