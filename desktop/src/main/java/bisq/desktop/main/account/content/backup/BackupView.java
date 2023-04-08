@@ -30,7 +30,7 @@ import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.util.Tuple2;
-import bisq.common.util.Tuple3;
+import bisq.common.util.Tuple4;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -64,7 +64,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
     private final Preferences preferences;
     private Button selectBackupDir, backupNow;
     private TextField backUpLocationTextField;
-    private Button openDataDirButton, openLogsButton, zipLogsButton;
+    private Button openDataDirButton, refreshDataDirButton, openLogsButton, zipLogsButton;
     private ChangeListener<Boolean> backUpLocationTextFieldFocusListener;
 
 
@@ -102,15 +102,17 @@ public class BackupView extends ActivatableView<GridPane, Void> {
 
         addTitledGroupBg(root, ++gridRow, 2, Res.get("account.backup.appDir"), Layout.GROUP_DISTANCE);
 
-        final Tuple3<Button, Button, Button> applicationDataDirTuple2 = add3Buttons(root, gridRow,
+        final Tuple4<Button, Button, Button, Button> applicationDataDirTuple2 = add4Buttons(root, gridRow,
                 Res.get("account.backup.openDirectory"),
+                Res.get("account.backup.refreshDirectory"),
                 Res.get("account.backup.openLogFile"),
                 Res.get("account.backup.zipLogFiles"),
                 Layout.TWICE_FIRST_ROW_AND_GROUP_DISTANCE);
 
         openDataDirButton = applicationDataDirTuple2.first;
-        openLogsButton = applicationDataDirTuple2.second;
-        zipLogsButton = applicationDataDirTuple2.third;
+        refreshDataDirButton = applicationDataDirTuple2.second;
+        openLogsButton = applicationDataDirTuple2.third;
+        zipLogsButton = applicationDataDirTuple2.fourth;
     }
 
     @Override
@@ -137,6 +139,10 @@ public class BackupView extends ActivatableView<GridPane, Void> {
         });
         openFileOrShowWarning(openDataDirButton, dataDir);
         openFileOrShowWarning(openLogsButton, logFile);
+
+        refreshDataDirButton.setOnAction(event -> {
+            // TODO:
+        });
 
         backupNow.setOnAction(event -> {
             String backupDirectory = preferences.getBackupDirectory();
@@ -187,6 +193,7 @@ public class BackupView extends ActivatableView<GridPane, Void> {
         backUpLocationTextField.focusedProperty().removeListener(backUpLocationTextFieldFocusListener);
         selectBackupDir.setOnAction(null);
         openDataDirButton.setOnAction(null);
+        refreshDataDirButton.setOnAction(null);
         openLogsButton.setOnAction(null);
         backupNow.setOnAction(null);
     }
