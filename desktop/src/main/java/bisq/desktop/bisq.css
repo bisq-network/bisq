@@ -1756,19 +1756,19 @@ textfield */
 }
 
 #charts .default-color0.chart-area-symbol {
-    -fx-background-color: -bs-sell, -bs-background-color;
-}
-
-#charts .default-color1.chart-area-symbol, #charts-dao .default-color0.chart-area-symbol {
     -fx-background-color: -bs-buy, -bs-background-color;
 }
 
+#charts .default-color1.chart-area-symbol, #charts-dao .default-color0.chart-area-symbol {
+    -fx-background-color: -bs-sell, -bs-background-color;
+}
+
 #charts .default-color0.chart-series-area-line {
-    -fx-stroke: -bs-sell;
+    -fx-stroke: -bs-buy;
 }
 
 #charts .default-color1.chart-series-area-line, #charts-dao .default-color0.chart-series-area-line {
-    -fx-stroke: -bs-buy;
+    -fx-stroke: -bs-sell;
 }
 
 /* The .chart-line-symbol rules change the color of the legend symbol */
@@ -1960,11 +1960,11 @@ textfield */
 }
 
 #charts .default-color0.chart-series-area-fill {
-    -fx-fill: -bs-sell-transparent;
+    -fx-fill: -bs-buy-transparent;
 }
 
 #charts .default-color1.chart-series-area-fill, #charts-dao .default-color0.chart-series-area-fill {
-    -fx-fill: -bs-buy-transparent;
+    -fx-fill: -bs-sell-transparent;
 }
 
 .chart-vertical-grid-lines {
