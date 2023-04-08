@@ -88,6 +88,8 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -2039,30 +2041,64 @@ public class FormBuilder {
                                                              String title2,
                                                              String title3,
                                                              double top) {
+        List<Button> buttons = addXButtons(
+                gridPane,
+                rowIndex,
+                new String[]{ title1, title2, title3 },
+                top
+        );
+        return new Tuple3<>(buttons.get(0), buttons.get(1), buttons.get(2));
+    }
+
+    public static Tuple4<Button, Button, Button, Button> add4Buttons(GridPane gridPane,
+                                                             int rowIndex,
+                                                             String title1,
+                                                             String title2,
+                                                             String title3,
+                                                             String title4,
+                                                             double top) {
+        List<Button> buttons = addXButtons(
+                gridPane,
+                rowIndex,
+                new String[]{ title1, title2, title3, title4 },
+                top
+        );
+        return new Tuple4<>(buttons.get(0), buttons.get(1), buttons.get(2), buttons.get(3));
+    }
+
+    private static List<Button> addXButtons(GridPane gridPane,
+                                            int rowIndex,
+                                            String[] titles,
+                                            double top) {
         HBox hBox = new HBox();
         hBox.setSpacing(10);
-        Button button1 = new AutoTooltipButton(title1);
+        Button button1 = new AutoTooltipButton(titles[0]);
 
         button1.getStyleClass().add("action-button");
         button1.setDefaultButton(true);
         button1.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(button1, Priority.ALWAYS);
 
-        Button button2 = new AutoTooltipButton(title2);
-        button2.setMaxWidth(Double.MAX_VALUE);
-        HBox.setHgrow(button2, Priority.ALWAYS);
+        List<Button> buttons = new ArrayList<Button>();
+        buttons.add(button1);
 
-        Button button3 = new AutoTooltipButton(title3);
-        button3.setMaxWidth(Double.MAX_VALUE);
-        HBox.setHgrow(button3, Priority.ALWAYS);
+        for (int i = 1; i < titles.length; i++) {
+            Button button = new AutoTooltipButton(titles[i]);
+            button.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(button, Priority.ALWAYS);
+            buttons.add(button);
+        }
 
-        hBox.getChildren().addAll(button1, button2, button3);
+        hBox.getChildren().addAll(buttons);
         GridPane.setRowIndex(hBox, rowIndex);
         GridPane.setColumnIndex(hBox, 0);
         GridPane.setMargin(hBox, new Insets(top, 10, 0, 0));
         gridPane.getChildren().add(hBox);
-        return new Tuple3<>(button1, button2, button3);
+
+        return buttons;
     }
+
+
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
