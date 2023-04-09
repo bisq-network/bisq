@@ -42,6 +42,7 @@ import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
 import bisq.common.config.Config;
+import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
 import javax.inject.Inject;
@@ -52,7 +53,6 @@ import com.jfoenix.controls.JFXTabPane;
 import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.SingleSelectionModel;
@@ -110,8 +110,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private Subscription tradeCurrencySubscriber;
     private final StringProperty volumeColumnLabel = new SimpleStringProperty();
     private final StringProperty priceColumnLabel = new SimpleStringProperty();
-    private AutoTooltipButton sellButton;
-    private AutoTooltipButton buyButton;
     private ChangeListener<Number> selectedTabIndexListener;
     private SingleSelectionModel<Tab> tabPaneSelectionModel;
     private ChangeListener<OfferListItem> sellTableRowSelectionListener, buyTableRowSelectionListener;
@@ -153,13 +151,10 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         VBox.setMargin(chartPane, new Insets(0, 0, 5, 0));
 
-        Tuple3<TableView<OfferListItem>, VBox, Button> tupleBuy = getOfferTable(OfferDirection.BUY);
-        Tuple3<TableView<OfferListItem>, VBox, Button> tupleSell = getOfferTable(OfferDirection.SELL);
+        Tuple2<TableView<OfferListItem>, VBox> tupleBuy = getOfferTable(OfferDirection.BUY);
+        Tuple2<TableView<OfferListItem>, VBox> tupleSell = getOfferTable(OfferDirection.SELL);
         buyOfferTableView = tupleBuy.first;
         sellOfferTableView = tupleSell.first;
-
-        buyButton = (AutoTooltipButton) tupleBuy.third;
-        sellButton = (AutoTooltipButton) tupleSell.third;
 
         HBox bottomHBox = new HBox();
         bottomHBox.setSpacing(20); //30
@@ -235,11 +230,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                         }
                     });
 
-                    String viewBaseCurrencyCode = CurrencyUtil.isCryptoCurrency(code) ? code : Res.getBaseCurrencyCode();
                     String viewPriceCurrencyCode = CurrencyUtil.isCryptoCurrency(code) ? Res.getBaseCurrencyCode() : code;
-
-                    sellButton.updateText(Res.get("shared.sellCurrency", viewBaseCurrencyCode, viewPriceCurrencyCode));
-                    buyButton.updateText(Res.get("shared.buyCurrency", viewBaseCurrencyCode, viewPriceCurrencyCode));
 
                     priceColumnLabel.set(Res.get("shared.priceWithCur", viewPriceCurrencyCode));
 
@@ -417,7 +408,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 .collect(Collectors.toList());
     }
 
-    private Tuple3<TableView<OfferListItem>, VBox, Button> getOfferTable(OfferDirection direction) {
+    private Tuple2<TableView<OfferListItem>, VBox> getOfferTable(OfferDirection direction) {
         TableView<OfferListItem> tableView = new TableView<>();
         tableView.setMinHeight(initialOfferTableViewHeight);
         tableView.setPrefHeight(initialOfferTableViewHeight);
@@ -633,7 +624,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         iconView.setId(isSellOffer ? "image-sell-white" : "image-buy-white");
         button.setGraphic(iconView);
         button.setGraphicTextGap(10);
-        button.updateText(isSellOffer ? Res.get("market.offerBook.sell") : Res.get("market.offerBook.buy"));
+        button.updateText(isSellOffer ? Res.get("shared.sellCurrency", "BTC") : Res.get("shared.buyCurrency", "BTC"));
+
         button.setMinHeight(32);
         button.setId(isSellOffer ? "sell-button-big" : "buy-button-big");
         button.setOnAction(e -> model.goToOfferView(direction));
@@ -652,7 +644,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         vBox.setMinHeight(190);
         vBox.getChildren().addAll(titleButtonBox, tableView);
 
-        return new Tuple3<>(tableView, vBox, button);
+        return new Tuple2<>(tableView, vBox);
     }
 
     private void layout() {
