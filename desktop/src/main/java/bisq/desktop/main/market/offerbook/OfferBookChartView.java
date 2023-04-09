@@ -163,8 +163,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         buyButton = (AutoTooltipButton) tupleBuy.third;
         sellButton = (AutoTooltipButton) tupleSell.third;
 
-        sellHeaderLabel = tupleBuy.fourth;
-        buyHeaderLabel = tupleSell.fourth;
+        buyHeaderLabel = tupleBuy.fourth;
+        sellHeaderLabel = tupleSell.fourth;
 
         HBox bottomHBox = new HBox();
         bottomHBox.setSpacing(20); //30
@@ -243,10 +243,10 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     String viewBaseCurrencyCode = CurrencyUtil.isCryptoCurrency(code) ? code : Res.getBaseCurrencyCode();
                     String viewPriceCurrencyCode = CurrencyUtil.isCryptoCurrency(code) ? Res.getBaseCurrencyCode() : code;
 
-                    sellHeaderLabel.setText(Res.get("market.offerBook.sellOffersHeaderLabel", viewBaseCurrencyCode));
+                    sellHeaderLabel.setText(Res.get("market.offerBook.sellOffersHeaderLabel"));
                     sellButton.updateText(Res.get("shared.sellCurrency", viewBaseCurrencyCode, viewPriceCurrencyCode));
 
-                    buyHeaderLabel.setText(Res.get("market.offerBook.buyOffersHeaderLabel", viewBaseCurrencyCode));
+                    buyHeaderLabel.setText(Res.get("market.offerBook.buyOffersHeaderLabel"));
                     buyButton.updateText(Res.get("shared.buyCurrency", viewBaseCurrencyCode, viewPriceCurrencyCode));
 
                     priceColumnLabel.set(Res.get("shared.priceWithCur", viewPriceCurrencyCode));
