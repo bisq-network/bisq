@@ -160,8 +160,8 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         buyOfferTableView = tupleBuy.first;
         sellOfferTableView = tupleSell.first;
 
-        sellButton = (AutoTooltipButton) tupleBuy.third;
-        buyButton = (AutoTooltipButton) tupleSell.third;
+        buyButton = (AutoTooltipButton) tupleBuy.third;
+        sellButton = (AutoTooltipButton) tupleSell.third;
 
         sellHeaderLabel = tupleBuy.fourth;
         buyHeaderLabel = tupleSell.fourth;
@@ -637,12 +637,12 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         AutoTooltipButton button = new AutoTooltipButton();
         ImageView iconView = new ImageView();
-        iconView.setId(isSellOffer ? "image-buy-white" : "image-sell-white");
+        iconView.setId(isSellOffer ? "image-sell-white" : "image-buy-white");
         button.setGraphic(iconView);
         button.setGraphicTextGap(10);
-        button.updateText(isSellOffer ? Res.get("market.offerBook.buy") : Res.get("market.offerBook.sell"));
+        button.updateText(isSellOffer ? Res.get("market.offerBook.sell") : Res.get("market.offerBook.buy"));
         button.setMinHeight(32);
-        button.setId(isSellOffer ? "buy-button-big" : "sell-button-big");
+        button.setId(isSellOffer ? "sell-button-big" : "buy-button-big");
         button.setOnAction(e -> model.goToOfferView(direction));
 
         Region spacer = new Region();

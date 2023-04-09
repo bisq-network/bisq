@@ -220,7 +220,7 @@ class OfferBookChartViewModel extends ActivatableViewModel {
 
     public void goToOfferView(OfferDirection direction) {
         updateScreenCurrencyInPreferences(direction);
-        Class<? extends OfferView> offerView = isSellOffer(direction) ? BuyOfferView.class : SellOfferView.class;
+        Class<? extends OfferView> offerView = isSellOffer(direction) ? SellOfferView.class : BuyOfferView.class;
         navigation.navigateTo(MainView.class, offerView, OfferViewUtil.getOfferBookViewClass(getCurrencyCode()));
     }
 
