@@ -43,7 +43,6 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.util.Tuple3;
-import bisq.common.util.Tuple4;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -115,7 +114,6 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
     private AutoTooltipButton buyButton;
     private ChangeListener<Number> selectedTabIndexListener;
     private SingleSelectionModel<Tab> tabPaneSelectionModel;
-    private Label sellHeaderLabel, buyHeaderLabel;
     private ChangeListener<OfferListItem> sellTableRowSelectionListener, buyTableRowSelectionListener;
     private ListChangeListener<OfferBookListItem> changeListener;
     private ListChangeListener<CurrencyListItem> currencyListItemsListener;
@@ -155,16 +153,13 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         VBox.setMargin(chartPane, new Insets(0, 0, 5, 0));
 
-        Tuple4<TableView<OfferListItem>, VBox, Button, Label> tupleBuy = getOfferTable(OfferDirection.BUY);
-        Tuple4<TableView<OfferListItem>, VBox, Button, Label> tupleSell = getOfferTable(OfferDirection.SELL);
+        Tuple3<TableView<OfferListItem>, VBox, Button> tupleBuy = getOfferTable(OfferDirection.BUY);
+        Tuple3<TableView<OfferListItem>, VBox, Button> tupleSell = getOfferTable(OfferDirection.SELL);
         buyOfferTableView = tupleBuy.first;
         sellOfferTableView = tupleSell.first;
 
         buyButton = (AutoTooltipButton) tupleBuy.third;
         sellButton = (AutoTooltipButton) tupleSell.third;
-
-        buyHeaderLabel = tupleBuy.fourth;
-        sellHeaderLabel = tupleSell.fourth;
 
         HBox bottomHBox = new HBox();
         bottomHBox.setSpacing(20); //30
@@ -243,18 +238,15 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                     String viewBaseCurrencyCode = CurrencyUtil.isCryptoCurrency(code) ? code : Res.getBaseCurrencyCode();
                     String viewPriceCurrencyCode = CurrencyUtil.isCryptoCurrency(code) ? Res.getBaseCurrencyCode() : code;
 
-                    sellHeaderLabel.setText(Res.get("market.offerBook.sellOffersHeaderLabel"));
                     sellButton.updateText(Res.get("shared.sellCurrency", viewBaseCurrencyCode, viewPriceCurrencyCode));
-
-                    buyHeaderLabel.setText(Res.get("market.offerBook.buyOffersHeaderLabel"));
                     buyButton.updateText(Res.get("shared.buyCurrency", viewBaseCurrencyCode, viewPriceCurrencyCode));
 
                     priceColumnLabel.set(Res.get("shared.priceWithCur", viewPriceCurrencyCode));
 
                     xAxis.setLabel(CurrencyUtil.getPriceWithCurrencyCode(code));
 
-                    seriesBuy.setName(sellHeaderLabel.getText() + "   ");
-                    seriesSell.setName(buyHeaderLabel.getText());
+                    seriesBuy.setName(Res.get("market.offerBook.sellOffersHeaderLabel") + "   ");
+                    seriesSell.setName(Res.get("market.offerBook.buyOffersHeaderLabel"));
                 });
 
         buyOfferTableView.setItems(model.getTopBuyOfferList());
@@ -425,7 +417,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
                 .collect(Collectors.toList());
     }
 
-    private Tuple4<TableView<OfferListItem>, VBox, Button, Label> getOfferTable(OfferDirection direction) {
+    private Tuple3<TableView<OfferListItem>, VBox, Button> getOfferTable(OfferDirection direction) {
         TableView<OfferListItem> tableView = new TableView<>();
         tableView.setMinHeight(initialOfferTableViewHeight);
         tableView.setPrefHeight(initialOfferTableViewHeight);
@@ -634,6 +626,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
 
         Label titleLabel = new AutoTooltipLabel();
         titleLabel.getStyleClass().add("table-title");
+        titleLabel.setText(isSellOffer ? Res.get("market.offerBook.sellOffersHeaderLabel") : Res.get("market.offerBook.buyOffersHeaderLabel"));
 
         AutoTooltipButton button = new AutoTooltipButton();
         ImageView iconView = new ImageView();
@@ -659,7 +652,7 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         vBox.setMinHeight(190);
         vBox.getChildren().addAll(titleButtonBox, tableView);
 
-        return new Tuple4<>(tableView, vBox, button, titleLabel);
+        return new Tuple3<>(tableView, vBox, button);
     }
 
     private void layout() {
