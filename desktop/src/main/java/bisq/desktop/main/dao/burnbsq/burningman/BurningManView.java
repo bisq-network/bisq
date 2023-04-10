@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.dao.burnbsq.burningman;
 
+import bisq.desktop.app.BisqApp;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.AutoTooltipButton;
@@ -51,11 +52,13 @@ import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.locale.Res;
 import bisq.core.monetary.Price;
+import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
+import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.util.DateUtil;
 import bisq.common.util.Tuple2;
@@ -113,6 +116,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -150,7 +154,6 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
     private TableView<CompensationListItem> compensationsTableView;
     private TableView<ReimbursementListItem> reimbursementsTableView;
 
-
     private final ObservableList<BurningManListItem> burningManObservableList = FXCollections.observableArrayList();
     private final FilteredList<BurningManListItem> burningManFilteredList = new FilteredList<>(burningManObservableList);
     private final SortedList<BurningManListItem> burningManSortedList = new SortedList<>(burningManFilteredList);
@@ -170,6 +173,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
     private final ChangeListener<String> filterListener;
     private final ChangeListener<BurningManListItem> contributorsListener;
     private final ChangeListener<Toggle> balanceEntryToggleListener;
+    private final ChangeListener<Boolean> isProcessingListener;
 
     private int gridRow = 0;
     private boolean showMonthlyBalanceEntries = true;
@@ -187,7 +191,8 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
                            BsqWalletService bsqWalletService,
                            BsqFormatter bsqFormatter,
                            @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
-                           BsqValidator bsqValidator) {
+                           BsqValidator bsqValidator,
+                           Preferences preferences) {
         this.daoFacade = daoFacade;
         this.burningManPresentationService = burningManPresentationService;
         this.burningManAccountingService = burningManAccountingService;
@@ -235,7 +240,26 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             selectedContributorAddressBox.setManaged(isValueSet);
             selectedContributorAddressBox.setVisible(isValueSet);
             if (isValueSet) {
-                onBurningManSelected(newValue);
+                if (preferences.isProcessBurningManAccountingData()) {
+                    onBurningManSelected(newValue);
+                } else {
+                    selectedContributorTitledGroupBg.setText(Res.get("dao.burningman.selectedContributor") + " " + Res.get("dao.burningman.selectedContributor.disabledAccounting"));
+                    String key = "processBurningManAccountingData";
+                    if (preferences.showAgain(key)) {
+                        new Popup().information(Res.get("dao.burningman.accounting.popup"))
+                                .actionButtonText(Res.get("shared.applyAndShutDown"))
+                                .onAction(() -> {
+                                    preferences.setProcessBurningManAccountingData(true);
+                                    UserThread.runAfter(BisqApp.getShutDownHandler(), 500, TimeUnit.MILLISECONDS);
+                                })
+                                .closeButtonText(Res.get("shared.cancel"))
+                                .onClose(() -> onBurningManSelected(newValue))
+                                .dontShowAgainId(key)
+                                .show();
+                    } else {
+                        onBurningManSelected(newValue);
+                    }
+                }
             } else {
                 selectedContributorNameField.clear();
                 selectedContributorTotalRevenueField.clear();
@@ -257,6 +281,16 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         };
         balanceEntryToggleListener = (observable, oldValue, newValue) -> onTypeChanged();
+
+        isProcessingListener = (observable, oldValue, newValue) -> {
+            if (preferences.isProcessBurningManAccountingData()) {
+                if (newValue) {
+                    selectedContributorTitledGroupBg.setText(Res.get("dao.burningman.selectedContributor") + " " + Res.get("dao.burningman.selectedContributor.processing"));
+                } else {
+                    selectedContributorTitledGroupBg.setText(Res.get("dao.burningman.selectedContributor"));
+                }
+            }
+        };
     }
 
 
@@ -553,6 +587,8 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
 
         balanceEntryToggleGroup.selectedToggleProperty().addListener(balanceEntryToggleListener);
 
+        burningManAccountingService.getIsProcessing().addListener(isProcessingListener);
+
         burningManSortedList.comparatorProperty().bind(burningManTableView.comparatorProperty());
         burnOutputsSortedList.comparatorProperty().bind(burnOutputsTableView.comparatorProperty());
         balanceEntrySortedList.comparatorProperty().bind(balanceEntryTableView.comparatorProperty());
@@ -591,6 +627,8 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         contributorComboBox.getSelectionModel().selectedItemProperty().removeListener(contributorsListener);
 
         balanceEntryToggleGroup.selectedToggleProperty().removeListener(balanceEntryToggleListener);
+
+        burningManAccountingService.getIsProcessing().removeListener(isProcessingListener);
 
         burningManSortedList.comparatorProperty().unbind();
         burnOutputsSortedList.comparatorProperty().unbind();

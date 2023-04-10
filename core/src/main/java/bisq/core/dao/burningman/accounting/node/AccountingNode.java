@@ -23,6 +23,7 @@ import bisq.core.dao.burningman.accounting.blockchain.AccountingBlock;
 import bisq.core.dao.burningman.accounting.node.full.AccountingBlockParser;
 import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.user.Preferences;
 
 import bisq.network.p2p.BootstrapListener;
 import bisq.network.p2p.P2PService;
@@ -119,6 +120,7 @@ public abstract class AccountingNode implements DaoSetupService, DaoStateListene
     private final DaoStateService daoStateService;
     protected final BurningManAccountingService burningManAccountingService;
     protected final AccountingBlockParser accountingBlockParser;
+    private final Preferences preferences;
 
     @Nullable
     protected Consumer<String> errorMessageHandler;
@@ -132,11 +134,13 @@ public abstract class AccountingNode implements DaoSetupService, DaoStateListene
     public AccountingNode(P2PService p2PService,
                           DaoStateService daoStateService,
                           BurningManAccountingService burningManAccountingService,
-                          AccountingBlockParser accountingBlockParser) {
+                          AccountingBlockParser accountingBlockParser,
+                          Preferences preferences) {
         this.p2PService = p2PService;
         this.daoStateService = daoStateService;
         this.burningManAccountingService = burningManAccountingService;
         this.accountingBlockParser = accountingBlockParser;
+        this.preferences = preferences;
     }
 
 
@@ -160,6 +164,10 @@ public abstract class AccountingNode implements DaoSetupService, DaoStateListene
 
     @Override
     public void addListeners() {
+        if (!preferences.isProcessBurningManAccountingData()) {
+            return;
+        }
+
         if (daoStateService.isParseBlockChainComplete()) {
             log.info("daoStateService.isParseBlockChainComplete is already true, " +
                     "we call onInitialDaoBlockParsingComplete directly");
@@ -182,7 +190,10 @@ public abstract class AccountingNode implements DaoSetupService, DaoStateListene
     }
 
     @Override
-    public abstract void start();
+    public void start() {
+        // We do not start yet but wait until DAO block parsing is complete to not interfere with
+        // that higher priority activity.
+    }
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////

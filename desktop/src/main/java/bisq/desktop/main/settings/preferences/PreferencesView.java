@@ -131,7 +131,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ToggleButton showOwnOffersInOfferBook, useAnimations, useDarkMode, sortMarketCurrenciesNumerically,
             avoidStandbyMode, useCustomFee, autoConfirmXmrToggle, hideNonAccountPaymentMethodsToggle, denyApiTakerToggle,
             notifyOnPreReleaseToggle, isDaoFullNodeToggleButton,
-            fullModeDaoMonitorToggleButton, useBitcoinUrisToggle, tradeLimitToggle;
+            fullModeDaoMonitorToggleButton, useBitcoinUrisToggle, tradeLimitToggle, processBurningManAccountingDataToggleButton;
     private int gridRow = 0;
     private int displayCurrenciesGridRowIndex = 0;
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, ignoreDustThresholdInputTextField,
@@ -676,11 +676,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void initializeDaoOptions() {
-        int rowSpan = 5;
+        int rowSpan = 6;
         daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, rowSpan,
                 Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
-        fullModeDaoMonitorToggleButton = addSlideToggleButton(root, gridRow,
-                Res.get("setting.preferences.dao.fullModeDaoMonitor"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+
+        processBurningManAccountingDataToggleButton = addSlideToggleButton(root, gridRow, Res.get("setting.preferences.dao.processBurningManAccountingData"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+
+        fullModeDaoMonitorToggleButton = addSlideToggleButton(root, ++gridRow,
+                Res.get("setting.preferences.dao.fullModeDaoMonitor"));
 
         resyncDaoFromResourcesButton = addButton(root, ++gridRow, Res.get("setting.preferences.dao.resyncFromResources.label"));
         resyncDaoFromResourcesButton.setMaxWidth(Double.MAX_VALUE);
@@ -1099,6 +1102,22 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void activateDaoPreferences() {
+        processBurningManAccountingDataToggleButton.setSelected(preferences.isProcessBurningManAccountingData());
+        processBurningManAccountingDataToggleButton.setOnAction(e -> {
+            boolean selected = processBurningManAccountingDataToggleButton.isSelected();
+            if (selected != preferences.isProcessBurningManAccountingData()) {
+                new Popup().information(Res.get("settings.net.needRestart"))
+                        .actionButtonText(Res.get("shared.applyAndShutDown"))
+                        .onAction(() -> {
+                            preferences.setProcessBurningManAccountingData(selected);
+                            UserThread.runAfter(BisqApp.getShutDownHandler(), 500, TimeUnit.MILLISECONDS);
+                        })
+                        .closeButtonText(Res.get("shared.cancel"))
+                        .onClose(() -> processBurningManAccountingDataToggleButton.setSelected(!selected))
+                        .show();
+            }
+        });
+
         fullModeDaoMonitorToggleButton.setSelected(preferences.isUseFullModeDaoMonitor());
         fullModeDaoMonitorToggleButton.setOnAction(e -> {
             preferences.setUseFullModeDaoMonitor(fullModeDaoMonitorToggleButton.isSelected());
@@ -1221,7 +1240,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     private void updateDaoFields() {
         boolean isDaoFullNode = isDaoFullNodeToggleButton.isSelected();
-        GridPane.setRowSpan(daoOptionsTitledGroupBg, isDaoFullNode ? 8 : 5);
+        GridPane.setRowSpan(daoOptionsTitledGroupBg, isDaoFullNode ? 9 : 6);
         rpcUserTextField.setVisible(isDaoFullNode);
         rpcUserTextField.setManaged(isDaoFullNode);
         rpcPwTextField.setVisible(isDaoFullNode);
@@ -1284,6 +1303,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void deactivateDaoPreferences() {
+        processBurningManAccountingDataToggleButton.setOnAction(null);
         fullModeDaoMonitorToggleButton.setOnAction(null);
         resyncDaoFromResourcesButton.setOnAction(null);
         resyncDaoFromGenesisButton.setOnAction(null);
