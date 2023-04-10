@@ -29,6 +29,7 @@ import bisq.core.dao.burningman.accounting.node.lite.network.AccountingLiteNodeN
 import bisq.core.dao.burningman.accounting.node.messages.GetAccountingBlocksResponse;
 import bisq.core.dao.burningman.accounting.node.messages.NewAccountingBlockBroadcastMessage;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.user.Preferences;
 
 import bisq.network.p2p.P2PService;
 import bisq.network.p2p.network.ConnectionState;
@@ -76,8 +77,10 @@ public class AccountingLiteNode extends AccountingNode implements AccountingLite
                               WalletsSetup walletsSetup,
                               BsqWalletService bsqWalletService,
                               AccountingLiteNodeNetworkService accountingLiteNodeNetworkService,
+                              Preferences preferences,
                               @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
-        super(p2PService, daoStateService, burningManAccountingService, accountingBlockParser);
+        super(p2PService, daoStateService, burningManAccountingService,
+                accountingBlockParser, preferences);
 
         this.walletsSetup = walletsSetup;
         this.bsqWalletService = bsqWalletService;
@@ -95,12 +98,6 @@ public class AccountingLiteNode extends AccountingNode implements AccountingLite
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void start() {
-        // We do not start yes but wait until DAO block parsing is complete to not interfere with
-        // that higher priority activity.
-    }
 
     @Override
     public void shutDown() {

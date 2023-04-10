@@ -20,6 +20,7 @@ package bisq.core.dao.burningman.accounting.node;
 import bisq.core.dao.burningman.accounting.BurningManAccountingService;
 import bisq.core.dao.burningman.accounting.node.full.AccountingBlockParser;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.user.Preferences;
 
 import bisq.network.p2p.P2PService;
 
@@ -34,8 +35,10 @@ class InActiveAccountingNode extends AccountingNode {
     public InActiveAccountingNode(P2PService p2PService,
                                   DaoStateService daoStateService,
                                   BurningManAccountingService burningManAccountingService,
-                                  AccountingBlockParser accountingBlockParser) {
-        super(p2PService, daoStateService, burningManAccountingService, accountingBlockParser);
+                                  AccountingBlockParser accountingBlockParser,
+                                  Preferences preferences) {
+        super(p2PService, daoStateService, burningManAccountingService,
+                accountingBlockParser, preferences);
     }
 
     @Override

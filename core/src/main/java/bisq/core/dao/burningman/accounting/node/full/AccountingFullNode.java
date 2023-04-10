@@ -28,6 +28,7 @@ import bisq.core.dao.node.full.RpcService;
 import bisq.core.dao.node.full.rpc.NotificationHandlerException;
 import bisq.core.dao.node.full.rpc.dto.RawDtoBlock;
 import bisq.core.dao.state.DaoStateService;
+import bisq.core.user.Preferences;
 
 import bisq.network.p2p.P2PService;
 
@@ -65,8 +66,10 @@ public class AccountingFullNode extends AccountingNode {
                               BurningManAccountingService burningManAccountingService,
                               AccountingBlockParser accountingBlockParser,
                               AccountingFullNodeNetworkService accountingFullNodeNetworkService,
-                              RpcService rpcService) {
-        super(p2PService, daoStateService, burningManAccountingService, accountingBlockParser);
+                              RpcService rpcService,
+                              Preferences preferences) {
+        super(p2PService, daoStateService, burningManAccountingService,
+                accountingBlockParser, preferences);
 
         this.rpcService = rpcService;
         this.accountingFullNodeNetworkService = accountingFullNodeNetworkService;
@@ -76,12 +79,6 @@ public class AccountingFullNode extends AccountingNode {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Public methods
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void start() {
-        // We do not start yes but wait until DAO block parsing is complete to not interfere with
-        // that higher priority activity.
-    }
 
     @Override
     public void shutDown() {
