@@ -154,7 +154,6 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
     private TableView<CompensationListItem> compensationsTableView;
     private TableView<ReimbursementListItem> reimbursementsTableView;
 
-
     private final ObservableList<BurningManListItem> burningManObservableList = FXCollections.observableArrayList();
     private final FilteredList<BurningManListItem> burningManFilteredList = new FilteredList<>(burningManObservableList);
     private final SortedList<BurningManListItem> burningManSortedList = new SortedList<>(burningManFilteredList);
@@ -174,6 +173,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
     private final ChangeListener<String> filterListener;
     private final ChangeListener<BurningManListItem> contributorsListener;
     private final ChangeListener<Toggle> balanceEntryToggleListener;
+    private final ChangeListener<Boolean> isProcessingListener;
 
     private int gridRow = 0;
     private boolean showMonthlyBalanceEntries = true;
@@ -243,6 +243,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
                 if (preferences.isProcessBurningManAccountingData()) {
                     onBurningManSelected(newValue);
                 } else {
+                    selectedContributorTitledGroupBg.setText(Res.get("dao.burningman.selectedContributor") + " " + Res.get("dao.burningman.selectedContributor.disabledAccounting"));
                     String key = "processBurningManAccountingData";
                     if (preferences.showAgain(key)) {
                         new Popup().information(Res.get("dao.burningman.accounting.popup"))
@@ -280,6 +281,16 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         };
         balanceEntryToggleListener = (observable, oldValue, newValue) -> onTypeChanged();
+
+        isProcessingListener = (observable, oldValue, newValue) -> {
+            if (preferences.isProcessBurningManAccountingData()) {
+                if (newValue) {
+                    selectedContributorTitledGroupBg.setText(Res.get("dao.burningman.selectedContributor") + " " + Res.get("dao.burningman.selectedContributor.processing"));
+                } else {
+                    selectedContributorTitledGroupBg.setText(Res.get("dao.burningman.selectedContributor"));
+                }
+            }
+        };
     }
 
 
@@ -576,6 +587,8 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
 
         balanceEntryToggleGroup.selectedToggleProperty().addListener(balanceEntryToggleListener);
 
+        burningManAccountingService.getIsProcessing().addListener(isProcessingListener);
+
         burningManSortedList.comparatorProperty().bind(burningManTableView.comparatorProperty());
         burnOutputsSortedList.comparatorProperty().bind(burnOutputsTableView.comparatorProperty());
         balanceEntrySortedList.comparatorProperty().bind(balanceEntryTableView.comparatorProperty());
@@ -614,6 +627,8 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         contributorComboBox.getSelectionModel().selectedItemProperty().removeListener(contributorsListener);
 
         balanceEntryToggleGroup.selectedToggleProperty().removeListener(balanceEntryToggleListener);
+
+        burningManAccountingService.getIsProcessing().removeListener(isProcessingListener);
 
         burningManSortedList.comparatorProperty().unbind();
         burnOutputsSortedList.comparatorProperty().unbind();

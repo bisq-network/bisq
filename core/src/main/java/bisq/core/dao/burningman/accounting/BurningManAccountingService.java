@@ -43,6 +43,9 @@ import org.bitcoinj.core.Coin;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -82,6 +85,8 @@ public class BurningManAccountingService implements DaoSetupService {
     private final Map<Date, Price> averageBsqPriceByMonth = new HashMap<>(getHistoricalAverageBsqPriceByMonth());
     @Getter
     private final Map<String, BalanceModel> balanceModelByBurningManName = new HashMap<>();
+    @Getter
+    private BooleanProperty isProcessing = new SimpleBooleanProperty();
 
     @Inject
     public BurningManAccountingService(BurningManAccountingStoreService burningManAccountingStoreService,
@@ -105,6 +110,7 @@ public class BurningManAccountingService implements DaoSetupService {
 
     @Override
     public void start() {
+        UserThread.execute(() -> isProcessing.set(true));
         // Create the map from now back to the last entry of the historical data (April 2019-Nov. 2022).
         averageBsqPriceByMonth.putAll(getAverageBsqPriceByMonth(new Date(), 2022, 10));
 
@@ -125,6 +131,7 @@ public class BurningManAccountingService implements DaoSetupService {
     public void onInitialBlockRequestsComplete() {
         updateBalanceModelByAddress();
         burningManAccountingStoreService.forEachBlock(this::addAccountingBlockToBalanceModel);
+        UserThread.execute(() -> isProcessing.set(false));
     }
 
     public void onNewBlockReceived(AccountingBlock accountingBlock) {
@@ -133,7 +140,7 @@ public class BurningManAccountingService implements DaoSetupService {
     }
 
     public void addBlock(AccountingBlock block) throws BlockHashNotConnectingException, BlockHeightNotConnectingException {
-            burningManAccountingStoreService.addIfNewBlock(block);
+        burningManAccountingStoreService.addIfNewBlock(block);
     }
 
     public int getBlockHeightOfLastBlock() {
