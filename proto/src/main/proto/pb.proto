@@ -1971,6 +1971,7 @@ message PreferencesPayload {
     bool use_bitcoin_uris_in_qr_codes = 66;
     int64 user_defined_trade_limit = 67;
     bool user_has_raised_trade_limit = 68;
+    bool process_burning_man_accounting_data = 69;
 }
 
 message AutoConfirmSettings {

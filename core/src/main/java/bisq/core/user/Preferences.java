@@ -846,6 +846,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         requestPersistence();
     }
 
+    public void setProcessBurningManAccountingData(boolean processBurningManAccountingData) {
+        prefPayload.setProcessBurningManAccountingData(processBurningManAccountingData);
+        requestPersistence();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Getter
@@ -1012,6 +1017,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         }
     }
 
+    public boolean isProcessBurningManAccountingData() {
+        return prefPayload.isProcessBurningManAccountingData();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -1132,6 +1141,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         double getBuyerSecurityDepositAsPercent();
 
+        boolean isProcessBurningManAccountingData();
+
         void setDaoFullNode(boolean value);
 
         void setRpcUser(String value);
@@ -1175,5 +1186,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setUserDefinedTradeLimit(long userDefinedTradeLimit);
 
         void setUserHasRaisedTradeLimit(boolean userHasRaisedTradeLimit);
+
+        void setProcessBurningManAccountingData(boolean processBurningManAccountingData);
     }
 }
