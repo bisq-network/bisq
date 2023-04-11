@@ -26,6 +26,7 @@ public class OptLabel {
     public final static String OPT_AMOUNT = "amount";
     public final static String OPT_CATEGORY = "category";
     public final static String OPT_CURRENCY_CODE = "currency-code";
+    public final static String OPT_ALL = "all";
     public final static String OPT_DAYS = "days";
     public final static String OPT_DIRECTION = "direction";
     public final static String OPT_DISPUTE_AGENT_TYPE = "dispute-agent-type";

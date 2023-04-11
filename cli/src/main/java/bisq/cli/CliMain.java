@@ -468,7 +468,8 @@ public class CliMain {
                     }
                     var direction = opts.getDirection();
                     var currencyCode = opts.getCurrencyCode();
-                    List<OfferInfo> offers = client.getOffers(direction, currencyCode);
+                    var all = opts.getAll();
+                    List<OfferInfo> offers = client.getOffers(direction, currencyCode, all);
                     if (offers.isEmpty())
                         out.printf("no %s %s offers found%n", direction, currencyCode);
                     else

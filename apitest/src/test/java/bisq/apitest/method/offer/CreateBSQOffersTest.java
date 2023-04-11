@@ -277,7 +277,7 @@ public class CreateBSQOffersTest extends AbstractOfferTest {
     @Test
     @Order(6)
     public void testGetAvailableBsqOffers() {
-        List<OfferInfo> offers = bobClient.getOffersSortedByDate(BSQ);
+        List<OfferInfo> offers = bobClient.getOffersSortedByDate(BSQ, false);
         log.debug("All Bob's Available BSQ Offers:\n{}", toOffersTable.apply(offers));
         assertEquals(4, offers.size());
         log.debug("BOB'S BALANCES\n{}", formatBalancesTbls(bobClient.getBalances()));

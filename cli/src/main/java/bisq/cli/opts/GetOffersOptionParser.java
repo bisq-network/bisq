@@ -20,6 +20,7 @@ package bisq.cli.opts;
 
 import joptsimple.OptionSpec;
 
+import static bisq.cli.opts.OptLabel.OPT_ALL;
 import static bisq.cli.opts.OptLabel.OPT_CURRENCY_CODE;
 import static bisq.cli.opts.OptLabel.OPT_DIRECTION;
 
@@ -30,6 +31,11 @@ public class GetOffersOptionParser extends AbstractMethodOptionParser implements
 
     final OptionSpec<String> currencyCodeOpt = parser.accepts(OPT_CURRENCY_CODE, "currency code (bsq|xmr|eur|usd|...)")
             .withRequiredArg();
+
+    final OptionSpec<Boolean> allOpt = parser.accepts(OPT_ALL, "get all offers")
+            .withOptionalArg()
+            .ofType(boolean.class)
+            .defaultsTo(Boolean.FALSE);
 
     public GetOffersOptionParser(String[] args) {
         super(args);
@@ -57,5 +63,9 @@ public class GetOffersOptionParser extends AbstractMethodOptionParser implements
 
     public String getCurrencyCode() {
         return options.valueOf(currencyCodeOpt);
+    }
+
+    public boolean getAll() {
+        return options.valueOf(allOpt);
     }
 }
