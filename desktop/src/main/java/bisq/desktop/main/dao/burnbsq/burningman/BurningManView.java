@@ -20,7 +20,6 @@ package bisq.desktop.main.dao.burnbsq.burningman;
 import bisq.desktop.app.BisqApp;
 import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
-import bisq.desktop.components.AutoTooltipButton;
 import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.AutoTooltipRadioButton;
 import bisq.desktop.components.AutoTooltipSlideToggleButton;
@@ -61,6 +60,7 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.common.UserThread;
 import bisq.common.app.DevEnv;
 import bisq.common.util.DateUtil;
+import bisq.common.util.MathUtils;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 
@@ -77,6 +77,7 @@ import javafx.stage.Stage;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ScrollPane;
@@ -115,6 +116,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -143,11 +145,12 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
     private AutoTooltipSlideToggleButton showOnlyActiveBurningmenToggle, showMonthlyBalanceEntryToggle;
     private TextField expectedRevenueField, daoBalanceTotalBurnedField, daoBalanceTotalDistributedField,
             selectedContributorNameField, selectedContributorTotalRevenueField, selectedContributorTotalReceivedField,
-            selectedContributorAddressField, burnTargetField;
+            selectedContributorAddressField, burnTargetField, daoBalanceTotalBtcFeeField, daoBalanceTotalDPTField;
     private ToggleGroup balanceEntryToggleGroup;
     private HBox balanceEntryHBox;
     private VBox selectedContributorNameBox, selectedContributorTotalReceivedBox, selectedContributorTotalRevenueBox,
             selectedContributorAddressBox;
+    private Hyperlink exportAsCSVHyperlink;
     private TableView<BurningManListItem> burningManTableView;
     private TableView<BalanceEntryItem> balanceEntryTableView;
     private TableView<BurnOutputListItem> burnOutputsTableView;
@@ -364,26 +367,56 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         // DAO balance
         addTitledGroupBg(gridPane, ++gridRow, 4,
                 Res.get("dao.burningman.daoBalance"), Layout.COMPACT_GROUP_DISTANCE);
-        Tuple3<Label, TextField, VBox> daoBalanceTotalBurnedTuple = addCompactTopLabelTextField(gridPane, ++gridRow,
-                Res.get("dao.burningman.daoBalanceTotalBurned"), "",
-                Layout.COMPACT_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE);
-        daoBalanceTotalBurnedField = daoBalanceTotalBurnedTuple.second;
-        Tuple3<Label, TextField, VBox> daoBalanceTotalDistributedTuple = addCompactTopLabelTextField(gridPane, gridRow,
-                Res.get("dao.burningman.daoBalanceTotalDistributed"), "",
-                Layout.COMPACT_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE);
-        daoBalanceTotalDistributedField = daoBalanceTotalDistributedTuple.second;
-        VBox daoBalanceTotalDistributedBox = daoBalanceTotalDistributedTuple.third;
-        daoBalanceTotalDistributedBox.getChildren().remove(daoBalanceTotalDistributedField);
-        Button reportButton = new AutoTooltipButton(Res.get("support.reportButton.label"));
-        reportButton.setStyle("-fx-pref-width: 66; -fx-pref-height: 26; -fx-padding: 3 3 3 3;");
-        reportButton.setOnAction(e -> writeReport());
-        HBox hBox1 = new HBox();
-        hBox1.getChildren().addAll(daoBalanceTotalDistributedField, reportButton);
-        HBox.setHgrow(daoBalanceTotalDistributedField, Priority.ALWAYS);
-        HBox.setMargin(reportButton, new Insets(0, 0, 0, 5.0));
-        daoBalanceTotalDistributedBox.getChildren().add(hBox1);
-        GridPane.setColumnSpan(daoBalanceTotalDistributedBox, 2);
-        GridPane.setColumnIndex(daoBalanceTotalDistributedBox, 1);
+
+        // left box
+        daoBalanceTotalBurnedField = new BisqTextField();
+        daoBalanceTotalBurnedField.setEditable(false);
+        daoBalanceTotalBurnedField.setFocusTraversable(false);
+        VBox selectedContributorTotalBurnedBox = getTopLabelWithVBox(Res.get("dao.burningman.daoBalanceTotalBurned"),
+                daoBalanceTotalBurnedField).second;
+
+        daoBalanceTotalBtcFeeField = new BisqTextField();
+        daoBalanceTotalBtcFeeField.setEditable(false);
+        daoBalanceTotalBtcFeeField.setFocusTraversable(false);
+        VBox selectedContributorTotalBtcFeeBox = getTopLabelWithVBox(Res.get("dao.burningman.daoBalanceTotalBtcFees"),
+                daoBalanceTotalBtcFeeField).second;
+
+        HBox daoLeftHBox = new HBox(5, selectedContributorTotalBurnedBox, selectedContributorTotalBtcFeeBox);
+        HBox.setHgrow(selectedContributorTotalBurnedBox, Priority.ALWAYS);
+        HBox.setHgrow(selectedContributorTotalBtcFeeBox, Priority.ALWAYS);
+
+        GridPane.setRowIndex(daoLeftHBox, ++gridRow);
+        GridPane.setMargin(daoLeftHBox, new Insets(Layout.COMPACT_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
+        gridPane.getChildren().add(daoLeftHBox);
+
+        // right box
+        daoBalanceTotalDPTField = new BisqTextField();
+        daoBalanceTotalDPTField.setEditable(false);
+        daoBalanceTotalDPTField.setFocusTraversable(false);
+        VBox selectedContributorTotalDPTBox = getTopLabelWithVBox(Res.get("dao.burningman.daoBalanceTotalDPT"),
+                daoBalanceTotalDPTField).second;
+
+        daoBalanceTotalDistributedField = new BisqTextField();
+        daoBalanceTotalDistributedField.setEditable(false);
+        daoBalanceTotalDistributedField.setFocusTraversable(false);
+        VBox selectedContributorTotalDistributedBox = getTopLabelWithVBox(Res.get("dao.burningman.daoBalanceTotalDistributed"),
+                daoBalanceTotalDistributedField).second;
+
+        HBox daoRightHBox = new HBox(5, selectedContributorTotalDPTBox, selectedContributorTotalDistributedBox);
+        HBox.setHgrow(selectedContributorTotalDPTBox, Priority.ALWAYS);
+        HBox.setHgrow(selectedContributorTotalDistributedBox, Priority.ALWAYS);
+
+        GridPane.setRowIndex(daoRightHBox, gridRow);
+        GridPane.setColumnIndex(daoRightHBox, 1);
+        GridPane.setMargin(daoRightHBox, new Insets(Layout.COMPACT_GROUP_DISTANCE + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
+        gridPane.getChildren().add(daoRightHBox);
+
+        exportAsCSVHyperlink = new Hyperlink(Res.get("shared.exportCSV"));
+        GridPane.setRowIndex(exportAsCSVHyperlink, ++gridRow);
+        GridPane.setColumnIndex(exportAsCSVHyperlink, 1);
+        GridPane.setMargin(exportAsCSVHyperlink, new Insets(-5, 0, 0, 0));
+        GridPane.setHalignment(exportAsCSVHyperlink, HPos.RIGHT);
+        gridPane.getChildren().add(exportAsCSVHyperlink);
 
         // Selected contributor
         selectedContributorTitledGroupBg = addTitledGroupBg(gridPane, ++gridRow, 4,
@@ -530,45 +563,6 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         reimbursementsTableView.setItems(reimbursementSortedList);
     }
 
-    private void writeReport() {
-        List<String> reportList = new ArrayList<>();
-        String separator = "~";
-        String tableColumns = "Month~Fees~DPT~Total";
-        CSVEntryConverter<String> headerConverter = item -> tableColumns.split(separator);
-        CSVEntryConverter<String> contentConverter = item -> item.split(separator);
-        int year = 2022;
-        int month = 11;
-        while (true) {
-            Date date = DateUtil.getStartOfMonth(year, month);
-            long feeAmount = burningManAccountingService.getDistributedBtcBalanceByMonth(date)
-                    .filter(ee -> ee.getType() == BalanceEntry.Type.BTC_TRADE_FEE_TX).mapToLong(BaseBalanceEntry::getAmount).sum();
-            long dptAmount = burningManAccountingService.getDistributedBtcBalanceByMonth(date)
-                    .filter(ee -> ee.getType() == BalanceEntry.Type.DPT_TX).mapToLong(BaseBalanceEntry::getAmount).sum();
-            String reportLine = new SimpleDateFormat("MMM yyyy", Locale.ENGLISH).format(date)
-                    + separator + Coin.valueOf(feeAmount).toPlainString()
-                    + separator + Coin.valueOf(dptAmount).toPlainString()
-                    + separator + Coin.valueOf(feeAmount + dptAmount).toPlainString();
-            reportList.add(reportLine);
-            if (++month > 11) {
-                month = 0;
-                ++year;
-            }
-            if (date.after(new Date())) {
-                break;
-            }
-        }
-        GUIUtil.exportCSV("DAOreport.csv", headerConverter, contentConverter, "", reportList,
-                (Stage) root.getScene().getWindow());
-    }
-
-    private RadioButton getRadioButton(String title, @Nullable BalanceEntry.Type type) {
-        AutoTooltipRadioButton radioButton = new AutoTooltipRadioButton(title);
-        radioButton.setToggleGroup(balanceEntryToggleGroup);
-        radioButton.setUserData(type);
-        HBox.setMargin(radioButton, new Insets(-12, 2, 0, 0));
-        return radioButton;
-    }
-
     @Override
     protected void activate() {
         GUIUtil.setFitToRowsForTableView(burningManTableView, 36, 28, 5, 5);
@@ -596,6 +590,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         reimbursementSortedList.comparatorProperty().bind(reimbursementsTableView.comparatorProperty());
 
         burnButton.setOnAction(e -> onBurn());
+        exportAsCSVHyperlink.setOnAction(e -> exportToCSV());
 
         exportBalanceEntriesButton.setOnAction(event -> onExportBalanceEntries());
         showOnlyActiveBurningmenToggle.setOnAction(e -> updateBurningmenPredicate());
@@ -637,6 +632,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         reimbursementSortedList.comparatorProperty().unbind();
 
         burnButton.setOnAction(null);
+        exportAsCSVHyperlink.setOnAction(null);
         exportBalanceEntriesButton.setOnAction(null);
         showOnlyActiveBurningmenToggle.setOnAction(null);
         showMonthlyBalanceEntryToggle.setOnAction(null);
@@ -678,6 +674,99 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    private void exportToCSV() {
+        List<String> result = new ArrayList<>();
+        String separator = "~";
+        String tableColumns = "Month~BTC Fees~Fees as BSQ~DPT as BTC~DPT as BSQ~Distributed BTC~Distributed BTC as BSQ";
+        CSVEntryConverter<String> headerConverter = item -> tableColumns.split(separator);
+        CSVEntryConverter<String> contentConverter = item -> item.split(separator);
+        Date now = new Date();
+        String line;
+        long feeAsBtcSum = 0;
+        long dptAsBtcSum = 0;
+        long distributedBtcSum = 0;
+        long feeAsBsqSum = 0;
+        long dptAsBsqSum = 0;
+        long distributedBtcAsBsqSum = 0;
+        long feeAsBsq, dptAsBsq, distributedBtcAsBsq;
+        int year = 2023;
+        int month = 0;
+        while (true) {
+            Date date = DateUtil.getStartOfMonth(year, month);
+            if (date.after(now)) {
+                break;
+            }
+
+            Map<Date, Price> averageBsqPriceByMonth = burningManAccountingService.getAverageBsqPriceByMonth();
+            Optional<Price> price = Optional.ofNullable(averageBsqPriceByMonth.get(date));
+
+            List<ReceivedBtcBalanceEntry> distributedBtcBalanceByMonth = burningManAccountingService.getDistributedBtcBalanceByMonth(date)
+                    .collect(Collectors.toList());
+            long feeAsBtc = distributedBtcBalanceByMonth.stream()
+                    .filter(ee -> ee.getType() == BalanceEntry.Type.BTC_TRADE_FEE_TX)
+                    .mapToLong(BaseBalanceEntry::getAmount)
+                    .sum();
+            long dptAsBtc = distributedBtcBalanceByMonth.stream()
+                    .filter(ee -> ee.getType() == BalanceEntry.Type.DPT_TX)
+                    .mapToLong(BaseBalanceEntry::getAmount)
+                    .sum();
+            long distributedBtc = feeAsBtc + dptAsBtc;
+            feeAsBtcSum += feeAsBtc;
+            dptAsBtcSum += dptAsBtc;
+            distributedBtcSum += distributedBtc;
+
+            if (price.isEmpty() || price.get().getValue() == 0 || distributedBtc == 0) {
+                feeAsBsq = 0;
+                dptAsBsq = 0;
+            } else {
+                long feeAsVolume = price.get().getVolumeByAmount(Coin.valueOf(feeAsBtc)).getValue();
+                feeAsBsq = MathUtils.roundDoubleToLong(MathUtils.scaleDownByPowerOf10(feeAsVolume, 6));
+                long dptAsVolume = price.get().getVolumeByAmount(Coin.valueOf(dptAsBtc)).getValue();
+                dptAsBsq = MathUtils.roundDoubleToLong(MathUtils.scaleDownByPowerOf10(dptAsVolume, 6));
+            }
+            distributedBtcAsBsq = feeAsBsq + dptAsBsq;
+            feeAsBsqSum += feeAsBsq;
+            dptAsBsqSum += dptAsBsq;
+            distributedBtcAsBsqSum += distributedBtcAsBsq;
+
+
+            line = new SimpleDateFormat("MMM yyyy", Locale.ENGLISH).format(date)
+                    + separator + btcFormatter.formatCoin(Coin.valueOf(feeAsBtc))
+                    + separator + bsqFormatter.formatCoin(Coin.valueOf(feeAsBsq))
+                    + separator + btcFormatter.formatCoin(Coin.valueOf(dptAsBtc))
+                    + separator + bsqFormatter.formatCoin(Coin.valueOf(dptAsBsq))
+                    + separator + btcFormatter.formatCoin(Coin.valueOf(distributedBtc))
+                    + separator + bsqFormatter.formatCoin(Coin.valueOf(distributedBtcAsBsq));
+            result.add(line);
+            if (++month > 11) {
+                month = 0;
+                ++year;
+            }
+        }
+
+        result.add("");
+
+        line = "Sum:"
+                + separator + btcFormatter.formatCoin(Coin.valueOf(feeAsBtcSum))
+                + separator + bsqFormatter.formatCoin(Coin.valueOf(feeAsBsqSum))
+                + separator + btcFormatter.formatCoin(Coin.valueOf(dptAsBtcSum))
+                + separator + bsqFormatter.formatCoin(Coin.valueOf(dptAsBsqSum))
+                + separator + btcFormatter.formatCoin(Coin.valueOf(distributedBtcSum))
+                + separator + bsqFormatter.formatCoin(Coin.valueOf(distributedBtcAsBsqSum));
+        result.add(line);
+
+        GUIUtil.exportCSV("Burningman_dao_revenue.csv", headerConverter, contentConverter,
+                "", result, (Stage) root.getScene().getWindow());
+    }
+
+    private RadioButton getRadioButton(String title, @Nullable BalanceEntry.Type type) {
+        AutoTooltipRadioButton radioButton = new AutoTooltipRadioButton(title);
+        radioButton.setToggleGroup(balanceEntryToggleGroup);
+        radioButton.setUserData(type);
+        HBox.setMargin(radioButton, new Insets(-12, 2, 0, 0));
+        return radioButton;
+    }
+
     private void updateData() {
         burningManObservableList.setAll(burningManPresentationService.getBurningManCandidatesByName().entrySet().stream()
                 .map(entry -> new BurningManListItem(burningManPresentationService, entry.getKey(), entry.getValue(), bsqFormatter))
@@ -711,8 +800,11 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
                     .sorted(Comparator.comparing(BurningManListItem::getName))
                     .collect(Collectors.toList());
             contributorComboBox.setItems(FXCollections.observableArrayList(myBurningManListItems));
-
             daoBalanceTotalBurnedField.setText(bsqFormatter.formatCoinWithCode(burningManPresentationService.getTotalAmountOfBurnedBsq()));
+            daoBalanceTotalBtcFeeField.setText(btcFormatter.formatCoinWithCode(burningManAccountingService.getTotalAmountOfDistributedBtcFees()) + " / " +
+                    bsqFormatter.formatCoinWithCode(burningManAccountingService.getTotalAmountOfDistributedBtcFeesAsBsq()));
+            daoBalanceTotalDPTField.setText(btcFormatter.formatCoinWithCode(burningManAccountingService.getTotalAmountOfDistributedDPT()) + " / " +
+                    bsqFormatter.formatCoinWithCode(burningManAccountingService.getTotalAmountOfDistributedDPTAsBsq()));
             daoBalanceTotalDistributedField.setText(btcFormatter.formatCoinWithCode(burningManAccountingService.getTotalAmountOfDistributedBtc()) + " / " +
                     bsqFormatter.formatCoinWithCode(burningManAccountingService.getTotalAmountOfDistributedBsq()));
         }
@@ -786,7 +878,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
                     .collect(Collectors.toList()));
 
             long totalRevenueAsBsq = balanceEntryObservableList.stream()
-                    .mapToLong(item -> item.getRevenue())
+                    .mapToLong(BalanceEntryItem::getRevenue)
                     .sum();
             selectedContributorTotalRevenueField.setText(bsqFormatter.formatCoinWithCode(totalRevenueAsBsq));
 

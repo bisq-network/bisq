@@ -28,6 +28,9 @@ import bisq.core.dao.burningman.accounting.blockchain.AccountingTx;
 import bisq.core.dao.burningman.accounting.exceptions.BlockHashNotConnectingException;
 import bisq.core.dao.burningman.accounting.exceptions.BlockHeightNotConnectingException;
 import bisq.core.dao.burningman.accounting.storage.BurningManAccountingStoreService;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.monetary.Price;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
@@ -46,6 +49,7 @@ import javax.inject.Singleton;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -67,7 +71,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Singleton
-public class BurningManAccountingService implements DaoSetupService {
+public class BurningManAccountingService implements DaoSetupService, DaoStateListener {
     // now 763195 -> 107159 blocks takes about 14h
     // First tx at BM address 656036 Sun Nov 08 19:02:18 EST 2020
     // 2 months ago 754555
@@ -86,10 +90,14 @@ public class BurningManAccountingService implements DaoSetupService {
     @Getter
     private final Map<String, BalanceModel> balanceModelByBurningManName = new HashMap<>();
     @Getter
-    private BooleanProperty isProcessing = new SimpleBooleanProperty();
+    private final BooleanProperty isProcessing = new SimpleBooleanProperty();
+
+    // cache
+    private final List<ReceivedBtcBalanceEntry> receivedBtcBalanceEntryListExcludingLegacyBM = new ArrayList<>();
 
     @Inject
-    public BurningManAccountingService(BurningManAccountingStoreService burningManAccountingStoreService,
+    public BurningManAccountingService(DaoStateService daoStateService,
+                                       BurningManAccountingStoreService burningManAccountingStoreService,
                                        BurningManPresentationService burningManPresentationService,
                                        TradeStatisticsManager tradeStatisticsManager,
                                        Preferences preferences) {
@@ -98,6 +106,8 @@ public class BurningManAccountingService implements DaoSetupService {
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.preferences = preferences;
 
+        daoStateService.addDaoStateListener(this);
+        daoStateService.getLastBlock().ifPresent(this::applyBlock);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -121,6 +131,20 @@ public class BurningManAccountingService implements DaoSetupService {
             burningManAccountingStoreService.forEachBlock(block -> addAccountingBlockToBalanceModel(map, block));
             UserThread.execute(() -> balanceModelByBurningManName.putAll(map));
         });
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // DaoStateListener
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
+        applyBlock(block);
+    }
+
+    private void applyBlock(Block block) {
+        receivedBtcBalanceEntryListExcludingLegacyBM.clear();
     }
 
 
@@ -162,14 +186,22 @@ public class BurningManAccountingService implements DaoSetupService {
     }
 
     public long getTotalAmountOfDistributedBtc() {
-        return getReceivedBtcBalanceEntryStreamExcludingLegacyBurningmen()
+        return getReceivedBtcBalanceEntryListExcludingLegacyBM().stream()
                 .mapToLong(BaseBalanceEntry::getAmount)
                 .sum();
     }
 
-    public long getTotalAmountOfDistributedBsq() {
+    public long getTotalAmountOfDistributedBtcFees() {
+        return getReceivedBtcBalanceEntryListExcludingLegacyBM().stream()
+                .filter(e -> e.getType() == BalanceEntry.Type.BTC_TRADE_FEE_TX)
+                .mapToLong(BaseBalanceEntry::getAmount)
+                .sum();
+    }
+
+    public long getTotalAmountOfDistributedBtcFeesAsBsq() {
         Map<Date, Price> averageBsqPriceByMonth = getAverageBsqPriceByMonth();
-        return getReceivedBtcBalanceEntryStreamExcludingLegacyBurningmen()
+        return getReceivedBtcBalanceEntryListExcludingLegacyBM().stream()
+                .filter(e -> e.getType() == BalanceEntry.Type.BTC_TRADE_FEE_TX)
                 .map(balanceEntry -> {
                     Date month = balanceEntry.getMonth();
                     Optional<Price> price = Optional.ofNullable(averageBsqPriceByMonth.get(month));
@@ -188,12 +220,68 @@ public class BurningManAccountingService implements DaoSetupService {
                 .sum();
     }
 
-    private Stream<ReceivedBtcBalanceEntry> getReceivedBtcBalanceEntryStreamExcludingLegacyBurningmen() {
-        return balanceModelByBurningManName.entrySet().stream()
+    public long getTotalAmountOfDistributedDPT() {
+        return getReceivedBtcBalanceEntryListExcludingLegacyBM().stream()
+                .filter(e -> e.getType() == BalanceEntry.Type.DPT_TX)
+                .mapToLong(BaseBalanceEntry::getAmount)
+                .sum();
+    }
+
+    public long getTotalAmountOfDistributedDPTAsBsq() {
+        Map<Date, Price> averageBsqPriceByMonth = getAverageBsqPriceByMonth();
+        return getReceivedBtcBalanceEntryListExcludingLegacyBM().stream()
+                .filter(e -> e.getType() == BalanceEntry.Type.DPT_TX)
+                .map(balanceEntry -> {
+                    Date month = balanceEntry.getMonth();
+                    Optional<Price> price = Optional.ofNullable(averageBsqPriceByMonth.get(month));
+                    long receivedBtc = balanceEntry.getAmount();
+                    Optional<Long> receivedBtcAsBsq;
+                    if (price.isEmpty() || price.get().getValue() == 0) {
+                        receivedBtcAsBsq = Optional.empty();
+                    } else {
+                        long volume = price.get().getVolumeByAmount(Coin.valueOf(receivedBtc)).getValue();
+                        receivedBtcAsBsq = Optional.of(MathUtils.roundDoubleToLong(MathUtils.scaleDownByPowerOf10(volume, 6)));
+                    }
+                    return receivedBtcAsBsq;
+                })
+                .filter(Optional::isPresent)
+                .mapToLong(Optional::get)
+                .sum();
+    }
+
+    public long getTotalAmountOfDistributedBsq() {
+        Map<Date, Price> averageBsqPriceByMonth = getAverageBsqPriceByMonth();
+        return getReceivedBtcBalanceEntryListExcludingLegacyBM().stream()
+                .map(balanceEntry -> {
+                    Date month = balanceEntry.getMonth();
+                    Optional<Price> price = Optional.ofNullable(averageBsqPriceByMonth.get(month));
+                    long receivedBtc = balanceEntry.getAmount();
+                    Optional<Long> receivedBtcAsBsq;
+                    if (price.isEmpty() || price.get().getValue() == 0) {
+                        receivedBtcAsBsq = Optional.empty();
+                    } else {
+                        long volume = price.get().getVolumeByAmount(Coin.valueOf(receivedBtc)).getValue();
+                        receivedBtcAsBsq = Optional.of(MathUtils.roundDoubleToLong(MathUtils.scaleDownByPowerOf10(volume, 6)));
+                    }
+                    return receivedBtcAsBsq;
+                })
+                .filter(Optional::isPresent)
+                .mapToLong(Optional::get)
+                .sum();
+    }
+
+    private List<ReceivedBtcBalanceEntry> getReceivedBtcBalanceEntryListExcludingLegacyBM() {
+        if (!receivedBtcBalanceEntryListExcludingLegacyBM.isEmpty()) {
+            return receivedBtcBalanceEntryListExcludingLegacyBM;
+        }
+
+        receivedBtcBalanceEntryListExcludingLegacyBM.addAll(balanceModelByBurningManName.entrySet().stream()
                 .filter(e -> !e.getKey().equals(BurningManPresentationService.LEGACY_BURNING_MAN_DPT_NAME) &&
                         !e.getKey().equals(BurningManPresentationService.LEGACY_BURNING_MAN_BTC_FEES_NAME))
                 .map(Map.Entry::getValue)
-                .flatMap(balanceModel -> balanceModel.getReceivedBtcBalanceEntries().stream());
+                .flatMap(balanceModel -> balanceModel.getReceivedBtcBalanceEntries().stream())
+                .collect(Collectors.toList()));
+        return receivedBtcBalanceEntryListExcludingLegacyBM;
     }
 
     public Stream<ReceivedBtcBalanceEntry> getDistributedBtcBalanceByMonth(Date month) {
