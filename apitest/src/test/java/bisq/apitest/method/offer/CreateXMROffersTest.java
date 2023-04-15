@@ -274,7 +274,7 @@ public class CreateXMROffersTest extends AbstractOfferTest {
     @Test
     @Order(6)
     public void testGetAvailableXMROffers() {
-        List<OfferInfo> offers = bobClient.getOffersSortedByDate(XMR);
+        List<OfferInfo> offers = bobClient.getOffersSortedByDate(XMR, false);
         log.debug("All of Bob's available XMR offers:\n{}", toOffersTable.apply(offers));
         assertEquals(4, offers.size());
         log.debug("Bob's balances\n{}", formatBalancesTbls(bobClient.getBalances()));

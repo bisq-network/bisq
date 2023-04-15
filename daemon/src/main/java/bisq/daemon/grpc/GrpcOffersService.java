@@ -195,7 +195,7 @@ class GrpcOffersService extends OffersImplBase {
     public void getOffers(GetOffersRequest req,
                           StreamObserver<GetOffersReply> responseObserver) {
         try {
-            List<OfferInfo> result = coreApi.getOffers(req.getDirection(), req.getCurrencyCode())
+            List<OfferInfo> result = coreApi.getOffers(req.getDirection(), req.getCurrencyCode(), req.getAll())
                     .stream()
                     .map(OfferInfo::toOfferInfo)
                     .collect(Collectors.toList());

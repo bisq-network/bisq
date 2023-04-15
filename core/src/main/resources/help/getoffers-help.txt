@@ -9,6 +9,7 @@ SYNOPSIS
 getoffers
 		--direction=<buy|sell>
 		--currency-code=<eur|usd>
+		--all=<true|false>
 
 DESCRIPTION
 -----------
@@ -23,6 +24,9 @@ OPTIONS
 
 --currency-code
 		The three letter code for the fiat used to buy or sell BTC, e.g., EUR, USD, BRL, ...
+
+--all
+		Whether return all offers or only these matching my accounts
 
 EXAMPLES
 --------
