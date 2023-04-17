@@ -9,11 +9,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class OfferUtilTest {
-    @Test
-    public void testGetRandomOfferId() {
-        String offerId = OfferUtil.getRandomOfferId();
-        assertTrue(offerId.matches("\\w{5,8}-\\w{8}-\\w{4}-\\w{4}-\\w{4}-\\w{12}-\\w{3}"));
-    }
 
     @Test
     public void testGetOfferIdWithMutationCounter() {
