@@ -211,9 +211,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         };
 
-        amountInputTextFieldListener = (observable, oldValue, newValue) -> {
-            updateButtonState();
-        };
+        amountInputTextFieldListener = (observable, oldValue, newValue) -> updateButtonState();
 
         burningmenSelectionListener = (observable, oldValue, newValue) -> {
             boolean isValueSet = newValue != null;

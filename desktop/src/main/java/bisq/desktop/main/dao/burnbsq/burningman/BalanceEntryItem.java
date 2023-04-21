@@ -36,7 +36,6 @@ import com.google.common.base.Joiner;
 
 import java.text.SimpleDateFormat;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
@@ -90,7 +89,7 @@ class BalanceEntryItem {
             receivedBtc = Optional.of(monthlyBalanceEntry.getReceivedBtc());
             burnedBsq = Optional.of(-monthlyBalanceEntry.getBurnedBsq());
             type = monthlyBalanceEntry.getTypes().size() == 1 ?
-                    Optional.of(new ArrayList<>(monthlyBalanceEntry.getTypes()).get(0)) :
+                    Optional.of(monthlyBalanceEntry.getTypes().iterator().next()) :
                     Optional.empty();
         } else if (balanceEntry instanceof BurnedBsqBalanceEntry) {
             BurnedBsqBalanceEntry burnedBsqBalanceEntry = (BurnedBsqBalanceEntry) balanceEntry;
