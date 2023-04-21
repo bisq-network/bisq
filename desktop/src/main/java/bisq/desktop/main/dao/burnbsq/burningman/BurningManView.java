@@ -1026,7 +1026,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         burningManTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(BurningManListItem::getBurnTarget));
+        column.setComparator(Comparator.comparingLong(BurningManListItem::getBurnTarget));
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.expectedRevenue"));
         column.setMinWidth(140);
@@ -1049,7 +1049,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         burningManTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(BurningManListItem::getExpectedRevenue));
+        column.setComparator(Comparator.comparingLong(BurningManListItem::getExpectedRevenue));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.burnAmountShare.label"));
@@ -1075,7 +1075,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         });
         burningManTableView.getColumns().add(column);
         column.setSortType(TableColumn.SortType.DESCENDING);
-        column.setComparator(Comparator.comparing(BurningManListItem::getCappedBurnAmountShare));
+        column.setComparator(Comparator.comparingDouble(BurningManListItem::getCappedBurnAmountShare));
         burningManTableView.getSortOrder().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.decayedBurnAmount"));
@@ -1099,7 +1099,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         burningManTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(BurningManListItem::getAccumulatedDecayedBurnAmount));
+        column.setComparator(Comparator.comparingLong(BurningManListItem::getAccumulatedDecayedBurnAmount));
         column.setSortType(TableColumn.SortType.DESCENDING);
         column.setVisible(false);
 
@@ -1124,7 +1124,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         burningManTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(BurningManListItem::getAccumulatedBurnAmount));
+        column.setComparator(Comparator.comparingLong(BurningManListItem::getAccumulatedBurnAmount));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.issuanceShare"));
@@ -1148,7 +1148,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         burningManTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(BurningManListItem::getCompensationShare));
+        column.setComparator(Comparator.comparingDouble(BurningManListItem::getCompensationShare));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.decayedIssuanceAmount"));
@@ -1172,7 +1172,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         burningManTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(BurningManListItem::getAccumulatedDecayedCompensationAmount));
+        column.setComparator(Comparator.comparingLong(BurningManListItem::getAccumulatedDecayedCompensationAmount));
         column.setSortType(TableColumn.SortType.DESCENDING);
         column.setVisible(false);
 
@@ -1197,7 +1197,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         burningManTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(BurningManListItem::getAccumulatedCompensationAmount));
+        column.setComparator(Comparator.comparingLong(BurningManListItem::getAccumulatedCompensationAmount));
         column.setSortType(TableColumn.SortType.DESCENDING);
     }
 
@@ -1228,7 +1228,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         });
         burnOutputsTableView.getColumns().add(column);
         column.setSortType(TableColumn.SortType.DESCENDING);
-        column.setComparator(Comparator.comparing(BurnOutputListItem::getDate));
+        column.setComparator(Comparator.comparingLong(BurnOutputListItem::getDate));
         burnOutputsTableView.getSortOrder().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.shared.table.cycle"));
@@ -1253,7 +1253,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         burnOutputsTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(BurnOutputListItem::getCycleIndex));
+        column.setComparator(Comparator.comparingInt(BurnOutputListItem::getCycleIndex));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.shared.table.height"));
@@ -1278,7 +1278,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         burnOutputsTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(BurnOutputListItem::getHeight));
+        column.setComparator(Comparator.comparingInt(BurnOutputListItem::getHeight));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.decayedBurnAmount"));
@@ -1302,7 +1302,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         burnOutputsTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(BurnOutputListItem::getDecayedAmount));
+        column.setComparator(Comparator.comparingLong(BurnOutputListItem::getDecayedAmount));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.burnAmount"));
@@ -1326,7 +1326,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         burnOutputsTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(BurnOutputListItem::getAmount));
+        column.setComparator(Comparator.comparingLong(BurnOutputListItem::getAmount));
         column.setSortType(TableColumn.SortType.DESCENDING);
     }
 
@@ -1380,7 +1380,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         balanceEntryTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(e -> e.getReceivedBtc().orElse(0L)));
+        column.setComparator(Comparator.comparingLong(e -> e.getReceivedBtc().orElse(0L)));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.balanceEntry.price"));
@@ -1429,7 +1429,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         balanceEntryTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(e -> e.getReceivedBtcAsBsq().orElse(0L)));
+        column.setComparator(Comparator.comparingLong(e -> e.getReceivedBtcAsBsq().orElse(0L)));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.balanceEntry.burnedBsq"));
@@ -1453,7 +1453,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         balanceEntryTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(e -> e.getBurnedBsq().orElse(0L)));
+        column.setComparator(Comparator.comparingLong(e -> e.getBurnedBsq().orElse(0L)));
         column.setSortType(TableColumn.SortType.ASCENDING);
 
 
@@ -1478,7 +1478,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         balanceEntryTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(BalanceEntryItem::getRevenue));
+        column.setComparator(Comparator.comparingLong(BalanceEntryItem::getRevenue));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.balanceEntry.type"));
@@ -1535,7 +1535,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         });
         compensationsTableView.getColumns().add(column);
         column.setSortType(TableColumn.SortType.DESCENDING);
-        column.setComparator(Comparator.comparing(CompensationListItem::getDate));
+        column.setComparator(Comparator.comparingLong(CompensationListItem::getDate));
         compensationsTableView.getSortOrder().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.shared.table.cycle"));
@@ -1560,7 +1560,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         compensationsTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(CompensationListItem::getCycleIndex));
+        column.setComparator(Comparator.comparingInt(CompensationListItem::getCycleIndex));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.shared.table.height"));
@@ -1585,7 +1585,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         compensationsTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(CompensationListItem::getHeight));
+        column.setComparator(Comparator.comparingInt(CompensationListItem::getHeight));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.decayedIssuanceAmount"));
@@ -1610,7 +1610,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         compensationsTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(CompensationListItem::getDecayedAmount));
+        column.setComparator(Comparator.comparingLong(CompensationListItem::getDecayedAmount));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.issuanceAmount"));
@@ -1634,7 +1634,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         compensationsTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(CompensationListItem::getAmount));
+        column.setComparator(Comparator.comparingLong(CompensationListItem::getAmount));
         column.setSortType(TableColumn.SortType.DESCENDING);
     }
 
@@ -1665,7 +1665,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         });
         reimbursementsTableView.getColumns().add(column);
         column.setSortType(TableColumn.SortType.DESCENDING);
-        column.setComparator(Comparator.comparing(ReimbursementListItem::getDate));
+        column.setComparator(Comparator.comparingLong(ReimbursementListItem::getDate));
         reimbursementsTableView.getSortOrder().add(column);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.shared.table.height"));
@@ -1689,7 +1689,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         reimbursementsTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(ReimbursementListItem::getHeight));
+        column.setComparator(Comparator.comparingInt(ReimbursementListItem::getHeight));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.shared.table.cycle"));
@@ -1713,7 +1713,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         reimbursementsTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(ReimbursementListItem::getCycleIndex));
+        column.setComparator(Comparator.comparingInt(ReimbursementListItem::getCycleIndex));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.reimbursedAmount"));
@@ -1737,7 +1737,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         reimbursementsTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(ReimbursementListItem::getAmount));
+        column.setComparator(Comparator.comparingLong(ReimbursementListItem::getAmount));
         column.setSortType(TableColumn.SortType.DESCENDING);
     }
 }
