@@ -1380,7 +1380,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         balanceEntryTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(e -> e.getReceivedBtc().orElse(null)));
+        column.setComparator(Comparator.comparing(e -> e.getReceivedBtc().orElse(0L)));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.balanceEntry.price"));
@@ -1404,7 +1404,8 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         balanceEntryTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(e -> e.getPrice().orElse(null)));
+        column.setComparator(Comparator.comparing(e -> e.getPrice().orElse(null),
+                Comparator.nullsFirst(Comparator.naturalOrder())));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.balanceEntry.receivedBtcAsBsq"));
@@ -1428,7 +1429,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         balanceEntryTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(e -> e.getReceivedBtcAsBsq().orElse(null)));
+        column.setComparator(Comparator.comparing(e -> e.getReceivedBtcAsBsq().orElse(0L)));
         column.setSortType(TableColumn.SortType.DESCENDING);
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.balanceEntry.burnedBsq"));
@@ -1452,8 +1453,8 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         balanceEntryTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(e -> e.getBurnedBsq().orElse(null)));
-        column.setSortType(TableColumn.SortType.DESCENDING);
+        column.setComparator(Comparator.comparing(e -> e.getBurnedBsq().orElse(0L)));
+        column.setSortType(TableColumn.SortType.ASCENDING);
 
 
         column = new AutoTooltipTableColumn<>(Res.get("dao.burningman.table.balanceEntry.revenue"));
@@ -1501,7 +1502,8 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             }
         });
         balanceEntryTableView.getColumns().add(column);
-        column.setComparator(Comparator.comparing(e -> e.getType().orElse(null)));
+        column.setComparator(Comparator.comparing(e -> e.getType().orElse(null),
+                Comparator.nullsFirst(Comparator.naturalOrder())));
         column.setSortType(TableColumn.SortType.DESCENDING);
     }
 
