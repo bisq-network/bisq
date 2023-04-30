@@ -52,7 +52,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Getter
 public class TxValidator {
     private static final Date USE_FEE_FROM_FILTER_ACTIVATION_DATE = Utilities.getUTCDate(2022, GregorianCalendar.JANUARY, 1);
-    private final static double FEE_TOLERANCE = 0.95;     // we expect fees to be at least 95% of target
+    private final static double FEE_TOLERANCE = 0.5;     // we expect fees to be at least 50% of target
     private final static long BLOCK_TOLERANCE = 599999;  // allow really old offers with weird fee addresses
 
     private final DaoStateService daoStateService;
