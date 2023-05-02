@@ -323,7 +323,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     }
 
     private void updateGroupColumn() {
-        groupColumn.setVisible(sortedList.stream()
+        groupColumn.setVisible(model.dataModel.getList().stream()
                 .collect(Collectors.groupingBy(OpenOfferListItem::getOcoGroupForSorting, Collectors.counting()))
                 .values().stream().anyMatch(i -> i > 1));
     }
