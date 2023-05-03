@@ -114,19 +114,17 @@ public class AccountingBlockParser {
         // Address check is done in parse method above already.
         // Amounts are in a certain range but as fee can change with DAO param changes we cannot set hard limits.
         // The min. trade fee in Nov. 2022 is 5000 sat. We use 2500 as lower bound.
-        // The largest taker fee for a 2 BTC trade is about 0.0059976 BTC (599_760 sat). We use 1_000_000 sat as upper bound.
+        // The largest taker fee for a 2 BTC trade is about 0.023 BTC (2_300_000 sat).
+        // We use 10_000_000 sat as upper bound to give some headroom for future fee increase and to cover some
+        // exceptions like SiaCoin having a 4 BTC limit.
         // Inputs are not constrained.
-        // Max fees amount is currently 0.0176 BTC.
-        // We give some extra headroom to cover potential future fee changes.
         // We store value as integer in protobuf to safe space, so max. possible value is 21.47483647 BTC.
-        long maxTradeFeeValue = Coin.parseCoin("0.1").getValue();
         TempAccountingTxOutput firstOutput = outputs.get(0);
         if (outputs.size() >= 2 &&
                 outputs.size() <= 3 &&
                 firstOutput.getValue() > 2500 &&
-                firstOutput.getValue() < 1_000_000 &&
-                isExpectedScriptType(firstOutput, tempAccountingTx) &&
-                firstOutput.getValue() <= maxTradeFeeValue) {
+                firstOutput.getValue() < 10_000_000 &&
+                isExpectedScriptType(firstOutput, tempAccountingTx)) {
             // We only keep first output.
             String name = burningManNameByAddress.get(firstOutput.getAddress());
             return Optional.of(new AccountingTx(AccountingTx.Type.BTC_TRADE_FEE_TX,
