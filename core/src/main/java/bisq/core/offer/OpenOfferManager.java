@@ -388,7 +388,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         checkNotNull(offer.getMakerFee(), "makerFee must not be null");
         checkArgument(!offer.isBsqSwapOffer());
 
-        int numClones = getOpenOffersByMakerFee(offer.getOfferFeePaymentTxId()).size();
+        int numClones = getOpenOffersByMakerFeeTxId(offer.getOfferFeePaymentTxId()).size();
         if (numClones >= 10) {
             errorMessageHandler.handleErrorMessage("Cannot create offer because maximum number of 10 cloned offers with shared maker fee is reached.");
             return;
@@ -608,7 +608,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             // to history. Only when the last offer with that maker fee txId got removed we add it.
             // Only canceled offers which have lost maker fees are shown in history.
             // For that reason we also do not add BSQ offers.
-            if (getOpenOffersByMakerFee(offer.getOfferFeePaymentTxId()).isEmpty()) {
+            if (getOpenOffersByMakerFeeTxId(offer.getOfferFeePaymentTxId()).isEmpty()) {
                 closedTradableManager.add(openOffer);
             }
             btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
@@ -628,7 +628,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         log::error);
             });
         } else {
-            getOpenOffersByMakerFee(offer.getOfferFeePaymentTxId()).forEach(openOffer -> {
+            getOpenOffersByMakerFeeTxId(offer.getOfferFeePaymentTxId()).forEach(openOffer -> {
                 removeOpenOfferFromList(openOffer);
 
                 if (offer.getId().equals(openOffer.getId())) {
@@ -664,8 +664,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                                 openOffer.getOffer().getBaseCurrencyCode().equalsIgnoreCase(offer.getBaseCurrencyCode()));
     }
 
-    public boolean isOfferWithSharedMakerFee(OpenOffer openOffer) {
-        return getOpenOffersByMakerFee(openOffer.getOffer().getOfferFeePaymentTxId()).size() > 1;
+    public boolean hasOfferSharedMakerFee(OpenOffer openOffer) {
+        return getOpenOffersByMakerFeeTxId(openOffer.getOffer().getOfferFeePaymentTxId()).size() > 1;
     }
 
 
@@ -1208,10 +1208,12 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 cannotActivateOffer(openOffer.getOffer());
     }
 
-    private Set<OpenOffer> getOpenOffersByMakerFee(String makerFeeTxId) {
-        return openOffers.stream()
+    private Set<OpenOffer> getOpenOffersByMakerFeeTxId(String makerFeeTxId) {
+        Set<OpenOffer> collect = openOffers.stream()
                 .filter(openOffer -> !openOffer.getOffer().isBsqSwapOffer() &&
-                        openOffer.getOffer().getOfferFeePaymentTxId().equals(makerFeeTxId))
+                        makerFeeTxId != null &&
+                        makerFeeTxId.equals(openOffer.getOffer().getOfferFeePaymentTxId()))
                 .collect(Collectors.toSet());
+        return collect;
     }
 }

@@ -56,6 +56,7 @@ public class CloneAddressEntryForSharedMakerFee extends Task<PlaceOfferModel> {
                 return;
             }
         }
+
         failed();
     }
 

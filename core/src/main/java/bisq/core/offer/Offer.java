@@ -502,6 +502,7 @@ public class Offer implements NetworkPayload, PersistablePayload {
         return offerPayloadBase.getMakerPaymentAccountId();
     }
 
+    @Nullable
     public String getOfferFeePaymentTxId() {
         return getOfferPayload().map(OfferPayload::getOfferFeePaymentTxId).orElse(null);
     }

@@ -630,7 +630,7 @@ public class BtcWalletService extends WalletService {
                 .findAny();
     }
 
-    // For offers with shared maker fee we create a new address entry with from the source entry
+    // For cloned offers with shared maker fee we create a new address entry based on the source entry
     // and set the new offerId.
     public AddressEntry getOrCloneAddressEntryWithOfferId(AddressEntry sourceAddressEntry, String offerId) {
         Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()

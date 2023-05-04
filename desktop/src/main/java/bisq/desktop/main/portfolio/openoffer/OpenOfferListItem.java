@@ -50,7 +50,11 @@ class OpenOfferListItem implements FilterableListItem {
     private final OpenOfferManager openOfferManager;
 
 
-    OpenOfferListItem(OpenOffer openOffer, PriceUtil priceUtil, CoinFormatter btcFormatter, BsqFormatter bsqFormatter, OpenOfferManager openOfferManager) {
+    OpenOfferListItem(OpenOffer openOffer,
+                      PriceUtil priceUtil,
+                      CoinFormatter btcFormatter,
+                      BsqFormatter bsqFormatter,
+                      OpenOfferManager openOfferManager) {
         this.openOffer = openOffer;
         this.priceUtil = priceUtil;
         this.btcFormatter = btcFormatter;
@@ -134,18 +138,9 @@ class OpenOfferListItem implements FilterableListItem {
         }
     }
 
-    //
-    public String getOcoGroupForSorting() {
-        Offer offer = getOffer();
-        if (offer.isBsqSwapOffer()) {
-            return "    ";
-        }
-        return offer.getOfferFeePaymentTxId();
-    }
-
-    //
-    public String getOcoGroupForDisplay() {
-        return getOcoGroupForSorting().substring(0, 4);
+    String getMakerFeeTxId() {
+        String makerFeeTxId = getOffer().getOfferFeePaymentTxId();
+        return makerFeeTxId != null ? makerFeeTxId : "";
     }
 
     @Override
