@@ -138,7 +138,8 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     // The payment method string can be quite long and would consume 15% more space.
     // When we get a new payment method we can add it to the enum at the end. Old users would add it as string if not
     // recognized.
-    private enum PaymentMethodMapper {
+    @VisibleForTesting
+    enum PaymentMethodMapper {
         OK_PAY,
         CASH_APP,
         VENMO,
@@ -298,7 +299,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         String tempPaymentMethod;
         try {
             tempPaymentMethod = String.valueOf(PaymentMethodMapper.valueOf(paymentMethod).ordinal());
-        } catch (Throwable t) {
+        } catch (IllegalArgumentException e) {
             tempPaymentMethod = paymentMethod;
         }
         this.paymentMethod = tempPaymentMethod;
@@ -403,9 +404,12 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     }
 
     public String getPaymentMethodId() {
+        if (paymentMethod.isEmpty() || paymentMethod.charAt(0) > '9') {
+            return paymentMethod;
+        }
         try {
             return PaymentMethodMapper.values()[Integer.parseInt(paymentMethod)].name();
-        } catch (Throwable ignore) {
+        } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
             return paymentMethod;
         }
     }
