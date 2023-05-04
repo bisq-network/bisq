@@ -33,45 +33,44 @@ import org.bitcoinj.core.TransactionOutput;
 import java.util.List;
 import java.util.Optional;
 
-public class CloneMakerFeeOco extends Task<PlaceOfferModel> {
+//
+public class CloneAddressEntryForSharedMakerFee extends Task<PlaceOfferModel> {
     @SuppressWarnings({"unused"})
-    public CloneMakerFeeOco(TaskRunner<PlaceOfferModel> taskHandler, PlaceOfferModel model) {
+    public CloneAddressEntryForSharedMakerFee(TaskRunner<PlaceOfferModel> taskHandler, PlaceOfferModel model) {
         super(taskHandler, model);
     }
 
     @Override
     protected void run() {
         runInterceptHook();
-        Offer newOcoOffer = model.getOffer();
-        // newOcoOffer is cloned from an existing offer;
-        // the clone needs a unique AddressEntry record associating the offerId with the reserved amount.
+
+        Offer offer = model.getOffer();
+        String makerFeeTxId = offer.getOfferFeePaymentTxId();
         BtcWalletService walletService = model.getWalletService();
-        for (AddressEntry potentialOcoSource : walletService.getAddressEntries(AddressEntry.Context.RESERVED_FOR_TRADE)) {
-            getTxIdFromAddress(walletService, potentialOcoSource.getAddress()).ifPresent(txId -> {
-                if (txId.equalsIgnoreCase(newOcoOffer.getOfferFeePaymentTxId())) {
-                    walletService.getOrCreateAddressEntry(potentialOcoSource, newOcoOffer.getId());
-                    newOcoOffer.setState(Offer.State.OFFER_FEE_PAID);
-                    complete();
-                }
-            });
-            if (completed) {
+        for (AddressEntry reservedForTradeEntry : walletService.getAddressEntries(AddressEntry.Context.RESERVED_FOR_TRADE)) {
+            if (findTxId(reservedForTradeEntry.getAddress())
+                    .map(txId -> txId.equals(makerFeeTxId))
+                    .orElse(false)) {
+                walletService.getOrCloneAddressEntryWithOfferId(reservedForTradeEntry, offer.getId());
+                complete();
                 return;
             }
         }
         failed();
     }
 
-    // AddressEntry and TxId are not linked, so do a reverse lookup
-    private Optional<String> getTxIdFromAddress(BtcWalletService walletService, Address address) {
-        List<Transaction> txns = walletService.getRecentTransactions(0, false);
-        for (Transaction txn : txns) {
-            for (TransactionOutput output : txn.getOutputs()) {
+    // We look up the most recent transaction with unspent outputs associated with the given address and return
+    // the txId if found.
+    private Optional<String> findTxId(Address address) {
+        BtcWalletService walletService = model.getWalletService();
+        List<Transaction> transactions = walletService.getAllRecentTransactions(false);
+        for (Transaction transaction : transactions) {
+            for (TransactionOutput output : transaction.getOutputs()) {
                 if (walletService.isTransactionOutputMine(output) && WalletService.isOutputScriptConvertibleToAddress(output)) {
                     String addressString = WalletService.getAddressStringFromOutput(output);
-                    assert addressString != null;
                     // make sure the output is still unspent
-                    if (addressString.equalsIgnoreCase(address.toString()) && output.getSpentBy() == null) {
-                        return Optional.of(txn.getTxId().toString());
+                    if (addressString != null && addressString.equals(address.toString()) && output.getSpentBy() == null) {
+                        return Optional.of(transaction.getTxId().toString());
                     }
                 }
             }

@@ -264,7 +264,7 @@ public class ClosedTradesView extends ActivatableViewAndModel<VBox, ClosedTrades
                 tableView -> {
                     TableRow<ClosedTradesListItem> row = new TableRow<>();
                     ContextMenu rowMenu = new ContextMenu();
-                    MenuItem duplicateItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
+                    MenuItem duplicateItem = new MenuItem(Res.get("portfolio.tab.duplicateOffer"));
                     duplicateItem.setOnAction((ActionEvent event) -> onDuplicateOffer(row.getItem().getTradable().getOffer()));
                     rowMenu.getItems().add(duplicateItem);
                     row.contextMenuProperty().bind(

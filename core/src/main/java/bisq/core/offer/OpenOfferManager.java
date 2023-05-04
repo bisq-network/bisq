@@ -381,16 +381,16 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     public void placeOffer(Offer offer,
                            double buyerSecurityDeposit,
                            boolean useSavingsWallet,
-                           boolean useBatchOfferOco,
+                           boolean isSharedMakerFee,
                            long triggerPrice,
                            TransactionResultHandler resultHandler,
                            ErrorMessageHandler errorMessageHandler) {
         checkNotNull(offer.getMakerFee(), "makerFee must not be null");
         checkArgument(!offer.isBsqSwapOffer());
 
-        int numClones = getOpenOffersByMakerFeeTxId(offer.getOfferFeePaymentTxId()).size();
-        if (numClones > 10) {
-            errorMessageHandler.handleErrorMessage("PlaceOffer prevented because cloned OCO offers count is " + numClones);
+        int numClones = getOpenOffersByMakerFee(offer.getOfferFeePaymentTxId()).size();
+        if (numClones >= 10) {
+            errorMessageHandler.handleErrorMessage("Cannot create offer because maximum number of 10 cloned offers with shared maker fee is reached.");
             return;
         }
 
@@ -399,14 +399,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 buyerSecurityDeposit,
                 createOfferService.getSellerSecurityDepositAsDouble(buyerSecurityDeposit));
 
-        if (useBatchOfferOco) {
-            offer.setPriceFeedService(priceFeedService);
-        }
-
         PlaceOfferModel model = new PlaceOfferModel(offer,
                 reservedFundsForOffer,
                 useSavingsWallet,
-                useBatchOfferOco,
+                isSharedMakerFee,
                 btcWalletService,
                 tradeWalletService,
                 bsqWalletService,
@@ -421,7 +417,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 model,
                 transaction -> {
                     OpenOffer openOffer = new OpenOffer(offer, triggerPrice);
-                    if (useBatchOfferOco) {
+                    if (isSharedMakerFee) {
                         openOffer.setState(OpenOffer.State.DEACTIVATED);
                     }
                     addOpenOfferToList(openOffer);
@@ -471,17 +467,18 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             return;
         }
 
+        if (cannotActivateOffer(openOffer.getOffer())) {
+            errorMessageHandler.handleErrorMessage("This cloned offer with shared maker fee cannot be activated because it uses the same payment method " +
+                    "and currency as another active offer.");
+            return;
+        }
+
         // If there is not enough funds for a BsqSwapOffer we do not publish the offer, but still apply the state change.
         // Once the wallet gets funded the offer gets published automatically.
         if (isBsqSwapOfferLackingFunds(openOffer)) {
             openOffer.setState(OpenOffer.State.AVAILABLE);
             requestPersistence();
             resultHandler.handleResult();
-            return;
-        }
-
-        if (!canBeEnabled(openOffer.getOffer())) {
-            log.info("{} cannot be enabled, as it has duplicate characteristics with another open offer", openOffer.getShortId());
             return;
         }
 
@@ -606,8 +603,14 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         openOffer.setState(OpenOffer.State.CANCELED);
         removeOpenOfferFromList(openOffer);
 
-        if (!openOffer.getOffer().isBsqSwapOffer() && !safeRemovalOfOcoClone(openOffer)) {
-            closedTradableManager.add(openOffer);
+        if (!openOffer.getOffer().isBsqSwapOffer()) {
+            // In case of an offer which has its maker fee shared with other offers, we do not add the openOffer
+            // to history. Only when the last offer with that maker fee txId got removed we add it.
+            // Only canceled offers which have lost maker fees are shown in history.
+            // For that reason we also do not add BSQ offers.
+            if (getOpenOffersByMakerFee(offer.getOfferFeePaymentTxId()).isEmpty()) {
+                closedTradableManager.add(openOffer);
+            }
             btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
         }
         log.info("onRemoved offerId={}", offer.getId());
@@ -625,12 +628,15 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                         log::error);
             });
         } else {
-            // offer taken may have been OCO, in which case all its clones need to be removed
-            getOpenOffersByMakerFeeTxId(offer.getOfferFeePaymentTxId()).forEach(openOffer -> {
+            getOpenOffersByMakerFee(offer.getOfferFeePaymentTxId()).forEach(openOffer -> {
                 removeOpenOfferFromList(openOffer);
-                openOffer.setState(OpenOffer.State.CLOSED);
-                if (!offer.getId().equals(openOffer.getId())) {
-                    btcWalletService.resetAddressEntriesForOpenOffer(openOffer.getId());    // cleanup OCO clone
+
+                if (offer.getId().equals(openOffer.getId())) {
+                    openOffer.setState(OpenOffer.State.CLOSED);
+                } else {
+                    // We use CANCELED for the offers which have shared maker fee but have not been taken for the trade.
+                    openOffer.setState(OpenOffer.State.CANCELED);
+                    btcWalletService.resetAddressEntriesForOpenOffer(openOffer.getId());
                 }
                 offerBookService.removeOffer(openOffer.getOffer().getOfferPayloadBase(),
                         () -> log.trace("Successfully removed offer"),
@@ -642,6 +648,24 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     public void reserveOpenOffer(OpenOffer openOffer) {
         openOffer.setState(OpenOffer.State.RESERVED);
         requestPersistence();
+    }
+
+    public boolean cannotActivateOffer(Offer offer) {
+        return openOffers.stream()
+                .filter(openOffer -> !openOffer.getOffer().isBsqSwapOffer())    // We only handle non-BSQ offers
+                .filter(openOffer -> !openOffer.getId().equals(offer.getId()))  // our own offer gets skipped
+                .filter(OpenOffer::isActivated)  // we only check with activated offers
+                .anyMatch(openOffer ->
+                        // Offers which share our maker fee will get checked if they have the same payment method
+                        // and currency.
+                        openOffer.getOffer().getOfferFeePaymentTxId().equals(offer.getOfferFeePaymentTxId()) &&
+                                openOffer.getOffer().getPaymentMethodId().equalsIgnoreCase(offer.getPaymentMethodId()) &&
+                                openOffer.getOffer().getCounterCurrencyCode().equalsIgnoreCase(offer.getCounterCurrencyCode()) &&
+                                openOffer.getOffer().getBaseCurrencyCode().equalsIgnoreCase(offer.getBaseCurrencyCode()));
+    }
+
+    public boolean isOfferWithSharedMakerFee(OpenOffer openOffer) {
+        return getOpenOffersByMakerFee(openOffer.getOffer().getOfferFeePaymentTxId()).size() > 1;
     }
 
 
@@ -659,13 +683,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     public Optional<OpenOffer> getOpenOfferById(String offerId) {
         return openOffers.stream().filter(e -> e.getId().equals(offerId)).findFirst();
-    }
-
-    public List<OpenOffer> getOpenOffersByMakerFeeTxId(String makerFeeTxId) {
-        return openOffers.stream()
-                .filter(e -> !e.getOffer().isBsqSwapOffer() && e.getOffer().getOfferFeePaymentTxId()
-                        .equals(makerFeeTxId == null ? "" : makerFeeTxId))
-                .collect(Collectors.toList());
     }
 
 
@@ -1185,23 +1202,16 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 openOffer.isBsqSwapOfferHasMissingFunds();
     }
 
-    public boolean canBeEnabled(Offer newOffer) {
-        // does the user have another open offer on the same currency, payment method, and reserved UTXO?
-        return openOffers.stream().noneMatch(e ->
-                        !e.getOffer().isBsqSwapOffer() &&
-                        !e.isDeactivated() &&
-                        !e.getId().equals(newOffer.getId()) &&
-                        e.getOffer().getOfferFeePaymentTxId().equals(newOffer.getOfferFeePaymentTxId()) &&
-                        e.getOffer().getPaymentMethodId().equalsIgnoreCase(newOffer.getPaymentMethodId()) &&
-                        e.getOffer().getCounterCurrencyCode().equalsIgnoreCase(newOffer.getCounterCurrencyCode()) &&
-                        e.getOffer().getBaseCurrencyCode().equalsIgnoreCase(newOffer.getBaseCurrencyCode()));
-    }
-
-    public boolean safeRemovalOfOcoClone(OpenOffer openOffer) {
-        return getOpenOffersByMakerFeeTxId(openOffer.getOffer().getOfferFeePaymentTxId()).size() > 1;
-    }
-
     private boolean preventedFromPublishing(OpenOffer openOffer) {
-        return openOffer.isDeactivated() || openOffer.isBsqSwapOfferHasMissingFunds() || !canBeEnabled(openOffer.getOffer());
+        return openOffer.isDeactivated() ||
+                openOffer.isBsqSwapOfferHasMissingFunds() ||
+                cannotActivateOffer(openOffer.getOffer());
+    }
+
+    private Set<OpenOffer> getOpenOffersByMakerFee(String makerFeeTxId) {
+        return openOffers.stream()
+                .filter(openOffer -> !openOffer.getOffer().isBsqSwapOffer() &&
+                        openOffer.getOffer().getOfferFeePaymentTxId().equals(makerFeeTxId))
+                .collect(Collectors.toSet());
     }
 }

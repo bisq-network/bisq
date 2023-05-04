@@ -41,6 +41,7 @@ import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.DontShowAgainLookup;
 
 import com.googlecode.jcsv.writer.CSVEntryConverter;
@@ -139,6 +140,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     @FXML
     AutoTooltipSlideToggleButton selectToggleButton;
 
+    private final PriceFeedService priceFeedService;
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
     private final BsqSwapOfferDetailsWindow bsqSwapOfferDetailsWindow;
@@ -151,10 +153,12 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     @Inject
     public OpenOffersView(OpenOffersViewModel model,
                           OpenOfferManager openOfferManager,
+                          PriceFeedService priceFeedService,
                           Navigation navigation,
                           OfferDetailsWindow offerDetailsWindow,
                           BsqSwapOfferDetailsWindow bsqSwapOfferDetailsWindow) {
         super(model);
+        this.priceFeedService = priceFeedService;
         this.navigation = navigation;
         this.offerDetailsWindow = offerDetailsWindow;
         this.bsqSwapOfferDetailsWindow = bsqSwapOfferDetailsWindow;
@@ -221,15 +225,13 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                 tableView -> {
                     final TableRow<OpenOfferListItem> row = new TableRow<>();
                     final ContextMenu rowMenu = new ContextMenu();
-                    MenuItem duplicateItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
-                    duplicateItem.setOnAction((event) -> onDuplicateOffer(row.getItem()));
-                    MenuItem cloneGroupedOfferOco1 = new MenuItem(Res.get("shared.cloneGroupedOfferOco"));
-                    cloneGroupedOfferOco1.setOnAction((event) -> onDuplicateOfferOco(row.getItem(), 1));
-                    MenuItem cloneGroupedOfferOco5 = new MenuItem(Res.get("shared.cloneGroupedOfferOco") + " x5");
-                    cloneGroupedOfferOco5.setOnAction((event) -> onDuplicateOfferOco(row.getItem(), 5));
-                    rowMenu.getItems().add(duplicateItem);
-                    rowMenu.getItems().add(cloneGroupedOfferOco1);
-                    rowMenu.getItems().add(cloneGroupedOfferOco5);
+                    MenuItem duplicateOfferMenuItem = new MenuItem(Res.get("portfolio.tab.duplicateOffer"));
+                    duplicateOfferMenuItem.setOnAction((event) -> onDuplicateOffer(row.getItem()));
+                    //
+                    MenuItem cloneOfferMenuItem = new MenuItem(Res.get("shared.cloneOffer"));
+                    cloneOfferMenuItem.setOnAction((event) -> onCloneOffer(row.getItem().getOpenOffer()));
+                    rowMenu.getItems().add(duplicateOfferMenuItem);
+                    rowMenu.getItems().add(cloneOfferMenuItem);
                     row.contextMenuProperty().bind(
                             Bindings.when(Bindings.isNotNull(row.itemProperty()))
                                     .then(rowMenu)
@@ -386,7 +388,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     private void onRemoveOpenOffer(OpenOfferListItem item) {
         OpenOffer openOffer = item.getOpenOffer();
         if (model.isBootstrappedOrShowPopup()) {
-            if (openOfferManager.safeRemovalOfOcoClone(openOffer)) {
+            if (openOfferManager.isOfferWithSharedMakerFee(openOffer)) {
                 doRemoveOpenOffer(openOffer);
             } else {
                 String key = (openOffer.getOffer().isBsqSwapOffer() ? "RemoveBsqSwapWarning" : "RemoveOfferWarning");
@@ -409,16 +411,17 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     }
 
     private void doRemoveOpenOffer(OpenOffer openOffer) {
-        boolean isSafeRemovalOfOcoClone = openOfferManager.safeRemovalOfOcoClone(openOffer);
         model.onRemoveOpenOffer(openOffer,
                 () -> {
                     log.debug("Remove offer was successful");
 
                     tableView.refresh();
 
-                    if (openOffer.getOffer().isBsqSwapOffer() || isSafeRemovalOfOcoClone) {
-                        return; // nothing to withdraw when Bsq swap is canceled (issue #5956)
+                    // We do not show the popup if it's a BSQ offer or a cloned offer with shared maker fee
+                    if (openOffer.getOffer().isBsqSwapOffer() || openOfferManager.isOfferWithSharedMakerFee(openOffer)) {
+                        return;
                     }
+
                     String key = "WithdrawFundsAfterRemoveOfferInfo";
                     if (DontShowAgainLookup.showAgain(key)) {
                         new Popup().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
@@ -448,60 +451,64 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         }
     }
 
-    private void onDuplicateOfferOco(OpenOfferListItem item, int numDuplicates) {
-        for (int i=0; i< numDuplicates; i++) {
-            item.getOffer().getOfferPayload().ifPresent(original -> {
-                log.info("Duplicating offer as OCO: {}", original.getId());
-                String newOfferId = getRandomOfferId();
-                OfferPayload offerPayload = new OfferPayload(newOfferId,
-                        new Date().getTime(),
-                        original.getOwnerNodeAddress(),
-                        original.getPubKeyRing(),
-                        original.getDirection(),
-                        original.getPrice(),
-                        original.getMarketPriceMargin(),
-                        original.isUseMarketBasedPrice(),
-                        original.getAmount(),
-                        original.getMinAmount(),
-                        original.getBaseCurrencyCode(),
-                        original.getCounterCurrencyCode(),
-                        original.getArbitratorNodeAddresses(),
-                        original.getMediatorNodeAddresses(),
-                        original.getPaymentMethodId(),
-                        original.getMakerPaymentAccountId(),
-                        original.getOfferFeePaymentTxId(),
-                        original.getCountryCode(),
-                        original.getAcceptedCountryCodes(),
-                        original.getBankId(),
-                        original.getAcceptedBankIds(),
-                        original.getVersionNr(),
-                        original.getBlockHeightAtOfferCreation(),
-                        original.getTxFee(),
-                        original.getMakerFee(),
-                        original.isCurrencyForMakerFeeBtc(),
-                        original.getBuyerSecurityDeposit(),
-                        original.getSellerSecurityDeposit(),
-                        original.getMaxTradeLimit(),
-                        original.getMaxTradePeriod(),
-                        original.isUseAutoClose(),
-                        original.isUseReOpenAfterAutoClose(),
-                        original.getLowerClosePrice(),
-                        original.getUpperClosePrice(),
-                        original.isPrivateOffer(),
-                        original.getHashOfChallenge(),
-                        original.getExtraDataMap(),
-                        original.getProtocolVersion());
-                Offer expandedOffer = new Offer(offerPayload);
-                openOfferManager.placeOffer(expandedOffer,
-                        0,
-                        false,
-                        true,
-                        0,
-                        transaction -> {
-                        },
-                        log::error);
-            });
+    private void onCloneOffer(OpenOffer openOffer) {
+        if (openOffer == null || openOffer.getOffer() == null || openOffer.getOffer().getOfferPayload().isEmpty()) {
+            return;
         }
+
+        Offer offer = openOffer.getOffer();
+        OfferPayload sourceOfferPayload = offer.getOfferPayload().get();
+        log.info("Clone offerPayload with shared maker fee: {}", sourceOfferPayload.getId());
+        String newOfferId = getRandomOfferId();
+        OfferPayload duplicatedOfferPayload = new OfferPayload(newOfferId,
+                new Date().getTime(),
+                sourceOfferPayload.getOwnerNodeAddress(),
+                sourceOfferPayload.getPubKeyRing(),
+                sourceOfferPayload.getDirection(),
+                sourceOfferPayload.getPrice(),
+                sourceOfferPayload.getMarketPriceMargin(),
+                sourceOfferPayload.isUseMarketBasedPrice(),
+                sourceOfferPayload.getAmount(),
+                sourceOfferPayload.getMinAmount(),
+                sourceOfferPayload.getBaseCurrencyCode(),
+                sourceOfferPayload.getCounterCurrencyCode(),
+                sourceOfferPayload.getArbitratorNodeAddresses(),
+                sourceOfferPayload.getMediatorNodeAddresses(),
+                sourceOfferPayload.getPaymentMethodId(),
+                sourceOfferPayload.getMakerPaymentAccountId(),
+                sourceOfferPayload.getOfferFeePaymentTxId(),
+                sourceOfferPayload.getCountryCode(),
+                sourceOfferPayload.getAcceptedCountryCodes(),
+                sourceOfferPayload.getBankId(),
+                sourceOfferPayload.getAcceptedBankIds(),
+                sourceOfferPayload.getVersionNr(),
+                sourceOfferPayload.getBlockHeightAtOfferCreation(),
+                sourceOfferPayload.getTxFee(),
+                sourceOfferPayload.getMakerFee(),
+                sourceOfferPayload.isCurrencyForMakerFeeBtc(),
+                sourceOfferPayload.getBuyerSecurityDeposit(),
+                sourceOfferPayload.getSellerSecurityDeposit(),
+                sourceOfferPayload.getMaxTradeLimit(),
+                sourceOfferPayload.getMaxTradePeriod(),
+                sourceOfferPayload.isUseAutoClose(),
+                sourceOfferPayload.isUseReOpenAfterAutoClose(),
+                sourceOfferPayload.getLowerClosePrice(),
+                sourceOfferPayload.getUpperClosePrice(),
+                sourceOfferPayload.isPrivateOffer(),
+                sourceOfferPayload.getHashOfChallenge(),
+                sourceOfferPayload.getExtraDataMap(),
+                sourceOfferPayload.getProtocolVersion());
+        Offer clonedOffer = new Offer(duplicatedOfferPayload);
+        clonedOffer.setPriceFeedService(priceFeedService);
+        offer.setState(Offer.State.OFFER_FEE_PAID);
+        openOfferManager.placeOffer(clonedOffer,
+                clonedOffer.getBuyerSecurityDeposit().getValue(),
+                false,
+                true,
+                openOffer.getTriggerPrice(),
+                transaction -> {
+                },
+                log::error);
     }
 
     private void setOfferIdColumnCellFactory() {
@@ -684,7 +691,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 if (item != null) {
                                     if (item.isNotPublished()) getStyleClass().add("offer-disabled");
                                     Label label = new AutoTooltipLabel(item.getOcoGroupForDisplay());
-                                    if (!openOfferManager.canBeEnabled(item.getOpenOffer().getOffer())) {
+                                    if (openOfferManager.cannotActivateOffer(item.getOpenOffer().getOffer())) {
                                         Text icon = getRegularIconForLabel(MaterialDesignIcon.EYE_OFF, label, "opaque-icon");
                                         label.setContentDisplay(ContentDisplay.RIGHT);
                                         Tooltip.install(icon, new Tooltip(Res.get("offerbook.toEnableOffer")));

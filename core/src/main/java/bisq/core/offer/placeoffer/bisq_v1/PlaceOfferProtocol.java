@@ -19,7 +19,7 @@ package bisq.core.offer.placeoffer.bisq_v1;
 
 import bisq.core.offer.placeoffer.bisq_v1.tasks.AddToOfferBook;
 import bisq.core.offer.placeoffer.bisq_v1.tasks.CheckNumberOfUnconfirmedTransactions;
-import bisq.core.offer.placeoffer.bisq_v1.tasks.CloneMakerFeeOco;
+import bisq.core.offer.placeoffer.bisq_v1.tasks.CloneAddressEntryForSharedMakerFee;
 import bisq.core.offer.placeoffer.bisq_v1.tasks.CreateMakerFeeTx;
 import bisq.core.offer.placeoffer.bisq_v1.tasks.ValidateOffer;
 import bisq.core.trade.bisq_v1.TransactionResultHandler;
@@ -78,10 +78,10 @@ public class PlaceOfferProtocol {
                 }
         );
 
-        if (model.isUseBatchOfferOco()) {
+        if (model.isSharedMakerFee()) {
             taskRunner.addTasks(
                     ValidateOffer.class,
-                    CloneMakerFeeOco.class
+                    CloneAddressEntryForSharedMakerFee.class
             );
         } else {
             taskRunner.addTasks(

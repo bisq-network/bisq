@@ -134,6 +134,7 @@ class OpenOfferListItem implements FilterableListItem {
         }
     }
 
+    //
     public String getOcoGroupForSorting() {
         Offer offer = getOffer();
         if (offer.isBsqSwapOffer()) {
@@ -142,6 +143,7 @@ class OpenOfferListItem implements FilterableListItem {
         return offer.getOfferFeePaymentTxId();
     }
 
+    //
     public String getOcoGroupForDisplay() {
         return getOcoGroupForSorting().substring(0, 4);
     }
