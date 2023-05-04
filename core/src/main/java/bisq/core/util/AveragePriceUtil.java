@@ -91,8 +91,8 @@ public class AveragePriceUtil {
         double lowerBound = tuple.first;
         double upperBound = tuple.second;
         return list.stream()
-                .filter(e -> e.getPrice() > lowerBound)
-                .filter(e -> e.getPrice() < upperBound)
+                .filter(e -> (double) e.getPrice() >= lowerBound)
+                .filter(e -> (double) e.getPrice() <= upperBound)
                 .collect(Collectors.toList());
     }
 
