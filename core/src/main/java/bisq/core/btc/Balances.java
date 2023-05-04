@@ -42,7 +42,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ListChangeListener;
 
 import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import lombok.Getter;
@@ -111,10 +110,12 @@ public class Balances {
     }
 
     private void updateReservedBalance() {
-        long sum = btcWalletService.getAddressEntriesForOpenOffer().stream()
-                .collect(Collectors.toMap(AddressEntry::getAddress, p -> p, (p, q) -> p))
-                .keySet()
-                .stream()
+        long sum = openOfferManager.getObservableList().stream()
+                .map(openOffer -> btcWalletService.getAddressEntry(openOffer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE)
+                        .orElse(null))
+                .filter(Objects::nonNull)
+                .map(AddressEntry::getAddress)
+                .distinct()
                 .mapToLong(address -> btcWalletService.getBalanceForAddress(address).value)
                 .sum();
         reservedBalance.set(Coin.valueOf(sum));
@@ -124,7 +125,7 @@ public class Balances {
         Stream<Trade> lockedTrades = Stream.concat(closedTradableManager.getTradesStreamWithFundsLockedIn(), failedTradesManager.getTradesStreamWithFundsLockedIn());
         lockedTrades = Stream.concat(lockedTrades, tradeManager.getTradesStreamWithFundsLockedIn());
         long sum = lockedTrades.map(trade -> btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG)
-                .orElse(null))
+                        .orElse(null))
                 .filter(Objects::nonNull)
                 .mapToLong(AddressEntry::getCoinLockedInMultiSig)
                 .sum();
