@@ -149,7 +149,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
             wallet.getIssuedReceiveAddresses().stream()
                     .filter(this::isAddressNotInEntries)
                     .forEach(address -> {
-                         DeterministicKey key = (DeterministicKey) wallet.findKeyFromAddress(address);
+                        DeterministicKey key = (DeterministicKey) wallet.findKeyFromAddress(address);
                         if (key != null) {
                             // Address will be derived from key in getAddress method
                             log.info("Create AddressEntry for IssuedReceiveAddress. address={}", address.toString());
@@ -209,25 +209,11 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
         }
 
         log.info("swapToAvailable addressEntry to swap={}", addressEntry);
-        if (entrySet.remove(addressEntry)) {
-            requestPersistence();
-        }
-        // check if the address still has any existing entries, which would be OCO offers sharing the UTXO
-        boolean entryWithSameContextStillExists = entrySet.stream().anyMatch(e -> {
-            if (addressEntry.getAddressString() != null) {
-                return addressEntry.getAddressString().equals(e.getAddressString()) &&
-                        addressEntry.getContext() == e.getContext();
-            }
-            return false;
-        });
-        if (entryWithSameContextStillExists) {
-            return;
-        }
-        // no other uses of the address context remain, so make it available
-        if (entrySet.add(
-            new AddressEntry(addressEntry.getKeyPair(),
+        boolean setChangedByRemove = entrySet.remove(addressEntry);
+        boolean setChangedByAdd = entrySet.add(new AddressEntry(addressEntry.getKeyPair(),
                 AddressEntry.Context.AVAILABLE,
-                addressEntry.isSegwit()))) {
+                addressEntry.isSegwit()));
+        if (setChangedByRemove || setChangedByAdd) {
             requestPersistence();
         }
     }
