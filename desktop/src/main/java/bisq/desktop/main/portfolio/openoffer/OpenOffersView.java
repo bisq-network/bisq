@@ -127,7 +127,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     @FXML
     TableColumn<OpenOfferListItem, OpenOfferListItem> priceColumn, deviationColumn, amountColumn, volumeColumn,
             marketColumn, directionColumn, dateColumn, offerIdColumn, deactivateItemColumn, makerFeeTxIdColumn,
-            removeItemColumn, editItemColumn, triggerPriceColumn, triggerIconColumn, paymentMethodColumn, duplicateItemColumn;
+            removeItemColumn, editItemColumn, triggerPriceColumn, triggerIconColumn, paymentMethodColumn, duplicateItemColumn,
+            cloneItemColumn;
     @FXML
     FilterBox filterBox;
     @FXML
@@ -182,6 +183,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         deactivateItemColumn.setGraphic(new AutoTooltipLabel(ColumnNames.STATUS.toString()));
         editItemColumn.setText("");
         duplicateItemColumn.setText("");
+        cloneItemColumn.setText("");
         removeItemColumn.setText("");
 
         setOfferIdColumnCellFactory();
@@ -199,6 +201,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         setTriggerIconColumnCellFactory();
         setTriggerPriceColumnCellFactory();
         setDuplicateColumnCellFactory();
+        setCloneColumnCellFactory();
         setRemoveColumnCellFactory();
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -255,7 +258,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             c.next();
             if (c.wasAdded() || c.wasRemoved()) {
                 updateNumberOfOffers();
-                updateMakerFeeTxIdColumn();
+                updateMakerFeeTxIdColumnVisibility();
+                updateTriggerColumnVisibility();
             }
         };
     }
@@ -270,7 +274,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
         filterBox.initializeWithCallback(filteredList, tableView, this::updateNumberOfOffers);
         filterBox.activate();
-        updateMakerFeeTxIdColumn();
+        updateMakerFeeTxIdColumnVisibility();
+        updateTriggerColumnVisibility();
         updateSelectToggleButtonState();
 
         selectToggleButton.setOnAction(event -> {
@@ -325,10 +330,16 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
     }
 
-    private void updateMakerFeeTxIdColumn() {
+    private void updateMakerFeeTxIdColumnVisibility() {
         makerFeeTxIdColumn.setVisible(model.dataModel.getList().stream()
                 .collect(Collectors.groupingBy(OpenOfferListItem::getMakerFeeTxId, Collectors.counting()))
                 .values().stream().anyMatch(i -> i > 1));
+    }
+
+    private void updateTriggerColumnVisibility() {
+        triggerIconColumn.setVisible(model.dataModel.getList().stream()
+                .mapToLong(item -> item.getOpenOffer().getTriggerPrice())
+                .sum() > 0);
     }
 
     @Override
@@ -955,6 +966,40 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                         setGraphic(button);
                                     }
                                     button.setOnAction(event -> onDuplicateOffer(item));
+                                } else {
+                                    setGraphic(null);
+                                    if (button != null) {
+                                        button.setOnAction(null);
+                                        button = null;
+                                    }
+                                }
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void setCloneColumnCellFactory() {
+        cloneItemColumn.getStyleClass().add("avatar-column");
+        cloneItemColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
+        cloneItemColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<OpenOfferListItem, OpenOfferListItem> call(TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
+                        return new TableCell<>() {
+                            Button button;
+
+                            @Override
+                            public void updateItem(final OpenOfferListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    if (button == null) {
+                                        button = getRegularIconButton(MaterialDesignIcon.BOX_SHADOW);
+                                        button.setTooltip(new Tooltip(Res.get("shared.cloneOffer")));
+                                        setGraphic(button);
+                                    }
+                                    button.setOnAction(event -> onCloneOffer(item));
                                 } else {
                                     setGraphic(null);
                                     if (button != null) {
