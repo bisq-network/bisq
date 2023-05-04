@@ -93,20 +93,20 @@ public class TxValidatorTest {
         mempoolData = "{\"txid\":\"94b2589f3270caa0df63437707d4442cae34498ee5b0285090deed9c0ce8584d\",\"version\":1,\"locktime\":0,\"vin\":[{\"vout\":0,\"prevout\":{\"value\":577}},{\"vout\":0,\"prevout\":{\"value\":19989}},{\"vout\":2,\"prevout\":{\"value\":3008189}}],\"vout\":[{\"scriptpubkey_address\":\"bc1q48p2nvqf3tepjy7x33c5sfx3tp89e8c05z46cs\",\"value\":20555},{\"scriptpubkey_address\":\"bc1q9h69k8l0vy2yv3c72lw2cgn95sd7hlwjjzul05\",\"value\":920000},{\"scriptpubkey_address\":\"bc1qxmwscy2krw7zzfryw5g8868dexfy6pnq9yx3rv\",\"value\":2085750}],\"size\":550,\"weight\":1228,\"fee\":2450,\"status\":{\"confirmed\":true,\"block_height\":705301}}";
         Assert.assertTrue(createTxValidator(offerData).parseJsonValidateMakerFeeTx(mempoolData, btcFeeReceivers).getResult());
 
-        log.info("expected: UNDERPAID expected 1.01 BSQ, actual fee paid 0.80 BSQ (USED 8.00 RATE INSTEAD OF 10.06 RATE");
-        offerData = "48067552,3b6009da764b71d79a4df8e2d8960b6919cae2e9bdccd5ef281e261fa9cd31b3,10000000,80,0,667656";
+        log.info("expected: UNDERPAID expected 1.01 BSQ, actual fee paid 0.40 BSQ (USED 4.00 RATE INSTEAD OF 10.06 RATE");
+        offerData = "48067552,3b6009da764b71d79a4df8e2d8960b6919cae2e9bdccd5ef281e261fa9cd31b3,10000000,40,0,667656";
         //mempoolData = "{\"txid\":\"3b6009da764b71d79a4df8e2d8960b6919cae2e9bdccd5ef281e261fa9cd31b3\",\"version\":1,\"locktime\":0,\"vin\":[{\"vout\":0,\"prevout\":{\"value\":9717}},{\"vout\":0,\"prevout\":{\"value\":4434912}},{\"vout\":2,\"prevout\":{\"value\":12809932}}],\"vout\":[{\"scriptpubkey_address\":\"1Nzqa4J7ck5bgz7QNXKtcjZExAvReozFo4\",\"value\":9637},{\"scriptpubkey_address\":\"bc1qhmmulf5prreqhccqy2wqpxxn6dcye7ame9dd57\",\"value\":11500000},{\"scriptpubkey_address\":\"bc1qx6hg8km2jdjc5ukhuedmkseu9wlsjtd8zeajpj\",\"value\":5721894}],\"size\":553,\"weight\":1879,\"fee\":23030,\"status\":{\"confirmed\":true,\"block_height\":667660}}";
         Assert.assertFalse(createTxValidator(offerData).validateBsqFeeTx(true).getResult());
 
-        log.info("expected: UNDERPAID Expected fee: 0.61 BSQ, actual fee paid: 0.35 BSQ (USED 5.75 RATE INSTEAD OF 10.06 RATE");
+        log.info("expected: LENIENCY Expected fee: 0.61 BSQ, actual fee paid: 0.35 BSQ (USED 5.75 RATE INSTEAD OF 10.06 RATE");
         offerData = "am7DzIv,4cdea8872a7d96210f378e0221dc1aae8ee9abb282582afa7546890fb39b7189,6100000,35,0,668195";
         //mempoolData = "{\"txid\":\"4cdea8872a7d96210f378e0221dc1aae8ee9abb282582afa7546890fb39b7189\",\"version\":1,\"locktime\":0,\"vin\":[{\"vout\":0,\"prevout\":{\"value\":23893}},{\"vout\":1,\"prevout\":{\"value\":1440000}},{\"vout\":2,\"prevout\":{\"value\":16390881}}],\"vout\":[{\"scriptpubkey_address\":\"1Kmrzq3WGCQsZw5kroEphuk1KgsEr65yB7\",\"value\":23858},{\"scriptpubkey_address\":\"bc1qyw5qql9m7rkse9mhcun225nrjpwycszsa5dpjg\",\"value\":7015000},{\"scriptpubkey_address\":\"bc1q90y3p6mg0pe3rvvzfeudq4mfxafgpc9rulruff\",\"value\":10774186}],\"size\":554,\"weight\":1559,\"fee\":41730,\"status\":{\"confirmed\":true,\"block_height\":668198}}";
-        Assert.assertFalse(createTxValidator(offerData).validateBsqFeeTx(true).getResult());
+        Assert.assertTrue(createTxValidator(offerData).validateBsqFeeTx(true).getResult());
 
-        log.info("expected: UNDERPAID expected 0.11 BSQ, actual fee paid 0.08 BSQ (USED 5.75 RATE INSTEAD OF 7.53");
+        log.info("expected: LENIENCY expected 0.11 BSQ, actual fee paid 0.08 BSQ (USED 5.75 RATE INSTEAD OF 7.53");
         offerData = "F1dzaFNQ,f72e263947c9dee6fbe7093fc85be34a149ef5bcfdd49b59b9cc3322fea8967b,1440000,8,0,670822, bsq paid too little";
         //mempoolData = "{\"txid\":\"f72e263947c9dee6fbe7093fc85be34a149ef5bcfdd49b59b9cc3322fea8967b\",\"version\":1,\"locktime\":0,\"vin\":[{\"vout\":0,\"prevout\":{\"value\":15163}},{\"vout\":2,\"prevout\":{\"value\":6100000}}],\"vout\":[{\"scriptpubkey_address\":\"1MEsc2m4MSomNJWSr1p6fhnUQMyA3DRGrN\",\"value\":15155},{\"scriptpubkey_address\":\"bc1qztgwe9ry9a9puchjuscqdnv4v9lsm2ut0jtfec\",\"value\":2040000},{\"scriptpubkey_address\":\"bc1q0nstwxc0vqkj4x000xt328mfjapvlsd56nn70h\",\"value\":4048308}],\"size\":406,\"weight\":1291,\"fee\":11700,\"status\":{\"confirmed\":true,\"block_height\":670823}}";
-        Assert.assertFalse(createTxValidator(offerData).validateBsqFeeTx(true).getResult());
+        Assert.assertTrue(createTxValidator(offerData).validateBsqFeeTx(true).getResult());
     }
 
     @Test
