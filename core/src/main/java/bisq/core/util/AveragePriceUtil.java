@@ -28,6 +28,8 @@ import bisq.common.util.Tuple2;
 
 import org.bitcoinj.utils.Fiat;
 
+import com.google.common.primitives.Doubles;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
@@ -82,10 +84,10 @@ public class AveragePriceUtil {
     }
 
     private static List<TradeStatistics3> removeOutliers(List<TradeStatistics3> list, double percentToTrim) {
-        List<Double> yValues = list.stream()
+        List<Double> yValues = Doubles.asList(list.stream()
                 .filter(TradeStatistics3::isValid)
-                .map(e -> (double) e.getPrice())
-                .collect(Collectors.toList());
+                .mapToDouble(TradeStatistics3::getPrice)
+                .toArray());
 
         Tuple2<Double, Double> tuple = InlierUtil.findInlierRange(yValues, percentToTrim, HOW_MANY_STD_DEVS_CONSTITUTE_OUTLIER);
         double lowerBound = tuple.first;

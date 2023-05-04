@@ -20,11 +20,15 @@ package bisq.core.util;
 import bisq.common.util.DoubleSummaryStatisticsWithStdDev;
 import bisq.common.util.Tuple2;
 
-import javafx.collections.FXCollections;
+import com.google.common.primitives.Doubles;
 
+import java.util.Arrays;
 import java.util.DoubleSummaryStatistics;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Spliterator;
+import java.util.function.DoublePredicate;
+import java.util.stream.DoubleStream;
+import java.util.stream.StreamSupport;
 
 public class InlierUtil {
 
@@ -39,12 +43,9 @@ public class InlierUtil {
         Tuple2<Double, Double> inlierThreshold =
                 computeInlierThreshold(yValues, percentToTrim, howManyStdDevsConstituteOutlier);
 
-        DoubleSummaryStatistics inlierStatistics =
-                yValues
-                        .stream()
-                        .filter(y -> withinBounds(inlierThreshold, y))
-                        .mapToDouble(Double::doubleValue)
-                        .summaryStatistics();
+        DoubleSummaryStatistics inlierStatistics = stream(yValues)
+                .filter(withinBounds(inlierThreshold))
+                .summaryStatistics();
 
         var inlierMin = inlierStatistics.getMin();
         var inlierMax = inlierStatistics.getMax();
@@ -52,10 +53,10 @@ public class InlierUtil {
         return new Tuple2<>(inlierMin, inlierMax);
     }
 
-    private static boolean withinBounds(Tuple2<Double, Double> bounds, double number) {
-        var lowerBound = bounds.first;
-        var upperBound = bounds.second;
-        return (lowerBound <= number) && (number <= upperBound);
+    private static DoublePredicate withinBounds(Tuple2<Double, Double> bounds) {
+        double lowerBound = bounds.first;
+        double upperBound = bounds.second;
+        return number -> lowerBound <= number && number <= upperBound;
     }
 
     /* Computes the lower and upper inlier thresholds. A point lying outside
@@ -75,12 +76,10 @@ public class InlierUtil {
 
         List<Double> trimmed = trim(percentToTrim, numbers);
 
-        DoubleSummaryStatisticsWithStdDev summaryStatistics =
-                trimmed.stream()
-                        .collect(
-                                DoubleSummaryStatisticsWithStdDev::new,
-                                DoubleSummaryStatisticsWithStdDev::accept,
-                                DoubleSummaryStatisticsWithStdDev::combine);
+        DoubleSummaryStatisticsWithStdDev summaryStatistics = stream(trimmed)
+                .collect(DoubleSummaryStatisticsWithStdDev::new,
+                        DoubleSummaryStatisticsWithStdDev::accept,
+                        DoubleSummaryStatisticsWithStdDev::combine);
 
         double mean = summaryStatistics.getAverage();
         double stdDev = summaryStatistics.getStandardDeviation();
@@ -111,7 +110,7 @@ public class InlierUtil {
             return numbers;
         }
         if (totalPercentTrim == 100) {
-            return FXCollections.emptyObservableList();
+            return Doubles.asList();
         }
 
         if (numbers.isEmpty()) {
@@ -124,17 +123,17 @@ public class InlierUtil {
             return numbers;
         }
 
-        var sorted = numbers.stream().sorted();
+        var array = stream(numbers).toArray();
+        Arrays.sort(array);
 
-        var oneSideTrimmed = sorted.skip(countToDropFromEachSide);
-
-        // Here, having already trimmed the left-side, we are implicitly trimming
-        // the right-side by specifying a limit to the stream's length.
-        // An explicit right-side drop/trim/skip is not supported by the Stream API.
-        var countAfterTrim = count - (countToDropFromEachSide * 2); // visada > 0? ir <= count?
-        var bothSidesTrimmed = oneSideTrimmed.limit(countAfterTrim);
-
-        return bothSidesTrimmed.collect(Collectors.toList());
+        var sorted = Doubles.asList(array);
+        return sorted.subList(countToDropFromEachSide, sorted.size() - countToDropFromEachSide);
     }
 
+    private static DoubleStream stream(Iterable<Double> doubles) {
+        var spliterator = doubles.spliterator();
+        return spliterator instanceof Spliterator.OfDouble
+                ? StreamSupport.doubleStream((Spliterator.OfDouble) spliterator, false)
+                : StreamSupport.stream(spliterator, false).mapToDouble(Double::doubleValue);
+    }
 }
