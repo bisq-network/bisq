@@ -19,9 +19,9 @@ package bisq.core.payment;
 
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
-
-import bisq.common.util.MathUtils;
+import bisq.core.dao.state.model.blockchain.Block;
 
 import org.bitcoinj.core.Coin;
 
@@ -37,7 +37,7 @@ import javax.annotation.Nullable;
 
 @Slf4j
 @Singleton
-public class TradeLimits {
+public class TradeLimits implements DaoStateListener {
     @Nullable
     @Getter
     private static TradeLimits INSTANCE;
@@ -45,10 +45,14 @@ public class TradeLimits {
     private final DaoStateService daoStateService;
     private final PeriodService periodService;
 
+    private volatile Coin cachedMaxTradeLimit;
+
     @Inject
     public TradeLimits(DaoStateService daoStateService, PeriodService periodService) {
         this.daoStateService = daoStateService;
         this.periodService = periodService;
+
+        daoStateService.addDaoStateListener(this);
         INSTANCE = this;
     }
 
@@ -58,6 +62,10 @@ public class TradeLimits {
         // guice.
     }
 
+    @Override
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
+        cachedMaxTradeLimit = null;
+    }
 
     /**
      * The default trade limits defined as statics in PaymentMethod are only used until the DAO
@@ -67,7 +75,11 @@ public class TradeLimits {
      * @return the maximum trade limit set by the DAO.
      */
     public Coin getMaxTradeLimit() {
-        return daoStateService.getParamValueAsCoin(Param.MAX_TRADE_LIMIT, periodService.getChainHeight());
+        Coin limit = cachedMaxTradeLimit;
+        if (limit == null) {
+            cachedMaxTradeLimit = limit = daoStateService.getParamValueAsCoin(Param.MAX_TRADE_LIMIT, periodService.getChainHeight());
+        }
+        return limit;
     }
 
     // We possibly rounded value for the first month gets multiplied by 4 to get the trade limit after the account
@@ -98,8 +110,6 @@ public class TradeLimits {
         long smallestLimit = maxLimit / (4 * riskFactor);  // e.g. 100000000 / 32 = 3125000
         // We want to avoid more than 4 decimal places (100000000 / 32 = 3125000 or 1 BTC / 32 = 0.03125 BTC).
         // We want rounding to 0.0313 BTC
-        double decimalForm = MathUtils.scaleDownByPowerOf10((double) smallestLimit, 8);
-        double rounded = MathUtils.roundDouble(decimalForm, 4);
-        return MathUtils.roundDoubleToLong(MathUtils.scaleUpByPowerOf10(rounded, 8));
+        return ((smallestLimit + 5000L) / 10000L) * 10000L;
     }
 }

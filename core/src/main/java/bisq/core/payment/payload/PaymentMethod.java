@@ -26,11 +26,13 @@ import bisq.common.proto.persistable.PersistablePayload;
 
 import org.bitcoinj.core.Coin;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -196,8 +198,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
 
     // The limit and duration assignment must not be changed as that could break old offers (if amount would be higher
     // than new trade limit) and violate the maker expectation when he created the offer (duration).
-    @Getter
-    private final static List<PaymentMethod> paymentMethods = new ArrayList<>(Arrays.asList(
+    private static final List<PaymentMethod> PAYMENT_METHODS = Stream.of(
             // EUR
             SEPA = new PaymentMethod(SEPA_ID, 6 * DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
             SEPA_INSTANT = new PaymentMethod(SEPA_INSTANT_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
@@ -277,18 +278,15 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
             BLOCK_CHAINS_INSTANT = new PaymentMethod(BLOCK_CHAINS_INSTANT_ID, TimeUnit.HOURS.toMillis(1), DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
             // BsqSwap
             BSQ_SWAP = new PaymentMethod(BSQ_SWAP_ID, 1, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK)
-    ));
+    ).sorted(Comparator.comparing(
+            m -> m.id.equals(CLEAR_X_CHANGE_ID) ? "ZELLE" : m.id)
+    ).collect(Collectors.toUnmodifiableList());
 
-    static {
-        paymentMethods.sort((o1, o2) -> {
-            String id1 = o1.getId();
-            if (id1.equals(CLEAR_X_CHANGE_ID))
-                id1 = "ZELLE";
-            String id2 = o2.getId();
-            if (id2.equals(CLEAR_X_CHANGE_ID))
-                id2 = "ZELLE";
-            return id1.compareTo(id2);
-        });
+    private static final Map<String, PaymentMethod> PAYMENT_METHOD_MAP = PAYMENT_METHODS.stream()
+            .collect(Collectors.toUnmodifiableMap(m -> m.id, m -> m));
+
+    public static List<PaymentMethod> getPaymentMethods() {
+        return PAYMENT_METHODS;
     }
 
     public static PaymentMethod getDummyPaymentMethod(String id) {
@@ -371,9 +369,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
 
     // We look up only our active payment methods not retired ones.
     public static Optional<PaymentMethod> getActivePaymentMethod(String id) {
-        return paymentMethods.stream()
-                .filter(e -> e.getId().equals(id))
-                .findFirst();
+        return Optional.ofNullable(PAYMENT_METHOD_MAP.get(id));
     }
 
     public Coin getMaxTradeLimitAsCoin(String currencyCode) {
