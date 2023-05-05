@@ -7,3 +7,4 @@ dependencyResolutionManagement {
 }
 
 include 'commons'
+include 'gradle-tasks'
