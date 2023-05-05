@@ -417,8 +417,18 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 model,
                 transaction -> {
                     OpenOffer openOffer = new OpenOffer(offer, triggerPrice);
-                    if (isSharedMakerFee && cannotActivateOffer(offer)) {
-                        openOffer.setState(OpenOffer.State.DEACTIVATED);
+                    if (isSharedMakerFee) {
+                        if (cannotActivateOffer(offer)) {
+                            openOffer.setState(OpenOffer.State.DEACTIVATED);
+                        } else {
+                            // We did not use the AddToOfferBook task for publishing because we
+                            // do not have created the openOffer during the protocol and we need that to determine if the offer can be activated.
+                            // So in case we have an activated cloned offer we do the publishing here.
+                            model.getOfferBookService().addOffer(model.getOffer(),
+                                    () -> model.setOfferAddedToOfferBook(true),
+                                    errorMessage -> model.getOffer().setErrorMessage("Could not add offer to offerbook.\n" +
+                                            "Please check your network connection and try again."));
+                        }
                     }
                     addOpenOfferToList(openOffer);
                     if (!stopped) {
