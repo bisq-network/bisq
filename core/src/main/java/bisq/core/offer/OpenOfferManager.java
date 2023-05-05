@@ -227,7 +227,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     private void cleanUpAddressEntries() {
-        Set<String> openOffersIdSet = openOffers.getList().stream().map(OpenOffer::getId).collect(Collectors.toSet());
+        Set<String> openOffersIdSet = openOffers.getList().stream()
+                .filter(openOffer -> !hasOfferSharedMakerFee(openOffer))
+                .map(OpenOffer::getId)
+                .collect(Collectors.toSet());
         btcWalletService.getAddressEntriesForOpenOffer().stream()
                 .filter(e -> !openOffersIdSet.contains(e.getOfferId()))
                 .forEach(e -> {
