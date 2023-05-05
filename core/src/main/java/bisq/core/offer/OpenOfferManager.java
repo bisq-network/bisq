@@ -468,8 +468,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         }
 
         if (cannotActivateOffer(openOffer.getOffer())) {
-            errorMessageHandler.handleErrorMessage("This cloned offer with shared maker fee cannot be activated because it uses the same payment method " +
-                    "and currency as another active offer.");
+            errorMessageHandler.handleErrorMessage(Res.get("offerbook.cannotActivate.info"));
             return;
         }
 
@@ -640,6 +639,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 } else {
                     // We use CANCELED for the offers which have shared maker fee but have not been taken for the trade.
                     openOffer.setState(OpenOffer.State.CANCELED);
+                    // We need to reset now those entries as well
                     btcWalletService.resetAddressEntriesForOpenOffer(openOffer.getId());
                 }
                 offerBookService.removeOffer(openOffer.getOffer().getOfferPayloadBase(),
