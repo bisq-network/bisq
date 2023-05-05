@@ -54,6 +54,7 @@ import com.google.inject.Inject;
 
 import javax.inject.Named;
 
+import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -112,6 +113,7 @@ class CloneOfferDataModel extends MutableOfferDataModel {
         paymentAccounts.clear();
         paymentAccount = null;
         marketPriceMargin = 0;
+        sourceOpenOffer = null;
     }
 
     public void applyOpenOffer(OpenOffer openOffer) {
@@ -202,10 +204,13 @@ class CloneOfferDataModel extends MutableOfferDataModel {
         // We create a new offer based on our source offer and the edited fields in the UI
         Offer editedOffer = createAndGetOffer();
         OfferPayload editedOfferPayload = editedOffer.getOfferPayload().orElseThrow();
-        // We clone the edited offer but use the maker tx ID from the source offer
+        // We clone the edited offer but use the maker tx ID from the source offer as well as a new offerId and
+        // a fresh date.
         String sharedMakerTxId = sourceOfferPayload.getOfferFeePaymentTxId();
-        OfferPayload clonedOfferPayload = new OfferPayload(editedOfferPayload.getId(),
-                editedOfferPayload.getDate(),
+        String newOfferId = OfferUtil.getRandomOfferId();
+        long date = new Date().getTime();
+        OfferPayload clonedOfferPayload = new OfferPayload(newOfferId,
+                date,
                 editedOfferPayload.getOwnerNodeAddress(),
                 editedOfferPayload.getPubKeyRing(),
                 editedOfferPayload.getDirection(),
