@@ -187,10 +187,6 @@ public final class OpenOffer implements Tradable {
         return state == State.DEACTIVATED;
     }
 
-    public boolean isActivated() {
-        return !isDeactivated();
-    }
-
     public boolean isCanceled() {
         return state == State.CANCELED;
     }

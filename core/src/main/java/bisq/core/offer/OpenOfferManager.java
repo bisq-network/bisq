@@ -417,7 +417,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 model,
                 transaction -> {
                     OpenOffer openOffer = new OpenOffer(offer, triggerPrice);
-                    if (isSharedMakerFee) {
+                    if (isSharedMakerFee && cannotActivateOffer(offer)) {
                         openOffer.setState(OpenOffer.State.DEACTIVATED);
                     }
                     addOpenOfferToList(openOffer);
@@ -592,8 +592,6 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             } else {
                 resultHandler.handleResult();
             }
-        } else {
-            errorMessageHandler.handleErrorMessage("Editing of offer can't be canceled as it is not edited.");
         }
     }
 
@@ -658,11 +656,12 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         return openOffers.stream()
                 .filter(openOffer -> !openOffer.getOffer().isBsqSwapOffer())    // We only handle non-BSQ offers
                 .filter(openOffer -> !openOffer.getId().equals(offer.getId()))  // our own offer gets skipped
-                .filter(OpenOffer::isActivated)  // we only check with activated offers
+                .filter(openOffer -> !openOffer.isDeactivated())  // we only check with activated offers
                 .anyMatch(openOffer ->
                         // Offers which share our maker fee will get checked if they have the same payment method
                         // and currency.
-                        openOffer.getOffer().getOfferFeePaymentTxId().equals(offer.getOfferFeePaymentTxId()) &&
+                        openOffer.getOffer().getOfferFeePaymentTxId() != null &&
+                                openOffer.getOffer().getOfferFeePaymentTxId().equals(offer.getOfferFeePaymentTxId()) &&
                                 openOffer.getOffer().getPaymentMethodId().equalsIgnoreCase(offer.getPaymentMethodId()) &&
                                 openOffer.getOffer().getCounterCurrencyCode().equalsIgnoreCase(offer.getCounterCurrencyCode()) &&
                                 openOffer.getOffer().getBaseCurrencyCode().equalsIgnoreCase(offer.getBaseCurrencyCode()));

@@ -37,10 +37,8 @@ import bisq.desktop.main.portfolio.presentation.PortfolioUtil;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.Res;
-import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
-import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.DontShowAgainLookup;
 
@@ -83,18 +81,15 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 
 import java.util.Comparator;
-import java.util.Date;
 import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
 
-import static bisq.core.offer.OfferUtil.getRandomOfferId;
 import static bisq.desktop.util.FormBuilder.getRegularIconButton;
 import static bisq.desktop.util.FormBuilder.getRegularIconForLabel;
 
 @FxmlView
 public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersViewModel> {
-
 
     private enum ColumnNames {
         OFFER_ID(Res.get("shared.offerId")),
@@ -146,7 +141,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     private final BsqSwapOfferDetailsWindow bsqSwapOfferDetailsWindow;
     private final OpenOfferManager openOfferManager;
     private SortedList<OpenOfferListItem> sortedList;
-    private PortfolioView.OpenOfferActionHandler openOfferActionHandler;
+    private PortfolioView.EditOpenOfferHandler editOpenOfferHandler;
+    private PortfolioView.CloneOpenOfferHandler cloneOpenOfferHandler;
     private ChangeListener<Number> widthListener;
     private ListChangeListener<OpenOfferListItem> sortedListeChangedListener;
 
@@ -452,7 +448,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
     private void onEditOpenOffer(OpenOffer openOffer) {
         if (model.isBootstrappedOrShowPopup()) {
-            openOfferActionHandler.onEditOpenOffer(openOffer);
+            editOpenOfferHandler.onEditOpenOffer(openOffer);
         }
     }
 
@@ -460,23 +456,26 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         if (item == null || item.getOffer().getOfferPayloadBase() == null) {
             return;
         }
-        PortfolioUtil.duplicateOffer(navigation, item.getOffer().getOfferPayloadBase());
+        if (model.isBootstrappedOrShowPopup()) {
+            PortfolioUtil.duplicateOffer(navigation, item.getOffer().getOfferPayloadBase());
+        }
     }
 
     private void onCloneOffer(OpenOfferListItem item) {
         if (item == null) {
             return;
         }
-
-        String key = "clonedOfferInfo";
-        if (DontShowAgainLookup.showAgain(key)) {
-            new Popup().backgroundInfo(Res.get("offerbook.clonedOffer.info"))
-                    .useIUnderstandButton()
-                    .dontShowAgainId(key)
-                    .onClose(() -> doCloneOffer(item))
-                    .show();
-        } else {
-            doCloneOffer(item);
+        if (model.isBootstrappedOrShowPopup()) {
+            String key = "clonedOfferInfo";
+            if (DontShowAgainLookup.showAgain(key)) {
+                new Popup().backgroundInfo(Res.get("offerbook.clonedOffer.info"))
+                        .useIUnderstandButton()
+                        .dontShowAgainId(key)
+                        .onClose(() -> doCloneOffer(item))
+                        .show();
+            } else {
+                doCloneOffer(item);
+            }
         }
     }
 
@@ -485,60 +484,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         if (openOffer == null || openOffer.getOffer() == null || openOffer.getOffer().getOfferPayload().isEmpty()) {
             return;
         }
-
-        Offer offer = openOffer.getOffer();
-        OfferPayload sourceOfferPayload = offer.getOfferPayload().get();
-        log.info("Clone offerPayload with shared maker fee: {}", sourceOfferPayload.getId());
-        String newOfferId = getRandomOfferId();
-        OfferPayload clonedOfferPayload = new OfferPayload(newOfferId,
-                new Date().getTime(),
-                sourceOfferPayload.getOwnerNodeAddress(),
-                sourceOfferPayload.getPubKeyRing(),
-                sourceOfferPayload.getDirection(),
-                sourceOfferPayload.getPrice(),
-                sourceOfferPayload.getMarketPriceMargin(),
-                sourceOfferPayload.isUseMarketBasedPrice(),
-                sourceOfferPayload.getAmount(),
-                sourceOfferPayload.getMinAmount(),
-                sourceOfferPayload.getBaseCurrencyCode(),
-                sourceOfferPayload.getCounterCurrencyCode(),
-                sourceOfferPayload.getArbitratorNodeAddresses(),
-                sourceOfferPayload.getMediatorNodeAddresses(),
-                sourceOfferPayload.getPaymentMethodId(),
-                sourceOfferPayload.getMakerPaymentAccountId(),
-                sourceOfferPayload.getOfferFeePaymentTxId(),
-                sourceOfferPayload.getCountryCode(),
-                sourceOfferPayload.getAcceptedCountryCodes(),
-                sourceOfferPayload.getBankId(),
-                sourceOfferPayload.getAcceptedBankIds(),
-                sourceOfferPayload.getVersionNr(),
-                sourceOfferPayload.getBlockHeightAtOfferCreation(),
-                sourceOfferPayload.getTxFee(),
-                sourceOfferPayload.getMakerFee(),
-                sourceOfferPayload.isCurrencyForMakerFeeBtc(),
-                sourceOfferPayload.getBuyerSecurityDeposit(),
-                sourceOfferPayload.getSellerSecurityDeposit(),
-                sourceOfferPayload.getMaxTradeLimit(),
-                sourceOfferPayload.getMaxTradePeriod(),
-                sourceOfferPayload.isUseAutoClose(),
-                sourceOfferPayload.isUseReOpenAfterAutoClose(),
-                sourceOfferPayload.getLowerClosePrice(),
-                sourceOfferPayload.getUpperClosePrice(),
-                sourceOfferPayload.isPrivateOffer(),
-                sourceOfferPayload.getHashOfChallenge(),
-                sourceOfferPayload.getExtraDataMap(),
-                sourceOfferPayload.getProtocolVersion());
-        Offer clonedOffer = new Offer(clonedOfferPayload);
-        clonedOffer.setPriceFeedService(priceFeedService);
-        offer.setState(Offer.State.OFFER_FEE_PAID);
-        openOfferManager.placeOffer(clonedOffer,
-                clonedOffer.getBuyerSecurityDeposit().getValue(),
-                false,
-                true,
-                openOffer.getTriggerPrice(),
-                transaction -> {
-                },
-                errorMessage -> new Popup().warning(errorMessage).show());
+        cloneOpenOfferHandler.onCloneOpenOffer(openOffer);
     }
 
     private void setOfferIdColumnCellFactory() {
@@ -1092,8 +1038,12 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                 });
     }
 
-    public void setOpenOfferActionHandler(PortfolioView.OpenOfferActionHandler openOfferActionHandler) {
-        this.openOfferActionHandler = openOfferActionHandler;
+    public void setEditOpenOfferHandler(PortfolioView.EditOpenOfferHandler editOpenOfferHandler) {
+        this.editOpenOfferHandler = editOpenOfferHandler;
+    }
+
+    public void setCloneOpenOfferHandler(PortfolioView.CloneOpenOfferHandler cloneOpenOfferHandler) {
+        this.cloneOpenOfferHandler = cloneOpenOfferHandler;
     }
 }
 
