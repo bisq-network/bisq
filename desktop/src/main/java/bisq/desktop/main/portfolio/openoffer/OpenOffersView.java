@@ -232,7 +232,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     duplicateOfferMenuItem.setOnAction((event) -> onDuplicateOffer(row.getItem()));
                     rowMenu.getItems().add(duplicateOfferMenuItem);
 
-                    MenuItem cloneOfferMenuItem = new MenuItem(Res.get("shared.cloneOffer"));
+                    MenuItem cloneOfferMenuItem = new MenuItem(Res.get("offerbook.cloneOffer"));
                     cloneOfferMenuItem.setOnAction((event) -> onCloneOffer(row.getItem()));
                     rowMenu.getItems().add(cloneOfferMenuItem);
 
@@ -996,7 +996,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                 if (item != null && !empty) {
                                     if (button == null) {
                                         button = getRegularIconButton(MaterialDesignIcon.BOX_SHADOW);
-                                        button.setTooltip(new Tooltip(Res.get("shared.cloneOffer")));
+                                        button.setTooltip(new Tooltip(Res.get("offerbook.cloneOffer")));
                                         setGraphic(button);
                                     }
                                     button.setOnAction(event -> onCloneOffer(item));
