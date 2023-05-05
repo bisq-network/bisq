@@ -463,12 +463,12 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                                   ResultHandler resultHandler,
                                   ErrorMessageHandler errorMessageHandler) {
         if (offersToBeEdited.containsKey(openOffer.getId())) {
-            errorMessageHandler.handleErrorMessage("You can't activate an offer that is currently edited.");
+            errorMessageHandler.handleErrorMessage(Res.get("offerbook.cannotActivateEditedOffer.warning"));
             return;
         }
 
         if (cannotActivateOffer(openOffer.getOffer())) {
-            errorMessageHandler.handleErrorMessage(Res.get("offerbook.cannotActivate.info"));
+            errorMessageHandler.handleErrorMessage(Res.get("offerbook.cannotActivate.warning"));
             return;
         }
 

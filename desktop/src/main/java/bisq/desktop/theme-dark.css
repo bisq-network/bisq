@@ -557,3 +557,7 @@
     -fx-text-fill: -bs-text-color;
     -fx-fill: -bs-text-color;
 }
+
+.icon {
+    -fx-fill: #fff;
+}

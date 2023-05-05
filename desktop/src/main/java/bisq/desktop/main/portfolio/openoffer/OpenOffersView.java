@@ -391,7 +391,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     () -> log.debug("Activate offer was successful"),
                     (message) -> {
                         log.error(message);
-                        new Popup().warning(Res.get("offerbook.activateOffer.failed", message)).show();
+                        new Popup().warning(message).show();
                     });
             updateSelectToggleButtonState();
         }
@@ -467,6 +467,20 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         if (item == null) {
             return;
         }
+
+        String key = "clonedOfferInfo";
+        if (DontShowAgainLookup.showAgain(key)) {
+            new Popup().backgroundInfo(Res.get("offerbook.clonedOffer.info"))
+                    .useIUnderstandButton()
+                    .dontShowAgainId(key)
+                    .onClose(() -> doCloneOffer(item))
+                    .show();
+        } else {
+            doCloneOffer(item);
+        }
+    }
+
+    private void doCloneOffer(OpenOfferListItem item) {
         OpenOffer openOffer = item.getOpenOffer();
         if (openOffer == null || openOffer.getOffer() == null || openOffer.getOffer().getOfferPayload().isEmpty()) {
             return;
@@ -576,60 +590,35 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     @Override
                     public TableCell<OpenOfferListItem, OpenOfferListItem> call(
                             TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
+
                         return new TableCell<>() {
-                            private HyperlinkWithIcon hyperlinkWithIcon = null;
-
-                            @Override
-                            public void updateItem(final OpenOfferListItem item, boolean empty) {
-                                super.updateItem(item, empty);
-                                if (item != null && !empty) {
-                                    hyperlinkWithIcon = new HyperlinkWithIcon(item.getMakerFeeTxId());
-                                    if (item.isNotPublished()) {
-                                        // getStyleClass().add("offer-disabled"); does not work with hyperlinkWithIcon ;-(
-                                        hyperlinkWithIcon.setStyle("-fx-text-fill: -bs-color-gray-3;");
-                                        hyperlinkWithIcon.getIcon().setOpacity(0.2);
-                                    }
-                                    hyperlinkWithIcon.setOnAction(event -> GUIUtil.openTxInBlockExplorer(item.getMakerFeeTxId()));
-                                    if (openOfferManager.hasOfferSharedMakerFee(item.getOpenOffer())) {
-                                        hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("offerbook.clonedOffer.info")));
-                                    } else {
-                                        hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("offerbook.nonClonedOffer.info")));
-                                    }
-                                    setGraphic(hyperlinkWithIcon);
-                                } else {
-                                    setGraphic(null);
-                                    if (hyperlinkWithIcon != null) {
-                                        hyperlinkWithIcon.setOnAction(null);
-                                    }
-                                }
-                            }
-                        };
-
-
-                        /*return new TableCell<>() {
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 getStyleClass().removeAll("offer-disabled");
                                 if (item != null) {
+
+                                    Label label = new Label(item.getMakerFeeTxId());
+                                    Text icon;
+                                    if (openOfferManager.hasOfferSharedMakerFee(item.getOpenOffer())) {
+                                        icon = getRegularIconForLabel(MaterialDesignIcon.LINK, label, "icon");
+                                        setTooltip(new Tooltip(Res.get("offerbook.clonedOffer.tooltip", item.getMakerFeeTxId())));
+                                    } else {
+                                        icon = getRegularIconForLabel(MaterialDesignIcon.LINK_OFF, label, "icon");
+                                        setTooltip(new Tooltip(Res.get("offerbook.nonClonedOffer.tooltip", item.getMakerFeeTxId())));
+                                    }
+                                    icon.setVisible(!item.getOffer().isBsqSwapOffer());
+
                                     if (item.isNotPublished()) {
                                         getStyleClass().add("offer-disabled");
-                                    }
-                                    Label label = new AutoTooltipLabel(item.getMakerFeeTxId());
-                                    log.error("{} {}",openOfferManager.hasOfferSharedMakerFee(item.getOpenOffer()),item.getOpenOffer().getId());
-                                    if (openOfferManager.hasOfferSharedMakerFee(item.getOpenOffer())) {
-                                        Text icon = getRegularIconForLabel(MaterialDesignIcon.CALENDAR_QUESTION, label);
-                                        label.setContentDisplay(ContentDisplay.LEFT);
-                                       Tooltip.install(icon, new Tooltip(Res.get("offerbook.sharedMakerFeeTxId")));
-                                    } else {
-                                        label.setGraphic(null);
+                                        icon.setOpacity(0.2);
                                     }
                                     setGraphic(label);
                                 } else {
                                     setGraphic(null);
                                 }
                             }
-                        };*/
+                        };
                     }
                 });
     }
