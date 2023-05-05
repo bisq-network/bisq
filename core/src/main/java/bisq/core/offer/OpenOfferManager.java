@@ -610,8 +610,12 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             // For that reason we also do not add BSQ offers.
             if (getOpenOffersByMakerFeeTxId(offer.getOfferFeePaymentTxId()).isEmpty()) {
                 closedTradableManager.add(openOffer);
+
+                // We only reset if there are no other offers with the shared maker fee as otherwise the
+                // address in the addressEntry would become available while it's still RESERVED_FOR_TRADE
+                // for the remaining offers.
+                btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
             }
-            btcWalletService.resetAddressEntriesForOpenOffer(offer.getId());
         }
         log.info("onRemoved offerId={}", offer.getId());
         resultHandler.handleResult();
@@ -877,7 +881,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 result,
                 errorMessage);
 
-        final NodeAddress takersNodeAddress = sender;
+        NodeAddress takersNodeAddress = sender;
         PubKeyRing takersPubKeyRing = message.getPubKeyRing();
         log.info("Send AckMessage for OfferAvailabilityRequest to peer {} with offerId {} and sourceUid {}",
                 takersNodeAddress, offerId, ackMessage.getSourceUid());
@@ -1209,11 +1213,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     }
 
     private Set<OpenOffer> getOpenOffersByMakerFeeTxId(String makerFeeTxId) {
-        Set<OpenOffer> collect = openOffers.stream()
+        return openOffers.stream()
                 .filter(openOffer -> !openOffer.getOffer().isBsqSwapOffer() &&
                         makerFeeTxId != null &&
                         makerFeeTxId.equals(openOffer.getOffer().getOfferFeePaymentTxId()))
                 .collect(Collectors.toSet());
-        return collect;
     }
 }
