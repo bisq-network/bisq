@@ -1,7 +1,12 @@
 package bisq.common.util;
 
+import com.google.common.collect.Ordering;
+
 import java.io.File;
 
+import java.util.Comparator;
+
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 
 /**
@@ -28,5 +33,11 @@ public class Preconditions {
             throw new IllegalArgumentException(format("Directory '%s' is not writeable", dir));
 
         return dir;
+    }
+
+    // needed since Guava makes it impossible to create an ImmutableSorted[Set|Map] with a null comparator:
+    public static void checkComparatorNullOrNatural(Comparator<?> comparator, Object errorMessage) {
+        checkArgument(comparator == null || comparator.equals(Ordering.natural()) ||
+                comparator.equals(Comparator.naturalOrder()), errorMessage);
     }
 }
