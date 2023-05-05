@@ -47,11 +47,13 @@ import java.time.Instant;
 import java.io.File;
 
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -68,7 +70,8 @@ public class TradeStatisticsManager {
     private final TradeStatisticsConverter tradeStatisticsConverter;
     private final File storageDir;
     private final boolean dumpStatistics;
-    private final ObservableSet<TradeStatistics3> observableTradeStatisticsSet = FXCollections.observableSet();
+    private final NavigableSet<TradeStatistics3> navigableTradeStatisticsSet = new TreeSet<>();
+    private final ObservableSet<TradeStatistics3> observableTradeStatisticsSet = FXCollections.observableSet(navigableTradeStatisticsSet);
     private JsonFileManager jsonFileManager;
 
     @Inject
@@ -110,37 +113,22 @@ public class TradeStatisticsManager {
             }
         });
 
-        Set<TradeStatistics3> set = tradeStatistics3StorageService.getMapOfAllData().values().stream()
+        tradeStatistics3StorageService.getMapOfAllData().values().stream()
                 .filter(e -> e instanceof TradeStatistics3)
                 .map(e -> (TradeStatistics3) e)
                 .filter(TradeStatistics3::isValid)
-                .collect(Collectors.toSet());
-        observableTradeStatisticsSet.addAll(set);
+                .forEach(observableTradeStatisticsSet::add);
 
-        // collate prices by ccy -- takes about 10 ms for 5000 items
-        Map<String, List<TradeStatistics3>> allPriceByCurrencyCode = new HashMap<>();
-        observableTradeStatisticsSet.forEach(e -> {
-            List<TradeStatistics3> list;
-            String currencyCode = e.getCurrency();
-            if (allPriceByCurrencyCode.containsKey(currencyCode)) {
-                list = allPriceByCurrencyCode.get(currencyCode);
-            } else {
-                list = new ArrayList<>();
-                allPriceByCurrencyCode.put(currencyCode, list);
-            }
-            list.add(e);
-        });
         // get the most recent price for each ccy and notify priceFeedService
+        // (this relies on the trade statistics set being sorted by date)
         Map<String, Price> newestPriceByCurrencyCode = new HashMap<>();
-        allPriceByCurrencyCode.values().stream()
-                .filter(list -> !list.isEmpty())
-                .forEach(list -> {
-                    list.sort(Comparator.comparing(TradeStatistics3::getDate));
-                    TradeStatistics3 tradeStatistics = list.get(list.size() - 1);
-                    newestPriceByCurrencyCode.put(tradeStatistics.getCurrency(), tradeStatistics.getTradePrice());
-                });
+        observableTradeStatisticsSet.forEach(e -> newestPriceByCurrencyCode.put(e.getCurrency(), e.getTradePrice()));
         priceFeedService.applyInitialBisqMarketPrice(newestPriceByCurrencyCode);
         maybeDumpStatistics();
+    }
+
+    public NavigableSet<TradeStatistics3> getNavigableTradeStatisticsSet() {
+        return Collections.unmodifiableNavigableSet(navigableTradeStatisticsSet);
     }
 
     public ObservableSet<TradeStatistics3> getObservableTradeStatisticsSet() {
@@ -170,7 +158,7 @@ public class TradeStatisticsManager {
             Instant yearAgo = Instant.ofEpochSecond(Instant.now().getEpochSecond() - TimeUnit.DAYS.toSeconds(365));
             Set<String> activeCurrencies = observableTradeStatisticsSet.stream()
                     .filter(e -> e.getDate().toInstant().isAfter(yearAgo))
-                    .map(p -> p.getCurrency())
+                    .map(TradeStatistics3::getCurrency)
                     .collect(Collectors.toSet());
 
             ArrayList<CurrencyTuple> activeFiatCurrencyList = fiatCurrencyList.stream()

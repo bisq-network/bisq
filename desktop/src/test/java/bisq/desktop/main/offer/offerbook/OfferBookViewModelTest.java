@@ -60,9 +60,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Collections;
 
 import com.natpryce.makeiteasy.Maker;
 
@@ -86,7 +84,6 @@ import static org.mockito.Mockito.when;
 
 public class OfferBookViewModelTest {
     private final CoinFormatter coinFormatter = new ImmutableCoinFormatter(Config.baseCurrencyNetworkParameters().getMonetaryFormat());
-    private static final Logger log = LoggerFactory.getLogger(OfferBookViewModelTest.class);
     private User user;
 
     @BeforeEach
@@ -101,7 +98,7 @@ public class OfferBookViewModelTest {
     private PriceUtil getPriceUtil() {
         PriceFeedService priceFeedService = mock(PriceFeedService.class);
         TradeStatisticsManager tradeStatisticsManager = mock(TradeStatisticsManager.class);
-        when(tradeStatisticsManager.getObservableTradeStatisticsSet()).thenReturn(FXCollections.observableSet());
+        when(tradeStatisticsManager.getNavigableTradeStatisticsSet()).thenReturn(Collections.emptyNavigableSet());
         return new PriceUtil(priceFeedService, tradeStatisticsManager, empty);
     }
 
@@ -639,4 +636,3 @@ public class OfferBookViewModelTest {
                 1));
     }
 }
-

@@ -54,6 +54,7 @@ import bisq.core.util.coin.CoinUtil;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.util.MathUtils;
+import bisq.common.util.RangeUtils;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
 
@@ -61,6 +62,8 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Named;
+
+import com.google.common.collect.Range;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
@@ -79,7 +82,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
 
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
@@ -362,14 +364,15 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
             // Get average historic prices over for the prior trade period equaling the lock time
             var blocksRange = Restrictions.getLockTime(paymentAccount.getPaymentMethod().isBlockchain());
             var startDate = new Date(System.currentTimeMillis() - blocksRange * 10L * 60000);
-            var sortedRangeData = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+            var sortedRangeData = RangeUtils.subSet(tradeStatisticsManager.getNavigableTradeStatisticsSet())
+                    .withKey(TradeStatistics3::getDate)
+                    .overRange(Range.atLeast(startDate));
+            var sortedFilteredRangeData = sortedRangeData.stream()
                     .filter(e -> e.getCurrency().equals(getTradeCurrency().getCode()))
-                    .filter(e -> e.getDate().compareTo(startDate) >= 0)
-                    .sorted(Comparator.comparing(TradeStatistics3::getDate))
                     .collect(Collectors.toList());
             var movingAverage = new MathUtils.MovingAverage(10, 0.2);
             double[] extremes = {Double.MAX_VALUE, Double.MIN_VALUE};
-            sortedRangeData.forEach(e -> {
+            sortedFilteredRangeData.forEach(e -> {
                 var price = e.getTradePrice().getValue();
                 movingAverage.next(price).ifPresent(val -> {
                     if (val < extremes[0]) extremes[0] = val;

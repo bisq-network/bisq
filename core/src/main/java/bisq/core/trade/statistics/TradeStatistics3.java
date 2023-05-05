@@ -43,6 +43,7 @@ import bisq.common.proto.ProtoUtil;
 import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.JsonExclude;
+import bisq.common.util.ComparableExt;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
@@ -59,14 +60,18 @@ import java.time.ZoneId;
 
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
@@ -78,7 +83,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload,
-        CapabilityRequiringPayload, DateSortedTruncatablePayload {
+        CapabilityRequiringPayload, DateSortedTruncatablePayload, ComparableExt<TradeStatistics3> {
 
     @JsonExclude
     private transient static final ZoneId ZONE_ID = ZoneId.systemDefault();
@@ -476,6 +481,27 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                 currencyFound;
     }
 
+    private static <T extends Comparable<? super T>> int nullsFirstCompare(T a, T b) {
+        return Comparator.nullsFirst(Comparator.<T>naturalOrder()).compare(a, b);
+    }
+
+    @Override
+    public int compareTo(@NotNull ComparableExt<TradeStatistics3> o) {
+        if (this == o) {
+            return 0;
+        }
+        if (!(o instanceof TradeStatistics3)) {
+            return -o.compareTo(this);
+        }
+        TradeStatistics3 that = (TradeStatistics3) o;
+        return date != that.date ? Long.compare(date, that.date)
+                : amount != that.amount ? Long.compare(amount, that.amount)
+                : !Objects.equals(currency, that.currency) ? nullsFirstCompare(currency, that.currency)
+                : price != that.price ? Long.compare(price, that.price)
+                : !Objects.equals(paymentMethod, that.paymentMethod) ? nullsFirstCompare(paymentMethod, that.paymentMethod)
+                : Arrays.compare(hash, that.hash);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -486,9 +512,8 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         if (price != that.price) return false;
         if (amount != that.amount) return false;
         if (date != that.date) return false;
-        if (currency != null ? !currency.equals(that.currency) : that.currency != null) return false;
-        if (paymentMethod != null ? !paymentMethod.equals(that.paymentMethod) : that.paymentMethod != null)
-            return false;
+        if (!Objects.equals(currency, that.currency)) return false;
+        if (!Objects.equals(paymentMethod, that.paymentMethod)) return false;
         return Arrays.equals(hash, that.hash);
     }
 
