@@ -389,13 +389,13 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
 
     private void fillList() {
         long ts = System.currentTimeMillis();
-        CompletableFuture.supplyAsync(() -> {
-            return model.tradeStatisticsByCurrency.stream()
-                    .map(tradeStatistics -> new TradeStatistics3ListItem(tradeStatistics,
-                            coinFormatter,
-                            model.showAllTradeCurrenciesProperty.get()))
-                    .collect(Collectors.toCollection(FXCollections::observableArrayList));
-        }).whenComplete((listItems, throwable) -> {
+        boolean showAllTradeCurrencies = model.showAllTradeCurrenciesProperty.get();
+        CompletableFuture.supplyAsync(() -> model.tradeStatisticsByCurrency.stream()
+                .map(tradeStatistics -> new TradeStatistics3ListItem(tradeStatistics,
+                        coinFormatter,
+                        showAllTradeCurrencies))
+                .collect(Collectors.toCollection(FXCollections::observableArrayList))
+        ).whenComplete((listItems, throwable) -> {
             log.debug("Creating listItems took {} ms", System.currentTimeMillis() - ts);
 
             long ts2 = System.currentTimeMillis();

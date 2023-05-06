@@ -77,8 +77,7 @@ public class ChartCalculations {
                         for (TradesChartsViewModel.TickUnit tick : TradesChartsViewModel.TickUnit.values()) {
                             long time = roundToTick(tradeStatistics.getLocalDateTime(), tick).getTime();
                             Map<Long, List<TradeStatistics3>> map = dateMapsPerTickUnit.get(tick);
-                            map.putIfAbsent(time, new ArrayList<>());
-                            map.get(time).add(tradeStatistics);
+                            map.computeIfAbsent(time, t -> new ArrayList<>()).add(tradeStatistics);
                         }
                     });
 
@@ -94,11 +93,9 @@ public class ChartCalculations {
     static CompletableFuture<List<TradeStatistics3>> getTradeStatisticsForCurrency(Set<TradeStatistics3> tradeStatisticsSet,
                                                                                    String currencyCode,
                                                                                    boolean showAllTradeCurrencies) {
-        return CompletableFuture.supplyAsync(() -> {
-            return tradeStatisticsSet.stream()
-                    .filter(e -> showAllTradeCurrencies || e.getCurrency().equals(currencyCode))
-                    .collect(Collectors.toList());
-        });
+        return CompletableFuture.supplyAsync(() -> tradeStatisticsSet.stream()
+                .filter(e -> showAllTradeCurrencies || e.getCurrency().equals(currencyCode))
+                .collect(Collectors.toList()));
     }
 
     static CompletableFuture<UpdateChartResult> getUpdateChartResult(List<TradeStatistics3> tradeStatisticsByCurrency,
@@ -193,7 +190,7 @@ public class ChartCalculations {
     }
 
 
-    static Date roundToTick(LocalDateTime localDate, TradesChartsViewModel.TickUnit tickUnit) {
+    private static Date roundToTick(LocalDateTime localDate, TradesChartsViewModel.TickUnit tickUnit) {
         switch (tickUnit) {
             case YEAR:
                 return Date.from(localDate.withMonth(1).withDayOfYear(1).withHour(0).withMinute(0).withSecond(0).withNano(0).atZone(ZONE_ID).toInstant());
@@ -214,6 +211,7 @@ public class ChartCalculations {
         }
     }
 
+    @VisibleForTesting
     static Date roundToTick(Date time, TradesChartsViewModel.TickUnit tickUnit) {
         return roundToTick(time.toInstant().atZone(ChartCalculations.ZONE_ID).toLocalDateTime(), tickUnit);
     }
