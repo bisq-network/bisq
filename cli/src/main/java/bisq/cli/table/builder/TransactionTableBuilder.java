@@ -20,8 +20,7 @@ package bisq.cli.table.builder;
 import bisq.proto.grpc.TxInfo;
 
 import java.util.List;
-
-import javax.annotation.Nullable;
+import java.util.stream.Collectors;
 
 import static bisq.cli.table.builder.TableBuilderConstants.*;
 import static bisq.cli.table.builder.TableType.TRANSACTION_TBL;
@@ -47,6 +46,7 @@ class TransactionTableBuilder extends AbstractTableBuilder {
     private final Column<Long> colOutputSum;
     private final Column<Long> colTxFee;
     private final Column<Long> colTxSize;
+    private final Column<String> colMemo;
 
     TransactionTableBuilder(List<?> protos) {
         super(TRANSACTION_TBL, protos);
@@ -56,32 +56,20 @@ class TransactionTableBuilder extends AbstractTableBuilder {
         this.colOutputSum = new SatoshiColumn(COL_HEADER_TX_OUTPUT_SUM);
         this.colTxFee = new SatoshiColumn(COL_HEADER_TX_FEE);
         this.colTxSize = new LongColumn(COL_HEADER_TX_SIZE);
+        this.colMemo = new StringColumn(COL_HEADER_TX_MEMO);
     }
 
     public Table build() {
-        // TODO Add 'gettransactions' api method & show multiple tx in the console.
-        //  For now, a tx tbl is only one row.
-        TxInfo tx = (TxInfo) protos.get(0);
-
-        // Declare the columns derived from tx info.
-
-        @Nullable
-        Column<String> colMemo = tx.getMemo().isEmpty()
-                ? null
-                : new StringColumn(COL_HEADER_TX_MEMO);
-
-        // Populate columns with tx info.
-
-        colTxId.addRow(tx.getTxId());
-        colIsConfirmed.addRow(!tx.getIsPending());
-        colInputSum.addRow(tx.getInputSum());
-        colOutputSum.addRow(tx.getOutputSum());
-        colTxFee.addRow(tx.getFee());
-        colTxSize.addRow((long) tx.getSize());
-        if (colMemo != null)
+        protos.stream().forEach(p -> {
+            TxInfo tx = (TxInfo) p;
+            colTxId.addRow(tx.getTxId());
+            colIsConfirmed.addRow(!tx.getIsPending());
+            colInputSum.addRow(tx.getInputSum());
+            colOutputSum.addRow(tx.getOutputSum());
+            colTxFee.addRow(tx.getFee());
+            colTxSize.addRow((long) tx.getSize());
             colMemo.addRow(tx.getMemo());
-
-        // Define and return the table instance with populated columns.
+        });
 
         if (colMemo != null) {
             return new Table(colTxId,

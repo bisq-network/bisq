@@ -81,6 +81,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -411,6 +412,10 @@ class CoreWalletsService {
                 feeService.getMinFeePerVByte(),
                 feeService.getTxFeePerVbyte().value,
                 feeService.getLastRequest());
+    }
+
+    Set<Transaction> getTransactions() {
+        return btcWalletService.getTransactions(false);
     }
 
     Transaction getTransaction(String txId) {

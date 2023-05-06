@@ -72,6 +72,7 @@ import bisq.cli.opts.GetPaymentAcctFormOptionParser;
 import bisq.cli.opts.GetTradeOptionParser;
 import bisq.cli.opts.GetTradesOptionParser;
 import bisq.cli.opts.GetTransactionOptionParser;
+import bisq.cli.opts.GetTransactionsOptionParser;
 import bisq.cli.opts.OfferIdOptionParser;
 import bisq.cli.opts.RegisterDisputeAgentOptionParser;
 import bisq.cli.opts.RemoveWalletPasswordOptionParser;
@@ -344,6 +345,16 @@ public class CliMain {
                     }
                     var txFeeRate = client.unsetTxFeeRate();
                     out.println(formatTxFeeRateInfo(txFeeRate));
+                    return;
+                }
+                case gettransactions: {
+                    var opts = new GetTransactionsOptionParser(args).parse();
+                    if (opts.isForHelp()) {
+                        out.println(client.getMethodHelp(method));
+                        return;
+                    }
+                    var txs = client.getTransactions();
+                    new TableBuilder(TRANSACTION_TBL, txs).build().print(out);
                     return;
                 }
                 case gettransaction: {

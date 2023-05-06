@@ -147,6 +147,10 @@ public final class GrpcClient {
         return walletsServiceRequest.unsetTxFeeRate();
     }
 
+    public List<TxInfo> getTransactions() {
+        return walletsServiceRequest.getTransactions();
+    }
+
     public TxInfo getTransaction(String txId) {
         return walletsServiceRequest.getTransaction(txId);
     }

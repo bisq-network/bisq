@@ -33,6 +33,8 @@ import bisq.proto.grpc.GetNetworkReply;
 import bisq.proto.grpc.GetNetworkRequest;
 import bisq.proto.grpc.GetTransactionReply;
 import bisq.proto.grpc.GetTransactionRequest;
+import bisq.proto.grpc.GetTransactionsReply;
+import bisq.proto.grpc.GetTransactionsRequest;
 import bisq.proto.grpc.GetTxFeeRateReply;
 import bisq.proto.grpc.GetTxFeeRateRequest;
 import bisq.proto.grpc.GetUnusedBsqAddressReply;
@@ -68,6 +70,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -303,6 +306,24 @@ class GrpcWalletsService extends WalletsImplBase {
                 responseObserver.onNext(reply);
                 responseObserver.onCompleted();
             });
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(log, cause, responseObserver);
+        }
+    }
+
+    @Override
+    public void getTransactions(GetTransactionsRequest req,
+                                StreamObserver<GetTransactionsReply> responseObserver) {
+        try {
+            Set<Transaction> transactions = coreApi.getTransactions();
+            log.info("Transactions count: " + transactions.size());
+            var reply = GetTransactionsReply.newBuilder()
+                    .addAllTxInfo(transactions.stream()
+                            .map(tx -> toTxInfo(tx).toProtoMessage())
+                            .collect(Collectors.toList()))
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
         } catch (Throwable cause) {
             exceptionHandler.handleException(log, cause, responseObserver);
         }
