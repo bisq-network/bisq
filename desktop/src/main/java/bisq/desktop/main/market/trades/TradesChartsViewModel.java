@@ -96,7 +96,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     final ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
     final ObservableList<XYChart.Data<Number, Number>> volumeItems = FXCollections.observableArrayList();
     final ObservableList<XYChart.Data<Number, Number>> volumeInUsdItems = FXCollections.observableArrayList();
-    private final Map<Long, Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = new HashMap<>();
+    private final List<Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = new ArrayList<>();
 
     TickUnit tickUnit;
     private int selectedTabIndex;
@@ -278,7 +278,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
                     }
                     UserThread.execute(() -> {
                         itemsPerInterval.clear();
-                        itemsPerInterval.putAll(updateChartResult.getItemsPerInterval());
+                        itemsPerInterval.addAll(updateChartResult.getItemsPerInterval());
 
                         priceItems.setAll(updateChartResult.getPriceItems());
                         volumeItems.setAll(updateChartResult.getVolumeItems());
@@ -356,8 +356,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
         return currencyListItems.getObservableList().stream().filter(e -> e.tradeCurrency.equals(selectedTradeCurrencyProperty.get())).findAny();
     }
 
-    long getTimeFromTickIndex(long tick) {
-        return ChartCalculations.getTimeFromTickIndex(tick, itemsPerInterval);
+    long getTimeFromTickIndex(int tickIndex) {
+        return ChartCalculations.getTimeFromTickIndex(tickIndex, itemsPerInterval);
     }
 
 

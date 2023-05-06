@@ -47,7 +47,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -171,9 +171,10 @@ public class TradesChartsViewModelTest {
                 null,
                 null));
 
-        Map<Long, Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = null;
+        List<Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = List.of();
         long tick = ChartCalculations.roundToTick(now, TradesChartsViewModel.TickUnit.DAY).getTime();
-        CandleData candleData = ChartCalculations.getCandleData(tick,
+        // FIXME: Type error - trying to pass a time (long) as a tick index (int from 0 to 91 inclusive)!!
+        CandleData candleData = ChartCalculations.getCandleData((int) tick,
                 set,
                 0,
                 TradesChartsViewModel.TickUnit.DAY, currencyCode,

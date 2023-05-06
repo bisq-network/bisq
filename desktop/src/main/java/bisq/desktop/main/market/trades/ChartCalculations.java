@@ -50,6 +50,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import lombok.Getter;
 
@@ -104,21 +105,22 @@ public class ChartCalculations {
                                                                      String currencyCode) {
         return CompletableFuture.supplyAsync(() -> {
             // Generate date range and create sets for all ticks
-            Map<Long, Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = getItemsPerInterval(tradeStatisticsByCurrency, tickUnit);
+            List<Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = getItemsPerInterval(tradeStatisticsByCurrency, tickUnit);
 
             Map<Long, Long> usdAveragePriceMap = usdAveragePriceMapsPerTickUnit.get(tickUnit);
             AtomicLong averageUsdPrice = new AtomicLong(0);
 
             // create CandleData for defined time interval
-            List<CandleData> candleDataList = itemsPerInterval.entrySet().stream()
-                    .filter(entry -> entry.getKey() >= 0 && !entry.getValue().getValue().isEmpty())
-                    .map(entry -> {
-                        long tickStartDate = entry.getValue().getKey().getTime();
+            List<CandleData> candleDataList = IntStream.range(0, itemsPerInterval.size())
+                    .filter(i -> !itemsPerInterval.get(i).getValue().isEmpty())
+                    .mapToObj(i -> {
+                        Pair<Date, Set<TradeStatistics3>> pair = itemsPerInterval.get(i);
+                        long tickStartDate = pair.getKey().getTime();
                         // If we don't have a price we take the previous one
                         if (usdAveragePriceMap.containsKey(tickStartDate)) {
                             averageUsdPrice.set(usdAveragePriceMap.get(tickStartDate));
                         }
-                        return getCandleData(entry.getKey(), entry.getValue().getValue(), averageUsdPrice.get(), tickUnit, currencyCode, itemsPerInterval);
+                        return getCandleData(i, pair.getValue(), averageUsdPrice.get(), tickUnit, currencyCode, itemsPerInterval);
                     })
                     .sorted(Comparator.comparingLong(o -> o.tick))
                     .collect(Collectors.toList());
@@ -141,12 +143,12 @@ public class ChartCalculations {
 
     @Getter
     static class UpdateChartResult {
-        private final Map<Long, Pair<Date, Set<TradeStatistics3>>> itemsPerInterval;
+        private final List<Pair<Date, Set<TradeStatistics3>>> itemsPerInterval;
         private final List<XYChart.Data<Number, Number>> priceItems;
         private final List<XYChart.Data<Number, Number>> volumeItems;
         private final List<XYChart.Data<Number, Number>> volumeInUsdItems;
 
-        public UpdateChartResult(Map<Long, Pair<Date, Set<TradeStatistics3>>> itemsPerInterval,
+        public UpdateChartResult(List<Pair<Date, Set<TradeStatistics3>>> itemsPerInterval,
                                  List<XYChart.Data<Number, Number>> priceItems,
                                  List<XYChart.Data<Number, Number>> volumeItems,
                                  List<XYChart.Data<Number, Number>> volumeInUsdItems) {
@@ -163,29 +165,38 @@ public class ChartCalculations {
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    static Map<Long, Pair<Date, Set<TradeStatistics3>>> getItemsPerInterval(List<TradeStatistics3> tradeStatisticsByCurrency,
-                                                                            TradesChartsViewModel.TickUnit tickUnit) {
+    static List<Pair<Date, Set<TradeStatistics3>>> getItemsPerInterval(List<TradeStatistics3> tradeStatisticsByCurrency,
+                                                                       TradesChartsViewModel.TickUnit tickUnit) {
         // Generate date range and create sets for all ticks
-        Map<Long, Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = new HashMap<>();
+        List<Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = new ArrayList<>(Collections.nCopies(MAX_TICKS + 2, null));
         Date time = new Date();
-        for (long i = MAX_TICKS + 1; i >= 0; --i) {
+        for (int i = MAX_TICKS + 1; i >= 0; --i) {
             Pair<Date, Set<TradeStatistics3>> pair = new Pair<>((Date) time.clone(), new HashSet<>());
-            itemsPerInterval.put(i, pair);
+            itemsPerInterval.set(i, pair);
             // We adjust the time for the next iteration
             time.setTime(time.getTime() - 1);
             time = roundToTick(time, tickUnit);
         }
 
         // Get all entries for the defined time interval
-        tradeStatisticsByCurrency.forEach(tradeStatistics -> {
-            for (long i = MAX_TICKS; i > 0; --i) {
+        int i = MAX_TICKS;
+        for (TradeStatistics3 tradeStatistics : tradeStatisticsByCurrency) {
+            // Start from the last used tick index - move forwards if necessary
+            for (; i < MAX_TICKS; i++) {
+                Pair<Date, Set<TradeStatistics3>> pair = itemsPerInterval.get(i + 1);
+                if (!tradeStatistics.getDate().after(pair.getKey())) {
+                    break;
+                }
+            }
+            // Scan backwards until the correct tick is reached
+            for (; i > 0; --i) {
                 Pair<Date, Set<TradeStatistics3>> pair = itemsPerInterval.get(i);
                 if (tradeStatistics.getDate().after(pair.getKey())) {
                     pair.getValue().add(tradeStatistics);
                     break;
                 }
             }
-        });
+        }
         return itemsPerInterval;
     }
 
@@ -229,11 +240,11 @@ public class ChartCalculations {
     }
 
     @VisibleForTesting
-    static CandleData getCandleData(long tick, Set<TradeStatistics3> set,
+    static CandleData getCandleData(int tickIndex, Set<TradeStatistics3> set,
                                     long averageUsdPrice,
                                     TradesChartsViewModel.TickUnit tickUnit,
                                     String currencyCode,
-                                    Map<Long, Pair<Date, Set<TradeStatistics3>>> itemsPerInterval) {
+                                    List<Pair<Date, Set<TradeStatistics3>>> itemsPerInterval) {
         long open = 0;
         long close = 0;
         long high = 0;
@@ -276,8 +287,8 @@ public class ChartCalculations {
             averagePrice = MathUtils.roundDoubleToLong(accumulatedVolumeAsDouble / (double) accumulatedAmount);
         }
 
-        Date dateFrom = new Date(getTimeFromTickIndex(tick, itemsPerInterval));
-        Date dateTo = new Date(getTimeFromTickIndex(tick + 1, itemsPerInterval));
+        Date dateFrom = new Date(getTimeFromTickIndex(tickIndex, itemsPerInterval));
+        Date dateTo = new Date(getTimeFromTickIndex(tickIndex + 1, itemsPerInterval));
         String dateString = tickUnit.ordinal() > TradesChartsViewModel.TickUnit.DAY.ordinal() ?
                 DisplayUtils.formatDateTimeSpan(dateFrom, dateTo) :
                 DisplayUtils.formatDate(dateFrom) + " - " + DisplayUtils.formatDate(dateTo);
@@ -287,15 +298,14 @@ public class ChartCalculations {
         long volumeInUsd = averageUsdPrice * (long) MathUtils.scaleDownByPowerOf10((double) accumulatedAmount, 4);
         // We store USD value without decimals as its only total volume, no precision is needed.
         volumeInUsd = (long) MathUtils.scaleDownByPowerOf10((double) volumeInUsd, 4);
-        return new CandleData(tick, open, close, high, low, averagePrice, medianPrice, accumulatedAmount, accumulatedVolume,
+        return new CandleData(tickIndex, open, close, high, low, averagePrice, medianPrice, accumulatedAmount, accumulatedVolume,
                 numTrades, isBullish, dateString, volumeInUsd);
     }
 
-    static long getTimeFromTickIndex(long tick, Map<Long, Pair<Date, Set<TradeStatistics3>>> itemsPerInterval) {
-        if (tick > MAX_TICKS + 1 ||
-                itemsPerInterval.get(tick) == null) {
+    static long getTimeFromTickIndex(int tickIndex, List<Pair<Date, Set<TradeStatistics3>>> itemsPerInterval) {
+        if (tickIndex < 0 || tickIndex >= itemsPerInterval.size()) {
             return 0;
         }
-        return itemsPerInterval.get(tick).getKey().getTime();
+        return itemsPerInterval.get(tickIndex).getKey().getTime();
     }
 }

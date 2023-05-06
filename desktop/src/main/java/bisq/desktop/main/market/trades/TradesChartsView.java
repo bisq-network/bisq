@@ -640,7 +640,7 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
         return new StringConverter<>() {
             @Override
             public String toString(Number object) {
-                long index = MathUtils.doubleToLong((double) object);
+                int index = object.intValue();
                 // The last tick is on the chart edge, it is not well spaced with
                 // the previous tick and interferes with its label.
                 if (MAX_TICKS + 1 == index) return "";
