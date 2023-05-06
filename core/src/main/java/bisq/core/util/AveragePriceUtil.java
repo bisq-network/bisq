@@ -34,7 +34,6 @@ import com.google.common.primitives.Doubles;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -115,21 +114,23 @@ public class AveragePriceUtil {
         return averagePrice;
     }
 
-    private static long getUSDAverage(List<TradeStatistics3> bsqList, List<TradeStatistics3> usdList) {
+    private static long getUSDAverage(List<TradeStatistics3> sortedBsqList, List<TradeStatistics3> sortedUsdList) {
         // Use next USD/BTC print as price to calculate BSQ/USD rate
         // Store each trade as amount of USD and amount of BSQ traded
-        List<Tuple2<Double, Double>> usdBsqList = new ArrayList<>(bsqList.size());
-        usdList.sort(Comparator.comparing(TradeStatistics3::getDateAsLong));
+        List<Tuple2<Double, Double>> usdBsqList = new ArrayList<>(sortedBsqList.size());
         var usdBTCPrice = 10000d; // Default to 10000 USD per BTC if there is no USD feed at all
 
-        for (TradeStatistics3 item : bsqList) {
+        int i = 0;
+        for (TradeStatistics3 item : sortedBsqList) {
             // Find usd price for trade item
-            usdBTCPrice = usdList.stream()
-                    .filter(usd -> usd.getDateAsLong() > item.getDateAsLong())
-                    .map(usd -> MathUtils.scaleDownByPowerOf10((double) usd.getTradePrice().getValue(),
-                            Fiat.SMALLEST_UNIT_EXPONENT))
-                    .findFirst()
-                    .orElse(usdBTCPrice);
+            for (; i < sortedUsdList.size(); i++) {
+                TradeStatistics3 usd = sortedUsdList.get(i);
+                if (usd.getDateAsLong() > item.getDateAsLong()) {
+                    usdBTCPrice = MathUtils.scaleDownByPowerOf10((double) usd.getTradePrice().getValue(),
+                            Fiat.SMALLEST_UNIT_EXPONENT);
+                    break;
+                }
+            }
             var bsqAmount = MathUtils.scaleDownByPowerOf10((double) item.getTradeVolume().getValue(),
                     Altcoin.SMALLEST_UNIT_EXPONENT);
             var btcAmount = MathUtils.scaleDownByPowerOf10((double) item.getTradeAmount().getValue(),
