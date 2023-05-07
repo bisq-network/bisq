@@ -73,20 +73,21 @@ public class ChartCalculations {
                 dateMapsPerTickUnit.put(tick, new HashMap<>());
             }
 
+            TradesChartsViewModel.TickUnit[] tickUnits = TradesChartsViewModel.TickUnit.values();
             tradeStatisticsSet.stream()
                     .filter(e -> e.getCurrency().equals("USD"))
                     .forEach(tradeStatistics -> {
-                        for (TradesChartsViewModel.TickUnit tick : TradesChartsViewModel.TickUnit.values()) {
-                            long time = roundToTick(tradeStatistics.getLocalDateTime(), tick).getTime();
-                            Map<Long, List<TradeStatistics3>> map = dateMapsPerTickUnit.get(tick);
+                        for (TradesChartsViewModel.TickUnit tickUnit : tickUnits) {
+                            long time = roundToTick(tradeStatistics.getLocalDateTime(), tickUnit).getTime();
+                            Map<Long, List<TradeStatistics3>> map = dateMapsPerTickUnit.get(tickUnit);
                             map.computeIfAbsent(time, t -> new ArrayList<>()).add(tradeStatistics);
                         }
                     });
 
-            dateMapsPerTickUnit.forEach((tick, map) -> {
+            dateMapsPerTickUnit.forEach((tickUnit, map) -> {
                 HashMap<Long, Long> priceMap = new HashMap<>();
                 map.forEach((date, tradeStatisticsList) -> priceMap.put(date, getAveragePrice(tradeStatisticsList)));
-                usdAveragePriceMapsPerTickUnit.put(tick, priceMap);
+                usdAveragePriceMapsPerTickUnit.put(tickUnit, priceMap);
             });
             return usdAveragePriceMapsPerTickUnit;
         });

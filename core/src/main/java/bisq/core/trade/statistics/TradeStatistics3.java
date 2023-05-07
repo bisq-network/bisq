@@ -200,7 +200,9 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         TIKKIE,
         TRANSFERWISE_USD,
         ACH_TRANSFER,
-        DOMESTIC_WIRE_TRANSFER
+        DOMESTIC_WIRE_TRANSFER;
+
+        private static final PaymentMethodMapper[] values = values(); // cache for perf gain
     }
 
     @Getter
@@ -413,7 +415,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
             return paymentMethod;
         }
         try {
-            return PaymentMethodMapper.values()[Integer.parseInt(paymentMethod)].name();
+            return PaymentMethodMapper.values[Integer.parseInt(paymentMethod)].name();
         } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
             return paymentMethod;
         }
