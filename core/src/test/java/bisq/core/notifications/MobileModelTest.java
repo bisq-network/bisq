@@ -24,9 +24,9 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Slf4j
 public class MobileModelTest {
@@ -83,7 +83,7 @@ public class MobileModelTest {
 
         list.forEach(tuple -> {
             log.info(tuple.toString());
-            assertEquals("tuple: " + tuple, mobileModel.parseDescriptor(tuple.first), tuple.second);
+            assertEquals(mobileModel.parseDescriptor(tuple.first), tuple.second, "tuple: " + tuple);
         });
 
     }

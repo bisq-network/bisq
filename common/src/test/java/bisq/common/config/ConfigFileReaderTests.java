@@ -4,15 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ConfigFileReaderTests {
 
@@ -20,10 +18,7 @@ public class ConfigFileReaderTests {
     private PrintWriter writer;
     private ConfigFileReader reader;
 
-    @Rule
-    public ExpectedException exception = ExpectedException.none();
-
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         file = File.createTempFile("bisq", "properties");
         reader = new ConfigFileReader(file);
@@ -35,11 +30,12 @@ public class ConfigFileReaderTests {
         writer.close();
         assertTrue(file.delete());
 
-        exception.expect(ConfigException.class);
-        exception.expectMessage(containsString("Config file"));
-        exception.expectMessage(containsString("does not exist"));
+        Exception exception = assertThrows(ConfigException.class, () -> reader.getLines());
 
-        reader.getLines();
+        String expectedMessage = "does not exist";
+        String actualMessage = exception.getMessage();
+
+        assertTrue(actualMessage.contains(expectedMessage));
     }
 
     @Test

@@ -1,18 +1,18 @@
 package bisq.core.arbitration;
 
 import bisq.core.account.witness.AccountAgeWitness;
-import bisq.core.support.dispute.arbitration.TraderDataItem;
 import bisq.core.payment.payload.PaymentAccountPayload;
+import bisq.core.support.dispute.arbitration.TraderDataItem;
 
 import org.bitcoinj.core.Coin;
 
 import java.security.PublicKey;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.Mockito.mock;
 
 /*
@@ -40,7 +40,7 @@ public class TraderDataItemTest {
     private byte[] hash1 = "1".getBytes();
     private byte[] hash2 = "2".getBytes();
 
-    @Before
+    @BeforeEach
     public void setup() {
         accountAgeWitness1 = new AccountAgeWitness(hash1, 123);
         accountAgeWitness2 = new AccountAgeWitness(hash2, 124);

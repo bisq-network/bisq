@@ -16,22 +16,22 @@ import org.bitcoinj.core.Coin;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static bisq.desktop.maker.OfferMaker.btcUsdOffer;
 import static bisq.desktop.maker.VolumeMaker.usdVolume;
 import static bisq.desktop.maker.VolumeMaker.volumeString;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class DisplayUtilsTest {
     private final CoinFormatter formatter = new ImmutableCoinFormatter(Config.baseCurrencyNetworkParameters().getMonetaryFormat());
 
-    @Before
+    @BeforeEach
     public void setUp() {
         Locale.setDefault(Locale.US);
         GlobalSettings.setLocale(Locale.US);

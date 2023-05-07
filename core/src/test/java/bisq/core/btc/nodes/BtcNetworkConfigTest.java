@@ -28,8 +28,8 @@ import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
 import java.util.Collections;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -41,7 +41,7 @@ public class BtcNetworkConfigTest {
 
     private WalletConfig delegate;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         delegate = mock(WalletConfig.class);
     }

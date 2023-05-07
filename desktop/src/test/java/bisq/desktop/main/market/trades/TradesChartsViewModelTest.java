@@ -50,11 +50,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
 public class TradesChartsViewModelTest {
@@ -103,7 +103,7 @@ public class TradesChartsViewModelTest {
             1
     );
 
-    @Before
+    @BeforeEach
     public void setup() throws IOException {
         tradeStatisticsManager = mock(TradeStatisticsManager.class);
         model = new TradesChartsViewModel(tradeStatisticsManager, mock(Preferences.class), mock(PriceFeedService.class),
@@ -190,7 +190,7 @@ public class TradesChartsViewModelTest {
     }
 
     // TODO JMOCKIT
-    @Ignore
+    @Disabled
     @Test
     public void testItemLists() throws ParseException {
         // Helper class to add historic trades

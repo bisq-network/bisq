@@ -17,15 +17,15 @@
 
 package bisq.core.dao.node.full;
 
-import bisq.core.dao.node.full.rpc.dto.RawDtoInput;
 import bisq.core.dao.node.full.rpc.dto.DtoSignatureScript;
+import bisq.core.dao.node.full.rpc.dto.RawDtoInput;
 
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class RpcServiceTest {
     private static final String SIGNATURE = "3045" +

@@ -15,10 +15,6 @@ repositories {
     maven { url 'https://jitpack.io' }
 }
 
-dependencies {
-    testImplementation libs.junit
-}
-
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }

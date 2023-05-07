@@ -19,16 +19,16 @@ package bisq.core.btc.wallet;
 
 import org.bitcoinj.core.Coin;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SuppressWarnings("ConstantConditions")
 public class RestrictionsTest {
     @Test
     public void testIsMinSpendableAmount() {
-        Coin amount = null;
+        Coin amount;
         Coin txFee = Coin.valueOf(20000);
 
         amount = Coin.ZERO;

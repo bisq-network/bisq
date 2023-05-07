@@ -23,18 +23,16 @@ import bisq.network.p2p.storage.mocks.DateTolerantPayloadStub;
 import bisq.network.p2p.storage.mocks.PersistableNetworkPayloadStub;
 import bisq.network.p2p.storage.payload.PersistableNetworkPayload;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import static bisq.network.p2p.storage.TestState.SavedTestState;
+import static java.util.stream.Stream.of;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -56,15 +54,8 @@ import static org.mockito.Mockito.when;
 @SuppressWarnings("unused")
 public class P2PDataStoragePersistableNetworkPayloadTest {
 
-    @RunWith(Parameterized.class)
     public abstract static class AddPersistableNetworkPayloadTest {
         TestState testState;
-
-        @Parameterized.Parameter(0)
-        public TestCase testCase;
-
-        @Parameterized.Parameter(1)
-        public boolean reBroadcast;
 
         PersistableNetworkPayload persistableNetworkPayload;
 
@@ -75,16 +66,18 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
             ON_MESSAGE,
         }
 
-        void doAddAndVerify(PersistableNetworkPayload persistableNetworkPayload,
+        void assertAndDoAdd(PersistableNetworkPayload persistableNetworkPayload,
+                            TestCase testCase,
+                            boolean reBroadcast,
                             boolean expectedReturnValue,
                             boolean expectedHashMapAndDataStoreUpdated,
                             boolean expectedListenersSignaled,
                             boolean expectedBroadcast) {
             SavedTestState beforeState = this.testState.saveTestState(persistableNetworkPayload);
 
-            if (this.testCase == TestCase.PUBLIC_API) {
-                Assert.assertEquals(expectedReturnValue,
-                        this.testState.mockedStorage.addPersistableNetworkPayload(persistableNetworkPayload, TestState.getTestNodeAddress(), this.reBroadcast));
+            if (testCase == TestCase.PUBLIC_API) {
+                assertEquals(expectedReturnValue,
+                        this.testState.mockedStorage.addPersistableNetworkPayload(persistableNetworkPayload, TestState.getTestNodeAddress(), reBroadcast));
             } else { // onMessage
                 Connection mockedConnection = mock(Connection.class);
                 when(mockedConnection.getPeersNodeAddressOptional()).thenReturn(Optional.of(TestState.getTestNodeAddress()));
@@ -95,42 +88,35 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
             this.testState.verifyPersistableAdd(beforeState, persistableNetworkPayload, expectedHashMapAndDataStoreUpdated, expectedListenersSignaled, expectedBroadcast);
         }
 
-        @Before
+        @BeforeEach
         public void setup() {
             this.persistableNetworkPayload = this.createInstance();
 
             this.testState = new TestState();
         }
 
-        @Parameterized.Parameters(name = "{index}: Test with TestCase={0} allowBroadcast={1} reBroadcast={2} checkDate={3}")
-        public static Collection<Object[]> data() {
-            List<Object[]> data = new ArrayList<>();
-
-            // onMessage doesn't use other parameters
-            data.add(new Object[] { TestCase.ON_MESSAGE, false });
-
-            // Client API uses two permutations
-            // Normal path
-            data.add(new Object[] { TestCase.PUBLIC_API, true });
-
-            // Refresh path
-            data.add(new Object[] { TestCase.PUBLIC_API, false });
-
-            return data;
+        static Stream<Object[]> data() {
+            return of(
+                    new Object[]{TestCase.ON_MESSAGE, false, true, true},
+                    new Object[]{TestCase.PUBLIC_API, true, false, true},
+                    new Object[]{TestCase.PUBLIC_API, false, true, false}
+            );
         }
 
-        @Test
-        public void addPersistableNetworkPayload() {
+        @MethodSource("data")
+        @ParameterizedTest(name = "{index}: Test with TestCase={0} allowBroadcast={1} reBroadcast={2} checkDate={3}")
+        public void addPersistableNetworkPayload(TestCase testCase, boolean reBroadcast) {
             // First add should succeed regardless of parameters
-            doAddAndVerify(this.persistableNetworkPayload, true, true, true, true);
+            assertAndDoAdd(this.persistableNetworkPayload, testCase, reBroadcast, true, true, true, true);
         }
 
-        @Test
-        public void addPersistableNetworkPayloadDuplicate() {
-            doAddAndVerify(this.persistableNetworkPayload, true, true, true, true);
+        @MethodSource("data")
+        @ParameterizedTest(name = "{index}: Test with TestCase={0} allowBroadcast={1} reBroadcast={2} checkDate={3}")
+        public void addPersistableNetworkPayloadDuplicate(TestCase testCase, boolean reBroadcast) {
+            assertAndDoAdd(this.persistableNetworkPayload, testCase, reBroadcast, true, true, true, true);
 
             // We return true and broadcast if reBroadcast is set
-            // doAddAndVerify(this.persistableNetworkPayload, this.reBroadcast, false, false, this.reBroadcast);
+            assertAndDoAdd(this.persistableNetworkPayload, testCase, reBroadcast, reBroadcast, false, false, reBroadcast);
         }
     }
 
@@ -143,11 +129,12 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
             return new PersistableNetworkPayloadStub(true);
         }
 
-        @Test
-        public void invalidHash() {
+        @MethodSource("data")
+        @ParameterizedTest(name = "{index}: Test with TestCase={0} allowBroadcast={1} reBroadcast={2} checkDate={3}")
+        public void invalidHash(TestCase testCase, boolean reBroadcast) {
             PersistableNetworkPayload persistableNetworkPayload = new PersistableNetworkPayloadStub(false);
 
-            doAddAndVerify(persistableNetworkPayload, false, false, false, false);
+            assertAndDoAdd(persistableNetworkPayload, testCase, reBroadcast, false, false, false, false);
         }
     }
 
@@ -163,14 +150,15 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
 
         }
 
-        @Test
-        public void outOfTolerance() {
+        @MethodSource("data")
+        @ParameterizedTest(name = "{index}: Test with TestCase={0} allowBroadcast={1} reBroadcast={2} checkDate={3}")
+        public void outOfTolerance(TestCase testCase, boolean reBroadcast) {
             PersistableNetworkPayload persistableNetworkPayload = new DateTolerantPayloadStub(false);
 
             // The onMessage path checks for tolerance
-            boolean expectedReturn = this.testCase != TestCase.ON_MESSAGE;
+            boolean expectedReturn = testCase != TestCase.ON_MESSAGE;
 
-            doAddAndVerify(persistableNetworkPayload, expectedReturn, expectedReturn, expectedReturn, expectedReturn);
+            assertAndDoAdd(persistableNetworkPayload, testCase, reBroadcast, expectedReturn, expectedReturn, expectedReturn, expectedReturn);
         }
     }
 }

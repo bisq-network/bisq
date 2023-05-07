@@ -47,10 +47,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -68,7 +70,7 @@ public class P2PDataStorageBuildGetDataResponseTest {
 
         private NodeAddress localNodeAddress;
 
-        @Before
+        @BeforeEach
         public void setUp() {
             MockitoAnnotations.initMocks(this);
             this.testState = new TestState();
@@ -149,13 +151,13 @@ public class P2PDataStorageBuildGetDataResponseTest {
             GetDataResponse getDataResponse = this.testState.mockedStorage.buildGetDataResponse(
                     getDataRequest, 1, outPNPTruncated, outPSETruncated, peerCapabilities);
 
-            Assert.assertFalse(outPNPTruncated.get());
-            Assert.assertFalse(outPSETruncated.get());
-            Assert.assertEquals(1, getDataResponse.getRequestNonce());
-            Assert.assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
-            Assert.assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
-            Assert.assertTrue(getDataResponse.getPersistableNetworkPayloadSet().isEmpty());
-            Assert.assertTrue(getDataResponse.getDataSet().isEmpty());
+            assertFalse(outPNPTruncated.get());
+            assertFalse(outPSETruncated.get());
+            assertEquals(1, getDataResponse.getRequestNonce());
+            assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
+            assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
+            assertTrue(getDataResponse.getPersistableNetworkPayloadSet().isEmpty());
+            assertTrue(getDataResponse.getDataSet().isEmpty());
         }
 
         // TESTCASE: Given a GetDataRequest w/ known PNP, nothing is sent back
@@ -177,13 +179,13 @@ public class P2PDataStorageBuildGetDataResponseTest {
             GetDataResponse getDataResponse = this.testState.mockedStorage.buildGetDataResponse(
                     getDataRequest, 1, outPNPTruncated, outPSETruncated, peerCapabilities);
 
-            Assert.assertFalse(outPNPTruncated.get());
-            Assert.assertFalse(outPSETruncated.get());
-            Assert.assertEquals(1, getDataResponse.getRequestNonce());
-            Assert.assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
-            Assert.assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
-            Assert.assertTrue(getDataResponse.getPersistableNetworkPayloadSet().isEmpty());
-            Assert.assertTrue(getDataResponse.getDataSet().isEmpty());
+            assertFalse(outPNPTruncated.get());
+            assertFalse(outPSETruncated.get());
+            assertEquals(1, getDataResponse.getRequestNonce());
+            assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
+            assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
+            assertTrue(getDataResponse.getPersistableNetworkPayloadSet().isEmpty());
+            assertTrue(getDataResponse.getDataSet().isEmpty());
         }
 
         // TESTCASE: Given a GetDataRequest w/o known PNP, send it back
@@ -203,13 +205,13 @@ public class P2PDataStorageBuildGetDataResponseTest {
             GetDataResponse getDataResponse = this.testState.mockedStorage.buildGetDataResponse(
                     getDataRequest, 1, outPNPTruncated, outPSETruncated, peerCapabilities);
 
-            Assert.assertFalse(outPNPTruncated.get());
-            Assert.assertFalse(outPSETruncated.get());
-            Assert.assertEquals(1, getDataResponse.getRequestNonce());
-            Assert.assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
-            Assert.assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
-            Assert.assertTrue(getDataResponse.getPersistableNetworkPayloadSet().contains(onlyLocal));
-            Assert.assertTrue(getDataResponse.getDataSet().isEmpty());
+            assertFalse(outPNPTruncated.get());
+            assertFalse(outPSETruncated.get());
+            assertEquals(1, getDataResponse.getRequestNonce());
+            assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
+            assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
+            assertTrue(getDataResponse.getPersistableNetworkPayloadSet().contains(onlyLocal));
+            assertTrue(getDataResponse.getDataSet().isEmpty());
         }
 
         // TESTCASE: Given a GetDataRequest w/o known PNP, don't send more than truncation limit
@@ -232,17 +234,17 @@ public class P2PDataStorageBuildGetDataResponseTest {
             GetDataResponse getDataResponse = this.testState.mockedStorage.buildGetDataResponse(
                     getDataRequest, 1, outPNPTruncated, outPSETruncated, peerCapabilities);
 
-            Assert.assertTrue(outPNPTruncated.get());
-            Assert.assertFalse(outPSETruncated.get());
-            Assert.assertEquals(1, getDataResponse.getRequestNonce());
-            Assert.assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
-            Assert.assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
-            Assert.assertEquals(1, getDataResponse.getPersistableNetworkPayloadSet().size());
+            assertTrue(outPNPTruncated.get());
+            assertFalse(outPSETruncated.get());
+            assertEquals(1, getDataResponse.getRequestNonce());
+            assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
+            assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
+            assertEquals(1, getDataResponse.getPersistableNetworkPayloadSet().size());
             Set<PersistableNetworkPayload> persistableNetworkPayloadSet = getDataResponse.getPersistableNetworkPayloadSet();
 
             // We use a set at the filter so it is not deterministic which item get truncated
-            Assert.assertEquals(1, persistableNetworkPayloadSet.size());
-            Assert.assertTrue(getDataResponse.getDataSet().isEmpty());
+            assertEquals(1, persistableNetworkPayloadSet.size());
+            assertTrue(getDataResponse.getDataSet().isEmpty());
         }
 
         // TESTCASE: Given a GetDataRequest w/o known PNP, but missing required capabilities, nothing is sent back
@@ -264,13 +266,13 @@ public class P2PDataStorageBuildGetDataResponseTest {
             GetDataResponse getDataResponse = this.testState.mockedStorage.buildGetDataResponse(
                     getDataRequest, 2, outPNPTruncated, outPSETruncated, peerCapabilities);
 
-            Assert.assertFalse(outPNPTruncated.get());
-            Assert.assertFalse(outPSETruncated.get());
-            Assert.assertEquals(1, getDataResponse.getRequestNonce());
-            Assert.assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
-            Assert.assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
-            Assert.assertTrue(getDataResponse.getPersistableNetworkPayloadSet().isEmpty());
-            Assert.assertTrue(getDataResponse.getDataSet().isEmpty());
+            assertFalse(outPNPTruncated.get());
+            assertFalse(outPSETruncated.get());
+            assertEquals(1, getDataResponse.getRequestNonce());
+            assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
+            assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
+            assertTrue(getDataResponse.getPersistableNetworkPayloadSet().isEmpty());
+            assertTrue(getDataResponse.getDataSet().isEmpty());
         }
 
         // TESTCASE: Given a GetDataRequest w/o known PNP that requires capabilities (and they match) send it back
@@ -292,13 +294,13 @@ public class P2PDataStorageBuildGetDataResponseTest {
             GetDataResponse getDataResponse = this.testState.mockedStorage.buildGetDataResponse(
                     getDataRequest, 2, outPNPTruncated, outPSETruncated, peerCapabilities);
 
-            Assert.assertFalse(outPNPTruncated.get());
-            Assert.assertFalse(outPSETruncated.get());
-            Assert.assertEquals(1, getDataResponse.getRequestNonce());
-            Assert.assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
-            Assert.assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
-            Assert.assertTrue(getDataResponse.getPersistableNetworkPayloadSet().contains(onlyLocal));
-            Assert.assertTrue(getDataResponse.getDataSet().isEmpty());
+            assertFalse(outPNPTruncated.get());
+            assertFalse(outPSETruncated.get());
+            assertEquals(1, getDataResponse.getRequestNonce());
+            assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
+            assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
+            assertTrue(getDataResponse.getPersistableNetworkPayloadSet().contains(onlyLocal));
+            assertTrue(getDataResponse.getDataSet().isEmpty());
         }
 
         // TESTCASE: Given a GetDataRequest w/ unknown PSE, nothing is sent back
@@ -317,13 +319,13 @@ public class P2PDataStorageBuildGetDataResponseTest {
             GetDataResponse getDataResponse = this.testState.mockedStorage.buildGetDataResponse(
                     getDataRequest, 1, outPNPTruncated, outPSETruncated, peerCapabilities);
 
-            Assert.assertFalse(outPNPTruncated.get());
-            Assert.assertFalse(outPSETruncated.get());
-            Assert.assertEquals(1, getDataResponse.getRequestNonce());
-            Assert.assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
-            Assert.assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
-            Assert.assertTrue(getDataResponse.getPersistableNetworkPayloadSet().isEmpty());
-            Assert.assertTrue(getDataResponse.getDataSet().isEmpty());
+            assertFalse(outPNPTruncated.get());
+            assertFalse(outPSETruncated.get());
+            assertEquals(1, getDataResponse.getRequestNonce());
+            assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
+            assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
+            assertTrue(getDataResponse.getPersistableNetworkPayloadSet().isEmpty());
+            assertTrue(getDataResponse.getDataSet().isEmpty());
         }
 
         // TESTCASE: Given a GetDataRequest w/ known PSE, nothing is sent back
@@ -345,13 +347,13 @@ public class P2PDataStorageBuildGetDataResponseTest {
             GetDataResponse getDataResponse = this.testState.mockedStorage.buildGetDataResponse(
                     getDataRequest, 1, outPNPTruncated, outPSETruncated, peerCapabilities);
 
-            Assert.assertFalse(outPNPTruncated.get());
-            Assert.assertFalse(outPSETruncated.get());
-            Assert.assertEquals(1, getDataResponse.getRequestNonce());
-            Assert.assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
-            Assert.assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
-            Assert.assertTrue(getDataResponse.getPersistableNetworkPayloadSet().isEmpty());
-            Assert.assertTrue(getDataResponse.getDataSet().isEmpty());
+            assertFalse(outPNPTruncated.get());
+            assertFalse(outPSETruncated.get());
+            assertEquals(1, getDataResponse.getRequestNonce());
+            assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
+            assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
+            assertTrue(getDataResponse.getPersistableNetworkPayloadSet().isEmpty());
+            assertTrue(getDataResponse.getDataSet().isEmpty());
         }
 
         // TESTCASE: Given a GetDataRequest w/o known PSE, send it back
@@ -370,13 +372,13 @@ public class P2PDataStorageBuildGetDataResponseTest {
             GetDataResponse getDataResponse = this.testState.mockedStorage.buildGetDataResponse(
                     getDataRequest, 1, outPNPTruncated, outPSETruncated, peerCapabilities);
 
-            Assert.assertFalse(outPNPTruncated.get());
-            Assert.assertFalse(outPSETruncated.get());
-            Assert.assertEquals(1, getDataResponse.getRequestNonce());
-            Assert.assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
-            Assert.assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
-            Assert.assertTrue(getDataResponse.getPersistableNetworkPayloadSet().isEmpty());
-            Assert.assertTrue(getDataResponse.getDataSet().contains(onlyLocal));
+            assertFalse(outPNPTruncated.get());
+            assertFalse(outPSETruncated.get());
+            assertEquals(1, getDataResponse.getRequestNonce());
+            assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
+            assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
+            assertTrue(getDataResponse.getPersistableNetworkPayloadSet().isEmpty());
+            assertTrue(getDataResponse.getDataSet().contains(onlyLocal));
         }
 
         // TESTCASE: Given a GetDataRequest w/o known PNP, don't send more than truncation limit
@@ -398,14 +400,14 @@ public class P2PDataStorageBuildGetDataResponseTest {
             GetDataResponse getDataResponse = this.testState.mockedStorage.buildGetDataResponse(
                     getDataRequest, 1, outPNPTruncated, outPSETruncated, peerCapabilities);
 
-            Assert.assertFalse(outPNPTruncated.get());
-            Assert.assertTrue(outPSETruncated.get());
-            Assert.assertEquals(1, getDataResponse.getRequestNonce());
-            Assert.assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
-            Assert.assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
-            Assert.assertTrue(getDataResponse.getPersistableNetworkPayloadSet().isEmpty());
-            Assert.assertEquals(1, getDataResponse.getDataSet().size());
-            Assert.assertTrue(
+            assertFalse(outPNPTruncated.get());
+            assertTrue(outPSETruncated.get());
+            assertEquals(1, getDataResponse.getRequestNonce());
+            assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
+            assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
+            assertTrue(getDataResponse.getPersistableNetworkPayloadSet().isEmpty());
+            assertEquals(1, getDataResponse.getDataSet().size());
+            assertTrue(
                     getDataResponse.getDataSet().contains(onlyLocal1)
                             || getDataResponse.getDataSet().contains(onlyLocal2));
         }
@@ -427,13 +429,13 @@ public class P2PDataStorageBuildGetDataResponseTest {
             GetDataResponse getDataResponse = this.testState.mockedStorage.buildGetDataResponse(
                     getDataRequest, 2, outPNPTruncated, outPSETruncated, peerCapabilities);
 
-            Assert.assertFalse(outPNPTruncated.get());
-            Assert.assertFalse(outPSETruncated.get());
-            Assert.assertEquals(1, getDataResponse.getRequestNonce());
-            Assert.assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
-            Assert.assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
-            Assert.assertTrue(getDataResponse.getPersistableNetworkPayloadSet().isEmpty());
-            Assert.assertTrue(getDataResponse.getDataSet().isEmpty());
+            assertFalse(outPNPTruncated.get());
+            assertFalse(outPSETruncated.get());
+            assertEquals(1, getDataResponse.getRequestNonce());
+            assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
+            assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
+            assertTrue(getDataResponse.getPersistableNetworkPayloadSet().isEmpty());
+            assertTrue(getDataResponse.getDataSet().isEmpty());
         }
 
         // TESTCASE: Given a GetDataRequest w/o known PNP that requires capabilities (and they match) send it back
@@ -454,13 +456,13 @@ public class P2PDataStorageBuildGetDataResponseTest {
             GetDataResponse getDataResponse = this.testState.mockedStorage.buildGetDataResponse(
                     getDataRequest, 2, outPNPTruncated, outPSETruncated, peerCapabilities);
 
-            Assert.assertFalse(outPNPTruncated.get());
-            Assert.assertFalse(outPSETruncated.get());
-            Assert.assertEquals(1, getDataResponse.getRequestNonce());
-            Assert.assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
-            Assert.assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
-            Assert.assertTrue(getDataResponse.getPersistableNetworkPayloadSet().isEmpty());
-            Assert.assertTrue(getDataResponse.getDataSet().contains(onlyLocal));
+            assertFalse(outPNPTruncated.get());
+            assertFalse(outPSETruncated.get());
+            assertEquals(1, getDataResponse.getRequestNonce());
+            assertEquals(getDataRequest instanceof GetUpdatedDataRequest, getDataResponse.isGetUpdatedDataResponse());
+            assertEquals(getDataResponse.getSupportedCapabilities(), Capabilities.app);
+            assertTrue(getDataResponse.getPersistableNetworkPayloadSet().isEmpty());
+            assertTrue(getDataResponse.getDataSet().contains(onlyLocal));
         }
     }
 

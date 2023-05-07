@@ -17,7 +17,7 @@
 
 package bisq.asset.coins;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
 

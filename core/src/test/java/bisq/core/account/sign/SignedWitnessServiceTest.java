@@ -43,13 +43,13 @@ import java.time.temporal.ChronoUnit;
 
 import java.util.Date;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static bisq.core.account.sign.SignedWitness.VerificationMethod.ARBITRATOR;
 import static bisq.core.account.sign.SignedWitness.VerificationMethod.TRADE;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 public class SignedWitnessServiceTest {
@@ -86,7 +86,7 @@ public class SignedWitnessServiceTest {
     KeyPair peer2KeyPair;
     KeyPair peer3KeyPair;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         AppendOnlyDataStoreService appendOnlyDataStoreService = mock(AppendOnlyDataStoreService.class);
         ArbitratorManager arbitratorManager = mock(ArbitratorManager.class);

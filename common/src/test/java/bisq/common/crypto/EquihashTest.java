@@ -30,12 +30,12 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import static java.lang.Double.POSITIVE_INFINITY;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EquihashTest {
     @Test
@@ -83,7 +83,7 @@ public class EquihashTest {
     }
 
     @Test
-    @Ignore
+    @Disabled
     public void benchmarkFindSolution() {
         // On Intel Core i3 CPU M 330 @ 2.13GHz ...
         //
@@ -110,7 +110,7 @@ public class EquihashTest {
     }
 
     @Test
-    @Ignore
+    @Disabled
     public void benchmarkVerify() {
         // On Intel Core i3 CPU M 330 @ 2.13GHz ...
         //
@@ -137,7 +137,7 @@ public class EquihashTest {
     private static final int SAMPLE_NO = 10000;
 
     @Test
-    @Ignore
+    @Disabled
     public void solutionCountPerNonceStats() {
         // For Equihash-60-4...
         // Got puzzle solution count mean: 1.9797

@@ -31,14 +31,14 @@ import bisq.common.config.Config;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.btcBuyItem;
 import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.btcSellItem;
 import static bisq.desktop.main.offer.offerbook.OfferBookListItemMaker.id;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 import static com.natpryce.makeiteasy.MakeItEasy.with;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 

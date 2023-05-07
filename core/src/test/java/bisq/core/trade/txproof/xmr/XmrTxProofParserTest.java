@@ -7,12 +7,12 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static bisq.core.trade.txproof.xmr.XmrTxProofParser.MAX_DATE_TOLERANCE;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class XmrTxProofParserTest {
     private XmrTxProofModel xmrTxProofModel;
@@ -22,7 +22,7 @@ public class XmrTxProofParserTest {
     private XmrTxProofParser parser;
     private Date tradeDate;
 
-    @Before
+    @BeforeEach
     public void prepareMocksAndObjects() {
         long amount = 100000000000L;
         tradeDate = new Date(1574922644000L);

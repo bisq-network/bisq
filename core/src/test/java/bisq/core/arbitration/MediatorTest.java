@@ -27,13 +27,13 @@ import com.google.common.collect.Lists;
 
 import java.util.Date;
 
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 
 import static bisq.core.arbitration.ArbitratorTest.getBytes;
 
 public class MediatorTest {
 
-    @Ignore("TODO InvalidKeySpecException at bisq.common.crypto.Sig.getPublicKeyFromBytes(Sig.java:135)")
+    @Disabled("TODO InvalidKeySpecException at bisq.common.crypto.Sig.getPublicKeyFromBytes(Sig.java:135)")
     public void testRoundtrip() {
         Mediator Mediator = getMediatorMock();
 

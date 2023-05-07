@@ -22,9 +22,9 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.trade.model.TradableList;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static protobuf.PersistableEnvelope.MessageCase.TRADABLE_LIST;

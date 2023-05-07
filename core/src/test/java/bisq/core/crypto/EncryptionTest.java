@@ -32,15 +32,15 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 public class EncryptionTest {
     private static final Logger log = LoggerFactory.getLogger(EncryptionTest.class);
     private KeyRing keyRing;
     private File dir;
 
-    @Before
+    @BeforeEach
     public void setup() throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, CryptoException {
 
         dir = File.createTempFile("temp_tests", "");
@@ -52,7 +52,7 @@ public class EncryptionTest {
         keyRing = new KeyRing(keyStorage);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws IOException {
         FileUtil.deleteDirectory(dir);
     }

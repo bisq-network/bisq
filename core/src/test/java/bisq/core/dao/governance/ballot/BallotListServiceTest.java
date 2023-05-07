@@ -11,7 +11,7 @@ import bisq.common.persistence.PersistenceManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;

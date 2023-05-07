@@ -19,7 +19,7 @@ package bisq.asset.coins;
 
 import bisq.asset.AbstractAssetTest;
 import java.util.Collections;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class BurntBlackCoinTest extends AbstractAssetTest {
 

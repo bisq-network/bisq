@@ -17,7 +17,7 @@
 
 package bisq.asset.coins;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import bisq.asset.AbstractAssetTest;
 
 public class MyceTest extends AbstractAssetTest {
@@ -35,8 +35,8 @@ public class MyceTest extends AbstractAssetTest {
 
     @Test
     public void testInvalidAddresses() {
-        assertInvalidAddress("MCgtattGUWUBAV8n2JAa4uDWCRvbZeVcaDx"); 
-        assertInvalidAddress("AUV2dtuxwo8b1JSkwBXN3uGypJxp85Hbqn"); 
-        assertInvalidAddress("SEUvfCySnAqzuNvbRh2SZCbSro8e2dxLYK"); 
+        assertInvalidAddress("MCgtattGUWUBAV8n2JAa4uDWCRvbZeVcaDx");
+        assertInvalidAddress("AUV2dtuxwo8b1JSkwBXN3uGypJxp85Hbqn");
+        assertInvalidAddress("SEUvfCySnAqzuNvbRh2SZCbSro8e2dxLYK");
     }
 }

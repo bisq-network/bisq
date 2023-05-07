@@ -27,17 +27,17 @@ import com.google.common.collect.Lists;
 
 import java.util.HashSet;
 
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 
 public class UserPayloadModelVOTest {
-    @Ignore("TODO InvalidKeySpecException at bisq.common.crypto.Sig.getPublicKeyFromBytes(Sig.java:135)")
+    @Disabled("TODO InvalidKeySpecException at bisq.common.crypto.Sig.getPublicKeyFromBytes(Sig.java:135)")
     public void testRoundtrip() {
         UserPayload vo = new UserPayload();
         vo.setAccountId("accountId");
         UserPayload newVo = UserPayload.fromProto(vo.toProtoMessage().getUserPayload(), new CoreProtoResolver());
     }
 
-    @Ignore("TODO InvalidKeySpecException at bisq.common.crypto.Sig.getPublicKeyFromBytes(Sig.java:135)")
+    @Disabled("TODO InvalidKeySpecException at bisq.common.crypto.Sig.getPublicKeyFromBytes(Sig.java:135)")
     public void testRoundtripFull() {
         UserPayload vo = new UserPayload();
         vo.setAccountId("accountId");

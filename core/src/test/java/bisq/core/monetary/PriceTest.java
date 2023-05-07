@@ -17,73 +17,75 @@
 
 package bisq.core.monetary;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class PriceTest {
 
     @Test
     public void testParse() {
         Price result = Price.parse("USD", "0.1");
-        Assert.assertEquals(
-                "Fiat value should be formatted with two decimals.",
+        assertEquals(
                 "0.10 BTC/USD",
-                result.toFriendlyString()
+                result.toFriendlyString(),
+                "Fiat value should be formatted with two decimals."
         );
 
         result = Price.parse("EUR", "0.1234");
-        Assert.assertEquals(
-                "Fiat value should be given two decimals",
+        assertEquals(
                 "0.1234 BTC/EUR",
-                result.toFriendlyString()
+                result.toFriendlyString(),
+                "Fiat value should be given two decimals"
         );
 
         try {
             Price.parse("EUR", "0.12345");
-            Assert.fail("Expected IllegalArgumentException to be thrown when too many decimals are used.");
+            fail("Expected IllegalArgumentException to be thrown when too many decimals are used.");
         } catch (IllegalArgumentException iae) {
-            Assert.assertEquals(
-                    "Unexpected exception message.",
+            assertEquals(
                     "java.lang.ArithmeticException: Rounding necessary",
-                    iae.getMessage()
+                    iae.getMessage(),
+                    "Unexpected exception message."
             );
         }
 
-        Assert.assertEquals(
-                "Negative value should be parsed correctly.",
+        assertEquals(
                 -100000000L,
-                Price.parse("LTC", "-1").getValue()
+                Price.parse("LTC", "-1").getValue(),
+                "Negative value should be parsed correctly."
         );
 
-        Assert.assertEquals(
-                "Comma (',') as decimal separator should be converted to period ('.')",
+        assertEquals(
                 "0.0001 BTC/USD",
-                Price.parse("USD", "0,0001").toFriendlyString()
+                Price.parse("USD", "0,0001").toFriendlyString(),
+                "Comma (',') as decimal separator should be converted to period ('.')"
         );
 
-        Assert.assertEquals(
-                "Too many decimals should get rounded up properly.",
+        assertEquals(
                 "10000.2346 LTC/BTC",
-                Price.parse("LTC", "10000,23456789").toFriendlyString()
+                Price.parse("LTC", "10000,23456789").toFriendlyString(),
+                "Too many decimals should get rounded up properly."
         );
 
-        Assert.assertEquals(
-                "Too many decimals should get rounded down properly.",
+        assertEquals(
                 "10000.2345 LTC/BTC",
-                Price.parse("LTC", "10000,23454999").toFriendlyString()
+                Price.parse("LTC", "10000,23454999").toFriendlyString(),
+                "Too many decimals should get rounded down properly."
         );
 
-        Assert.assertEquals(
-                "Underlying long value should be correct.",
+        assertEquals(
                 1000023456789L,
-                Price.parse("LTC", "10000,23456789").getValue()
+                Price.parse("LTC", "10000,23456789").getValue(),
+                "Underlying long value should be correct."
         );
 
         try {
             Price.parse("XMR", "56789.123456789");
-            Assert.fail("Expected IllegalArgumentException to be thrown when too many decimals are used.");
+            fail("Expected IllegalArgumentException to be thrown when too many decimals are used.");
         } catch (IllegalArgumentException iae) {
-            Assert.assertEquals(
+            assertEquals(
                     "Unexpected exception message.",
                     "java.lang.ArithmeticException: Rounding necessary",
                     iae.getMessage()
@@ -93,41 +95,41 @@ public class PriceTest {
     @Test
     public void testValueOf() {
         Price result = Price.valueOf("USD", 1);
-        Assert.assertEquals(
-                "Fiat value should have four decimals.",
+        assertEquals(
                 "0.0001 BTC/USD",
-                result.toFriendlyString()
+                result.toFriendlyString(),
+                "Fiat value should have four decimals."
         );
 
         result = Price.valueOf("EUR", 1234);
-        Assert.assertEquals(
-                "Fiat value should be given two decimals",
+        assertEquals(
                 "0.1234 BTC/EUR",
-                result.toFriendlyString()
+                result.toFriendlyString(),
+                "Fiat value should be given two decimals"
         );
 
-        Assert.assertEquals(
-                "Negative value should be parsed correctly.",
+        assertEquals(
                 -1L,
-                Price.valueOf("LTC", -1L).getValue()
+                Price.valueOf("LTC", -1L).getValue(),
+                "Negative value should be parsed correctly."
         );
 
-        Assert.assertEquals(
-                "Too many decimals should get rounded up properly.",
+        assertEquals(
                 "10000.2346 LTC/BTC",
-                Price.valueOf("LTC", 1000023456789L).toFriendlyString()
+                Price.valueOf("LTC", 1000023456789L).toFriendlyString(),
+                "Too many decimals should get rounded up properly."
         );
 
-        Assert.assertEquals(
-                "Too many decimals should get rounded down properly.",
+        assertEquals(
                 "10000.2345 LTC/BTC",
-                Price.valueOf("LTC", 1000023454999L).toFriendlyString()
+                Price.valueOf("LTC", 1000023454999L).toFriendlyString(),
+                "Too many decimals should get rounded down properly."
         );
 
-        Assert.assertEquals(
-                "Underlying long value should be correct.",
+        assertEquals(
                 1000023456789L,
-                Price.valueOf("LTC", 1000023456789L).getValue()
+                Price.valueOf("LTC", 1000023456789L).getValue(),
+                "Underlying long value should be correct."
         );
     }
 }

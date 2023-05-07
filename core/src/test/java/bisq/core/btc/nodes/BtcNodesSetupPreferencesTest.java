@@ -24,12 +24,12 @@ import bisq.common.config.Config;
 
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static bisq.core.btc.nodes.BtcNodes.BitcoinNodesOption.CUSTOM;
 import static bisq.core.btc.nodes.BtcNodes.BitcoinNodesOption.PUBLIC;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 

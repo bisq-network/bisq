@@ -20,12 +20,12 @@ package bisq.core.provider.price;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
-import static junit.framework.TestCase.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Ignore
+@Disabled
 public class MarketPriceFeedServiceTest {
     private static final Logger log = LoggerFactory.getLogger(MarketPriceFeedServiceTest.class);
 

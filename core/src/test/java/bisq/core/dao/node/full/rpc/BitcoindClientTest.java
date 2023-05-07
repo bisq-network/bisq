@@ -36,11 +36,12 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -67,7 +68,7 @@ public class BitcoindClientTest {
     private ByteArrayInputStream mockErrorResponse;
     private ByteArrayOutputStream mockOutputStream = new ByteArrayOutputStream();
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         var mockURLStreamHandler = mock(MyURLStreamHandler.class);
         var mockRequestIDGenerator = mock(RequestIDGenerator.class);
@@ -108,19 +109,17 @@ public class BitcoindClientTest {
         assertEquals(expectedRequest, mockOutputStream.toString(UTF_8));
     }
 
-    @Test(expected = ConnectException.class)
-    public void testGetBlockCount_noConnection() throws Exception {
+    @Test
+    public void testGetBlockCount_noConnection() {
         canConnect = false;
-
-        client.getBlockCount();
+        assertThrows(ConnectException.class, () -> client.getBlockCount());
     }
 
-    @Test(expected = HttpException.class)
+    @Test
     public void testGetBlockCount_wrongCredentials() throws Exception {
         mockResponseCode = 401;
 //        mockResponseCustomHeaders.put("WWW-Authenticate", "[Basic realm=\"jsonrpc\"]");
-
-        client.getBlockCount();
+        assertThrows(HttpException.class, () -> client.getBlockCount());
     }
 
     @Test
@@ -141,12 +140,13 @@ public class BitcoindClientTest {
         assertEquals(expectedRequest, mockOutputStream.toString(UTF_8));
     }
 
-    @Test(expected = JsonRpcClientException.class)
-    public void testGetBlockHash_heightOutOfRange() throws Exception {
+    @Test
+    public void testGetBlockHash_heightOutOfRange() {
         mockResponseCode = 500;
         mockErrorResponse = toJsonIS("{'result':null,'error':{'code':-8,'message':'Block height out of range'},'id':'123456789'}");
-
-        client.getBlockHash(151);
+        assertThrows(
+                JsonRpcClientException.class, () -> client.getBlockHash(151)
+        );
     }
 
     @Test
@@ -180,21 +180,19 @@ public class BitcoindClientTest {
         assertEquals(expectedRequest, mockOutputStream.toString(UTF_8));
     }
 
-    @Test(expected = JsonRpcClientException.class)
-    public void testGetBlock_blockNotFound() throws Exception {
+    @Test
+    public void testGetBlock_blockNotFound() {
         mockResponseCode = 500;
         mockErrorResponse = toJsonIS("{'result':null,'error':{'code':-5,'message':'Block not found'},'id':'123456789'}");
-
-        client.getBlock(TEST_BLOCK_HASH.replace('f', 'e'), 2);
+        assertThrows(JsonRpcClientException.class, () -> client.getBlock(TEST_BLOCK_HASH.replace('f', 'e'), 2));
     }
 
-    @Test(expected = JsonRpcClientException.class)
-    public void testGetBlock_malformedHash() throws Exception {
+    @Test
+    public void testGetBlock_malformedHash() {
         mockResponseCode = 500;
         mockErrorResponse = toJsonIS("{'result':null,'error':{'code':-8,'message':'blockhash must be of length 64 " +
                 "(not 3, for \\'foo\\')'},'id':'123456789'}");
-
-        client.getBlock("foo", 2);
+        assertThrows(JsonRpcClientException.class, () -> client.getBlock("foo", 2));
     }
 
     @Test

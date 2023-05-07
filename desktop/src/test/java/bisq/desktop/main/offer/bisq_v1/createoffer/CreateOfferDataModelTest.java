@@ -24,10 +24,10 @@ import javafx.collections.FXCollections;
 
 import java.util.HashSet;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -39,7 +39,7 @@ public class CreateOfferDataModelTest {
     private Preferences preferences;
     private OfferUtil offerUtil;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         final CryptoCurrency btc = new CryptoCurrency("BTC", "bitcoin");
         GlobalSettings.setDefaultTradeCurrency(btc);

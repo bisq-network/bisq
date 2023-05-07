@@ -160,6 +160,7 @@ configure(project(':common')) {
         implementation libs.jetbrains.annotations
         implementation libs.slf4j.api
         testImplementation libs.hamcrest
+        testImplementation libs.junit.jupiter.api
         runtimeOnly(libs.grpc.netty.shaded) {
             exclude(module: 'animal-sniffer-annotations')
             exclude(module: 'guava')
@@ -212,6 +213,8 @@ configure(project(':p2p')) {
         testImplementation libs.logback.core
         testImplementation libs.apache.commons.lang3
         testImplementation libs.mockito
+        testImplementation libs.junit.jupiter.api
+        testImplementation libs.junit.jupiter.params
     }
 }
 
@@ -281,6 +284,7 @@ configure(project(':core')) {
         testImplementation libs.natpryce.make.it.easy
         testImplementation libs.hamcrest
         testImplementation libs.mockito
+        testImplementation libs.junit.jupiter.api
     }
 
     test {
@@ -357,6 +361,8 @@ configure(project(':desktop')) {
         testCompileOnly libs.lombok
         testImplementation libs.natpryce.make.it.easy
         testImplementation libs.mockito
+        testImplementation libs.hamcrest
+        testImplementation libs.junit.jupiter.api
     }
 
     test {
@@ -391,6 +397,7 @@ configure(project(':seednode')) {
             exclude(module: 'guava')
         }
         testImplementation libs.mockito
+        testImplementation libs.junit.jupiter.api
     }
 }
 

@@ -18,14 +18,10 @@
 package bisq.core.dao.burningman;
 
 
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import static org.junit.Assert.assertEquals;
-
-@RunWith(MockitoJUnitRunner.class)
 public class BurningManPresentationServiceTest {
     @Test
     public void testGetRandomIndex() {

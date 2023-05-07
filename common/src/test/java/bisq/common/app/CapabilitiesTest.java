@@ -21,15 +21,15 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static bisq.common.app.Capability.DAO_FULL_NODE;
 import static bisq.common.app.Capability.SEED_NODE;
 import static bisq.common.app.Capability.TRADE_STATISTICS;
 import static bisq.common.app.Capability.TRADE_STATISTICS_2;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CapabilitiesTest {
 

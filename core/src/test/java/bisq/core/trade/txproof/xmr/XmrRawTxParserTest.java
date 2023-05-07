@@ -1,8 +1,8 @@
 package bisq.core.trade.txproof.xmr;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class XmrRawTxParserTest {
     private final XmrRawTxParser parser = new XmrRawTxParser();

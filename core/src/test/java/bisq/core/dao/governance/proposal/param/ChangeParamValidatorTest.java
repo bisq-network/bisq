@@ -21,12 +21,14 @@ import bisq.core.dao.governance.param.Param;
 import bisq.core.locale.Res;
 import bisq.core.util.coin.BsqFormatter;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class ChangeParamValidatorTest {
-    @Before
+    @BeforeEach
     public void setup() {
         Res.setup();
     }
@@ -36,37 +38,37 @@ public class ChangeParamValidatorTest {
         ChangeParamValidator changeParamValidator = new ChangeParamValidator(null, null, new BsqFormatter());
         try {
             changeParamValidator.validationChange(0, 0, 2, 2, Param.UNDEFINED);
-            Assert.fail();
+            fail();
         } catch (ParamValidationException e) {
-            Assert.assertEquals(e.getError(), ParamValidationException.ERROR.SAME);
+            assertEquals(e.getError(), ParamValidationException.ERROR.SAME);
         }
 
         try {
             changeParamValidator.validationChange(0, 1, 2, 2, Param.UNDEFINED);
-            Assert.fail();
+            fail();
         } catch (ParamValidationException e) {
-            Assert.assertEquals(e.getError(), ParamValidationException.ERROR.NO_CHANGE_POSSIBLE);
+            assertEquals(e.getError(), ParamValidationException.ERROR.NO_CHANGE_POSSIBLE);
         }
 
         try {
             changeParamValidator.validationChange(0, -1, 2, 2, Param.UNDEFINED);
-            Assert.fail();
+            fail();
         } catch (ParamValidationException e) {
-            Assert.assertEquals(e.getError(), ParamValidationException.ERROR.NO_CHANGE_POSSIBLE);
+            assertEquals(e.getError(), ParamValidationException.ERROR.NO_CHANGE_POSSIBLE);
         }
 
         try {
             changeParamValidator.validationChange(2, 4, 2, 1.1, Param.UNDEFINED);
-            Assert.fail();
+            fail();
         } catch (ParamValidationException e) {
-            Assert.assertEquals(e.getError(), ParamValidationException.ERROR.TOO_HIGH);
+            assertEquals(e.getError(), ParamValidationException.ERROR.TOO_HIGH);
         }
 
         try {
             changeParamValidator.validationChange(4, 2, 1.5, 2, Param.UNDEFINED);
-            Assert.fail();
+            fail();
         } catch (ParamValidationException e) {
-            Assert.assertEquals(e.getError(), ParamValidationException.ERROR.TOO_LOW);
+            assertEquals(e.getError(), ParamValidationException.ERROR.TOO_LOW);
         }
 
         changeParamValidator.validationChange(4, 2, 2, 2, Param.UNDEFINED);

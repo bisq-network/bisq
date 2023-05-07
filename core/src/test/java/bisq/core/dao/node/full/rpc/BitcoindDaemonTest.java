@@ -32,10 +32,11 @@ import java.util.function.Consumer;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 public class BitcoindDaemonTest {
@@ -47,7 +48,7 @@ public class BitcoindDaemonTest {
     private Socket socket = mock(Socket.class);
     private volatile boolean socketClosed;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         var serverSocket = mock(ServerSocket.class);
 
@@ -68,7 +69,7 @@ public class BitcoindDaemonTest {
         daemon.setBlockListener(blockListener);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         daemon.shutdown();
     }
@@ -141,9 +142,11 @@ public class BitcoindDaemonTest {
         verify(errorHandler).accept(any(Error.class));
     }
 
-    @Test(expected = NotificationHandlerException.class)
-    public void testUnknownHost() throws Exception {
-        new BitcoindDaemon("[", -1, errorHandler).shutdown();
+    @Test
+    public void testUnknownHost() {
+        assertThrows(
+                NotificationHandlerException.class, () -> new BitcoindDaemon("[", -1, errorHandler).shutdown()
+        );
     }
 
     private synchronized void acceptAnother(int n) {

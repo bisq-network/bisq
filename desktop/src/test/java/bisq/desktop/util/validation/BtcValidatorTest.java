@@ -17,27 +17,27 @@
 
 package bisq.desktop.util.validation;
 
-import bisq.common.config.BaseCurrencyNetwork;
-import bisq.common.config.Config;
-
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.coin.ImmutableCoinFormatter;
 
+import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.config.Config;
+
 import org.bitcoinj.core.Coin;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BtcValidatorTest {
 
     private final CoinFormatter coinFormatter = new ImmutableCoinFormatter(Config.baseCurrencyNetworkParameters().getMonetaryFormat());
 
-    @Before
+    @BeforeEach
     public void setup() {
         final BaseCurrencyNetwork baseCurrencyNetwork = Config.baseCurrencyNetwork();
         final String currencyCode = baseCurrencyNetwork.getCurrencyCode();

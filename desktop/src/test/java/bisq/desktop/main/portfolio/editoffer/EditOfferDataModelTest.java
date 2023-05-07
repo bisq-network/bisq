@@ -33,15 +33,14 @@ import javafx.collections.FXCollections;
 
 import java.time.Instant;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static bisq.desktop.maker.OfferMaker.btcBCHCOffer;
 import static bisq.desktop.maker.PreferenceMakers.empty;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -53,10 +52,7 @@ public class EditOfferDataModelTest {
     private EditOfferDataModel model;
     private User user;
 
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
-
-    @Before
+    @BeforeEach
     public void setUp() {
 
         final CryptoCurrency btc = new CryptoCurrency("BTC", "bitcoin");
@@ -125,7 +121,6 @@ public class EditOfferDataModelTest {
 
     @Test
     public void testInitializeEditOfferWithRemovedAsset() {
-        exception.expect(IllegalArgumentException.class);
-        model.initWithData(OfferDirection.BUY, null);
+        assertThrows(IllegalArgumentException.class, () -> model.initWithData(OfferDirection.BUY, null));
     }
 }
