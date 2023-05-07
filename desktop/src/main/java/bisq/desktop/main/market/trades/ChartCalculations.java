@@ -57,6 +57,7 @@ import lombok.Getter;
 import static bisq.desktop.main.market.trades.TradesChartsViewModel.MAX_TICKS;
 
 public class ChartCalculations {
+    @VisibleForTesting
     static final ZoneId ZONE_ID = ZoneId.systemDefault();
 
 

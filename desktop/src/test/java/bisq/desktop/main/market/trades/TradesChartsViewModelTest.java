@@ -21,6 +21,7 @@ import bisq.desktop.Navigation;
 import bisq.desktop.main.market.trades.charts.CandleData;
 
 import bisq.core.locale.FiatCurrency;
+import bisq.core.locale.GlobalSettings;
 import bisq.core.monetary.Price;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.payload.PaymentMethod;
@@ -37,17 +38,19 @@ import javafx.collections.ObservableSet;
 
 import javafx.util.Pair;
 
+import java.time.LocalDateTime;
+
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
-import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -62,7 +65,6 @@ public class TradesChartsViewModelTest {
     TradeStatisticsManager tradeStatisticsManager;
 
     DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-    private File dir;
     OfferPayload offer = new OfferPayload(null,
             0,
             null,
@@ -105,14 +107,10 @@ public class TradesChartsViewModelTest {
 
     @BeforeEach
     public void setup() throws IOException {
+        GlobalSettings.setLocale(Locale.US);
         tradeStatisticsManager = mock(TradeStatisticsManager.class);
         model = new TradesChartsViewModel(tradeStatisticsManager, mock(Preferences.class), mock(PriceFeedService.class),
                 mock(Navigation.class));
-        dir = File.createTempFile("temp_tests1", "");
-        //noinspection ResultOfMethodCallIgnored
-        dir.delete();
-        //noinspection ResultOfMethodCallIgnored
-        dir.mkdir();
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -130,9 +128,14 @@ public class TradesChartsViewModelTest {
         long amount = Coin.parseCoin("4").value;
         long volume = Fiat.parseFiat("EUR", "2200").value;
         boolean isBullish = true;
+        // NOTE: This is the LAST candle date (today) on the chart, which is presently formatted with
+        // both days the same, whereas earlier candle dates span two consecutive days (for TickUnit.DAY):
+        // TODO: Is this a bug?
+        String date = "May 7, 2023 - May 7, 2023";
 
         Set<TradeStatistics3> set = new HashSet<>();
-        final Date now = new Date();
+        Date now = Date.from(LocalDateTime.of(2023, 5, 7, 12, 34)
+                .atZone(ChartCalculations.ZONE_ID).toInstant());
 
         set.add(new TradeStatistics3(offer.getCurrencyCode(),
                 Price.parse("EUR", "520").getValue(),
@@ -171,10 +174,11 @@ public class TradesChartsViewModelTest {
                 null,
                 null));
 
-        List<Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = List.of();
-        long tick = ChartCalculations.roundToTick(now, TradesChartsViewModel.TickUnit.DAY).getTime();
-        // FIXME: Type error - trying to pass a time (long) as a tick index (int from 0 to 91 inclusive)!!
-        CandleData candleData = ChartCalculations.getCandleData((int) tick,
+        Date tickStart = ChartCalculations.roundToTick(now, TradesChartsViewModel.TickUnit.DAY);
+        List<Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = List.of(
+                new Pair<>(tickStart, set), new Pair<>(now, Set.of())
+        );
+        CandleData candleData = ChartCalculations.getCandleData(0,
                 set,
                 0,
                 TradesChartsViewModel.TickUnit.DAY, currencyCode,
@@ -188,12 +192,13 @@ public class TradesChartsViewModelTest {
         assertEquals(amount, candleData.accumulatedAmount);
         assertEquals(volume, candleData.accumulatedVolume);
         assertEquals(isBullish, candleData.isBullish);
+        assertEquals(date, candleData.date);
     }
 
     // TODO JMOCKIT
     @Disabled
     @Test
-    public void testItemLists() throws ParseException {
+    public void testItemLists() {
         // Helper class to add historic trades
         class Trade {
             Trade(String date, String size, String price, String cc) {
@@ -208,9 +213,9 @@ public class TradesChartsViewModelTest {
             }
 
             Date date;
-            String size;
-            String price;
-            String cc;
+            final String size;
+            final String price;
+            final String cc;
         }
 
         // Trade EUR
