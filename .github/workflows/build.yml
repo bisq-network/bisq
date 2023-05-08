@@ -29,4 +29,4 @@ jobs:
     - name: Build with Gradle
       uses: gradle/gradle-build-action@v2.4.2
       with:
-        arguments: build
+        arguments: build --scan
