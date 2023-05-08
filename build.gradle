@@ -210,7 +210,6 @@ configure(project(':p2p')) {
         testImplementation libs.logback.classic
         testImplementation libs.logback.core
         testImplementation libs.apache.commons.lang3
-        testImplementation libs.mockito
     }
 }
 
@@ -278,7 +277,6 @@ configure(project(':core')) {
         testAnnotationProcessor libs.lombok
         testCompileOnly libs.lombok
         testImplementation libs.natpryce.make.it.easy
-        testImplementation libs.mockito
     }
 
     test {
@@ -354,7 +352,6 @@ configure(project(':desktop')) {
         testAnnotationProcessor libs.lombok
         testCompileOnly libs.lombok
         testImplementation libs.natpryce.make.it.easy
-        testImplementation libs.mockito
     }
 
     test {
@@ -388,7 +385,6 @@ configure(project(':seednode')) {
         implementation(libs.google.guice) {
             exclude(module: 'guava')
         }
-        testImplementation libs.mockito
     }
 }
 
