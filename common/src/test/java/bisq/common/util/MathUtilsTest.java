@@ -32,12 +32,12 @@ public class MathUtilsTest {
 
     @Test
     public void testRoundDoubleWithNaNArg() {
-        assertThrows(IllegalArgumentException.class, () ->MathUtils.roundDouble(Double.NaN, 2));
+        assertThrows(IllegalArgumentException.class, () -> MathUtils.roundDouble(Double.NaN, 2));
     }
 
     @Test
     public void testRoundDoubleWithNegativePrecision() {
-        assertThrows(IllegalArgumentException.class, () ->MathUtils.roundDouble(3, -1));
+        assertThrows(IllegalArgumentException.class, () -> MathUtils.roundDouble(3, -1));
     }
 
     @SuppressWarnings("OptionalGetWithoutIsPresent")
@@ -47,12 +47,12 @@ public class MathUtilsTest {
         // Moving average = 4, 4.5, 4, 3, 2, 7/3
         var movingAverage = new MathUtils.MovingAverage(3, 0);
         int i = 0;
-        assertEquals(4, movingAverage.next(values[i++]).get(),0.001);
-        assertEquals(4.5, movingAverage.next(values[i++]).get(),0.001);
-        assertEquals(4, movingAverage.next(values[i++]).get(),0.001);
-        assertEquals(3, movingAverage.next(values[i++]).get(),0.001);
-        assertEquals(2, movingAverage.next(values[i++]).get(),0.001);
-        assertEquals((double) 7 / 3, movingAverage.next(values[i]).get(),0.001);
+        assertEquals(4, movingAverage.next(values[i++]).get(), 0.001);
+        assertEquals(4.5, movingAverage.next(values[i++]).get(), 0.001);
+        assertEquals(4, movingAverage.next(values[i++]).get(), 0.001);
+        assertEquals(3, movingAverage.next(values[i++]).get(), 0.001);
+        assertEquals(2, movingAverage.next(values[i++]).get(), 0.001);
+        assertEquals((double) 7 / 3, movingAverage.next(values[i]).get(), 0.001);
     }
 
     @SuppressWarnings("OptionalGetWithoutIsPresent")
@@ -64,9 +64,9 @@ public class MathUtilsTest {
         int i = 0;
         assertFalse(movingAverage.next(values[i++]).isPresent());
         assertFalse(movingAverage.next(values[i++]).isPresent());
-        assertEquals(99, movingAverage.next(values[i++]).get(),0.001);
-        assertEquals(99.333, movingAverage.next(values[i++]).get(),0.001);
+        assertEquals(99, movingAverage.next(values[i++]).get(), 0.001);
+        assertEquals(99.333, movingAverage.next(values[i++]).get(), 0.001);
         assertFalse(movingAverage.next(values[i++]).isPresent());
-        assertEquals(103.666, movingAverage.next(values[i]).get(),0.001);
+        assertEquals(103.666, movingAverage.next(values[i]).get(), 0.001);
     }
 }
