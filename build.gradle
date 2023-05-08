@@ -1,3 +1,5 @@
+import org.gradle.internal.logging.ConsoleRenderer
+
 buildscript {
     repositories {
         mavenCentral()
@@ -6,8 +8,8 @@ buildscript {
     }
     dependencies {
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.17'
-        classpath 'com.google.gradle:osdetector-gradle-plugin:1.6.0'
-        classpath 'com.github.jengelman.gradle.plugins:shadow:5.2.0'
+        classpath 'com.google.gradle:osdetector-gradle-plugin:1.7.3'
+        classpath 'com.github.johnrengelman:shadow:7.1.2'
         classpath 'org.openjfx:javafx-plugin:0.0.10'
     }
 }
@@ -23,7 +25,10 @@ configure(rootProject) {
 }
 
 configure(subprojects) {
+    apply plugin: 'java'
     apply plugin: 'com.google.osdetector'
+    apply plugin: 'jacoco'
+    apply plugin: 'jacoco-report-aggregation'
 
     ext { // in alphabetical order
         grpcVersion = '1.42.1'
@@ -31,6 +36,21 @@ configure(subprojects) {
         protocVersion = '3.19.1'
 
         os = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
+    }
+
+    jacoco {
+        toolVersion = "0.8.9"
+        reportsDirectory = file("$rootDir/build/reports/jacoco")
+    }
+
+    test.finalizedBy {
+        testCodeCoverageReport {
+            // tests are required to run before generating the report
+            reports {
+                xml.required.set(true)
+                html.required.set(false)
+            }
+        }
     }
 }
 
@@ -457,7 +477,7 @@ configure(project(':apitest')) {
                 // Show report link if all tests passed in case you want to see more detail, stdout, skipped, etc.
                 if (result.resultType == TestResult.ResultType.SUCCESS) {
                     DirectoryReport htmlReport = getReports().getHtml()
-                    String reportUrl = new org.gradle.internal.logging.ConsoleRenderer()
+                    String reportUrl = new ConsoleRenderer()
                         .asClickableFileUrl(htmlReport.getEntryPoint())
                     println("REPORT  " + reportUrl)
                 }
