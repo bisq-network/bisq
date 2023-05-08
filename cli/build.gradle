@@ -32,8 +32,6 @@ dependencies {
     testCompileOnly libs.lombok
     testImplementation libs.cowwoc.diff.match.patch
 
-    testImplementation libs.junit.jupiter.api
-    testImplementation libs.junit.jupiter.params
     testRuntimeOnly libs.javax.annotation
     testRuntimeOnly libs.junit.jupiter.engine
 }

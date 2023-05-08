@@ -18,3 +18,8 @@ repositories {
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
+
+dependencies {
+    testImplementation libs.junit.jupiter.api
+    testImplementation libs.junit.jupiter.params
+}
