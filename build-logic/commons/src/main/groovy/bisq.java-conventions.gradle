@@ -20,6 +20,7 @@ tasks.withType(JavaCompile) {
 }
 
 dependencies {
+    testImplementation libs.hamcrest
     testImplementation libs.junit.jupiter.api
     testImplementation libs.junit.jupiter.params
 }

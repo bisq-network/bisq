@@ -159,7 +159,6 @@ configure(project(':common')) {
         implementation libs.kotlin.stdlib.jdk8
         implementation libs.jetbrains.annotations
         implementation libs.slf4j.api
-        testImplementation libs.hamcrest
         runtimeOnly(libs.grpc.netty.shaded) {
             exclude(module: 'animal-sniffer-annotations')
             exclude(module: 'guava')
@@ -279,7 +278,6 @@ configure(project(':core')) {
         testAnnotationProcessor libs.lombok
         testCompileOnly libs.lombok
         testImplementation libs.natpryce.make.it.easy
-        testImplementation libs.hamcrest
         testImplementation libs.mockito
     }
 
@@ -357,7 +355,6 @@ configure(project(':desktop')) {
         testCompileOnly libs.lombok
         testImplementation libs.natpryce.make.it.easy
         testImplementation libs.mockito
-        testImplementation libs.hamcrest
     }
 
     test {
