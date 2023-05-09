@@ -31,6 +31,7 @@ import bisq.common.util.Tuple2;
 import org.bitcoinj.core.Coin;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSortedSet;
 
 import javafx.scene.chart.XYChart;
 
@@ -41,11 +42,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
@@ -178,11 +179,11 @@ public class ChartCalculations {
 
     static List<Pair<Date, Set<TradeStatistics3>>> getItemsPerInterval(List<TradeStatistics3> tradeStatisticsByCurrency,
                                                                        TickUnit tickUnit) {
-        // Generate date range and create sets for all ticks
-        List<Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = new ArrayList<>(Collections.nCopies(MAX_TICKS + 2, null));
+        // Generate date range and create lists for all ticks
+        List<Pair<Date, List<TradeStatistics3>>> itemsPerInterval = new ArrayList<>(Collections.nCopies(MAX_TICKS + 2, null));
         Date time = new Date();
         for (int i = MAX_TICKS + 1; i >= 0; --i) {
-            Pair<Date, Set<TradeStatistics3>> pair = new Pair<>((Date) time.clone(), new HashSet<>());
+            Pair<Date, List<TradeStatistics3>> pair = new Pair<>((Date) time.clone(), new ArrayList<>());
             itemsPerInterval.set(i, pair);
             // We adjust the time for the next iteration
             time.setTime(time.getTime() - 1);
@@ -194,21 +195,24 @@ public class ChartCalculations {
         for (TradeStatistics3 tradeStatistics : tradeStatisticsByCurrency) {
             // Start from the last used tick index - move forwards if necessary
             for (; i < MAX_TICKS; i++) {
-                Pair<Date, Set<TradeStatistics3>> pair = itemsPerInterval.get(i + 1);
+                Pair<Date, List<TradeStatistics3>> pair = itemsPerInterval.get(i + 1);
                 if (!tradeStatistics.getDate().after(pair.getKey())) {
                     break;
                 }
             }
             // Scan backwards until the correct tick is reached
             for (; i > 0; --i) {
-                Pair<Date, Set<TradeStatistics3>> pair = itemsPerInterval.get(i);
+                Pair<Date, List<TradeStatistics3>> pair = itemsPerInterval.get(i);
                 if (tradeStatistics.getDate().after(pair.getKey())) {
                     pair.getValue().add(tradeStatistics);
                     break;
                 }
             }
         }
-        return itemsPerInterval;
+        // Convert the lists into sorted sets
+        return itemsPerInterval.stream()
+                .map(pair -> new Pair<>(pair.getKey(), (Set<TradeStatistics3>) ImmutableSortedSet.copyOf(pair.getValue())))
+                .collect(Collectors.toList());
     }
 
 
@@ -266,7 +270,9 @@ public class ChartCalculations {
         long accumulatedVolume = 0;
         long accumulatedAmount = 0;
         long numTrades = set.size();
-        List<Long> tradePrices = new ArrayList<>();
+
+        int arrayIndex = 0;
+        long[] tradePrices = new long[set.size()];
         for (TradeStatistics3 item : set) {
             long tradePriceAsLong = item.getTradePrice().getValue();
             // Previously a check was done which inverted the low and high for cryptocurrencies.
@@ -275,21 +281,18 @@ public class ChartCalculations {
 
             accumulatedVolume += item.getTradeVolume().getValue();
             accumulatedAmount += item.getTradeAmount().getValue();
-            tradePrices.add(tradePriceAsLong);
+            tradePrices[arrayIndex++] = tradePriceAsLong;
         }
-        Collections.sort(tradePrices);
+        Arrays.sort(tradePrices);
 
-        List<TradeStatistics3> list = new ArrayList<>(set);
-        list.sort(Comparator.comparingLong(TradeStatistics3::getDateAsLong));
-        if (list.size() > 0) {
-            open = list.get(0).getTradePrice().getValue();
-            close = list.get(list.size() - 1).getTradePrice().getValue();
+        if (!set.isEmpty()) {
+            NavigableSet<TradeStatistics3> sortedSet = ImmutableSortedSet.copyOf(set);
+            open = sortedSet.first().getTradePrice().getValue();
+            close = sortedSet.last().getTradePrice().getValue();
         }
 
         long averagePrice;
-        Long[] prices = new Long[tradePrices.size()];
-        tradePrices.toArray(prices);
-        long medianPrice = MathUtils.getMedian(prices);
+        long medianPrice = MathUtils.getMedian(tradePrices);
         boolean isBullish;
         if (CurrencyUtil.isCryptoCurrency(currencyCode)) {
             isBullish = close < open;
