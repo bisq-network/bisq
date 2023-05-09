@@ -17,6 +17,7 @@
 
 package bisq.desktop.main.market.trades;
 
+import bisq.desktop.main.market.trades.TradesChartsViewModel.TickUnit;
 import bisq.desktop.main.market.trades.charts.CandleData;
 import bisq.desktop.util.DisplayUtils;
 
@@ -25,6 +26,7 @@ import bisq.core.monetary.Altcoin;
 import bisq.core.trade.statistics.TradeStatistics3;
 
 import bisq.common.util.MathUtils;
+import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
 
@@ -34,9 +36,9 @@ import javafx.scene.chart.XYChart;
 
 import javafx.util.Pair;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -65,19 +67,19 @@ public class ChartCalculations {
     // Async
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    static CompletableFuture<Map<TradesChartsViewModel.TickUnit, Map<Long, Long>>> getUsdAveragePriceMapsPerTickUnit(Set<TradeStatistics3> tradeStatisticsSet) {
+    static CompletableFuture<Map<TickUnit, Map<Long, Long>>> getUsdAveragePriceMapsPerTickUnit(Set<TradeStatistics3> tradeStatisticsSet) {
         return CompletableFuture.supplyAsync(() -> {
-            Map<TradesChartsViewModel.TickUnit, Map<Long, Long>> usdAveragePriceMapsPerTickUnit = new HashMap<>();
-            Map<TradesChartsViewModel.TickUnit, Map<Long, List<TradeStatistics3>>> dateMapsPerTickUnit = new HashMap<>();
-            for (TradesChartsViewModel.TickUnit tick : TradesChartsViewModel.TickUnit.values()) {
+            Map<TickUnit, Map<Long, Long>> usdAveragePriceMapsPerTickUnit = new HashMap<>();
+            Map<TickUnit, Map<Long, List<TradeStatistics3>>> dateMapsPerTickUnit = new HashMap<>();
+            for (TickUnit tick : TickUnit.values()) {
                 dateMapsPerTickUnit.put(tick, new HashMap<>());
             }
 
-            TradesChartsViewModel.TickUnit[] tickUnits = TradesChartsViewModel.TickUnit.values();
+            TickUnit[] tickUnits = TickUnit.values();
             tradeStatisticsSet.stream()
                     .filter(e -> e.getCurrency().equals("USD"))
                     .forEach(tradeStatistics -> {
-                        for (TradesChartsViewModel.TickUnit tickUnit : tickUnits) {
+                        for (TickUnit tickUnit : tickUnits) {
                             long time = roundToTick(tradeStatistics.getLocalDateTime(), tickUnit).getTime();
                             Map<Long, List<TradeStatistics3>> map = dateMapsPerTickUnit.get(tickUnit);
                             map.computeIfAbsent(time, t -> new ArrayList<>()).add(tradeStatistics);
@@ -102,8 +104,8 @@ public class ChartCalculations {
     }
 
     static CompletableFuture<UpdateChartResult> getUpdateChartResult(List<TradeStatistics3> tradeStatisticsByCurrency,
-                                                                     TradesChartsViewModel.TickUnit tickUnit,
-                                                                     Map<TradesChartsViewModel.TickUnit, Map<Long, Long>> usdAveragePriceMapsPerTickUnit,
+                                                                     TickUnit tickUnit,
+                                                                     Map<TickUnit, Map<Long, Long>> usdAveragePriceMapsPerTickUnit,
                                                                      String currencyCode) {
         return CompletableFuture.supplyAsync(() -> {
             // Generate date range and create sets for all ticks
@@ -168,7 +170,7 @@ public class ChartCalculations {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     static List<Pair<Date, Set<TradeStatistics3>>> getItemsPerInterval(List<TradeStatistics3> tradeStatisticsByCurrency,
-                                                                       TradesChartsViewModel.TickUnit tickUnit) {
+                                                                       TickUnit tickUnit) {
         // Generate date range and create sets for all ticks
         List<Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = new ArrayList<>(Collections.nCopies(MAX_TICKS + 2, null));
         Date time = new Date();
@@ -203,29 +205,44 @@ public class ChartCalculations {
     }
 
 
-    private static Date roundToTick(LocalDateTime localDate, TradesChartsViewModel.TickUnit tickUnit) {
+    private static LocalDateTime roundToTickAsLocalDateTime(LocalDateTime localDateTime,
+                                                            TickUnit tickUnit) {
         switch (tickUnit) {
             case YEAR:
-                return Date.from(localDate.withMonth(1).withDayOfYear(1).withHour(0).withMinute(0).withSecond(0).withNano(0).atZone(ZONE_ID).toInstant());
+                return localDateTime.withMonth(1).withDayOfYear(1).toLocalDate().atStartOfDay();
             case MONTH:
-                return Date.from(localDate.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0).atZone(ZONE_ID).toInstant());
+                return localDateTime.withDayOfMonth(1).toLocalDate().atStartOfDay();
             case WEEK:
-                int dayOfWeek = localDate.getDayOfWeek().getValue();
-                LocalDateTime firstDayOfWeek = ChronoUnit.DAYS.addTo(localDate, 1 - dayOfWeek);
-                return Date.from(firstDayOfWeek.withHour(0).withMinute(0).withSecond(0).withNano(0).atZone(ZONE_ID).toInstant());
+                int dayOfWeek = localDateTime.getDayOfWeek().getValue();
+                LocalDate firstDayOfWeek = localDateTime.toLocalDate().minusDays(dayOfWeek - 1);
+                return firstDayOfWeek.atStartOfDay();
             case DAY:
-                return Date.from(localDate.withHour(0).withMinute(0).withSecond(0).withNano(0).atZone(ZONE_ID).toInstant());
+                return localDateTime.toLocalDate().atStartOfDay();
             case HOUR:
-                return Date.from(localDate.withMinute(0).withSecond(0).withNano(0).atZone(ZONE_ID).toInstant());
+                return localDateTime.withMinute(0).withSecond(0).withNano(0);
             case MINUTE_10:
-                return Date.from(localDate.withMinute(localDate.getMinute() - localDate.getMinute() % 10).withSecond(0).withNano(0).atZone(ZONE_ID).toInstant());
+                return localDateTime.withMinute(localDateTime.getMinute() - localDateTime.getMinute() % 10).withSecond(0).withNano(0);
             default:
-                return Date.from(localDate.atZone(ZONE_ID).toInstant());
+                return localDateTime;
         }
     }
 
+    // Use an array rather than an EnumMap here, since the latter is not thread safe - this gives benign races only:
+    private static final Tuple2<?, ?>[] cachedLocalDateTimeToDateMappings = new Tuple2<?, ?>[TickUnit.values().length];
+
+    private static Date roundToTick(LocalDateTime localDateTime, TickUnit tickUnit) {
+        LocalDateTime rounded = roundToTickAsLocalDateTime(localDateTime, tickUnit);
+        // Benefits from caching last result (per tick unit) since trade statistics are pre-sorted by date
+        int i = tickUnit.ordinal();
+        var tuple = cachedLocalDateTimeToDateMappings[i];
+        if (tuple == null || !rounded.equals(tuple.first)) {
+            cachedLocalDateTimeToDateMappings[i] = tuple = new Tuple2<>(rounded, Date.from(rounded.atZone(ZONE_ID).toInstant()));
+        }
+        return (Date) tuple.second;
+    }
+
     @VisibleForTesting
-    static Date roundToTick(Date time, TradesChartsViewModel.TickUnit tickUnit) {
+    static Date roundToTick(Date time, TickUnit tickUnit) {
         return roundToTick(time.toInstant().atZone(ChartCalculations.ZONE_ID).toLocalDateTime(), tickUnit);
     }
 
@@ -244,7 +261,7 @@ public class ChartCalculations {
     @VisibleForTesting
     static CandleData getCandleData(int tickIndex, Set<TradeStatistics3> set,
                                     long averageUsdPrice,
-                                    TradesChartsViewModel.TickUnit tickUnit,
+                                    TickUnit tickUnit,
                                     String currencyCode,
                                     List<Pair<Date, Set<TradeStatistics3>>> itemsPerInterval) {
         long open = 0;
@@ -291,7 +308,7 @@ public class ChartCalculations {
 
         Date dateFrom = new Date(getTimeFromTickIndex(tickIndex, itemsPerInterval));
         Date dateTo = new Date(getTimeFromTickIndex(tickIndex + 1, itemsPerInterval));
-        String dateString = tickUnit.ordinal() > TradesChartsViewModel.TickUnit.DAY.ordinal() ?
+        String dateString = tickUnit.ordinal() > TickUnit.DAY.ordinal() ?
                 DisplayUtils.formatDateTimeSpan(dateFrom, dateTo) :
                 DisplayUtils.formatDate(dateFrom) + " - " + DisplayUtils.formatDate(dateTo);
 
