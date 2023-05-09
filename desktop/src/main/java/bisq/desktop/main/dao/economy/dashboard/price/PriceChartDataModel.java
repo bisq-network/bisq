@@ -188,9 +188,10 @@ public class PriceChartDataModel extends ChartDataModel {
 
     private Map<Long, Double> getPriceByInterval(Predicate<TradeStatistics3> collectionFilter,
                                                  Function<List<TradeStatistics3>, Double> getAveragePriceFunction) {
+        var toTimeIntervalFn = toCachedTimeIntervalFn();
         return getPriceByInterval(tradeStatisticsManager.getObservableTradeStatisticsSet(),
                 collectionFilter,
-                tradeStatistics -> toTimeInterval(Instant.ofEpochMilli(tradeStatistics.getDateAsLong())),
+                tradeStatistics -> toTimeIntervalFn.applyAsLong(Instant.ofEpochMilli(tradeStatistics.getDateAsLong())),
                 dateFilter,
                 getAveragePriceFunction);
     }

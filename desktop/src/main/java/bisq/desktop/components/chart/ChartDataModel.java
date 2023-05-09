@@ -22,10 +22,10 @@ import bisq.desktop.common.model.ActivatableDataModel;
 import java.time.Instant;
 import java.time.temporal.TemporalAdjuster;
 
-import java.util.Comparator;
 import java.util.Map;
 import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
+import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -64,6 +64,11 @@ public abstract class ChartDataModel extends ActivatableDataModel {
         return temporalAdjusterModel.toTimeInterval(instant);
     }
 
+    // optimized for use when the input times are sequential and not too spread out
+    public ToLongFunction<Instant> toCachedTimeIntervalFn() {
+        return temporalAdjusterModel.withCache()::toTimeInterval;
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Date filter predicate
@@ -88,7 +93,7 @@ public abstract class ChartDataModel extends ActivatableDataModel {
                                            Map<Long, Long> map2,
                                            BinaryOperator<Long> mergeFunction) {
         return Stream.concat(map1.entrySet().stream(),
-                map2.entrySet().stream())
+                        map2.entrySet().stream())
                 .collect(Collectors.toMap(Map.Entry::getKey,
                         Map.Entry::getValue,
                         mergeFunction));

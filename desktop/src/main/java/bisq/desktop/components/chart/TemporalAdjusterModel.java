@@ -18,6 +18,7 @@
 package bisq.desktop.components.chart;
 
 import bisq.common.util.MathUtils;
+import bisq.common.util.Tuple3;
 
 import java.time.DayOfWeek;
 import java.time.Instant;
@@ -36,6 +37,19 @@ import static java.time.temporal.ChronoField.DAY_OF_YEAR;
 @Slf4j
 public class TemporalAdjusterModel {
     private static final ZoneId ZONE_ID = ZoneId.systemDefault();
+
+    protected TemporalAdjuster temporalAdjuster = Interval.MONTH.getAdjuster();
+
+    private boolean enableCache;
+    private Tuple3<LocalDate, Instant, Instant> cachedDateStartEndTuple;
+    private Tuple3<LocalDate, TemporalAdjuster, Long> cachedTimeIntervalMapping;
+
+    public TemporalAdjusterModel withCache() {
+        var model = new TemporalAdjusterModel();
+        model.temporalAdjuster = this.temporalAdjuster;
+        model.enableCache = true;
+        return model;
+    }
 
     public enum Interval {
         YEAR(TemporalAdjusters.firstDayOfYear()),
@@ -81,8 +95,6 @@ public class TemporalAdjusterModel {
         }
     }
 
-    protected TemporalAdjuster temporalAdjuster = Interval.MONTH.getAdjuster();
-
     public void setTemporalAdjuster(TemporalAdjuster temporalAdjuster) {
         this.temporalAdjuster = temporalAdjuster;
     }
@@ -96,12 +108,36 @@ public class TemporalAdjusterModel {
     }
 
     public long toTimeInterval(Instant instant, TemporalAdjuster temporalAdjuster) {
-        return instant
-                .atZone(ZONE_ID)
-                .toLocalDate()
-                .with(temporalAdjuster)
-                .atStartOfDay(ZONE_ID)
-                .toInstant()
-                .getEpochSecond();
+        LocalDate date = toLocalDate(instant);
+        Tuple3<LocalDate, TemporalAdjuster, Long> tuple = cachedTimeIntervalMapping;
+        long timeInterval;
+        if (tuple != null && date.equals(tuple.first) && temporalAdjuster.equals(tuple.second)) {
+            timeInterval = tuple.third;
+        } else {
+            timeInterval = date
+                    .with(temporalAdjuster)
+                    .atStartOfDay(ZONE_ID)
+                    .toEpochSecond();
+            if (enableCache) {
+                cachedTimeIntervalMapping = new Tuple3<>(date, temporalAdjuster, timeInterval);
+            }
+        }
+        return timeInterval;
+    }
+
+    private LocalDate toLocalDate(Instant instant) {
+        LocalDate date;
+        Tuple3<LocalDate, Instant, Instant> tuple = cachedDateStartEndTuple;
+        if (tuple != null && !instant.isBefore(tuple.second) && instant.isBefore(tuple.third)) {
+            date = tuple.first;
+        } else {
+            date = instant.atZone(ZONE_ID).toLocalDate();
+            if (enableCache) {
+                cachedDateStartEndTuple = new Tuple3<>(date,
+                        date.atStartOfDay(ZONE_ID).toInstant(),
+                        date.plusDays(1).atStartOfDay(ZONE_ID).toInstant());
+            }
+        }
+        return date;
     }
 }

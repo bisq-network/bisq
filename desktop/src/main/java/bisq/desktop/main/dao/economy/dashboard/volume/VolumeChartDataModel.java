@@ -134,8 +134,9 @@ public class VolumeChartDataModel extends ChartDataModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private Map<Long, Long> getVolumeByInterval(Function<List<TradeStatistics3>, Long> getVolumeFunction) {
+        var toTimeIntervalFn = toCachedTimeIntervalFn();
         return getVolumeByInterval(tradeStatisticsManager.getObservableTradeStatisticsSet(),
-                tradeStatistics -> toTimeInterval(Instant.ofEpochMilli(tradeStatistics.getDateAsLong())),
+                tradeStatistics -> toTimeIntervalFn.applyAsLong(Instant.ofEpochMilli(tradeStatistics.getDateAsLong())),
                 dateFilter,
                 getVolumeFunction);
     }
