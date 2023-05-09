@@ -368,7 +368,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     private void fillTradeCurrencies() {
         // Don't use a set as we need all entries
-        List<TradeCurrency> tradeCurrencyList = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+        List<TradeCurrency> tradeCurrencyList = tradeStatisticsManager.getNavigableTradeStatisticsSet().parallelStream()
                 .flatMap(e -> CurrencyUtil.getTradeCurrency(e.getCurrency()).stream())
                 .collect(Collectors.toList());
         currencyListItems.updateWithCurrencies(tradeCurrencyList, showAllCurrencyListItem);
