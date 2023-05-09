@@ -26,6 +26,9 @@ import bisq.core.util.FormattingUtils;
 import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.CoinFormatter;
 
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ObservableValue;
+
 import lombok.experimental.Delegate;
 
 import org.jetbrains.annotations.Nullable;
@@ -35,6 +38,7 @@ public class TradeStatistics3ListItem {
     private final TradeStatistics3 tradeStatistics3;
     private final CoinFormatter coinFormatter;
     private final boolean showAllTradeCurrencies;
+    private final ObservableValue<TradeStatistics3ListItem> observableWrapper;
     private String dateString;
     private String market;
     private String priceString;
@@ -48,6 +52,11 @@ public class TradeStatistics3ListItem {
         this.tradeStatistics3 = tradeStatistics3;
         this.coinFormatter = coinFormatter;
         this.showAllTradeCurrencies = showAllTradeCurrencies;
+        observableWrapper = new ReadOnlyObjectWrapper<>(this).getReadOnlyProperty();
+    }
+
+    public ObservableValue<TradeStatistics3ListItem> asObservableValue() {
+        return observableWrapper;
     }
 
     public String getDateString() {
