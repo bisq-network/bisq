@@ -1,0 +1,21 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.7.10'
+    id 'org.gradle.kotlin.kotlin-dsl' version '2.4.1'
+}
+
+repositories {
+    mavenCentral()
+}
+
+gradlePlugin {
+    plugins {
+        simplePlugin {
+            id = 'bisq.gradle.tor_binary.BisqTorBinaryPlugin'
+            implementationClass = 'bisq.gradle.tor_binary.BisqTorBinaryPlugin'
+        }
+    }
+}
+
+dependencies {
+    implementation project(':gradle-tasks')
+}
