@@ -86,9 +86,9 @@ public class PriceTest {
             fail("Expected IllegalArgumentException to be thrown when too many decimals are used.");
         } catch (IllegalArgumentException iae) {
             assertEquals(
-                    "Unexpected exception message.",
                     "java.lang.ArithmeticException: Rounding necessary",
-                    iae.getMessage()
+                    iae.getMessage(),
+                    "Unexpected exception message."
             );
         }
     }
