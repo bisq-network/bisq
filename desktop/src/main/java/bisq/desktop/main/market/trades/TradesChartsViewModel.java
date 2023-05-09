@@ -73,6 +73,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     // Enum
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // NOTE: For the code to work correctly, order must be from biggest to smallest duration:
     public enum TickUnit {
         YEAR,
         MONTH,
@@ -208,7 +209,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     private void applyAsyncUsdAveragePriceMapsPerTickUnit(CompletableFuture<Boolean> completeFuture) {
         long ts = System.currentTimeMillis();
-        ChartCalculations.getUsdAveragePriceMapsPerTickUnit(tradeStatisticsManager.getObservableTradeStatisticsSet())
+        ChartCalculations.getUsdAveragePriceMapsPerTickUnit(tradeStatisticsManager.getNavigableTradeStatisticsSet())
                 .whenComplete((usdAveragePriceMapsPerTickUnit, throwable) -> {
                     if (deactivateCalled) {
                         return;
@@ -236,8 +237,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         long ts = System.currentTimeMillis();
         ChartCalculations.getTradeStatisticsForCurrency(tradeStatisticsManager.getObservableTradeStatisticsSet(),
-                currencyCode,
-                showAllTradeCurrenciesProperty.get())
+                        currencyCode,
+                        showAllTradeCurrenciesProperty.get())
                 .whenComplete((list, throwable) -> {
                     if (deactivateCalled) {
                         return;
@@ -265,9 +266,9 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private void applyAsyncChartData() {
         long ts = System.currentTimeMillis();
         ChartCalculations.getUpdateChartResult(new ArrayList<>(tradeStatisticsByCurrency),
-                tickUnit,
-                usdAveragePriceMapsPerTickUnit,
-                getCurrencyCode())
+                        tickUnit,
+                        usdAveragePriceMapsPerTickUnit,
+                        getCurrencyCode())
                 .whenComplete((updateChartResult, throwable) -> {
                     if (deactivateCalled) {
                         return;
