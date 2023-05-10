@@ -90,6 +90,7 @@ public class BurningManPresentationService implements DaoStateListener {
     private int currentChainHeight;
     private Optional<Long> burnTarget = Optional.empty();
     private final Map<String, BurningManCandidate> burningManCandidatesByName = new HashMap<>();
+    private Long accumulatedDecayedBurnedAmount;
     private final Set<ReimbursementModel> reimbursements = new HashSet<>();
     private Optional<Long> averageDistributionPerCycle = Optional.empty();
     private Set<String> myCompensationRequestNames = null;
@@ -132,6 +133,7 @@ public class BurningManPresentationService implements DaoStateListener {
         burningManCandidatesByName.clear();
         reimbursements.clear();
         burnTarget = Optional.empty();
+        accumulatedDecayedBurnedAmount = null;
         myCompensationRequestNames = null;
         averageDistributionPerCycle = Optional.empty();
         legacyBurningManDPT = Optional.empty();
@@ -188,8 +190,7 @@ public class BurningManPresentationService implements DaoStateListener {
         long lowerBaseTarget = Math.round(burnTarget * maxCompensationShare);
         double maxBoostedCompensationShare = burningManCandidate.getMaxBoostedCompensationShare();
         long upperBaseTarget = Math.round(boostedBurnTarget * maxBoostedCompensationShare);
-        Collection<BurningManCandidate> burningManCandidates = getBurningManCandidatesByName().values();
-        long totalBurnedAmount = burnTargetService.getAccumulatedDecayedBurnedAmount(burningManCandidates, currentChainHeight);
+        long totalBurnedAmount = getAccumulatedDecayedBurnedAmount();
 
         if (totalBurnedAmount == 0) {
             // The first BM would reach their max burn share by 5.46 BSQ already. But we suggest the lowerBaseTarget
@@ -344,7 +345,6 @@ public class BurningManPresentationService implements DaoStateListener {
             receiverAddressesByBurningManName.get(name).addAll(burningManCandidate.getAllAddresses());
         });
 
-
         Map<String, String> map = new HashMap<>();
         receiverAddressesByBurningManName
                 .forEach((name, addresses) -> addresses
@@ -370,5 +370,13 @@ public class BurningManPresentationService implements DaoStateListener {
 
         proofOfBurnOpReturnTxOutputByHash.putAll(burningManService.getProofOfBurnOpReturnTxOutputByHash(currentChainHeight));
         return proofOfBurnOpReturnTxOutputByHash;
+    }
+
+    private long getAccumulatedDecayedBurnedAmount() {
+        if (accumulatedDecayedBurnedAmount == null) {
+            Collection<BurningManCandidate> burningManCandidates = getBurningManCandidatesByName().values();
+            accumulatedDecayedBurnedAmount = burnTargetService.getAccumulatedDecayedBurnedAmount(burningManCandidates, currentChainHeight);
+        }
+        return accumulatedDecayedBurnedAmount;
     }
 }
