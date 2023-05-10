@@ -58,6 +58,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -202,21 +203,7 @@ public class BurningManAccountingService implements DaoSetupService, DaoStateLis
         Map<Date, Price> averageBsqPriceByMonth = getAverageBsqPriceByMonth();
         return getReceivedBtcBalanceEntryListExcludingLegacyBM().stream()
                 .filter(e -> e.getType() == BalanceEntry.Type.BTC_TRADE_FEE_TX)
-                .map(balanceEntry -> {
-                    Date month = balanceEntry.getMonth();
-                    Optional<Price> price = Optional.ofNullable(averageBsqPriceByMonth.get(month));
-                    long receivedBtc = balanceEntry.getAmount();
-                    Optional<Long> receivedBtcAsBsq;
-                    if (price.isEmpty() || price.get().getValue() == 0) {
-                        receivedBtcAsBsq = Optional.empty();
-                    } else {
-                        long volume = price.get().getVolumeByAmount(Coin.valueOf(receivedBtc)).getValue();
-                        receivedBtcAsBsq = Optional.of(MathUtils.roundDoubleToLong(MathUtils.scaleDownByPowerOf10(volume, 6)));
-                    }
-                    return receivedBtcAsBsq;
-                })
-                .filter(Optional::isPresent)
-                .mapToLong(Optional::get)
+                .flatMapToLong(balanceEntry -> receivedBtcAsBsq(balanceEntry, averageBsqPriceByMonth).stream())
                 .sum();
     }
 
@@ -231,43 +218,27 @@ public class BurningManAccountingService implements DaoSetupService, DaoStateLis
         Map<Date, Price> averageBsqPriceByMonth = getAverageBsqPriceByMonth();
         return getReceivedBtcBalanceEntryListExcludingLegacyBM().stream()
                 .filter(e -> e.getType() == BalanceEntry.Type.DPT_TX)
-                .map(balanceEntry -> {
-                    Date month = balanceEntry.getMonth();
-                    Optional<Price> price = Optional.ofNullable(averageBsqPriceByMonth.get(month));
-                    long receivedBtc = balanceEntry.getAmount();
-                    Optional<Long> receivedBtcAsBsq;
-                    if (price.isEmpty() || price.get().getValue() == 0) {
-                        receivedBtcAsBsq = Optional.empty();
-                    } else {
-                        long volume = price.get().getVolumeByAmount(Coin.valueOf(receivedBtc)).getValue();
-                        receivedBtcAsBsq = Optional.of(MathUtils.roundDoubleToLong(MathUtils.scaleDownByPowerOf10(volume, 6)));
-                    }
-                    return receivedBtcAsBsq;
-                })
-                .filter(Optional::isPresent)
-                .mapToLong(Optional::get)
+                .flatMapToLong(balanceEntry -> receivedBtcAsBsq(balanceEntry, averageBsqPriceByMonth).stream())
                 .sum();
     }
 
     public long getTotalAmountOfDistributedBsq() {
         Map<Date, Price> averageBsqPriceByMonth = getAverageBsqPriceByMonth();
         return getReceivedBtcBalanceEntryListExcludingLegacyBM().stream()
-                .map(balanceEntry -> {
-                    Date month = balanceEntry.getMonth();
-                    Optional<Price> price = Optional.ofNullable(averageBsqPriceByMonth.get(month));
-                    long receivedBtc = balanceEntry.getAmount();
-                    Optional<Long> receivedBtcAsBsq;
-                    if (price.isEmpty() || price.get().getValue() == 0) {
-                        receivedBtcAsBsq = Optional.empty();
-                    } else {
-                        long volume = price.get().getVolumeByAmount(Coin.valueOf(receivedBtc)).getValue();
-                        receivedBtcAsBsq = Optional.of(MathUtils.roundDoubleToLong(MathUtils.scaleDownByPowerOf10(volume, 6)));
-                    }
-                    return receivedBtcAsBsq;
-                })
-                .filter(Optional::isPresent)
-                .mapToLong(Optional::get)
+                .flatMapToLong(balanceEntry -> receivedBtcAsBsq(balanceEntry, averageBsqPriceByMonth).stream())
                 .sum();
+    }
+
+    private static OptionalLong receivedBtcAsBsq(ReceivedBtcBalanceEntry balanceEntry,
+                                                 Map<Date, Price> averageBsqPriceByMonth) {
+        Date month = balanceEntry.getMonth();
+        long receivedBtc = balanceEntry.getAmount();
+        Price price = averageBsqPriceByMonth.get(month);
+        if (price == null) {
+            return OptionalLong.empty();
+        }
+        long volume = price.getVolumeByAmount(Coin.valueOf(receivedBtc)).getValue();
+        return OptionalLong.of(MathUtils.roundDoubleToLong(MathUtils.scaleDownByPowerOf10(volume, 6)));
     }
 
     private List<ReceivedBtcBalanceEntry> getReceivedBtcBalanceEntryListExcludingLegacyBM() {
@@ -329,16 +300,15 @@ public class BurningManAccountingService implements DaoSetupService, DaoStateLis
 
     private void addAccountingBlockToBalanceModel(Map<String, BalanceModel> balanceModelByBurningManName,
                                                   AccountingBlock accountingBlock) {
-        accountingBlock.getTxs().forEach(tx -> {
-            tx.getOutputs().forEach(txOutput -> {
-                String name = txOutput.getName();
-                balanceModelByBurningManName.putIfAbsent(name, new BalanceModel());
-                balanceModelByBurningManName.get(name).addReceivedBtcBalanceEntry(new ReceivedBtcBalanceEntry(tx.getTruncatedTxId(),
-                        txOutput.getValue(),
-                        new Date(accountingBlock.getDate()),
-                        toBalanceEntryType(tx.getType())));
-            });
-        });
+        accountingBlock.getTxs().forEach(tx ->
+                tx.getOutputs().forEach(txOutput -> {
+                    String name = txOutput.getName();
+                    balanceModelByBurningManName.putIfAbsent(name, new BalanceModel());
+                    balanceModelByBurningManName.get(name).addReceivedBtcBalanceEntry(new ReceivedBtcBalanceEntry(tx.getTruncatedTxId(),
+                            txOutput.getValue(),
+                            new Date(accountingBlock.getDate()),
+                            toBalanceEntryType(tx.getType())));
+                }));
     }
 
     private Map<Date, Price> getAverageBsqPriceByMonth(Date from, int backToYear, int backToMonth) {
