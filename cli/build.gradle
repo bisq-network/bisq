@@ -34,7 +34,3 @@ dependencies {
 
     testRuntimeOnly libs.javax.annotation
 }
-
-test {
-    useJUnitPlatform()
-}
