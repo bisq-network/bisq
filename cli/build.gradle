@@ -33,7 +33,6 @@ dependencies {
     testImplementation libs.cowwoc.diff.match.patch
 
     testRuntimeOnly libs.javax.annotation
-    testRuntimeOnly libs.junit.jupiter.engine
 }
 
 test {

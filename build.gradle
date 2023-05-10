@@ -504,7 +504,6 @@ configure(project(':apitest')) {
         testAnnotationProcessor libs.lombok
         testCompileOnly libs.lombok
         testRuntimeOnly libs.javax.annotation
-        testRuntimeOnly(libs.junit.jupiter.engine)
     }
 }
 
