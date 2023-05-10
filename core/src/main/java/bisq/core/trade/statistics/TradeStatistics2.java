@@ -18,7 +18,6 @@
 package bisq.core.trade.statistics;
 
 import bisq.core.monetary.Altcoin;
-import bisq.core.monetary.AltcoinExchangeRate;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
@@ -45,8 +44,6 @@ import bisq.common.util.Utilities;
 import com.google.protobuf.ByteString;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.ExchangeRate;
-import org.bitcoinj.utils.Fiat;
 
 import com.google.common.base.Charsets;
 
@@ -311,12 +308,10 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
     }
 
     public Volume getTradeVolume() {
-        if (getTradePrice().getMonetary() instanceof Altcoin) {
-            return new Volume(new AltcoinExchangeRate((Altcoin) getTradePrice().getMonetary()).coinToAltcoin(getTradeAmount()));
-        } else {
-            Volume volume = new Volume(new ExchangeRate((Fiat) getTradePrice().getMonetary()).coinToFiat(getTradeAmount()));
-            return VolumeUtil.getRoundedFiatVolume(volume);
-        }
+        Price price = getTradePrice();
+        return price.getMonetary() instanceof Altcoin
+                ? price.getVolumeByAmount(getTradeAmount())
+                : VolumeUtil.getRoundedFiatVolume(price.getVolumeByAmount(getTradeAmount()));
     }
 
     public boolean isValid() {

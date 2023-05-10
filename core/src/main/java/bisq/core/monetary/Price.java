@@ -25,9 +25,6 @@ import org.bitcoinj.core.Monetary;
 import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -39,12 +36,11 @@ import org.jetbrains.annotations.NotNull;
  * those classes, like {@link Fiat} or {@link Altcoin}.
  */
 public class Price extends MonetaryWrapper implements Comparable<Price> {
-    private static final Logger log = LoggerFactory.getLogger(Price.class);
 
     /**
      * Create a new {@code Price} from specified {@code Monetary}.
      *
-     * @param monetary
+     * @param monetary The monetary (either {@link Altcoin} or {@link Fiat}) to wrap
      */
     public Price(Monetary monetary) {
         super(monetary);
@@ -82,21 +78,39 @@ public class Price extends MonetaryWrapper implements Comparable<Price> {
 
     public Volume getVolumeByAmount(Coin amount) {
         if (monetary instanceof Fiat)
-            return new Volume(new ExchangeRate((Fiat) monetary).coinToFiat(amount));
+            return new Volume(coinToFiat(new ExchangeRate((Fiat) monetary), amount));
         else if (monetary instanceof Altcoin)
             return new Volume(new AltcoinExchangeRate((Altcoin) monetary).coinToAltcoin(amount));
         else
             throw new IllegalStateException("Monetary must be either of type Fiat or Altcoin");
     }
 
+    // Short circuit BigInteger logic in ExchangeRate.coinToFiat in a common case where long arithmetic won't overflow.
+    private static Fiat coinToFiat(ExchangeRate rate, Coin convertCoin) {
+        if ((int) convertCoin.value == convertCoin.value && (int) rate.fiat.value == rate.fiat.value) {
+            long converted = convertCoin.value * rate.fiat.value / rate.coin.value;
+            return Fiat.valueOf(rate.fiat.currencyCode, converted);
+        }
+        return rate.coinToFiat(convertCoin);
+    }
+
     public Coin getAmountByVolume(Volume volume) {
         Monetary monetary = volume.getMonetary();
         if (monetary instanceof Fiat && this.monetary instanceof Fiat)
-            return new ExchangeRate((Fiat) this.monetary).fiatToCoin((Fiat) monetary);
+            return fiatToCoin(new ExchangeRate((Fiat) this.monetary), (Fiat) monetary);
         else if (monetary instanceof Altcoin && this.monetary instanceof Altcoin)
             return new AltcoinExchangeRate((Altcoin) this.monetary).altcoinToCoin((Altcoin) monetary);
         else
             return Coin.ZERO;
+    }
+
+    // Short circuit BigInteger logic in ExchangeRate.fiatToCoin in a common case where long arithmetic won't overflow.
+    private static Coin fiatToCoin(ExchangeRate rate, Fiat convertFiat) {
+        if ((int) convertFiat.value == convertFiat.value && (int) rate.coin.value == rate.coin.value) {
+            long converted = convertFiat.value * rate.coin.value / rate.fiat.value;
+            return Coin.valueOf(converted);
+        }
+        return rate.fiatToCoin(convertFiat);
     }
 
     public String getCurrencyCode() {

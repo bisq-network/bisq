@@ -19,7 +19,6 @@ package bisq.core.trade.statistics;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Altcoin;
-import bisq.core.monetary.AltcoinExchangeRate;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
@@ -41,16 +40,14 @@ import bisq.common.app.Capability;
 import bisq.common.crypto.Hash;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.util.CollectionUtils;
+import bisq.common.util.ComparableExt;
 import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.JsonExclude;
-import bisq.common.util.ComparableExt;
 import bisq.common.util.Utilities;
 
 import com.google.protobuf.ByteString;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.ExchangeRate;
-import org.bitcoinj.utils.Fiat;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -390,8 +387,9 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     }
 
     public LocalDateTime getLocalDateTime() {
+        LocalDateTime localDateTime = this.localDateTime;
         if (localDateTime == null) {
-            localDateTime = dateObj.toInstant().atZone(ZONE_ID).toLocalDateTime();
+            this.localDateTime = localDateTime = dateObj.toInstant().atZone(ZONE_ID).toLocalDateTime();
         }
         return localDateTime;
     }
@@ -424,8 +422,9 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     private transient Price priceObj;
 
     public Price getTradePrice() {
+        Price priceObj = this.priceObj;
         if (priceObj == null) {
-            priceObj = Price.valueOf(currency, price);
+            this.priceObj = priceObj = Price.valueOf(currency, price);
         }
         return priceObj;
     }
@@ -435,13 +434,12 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     }
 
     public Volume getTradeVolume() {
+        Volume volume = this.volume;
         if (volume == null) {
-            if (getTradePrice().getMonetary() instanceof Altcoin) {
-                volume = new Volume(new AltcoinExchangeRate((Altcoin) getTradePrice().getMonetary()).coinToAltcoin(getTradeAmount()));
-            } else {
-                Volume exactVolume = new Volume(new ExchangeRate((Fiat) getTradePrice().getMonetary()).coinToFiat(getTradeAmount()));
-                volume = VolumeUtil.getRoundedFiatVolume(exactVolume);
-            }
+            Price price = getTradePrice();
+            this.volume = volume = price.getMonetary() instanceof Altcoin
+                    ? price.getVolumeByAmount(getTradeAmount())
+                    : VolumeUtil.getRoundedFiatVolume(price.getVolumeByAmount(getTradeAmount()));
         }
         return volume;
     }
