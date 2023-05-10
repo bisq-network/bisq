@@ -32,6 +32,7 @@ import bisq.core.dao.state.DaoStateListener;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.monetary.Price;
+import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.util.AveragePriceUtil;
@@ -48,6 +49,8 @@ import javax.inject.Singleton;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+
+import javafx.collections.SetChangeListener;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -88,6 +91,7 @@ public class BurningManAccountingService implements DaoSetupService, DaoStateLis
     private final Preferences preferences;
 
     private final Map<Date, Price> averageBsqPriceByMonth = new HashMap<>(getHistoricalAverageBsqPriceByMonth());
+    private boolean averagePricesValid;
     @Getter
     private final Map<String, BalanceModel> balanceModelByBurningManName = new HashMap<>();
     @Getter
@@ -117,13 +121,13 @@ public class BurningManAccountingService implements DaoSetupService, DaoStateLis
 
     @Override
     public void addListeners() {
+        tradeStatisticsManager.getObservableTradeStatisticsSet().addListener(
+                (SetChangeListener<TradeStatistics3>) observable -> averagePricesValid = false);
     }
 
     @Override
     public void start() {
         UserThread.execute(() -> isProcessing.set(true));
-        // Create the map from now back to the last entry of the historical data (April 2019-Nov. 2022).
-        averageBsqPriceByMonth.putAll(getAverageBsqPriceByMonth(new Date(), 2022, 10));
 
         updateBalanceModelByAddress();
         CompletableFuture.runAsync(() -> {
@@ -181,8 +185,11 @@ public class BurningManAccountingService implements DaoSetupService, DaoStateLis
     }
 
     public Map<Date, Price> getAverageBsqPriceByMonth() {
-        getAverageBsqPriceByMonth(new Date(), HIST_BSQ_PRICE_LAST_DATE_YEAR, HIST_BSQ_PRICE_LAST_DATE_MONTH)
-                .forEach((key, value) -> averageBsqPriceByMonth.put(new Date(key.getTime()), Price.valueOf("BSQ", value.getValue())));
+        if (!averagePricesValid) {
+            // Fill the map from now back to the last entry of the historical data (April 2019-Nov. 2022).
+            averageBsqPriceByMonth.putAll(getAverageBsqPriceByMonth(new Date(), HIST_BSQ_PRICE_LAST_DATE_YEAR, HIST_BSQ_PRICE_LAST_DATE_MONTH));
+            averagePricesValid = true;
+        }
         return averageBsqPriceByMonth;
     }
 
@@ -311,6 +318,7 @@ public class BurningManAccountingService implements DaoSetupService, DaoStateLis
                 }));
     }
 
+    @SuppressWarnings("SameParameterValue")
     private Map<Date, Price> getAverageBsqPriceByMonth(Date from, int backToYear, int backToMonth) {
         Map<Date, Price> averageBsqPriceByMonth = new HashMap<>();
         Calendar calendar = new GregorianCalendar();
