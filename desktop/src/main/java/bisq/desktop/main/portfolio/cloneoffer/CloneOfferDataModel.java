@@ -219,7 +219,7 @@ class CloneOfferDataModel extends MutableOfferDataModel {
                 editedOfferPayload.getBankId(),
                 editedOfferPayload.getAcceptedBankIds(),
                 editedOfferPayload.getVersionNr(),
-                editedOfferPayload.getBlockHeightAtOfferCreation(),
+                sourceOfferPayload.getBlockHeightAtOfferCreation(),
                 sourceOfferPayload.getTxFee(),
                 sourceOfferPayload.getMakerFee(),
                 sourceOfferPayload.isCurrencyForMakerFeeBtc(),
@@ -227,14 +227,14 @@ class CloneOfferDataModel extends MutableOfferDataModel {
                 sourceOfferPayload.getSellerSecurityDeposit(),
                 editedOfferPayload.getMaxTradeLimit(),
                 editedOfferPayload.getMaxTradePeriod(),
-                editedOfferPayload.isUseAutoClose(),
-                editedOfferPayload.isUseReOpenAfterAutoClose(),
-                editedOfferPayload.getLowerClosePrice(),
-                editedOfferPayload.getUpperClosePrice(),
-                editedOfferPayload.isPrivateOffer(),
-                editedOfferPayload.getHashOfChallenge(),
-                editedOfferPayload.getExtraDataMap(),
-                editedOfferPayload.getProtocolVersion());
+                sourceOfferPayload.isUseAutoClose(),
+                sourceOfferPayload.isUseReOpenAfterAutoClose(),
+                sourceOfferPayload.getLowerClosePrice(),
+                sourceOfferPayload.getUpperClosePrice(),
+                sourceOfferPayload.isPrivateOffer(),
+                sourceOfferPayload.getHashOfChallenge(),
+                sourceOfferPayload.getExtraDataMap(),
+                sourceOfferPayload.getProtocolVersion());
         Offer clonedOffer = new Offer(clonedOfferPayload);
         clonedOffer.setPriceFeedService(priceFeedService);
         clonedOffer.setState(Offer.State.OFFER_FEE_PAID);
