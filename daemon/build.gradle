@@ -48,5 +48,4 @@ dependencies {
     }
     testAnnotationProcessor libs.lombok
     testCompileOnly libs.lombok
-    testRuntimeOnly(libs.junit.jupiter.engine)
 }

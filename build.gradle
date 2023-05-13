@@ -436,7 +436,6 @@ configure(project(':apitest')) {
     }
 
     test {
-        useJUnitPlatform()
         outputs.upToDateWhen { false }          // Don't use previously cached test outputs.
         testLogging {
             showStackTraces = true              // Show full stack traces in the console.
@@ -504,7 +503,6 @@ configure(project(':apitest')) {
         testAnnotationProcessor libs.lombok
         testCompileOnly libs.lombok
         testRuntimeOnly libs.javax.annotation
-        testRuntimeOnly(libs.junit.jupiter.engine)
     }
 }
 
