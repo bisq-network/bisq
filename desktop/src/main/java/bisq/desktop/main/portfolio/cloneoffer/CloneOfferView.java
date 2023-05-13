@@ -24,6 +24,7 @@ import bisq.desktop.components.BusyAnimation;
 import bisq.desktop.main.offer.bisq_v1.MutableOfferView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.OfferDetailsWindow;
+import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
@@ -51,7 +52,10 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+
+import java.util.stream.Collectors;
 
 import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabelAfterGroup;
 
@@ -169,7 +173,11 @@ public class CloneOfferView extends MutableOfferView<CloneOfferViewModel> {
 
     @Override
     protected ObservableList<PaymentAccount> filterPaymentAccounts(ObservableList<PaymentAccount> paymentAccounts) {
-        return paymentAccounts;
+        // We do not allow cloning or BSQ as there is no maker fee and requirement for reserved funds.
+        return FXCollections.observableArrayList(
+                paymentAccounts.stream()
+                        .filter(paymentAccount -> !GUIUtil.BSQ.equals(paymentAccount.getSingleTradeCurrency()))
+                        .collect(Collectors.toList()));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
