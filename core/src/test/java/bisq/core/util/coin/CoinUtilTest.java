@@ -62,9 +62,9 @@ public class CoinUtilTest {
                 20_000_000,
                 1);
         assertEquals(
-                "Minimum trade amount allowed should be adjusted to the smallest trade allowed.",
                 "0.001 BTC",
-                result.toFriendlyString()
+                result.toFriendlyString(),
+                "Minimum trade amount allowed should be adjusted to the smallest trade allowed."
         );
 
         try {
@@ -76,9 +76,9 @@ public class CoinUtilTest {
             fail("Expected IllegalArgumentException to be thrown when amount is too low.");
         } catch (IllegalArgumentException iae) {
             assertEquals(
-                    "Unexpected exception message.",
                     "amount needs to be above minimum of 10k satoshis",
-                    iae.getMessage()
+                    iae.getMessage(),
+                    "Unexpected exception message."
             );
         }
 
@@ -88,9 +88,9 @@ public class CoinUtilTest {
                 20_000_000,
                 1);
         assertEquals(
-                "Minimum allowed trade amount should not be adjusted.",
                 "0.01 BTC",
-                result.toFriendlyString()
+                result.toFriendlyString(),
+                "Minimum allowed trade amount should not be adjusted."
         );
 
         result = CoinUtil.getAdjustedAmount(
@@ -99,9 +99,9 @@ public class CoinUtilTest {
                 1_000_000,
                 1);
         assertEquals(
-                "Minimum trade amount allowed should respect maxTradeLimit and factor, if possible.",
                 "0.001 BTC",
-                result.toFriendlyString()
+                result.toFriendlyString(),
+                "Minimum trade amount allowed should respect maxTradeLimit and factor, if possible."
         );
 
         // TODO(chirhonul): The following seems like it should raise an exception or otherwise fail.
@@ -115,9 +115,9 @@ public class CoinUtilTest {
                 5_000,
                 1);
         assertEquals(
-                "Minimum trade amount allowed with low maxTradeLimit should still respect that limit, even if result does not respect the factor specified.",
                 "0.00005 BTC",
-                result.toFriendlyString()
+                result.toFriendlyString(),
+                "Minimum trade amount allowed with low maxTradeLimit should still respect that limit, even if result does not respect the factor specified."
         );
     }
 }
