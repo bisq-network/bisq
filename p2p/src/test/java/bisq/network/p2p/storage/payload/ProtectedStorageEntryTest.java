@@ -37,6 +37,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -255,8 +256,10 @@ public class ProtectedStorageEntryTest {
 
         KeyPair ownerKeys = TestUtils.generateKeyPair();
         IncompatiblePayload incompatiblePayload = new IncompatiblePayload(ownerKeys.getPublic());
-        new ProtectedStorageEntry(incompatiblePayload,ownerKeys.getPublic(), 1,
-                new byte[] { 0 }, Clock.systemDefaultZone());
+        assertThrows(IllegalArgumentException.class, () ->
+                new ProtectedStorageEntry(incompatiblePayload,ownerKeys.getPublic(), 1,
+                        new byte[] { 0 }, Clock.systemDefaultZone())
+        );
     }
 
     // TESTCASE: PSEs received with future-dated timestamps are updated to be min(currentTime, creationTimeStamp)
