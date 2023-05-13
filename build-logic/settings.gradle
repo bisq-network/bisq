@@ -7,3 +7,5 @@ dependencyResolutionManagement {
 }
 
 include 'commons'
+include 'gradle-tasks'
+include 'tor-binary'

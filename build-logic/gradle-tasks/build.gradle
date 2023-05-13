@@ -1,0 +1,12 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.7.10'
+    id 'org.gradle.kotlin.kotlin-dsl' version '2.4.1'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation libs.bouncycastle.bcpg.jdk15on
+}
