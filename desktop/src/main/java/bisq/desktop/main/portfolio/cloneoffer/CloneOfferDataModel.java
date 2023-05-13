@@ -233,7 +233,7 @@ class CloneOfferDataModel extends MutableOfferDataModel {
                 sourceOfferPayload.getUpperClosePrice(),
                 sourceOfferPayload.isPrivateOffer(),
                 sourceOfferPayload.getHashOfChallenge(),
-                sourceOfferPayload.getExtraDataMap(),
+                editedOfferPayload.getExtraDataMap(),
                 sourceOfferPayload.getProtocolVersion());
         Offer clonedOffer = new Offer(clonedOfferPayload);
         clonedOffer.setPriceFeedService(priceFeedService);
