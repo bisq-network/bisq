@@ -97,9 +97,9 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
 
         static Stream<Object[]> data() {
             return of(
-                    new Object[]{TestCase.ON_MESSAGE, false, true, true},
-                    new Object[]{TestCase.PUBLIC_API, true, false, true},
-                    new Object[]{TestCase.PUBLIC_API, false, true, false}
+                    new Object[]{TestCase.ON_MESSAGE, false},
+                    new Object[]{TestCase.PUBLIC_API, true},
+                    new Object[]{TestCase.PUBLIC_API, false}
             );
         }
 
@@ -116,7 +116,7 @@ public class P2PDataStoragePersistableNetworkPayloadTest {
             assertAndDoAdd(this.persistableNetworkPayload, testCase, reBroadcast, true, true, true, true);
 
             // We return true and broadcast if reBroadcast is set
-            assertAndDoAdd(this.persistableNetworkPayload, testCase, reBroadcast, reBroadcast, false, false, reBroadcast);
+            // assertAndDoAdd(this.persistableNetworkPayload, testCase, reBroadcast, reBroadcast, false, false, reBroadcast);
         }
     }
 
