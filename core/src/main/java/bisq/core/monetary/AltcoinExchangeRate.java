@@ -60,34 +60,39 @@ public class AltcoinExchangeRate {
      * @throws ArithmeticException if the converted altcoin amount is too high or too low.
      */
     public Altcoin coinToAltcoin(Coin convertCoin) {
-        BigInteger converted = BigInteger.valueOf(coin.value)
-                .multiply(BigInteger.valueOf(convertCoin.value))
-                .divide(BigInteger.valueOf(altcoin.value));
-        if (converted.compareTo(BigInteger.valueOf(Long.MAX_VALUE)) > 0
-                || converted.compareTo(BigInteger.valueOf(Long.MIN_VALUE)) < 0)
-            throw new ArithmeticException("Overflow");
-        return Altcoin.valueOf(altcoin.currencyCode, converted.longValue());
+        long converted;
+        if ((int) coin.value == coin.value && (int) convertCoin.value == convertCoin.value) {
+            // Short circuit in a common case where long arithmetic won't overflow.
+            converted = coin.value * convertCoin.value / altcoin.value;
+        } else {
+            // Otherwise use BigInteger to maintain full precision without overflowing.
+            converted = BigInteger.valueOf(coin.value)
+                    .multiply(BigInteger.valueOf(convertCoin.value))
+                    .divide(BigInteger.valueOf(altcoin.value))
+                    .longValueExact();
+        }
+        return Altcoin.valueOf(altcoin.currencyCode, converted);
     }
 
     /**
-     * Convert a altcoin amount to a coin amount using this exchange rate.
+     * Convert an altcoin amount to a coin amount using this exchange rate.
      *
      * @throws ArithmeticException if the converted coin amount is too high or too low.
      */
     public Coin altcoinToCoin(Altcoin convertAltcoin) {
         checkArgument(convertAltcoin.currencyCode.equals(altcoin.currencyCode), "Currency mismatch: %s vs %s",
                 convertAltcoin.currencyCode, altcoin.currencyCode);
-        // Use BigInteger because it's much easier to maintain full precision without overflowing.
-        BigInteger converted = BigInteger.valueOf(altcoin.value)
-                .multiply(BigInteger.valueOf(convertAltcoin.value))
-                .divide(BigInteger.valueOf(coin.value));
-        if (converted.compareTo(BigInteger.valueOf(Long.MAX_VALUE)) > 0
-                || converted.compareTo(BigInteger.valueOf(Long.MIN_VALUE)) < 0)
-            throw new ArithmeticException("Overflow");
-        try {
-            return Coin.valueOf(converted.longValue());
-        } catch (IllegalArgumentException x) {
-            throw new ArithmeticException("Overflow: " + x.getMessage());
+        long converted;
+        if ((int) altcoin.value == altcoin.value && (int) convertAltcoin.value == convertAltcoin.value) {
+            // Short circuit in a common case where long arithmetic won't overflow.
+            converted = altcoin.value * convertAltcoin.value / coin.value;
+        } else {
+            // Otherwise use BigInteger to maintain full precision without overflowing.
+            converted = BigInteger.valueOf(altcoin.value)
+                    .multiply(BigInteger.valueOf(convertAltcoin.value))
+                    .divide(BigInteger.valueOf(coin.value))
+                    .longValueExact();
         }
+        return Coin.valueOf(converted);
     }
 }

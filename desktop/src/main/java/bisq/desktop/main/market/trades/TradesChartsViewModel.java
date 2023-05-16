@@ -73,6 +73,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     // Enum
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // NOTE: For the code to work correctly, order must be from biggest to smallest duration:
     public enum TickUnit {
         YEAR,
         MONTH,
@@ -96,7 +97,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
     final ObservableList<XYChart.Data<Number, Number>> priceItems = FXCollections.observableArrayList();
     final ObservableList<XYChart.Data<Number, Number>> volumeItems = FXCollections.observableArrayList();
     final ObservableList<XYChart.Data<Number, Number>> volumeInUsdItems = FXCollections.observableArrayList();
-    private final Map<Long, Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = new HashMap<>();
+    private final List<Pair<Date, Set<TradeStatistics3>>> itemsPerInterval = new ArrayList<>();
 
     TickUnit tickUnit;
     private int selectedTabIndex;
@@ -208,7 +209,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     private void applyAsyncUsdAveragePriceMapsPerTickUnit(CompletableFuture<Boolean> completeFuture) {
         long ts = System.currentTimeMillis();
-        ChartCalculations.getUsdAveragePriceMapsPerTickUnit(tradeStatisticsManager.getObservableTradeStatisticsSet())
+        ChartCalculations.getUsdAveragePriceMapsPerTickUnit(tradeStatisticsManager.getNavigableTradeStatisticsSet())
                 .whenComplete((usdAveragePriceMapsPerTickUnit, throwable) -> {
                     if (deactivateCalled) {
                         return;
@@ -236,8 +237,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         long ts = System.currentTimeMillis();
         ChartCalculations.getTradeStatisticsForCurrency(tradeStatisticsManager.getObservableTradeStatisticsSet(),
-                currencyCode,
-                showAllTradeCurrenciesProperty.get())
+                        currencyCode,
+                        showAllTradeCurrenciesProperty.get())
                 .whenComplete((list, throwable) -> {
                     if (deactivateCalled) {
                         return;
@@ -265,9 +266,9 @@ class TradesChartsViewModel extends ActivatableViewModel {
     private void applyAsyncChartData() {
         long ts = System.currentTimeMillis();
         ChartCalculations.getUpdateChartResult(new ArrayList<>(tradeStatisticsByCurrency),
-                tickUnit,
-                usdAveragePriceMapsPerTickUnit,
-                getCurrencyCode())
+                        tickUnit,
+                        usdAveragePriceMapsPerTickUnit,
+                        getCurrencyCode())
                 .whenComplete((updateChartResult, throwable) -> {
                     if (deactivateCalled) {
                         return;
@@ -278,7 +279,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
                     }
                     UserThread.execute(() -> {
                         itemsPerInterval.clear();
-                        itemsPerInterval.putAll(updateChartResult.getItemsPerInterval());
+                        itemsPerInterval.addAll(updateChartResult.getItemsPerInterval());
 
                         priceItems.setAll(updateChartResult.getPriceItems());
                         volumeItems.setAll(updateChartResult.getVolumeItems());
@@ -356,8 +357,8 @@ class TradesChartsViewModel extends ActivatableViewModel {
         return currencyListItems.getObservableList().stream().filter(e -> e.tradeCurrency.equals(selectedTradeCurrencyProperty.get())).findAny();
     }
 
-    long getTimeFromTickIndex(long tick) {
-        return ChartCalculations.getTimeFromTickIndex(tick, itemsPerInterval);
+    long getTimeFromTickIndex(int tickIndex) {
+        return ChartCalculations.getTimeFromTickIndex(tickIndex, itemsPerInterval);
     }
 
 
@@ -367,7 +368,7 @@ class TradesChartsViewModel extends ActivatableViewModel {
 
     private void fillTradeCurrencies() {
         // Don't use a set as we need all entries
-        List<TradeCurrency> tradeCurrencyList = tradeStatisticsManager.getObservableTradeStatisticsSet().stream()
+        List<TradeCurrency> tradeCurrencyList = tradeStatisticsManager.getNavigableTradeStatisticsSet().parallelStream()
                 .flatMap(e -> CurrencyUtil.getTradeCurrency(e.getCurrency()).stream())
                 .collect(Collectors.toList());
         currencyListItems.updateWithCurrencies(tradeCurrencyList, showAllCurrencyListItem);

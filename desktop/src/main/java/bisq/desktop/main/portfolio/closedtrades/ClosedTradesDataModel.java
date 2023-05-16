@@ -33,7 +33,6 @@ import bisq.core.trade.bsq_swap.BsqSwapTradeManager;
 import bisq.core.trade.model.Tradable;
 import bisq.core.user.Preferences;
 import bisq.core.util.PriceUtil;
-import bisq.core.util.VolumeUtil;
 
 import org.bitcoinj.core.Coin;
 
@@ -120,7 +119,7 @@ class ClosedTradesDataModel extends ActivatableDataModel {
         }
 
         Price price = PriceUtil.marketPriceToPrice(marketPrice);
-        return Optional.of(VolumeUtil.getVolume(amount, price));
+        return Optional.of(price.getVolumeByAmount(amount));
     }
 
     Volume getBsqVolumeInUsdWithAveragePrice(Coin amount) {

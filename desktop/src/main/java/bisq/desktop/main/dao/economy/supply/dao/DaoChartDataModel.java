@@ -45,6 +45,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,7 +77,6 @@ public class DaoChartDataModel extends ChartDataModel {
 
         this.daoStateService = daoStateService;
 
-        // TODO getBlockTime is the bottleneck. Add a lookup map to daoState to fix that in a dedicated PR.
         blockTimeOfIssuanceFunction = memoize(issuance -> {
             int height = daoStateService.getStartHeightOfCurrentCycle(issuance.getChainHeight()).orElse(0);
             return daoStateService.getBlockTime(height);
@@ -218,7 +218,7 @@ public class DaoChartDataModel extends ChartDataModel {
             return totalBurnedByInterval;
         }
 
-        totalBurnedByInterval = getBurntBsqByInterval(daoStateService.getBurntFeeTxs(), getDateFilter());
+        totalBurnedByInterval = getBurntBsqByInterval(getBurntFeeTxStream(), getDateFilter());
         return totalBurnedByInterval;
     }
 
@@ -227,7 +227,7 @@ public class DaoChartDataModel extends ChartDataModel {
             return bsqTradeFeeByInterval;
         }
 
-        bsqTradeFeeByInterval = getBurntBsqByInterval(daoStateService.getTradeFeeTxs(), getDateFilter());
+        bsqTradeFeeByInterval = getBurntBsqByInterval(getTradeFeeTxStream(), getDateFilter());
         return bsqTradeFeeByInterval;
     }
 
@@ -247,7 +247,7 @@ public class DaoChartDataModel extends ChartDataModel {
             return proofOfBurnByInterval;
         }
 
-        proofOfBurnByInterval = getBurntBsqByInterval(daoStateService.getProofOfBurnTxs(), getDateFilter());
+        proofOfBurnByInterval = getBurntBsqByInterval(daoStateService.getProofOfBurnTxs().stream(), getDateFilter());
         return proofOfBurnByInterval;
     }
 
@@ -278,10 +278,9 @@ public class DaoChartDataModel extends ChartDataModel {
         // Tagging started Nov 2021
         // opReturn data from BTC fees: 1701721206fe6b40777763de1c741f4fd2706d94775d
         Set<Tx> proofOfBurnTxs = daoStateService.getProofOfBurnTxs();
-        Set<Tx> feeTxs = proofOfBurnTxs.stream()
-                .filter(tx -> "1701721206fe6b40777763de1c741f4fd2706d94775d".equals(Hex.encode(tx.getLastTxOutput().getOpReturnData())))
-                .collect(Collectors.toSet());
-        proofOfBurnFromBtcFeesByInterval = getBurntBsqByInterval(feeTxs, getDateFilter());
+        Stream<Tx> feeTxStream = proofOfBurnTxs.stream()
+                .filter(tx -> "1701721206fe6b40777763de1c741f4fd2706d94775d".equals(Hex.encode(tx.getLastTxOutput().getOpReturnData())));
+        proofOfBurnFromBtcFeesByInterval = getBurntBsqByInterval(feeTxStream, getDateFilter());
         return proofOfBurnFromBtcFeesByInterval;
     }
 
@@ -293,11 +292,10 @@ public class DaoChartDataModel extends ChartDataModel {
         // Tagging started Nov 2021
         // opReturn data from delayed payout txs: 1701e47e5d8030f444c182b5e243871ebbaeadb5e82f
         // opReturn data from BM trades with a trade who got reimbursed by the DAO : 1701293c488822f98e70e047012f46f5f1647f37deb7
-        Set<Tx> feeTxs = daoStateService.getProofOfBurnTxs().stream()
+        Stream<Tx> feeTxStream = daoStateService.getProofOfBurnTxs().stream()
                 .filter(e -> "1701e47e5d8030f444c182b5e243871ebbaeadb5e82f".equals(Hex.encode(e.getLastTxOutput().getOpReturnData())) ||
-                        "1701293c488822f98e70e047012f46f5f1647f37deb7".equals(Hex.encode(e.getLastTxOutput().getOpReturnData())))
-                .collect(Collectors.toSet());
-        proofOfBurnFromArbitrationByInterval = getBurntBsqByInterval(feeTxs, getDateFilter());
+                        "1701293c488822f98e70e047012f46f5f1647f37deb7".equals(Hex.encode(e.getLastTxOutput().getOpReturnData())));
+        proofOfBurnFromArbitrationByInterval = getBurntBsqByInterval(feeTxStream, getDateFilter());
         return proofOfBurnFromArbitrationByInterval;
     }
 
@@ -310,7 +308,7 @@ public class DaoChartDataModel extends ChartDataModel {
         Collection<Issuance> issuanceSetForType = daoStateService.getIssuanceItems();
         // get all issued and burnt BSQ, not just the filtered date range
         Map<Long, Long> tmpIssuedByInterval = getIssuedBsqByInterval(issuanceSetForType, e -> true);
-        Map<Long, Long> tmpBurnedByInterval = new TreeMap<>(getBurntBsqByInterval(daoStateService.getBurntFeeTxs(), e -> true)
+        Map<Long, Long> tmpBurnedByInterval = new TreeMap<>(getBurntBsqByInterval(getBurntFeeTxStream(), e -> true)
                 .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> -e.getValue())));
         Map<Long, Long> tmpSupplyByInterval = getMergedMap(tmpIssuedByInterval, tmpBurnedByInterval, Long::sum);
 
@@ -367,9 +365,10 @@ public class DaoChartDataModel extends ChartDataModel {
                         Long::sum));
     }
 
-    private Map<Long, Long> getBurntBsqByInterval(Collection<Tx> txs, Predicate<Long> dateFilter) {
-        return txs.stream()
-                .collect(Collectors.groupingBy(tx -> toTimeInterval(Instant.ofEpochMilli(tx.getTime()))))
+    private Map<Long, Long> getBurntBsqByInterval(Stream<Tx> txStream, Predicate<Long> dateFilter) {
+        var toTimeIntervalFn = toCachedTimeIntervalFn();
+        return txStream
+                .collect(Collectors.groupingBy(tx -> toTimeIntervalFn.applyAsLong(Instant.ofEpochMilli(tx.getTime()))))
                 .entrySet()
                 .stream()
                 .filter(entry -> dateFilter.test(entry.getKey()))
@@ -382,6 +381,20 @@ public class DaoChartDataModel extends ChartDataModel {
     private Predicate<Long> getPostTagDateFilter() {
         // We filter out old dates as it only makes sense since Nov 2021
         return date -> date >= TAG_DATE.getTimeInMillis() / 1000;  // we use seconds
+    }
+
+    // TODO: Consider moving these two methods to DaoStateService:
+
+    private Stream<Tx> getBurntFeeTxStream() {
+        return daoStateService.getBlocks().stream()
+                .flatMap(b -> b.getTxs().stream())
+                .filter(tx -> tx.getBurntFee() > 0);
+    }
+
+    private Stream<Tx> getTradeFeeTxStream() {
+        return daoStateService.getBlocks().stream()
+                .flatMap(b -> b.getTxs().stream())
+                .filter(tx -> tx.getTxType() == TxType.PAY_TRADE_FEE);
     }
 
 

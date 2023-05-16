@@ -19,7 +19,6 @@ package bisq.core.trade.statistics;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.monetary.Altcoin;
-import bisq.core.monetary.AltcoinExchangeRate;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
@@ -41,6 +40,7 @@ import bisq.common.app.Capability;
 import bisq.common.crypto.Hash;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.util.CollectionUtils;
+import bisq.common.util.ComparableExt;
 import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.JsonExclude;
 import bisq.common.util.Utilities;
@@ -48,8 +48,6 @@ import bisq.common.util.Utilities;
 import com.google.protobuf.ByteString;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.utils.ExchangeRate;
-import org.bitcoinj.utils.Fiat;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -59,14 +57,18 @@ import java.time.ZoneId;
 
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
@@ -78,7 +80,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 @Slf4j
 public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayload, PersistableNetworkPayload,
-        CapabilityRequiringPayload, DateSortedTruncatablePayload {
+        CapabilityRequiringPayload, DateSortedTruncatablePayload, ComparableExt<TradeStatistics3> {
 
     @JsonExclude
     private transient static final ZoneId ZONE_ID = ZoneId.systemDefault();
@@ -138,7 +140,8 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     // The payment method string can be quite long and would consume 15% more space.
     // When we get a new payment method we can add it to the enum at the end. Old users would add it as string if not
     // recognized.
-    private enum PaymentMethodMapper {
+    @VisibleForTesting
+    enum PaymentMethodMapper {
         OK_PAY,
         CASH_APP,
         VENMO,
@@ -194,7 +197,9 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         TIKKIE,
         TRANSFERWISE_USD,
         ACH_TRANSFER,
-        DOMESTIC_WIRE_TRANSFER
+        DOMESTIC_WIRE_TRANSFER;
+
+        private static final PaymentMethodMapper[] values = values(); // cache for perf gain
     }
 
     @Getter
@@ -298,7 +303,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         String tempPaymentMethod;
         try {
             tempPaymentMethod = String.valueOf(PaymentMethodMapper.valueOf(paymentMethod).ordinal());
-        } catch (Throwable t) {
+        } catch (IllegalArgumentException e) {
             tempPaymentMethod = paymentMethod;
         }
         this.paymentMethod = tempPaymentMethod;
@@ -382,8 +387,9 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     }
 
     public LocalDateTime getLocalDateTime() {
+        LocalDateTime localDateTime = this.localDateTime;
         if (localDateTime == null) {
-            localDateTime = dateObj.toInstant().atZone(ZONE_ID).toLocalDateTime();
+            this.localDateTime = localDateTime = dateObj.toInstant().atZone(ZONE_ID).toLocalDateTime();
         }
         return localDateTime;
     }
@@ -403,9 +409,12 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     }
 
     public String getPaymentMethodId() {
+        if (paymentMethod.isEmpty() || paymentMethod.charAt(0) > '9') {
+            return paymentMethod;
+        }
         try {
-            return PaymentMethodMapper.values()[Integer.parseInt(paymentMethod)].name();
-        } catch (Throwable ignore) {
+            return PaymentMethodMapper.values[Integer.parseInt(paymentMethod)].name();
+        } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
             return paymentMethod;
         }
     }
@@ -413,8 +422,9 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     private transient Price priceObj;
 
     public Price getTradePrice() {
+        Price priceObj = this.priceObj;
         if (priceObj == null) {
-            priceObj = Price.valueOf(currency, price);
+            this.priceObj = priceObj = Price.valueOf(currency, price);
         }
         return priceObj;
     }
@@ -424,13 +434,12 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
     }
 
     public Volume getTradeVolume() {
+        Volume volume = this.volume;
         if (volume == null) {
-            if (getTradePrice().getMonetary() instanceof Altcoin) {
-                volume = new Volume(new AltcoinExchangeRate((Altcoin) getTradePrice().getMonetary()).coinToAltcoin(getTradeAmount()));
-            } else {
-                Volume exactVolume = new Volume(new ExchangeRate((Fiat) getTradePrice().getMonetary()).coinToFiat(getTradeAmount()));
-                volume = VolumeUtil.getRoundedFiatVolume(exactVolume);
-            }
+            Price price = getTradePrice();
+            this.volume = volume = price.getMonetary() instanceof Altcoin
+                    ? price.getVolumeByAmount(getTradeAmount())
+                    : VolumeUtil.getRoundedFiatVolume(price.getVolumeByAmount(getTradeAmount()));
         }
         return volume;
     }
@@ -472,6 +481,27 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                 currencyFound;
     }
 
+    private static <T extends Comparable<? super T>> int nullsFirstCompare(T a, T b) {
+        return Comparator.nullsFirst(Comparator.<T>naturalOrder()).compare(a, b);
+    }
+
+    @Override
+    public int compareTo(@NotNull ComparableExt<TradeStatistics3> o) {
+        if (this == o) {
+            return 0;
+        }
+        if (!(o instanceof TradeStatistics3)) {
+            return -o.compareTo(this);
+        }
+        TradeStatistics3 that = (TradeStatistics3) o;
+        return date != that.date ? Long.compare(date, that.date)
+                : amount != that.amount ? Long.compare(amount, that.amount)
+                : !Objects.equals(currency, that.currency) ? nullsFirstCompare(currency, that.currency)
+                : price != that.price ? Long.compare(price, that.price)
+                : !Objects.equals(paymentMethod, that.paymentMethod) ? nullsFirstCompare(paymentMethod, that.paymentMethod)
+                : Arrays.compare(hash, that.hash);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -482,9 +512,8 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         if (price != that.price) return false;
         if (amount != that.amount) return false;
         if (date != that.date) return false;
-        if (currency != null ? !currency.equals(that.currency) : that.currency != null) return false;
-        if (paymentMethod != null ? !paymentMethod.equals(that.paymentMethod) : that.paymentMethod != null)
-            return false;
+        if (!Objects.equals(currency, that.currency)) return false;
+        if (!Objects.equals(paymentMethod, that.paymentMethod)) return false;
         return Arrays.equals(hash, that.hash);
     }
 

@@ -26,8 +26,6 @@ import bisq.common.util.Tuple2;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -35,6 +33,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,16 +61,11 @@ public class DisputeAgentSelection {
                                                                        DisputeAgentManager<T> disputeAgentManager,
                                                                        boolean isMediator) {
         // We take last 100 entries from trade statistics
-        List<TradeStatistics3> list = new ArrayList<>(tradeStatisticsManager.getObservableTradeStatisticsSet());
-        list.sort(Comparator.comparing(TradeStatistics3::getDateAsLong));
-        Collections.reverse(list);
-        if (!list.isEmpty()) {
-            int max = Math.min(list.size(), LOOK_BACK_RANGE);
-            list = list.subList(0, max);
-        }
+        Stream<TradeStatistics3> stream = tradeStatisticsManager.getNavigableTradeStatisticsSet().descendingSet().stream()
+                .limit(LOOK_BACK_RANGE);
 
         // We stored only first 4 chars of disputeAgents onion address
-        List<String> lastAddressesUsedInTrades = list.stream()
+        List<String> lastAddressesUsedInTrades = stream
                 .map(tradeStatistics3 -> isMediator ? tradeStatistics3.getMediator() : tradeStatistics3.getRefundAgent())
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());

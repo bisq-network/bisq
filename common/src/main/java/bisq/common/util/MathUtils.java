@@ -101,7 +101,7 @@ public class MathUtils {
         return BigDecimal.valueOf(value1).multiply(BigDecimal.valueOf(value2)).doubleValue();
     }
 
-    public static long getMedian(Long[] list) {
+    public static long getMedian(long[] list) {
         if (list.length == 0) {
             return 0L;
         }
