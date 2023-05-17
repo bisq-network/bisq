@@ -23,7 +23,6 @@ import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.filter.FilterManager;
 
 import bisq.common.util.Tuple2;
-import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
@@ -34,8 +33,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,7 +48,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 @Getter
 public class TxValidator {
-    private static final Date USE_FEE_FROM_FILTER_ACTIVATION_DATE = Utilities.getUTCDate(2022, GregorianCalendar.JANUARY, 1);
     private final static double FEE_TOLERANCE = 0.5;     // we expect fees to be at least 50% of target
     private final static long BLOCK_TOLERANCE = 599999;  // allow really old offers with weird fee addresses
 
@@ -420,9 +416,6 @@ public class TxValidator {
                                                              Param minFeeParam,
                                                              boolean isBtcFee,
                                                              String description) {
-        if (new Date().before(USE_FEE_FROM_FILTER_ACTIVATION_DATE)) {
-            return Optional.empty();
-        }
         return getFeeFromFilter(isMaker, isBtcFee)
                 .map(feeFromFilter -> {
                     boolean isValid = testWithFeeFromFilter(tradeAmount, feeValueAsCoin, feeFromFilter, minFeeParam);
