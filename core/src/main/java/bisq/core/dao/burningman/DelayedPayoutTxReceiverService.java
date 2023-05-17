@@ -52,10 +52,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Singleton
 public class DelayedPayoutTxReceiverService implements DaoStateListener {
-    public static final Date HOTFIX_ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.JANUARY, 10);
+    // Activation date for bugfix of receiver addresses getting overwritten by a new compensation
+    // requests change address.
+    // See: https://github.com/bisq-network/bisq/issues/6699
+    public static final Date BUGFIX_6699_ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.AUGUST, 10);
 
-    public static boolean isHotfixActivated() {
-        return new Date().after(HOTFIX_ACTIVATION_DATE);
+    public static boolean isBugfix6699Activated() {
+        return new Date().after(BUGFIX_6699_ACTIVATION_DATE);
     }
 
     // We don't allow to get further back than 767950 (the block height from Dec. 18th 2022).
@@ -121,13 +124,13 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     public List<Tuple2<Long, String>> getReceivers(int burningManSelectionHeight,
                                                    long inputAmount,
                                                    long tradeTxFee) {
-        return getReceivers(burningManSelectionHeight, inputAmount, tradeTxFee, isHotfixActivated());
+        return getReceivers(burningManSelectionHeight, inputAmount, tradeTxFee, isBugfix6699Activated());
     }
 
     public List<Tuple2<Long, String>> getReceivers(int burningManSelectionHeight,
                                                    long inputAmount,
                                                    long tradeTxFee,
-                                                   boolean isHotfixActivated) {
+                                                   boolean isBugfix6699Activated) {
         checkArgument(burningManSelectionHeight >= MIN_SNAPSHOT_HEIGHT, "Selection height must be >= " + MIN_SNAPSHOT_HEIGHT);
         Collection<BurningManCandidate> burningManCandidates = burningManService.getActiveBurningManCandidates(burningManSelectionHeight);
 
