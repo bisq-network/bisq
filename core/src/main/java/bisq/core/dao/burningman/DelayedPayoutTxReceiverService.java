@@ -129,9 +129,7 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
                                                    long tradeTxFee,
                                                    boolean isHotfixActivated) {
         checkArgument(burningManSelectionHeight >= MIN_SNAPSHOT_HEIGHT, "Selection height must be >= " + MIN_SNAPSHOT_HEIGHT);
-        Collection<BurningManCandidate> burningManCandidates = isHotfixActivated ?
-                burningManService.getActiveBurningManCandidates(burningManSelectionHeight) :
-                burningManService.getBurningManCandidatesByName(burningManSelectionHeight).values();
+        Collection<BurningManCandidate> burningManCandidates = burningManService.getActiveBurningManCandidates(burningManSelectionHeight);
 
         // We need to use the same txFeePerVbyte value for both traders.
         // We use the tradeTxFee value which is calculated from the average of taker fee tx size and deposit tx size.
@@ -158,9 +156,7 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
         // If we remove outputs it will be spent as miner fee.
         long minOutputAmount = Math.max(DPT_MIN_OUTPUT_AMOUNT, txFeePerVbyte * 32 * 2);
         // Sanity check that max share of a non-legacy BM is 20% over MAX_BURN_SHARE (taking into account potential increase due adjustment)
-        long maxOutputAmount = isHotfixActivated ?
-                Math.round(spendableAmount * (BurningManService.MAX_BURN_SHARE * 1.2)) :
-                Math.round(inputAmount * (BurningManService.MAX_BURN_SHARE * 1.2));
+        long maxOutputAmount = Math.round(spendableAmount * (BurningManService.MAX_BURN_SHARE * 1.2));
         // We accumulate small amounts which gets filtered out and subtract it from 1 to get an adjustment factor
         // used later to be applied to the remaining burningmen share.
         double adjustment = 1 - burningManCandidates.stream()
@@ -189,8 +185,7 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
             long available = spendableAmount - totalOutputValue;
             // If the available is larger than DPT_MIN_REMAINDER_TO_LEGACY_BM we send it to legacy BM
             // Otherwise we use it as miner fee
-            long dptMinRemainderToLegacyBm = isHotfixActivated ? DPT_MIN_REMAINDER_TO_LEGACY_BM : 50000;
-            if (available > dptMinRemainderToLegacyBm) {
+            if (available > DPT_MIN_REMAINDER_TO_LEGACY_BM) {
                 receivers.add(new Tuple2<>(available, burningManService.getLegacyBurningManAddress(burningManSelectionHeight)));
             }
         }
