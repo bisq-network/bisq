@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(callSuper = true)
 public final class LegacyBurningMan extends BurningManCandidate {
     public LegacyBurningMan(String address) {
-        mostRecentAddress = Optional.of(address);
+        receiverAddress = mostRecentAddress = Optional.of(address);
     }
 
     public void applyBurnAmountShare(double burnAmountShare) {
@@ -56,6 +56,6 @@ public final class LegacyBurningMan extends BurningManCandidate {
 
     @Override
     public Set<String> getAllAddresses() {
-        return mostRecentAddress.map(Set::of).orElse(new HashSet<>());
+        return getReceiverAddress().map(Set::of).orElse(new HashSet<>());
     }
 }

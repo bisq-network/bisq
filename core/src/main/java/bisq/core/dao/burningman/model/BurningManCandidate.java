@@ -18,6 +18,7 @@
 package bisq.core.dao.burningman.model;
 
 import bisq.core.dao.burningman.BurningManService;
+import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 
 import bisq.common.util.DateUtil;
 
@@ -46,6 +47,13 @@ public class BurningManCandidate {
     private long accumulatedCompensationAmount;
     private long accumulatedDecayedCompensationAmount;
     private double compensationShare;           // Share of accumulated decayed compensation amounts in relation to total issued amounts
+
+    protected Optional<String> receiverAddress = Optional.empty();
+
+    // For deploying a bugfix with mostRecentAddress we need to maintain the old version to avoid breaking the
+    // trade protocol. We use the legacyMostRecentAddress until the activation date where we
+    // enforce the version by the filter to ensure users have updated.
+    // See: https://github.com/bisq-network/bisq/issues/6699
     protected Optional<String> mostRecentAddress = Optional.empty();
 
     private final Set<BurnOutputModel> burnOutputModels = new HashSet<>();
@@ -61,6 +69,14 @@ public class BurningManCandidate {
     protected double adjustedBurnAmountShare;
 
     public BurningManCandidate() {
+    }
+
+    public Optional<String> getReceiverAddress() {
+        return getReceiverAddress(DelayedPayoutTxReceiverService.isBugfix6699Activated());
+    }
+
+    public Optional<String> getReceiverAddress(boolean isBugfix6699Activated) {
+        return isBugfix6699Activated ? receiverAddress : mostRecentAddress;
     }
 
     public void addBurnOutputModel(BurnOutputModel burnOutputModel) {
@@ -87,6 +103,25 @@ public class BurningManCandidate {
         accumulatedDecayedCompensationAmount += compensationModel.getDecayedAmount();
         accumulatedCompensationAmount += compensationModel.getAmount();
 
+        boolean hasAnyCustomAddress = compensationModels.stream()
+                .anyMatch(CompensationModel::isCustomAddress);
+        if (hasAnyCustomAddress) {
+            // If any custom address was defined, we only consider custom addresses and sort them to take the
+            // most recent one.
+            receiverAddress = compensationModels.stream()
+                    .filter(CompensationModel::isCustomAddress)
+                    .max(Comparator.comparing(CompensationModel::getHeight))
+                    .map(CompensationModel::getAddress);
+        } else {
+            // If no custom addresses ever have been defined, we take the change address of the compensation request
+            // and use the earliest address. This helps to avoid change of address with every new comp. request.
+            receiverAddress = compensationModels.stream()
+                    .min(Comparator.comparing(CompensationModel::getHeight))
+                    .map(CompensationModel::getAddress);
+        }
+
+        // For backward compatibility reasons we need to maintain the old buggy version.
+        // See: https://github.com/bisq-network/bisq/issues/6699.
         mostRecentAddress = compensationModels.stream()
                 .max(Comparator.comparing(CompensationModel::getHeight))
                 .map(CompensationModel::getAddress);
@@ -145,6 +180,7 @@ public class BurningManCandidate {
                 ",\r\n     accumulatedCompensationAmount=" + accumulatedCompensationAmount +
                 ",\r\n     accumulatedDecayedCompensationAmount=" + accumulatedDecayedCompensationAmount +
                 ",\r\n     compensationShare=" + compensationShare +
+                ",\r\n     receiverAddress=" + receiverAddress +
                 ",\r\n     mostRecentAddress=" + mostRecentAddress +
                 ",\r\n     burnOutputModels=" + burnOutputModels +
                 ",\r\n     accumulatedBurnAmount=" + accumulatedBurnAmount +
