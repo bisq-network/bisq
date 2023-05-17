@@ -153,6 +153,7 @@ public class BurningManService {
                                         long decayedIssuanceAmount = getDecayedCompensationAmount(issuanceAmount, issuanceHeight, chainHeight);
                                         long issuanceDate = daoStateService.getBlockTime(issuanceHeight);
                                         candidate.addCompensationModel(CompensationModel.fromCompensationRequest(receiverAddress.get(),
+                                                isCustomAddress,
                                                 issuanceAmount,
                                                 decayedIssuanceAmount,
                                                 issuanceHeight,

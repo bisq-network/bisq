@@ -27,6 +27,7 @@ import lombok.Getter;
 @EqualsAndHashCode
 public final class CompensationModel {
     public static CompensationModel fromCompensationRequest(String address,
+                                                            boolean isCustomAddress,
                                                             long amount,
                                                             long decayedAmount,
                                                             int height,
@@ -34,6 +35,7 @@ public final class CompensationModel {
                                                             long date,
                                                             int cycleIndex) {
         return new CompensationModel(address,
+                isCustomAddress,
                 amount,
                 decayedAmount,
                 height,
@@ -51,6 +53,7 @@ public final class CompensationModel {
                                                       int outputIndex,
                                                       long date) {
         return new CompensationModel(address,
+                false,
                 amount,
                 decayedAmount,
                 height,
@@ -62,6 +65,7 @@ public final class CompensationModel {
 
 
     private final String address;
+    private final boolean isCustomAddress;
     private final long amount;
     private final long decayedAmount;
     private final int height;
@@ -71,6 +75,7 @@ public final class CompensationModel {
     private final int cycleIndex;
 
     private CompensationModel(String address,
+                              boolean isCustomAddress,
                               long amount,
                               long decayedAmount,
                               int height,
@@ -79,6 +84,7 @@ public final class CompensationModel {
                               long date,
                               int cycleIndex) {
         this.address = address;
+        this.isCustomAddress = isCustomAddress;
         this.amount = amount;
         this.decayedAmount = decayedAmount;
         this.height = height;
@@ -92,6 +98,7 @@ public final class CompensationModel {
     public String toString() {
         return "\n          CompensationModel{" +
                 "\r\n                address='" + address + '\'' +
+                "\r\n                isCustomAddress='" + isCustomAddress + '\'' +
                 ",\r\n               amount=" + amount +
                 ",\r\n               decayedAmount=" + decayedAmount +
                 ",\r\n               height=" + height +
