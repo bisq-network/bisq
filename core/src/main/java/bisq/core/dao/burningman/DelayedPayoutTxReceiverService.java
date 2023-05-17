@@ -163,7 +163,7 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
         // We accumulate small amounts which gets filtered out and subtract it from 1 to get an adjustment factor
         // used later to be applied to the remaining burningmen share.
         double adjustment = 1 - burningManCandidates.stream()
-                .filter(candidate -> candidate.getMostRecentAddress().isPresent())
+                .filter(candidate -> candidate.getReceiverAddress(isBugfix6699Activated).isPresent())
                 .mapToDouble(candidate -> {
                     double cappedBurnAmountShare = candidate.getCappedBurnAmountShare();
                     long amount = Math.round(cappedBurnAmountShare * spendableAmount);
@@ -172,11 +172,11 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
                 .sum();
 
         List<Tuple2<Long, String>> receivers = burningManCandidates.stream()
-                .filter(candidate -> candidate.getMostRecentAddress().isPresent())
+                .filter(candidate -> candidate.getReceiverAddress(isBugfix6699Activated).isPresent())
                 .map(candidate -> {
                     double cappedBurnAmountShare = candidate.getCappedBurnAmountShare() / adjustment;
                     return new Tuple2<>(Math.round(cappedBurnAmountShare * spendableAmount),
-                            candidate.getMostRecentAddress().get());
+                            candidate.getReceiverAddress(isBugfix6699Activated).get());
                 })
                 .filter(tuple -> tuple.first >= minOutputAmount)
                 .filter(tuple -> tuple.first <= maxOutputAmount)
