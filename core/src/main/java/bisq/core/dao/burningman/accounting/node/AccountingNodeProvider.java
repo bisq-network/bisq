@@ -17,7 +17,6 @@
 
 package bisq.core.dao.burningman.accounting.node;
 
-import bisq.core.dao.burningman.BurningManService;
 import bisq.core.dao.burningman.accounting.node.full.AccountingFullNode;
 import bisq.core.dao.burningman.accounting.node.lite.AccountingLiteNode;
 import bisq.core.user.Preferences;
@@ -39,7 +38,6 @@ public class AccountingNodeProvider {
     @Inject
     public AccountingNodeProvider(AccountingLiteNode liteNode,
                                   AccountingFullNode fullNode,
-                                  InActiveAccountingNode inActiveAccountingNode,
                                   @Named(Config.IS_BM_FULL_NODE) boolean isBmFullNode,
                                   Preferences preferences) {
 
@@ -51,7 +49,7 @@ public class AccountingNodeProvider {
         if (isBmFullNode && rpcDataSet) {
             accountingNode = fullNode;
         } else {
-            accountingNode = BurningManService.isActivated() ? liteNode : inActiveAccountingNode;
+            accountingNode = liteNode;
         }
     }
 }
