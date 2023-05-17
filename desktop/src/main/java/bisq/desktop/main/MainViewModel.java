@@ -635,7 +635,12 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             @Override
             public void onAwakeFromStandby(long missedMs) {
                 if (missedMs > TimeUnit.SECONDS.toMillis(10)) {
-                    String key = "clockWatcherWarning";
+                    log.warn("UI thread has been blocked for {} sec", (int) missedMs / 1000);
+
+                    // See: https://github.com/bisq-network/bisq/issues/6703
+                    // Keep original code as once the blocking UI thread issue is
+                    // fixed (https://github.com/bisq-network/bisq/issues/6704) we can re-enable it.
+                   /* String key = "clockWatcherWarning";
                     if (DontShowAgainLookup.showAgain(key)) {
                         new Popup().warning(Res.get("mainView.networkWarning.clockWatcher", missedMs / 1000))
                                 .actionButtonText(Res.get("shared.iUnderstand"))
@@ -643,7 +648,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                                 .dontShowAgainId(key)
                                 .hideCloseButton()
                                 .show();
-                    }
+                    }*/
                 }
             }
         };
