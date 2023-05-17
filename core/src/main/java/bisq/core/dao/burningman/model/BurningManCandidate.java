@@ -79,6 +79,11 @@ public class BurningManCandidate {
         return isBugfix6699Activated ? receiverAddress : mostRecentAddress;
     }
 
+    public Optional<String> getMostRecentAddress() {
+        // Lombok getter is set for class, so we would get a getMostRecentAddress but want to ensure it's not accidentally used.
+        throw new UnsupportedOperationException("getMostRecentAddress must not be used. Use getReceiverAddress instead.");
+    }
+
     public void addBurnOutputModel(BurnOutputModel burnOutputModel) {
         if (burnOutputModels.contains(burnOutputModel)) {
             return;
