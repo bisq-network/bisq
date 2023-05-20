@@ -216,10 +216,18 @@ public class PortfolioView extends ActivatableView<TabPane, Void> {
     }
 
     private void loadView(Class<? extends View> viewClass, @Nullable Object data) {
-        // we want to get activate/deactivate called, so we remove the old view on tab change
-        // TODO Don't understand the check for currentTab != editOpenOfferTab
-        if (currentTab != null && currentTab != editOpenOfferTab)
-            currentTab.setContent(null);
+        // We want to get activate/deactivate triggered, so we remove the old view on tab change
+        // for the tab views which are not-closable by calling `currentTab.setContent(null)`.
+        // The closable tab views like editOpenOfferTab, duplicateOfferTab and cloneOpenOfferTab
+        // do not need to be triggered.
+        if (currentTab != null) {
+            boolean isClosableTabView = currentTab == editOpenOfferTab ||
+                    currentTab == duplicateOfferTab ||
+                    currentTab == cloneOpenOfferTab;
+            if (!isClosableTabView) {
+                currentTab.setContent(null);
+            }
+        }
 
         View view = viewLoader.load(viewClass);
 
