@@ -52,9 +52,9 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static bisq.desktop.util.FormBuilder.addButtonBusyAnimationLabelAfterGroup;
@@ -102,6 +102,7 @@ public class CloneOfferView extends MutableOfferView<CloneOfferViewModel> {
     protected void doActivate() {
         super.doActivate();
 
+
         addBindings();
 
         hideOptionsGroup();
@@ -131,14 +132,14 @@ public class CloneOfferView extends MutableOfferView<CloneOfferViewModel> {
     }
 
     @Override
-    public void onClose() {
-    }
-
-    @Override
     protected void deactivate() {
         super.deactivate();
 
         removeBindings();
+    }
+
+    @Override
+    public void onClose() {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -174,11 +175,14 @@ public class CloneOfferView extends MutableOfferView<CloneOfferViewModel> {
     @Override
     protected ObservableList<PaymentAccount> filterPaymentAccounts(ObservableList<PaymentAccount> paymentAccounts) {
         // We do not allow cloning or BSQ as there is no maker fee and requirement for reserved funds.
-        return FXCollections.observableArrayList(
-                paymentAccounts.stream()
-                        .filter(paymentAccount -> !GUIUtil.BSQ.equals(paymentAccount.getSingleTradeCurrency()))
-                        .collect(Collectors.toList()));
+        // Do not create a new ObservableList as that would cause bugs with the selected account.
+        List<PaymentAccount> toRemove = paymentAccounts.stream()
+                .filter(paymentAccount -> GUIUtil.BSQ.equals(paymentAccount.getSingleTradeCurrency()))
+                .collect(Collectors.toList());
+        toRemove.forEach(paymentAccounts::remove);
+        return paymentAccounts;
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Build UI elements
