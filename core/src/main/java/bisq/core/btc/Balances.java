@@ -18,7 +18,9 @@
 package bisq.core.btc;
 
 import bisq.core.btc.listeners.BalanceListener;
+import bisq.core.btc.listeners.BsqBalanceListener;
 import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
@@ -51,6 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 public class Balances {
     private final TradeManager tradeManager;
     private final BtcWalletService btcWalletService;
+    private final BsqWalletService bsqWalletService;
     private final OpenOfferManager openOfferManager;
     private final ClosedTradableManager closedTradableManager;
     private final FailedTradesManager failedTradesManager;
@@ -62,16 +65,20 @@ public class Balances {
     private final ObjectProperty<Coin> reservedBalance = new SimpleObjectProperty<>();
     @Getter
     private final ObjectProperty<Coin> lockedBalance = new SimpleObjectProperty<>();
+    @Getter
+    private final ObjectProperty<Coin> bsqBalance = new SimpleObjectProperty<>();
 
     @Inject
     public Balances(TradeManager tradeManager,
                     BtcWalletService btcWalletService,
+                    BsqWalletService bsqWalletService,
                     OpenOfferManager openOfferManager,
                     ClosedTradableManager closedTradableManager,
                     FailedTradesManager failedTradesManager,
                     RefundManager refundManager) {
         this.tradeManager = tradeManager;
         this.btcWalletService = btcWalletService;
+        this.bsqWalletService = bsqWalletService;
         this.openOfferManager = openOfferManager;
         this.closedTradableManager = closedTradableManager;
         this.failedTradesManager = failedTradesManager;
@@ -90,6 +97,21 @@ public class Balances {
         });
         btcWalletService.addNewBestBlockListener(storedBlock -> updateBalance());
 
+        bsqWalletService.addBsqBalanceListener(new BsqBalanceListener() {
+            @Override
+            public void onUpdateBalances(Coin availableBalance,
+                                         Coin availableNonBsqBalance,
+                                         Coin unverifiedBalance,
+                                         Coin unconfirmedChangeBalance,
+                                         Coin lockedForVotingBalance,
+                                         Coin lockedInBondsBalance,
+                                         Coin unlockingBondsBalance) {
+                updateBalance();
+            }
+        });
+        bsqWalletService.addNewBestBlockListener(storedBlock -> updateBalance());
+
+
         updateBalance();
     }
 
@@ -99,6 +121,7 @@ public class Balances {
             updateAvailableBalance();
             updateReservedBalance();
             updateLockedBalance();
+            updateBsqBalance();
         });
     }
 
@@ -128,5 +151,9 @@ public class Balances {
                 .mapToLong(AddressEntry::getCoinLockedInMultiSig)
                 .sum();
         lockedBalance.set(Coin.valueOf(sum));
+    }
+
+    private void updateBsqBalance() {
+        bsqBalance.set(bsqWalletService.getAvailableBalance());
     }
 }

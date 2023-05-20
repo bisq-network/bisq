@@ -785,6 +785,10 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         return balancePresentation.getLockedBalance();
     }
 
+    StringProperty getBsqBalance() {
+        return balancePresentation.getBsqBalance();
+    }
+
 
     // Wallet
     StringProperty getBtcInfo() {

@@ -325,6 +325,17 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             }
         });
 
+        Tuple2<Label, VBox> bsqBalanceBox = getBalanceBox(Res.get("mainView.balance.bsq.short"));
+        bsqBalanceBox.first.textProperty().bind(model.getBsqBalance());
+        bsqBalanceBox.first.setPrefWidth(60);
+        bsqBalanceBox.first.tooltipProperty().bind(new ObjectBinding<>() {
+            @Override
+            protected Tooltip computeValue() {
+                return new Tooltip(Res.get("mainView.balance.bsq"));
+            }
+        });
+
+
         HBox primaryNav = new HBox(marketButton, getNavigationSeparator(), buyButton, getNavigationSeparator(),
                 sellButton, getNavigationSeparator(), portfolioButtonWithBadge, getNavigationSeparator(), fundsButton);
 
@@ -340,7 +351,8 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         secondaryNav.setAlignment(Pos.CENTER);
 
         HBox priceAndBalance = new HBox(marketPriceBox.second, getNavigationSeparator(), availableBalanceBox.second,
-                getNavigationSeparator(), reservedBalanceBox.second, getNavigationSeparator(), lockedBalanceBox.second);
+                getNavigationSeparator(), reservedBalanceBox.second, getNavigationSeparator(), lockedBalanceBox.second,
+                getNavigationSeparator(), bsqBalanceBox.second);
         priceAndBalance.setMaxHeight(41);
 
         priceAndBalance.setAlignment(Pos.CENTER);

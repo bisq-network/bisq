@@ -19,6 +19,7 @@ package bisq.core.presentation;
 
 import bisq.core.btc.Balances;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
 import javax.inject.Inject;
@@ -38,9 +39,15 @@ public class BalancePresentation {
     private final StringProperty reservedBalance = new SimpleStringProperty();
     @Getter
     private final StringProperty lockedBalance = new SimpleStringProperty();
+    @Getter
+    private final StringProperty bsqBalance = new SimpleStringProperty();
 
     @Inject
-    public BalancePresentation(Balances balances, @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
+    public BalancePresentation(
+            Balances balances,
+            @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
+            BsqFormatter bsqFormatter
+    ) {
         balances.getAvailableBalance().addListener((observable, oldValue, newValue) -> {
             String value = formatter.formatCoinWithCode(newValue);
             // If we get full precision the BTC postfix breaks layout so we omit it
@@ -54,6 +61,10 @@ public class BalancePresentation {
         });
         balances.getLockedBalance().addListener((observable, oldValue, newValue) -> {
             lockedBalance.set(formatter.formatCoinWithCode(newValue));
+        });
+
+        balances.getBsqBalance().addListener((observable, oldValue, newValue) -> {
+            bsqBalance.set(bsqFormatter.formatCoinWithCode(newValue));
         });
     }
 }
