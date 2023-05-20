@@ -174,7 +174,7 @@ public class JFXRadioButtonSkinBisqStyle extends RadioButtonSkin {
     protected void updateChildren() {
         super.updateChildren();
         if (radio != null) {
-            removeRadio();
+            getChildren().removeIf(child -> "radio".equals(child.getStyleClass().get(0)));
             getChildren().addAll(container, rippler);
         }
     }
@@ -214,15 +214,6 @@ public class JFXRadioButtonSkinBisqStyle extends RadioButtonSkin {
         rippler.resizeRelocate((width / 2 + xOffset) - ripplerWidth / 2,
                 (height / 2 + yOffset) + 2 - ripplerHeight / 2,
                 ripplerWidth, ripplerHeight);
-    }
-
-    private void removeRadio() {
-        // TODO: replace with removeIf
-        for (int i = 0; i < getChildren().size(); i++) {
-            if ("radio".equals(getChildren().get(i).getStyleClass().get(0))) {
-                getChildren().remove(i);
-            }
-        }
     }
 
     private void updateColors() {
