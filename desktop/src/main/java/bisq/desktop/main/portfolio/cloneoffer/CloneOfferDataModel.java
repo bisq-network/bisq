@@ -181,7 +181,7 @@ class CloneOfferDataModel extends MutableOfferDataModel {
                 sourceOpenOffer.getOffer().getBuyerSecurityDeposit().getValue(),
                 false,
                 true,
-                sourceOpenOffer.getTriggerPrice(),
+                triggerPrice,
                 transaction -> resultHandler.handleResult(),
                 errorMessageHandler);
     }
