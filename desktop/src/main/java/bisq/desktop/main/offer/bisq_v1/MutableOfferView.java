@@ -258,8 +258,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
             currencyComboBox.getSelectionModel().select(model.getTradeCurrency());
             paymentAccountsComboBox.setItems(getPaymentAccounts());
-            paymentAccountsComboBox.getSelectionModel().select(model.getPaymentAccount());
-
+            UserThread.execute(() -> paymentAccountsComboBox.getSelectionModel().select(model.getPaymentAccount()));
             onPaymentAccountsComboBoxSelected();
 
             balanceTextField.setTargetAmount(model.getDataModel().totalToPayAsCoinProperty().get());
