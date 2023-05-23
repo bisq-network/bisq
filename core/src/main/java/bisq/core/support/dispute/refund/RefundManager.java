@@ -329,12 +329,12 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         long inputAmount = depositTx.getOutput(0).getValue().value;
         int selectionHeight = dispute.getBurningManSelectionHeight();
 
-        boolean wasHotfixActivatedAtTradeDate = dispute.getTradeDate().after(DelayedPayoutTxReceiverService.HOTFIX_ACTIVATION_DATE);
+        boolean wasBugfix6699ActivatedAtTradeDate = dispute.getTradeDate().after(DelayedPayoutTxReceiverService.BUGFIX_6699_ACTIVATION_DATE);
         List<Tuple2<Long, String>> delayedPayoutTxReceivers = delayedPayoutTxReceiverService.getReceivers(
                 selectionHeight,
                 inputAmount,
                 dispute.getTradeTxFee(),
-                wasHotfixActivatedAtTradeDate);
+                wasBugfix6699ActivatedAtTradeDate);
         log.info("Verify delayedPayoutTx using selectionHeight {} and receivers {}", selectionHeight, delayedPayoutTxReceivers);
         checkArgument(delayedPayoutTx.getOutputs().size() == delayedPayoutTxReceivers.size(),
                 "Size of outputs and delayedPayoutTxReceivers must be the same");

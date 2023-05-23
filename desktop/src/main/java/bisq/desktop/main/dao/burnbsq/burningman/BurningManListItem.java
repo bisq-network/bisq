@@ -48,7 +48,7 @@ class BurningManListItem {
         this.burningManCandidate = burningManCandidate;
 
         this.name = name;
-        address = burningManCandidate.getMostRecentAddress().orElse(Res.get("shared.na"));
+        address = burningManCandidate.getReceiverAddress().orElse(Res.get("shared.na"));
 
         adjustedBurnAmountShare = burningManCandidate.getAdjustedBurnAmountShare();
         cappedBurnAmountShare = burningManCandidate.getCappedBurnAmountShare();

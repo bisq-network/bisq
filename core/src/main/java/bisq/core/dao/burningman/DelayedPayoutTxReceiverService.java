@@ -52,10 +52,13 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @Singleton
 public class DelayedPayoutTxReceiverService implements DaoStateListener {
-    public static final Date HOTFIX_ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.JANUARY, 10);
+    // Activation date for bugfix of receiver addresses getting overwritten by a new compensation
+    // requests change address.
+    // See: https://github.com/bisq-network/bisq/issues/6699
+    public static final Date BUGFIX_6699_ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.JULY, 15);
 
-    public static boolean isHotfixActivated() {
-        return new Date().after(HOTFIX_ACTIVATION_DATE);
+    public static boolean isBugfix6699Activated() {
+        return new Date().after(BUGFIX_6699_ACTIVATION_DATE);
     }
 
     // We don't allow to get further back than 767950 (the block height from Dec. 18th 2022).
@@ -121,17 +124,15 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     public List<Tuple2<Long, String>> getReceivers(int burningManSelectionHeight,
                                                    long inputAmount,
                                                    long tradeTxFee) {
-        return getReceivers(burningManSelectionHeight, inputAmount, tradeTxFee, isHotfixActivated());
+        return getReceivers(burningManSelectionHeight, inputAmount, tradeTxFee, isBugfix6699Activated());
     }
 
     public List<Tuple2<Long, String>> getReceivers(int burningManSelectionHeight,
                                                    long inputAmount,
                                                    long tradeTxFee,
-                                                   boolean isHotfixActivated) {
+                                                   boolean isBugfix6699Activated) {
         checkArgument(burningManSelectionHeight >= MIN_SNAPSHOT_HEIGHT, "Selection height must be >= " + MIN_SNAPSHOT_HEIGHT);
-        Collection<BurningManCandidate> burningManCandidates = isHotfixActivated ?
-                burningManService.getActiveBurningManCandidates(burningManSelectionHeight) :
-                burningManService.getBurningManCandidatesByName(burningManSelectionHeight).values();
+        Collection<BurningManCandidate> burningManCandidates = burningManService.getActiveBurningManCandidates(burningManSelectionHeight);
 
         // We need to use the same txFeePerVbyte value for both traders.
         // We use the tradeTxFee value which is calculated from the average of taker fee tx size and deposit tx size.
@@ -158,13 +159,11 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
         // If we remove outputs it will be spent as miner fee.
         long minOutputAmount = Math.max(DPT_MIN_OUTPUT_AMOUNT, txFeePerVbyte * 32 * 2);
         // Sanity check that max share of a non-legacy BM is 20% over MAX_BURN_SHARE (taking into account potential increase due adjustment)
-        long maxOutputAmount = isHotfixActivated ?
-                Math.round(spendableAmount * (BurningManService.MAX_BURN_SHARE * 1.2)) :
-                Math.round(inputAmount * (BurningManService.MAX_BURN_SHARE * 1.2));
+        long maxOutputAmount = Math.round(spendableAmount * (BurningManService.MAX_BURN_SHARE * 1.2));
         // We accumulate small amounts which gets filtered out and subtract it from 1 to get an adjustment factor
         // used later to be applied to the remaining burningmen share.
         double adjustment = 1 - burningManCandidates.stream()
-                .filter(candidate -> candidate.getMostRecentAddress().isPresent())
+                .filter(candidate -> candidate.getReceiverAddress(isBugfix6699Activated).isPresent())
                 .mapToDouble(candidate -> {
                     double cappedBurnAmountShare = candidate.getCappedBurnAmountShare();
                     long amount = Math.round(cappedBurnAmountShare * spendableAmount);
@@ -173,11 +172,11 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
                 .sum();
 
         List<Tuple2<Long, String>> receivers = burningManCandidates.stream()
-                .filter(candidate -> candidate.getMostRecentAddress().isPresent())
+                .filter(candidate -> candidate.getReceiverAddress(isBugfix6699Activated).isPresent())
                 .map(candidate -> {
                     double cappedBurnAmountShare = candidate.getCappedBurnAmountShare() / adjustment;
                     return new Tuple2<>(Math.round(cappedBurnAmountShare * spendableAmount),
-                            candidate.getMostRecentAddress().get());
+                            candidate.getReceiverAddress(isBugfix6699Activated).get());
                 })
                 .filter(tuple -> tuple.first >= minOutputAmount)
                 .filter(tuple -> tuple.first <= maxOutputAmount)
@@ -189,8 +188,7 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
             long available = spendableAmount - totalOutputValue;
             // If the available is larger than DPT_MIN_REMAINDER_TO_LEGACY_BM we send it to legacy BM
             // Otherwise we use it as miner fee
-            long dptMinRemainderToLegacyBm = isHotfixActivated ? DPT_MIN_REMAINDER_TO_LEGACY_BM : 50000;
-            if (available > dptMinRemainderToLegacyBm) {
+            if (available > DPT_MIN_REMAINDER_TO_LEGACY_BM) {
                 receivers.add(new Tuple2<>(available, burningManService.getLegacyBurningManAddress(burningManSelectionHeight)));
             }
         }
