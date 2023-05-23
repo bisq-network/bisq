@@ -18,7 +18,6 @@
 package bisq.core.trade.protocol.bisq_v1.tasks.buyer;
 
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.burningman.BurningManService;
 import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
@@ -59,33 +58,31 @@ public class BuyerVerifiesFinalDelayedPayoutTx extends TradeTask {
             // Now as we know the deposit tx we can also verify the input
             TradeDataValidation.validatePayoutTxInput(depositTx, finalDelayedPayoutTx);
 
-            if (BurningManService.isActivated()) {
-                long inputAmount = depositTx.getOutput(0).getValue().value;
-                long tradeTxFeeAsLong = trade.getTradeTxFeeAsLong();
-                int selectionHeight = processModel.getBurningManSelectionHeight();
-                List<Tuple2<Long, String>> delayedPayoutTxReceivers = processModel.getDelayedPayoutTxReceiverService().getReceivers(
-                        selectionHeight,
-                        inputAmount,
-                        tradeTxFeeAsLong);
-                log.info("Verify delayedPayoutTx using selectionHeight {} and receivers {}", selectionHeight, delayedPayoutTxReceivers);
-                long lockTime = trade.getLockTime();
-                Transaction buyersDelayedPayoutTx = processModel.getTradeWalletService().createDelayedUnsignedPayoutTx(
-                        depositTx,
-                        delayedPayoutTxReceivers,
-                        lockTime);
+            long inputAmount = depositTx.getOutput(0).getValue().value;
+            long tradeTxFeeAsLong = trade.getTradeTxFeeAsLong();
+            int selectionHeight = processModel.getBurningManSelectionHeight();
+            List<Tuple2<Long, String>> delayedPayoutTxReceivers = processModel.getDelayedPayoutTxReceiverService().getReceivers(
+                    selectionHeight,
+                    inputAmount,
+                    tradeTxFeeAsLong);
+            log.info("Verify delayedPayoutTx using selectionHeight {} and receivers {}", selectionHeight, delayedPayoutTxReceivers);
+            long lockTime = trade.getLockTime();
+            Transaction buyersDelayedPayoutTx = processModel.getTradeWalletService().createDelayedUnsignedPayoutTx(
+                    depositTx,
+                    delayedPayoutTxReceivers,
+                    lockTime);
 
-                if (!buyersDelayedPayoutTx.getTxId().equals(finalDelayedPayoutTx.getTxId())) {
-                    String errorMsg = "TxIds of buyersDelayedPayoutTx and finalDelayedPayoutTx must be the same.";
-                    log.error("{} \nbuyersDelayedPayoutTx={}, \nfinalDelayedPayoutTx={}, " +
-                                    "\nBtcWalletService.chainHeight={}, " +
-                                    "\nDaoState.chainHeight={}, " +
-                                    "\nisDaoStateIsInSync={}",
-                            errorMsg, buyersDelayedPayoutTx, finalDelayedPayoutTx,
-                            processModel.getBtcWalletService().getBestChainHeight(),
-                            processModel.getDaoFacade().getChainHeight(),
-                            processModel.getDaoFacade().isDaoStateReadyAndInSync());
-                    throw new IllegalArgumentException(errorMsg);
-                }
+            if (!buyersDelayedPayoutTx.getTxId().equals(finalDelayedPayoutTx.getTxId())) {
+                String errorMsg = "TxIds of buyersDelayedPayoutTx and finalDelayedPayoutTx must be the same.";
+                log.error("{} \nbuyersDelayedPayoutTx={}, \nfinalDelayedPayoutTx={}, " +
+                                "\nBtcWalletService.chainHeight={}, " +
+                                "\nDaoState.chainHeight={}, " +
+                                "\nisDaoStateIsInSync={}",
+                        errorMsg, buyersDelayedPayoutTx, finalDelayedPayoutTx,
+                        processModel.getBtcWalletService().getBestChainHeight(),
+                        processModel.getDaoFacade().getChainHeight(),
+                        processModel.getDaoFacade().isDaoStateReadyAndInSync());
+                throw new IllegalArgumentException(errorMsg);
             }
 
             complete();

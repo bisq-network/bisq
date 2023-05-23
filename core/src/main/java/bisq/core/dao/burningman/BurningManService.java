@@ -35,9 +35,6 @@ import bisq.core.dao.state.model.governance.IssuanceType;
 
 import bisq.network.p2p.storage.P2PDataStorage;
 
-import bisq.common.config.Config;
-import bisq.common.util.Utilities;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -46,8 +43,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 
 import java.util.Collection;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -67,12 +62,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class BurningManService {
-    private static final Date ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.JANUARY, 1);
-
-    public static boolean isActivated() {
-        return Config.baseCurrencyNetwork().isRegtest() || new Date().after(ACTIVATION_DATE);
-    }
-
     // Parameters
     // Cannot be changed after release as it would break trade protocol verification of DPT receivers.
 

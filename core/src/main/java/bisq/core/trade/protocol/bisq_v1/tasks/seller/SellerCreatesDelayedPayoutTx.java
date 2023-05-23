@@ -18,8 +18,6 @@
 package bisq.core.trade.protocol.bisq_v1.tasks.seller;
 
 import bisq.core.btc.wallet.TradeWalletService;
-import bisq.core.dao.burningman.BurningManService;
-import bisq.core.dao.governance.param.Param;
 import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
@@ -27,7 +25,6 @@ import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.common.taskrunner.TaskRunner;
 import bisq.common.util.Tuple2;
 
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 
 import java.util.List;
@@ -51,29 +48,19 @@ public class SellerCreatesDelayedPayoutTx extends TradeTask {
             TradeWalletService tradeWalletService = processModel.getTradeWalletService();
             Transaction depositTx = checkNotNull(processModel.getDepositTx());
             Transaction preparedDelayedPayoutTx;
-            if (BurningManService.isActivated()) {
-                long inputAmount = depositTx.getOutput(0).getValue().value;
-                long tradeTxFeeAsLong = trade.getTradeTxFeeAsLong();
-                int selectionHeight = processModel.getBurningManSelectionHeight();
-                List<Tuple2<Long, String>> delayedPayoutTxReceivers = processModel.getDelayedPayoutTxReceiverService().getReceivers(
-                        selectionHeight,
-                        inputAmount,
-                        tradeTxFeeAsLong);
-                log.info("Create delayedPayoutTx using selectionHeight {} and receivers {}", selectionHeight, delayedPayoutTxReceivers);
-                long lockTime = trade.getLockTime();
-                preparedDelayedPayoutTx = tradeWalletService.createDelayedUnsignedPayoutTx(
-                        depositTx,
-                        delayedPayoutTxReceivers,
-                        lockTime);
-            } else {
-                String donationAddressString = processModel.getDaoFacade().getParamValue(Param.RECIPIENT_BTC_ADDRESS);
-                Coin minerFee = trade.getTradeTxFee();
-                long lockTime = trade.getLockTime();
-                preparedDelayedPayoutTx = tradeWalletService.createDelayedUnsignedPayoutTx(depositTx,
-                        donationAddressString,
-                        minerFee,
-                        lockTime);
-            }
+            long inputAmount = depositTx.getOutput(0).getValue().value;
+            long tradeTxFeeAsLong = trade.getTradeTxFeeAsLong();
+            int selectionHeight = processModel.getBurningManSelectionHeight();
+            List<Tuple2<Long, String>> delayedPayoutTxReceivers = processModel.getDelayedPayoutTxReceiverService().getReceivers(
+                    selectionHeight,
+                    inputAmount,
+                    tradeTxFeeAsLong);
+            log.info("Create delayedPayoutTx using selectionHeight {} and receivers {}", selectionHeight, delayedPayoutTxReceivers);
+            long lockTime = trade.getLockTime();
+            preparedDelayedPayoutTx = tradeWalletService.createDelayedUnsignedPayoutTx(
+                    depositTx,
+                    delayedPayoutTxReceivers,
+                    lockTime);
 
             TradeDataValidation.validateDelayedPayoutTx(trade,
                     preparedDelayedPayoutTx,

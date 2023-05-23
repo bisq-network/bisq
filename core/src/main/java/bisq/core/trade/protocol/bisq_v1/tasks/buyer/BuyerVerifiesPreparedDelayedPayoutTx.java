@@ -18,7 +18,6 @@
 package bisq.core.trade.protocol.bisq_v1.tasks.buyer;
 
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.dao.burningman.BurningManService;
 import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
@@ -52,31 +51,29 @@ public class BuyerVerifiesPreparedDelayedPayoutTx extends TradeTask {
                     btcWalletService);
 
             Transaction preparedDepositTx = btcWalletService.getTxFromSerializedTx(processModel.getPreparedDepositTx());
-            if (BurningManService.isActivated()) {
-                long inputAmount = preparedDepositTx.getOutput(0).getValue().value;
-                long tradeTxFeeAsLong = trade.getTradeTxFeeAsLong();
-                List<Tuple2<Long, String>> delayedPayoutTxReceivers = processModel.getDelayedPayoutTxReceiverService().getReceivers(
-                        processModel.getBurningManSelectionHeight(),
-                        inputAmount,
-                        tradeTxFeeAsLong);
+            long inputAmount = preparedDepositTx.getOutput(0).getValue().value;
+            long tradeTxFeeAsLong = trade.getTradeTxFeeAsLong();
+            List<Tuple2<Long, String>> delayedPayoutTxReceivers = processModel.getDelayedPayoutTxReceiverService().getReceivers(
+                    processModel.getBurningManSelectionHeight(),
+                    inputAmount,
+                    tradeTxFeeAsLong);
 
-                long lockTime = trade.getLockTime();
-                Transaction buyersPreparedDelayedPayoutTx = processModel.getTradeWalletService().createDelayedUnsignedPayoutTx(
-                        preparedDepositTx,
-                        delayedPayoutTxReceivers,
-                        lockTime);
-                if (!buyersPreparedDelayedPayoutTx.getTxId().equals(sellersPreparedDelayedPayoutTx.getTxId())) {
-                    String errorMsg = "TxIds of buyersPreparedDelayedPayoutTx and sellersPreparedDelayedPayoutTx must be the same.";
-                    log.error("{} \nbuyersPreparedDelayedPayoutTx={}, \nsellersPreparedDelayedPayoutTx={}, " +
-                                    "\nBtcWalletService.chainHeight={}, " +
-                                    "\nDaoState.chainHeight={}, " +
-                                    "\nisDaoStateIsInSync={}",
-                            errorMsg, buyersPreparedDelayedPayoutTx, sellersPreparedDelayedPayoutTx,
-                            processModel.getBtcWalletService().getBestChainHeight(),
-                            processModel.getDaoFacade().getChainHeight(),
-                            processModel.getDaoFacade().isDaoStateReadyAndInSync());
-                    throw new IllegalArgumentException(errorMsg);
-                }
+            long lockTime = trade.getLockTime();
+            Transaction buyersPreparedDelayedPayoutTx = processModel.getTradeWalletService().createDelayedUnsignedPayoutTx(
+                    preparedDepositTx,
+                    delayedPayoutTxReceivers,
+                    lockTime);
+            if (!buyersPreparedDelayedPayoutTx.getTxId().equals(sellersPreparedDelayedPayoutTx.getTxId())) {
+                String errorMsg = "TxIds of buyersPreparedDelayedPayoutTx and sellersPreparedDelayedPayoutTx must be the same.";
+                log.error("{} \nbuyersPreparedDelayedPayoutTx={}, \nsellersPreparedDelayedPayoutTx={}, " +
+                                "\nBtcWalletService.chainHeight={}, " +
+                                "\nDaoState.chainHeight={}, " +
+                                "\nisDaoStateIsInSync={}",
+                        errorMsg, buyersPreparedDelayedPayoutTx, sellersPreparedDelayedPayoutTx,
+                        processModel.getBtcWalletService().getBestChainHeight(),
+                        processModel.getDaoFacade().getChainHeight(),
+                        processModel.getDaoFacade().isDaoStateReadyAndInSync());
+                throw new IllegalArgumentException(errorMsg);
             }
 
             // If the deposit tx is non-malleable, we already know its final ID, so should check that now

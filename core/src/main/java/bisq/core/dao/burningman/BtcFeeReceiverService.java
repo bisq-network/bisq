@@ -69,11 +69,6 @@ public class BtcFeeReceiverService implements DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String getAddress() {
-        if (!BurningManService.isActivated()) {
-            // Before activation, we fall back to the current fee receiver address
-            return BurningManPresentationService.LEGACY_BURNING_MAN_BTC_FEES_ADDRESS;
-        }
-
         List<BurningManCandidate> activeBurningManCandidates = new ArrayList<>(burningManService.getActiveBurningManCandidates(currentChainHeight));
         if (activeBurningManCandidates.isEmpty()) {
             // If there are no compensation requests (e.g. at dev testing) we fall back to the default address

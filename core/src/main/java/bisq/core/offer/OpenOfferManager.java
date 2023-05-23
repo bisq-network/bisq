@@ -23,7 +23,6 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.burningman.BtcFeeReceiverService;
-import bisq.core.dao.burningman.BurningManService;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.filter.FilterManager;
@@ -745,20 +744,18 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 availabilityResult = AvailabilityResult.UNCONF_TX_LIMIT_HIT;
             }
 
-            if (BurningManService.isActivated()) {
-                try {
-                    int takersBurningManSelectionHeight = request.getBurningManSelectionHeight();
-                    checkArgument(takersBurningManSelectionHeight > 0, "takersBurningManSelectionHeight must not be 0");
+            try {
+                int takersBurningManSelectionHeight = request.getBurningManSelectionHeight();
+                checkArgument(takersBurningManSelectionHeight > 0, "takersBurningManSelectionHeight must not be 0");
 
-                    int makersBurningManSelectionHeight = delayedPayoutTxReceiverService.getBurningManSelectionHeight();
-                    checkArgument(takersBurningManSelectionHeight == makersBurningManSelectionHeight,
-                            "takersBurningManSelectionHeight does no match makersBurningManSelectionHeight. " +
-                                    "takersBurningManSelectionHeight=" + takersBurningManSelectionHeight + "; makersBurningManSelectionHeight=" + makersBurningManSelectionHeight);
-                } catch (Throwable t) {
-                    errorMessage = "Message validation failed. Error=" + t + ", Message=" + request;
-                    log.warn(errorMessage);
-                    availabilityResult = AvailabilityResult.INVALID_SNAPSHOT_HEIGHT;
-                }
+                int makersBurningManSelectionHeight = delayedPayoutTxReceiverService.getBurningManSelectionHeight();
+                checkArgument(takersBurningManSelectionHeight == makersBurningManSelectionHeight,
+                        "takersBurningManSelectionHeight does no match makersBurningManSelectionHeight. " +
+                                "takersBurningManSelectionHeight=" + takersBurningManSelectionHeight + "; makersBurningManSelectionHeight=" + makersBurningManSelectionHeight);
+            } catch (Throwable t) {
+                errorMessage = "Message validation failed. Error=" + t + ", Message=" + request;
+                log.warn(errorMessage);
+                availabilityResult = AvailabilityResult.INVALID_SNAPSHOT_HEIGHT;
             }
 
             OfferAvailabilityResponse offerAvailabilityResponse = new OfferAvailabilityResponse(request.offerId,
