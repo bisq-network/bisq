@@ -461,8 +461,8 @@ public abstract class WalletService {
                     .map(tx -> getTransactionConfidence(tx, address))
                     .filter(Objects::nonNull)
                     .filter(con -> con.getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING ||
-                        (con.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING &&
-                            con.getAppearedAtChainHeight() > targetHeight))
+                            (con.getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING &&
+                                    con.getAppearedAtChainHeight() > targetHeight))
                     .collect(Collectors.toList()));
         }
         return getMostRecentConfidence(transactionConfidenceList);
@@ -749,6 +749,10 @@ public abstract class WalletService {
 
     public boolean isEncrypted() {
         return wallet.isEncrypted();
+    }
+
+    public List<Transaction> getAllRecentTransactions(boolean includeDead) {
+        return getRecentTransactions(Integer.MAX_VALUE, includeDead);
     }
 
     public List<Transaction> getRecentTransactions(int numTransactions, boolean includeDead) {

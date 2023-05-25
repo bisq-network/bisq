@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.portfolio.editoffer;
+package bisq.desktop.main.portfolio.cloneoffer;
 
 
 import bisq.desktop.Navigation;
@@ -24,7 +24,6 @@ import bisq.desktop.main.offer.bisq_v1.MutableOfferDataModel;
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
-import bisq.core.btc.wallet.Restrictions;
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
@@ -33,7 +32,6 @@ import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.bisq_v1.CreateOfferService;
-import bisq.core.offer.bisq_v1.MutableOfferPayloadFields;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
@@ -44,7 +42,6 @@ import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
-import bisq.core.util.coin.CoinUtil;
 
 import bisq.network.p2p.P2PService;
 
@@ -55,34 +52,33 @@ import com.google.inject.Inject;
 
 import javax.inject.Named;
 
+import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-class EditOfferDataModel extends MutableOfferDataModel {
+class CloneOfferDataModel extends MutableOfferDataModel {
 
     private final CorePersistenceProtoResolver corePersistenceProtoResolver;
-    private OpenOffer originalOpenOffer;
-    private OpenOffer.State initialState;
-    private Offer editedOffer;
+    private OpenOffer sourceOpenOffer;
 
     @Inject
-    EditOfferDataModel(CreateOfferService createOfferService,
-                       OpenOfferManager openOfferManager,
-                       OfferUtil offerUtil,
-                       BtcWalletService btcWalletService,
-                       BsqWalletService bsqWalletService,
-                       Preferences preferences,
-                       User user,
-                       P2PService p2PService,
-                       PriceFeedService priceFeedService,
-                       AccountAgeWitnessService accountAgeWitnessService,
-                       FeeService feeService,
-                       @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
-                       CorePersistenceProtoResolver corePersistenceProtoResolver,
-                       TradeStatisticsManager tradeStatisticsManager,
-                       Navigation navigation) {
+    CloneOfferDataModel(CreateOfferService createOfferService,
+                        OpenOfferManager openOfferManager,
+                        OfferUtil offerUtil,
+                        BtcWalletService btcWalletService,
+                        BsqWalletService bsqWalletService,
+                        Preferences preferences,
+                        User user,
+                        P2PService p2PService,
+                        PriceFeedService priceFeedService,
+                        AccountAgeWitnessService accountAgeWitnessService,
+                        FeeService feeService,
+                        @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
+                        CorePersistenceProtoResolver corePersistenceProtoResolver,
+                        TradeStatisticsManager tradeStatisticsManager,
+                        Navigation navigation) {
 
         super(createOfferService,
                 openOfferManager,
@@ -115,10 +111,11 @@ class EditOfferDataModel extends MutableOfferDataModel {
         paymentAccounts.clear();
         paymentAccount = null;
         marketPriceMargin = 0;
+        sourceOpenOffer = null;
     }
 
     public void applyOpenOffer(OpenOffer openOffer) {
-        this.originalOpenOffer = openOffer;
+        this.sourceOpenOffer = openOffer;
 
         Offer offer = openOffer.getOffer();
         direction = offer.getDirection();
@@ -126,7 +123,6 @@ class EditOfferDataModel extends MutableOfferDataModel {
                 .ifPresent(c -> this.tradeCurrency = c);
         tradeCurrencyCode.set(offer.getCurrencyCode());
 
-        this.initialState = openOffer.getState();
         PaymentAccount tmpPaymentAccount = user.getPaymentAccount(openOffer.getOffer().getMakerPaymentAccountId());
         Optional<TradeCurrency> optionalTradeCurrency = CurrencyUtil.getTradeCurrency(openOffer.getOffer().getCurrencyCode());
         if (optionalTradeCurrency.isPresent() && tmpPaymentAccount != null) {
@@ -137,16 +133,6 @@ class EditOfferDataModel extends MutableOfferDataModel {
             else
                 paymentAccount.setSelectedTradeCurrency(selectedTradeCurrency);
         }
-
-        // If the security deposit got bounded because it was below the coin amount limit, it can be bigger
-        // by percentage than the restriction. We can't determine the percentage originally entered at offer
-        // creation, so just use the default value as it doesn't matter anyway.
-        double buyerSecurityDepositPercent = CoinUtil.getAsPercentPerBtc(offer.getBuyerSecurityDeposit(), offer.getAmount());
-        if (buyerSecurityDepositPercent > Restrictions.getMaxBuyerSecurityDepositAsPercent()
-                && offer.getBuyerSecurityDeposit().value == Restrictions.getMinBuyerSecurityDepositAsCoin().value)
-            buyerSecurityDeposit.set(Restrictions.getDefaultBuyerSecurityDepositAsPercent());
-        else
-            buyerSecurityDeposit.set(buyerSecurityDepositPercent);
 
         allowAmountUpdate = false;
     }
@@ -176,59 +162,87 @@ class EditOfferDataModel extends MutableOfferDataModel {
     }
 
     public void populateData() {
-        Offer offer = originalOpenOffer.getOffer();
+        Offer offer = sourceOpenOffer.getOffer();
         // Min amount need to be set before amount as if minAmount is null it would be set by amount
         setMinAmount(offer.getMinAmount());
         setAmount(offer.getAmount());
         setPrice(offer.getPrice());
         setVolume(offer.getVolume());
         setUseMarketBasedPrice(offer.isUseMarketBasedPrice());
-        setTriggerPrice(originalOpenOffer.getTriggerPrice());
+        setTriggerPrice(sourceOpenOffer.getTriggerPrice());
         if (offer.isUseMarketBasedPrice()) {
             setMarketPriceMargin(offer.getMarketPriceMargin());
         }
     }
 
-    public void onStartEditOffer(ErrorMessageHandler errorMessageHandler) {
-        openOfferManager.editOpenOfferStart(originalOpenOffer, () -> {
-        }, errorMessageHandler);
+    public void onCloneOffer(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        Offer clonedOffer = createClonedOffer();
+        openOfferManager.placeOffer(clonedOffer,
+                sourceOpenOffer.getOffer().getBuyerSecurityDeposit().getValue(),
+                false,
+                true,
+                triggerPrice,
+                transaction -> resultHandler.handleResult(),
+                errorMessageHandler);
     }
 
-    public void onPublishOffer(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
-        Offer offer = createAndGetOffer();
-        if (offer.isBsqSwapOffer()) {
-            return;
-        }
-
-        OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();
-        var mutableOfferPayloadFields = new MutableOfferPayloadFields(offerPayload);
-        OfferPayload editedPayload = offerUtil.getMergedOfferPayload(originalOpenOffer, mutableOfferPayloadFields);
-        editedOffer = new Offer(editedPayload);
-        editedOffer.setPriceFeedService(priceFeedService);
-        editedOffer.setState(Offer.State.AVAILABLE);
-        openOfferManager.editOpenOfferPublish(editedOffer, triggerPrice, initialState, () -> {
-            if (cannotActivateOffer()) {
-                OpenOffer editedOpenOffer = openOfferManager.getOpenOfferById(editedOffer.getId()).orElseThrow();
-                editedOpenOffer.setState(OpenOffer.State.DEACTIVATED);
-            }
-            resultHandler.handleResult();
-            originalOpenOffer = null;
-            editedOffer = null;
-        }, errorMessageHandler);
-    }
-
-    public void onCancelEditOffer(ErrorMessageHandler errorMessageHandler) {
-        if (originalOpenOffer != null)
-            openOfferManager.editOpenOfferCancel(originalOpenOffer, initialState, () -> {
-            }, errorMessageHandler);
+    private Offer createClonedOffer() {
+        Offer sourceOffer = sourceOpenOffer.getOffer();
+        OfferPayload sourceOfferPayload = sourceOffer.getOfferPayload().orElseThrow();
+        // We create a new offer based on our source offer and the edited fields in the UI
+        Offer editedOffer = createAndGetOffer();
+        OfferPayload editedOfferPayload = editedOffer.getOfferPayload().orElseThrow();
+        // We clone the edited offer but use the maker tx ID from the source offer as well as a new offerId and
+        // a fresh date.
+        String sharedMakerTxId = sourceOfferPayload.getOfferFeePaymentTxId();
+        String newOfferId = OfferUtil.getRandomOfferId();
+        long date = new Date().getTime();
+        OfferPayload clonedOfferPayload = new OfferPayload(newOfferId,
+                date,
+                sourceOfferPayload.getOwnerNodeAddress(),
+                sourceOfferPayload.getPubKeyRing(),
+                sourceOfferPayload.getDirection(),
+                editedOfferPayload.getPrice(),
+                editedOfferPayload.getMarketPriceMargin(),
+                editedOfferPayload.isUseMarketBasedPrice(),
+                sourceOfferPayload.getAmount(),
+                sourceOfferPayload.getMinAmount(),
+                editedOfferPayload.getBaseCurrencyCode(),
+                editedOfferPayload.getCounterCurrencyCode(),
+                sourceOfferPayload.getArbitratorNodeAddresses(),
+                sourceOfferPayload.getMediatorNodeAddresses(),
+                editedOfferPayload.getPaymentMethodId(),
+                editedOfferPayload.getMakerPaymentAccountId(),
+                sharedMakerTxId,
+                editedOfferPayload.getCountryCode(),
+                editedOfferPayload.getAcceptedCountryCodes(),
+                editedOfferPayload.getBankId(),
+                editedOfferPayload.getAcceptedBankIds(),
+                editedOfferPayload.getVersionNr(),
+                sourceOfferPayload.getBlockHeightAtOfferCreation(),
+                sourceOfferPayload.getTxFee(),
+                sourceOfferPayload.getMakerFee(),
+                sourceOfferPayload.isCurrencyForMakerFeeBtc(),
+                sourceOfferPayload.getBuyerSecurityDeposit(),
+                sourceOfferPayload.getSellerSecurityDeposit(),
+                editedOfferPayload.getMaxTradeLimit(),
+                editedOfferPayload.getMaxTradePeriod(),
+                sourceOfferPayload.isUseAutoClose(),
+                sourceOfferPayload.isUseReOpenAfterAutoClose(),
+                sourceOfferPayload.getLowerClosePrice(),
+                sourceOfferPayload.getUpperClosePrice(),
+                sourceOfferPayload.isPrivateOffer(),
+                sourceOfferPayload.getHashOfChallenge(),
+                editedOfferPayload.getExtraDataMap(),
+                sourceOfferPayload.getProtocolVersion());
+        Offer clonedOffer = new Offer(clonedOfferPayload);
+        clonedOffer.setPriceFeedService(priceFeedService);
+        clonedOffer.setState(Offer.State.OFFER_FEE_PAID);
+        return clonedOffer;
     }
 
     public boolean cannotActivateOffer() {
-        // The cannotActivateOffer check considers only activated offers but at editing offer we have set the
-        // offer DEACTIVATED. We temporarily flip the state so that our cannotActivateOffer works as expected.
-        originalOpenOffer.setState(OpenOffer.State.AVAILABLE);
-        boolean result = openOfferManager.cannotActivateOffer(editedOffer);
-        originalOpenOffer.setState(OpenOffer.State.DEACTIVATED);
-        return result;
+        Offer clonedOffer = createClonedOffer();
+        return openOfferManager.cannotActivateOffer(clonedOffer);
     }
 }

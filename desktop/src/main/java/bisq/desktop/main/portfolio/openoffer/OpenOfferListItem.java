@@ -50,7 +50,11 @@ class OpenOfferListItem implements FilterableListItem {
     private final OpenOfferManager openOfferManager;
 
 
-    OpenOfferListItem(OpenOffer openOffer, PriceUtil priceUtil, CoinFormatter btcFormatter, BsqFormatter bsqFormatter, OpenOfferManager openOfferManager) {
+    OpenOfferListItem(OpenOffer openOffer,
+                      PriceUtil priceUtil,
+                      CoinFormatter btcFormatter,
+                      BsqFormatter bsqFormatter,
+                      OpenOfferManager openOfferManager) {
         this.openOffer = openOffer;
         this.priceUtil = priceUtil;
         this.btcFormatter = btcFormatter;
@@ -132,6 +136,11 @@ class OpenOfferListItem implements FilterableListItem {
         } else {
             return PriceUtil.formatMarketPrice(triggerPrice, offer.getCurrencyCode());
         }
+    }
+
+    String getMakerFeeTxId() {
+        String makerFeeTxId = getOffer().getOfferFeePaymentTxId();
+        return makerFeeTxId != null ? makerFeeTxId : "";
     }
 
     @Override

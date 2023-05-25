@@ -336,6 +336,7 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
         openOfferManager.placeOffer(offer,
                 buyerSecurityDeposit.get(),
                 useSavingsWallet,
+                false,
                 triggerPrice,
                 resultHandler,
                 log::error);

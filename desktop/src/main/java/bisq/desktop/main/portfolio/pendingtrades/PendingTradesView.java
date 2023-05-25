@@ -234,7 +234,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                 tableView -> {
                     final TableRow<PendingTradesListItem> row = new TableRow<>();
                     final ContextMenu rowMenu = new ContextMenu();
-                    MenuItem duplicateItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
+                    MenuItem duplicateItem = new MenuItem(Res.get("portfolio.tab.duplicateOffer"));
                     duplicateItem.setOnAction((event) -> {
                         try {
                             OfferPayload offerPayload = row.getItem().getTrade().getOffer().getOfferPayload().orElseThrow();

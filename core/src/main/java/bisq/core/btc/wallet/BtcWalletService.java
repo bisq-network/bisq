@@ -630,6 +630,25 @@ public class BtcWalletService extends WalletService {
                 .findAny();
     }
 
+    // For cloned offers with shared maker fee we create a new address entry based on the source entry
+    // and set the new offerId.
+    public AddressEntry getOrCloneAddressEntryWithOfferId(AddressEntry sourceAddressEntry, String offerId) {
+        Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
+                .filter(entry -> offerId.equals(entry.getOfferId()))
+                .filter(entry -> sourceAddressEntry.getContext() == entry.getContext())
+                .findAny();
+        if (addressEntry.isPresent()) {
+            return addressEntry.get();
+        } else {
+            AddressEntry cloneWithNewOfferId = new AddressEntry(sourceAddressEntry.getKeyPair(),
+                    sourceAddressEntry.getContext(),
+                    offerId,
+                    sourceAddressEntry.isSegwit());
+            addressEntryList.addAddressEntry(cloneWithNewOfferId);
+            return cloneWithNewOfferId;
+        }
+    }
+
     public AddressEntry getOrCreateAddressEntry(String offerId, AddressEntry.Context context) {
         Optional<AddressEntry> addressEntry = getAddressEntryListAsImmutableList().stream()
                 .filter(e -> offerId.equals(e.getOfferId()))

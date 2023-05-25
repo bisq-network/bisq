@@ -114,7 +114,9 @@ public class Balances {
                 .map(openOffer -> btcWalletService.getAddressEntry(openOffer.getId(), AddressEntry.Context.RESERVED_FOR_TRADE)
                         .orElse(null))
                 .filter(Objects::nonNull)
-                .mapToLong(addressEntry -> btcWalletService.getBalanceForAddress(addressEntry.getAddress()).value)
+                .map(AddressEntry::getAddress)
+                .distinct()
+                .mapToLong(address -> btcWalletService.getBalanceForAddress(address).value)
                 .sum();
         reservedBalance.set(Coin.valueOf(sum));
     }
@@ -122,8 +124,9 @@ public class Balances {
     private void updateLockedBalance() {
         Stream<Trade> lockedTrades = Stream.concat(closedTradableManager.getTradesStreamWithFundsLockedIn(), failedTradesManager.getTradesStreamWithFundsLockedIn());
         lockedTrades = Stream.concat(lockedTrades, tradeManager.getTradesStreamWithFundsLockedIn());
-        long sum = lockedTrades.map(trade -> btcWalletService.getAddressEntry(trade.getId(), AddressEntry.Context.MULTI_SIG)
-                .orElse(null))
+        long sum = lockedTrades.map(trade -> btcWalletService.getAddressEntry(trade.getId(),
+                                AddressEntry.Context.MULTI_SIG)
+                        .orElse(null))
                 .filter(Objects::nonNull)
                 .mapToLong(AddressEntry::getCoinLockedInMultiSig)
                 .sum();

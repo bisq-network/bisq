@@ -149,7 +149,7 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
             wallet.getIssuedReceiveAddresses().stream()
                     .filter(this::isAddressNotInEntries)
                     .forEach(address -> {
-                         DeterministicKey key = (DeterministicKey) wallet.findKeyFromAddress(address);
+                        DeterministicKey key = (DeterministicKey) wallet.findKeyFromAddress(address);
                         if (key != null) {
                             // Address will be derived from key in getAddress method
                             log.info("Create AddressEntry for IssuedReceiveAddress. address={}", address.toString());
@@ -209,11 +209,26 @@ public final class AddressEntryList implements PersistableEnvelope, PersistedDat
         }
 
         log.info("swapToAvailable addressEntry to swap={}", addressEntry);
-        boolean setChangedByRemove = entrySet.remove(addressEntry);
-        boolean setChangedByAdd = entrySet.add(new AddressEntry(addressEntry.getKeyPair(),
-                AddressEntry.Context.AVAILABLE,
-                addressEntry.isSegwit()));
-        if (setChangedByRemove || setChangedByAdd) {
+        if (entrySet.remove(addressEntry)) {
+            requestPersistence();
+        }
+        // If we have an address entry which shared the address with another one (shared maker fee offers use case)
+        // then we do not swap to available as we need to protect the address of the remaining entry.
+        boolean entryWithSameContextStillExists = entrySet.stream().anyMatch(entry -> {
+            if (addressEntry.getAddressString() != null) {
+                return addressEntry.getAddressString().equals(entry.getAddressString()) &&
+                        addressEntry.getContext() == entry.getContext();
+            }
+            return false;
+        });
+        if (entryWithSameContextStillExists) {
+            return;
+        }
+        // no other uses of the address context remain, so make it available
+        if (entrySet.add(
+                new AddressEntry(addressEntry.getKeyPair(),
+                        AddressEntry.Context.AVAILABLE,
+                        addressEntry.isSegwit()))) {
             requestPersistence();
         }
     }

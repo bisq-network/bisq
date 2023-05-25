@@ -2248,12 +2248,12 @@ public class FormBuilder {
     // Icons
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Text getIconForLabel(GlyphIcons icon, String iconSize, Label label, String style) {
+    public static Text getIconForLabel(GlyphIcons icon, String iconSize, Label label, String styleClass) {
         if (icon.fontFamily().equals(MATERIAL_DESIGN_ICONS)) {
             final Text textIcon = MaterialDesignIconFactory.get().createIcon(icon, iconSize);
             textIcon.setOpacity(0.7);
-            if (style != null) {
-                textIcon.getStyleClass().add(style);
+            if (styleClass != null) {
+                textIcon.getStyleClass().add(styleClass);
             }
             label.setContentDisplay(ContentDisplay.LEFT);
             label.setGraphic(textIcon);
@@ -2279,8 +2279,8 @@ public class FormBuilder {
         return getRegularIconForLabel(icon, label, null);
     }
 
-    public static Text getRegularIconForLabel(GlyphIcons icon, Label label, String style) {
-        return getIconForLabel(icon, "1.231em", label, style);
+    public static Text getRegularIconForLabel(GlyphIcons icon, Label label, String styleClass) {
+        return getIconForLabel(icon, "1.231em", label, styleClass);
     }
 
     public static Text getIcon(GlyphIcons icon) {

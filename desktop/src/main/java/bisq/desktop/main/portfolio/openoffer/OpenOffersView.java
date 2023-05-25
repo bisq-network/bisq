@@ -37,8 +37,9 @@ import bisq.desktop.main.portfolio.presentation.PortfolioUtil;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.Res;
-import bisq.core.offer.Offer;
 import bisq.core.offer.OpenOffer;
+import bisq.core.offer.OpenOfferManager;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.user.DontShowAgainLookup;
 
 import com.googlecode.jcsv.writer.CSVEntryConverter;
@@ -80,6 +81,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.util.Callback;
 
 import java.util.Comparator;
+import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -89,9 +91,9 @@ import static bisq.desktop.util.FormBuilder.getRegularIconForLabel;
 @FxmlView
 public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersViewModel> {
 
-
     private enum ColumnNames {
         OFFER_ID(Res.get("shared.offerId")),
+        MAKER_FEE_TX_ID(Res.get("openOffer.header.makerFeeTxId")),
         DATE(Res.get("shared.dateTime")),
         MARKET(Res.get("shared.market")),
         PRICE(Res.get("shared.price")),
@@ -119,8 +121,9 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     TableView<OpenOfferListItem> tableView;
     @FXML
     TableColumn<OpenOfferListItem, OpenOfferListItem> priceColumn, deviationColumn, amountColumn, volumeColumn,
-            marketColumn, directionColumn, dateColumn, offerIdColumn, deactivateItemColumn,
-            removeItemColumn, editItemColumn, triggerPriceColumn, triggerIconColumn, paymentMethodColumn, duplicateItemColumn;
+            marketColumn, directionColumn, dateColumn, offerIdColumn, deactivateItemColumn, makerFeeTxIdColumn,
+            removeItemColumn, editItemColumn, triggerPriceColumn, triggerIconColumn, paymentMethodColumn, duplicateItemColumn,
+            cloneItemColumn;
     @FXML
     FilterBox filterBox;
     @FXML
@@ -132,28 +135,36 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     @FXML
     AutoTooltipSlideToggleButton selectToggleButton;
 
+    private final PriceFeedService priceFeedService;
     private final Navigation navigation;
     private final OfferDetailsWindow offerDetailsWindow;
     private final BsqSwapOfferDetailsWindow bsqSwapOfferDetailsWindow;
+    private final OpenOfferManager openOfferManager;
     private SortedList<OpenOfferListItem> sortedList;
-    private PortfolioView.OpenOfferActionHandler openOfferActionHandler;
+    private PortfolioView.EditOpenOfferHandler editOpenOfferHandler;
+    private PortfolioView.CloneOpenOfferHandler cloneOpenOfferHandler;
     private ChangeListener<Number> widthListener;
     private ListChangeListener<OpenOfferListItem> sortedListeChangedListener;
 
     @Inject
     public OpenOffersView(OpenOffersViewModel model,
+                          OpenOfferManager openOfferManager,
+                          PriceFeedService priceFeedService,
                           Navigation navigation,
                           OfferDetailsWindow offerDetailsWindow,
                           BsqSwapOfferDetailsWindow bsqSwapOfferDetailsWindow) {
         super(model);
+        this.priceFeedService = priceFeedService;
         this.navigation = navigation;
         this.offerDetailsWindow = offerDetailsWindow;
         this.bsqSwapOfferDetailsWindow = bsqSwapOfferDetailsWindow;
+        this.openOfferManager = openOfferManager;
     }
 
     @Override
     public void initialize() {
         widthListener = (observable, oldValue, newValue) -> onWidthChange((double) newValue);
+        makerFeeTxIdColumn.setGraphic(new AutoTooltipLabel(ColumnNames.MAKER_FEE_TX_ID.toString()));
         paymentMethodColumn.setGraphic(new AutoTooltipLabel(ColumnNames.PAYMENT_METHOD.toString()));
         priceColumn.setGraphic(new AutoTooltipLabel(ColumnNames.PRICE.toString()));
         deviationColumn.setGraphic(new AutoTooltipTableColumn<>(ColumnNames.DEVIATION.toString(),
@@ -168,9 +179,11 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         deactivateItemColumn.setGraphic(new AutoTooltipLabel(ColumnNames.STATUS.toString()));
         editItemColumn.setText("");
         duplicateItemColumn.setText("");
+        cloneItemColumn.setText("");
         removeItemColumn.setText("");
 
         setOfferIdColumnCellFactory();
+        setMakerFeeTxIdColumnCellFactory();
         setDirectionColumnCellFactory();
         setMarketColumnCellFactory();
         setPriceColumnCellFactory();
@@ -184,12 +197,14 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         setTriggerIconColumnCellFactory();
         setTriggerPriceColumnCellFactory();
         setDuplicateColumnCellFactory();
+        setCloneColumnCellFactory();
         setRemoveColumnCellFactory();
 
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tableView.setPlaceholder(new AutoTooltipLabel(Res.get("table.placeholder.noItems", Res.get("shared.openOffers"))));
 
         offerIdColumn.setComparator(Comparator.comparing(o -> o.getOffer().getId()));
+        makerFeeTxIdColumn.setComparator(Comparator.comparing(OpenOfferListItem::getMakerFeeTxId));
         directionColumn.setComparator(Comparator.comparing(o -> o.getOffer().getDirection()));
         marketColumn.setComparator(Comparator.comparing(OpenOfferListItem::getMarketDescription));
         amountColumn.setComparator(Comparator.comparing(o -> o.getOffer().getAmount()));
@@ -201,16 +216,22 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         dateColumn.setComparator(Comparator.comparing(o -> o.getOffer().getDate()));
         paymentMethodColumn.setComparator(Comparator.comparing(o -> Res.get(o.getOffer().getPaymentMethod().getId())));
 
-        dateColumn.setSortType(TableColumn.SortType.DESCENDING);
+        dateColumn.setSortType(TableColumn.SortType.ASCENDING);
         tableView.getSortOrder().add(dateColumn);
 
         tableView.setRowFactory(
                 tableView -> {
                     final TableRow<OpenOfferListItem> row = new TableRow<>();
                     final ContextMenu rowMenu = new ContextMenu();
-                    MenuItem duplicateItem = new MenuItem(Res.get("portfolio.context.offerLikeThis"));
-                    duplicateItem.setOnAction((event) -> onDuplicateOffer(row.getItem().getOffer()));
-                    rowMenu.getItems().add(duplicateItem);
+
+                    MenuItem duplicateOfferMenuItem = new MenuItem(Res.get("portfolio.tab.duplicateOffer"));
+                    duplicateOfferMenuItem.setOnAction((event) -> onDuplicateOffer(row.getItem()));
+                    rowMenu.getItems().add(duplicateOfferMenuItem);
+
+                    MenuItem cloneOfferMenuItem = new MenuItem(Res.get("offerbook.cloneOffer"));
+                    cloneOfferMenuItem.setOnAction((event) -> onCloneOffer(row.getItem()));
+                    rowMenu.getItems().add(cloneOfferMenuItem);
+
                     row.contextMenuProperty().bind(
                             Bindings.when(Bindings.isNotNull(row.itemProperty()))
                                     .then(rowMenu)
@@ -233,6 +254,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             c.next();
             if (c.wasAdded() || c.wasRemoved()) {
                 updateNumberOfOffers();
+                updateMakerFeeTxIdColumnVisibility();
+                updateTriggerColumnVisibility();
             }
         };
     }
@@ -247,7 +270,8 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
         filterBox.initializeWithCallback(filteredList, tableView, this::updateNumberOfOffers);
         filterBox.activate();
-
+        updateMakerFeeTxIdColumnVisibility();
+        updateTriggerColumnVisibility();
         updateSelectToggleButtonState();
 
         selectToggleButton.setOnAction(event -> {
@@ -272,6 +296,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             CSVEntryConverter<OpenOfferListItem> contentConverter = item -> {
                 String[] columns = new String[ColumnNames.values().length];
                 columns[ColumnNames.OFFER_ID.ordinal()] = item.getOffer().getShortId();
+                columns[ColumnNames.MAKER_FEE_TX_ID.ordinal()] = item.getMakerFeeTxId();
                 columns[ColumnNames.DATE.ordinal()] = item.getDateAsString();
                 columns[ColumnNames.MARKET.ordinal()] = item.getMarketDescription();
                 columns[ColumnNames.PRICE.ordinal()] = item.getPriceAsString();
@@ -299,6 +324,18 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
     private void updateNumberOfOffers() {
         numItems.setText(Res.get("shared.numItemsLabel", sortedList.size()));
+    }
+
+    private void updateMakerFeeTxIdColumnVisibility() {
+        makerFeeTxIdColumn.setVisible(model.dataModel.getList().stream()
+                .collect(Collectors.groupingBy(OpenOfferListItem::getMakerFeeTxId, Collectors.counting()))
+                .values().stream().anyMatch(i -> i > 1));
+    }
+
+    private void updateTriggerColumnVisibility() {
+        triggerIconColumn.setVisible(model.dataModel.getList().stream()
+                .mapToLong(item -> item.getOpenOffer().getTriggerPrice())
+                .sum() > 0);
     }
 
     @Override
@@ -329,7 +366,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     }
 
     private void onWidthChange(double width) {
-        triggerPriceColumn.setVisible(width > 1200);
+        triggerPriceColumn.setVisible(width > 1300);
     }
 
     private void onDeactivateOpenOffer(OpenOffer openOffer) {
@@ -350,7 +387,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                     () -> log.debug("Activate offer was successful"),
                     (message) -> {
                         log.error(message);
-                        new Popup().warning(Res.get("offerbook.activateOffer.failed", message)).show();
+                        new Popup().warning(message).show();
                     });
             updateSelectToggleButtonState();
         }
@@ -359,19 +396,23 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
     private void onRemoveOpenOffer(OpenOfferListItem item) {
         OpenOffer openOffer = item.getOpenOffer();
         if (model.isBootstrappedOrShowPopup()) {
-            String key = (openOffer.getOffer().isBsqSwapOffer() ? "RemoveBsqSwapWarning" : "RemoveOfferWarning");
-            if (DontShowAgainLookup.showAgain(key)) {
-                String message = openOffer.getOffer().isBsqSwapOffer() ?
-                        Res.get("popup.warning.removeNoFeeOffer") :
-                        Res.get("popup.warning.removeOffer", item.getMakerFeeAsString());
-                new Popup().warning(message)
-                        .actionButtonText(Res.get("shared.removeOffer"))
-                        .onAction(() -> doRemoveOpenOffer(openOffer))
-                        .closeButtonText(Res.get("shared.dontRemoveOffer"))
-                        .dontShowAgainId(key)
-                        .show();
-            } else {
+            if (openOfferManager.hasOfferSharedMakerFee(openOffer)) {
                 doRemoveOpenOffer(openOffer);
+            } else {
+                String key = (openOffer.getOffer().isBsqSwapOffer() ? "RemoveBsqSwapWarning" : "RemoveOfferWarning");
+                if (DontShowAgainLookup.showAgain(key)) {
+                    String message = openOffer.getOffer().isBsqSwapOffer() ?
+                            Res.get("popup.warning.removeNoFeeOffer") :
+                            Res.get("popup.warning.removeOffer", item.getMakerFeeAsString());
+                    new Popup().warning(message)
+                            .actionButtonText(Res.get("shared.removeOffer"))
+                            .onAction(() -> doRemoveOpenOffer(openOffer))
+                            .closeButtonText(Res.get("shared.dontRemoveOffer"))
+                            .dontShowAgainId(key)
+                            .show();
+                } else {
+                    doRemoveOpenOffer(openOffer);
+                }
             }
             updateSelectToggleButtonState();
         }
@@ -384,9 +425,12 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
                     tableView.refresh();
 
-                    if (openOffer.getOffer().isBsqSwapOffer()) {
-                        return; // nothing to withdraw when Bsq swap is canceled (issue #5956)
+                    // We do not show the popup if it's a BSQ offer or a cloned offer with shared maker fee
+                    if (openOffer.getOffer().isBsqSwapOffer() ||
+                            openOfferManager.hasOfferSharedMakerFee(openOffer)) {
+                        return;
                     }
+
                     String key = "WithdrawFundsAfterRemoveOfferInfo";
                     if (DontShowAgainLookup.showAgain(key)) {
                         new Popup().instruction(Res.get("offerbook.withdrawFundsHint", Res.get("navigation.funds.availableForWithdrawal")))
@@ -404,16 +448,43 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
     private void onEditOpenOffer(OpenOffer openOffer) {
         if (model.isBootstrappedOrShowPopup()) {
-            openOfferActionHandler.onEditOpenOffer(openOffer);
+            editOpenOfferHandler.onEditOpenOffer(openOffer);
         }
     }
 
-    private void onDuplicateOffer(Offer offer) {
-        try {
-            PortfolioUtil.duplicateOffer(navigation, offer.getOfferPayloadBase());
-        } catch (NullPointerException e) {
-            log.warn("Unable to get offerPayload - {}", e.toString());
+    private void onDuplicateOffer(OpenOfferListItem item) {
+        if (item == null || item.getOffer().getOfferPayloadBase() == null) {
+            return;
         }
+        if (model.isBootstrappedOrShowPopup()) {
+            PortfolioUtil.duplicateOffer(navigation, item.getOffer().getOfferPayloadBase());
+        }
+    }
+
+    private void onCloneOffer(OpenOfferListItem item) {
+        if (item == null) {
+            return;
+        }
+        if (model.isBootstrappedOrShowPopup()) {
+            String key = "clonedOfferInfo";
+            if (DontShowAgainLookup.showAgain(key)) {
+                new Popup().backgroundInfo(Res.get("offerbook.clonedOffer.info"))
+                        .useIUnderstandButton()
+                        .dontShowAgainId(key)
+                        .onClose(() -> doCloneOffer(item))
+                        .show();
+            } else {
+                doCloneOffer(item);
+            }
+        }
+    }
+
+    private void doCloneOffer(OpenOfferListItem item) {
+        OpenOffer openOffer = item.getOpenOffer();
+        if (openOffer == null || openOffer.getOffer() == null || openOffer.getOffer().getOfferPayload().isEmpty()) {
+            return;
+        }
+        cloneOpenOfferHandler.onCloneOpenOffer(openOffer);
     }
 
     private void setOfferIdColumnCellFactory() {
@@ -421,19 +492,23 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
         offerIdColumn.getStyleClass().addAll("number-column", "first-column");
         offerIdColumn.setCellFactory(
                 new Callback<>() {
-
                     @Override
                     public TableCell<OpenOfferListItem, OpenOfferListItem> call(TableColumn<OpenOfferListItem,
                             OpenOfferListItem> column) {
                         return new TableCell<>() {
-                            private HyperlinkWithIcon field;
+                            private HyperlinkWithIcon hyperlinkWithIcon;
 
                             @Override
                             public void updateItem(final OpenOfferListItem item, boolean empty) {
                                 super.updateItem(item, empty);
                                 if (item != null && !empty) {
-                                    field = new HyperlinkWithIcon(item.getOffer().getShortId());
-                                    field.setOnAction(event -> {
+                                    hyperlinkWithIcon = new HyperlinkWithIcon(item.getOffer().getShortId());
+                                    if (item.isNotPublished()) {
+                                        // getStyleClass().add("offer-disabled"); does not work with hyperlinkWithIcon;-(
+                                        hyperlinkWithIcon.setStyle("-fx-text-fill: -bs-color-gray-3;");
+                                        hyperlinkWithIcon.getIcon().setOpacity(0.2);
+                                    }
+                                    hyperlinkWithIcon.setOnAction(event -> {
                                         if (item.getOffer().isBsqSwapOffer()) {
                                             bsqSwapOfferDetailsWindow.show(item.getOffer());
                                         } else {
@@ -441,12 +516,52 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                         }
                                     });
 
-                                    field.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
-                                    setGraphic(field);
+                                    hyperlinkWithIcon.setTooltip(new Tooltip(Res.get("tooltip.openPopupForDetails")));
+                                    setGraphic(hyperlinkWithIcon);
                                 } else {
                                     setGraphic(null);
-                                    if (field != null)
-                                        field.setOnAction(null);
+                                    if (hyperlinkWithIcon != null)
+                                        hyperlinkWithIcon.setOnAction(null);
+                                }
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void setMakerFeeTxIdColumnCellFactory() {
+        makerFeeTxIdColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
+        makerFeeTxIdColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<OpenOfferListItem, OpenOfferListItem> call(
+                            TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
+
+                        return new TableCell<>() {
+                            @Override
+                            public void updateItem(final OpenOfferListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+                                getStyleClass().removeAll("offer-disabled");
+                                if (item != null) {
+
+                                    Label label = new Label(item.getMakerFeeTxId());
+                                    Text icon;
+                                    if (openOfferManager.hasOfferSharedMakerFee(item.getOpenOffer())) {
+                                        icon = getRegularIconForLabel(MaterialDesignIcon.LINK, label, "icon");
+                                        setTooltip(new Tooltip(Res.get("offerbook.clonedOffer.tooltip", item.getMakerFeeTxId())));
+                                    } else {
+                                        icon = getRegularIconForLabel(MaterialDesignIcon.LINK_OFF, label, "icon");
+                                        setTooltip(new Tooltip(Res.get("offerbook.nonClonedOffer.tooltip", item.getMakerFeeTxId())));
+                                    }
+                                    icon.setVisible(!item.getOffer().isBsqSwapOffer());
+
+                                    if (item.isNotPublished()) {
+                                        getStyleClass().add("offer-disabled");
+                                        icon.setOpacity(0.2);
+                                    }
+                                    setGraphic(label);
+                                } else {
+                                    setGraphic(null);
                                 }
                             }
                         };
@@ -785,7 +900,41 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                         button.setTooltip(new Tooltip(Res.get("shared.duplicateOffer")));
                                         setGraphic(button);
                                     }
-                                    button.setOnAction(event -> onDuplicateOffer(item.getOffer()));
+                                    button.setOnAction(event -> onDuplicateOffer(item));
+                                } else {
+                                    setGraphic(null);
+                                    if (button != null) {
+                                        button.setOnAction(null);
+                                        button = null;
+                                    }
+                                }
+                            }
+                        };
+                    }
+                });
+    }
+
+    private void setCloneColumnCellFactory() {
+        cloneItemColumn.getStyleClass().add("avatar-column");
+        cloneItemColumn.setCellValueFactory((offerListItem) -> new ReadOnlyObjectWrapper<>(offerListItem.getValue()));
+        cloneItemColumn.setCellFactory(
+                new Callback<>() {
+                    @Override
+                    public TableCell<OpenOfferListItem, OpenOfferListItem> call(TableColumn<OpenOfferListItem, OpenOfferListItem> column) {
+                        return new TableCell<>() {
+                            Button button;
+
+                            @Override
+                            public void updateItem(final OpenOfferListItem item, boolean empty) {
+                                super.updateItem(item, empty);
+
+                                if (item != null && !empty) {
+                                    if (button == null) {
+                                        button = getRegularIconButton(MaterialDesignIcon.BOX_SHADOW);
+                                        button.setTooltip(new Tooltip(Res.get("offerbook.cloneOffer")));
+                                        setGraphic(button);
+                                    }
+                                    button.setOnAction(event -> onCloneOffer(item));
                                 } else {
                                     setGraphic(null);
                                     if (button != null) {
@@ -889,8 +1038,12 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                 });
     }
 
-    public void setOpenOfferActionHandler(PortfolioView.OpenOfferActionHandler openOfferActionHandler) {
-        this.openOfferActionHandler = openOfferActionHandler;
+    public void setEditOpenOfferHandler(PortfolioView.EditOpenOfferHandler editOpenOfferHandler) {
+        this.editOpenOfferHandler = editOpenOfferHandler;
+    }
+
+    public void setCloneOpenOfferHandler(PortfolioView.CloneOpenOfferHandler cloneOpenOfferHandler) {
+        this.cloneOpenOfferHandler = cloneOpenOfferHandler;
     }
 }
 
