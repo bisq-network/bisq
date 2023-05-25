@@ -54,6 +54,7 @@ public class BurningManCandidate {
     // trade protocol. We use the legacyMostRecentAddress until the activation date where we
     // enforce the version by the filter to ensure users have updated.
     // See: https://github.com/bisq-network/bisq/issues/6699
+    @EqualsAndHashCode.Exclude
     protected Optional<String> mostRecentAddress = Optional.empty();
 
     private final Set<BurnOutputModel> burnOutputModels = new HashSet<>();
