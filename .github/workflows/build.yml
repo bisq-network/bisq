@@ -28,4 +28,4 @@ jobs:
     - name: Build with Gradle
       uses: gradle/gradle-build-action@v2.5.1
       with:
-        arguments: build --scan
+        arguments: build jacocoTestReport testCodeCoverageReport --scan
