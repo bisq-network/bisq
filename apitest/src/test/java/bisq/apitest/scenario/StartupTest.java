@@ -58,7 +58,6 @@ public class StartupTest extends MethodTest {
             callRateMeteringConfigFile = getTestRateMeterInterceptorConfig();
             startSupportingApps(callRateMeteringConfigFile,
                     false,
-                    false,
                     bitcoind, seednode, arbdaemon, alicedaemon);
         } catch (Exception ex) {
             fail(ex);

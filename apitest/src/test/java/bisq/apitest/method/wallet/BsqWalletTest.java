@@ -48,7 +48,6 @@ public class BsqWalletTest extends MethodTest {
     @BeforeAll
     public static void setUp() {
         startSupportingApps(true,
-                false,
                 bitcoind,
                 seednode,
                 arbdaemon,
