@@ -363,6 +363,24 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     // Message handler
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    public boolean agentCheckDisputeHealth(Dispute disputeToCheck) {
+        // checking from the agent perspective only
+        if (disputeToCheck.getChatMessages().stream().anyMatch(ChatMessage::isSenderIsTrader)) {
+            return true;
+        }
+        // consider only messages which have been transmitted
+        List<ChatMessage> transmittedMessages = disputeToCheck.getChatMessages().stream()
+                .filter(e -> !e.isSystemMessage())
+                .filter(e -> !e.getStoredInMailboxProperty().get())
+                .collect(Collectors.toList());
+        if (transmittedMessages.size() == 0) {
+            return true;
+        }
+        // dispute is healthy if any transmitted message has been ACKd by the peer
+        return transmittedMessages.stream()
+                .anyMatch(e -> e.acknowledgedProperty().get());
+    }
+
     // dispute agent receives that from trader who opens dispute
     protected void onOpenNewDisputeMessage(OpenNewDisputeMessage openNewDisputeMessage) {
         T disputeList = getDisputeList();
@@ -694,8 +712,12 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         dispute.addAndPersistChatMessage(chatMessage);
 
         disputeList.add(dispute);
+        sendDisputeOpeningMsg(dispute);
+    }
 
+    public void sendDisputeOpeningMsg(Dispute dispute) {
         // We mirrored dispute already!
+        ChatMessage chatMessage = dispute.getChatMessages().get(0);
         Contract contract = dispute.getContract();
         PubKeyRing peersPubKeyRing = dispute.isDisputeOpenerIsBuyer() ? contract.getBuyerPubKeyRing() : contract.getSellerPubKeyRing();
         NodeAddress peersNodeAddress = dispute.isDisputeOpenerIsBuyer() ? contract.getBuyerNodeAddress() : contract.getSellerNodeAddress();

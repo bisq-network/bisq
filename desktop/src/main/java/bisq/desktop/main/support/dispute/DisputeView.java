@@ -1444,7 +1444,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
         return column;
     }
 
-    private void openChat(Dispute dispute) {
+    protected void openChat(Dispute dispute) {
         chatPopup.openChat(dispute, getConcreteDisputeChatSession(dispute), getCounterpartyName());
         dispute.setDisputeSeen(senderFlag());
         newBadgeByDispute.get(dispute.getId()).setVisible(dispute.isNew());
