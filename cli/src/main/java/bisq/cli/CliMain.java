@@ -894,6 +894,8 @@ public class CliMain {
             stream.println();
             stream.format(rowFormat, unsettxfeerate.name(), "", "Unset custom tx fee rate");
             stream.println();
+            stream.format(rowFormat, gettransactions.name(), "", "Get transactions");
+            stream.println();
             stream.format(rowFormat, gettransaction.name(), "--transaction-id=<transaction-id>", "Get transaction with id");
             stream.println();
             stream.format(rowFormat, createoffer.name(), "--payment-account=<payment-account-id> \\", "Create and place an offer");
