@@ -356,6 +356,24 @@ public abstract class DisputeAgentView extends DisputeView implements MultipleHo
     }
 
     @Override
+    protected void openChat(Dispute dispute) {
+        if (disputeManager.agentCheckDisputeHealth(dispute)) {
+            super.openChat(dispute);
+        } else {
+            new Popup().headLine(Res.get("support.warning.ticketNotAcknowledged"))
+                    .confirmation(Res.get("support.resendTicket"))
+                    .actionButtonText(Res.get("shared.yes"))
+                    .onAction(() -> {
+                        disputeManager.sendDisputeOpeningMsg(dispute);
+                        super.openChat(dispute);
+                    })
+                    .closeButtonText(Res.get("shared.no"))
+                    .onClose(() -> super.openChat(dispute))
+                    .show();
+        }
+    }
+
+    @Override
     protected boolean senderFlag() {
         return true;
     }
