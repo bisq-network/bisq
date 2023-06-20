@@ -96,7 +96,7 @@ public class CountryUtil {
     public static List<Country> getAllSepaNonEuroCountries() {
         List<Country> list = new ArrayList<>();
         String[] codes = {"BG", "HR", "CZ", "DK", "GB", "HU", "PL", "RO",
-                "SE", "IS", "NO", "LI", "CH", "JE"};
+                "SE", "IS", "NO", "LI", "CH", "JE", "GI"};
         populateCountryListByCodes(list, codes);
         list.sort((a, b) -> a.name.compareTo(b.name));
         return list;
@@ -114,14 +114,6 @@ public class CountryUtil {
     }
 
     public static List<Country> getAllSepaInstantCountries() {
-        // TODO find reliable source for list
-        // //Austria, Estonia, Germany, Italy, Latvia, Lithuania, the Netherlands and Spain.
-
-       /* List<Country> list = new ArrayList<>();
-        String[] codes = {"AT", "DE", "EE",
-                "IT", "LV", "LT", "NL", "ES"};
-        populateCountryListByCodes(list, codes);
-        list.sort((a, b) -> a.name.compareTo(b.name));*/
         return getAllSepaCountries();
     }
 
