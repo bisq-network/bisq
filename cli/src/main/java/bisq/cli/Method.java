@@ -47,6 +47,7 @@ public enum Method {
     gettrades,
     failtrade,
     unfailtrade,
+    gettransactions,
     gettransaction,
     gettxfeerate,
     getunusedbsqaddress,

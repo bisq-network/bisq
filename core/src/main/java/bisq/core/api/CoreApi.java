@@ -430,6 +430,10 @@ public class CoreApi {
         return walletsService.getMostRecentTxFeeRateInfo();
     }
 
+    public Set<Transaction> getTransactions() {
+        return walletsService.getTransactions();
+    }
+
     public Transaction getTransaction(String txId) {
         return walletsService.getTransaction(txId);
     }

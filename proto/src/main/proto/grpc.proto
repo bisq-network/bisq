@@ -761,6 +761,10 @@ service Wallets {
     // Remove the custom bitcoin miner transaction fee rate;  revert to the Bisq network's bitcoin miner transaction fee rate.
     rpc UnsetTxFeeRatePreference (UnsetTxFeeRatePreferenceRequest) returns (UnsetTxFeeRatePreferenceReply) {
     }
+    // Get a bitcoin transactions.
+    rpc GetTransactions (GetTransactionsRequest) returns (GetTransactionsReply) {
+    }
+
     // Get a bitcoin transaction summary.
     rpc GetTransaction (GetTransactionRequest) returns (GetTransactionReply) {
     }
@@ -878,6 +882,13 @@ message UnsetTxFeeRatePreferenceRequest {
 
 message UnsetTxFeeRatePreferenceReply {
     TxFeeRateInfo tx_fee_rate_info = 1; // The summary of the most recently available bitcoin transaction fee rates.
+}
+
+message GetTransactionsRequest {
+}
+
+message GetTransactionsReply {
+    repeated TxInfo tx_info = 1; // List of Bitcoin transactions.
 }
 
 message GetTransactionRequest {
