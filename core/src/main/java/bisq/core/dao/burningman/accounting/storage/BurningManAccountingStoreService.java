@@ -49,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class BurningManAccountingStoreService extends StoreService<BurningManAccountingStore> {
     private static final String FILE_NAME = "BurningManAccountingStore_v2";
+    private volatile boolean removeAllBlocksCalled;
 
     @Inject
     public BurningManAccountingStoreService(ResourceDataStoreService resourceDataStoreService,
@@ -82,6 +83,9 @@ public class BurningManAccountingStoreService extends StoreService<BurningManAcc
     }
 
     public void addIfNewBlock(AccountingBlock block) throws BlockHashNotConnectingException, BlockHeightNotConnectingException {
+        if (removeAllBlocksCalled) {
+            return;
+        }
         store.addIfNewBlock(block);
         requestPersistence();
     }
@@ -91,8 +95,25 @@ public class BurningManAccountingStoreService extends StoreService<BurningManAcc
     }
 
     public void purgeLastTenBlocks() {
+        if (removeAllBlocksCalled) {
+            return;
+        }
         store.purgeLastTenBlocks();
         requestPersistence();
+    }
+
+    public void removeAllBlocks(Runnable resultHandler) {
+        removeAllBlocksCalled = true;
+        store.removeAllBlocks();
+        persistenceManager.persistNow(resultHandler);
+    }
+
+    public void deleteStorageFile() {
+        try {
+            FileUtil.deleteFileIfExists(Path.of(absolutePathOfStorageDir, FILE_NAME).toFile());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public Optional<AccountingBlock> getLastBlock() {

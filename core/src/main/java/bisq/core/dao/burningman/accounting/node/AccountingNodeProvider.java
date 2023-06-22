@@ -38,15 +38,16 @@ public class AccountingNodeProvider {
     @Inject
     public AccountingNodeProvider(AccountingLiteNode liteNode,
                                   AccountingFullNode fullNode,
-                                  @Named(Config.IS_BM_FULL_NODE) boolean isBmFullNode,
+                                  @Named(Config.IS_BM_FULL_NODE) boolean isBmFullNodeFromOptions,
                                   Preferences preferences) {
 
-        boolean rpcDataSet = preferences.getRpcUser() != null &&
-                !preferences.getRpcUser().isEmpty()
-                && preferences.getRpcPw() != null &&
-                !preferences.getRpcPw().isEmpty() &&
+        String rpcUser = preferences.getRpcUser();
+        String rpcPw = preferences.getRpcPw();
+        boolean rpcDataSet = rpcUser != null && !rpcUser.isEmpty() &&
+                rpcPw != null && !rpcPw.isEmpty() &&
                 preferences.getBlockNotifyPort() > 0;
-        if (isBmFullNode && rpcDataSet) {
+        boolean fullBMAccountingNode = preferences.isFullBMAccountingNode();
+        if ((fullBMAccountingNode || isBmFullNodeFromOptions) && rpcDataSet) {
             accountingNode = fullNode;
         } else {
             accountingNode = liteNode;
