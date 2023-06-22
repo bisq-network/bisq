@@ -55,7 +55,7 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     // Activation date for bugfix of receiver addresses getting overwritten by a new compensation
     // requests change address.
     // See: https://github.com/bisq-network/bisq/issues/6699
-    public static final Date BUGFIX_6699_ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.JULY, 15);
+    public static final Date BUGFIX_6699_ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.JULY, 24);
 
     public static boolean isBugfix6699Activated() {
         return new Date().after(BUGFIX_6699_ACTIVATION_DATE);
