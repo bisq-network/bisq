@@ -24,14 +24,19 @@ import bisq.core.dao.burningman.accounting.exceptions.BlockHeightNotConnectingEx
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.StoreService;
 
+import bisq.common.UserThread;
 import bisq.common.config.Config;
+import bisq.common.file.FileUtil;
 import bisq.common.persistence.PersistenceManager;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import java.nio.file.Path;
+
 import java.io.File;
+import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class BurningManAccountingStoreService extends StoreService<BurningManAccountingStore> {
-    private static final String FILE_NAME = "BurningManAccountingStore";
+    private static final String FILE_NAME = "BurningManAccountingStore_v2";
 
     @Inject
     public BurningManAccountingStoreService(ResourceDataStoreService resourceDataStoreService,
@@ -52,6 +57,19 @@ public class BurningManAccountingStoreService extends StoreService<BurningManAcc
         super(storageDir, persistenceManager);
 
         resourceDataStoreService.addService(this);
+    }
+
+    protected void readFromResources(String postFix, Runnable completeHandler) {
+        super.readFromResources(postFix, completeHandler);
+
+        UserThread.runAfter(() -> {
+            try {
+                // Delete old BurningManAccountingStore file which was missing some data.
+                FileUtil.deleteFileIfExists(Path.of(absolutePathOfStorageDir, "BurningManAccountingStore").toFile());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }, 5);
     }
 
 
@@ -100,7 +118,7 @@ public class BurningManAccountingStoreService extends StoreService<BurningManAcc
 
     @Override
     protected void initializePersistenceManager() {
-        persistenceManager.initialize(store, PersistenceManager.Source.NETWORK);
+        persistenceManager.initialize(store, FILE_NAME, PersistenceManager.Source.NETWORK);
     }
 
     @Override
