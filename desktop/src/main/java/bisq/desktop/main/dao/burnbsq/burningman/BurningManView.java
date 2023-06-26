@@ -675,7 +675,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
     private void exportToCSV() {
         List<String> result = new ArrayList<>();
         String separator = "~";
-        String tableColumns = "Month~BTC Fees~Fees as BSQ~DPT as BTC~DPT as BSQ~Distributed BTC~Distributed BTC as BSQ";
+        String tableColumns = "Month~BTC Fees~Fees as BSQ~DPT as BTC~DPT as BSQ~Distributed BTC~Distributed BTC as BSQ~BSQ burned";
         CSVEntryConverter<String> headerConverter = item -> tableColumns.split(separator);
         CSVEntryConverter<String> contentConverter = item -> item.split(separator);
         Date now = new Date();
@@ -686,6 +686,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
         long feeAsBsqSum = 0;
         long dptAsBsqSum = 0;
         long distributedBtcAsBsqSum = 0;
+        long bsqBurnedSum = 0;
         long feeAsBsq, dptAsBsq, distributedBtcAsBsq;
         int year = 2023;
         int month = 0;
@@ -697,7 +698,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
 
             Map<Date, Price> averageBsqPriceByMonth = burningManAccountingService.getAverageBsqPriceByMonth();
             Optional<Price> price = Optional.ofNullable(averageBsqPriceByMonth.get(date));
-
+            long bsqBurned = burningManPresentationService.getBsqBurnedByMonth(date);
             List<ReceivedBtcBalanceEntry> distributedBtcBalanceByMonth = burningManAccountingService.getDistributedBtcBalanceByMonth(date)
                     .collect(Collectors.toList());
             long feeAsBtc = distributedBtcBalanceByMonth.stream()
@@ -726,7 +727,7 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
             feeAsBsqSum += feeAsBsq;
             dptAsBsqSum += dptAsBsq;
             distributedBtcAsBsqSum += distributedBtcAsBsq;
-
+            bsqBurnedSum += bsqBurned;
 
             line = new SimpleDateFormat("MMM yyyy", Locale.ENGLISH).format(date)
                     + separator + btcFormatter.formatCoin(Coin.valueOf(feeAsBtc))
@@ -734,7 +735,8 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
                     + separator + btcFormatter.formatCoin(Coin.valueOf(dptAsBtc))
                     + separator + bsqFormatter.formatCoin(Coin.valueOf(dptAsBsq))
                     + separator + btcFormatter.formatCoin(Coin.valueOf(distributedBtc))
-                    + separator + bsqFormatter.formatCoin(Coin.valueOf(distributedBtcAsBsq));
+                    + separator + bsqFormatter.formatCoin(Coin.valueOf(distributedBtcAsBsq))
+                    + separator + bsqFormatter.formatCoin(Coin.valueOf(bsqBurned));
             result.add(line);
             if (++month > 11) {
                 month = 0;
@@ -750,7 +752,8 @@ public class BurningManView extends ActivatableView<ScrollPane, Void> implements
                 + separator + btcFormatter.formatCoin(Coin.valueOf(dptAsBtcSum))
                 + separator + bsqFormatter.formatCoin(Coin.valueOf(dptAsBsqSum))
                 + separator + btcFormatter.formatCoin(Coin.valueOf(distributedBtcSum))
-                + separator + bsqFormatter.formatCoin(Coin.valueOf(distributedBtcAsBsqSum));
+                + separator + bsqFormatter.formatCoin(Coin.valueOf(distributedBtcAsBsqSum))
+                + separator + bsqFormatter.formatCoin(Coin.valueOf(bsqBurnedSum));
         result.add(line);
 
         GUIUtil.exportCSV("Burningman_dao_revenue.csv", headerConverter, contentConverter,
