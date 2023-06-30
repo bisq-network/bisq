@@ -51,16 +51,24 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 
+import com.googlecode.jcsv.writer.CSVEntryConverter;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import javafx.stage.Stage;
+
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
+
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -72,7 +80,10 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
+
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static bisq.desktop.util.FormBuilder.addButtonAfterGroup;
@@ -95,6 +106,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
     private Button burnButton;
     private TableView<MyProofOfBurnListItem> myItemsTableView;
     private TableView<ProofOfBurnListItem> allTxsTableView;
+    private Hyperlink exportAsCSVHyperlink;
 
     private final ObservableList<MyProofOfBurnListItem> myItemsObservableList = FXCollections.observableArrayList();
     private final SortedList<MyProofOfBurnListItem> myItemsSortedList = new SortedList<>(myItemsObservableList);
@@ -152,6 +164,14 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
                 Res.get("dao.proofOfBurn.allTxs"), 30, "last").first;
         createColumnsForAllTxs();
         allTxsTableView.setItems(allItemsSortedList);
+
+        exportAsCSVHyperlink = new Hyperlink(Res.get("shared.exportCSV"));
+        GridPane.setRowIndex(exportAsCSVHyperlink, ++gridRow);
+        GridPane.setColumnIndex(exportAsCSVHyperlink, 0);
+        GridPane.setMargin(exportAsCSVHyperlink, new Insets(-5, 0, 0, 0));
+        GridPane.setHalignment(exportAsCSVHyperlink, HPos.RIGHT);
+        root.getChildren().add(exportAsCSVHyperlink);
+        exportAsCSVHyperlink.setOnAction(e -> exportToCSV());
 
         createListeners();
     }
@@ -301,6 +321,27 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
         preImageTextField.resetValidation();
     }
 
+    private void exportToCSV() {
+        List<String> result = new ArrayList<>();
+        String separator = "~";
+        String tableColumns = "Amount~Date~Hash~TxId~Pubkey";
+        CSVEntryConverter<String> headerConverter = item -> tableColumns.split(separator);
+        CSVEntryConverter<String> contentConverter = item -> item.split(separator);
+        for (ProofOfBurnListItem item: allItemsSortedList) {
+            String line = bsqFormatter.formatCoin(item.getAmount())
+                    + separator + item.getDateAsString()
+                    + separator + item.getHashAsHex()
+                    + separator + item.getTxId()
+                    + separator + item.getPubKey();
+            result.add(line);
+        }
+        GUIUtil.exportCSV("proofOfBurnTransactions.csv",
+                headerConverter,
+                contentConverter,
+                "",
+                result,
+                (Stage) root.getScene().getWindow());
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Table columns
