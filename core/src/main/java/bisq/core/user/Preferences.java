@@ -172,7 +172,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     private final String btcNodesFromOptions, referralIdFromOptions,
             rpcUserFromOptions, rpcPwFromOptions;
     private final int blockNotifyPortFromOptions;
-    private final boolean fullDaoNodeFromOptions;
+    private final boolean fullDaoNodeFromOptions, fullAccountingNodeFromOptions;
     @Getter
     private final BooleanProperty useStandbyModeProperty = new SimpleBooleanProperty(prefPayload.isUseStandbyMode());
 
@@ -189,6 +189,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                        @Named(Config.BTC_NODES) String btcNodesFromOptions,
                        @Named(Config.REFERRAL_ID) String referralId,
                        @Named(Config.FULL_DAO_NODE) boolean fullDaoNode,
+                       @Named(Config.IS_BM_FULL_NODE) boolean fullAccountingNode,
                        @Named(Config.RPC_USER) String rpcUser,
                        @Named(Config.RPC_PASSWORD) String rpcPassword,
                        @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockNotificationPort) {
@@ -200,6 +201,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         this.btcNodesFromOptions = btcNodesFromOptions;
         this.referralIdFromOptions = referralId;
         this.fullDaoNodeFromOptions = fullDaoNode;
+        this.fullAccountingNodeFromOptions = fullAccountingNode;
         this.rpcUserFromOptions = rpcUser;
         this.rpcPwFromOptions = rpcPassword;
         this.blockNotifyPortFromOptions = rpcBlockNotificationPort;
@@ -1018,7 +1020,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public boolean isProcessBurningManAccountingData() {
-        return prefPayload.isProcessBurningManAccountingData();
+        return fullAccountingNodeFromOptions || prefPayload.isProcessBurningManAccountingData();
     }
 
 
