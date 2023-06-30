@@ -45,12 +45,14 @@ import javax.inject.Singleton;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -356,6 +358,17 @@ public class BurningManPresentationService implements DaoStateListener {
     public long getTotalAmountOfBurnedBsq() {
         return getBurningManCandidatesByName().values().stream()
                 .mapToLong(BurningManCandidate::getAccumulatedBurnAmount)
+                .sum();
+    }
+
+    public long getBsqBurnedByMonth(Date dateFilter) {
+        Set<BurnOutputModel> defaultZeroBurn = new HashSet<>();
+        defaultZeroBurn.add(new BurnOutputModel(0, 0, 0, "", 0L, 0));
+        Map<String, BurningManCandidate> burningMen = getBurningManCandidatesByName();
+        return burningMen.values().stream()
+                .map(burningMan -> burningMan.getBurnOutputModelsByMonth().getOrDefault(dateFilter, defaultZeroBurn).stream()
+                        .mapToLong(BurnOutputModel::getAmount))
+                .mapToLong(LongStream::sum)
                 .sum();
     }
 
