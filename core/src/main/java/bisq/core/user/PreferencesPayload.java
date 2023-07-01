@@ -148,6 +148,10 @@ public final class PreferencesPayload implements PersistableEnvelope {
     // Added at 1.9.11
     private boolean processBurningManAccountingData = false;
 
+    // Added at 1.9.11
+    private boolean isFullBMAccountingNode = false;
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -220,7 +224,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setUseBitcoinUrisInQrCodes(useBitcoinUrisInQrCodes)
                 .setUserDefinedTradeLimit(userDefinedTradeLimit)
                 .setUserHasRaisedTradeLimit(userHasRaisedTradeLimit)
-                .setProcessBurningManAccountingData(processBurningManAccountingData);
+                .setProcessBurningManAccountingData(processBurningManAccountingData)
+                .setIsFullBMAccountingNode(isFullBMAccountingNode);
 
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((protobuf.TradeCurrency) e.toProtoMessage()));
@@ -328,7 +333,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getUseBitcoinUrisInQrCodes(),
                 proto.getUserHasRaisedTradeLimit() ? proto.getUserDefinedTradeLimit() : Preferences.INITIAL_TRADE_LIMIT,
                 proto.getUserHasRaisedTradeLimit(),
-                proto.getProcessBurningManAccountingData()
+                proto.getProcessBurningManAccountingData(),
+                proto.getIsFullBMAccountingNode()
         );
     }
 }

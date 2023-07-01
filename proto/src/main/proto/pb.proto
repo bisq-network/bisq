@@ -1972,6 +1972,7 @@ message PreferencesPayload {
     int64 user_defined_trade_limit = 67;
     bool user_has_raised_trade_limit = 68;
     bool process_burning_man_accounting_data = 69;
+    bool is_full_b_m_accounting_node = 70;
 }
 
 message AutoConfirmSettings {

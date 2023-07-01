@@ -772,7 +772,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setDaoFullNode(boolean value) {
         // We only persist if we have not set the program argument
-        if (config.fullDaoNodeOptionSetExplicitly) {
+        if (!config.fullDaoNodeOptionSetExplicitly) {
             prefPayload.setDaoFullNode(value);
             requestPersistence();
         }
@@ -850,6 +850,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     public void setProcessBurningManAccountingData(boolean processBurningManAccountingData) {
         prefPayload.setProcessBurningManAccountingData(processBurningManAccountingData);
+        requestPersistence();
+    }
+
+    public void setFullBMAccountingNode(boolean isFullBMAccountingNode) {
+        prefPayload.setFullBMAccountingNode(isFullBMAccountingNode);
         requestPersistence();
     }
 
@@ -1023,6 +1028,10 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         return fullAccountingNodeFromOptions || prefPayload.isProcessBurningManAccountingData();
     }
 
+    public boolean isFullBMAccountingNode() {
+        return prefPayload.isFullBMAccountingNode();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -1145,6 +1154,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         boolean isProcessBurningManAccountingData();
 
+        boolean isFullBMAccountingNode();
+
         void setDaoFullNode(boolean value);
 
         void setRpcUser(String value);
@@ -1190,5 +1201,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setUserHasRaisedTradeLimit(boolean userHasRaisedTradeLimit);
 
         void setProcessBurningManAccountingData(boolean processBurningManAccountingData);
+
+        void setFullBMAccountingNode(boolean isFullBMAccountingNode);
     }
 }
