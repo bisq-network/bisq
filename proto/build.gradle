@@ -23,11 +23,6 @@ dependencies {
     }
 }
 
-sourceSets.main.java.srcDirs += [
-    'build/generated/source/proto/main/grpc',
-    'build/generated/source/proto/main/java'
-]
-
 protobuf {
     protoc {
         artifact = "com.google.protobuf:protoc:${protocVersion}"
