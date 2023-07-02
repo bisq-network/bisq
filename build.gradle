@@ -28,7 +28,6 @@ configure(subprojects) {
     ext { // in alphabetical order
         grpcVersion = '1.42.1'
         javafxVersion = '16'
-        protocVersion = '3.19.1'
 
         os = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
     }
