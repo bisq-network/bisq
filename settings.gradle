@@ -16,5 +16,6 @@ include 'desktop'
 include 'seednode'
 include 'statsnode'
 include 'apitest'
+include 'platform'
 
 rootProject.name = 'bisq'
