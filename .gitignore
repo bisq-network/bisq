@@ -23,7 +23,9 @@ build
 *.~ava
 /bundles
 /bisq-*
+/scripts/bisq-*
 /lib
+/scripts/lib
 /xchange
 desktop.ini
 */target/*
