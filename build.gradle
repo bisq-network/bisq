@@ -26,7 +26,6 @@ configure(subprojects) {
     apply plugin: 'com.google.osdetector'
 
     ext { // in alphabetical order
-        grpcVersion = '1.42.1'
         javafxVersion = '16'
         protocVersion = '3.19.1'
 
