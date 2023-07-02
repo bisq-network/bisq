@@ -38,6 +38,6 @@ protobuf {
         }
     }
     generateProtoTasks {
-        all()*.plugins { grpc {} }
+        ofSourceSet('main')*.plugins { grpc {} }
     }
 }
