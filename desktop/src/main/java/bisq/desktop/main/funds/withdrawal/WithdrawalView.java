@@ -24,7 +24,6 @@ import bisq.desktop.components.AutoTooltipLabel;
 import bisq.desktop.components.ExternalHyperlink;
 import bisq.desktop.components.HyperlinkWithIcon;
 import bisq.desktop.components.InputTextField;
-import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.components.list.FilterBox;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.TxDetails;
@@ -53,6 +52,7 @@ import bisq.core.util.validation.BtcAddressValidator;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.UserThread;
+import bisq.common.util.Tuple2;
 import bisq.common.util.Tuple3;
 import bisq.common.util.Tuple4;
 
@@ -130,7 +130,8 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
     private RadioButton useAllInputsRadioButton, useCustomInputsRadioButton, feeExcludedRadioButton, feeIncludedRadioButton;
     private Label amountLabel;
-    private TextField amountTextField, withdrawFromTextField, withdrawToTextField, withdrawMemoTextField, transactionFeeInputTextField;
+    private TextField amountTextField, withdrawToTextField, withdrawMemoTextField, transactionFeeInputTextField;
+    private String withdrawFromAddresses = "";
 
     private final BtcWalletService btcWalletService;
     private final TradeManager tradeManager;
@@ -188,8 +189,6 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     @Override
     public void initialize() {
         filterBox.initialize(filteredList, tableView);
-        final TitledGroupBg titledGroupBg = addTitledGroupBg(gridPane, rowIndex, 4, Res.get("funds.deposit.withdrawFromWallet"));
-        titledGroupBg.getStyleClass().add("last");
 
         inputsToggleGroup = new ToggleGroup();
         inputsToggleGroupListener = (observable, oldValue, newValue) -> {
@@ -202,7 +201,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                         Res.get("funds.withdrawal.inputs"),
                         Res.get("funds.withdrawal.useAllInputs"),
                         Res.get("funds.withdrawal.useCustomInputs"),
-                        Layout.FIRST_ROW_DISTANCE);
+                        0);
 
         useAllInputsRadioButton = labelRadioButtonRadioButtonTuple3.second;
         useCustomInputsRadioButton = labelRadioButtonRadioButtonTuple3.third;
@@ -222,14 +221,13 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         feeExcludedRadioButton = feeTuple3.third;
         feeIncludedRadioButton = feeTuple3.fourth;
 
-        withdrawFromTextField = addTopLabelTextField(gridPane, ++rowIndex,
-                Res.get("funds.withdrawal.fromLabel", Res.getBaseCurrencyCode())).second;
-
-        withdrawToTextField = addTopLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("funds.withdrawal.toLabel", Res.getBaseCurrencyCode())).second;
-
-        withdrawMemoTextField = addTopLabelInputTextField(gridPane, ++rowIndex,
-                Res.get("funds.withdrawal.memoLabel", Res.getBaseCurrencyCode())).second;
+        Tuple2<InputTextField, InputTextField> x = addInputTextFieldInputTextField(gridPane, ++rowIndex,
+                Res.get("funds.withdrawal.toLabel", Res.getBaseCurrencyCode()),
+                Res.get("funds.withdrawal.memoLabel", Res.getBaseCurrencyCode()));
+        withdrawToTextField = x.first;
+        withdrawMemoTextField = x.second;
+        withdrawToTextField.setPrefWidth(Layout.MIN_WINDOW_WIDTH);
+        withdrawMemoTextField.setPrefWidth(Layout.MIN_WINDOW_WIDTH);
 
         Tuple3<Label, InputTextField, ToggleButton> customFeeTuple = addTopLabelInputTextFieldSlideToggleButtonRight(gridPane, ++rowIndex,
                 Res.get("funds.withdrawal.txFee"), Res.get("funds.withdrawal.useCustomFeeValue"));
@@ -442,7 +440,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
 
                         String messageText = Res.get("shared.sendFundsDetailsWithFee",
                                 formatter.formatCoinWithCode(sendersAmount),
-                                withdrawFromTextField.getText(),
+                                withdrawFromAddresses,
                                 withdrawToAddress,
                                 formatter.formatCoinWithCode(fee),
                                 (double) fee.longValue() / txVsize,    // no risk of div/0 since txVsize is always positive
@@ -522,25 +520,17 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 amountAsCoin = Coin.ZERO;
                 totalAvailableAmountOfSelectedItems = Coin.ZERO;
                 amountTextField.setText("");
-                withdrawFromTextField.setText("");
+                withdrawFromAddresses = "";
             }
 
             if (selectedItems.size() == 1) {
-                withdrawFromTextField.setText(selectedItems.stream().findAny().get().getAddressEntry().getAddressString());
-                withdrawFromTextField.setTooltip(null);
+                withdrawFromAddresses = selectedItems.stream().findAny().get().getAddressEntry().getAddressString();
             } else {
                 int abbr = Math.max(10, 66 / selectedItems.size());
                 String addressesShortened = selectedItems.stream()
                         .map(e -> StringUtils.abbreviate(e.getAddressString(), abbr))
                         .collect(Collectors.joining(", "));
-                String text = Res.get("funds.withdrawal.withdrawMultipleAddresses", addressesShortened);
-                withdrawFromTextField.setText(text);
-
-                String addresses = selectedItems.stream()
-                        .map(WithdrawalListItem::getAddressString)
-                        .collect(Collectors.joining(",\n"));
-                String tooltipText = Res.get("funds.withdrawal.withdrawMultipleAddresses.tooltip", addresses);
-                withdrawFromTextField.setTooltip(new Tooltip(tooltipText));
+                withdrawFromAddresses = Res.get("funds.withdrawal.withdrawMultipleAddresses", addressesShortened);
             }
         } else {
             reset();
@@ -605,9 +595,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
     }
 
     private void reset() {
-        withdrawFromTextField.setText("");
-        withdrawFromTextField.setPromptText(Res.get("funds.withdrawal.selectAddress"));
-        withdrawFromTextField.setTooltip(null);
+        withdrawFromAddresses = "";
 
         totalAvailableAmountOfSelectedItems = Coin.ZERO;
         amountAsCoin = Coin.ZERO;
@@ -752,5 +740,3 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                 });
     }
 }
-
-
