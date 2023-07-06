@@ -6,6 +6,7 @@ apply plugin: 'com.google.protobuf'
 apply plugin: 'idea'
 
 dependencies {
+    implementation enforcedPlatform(project(':platform'))
     annotationProcessor libs.lombok
     compileOnly libs.javax.annotation
     compileOnly libs.lombok

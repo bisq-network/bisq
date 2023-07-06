@@ -128,6 +128,7 @@ configure(project(':common')) {
         "Implementation-Version": getHash())
 
     dependencies {
+        implementation enforcedPlatform(project(':platform'))
         implementation project(':proto')
         annotationProcessor libs.lombok
         compileOnly libs.javax.annotation
@@ -140,7 +141,6 @@ configure(project(':common')) {
             exclude(module: 'jsr305')
             exclude(module: 'okhttp')
             exclude(module: 'okio')
-            exclude(module: 'protobuf-java')
             exclude(module: 'slf4j-api')
         }
         implementation libs.google.findbugs
@@ -149,7 +149,6 @@ configure(project(':common')) {
         implementation(libs.google.guice) {
             exclude(module: 'guava')
         }
-        implementation libs.protobuf.java
         implementation libs.commons.io
         implementation libs.jopt
         implementation libs.apache.commons.lang3
@@ -174,12 +173,12 @@ configure(project(':p2p')) {
     }
 
     dependencies {
+        implementation enforcedPlatform(project(':platform'))
         implementation project(':proto')
         implementation project(':common')
         annotationProcessor libs.lombok
         compileOnly libs.lombok
         implementation libs.google.guava
-        implementation libs.protobuf.java
         implementation libs.fxmisc.easybind
         implementation libs.slf4j.api
         implementation(libs.netlayer.tor.external) {
@@ -194,7 +193,6 @@ configure(project(':p2p')) {
             exclude(module: 'jsr305')
             exclude(module: 'okhttp')
             exclude(module: 'okio')
-            exclude(module: 'protobuf-java')
             exclude(module: 'slf4j-api')
         }
         implementation(libs.google.guice) {
@@ -221,6 +219,7 @@ configure(project(':core')) {
     }
 
     dependencies {
+        implementation enforcedPlatform(project(':platform'))
         implementation project(':proto')
         implementation project(':assets')
         implementation project(':common')
@@ -235,7 +234,6 @@ configure(project(':core')) {
         implementation libs.google.findbugs
         implementation libs.google.gson
         implementation libs.google.guava
-        implementation libs.protobuf.java
         implementation libs.commons.codec
         implementation libs.commons.io
         implementation libs.jopt
@@ -259,7 +257,6 @@ configure(project(':core')) {
             exclude(module: 'jsr305')
             exclude(module: 'okhttp')
             exclude(module: 'okio')
-            exclude(module: 'protobuf-java')
             exclude(module: 'slf4j-api')
         }
         implementation(libs.jsonrpc4j) {
@@ -311,6 +308,7 @@ configure(project(':desktop')) {
     sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy fxml and css files
 
     dependencies {
+        implementation enforcedPlatform(project(':platform'))
         implementation project(':assets')
         implementation project(':common')
         implementation project(':proto')
@@ -322,7 +320,6 @@ configure(project(':desktop')) {
         implementation libs.logback.core
         implementation libs.google.gson
         implementation libs.google.guava
-        implementation libs.protobuf.java
         implementation libs.jcsv
         implementation libs.jfoenix
         implementation libs.commons.io
@@ -341,7 +338,6 @@ configure(project(':desktop')) {
             exclude(module: 'jsr305')
             exclude(module: 'okhttp')
             exclude(module: 'okio')
-            exclude(module: 'protobuf-java')
             exclude(module: 'slf4j-api')
         }
         implementation(libs.google.guice) {
@@ -371,6 +367,7 @@ configure(project(':seednode')) {
     mainClassName = 'bisq.seednode.SeedNodeMain'
 
     dependencies {
+        implementation enforcedPlatform(project(':platform'))
         implementation project(':common')
         implementation project(':proto')
         implementation project(':p2p')
@@ -463,6 +460,7 @@ configure(project(':apitest')) {
     }
 
     dependencies {
+        implementation enforcedPlatform(project(':platform'))
         implementation project(':proto')
         implementation project(':common')
         implementation project(':core')
@@ -477,7 +475,6 @@ configure(project(':apitest')) {
         implementation libs.logback.core
         implementation libs.google.gson
         implementation libs.google.guava
-        implementation libs.protobuf.java
         implementation libs.jopt
         implementation libs.apache.commons.lang3
         implementation libs.slf4j.api
@@ -487,7 +484,6 @@ configure(project(':apitest')) {
             exclude(module: 'jsr305')
             exclude(module: 'okhttp')
             exclude(module: 'okio')
-            exclude(module: 'protobuf-java')
             exclude(module: 'slf4j-api')
         }
         implementation(libs.grpc.protobuf) {
