@@ -36,7 +36,6 @@ public class BtcTxFeeRateTest extends MethodTest {
     @BeforeAll
     public static void setUp() {
         startSupportingApps(false,
-                true,
                 bitcoind,
                 seednode,
                 alicedaemon);
