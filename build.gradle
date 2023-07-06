@@ -26,7 +26,6 @@ configure(subprojects) {
     apply plugin: 'com.google.osdetector'
 
     ext { // in alphabetical order
-        grpcVersion = '1.42.1'
         javafxVersion = '16'
 
         os = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
