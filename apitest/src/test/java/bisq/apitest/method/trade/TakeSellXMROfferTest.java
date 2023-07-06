@@ -60,7 +60,7 @@ public class TakeSellXMROfferTest extends AbstractTradeTest {
 
     @BeforeAll
     public static void setUp() {
-        AbstractOfferTest.setUp(false);
+        AbstractOfferTest.setUp();
         createXmrPaymentAccounts();
         EXPECTED_PROTOCOL_STATUS.init();
     }

@@ -53,7 +53,6 @@ public class WalletTest extends MethodTest {
     @BeforeAll
     public static void setUp() {
         startSupportingApps(true,
-                false,
                 bitcoind,
                 seednode,
                 arbdaemon,
