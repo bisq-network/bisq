@@ -59,8 +59,8 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
             PaymentAccount alicesUsdAccount = createDummyF2FAccount(aliceClient, "US");
             var alicesOffer = aliceClient.createMarketBasedPricedOffer(BUY.name(),
                     USD,
-                    12_500_000L,
-                    12_500_000L, // min-amount = amount
+                    10_000_000L,
+                    10_000_000L, // min-amount = amount
                     0.00,
                     defaultBuyerSecurityDepositPct.get(),
                     alicesUsdAccount.getId(),
