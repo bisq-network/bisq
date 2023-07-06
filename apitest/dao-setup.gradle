@@ -11,14 +11,14 @@
 //
 // The :apitest subproject will not run on Windows, and these tasks have not been
 // tested on Windows.
-def buildResourcesDir = project(":apitest").buildDir.path + '/resources/main'
+def buildResourcesDir = project(":apitest").sourceSets.main.resources.srcDirs.first().path
 
 // This task requires ant in the system $PATH.
 task installDaoSetup(dependsOn: 'cleanDaoSetup') {
     doLast {
         println "Installing dao-setup directories in build dir $buildResourcesDir ..."
         def src = 'https://github.com/bisq-network/bisq/raw/master/docs/dao-setup.zip'
-        def destfile = project.rootDir.path + '/apitest/src/main/resources/dao-setup.zip'
+        def destfile = buildResourcesDir + '/dao-setup.zip'
         def url = new URL(src)
         def f = new File(destfile)
         if (f.exists()) {
@@ -48,21 +48,14 @@ task installDaoSetup(dependsOn: 'cleanDaoSetup') {
         }
 
         // Copy files from unzip target dir 'dao-setup' to build/resources/main.
-        def daoSetupSrc = project.rootDir.path + '/apitest/src/main/resources/dao-setup'
-        def daoSetupDest = buildResourcesDir + '/dao-setup'
+        def daoSetupSrc = buildResourcesDir + '/dao-setup'
+        def daoSetupDest = buildResourcesDir
         println "Copying $daoSetupSrc to $daoSetupDest ..."
         copy {
             from daoSetupSrc
             into daoSetupDest
         }
 
-        // Move dao-setup files from build/resources/main/dao-setup to build/resources/main
-        file(buildResourcesDir + '/dao-setup/Bitcoin-regtest')
-                .renameTo(file(buildResourcesDir + '/Bitcoin-regtest'))
-        file(buildResourcesDir + '/dao-setup/bisq-BTC_REGTEST_Alice_dao')
-                .renameTo(file(buildResourcesDir + '/bisq-BTC_REGTEST_Alice_dao'))
-        file(buildResourcesDir + '/dao-setup/bisq-BTC_REGTEST_Bob_dao')
-                .renameTo(file(buildResourcesDir + '/bisq-BTC_REGTEST_Bob_dao'))
         delete file(buildResourcesDir + '/dao-setup')
     }
 }
