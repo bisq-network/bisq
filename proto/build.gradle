@@ -3,6 +3,7 @@ plugins {
 }
 
 apply plugin: 'com.google.protobuf'
+apply plugin: 'idea'
 
 dependencies {
     annotationProcessor libs.lombok
