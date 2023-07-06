@@ -77,12 +77,7 @@ public abstract class AbstractOfferTest extends MethodTest {
 
     @BeforeAll
     public static void setUp() {
-        setUp(false);
-    }
-
-    public static void setUp(boolean startSupportingAppsInDebugMode) {
         startSupportingApps(true,
-                startSupportingAppsInDebugMode,
                 bitcoind,
                 seednode,
                 arbdaemon,

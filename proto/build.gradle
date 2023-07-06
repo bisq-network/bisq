@@ -3,6 +3,7 @@ plugins {
 }
 
 apply plugin: 'com.google.protobuf'
+apply plugin: 'idea'
 
 dependencies {
     implementation enforcedPlatform(project(':platform'))
@@ -24,21 +25,16 @@ dependencies {
     }
 }
 
-sourceSets.main.java.srcDirs += [
-    'build/generated/source/proto/main/grpc',
-    'build/generated/source/proto/main/java'
-]
-
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:${protocVersion}"
+        artifact = "com.google.protobuf:protoc:3.19.1"
     }
     plugins {
         grpc {
-            artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+            artifact = "io.grpc:protoc-gen-grpc-java:1.42.1"
         }
     }
     generateProtoTasks {
-        all()*.plugins { grpc {} }
+        ofSourceSet('main')*.plugins { grpc {} }
     }
 }

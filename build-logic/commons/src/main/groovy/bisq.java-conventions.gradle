@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'jacoco'
 }
 
 repositories {
@@ -9,11 +10,6 @@ repositories {
 
 sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
-
-repositories {
-    mavenCentral()
-    maven { url 'https://jitpack.io' }
-}
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
@@ -30,4 +26,11 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+jacocoTestReport {
+    reports {
+        html.required = false
+        xml.required = true
+    }
 }

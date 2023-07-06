@@ -78,10 +78,6 @@ public class TakeBuyBTCOfferWithNationalBankAcctTest extends AbstractTradeTest {
     private static PaymentAccount alicesPaymentAccount;
     private static PaymentAccount bobsPaymentAccount;
 
-    @BeforeAll
-    public static void setUp() {
-        setUp(false);
-    }
 
     @Test
     @Order(1)

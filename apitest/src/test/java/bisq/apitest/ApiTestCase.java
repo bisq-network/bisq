@@ -87,8 +87,7 @@ public class ApiTestCase {
             throws InterruptedException, ExecutionException, IOException {
         String[] params = new String[]{
                 "--supportingApps", stream(supportingApps).map(Enum::name).collect(Collectors.joining(",")),
-                "--callRateMeteringConfigPath", getTestRateMeterInterceptorConfig().getAbsolutePath(),
-                "--enableBisqDebugging", "false"
+                "--callRateMeteringConfigPath", getTestRateMeterInterceptorConfig().getAbsolutePath()
         };
         setUpScaffold(params);
     }

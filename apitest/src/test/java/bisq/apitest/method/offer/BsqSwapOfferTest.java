@@ -44,10 +44,6 @@ import static protobuf.OfferDirection.BUY;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class BsqSwapOfferTest extends AbstractOfferTest {
 
-    @BeforeAll
-    public static void setUp() {
-        AbstractOfferTest.setUp(false);
-    }
 
     @BeforeEach
     public void generateBtcBlock() {

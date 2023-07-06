@@ -85,6 +85,8 @@ public class ApiTestConfig {
     static final String ENABLE_BISQ_DEBUGGING = "enableBisqDebugging";
     static final String REGISTER_DISPUTE_AGENTS = "registerDisputeAgents";
 
+    static final String SUSPEND_INSTANCE = "suspendInstance";
+
     // Default values for certain options
     static final String DEFAULT_CONFIG_FILE_NAME = "apitest.properties";
 
@@ -125,6 +127,8 @@ public class ApiTestConfig {
     public final String rootProjectDir;
     public final String baseBuildResourcesDir;
     public final String baseSrcResourcesDir;
+
+    public final String suspendedInstances;
 
     // The parser that will be used to parse both cmd line and config file options
     private final OptionParser parser = new OptionParser();
@@ -261,6 +265,12 @@ public class ApiTestConfig {
                         .withRequiredArg()
                         .ofType(Boolean.class)
                         .defaultsTo(true);
+
+        ArgumentAcceptingOptionSpec<String> suspendInstancesOpt =
+                parser.accepts(SUSPEND_INSTANCE, "Suspended the given instances when debugging")
+                        .withRequiredArg()
+                        .ofType(String.class)
+                        .defaultsTo(EMPTY);
         try {
             CompositeOptionSet options = new CompositeOptionSet();
 
@@ -319,6 +329,7 @@ public class ApiTestConfig {
             this.callRateMeteringConfigPath = options.valueOf(callRateMeteringConfigPathOpt);
             this.enableBisqDebugging = options.valueOf(enableBisqDebuggingOpt);
             this.registerDisputeAgents = options.valueOf(registerDisputeAgentsOpt);
+            this.suspendedInstances = options.valueOf(suspendInstancesOpt);
 
             // Assign values to special-case static fields.
             BASH_PATH_VALUE = bashPath;

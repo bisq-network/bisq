@@ -41,7 +41,6 @@ public class BtcWalletTest extends MethodTest {
     @BeforeAll
     public static void setUp() {
         startSupportingApps(false,
-                false,
                 bitcoind,
                 seednode,
                 alicedaemon,
