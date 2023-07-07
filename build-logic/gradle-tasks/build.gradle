@@ -1,6 +1,6 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.7.10'
-    id 'org.gradle.kotlin.kotlin-dsl' version '2.4.1'
+    id 'org.jetbrains.kotlin.jvm' version '1.8.20'
+    id 'org.gradle.kotlin.kotlin-dsl' version '4.0.14'
 }
 
 repositories {

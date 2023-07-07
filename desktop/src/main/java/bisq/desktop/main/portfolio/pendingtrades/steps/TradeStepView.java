@@ -50,8 +50,6 @@ import org.bitcoinj.core.listeners.NewBestBlockListener;
 import de.jensd.fx.fontawesome.AwesomeDude;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
-import com.jfoenix.controls.JFXProgressBar;
-
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollPane;
@@ -350,7 +348,7 @@ public abstract class TradeStepView extends AnchorPane {
         timeLeftTextField = labelTextFieldVBoxTuple3.second;
         timeLeftTextField.setMinWidth(400);
 
-        timeLeftProgressBar = new JFXProgressBar(0);
+        timeLeftProgressBar = new ProgressBar(0);
         timeLeftProgressBar.setOpacity(0.7);
         timeLeftProgressBar.setMinHeight(9);
         timeLeftProgressBar.setMaxHeight(9);

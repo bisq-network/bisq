@@ -29,13 +29,10 @@ import bisq.core.locale.Res;
 import bisq.core.user.CookieKey;
 import bisq.core.user.User;
 
-import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
 import com.google.common.base.Joiner;
-
-import com.jfoenix.controls.JFXProgressBar;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -150,7 +147,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
         downloadingFileLabel.setOpacity(0.2);
         GridPane.setHalignment(downloadingFileLabel, HPos.LEFT);
 
-        progressBar = new JFXProgressBar(0L);
+        progressBar = new ProgressBar(0L);
         progressBar.setMaxHeight(4);
         progressBar.managedProperty().bind(progressBar.visibleProperty());
 

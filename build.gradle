@@ -5,8 +5,8 @@ buildscript {
         maven { url "https://plugins.gradle.org/m2/" }
     }
     dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:5.2.0'
-        classpath 'org.openjfx:javafx-plugin:0.0.10'
+        classpath 'com.github.johnrengelman:shadow:8.1.1'
+        classpath 'org.openjfx:javafx-plugin:0.0.14'
     }
 }
 
@@ -22,7 +22,7 @@ configure(rootProject) {
 
 configure(subprojects) {
     ext { // in alphabetical order
-        javafxVersion = '16'
+        javafxVersion = '20.0.1'
     }
 }
 
@@ -77,6 +77,10 @@ configure([project(':cli'),
                 script.text = script.text.replace(
                     'DEFAULT_JVM_OPTS=""', 'DEFAULT_JVM_OPTS="-XX:MaxRAM=8g -Xss1280k -XX:+UseG1GC ' +
                     '-XX:MaxHeapFreeRatio=10 -XX:MinHeapFreeRatio=5 -XX:+UseStringDeduplication ' +
+                    '--add-opens=javafx.controls/com.sun.javafx.scene.control.behavior=ALL-UNNAMED ' +
+                    '--add-opens=javafx.controls/com.sun.javafx.scene.control=ALL-UNNAMED ' +
+                    '--add-opens=javafx.graphics/com.sun.javafx.scene=ALL-UNNAMED ' +
+                    '--add-opens=java.base/java.lang.reflect=ALL-UNNAMED ' +
                     '-Djava.net.preferIPv4Stack=true"')
             }
 

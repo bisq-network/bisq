@@ -59,7 +59,6 @@ import javax.inject.Inject;
 
 import com.jfoenix.controls.JFXBadge;
 import com.jfoenix.controls.JFXComboBox;
-import com.jfoenix.controls.JFXProgressBar;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -573,7 +572,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
         };
         model.getWalletServiceErrorMsg().addListener(walletServiceErrorMsgListener);
 
-        btcSyncIndicator = new JFXProgressBar();
+        btcSyncIndicator = new ProgressBar();
         btcSyncIndicator.setPrefWidth(305);
         btcSyncIndicator.progressProperty().bind(model.getCombinedSyncProgress());
 
@@ -825,7 +824,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
             p2pNetworkProgressBar.setProgress(0);
         });
 
-        p2pNetworkProgressBar = new JFXProgressBar(-1);
+        p2pNetworkProgressBar = new ProgressBar(-1);
         p2pNetworkProgressBar.setMaxHeight(2);
         p2pNetworkProgressBar.prefWidthProperty().bind(p2PNetworkLabel.widthProperty());
 

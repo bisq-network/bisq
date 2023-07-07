@@ -20,8 +20,6 @@ package bisq.desktop.components;
 import bisq.core.dao.state.model.governance.DaoPhase;
 import bisq.core.locale.Res;
 
-import com.jfoenix.controls.JFXProgressBar;
-
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.HBox;
@@ -44,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SeparatedPhaseBars extends VBox {
     // Last day for creating github compensation request issue, as decided by general consensus
-    private static final double LAST_COMP_REQ_GH_ISSUE = (double) 18 / 25;
+//    private static final double LAST_COMP_REQ_GH_ISSUE = (double) 18 / 25;
     private double labelMinWidth = 150;
     private double breakMinWidth = 20;
     private int totalDuration;
@@ -70,14 +68,14 @@ public class SeparatedPhaseBars extends VBox {
             item.setTitleLabel(titleLabel);
             titlesBars.getChildren().addAll(titleLabel);
 
-            JFXProgressBar progressBar = new JFXProgressBar();
+            ProgressBar progressBar = new ProgressBar();
             progressBar.setMinHeight(9);
             progressBar.setMaxHeight(9);
             progressBar.progressProperty().bind(item.progressProperty);
             progressBar.setOpacity(item.isShowBlocks() ? 1 : 0.25);
-            if (item.phase.name().startsWith("PROPOSAL")) {
-                progressBar.setSecondaryProgress(LAST_COMP_REQ_GH_ISSUE);
-            }
+//            if (item.phase.name().startsWith("PROPOSAL")) {
+//                progressBar.setSecondaryProgress(LAST_COMP_REQ_GH_ISSUE);
+//            }
             progressBars.getChildren().add(progressBar);
             item.setProgressBar(progressBar);
         });

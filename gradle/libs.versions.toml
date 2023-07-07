@@ -38,7 +38,7 @@ junit-jupiter = { strictly = '5.7.0' }
 kotlin = { strictly = '1.3.41' }
 logback = { strictly = '1.1.11' }
 lombok = { strictly = '1.18.22' }
-mockito = { strictly = '4.0.0' }
+mockito = { strictly = '5.4.0' }
 natpryce-make-it-easy = { strictly = '4.0.1' }
 netlayer = { strictly = '0.7.6' }
 protobuf = { strictly = '3.19.1' }

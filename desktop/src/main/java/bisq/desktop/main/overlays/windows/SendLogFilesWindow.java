@@ -32,10 +32,9 @@ import bisq.core.support.dispute.mediation.MediationManager;
 
 import bisq.common.UserThread;
 
-import com.jfoenix.controls.JFXProgressBar;
-
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Separator;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -138,7 +137,7 @@ public class SendLogFilesWindow extends Overlay<SendLogFilesWindow> implements F
         addWizardsToGridPane(step3);
         addRegionToGridPane();
 
-        JFXProgressBar progressBar = new JFXProgressBar();
+        ProgressBar progressBar = new ProgressBar();
         progressBar.setMinHeight(19);
         progressBar.setMaxHeight(19);
         progressBar.setPrefWidth(9305);
