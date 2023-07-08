@@ -190,7 +190,7 @@ bitcoind: .localnet
 		-blocknotify='.localnet/bitcoind/blocknotify %s'
 
 seednode: seednode/build
-	./bisq-seednode \
+	./scripts/bisq-seednode \
 		--baseCurrencyNetwork=BTC_REGTEST \
 		--useLocalhostForP2P=true \
 		--useDevPrivilegeKeys=true \
@@ -203,7 +203,7 @@ seednode: seednode/build
 		--appName=seednode
 
 seednode2: seednode/build
-	./bisq-seednode \
+	./scripts/bisq-seednode \
 		--baseCurrencyNetwork=BTC_REGTEST \
 		--useLocalhostForP2P=true \
 		--useDevPrivilegeKeys=true \
@@ -216,7 +216,7 @@ seednode2: seednode/build
 		--appName=seednode2
 
 mediator: desktop/build
-	./bisq-desktop \
+	./scripts/bisq-desktop \
 		--baseCurrencyNetwork=BTC_REGTEST \
 		--useLocalhostForP2P=true \
 		--useDevPrivilegeKeys=true \
@@ -225,7 +225,7 @@ mediator: desktop/build
 		--appName=Mediator
 
 alice: setup
-	./bisq-desktop \
+	./scripts/bisq-desktop \
 		--baseCurrencyNetwork=BTC_REGTEST \
 		--useLocalhostForP2P=true \
 		--useDevPrivilegeKeys=true \
@@ -240,7 +240,7 @@ alice: setup
 		--appName=Alice
 
 bob: setup
-	./bisq-desktop \
+	./scripts/bisq-desktop \
 		--baseCurrencyNetwork=BTC_REGTEST \
 		--useLocalhostForP2P=true \
 		--useDevPrivilegeKeys=true \
