@@ -81,6 +81,16 @@ public class BurningManAccountingStore implements PersistableEnvelope {
         }
     }
 
+    public void removeAllBlocks() {
+        Lock writeLock = readWriteLock.writeLock();
+        writeLock.lock();
+        try {
+            blocks.clear();
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
     public Optional<AccountingBlock> getLastBlock() {
         Lock readLock = readWriteLock.readLock();
         readLock.lock();

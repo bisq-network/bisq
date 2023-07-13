@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
@@ -66,8 +67,9 @@ public class BisqProcess extends AbstractLinuxProcess implements LinuxProcess {
         this.useDevPrivilegeKeys = true;
         this.findBisqPidScript = (config.isRunningTest ? "." : "./apitest")
                 + "/scripts/get-bisq-pid.sh";
-        this.debugOpts = config.enableBisqDebugging
-                ? " -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:" + bisqAppConfig.remoteDebugPort
+        this.debugOpts = config.enableBisqDebugging ? " -agentlib:jdwp=transport=dt_socket,server=y,"
+                + "suspend=" + (Arrays.asList(config.suspendedInstances.split(",")).contains(bisqAppConfig.name()) ? "y" : "n")
+                + ",address=*:" + bisqAppConfig.remoteDebugPort
                 : "";
     }
 

@@ -45,7 +45,6 @@ public class CallRateMeteringInterceptorTest extends MethodTest {
     @BeforeAll
     public static void setUp() {
         startSupportingApps(false,
-                false,
                 bitcoind, alicedaemon);
     }
 

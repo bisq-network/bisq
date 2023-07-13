@@ -19,7 +19,12 @@ package bisq.apitest.method.trade;
 
 import bisq.core.payment.PaymentAccount;
 
+import bisq.proto.grpc.OfferInfo;
+
 import io.grpc.StatusRuntimeException;
+
+import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,8 +64,8 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
             PaymentAccount alicesUsdAccount = createDummyF2FAccount(aliceClient, "US");
             var alicesOffer = aliceClient.createMarketBasedPricedOffer(BUY.name(),
                     USD,
-                    12_500_000L,
-                    12_500_000L, // min-amount = amount
+                    10_000_000L,
+                    10_000_000L, // min-amount = amount
                     0.00,
                     defaultBuyerSecurityDepositPct.get(),
                     alicesUsdAccount.getId(),
@@ -71,19 +76,34 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
 
             // Wait for Alice's AddToOfferBook task.
             // Wait times vary;  my logs show >= 2-second delay.
-            sleep(3_000); // TODO loop instead of hard code a wait time
-            var alicesUsdOffers = aliceClient.getMyOffersSortedByDate(BUY.name(), USD);
+            var timeout = System.currentTimeMillis() + 3000;
+            while (bobClient.getOffersSortedByDate(USD, true).size() < 1) {
+                sleep(100);
+                if (System.currentTimeMillis() > timeout)
+                    fail(new TimeoutException("Timed out waiting for Offer to be added to OfferBook"));
+            }
+
+            List<OfferInfo> alicesUsdOffers = aliceClient.getMyOffersSortedByDate(BUY.name(), USD);
             assertEquals(1, alicesUsdOffers.size());
 
             PaymentAccount bobsUsdAccount = createDummyF2FAccount(bobClient, "US");
             var ignoredTakeOfferAmountParam = 0L;
+
             var trade = takeAlicesOffer(offerId,
                     bobsUsdAccount.getId(),
                     TRADE_FEE_CURRENCY_CODE,
                     ignoredTakeOfferAmountParam,
                     false);
-            sleep(2_500);  // Allow available offer to be removed from offer book.
-            alicesUsdOffers = aliceClient.getMyOffersSortedByDate(BUY.name(), USD);
+
+            // Allow available offer to be removed from offer book.
+            timeout = System.currentTimeMillis() + 2500;
+            do {
+                alicesUsdOffers = aliceClient.getMyOffersSortedByDate(BUY.name(), USD);
+                sleep(100);
+                if (System.currentTimeMillis() > timeout)
+                    fail(new TimeoutException("Timed out waiting for Offer to be removed from OfferBook"));
+            } while (alicesUsdOffers.size() > 0);
+
             assertEquals(0, alicesUsdOffers.size());
 
             trade = bobClient.getTrade(tradeId);

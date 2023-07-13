@@ -26,6 +26,28 @@ jobs:
         distribution: 'zulu'
 
     - name: Build with Gradle
-      uses: gradle/gradle-build-action@v2.4.2
+      uses: gradle/gradle-build-action@v2.5.1
       with:
-        arguments: build --scan
+        arguments: build jacocoTestReport testCodeCoverageReport --scan
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v3
+      with:
+          name: coverage-report
+          path: code-coverage-report/build/reports/jacoco/testCodeCoverageReport/testCodeCoverageReport.xml
+
+  publish_coverage:
+    name: Publish coverage
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+        - name: Download coverage report
+          uses: actions/download-artifact@v3
+          with:
+              name: coverage-report
+              path: code-coverage-report/build/reports/jacoco/testCodeCoverageReport
+        - name: Run codacy-coverage-reporter
+          uses: codacy/codacy-coverage-reporter-action@v1.3.0
+          with:
+              project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+              coverage-reports: ${{ github.workspace }}/code-coverage-report/build/reports/jacoco/testCodeCoverageReport/testCodeCoverageReport.xml

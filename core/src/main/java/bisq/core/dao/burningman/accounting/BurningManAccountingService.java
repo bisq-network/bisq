@@ -271,6 +271,15 @@ public class BurningManAccountingService implements DaoSetupService, DaoStateLis
     }
 
 
+    public void resyncAccountingDataFromScratch(Runnable resultHandler) {
+        burningManAccountingStoreService.removeAllBlocks(resultHandler);
+    }
+
+    public void resyncAccountingDataFromResources() {
+        burningManAccountingStoreService.deleteStorageFile();
+    }
+
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Delegates
     ///////////////////////////////////////////////////////////////////////////////////////////

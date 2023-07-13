@@ -242,27 +242,36 @@ public class Scaffold {
 
             log.info("Copied all dao-setup files to {}", buildDataDir);
 
-            // Try to avoid confusion about which 'bisq.properties' file is or was loaded
-            // by a Bisq instance:  delete the 'bisq.properties' file automatically copied
-            // to the 'apitest/build/resources/main' directory during IDE or Gradle build.
-            // Note:  there is no way to prevent this deleted file from being re-copied
-            // from 'src/main/resources' to the buildDataDir each time you hit the build
-            // button in the IDE.
-            BashCommand rmRedundantBisqPropertiesFile =
-                    new BashCommand("rm -rf " + buildDataDir + "/bisq.properties");
-            if (rmRedundantBisqPropertiesFile.run().getExitStatus() != 0)
-                throw new IllegalStateException("Could not delete redundant bisq.properties file");
+            // Copy 'bisq.properties' file from 'src/main/resources' to each
+            // Bisq instance's DataDir
+            copyBisqPropertiesFileToAppDataDir();
 
             // Copy the blocknotify script from the src resources dir to the build
             // resources dir.  Users may want to edit comment out some lines when all
             // the default block notifcation ports being will not be used (to avoid
             // seeing rpc notifcation warnings in log files).
             installBitcoinBlocknotify();
-
         } catch (IOException | InterruptedException ex) {
             throw new IllegalStateException("Could not install dao-setup files from " + daoSetupDir, ex);
         }
     }
+
+    private void copyBisqPropertiesFileToAppDataDir() throws IOException, InterruptedException {
+        copyBisqPropertiesFileToAppDataDir(alicedaemon);
+        copyBisqPropertiesFileToAppDataDir(bobdaemon);
+    }
+
+    private void copyBisqPropertiesFileToAppDataDir(BisqAppConfig bisqAppConfig) throws IOException, InterruptedException {
+        if (!new File(config.baseSrcResourcesDir + "/bisq.properties").exists()) return;
+
+        String instanceDataDir = config.rootAppDataDir + "/" + bisqAppConfig.appName;
+        BashCommand moveToDataDir =
+                new BashCommand("cp " + config.baseSrcResourcesDir + "/bisq.properties " + instanceDataDir);
+        if (moveToDataDir.run().getExitStatus() != 0)
+            throw new IllegalStateException("Could not copy bisq.properties to " + instanceDataDir);
+        log.debug("bisq.properties copied to " + instanceDataDir);
+    }
+
 
     private void cleanDaoSetupDirectories() {
         String buildDataDir = config.rootAppDataDir.getAbsolutePath();

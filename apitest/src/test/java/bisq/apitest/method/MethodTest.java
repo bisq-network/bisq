@@ -70,13 +70,11 @@ public class MethodTest extends ApiTestCase {
 
     public static void startSupportingApps(File callRateMeteringConfigFile,
                                            boolean generateBtcBlock,
-                                           boolean startSupportingAppsInDebugMode,
                                            Enum<?>... supportingApps) {
         try {
             setUpScaffold(new String[]{
                     "--supportingApps", toNameList.apply(supportingApps),
                     "--callRateMeteringConfigPath", callRateMeteringConfigFile.getAbsolutePath(),
-                    "--enableBisqDebugging", startSupportingAppsInDebugMode ? "true" : "false"
             });
             doPostStartup(generateBtcBlock);
         } catch (Exception ex) {
@@ -84,16 +82,13 @@ public class MethodTest extends ApiTestCase {
         }
     }
 
-    public static void startSupportingApps(boolean generateBtcBlock,
-                                           boolean startSupportingAppsInDebugMode,
-                                           Enum<?>... supportingApps) {
+    public static void startSupportingApps(boolean generateBtcBlock, Enum<?>... supportingApps) {
         try {
             // Disable call rate metering where there is no callRateMeteringConfigFile.
             File callRateMeteringConfigFile = getTestRateMeterInterceptorConfig();
             setUpScaffold(new String[]{
                     "--supportingApps", toNameList.apply(supportingApps),
-                    "--callRateMeteringConfigPath", callRateMeteringConfigFile.getAbsolutePath(),
-                    "--enableBisqDebugging", startSupportingAppsInDebugMode ? "true" : "false"
+                    "--callRateMeteringConfigPath", callRateMeteringConfigFile.getAbsolutePath()
             });
             doPostStartup(generateBtcBlock);
         } catch (Exception ex) {

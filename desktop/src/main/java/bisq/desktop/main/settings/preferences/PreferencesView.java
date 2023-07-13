@@ -35,6 +35,7 @@ import bisq.desktop.util.validation.BtcValidator;
 
 import bisq.core.btc.wallet.Restrictions;
 import bisq.core.dao.DaoFacade;
+import bisq.core.dao.burningman.accounting.BurningManAccountingService;
 import bisq.core.dao.governance.asset.AssetService;
 import bisq.core.filter.Filter;
 import bisq.core.filter.FilterManager;
@@ -122,6 +123,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @FxmlView
 public class PreferencesView extends ActivatableViewAndModel<GridPane, PreferencesViewModel> {
     private final User user;
+    private final BurningManAccountingService burningManAccountingService;
     private final CoinFormatter formatter;
     private TextField btcExplorerTextField, bsqExplorerTextField;
     private ComboBox<String> userLanguageComboBox;
@@ -131,7 +133,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ToggleButton showOwnOffersInOfferBook, useAnimations, useDarkMode, sortMarketCurrenciesNumerically,
             avoidStandbyMode, useCustomFee, autoConfirmXmrToggle, hideNonAccountPaymentMethodsToggle, denyApiTakerToggle,
             notifyOnPreReleaseToggle, isDaoFullNodeToggleButton,
-            fullModeDaoMonitorToggleButton, useBitcoinUrisToggle, tradeLimitToggle, processBurningManAccountingDataToggleButton;
+            fullModeDaoMonitorToggleButton, useBitcoinUrisToggle, tradeLimitToggle, processBurningManAccountingDataToggleButton,
+            isFullBMAccountingDataNodeToggleButton;
     private int gridRow = 0;
     private int displayCurrenciesGridRowIndex = 0;
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, ignoreDustThresholdInputTextField,
@@ -147,6 +150,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private final OfferFilterService offerFilterService;
     private final FilterManager filterManager;
     private final DaoFacade daoFacade;
+    private final boolean isBmFullNodeFromOptions;
     private final File storageDir;
 
     private ListView<FiatCurrency> fiatCurrenciesListView;
@@ -154,6 +158,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ListView<CryptoCurrency> cryptoCurrenciesListView;
     private ComboBox<CryptoCurrency> cryptoCurrenciesComboBox;
     private Button resetDontShowAgainButton, resyncDaoFromGenesisButton, resyncDaoFromResourcesButton,
+            resyncBMAccFromScratchButton, resyncBMAccFromResourcesButton,
             editCustomBtcExplorer, editCustomBsqExplorer;
     private ObservableList<String> languageCodes;
     private ObservableList<Country> countries;
@@ -169,7 +174,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ChangeListener<Boolean> deviationFocusedListener, bsqAverageTrimThresholdFocusedListener;
     private ChangeListener<Boolean> useCustomFeeCheckboxListener;
     private ChangeListener<Number> transactionFeeChangeListener;
-    private final boolean daoOptionsSet;
+    private final boolean daoFullModeFromOptionsSet;
     private final boolean displayStandbyModeFeature;
     private ChangeListener<Filter> filterChangeListener;
 
@@ -188,13 +193,16 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                            DaoFacade daoFacade,
                            Config config,
                            User user,
+                           BurningManAccountingService burningManAccountingService,
                            @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
+                           @Named(Config.IS_BM_FULL_NODE) boolean isBmFullNodeFromOptions,
                            @Named(Config.RPC_USER) String rpcUser,
                            @Named(Config.RPC_PASSWORD) String rpcPassword,
                            @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockNotificationPort,
                            @Named(Config.STORAGE_DIR) File storageDir) {
         super(model);
         this.user = user;
+        this.burningManAccountingService = burningManAccountingService;
         this.formatter = formatter;
         this.preferences = preferences;
         this.feeService = feeService;
@@ -202,11 +210,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         this.offerFilterService = offerFilterService;
         this.filterManager = filterManager;
         this.daoFacade = daoFacade;
+        this.isBmFullNodeFromOptions = isBmFullNodeFromOptions;
         this.storageDir = storageDir;
-        daoOptionsSet = config.fullDaoNodeOptionSetExplicitly &&
-                !rpcUser.isEmpty() &&
-                !rpcPassword.isEmpty() &&
-                rpcBlockNotificationPort != Config.UNSPECIFIED_PORT;
+        daoFullModeFromOptionsSet = config.fullDaoNodeOptionSetExplicitly &&
+                rpcUser != null && !rpcUser.isEmpty() &&
+                rpcPassword != null && !rpcPassword.isEmpty() &&
+                rpcBlockNotificationPort > Config.UNSPECIFIED_PORT;
         this.displayStandbyModeFeature = Utilities.isLinux() || Utilities.isOSX() || Utilities.isWindows();
     }
 
@@ -676,11 +685,26 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void initializeDaoOptions() {
-        int rowSpan = 6;
-        daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, rowSpan,
+        daoOptionsTitledGroupBg = addTitledGroupBg(root, ++gridRow, 8,
                 Res.get("setting.preferences.daoOptions"), Layout.GROUP_DISTANCE);
 
         processBurningManAccountingDataToggleButton = addSlideToggleButton(root, gridRow, Res.get("setting.preferences.dao.processBurningManAccountingData"), Layout.FIRST_ROW_AND_GROUP_DISTANCE);
+
+        isFullBMAccountingDataNodeToggleButton = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.dao.isFullBMAccountingNode"));
+        isFullBMAccountingDataNodeToggleButton.setManaged(preferences.isProcessBurningManAccountingData());
+        isFullBMAccountingDataNodeToggleButton.setVisible(preferences.isProcessBurningManAccountingData());
+
+        resyncBMAccFromScratchButton = addButton(root, ++gridRow, Res.get("setting.preferences.dao.resyncBMAccFromScratch"));
+        resyncBMAccFromScratchButton.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setHgrow(resyncBMAccFromScratchButton, Priority.ALWAYS);
+        resyncBMAccFromScratchButton.setManaged(preferences.isProcessBurningManAccountingData());
+        resyncBMAccFromScratchButton.setVisible(preferences.isProcessBurningManAccountingData());
+
+        resyncBMAccFromResourcesButton = addButton(root, ++gridRow, Res.get("setting.preferences.dao.resyncBMAccFromResources"));
+        resyncBMAccFromResourcesButton.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setHgrow(resyncBMAccFromResourcesButton, Priority.ALWAYS);
+        resyncBMAccFromResourcesButton.setManaged(preferences.isProcessBurningManAccountingData());
+        resyncBMAccFromResourcesButton.setVisible(preferences.isProcessBurningManAccountingData());
 
         fullModeDaoMonitorToggleButton = addSlideToggleButton(root, ++gridRow,
                 Res.get("setting.preferences.dao.fullModeDaoMonitor"));
@@ -1118,6 +1142,36 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         });
 
+        boolean isDaoModeEnabled = isDaoModeEnabled();
+        boolean isFullBMAccountingNode = (isBmFullNodeFromOptions || preferences.isFullBMAccountingNode()) && isDaoModeEnabled;
+        preferences.setFullBMAccountingNode(isFullBMAccountingNode);
+        isFullBMAccountingDataNodeToggleButton.setSelected(isFullBMAccountingNode);
+
+        isFullBMAccountingDataNodeToggleButton.setOnAction(e -> {
+            if (isFullBMAccountingDataNodeToggleButton.isSelected()) {
+                if (isDaoModeEnabled()) {
+                    new Popup().attention(Res.get("setting.preferences.dao.useFullBMAccountingNode.enabledDaoMode.popup"))
+                            .actionButtonText(Res.get("shared.yes"))
+                            .onAction(() -> {
+                                preferences.setFullBMAccountingNode(true);
+                                UserThread.runAfter(BisqApp.getShutDownHandler(), 500, TimeUnit.MILLISECONDS);
+                            })
+                            .closeButtonText(Res.get("shared.cancel"))
+                            .onClose(() -> isFullBMAccountingDataNodeToggleButton.setSelected(false))
+                            .show();
+                } else {
+                    new Popup().attention(Res.get("setting.preferences.dao.useFullBMAccountingNode.noDaoMode.popup"))
+                            .actionButtonText(Res.get("shared.ok"))
+                            .onAction(() -> isFullBMAccountingDataNodeToggleButton.setSelected(false))
+                            .onClose(() -> isFullBMAccountingDataNodeToggleButton.setSelected(false))
+                            .show();
+                }
+            } else {
+                preferences.setFullBMAccountingNode(false);
+            }
+        });
+
+
         fullModeDaoMonitorToggleButton.setSelected(preferences.isUseFullModeDaoMonitor());
         fullModeDaoMonitorToggleButton.setOnAction(e -> {
             preferences.setUseFullModeDaoMonitor(fullModeDaoMonitorToggleButton.isSelected());
@@ -1133,8 +1187,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         });
 
-        boolean daoFullNode = preferences.isDaoFullNode();
-        isDaoFullNodeToggleButton.setSelected(daoFullNode);
+        isDaoFullNodeToggleButton.setSelected(isDaoModeEnabled);
 
         bsqAverageTrimThresholdTextField.textProperty().addListener(bsqAverageTrimThresholdListener);
         bsqAverageTrimThresholdTextField.focusedProperty().addListener(bsqAverageTrimThresholdFocusedListener);
@@ -1142,9 +1195,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         String rpcUser = preferences.getRpcUser();
         String rpcPw = preferences.getRpcPw();
         int blockNotifyPort = preferences.getBlockNotifyPort();
-        if (daoFullNode && (rpcUser == null || rpcUser.isEmpty() ||
-                rpcPw == null || rpcPw.isEmpty() ||
-                blockNotifyPort <= 0)) {
+        boolean rpcDataFromPrefSet = rpcUser != null && !rpcUser.isEmpty() &&
+                rpcPw != null && !rpcPw.isEmpty() &&
+                blockNotifyPort > 0;
+        if (!daoFullModeFromOptionsSet && !rpcDataFromPrefSet) {
             log.warn("You have full DAO node selected but have not provided the rpc username, password and " +
                     "block notify port. We reset daoFullNode to false");
             isDaoFullNodeToggleButton.setSelected(false);
@@ -1175,6 +1229,23 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                         .closeButtonText(Res.get("shared.cancel"))
                         .show());
 
+        resyncBMAccFromScratchButton.setOnAction(e ->
+                new Popup().attention(Res.get("setting.preferences.dao.resyncBMAccFromScratch.popup"))
+                        .actionButtonText(Res.get("setting.preferences.dao.resyncBMAccFromScratch.resync"))
+                        .onAction(() -> burningManAccountingService.resyncAccountingDataFromScratch(BisqApp::getShutDownHandler))
+                        .closeButtonText(Res.get("shared.cancel"))
+                        .show());
+
+        resyncBMAccFromResourcesButton.setOnAction(e ->
+                new Popup().attention(Res.get("setting.preferences.dao.resyncBMAccFromResources.popup"))
+                        .actionButtonText(Res.get("setting.preferences.dao.resyncBMAccFromResources.resync"))
+                        .onAction(() -> {
+                            burningManAccountingService.resyncAccountingDataFromResources();
+                            UserThread.runAfter(BisqApp.getShutDownHandler(), 500, TimeUnit.MILLISECONDS);
+                        })
+                        .closeButtonText(Res.get("shared.cancel"))
+                        .show());
+
         isDaoFullNodeToggleButton.setOnAction(e -> {
             String key = "daoFullModeInfoShown";
             if (isDaoFullNodeToggleButton.isSelected() && preferences.showAgain(key)) {
@@ -1191,13 +1262,23 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                         .width(800)
                         .show();
             }
-
             updateDaoFields();
         });
 
         rpcUserTextField.textProperty().addListener(rpcUserListener);
         rpcPwTextField.textProperty().addListener(rpcPwListener);
         blockNotifyPortTextField.textProperty().addListener(blockNotifyPortListener);
+    }
+
+    private boolean isDaoModeEnabled() {
+        String rpcUser = preferences.getRpcUser();
+        String rpcPw = preferences.getRpcPw();
+        int blockNotifyPort = preferences.getBlockNotifyPort();
+        boolean rpcDataFromPrefSet = rpcUser != null && !rpcUser.isEmpty() &&
+                rpcPw != null && !rpcPw.isEmpty() &&
+                blockNotifyPort > 0;
+        boolean daoFullModeFromPrefSet = rpcDataFromPrefSet && preferences.isDaoFullNode();
+        return daoFullModeFromPrefSet || daoFullModeFromOptionsSet;
     }
 
     private void activateAutoConfirmPreferences() {
@@ -1240,7 +1321,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     private void updateDaoFields() {
         boolean isDaoFullNode = isDaoFullNodeToggleButton.isSelected();
-        GridPane.setRowSpan(daoOptionsTitledGroupBg, isDaoFullNode ? 9 : 6);
+        int rowSpan = 9;
+        if (isDaoFullNode) {
+            rowSpan += 3;
+        }
+        if (preferences.isProcessBurningManAccountingData()) {
+            rowSpan += 3;
+        }
+        GridPane.setRowSpan(daoOptionsTitledGroupBg, rowSpan);
         rpcUserTextField.setVisible(isDaoFullNode);
         rpcUserTextField.setManaged(isDaoFullNode);
         rpcPwTextField.setVisible(isDaoFullNode);
@@ -1252,12 +1340,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             rpcUserTextField.clear();
             rpcPwTextField.clear();
             blockNotifyPortTextField.clear();
+            preferences.setFullBMAccountingNode(false);
+            isFullBMAccountingDataNodeToggleButton.setSelected(false);
         }
 
-        isDaoFullNodeToggleButton.setDisable(daoOptionsSet);
-        rpcUserTextField.setDisable(daoOptionsSet);
-        rpcPwTextField.setDisable(daoOptionsSet);
-        blockNotifyPortTextField.setDisable(daoOptionsSet);
+        isDaoFullNodeToggleButton.setDisable(daoFullModeFromOptionsSet);
+        rpcUserTextField.setDisable(daoFullModeFromOptionsSet);
+        rpcPwTextField.setDisable(daoFullModeFromOptionsSet);
+        blockNotifyPortTextField.setDisable(daoFullModeFromOptionsSet);
     }
 
 
@@ -1304,9 +1394,12 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
     private void deactivateDaoPreferences() {
         processBurningManAccountingDataToggleButton.setOnAction(null);
+        isFullBMAccountingDataNodeToggleButton.setOnAction(null);
         fullModeDaoMonitorToggleButton.setOnAction(null);
         resyncDaoFromResourcesButton.setOnAction(null);
         resyncDaoFromGenesisButton.setOnAction(null);
+        resyncBMAccFromScratchButton.setOnAction(null);
+        resyncBMAccFromResourcesButton.setOnAction(null);
         bsqAverageTrimThresholdTextField.textProperty().removeListener(bsqAverageTrimThresholdListener);
         bsqAverageTrimThresholdTextField.focusedProperty().removeListener(bsqAverageTrimThresholdFocusedListener);
         isDaoFullNodeToggleButton.setOnAction(null);
