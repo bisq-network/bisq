@@ -2,7 +2,7 @@
 
 cd $(dirname $0)/../../../
 
-version=1.9.10
+version=1.9.12
 
 find . -type f \( -name "finalize.sh" \
 -o -name "create_app.sh" \

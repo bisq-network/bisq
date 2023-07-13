@@ -48,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class BurningManAccountingStoreService extends StoreService<BurningManAccountingStore> {
-    private static final String FILE_NAME = "BurningManAccountingStore_v2";
+    private static final String FILE_NAME = "BurningManAccountingStore_v3";
     private volatile boolean removeAllBlocksCalled;
 
     @Inject
@@ -67,6 +67,7 @@ public class BurningManAccountingStoreService extends StoreService<BurningManAcc
             try {
                 // Delete old BurningManAccountingStore file which was missing some data.
                 FileUtil.deleteFileIfExists(Path.of(absolutePathOfStorageDir, "BurningManAccountingStore").toFile());
+                FileUtil.deleteFileIfExists(Path.of(absolutePathOfStorageDir, "BurningManAccountingStore_v2").toFile());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
