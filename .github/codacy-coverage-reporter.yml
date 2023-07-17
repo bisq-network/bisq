@@ -1,0 +1,30 @@
+name: Codacy Coverage Reporter
+
+on: ["push"]
+
+permissions:
+    contents: read
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        name: codacy-coverage-reporter
+        steps:
+            - uses: actions/checkout@v3.5.3
+
+            - name: Set up JDK
+              uses: actions/setup-java@v3.11.0
+              with:
+                  java-version: '15'
+                  distribution: 'zulu'
+
+            - name: Build with Gradle
+              uses: gradle/gradle-build-action@v2.5.1
+              with:
+                  arguments: build jacocoTestReport testCodeCoverageReport --scan
+
+            - name: Run codacy-coverage-reporter
+              uses: codacy/codacy-coverage-reporter-action@v1.3.0
+              with:
+                  project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+                  coverage-reports: ${{ github.workspace }}/code-coverage-report/build/reports/jacoco/testCodeCoverageReport/testCodeCoverageReport.xml
