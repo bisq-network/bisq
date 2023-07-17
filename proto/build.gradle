@@ -1,9 +1,8 @@
 plugins {
     id 'bisq.java-conventions'
+    id 'idea'
+    id 'com.google.protobuf' version "0.9.3"
 }
-
-apply plugin: 'com.google.protobuf'
-apply plugin: 'idea'
 
 dependencies {
     implementation enforcedPlatform(project(':platform'))
@@ -29,12 +28,22 @@ protobuf {
     protoc {
         artifact = "com.google.protobuf:protoc:3.19.1"
     }
+
     plugins {
         grpc {
             artifact = "io.grpc:protoc-gen-grpc-java:1.42.1"
         }
     }
+
     generateProtoTasks {
-        ofSourceSet('main')*.plugins { grpc {} }
+        ofSourceSet('main').configureEach {
+            plugins {
+                // Apply the "grpc" plugin whose spec is defined above, without
+                // options.  Note the braces cannot be omitted, otherwise the
+                // plugin will not be added. This is because of the implicit way
+                // NamedDomainObjectContainer binds the methods.
+                grpc { }
+            }
+        }
     }
 }

@@ -5,7 +5,6 @@ buildscript {
         maven { url "https://plugins.gradle.org/m2/" }
     }
     dependencies {
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.17'
         classpath 'com.github.jengelman.gradle.plugins:shadow:5.2.0'
         classpath 'org.openjfx:javafx-plugin:0.0.10'
     }
