@@ -6,7 +6,6 @@ buildscript {
     }
     dependencies {
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.17'
-        classpath 'com.google.gradle:osdetector-gradle-plugin:1.6.0'
         classpath 'com.github.jengelman.gradle.plugins:shadow:5.2.0'
         classpath 'org.openjfx:javafx-plugin:0.0.10'
     }
@@ -23,12 +22,8 @@ configure(rootProject) {
 }
 
 configure(subprojects) {
-    apply plugin: 'com.google.osdetector'
-
     ext { // in alphabetical order
         javafxVersion = '16'
-
-        os = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
     }
 }
 
@@ -95,11 +90,6 @@ configure([project(':cli'),
                     'DEFAULT_JVM_OPTS=""', 'DEFAULT_JVM_OPTS="' +
                     '-Dlogback.configurationFile=apitest/build/resources/main/logback.xml"')
             }
-
-            if (osdetector.os != 'windows')
-                delete fileTree(dir: rootProject.projectDir, include: 'bisq-*.bat')
-            else
-                delete fileTree(dir: rootProject.projectDir, include: 'bisq-*', exclude: '*.bat')
         }
     }
 
