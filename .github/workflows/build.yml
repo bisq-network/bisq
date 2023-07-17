@@ -26,7 +26,7 @@ jobs:
         distribution: 'zulu'
 
     - name: Build with Gradle
-      uses: gradle/gradle-build-action@v2.5.1
+      uses: gradle/gradle-build-action@v2.6.0
       with:
         arguments: build jacocoTestReport testCodeCoverageReport --scan
 
