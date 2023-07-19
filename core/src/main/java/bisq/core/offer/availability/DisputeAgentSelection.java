@@ -20,12 +20,10 @@ package bisq.core.offer.availability;
 import bisq.core.support.dispute.agent.DisputeAgent;
 import bisq.core.support.dispute.agent.DisputeAgentManager;
 
-import com.google.common.annotations.VisibleForTesting;
-
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,24 +42,11 @@ public class DisputeAgentSelection {
     }
 
     private static <T extends DisputeAgent> T getRandomDisputeAgent(DisputeAgentManager<T> disputeAgentManager) {
-        Set<String> disputeAgents = disputeAgentManager.getObservableMap().values().stream()
-                .map(disputeAgent -> disputeAgent.getNodeAddress().getFullAddress())
-                .collect(Collectors.toSet());
+        List<T> disputeAgents = new ArrayList<>(disputeAgentManager.getObservableMap().values());
+        Collections.shuffle(disputeAgents);
 
-        String result = getRandomDisputeAgent(disputeAgents);
-
-        Optional<T> optionalDisputeAgent = disputeAgentManager.getObservableMap().values().stream()
-                .filter(e -> e.getNodeAddress().getFullAddress().equals(result))
-                .findAny();
+        Optional<T> optionalDisputeAgent = disputeAgents.stream().findFirst();
         checkArgument(optionalDisputeAgent.isPresent(), "optionalDisputeAgent has to be present");
         return optionalDisputeAgent.get();
-    }
-
-    @VisibleForTesting
-    static String getRandomDisputeAgent(Set<String> disputeAgents) {
-        if (disputeAgents.isEmpty()) {
-            return null;
-        }
-        return (String) disputeAgents.toArray()[new Random().nextInt(disputeAgents.size())];
     }
 }

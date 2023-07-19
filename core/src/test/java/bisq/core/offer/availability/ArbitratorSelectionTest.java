@@ -17,51 +17,96 @@
 
 package bisq.core.offer.availability;
 
+import bisq.core.support.dispute.agent.DisputeAgent;
+import bisq.core.support.dispute.agent.DisputeAgentManager;
+import bisq.core.support.dispute.mediation.mediator.Mediator;
+import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+
+import bisq.network.p2p.NodeAddress;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableMap;
+
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ArbitratorSelectionTest {
     @Test
-    public void testGetRandomArbitratorFromZero() {
-        testArbitratorSelection(10, new HashSet<>());
-    }
-    @Test
     public void testGetRandomArbitratorFromOne() {
-        testArbitratorSelection(10, new HashSet<>(Arrays.asList("arb1")));
+        MediatorManager mediatorManager = createFakeMediatorManagerWith(
+                createFakeMediatorWithId(1)
+        );
+        testArbitratorSelection(10, mediatorManager);
     }
+
     @Test
     public void testGetRandomArbitratorFromTwo() {
-        testArbitratorSelection(10000, new HashSet<>(Arrays.asList("arb1", "arb2")));
+        MediatorManager mediatorManager = createFakeMediatorManagerWith(
+                createFakeMediatorWithId(1),
+                createFakeMediatorWithId(2)
+        );
+        testArbitratorSelection(10000, mediatorManager);
     }
+
     @Test
     public void testGetRandomArbitratorFromThree() {
-        testArbitratorSelection(10000, new HashSet<>(Arrays.asList("arb1", "arb2", "arb3")));
+        MediatorManager mediatorManager = createFakeMediatorManagerWith(
+                createFakeMediatorWithId(1),
+                createFakeMediatorWithId(2),
+                createFakeMediatorWithId(3)
+        );
+        testArbitratorSelection(10000, mediatorManager);
     }
     @Test
     public void testGetRandomArbitratorFromFour() {
-        testArbitratorSelection(1000, new HashSet<>(Arrays.asList("arb1", "arb2", "arb3", "arb4")));
+        MediatorManager mediatorManager = createFakeMediatorManagerWith(
+                createFakeMediatorWithId(1),
+                createFakeMediatorWithId(2),
+                createFakeMediatorWithId(3),
+                createFakeMediatorWithId(4)
+        );
+        testArbitratorSelection(1000, mediatorManager);
     }
 
-    private void testArbitratorSelection(int iterations, Set<String> arbitrators) {
-        double expectedPercentage = 1.00 / arbitrators.size();
+    private MediatorManager createFakeMediatorManagerWith(Mediator... mediators) {
+        ObservableMap<NodeAddress, Mediator> observableMap = FXCollections.observableHashMap();
+        Arrays.stream(mediators)
+                .forEach(mediator -> observableMap.put(mediator.getNodeAddress(), mediator));
+
+        MediatorManager mediatorManager = mock(MediatorManager.class);
+        when(mediatorManager.getObservableMap()).thenReturn(observableMap);
+        return mediatorManager;
+    }
+
+    private Mediator createFakeMediatorWithId(int id) {
+        Mediator mediator = mock(Mediator.class);
+        when(mediator.getNodeAddress()).thenReturn(new NodeAddress("127.0.0.1", id));
+        return mediator;
+    }
+
+    private <T extends DisputeAgent> void testArbitratorSelection(int iterations,
+                                                                  DisputeAgentManager<T> disputeAgentManager) {
+        int numberOfDisputeAgents = disputeAgentManager.getObservableMap().size();
+        double expectedPercentage = 1.00 / numberOfDisputeAgents;
         System.out.printf("%ntestArbitratorSelection with %d arbitrators %d iterations, expected percentage=%f%n",
-                arbitrators.size(), iterations, expectedPercentage);
-        Map<String, Integer> results = new HashMap<>();
-        for (int i=0; i < iterations; i++) {
-            String selectedArb = DisputeAgentSelection.getRandomDisputeAgent(arbitrators);
-            if (selectedArb != null) {
-                results.put(selectedArb, 1 + results.getOrDefault(selectedArb, 0));
-            }
+                numberOfDisputeAgents, iterations, expectedPercentage);
+
+        Map<NodeAddress, Integer> results = new HashMap<>();
+        for (int i = 0; i < iterations; i++) {
+            T selectedArb = DisputeAgentSelection.getRandomMediator(disputeAgentManager);
+            NodeAddress selectedArbNodeAddress = selectedArb.getNodeAddress();
+            results.put(selectedArbNodeAddress, 1 + results.getOrDefault(selectedArbNodeAddress, 0));
         }
-        assertEquals(results.size(), arbitrators.size());
-        results.forEach((k, v) -> System.out.printf("arb=%s result=%d percentage=%f%n", k, v, (double)v / iterations));
-        results.forEach((k, v) -> assertEquals(expectedPercentage, (double)v / iterations, 0.1));
+
+        assertEquals(results.size(), numberOfDisputeAgents);
+        results.forEach((k, v) -> System.out.printf("arb=%s result=%d percentage=%f%n", k, v, (double) v / iterations));
+        results.forEach((k, v) -> assertEquals(expectedPercentage, (double) v / iterations, 0.1));
     }
 }
