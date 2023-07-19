@@ -1,0 +1,40 @@
+name: Stale Bot
+
+on:
+    workflow_dispatch:
+    schedule:
+        - cron: '0 0 * * *'
+
+permissions:
+    issues: write
+    pull-requests: write
+
+jobs:
+    build:
+        name: Process issues and pull requests
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Close Stale Issues and Pull Requests
+              uses: actions/stale@v4.1.1
+              with:
+                  days-before-issue-stale: 90
+                  days-before-pr-stale: 30
+                  stale-issue-message: >
+                      This issue has been automatically marked as stale because it has not had
+                      recent activity. It will be closed if no further activity occurs. Thank you
+                      for your contributions.
+                  stale-pr-message: >
+                      This pull request has been automatically marked as stale because it has not had
+                      recent activity. It will be closed if no further activity occurs. Thank you
+                      for your contributions.
+                  close-issue-message: >
+                      This issue has been automatically closed because of inactivity.
+                      Feel free to reopen it if you think it is still relevant.
+                  close-pr-message: >
+                      This pull request has been automatically closed because of inactivity.
+                      Feel free to reopen it if you think it is still relevant.
+                  stale-issue-label: was:dropped
+                  stale-pr-label: was:dropped
+                  exempt-issue-labels: a:bug,re:security,re:privacy,re:Tor,in:dao,$BSQ bounty,good first issue,Epic,a:feature,is:priority
+                  exempt-pr-labels: a:bug,re:security,re:privacy,re:Tor,in:dao,$BSQ bounty,good first issue,Epic,a:feature,is:priority
