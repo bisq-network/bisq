@@ -18,8 +18,9 @@
 package bisq.core.offer.availability;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -28,58 +29,39 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ArbitratorSelectionTest {
     @Test
-    public void testGetLeastUsedArbitrator() {
-        // We get least used selected
-        List<String> lastAddressesUsedInTrades;
-        Set<String> arbitrators;
-        String result;
+    public void testGetRandomArbitratorFromZero() {
+        testArbitratorSelection(10, new HashSet<>());
+    }
+    @Test
+    public void testGetRandomArbitratorFromOne() {
+        testArbitratorSelection(10, new HashSet<>(Arrays.asList("arb1")));
+    }
+    @Test
+    public void testGetRandomArbitratorFromTwo() {
+        testArbitratorSelection(10000, new HashSet<>(Arrays.asList("arb1", "arb2")));
+    }
+    @Test
+    public void testGetRandomArbitratorFromThree() {
+        testArbitratorSelection(10000, new HashSet<>(Arrays.asList("arb1", "arb2", "arb3")));
+    }
+    @Test
+    public void testGetRandomArbitratorFromFour() {
+        testArbitratorSelection(1000, new HashSet<>(Arrays.asList("arb1", "arb2", "arb3", "arb4")));
+    }
 
-        lastAddressesUsedInTrades = Arrays.asList("arb1", "arb2", "arb1");
-        arbitrators = new HashSet<>(Arrays.asList("arb1", "arb2"));
-        result = DisputeAgentSelection.getLeastUsedDisputeAgent(lastAddressesUsedInTrades, arbitrators);
-        assertEquals("arb2", result);
-
-        // if all are same we use first according to alphanumeric sorting
-        lastAddressesUsedInTrades = Arrays.asList("arb1", "arb2", "arb3");
-        arbitrators = new HashSet<>(Arrays.asList("arb1", "arb2", "arb3"));
-        result = DisputeAgentSelection.getLeastUsedDisputeAgent(lastAddressesUsedInTrades, arbitrators);
-        assertEquals("arb1", result);
-
-        lastAddressesUsedInTrades = Arrays.asList("arb1", "arb2", "arb3", "arb1");
-        arbitrators = new HashSet<>(Arrays.asList("arb1", "arb2", "arb3"));
-        result = DisputeAgentSelection.getLeastUsedDisputeAgent(lastAddressesUsedInTrades, arbitrators);
-        assertEquals("arb2", result);
-
-        lastAddressesUsedInTrades = Arrays.asList("arb1", "arb2", "arb3", "arb1", "arb2");
-        arbitrators = new HashSet<>(Arrays.asList("arb1", "arb2", "arb3"));
-        result = DisputeAgentSelection.getLeastUsedDisputeAgent(lastAddressesUsedInTrades, arbitrators);
-        assertEquals("arb3", result);
-
-        lastAddressesUsedInTrades = Arrays.asList("xxx", "ccc", "aaa");
-        arbitrators = new HashSet<>(Arrays.asList("aaa", "ccc", "xxx"));
-        result = DisputeAgentSelection.getLeastUsedDisputeAgent(lastAddressesUsedInTrades, arbitrators);
-        assertEquals("aaa", result);
-        lastAddressesUsedInTrades = Arrays.asList("333", "000", "111");
-        arbitrators = new HashSet<>(Arrays.asList("111", "333", "000"));
-        result = DisputeAgentSelection.getLeastUsedDisputeAgent(lastAddressesUsedInTrades, arbitrators);
-        assertEquals("000", result);
-
-        // if winner is not in our arb list we use our arb from arbitrators even if never used in trades
-        lastAddressesUsedInTrades = Arrays.asList("arb1", "arb2", "arb3");
-        arbitrators = new HashSet<>(Arrays.asList("arb4"));
-        result = DisputeAgentSelection.getLeastUsedDisputeAgent(lastAddressesUsedInTrades, arbitrators);
-        assertEquals("arb4", result);
-
-        // if winner (arb2) is not in our arb list we use our arb from arbitrators
-        lastAddressesUsedInTrades = Arrays.asList("arb1", "arb1", "arb1", "arb2");
-        arbitrators = new HashSet<>(Arrays.asList("arb1"));
-        result = DisputeAgentSelection.getLeastUsedDisputeAgent(lastAddressesUsedInTrades, arbitrators);
-        assertEquals("arb1", result);
-
-        // arb1 is used least
-        lastAddressesUsedInTrades = Arrays.asList("arb1", "arb2", "arb2", "arb2", "arb1", "arb1", "arb2");
-        arbitrators = new HashSet<>(Arrays.asList("arb1", "arb2"));
-        result = DisputeAgentSelection.getLeastUsedDisputeAgent(lastAddressesUsedInTrades, arbitrators);
-        assertEquals("arb1", result);
+    private void testArbitratorSelection(int iterations, Set<String> arbitrators) {
+        double expectedPercentage = 1.00 / arbitrators.size();
+        System.out.printf("%ntestArbitratorSelection with %d arbitrators %d iterations, expected percentage=%f%n",
+                arbitrators.size(), iterations, expectedPercentage);
+        Map<String, Integer> results = new HashMap<>();
+        for (int i=0; i < iterations; i++) {
+            String selectedArb = DisputeAgentSelection.getRandomDisputeAgent(arbitrators);
+            if (selectedArb != null) {
+                results.put(selectedArb, 1 + results.getOrDefault(selectedArb, 0));
+            }
+        }
+        assertEquals(results.size(), arbitrators.size());
+        results.forEach((k, v) -> System.out.printf("arb=%s result=%d percentage=%f%n", k, v, (double)v / iterations));
+        results.forEach((k, v) -> assertEquals(expectedPercentage, (double)v / iterations, 0.1));
     }
 }

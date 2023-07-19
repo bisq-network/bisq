@@ -777,10 +777,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                     if (openOffer.getState() == OpenOffer.State.AVAILABLE) {
                         Offer offer = openOffer.getOffer();
                         if (preferences.getIgnoreTradersList().stream().noneMatch(fullAddress -> fullAddress.equals(peer.getFullAddress()))) {
-                            mediatorNodeAddress = DisputeAgentSelection.getLeastUsedMediator(tradeStatisticsManager, mediatorManager).getNodeAddress();
+                            mediatorNodeAddress = DisputeAgentSelection.getRandomMediator(mediatorManager).getNodeAddress();
                             openOffer.setMediatorNodeAddress(mediatorNodeAddress);
 
-                            refundAgentNodeAddress = DisputeAgentSelection.getLeastUsedRefundAgent(tradeStatisticsManager, refundAgentManager).getNodeAddress();
+                            refundAgentNodeAddress = DisputeAgentSelection.getRandomRefundAgent(refundAgentManager).getNodeAddress();
                             openOffer.setRefundAgentNodeAddress(refundAgentNodeAddress);
 
                             try {

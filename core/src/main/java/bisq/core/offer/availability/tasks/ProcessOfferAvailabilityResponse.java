@@ -62,7 +62,7 @@ public class ProcessOfferAvailabilityResponse extends Task<OfferAvailabilityMode
             NodeAddress mediator = offerAvailabilityResponse.getMediator();
             if (mediator == null) {
                 // We do not get a mediator from old clients so we need to handle the null case.
-                mediator = DisputeAgentSelection.getLeastUsedMediator(model.getTradeStatisticsManager(), model.getMediatorManager()).getNodeAddress();
+                mediator = DisputeAgentSelection.getRandomMediator(model.getMediatorManager()).getNodeAddress();
             }
             model.setSelectedMediator(mediator);
 
