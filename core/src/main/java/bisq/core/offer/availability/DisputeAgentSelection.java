@@ -19,21 +19,11 @@ package bisq.core.offer.availability;
 
 import bisq.core.support.dispute.agent.DisputeAgent;
 import bisq.core.support.dispute.agent.DisputeAgentManager;
-import bisq.core.trade.statistics.TradeStatistics3;
-import bisq.core.trade.statistics.TradeStatisticsManager;
 
-import bisq.common.util.Tuple2;
-
-import com.google.common.annotations.VisibleForTesting;
-
-import java.util.Comparator;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,62 +33,20 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class DisputeAgentSelection {
     public static final int LOOK_BACK_RANGE = 100;
 
-    public static <T extends DisputeAgent> T getLeastUsedMediator(TradeStatisticsManager tradeStatisticsManager,
-                                                                  DisputeAgentManager<T> disputeAgentManager) {
-        return getLeastUsedDisputeAgent(tradeStatisticsManager,
-                disputeAgentManager,
-                true);
+    public static <T extends DisputeAgent> T getRandomMediator(DisputeAgentManager<T> disputeAgentManager) {
+        return getRandomDisputeAgent(disputeAgentManager);
     }
 
-    public static <T extends DisputeAgent> T getLeastUsedRefundAgent(TradeStatisticsManager tradeStatisticsManager,
-                                                                     DisputeAgentManager<T> disputeAgentManager) {
-        return getLeastUsedDisputeAgent(tradeStatisticsManager,
-                disputeAgentManager,
-                false);
+    public static <T extends DisputeAgent> T getRandomRefundAgent(DisputeAgentManager<T> disputeAgentManager) {
+        return getRandomDisputeAgent(disputeAgentManager);
     }
 
-    private static <T extends DisputeAgent> T getLeastUsedDisputeAgent(TradeStatisticsManager tradeStatisticsManager,
-                                                                       DisputeAgentManager<T> disputeAgentManager,
-                                                                       boolean isMediator) {
-        // We take last 100 entries from trade statistics
-        Stream<TradeStatistics3> stream = tradeStatisticsManager.getNavigableTradeStatisticsSet().descendingSet().stream()
-                .limit(LOOK_BACK_RANGE);
+    private static <T extends DisputeAgent> T getRandomDisputeAgent(DisputeAgentManager<T> disputeAgentManager) {
+        List<T> disputeAgents = new ArrayList<>(disputeAgentManager.getObservableMap().values());
+        Collections.shuffle(disputeAgents);
 
-        // We stored only first 4 chars of disputeAgents onion address
-        List<String> lastAddressesUsedInTrades = stream
-                .map(tradeStatistics3 -> isMediator ? tradeStatistics3.getMediator() : tradeStatistics3.getRefundAgent())
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
-        Set<String> disputeAgents = disputeAgentManager.getObservableMap().values().stream()
-                .map(disputeAgent -> disputeAgent.getNodeAddress().getFullAddress())
-                .collect(Collectors.toSet());
-
-        String result = getLeastUsedDisputeAgent(lastAddressesUsedInTrades, disputeAgents);
-
-        Optional<T> optionalDisputeAgent = disputeAgentManager.getObservableMap().values().stream()
-                .filter(e -> e.getNodeAddress().getFullAddress().equals(result))
-                .findAny();
+        Optional<T> optionalDisputeAgent = disputeAgents.stream().findFirst();
         checkArgument(optionalDisputeAgent.isPresent(), "optionalDisputeAgent has to be present");
         return optionalDisputeAgent.get();
-    }
-
-    @VisibleForTesting
-    static String getLeastUsedDisputeAgent(List<String> lastAddressesUsedInTrades, Set<String> disputeAgents) {
-        checkArgument(!disputeAgents.isEmpty(), "disputeAgents must not be empty");
-        List<Tuple2<String, AtomicInteger>> disputeAgentTuples = disputeAgents.stream()
-                .map(e -> new Tuple2<>(e, new AtomicInteger(0)))
-                .collect(Collectors.toList());
-        disputeAgentTuples.forEach(tuple -> {
-            int count = (int) lastAddressesUsedInTrades.stream()
-                    .filter(tuple.first::startsWith) // we use only first 4 chars for comparing
-                    .mapToInt(e -> 1)
-                    .count();
-            tuple.second.set(count);
-        });
-
-        disputeAgentTuples.sort(Comparator.comparing(e -> e.first));
-        disputeAgentTuples.sort(Comparator.comparingInt(e -> e.second.get()));
-        return disputeAgentTuples.get(0).first;
     }
 }
