@@ -247,6 +247,9 @@ public class PaymentAccountUtil {
         if (paymentAccount instanceof CountryBasedPaymentAccount) {
             Country country = (((CountryBasedPaymentAccount) paymentAccount)).getCountry();
             return country != null ? country.code : null;
+        } else if (paymentAccount instanceof AmazonGiftCardAccount) {   // GH ISSUE #6661 show Amazon country
+            Country country = ((AmazonGiftCardAccount) paymentAccount).getCountry();
+            return country != null ? country.code : null;
         }
         return null;
     }
