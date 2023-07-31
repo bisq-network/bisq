@@ -30,8 +30,11 @@ import bisq.core.offer.availability.OfferAvailabilityModel;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.proto.persistable.CorePersistenceProtoResolver;
 import bisq.core.provider.price.PriceFeedService;
+import bisq.core.support.SupportType;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
+import bisq.core.support.messages.ChatMessage;
+import bisq.core.support.traderchat.TradeChatSession;
 import bisq.core.trade.bisq_v1.DumpDelayedPayoutTx;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.bisq_v1.TradeResultHandler;
@@ -66,6 +69,8 @@ import bisq.core.trade.protocol.bsq_swap.messages.SellersBsqSwapRequest;
 import bisq.core.trade.protocol.bsq_swap.model.BsqSwapProtocolModel;
 import bisq.core.trade.statistics.ReferralIdService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
+import bisq.core.user.Preferences;
+import bisq.core.user.TradeGreeting;
 import bisq.core.user.User;
 import bisq.core.util.Validator;
 
@@ -74,12 +79,14 @@ import bisq.network.p2p.DecryptedDirectMessageListener;
 import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.SendMailboxMessageListener;
 import bisq.network.p2p.network.TorNetworkNode;
 
 import bisq.common.ClockWatcher;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
+import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.FaultHandler;
 import bisq.common.handlers.ResultHandler;
@@ -148,6 +155,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     private final FailedTradesManager failedTradesManager;
     private final P2PService p2PService;
     private final PriceFeedService priceFeedService;
+    private final Preferences preferences;
     private final TradeStatisticsManager tradeStatisticsManager;
     private final TradeUtil tradeUtil;
     @Getter
@@ -199,6 +207,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                         FailedTradesManager failedTradesManager,
                         P2PService p2PService,
                         PriceFeedService priceFeedService,
+                        Preferences preferences,
                         TradeStatisticsManager tradeStatisticsManager,
                         TradeUtil tradeUtil,
                         ArbitratorManager arbitratorManager,
@@ -220,6 +229,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         this.failedTradesManager = failedTradesManager;
         this.p2PService = p2PService;
         this.priceFeedService = priceFeedService;
+        this.preferences = preferences;
         this.tradeStatisticsManager = tradeStatisticsManager;
         this.tradeUtil = tradeUtil;
         this.arbitratorManager = arbitratorManager;
@@ -330,9 +340,98 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 takeOfferRequestErrorMessageHandler.handleErrorMessage(errorMessage);
         });
 
+        maybeSendGreeting(trade, inputsForDepositTxRequest.getSenderNodeAddress(), inputsForDepositTxRequest.getTakerPubKeyRing());
         requestPersistence();
     }
 
+    private String selectGreeting(List<TradeGreeting> greetings, String directionFilter, String paymentFilter) {
+        for (TradeGreeting greeting : greetings) {
+            if (greeting.getOfferDirection().equals(directionFilter) && greeting.getPaymentMethodId().equals(paymentFilter)) {
+                return greeting.getGreeting();
+            }
+        }
+        return "";
+    }
+
+    private void maybeSendGreeting(Trade trade, NodeAddress peersNodeAddress, PubKeyRing receiverPubKeyRing) {
+        // decide which is the appropriate greeting to send, if any.
+        List<TradeGreeting> greetings = preferences.getTradeGreetings();
+        // 1st preference: greeting with payment method and direction
+        // 2nd preference: greeting with payment method only
+        // 3rd preference: greeting with direction only
+        // 4th preference: greeting with no payment method, no direction
+        String directionFilter = trade.getOffer().getDirection().toString();
+        String paymentFilter = trade.getOffer().getPaymentMethodId();
+        String selected = selectGreeting(greetings, directionFilter, paymentFilter);
+        if (selected.isEmpty())
+            selected = selectGreeting(greetings, "", paymentFilter);
+        if (selected.isEmpty())
+            selected = selectGreeting(greetings, directionFilter, "");
+        if (selected.isEmpty())
+            selected = selectGreeting(greetings, "", "");
+        if (selected.isEmpty())
+            return;
+
+        addSystemMsg(trade);
+        TradeChatSession tradeChatSession = new TradeChatSession(trade, false);
+        ChatMessage message = new ChatMessage(
+                SupportType.TRADE,
+                trade.getId(),
+                tradeChatSession.getClientId(),
+                tradeChatSession.isClient(),
+                selected,
+                trade.getOffer().getMakerNodeAddress());
+
+        assert trade.getContract() != null;
+        p2PService.getMailboxMessageService().sendEncryptedMailboxMessage(peersNodeAddress,
+                receiverPubKeyRing,
+                message,
+                new SendMailboxMessageListener() {
+                    @Override
+                    public void onArrived() {
+                        log.info("{} arrived at peer {}. tradeId={}, uid={}",
+                                message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
+                        message.setArrived(true);
+                        requestPersistence();
+                    }
+
+                    @Override
+                    public void onStoredInMailbox() {
+                        log.info("{} stored in mailbox for peer {}. tradeId={}, uid={}",
+                                message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
+                        message.setStoredInMailbox(true);
+                        requestPersistence();
+                    }
+
+                    @Override
+                    public void onFault(String errorMessage) {
+                        log.error("{} failed: Peer {}. tradeId={}, uid={}, errorMessage={}",
+                                message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid(), errorMessage);
+                        message.setSendMessageError(errorMessage);
+                        requestPersistence();
+                    }
+                }
+        );
+        message.setWasDisplayed(true);
+        trade.addAndPersistChatMessage(message);
+    }
+
+    public void addSystemMsg(Trade trade) {
+        // We need to use the trade date as otherwise our system msg would not be displayed first as the list is sorted
+        // by date.
+        ChatMessage chatMessage = new ChatMessage(
+                SupportType.TRADE,
+                trade.getId(),
+                0,
+                false,
+                Res.get("tradeChat.rules"),
+                new NodeAddress("null:0000"),
+                trade.getDate().getTime());
+        chatMessage.setSystemMessage(true);
+        trade.getChatMessages().add(chatMessage);
+
+        requestPersistence();
+    }
 
     private void handleBsqSwapRequest(NodeAddress peer, BsqSwapRequest request) {
         if (!BsqSwapTakeOfferRequestVerification.isValid(openOfferManager, provider.getFeeService(), keyRing, peer, request)) {

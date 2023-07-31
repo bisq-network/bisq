@@ -1973,6 +1973,7 @@ message PreferencesPayload {
     bool user_has_raised_trade_limit = 68;
     bool process_burning_man_accounting_data = 69;
     bool is_full_b_m_accounting_node = 70;
+    repeated TradeGreeting trade_greetings = 71;
 }
 
 message AutoConfirmSettings {
@@ -1981,6 +1982,12 @@ message AutoConfirmSettings {
     int64 trade_limit = 3;
     repeated string service_addresses = 4;
     string currency_code = 5;
+}
+
+message TradeGreeting {
+    string greeting_text = 1;
+    OfferDirection offer_direction = 2;
+    string payment_method_id = 3;
 }
 
 message UserPayload {

@@ -28,6 +28,7 @@ import bisq.desktop.components.PasswordTextField;
 import bisq.desktop.components.TitledGroupBg;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.EditCustomExplorerWindow;
+import bisq.desktop.main.overlays.windows.EditGreetingsWindow;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.ImageUtil;
 import bisq.desktop.util.Layout;
@@ -54,6 +55,7 @@ import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
+import bisq.core.user.TradeGreeting;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.ParsingUtils;
@@ -159,7 +161,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private ComboBox<CryptoCurrency> cryptoCurrenciesComboBox;
     private Button resetDontShowAgainButton, resyncDaoFromGenesisButton, resyncDaoFromResourcesButton,
             resyncBMAccFromScratchButton, resyncBMAccFromResourcesButton,
-            editCustomBtcExplorer, editCustomBsqExplorer;
+            editCustomBtcExplorer, editCustomBsqExplorer, editCustomGreetings;
     private ObservableList<String> languageCodes;
     private ObservableList<Country> countries;
     private ObservableList<FiatCurrency> fiatCurrencies;
@@ -677,6 +679,13 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         hideNonAccountPaymentMethodsToggle = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.onlyShowPaymentMethodsFromAccount"));
         denyApiTakerToggle = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.denyApiTaker"));
         notifyOnPreReleaseToggle = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.notifyOnPreRelease"));
+
+        editCustomGreetings = addButton(root, ++gridRow, Res.get("settings.preferences.editGreetings.headline"), 0);
+        editCustomGreetings.getStyleClass().add("compact-button");
+        editCustomGreetings.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setHgrow(editCustomGreetings, Priority.ALWAYS);
+        GridPane.setColumnIndex(editCustomGreetings, 0);
+
         resetDontShowAgainButton = addButton(root, ++gridRow, Res.get("setting.preferences.resetAllFlags"), 0);
         resetDontShowAgainButton.getStyleClass().add("compact-button");
         resetDontShowAgainButton.setMaxWidth(Double.MAX_VALUE);
@@ -1086,6 +1095,20 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         notifyOnPreReleaseToggle.setOnAction(e -> preferences.setNotifyOnPreRelease(notifyOnPreReleaseToggle.isSelected()));
 
         resetDontShowAgainButton.setOnAction(e -> preferences.resetDontShowAgain());
+
+        editCustomGreetings.setOnAction(e -> {
+            List<TradeGreeting> x = preferences.getTradeGreetings();
+            EditGreetingsWindow urlWindow = new EditGreetingsWindow(x);
+            urlWindow
+                    .actionButtonText(Res.get("shared.save"))
+                    .onAction(() -> {
+                        preferences.setTradeGreetings(urlWindow.getListViewItems());
+                        btcExplorerTextField.setText(preferences.getBlockChainExplorer().name);
+                    })
+                    .closeButtonText(Res.get("shared.cancel"))
+                    .onClose(urlWindow::hide)
+                    .show();
+        });
 
         editCustomBtcExplorer.setOnAction(e -> {
             EditCustomExplorerWindow urlWindow = new EditCustomExplorerWindow("BTC",

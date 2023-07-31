@@ -151,6 +151,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     // Added at 1.9.11
     private boolean isFullBMAccountingNode = false;
 
+    private List<TradeGreeting> tradeGreetings = new ArrayList<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -225,7 +226,10 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setUserDefinedTradeLimit(userDefinedTradeLimit)
                 .setUserHasRaisedTradeLimit(userHasRaisedTradeLimit)
                 .setProcessBurningManAccountingData(processBurningManAccountingData)
-                .setIsFullBMAccountingNode(isFullBMAccountingNode);
+                .setIsFullBMAccountingNode(isFullBMAccountingNode)
+                .addAllTradeGreetings(tradeGreetings.stream()
+                        .map(tradeGreetings -> ((protobuf.TradeGreeting) tradeGreetings.toProtoMessage()))
+                        .collect(Collectors.toList()));
 
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((protobuf.TradeCurrency) e.toProtoMessage()));
@@ -334,7 +338,11 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getUserHasRaisedTradeLimit() ? proto.getUserDefinedTradeLimit() : Preferences.INITIAL_TRADE_LIMIT,
                 proto.getUserHasRaisedTradeLimit(),
                 proto.getProcessBurningManAccountingData(),
-                proto.getIsFullBMAccountingNode()
+                proto.getIsFullBMAccountingNode(),
+                proto.getTradeGreetingsList().isEmpty() ? new ArrayList<>() :
+                        new ArrayList<>(proto.getTradeGreetingsList().stream()
+                                .map(TradeGreeting::fromProto)
+                                .collect(Collectors.toList()))
         );
     }
 }

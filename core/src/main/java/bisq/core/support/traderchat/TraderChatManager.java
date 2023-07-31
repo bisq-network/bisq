@@ -125,7 +125,7 @@ public class TraderChatManager extends SupportManager {
             List<ChatMessage> chatMessages = trade.getChatMessages();
             if (chatMessages.stream().noneMatch(m -> m.getUid().equals(message.getUid()))) {
                 if (chatMessages.isEmpty()) {
-                    addSystemMsg(trade);
+                    tradeManager.addSystemMsg(trade);
                 }
                 trade.addAndPersistChatMessage(message);
                 tradeManager.requestPersistence();
@@ -161,23 +161,6 @@ public class TraderChatManager extends SupportManager {
                 log.warn("Unsupported message at dispatchMessage. message={}", message);
             }
         }
-    }
-
-    public void addSystemMsg(Trade trade) {
-        // We need to use the trade date as otherwise our system msg would not be displayed first as the list is sorted
-        // by date.
-        ChatMessage chatMessage = new ChatMessage(
-                getSupportType(),
-                trade.getId(),
-                0,
-                false,
-                Res.get("tradeChat.rules"),
-                new NodeAddress("null:0000"),
-                trade.getDate().getTime());
-        chatMessage.setSystemMessage(true);
-        trade.getChatMessages().add(chatMessage);
-
-        requestPersistence();
     }
 
     private Optional<Trade> getTradeById(String tradeId) {

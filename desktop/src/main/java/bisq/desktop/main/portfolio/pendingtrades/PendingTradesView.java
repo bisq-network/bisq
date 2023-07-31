@@ -457,7 +457,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         TraderChatManager traderChatManager = model.dataModel.getTraderChatManager();
         if (trade.getChatMessages().isEmpty()) {
-            traderChatManager.addSystemMsg(trade);
+            model.dataModel.getTradeManager().addSystemMsg(trade);
         }
 
         trade.getChatMessages().forEach(m -> m.setWasDisplayed(true));
