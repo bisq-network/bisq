@@ -98,61 +98,6 @@ configure([project(':cli'),
     }
 }
 
-
-configure(project(':common')) {
-    apply plugin: 'org.openjfx.javafxplugin'
-
-    javafx {
-        version = "$javafxVersion"
-        modules = ['javafx.graphics']
-    }
-
-    ext.getHash = {
-        def p1 = 'git rev-parse HEAD'.execute()
-        p1.waitFor()
-        return p1.text
-    }
-
-    jar.manifest.attributes(
-        "Implementation-Version": getHash())
-
-    dependencies {
-        implementation enforcedPlatform(project(':platform'))
-        implementation project(':proto')
-        annotationProcessor libs.lombok
-        compileOnly libs.javax.annotation
-        compileOnly libs.lombok
-        implementation libs.logback.classic
-        implementation libs.logback.core
-        implementation(libs.bitcoinj) {
-            exclude(module: 'bcprov-jdk15on')
-            exclude(module: 'guava')
-            exclude(module: 'jsr305')
-            exclude(module: 'okhttp')
-            exclude(module: 'okio')
-            exclude(module: 'slf4j-api')
-        }
-        implementation libs.google.findbugs
-        implementation libs.google.gson
-        implementation libs.google.guava
-        implementation(libs.google.guice) {
-            exclude(module: 'guava')
-        }
-        implementation libs.commons.io
-        implementation libs.jopt
-        implementation libs.apache.commons.lang3
-        implementation libs.bouncycastle.bcpg.jdk15on
-        implementation libs.kotlin.stdlib.jdk8
-        implementation libs.jetbrains.annotations
-        implementation libs.slf4j.api
-        runtimeOnly(libs.grpc.netty.shaded) {
-            exclude(module: 'animal-sniffer-annotations')
-            exclude(module: 'guava')
-        }
-    }
-}
-
-
 configure(project(':p2p')) {
     apply plugin: 'org.openjfx.javafxplugin'
 
