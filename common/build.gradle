@@ -7,15 +7,6 @@ javafx {
     modules = ['javafx.graphics']
 }
 
-ext.getHash = {
-    def p1 = 'git rev-parse HEAD'.execute()
-    p1.waitFor()
-    return p1.text
-}
-
-jar.manifest.attributes(
-    "Implementation-Version": getHash())
-
 dependencies {
     implementation enforcedPlatform(project(':platform'))
     implementation project(':proto')
