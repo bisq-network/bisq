@@ -1,16 +1,15 @@
 plugins {
     id 'bisq.java-conventions'
+    id 'bisq.javafx'
 }
 
 apply plugin: 'com.github.johnrengelman.shadow'
-apply plugin: 'org.openjfx.javafxplugin'
 apply from: 'package/package.gradle'
 
 shadowDistTar.enabled = false
 shadowDistZip.enabled = false
 
 javafx {
-    version = "16"
     modules = ['javafx.controls', 'javafx.fxml']
 }
 
