@@ -1,3 +1,46 @@
 plugins {
     id 'bisq.java-conventions'
 }
+
+apply plugin: 'org.openjfx.javafxplugin'
+
+javafx {
+    version = "16"
+    modules = ['javafx.base']
+}
+
+dependencies {
+    implementation enforcedPlatform(project(':platform'))
+    implementation project(':proto')
+    implementation project(':common')
+    annotationProcessor libs.lombok
+    compileOnly libs.lombok
+    implementation libs.google.guava
+    implementation libs.fxmisc.easybind
+    implementation libs.slf4j.api
+    implementation(libs.netlayer.tor.external) {
+        exclude(module: 'slf4j-api')
+    }
+    implementation(libs.netlayer.tor.native) {
+        exclude(module: 'slf4j-api')
+    }
+    implementation(libs.bitcoinj) {
+        exclude(module: 'bcprov-jdk15on')
+        exclude(module: 'guava')
+        exclude(module: 'jsr305')
+        exclude(module: 'okhttp')
+        exclude(module: 'okio')
+        exclude(module: 'slf4j-api')
+    }
+    implementation(libs.google.guice) {
+        exclude(module: 'guava')
+    }
+    implementation(libs.apache.httpclient) {
+        exclude(module: 'commons-codec')
+    }
+    testAnnotationProcessor libs.lombok
+    testCompileOnly libs.lombok
+    testImplementation libs.logback.classic
+    testImplementation libs.logback.core
+    testImplementation libs.apache.commons.lang3
+}
