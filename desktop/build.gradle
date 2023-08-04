@@ -1,3 +1,74 @@
 plugins {
     id 'bisq.java-conventions'
+    id 'bisq.javafx'
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
+apply from: 'package/package.gradle'
+
+shadowDistTar.enabled = false
+shadowDistZip.enabled = false
+
+javafx {
+    modules = ['javafx.controls', 'javafx.fxml']
+}
+
+version = file("src/main/resources/version.txt").text.trim()
+
+jar.manifest.attributes(
+    "Implementation-Title": project.name,
+    "Implementation-Version": version)
+
+mainClassName = 'bisq.desktop.app.BisqAppMain'
+
+jar {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy fxml and css files
+
+dependencies {
+    implementation enforcedPlatform(project(':platform'))
+    implementation project(':assets')
+    implementation project(':common')
+    implementation project(':proto')
+    implementation project(':p2p')
+    implementation project(':core')
+    annotationProcessor libs.lombok
+    compileOnly libs.lombok
+    implementation libs.logback.classic
+    implementation libs.logback.core
+    implementation libs.google.gson
+    implementation libs.google.guava
+    implementation libs.jcsv
+    implementation libs.jfoenix
+    implementation libs.commons.io
+    implementation libs.fontawesomefx
+    implementation libs.fontawesomefx.commons
+    implementation libs.fontawesomefx.materialdesign.font
+    implementation libs.qrgen
+    implementation libs.apache.commons.lang3
+    implementation libs.bouncycastle.bcpg.jdk15on
+    implementation libs.fxmisc.easybind
+    implementation libs.jetbrains.annotations
+    implementation libs.slf4j.api
+    implementation(libs.bitcoinj) {
+        exclude(module: 'bcprov-jdk15on')
+        exclude(module: 'guava')
+        exclude(module: 'jsr305')
+        exclude(module: 'okhttp')
+        exclude(module: 'okio')
+        exclude(module: 'slf4j-api')
+    }
+    implementation(libs.google.guice) {
+        exclude(module: 'guava')
+    }
+    testAnnotationProcessor libs.lombok
+    testCompileOnly libs.lombok
+    testImplementation libs.natpryce.make.it.easy
+}
+
+test {
+    systemProperty 'jdk.attach.allowAttachSelf', true
 }

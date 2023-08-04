@@ -5,3 +5,7 @@ plugins {
 repositories {
     gradlePluginPortal()
 }
+
+dependencies {
+    implementation libs.openjfx.javafx.plugin
+}
