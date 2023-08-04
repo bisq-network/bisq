@@ -1,11 +1,9 @@
 plugins {
     id 'bisq.java-conventions'
+    id 'bisq.javafx'
 }
 
-apply plugin: 'org.openjfx.javafxplugin'
-
 javafx {
-    version = "16"
     modules = ['javafx.base']
 }
 
