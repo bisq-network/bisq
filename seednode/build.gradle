@@ -2,11 +2,6 @@ plugins {
     id 'bisq.java-conventions'
 }
 
-apply plugin: 'com.github.johnrengelman.shadow'
-
-shadowDistTar.enabled = false
-shadowDistZip.enabled = false
-
 mainClassName = 'bisq.seednode.SeedNodeMain'
 
 dependencies {
