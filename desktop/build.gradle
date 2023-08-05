@@ -1,9 +1,9 @@
 plugins {
     id 'bisq.application'
     id 'bisq.javafx'
+    id "com.github.johnrengelman.shadow" version "5.2.0"
 }
 
-apply plugin: 'com.github.johnrengelman.shadow'
 apply from: 'package/package.gradle'
 
 shadowDistTar.enabled = false
