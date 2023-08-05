@@ -39,14 +39,6 @@ installDist {
         unixScriptFile.text = unixScriptFile.text.replace(
                 'APP_HOME=$( cd "${APP_HOME:-./}.." && pwd -P ) || exit', 'APP_HOME=$( cd "${APP_HOME:-./}" && pwd -P ) || exit')
 
-        if (applicationName == 'desktop') {
-            def script = file("${rootProject.projectDir}/bisq-$applicationName")
-            script.text = script.text.replace(
-                    'DEFAULT_JVM_OPTS=""', 'DEFAULT_JVM_OPTS="-XX:MaxRAM=8g -Xss1280k -XX:+UseG1GC ' +
-                    '-XX:MaxHeapFreeRatio=10 -XX:MinHeapFreeRatio=5 -XX:+UseStringDeduplication ' +
-                    '-Djava.net.preferIPv4Stack=true"')
-        }
-
         if (applicationName == 'apitest') {
             // Pass the logback config file as a system property to avoid chatty
             // logback startup due to multiple logback.xml files in the classpath
