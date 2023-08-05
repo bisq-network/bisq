@@ -2,7 +2,9 @@ plugins {
     id 'bisq.application'
 }
 
-mainClassName = 'bisq.apitest.ApiTestMain'
+application {
+    mainClass = 'bisq.apitest.ApiTestMain'
+}
 
 // The external dao-setup.gradle file contains tasks to install and clean dao-setup
 // files downloaded from
