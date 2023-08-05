@@ -1,3 +1,30 @@
 plugins {
     id 'bisq.java-conventions'
 }
+
+apply plugin: 'com.github.johnrengelman.shadow'
+
+shadowDistTar.enabled = false
+shadowDistZip.enabled = false
+
+jar.manifest.attributes(
+    "Implementation-Title": project.name,
+    "Implementation-Version": version)
+
+mainClassName = 'bisq.seednode.SeedNodeMain'
+
+dependencies {
+    implementation enforcedPlatform(project(':platform'))
+    implementation project(':common')
+    implementation project(':proto')
+    implementation project(':p2p')
+    implementation project(':core')
+    implementation libs.protobuf.java
+    annotationProcessor libs.lombok
+    compileOnly libs.lombok
+    implementation libs.google.guava
+    implementation libs.slf4j.api
+    implementation(libs.google.guice) {
+        exclude(module: 'guava')
+    }
+}
