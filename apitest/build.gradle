@@ -4,6 +4,7 @@ plugins {
 
 application {
     mainClass = 'bisq.apitest.ApiTestMain'
+    applicationDefaultJvmArgs = ['-Dlogback.configurationFile=apitest/build/resources/main/logback.xml']
 }
 
 // The external dao-setup.gradle file contains tasks to install and clean dao-setup

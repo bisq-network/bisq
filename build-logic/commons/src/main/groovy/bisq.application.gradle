@@ -38,16 +38,6 @@ installDist {
         def unixScriptFile = file("${rootProject.projectDir}/bisq-$applicationName")
         unixScriptFile.text = unixScriptFile.text.replace(
                 'APP_HOME=$( cd "${APP_HOME:-./}.." && pwd -P ) || exit', 'APP_HOME=$( cd "${APP_HOME:-./}" && pwd -P ) || exit')
-
-        if (applicationName == 'apitest') {
-            // Pass the logback config file as a system property to avoid chatty
-            // logback startup due to multiple logback.xml files in the classpath
-            // (:daemon & :cli).
-            def script = file("${rootProject.projectDir}/bisq-$applicationName")
-            script.text = script.text.replace(
-                    'DEFAULT_JVM_OPTS=""', 'DEFAULT_JVM_OPTS="' +
-                    '-Dlogback.configurationFile=apitest/build/resources/main/logback.xml"')
-        }
     }
 }
 
