@@ -84,6 +84,7 @@ public class TradeWalletService {
     private final NetworkParameters params;
 
     private final WarningTransactionFactory warningTransactionFactory;
+    private final RedirectionTransactionFactory redirectionTransactionFactory;
 
     @Nullable
     private Wallet wallet;
@@ -103,6 +104,7 @@ public class TradeWalletService {
         this.preferences = preferences;
         this.params = Config.baseCurrencyNetworkParameters();
         this.warningTransactionFactory = new WarningTransactionFactory(params);
+        this.redirectionTransactionFactory = new RedirectionTransactionFactory(params);
         walletsSetup.addSetupCompletedHandler(() -> {
             walletConfig = walletsSetup.getWalletConfig();
             wallet = walletsSetup.getBtcWallet();
@@ -851,6 +853,49 @@ public class TradeWalletService {
                 warningTx,
                 buyerPubKey,
                 sellerPubKey,
+                buyerSignature,
+                sellerSignature,
+                inputValue
+        );
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Redirection tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Transaction createUnsignedRedirectionTx(Transaction warningTx,
+                                                   List<Tuple2<Long, String>> receivers,
+                                                   Tuple2<Long, String> feeBumpOutputAmountAndAddress)
+            throws AddressFormatException, TransactionVerificationException {
+        return redirectionTransactionFactory.createUnsignedRedirectionTransaction(
+                warningTx,
+                receivers,
+                feeBumpOutputAmountAndAddress
+        );
+    }
+
+    public byte[] signRedirectionTx(Transaction redirectionTx,
+                                    Transaction warningTx,
+                                    DeterministicKey myMultiSigKeyPair,
+                                    KeyParameter aesKey)
+            throws AddressFormatException, TransactionVerificationException {
+        return redirectionTransactionFactory.signRedirectionTransaction(
+                redirectionTx,
+                warningTx,
+                myMultiSigKeyPair,
+                aesKey
+        );
+    }
+
+    public Transaction finalizeRedirectionTx(Transaction warningTx,
+                                             Transaction redirectionTx,
+                                             byte[] buyerSignature,
+                                             byte[] sellerSignature,
+                                             Coin inputValue)
+            throws AddressFormatException, TransactionVerificationException, SignatureDecodeException {
+        return redirectionTransactionFactory.finalizeRedirectionTransaction(
+                warningTx,
+                redirectionTx,
                 buyerSignature,
                 sellerSignature,
                 inputValue
