@@ -903,6 +903,20 @@ public class TradeWalletService {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
+    // Claim tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Transaction createSignedClaimTx(Transaction warningTx,
+                                                    long nSequence,
+                                                    Address payoutAddress,
+                                                    long miningFee,
+                                                    DeterministicKey myMultiSigKeyPair,
+                                                    KeyParameter aesKey) throws TransactionVerificationException {
+        return new ClaimTransactionFactory(params)
+                .createSignedClaimTransaction(warningTx, nSequence, payoutAddress, miningFee, myMultiSigKeyPair, aesKey);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
     // Standard payout tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
