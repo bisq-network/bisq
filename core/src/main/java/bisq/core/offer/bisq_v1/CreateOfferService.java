@@ -216,7 +216,7 @@ public class CreateOfferService {
                 isPrivateOffer,
                 hashOfChallenge,
                 extraDataMap,
-                Version.TRADE_PROTOCOL_VERSION);
+                Version.getTradeProtocolVersion());
         Offer offer = new Offer(offerPayload);
         offer.setPriceFeedService(priceFeedService);
         return offer;
