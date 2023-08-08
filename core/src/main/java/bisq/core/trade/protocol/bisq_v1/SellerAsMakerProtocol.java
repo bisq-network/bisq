@@ -26,6 +26,7 @@ import bisq.core.trade.protocol.bisq_v1.messages.CounterCurrencyTransferStartedM
 import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureResponse;
 import bisq.core.trade.protocol.bisq_v1.messages.DepositTxMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
+import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bisq_v1.tasks.CheckIfDaoStateIsInSync;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
@@ -113,9 +114,13 @@ public class SellerAsMakerProtocol extends SellerProtocol implements MakerProtoc
                 .executeTasks();
     }
 
-    // We keep the handler here in as well to make it more transparent which messages we expect
     @Override
     protected void handle(DelayedPayoutTxSignatureResponse message, NodeAddress peer) {
+        super.handle(message, peer);
+    }
+
+    @Override
+    protected void handle(ShareBuyerPaymentAccountMessage message, NodeAddress peer) {
         super.handle(message, peer);
     }
 
@@ -124,7 +129,6 @@ public class SellerAsMakerProtocol extends SellerProtocol implements MakerProtoc
     // Incoming message when buyer has clicked payment started button
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // We keep the handler here in as well to make it more transparent which messages we expect
     @Override
     protected void handle(CounterCurrencyTransferStartedMessage message, NodeAddress peer) {
         super.handle(message, peer);
@@ -135,7 +139,6 @@ public class SellerAsMakerProtocol extends SellerProtocol implements MakerProtoc
     // User interaction
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // We keep the handler here in as well to make it more transparent which events we expect
     @Override
     public void onPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         super.onPaymentReceived(resultHandler, errorMessageHandler);
