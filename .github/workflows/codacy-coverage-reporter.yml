@@ -1,6 +1,9 @@
 name: Codacy Coverage Reporter
 
-on: ["push"]
+on:
+    push:
+        branches:
+            - master
 
 permissions:
     contents: read
