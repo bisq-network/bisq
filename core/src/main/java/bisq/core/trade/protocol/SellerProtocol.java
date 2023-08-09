@@ -17,5 +17,10 @@
 
 package bisq.core.trade.protocol;
 
+import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.handlers.ResultHandler;
+
 public interface SellerProtocol {
+
+    void onPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler);
 }

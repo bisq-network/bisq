@@ -17,5 +17,9 @@
 
 package bisq.core.trade.protocol;
 
+import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.handlers.ResultHandler;
+
 public interface BuyerProtocol {
+    void onPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler);
 }

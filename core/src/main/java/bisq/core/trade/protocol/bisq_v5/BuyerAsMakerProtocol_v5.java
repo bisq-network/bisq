@@ -21,7 +21,6 @@ import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.MakerProtocol;
 import bisq.core.trade.protocol.TradeTaskRunner;
-import bisq.core.trade.protocol.bisq_v1.BaseBuyerProtocol;
 import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureRequest;
 import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
@@ -51,7 +50,7 @@ import bisq.common.handlers.ResultHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BuyerAsMakerProtocol_v5 extends BaseBuyerProtocol implements MakerProtocol {
+public class BuyerAsMakerProtocol_v5 extends BaseBuyerProtocol_v5 implements MakerProtocol {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor

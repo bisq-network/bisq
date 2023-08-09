@@ -23,7 +23,6 @@ import bisq.core.trade.model.bisq_v1.BuyerAsTakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.TakerProtocol;
 import bisq.core.trade.protocol.TradeMessage;
-import bisq.core.trade.protocol.bisq_v1.BaseBuyerProtocol;
 import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureRequest;
 import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxResponse;
@@ -57,7 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class BuyerAsTakerProtocol_v5 extends BaseBuyerProtocol implements TakerProtocol {
+public class BuyerAsTakerProtocol_v5 extends BaseBuyerProtocol_v5 implements TakerProtocol {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
