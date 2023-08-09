@@ -20,10 +20,10 @@ package bisq.core.trade.protocol.bisq_v5;
 
 import bisq.core.trade.model.bisq_v1.SellerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.MakerProtocol;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.bisq_v1.BaseSellerProtocol;
-import bisq.core.trade.protocol.bisq_v1.MakerProtocol;
 import bisq.core.trade.protocol.bisq_v1.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureResponse;
 import bisq.core.trade.protocol.bisq_v1.messages.DepositTxMessage;

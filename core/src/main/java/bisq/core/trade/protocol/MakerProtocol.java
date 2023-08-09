@@ -15,7 +15,17 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bisq_v1;
+package bisq.core.trade.protocol;
 
-public interface SellerProtocol {
+
+import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
+
+import bisq.network.p2p.NodeAddress;
+
+import bisq.common.handlers.ErrorMessageHandler;
+
+public interface MakerProtocol {
+    void handleTakeOfferRequest(InputsForDepositTxRequest message,
+                                NodeAddress taker,
+                                ErrorMessageHandler errorMessageHandler);
 }

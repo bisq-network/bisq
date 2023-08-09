@@ -15,14 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bisq_v1;
+package bisq.core.trade.protocol;
 
-import bisq.core.trade.protocol.FluentProtocol;
-
-public interface TakerProtocol {
-    void onTakeOffer();
-
-    enum TakerEvent implements FluentProtocol.Event {
-        TAKE_OFFER
-    }
+public interface BuyerProtocol {
 }
