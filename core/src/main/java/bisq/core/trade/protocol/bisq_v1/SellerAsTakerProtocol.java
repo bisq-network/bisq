@@ -52,7 +52,7 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class SellerAsTakerProtocol extends SellerProtocol implements TakerProtocol {
+public class SellerAsTakerProtocol extends BaseSellerProtocol implements TakerProtocol {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
