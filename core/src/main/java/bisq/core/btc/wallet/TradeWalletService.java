@@ -885,14 +885,14 @@ public class TradeWalletService {
         );
     }
 
-    public Transaction finalizeRedirectionTx(Transaction warningTx,
+    public Transaction finalizeRedirectionTx(TransactionOutput warningTxOutput,
                                              Transaction redirectionTx,
                                              byte[] buyerSignature,
                                              byte[] sellerSignature,
                                              Coin inputValue)
-            throws AddressFormatException, TransactionVerificationException, SignatureDecodeException {
+            throws AddressFormatException, TransactionVerificationException {
         return redirectionTransactionFactory.finalizeRedirectionTransaction(
-                warningTx,
+                warningTxOutput,
                 redirectionTx,
                 buyerSignature,
                 sellerSignature,
