@@ -17,9 +17,13 @@
 
 package bisq.common.app;
 
+import bisq.common.util.Utilities;
+
 import java.net.URL;
 
 import java.util.Arrays;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -98,17 +102,19 @@ public class Version {
     // VERSION = 0.5.0 -> LOCAL_DB_VERSION = 1
     public static final int LOCAL_DB_VERSION = 1;
 
-    // The version no. of the current protocol. The offer holds that version.
-    // A taker will check the version of the offers to see if his version is compatible.
-    // For the switch to version 2, offers created with the old version will become invalid and have to be canceled.
-    // For the switch to version 3, offers created with the old version can be migrated to version 3 just by opening
-    // the Bisq app.
     // VERSION = 0.5.0 -> TRADE_PROTOCOL_VERSION = 1
     // Version 1.2.2 -> TRADE_PROTOCOL_VERSION = 2
     // Version 1.5.0 -> TRADE_PROTOCOL_VERSION = 3
     // Version 1.7.0 -> TRADE_PROTOCOL_VERSION = 4
+    // Version 1.9.13 and after activation date -> TRADE_PROTOCOL_VERSION = 5
+    public static final Date PROTOCOL_5_ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.OCTOBER, 1);
+
+    public static boolean isTradeProtocolVersion5Activated() {
+        return new Date().after(PROTOCOL_5_ACTIVATION_DATE);
+    }
+
     public static int getTradeProtocolVersion() {
-        return 4;
+        return isTradeProtocolVersion5Activated() ? 5 : 4;
     }
 
     private static int p2pMessageVersion;
