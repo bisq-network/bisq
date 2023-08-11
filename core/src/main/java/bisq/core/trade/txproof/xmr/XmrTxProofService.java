@@ -28,7 +28,7 @@ import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.bisq_v1.SellerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
-import bisq.core.trade.protocol.bisq_v1.BaseSellerProtocol;
+import bisq.core.trade.protocol.bisq_v1.SellerProtocol;
 import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.trade.txproof.AssetTxProofService;
 import bisq.core.user.AutoConfirmSettings;
@@ -277,7 +277,7 @@ public class XmrTxProofService implements AssetTxProofService {
                         log.info("We auto-confirm trade {} as our all our services for the tx proof completed successfully", trade.getShortId());
                         log.info("###########################################################################################");
 
-                        ((BaseSellerProtocol) tradeManager.getTradeProtocol(trade)).onPaymentReceived(() -> {
+                        ((SellerProtocol) tradeManager.getTradeProtocol(trade)).onPaymentReceived(() -> {
                         }, errorMessage -> {
                         });
                     }
