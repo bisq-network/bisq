@@ -106,7 +106,7 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Setter
-    transient private Transaction unsignedWarningTx;
+    transient private Transaction warningTx;
     @Setter
     transient private byte[] warningTxSellerSignature;
     @Setter
@@ -115,7 +115,7 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     private Transaction finalizedWarningTx;
 
     @Setter
-    transient private Transaction unsignedRedirectTx;
+    transient private Transaction redirectTx;
     @Setter
     transient private byte[] redirectTxSellerSignature;
     @Setter

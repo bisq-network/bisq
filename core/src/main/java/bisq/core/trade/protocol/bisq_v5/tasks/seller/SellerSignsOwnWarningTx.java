@@ -15,26 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bisq_v5.tasks.buyer;
+package bisq.core.trade.protocol.bisq_v5.tasks.seller;
 
-import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
-import bisq.core.trade.protocol.bisq_v5.model.StagedPayoutTxParameters;
 
 import bisq.common.taskrunner.TaskRunner;
-import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.crypto.DeterministicKey;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BuyerCreatesWarningTx extends TradeTask {
-    public BuyerCreatesWarningTx(TaskRunner<Trade> taskHandler, Trade trade) {
+public class SellerSignsOwnWarningTx extends TradeTask {
+    public SellerSignsOwnWarningTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -47,25 +45,17 @@ public class BuyerCreatesWarningTx extends TradeTask {
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
             String tradeId = processModel.getOffer().getId();
 
-            Transaction depositTx = btcWalletService.getTxFromSerializedTx(processModel.getPreparedDepositTx());
-            TransactionOutput depositTxOutput = depositTx.getOutput(0);
-            long lockTime = trade.getLockTime();
-            byte[] buyerPubKey = processModel.getMyMultiSigPubKey();
-            byte[] sellerPubKey = processModel.getTradePeer().getMultiSigPubKey();
-            long claimDelay = StagedPayoutTxParameters.CLAIM_DELAY;
-            long miningFee = StagedPayoutTxParameters.getWarningTxMiningFee(trade.getDepositTxFeeRate());
-            AddressEntry feeBumpAddressEntry = btcWalletService.getOrCreateAddressEntry(tradeId, AddressEntry.Context.WARNING_TX_FEE_BUMP);
-            Tuple2<Long, String> feeBumpOutputAmountAndAddress = new Tuple2<>(StagedPayoutTxParameters.WARNING_TX_FEE_BUMP_OUTPUT_VALUE, feeBumpAddressEntry.getAddressString());
-
-            Transaction unsignedWarningTx = tradeWalletService.createUnsignedWarningTx(true,
+            Transaction unsignedWarningTx = processModel.getWarningTx();
+            TransactionOutput depositTxOutput = processModel.getDepositTx().getOutput(0);
+            byte[] sellerPubKey = processModel.getMyMultiSigPubKey();
+            DeterministicKey myMultiSigKeyPair = btcWalletService.getMultiSigKeyPair(tradeId, sellerPubKey);
+            byte[] buyerPubKey = processModel.getTradePeer().getMultiSigPubKey();
+            byte[] signature = tradeWalletService.signWarningTx(unsignedWarningTx,
                     depositTxOutput,
-                    lockTime,
+                    myMultiSigKeyPair,
                     buyerPubKey,
-                    sellerPubKey,
-                    claimDelay,
-                    miningFee,
-                    feeBumpOutputAmountAndAddress);
-            processModel.setWarningTx(unsignedWarningTx);
+                    sellerPubKey);
+            processModel.setWarningTxSellerSignature(signature);
 
             processModel.getTradeManager().requestPersistence();
 
