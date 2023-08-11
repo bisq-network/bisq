@@ -67,6 +67,7 @@ import bisq.core.trade.protocol.bisq_v1.messages.RefreshTradeStateRequest;
 import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.TraderSignedWitnessMessage;
 import bisq.core.trade.protocol.bisq_v5.messages.BuyersRedirectSellerSignatureRequest;
+import bisq.core.trade.protocol.bisq_v5.messages.BuyersRedirectSellerSignatureResponse;
 import bisq.core.trade.protocol.bisq_v5.messages.InputsForDepositTxResponse_v5;
 import bisq.core.trade.protocol.bisq_v5.messages.StagedPayoutTxRequest;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapFinalizeTxRequest;
@@ -274,6 +275,8 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return StagedPayoutTxRequest.fromProto(proto.getStagedPayoutTxRequest(), messageVersion);
                 case BUYERS_REDIRECT_SELLER_SIGNATURE_REQUEST:
                     return BuyersRedirectSellerSignatureRequest.fromProto(proto.getBuyersRedirectSellerSignatureRequest(), messageVersion);
+                case BUYERS_REDIRECT_SELLER_SIGNATURE_RESPONSE:
+                    return BuyersRedirectSellerSignatureResponse.fromProto(proto.getBuyersRedirectSellerSignatureResponse(), messageVersion);
 
                 default:
                     throw new ProtobufferException("Unknown proto message case (PB.NetworkEnvelope). messageCase=" +
