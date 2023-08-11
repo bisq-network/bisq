@@ -95,7 +95,7 @@ public class RedirectionTransactionFactory {
         return mySignature.encodeToDER();
     }
 
-    public Transaction finalizeRedirectionTransaction(Transaction warningTx,
+    public Transaction finalizeRedirectionTransaction(TransactionOutput warningTxOutput,
                                                       Transaction redirectionTx,
                                                       byte[] buyerSignature,
                                                       byte[] sellerSignature,
@@ -112,7 +112,7 @@ public class RedirectionTransactionFactory {
         WalletService.printTx("finalizeRedirectionTransaction", redirectionTx);
         WalletService.verifyTransaction(redirectionTx);
 
-        Script scriptPubKey = warningTx.getOutput(0).getScriptPubKey();
+        Script scriptPubKey = warningTxOutput.getScriptPubKey();
         input.getScriptSig().correctlySpends(redirectionTx, 0, witness, inputValue, scriptPubKey, Script.ALL_VERIFY_FLAGS);
         return redirectionTx;
     }
