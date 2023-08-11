@@ -41,16 +41,29 @@ import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerProcessesInputsForDepos
 import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerRemovesOpenOffer;
 import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerSetsLockTime;
 import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerVerifyTakerFeePayment;
+import bisq.core.trade.protocol.bisq_v5.messages.StagedPayoutTxRequest;
+import bisq.core.trade.protocol.bisq_v5.tasks.CreateRedirectTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.CreateSignedClaimTx;
 import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerCreatesWarningTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerFinalizesOwnWarningTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerProcessStagedPayoutTxRequest;
+import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerSendsBuyersRedirectSellerSignatureRequest;
+import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerSignsOwnRedirectTx;
 import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerSignsOwnWarningTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerSignsPeersRedirectTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerSignsPeersWarningTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerVerifiesWarningAndRedirectTxs;
 import bisq.core.trade.protocol.bisq_v5.tasks.buyer_as_maker.BuyerAsMakerSendsInputsForDepositTxResponse_v5;
 
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.app.Version;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class BuyerAsMakerProtocol_v5 extends BaseBuyerProtocol_v5 implements MakerProtocol {
@@ -121,6 +134,50 @@ public class BuyerAsMakerProtocol_v5 extends BaseBuyerProtocol_v5 implements Mak
     // Incoming messages Take offer process
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    protected void handle(StagedPayoutTxRequest message, NodeAddress peer) {
+        checkArgument(Version.isTradeProtocolVersion5Activated());
+        expect(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
+                .with(message)
+                .from(peer))
+                .setup(tasks(
+                        // We received the sellers sig for our warn tx and the sellers warn and redirect tx as well the sellers signatures
+                        BuyerProcessStagedPayoutTxRequest.class,
+                        BuyerVerifiesWarningAndRedirectTxs.class,
+
+                        MakerRemovesOpenOffer.class,
+
+                        // We sign sellers warn and redirect tx
+                        BuyerSignsPeersWarningTx.class,
+                        BuyerSignsPeersRedirectTx.class,
+
+                        // We have now all for finalizing our warn tx
+                        BuyerFinalizesOwnWarningTx.class,
+
+                        // We create and sign our redirect tx with the input from the sellers warn tx
+                        CreateRedirectTx.class,
+                        BuyerSignsOwnRedirectTx.class,
+
+                        // As we have our finalized warn tx, we can create the signed claim tx
+                        CreateSignedClaimTx.class,
+
+                        // We have now:
+                        // - our finalized warn tx
+                        // - our signed claim tx
+                        // - our redirect tx + our sig
+                        //
+                        // Missing:
+                        // - sellers sig for our redirect tx
+                        // - sellers sig for the deposit tx
+
+                        // We do not send yet the signed deposit tx as we require first to have all txs completed.
+                        // We request from the seller the signature for the redirect tx
+                        // We send seller the signatures for the sellers warn and redirect tx,
+                        // as well as our redirect tx and its signature
+                        BuyerSendsBuyersRedirectSellerSignatureRequest.class)
+                        .withTimeout(120))
+                .executeTasks();
+    }
+
     protected void handle(DelayedPayoutTxSignatureRequest message, NodeAddress peer) {
         expect(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
                 .with(message)
@@ -169,6 +226,10 @@ public class BuyerAsMakerProtocol_v5 extends BaseBuyerProtocol_v5 implements Mak
     @Override
     protected void onTradeMessage(TradeMessage message, NodeAddress peer) {
         super.onTradeMessage(message, peer);
+
+        if (message instanceof StagedPayoutTxRequest) {
+            handle((StagedPayoutTxRequest) message, peer);
+        }
     }
 
 
