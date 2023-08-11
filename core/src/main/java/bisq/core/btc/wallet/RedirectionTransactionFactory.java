@@ -27,13 +27,11 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
-import org.bitcoinj.core.SignatureDecodeException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.core.TransactionWitness;
 import org.bitcoinj.crypto.DeterministicKey;
-import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 
@@ -52,12 +50,10 @@ public class RedirectionTransactionFactory {
         this.params = params;
     }
 
-    public Transaction createUnsignedRedirectionTransaction(Transaction warningTx,
+    public Transaction createUnsignedRedirectionTransaction(TransactionOutput warningTxOutput,
                                                             List<Tuple2<Long, String>> receivers,
                                                             Tuple2<Long, String> feeBumpOutputAmountAndAddress)
             throws AddressFormatException, TransactionVerificationException {
-
-        TransactionOutput warningTxOutput = warningTx.getOutput(0);
 
         Transaction redirectionTx = new Transaction(params);
         redirectionTx.addInput(warningTxOutput);
@@ -77,14 +73,13 @@ public class RedirectionTransactionFactory {
     }
 
     public byte[] signRedirectionTransaction(Transaction redirectionTx,
-                                             Transaction warningTx,
+                                             TransactionOutput warningTxOutput,
                                              DeterministicKey myMultiSigKeyPair,
                                              KeyParameter aesKey)
             throws AddressFormatException, TransactionVerificationException {
 
-        TransactionOutput warningTxPayoutOutput = warningTx.getOutput(0);
-        Script redeemScript = warningTxPayoutOutput.getScriptPubKey();
-        Coin redirectionTxInputValue = warningTxPayoutOutput.getValue();
+        Script redeemScript = warningTxOutput.getScriptPubKey();
+        Coin redirectionTxInputValue = warningTxOutput.getValue();
 
         Sha256Hash sigHash = redirectionTx.hashForWitnessSignature(0, redeemScript,
                 redirectionTxInputValue, Transaction.SigHash.ALL, false);

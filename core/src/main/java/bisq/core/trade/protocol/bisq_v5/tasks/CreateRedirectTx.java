@@ -15,12 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bisq_v5.tasks.buyer;
+package bisq.core.trade.protocol.bisq_v5.tasks;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.trade.protocol.bisq_v5.model.StagedPayoutTxParameters;
 
@@ -30,11 +31,13 @@ import bisq.common.util.Tuple2;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
+import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BuyerCreatesWarningTx extends TradeTask {
-    public BuyerCreatesWarningTx(TaskRunner<Trade> taskHandler, Trade trade) {
+public class CreateRedirectTx extends TradeTask {
+    public CreateRedirectTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -46,26 +49,25 @@ public class BuyerCreatesWarningTx extends TradeTask {
             TradeWalletService tradeWalletService = processModel.getTradeWalletService();
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
             String tradeId = processModel.getOffer().getId();
+            TradingPeer tradingPeer = processModel.getTradePeer();
 
-            Transaction depositTx = btcWalletService.getTxFromSerializedTx(processModel.getPreparedDepositTx());
-            TransactionOutput depositTxOutput = depositTx.getOutput(0);
-            long lockTime = trade.getLockTime();
-            byte[] buyerPubKey = processModel.getMyMultiSigPubKey();
-            byte[] sellerPubKey = processModel.getTradePeer().getMultiSigPubKey();
-            long claimDelay = StagedPayoutTxParameters.CLAIM_DELAY;
-            long miningFee = StagedPayoutTxParameters.getWarningTxMiningFee(trade.getDepositTxFeeRate());
-            AddressEntry feeBumpAddressEntry = btcWalletService.getOrCreateAddressEntry(tradeId, AddressEntry.Context.WARNING_TX_FEE_BUMP);
-            Tuple2<Long, String> feeBumpOutputAmountAndAddress = new Tuple2<>(StagedPayoutTxParameters.WARNING_TX_FEE_BUMP_OUTPUT_VALUE, feeBumpAddressEntry.getAddressString());
+            TransactionOutput peersWarningTxOutput = tradingPeer.getWarningTx().getOutput(0);
+            long inputAmount = peersWarningTxOutput.getValue().value;
+            long depositTxFee = trade.getTradeTxFeeAsLong(); // Used for fee rate calculation inside getDelayedPayoutTxReceiverService
+            int selectionHeight = processModel.getBurningManSelectionHeight();
+            List<Tuple2<Long, String>> burningMen = processModel.getDelayedPayoutTxReceiverService().getReceivers(
+                    selectionHeight,
+                    inputAmount,
+                    depositTxFee);
+            log.info("Create redirectionTx using selectionHeight {} and receivers {}", selectionHeight, burningMen);
 
-            Transaction unsignedWarningTx = tradeWalletService.createUnsignedWarningTx(true,
-                    depositTxOutput,
-                    lockTime,
-                    buyerPubKey,
-                    sellerPubKey,
-                    claimDelay,
-                    miningFee,
+            AddressEntry feeBumpAddressEntry = btcWalletService.getOrCreateAddressEntry(tradeId, AddressEntry.Context.REDIRECT_TX_FEE_BUMP);
+            Tuple2<Long, String> feeBumpOutputAmountAndAddress = new Tuple2<>(StagedPayoutTxParameters.REDIRECT_TX_FEE_BUMP_OUTPUT_VALUE, feeBumpAddressEntry.getAddressString());
+
+            Transaction unsignedRedirectionTx = tradeWalletService.createUnsignedRedirectionTx(peersWarningTxOutput,
+                    burningMen,
                     feeBumpOutputAmountAndAddress);
-            processModel.setWarningTx(unsignedWarningTx);
+            processModel.setRedirectTx(unsignedRedirectionTx);
 
             processModel.getTradeManager().requestPersistence();
 
