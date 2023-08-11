@@ -106,6 +106,7 @@ message NetworkEnvelope {
         InputsForDepositTxResponse_v5 inputs_for_deposit_tx_response_v_5 = 64;
         StagedPayoutTxRequest staged_payout_tx_request = 65;
         BuyersRedirectSellerSignatureRequest buyers_redirect_seller_signature_request = 66;
+        BuyersRedirectSellerSignatureResponse buyers_redirect_seller_signature_response = 67;
     }
 }
 
@@ -349,6 +350,14 @@ message BuyersRedirectSellerSignatureRequest {
     bytes buyers_redirect_tx = 6;
     bytes buyers_redirect_tx_buyer_signature = 7;
 }
+
+message BuyersRedirectSellerSignatureResponse {
+    string uid = 1;
+    string trade_id = 2;
+    NodeAddress sender_node_address = 3;
+    bytes buyers_redirect_tx_seller_signature = 7;
+}
+
 
 message DepositTxAndDelayedPayoutTxMessage {
     string uid = 1;
