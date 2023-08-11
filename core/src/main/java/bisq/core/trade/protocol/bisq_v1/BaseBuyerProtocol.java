@@ -19,6 +19,7 @@ package bisq.core.trade.protocol.bisq_v1;
 
 import bisq.core.trade.model.bisq_v1.BuyerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.BuyerProtocol;
 import bisq.core.trade.protocol.FluentProtocol;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.TradeTaskRunner;

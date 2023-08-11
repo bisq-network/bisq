@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bisq_v1;
+package bisq.core.trade.protocol;
 
 
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;

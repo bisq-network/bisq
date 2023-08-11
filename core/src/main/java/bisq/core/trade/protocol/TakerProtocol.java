@@ -15,11 +15,12 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bisq_v1;
+package bisq.core.trade.protocol;
 
-import bisq.common.handlers.ErrorMessageHandler;
-import bisq.common.handlers.ResultHandler;
+public interface TakerProtocol {
+    void onTakeOffer();
 
-public interface SellerProtocol {
-    void onPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler);
+    enum TakerEvent implements FluentProtocol.Event {
+        TAKE_OFFER
+    }
 }
