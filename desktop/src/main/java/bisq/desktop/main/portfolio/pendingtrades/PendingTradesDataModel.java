@@ -54,9 +54,9 @@ import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.BuyerTrade;
 import bisq.core.trade.model.bisq_v1.SellerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
-import bisq.core.trade.protocol.bisq_v1.BaseSellerProtocol;
 import bisq.core.trade.protocol.bisq_v1.BuyerProtocol;
 import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
+import bisq.core.trade.protocol.bisq_v1.SellerProtocol;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
@@ -216,7 +216,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         Trade trade = getTrade();
         checkNotNull(trade, "trade must not be null");
         checkArgument(trade instanceof SellerTrade, "Trade must be instance of SellerTrade");
-        ((BaseSellerProtocol) tradeManager.getTradeProtocol(trade)).onPaymentReceived(resultHandler, errorMessageHandler);
+        ((SellerProtocol) tradeManager.getTradeProtocol(trade)).onPaymentReceived(resultHandler, errorMessageHandler);
     }
 
     public void onWithdrawRequest(String toAddress,
