@@ -104,6 +104,7 @@ message NetworkEnvelope {
         NewAccountingBlockBroadcastMessage new_accounting_block_broadcast_message = 63;
 
         InputsForDepositTxResponse_v5 inputs_for_deposit_tx_response_v_5 = 64;
+        StagedPayoutTxRequest staged_payout_tx_request = 65;
     }
 }
 
@@ -317,6 +318,17 @@ message DelayedPayoutTxSignatureRequest {
     NodeAddress sender_node_address = 3;
     bytes delayed_payout_tx = 4;
     bytes delayed_payout_tx_seller_signature = 5;
+}
+
+message StagedPayoutTxRequest {
+    string uid = 1;
+    string trade_id = 2;
+    NodeAddress sender_node_address = 3;
+    bytes sellers_warning_tx = 4;
+    bytes sellers_warning_tx_seller_signature = 5;
+    bytes sellers_redirection_tx = 6;
+    bytes sellers_redirection_tx_seller_signature = 7;
+    bytes buyers_warning_tx_seller_signature = 8;
 }
 
 message DelayedPayoutTxSignatureResponse {
