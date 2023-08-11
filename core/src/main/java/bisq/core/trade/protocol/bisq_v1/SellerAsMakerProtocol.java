@@ -114,7 +114,6 @@ public class SellerAsMakerProtocol extends BaseSellerProtocol implements MakerPr
                 .executeTasks();
     }
 
-    // We keep the handler here in as well to make it more transparent which messages we expect
     @Override
     protected void handle(DelayedPayoutTxSignatureResponse message, NodeAddress peer) {
         super.handle(message, peer);
@@ -125,7 +124,6 @@ public class SellerAsMakerProtocol extends BaseSellerProtocol implements MakerPr
     // Incoming message when buyer has clicked payment started button
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // We keep the handler here in as well to make it more transparent which messages we expect
     @Override
     protected void handle(CounterCurrencyTransferStartedMessage message, NodeAddress peer) {
         super.handle(message, peer);
@@ -136,7 +134,6 @@ public class SellerAsMakerProtocol extends BaseSellerProtocol implements MakerPr
     // User interaction
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // We keep the handler here in as well to make it more transparent which events we expect
     @Override
     public void onPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         super.onPaymentReceived(resultHandler, errorMessageHandler);

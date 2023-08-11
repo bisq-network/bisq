@@ -108,7 +108,6 @@ public class SellerAsTakerProtocol extends BaseSellerProtocol implements TakerPr
                 .executeTasks();
     }
 
-    // We keep the handler here in as well to make it more transparent which messages we expect
     @Override
     protected void handle(DelayedPayoutTxSignatureResponse message, NodeAddress peer) {
         super.handle(message, peer);
@@ -119,7 +118,6 @@ public class SellerAsTakerProtocol extends BaseSellerProtocol implements TakerPr
     // Incoming message when buyer has clicked payment started button
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // We keep the handler here in as well to make it more transparent which messages we expect
     @Override
     protected void handle(CounterCurrencyTransferStartedMessage message, NodeAddress peer) {
         super.handle(message, peer);
@@ -130,7 +128,6 @@ public class SellerAsTakerProtocol extends BaseSellerProtocol implements TakerPr
     // User interaction
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // We keep the handler here in as well to make it more transparent which events we expect
     @Override
     public void onPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         super.onPaymentReceived(resultHandler, errorMessageHandler);
