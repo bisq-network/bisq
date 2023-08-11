@@ -54,8 +54,8 @@ import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.BuyerTrade;
 import bisq.core.trade.model.bisq_v1.SellerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
-import bisq.core.trade.protocol.bisq_v1.BaseBuyerProtocol;
 import bisq.core.trade.protocol.bisq_v1.BaseSellerProtocol;
+import bisq.core.trade.protocol.bisq_v1.BuyerProtocol;
 import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
@@ -209,7 +209,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         Trade trade = getTrade();
         checkNotNull(trade, "trade must not be null");
         checkArgument(trade instanceof BuyerTrade, "Check failed: trade instanceof BuyerTrade. Was: " + trade.getClass().getSimpleName());
-        ((BaseBuyerProtocol) tradeManager.getTradeProtocol(trade)).onPaymentStarted(resultHandler, errorMessageHandler);
+        ((BuyerProtocol) tradeManager.getTradeProtocol(trade)).onPaymentStarted(resultHandler, errorMessageHandler);
     }
 
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
