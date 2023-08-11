@@ -36,12 +36,14 @@ import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerSetupDepositTxListener;
 import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerSignsDelayedPayoutTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerVerifiesPreparedDelayedPayoutTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.buyer_as_maker.BuyerAsMakerCreatesAndSignsDepositTx;
-import bisq.core.trade.protocol.bisq_v1.tasks.buyer_as_maker.BuyerAsMakerSendsInputsForDepositTxResponse;
 import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerCreateAndSignContract;
 import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerProcessesInputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerRemovesOpenOffer;
 import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerSetsLockTime;
 import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerVerifyTakerFeePayment;
+import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerCreatesWarningTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerSignsOwnWarningTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.buyer_as_maker.BuyerAsMakerSendsInputsForDepositTxResponse_v5;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -97,8 +99,14 @@ public class BuyerAsMakerProtocol_v5 extends BaseBuyerProtocol_v5 implements Mak
                         MakerCreateAndSignContract.class,
                         BuyerAsMakerCreatesAndSignsDepositTx.class,
                         BuyerSetupDepositTxListener.class,
-                        BuyerAsMakerSendsInputsForDepositTxResponse.class).
-                        using(new TradeTaskRunner(trade,
+
+                        // We create our warn tx and our signature for the MS script
+                        BuyerCreatesWarningTx.class,
+                        BuyerSignsOwnWarningTx.class,
+
+                        BuyerAsMakerSendsInputsForDepositTxResponse_v5.class)
+
+                        .using(new TradeTaskRunner(trade,
                                 () -> handleTaskRunnerSuccess(message),
                                 errorMessage -> {
                                     errorMessageHandler.handleErrorMessage(errorMessage);
