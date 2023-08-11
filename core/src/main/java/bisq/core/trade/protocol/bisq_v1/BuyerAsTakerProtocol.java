@@ -70,6 +70,21 @@ public class BuyerAsTakerProtocol extends BaseBuyerProtocol implements TakerProt
         processModel.getTradePeer().setPubKeyRing(offer.getPubKeyRing());
     }
 
+    @Override
+    protected void onInitialized() {
+        super.onInitialized();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Mailbox
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onMailboxMessage(TradeMessage message, NodeAddress peer) {
+        super.onMailboxMessage(message, peer);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Take offer
