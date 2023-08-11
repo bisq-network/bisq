@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bisq_v5.tasks.buyer;
+package bisq.core.trade.protocol.bisq_v5.tasks.seller;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
@@ -31,8 +31,8 @@ import org.bitcoinj.crypto.DeterministicKey;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BuyerSignsOwnWarningTx extends TradeTask {
-    public BuyerSignsOwnWarningTx(TaskRunner<Trade> taskHandler, Trade trade) {
+public class SellerSignsOwnRedirectTx extends TradeTask {
+    public SellerSignsOwnRedirectTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -45,18 +45,14 @@ public class BuyerSignsOwnWarningTx extends TradeTask {
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
             String tradeId = processModel.getOffer().getId();
 
-            Transaction unsignedWarningTx = processModel.getWarningTx();
-            Transaction depositTx = btcWalletService.getTxFromSerializedTx(processModel.getPreparedDepositTx());
-            TransactionOutput depositTxOutput = depositTx.getOutput(0);
-            byte[] buyerPubKey = processModel.getMyMultiSigPubKey();
-            DeterministicKey myMultiSigKeyPair = btcWalletService.getMultiSigKeyPair(tradeId, buyerPubKey);
-            byte[] sellerPubKey = processModel.getTradePeer().getMultiSigPubKey();
-            byte[] signature = tradeWalletService.signWarningTx(unsignedWarningTx,
-                    depositTxOutput,
-                    myMultiSigKeyPair,
-                    buyerPubKey,
-                    sellerPubKey);
-            processModel.setWarningTxBuyerSignature(signature);
+            Transaction unsignedRedirectTx = processModel.getRedirectTx();
+            TransactionOutput warningTxOutput = processModel.getTradePeer().getWarningTx().getOutput(0);
+            byte[] myMultiSigPubKey = processModel.getMyMultiSigPubKey();
+            DeterministicKey myMultiSigKeyPair = btcWalletService.getMultiSigKeyPair(tradeId, myMultiSigPubKey);
+            byte[] signature = tradeWalletService.signRedirectionTx(unsignedRedirectTx,
+                    warningTxOutput,
+                    myMultiSigKeyPair);
+            processModel.setRedirectTxSellerSignature(signature);
 
             processModel.getTradeManager().requestPersistence();
 

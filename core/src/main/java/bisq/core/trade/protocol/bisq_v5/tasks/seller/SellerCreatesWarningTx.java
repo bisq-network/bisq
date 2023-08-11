@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bisq_v5.tasks.buyer;
+package bisq.core.trade.protocol.bisq_v5.tasks.seller;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -33,8 +33,8 @@ import org.bitcoinj.core.TransactionOutput;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BuyerCreatesWarningTx extends TradeTask {
-    public BuyerCreatesWarningTx(TaskRunner<Trade> taskHandler, Trade trade) {
+public class SellerCreatesWarningTx extends TradeTask {
+    public SellerCreatesWarningTx(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -47,17 +47,16 @@ public class BuyerCreatesWarningTx extends TradeTask {
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
             String tradeId = processModel.getOffer().getId();
 
-            Transaction depositTx = btcWalletService.getTxFromSerializedTx(processModel.getPreparedDepositTx());
+            Transaction depositTx = processModel.getDepositTx();
             TransactionOutput depositTxOutput = depositTx.getOutput(0);
             long lockTime = trade.getLockTime();
-            byte[] buyerPubKey = processModel.getMyMultiSigPubKey();
-            byte[] sellerPubKey = processModel.getTradePeer().getMultiSigPubKey();
+            byte[] buyerPubKey = processModel.getTradePeer().getMultiSigPubKey();
+            byte[] sellerPubKey = processModel.getMyMultiSigPubKey();
             long claimDelay = StagedPayoutTxParameters.CLAIM_DELAY;
             long miningFee = StagedPayoutTxParameters.getWarningTxMiningFee(trade.getDepositTxFeeRate());
             AddressEntry feeBumpAddressEntry = btcWalletService.getOrCreateAddressEntry(tradeId, AddressEntry.Context.WARNING_TX_FEE_BUMP);
             Tuple2<Long, String> feeBumpOutputAmountAndAddress = new Tuple2<>(StagedPayoutTxParameters.WARNING_TX_FEE_BUMP_OUTPUT_VALUE, feeBumpAddressEntry.getAddressString());
-
-            Transaction unsignedWarningTx = tradeWalletService.createUnsignedWarningTx(true,
+            Transaction unsignedWarningTx = tradeWalletService.createUnsignedWarningTx(false,
                     depositTxOutput,
                     lockTime,
                     buyerPubKey,

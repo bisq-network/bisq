@@ -79,7 +79,7 @@ public class BuyerAsMakerSendsInputsForDepositTxResponse_v5 extends TradeTask {
             byte[] hashOfMakersPaymentAccountPayload = ProcessModel.hashOfPaymentAccountPayload(processModel.getPaymentAccountPayload(trade));
             String makersPaymentMethodId = checkNotNull(processModel.getPaymentAccountPayload(trade)).getPaymentMethodId();
 
-            byte[] buyersUnsignedWarningTx = processModel.getUnsignedWarningTx().bitcoinSerialize();
+            byte[] buyersUnsignedWarningTx = processModel.getWarningTx().bitcoinSerialize();
             byte[] buyersWarningTxSignature = processModel.getWarningTxBuyerSignature();
 
             InputsForDepositTxResponse_v5 message = new InputsForDepositTxResponse_v5(

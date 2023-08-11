@@ -862,25 +862,24 @@ public class TradeWalletService {
     // Redirection tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction createUnsignedRedirectionTx(Transaction warningTx,
+    public Transaction createUnsignedRedirectionTx(TransactionOutput warningTxOutput,
                                                    List<Tuple2<Long, String>> receivers,
                                                    Tuple2<Long, String> feeBumpOutputAmountAndAddress)
             throws AddressFormatException, TransactionVerificationException {
         return redirectionTransactionFactory.createUnsignedRedirectionTransaction(
-                warningTx,
+                warningTxOutput,
                 receivers,
                 feeBumpOutputAmountAndAddress
         );
     }
 
     public byte[] signRedirectionTx(Transaction redirectionTx,
-                                    Transaction warningTx,
-                                    DeterministicKey myMultiSigKeyPair,
-                                    KeyParameter aesKey)
+                                    TransactionOutput warningTxOutput,
+                                    DeterministicKey myMultiSigKeyPair)
             throws AddressFormatException, TransactionVerificationException {
         return redirectionTransactionFactory.signRedirectionTransaction(
                 redirectionTx,
-                warningTx,
+                warningTxOutput,
                 myMultiSigKeyPair,
                 aesKey
         );
@@ -906,11 +905,11 @@ public class TradeWalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction createSignedClaimTx(Transaction warningTx,
-                                                    long nSequence,
-                                                    Address payoutAddress,
-                                                    long miningFee,
-                                                    DeterministicKey myMultiSigKeyPair,
-                                                    KeyParameter aesKey) throws TransactionVerificationException {
+                                           long nSequence,
+                                           Address payoutAddress,
+                                           long miningFee,
+                                           DeterministicKey myMultiSigKeyPair,
+                                           KeyParameter aesKey) throws TransactionVerificationException {
         return new ClaimTransactionFactory(params)
                 .createSignedClaimTransaction(warningTx, nSequence, payoutAddress, miningFee, myMultiSigKeyPair, aesKey);
     }
