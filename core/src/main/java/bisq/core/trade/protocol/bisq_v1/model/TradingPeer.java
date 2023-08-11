@@ -28,6 +28,8 @@ import bisq.common.proto.ProtoUtil;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 
+import org.bitcoinj.core.Transaction;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -45,6 +47,26 @@ import javax.annotation.Nullable;
 @Getter
 @Setter
 public final class TradingPeer implements TradePeer {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Added in v 1.9.13 for trade protocol 5
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Setter
+    transient private Transaction warningTx;
+    @Setter
+    transient private byte[] warningTxSellerSignature;
+    @Setter
+    transient private byte[] warningTxBuyerSignature;
+
+    @Setter
+    transient private Transaction redirectTx;
+    @Setter
+    transient private byte[] redirectTxSellerSignature;
+    @Setter
+    transient private byte[] redirectTxBuyerSignature;
+
+
     // Transient/Mutable
     // Added in v1.2.0
     @Setter
