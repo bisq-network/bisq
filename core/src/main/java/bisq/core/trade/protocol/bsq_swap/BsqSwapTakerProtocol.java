@@ -17,7 +17,7 @@
 
 package bisq.core.trade.protocol.bsq_swap;
 
-import bisq.core.trade.protocol.bisq_v1.TakerProtocol;
+import bisq.core.trade.protocol.TakerProtocol;
 
 public interface BsqSwapTakerProtocol extends TakerProtocol {
 }
