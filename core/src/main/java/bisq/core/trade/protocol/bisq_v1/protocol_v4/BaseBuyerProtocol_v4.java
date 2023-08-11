@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bisq_v1;
+package bisq.core.trade.protocol.bisq_v1.protocol_v4;
 
 import bisq.core.trade.model.bisq_v1.BuyerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
@@ -23,6 +23,7 @@ import bisq.core.trade.protocol.BuyerProtocol;
 import bisq.core.trade.protocol.FluentProtocol;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.TradeTaskRunner;
+import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
 import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureRequest;
 import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.PayoutTxPublishedMessage;
@@ -46,7 +47,7 @@ import bisq.common.handlers.ResultHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-abstract class BaseBuyerProtocol extends DisputeProtocol implements BuyerProtocol {
+abstract class BaseBuyerProtocol_v4 extends DisputeProtocol implements BuyerProtocol {
     enum BuyerEvent implements FluentProtocol.Event {
         STARTUP,
         PAYMENT_SENT
@@ -56,7 +57,7 @@ abstract class BaseBuyerProtocol extends DisputeProtocol implements BuyerProtoco
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected BaseBuyerProtocol(BuyerTrade trade) {
+    protected BaseBuyerProtocol_v4(BuyerTrade trade) {
         super(trade);
     }
 

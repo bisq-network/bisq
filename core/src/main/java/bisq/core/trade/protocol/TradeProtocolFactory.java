@@ -26,10 +26,10 @@ import bisq.core.trade.model.bsq_swap.BsqSwapBuyerAsMakerTrade;
 import bisq.core.trade.model.bsq_swap.BsqSwapBuyerAsTakerTrade;
 import bisq.core.trade.model.bsq_swap.BsqSwapSellerAsMakerTrade;
 import bisq.core.trade.model.bsq_swap.BsqSwapSellerAsTakerTrade;
-import bisq.core.trade.protocol.bisq_v1.BuyerAsMakerProtocol;
-import bisq.core.trade.protocol.bisq_v1.BuyerAsTakerProtocol;
-import bisq.core.trade.protocol.bisq_v1.SellerAsMakerProtocol;
-import bisq.core.trade.protocol.bisq_v1.SellerAsTakerProtocol;
+import bisq.core.trade.protocol.bisq_v1.protocol_v4.BuyerAsMakerProtocol_v4;
+import bisq.core.trade.protocol.bisq_v1.protocol_v4.BuyerAsTakerProtocol_v4;
+import bisq.core.trade.protocol.bisq_v1.protocol_v4.SellerAsMakerProtocol_v4;
+import bisq.core.trade.protocol.bisq_v1.protocol_v4.SellerAsTakerProtocol_v4;
 import bisq.core.trade.protocol.bsq_swap.BsqSwapBuyerAsMakerProtocol;
 import bisq.core.trade.protocol.bsq_swap.BsqSwapBuyerAsTakerProtocol;
 import bisq.core.trade.protocol.bsq_swap.BsqSwapSellerAsMakerProtocol;
@@ -38,13 +38,13 @@ import bisq.core.trade.protocol.bsq_swap.BsqSwapSellerAsTakerProtocol;
 public class TradeProtocolFactory {
     public static TradeProtocol getNewTradeProtocol(TradeModel tradeModel) {
         if (tradeModel instanceof BuyerAsMakerTrade) {
-            return new BuyerAsMakerProtocol((BuyerAsMakerTrade) tradeModel);
+            return new BuyerAsMakerProtocol_v4((BuyerAsMakerTrade) tradeModel);
         } else if (tradeModel instanceof BuyerAsTakerTrade) {
-            return new BuyerAsTakerProtocol((BuyerAsTakerTrade) tradeModel);
+            return new BuyerAsTakerProtocol_v4((BuyerAsTakerTrade) tradeModel);
         } else if (tradeModel instanceof SellerAsMakerTrade) {
-            return new SellerAsMakerProtocol((SellerAsMakerTrade) tradeModel);
+            return new SellerAsMakerProtocol_v4((SellerAsMakerTrade) tradeModel);
         } else if (tradeModel instanceof SellerAsTakerTrade) {
-            return new SellerAsTakerProtocol((SellerAsTakerTrade) tradeModel);
+            return new SellerAsTakerProtocol_v4((SellerAsTakerTrade) tradeModel);
         } else if (tradeModel instanceof BsqSwapBuyerAsMakerTrade) {
             return new BsqSwapBuyerAsMakerProtocol((BsqSwapBuyerAsMakerTrade) tradeModel);
         } else if (tradeModel instanceof BsqSwapBuyerAsTakerTrade) {
