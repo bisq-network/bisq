@@ -967,7 +967,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
             // Capability.REFUND_AGENT in v1.2.0 and want to rewrite a
             // persisted offer after the user has updated to 1.2.0 so their offer will be accepted by the network.
 
-            if (original.getProtocolVersion() < Version.TRADE_PROTOCOL_VERSION ||
+            int tradeProtocolVersion = Version.getTradeProtocolVersion();
+            if (original.getProtocolVersion() < tradeProtocolVersion ||
                     !OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.MEDIATION) ||
                     !OfferRestrictions.hasOfferMandatoryCapability(originalOffer, Capability.REFUND_AGENT) ||
                     !original.getOwnerNodeAddress().equals(p2PService.getAddress())) {
@@ -993,9 +994,9 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
                 // - Protocol version changed?
                 int protocolVersion = original.getProtocolVersion();
-                if (protocolVersion < Version.TRADE_PROTOCOL_VERSION) {
+                if (protocolVersion < tradeProtocolVersion) {
                     // We update the trade protocol version
-                    protocolVersion = Version.TRADE_PROTOCOL_VERSION;
+                    protocolVersion = tradeProtocolVersion;
                     log.info("Updated the protocol version of offer id={}", originalOffer.getId());
                 }
 

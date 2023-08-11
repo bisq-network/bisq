@@ -107,7 +107,10 @@ public class Version {
     // Version 1.2.2 -> TRADE_PROTOCOL_VERSION = 2
     // Version 1.5.0 -> TRADE_PROTOCOL_VERSION = 3
     // Version 1.7.0 -> TRADE_PROTOCOL_VERSION = 4
-    public static final int TRADE_PROTOCOL_VERSION = 4;
+    public static int getTradeProtocolVersion() {
+        return 4;
+    }
+
     private static int p2pMessageVersion;
 
     public static final String BSQ_TX_VERSION = "1";
@@ -136,7 +139,7 @@ public class Version {
                 "VERSION=" + VERSION +
                 ", P2P_NETWORK_VERSION=" + P2P_NETWORK_VERSION +
                 ", LOCAL_DB_VERSION=" + LOCAL_DB_VERSION +
-                ", TRADE_PROTOCOL_VERSION=" + TRADE_PROTOCOL_VERSION +
+                ", TRADE_PROTOCOL_VERSION=" + getTradeProtocolVersion() +
                 ", BASE_CURRENCY_NETWORK=" + BASE_CURRENCY_NETWORK +
                 ", getP2PNetworkId()=" + getP2PMessageVersion() +
                 '}');
