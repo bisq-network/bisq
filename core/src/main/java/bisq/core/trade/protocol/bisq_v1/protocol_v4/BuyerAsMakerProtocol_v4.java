@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bisq_v1;
+package bisq.core.trade.protocol.bisq_v1.protocol_v4;
 
 import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
@@ -52,13 +52,13 @@ import bisq.common.handlers.ResultHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BuyerAsMakerProtocol extends BaseBuyerProtocol implements MakerProtocol {
+public class BuyerAsMakerProtocol_v4 extends BaseBuyerProtocol_v4 implements MakerProtocol {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BuyerAsMakerProtocol(BuyerAsMakerTrade trade) {
+    public BuyerAsMakerProtocol_v4(BuyerAsMakerTrade trade) {
         super(trade);
     }
 

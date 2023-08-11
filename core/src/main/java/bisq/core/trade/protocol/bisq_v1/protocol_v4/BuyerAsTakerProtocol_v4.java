@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bisq_v1;
+package bisq.core.trade.protocol.bisq_v1.protocol_v4;
 
 
 import bisq.core.offer.Offer;
@@ -57,13 +57,13 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class BuyerAsTakerProtocol extends BaseBuyerProtocol implements TakerProtocol {
+public class BuyerAsTakerProtocol_v4 extends BaseBuyerProtocol_v4 implements TakerProtocol {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BuyerAsTakerProtocol(BuyerAsTakerTrade trade) {
+    public BuyerAsTakerProtocol_v4(BuyerAsTakerTrade trade) {
         super(trade);
 
         Offer offer = checkNotNull(trade.getOffer());
