@@ -47,13 +47,13 @@ import bisq.common.handlers.ResultHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class BaseSellerProtocol extends DisputeProtocol implements SellerProtocol {
+abstract class BaseSellerProtocol extends DisputeProtocol implements SellerProtocol {
     enum SellerEvent implements FluentProtocol.Event {
         STARTUP,
         PAYMENT_RECEIVED
     }
 
-    public BaseSellerProtocol(SellerTrade trade) {
+    protected BaseSellerProtocol(SellerTrade trade) {
         super(trade);
     }
 
