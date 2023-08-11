@@ -54,9 +54,9 @@ import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.BuyerTrade;
 import bisq.core.trade.model.bisq_v1.SellerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
-import bisq.core.trade.protocol.bisq_v1.BuyerProtocol;
+import bisq.core.trade.protocol.bisq_v1.BaseBuyerProtocol;
+import bisq.core.trade.protocol.bisq_v1.BaseSellerProtocol;
 import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
-import bisq.core.trade.protocol.bisq_v1.SellerProtocol;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
@@ -209,14 +209,14 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         Trade trade = getTrade();
         checkNotNull(trade, "trade must not be null");
         checkArgument(trade instanceof BuyerTrade, "Check failed: trade instanceof BuyerTrade. Was: " + trade.getClass().getSimpleName());
-        ((BuyerProtocol) tradeManager.getTradeProtocol(trade)).onPaymentStarted(resultHandler, errorMessageHandler);
+        ((BaseBuyerProtocol) tradeManager.getTradeProtocol(trade)).onPaymentStarted(resultHandler, errorMessageHandler);
     }
 
     public void onFiatPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         Trade trade = getTrade();
         checkNotNull(trade, "trade must not be null");
         checkArgument(trade instanceof SellerTrade, "Trade must be instance of SellerTrade");
-        ((SellerProtocol) tradeManager.getTradeProtocol(trade)).onPaymentReceived(resultHandler, errorMessageHandler);
+        ((BaseSellerProtocol) tradeManager.getTradeProtocol(trade)).onPaymentReceived(resultHandler, errorMessageHandler);
     }
 
     public void onWithdrawRequest(String toAddress,
