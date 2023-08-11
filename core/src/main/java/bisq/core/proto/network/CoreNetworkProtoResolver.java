@@ -67,6 +67,7 @@ import bisq.core.trade.protocol.bisq_v1.messages.RefreshTradeStateRequest;
 import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.TraderSignedWitnessMessage;
 import bisq.core.trade.protocol.bisq_v5.messages.InputsForDepositTxResponse_v5;
+import bisq.core.trade.protocol.bisq_v5.messages.StagedPayoutTxRequest;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapFinalizeTxRequest;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapFinalizedTxMessage;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapTxInputsMessage;
@@ -165,8 +166,6 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return InputsForDepositTxRequest.fromProto(proto.getInputsForDepositTxRequest(), this, messageVersion);
                 case INPUTS_FOR_DEPOSIT_TX_RESPONSE:
                     return InputsForDepositTxResponse.fromProto(proto.getInputsForDepositTxResponse(), this, messageVersion);
-                case INPUTS_FOR_DEPOSIT_TX_RESPONSE_V_5:
-                    return InputsForDepositTxResponse_v5.fromProto(proto.getInputsForDepositTxResponseV5(), this, messageVersion);
                 case DEPOSIT_TX_MESSAGE:
                     return DepositTxMessage.fromProto(proto.getDepositTxMessage(), messageVersion);
                 case DELAYED_PAYOUT_TX_SIGNATURE_REQUEST:
@@ -266,6 +265,13 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return GetAccountingBlocksResponse.fromProto(proto.getGetAccountingBlocksResponse(), messageVersion);
                 case NEW_ACCOUNTING_BLOCK_BROADCAST_MESSAGE:
                     return NewAccountingBlockBroadcastMessage.fromProto(proto.getNewAccountingBlockBroadcastMessage(), messageVersion);
+
+                // Trade protocol v5 messages
+                case INPUTS_FOR_DEPOSIT_TX_RESPONSE_V_5:
+                    return InputsForDepositTxResponse_v5.fromProto(proto.getInputsForDepositTxResponseV5(), this, messageVersion);
+                case STAGED_PAYOUT_TX_REQUEST:
+                    return StagedPayoutTxRequest.fromProto(proto.getStagedPayoutTxRequest(), messageVersion);
+
 
                 default:
                     throw new ProtobufferException("Unknown proto message case (PB.NetworkEnvelope). messageCase=" +
