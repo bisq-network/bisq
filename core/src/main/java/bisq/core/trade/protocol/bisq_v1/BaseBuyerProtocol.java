@@ -83,6 +83,11 @@ abstract class BaseBuyerProtocol extends DisputeProtocol implements BuyerProtoco
                 .executeTasks();
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Mailbox
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public void onMailboxMessage(TradeMessage message, NodeAddress peer) {
         super.onMailboxMessage(message, peer);
