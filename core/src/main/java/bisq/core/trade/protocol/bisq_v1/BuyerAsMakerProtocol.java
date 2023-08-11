@@ -19,6 +19,7 @@ package bisq.core.trade.protocol.bisq_v1;
 
 import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.MakerProtocol;
 import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureRequest;
 import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;

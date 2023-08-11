@@ -21,6 +21,7 @@ package bisq.core.trade.protocol.bisq_v1;
 import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.BuyerAsTakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.TakerProtocol;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureRequest;
 import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
