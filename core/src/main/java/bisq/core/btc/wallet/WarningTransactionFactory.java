@@ -50,19 +50,16 @@ public class WarningTransactionFactory {
     }
 
     public Transaction createUnsignedWarningTransaction(boolean isBuyer,
-                                                        Transaction depositTx,
+                                                        TransactionOutput depositTxOutput,
                                                         long lockTime,
                                                         byte[] buyerPubKey,
                                                         byte[] sellerPubKey,
-                                                        int claimDelay,
+                                                        long claimDelay,
                                                         long miningFee,
                                                         Tuple2<Long, String> feeBumpOutputAmountAndAddress)
             throws TransactionVerificationException {
-
         Transaction warningTx = new Transaction(params);
-        TradeWalletService.applyLockTime(lockTime, warningTx);
 
-        TransactionOutput depositTxOutput = depositTx.getOutput(0);
         warningTx.addInput(depositTxOutput);
 
         Coin warningTxOutputCoin = depositTxOutput.getValue()
@@ -76,13 +73,15 @@ public class WarningTransactionFactory {
                 Address.fromString(params, feeBumpOutputAmountAndAddress.second)
         );
 
+        TradeWalletService.applyLockTime(lockTime, warningTx);
+
         WalletService.printTx("Unsigned warningTx", warningTx);
         WalletService.verifyTransaction(warningTx);
         return warningTx;
     }
 
     public byte[] signWarningTransaction(Transaction warningTx,
-                                         Transaction preparedDepositTx,
+                                         TransactionOutput depositTxOutput,
                                          DeterministicKey myMultiSigKeyPair,
                                          byte[] buyerPubKey,
                                          byte[] sellerPubKey,
@@ -90,7 +89,7 @@ public class WarningTransactionFactory {
             throws AddressFormatException, TransactionVerificationException {
 
         Script redeemScript = TradeWalletService.get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
-        Coin warningTxInputValue = preparedDepositTx.getOutput(0).getValue();
+        Coin warningTxInputValue = depositTxOutput.getValue();
 
         Sha256Hash sigHash = warningTx.hashForWitnessSignature(0, redeemScript,
                 warningTxInputValue, Transaction.SigHash.ALL, false);
@@ -134,7 +133,7 @@ public class WarningTransactionFactory {
         return warningTx;
     }
 
-    private Script createOutputScript(boolean isBuyer, byte[] buyerPubKey, byte[] sellerPubKey, int claimDelay) {
+    private Script createOutputScript(boolean isBuyer, byte[] buyerPubKey, byte[] sellerPubKey, long claimDelay) {
         var scriptBuilder = new ScriptBuilder();
         scriptBuilder.op(OP_IF)
                 .number(2)
