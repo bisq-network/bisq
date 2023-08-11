@@ -25,23 +25,26 @@ import bisq.core.trade.protocol.TakerProtocol;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureResponse;
-import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxResponse;
 import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bisq_v1.tasks.CheckIfDaoStateIsInSync;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.MaybeCreateSubAccount;
-import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerCreatesDelayedPayoutTx;
-import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSendDelayedPayoutTxSignatureRequest;
-import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSignsDelayedPayoutTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller_as_taker.SellerAsTakerCreatesDepositTxInputs;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller_as_taker.SellerAsTakerSignsDepositTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.taker.CreateTakerFeeTx;
-import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerProcessesInputsForDepositTxResponse;
 import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerPublishFeeTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerSendInputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerVerifyAndSignContract;
 import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerVerifyMakerFeePayment;
+import bisq.core.trade.protocol.bisq_v5.messages.InputsForDepositTxResponse_v5;
+import bisq.core.trade.protocol.bisq_v5.tasks.CreateRedirectTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerCreatesWarningTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSendStagedPayoutTxRequest;
+import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSignsOwnRedirectTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSignsOwnWarningTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSignsPeersWarningTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.seller_as_taker.SellerAsTakerProcessesInputsForDepositTxResponse_v5;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -102,19 +105,35 @@ public class SellerAsTakerProtocol_v5 extends BaseSellerProtocol_v5 implements T
     // Incoming messages Take offer process
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(InputsForDepositTxResponse message, NodeAddress peer) {
+    private void handle(InputsForDepositTxResponse_v5 message, NodeAddress peer) {
         expect(phase(Trade.Phase.INIT)
                 .with(message)
                 .from(peer))
                 .setup(tasks(
-                        TakerProcessesInputsForDepositTxResponse.class,
+                        SellerAsTakerProcessesInputsForDepositTxResponse_v5.class,
+
                         ApplyFilter.class,
                         TakerVerifyAndSignContract.class,
                         TakerPublishFeeTx.class,
                         SellerAsTakerSignsDepositTx.class,
-                        SellerCreatesDelayedPayoutTx.class,
-                        SellerSignsDelayedPayoutTx.class,
-                        SellerSendDelayedPayoutTxSignatureRequest.class)
+
+                        // We create our warn tx and our signature for the MS script.
+                        SellerCreatesWarningTx.class,
+                        SellerSignsOwnWarningTx.class,
+
+                        // We can now create the signed claim tx from out warn tx
+                        // CreateSignedClaimTx.class,
+
+                        // We create our redirect tx using the buyers warn tx output and our signature for the MS script
+                        CreateRedirectTx.class,
+                        SellerSignsOwnRedirectTx.class,
+
+
+                        // We sign the buyers warn tx
+                        SellerSignsPeersWarningTx.class,
+
+                        // We send buyer sig for their warn tx and our warn and redirect tx including our signatures
+                        SellerSendStagedPayoutTxRequest.class)
                         .withTimeout(120))
                 .executeTasks();
     }
@@ -161,9 +180,10 @@ public class SellerAsTakerProtocol_v5 extends BaseSellerProtocol_v5 implements T
         log.info("Received {} from {} with tradeId {} and uid {}",
                 message.getClass().getSimpleName(), peer, message.getTradeId(), message.getUid());
 
-        if (message instanceof InputsForDepositTxResponse) {
-            handle((InputsForDepositTxResponse) message, peer);
+        if (message instanceof InputsForDepositTxResponse_v5) {
+            handle((InputsForDepositTxResponse_v5) message, peer);
         }
+
     }
 
     @Override
