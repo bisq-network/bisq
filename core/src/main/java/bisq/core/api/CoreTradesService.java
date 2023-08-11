@@ -38,8 +38,8 @@ import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.TradeModel;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
-import bisq.core.trade.protocol.bisq_v1.BuyerProtocol;
-import bisq.core.trade.protocol.bisq_v1.SellerProtocol;
+import bisq.core.trade.protocol.bisq_v1.BaseBuyerProtocol;
+import bisq.core.trade.protocol.bisq_v1.BaseSellerProtocol;
 import bisq.core.user.User;
 import bisq.core.util.validation.BtcAddressValidator;
 
@@ -204,7 +204,7 @@ class CoreTradesService {
                 trade.setCounterCurrencyExtraData(txKey);
             }
             var tradeProtocol = tradeManager.getTradeProtocol(trade);
-            ((BuyerProtocol) tradeProtocol).onPaymentStarted(
+            ((BaseBuyerProtocol) tradeProtocol).onPaymentStarted(
                     () -> {
                     },
                     errorMessage -> {
@@ -236,7 +236,7 @@ class CoreTradesService {
                                 trade.getId()));
             }
             var tradeProtocol = tradeManager.getTradeProtocol(trade);
-            ((SellerProtocol) tradeProtocol).onPaymentReceived(
+            ((BaseSellerProtocol) tradeProtocol).onPaymentReceived(
                     () -> {
                     },
                     errorMessage -> {
@@ -403,7 +403,7 @@ class CoreTradesService {
     }
 
     private boolean isFollowingBuyerProtocol(Trade trade) {
-        return tradeManager.getTradeProtocol(trade) instanceof BuyerProtocol;
+        return tradeManager.getTradeProtocol(trade) instanceof BaseBuyerProtocol;
     }
 
     private Coin getEstimatedTxFee(String fromAddress, String toAddress, Coin amount) {

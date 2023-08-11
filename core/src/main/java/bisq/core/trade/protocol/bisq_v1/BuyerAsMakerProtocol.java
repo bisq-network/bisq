@@ -50,7 +50,7 @@ import bisq.common.handlers.ResultHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BuyerAsMakerProtocol extends BuyerProtocol implements MakerProtocol {
+public class BuyerAsMakerProtocol extends BaseBuyerProtocol implements MakerProtocol {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
