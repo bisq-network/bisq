@@ -102,6 +102,8 @@ message NetworkEnvelope {
         GetAccountingBlocksRequest get_accounting_blocks_request = 61;
         GetAccountingBlocksResponse get_accounting_blocks_response = 62;
         NewAccountingBlockBroadcastMessage new_accounting_block_broadcast_message = 63;
+
+        InputsForDepositTxResponse_v5 inputs_for_deposit_tx_response_v_5 = 64;
     }
 }
 
@@ -268,6 +270,7 @@ message InputsForDepositTxRequest {
     int32 burning_man_selection_height = 28;  // Added in v 1.9.7
 }
 
+// Used in protocol version 4 only
 message InputsForDepositTxResponse {
     string trade_id = 1;
     // Not used anymore from 1.7.0 but kept for backward compatibility.
@@ -286,6 +289,26 @@ message InputsForDepositTxResponse {
     int64 lock_time = 14;
     bytes hash_of_makers_payment_account_payload = 15;
     string makers_payout_method_id = 16;
+}
+
+message InputsForDepositTxResponse_v5 {
+    string trade_id = 1;
+    string maker_account_id = 3;
+    string maker_contract_as_json = 4;
+    string maker_contract_signature = 5;
+    string maker_payout_address_string = 6;
+    bytes prepared_deposit_tx = 7;
+    repeated RawTransactionInput maker_inputs = 8;
+    bytes maker_multi_sig_pub_key = 9;
+    NodeAddress sender_node_address = 10;
+    string uid = 11;
+    bytes account_age_witness_signature_of_prepared_deposit_tx = 12;
+    int64 current_date = 13;
+    int64 lock_time = 14;
+    bytes hash_of_makers_payment_account_payload = 15;
+    string makers_payout_method_id = 16;
+    bytes buyers_unsigned_warning_tx = 17;
+    bytes buyers_warning_tx_signature = 18;
 }
 
 message DelayedPayoutTxSignatureRequest {
