@@ -107,7 +107,7 @@ public class Version {
     // Version 1.5.0 -> TRADE_PROTOCOL_VERSION = 3
     // Version 1.7.0 -> TRADE_PROTOCOL_VERSION = 4
     // Version 1.9.13 and after activation date -> TRADE_PROTOCOL_VERSION = 5
-    public static final Date PROTOCOL_5_ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.OCTOBER, 1);
+    public static final Date PROTOCOL_5_ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.AUGUST, 1);
 
     public static boolean isTradeProtocolVersion5Activated() {
         return new Date().after(PROTOCOL_5_ACTIVATION_DATE);
