@@ -129,7 +129,6 @@ public class BuyerAsTakerProtocol extends BaseBuyerProtocol implements TakerProt
                 .executeTasks();
     }
 
-    // We keep the handler here in as well to make it more transparent which messages we expect
     @Override
     protected void handle(DepositTxAndDelayedPayoutTxMessage message, NodeAddress peer) {
         super.handle(message, peer);
@@ -140,7 +139,6 @@ public class BuyerAsTakerProtocol extends BaseBuyerProtocol implements TakerProt
     // User interaction
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // We keep the handler here in as well to make it more transparent which events we expect
     @Override
     public void onPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         super.onPaymentStarted(resultHandler, errorMessageHandler);
@@ -151,7 +149,6 @@ public class BuyerAsTakerProtocol extends BaseBuyerProtocol implements TakerProt
     // Incoming message Payout tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    // We keep the handler here in as well to make it more transparent which messages we expect
     @Override
     protected void handle(PayoutTxPublishedMessage message, NodeAddress peer) {
         super.handle(message, peer);
