@@ -1579,6 +1579,9 @@ message AddressEntry {
         RESERVED_FOR_TRADE = 4;
         MULTI_SIG = 5;
         TRADE_PAYOUT = 6;
+        WARNING_TX_FEE_BUMP = 7;
+        REDIRECT_TX_FEE_BUMP = 8;
+        CLAIM_TX_FEE_BUMP = 9;
     }
 
     string offer_id = 7;
