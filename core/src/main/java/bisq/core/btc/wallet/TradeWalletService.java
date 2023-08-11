@@ -805,17 +805,17 @@ public class TradeWalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction createUnsignedWarningTx(boolean isBuyer,
-                                               Transaction depositTx,
+                                               TransactionOutput depositTxOutput,
                                                long lockTime,
                                                byte[] buyerPubKey,
                                                byte[] sellerPubKey,
-                                               int claimDelay,
+                                               long claimDelay,
                                                long miningFee,
                                                Tuple2<Long, String> feeBumpOutputAmountAndAddress)
             throws TransactionVerificationException {
         return warningTransactionFactory.createUnsignedWarningTransaction(
                 isBuyer,
-                depositTx,
+                depositTxOutput,
                 lockTime,
                 buyerPubKey,
                 sellerPubKey,
@@ -826,15 +826,14 @@ public class TradeWalletService {
     }
 
     public byte[] signWarningTx(Transaction warningTx,
-                                Transaction preparedDepositTx,
+                                TransactionOutput depositTxOutput,
                                 DeterministicKey myMultiSigKeyPair,
                                 byte[] buyerPubKey,
-                                byte[] sellerPubKey,
-                                KeyParameter aesKey)
+                                byte[] sellerPubKey)
             throws AddressFormatException, TransactionVerificationException {
         return warningTransactionFactory.signWarningTransaction(
                 warningTx,
-                preparedDepositTx,
+                depositTxOutput,
                 myMultiSigKeyPair,
                 buyerPubKey,
                 sellerPubKey,
