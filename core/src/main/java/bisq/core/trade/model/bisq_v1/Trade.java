@@ -1085,6 +1085,15 @@ public abstract class Trade extends TradeModel {
         return processModel.getBurningManSelectionHeight() == 0;
     }
 
+    /**
+     * @return Fee rate per Vbyte based on tradeTxFeeAsLong (deposit tx) and the max. expected size of the deposit tx.
+     */
+    public long getDepositTxFeeRate() {
+        // Deposit tx has a clearly defined structure, so we know the size. It is only one optional output if range amount offer was taken.
+        // Smallest tx size is 246. With additional change output we add 32. To be safe we use the largest expected size.
+        return Math.round(tradeTxFeeAsLong / 278d);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
