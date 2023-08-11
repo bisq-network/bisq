@@ -45,7 +45,7 @@ import bisq.common.handlers.ResultHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class BaseBuyerProtocol extends DisputeProtocol {
+public abstract class BaseBuyerProtocol extends DisputeProtocol implements BuyerProtocol {
     enum BuyerEvent implements FluentProtocol.Event {
         STARTUP,
         PAYMENT_SENT
@@ -135,6 +135,7 @@ public abstract class BaseBuyerProtocol extends DisputeProtocol {
     // User interaction
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
     public void onPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         BuyerEvent event = BuyerEvent.PAYMENT_SENT;
         expect(phase(Trade.Phase.DEPOSIT_CONFIRMED)
