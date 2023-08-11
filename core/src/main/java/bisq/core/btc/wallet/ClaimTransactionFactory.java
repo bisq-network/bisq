@@ -44,18 +44,18 @@ public class ClaimTransactionFactory {
         this.params = params;
     }
 
-    public Transaction createSignedClaimTransaction(Transaction warningTx,
+    public Transaction createSignedClaimTransaction(TransactionOutput warningTxOutput,
                                                     long nSequence,
                                                     Address payoutAddress,
                                                     long miningFee,
                                                     DeterministicKey myMultiSigKeyPair,
                                                     KeyParameter aesKey) throws TransactionVerificationException {
-        Transaction claimTx = createUnsignedClaimTransaction(warningTx, nSequence, payoutAddress, miningFee);
-        byte[] mySignature = signClaimTransaction(claimTx, warningTx, myMultiSigKeyPair, aesKey);
-        return finalizeClaimTransaction(warningTx, claimTx, mySignature);
+        Transaction claimTx = createUnsignedClaimTransaction(warningTxOutput, nSequence, payoutAddress, miningFee);
+        byte[] mySignature = signClaimTransaction(claimTx, warningTxOutput, myMultiSigKeyPair, aesKey);
+        return finalizeClaimTransaction(warningTxOutput, claimTx, mySignature);
     }
 
-    private Transaction createUnsignedClaimTransaction(Transaction warningTx,
+    private Transaction createUnsignedClaimTransaction(TransactionOutput warningTxOutput,
                                                        long nSequence,
                                                        Address payoutAddress,
                                                        long miningFee)
@@ -63,7 +63,6 @@ public class ClaimTransactionFactory {
 
         Transaction claimTx = new Transaction(params);
 
-        TransactionOutput warningTxOutput = warningTx.getOutput(0);
         claimTx.addInput(warningTxOutput);
         claimTx.getInput(0).setSequenceNumber(nSequence);
 
@@ -77,14 +76,13 @@ public class ClaimTransactionFactory {
     }
 
     private byte[] signClaimTransaction(Transaction claimTx,
-                                        Transaction warningTx,
+                                        TransactionOutput warningTxOutput,
                                         DeterministicKey myMultiSigKeyPair,
                                         KeyParameter aesKey)
             throws AddressFormatException, TransactionVerificationException {
 
-        TransactionOutput warningTxPayoutOutput = warningTx.getOutput(0);
-        Script redeemScript = warningTxPayoutOutput.getScriptPubKey();
-        Coin redirectionTxInputValue = warningTxPayoutOutput.getValue();
+        Script redeemScript = warningTxOutput.getScriptPubKey();
+        Coin redirectionTxInputValue = warningTxOutput.getValue();
 
         Sha256Hash sigHash = claimTx.hashForWitnessSignature(0, redeemScript,
                 redirectionTxInputValue, Transaction.SigHash.ALL, false);
@@ -100,7 +98,7 @@ public class ClaimTransactionFactory {
         return mySignature.encodeToDER();
     }
 
-    private Transaction finalizeClaimTransaction(Transaction warningTx,
+    private Transaction finalizeClaimTransaction(TransactionOutput warningTxOutput,
                                                  Transaction claimTx,
                                                  byte[] mySignature)
             throws AddressFormatException, TransactionVerificationException {
@@ -115,7 +113,7 @@ public class ClaimTransactionFactory {
         WalletService.printTx("finalizeRedirectionTransaction", claimTx);
         WalletService.verifyTransaction(claimTx);
 
-        Script scriptPubKey = warningTx.getOutput(0).getScriptPubKey();
+        Script scriptPubKey = warningTxOutput.getScriptPubKey();
         input.getScriptSig().correctlySpends(claimTx, 0, witness, input.getValue(), scriptPubKey, Script.ALL_VERIFY_FLAGS);
         return claimTx;
     }

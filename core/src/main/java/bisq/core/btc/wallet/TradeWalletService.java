@@ -904,14 +904,13 @@ public class TradeWalletService {
     // Claim tx
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public Transaction createSignedClaimTx(Transaction warningTx,
+    public Transaction createSignedClaimTx(TransactionOutput warningTxOutput,
                                            long nSequence,
                                            Address payoutAddress,
                                            long miningFee,
-                                           DeterministicKey myMultiSigKeyPair,
-                                           KeyParameter aesKey) throws TransactionVerificationException {
+                                           DeterministicKey myMultiSigKeyPair) throws TransactionVerificationException {
         return new ClaimTransactionFactory(params)
-                .createSignedClaimTransaction(warningTx, nSequence, payoutAddress, miningFee, myMultiSigKeyPair, aesKey);
+                .createSignedClaimTransaction(warningTxOutput, nSequence, payoutAddress, miningFee, myMultiSigKeyPair, aesKey);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
