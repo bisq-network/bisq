@@ -27,6 +27,7 @@ import bisq.core.trade.protocol.bisq_v1.messages.CounterCurrencyTransferStartedM
 import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureResponse;
 import bisq.core.trade.protocol.bisq_v1.messages.DepositTxMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
+import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bisq_v1.tasks.CheckIfDaoStateIsInSync;
 import bisq.core.trade.protocol.bisq_v1.tasks.CheckRestrictions;
@@ -61,6 +62,16 @@ public class SellerAsMakerProtocol extends BaseSellerProtocol implements MakerPr
 
     public SellerAsMakerProtocol(SellerAsMakerTrade trade) {
         super(trade);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Mailbox
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onMailboxMessage(TradeMessage message, NodeAddress peerNodeAddress) {
+        super.onMailboxMessage(message, peerNodeAddress);
     }
 
 
@@ -118,6 +129,11 @@ public class SellerAsMakerProtocol extends BaseSellerProtocol implements MakerPr
 
     @Override
     protected void handle(DelayedPayoutTxSignatureResponse message, NodeAddress peer) {
+        super.handle(message, peer);
+    }
+
+    @Override
+    protected void handle(ShareBuyerPaymentAccountMessage message, NodeAddress peer) {
         super.handle(message, peer);
     }
 

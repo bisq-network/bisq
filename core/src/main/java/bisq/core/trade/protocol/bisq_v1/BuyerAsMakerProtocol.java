@@ -20,6 +20,7 @@ package bisq.core.trade.protocol.bisq_v1;
 import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.MakerProtocol;
+import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureRequest;
 import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
@@ -59,6 +60,21 @@ public class BuyerAsMakerProtocol extends BaseBuyerProtocol implements MakerProt
 
     public BuyerAsMakerProtocol(BuyerAsMakerTrade trade) {
         super(trade);
+    }
+
+    @Override
+    protected void onInitialized() {
+        super.onInitialized();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Mailbox
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onMailboxMessage(TradeMessage message, NodeAddress peer) {
+        super.onMailboxMessage(message, peer);
     }
 
 
@@ -137,6 +153,16 @@ public class BuyerAsMakerProtocol extends BaseBuyerProtocol implements MakerProt
     @Override
     protected void handle(PayoutTxPublishedMessage message, NodeAddress peer) {
         super.handle(message, peer);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Message dispatcher
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void onTradeMessage(TradeMessage message, NodeAddress peer) {
+        super.onTradeMessage(message, peer);
     }
 
 
