@@ -88,7 +88,7 @@ public class MempoolService {
     }
 
     public boolean canRequestBeMade() {
-        return outstandingRequests < 5; // limit max simultaneous lookups
+        return daoStateService.isParseBlockChainComplete() && outstandingRequests < 5; // limit max simultaneous lookups
     }
 
     public boolean canRequestBeMade(OfferPayload offerPayload) {
