@@ -300,6 +300,10 @@ public class MempoolService {
             log.info("MempoolService only supports mainnet");
             return false;
         }
+        if (!canRequestBeMade()) {
+            log.info("Tx Validation bypassed as service is not ready");
+            return false;
+        }
         return true;
     }
 }
