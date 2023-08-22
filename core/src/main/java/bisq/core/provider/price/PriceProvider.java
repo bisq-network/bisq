@@ -48,9 +48,9 @@ public class PriceProvider extends HttpClientProvider {
         super(httpClient, baseUrl, false);
     }
 
-    public Tuple2<Map<String, Long>, Map<String, MarketPrice>> getAll() throws IOException {
+    public Map<String, MarketPrice> getAll() throws IOException {
         if (shutDownRequested) {
-            return new Tuple2<>(new HashMap<>(), new HashMap<>());
+            return new HashMap<>();
         }
 
         Map<String, MarketPrice> marketPriceMap = new HashMap<>();
@@ -61,13 +61,7 @@ public class PriceProvider extends HttpClientProvider {
         String json = httpClient.get("getAllMarketPrices", "User-Agent", "bisq/"
                 + Version.VERSION + hsVersion);
 
-
         LinkedTreeMap<?, ?> map = new Gson().fromJson(json, LinkedTreeMap.class);
-        Map<String, Long> tsMap = new HashMap<>();
-        tsMap.put("btcAverageTs", ((Double) map.get("btcAverageTs")).longValue());
-        tsMap.put("poloniexTs", ((Double) map.get("poloniexTs")).longValue());
-        tsMap.put("coinmarketcapTs", ((Double) map.get("coinmarketcapTs")).longValue());
-
         List<?> list = (ArrayList<?>) map.get("data");
         list.forEach(obj -> {
             try {
@@ -83,7 +77,7 @@ public class PriceProvider extends HttpClientProvider {
             }
 
         });
-        return new Tuple2<>(tsMap, marketPriceMap);
+        return marketPriceMap;
     }
 
     public String getBaseUrl() {

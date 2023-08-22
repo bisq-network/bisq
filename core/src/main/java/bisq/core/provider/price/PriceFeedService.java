@@ -394,21 +394,17 @@ public class PriceFeedService {
         }
 
         priceRequest = new PriceRequest();
-        SettableFuture<Tuple2<Map<String, Long>, Map<String, MarketPrice>>> future = priceRequest.requestAllPrices(provider);
+        SettableFuture<Map<String, MarketPrice>> future = priceRequest.requestAllPrices(provider);
         Futures.addCallback(future, new FutureCallback<>() {
             @Override
-            public void onSuccess(@Nullable Tuple2<Map<String, Long>, Map<String, MarketPrice>> result) {
+            public void onSuccess(@Nullable Map<String, MarketPrice> result) {
                 UserThread.execute(() -> {
                     checkNotNull(result, "Result must not be null at requestAllPrices");
                     // Each currency rate has a different timestamp, depending on when
                     // the priceNode aggregate rate was calculated
                     // However, the request timestamp is when the pricenode was queried
                     epochInMillisAtLastRequest = System.currentTimeMillis();
-
-                    Map<String, MarketPrice> priceMap = result.second;
-
-                    cache.putAll(priceMap);
-
+                    cache.putAll(result);
                     resultHandler.run();
                 });
             }

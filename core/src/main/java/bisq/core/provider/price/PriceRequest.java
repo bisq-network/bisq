@@ -45,17 +45,17 @@ public class PriceRequest {
     public PriceRequest() {
     }
 
-    public SettableFuture<Tuple2<Map<String, Long>, Map<String, MarketPrice>>> requestAllPrices(PriceProvider provider) {
+    public SettableFuture<Map<String, MarketPrice>> requestAllPrices(PriceProvider provider) {
         this.provider = provider;
         String baseUrl = provider.getBaseUrl();
-        SettableFuture<Tuple2<Map<String, Long>, Map<String, MarketPrice>>> resultFuture = SettableFuture.create();
-        ListenableFuture<Tuple2<Map<String, Long>, Map<String, MarketPrice>>> future = executorService.submit(() -> {
+        SettableFuture<Map<String, MarketPrice>> resultFuture = SettableFuture.create();
+        ListenableFuture<Map<String, MarketPrice>> future = executorService.submit(() -> {
             Thread.currentThread().setName(Thread.currentThread().getName() + "@" + baseUrl);
             return provider.getAll();
         });
 
         Futures.addCallback(future, new FutureCallback<>() {
-            public void onSuccess(Tuple2<Map<String, Long>, Map<String, MarketPrice>> marketPriceTuple) {
+            public void onSuccess(Map<String, MarketPrice> marketPriceTuple) {
                 log.trace("Received marketPriceTuple of {}\nfrom provider {}", marketPriceTuple, provider);
                 if (!shutDownRequested) {
                     resultFuture.set(marketPriceTuple);
