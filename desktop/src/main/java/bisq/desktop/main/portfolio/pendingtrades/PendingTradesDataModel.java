@@ -647,11 +647,10 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             dispute.setBurningManSelectionHeight(trade.getProcessModel().getBurningManSelectionHeight());
             dispute.setTradeTxFee(trade.getTradeTxFeeAsLong());
 
-            ((DisputeProtocol) tradeManager.getTradeProtocol(trade)).onPublishDelayedPayoutTx(() -> {
-                        log.info("DelayedPayoutTx published and message sent to peer");
-                        sendOpenDisputeMessage(disputeManager, resultHandler, dispute);
-                    },
+            ((DisputeProtocol) tradeManager.getTradeProtocol(trade)).onPublishDelayedPayoutTx(
+                    () -> log.info("DelayedPayoutTx published and message sent to peer"),
                     errorMessage -> new Popup().error(errorMessage).show());
+            sendOpenDisputeMessage(disputeManager, resultHandler, dispute);
         } else {
             log.warn("Invalid dispute state {}", disputeState.name());
         }
