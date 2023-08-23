@@ -2,6 +2,7 @@ package bisq.gradle.tasks.signature
 
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPPublicKeyRing
+import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPUtil
 import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRingCollection
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentVerifierBuilderProvider
@@ -75,7 +76,8 @@ class PpgPublicKeyParser(
     private fun verifySubKeySignatures() {
         subKeys.forEach { subKey ->
             var hasValidSignature = false
-            subKey.keySignatures.forEach { signature ->
+            subKey.keySignatures.forEach { anySignature: Any? ->
+                val signature = anySignature as PGPSignature
                 signature.init(
                     JcaPGPContentVerifierBuilderProvider().setProvider("BC"),
                     masterKey!!
