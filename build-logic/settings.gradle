@@ -8,4 +8,5 @@ dependencyResolutionManagement {
 
 include 'commons'
 include 'gradle-tasks'
+include 'packaging'
 include 'tor-binary'
