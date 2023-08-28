@@ -13,7 +13,7 @@ jobs:
         runs-on: ubuntu-latest
         name: codacy-coverage-reporter
         steps:
-            - uses: actions/checkout@v3.5.3
+            - uses: actions/checkout@v3.6.0
 
             - name: Set up JDK
               uses: actions/setup-java@v3.12.0
