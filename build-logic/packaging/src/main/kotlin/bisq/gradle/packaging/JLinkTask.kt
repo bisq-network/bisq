@@ -5,6 +5,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.util.concurrent.TimeUnit
@@ -14,6 +15,7 @@ abstract class JLinkTask : DefaultTask() {
     @get:InputDirectory
     abstract val jdkDirectory: DirectoryProperty
 
+    @get:Optional
     @get:InputDirectory
     abstract val javaModulesDirectory: DirectoryProperty
 
@@ -33,7 +35,6 @@ abstract class JLinkTask : DefaultTask() {
         val processBuilder = ProcessBuilder(
                 jLinkPath.toAbsolutePath().toString(),
 
-                "--module-path", javaModulesDirectory.asFile.get().absolutePath,
                 "--add-modules", parseUsedJavaModulesFromJDepsOutput(),
 
                 "--strip-native-commands",
@@ -43,6 +44,13 @@ abstract class JLinkTask : DefaultTask() {
 
                 "--output", outputDirectoryFile.absolutePath
         )
+
+        if (javaModulesDirectory.isPresent) {
+            val commands = processBuilder.command()
+            commands.add("--module-path")
+            commands.add(javaModulesDirectory.asFile.get().absolutePath)
+        }
+
         processBuilder.inheritIO()
 
         val process = processBuilder.start()
@@ -55,7 +63,10 @@ abstract class JLinkTask : DefaultTask() {
     }
 
     private fun parseUsedJavaModulesFromJDepsOutput(): String {
-        val readLines = jDepsOutputFile.asFile.get().readLines()
+        var readLines = jDepsOutputFile.asFile.get().readLines()
+        if (!javaModulesDirectory.isPresent) {
+            readLines = readLines.filter { it.startsWith("java.") }
+        }
         return readLines.joinToString(",")
     }
 }
