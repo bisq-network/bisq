@@ -15,7 +15,7 @@ abstract class JLinkTask : DefaultTask() {
     abstract val jdkDirectory: DirectoryProperty
 
     @get:InputDirectory
-    abstract val javaFxJmodsDirectory: DirectoryProperty
+    abstract val javaModulesDirectory: DirectoryProperty
 
     @get:InputFile
     abstract val jDepsOutputFile: RegularFileProperty
@@ -33,7 +33,7 @@ abstract class JLinkTask : DefaultTask() {
         val processBuilder = ProcessBuilder(
                 jLinkPath.toAbsolutePath().toString(),
 
-                "--module-path", javaFxJmodsDirectory.asFile.get().absolutePath,
+                "--module-path", javaModulesDirectory.asFile.get().absolutePath,
                 "--add-modules", parseUsedJavaModulesFromJDepsOutput(),
 
                 "--strip-native-commands",
