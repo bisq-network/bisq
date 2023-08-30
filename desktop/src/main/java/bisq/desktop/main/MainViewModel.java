@@ -320,6 +320,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             setupDevDummyPaymentAccounts();
         }
 
+        maybeAddArsBlueMarketNotificationToQueue();
         getShowAppScreen().set(true);
     }
 
@@ -895,6 +896,20 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
 
     public BooleanProperty getShowSettingsUpdatesNotification() {
         return settingsPresentation.getShowSettingsUpdatesNotification();
+    }
+
+    private void maybeAddArsBlueMarketNotificationToQueue() {
+        String key = "arsBlueMarketNotificationPopup";
+        if (DontShowAgainLookup.showAgain(key)) {
+            Popup popup = new Popup()
+                    .headLine(Res.get("popup.arsBlueMarket.title"))
+                    .information(Res.get("popup.arsBlueMarket.info"))
+                    .actionButtonText(Res.get("shared.iUnderstand"))
+                    .hideCloseButton()
+                    .dontShowAgainId(key);
+            popup.setDisplayOrderPriority(1);
+            popupQueue.add(popup);
+        }
     }
 
     private void maybeShowPopupsFromQueue() {
