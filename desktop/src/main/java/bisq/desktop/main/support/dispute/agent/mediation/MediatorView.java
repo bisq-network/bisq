@@ -85,9 +85,6 @@ public class MediatorView extends DisputeAgentView {
     @Override
     public void initialize() {
         super.initialize();
-        openOrCloseButton.setVisible(true);
-        openOrCloseButton.setManaged(true);
-        setupReOpenDisputeListener();
     }
 
     @Override
