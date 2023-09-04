@@ -803,6 +803,23 @@ public class GUIUtil {
         return false;
     }
 
+    public static void maybeAskAboutStreamliningOrderFunding(Runnable actionHandlerYes, Runnable actionHandlerNo) {
+        String key = "ask_always_use_bisq_wallet";
+        if (!preferences.isUseBisqWalletFunding() && DontShowAgainLookup.showAgain(key)) {
+            // user clicks on "Fund from Bisq wallet",
+            // ask user if they want to in the future always fund from Bisq wallet
+            new Popup().instruction(Res.get("shared.question.useBisqWalletForFunding"))
+                    .actionButtonText(Res.get("shared.yes"))
+                    .onAction(actionHandlerYes)
+                    .closeButtonText(Res.get("shared.no"))
+                    .onClose(actionHandlerNo)
+                    .dontShowAgainId(key)
+                    .show();
+        } else {
+            actionHandlerNo.run();
+        }
+    }
+
     public static boolean isReadyForTxBroadcastOrShowPopup(P2PService p2PService, WalletsSetup walletsSetup) {
         if (!GUIUtil.isBootstrappedOrShowPopup(p2PService)) {
             return false;

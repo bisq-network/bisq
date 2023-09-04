@@ -41,6 +41,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.VolumeUtil;
 import bisq.core.util.coin.BsqFormatter;
@@ -86,6 +87,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private final P2PService p2PService;
     private final AccountAgeWitnessService accountAgeWitnessService;
     private final Navigation navigation;
+    private final Preferences preferences;
     private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
 
@@ -145,6 +147,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
                               P2PService p2PService,
                               AccountAgeWitnessService accountAgeWitnessService,
                               Navigation navigation,
+                              Preferences preferences,
                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                               BsqFormatter bsqFormatter) {
         super(dataModel);
@@ -154,6 +157,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         this.p2PService = p2PService;
         this.accountAgeWitnessService = accountAgeWitnessService;
         this.navigation = navigation;
+        this.preferences = preferences;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
         createListeners();
@@ -264,6 +268,11 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         dataModel.onShowPayFundsScreen();
         showPayFundsScreenDisplayed.set(true);
         updateSpinnerInfo();
+    }
+
+    void savePreferenceAndFundFromSavingsWallet() {
+        preferences.setUseBisqWalletFunding(true);
+        fundFromSavingsWallet();
     }
 
     boolean fundFromSavingsWallet() {

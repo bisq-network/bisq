@@ -690,6 +690,11 @@ public abstract class MutableOfferViewModel<M extends MutableOfferDataModel> ext
         updateSpinnerInfo();
     }
 
+    void savePreferenceAndFundFromSavingsWallet() {
+        preferences.setUseBisqWalletFunding(true);
+        fundFromSavingsWallet();
+    }
+
     void fundFromSavingsWallet() {
         dataModel.fundFromSavingsWallet();
         if (dataModel.getIsBtcWalletFunded().get()) {

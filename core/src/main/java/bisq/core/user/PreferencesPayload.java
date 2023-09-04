@@ -151,6 +151,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
     // Added at 1.9.11
     private boolean isFullBMAccountingNode = false;
 
+    private boolean useBisqWalletFunding = false;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -225,7 +226,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setUserDefinedTradeLimit(userDefinedTradeLimit)
                 .setUserHasRaisedTradeLimit(userHasRaisedTradeLimit)
                 .setProcessBurningManAccountingData(processBurningManAccountingData)
-                .setIsFullBMAccountingNode(isFullBMAccountingNode);
+                .setIsFullBMAccountingNode(isFullBMAccountingNode)
+                .setUseBisqWalletFunding(useBisqWalletFunding);
 
         Optional.ofNullable(backupDirectory).ifPresent(builder::setBackupDirectory);
         Optional.ofNullable(preferredTradeCurrency).ifPresent(e -> builder.setPreferredTradeCurrency((protobuf.TradeCurrency) e.toProtoMessage()));
@@ -334,7 +336,8 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getUserHasRaisedTradeLimit() ? proto.getUserDefinedTradeLimit() : Preferences.INITIAL_TRADE_LIMIT,
                 proto.getUserHasRaisedTradeLimit(),
                 proto.getProcessBurningManAccountingData(),
-                proto.getIsFullBMAccountingNode()
+                proto.getIsFullBMAccountingNode(),
+                proto.getUseBisqWalletFunding()
         );
     }
 }
