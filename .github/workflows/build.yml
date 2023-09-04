@@ -16,7 +16,7 @@ jobs:
             java: [ '11', '11.0.3', '15', '15.0.5']
     name: Test Java ${{ matrix.Java }}, ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v3.6.0
+    - uses: actions/checkout@v4.0.0
 
     - name: Set up JDK
       uses: actions/setup-java@v3.12.0
