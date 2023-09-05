@@ -44,6 +44,7 @@ import bisq.core.payment.payload.ImpsAccountPayload;
 import bisq.core.payment.payload.InstantCryptoCurrencyPayload;
 import bisq.core.payment.payload.InteracETransferAccountPayload;
 import bisq.core.payment.payload.JapanBankAccountPayload;
+import bisq.core.payment.payload.MercadoPagoAccountPayload;
 import bisq.core.payment.payload.MoneseAccountPayload;
 import bisq.core.payment.payload.MoneyBeamAccountPayload;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
@@ -158,6 +159,8 @@ public class CoreProtoResolver implements ProtoResolver {
                             return StrikeAccountPayload.fromProto(proto);
                         case TRANSFERWISE_USD_ACCOUNT_PAYLOAD:
                             return TransferwiseUsdAccountPayload.fromProto(proto);
+                        case MERCADO_PAGO_ACCOUNT_PAYLOAD:
+                            return MercadoPagoAccountPayload.fromProto(proto);
                         case IFSC_BASED_ACCOUNT_PAYLOAD:
                             final protobuf.IfscBasedAccountPayload.MessageCase messageCaseIfsc = proto.getCountryBasedPaymentAccountPayload().getIfscBasedAccountPayload().getMessageCase();
                             switch (messageCaseIfsc) {
