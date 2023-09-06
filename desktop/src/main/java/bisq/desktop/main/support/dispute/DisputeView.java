@@ -323,6 +323,10 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
         root.getChildren().addAll(filterBox, tableView);
 
         setupTable();
+
+        openOrCloseButton.setVisible(true);
+        openOrCloseButton.setManaged(true);
+        setupReOpenDisputeListener();
     }
 
     @Override
