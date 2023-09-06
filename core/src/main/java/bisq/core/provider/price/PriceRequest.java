@@ -49,10 +49,7 @@ public class PriceRequest {
         this.provider = provider;
         String baseUrl = provider.getBaseUrl();
         SettableFuture<Map<String, MarketPrice>> resultFuture = SettableFuture.create();
-        ListenableFuture<Map<String, MarketPrice>> future = executorService.submit(() -> {
-            Thread.currentThread().setName(Thread.currentThread().getName() + "@" + baseUrl);
-            return provider.getAll();
-        });
+        ListenableFuture<Map<String, MarketPrice>> future = executorService.submit(provider::getAll);
 
         Futures.addCallback(future, new FutureCallback<>() {
             public void onSuccess(Map<String, MarketPrice> marketPriceTuple) {
