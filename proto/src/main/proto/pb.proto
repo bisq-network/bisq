@@ -1973,6 +1973,7 @@ message PreferencesPayload {
     bool user_has_raised_trade_limit = 68;
     bool process_burning_man_accounting_data = 69;
     bool is_full_b_m_accounting_node = 70;
+    bool use_bisq_wallet_funding = 71;
 }
 
 message AutoConfirmSettings {

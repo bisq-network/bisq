@@ -134,7 +134,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             avoidStandbyMode, useCustomFee, autoConfirmXmrToggle, hideNonAccountPaymentMethodsToggle, denyApiTakerToggle,
             notifyOnPreReleaseToggle, isDaoFullNodeToggleButton,
             fullModeDaoMonitorToggleButton, useBitcoinUrisToggle, tradeLimitToggle, processBurningManAccountingDataToggleButton,
-            isFullBMAccountingDataNodeToggleButton;
+            isFullBMAccountingDataNodeToggleButton, useBisqWalletForFundingToggle;
     private int gridRow = 0;
     private int displayCurrenciesGridRowIndex = 0;
     private InputTextField transactionFeeInputTextField, ignoreTradersListInputTextField, ignoreDustThresholdInputTextField,
@@ -286,7 +286,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void initializeGeneralOptions() {
-        int titledGroupBgRowSpan = displayStandbyModeFeature ? 11 : 10;
+        int titledGroupBgRowSpan = displayStandbyModeFeature ? 12 : 11;
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, gridRow, titledGroupBgRowSpan, Res.get("setting.preferences.general"));
         GridPane.setColumnSpan(titledGroupBg, 1);
 
@@ -440,12 +440,23 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                     Res.get("setting.preferences.avoidStandbyMode"));
         }
 
-        useBitcoinUrisToggle = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.useBitcoinUris"));
-        Tooltip tooltip = new Tooltip(Res.get("setting.preferences.useBitcoinUris.tooltip"));
-        tooltip.setShowDuration(Duration.millis(8000));
-        tooltip.setShowDelay(Duration.millis(300));
-        tooltip.setHideDelay(Duration.millis(0));
-        Tooltip.install(useBitcoinUrisToggle, tooltip);
+        {
+            useBitcoinUrisToggle = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.useBitcoinUris"));
+            Tooltip tooltip = new Tooltip(Res.get("setting.preferences.useBitcoinUris.tooltip"));
+            tooltip.setShowDuration(Duration.millis(8000));
+            tooltip.setShowDelay(Duration.millis(300));
+            tooltip.setHideDelay(Duration.millis(0));
+            Tooltip.install(useBitcoinUrisToggle, tooltip);
+        }
+
+        {
+            useBisqWalletForFundingToggle = addSlideToggleButton(root, ++gridRow, Res.get("setting.preferences.useBisqWalletForFunding"));
+            Tooltip tooltip = new Tooltip(Res.get("setting.preferences.useBisqWalletForFunding.tooltip"));
+            tooltip.setShowDuration(Duration.millis(8000));
+            tooltip.setShowDelay(Duration.millis(300));
+            tooltip.setHideDelay(Duration.millis(0));
+            Tooltip.install(useBisqWalletForFundingToggle, tooltip);
+        }
     }
 
     private void initializeSeparator() {
@@ -990,6 +1001,10 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         useBitcoinUrisToggle.setOnAction(e ->
                 preferences.setUseBitcoinUrisInQrCodes(useBitcoinUrisToggle.isSelected()));
 
+        useBisqWalletForFundingToggle.setSelected(preferences.isUseBisqWalletFunding());
+        useBisqWalletForFundingToggle.setOnAction(e ->
+                preferences.setUseBisqWalletFunding(useBisqWalletForFundingToggle.isSelected()));
+
         btcExplorerTextField.setText(preferences.getBlockChainExplorer().name);
         bsqExplorerTextField.setText(preferences.getBsqBlockChainExplorer().name);
 
@@ -1362,6 +1377,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         editCustomBtcExplorer.setOnAction(null);
         editCustomBsqExplorer.setOnAction(null);
         useBitcoinUrisToggle.setOnAction(null);
+        useBisqWalletForFundingToggle.setOnAction(null);
         deviationInputTextField.textProperty().removeListener(deviationListener);
         deviationInputTextField.focusedProperty().removeListener(deviationFocusedListener);
         transactionFeeInputTextField.focusedProperty().removeListener(transactionFeeFocusedListener);

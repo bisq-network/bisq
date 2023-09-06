@@ -59,6 +59,7 @@ import bisq.core.payment.FasterPaymentsAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.user.DontShowAgainLookup;
+import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
@@ -126,6 +127,7 @@ import static javafx.beans.binding.Bindings.createStringBinding;
 @FxmlView
 public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOfferViewModel> implements ClosableView, InitializableViewWithTakeOfferData, SelectableView {
     private final Navigation navigation;
+    private final Preferences preferences;
     private final CoinFormatter formatter;
     private final BsqFormatter bsqFormatter;
     private final OfferDetailsWindow offerDetailsWindow;
@@ -184,6 +186,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     @Inject
     private TakeOfferView(TakeOfferViewModel model,
                           Navigation navigation,
+                          Preferences preferences,
                           @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter,
                           BsqFormatter bsqFormatter,
                           OfferDetailsWindow offerDetailsWindow,
@@ -191,6 +194,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         super(model);
 
         this.navigation = navigation;
+        this.preferences = preferences;
         this.formatter = formatter;
         this.bsqFormatter = bsqFormatter;
         this.offerDetailsWindow = offerDetailsWindow;
@@ -224,6 +228,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
                         .autoClose();
 
                 walletFundedNotification.show();
+                if (preferences.isUseBisqWalletFunding()) {  // potentially bypass review step to the confirmation popup
+                    UserThread.execute(this::onTakeOffer);
+                }
             }
         };
 
@@ -504,7 +511,9 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
 
         balanceTextField.setTargetAmount(model.dataModel.getTotalToPayAsCoin().get());
 
-        if (!DevEnv.isDevMode()) {
+        if (preferences.isUseBisqWalletFunding()) {
+            model.fundFromSavingsWallet();
+        } else {
             String key = "securityDepositInfo";
             new Popup().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
                     .actionButtonText(Res.get("shared.faq"))
@@ -995,7 +1004,8 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         fundFromSavingsWalletButton = new AutoTooltipButton(Res.get("shared.fundFromSavingsWalletButton"));
         fundFromSavingsWalletButton.setDefaultButton(true);
         fundFromSavingsWalletButton.getStyleClass().add("action-button");
-        fundFromSavingsWalletButton.setOnAction(e -> model.fundFromSavingsWallet());
+        fundFromSavingsWalletButton.setOnAction(e -> GUIUtil.maybeAskAboutStreamliningOrderFunding(
+                model::savePreferenceAndFundFromSavingsWallet, model::fundFromSavingsWallet));
         Label label = new AutoTooltipLabel(Res.get("shared.OR"));
         label.setPadding(new Insets(5, 0, 0, 0));
         Button fundFromExternalWalletButton = new AutoTooltipButton(Res.get("shared.fundFromExternalWalletButton"));

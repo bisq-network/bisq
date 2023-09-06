@@ -430,7 +430,12 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         advancedOptionsBox.setManaged(false);
 
         model.onShowPayFundsScreen(() -> {
-            if (!DevEnv.isDevMode()) {
+            totalToPayTextField.setFundsStructure(model.getFundsStructure());
+            totalToPayTextField.setContentForInfoPopOver(createInfoPopover());
+
+            if (preferences.isUseBisqWalletFunding()) {
+                model.fundFromSavingsWallet();
+            } else {
                 String key = "createOfferFundWalletInfo";
                 String tradeAmountText = model.isSellOffer() ?
                         Res.get("createOffer.createOfferFundWalletInfo.tradeAmount", model.getTradeAmount()) : "";
@@ -447,9 +452,6 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                         .dontShowAgainId(key)
                         .show();
             }
-
-            totalToPayTextField.setFundsStructure(model.getFundsStructure());
-            totalToPayTextField.setContentForInfoPopOver(createInfoPopover());
         });
 
         paymentAccountsComboBox.setDisable(true);
@@ -467,7 +469,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
         balanceTextField.setTargetAmount(model.getDataModel().totalToPayAsCoinProperty().get());
 
-        if (!DevEnv.isDevMode()) {
+        if (!preferences.isUseBisqWalletFunding()) {
             String key = "securityDepositInfo";
             new Popup().backgroundInfo(Res.get("popup.info.securityDepositInfo"))
                     .actionButtonText(Res.get("shared.faq"))
@@ -822,6 +824,9 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                         .autoClose();
 
                 walletFundedNotification.show();
+                if (preferences.isUseBisqWalletFunding()) {  // potentially bypass review step to the confirmation popup
+                    UserThread.execute(this::onPlaceOffer);
+                }
             }
         };
 
@@ -1254,7 +1259,8 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
         fundFromSavingsWalletButton = new AutoTooltipButton(Res.get("shared.fundFromSavingsWalletButton"));
         fundFromSavingsWalletButton.setDefaultButton(true);
         fundFromSavingsWalletButton.getStyleClass().add("action-button");
-        fundFromSavingsWalletButton.setOnAction(e -> model.fundFromSavingsWallet());
+        fundFromSavingsWalletButton.setOnAction(e -> GUIUtil.maybeAskAboutStreamliningOrderFunding(
+                model::savePreferenceAndFundFromSavingsWallet, model::fundFromSavingsWallet));
         Label label = new AutoTooltipLabel(Res.get("shared.OR"));
         label.setPadding(new Insets(5, 0, 0, 0));
         Button fundFromExternalWalletButton = new AutoTooltipButton(Res.get("shared.fundFromExternalWalletButton"));
