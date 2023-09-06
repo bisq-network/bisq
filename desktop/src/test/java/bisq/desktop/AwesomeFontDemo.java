@@ -27,11 +27,20 @@ import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 
-import java.util.ArrayList;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
+
 import java.util.Arrays;
-import java.util.List;
 
 public class AwesomeFontDemo extends Application {
     public static void main(String[] args) {
@@ -40,21 +49,52 @@ public class AwesomeFontDemo extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        Label headline = new Label("Filter by:");
+        TextField input = new TextField();
+        HBox filter = new HBox(10, headline, input);
+        filter.setAlignment(Pos.CENTER_LEFT);
+        filter.setStyle("-fx-background-color: #ddd");
+        filter.setPadding(new Insets(5));
+
         FlowPane flowPane = new FlowPane();
+        flowPane.setVgap(5);
+        flowPane.setHgap(5);
+        flowPane.setPadding(new Insets(5));
         flowPane.setStyle("-fx-background-color: #ddd;");
-        flowPane.setHgap(2);
-        flowPane.setVgap(2);
-        List<AwesomeIcon> values = new ArrayList<>(Arrays.asList(AwesomeIcon.values()));
-        values.sort((o1, o2) -> o1.name().compareTo(o2.name()));
-        for (AwesomeIcon icon : values) {
+        flowPane.setHgap(5);
+        flowPane.setVgap(5);
+
+        VBox vBox = new VBox(10, filter, flowPane);
+
+        ObservableList<AwesomeIcon> values = FXCollections.observableArrayList(Arrays.asList(AwesomeIcon.values()));
+        FilteredList<AwesomeIcon> filteredList = new FilteredList<>(values);
+        SortedList<AwesomeIcon> sortedList = new SortedList<>(filteredList);
+        sortedList.setComparator((o1, o2) -> o1.name().compareTo(o2.name()));
+        //List<AwesomeIcon> values = new ArrayList<>(Arrays.asList(AwesomeIcon.values()));
+        // values.sort((o1, o2) -> o1.name().compareTo(o2.name()));
+        fill(flowPane, sortedList);
+
+        input.textProperty().addListener((observable, oldValue, newValue) -> {
+            filteredList.setPredicate(e -> {
+                return newValue == null ||
+                        newValue.isEmpty() ||
+                        e.name().toLowerCase().contains(newValue.toLowerCase());
+            });
+            fill(flowPane, sortedList);
+        });
+
+        primaryStage.setScene(new Scene(vBox, 1200, 950));
+        primaryStage.show();
+    }
+
+    private void fill(FlowPane flowPane, SortedList<AwesomeIcon> sortedList) {
+        flowPane.getChildren().clear();
+        for (AwesomeIcon icon : sortedList) {
             Label label = new Label();
             Button button = new Button(icon.name(), label);
             button.setStyle("-fx-background-color: #fff;");
             AwesomeDude.setIcon(label, icon, "12");
             flowPane.getChildren().add(button);
         }
-
-        primaryStage.setScene(new Scene(flowPane, 1200, 950));
-        primaryStage.show();
     }
 }
