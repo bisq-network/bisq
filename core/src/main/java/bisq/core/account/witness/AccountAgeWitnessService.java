@@ -930,17 +930,21 @@ public class AccountAgeWitnessService {
     }
 
     public boolean isSignWitnessTrade(Trade trade) {
-        checkNotNull(trade, "trade must not be null");
-        checkNotNull(trade.getOffer(), "offer must not be null");
-        Contract contract = checkNotNull(trade.getContract());
-        PaymentAccountPayload sellerPaymentAccountPayload = contract.getSellerPaymentAccountPayload();
-        AccountAgeWitness myWitness = getMyWitness(sellerPaymentAccountPayload);
-
-        getAccountAgeWitnessUtils().witnessDebugLog(trade, myWitness);
-
-        return accountIsSigner(myWitness) &&
-                !peerHasSignedWitness(trade) &&
-                tradeAmountIsSufficient(trade.getAmount());
+        try {
+            checkNotNull(trade, "trade must not be null");
+            checkNotNull(trade.getOffer(), "offer must not be null");
+            Contract contract = checkNotNull(trade.getContract());
+            PaymentAccountPayload sellerPaymentAccountPayload = checkNotNull(
+                    contract.getSellerPaymentAccountPayload(), "paymentAccountPayload must not be null");
+            AccountAgeWitness myWitness = getMyWitness(sellerPaymentAccountPayload);
+            getAccountAgeWitnessUtils().witnessDebugLog(trade, myWitness);
+            return accountIsSigner(myWitness) &&
+                    !peerHasSignedWitness(trade) &&
+                    tradeAmountIsSufficient(trade.getAmount());
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     public String getSignInfoFromAccount(PaymentAccount paymentAccount) {
