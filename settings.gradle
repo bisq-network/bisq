@@ -5,6 +5,20 @@ pluginManagement {
     includeBuild('build-logic')
 }
 
+plugins {
+    id("org.gradle.toolchains.foojay-resolver") version "0.7.0"
+}
+
+toolchainManagement {
+    jvm {
+        javaRepositories {
+            repository("foojay") {
+                resolverClass = org.gradle.toolchains.foojay.FoojayToolchainResolver
+            }
+        }
+    }
+}
+
 include 'proto'
 include 'assets'
 include 'common'
