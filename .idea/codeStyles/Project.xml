@@ -178,6 +178,9 @@
       </option>
       <option name="ENABLE_JAVADOC_FORMATTING" value="false" />
     </JavaCodeStyleSettings>
+    <JetCodeStyleSettings>
+      <option name="CODE_STYLE_DEFAULTS" value="KOTLIN_OFFICIAL" />
+    </JetCodeStyleSettings>
     <Properties>
       <option name="KEEP_BLANK_LINES" value="true" />
     </Properties>
@@ -187,6 +190,9 @@
       <option name="METHOD_PARAMETERS_WRAP" value="5" />
       <option name="WRAP_ON_TYPING" value="0" />
       <option name="SOFT_MARGINS" value="90" />
+    </codeStyleSettings>
+    <codeStyleSettings language="kotlin">
+      <option name="CODE_STYLE_DEFAULTS" value="KOTLIN_OFFICIAL" />
     </codeStyleSettings>
   </code_scheme>
 </component>
