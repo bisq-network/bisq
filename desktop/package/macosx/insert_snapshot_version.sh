@@ -12,5 +12,4 @@ find . -type f \( -name "finalize.sh" \
 -o -name "release.sh" \
 -o -name "package.sh" \
 -o -name "version.txt" \
--o -name "Dockerfile" \
 \) -exec sed -i '' s/$version/"$version-SNAPSHOT"/ {} +
