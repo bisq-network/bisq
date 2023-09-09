@@ -17,6 +17,7 @@ find . -type f \( -name "finalize.sh" \
 \) -exec sed -i '' s/"$oldVersion-SNAPSHOT"/$newVersion/ {} +
 
 find . -type f \( -name "Info.plist" \
+-o -name "PackagingPlugin.kt" \
 -o -name "SeedNodeMain.java" \
 -o -name "Version.java" \
 -o -name "copy_dbs.sh" \
