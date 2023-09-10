@@ -3,7 +3,6 @@ plugins {
     id 'application'
 }
 
-build.dependsOn installDist
 installDist.destinationDir = file('build/app')
 distZip.enabled = false
 distTar.enabled = false
