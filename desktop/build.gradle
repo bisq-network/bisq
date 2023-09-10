@@ -12,20 +12,12 @@ application {
                                  '-Djava.net.preferIPv4Stack=true']
 }
 
-apply from: 'package/package.gradle'
-
 shadowDistTar.enabled = false
 shadowDistZip.enabled = false
 
 javafx {
     modules = ['javafx.controls', 'javafx.fxml']
 }
-
-version = file("src/main/resources/version.txt").text.trim()
-
-jar.manifest.attributes(
-    "Implementation-Title": project.name,
-    "Implementation-Version": version)
 
 mainClassName = 'bisq.desktop.app.BisqAppMain'
 
