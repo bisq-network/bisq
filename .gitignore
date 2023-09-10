@@ -22,7 +22,7 @@ build
 *.java.hsw
 *.~ava
 /bundles
-/bisq-*
+/bisq-*.bat
 /lib
 /xchange
 desktop.ini
