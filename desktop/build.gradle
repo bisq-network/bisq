@@ -18,11 +18,6 @@ javafx {
 
 mainClassName = 'bisq.desktop.app.BisqAppMain'
 
-jar {
-    preserveFileTimestamps = false
-    reproducibleFileOrder = true
-}
-
 sourceSets.main.resources.srcDirs += ['src/main/java'] // to copy fxml and css files
 
 dependencies {
