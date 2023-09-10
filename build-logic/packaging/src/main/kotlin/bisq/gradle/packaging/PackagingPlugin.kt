@@ -3,6 +3,7 @@ package bisq.gradle.packaging
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.Directory
+import org.gradle.api.file.RegularFile
 import org.gradle.api.plugins.JavaApplication
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Provider
@@ -22,16 +23,25 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
 
     companion object {
         const val APP_VERSION = "1.9.12"
+        const val OUTPUT_DIR_PATH = "packaging/jpackage/packages"
     }
 
     override fun apply(project: Project) {
         val installDistTask: TaskProvider<Sync> = project.tasks.named("installDist", Sync::class.java)
+
+        val generateHashesTask = project.tasks.register<Sha256HashTask>("generateHashes") {
+            inputDirFile.set(installDistTask.map { File(it.destinationDir, "lib") })
+            outputFile.set(getHashFileForOs(project))
+        }
+
         val jarTask: TaskProvider<Jar> = project.tasks.named("jar", Jar::class.java)
 
         val javaApplicationExtension = project.extensions.findByType<JavaApplication>()
         checkNotNull(javaApplicationExtension) { "Can't find JavaApplication extension." }
 
         project.tasks.register<JPackageTask>("generateInstaller") {
+            dependsOn(generateHashesTask)
+
             jdkDirectory.set(getJdk17Directory())
 
             distDirFile.set(installDistTask.map { it.destinationDir })
@@ -48,6 +58,16 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             runtimeImageDirectory.set(getProjectJdkDirectory(project))
             outputDirectory.set(project.layout.buildDirectory.dir("packaging/jpackage/packages"))
         }
+    }
+
+    private fun getHashFileForOs(project: Project): Provider<RegularFile> {
+        val osName = when (getOS()) {
+            OS.LINUX -> "linux"
+            OS.MAC_OS -> "mac"
+            OS.WINDOWS -> "win"
+        }
+
+        return project.layout.buildDirectory.file("$OUTPUT_DIR_PATH/desktop-$APP_VERSION-all-$osName.jar.SHA-256")
     }
 
     private fun getProjectJdkDirectory(project: Project): Provider<Directory> {

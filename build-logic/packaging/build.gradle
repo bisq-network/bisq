@@ -18,4 +18,5 @@ gradlePlugin {
 
 dependencies {
     implementation project(':gradle-tasks')
+    implementation libs.commons.codec
 }
