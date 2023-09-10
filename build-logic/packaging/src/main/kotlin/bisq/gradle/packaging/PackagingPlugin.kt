@@ -39,7 +39,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         val javaApplicationExtension = project.extensions.findByType<JavaApplication>()
         checkNotNull(javaApplicationExtension) { "Can't find JavaApplication extension." }
 
-        project.tasks.register<JPackageTask>("generateInstaller") {
+        project.tasks.register<JPackageTask>("generateInstallers") {
             dependsOn(generateHashesTask)
 
             jdkDirectory.set(getJdk17Directory())
