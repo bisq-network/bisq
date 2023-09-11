@@ -6,6 +6,10 @@ buildscript {
     }
 }
 
+plugins {
+    id 'bisq.gradle.regtest_plugin.RegtestPlugin'
+}
+
 if (hasProperty('buildScan')) {
     buildScan {
         termsOfServiceUrl = 'https://gradle.com/terms-of-service'
