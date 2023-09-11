@@ -2,12 +2,17 @@ package bisq.gradle.regtest_plugin
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 
 abstract class StartBitcoindTask : DefaultTask() {
+
+    @get:Internal
+    abstract val pidFile: RegularFileProperty
 
     @get:InputDirectory
     abstract val dataDirectory: DirectoryProperty
@@ -23,6 +28,12 @@ abstract class StartBitcoindTask : DefaultTask() {
 
     @TaskAction
     fun run() {
+        ProcessKiller(pidFile.asFile.get())
+                .kill()
+
+        // Wait until process stopped
+        Thread.sleep(5000)
+
         val processBuilder = ProcessBuilder(
                 "bitcoind",
                 "-datadir=${dataDirectory.asFile.get().absolutePath}",
@@ -42,6 +53,11 @@ abstract class StartBitcoindTask : DefaultTask() {
         processBuilder.redirectErrorStream(true)
         processBuilder.redirectOutput(ProcessBuilder.Redirect.DISCARD)
 
-        processBuilder.start()
+        val process = processBuilder.start()
+        val pid = process.pid()
+
+        pidFile.asFile
+                .get()
+                .writeText(pid.toString())
     }
 }

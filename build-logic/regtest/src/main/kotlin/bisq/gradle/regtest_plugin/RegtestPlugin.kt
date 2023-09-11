@@ -13,14 +13,22 @@ class RegtestPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         val startBitcoindTask = project.tasks.register<StartBitcoindTask>("startRegtestBitcoind") {
+            pidFile.set(project.layout.projectDirectory.file(".localnet/bitcoind.pid"))
+
             dataDirectory.set(project.layout.projectDirectory.dir(".localnet/bitcoind"))
             rpcUser.set(RPC_USER)
             rpcPassword.set(RPC_PASSWORD)
             blockNotifyArg.set(".localnet/bitcoind/blocknotify %s")
         }
 
+        val stopBitcoindTask = project.tasks.register<KillTask>("stopRegtestBitcoind") {
+            pidFile.set(startBitcoindTask.flatMap { it.pidFile })
+        }
+
         val startFirstSeedNodeTask = project.tasks.register<StartBisqTask>("startRegtestFirstSeednode") {
             dependsOn(startBitcoindTask)
+
+            pidFile.set(project.layout.projectDirectory.file(".localnet/seednode_1.pid"))
             startScriptFile.set(project.layout.projectDirectory.file("bisq-seednode"))
 
             arguments.set(
@@ -31,9 +39,15 @@ class RegtestPlugin : Plugin<Project> {
             logFile.set(project.layout.projectDirectory.file(".localnet/seednode_1_shell.log"))
         }
 
+        val stopFirstSeedNodeTask = project.tasks.register<KillTask>("stopRegtestFirstSeednode") {
+            pidFile.set(startFirstSeedNodeTask.flatMap { it.pidFile })
+        }
+
         val startSecondSeedNodeTask = project.tasks.register<StartBisqTask>("startRegtestSecondSeednode") {
             dependsOn(startBitcoindTask)
             dependsOn(startFirstSeedNodeTask)
+
+            pidFile.set(project.layout.projectDirectory.file(".localnet/seednode_2.pid"))
             startScriptFile.set(project.layout.projectDirectory.file("bisq-seednode"))
 
             arguments.set(
@@ -44,10 +58,15 @@ class RegtestPlugin : Plugin<Project> {
             logFile.set(project.layout.projectDirectory.file(".localnet/seednode_2_shell.log"))
         }
 
+        val stopSeedNodeTask = project.tasks.register<KillTask>("stopRegtestSecondSeednode") {
+            pidFile.set(startSecondSeedNodeTask.flatMap { it.pidFile })
+        }
+
         val startMediatorTask = project.tasks.register<StartBisqTask>("startRegtestMediator") {
             dependsOn(startFirstSeedNodeTask)
             dependsOn(startSecondSeedNodeTask)
 
+            pidFile.set(project.layout.projectDirectory.file(".localnet/mediator.pid"))
             startScriptFile.set(project.layout.projectDirectory.file("bisq-desktop"))
 
             arguments.set(
@@ -58,10 +77,15 @@ class RegtestPlugin : Plugin<Project> {
             logFile.set(project.layout.projectDirectory.file(".localnet/mediator_shell.log"))
         }
 
+        val stopMediatorTask = project.tasks.register<KillTask>("stopRegtestMediator") {
+            pidFile.set(startMediatorTask.flatMap { it.pidFile })
+        }
+
         val startAliceTask = project.tasks.register<StartBisqTask>("startRegtestAlice") {
             dependsOn(startFirstSeedNodeTask)
             dependsOn(startSecondSeedNodeTask)
 
+            pidFile.set(project.layout.projectDirectory.file(".localnet/alice.pid"))
             startScriptFile.set(project.layout.projectDirectory.file("bisq-desktop"))
 
             val additionalArgs = listOf(
@@ -80,10 +104,15 @@ class RegtestPlugin : Plugin<Project> {
             logFile.set(project.layout.projectDirectory.file(".localnet/alice_shell.log"))
         }
 
-        project.tasks.register<StartBisqTask>("startRegtest") {
+        val stopAliceTask = project.tasks.register<KillTask>("stopRegtestAlice") {
+            pidFile.set(startAliceTask.flatMap { it.pidFile })
+        }
+
+        val startBobTask = project.tasks.register<StartBisqTask>("startRegtest") {
             dependsOn(startMediatorTask)
             dependsOn(startAliceTask)
 
+            pidFile.set(project.layout.projectDirectory.file(".localnet/bob.pid"))
             startScriptFile.set(project.layout.projectDirectory.file("bisq-desktop"))
 
             arguments.set(
@@ -92,6 +121,18 @@ class RegtestPlugin : Plugin<Project> {
 
             workingDirectory.set(project.layout.projectDirectory)
             logFile.set(project.layout.projectDirectory.file(".localnet/bob_shell.log"))
+        }
+
+        project.tasks.register<KillTask>("stopRegtest") {
+            dependsOn(stopBitcoindTask)
+
+            dependsOn(stopFirstSeedNodeTask)
+            dependsOn(stopSeedNodeTask)
+
+            dependsOn(stopMediatorTask)
+            dependsOn(stopAliceTask)
+
+            pidFile.set(startBobTask.flatMap { it.pidFile })
         }
     }
 
