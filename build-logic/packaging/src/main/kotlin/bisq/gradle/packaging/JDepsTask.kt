@@ -20,7 +20,7 @@ abstract class JDepsTask : DefaultTask() {
     abstract val jdkDirectory: DirectoryProperty
 
     @get:InputDirectory
-    abstract val javaFxSdkDirectory: DirectoryProperty
+    abstract val javaModulesDirectory: DirectoryProperty
 
     @get:InputFile
     abstract val jarFileToAnalyze: RegularFileProperty
@@ -42,11 +42,9 @@ abstract class JDepsTask : DefaultTask() {
 
     private fun createAndRunJDepsProcess(): Process {
         val jDepsPath = jdkDirectory.asFile.get().toPath().resolve("bin").resolve("jdeps")
-        val javaFxSdkLibDirPath = javaFxSdkDirectory.asFile.get().toPath().resolve("lib")
-
         val processBuilder = ProcessBuilder(
                 jDepsPath.toAbsolutePath().toString(),
-                "--module-path", javaFxSdkLibDirPath.toAbsolutePath().toString(),
+                "--module-path", javaModulesDirectory.asFile.get().absolutePath,
                 "-s", jarFileToAnalyze.asFile.get().absolutePath
         )
 
