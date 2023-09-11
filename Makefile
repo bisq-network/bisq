@@ -100,7 +100,7 @@
 
 # Set up everything necessary for deploying your localnet. This is the
 # default target.
-setup: build .localnet
+setup: .localnet
 
 clean: clean-build clean-localnet
 
@@ -109,15 +109,6 @@ clean-build:
 
 clean-localnet:
 	rm -rf .localnet ./dao-setup
-
-# Build Bisq binaries and shell scripts used in the targets below
-build: seednode/build desktop/build
-
-seednode/build:
-	./gradlew :seednode:build
-
-desktop/build:
-	./gradlew :desktop:build
 
 # Unpack and customize a Bitcoin regtest node and Alice and Bob Bisq
 # nodes that have been preconfigured with a blockchain containing the
