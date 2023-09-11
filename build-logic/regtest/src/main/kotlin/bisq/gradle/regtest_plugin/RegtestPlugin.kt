@@ -19,7 +19,7 @@ class RegtestPlugin : Plugin<Project> {
             blockNotifyArg.set(".localnet/bitcoind/blocknotify %s")
         }
 
-        val startFirstSeedNodeTask = project.tasks.register<StartSeedNodeTask>("startRegtestFirstSeednode") {
+        val startFirstSeedNodeTask = project.tasks.register<StartBisqTask>("startRegtestFirstSeednode") {
             dependsOn(startBitcoindTask)
             startScriptFile.set(project.layout.projectDirectory.file("bisq-seednode"))
 
@@ -31,7 +31,7 @@ class RegtestPlugin : Plugin<Project> {
             logFile.set(project.layout.projectDirectory.file(".localnet/seednode_1_shell.log"))
         }
 
-        val startSecondSeedNodeTask = project.tasks.register<StartSeedNodeTask>("startRegtestSecondSeednode") {
+        val startSecondSeedNodeTask = project.tasks.register<StartBisqTask>("startRegtestSecondSeednode") {
             dependsOn(startBitcoindTask)
             dependsOn(startFirstSeedNodeTask)
             startScriptFile.set(project.layout.projectDirectory.file("bisq-seednode"))
@@ -43,20 +43,86 @@ class RegtestPlugin : Plugin<Project> {
             workingDirectory.set(project.layout.projectDirectory)
             logFile.set(project.layout.projectDirectory.file(".localnet/seednode_2_shell.log"))
         }
+
+        val startMediatorTask = project.tasks.register<StartBisqTask>("startRegtestMediator") {
+            dependsOn(startFirstSeedNodeTask)
+            dependsOn(startSecondSeedNodeTask)
+
+            startScriptFile.set(project.layout.projectDirectory.file("bisq-desktop"))
+
+            arguments.set(
+                    createBisqUserArgs(4444, ".localnet/mediator", "Mediator")
+            )
+
+            workingDirectory.set(project.layout.projectDirectory)
+            logFile.set(project.layout.projectDirectory.file(".localnet/mediator_shell.log"))
+        }
+
+        val startAliceTask = project.tasks.register<StartBisqTask>("startRegtestAlice") {
+            dependsOn(startFirstSeedNodeTask)
+            dependsOn(startSecondSeedNodeTask)
+
+            startScriptFile.set(project.layout.projectDirectory.file("bisq-desktop"))
+
+            val additionalArgs = listOf(
+                    "--fullDaoNode=true",
+                    "--rpcUser=bisqdao",
+                    "--rpcPassword=bsq",
+                    "--rpcBlockNotificationPort=5122",
+                    "--genesisBlockHeight=111",
+                    "--genesisTxId=30af0050040befd8af25068cc697e418e09c2d8ebd8d411d2240591b9ec203cf"
+            )
+            arguments.set(
+                    createBisqUserArgs(5555, ".localnet/alice", "Alice", additionalArgs)
+            )
+
+            workingDirectory.set(project.layout.projectDirectory)
+            logFile.set(project.layout.projectDirectory.file(".localnet/alice_shell.log"))
+        }
+
+        project.tasks.register<StartBisqTask>("startRegtest") {
+            dependsOn(startMediatorTask)
+            dependsOn(startAliceTask)
+
+            startScriptFile.set(project.layout.projectDirectory.file("bisq-desktop"))
+
+            arguments.set(
+                    createBisqUserArgs(6666, ".localnet/bob", "Bob")
+            )
+
+            workingDirectory.set(project.layout.projectDirectory)
+            logFile.set(project.layout.projectDirectory.file(".localnet/bob_shell.log"))
+        }
     }
 
-    private fun createSeedNodeArgs(blockNotificationPort: Int, nodePort: Int, appName: String): List<String> = listOf(
-            "--baseCurrencyNetwork=BTC_REGTEST",
-            "--useLocalhostForP2P=true",
-            "--useDevPrivilegeKeys=true",
-            "--fullDaoNode=true",
+    private fun createBisqUserArgs(nodePort: Int,
+                                   dataDir: String,
+                                   appName: String,
+                                   additionalArgs: List<String> = emptyList()): List<String> =
+            createBisqCommonArgs(nodePort) +
+                    listOf(
+                            "--appDataDir=$dataDir",
+                            "--appName=$appName"
+                    ) + additionalArgs
 
-            "--rpcUser=${RPC_USER}",
-            "--rpcPassword=${RPC_PASSWORD}",
-            "--rpcBlockNotificationPort=$blockNotificationPort",
+    private fun createSeedNodeArgs(blockNotificationPort: Int, nodePort: Int, appName: String): List<String> =
+            createBisqCommonArgs(nodePort) +
+                    listOf(
+                            "--fullDaoNode=true",
 
-            "--nodePort=$nodePort",
-            "--userDataDir=.localnet",
-            "--appName=$appName"
-    )
+                            "--rpcUser=${RPC_USER}",
+                            "--rpcPassword=${RPC_PASSWORD}",
+                            "--rpcBlockNotificationPort=$blockNotificationPort",
+
+                            "--userDataDir=.localnet",
+                            "--appName=$appName"
+                    )
+
+    private fun createBisqCommonArgs(nodePort: Int): List<String> =
+            listOf(
+                    "--baseCurrencyNetwork=BTC_REGTEST",
+                    "--useLocalhostForP2P=true",
+                    "--useDevPrivilegeKeys=true",
+                    "--nodePort=$nodePort"
+            )
 }

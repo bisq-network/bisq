@@ -10,7 +10,7 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 
-abstract class StartSeedNodeTask : DefaultTask() {
+abstract class StartBisqTask : DefaultTask() {
 
     @get:InputFile
     abstract val startScriptFile: RegularFileProperty
