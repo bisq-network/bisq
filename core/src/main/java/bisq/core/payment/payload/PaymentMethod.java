@@ -124,6 +124,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static final String ACH_TRANSFER_ID = "ACH_TRANSFER";
     public static final String DOMESTIC_WIRE_TRANSFER_ID = "DOMESTIC_WIRE_TRANSFER";
     public static final String BSQ_SWAP_ID = "BSQ_SWAP";
+    public static final String MERCADO_PAGO_ID = "MERCADO_PAGO";
 
     // Cannot be deleted as it would break old trade history entries
     @Deprecated
@@ -187,6 +188,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static PaymentMethod ACH_TRANSFER;
     public static PaymentMethod DOMESTIC_WIRE_TRANSFER;
     public static PaymentMethod BSQ_SWAP;
+    public static PaymentMethod MERCADO_PAGO;
 
     // Cannot be deleted as it would break old trade history entries
     @Deprecated
@@ -264,6 +266,9 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
 
             // Australia
             AUSTRALIA_PAYID = new PaymentMethod(AUSTRALIA_PAYID_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
+
+            // Argentina
+            MERCADO_PAGO = new PaymentMethod(MERCADO_PAGO_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
 
             // China
             ALI_PAY = new PaymentMethod(ALI_PAY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
