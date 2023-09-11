@@ -1,0 +1,16 @@
+#!/bin/bash
+project_dir=$(dirname "${BASH_SOURCE[0]}")
+echo $project_dir
+cd "$project_dir" || exit
+
+args=
+for i in "$@"
+do
+    args+="$i "
+done
+
+if [ ${#@} -eq 0 ]; then
+    ./gradlew :desktop:startBisqApp
+else
+    ./gradlew :desktop:startBisqApp --args \"\""$args"\"\"
+fi

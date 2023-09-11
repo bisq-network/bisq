@@ -6,6 +6,7 @@ dependencyResolutionManagement {
     }
 }
 
+include 'app-start-plugin'
 include 'commons'
 include 'gradle-tasks'
 include 'packaging'
