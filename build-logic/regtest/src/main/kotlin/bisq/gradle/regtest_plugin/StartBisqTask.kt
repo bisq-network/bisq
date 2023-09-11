@@ -10,7 +10,7 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 
-abstract class StartSeedNodeTask : DefaultTask() {
+abstract class StartBisqTask : DefaultTask() {
 
     @get:InputFile
     abstract val startScriptFile: RegularFileProperty
@@ -24,8 +24,17 @@ abstract class StartSeedNodeTask : DefaultTask() {
     @get:Internal
     abstract val logFile: RegularFileProperty
 
+    @get:Internal
+    abstract val pidFile: RegularFileProperty
+
     @TaskAction
     fun run() {
+        ProcessKiller(pidFile.asFile.get())
+                .kill()
+
+        // Wait until process stopped
+        Thread.sleep(5000)
+
         val processBuilder = ProcessBuilder(
                 "bash", startScriptFile.asFile.get().absolutePath, arguments.get().joinToString(" ")
         )
@@ -34,6 +43,11 @@ abstract class StartSeedNodeTask : DefaultTask() {
         processBuilder.redirectErrorStream(true)
         processBuilder.redirectOutput(logFile.asFile.get())
 
-        processBuilder.start()
+        val process = processBuilder.start()
+        val pid = process.pid()
+
+        pidFile.asFile
+                .get()
+                .writeText(pid.toString())
     }
 }
