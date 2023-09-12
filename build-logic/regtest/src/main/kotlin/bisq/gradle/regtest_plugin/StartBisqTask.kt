@@ -4,22 +4,25 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.ListProperty
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.*
 
 abstract class StartBisqTask : DefaultTask() {
 
+    @get:InputDirectory
+    abstract val workingDirectory: DirectoryProperty
+
     @get:InputFile
-    abstract val startScriptFile: RegularFileProperty
+    abstract val javaExecutable: RegularFileProperty
+
+    @get:InputDirectory
+    abstract val libsDir: DirectoryProperty
+
+    @get:Input
+    abstract val mainClass: Property<String>
 
     @get:Input
     abstract val arguments: ListProperty<String>
-
-    @get:InputDirectory
-    abstract val workingDirectory: DirectoryProperty
 
     @get:Internal
     abstract val logFile: RegularFileProperty
@@ -30,14 +33,28 @@ abstract class StartBisqTask : DefaultTask() {
     @TaskAction
     fun run() {
         ProcessKiller(pidFile.asFile.get())
-                .kill()
+            .kill()
 
         // Wait until process stopped
         Thread.sleep(5000)
 
         val processBuilder = ProcessBuilder(
-                "bash", startScriptFile.asFile.get().absolutePath, arguments.get().joinToString(" ")
+            javaExecutable.asFile.get().absolutePath,
+
+            "-XX:MaxRAM=8g",
+            "-Xss1280k",
+            "-XX:+UseG1GC",
+            "-XX:MaxHeapFreeRatio=10",
+            "-XX:MinHeapFreeRatio=5",
+            "-XX:+UseStringDeduplication",
+            "-Djava.net.preferIPv4Stack=true",
+
+            "-classpath", createClassPath(),
+            mainClass.get(),
         )
+
+        processBuilder.command()
+            .addAll(arguments.get())
 
         processBuilder.directory(workingDirectory.asFile.get())
         processBuilder.redirectErrorStream(true)
@@ -47,7 +64,12 @@ abstract class StartBisqTask : DefaultTask() {
         val pid = process.pid()
 
         pidFile.asFile
-                .get()
-                .writeText(pid.toString())
+            .get()
+            .writeText(pid.toString())
+    }
+
+    private fun createClassPath(): String {
+        val libsDirFile = libsDir.asFile.get()
+        return libsDirFile.listFiles()!!.joinToString(separator = ":") { it.absolutePath }
     }
 }
