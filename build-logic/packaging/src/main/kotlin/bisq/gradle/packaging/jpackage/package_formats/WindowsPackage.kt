@@ -8,7 +8,6 @@ class WindowsPackage(private val resourcesPath: Path) : JPackagePackageFormatCon
     override fun createArgumentsForJPackage(packageFormat: PackageFormat): List<String> =
             mutableListOf(
                     "--icon", resourcesPath.resolve("Bisq.ico").toAbsolutePath().toString(),
-                    "--resource-dir", resourcesPath.toAbsolutePath().toString(),
 
                     "--win-dir-chooser",
                     "--win-per-user-install",
