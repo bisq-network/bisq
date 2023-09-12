@@ -152,12 +152,6 @@ deploy: setup
 	sleep 5
 	# generate a block to ensure Bisq nodes get dao-synced
 	make block
-	tail -f .localnet/bitcoind_shell.log \
-			.localnet/seednode_1_shell.log \
-			.localnet/seednode_2_shell.log \
-			.localnet/alice_shell.log \
-			.localnet/bob_shell.log \
-			.localnet/mediator_shell.log
 
 # Undeploy a running localnet by killing all Bitcoin and Bisq
 # node processes, then killing the localnet screen session altogether
