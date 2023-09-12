@@ -6,14 +6,14 @@ pluginManagement {
 }
 
 plugins {
-    id("org.gradle.toolchains.foojay-resolver") version "0.7.0"
+    id 'bisq.gradle.toolchain_resolver.ToolchainResolverPlugin'
 }
 
 toolchainManagement {
     jvm {
         javaRepositories {
-            repository("foojay") {
-                resolverClass = org.gradle.toolchains.foojay.FoojayToolchainResolver
+            repository("bisq_zulu") {
+                resolverClass = bisq.gradle.toolchain_resolver.BisqToolchainResolver
             }
         }
     }
