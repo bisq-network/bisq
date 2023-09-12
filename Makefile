@@ -165,16 +165,7 @@ undeploy:
 	./gradlew :stopRegtest
 
 bitcoind: .localnet
-	bitcoind \
-		-regtest \
-		-prune=0 \
-		-txindex=1 \
-		-peerbloomfilters=1 \
-		-server \
-		-rpcuser=bisqdao \
-		-rpcpassword=bsq \
-		-datadir=.localnet/bitcoind \
-		-blocknotify='.localnet/bitcoind/blocknotify %s'
+	./gradlew :stopRegtestBitcoind :startRegtestBitcoind
 
 seednode: seednode/build
 	./bisq-seednode \
