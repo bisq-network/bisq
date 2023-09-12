@@ -32,12 +32,6 @@ abstract class StartBisqTask : DefaultTask() {
 
     @TaskAction
     fun run() {
-        ProcessKiller(pidFile.asFile.get())
-            .kill()
-
-        // Wait until process stopped
-        Thread.sleep(5000)
-
         val processBuilder = ProcessBuilder(
             javaExecutable.asFile.get().absolutePath,
 
