@@ -56,7 +56,7 @@ public class MercadoPagoForm extends PaymentMethodForm {
                 mercadoPagoAccountPayload.getAccountHolderName());
         addCompactTopLabelTextField(gridPane, gridRow, 1, Res.get("shared.country"),
                 CountryUtil.getNameAndCode(mercadoPagoAccountPayload.getCountryCode()));
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.mercado_pago.holderId"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.mercadoPago.holderId"),
                 mercadoPagoAccountPayload.getAccountHolderId());
         addCompactTopLabelTextField(gridPane, gridRow, 1, Res.get("payment.mercadoPago.site"),
                 MercadoPagoAccount.countryToMercadoPagoSite(mercadoPagoAccountPayload.getCountryCode()));
@@ -85,7 +85,7 @@ public class MercadoPagoForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        InputTextField mobileNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.mercado_pago.holderId"));
+        InputTextField mobileNrInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.mercadoPago.holderId"));
         mobileNrInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             mercadoPagoAccount.setAccountHolderId(newValue);
             updateFromInputs();
@@ -134,7 +134,7 @@ public class MercadoPagoForm extends PaymentMethodForm {
                 Res.get(mercadoPagoAccount.getPaymentMethod().getId()));
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
                 mercadoPagoAccount.getAccountHolderName());
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.mercado_pago.holderId"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.mercadoPago.holderId"),
                 mercadoPagoAccount.getAccountHolderId());
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.country"),
                 mercadoPagoAccount.getCountry() != null ? mercadoPagoAccount.getCountry().name : "");
