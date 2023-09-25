@@ -26,6 +26,11 @@ class AppStartPlugin @Inject constructor(private val javaToolchainService: JavaT
             dependsOn(installDistTask)
             javaLauncher.set(getJavaLauncher(project))
 
+            if (project.name == "seednode") {
+                minHeapSize = "4096M"
+                maxHeapSize = "4096M"
+            }
+
             classpath = installDistTask.map {
                 val appLibsDir = File(it.destinationDir, "lib")
                 val allFiles = appLibsDir.listFiles()
