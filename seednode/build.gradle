@@ -3,7 +3,10 @@ plugins {
     id 'bisq.gradle.app_start_plugin.AppStartPlugin'
 }
 
-mainClassName = 'bisq.seednode.SeedNodeMain'
+application {
+    mainClass = 'bisq.seednode.SeedNodeMain'
+    applicationDefaultJvmArgs = ['-XX:+ExitOnOutOfMemoryError']
+}
 
 dependencies {
     implementation enforcedPlatform(project(':platform'))
