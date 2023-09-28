@@ -3,6 +3,8 @@ plugins {
     id 'bisq.gradle.app_start_plugin.AppStartPlugin'
 }
 
+distTar.enabled = true
+
 mainClassName = 'bisq.seednode.SeedNodeMain'
 
 dependencies {
