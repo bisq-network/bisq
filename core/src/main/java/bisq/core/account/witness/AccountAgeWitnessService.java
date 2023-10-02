@@ -744,18 +744,18 @@ public class AccountAgeWitnessService {
     }
 
     public Optional<SignedWitness> traderSignAndPublishPeersAccountAgeWitness(Trade trade) {
-        AccountAgeWitness peersWitness = findTradePeerWitness(trade).orElse(null);
-        Coin tradeAmount = trade.getAmount();
-        checkNotNull(trade.getProcessModel().getTradePeer().getPubKeyRing(), "Peer must have a keyring");
-        PublicKey peersPubKey = trade.getProcessModel().getTradePeer().getPubKeyRing().getSignaturePubKey();
-        checkNotNull(peersWitness, "Not able to find peers witness, unable to sign for trade {}",
-                trade.toString());
-        checkNotNull(tradeAmount, "Trade amount must not be null");
-        checkNotNull(peersPubKey, "Peers pub key must not be null");
-
         try {
+            AccountAgeWitness peersWitness = findTradePeerWitness(trade).orElse(null);
+            Coin tradeAmount = trade.getAmount();
+            checkNotNull(trade.getProcessModel().getTradePeer().getPubKeyRing(), "Peer must have a keyring");
+            PublicKey peersPubKey = trade.getProcessModel().getTradePeer().getPubKeyRing().getSignaturePubKey();
+            checkNotNull(peersWitness, "Not able to find peers witness, unable to sign for trade {}",
+                    trade.toString());
+            checkNotNull(tradeAmount, "Trade amount must not be null");
+            checkNotNull(peersPubKey, "Peers pub key must not be null");
+
             return signedWitnessService.signAndPublishAccountAgeWitness(tradeAmount, peersWitness, peersPubKey);
-        } catch (CryptoException e) {
+        } catch (Exception e) {
             log.warn("Trader failed to sign witness, exception {}", e.toString());
         }
         return Optional.empty();
