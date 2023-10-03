@@ -1,0 +1,23 @@
+version: '3.7'
+
+services:
+    bisq-seednode:
+        image: bisq/seednode:latest
+        command:
+            - --fullDaoNode=${BISQ_DAO_FULLNODE}
+            - --userDataDir=${BISQ_HOME}
+            - --appName=${BISQ_APP_NAME}
+            - --baseCurrencyNetwork=${BISQ_BASE_CURRENCY}
+            - --maxConnections=${BISQ_MAX_CONNECTIONS}
+            - --maxMemory=${BISQ_MAX_MEMORY}
+            - --nodePort=${BISQ_NODE_PORT}
+            - --btcNodes=${BITCOIN_P2P_HOST}:${BITCOIN_P2P_PORT}
+            - --rpcBlockNotificationHost=${BITCOIN_RPC_BLOCKNOTIFY_HOST}
+            - --rpcBlockNotificationPort=${BITCOIN_RPC_BLOCKNOTIFY_PORT}
+            - --rpcHost=${BITCOIN_RPC_HOST}
+            - --rpcPort=${BITCOIN_RPC_PORT}
+            - --rpcUser=${BITCOIN_RPC_USER}
+            - --rpcPassword=${BITCOIN_RPC_PASS}
+            - --dumpBlockchainData=${BISQ_DUMP_BLOCKCHAIN}
+            - --dumpStatistics=${BISQ_DUMP_STATISTICS}
+            - --torControlPort=${BISQ_EXTERNAL_TOR_PORT}

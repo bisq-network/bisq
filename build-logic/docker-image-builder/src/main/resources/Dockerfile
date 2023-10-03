@@ -6,4 +6,4 @@ RUN tar xvf /seednode.tar
 FROM gcr.io/distroless/java11-debian11
 COPY --from=build /seednode /seednode
 
-ENTRYPOINT ["java", "-classpath",  "'{{ CLASS_PATH }}'", "'{{ MAIN_CLASS }}'"]
+ENTRYPOINT ["java", "-classpath", "'{{ CLASS_PATH }}'", "'{{ MAIN_CLASS }}'"]
