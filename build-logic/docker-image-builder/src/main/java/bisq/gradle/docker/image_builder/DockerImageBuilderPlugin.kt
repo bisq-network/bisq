@@ -44,5 +44,10 @@ class DockerImageBuilderPlugin : Plugin<Project> {
             imageTag.set("bisq/seednode:latest")
             dockerDirectory.set(seednodeBuildDir)
         }
+
+        project.tasks.register<DockerBuildTask>("torDockerImage") {
+            imageTag.set("bisq/tor:latest")
+            dockerDirectory.set(project.layout.projectDirectory.dir("deployment_v2/docker/tor"))
+        }
     }
 }
