@@ -20,9 +20,10 @@ class DockerImageBuilderPlugin : Plugin<Project> {
         val installDistTask: TaskProvider<Sync> = project.tasks.named("installDist", Sync::class.java)
         val distTarTask: TaskProvider<Tar> = project.tasks.named("distTar", Tar::class.java)
 
+        val seednodeBuildDir = project.layout.buildDirectory.dir("docker")
         val copyTask = project.tasks.register<Copy>("copyDistTar") {
             from(distTarTask.flatMap { it.archiveFile })
-            into(project.layout.buildDirectory.dir("docker"))
+            into(seednodeBuildDir)
         }
 
         project.tasks.register<CreateDockerfileTask>("generateDockerfile") {
@@ -38,8 +39,10 @@ class DockerImageBuilderPlugin : Plugin<Project> {
             outputFile.set(project.layout.buildDirectory.file("docker/Dockerfile"))
         }
 
-        project.tasks.register<DockerBuildTask>("dockerImage") {
-            dockerDirectory.set(copyTask.map { it.destinationDir })
+        project.tasks.register<DockerBuildTask>("seednodeDockerImage") {
+            dependsOn(copyTask)
+            imageTag.set("bisq/seednode:latest")
+            dockerDirectory.set(seednodeBuildDir)
         }
     }
 }
