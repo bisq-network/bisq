@@ -40,7 +40,7 @@ logback = { strictly = '1.1.11' }
 lombok = { strictly = '1.18.22' }
 mockito = { strictly = '4.0.0' }
 natpryce-make-it-easy = { strictly = '4.0.1' }
-netlayer = { strictly = '0.7.6' }
+netlayer = { strictly = '690d7dd' }
 openjfx-javafx-plugin = { strictly = '0.0.10' }
 protobuf = { strictly = '3.19.1' }
 qrgen = { strictly = '1.3' }
