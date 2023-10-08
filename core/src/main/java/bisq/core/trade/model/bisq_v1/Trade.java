@@ -441,6 +441,11 @@ public abstract class Trade extends TradeModel {
     @Getter
     transient final private IntegerProperty assetTxProofResultUpdateProperty = new SimpleIntegerProperty();
 
+    // Added in v.1.9.13
+    @Getter
+    @Setter
+    private long sellerConfirmedPaymentReceiptDate;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, initialization
@@ -527,7 +532,8 @@ public abstract class Trade extends TradeModel {
                         .map(msg -> msg.toProtoNetworkEnvelope().getChatMessage())
                         .collect(Collectors.toList()))
                 .setLockTime(lockTime)
-                .setUid(uid);
+                .setUid(uid)
+                .setSellerConfirmedPaymentReceiptDate(sellerConfirmedPaymentReceiptDate);
 
         Optional.ofNullable(takerFeeTxId).ifPresent(builder::setTakerFeeTxId);
         Optional.ofNullable(depositTxId).ifPresent(builder::setDepositTxId);
@@ -596,6 +602,8 @@ public abstract class Trade extends TradeModel {
         trade.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)
                 .collect(Collectors.toList()));
+
+        trade.setSellerConfirmedPaymentReceiptDate(proto.getSellerConfirmedPaymentReceiptDate());
 
         return trade;
     }
