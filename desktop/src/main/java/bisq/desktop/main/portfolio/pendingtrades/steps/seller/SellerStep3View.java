@@ -29,6 +29,7 @@ import bisq.desktop.main.dao.wallet.tx.BsqTxView;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.portfolio.pendingtrades.PendingTradesViewModel;
 import bisq.desktop.main.portfolio.pendingtrades.steps.TradeStepView;
+import bisq.desktop.util.DisplayUtils;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.Res;
@@ -74,7 +75,9 @@ import org.fxmisc.easybind.Subscription;
 
 import javafx.beans.value.ChangeListener;
 
+import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
@@ -98,6 +101,8 @@ public class SellerStep3View extends TradeStepView {
     private TxConfidenceIndicator assetTxConfidenceIndicator;
     @Nullable
     private ChangeListener<Number> proofResultListener;
+    @Nullable
+    private Timer payoutDelayTimer;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -169,6 +174,8 @@ public class SellerStep3View extends TradeStepView {
 
             applyAssetTxProofResult(trade.getAssetTxProofResult());
         }
+
+        updateConfirmButton();
     }
 
     @Override
@@ -188,6 +195,11 @@ public class SellerStep3View extends TradeStepView {
 
         if (isXmrTrade()) {
             trade.getAssetTxProofResultUpdateProperty().removeListener(proofResultListener);
+        }
+
+        if (payoutDelayTimer != null) {
+            payoutDelayTimer.stop();
+            payoutDelayTimer = null;
         }
     }
 
@@ -363,7 +375,7 @@ public class SellerStep3View extends TradeStepView {
     protected void updateDisputeState(Trade.DisputeState disputeState) {
         super.updateDisputeState(disputeState);
 
-        confirmButton.setDisable(!trade.confirmPermitted());
+        updateConfirmButtonDisableState();
     }
 
     @Override
@@ -475,14 +487,60 @@ public class SellerStep3View extends TradeStepView {
 
     private void confirmPaymentReceived() {
         log.info("User pressed the [Confirm payment receipt] button for Trade {}", trade.getShortId());
-        busyAnimation.play();
-        statusLabel.setText(Res.get("shared.sendingConfirmation"));
 
-        model.dataModel.onFiatPaymentReceived(() -> {
-        }, errorMessage -> {
-            busyAnimation.stop();
-            new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
-        });
+        model.dataModel.setSellerConfirmedPaymentReceiptDate();
+        updateConfirmButton();
+        if (!model.dataModel.requiresPayoutDelay() || model.dataModel.requiredPayoutDelayHasPassed()) {
+            onReleaseBitcoin();
+        }
+    }
+
+    private void updateConfirmButton() {
+        if (model.dataModel.requiresPayoutDelay() &&
+                model.dataModel.getSellerConfirmedPaymentReceiptDate() > 0) {
+            if (payoutDelayTimer == null) {
+                confirmButton.setText(Res.get("portfolio.pending.step3_seller.releaseBitcoin"));
+                confirmButton.setOnAction(e -> onReleaseBitcoin());
+                payoutDelayTimer = UserThread.runPeriodically(this::updateConfirmButtonDisableState, 1, TimeUnit.SECONDS);
+            }
+            if (!model.dataModel.requiredPayoutDelayHasPassed()) {
+                new Popup().warning(Res.get("portfolio.pending.step3_seller.delayedPayout",
+                                Objects.requireNonNull(model.dataModel.getTrade()).getShortId(),
+                                DisplayUtils.formatDateTime(model.dataModel.getDelayedPayoutDate())))
+                        .closeButtonText(Res.get("shared.iUnderstand"))
+                        .show();
+            }
+        } else {
+            if (payoutDelayTimer != null) {
+                payoutDelayTimer.stop();
+                payoutDelayTimer = null;
+            }
+            confirmButton.setText(Res.get("portfolio.pending.step3_seller.confirmReceipt"));
+            confirmButton.setOnAction(e -> onPaymentReceived());
+        }
+        updateConfirmButtonDisableState();
+    }
+
+    private void updateConfirmButtonDisableState() {
+        boolean confirmedReceiptAndRequiredDelayNotPassed = model.dataModel.getSellerConfirmedPaymentReceiptDate() > 0 &&
+                model.dataModel.requiresPayoutDelay() &&
+                !model.dataModel.requiredPayoutDelayHasPassed();
+        confirmButton.setDisable(!trade.confirmPermitted() || confirmedReceiptAndRequiredDelayNotPassed);
+    }
+
+    private void onReleaseBitcoin() {
+        if (!model.dataModel.requiresPayoutDelay() || model.dataModel.requiredPayoutDelayHasPassed()) {
+            busyAnimation.play();
+            statusLabel.setText(Res.get("shared.sendingConfirmation"));
+
+            model.dataModel.onFiatPaymentReceived(() -> {
+            }, errorMessage -> {
+                busyAnimation.stop();
+                new Popup().warning(Res.get("popup.warning.sendMsgFailed")).show();
+            });
+        } else {
+            log.error("Release Bitcoin is only permitted if no delayed payout is required or delay has passed");
+        }
     }
 
     private Optional<String> getOptionalHolderName() {

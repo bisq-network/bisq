@@ -32,6 +32,7 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoFacade;
+import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
@@ -62,6 +63,7 @@ import bisq.core.util.coin.CoinFormatter;
 
 import bisq.network.p2p.P2PService;
 
+import bisq.common.app.DevEnv;
 import bisq.common.crypto.PubKeyRing;
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.FaultHandler;
@@ -88,6 +90,8 @@ import javafx.collections.ObservableList;
 import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.Date;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -113,6 +117,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public final WalletPasswordWindow walletPasswordWindow;
     private final NotificationCenter notificationCenter;
     private final OfferUtil offerUtil;
+    private final FilterManager filterManager;
     private final CoinFormatter btcFormatter;
 
     final ObservableList<PendingTradesListItem> list = FXCollections.observableArrayList();
@@ -151,6 +156,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                                   WalletPasswordWindow walletPasswordWindow,
                                   NotificationCenter notificationCenter,
                                   OfferUtil offerUtil,
+                                  FilterManager filterManager,
                                   @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
         this.tradeManager = tradeManager;
         this.btcWalletService = btcWalletService;
@@ -167,6 +173,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         this.walletPasswordWindow = walletPasswordWindow;
         this.notificationCenter = notificationCenter;
         this.offerUtil = offerUtil;
+        this.filterManager = filterManager;
         this.btcFormatter = formatter;
 
         tradesListChangeListener = change -> onListChanged();
@@ -694,6 +701,34 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                         new Popup().warning(errorMessage).show();
                     }
                 });
+    }
+
+    public boolean requiresPayoutDelay() {
+        return filterManager.isDelayedPayoutPaymentAccount(Objects.requireNonNull(getTrade()).getProcessModel().getTradePeer().getPaymentAccountPayload());
+    }
+
+    public boolean requiredPayoutDelayHasPassed() {
+        return getSellerConfirmedPaymentReceiptDate() > 0 && new Date().after(getDelayedPayoutDate());
+    }
+
+    public void setSellerConfirmedPaymentReceiptDate() {
+        if (getSellerConfirmedPaymentReceiptDate() == 0) {
+            Objects.requireNonNull(getTrade()).setSellerConfirmedPaymentReceiptDate(new Date().getTime());
+            tradeManager.requestPersistence();
+        }
+    }
+
+    public long getSellerConfirmedPaymentReceiptDate() {
+        return Objects.requireNonNull(getTrade()).getSellerConfirmedPaymentReceiptDate();
+    }
+
+    public Date getDelayedPayoutDate() {
+        return new Date(Objects.requireNonNull(getTrade()).getSellerConfirmedPaymentReceiptDate() + getPayoutDelay());
+    }
+
+    private long getPayoutDelay() {
+        return DevEnv.isDevMode() ? TimeUnit.SECONDS.toMillis(10) :
+                TimeUnit.DAYS.toMillis(14);
     }
 }
 
