@@ -76,7 +76,8 @@ public class UserPayloadModelVOTest {
                 0,
                 0,
                 0,
-                0));
+                0,
+                Lists.newArrayList()));
 
         vo.setRegisteredArbitrator(ArbitratorTest.getArbitratorMock());
         vo.setRegisteredMediator(MediatorTest.getMediatorMock());
