@@ -144,6 +144,12 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 Res.get("filterWindow.accounts")).second;
         GridPane.setHalignment(paymentAccountFilterTF, HPos.RIGHT);
         paymentAccountFilterTF.setPromptText("E.g. PERFECT_MONEY|getAccountNr|12345"); // Do not translate
+
+        InputTextField delayedPayoutTF = addTopLabelInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.delayedPayout")).second;
+        GridPane.setHalignment(delayedPayoutTF, HPos.RIGHT);
+        delayedPayoutTF.setPromptText("E.g. SEPA|getBic|COBADEH077X"); // Do not translate
+
         InputTextField bannedCurrenciesTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.bannedCurrencies"));
         InputTextField bannedPaymentMethodsTF = addTopLabelInputTextField(gridPane, ++rowIndex,
@@ -234,6 +240,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
             takerFeeBtcTF.setText(btcFormatter.formatCoin(Coin.valueOf(filter.getTakerFeeBtc())));
             makerFeeBsqTF.setText(bsqFormatter.formatBSQSatoshis(filter.getMakerFeeBsq()));
             takerFeeBsqTF.setText(bsqFormatter.formatBSQSatoshis(filter.getTakerFeeBsq()));
+            setupFieldFromPaymentAccountFiltersList(delayedPayoutTF, filter.getDelayedPayoutPaymentAccounts());
         }
 
         Button removeFilterMessageButton = new AutoTooltipButton(Res.get("filterWindow.remove"));
@@ -276,7 +283,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                         ParsingUtils.parseToCoin(makerFeeBtcTF.getText(), btcFormatter).value,
                         ParsingUtils.parseToCoin(takerFeeBtcTF.getText(), btcFormatter).value,
                         ParsingUtils.parseToCoin(makerFeeBsqTF.getText(), bsqFormatter).value,
-                        ParsingUtils.parseToCoin(takerFeeBsqTF.getText(), bsqFormatter).value
+                        ParsingUtils.parseToCoin(takerFeeBsqTF.getText(), bsqFormatter).value,
+                        readAsPaymentAccountFiltersList(delayedPayoutTF)
                 );
 
                 // We remove first the old filter

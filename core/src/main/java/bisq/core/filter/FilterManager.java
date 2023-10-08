@@ -463,8 +463,25 @@ public class FilterManager {
         return getFilter() != null &&
                 paymentAccountPayload != null &&
                 getFilter().getBannedPaymentAccounts().stream()
-                        .filter(paymentAccountFilter -> paymentAccountFilter.getPaymentMethodId().equals(
-                                paymentAccountPayload.getPaymentMethodId()))
+                        .filter(paymentAccountFilter -> paymentAccountFilter.getPaymentMethodId().equals(paymentAccountPayload.getPaymentMethodId()))
+                        .anyMatch(paymentAccountFilter -> {
+                            try {
+                                Method method = paymentAccountPayload.getClass().getMethod(paymentAccountFilter.getGetMethodName());
+                                // We invoke getter methods (no args), e.g. getHolderName
+                                String valueFromInvoke = (String) method.invoke(paymentAccountPayload);
+                                return valueFromInvoke.equalsIgnoreCase(paymentAccountFilter.getValue());
+                            } catch (Throwable e) {
+                                log.error(e.getMessage());
+                                return false;
+                            }
+                        });
+    }
+
+    public boolean isDelayedPayoutPaymentAccount(PaymentAccountPayload paymentAccountPayload) {
+        return getFilter() != null &&
+                paymentAccountPayload != null &&
+                getFilter().getDelayedPayoutPaymentAccounts().stream()
+                        .filter(paymentAccountFilter -> paymentAccountFilter.getPaymentMethodId().equals(paymentAccountPayload.getPaymentMethodId()))
                         .anyMatch(paymentAccountFilter -> {
                             try {
                                 Method method = paymentAccountPayload.getClass().getMethod(paymentAccountFilter.getGetMethodName());

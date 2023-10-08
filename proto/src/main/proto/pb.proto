@@ -766,6 +766,7 @@ message Filter {
     int64 maker_fee_bsq = 33;
     int64 taker_fee_bsq = 34;
     repeated int32 enabled_pow_versions = 35;
+    repeated PaymentAccountFilter delayedPayoutPaymentAccounts = 36;
 }
 
 /* Deprecated */
