@@ -766,6 +766,7 @@ message Filter {
     int64 maker_fee_bsq = 33;
     int64 taker_fee_bsq = 34;
     repeated int32 enabled_pow_versions = 35;
+    repeated PaymentAccountFilter delayedPayoutPaymentAccounts = 36;
 }
 
 /* Deprecated */
@@ -1749,6 +1750,7 @@ message Trade {
     string counter_currency_extra_data = 37;
     string asset_tx_proof_result = 38; // name of AssetTxProofResult enum
     string uid = 39;
+    int64 sellerConfirmedPaymentReceiptDate = 40;
 }
 
 message BuyerAsMakerTrade {

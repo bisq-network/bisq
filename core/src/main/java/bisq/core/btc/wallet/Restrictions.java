@@ -78,6 +78,10 @@ public class Restrictions {
         return 0.15; // 15% of trade amount.
     }
 
+    public static double getMinSellerSecurityDepositAsPercent() {
+        return 0.15; // 15% of trade amount.
+    }
+
     public static Coin getMinSellerSecurityDepositAsCoin() {
         if (SELLER_SECURITY_DEPOSIT == null)
             SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.001"); // 0.001 BTC is 60 USD @ 60000 USD/BTC
