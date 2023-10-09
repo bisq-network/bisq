@@ -20,18 +20,17 @@ services:
             - --rpcPassword=${BITCOIN_RPC_PASS}
             - --dumpBlockchainData=${BISQ_DUMP_BLOCKCHAIN}
             - --dumpStatistics=${BISQ_DUMP_STATISTICS}
-            - --torControlPort=${BISQ_EXTERNAL_TOR_PORT}
+            - --torControlHost=bisq-tor
+            - --torControlPort=9051
+            - --torControlPassword=bisq
 
     bisq-tor:
         image: bisq/tor:latest
         command: [ "--allow-missing-torrc",
-                   "--RunAsDaemon", "1",
-                   "--SOCKSPort", "9050",
-                   "--ControlPort", "9051",
+                   "--SOCKSPort", "0.0.0.0:9050",
+                   "--ControlPort", "0.0.0.0:9051",
+                   "--HashedControlPassword", "16:ED08CEBE4E91EA126089506E2880119E20A39054754D3916EAFF774046", # password: bisq
                    "--Log", "notice syslog",
-                   "--CookieAuthentication", "0",
-                   "--CookieAuthFileGroupReadable", "1",
-                   "--DataDirectoryGroupReadable", "1",
                    "--SafeSocks", "0",
                    "--HiddenServiceStatistics", "0",
                    "--AvoidDiskWrites", "1" ]
