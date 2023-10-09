@@ -723,7 +723,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     }
 
     public Date getDelayedPayoutDate() {
-        return new Date(Objects.requireNonNull(getTrade()).getSellerConfirmedPaymentReceiptDate() + getPayoutDelay());
+        return new Date(getSellerConfirmedPaymentReceiptDate() + getPayoutDelay());
     }
 
     private long getPayoutDelay() {
