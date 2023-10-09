@@ -2,8 +2,8 @@
 
 cd $(dirname $0)/../../../.
 
-oldVersion=1.9.12
-newVersion=1.9.13
+oldVersion=1.9.13
+newVersion=1.9.14
 
 find . -type f \( -name "finalize.sh" \
 -o -name "create_app.sh" \
@@ -13,12 +13,12 @@ find . -type f \( -name "finalize.sh" \
 -o -name "release.sh" \
 -o -name "package.sh" \
 -o -name "version.txt" \
-\) -exec sed -i '' s/"$oldVersion-SNAPSHOT"/$newVersion/ {} +
+\) -exec sed -i s/"$oldVersion-SNAPSHOT"/$newVersion/ {} +
 
 find . -type f \( -name "Info.plist" \
 -o -name "PackagingPlugin.kt" \
 -o -name "SeedNodeMain.java" \
 -o -name "Version.java" \
 -o -name "copy_dbs.sh" \
-\) -exec sed -i '' s/$oldVersion/$newVersion/ {} +
+\) -exec sed -i s/$oldVersion/$newVersion/ {} +
 
