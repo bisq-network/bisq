@@ -503,12 +503,17 @@ public class SellerStep3View extends TradeStepView {
                 confirmButton.setOnAction(e -> onReleaseBitcoin());
                 payoutDelayTimer = UserThread.runPeriodically(this::updateConfirmButtonDisableState, 1, TimeUnit.SECONDS);
             }
-            if (!model.dataModel.requiredPayoutDelayHasPassed()) {
-                new Popup().warning(Res.get("portfolio.pending.step3_seller.delayedPayout",
-                                Objects.requireNonNull(model.dataModel.getTrade()).getShortId(),
-                                DisplayUtils.formatDateTime(model.dataModel.getDelayedPayoutDate())))
-                        .closeButtonText(Res.get("shared.iUnderstand"))
-                        .show();
+            String tradeId = Objects.requireNonNull(model.dataModel.getTrade()).getShortId();
+            String key = "trade.delayedPayout." + tradeId;
+            if (DontShowAgainLookup.showAgain(key)) {
+                if (!model.dataModel.requiredPayoutDelayHasPassed()) {
+                    new Popup().warning(Res.get("portfolio.pending.step3_seller.delayedPayout",
+                                    tradeId,
+                                    DisplayUtils.formatDateTime(model.dataModel.getDelayedPayoutDate())))
+                            .closeButtonText(Res.get("shared.iUnderstand"))
+                            .dontShowAgainId(key)
+                            .show();
+                }
             }
         } else {
             if (payoutDelayTimer != null) {
