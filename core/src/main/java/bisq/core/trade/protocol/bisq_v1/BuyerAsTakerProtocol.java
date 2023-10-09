@@ -28,6 +28,7 @@ import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxResponse;
 import bisq.core.trade.protocol.bisq_v1.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bisq_v1.tasks.CheckIfDaoStateIsInSync;
+import bisq.core.trade.protocol.bisq_v1.tasks.CheckRestrictions;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerFinalizesDelayedPayoutTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerProcessDelayedPayoutTxSignatureRequest;
@@ -80,6 +81,7 @@ public class BuyerAsTakerProtocol extends BuyerProtocol implements TakerProtocol
                 .setup(tasks(
                         CheckIfDaoStateIsInSync.class,
                         ApplyFilter.class,
+                        CheckRestrictions.class,
                         getVerifyPeersFeePaymentClass(),
                         CreateTakerFeeTx.class,
                         BuyerAsTakerCreatesDepositTxInputs.class,

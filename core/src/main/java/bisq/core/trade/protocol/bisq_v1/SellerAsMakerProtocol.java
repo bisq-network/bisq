@@ -28,6 +28,7 @@ import bisq.core.trade.protocol.bisq_v1.messages.DepositTxMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bisq_v1.tasks.CheckIfDaoStateIsInSync;
+import bisq.core.trade.protocol.bisq_v1.tasks.CheckRestrictions;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerCreateAndSignContract;
 import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerProcessesInputsForDepositTxRequest;
@@ -78,6 +79,7 @@ public class SellerAsMakerProtocol extends SellerProtocol implements MakerProtoc
                         MaybeCreateSubAccount.class,
                         MakerProcessesInputsForDepositTxRequest.class,
                         ApplyFilter.class,
+                        CheckRestrictions.class,
                         getVerifyPeersFeePaymentClass(),
                         MakerSetsLockTime.class,
                         MakerCreateAndSignContract.class,
