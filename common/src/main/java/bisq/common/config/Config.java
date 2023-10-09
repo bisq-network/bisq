@@ -88,6 +88,7 @@ public class Config {
     public static final String USE_TOR_FOR_BTC = "useTorForBtc";
     public static final String TORRC_FILE = "torrcFile";
     public static final String TORRC_OPTIONS = "torrcOptions";
+    public static final String TOR_CONTROL_HOST = "torControlHost";
     public static final String TOR_CONTROL_PORT = "torControlPort";
     public static final String TOR_CONTROL_PASSWORD = "torControlPassword";
     public static final String TOR_CONTROL_COOKIE_FILE = "torControlCookieFile";
@@ -187,6 +188,7 @@ public class Config {
     public final String socks5ProxyHttpAddress;
     public final File torrcFile;
     public final String torrcOptions;
+    public final String torControlHost;
     public final int torControlPort;
     public final String torControlPassword;
     public final File torControlCookieFile;
@@ -469,6 +471,11 @@ public class Config {
                         .withRequiredArg()
                         .withValuesConvertedBy(RegexMatcher.regex("^([^\\s,]+\\s[^,]+,?\\s*)+$"))
                         .defaultsTo("");
+
+        ArgumentAcceptingOptionSpec<String> torControlHostOpt =
+                parser.accepts(TOR_CONTROL_HOST, "The control hostname of an already running Tor service to be used by Bisq.")
+                        .withRequiredArg()
+                        .defaultsTo("127.0.0.1");
 
         ArgumentAcceptingOptionSpec<Integer> torControlPortOpt =
                 parser.accepts(TOR_CONTROL_PORT,
@@ -778,6 +785,7 @@ public class Config {
             this.bitcoinRegtestHost = options.valueOf(bitcoinRegtestHostOpt);
             this.torrcFile = options.has(torrcFileOpt) ? options.valueOf(torrcFileOpt).toFile() : null;
             this.torrcOptions = options.valueOf(torrcOptionsOpt);
+            this.torControlHost = options.valueOf(torControlHostOpt);
             this.torControlPort = options.valueOf(torControlPortOpt);
             this.torControlPassword = options.valueOf(torControlPasswordOpt);
             this.torControlCookieFile = options.has(torControlCookieFileOpt) ?

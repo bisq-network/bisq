@@ -40,15 +40,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RunningTor extends TorMode {
 
+    private final String controlHost;
     private final int controlPort;
     private final String password;
     private final File cookieFile;
     private final boolean useSafeCookieAuthentication;
 
 
-    public RunningTor(final File torDir, final int controlPort, final String password, final File cookieFile,
+    public RunningTor(final File torDir, final String controlHost, final int controlPort, final String password, final File cookieFile,
             final boolean useSafeCookieAuthentication) {
         super(torDir);
+        this.controlHost = controlHost;
         this.controlPort = controlPort;
         this.password = password;
         this.cookieFile = cookieFile;
@@ -63,11 +65,11 @@ public class RunningTor extends TorMode {
 
         Tor result;
         if (!password.isEmpty())
-            result = new ExternalTor(controlPort, password);
+            result = new ExternalTor(controlHost, controlPort, password);
         else if (cookieFile != null && cookieFile.exists())
-            result = new ExternalTor(controlPort, cookieFile, useSafeCookieAuthentication);
+            result = new ExternalTor(controlHost, controlPort, cookieFile, useSafeCookieAuthentication);
         else
-            result = new ExternalTor(controlPort);
+            result = new ExternalTor(controlHost, controlPort);
 
         log.info(
                 "\n################################################################\n"

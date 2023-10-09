@@ -51,6 +51,7 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
                                @Named(Config.TOR_DIR) File torDir,
                                @Nullable @Named(Config.TORRC_FILE) File torrcFile,
                                @Named(Config.TORRC_OPTIONS) String torrcOptions,
+                               @Named(Config.TOR_CONTROL_HOST) String controlHost,
                                @Named(Config.TOR_CONTROL_PORT) int controlPort,
                                @Named(Config.TOR_CONTROL_PASSWORD) String password,
                                @Nullable @Named(Config.TOR_CONTROL_COOKIE_FILE) File cookieFile,
@@ -63,6 +64,7 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
                     torDir,
                     torrcFile,
                     torrcOptions,
+                    controlHost,
                     controlPort,
                     password,
                     cookieFile,
@@ -75,12 +77,13 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
                                File torDir,
                                @Nullable File torrcFile,
                                String torrcOptions,
+                               String controlHost,
                                int controlPort,
                                String password,
                                @Nullable File cookieFile,
                                boolean useSafeCookieAuthentication) {
         return controlPort != Config.UNSPECIFIED_PORT ?
-                new RunningTor(torDir, controlPort, password, cookieFile, useSafeCookieAuthentication) :
+                new RunningTor(torDir, controlHost, controlPort, password, cookieFile, useSafeCookieAuthentication) :
                 new NewTor(torDir, torrcFile, torrcOptions, bridgeAddressProvider);
     }
 
