@@ -310,7 +310,7 @@ public class SellerStep3View extends TradeStepView {
         }
 
         Tuple4<Button, BusyAnimation, Label, HBox> tuple = addButtonBusyAnimationLabelAfterGroup(gridPane, ++gridRow,
-                Res.get("portfolio.pending.step3_seller.confirmReceipt"));
+                Res.get("portfolio.pending.step3_seller.confirmReceipt").toUpperCase());
 
         HBox hBox = tuple.fourth;
         GridPane.setColumnSpan(tuple.fourth, 2);
@@ -499,7 +499,7 @@ public class SellerStep3View extends TradeStepView {
         if (model.dataModel.requiresPayoutDelay() &&
                 model.dataModel.getSellerConfirmedPaymentReceiptDate() > 0) {
             if (payoutDelayTimer == null) {
-                confirmButton.setText(Res.get("portfolio.pending.step3_seller.releaseBitcoin"));
+                confirmButton.setText(Res.get("portfolio.pending.step3_seller.releaseBitcoin").toUpperCase());
                 confirmButton.setOnAction(e -> onReleaseBitcoin());
                 payoutDelayTimer = UserThread.runPeriodically(this::updateConfirmButtonDisableState, 1, TimeUnit.SECONDS);
             }
@@ -520,7 +520,7 @@ public class SellerStep3View extends TradeStepView {
                 payoutDelayTimer.stop();
                 payoutDelayTimer = null;
             }
-            confirmButton.setText(Res.get("portfolio.pending.step3_seller.confirmReceipt"));
+            confirmButton.setText(Res.get("portfolio.pending.step3_seller.confirmReceipt").toUpperCase());
             confirmButton.setOnAction(e -> onPaymentReceived());
         }
         updateConfirmButtonDisableState();
