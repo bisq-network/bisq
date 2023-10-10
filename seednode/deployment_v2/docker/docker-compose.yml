@@ -3,6 +3,8 @@ version: '3.7'
 services:
     bisq-seednode:
         image: bisq/seednode:latest
+        volumes:
+            - bisq_data:/bisq/bisq-seednode
         command:
             - --fullDaoNode=${BISQ_DAO_FULLNODE}
             - --userDataDir=${BISQ_HOME}
@@ -26,6 +28,8 @@ services:
 
     bisq-tor:
         image: bisq/tor:latest
+        volumes:
+            - tor_data:/root/.tor
         command: [ "--allow-missing-torrc",
                    "--SOCKSPort", "0.0.0.0:9050",
                    "--ControlPort", "0.0.0.0:9051",
@@ -34,3 +38,7 @@ services:
                    "--SafeSocks", "0",
                    "--HiddenServiceStatistics", "0",
                    "--AvoidDiskWrites", "1" ]
+
+volumes:
+    bisq_data:
+    tor_data:
