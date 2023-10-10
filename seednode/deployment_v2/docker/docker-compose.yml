@@ -7,6 +7,10 @@ services:
             replicas: 1
             restart_policy:
                 condition: any
+        extra_hosts:
+            - host.docker.internal:host-gateway
+        ports:
+            - 127.0.0.1:5120:5120 # bitcoind rpc block notifications
         volumes:
             - bisq_data:/bisq/bisq-seednode
         command:
