@@ -3,6 +3,10 @@ version: '3.7'
 services:
     bisq-seednode:
         image: bisq/seednode:latest
+        deploy:
+            replicas: 1
+            restart_policy:
+                condition: any
         volumes:
             - bisq_data:/bisq/bisq-seednode
         command:
@@ -28,6 +32,10 @@ services:
 
     bisq-tor:
         image: bisq/tor:latest
+        deploy:
+            replicas: 1
+            restart_policy:
+                condition: any
         volumes:
             - tor_data:/root/.tor
         command: [ "--allow-missing-torrc",
