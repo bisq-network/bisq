@@ -51,6 +51,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 public class TorNetworkNode extends NetworkNode {
     private static final long SHUT_DOWN_TIMEOUT = 2;
 
+    private final String torControlHost;
+
     private HiddenServiceSocket hiddenServiceSocket;
     private Timer shutDownTimeoutTimer;
     private Tor tor;
@@ -70,10 +72,11 @@ public class TorNetworkNode extends NetworkNode {
                           boolean useStreamIsolation,
                           TorMode torMode,
                           @Nullable BanFilter banFilter,
-                          int maxConnections) {
+                          int maxConnections, String torControlHost) {
         super(servicePort, networkProtoResolver, banFilter, maxConnections);
         this.torMode = torMode;
         this.streamIsolation = useStreamIsolation;
+        this.torControlHost = torControlHost;
 
         executor = SingleThreadExecutorUtils.getSingleThreadExecutor("StartTor");
     }
@@ -98,7 +101,7 @@ public class TorNetworkNode extends NetworkNode {
         checkArgument(peerNodeAddress.getHostName().endsWith(".onion"), "PeerAddress is not an onion address");
         // If streamId is null stream isolation gets deactivated.
         // Hidden services use stream isolation by default, so we pass null.
-        return new TorSocket(peerNodeAddress.getHostName(), peerNodeAddress.getPort(), null);
+        return new TorSocket(peerNodeAddress.getHostName(), peerNodeAddress.getPort(), torControlHost, null);
     }
 
     public Socks5Proxy getSocksProxy() {
@@ -112,7 +115,7 @@ public class TorNetworkNode extends NetworkNode {
 
             if (socksProxy == null || streamIsolation) {
                 tor = Tor.getDefault();
-                socksProxy = tor != null ? tor.getProxy(stream) : null;
+                socksProxy = tor != null ? tor.getProxy(torControlHost, stream) : null;
             }
             return socksProxy;
         } catch (Throwable t) {

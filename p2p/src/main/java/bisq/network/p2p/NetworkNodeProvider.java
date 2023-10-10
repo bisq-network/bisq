@@ -69,7 +69,7 @@ public class NetworkNodeProvider implements Provider<NetworkNode> {
                     password,
                     cookieFile,
                     useSafeCookieAuthentication);
-            networkNode = new TorNetworkNode(port, networkProtoResolver, streamIsolation, torMode, banFilter, maxConnections);
+            networkNode = new TorNetworkNode(port, networkProtoResolver, streamIsolation, torMode, banFilter, maxConnections, controlHost);
         }
     }
 
