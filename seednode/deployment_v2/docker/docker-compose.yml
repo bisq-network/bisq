@@ -10,6 +10,7 @@ services:
         extra_hosts:
             - host.docker.internal:host-gateway
         ports:
+            - ${BISQ_NODE_PORT}:${BISQ_NODE_PORT} # bisq node port
             - 127.0.0.1:5120:5120 # bitcoind rpc block notifications
         volumes:
             - bisq_data:/bisq/bisq-seednode
