@@ -1,8 +1,37 @@
 version: '3.7'
 
 services:
+    bisq-bitcoind:
+        image: bisq/bitcoind:latest
+        deploy:
+            replicas: 1
+            restart_policy:
+                condition: any
+        ports:
+            - 8333:8333 # bitcoind port
+        volumes:
+            - ./bitcoind_data_dir:/root/.bitcoin
+        command:
+            - -server=1
+            - -listen=1
+            - -discover=1
+            - -txindex=1
+            - -dbcache=1337
+            - -maxconnections=1337
+            - -peerbloomfilters=1
+            - -onion=bisq-tor:9050
+            - -rpcallowip=127.0.0.1
+            - -rpcallowip=172.0.0.1/8 # Docker IP range
+            - -rpcuser=${BITCOIN_RPC_USER}
+            - -rpcpassword=${BITCOIN_RPC_PASS}
+            - -blocknotify=/root/.bitcoin/blocknotify.sh %s
+            - -bind=0.0.0.0:${BITCOIN_RPC_PORT}
+            - -rpcbind=0.0.0.0:${BITCOIN_RPC_PORT}
+
     bisq-seednode:
         image: bisq/seednode:latest
+        depends_on:
+            - bisq-bitcoind
         deploy:
             replicas: 1
             restart_policy:
@@ -13,7 +42,7 @@ services:
             - ${BISQ_NODE_PORT}:${BISQ_NODE_PORT} # bisq node port
             - 127.0.0.1:5120:5120 # bitcoind rpc block notifications
         volumes:
-            - bisq_data:/bisq/bisq-seednode
+            - bisq_seednode_data:/bisq/bisq-seednode
         command:
             - --fullDaoNode=${BISQ_DAO_FULLNODE}
             - --userDataDir=${BISQ_HOME}
@@ -53,5 +82,5 @@ services:
                    "--AvoidDiskWrites", "1" ]
 
 volumes:
-    bisq_data:
+    bisq_seednode_data:
     tor_data:
