@@ -107,7 +107,7 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
                     list.add(new NodeAddress(matcher.group(1)));
 
                 // Maybe better include in regex...
-                if (line.startsWith("localhost")) {
+                if (line.startsWith("localhost") || line.startsWith("bisq-seednode-")) {
                     String[] strings = line.split(" \\(@");
                     String node = strings[0];
                     list.add(new NodeAddress(node));
