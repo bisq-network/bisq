@@ -22,14 +22,18 @@ services:
             - -onion=bisq-tor:9050
             - -rpcallowip=127.0.0.1
             - -rpcallowip=172.0.0.1/8 # Docker IP range
-            - -rpcuser=${BITCOIN_RPC_USER}
-            - -rpcpassword=${BITCOIN_RPC_PASS}
+            - -rpcuser=bisq
+            - -rpcpassword=bisq
             - -blocknotify=/root/.bitcoin/blocknotify.sh %s
-            - -bind=0.0.0.0:${BITCOIN_RPC_PORT}
-            - -rpcbind=0.0.0.0:${BITCOIN_RPC_PORT}
+            - -bind=0.0.0.0:8332
+            - -rpcbind=0.0.0.0:8332
 
     bisq-seednode:
         image: bisq/seednode:latest
+        environment:
+            - JDK_JAVA_OPTIONS=-Xms4096M -Xmx4096M -XX:+ExitOnOutOfMemoryError
+        configs:
+            - bisq_seednode_config
         depends_on:
             - bisq-bitcoind
         deploy:
@@ -39,30 +43,11 @@ services:
         extra_hosts:
             - host.docker.internal:host-gateway
         ports:
-            - ${BISQ_NODE_PORT}:${BISQ_NODE_PORT} # bisq node port
-            - 127.0.0.1:5120:5120 # bitcoind rpc block notifications
+            - 8000:8000 # bisq node port
         volumes:
             - bisq_seednode_data:/bisq/bisq-seednode
         command:
-            - --fullDaoNode=${BISQ_DAO_FULLNODE}
-            - --userDataDir=${BISQ_HOME}
-            - --appName=${BISQ_APP_NAME}
-            - --baseCurrencyNetwork=${BISQ_BASE_CURRENCY}
-            - --maxConnections=${BISQ_MAX_CONNECTIONS}
-            - --maxMemory=${BISQ_MAX_MEMORY}
-            - --nodePort=${BISQ_NODE_PORT}
-            - --btcNodes=${BITCOIN_P2P_HOST}:${BITCOIN_P2P_PORT}
-            - --rpcBlockNotificationHost=${BITCOIN_RPC_BLOCKNOTIFY_HOST}
-            - --rpcBlockNotificationPort=${BITCOIN_RPC_BLOCKNOTIFY_PORT}
-            - --rpcHost=${BITCOIN_RPC_HOST}
-            - --rpcPort=${BITCOIN_RPC_PORT}
-            - --rpcUser=${BITCOIN_RPC_USER}
-            - --rpcPassword=${BITCOIN_RPC_PASS}
-            - --dumpBlockchainData=${BISQ_DUMP_BLOCKCHAIN}
-            - --dumpStatistics=${BISQ_DUMP_STATISTICS}
-            - --torControlHost=bisq-tor
-            - --torControlPort=9051
-            - --torControlPassword=bisq
+            - --configFile=/bisq_seednode_config
 
     bisq-tor:
         image: bisq/tor:latest
@@ -80,6 +65,10 @@ services:
                    "--SafeSocks", "0",
                    "--HiddenServiceStatistics", "0",
                    "--AvoidDiskWrites", "1" ]
+
+configs:
+    bisq_seednode_config:
+        file: ./seednode_config
 
 volumes:
     bisq_seednode_data:
