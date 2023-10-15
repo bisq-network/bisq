@@ -18,11 +18,11 @@ services:
             - -onion=bisq-tor:9050
             - -rpcallowip=127.0.0.1
             - -rpcallowip=172.0.0.1/8 # Docker IP range
-            - -rpcuser=${BITCOIN_RPC_USER}
-            - -rpcpassword=${BITCOIN_RPC_PASS}
+            - -rpcuser=bisqdao
+            - -rpcpassword=bsq
             - -blocknotify=/blocknotify.sh %s
-            - -bind=0.0.0.0:${BITCOIN_RPC_PORT}
-            - -rpcbind=0.0.0.0:${BITCOIN_RPC_PORT}
+            - -bind=0.0.0.0:18443
+            - -rpcbind=0.0.0.0:18443
 
     bisq-seednode-1:
         image: bisq/seednode:latest
