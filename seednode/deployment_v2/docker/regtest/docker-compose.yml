@@ -25,6 +25,10 @@ services:
 
     bisq-seednode-1:
         image: bisq/seednode:latest
+        environment:
+            - JDK_JAVA_OPTIONS=-Xms4096M -Xmx4096M -XX:+ExitOnOutOfMemoryError
+        configs:
+            - bisq_seednode_1_config
         depends_on:
             - bisq-bitcoind
         extra_hosts:
@@ -35,22 +39,14 @@ services:
         volumes:
             - bisq_seednode_1_data:/bisq/bisq-seednode
         command:
-            - --baseCurrencyNetwork=${BISQ_BASE_CURRENCY}
-            - --useLocalhostForP2P=true
-            - --useDevPrivilegeKeys=true
-            - --fullDaoNode=${BISQ_DAO_FULLNODE}
-            - --btcNodes=${BITCOIN_P2P_HOST}:${BITCOIN_P2P_PORT}
-            - --rpcHost=${BITCOIN_RPC_HOST}
-            - --rpcPort=${BITCOIN_RPC_PORT}
-            - --rpcUser=${BITCOIN_RPC_USER}
-            - --rpcPassword=${BITCOIN_RPC_PASS}
-            - --rpcBlockNotificationPort=5120
-            - --nodePort=2002
-            - --userDataDir=${BISQ_HOME}
-            - --appName=${BISQ_APP_NAME}
+            - --configFile=/bisq_seednode_1_config
 
     bisq-seednode-2:
         image: bisq/seednode:latest
+        environment:
+            - JDK_JAVA_OPTIONS=-Xms4096M -Xmx4096M -XX:+ExitOnOutOfMemoryError
+        configs:
+            - bisq_seednode_2_config
         depends_on:
             - bisq-bitcoind
         extra_hosts:
@@ -61,19 +57,7 @@ services:
         volumes:
             - bisq_seednode_2_data:/bisq/bisq-seednode
         command:
-            - --baseCurrencyNetwork=${BISQ_BASE_CURRENCY}
-            - --useLocalhostForP2P=true
-            - --useDevPrivilegeKeys=true
-            - --fullDaoNode=${BISQ_DAO_FULLNODE}
-            - --btcNodes=${BITCOIN_P2P_HOST}:${BITCOIN_P2P_PORT}
-            - --rpcHost=${BITCOIN_RPC_HOST}
-            - --rpcPort=${BITCOIN_RPC_PORT}
-            - --rpcUser=${BITCOIN_RPC_USER}
-            - --rpcPassword=${BITCOIN_RPC_PASS}
-            - --rpcBlockNotificationPort=5121
-            - --nodePort=3002
-            - --userDataDir=${BISQ_HOME}
-            - --appName=${BISQ_APP_NAME}
+            - --configFile=/bisq_seednode_2_config
 
     bisq-tor:
         image: bisq/tor:latest
@@ -87,6 +71,12 @@ services:
                    "--SafeSocks", "0",
                    "--HiddenServiceStatistics", "0",
                    "--AvoidDiskWrites", "1" ]
+
+configs:
+    bisq_seednode_1_config:
+        file: ./seednode_1_config
+    bisq_seednode_2_config:
+        file: ./seednode_2_config
 
 volumes:
     bisq_seednode_1_data:
