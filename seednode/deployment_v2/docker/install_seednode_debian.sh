@@ -30,6 +30,8 @@ sudo usermod -aG docker $USER
 sudo systemctl enable docker
 sudo systemctl start docker
 
+mkdir bitcoind_data_dir
+
 sudo docker swarm init
 sudo docker stack deploy --compose-file docker-compose.yml bisq-seednode
 
