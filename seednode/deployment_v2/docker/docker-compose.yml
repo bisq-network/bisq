@@ -20,7 +20,6 @@ services:
             - -dbcache=1337
             - -maxconnections=1337
             - -peerbloomfilters=1
-            - -onion=bisq-tor:9050
             - -rpcallowip=127.0.0.1
             - -rpcallowip=172.0.0.1/8 # Docker IP range
             - -rpcuser=bisq
