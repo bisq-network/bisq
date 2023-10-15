@@ -5,6 +5,7 @@ services:
         image: bisq/bitcoind:latest
         volumes:
             - ./bitcoind_data_dir:/root/.bitcoin
+            - ./blocknotify.sh:/blocknotify.sh
         command:
             - -regtest
             - -server=1
@@ -19,7 +20,7 @@ services:
             - -rpcallowip=172.0.0.1/8 # Docker IP range
             - -rpcuser=${BITCOIN_RPC_USER}
             - -rpcpassword=${BITCOIN_RPC_PASS}
-            - -blocknotify=/root/.bitcoin/blocknotify.sh %s
+            - -blocknotify=/blocknotify.sh %s
             - -bind=0.0.0.0:${BITCOIN_RPC_PORT}
             - -rpcbind=0.0.0.0:${BITCOIN_RPC_PORT}
 
