@@ -18,4 +18,8 @@ RUN curl -O "https://bitcoincore.org/bin/bitcoin-core-22.0/{bitcoin-22.0-x86_64-
 RUN mv /root/bitcoin-22.0/bin/* /usr/bin/ \
     && rm -rf bitcoin* gpg_keys SHA256SUMS*
 
+RUN apt-get update \
+    && apt-get install netcat -y \
+    && rm -rf /var/lib/apt/lists/*
+
 ENTRYPOINT ["bitcoind"]
