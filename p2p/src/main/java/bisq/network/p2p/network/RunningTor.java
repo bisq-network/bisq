@@ -19,11 +19,15 @@ package bisq.network.p2p.network;
 
 import java.io.File;
 import java.io.IOException;
+
 import java.util.Date;
 
 import org.berndpruenster.netlayer.tor.ExternalTor;
 import org.berndpruenster.netlayer.tor.Tor;
 import org.berndpruenster.netlayer.tor.TorCtlException;
+
+import java.net.ConnectException;
+import java.net.UnknownHostException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,15 +44,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RunningTor extends TorMode {
 
+    private final String controlHost;
     private final int controlPort;
     private final String password;
     private final File cookieFile;
     private final boolean useSafeCookieAuthentication;
 
 
-    public RunningTor(final File torDir, final int controlPort, final String password, final File cookieFile,
-            final boolean useSafeCookieAuthentication) {
+    public RunningTor(final File torDir,
+                      final String controlHost,
+                      final int controlPort,
+                      final String password,
+                      final File cookieFile,
+                      final boolean useSafeCookieAuthentication) {
         super(torDir);
+        this.controlHost = controlHost;
         this.controlPort = controlPort;
         this.password = password;
         this.cookieFile = cookieFile;
@@ -58,24 +68,47 @@ public class RunningTor extends TorMode {
     @Override
     public Tor getTor() throws IOException, TorCtlException {
         long ts1 = new Date().getTime();
+        boolean retry = true;
+        long twoMinutesInMilli = 1000 * 60 * 2;
 
-        log.info("Connecting to running tor");
+        while (retry && ((new Date().getTime() - ts1) <= twoMinutesInMilli)) {
+            retry = false;
+            try {
+                log.info("Connecting to running tor");
 
-        Tor result;
-        if (!password.isEmpty())
-            result = new ExternalTor(controlPort, password);
-        else if (cookieFile != null && cookieFile.exists())
-            result = new ExternalTor(controlPort, cookieFile, useSafeCookieAuthentication);
-        else
-            result = new ExternalTor(controlPort);
+                Tor result;
+                if (!password.isEmpty())
+                    result = new ExternalTor(controlHost, controlPort, password);
+                else if (cookieFile != null && cookieFile.exists())
+                    result = new ExternalTor(controlHost, controlPort, cookieFile, useSafeCookieAuthentication);
+                else
+                    result = new ExternalTor(controlHost, controlPort);
 
-        log.info(
-                "\n################################################################\n"
-                        + "Connecting to Tor successful after {} ms. Start publishing hidden service.\n"
-                        + "################################################################",
-                (new Date().getTime() - ts1)); // takes usually a few seconds
+                boolean isTorBootstrapped = result.control.waitUntilBootstrapped();
+                if (!isTorBootstrapped) {
+                    log.error("Couldn't bootstrap Tor.");
+                }
 
-        return result;
+                log.info(
+                        "\n################################################################\n"
+                                + "Connecting to Tor successful after {} ms. Start publishing hidden service.\n"
+                                + "################################################################",
+                        (new Date().getTime() - ts1)); // takes usually a few seconds
+
+                return result;
+            } catch (Exception e) {
+                // netlayer throws UnknownHostException when tor docker container is not ready yet.
+                // netlayer throws ConnectException before tor container bind to control port.
+                if (e instanceof UnknownHostException || e instanceof ConnectException) {
+                    log.warn("Couldn't connect to Tor control port. Retrying...", e);
+                    retry = true;
+                }
+
+                log.error("Couldn't connect to Tor.", e);
+            }
+        }
+
+        return null;
     }
 
     @Override

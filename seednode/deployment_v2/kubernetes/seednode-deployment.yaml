@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+    name: seednode-pv
+    labels:
+        app: seednode-pv
+
+spec:
+    capacity:
+        storage: 10Gi
+    volumeMode: Filesystem
+    accessModes:
+        - ReadWriteOnce
+    persistentVolumeReclaimPolicy: Retain
+    storageClassName: local-storage
+    local:
+        path: /bisq/bisq-seednode
+    nodeAffinity:
+        required:
+            nodeSelectorTerms:
+                - matchExpressions:
+                      - key: kubernetes.io/hostname
+                        operator: In
+                        values:
+                            - seednode-node
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: seednode-pv-claim
+    labels:
+        app: seednode
+spec:
+    accessModes:
+        - ReadWriteOnce
+    resources:
+        requests:
+            storage: 10Gi
+    selector:
+        matchLabels:
+            app: seednode-pv
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: seednode
+    labels:
+        app: seednode
+spec:
+    selector:
+        matchLabels:
+            app: seednode
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                app: seednode
+        spec:
+            containers:
+                - image: localhost:5000/bisq-seednode:latest
+                  imagePullPolicy: IfNotPresent
+                  name: seednode
+                  ports:
+                      - containerPort: 8000
+                        name: seednode
+                  volumeMounts:
+                      - name: seednode-persistent-storage
+                        mountPath: /bisq/bisq-seednode
+            volumes:
+                - name: seednode-persistent-storage
+                  persistentVolumeClaim:
+                      claimName: seednode-pv-claim
