@@ -6,7 +6,6 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.TaskAction
-import java.util.concurrent.TimeUnit
 
 abstract class DockerBuildTask : DefaultTask() {
 
@@ -27,7 +26,17 @@ abstract class DockerBuildTask : DefaultTask() {
         processBuilder.redirectErrorStream(true)
         val process = processBuilder.start()
 
-        val isSuccess = process.waitFor(2, TimeUnit.MINUTES) && process.exitValue() == 0
+        // Report Progress
+        process.inputStream
+            .bufferedReader()
+            .use { bufferedReader ->
+                while (true) {
+                    val line = bufferedReader.readLine() ?: return@use
+                    println(line)
+                }
+            }
+
+        val isSuccess = process.waitFor() == 0
         if (!isSuccess) {
             throw IllegalStateException("Couldn't build docker image.")
         }
