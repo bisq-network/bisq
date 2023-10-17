@@ -4,9 +4,12 @@ plugins {
     id 'bisq.gradle.docker.image_builder.DockerImageBuilderPlugin'
 }
 
-distTar.enabled = true
+application {
+    mainClass = 'bisq.seednode.SeedNodeMain'
+    applicationDefaultJvmArgs = ['-XX:+ExitOnOutOfMemoryError']
+}
 
-mainClassName = 'bisq.seednode.SeedNodeMain'
+distTar.enabled = true
 
 dependencies {
     implementation enforcedPlatform(project(':platform'))
