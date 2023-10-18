@@ -38,8 +38,6 @@ services:
             replicas: 1
             restart_policy:
                 condition: any
-        extra_hosts:
-            - host.docker.internal:host-gateway
         ports:
             - 8000:8000 # bisq node port
         volumes:
