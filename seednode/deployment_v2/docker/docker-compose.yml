@@ -34,8 +34,6 @@ services:
             - JDK_JAVA_OPTIONS=-Xms4096M -Xmx4096M -XX:+ExitOnOutOfMemoryError
         configs:
             - bisq_seednode_config
-        depends_on:
-            - bisq-bitcoind
         deploy:
             replicas: 1
             restart_policy:
