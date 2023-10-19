@@ -31,8 +31,6 @@ services:
             - bisq_seednode_1_config
         depends_on:
             - bisq-bitcoind
-        extra_hosts:
-            - host.docker.internal:host-gateway
         ports:
             - 2002:2002 # bisq node port
             - 5120:5120 # bitcoind rpc block notifications
@@ -49,8 +47,6 @@ services:
             - bisq_seednode_2_config
         depends_on:
             - bisq-bitcoind
-        extra_hosts:
-            - host.docker.internal:host-gateway
         ports:
             - 3002:3002 # bisq node port
             - 5121:5121 # bitcoind rpc block notifications
