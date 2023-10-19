@@ -26,7 +26,7 @@ class DockerImageBuilderPlugin : Plugin<Project> {
             into(seednodeBuildDir)
         }
 
-        project.tasks.register<CreateDockerfileTask>("generateDockerfile") {
+        val generateDockerFileTask = project.tasks.register<CreateDockerfileTask>("generateDockerfile") {
             archiveFileName.set(distTarTask.flatMap { it.archiveFileName })
 
             val classpathFiles: Provider<List<String>> = installDistTask.map { syncTask ->
@@ -40,7 +40,7 @@ class DockerImageBuilderPlugin : Plugin<Project> {
         }
 
         project.tasks.register<DockerBuildTask>("seednodeDockerImage") {
-            dependsOn(copyTask)
+            dependsOn(copyTask, generateDockerFileTask)
             imageTag.set("bisq/seednode:latest")
             dockerDirectory.set(seednodeBuildDir)
         }
