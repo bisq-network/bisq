@@ -129,6 +129,15 @@ public class PriceUtil {
         return bsq30DayAveragePrice;
     }
 
+    public static Optional<Double> offerPercentageToDeviation(Offer offer) {
+        if (offer.isUseMarketBasedPrice()) {
+            return Optional.of(offer.getDirection() == OfferDirection.SELL ?
+                    offer.getMarketPriceMargin() : -offer.getMarketPriceMargin());
+        } else {
+            return Optional.empty();
+        }
+    }
+
     public boolean hasMarketPrice(Offer offer) {
         String currencyCode = offer.getCurrencyCode();
         checkNotNull(priceFeedService, "priceFeed must not be null");
