@@ -264,14 +264,12 @@ class GrpcWalletsService extends WalletsImplBase {
     public void getTxFeeRate(GetTxFeeRateRequest req,
                              StreamObserver<GetTxFeeRateReply> responseObserver) {
         try {
-            coreApi.getTxFeeRate(() -> {
-                TxFeeRateInfo txFeeRateInfo = coreApi.getMostRecentTxFeeRateInfo();
-                var reply = GetTxFeeRateReply.newBuilder()
-                        .setTxFeeRateInfo(txFeeRateInfo.toProtoMessage())
-                        .build();
-                responseObserver.onNext(reply);
-                responseObserver.onCompleted();
-            });
+            TxFeeRateInfo txFeeRateInfo = coreApi.getMostRecentTxFeeRateInfo();
+            var reply = GetTxFeeRateReply.newBuilder()
+                    .setTxFeeRateInfo(txFeeRateInfo.toProtoMessage())
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
         } catch (Throwable cause) {
             exceptionHandler.handleException(log, cause, responseObserver);
         }
@@ -281,14 +279,13 @@ class GrpcWalletsService extends WalletsImplBase {
     public void setTxFeeRatePreference(SetTxFeeRatePreferenceRequest req,
                                        StreamObserver<SetTxFeeRatePreferenceReply> responseObserver) {
         try {
-            coreApi.setTxFeeRatePreference(req.getTxFeeRatePreference(), () -> {
-                TxFeeRateInfo txFeeRateInfo = coreApi.getMostRecentTxFeeRateInfo();
-                var reply = SetTxFeeRatePreferenceReply.newBuilder()
-                        .setTxFeeRateInfo(txFeeRateInfo.toProtoMessage())
-                        .build();
-                responseObserver.onNext(reply);
-                responseObserver.onCompleted();
-            });
+            coreApi.setTxFeeRatePreference(req.getTxFeeRatePreference());
+            TxFeeRateInfo txFeeRateInfo = coreApi.getMostRecentTxFeeRateInfo();
+            var reply = SetTxFeeRatePreferenceReply.newBuilder()
+                    .setTxFeeRateInfo(txFeeRateInfo.toProtoMessage())
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
         } catch (Throwable cause) {
             exceptionHandler.handleException(log, cause, responseObserver);
         }
@@ -298,14 +295,13 @@ class GrpcWalletsService extends WalletsImplBase {
     public void unsetTxFeeRatePreference(UnsetTxFeeRatePreferenceRequest req,
                                          StreamObserver<UnsetTxFeeRatePreferenceReply> responseObserver) {
         try {
-            coreApi.unsetTxFeeRatePreference(() -> {
-                TxFeeRateInfo txFeeRateInfo = coreApi.getMostRecentTxFeeRateInfo();
-                var reply = UnsetTxFeeRatePreferenceReply.newBuilder()
-                        .setTxFeeRateInfo(txFeeRateInfo.toProtoMessage())
-                        .build();
-                responseObserver.onNext(reply);
-                responseObserver.onCompleted();
-            });
+            coreApi.unsetTxFeeRatePreference();
+            TxFeeRateInfo txFeeRateInfo = coreApi.getMostRecentTxFeeRateInfo();
+            var reply = UnsetTxFeeRatePreferenceReply.newBuilder()
+                    .setTxFeeRateInfo(txFeeRateInfo.toProtoMessage())
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
         } catch (Throwable cause) {
             exceptionHandler.handleException(log, cause, responseObserver);
         }

@@ -362,33 +362,7 @@ class CoreWalletsService {
         return numMatches > 0;
     }
 
-    void getTxFeeRate(ResultHandler resultHandler) {
-        try {
-            @SuppressWarnings({"unchecked", "Convert2MethodRef"})
-            ListenableFuture<Void> future =
-                    (ListenableFuture<Void>) executor.submit(() -> feeService.requestFees());
-            //noinspection NullableProblems
-            Futures.addCallback(future, new FutureCallback<>() {
-                @Override
-                public void onSuccess(@Nullable Void ignored) {
-                    resultHandler.handleResult();
-                }
-
-                @Override
-                public void onFailure(Throwable t) {
-                    log.error("", t);
-                    throw new IllegalStateException("could not request fees from fee service", t);
-                }
-            }, MoreExecutors.directExecutor());
-
-        } catch (Exception ex) {
-            log.error(ex.toString());
-            throw new IllegalStateException("could not request fees from fee service", ex);
-        }
-    }
-
-    void setTxFeeRatePreference(long txFeeRate,
-                                ResultHandler resultHandler) {
+    void setTxFeeRatePreference(long txFeeRate) {
         long minFeePerVbyte = feeService.getMinFeePerVByte();
         if (txFeeRate < minFeePerVbyte)
             throw new IllegalArgumentException(
@@ -397,12 +371,10 @@ class CoreWalletsService {
         preferences.setUseCustomWithdrawalTxFee(true);
         Coin satsPerByte = Coin.valueOf(txFeeRate);
         preferences.setWithdrawalTxFeeInVbytes(satsPerByte.value);
-        getTxFeeRate(resultHandler);
     }
 
-    void unsetTxFeeRatePreference(ResultHandler resultHandler) {
+    void unsetTxFeeRatePreference() {
         preferences.setUseCustomWithdrawalTxFee(false);
-        getTxFeeRate(resultHandler);
     }
 
     TxFeeRateInfo getMostRecentTxFeeRateInfo() {

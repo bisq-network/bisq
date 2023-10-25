@@ -395,11 +395,9 @@ public class BsqSwapOfferModel {
         // We only set the txFeePerVbyte at start, otherwise we might get diff. required amounts while user has view open
         txFeePerVbyte = feeService.getTxFeePerVbyte().getValue();
         resetTxFeeAndMissingFunds();
-        feeService.requestFees(() -> {
-            txFeePerVbyte = feeService.getTxFeePerVbyte().getValue();
-            calculateInputAndPayout();
-            resetTxFeeAndMissingFunds();
-        });
+        txFeePerVbyte = feeService.getTxFeePerVbyte().getValue();
+        calculateInputAndPayout();
+        resetTxFeeAndMissingFunds();
     }
 
     private void resetTxFeeAndMissingFunds() {

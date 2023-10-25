@@ -22,9 +22,7 @@ import bisq.core.dao.governance.period.PeriodService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.filter.FilterManager;
 
-import bisq.common.UserThread;
 import bisq.common.config.Config;
-import bisq.common.handlers.FaultHandler;
 
 import org.bitcoinj.core.Coin;
 
@@ -38,8 +36,6 @@ import java.time.Instant;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.Nullable;
 
 @Slf4j
 public class FeeService {
@@ -129,18 +125,6 @@ public class FeeService {
         minFeePerVByte = Config.baseCurrencyNetwork().getDefaultMinFeePerVbyte();
     }
 
-
-    public void requestFees() {
-        requestFees(null, null);
-    }
-
-    public void requestFees(Runnable resultHandler) {
-        requestFees(resultHandler, null);
-    }
-
-    public void requestFees(@Nullable Runnable resultHandler, @Nullable FaultHandler faultHandler) {
-        UserThread.execute(resultHandler);
-    }
 
     public Coin getTxFee(int vsizeInVbytes) {
         return getTxFeePerVbyte().multiply(vsizeInVbytes);
