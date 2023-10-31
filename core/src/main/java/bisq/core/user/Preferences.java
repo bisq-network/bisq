@@ -123,7 +123,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
     private static final ArrayList<String> XMR_TX_PROOF_SERVICES_CLEAR_NET = new ArrayList<>(Arrays.asList(
             "xmrblocks.monero.emzy.de", // @emzy
-            //"explorer.monero.wiz.biz", // @wiz
             "xmrblocks.bisq.services" // @devinbileck
     ));
     private static final ArrayList<String> XMR_TX_PROOF_SERVICES = new ArrayList<>(Arrays.asList(
