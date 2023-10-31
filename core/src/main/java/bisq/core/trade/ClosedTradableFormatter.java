@@ -26,6 +26,7 @@ import bisq.core.offer.OpenOffer;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.util.FormattingUtils;
+import bisq.core.util.PriceUtil;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinFormatter;
 
@@ -49,7 +50,6 @@ import static bisq.core.trade.model.bisq_v1.Trade.DisputeState.DISPUTE_CLOSED;
 import static bisq.core.trade.model.bisq_v1.Trade.DisputeState.MEDIATION_CLOSED;
 import static bisq.core.trade.model.bisq_v1.Trade.DisputeState.REFUND_REQUEST_CLOSED;
 import static bisq.core.util.FormattingUtils.BTC_FORMATTER_KEY;
-import static bisq.core.util.FormattingUtils.formatPercentagePrice;
 import static bisq.core.util.FormattingUtils.formatToPercentWithSymbol;
 import static bisq.core.util.VolumeUtil.formatVolume;
 import static bisq.core.util.VolumeUtil.formatVolumeWithCode;
@@ -142,11 +142,9 @@ public class ClosedTradableFormatter {
     }
 
     public String getPriceDeviationAsString(Tradable tradable) {
-        if (tradable.getOffer().isUseMarketBasedPrice()) {
-            return formatPercentagePrice(tradable.getOffer().getMarketPriceMargin());
-        } else {
-            return Res.get("shared.na");
-        }
+        return PriceUtil.offerPercentageToDeviation(tradable.getOffer())
+                .map(FormattingUtils::formatPercentagePrice)
+                .orElse(Res.get("shared.na"));
     }
 
     public String getVolumeAsString(Tradable tradable, boolean appendCode) {

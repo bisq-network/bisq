@@ -85,12 +85,12 @@ class OpenOfferListItem implements FilterableListItem {
 
     public Double getPriceDeviationAsDouble() {
         Offer offer = getOffer();
-        return priceUtil.getMarketBasedPrice(offer, offer.getMirroredDirection()).orElse(0d);
+        return PriceUtil.offerPercentageToDeviation(offer).orElse(0d);
     }
 
     public String getPriceDeviationAsString() {
         Offer offer = getOffer();
-        return priceUtil.getMarketBasedPrice(offer, offer.getMirroredDirection())
+        return PriceUtil.offerPercentageToDeviation(offer)
                 .map(FormattingUtils::formatPercentagePrice)
                 .orElse("");
     }
