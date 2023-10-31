@@ -7,7 +7,7 @@ echo "[*] Bisq Seednode installation script"
 
 ROOT_USER=root
 ROOT_GROUP=root
-ROOT_PKG="build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 git vim screen ufw"
+ROOT_PKG="build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 git vim screen ufw openjdk-11-jdk"
 ROOT_HOME=/root
 
 SYSTEMD_SERVICE_HOME=/etc/systemd/system
@@ -121,9 +121,6 @@ sudo -H -i -u "${ROOT_USER}" chown "${BISQ_USER}":"${BISQ_GROUP}" ${BISQ_HOME}
 echo "[*] Moving Bisq repo"
 sudo -H -i -u "${ROOT_USER}" mv "${ROOT_HOME}/${BISQ_REPO_NAME}" "${BISQ_HOME}/${BISQ_REPO_NAME}"
 sudo -H -i -u "${ROOT_USER}" chown -R "${BISQ_USER}:${BISQ_GROUP}" "${BISQ_HOME}/${BISQ_REPO_NAME}"
-
-echo "[*] Installing OpenJDK 11.0.2 from Bisq repo"
-sudo -H -i -u "${ROOT_USER}" "${BISQ_HOME}/${BISQ_REPO_NAME}/scripts/install_java_linux.sh"
 
 echo "[*] Installing Bisq init script"
 sudo -H -i -u "${ROOT_USER}" install -c -o "${ROOT_USER}" -g "${ROOT_GROUP}" -m 644 "${BISQ_HOME}/${BISQ_REPO_NAME}/seednode/bisq.service" "${SYSTEMD_SERVICE_HOME}/bisq.service"
