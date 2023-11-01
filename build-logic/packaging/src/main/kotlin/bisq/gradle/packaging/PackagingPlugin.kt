@@ -42,7 +42,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         project.tasks.register<JPackageTask>("generateInstallers") {
             dependsOn(generateHashesTask)
 
-            jdkDirectory.set(getJdk17Directory())
+            jdkDirectory.set(getJPackageJdkDirectory())
 
             distDirFile.set(installDistTask.map { it.destinationDir })
             mainJarFile.set(jarTask.flatMap { it.archiveFile })
@@ -55,7 +55,11 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
             val packageResourcesDirFile = File(project.projectDir, "package")
             packageResourcesDir.set(packageResourcesDirFile)
 
-            runtimeImageDirectory.set(getProjectJdkDirectory(project))
+            runtimeImageDirectory.set(
+                if (getOS() == OS.MAC_OS) getJPackageJdkDirectory()
+                else getProjectJdkDirectory(project)
+            )
+
             outputDirectory.set(project.layout.buildDirectory.dir("packaging/jpackage/packages"))
         }
     }
@@ -79,12 +83,13 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
         return projectLauncherProvider.map { it.metadata.installationPath }
     }
 
-    private fun getJdk17Directory(): Provider<Directory> {
-        val jdk17LauncherProvider = javaToolchainService.launcherFor {
-            languageVersion.set(JavaLanguageVersion.of(17))
+    private fun getJPackageJdkDirectory(): Provider<Directory> {
+        val javaVersion = if (getOS() == OS.MAC_OS) 15 else 17
+        val launcherProvider = javaToolchainService.launcherFor {
+            languageVersion.set(JavaLanguageVersion.of(javaVersion))
             vendor.set(JvmVendorSpec.AZUL)
             implementation.set(JvmImplementation.VENDOR_SPECIFIC)
         }
-        return jdk17LauncherProvider.map { it.metadata.installationPath }
+        return launcherProvider.map { it.metadata.installationPath }
     }
 }

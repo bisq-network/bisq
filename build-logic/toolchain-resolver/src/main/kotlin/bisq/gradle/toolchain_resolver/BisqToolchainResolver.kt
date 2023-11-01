@@ -37,6 +37,7 @@ abstract class BisqToolchainResolver : JavaToolchainResolver {
     private fun getToolchainUrlForMacOs(javaVersion: Int): String? =
         when (javaVersion) {
             11 -> "https://cdn.azul.com/zulu/bin/zulu11.66.15_1-ca-jdk11.0.20-macosx_x64.tar.gz"
+            15 -> "https://cdn.azul.com/zulu/bin/zulu15.46.17-ca-jdk15.0.10-macosx_x64.tar.gz"
             17 -> "https://cdn.azul.com/zulu/bin/zulu17.44.15_1-ca-jdk17.0.8-macosx_x64.tar.gz"
             else -> null
         }
