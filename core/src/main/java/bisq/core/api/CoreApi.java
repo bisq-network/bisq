@@ -413,7 +413,7 @@ public class CoreApi {
         return walletsService.verifyBsqSentToAddress(address, amount);
     }
 
-    public void setTxFeeRatePreference(long txFeeRate   ) {
+    public void setTxFeeRatePreference(long txFeeRate) {
         walletsService.setTxFeeRatePreference(txFeeRate);
     }
 
