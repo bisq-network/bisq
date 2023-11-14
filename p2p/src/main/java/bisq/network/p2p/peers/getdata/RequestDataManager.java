@@ -359,17 +359,17 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                     checkNotNull(listener).onUpdatedDataReceived();
                                 }
 
-                                checkNotNull(listener).onDataReceived();
-
                                 if (wasTruncated) {
                                     if (numRepeatedRequests < 10) {
                                         log.info("DataResponse did not contain all data, so we repeat request until we got all data");
                                         UserThread.runAfter(() -> requestData(nodeAddress, remainingNodeAddresses), 2);
                                     } else {
                                         log.info("DataResponse still did not contained all data but we requested already 10 times and stop now.");
+                                        checkNotNull(listener).onDataReceived();
                                     }
                                 } else {
                                     log.info("DataResponse contained all data");
+                                    checkNotNull(listener).onDataReceived();
                                 }
                             }
 
