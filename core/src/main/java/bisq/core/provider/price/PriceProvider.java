@@ -23,18 +23,10 @@ import bisq.network.http.HttpClient;
 import bisq.network.p2p.P2PService;
 
 import bisq.common.app.Version;
-import bisq.common.util.MathUtils;
-import bisq.common.util.Tuple2;
 
 import com.google.gson.Gson;
-import com.google.gson.internal.LinkedTreeMap;
 
 import java.io.IOException;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,12 +40,11 @@ public class PriceProvider extends HttpClientProvider {
         super(httpClient, baseUrl, false);
     }
 
-    public Map<String, MarketPrice> getAll() throws IOException {
+    public PricenodeDto getAll() throws IOException {
         if (shutDownRequested) {
-            return new HashMap<>();
+            return new PricenodeDto();
         }
 
-        Map<String, MarketPrice> marketPriceMap = new HashMap<>();
         String hsVersion = "";
         if (P2PService.getMyNodeAddress() != null)
             hsVersion = P2PService.getMyNodeAddress().getHostName().length() > 22 ? ", HSv3" : ", HSv2";
@@ -61,23 +52,7 @@ public class PriceProvider extends HttpClientProvider {
         String json = httpClient.get("getAllMarketPrices", "User-Agent", "bisq/"
                 + Version.VERSION + hsVersion);
 
-        LinkedTreeMap<?, ?> map = new Gson().fromJson(json, LinkedTreeMap.class);
-        List<?> list = (ArrayList<?>) map.get("data");
-        list.forEach(obj -> {
-            try {
-                LinkedTreeMap<?, ?> treeMap = (LinkedTreeMap<?, ?>) obj;
-                String currencyCode = (String) treeMap.get("currencyCode");
-                double price = (Double) treeMap.get("price");
-                // json uses double for our timestampSec long value...
-                long timestampSec = MathUtils.doubleToLong((Double) treeMap.get("timestampSec"));
-                marketPriceMap.put(currencyCode, new MarketPrice(currencyCode, price, timestampSec, true));
-            } catch (Throwable t) {
-                log.error(t.toString());
-                t.printStackTrace();
-            }
-
-        });
-        return marketPriceMap;
+        return new Gson().fromJson(json, PricenodeDto.class);
     }
 
     public String getBaseUrl() {

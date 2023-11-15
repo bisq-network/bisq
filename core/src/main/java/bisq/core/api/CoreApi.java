@@ -413,17 +413,12 @@ public class CoreApi {
         return walletsService.verifyBsqSentToAddress(address, amount);
     }
 
-    public void getTxFeeRate(ResultHandler resultHandler) {
-        walletsService.getTxFeeRate(resultHandler);
+    public void setTxFeeRatePreference(long txFeeRate) {
+        walletsService.setTxFeeRatePreference(txFeeRate);
     }
 
-    public void setTxFeeRatePreference(long txFeeRate,
-                                       ResultHandler resultHandler) {
-        walletsService.setTxFeeRatePreference(txFeeRate, resultHandler);
-    }
-
-    public void unsetTxFeeRatePreference(ResultHandler resultHandler) {
-        walletsService.unsetTxFeeRatePreference(resultHandler);
+    public void unsetTxFeeRatePreference() {
+        walletsService.unsetTxFeeRatePreference();
     }
 
     public TxFeeRateInfo getMostRecentTxFeeRateInfo() {

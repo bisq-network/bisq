@@ -244,17 +244,12 @@ class TakeOfferDataModel extends OfferDataModel {
 
         // We request to get the actual estimated fee
         log.info("Start requestTxFee: txFeeFromFeeService={}", txFeeFromFeeService);
-        feeService.requestFees(() -> {
-            if (!freezeFee) {
-                txFeePerVbyteFromFeeService = feeService.getTxFeePerVbyte();
-                txFeeFromFeeService = getTxFeeByVsize(feeTxVsize);
-                calculateTotalToPay();
-                log.info("Completed requestTxFee: txFeeFromFeeService={}", txFeeFromFeeService);
-            } else {
-                log.debug("We received the tx fee response after we have shown the funding screen and ignore that " +
-                        "to avoid that the total funds to pay changes due changed tx fees.");
-            }
-        });
+        if (!freezeFee) {
+            txFeePerVbyteFromFeeService = feeService.getTxFeePerVbyte();
+            txFeeFromFeeService = getTxFeeByVsize(feeTxVsize);
+            calculateTotalToPay();
+            log.info("Completed requestTxFee: txFeeFromFeeService={}", txFeeFromFeeService);
+        }
 
         mempoolStatus.setValue(-1);
         OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();

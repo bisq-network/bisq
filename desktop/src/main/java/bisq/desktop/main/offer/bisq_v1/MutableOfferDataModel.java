@@ -459,12 +459,10 @@ public abstract class MutableOfferDataModel extends OfferDataModel implements Bs
     }
 
     void requestTxFee(@Nullable Runnable actionHandler) {
-        feeService.requestFees(() -> {
-            txFeeFromFeeService = feeService.getTxFee(feeTxVsize);
-            calculateTotalToPay();
-            if (actionHandler != null)
-                actionHandler.run();
-        });
+        txFeeFromFeeService = feeService.getTxFee(feeTxVsize);
+        calculateTotalToPay();
+        if (actionHandler != null)
+            actionHandler.run();
     }
 
     void setPreferredCurrencyForMakerFeeBtc(boolean preferredCurrencyForMakerFeeBtc) {

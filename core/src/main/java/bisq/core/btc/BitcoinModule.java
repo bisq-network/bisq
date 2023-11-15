@@ -27,7 +27,6 @@ import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.NonBsqCoinSelector;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.provider.ProvidersRepository;
-import bisq.core.provider.fee.FeeProvider;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.PriceFeedService;
 
@@ -95,7 +94,6 @@ public class BitcoinModule extends AppModule {
         bind(Balances.class).in(Singleton.class);
 
         bind(ProvidersRepository.class).in(Singleton.class);
-        bind(FeeProvider.class).in(Singleton.class);
         bind(PriceFeedService.class).in(Singleton.class);
         bind(FeeService.class).in(Singleton.class);
         bind(TxFeeEstimationService.class).in(Singleton.class);

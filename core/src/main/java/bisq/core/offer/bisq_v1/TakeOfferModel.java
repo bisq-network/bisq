@@ -165,13 +165,7 @@ public class TakeOfferModel implements Model {
     }
 
     private Coin getTxFeePerVbyte() {
-        try {
-            CompletableFuture<Void> feeRequestFuture = CompletableFuture.runAsync(feeService::requestFees);
-            feeRequestFuture.get();  // Block until async fee request is complete.
-            return feeService.getTxFeePerVbyte();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new IllegalStateException("Could not request fees from fee service.", e);
-        }
+        return feeService.getTxFeePerVbyte();
     }
 
     private void calculateTotalToPay() {
