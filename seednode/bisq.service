@@ -10,7 +10,7 @@ After=bitcoin.service
 SyslogIdentifier=bisq
 EnvironmentFile=/etc/default/bisq.env
 
-ExecStart=/bin/bash __BISQ_HOME__/__BISQ_REPO_NAME__/${BISQ_ENTRYPOINT} \
+ExecStart=__BISQ_HOME__/__BISQ_REPO_NAME__/${BISQ_ENTRYPOINT} \
           --fullDaoNode=${BISQ_DAO_FULLNODE} \
           --userDataDir=${BISQ_HOME} \
           --appName=${BISQ_APP_NAME} \
