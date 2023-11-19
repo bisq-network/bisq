@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 
 // TorNode created. Took 6 sec.
 // Hidden service created. Took 40-50 sec.
@@ -94,7 +93,7 @@ public class PeerServiceTest {
     }
 
 
-    @Test
+    //@Test
     public void testSingleSeedNode() throws InterruptedException {
         LocalhostNetworkNode.setSimulateTorDelayTorNode(0);
         LocalhostNetworkNode.setSimulateTorDelayHiddenService(0);

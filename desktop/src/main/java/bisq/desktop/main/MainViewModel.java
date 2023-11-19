@@ -536,7 +536,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         } else {
             p2PService.addP2PServiceListener(new BootstrapListener() {
                 @Override
-                public void onUpdatedDataReceived() {
+                public void onDataReceived() {
                     setupInvalidOpenOffersHandler();
                 }
             });
@@ -699,7 +699,7 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
             } else {
                 p2PService.addP2PServiceListener(new BootstrapListener() {
                     @Override
-                    public void onUpdatedDataReceived() {
+                    public void onDataReceived() {
                         accountAgeWitnessService.publishMyAccountAgeWitness(aliPayAccount.getPaymentAccountPayload());
                     }
                 });
@@ -842,8 +842,8 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
         return bisqSetup.getP2PNetworkStatusIconId();
     }
 
-    BooleanProperty getUpdatedDataReceived() {
-        return bisqSetup.getUpdatedDataReceived();
+    BooleanProperty getDataReceived() {
+        return bisqSetup.getDataReceived();
     }
 
     StringProperty getP2pNetworkLabelId() {

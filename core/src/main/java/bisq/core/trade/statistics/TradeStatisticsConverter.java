@@ -95,7 +95,7 @@ public class TradeStatisticsConverter {
             }
 
             @Override
-            public void onUpdatedDataReceived() {
+            public void onDataReceived() {
             }
         });
 

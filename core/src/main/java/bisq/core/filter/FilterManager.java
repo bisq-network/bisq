@@ -188,6 +188,12 @@ public class FilterManager {
         p2PService.addP2PServiceListener(new P2PServiceListener() {
             @Override
             public void onDataReceived() {
+                // We should have received all data at that point and if the filters were not set we
+                // clean up the persisted banned nodes in the options file as it might be that we missed the filter
+                // remove message if we have not been online.
+                if (filterProperty.get() == null) {
+                    clearBannedNodes();
+                }
             }
 
             @Override
@@ -200,12 +206,6 @@ public class FilterManager {
 
             @Override
             public void onUpdatedDataReceived() {
-                // We should have received all data at that point and if the filters were not set we
-                // clean up the persisted banned nodes in the options file as it might be that we missed the filter
-                // remove message if we have not been online.
-                if (filterProperty.get() == null) {
-                    clearBannedNodes();
-                }
             }
 
             @Override
