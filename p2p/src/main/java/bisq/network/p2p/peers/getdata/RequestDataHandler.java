@@ -142,7 +142,7 @@ class RequestDataHandler implements MessageListener {
             }
 
             getDataRequestType = getDataRequest.getClass().getSimpleName();
-            log.info("We send a {} to peer {}. ", getDataRequestType, nodeAddress);
+            log.info("\n\n>> We send a {} to peer {}\n", getDataRequestType, nodeAddress);
             networkNode.addMessageListener(this);
             SettableFuture<Connection> future = networkNode.sendMessage(nodeAddress, getDataRequest);
             //noinspection UnstableApiUsage
@@ -242,7 +242,7 @@ class RequestDataHandler implements MessageListener {
         StringBuilder sb = new StringBuilder();
         String sep = System.lineSeparator();
         sb.append(sep).append("#################################################################").append(sep);
-        sb.append("Connected to node: ").append(peersNodeAddress.getFullAddress()).append(sep);
+        sb.append("Data provided by node: ").append(peersNodeAddress.getFullAddress()).append(sep);
         int items = dataSet.size() + persistableNetworkPayloadSet.size();
         sb.append("Received ").append(items).append(" instances from a ")
                 .append(getDataRequestType).append(sep);
@@ -252,7 +252,7 @@ class RequestDataHandler implements MessageListener {
                 .append(" / ")
                 .append(Utilities.readableFileSize(value.second.get()))
                 .append(sep));
-        sb.append("#################################################################");
+        sb.append("#################################################################\n");
         log.info(sb.toString());
     }
 

@@ -113,18 +113,18 @@ public abstract class StoreService<T extends PersistableEnvelope> {
         File destinationFile = new File(Paths.get(absolutePathOfStorageDir, fileName).toString());
         if (!destinationFile.exists()) {
             try {
-                log.info("We copy resource to file: resourceFileName={}, destinationFile={}", resourceFileName, destinationFile);
+                log.debug("We copy resource to file: resourceFileName={}, destinationFile={}", resourceFileName, destinationFile);
                 FileUtil.resourceToFile(resourceFileName, destinationFile);
                 return true;
             } catch (ResourceNotFoundException e) {
-                log.info("Could not find resourceFile " + resourceFileName + ". That is expected if none is provided yet.");
+                log.debug("Could not find resourceFile " + resourceFileName + ". That is expected if none is provided yet.");
             } catch (Throwable e) {
                 log.error("Could not copy resourceFile " + resourceFileName + " to " +
                         destinationFile.getAbsolutePath() + ".\n" + e.getMessage());
                 e.printStackTrace();
             }
         } else {
-            log.info("No resource file was copied. {} exists already.", fileName);
+            log.debug("No resource file was copied. {} exists already.", fileName);
         }
         return false;
     }
