@@ -364,15 +364,15 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                         log.info("DataResponse did not contain all data, so we repeat request until we got all data");
                                         UserThread.runAfter(() -> requestData(nodeAddress, remainingNodeAddresses), 2);
                                     } else {
-                                        log.warn("#################################################################\n" +
+                                        log.warn("\n#################################################################\n" +
                                                 "Loading initial data did not complete after 20 repeated requests. \n" +
-                                                "#################################################################");
+                                                "#################################################################\n");
                                         checkNotNull(listener).onDataReceived();
                                     }
                                 } else {
-                                    log.info("#################################################################\n" +
+                                    log.info("\n#################################################################\n" +
                                             "Loading initial data completed\n" +
-                                            "#################################################################");
+                                            "#################################################################\n");
                                     checkNotNull(listener).onDataReceived();
                                 }
                             }
