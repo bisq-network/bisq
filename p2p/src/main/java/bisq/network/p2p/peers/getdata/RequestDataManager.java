@@ -109,6 +109,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     private Optional<NodeAddress> nodeAddressOfPreliminaryDataRequest = Optional.empty();
     private Timer retryTimer;
     private boolean dataUpdateRequested;
+    private boolean allDataReceived;
     private boolean stopped;
     private int numRepeatedRequests = 0;
 
@@ -361,18 +362,23 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
                                 if (wasTruncated) {
                                     if (numRepeatedRequests < 20) {
+                                        // If we had allDataReceived already set to true but get a response with truncated flag,
+                                        // we still repeat the request to that node for higher redundancy. Otherwise, one seed node
+                                        // providing incomplete data would stop others to fill the gaps.
                                         log.info("DataResponse did not contain all data, so we repeat request until we got all data");
                                         UserThread.runAfter(() -> requestData(nodeAddress, remainingNodeAddresses), 2);
-                                    } else {
+                                    } else if (!allDataReceived) {
+                                        allDataReceived = true;
                                         log.warn("\n#################################################################\n" +
-                                                "Loading initial data did not complete after 20 repeated requests. \n" +
-                                                "#################################################################\n");
+                                                "Loading initial data from {} did not complete after 20 repeated requests. \n" +
+                                                "#################################################################\n", nodeAddress);
                                         checkNotNull(listener).onDataReceived();
                                     }
-                                } else {
-                                    log.info("\n#################################################################\n" +
-                                            "Loading initial data completed\n" +
-                                            "#################################################################\n");
+                                } else if (!allDataReceived) {
+                                    allDataReceived = true;
+                                    log.info("\n\n#################################################################\n" +
+                                            "Loading initial data from {} completed\n" +
+                                            "#################################################################\n", nodeAddress);
                                     checkNotNull(listener).onDataReceived();
                                 }
                             }

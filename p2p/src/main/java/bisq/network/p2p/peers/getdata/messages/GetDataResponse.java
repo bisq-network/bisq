@@ -128,7 +128,7 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
         boolean wasTruncated = proto.getWasTruncated();
         log.info("\n\n<< Received a GetDataResponse with {} {}\n",
                 Utilities.readableFileSize(proto.getSerializedSize()),
-                wasTruncated ? " (was truncated)" : "");
+                wasTruncated ? " (still data missing)" : " (all data received)");
         Set<ProtectedStorageEntry> dataSet = proto.getDataSetList().stream()
                 .map(entry -> (ProtectedStorageEntry) resolver.fromProto(entry)).collect(Collectors.toSet());
         Set<PersistableNetworkPayload> persistableNetworkPayloadSet = proto.getPersistableNetworkPayloadItemsList().stream()
