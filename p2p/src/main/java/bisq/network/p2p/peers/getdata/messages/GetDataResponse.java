@@ -126,7 +126,7 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
                                             NetworkProtoResolver resolver,
                                             int messageVersion) {
         boolean wasTruncated = proto.getWasTruncated();
-        log.info("Received a GetDataResponse with {} {}",
+        log.info("\n\n<< Received a GetDataResponse with {} {}\n",
                 Utilities.readableFileSize(proto.getSerializedSize()),
                 wasTruncated ? " (was truncated)" : "");
         Set<ProtectedStorageEntry> dataSet = proto.getDataSetList().stream()
