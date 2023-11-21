@@ -73,10 +73,10 @@ public class BurningManService {
     private static final double GENESIS_OUTPUT_AMOUNT_FACTOR = 0.1;
 
     // The number of cycles we go back for the decay function used for compensation request amounts.
-    private static final int NUM_CYCLES_COMP_REQUEST_DECAY = 24;
+    static final int NUM_CYCLES_COMP_REQUEST_DECAY = 24;
 
     // The number of cycles we go back for the decay function used for burned amounts.
-    private static final int NUM_CYCLES_BURN_AMOUNT_DECAY = 12;
+    static final int NUM_CYCLES_BURN_AMOUNT_DECAY = 12;
 
     // Factor for boosting the issuance share (issuance is compensation requests + genesis output).
     // This will be used for increasing the allowed burn amount. The factor gives more flexibility
