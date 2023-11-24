@@ -55,7 +55,7 @@ public class Statistics {
         priceFeedService.setCurrencyCode("USD");
         p2pService.addP2PServiceListener(new BootstrapListener() {
             @Override
-            public void onUpdatedDataReceived() {
+            public void onDataReceived() {
                 // we need to have tor ready
                 log.info("onBootstrapComplete: we start requestPriceFeed");
                 priceFeedService.requestPriceFeed(price -> log.info("requestPriceFeed. price=" + price),

@@ -113,6 +113,7 @@ public abstract class BsqNode implements DaoSetupService {
 
             @Override
             public void onDataReceived() {
+                onP2PNetworkReady();
             }
 
             @Override
@@ -126,7 +127,6 @@ public abstract class BsqNode implements DaoSetupService {
 
             @Override
             public void onUpdatedDataReceived() {
-                onP2PNetworkReady();
             }
         };
     }

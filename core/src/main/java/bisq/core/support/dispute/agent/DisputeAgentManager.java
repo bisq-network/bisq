@@ -161,7 +161,7 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
             else
                 p2PService.addP2PServiceListener(new BootstrapListener() {
                     @Override
-                    public void onUpdatedDataReceived() {
+                    public void onDataReceived() {
                         startRepublishDisputeAgent();
                     }
                 });

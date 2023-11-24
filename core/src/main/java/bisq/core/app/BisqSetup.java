@@ -849,8 +849,8 @@ public class BisqSetup {
         return p2PNetworkSetup.getP2PNetworkStatusIconId();
     }
 
-    public BooleanProperty getUpdatedDataReceived() {
-        return p2PNetworkSetup.getUpdatedDataReceived();
+    public BooleanProperty getDataReceived() {
+        return p2PNetworkSetup.getDataReceived();
     }
 
     public StringProperty getP2pNetworkLabelId() {

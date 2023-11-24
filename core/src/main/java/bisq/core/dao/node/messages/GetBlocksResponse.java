@@ -75,7 +75,7 @@ public final class GetBlocksResponse extends NetworkEnvelope implements DirectMe
         List<RawBlock> list = proto.getRawBlocksList().stream()
                 .map(RawBlock::fromProto)
                 .collect(Collectors.toList());
-        log.info("Received a GetBlocksResponse with {} blocks and {} kB size", list.size(), proto.getSerializedSize() / 1000d);
+        log.info("\n\n<< Received a GetBlocksResponse with {} blocks and {} kB size\n", list.size(), proto.getSerializedSize() / 1000d);
         return new GetBlocksResponse(proto.getRawBlocksList().isEmpty() ?
                 new ArrayList<>() :
                 list,

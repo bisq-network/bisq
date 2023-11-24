@@ -183,7 +183,7 @@ public abstract class AccountingNode implements DaoSetupService, DaoStateListene
             }
 
             @Override
-            public void onUpdatedDataReceived() {
+            public void onDataReceived() {
                 onP2PNetworkReady();
             }
         };

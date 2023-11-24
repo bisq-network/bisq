@@ -145,7 +145,7 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
     @Override
     protected void readFromResources(String postFix, Runnable completeHandler) {
         readStore(persisted -> {
-            log.info("We have created the {} store for the live data and filled it with {} entries from the persisted data.",
+            log.debug("We have created the {} store for the live data and filled it with {} entries from the persisted data.",
                     getFileName(), getMapOfLiveData().size());
 
             // Now we add our historical data stores.
@@ -185,7 +185,7 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
         persistenceManager.readPersisted(fileName, persisted -> {
                     storesByVersion.put(version, persisted);
                     allHistoricalPayloads.putAll(persisted.getMap());
-                    log.info("We have read from {} {} historical items.", fileName, persisted.getMap().size());
+                    log.debug("We have read from {} {} historical items.", fileName, persisted.getMap().size());
                     pruneStore(persisted, version);
                     completeHandler.run();
                 },
@@ -199,11 +199,11 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
         mapOfLiveData.keySet().removeAll(historicalStore.getMap().keySet());
         int postLive = mapOfLiveData.size();
         if (preLive > postLive) {
-            log.info("We pruned data from our live data store which are already contained in the historical data store with version {}. " +
+            log.debug("We pruned data from our live data store which are already contained in the historical data store with version {}. " +
                             "The live map had {} entries before pruning and has {} entries afterwards.",
                     version, preLive, postLive);
         } else {
-            log.info("No pruning from historical data store with version {} was applied", version);
+            log.debug("No pruning from historical data store with version {} was applied", version);
         }
         requestPersistence();
     }

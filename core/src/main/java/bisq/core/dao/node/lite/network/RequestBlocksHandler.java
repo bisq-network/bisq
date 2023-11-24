@@ -128,7 +128,7 @@ public class RequestBlocksHandler implements MessageListener {
                 },
                 TIMEOUT_MIN, TimeUnit.MINUTES);
 
-        log.info("We request blocks from peer {} from block height {}.", nodeAddress, getBlocksRequest.getFromBlockHeight());
+        log.info("\n\n>> We request blocks from peer {} from block height {}.\n", nodeAddress, getBlocksRequest.getFromBlockHeight());
 
         networkNode.addMessageListener(this);
 
@@ -136,7 +136,7 @@ public class RequestBlocksHandler implements MessageListener {
         Futures.addCallback(future, new FutureCallback<>() {
             @Override
             public void onSuccess(Connection connection) {
-                log.info("Sending of GetBlocksRequest message to peer {} succeeded.", nodeAddress.getFullAddress());
+                log.debug("Sending of GetBlocksRequest message to peer {} succeeded.", nodeAddress.getFullAddress());
             }
 
             @Override
@@ -190,7 +190,9 @@ public class RequestBlocksHandler implements MessageListener {
             }
 
             terminate();
-            log.info("We received from peer {} a BlocksResponse with {} blocks",
+            log.info("\n#################################################################\n" +
+                            "We received from peer {} a BlocksResponse with {} blocks" +
+                            "\n#################################################################\n",
                     nodeAddress.getFullAddress(), getBlocksResponse.getBlocks().size());
             listener.onComplete(getBlocksResponse);
         }

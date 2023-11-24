@@ -48,7 +48,7 @@ public class AppStartupState {
     private final BooleanProperty walletAndNetworkReady = new SimpleBooleanProperty();
     private final BooleanProperty allDomainServicesInitialized = new SimpleBooleanProperty();
     private final BooleanProperty applicationFullyInitialized = new SimpleBooleanProperty();
-    private final BooleanProperty updatedDataReceived = new SimpleBooleanProperty();
+    private final BooleanProperty dataReceived = new SimpleBooleanProperty();
     private final BooleanProperty isBlockDownloadComplete = new SimpleBooleanProperty();
     private final BooleanProperty hasSufficientPeersForBroadcast = new SimpleBooleanProperty();
 
@@ -57,8 +57,8 @@ public class AppStartupState {
 
         p2PService.addP2PServiceListener(new BootstrapListener() {
             @Override
-            public void onUpdatedDataReceived() {
-                updatedDataReceived.set(true);
+            public void onDataReceived() {
+                dataReceived.set(true);
             }
         });
 
@@ -72,7 +72,7 @@ public class AppStartupState {
                 hasSufficientPeersForBroadcast.set(true);
         });
 
-        p2pNetworkAndWalletInitialized = EasyBind.combine(updatedDataReceived,
+        p2pNetworkAndWalletInitialized = EasyBind.combine(dataReceived,
                 isBlockDownloadComplete,
                 hasSufficientPeersForBroadcast,
                 allDomainServicesInitialized,
@@ -120,14 +120,6 @@ public class AppStartupState {
 
     public ReadOnlyBooleanProperty applicationFullyInitializedProperty() {
         return applicationFullyInitialized;
-    }
-
-    public boolean isUpdatedDataReceived() {
-        return updatedDataReceived.get();
-    }
-
-    public ReadOnlyBooleanProperty updatedDataReceivedProperty() {
-        return updatedDataReceived;
     }
 
     public boolean isBlockDownloadComplete() {

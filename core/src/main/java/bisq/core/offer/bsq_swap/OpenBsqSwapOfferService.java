@@ -122,7 +122,7 @@ public class OpenBsqSwapOfferService {
         };
         bootstrapListener = new BootstrapListener() {
             @Override
-            public void onUpdatedDataReceived() {
+            public void onDataReceived() {
                 onP2PServiceReady();
                 p2PService.removeP2PServiceListener(bootstrapListener);
             }

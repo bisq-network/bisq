@@ -73,7 +73,7 @@ public class P2PNetworkSetup {
     @Getter
     final StringProperty p2pNetworkWarnMsg = new SimpleStringProperty();
     @Getter
-    final BooleanProperty updatedDataReceived = new SimpleBooleanProperty();
+    final BooleanProperty dataReceived = new SimpleBooleanProperty();
     @Getter
     final BooleanProperty p2pNetworkFailed = new SimpleBooleanProperty();
     final FilterManager filterManager;
@@ -97,12 +97,11 @@ public class P2PNetworkSetup {
         StringProperty bootstrapState = new SimpleStringProperty();
         StringProperty bootstrapWarning = new SimpleStringProperty();
         BooleanProperty hiddenServicePublished = new SimpleBooleanProperty();
-        BooleanProperty initialP2PNetworkDataReceived = new SimpleBooleanProperty();
 
         addP2PMessageFilter();
 
         p2PNetworkInfoBinding = EasyBind.combine(bootstrapState, bootstrapWarning, p2PService.getNumConnectedPeers(),
-                walletsSetup.numPeersProperty(), hiddenServicePublished, initialP2PNetworkDataReceived,
+                walletsSetup.numPeersProperty(), hiddenServicePublished, dataReceived,
                 (state, warning, numP2pPeers, numBtcPeers, hiddenService, dataReceived) -> {
                     String result;
                     String daoFullNode = preferences.isDaoFullNode() ? Res.get("mainView.footer.daoFullNode") + " / " : "";
@@ -171,8 +170,8 @@ public class P2PNetworkSetup {
             @Override
             public void onDataReceived() {
                 log.debug("onRequestingDataCompleted");
-                initialP2PNetworkDataReceived.set(true);
                 bootstrapState.set(Res.get("mainView.bootstrapState.initialDataReceived"));
+                dataReceived.set(true);
                 splashP2PNetworkAnimationVisible.set(false);
                 p2pNetworkInitialized.set(true);
             }
@@ -208,7 +207,6 @@ public class P2PNetworkSetup {
             public void onUpdatedDataReceived() {
                 log.debug("onUpdatedDataReceived");
                 splashP2PNetworkAnimationVisible.set(false);
-                updatedDataReceived.set(true);
             }
 
             @Override

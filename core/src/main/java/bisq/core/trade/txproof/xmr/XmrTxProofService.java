@@ -337,7 +337,7 @@ public class XmrTxProofService implements AssetTxProofService {
         } else {
             bootstrapListener = new BootstrapListener() {
                 @Override
-                public void onUpdatedDataReceived() {
+                public void onDataReceived() {
                     p2PService.removeP2PServiceListener(bootstrapListener);
                     result.set(true);
                 }
