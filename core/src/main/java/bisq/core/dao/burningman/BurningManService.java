@@ -48,6 +48,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -111,7 +112,7 @@ public class BurningManService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     Map<String, BurningManCandidate> getBurningManCandidatesByName(int chainHeight) {
-        Map<String, BurningManCandidate> burningManCandidatesByName = new HashMap<>();
+        Map<String, BurningManCandidate> burningManCandidatesByName = new TreeMap<>();
         Map<P2PDataStorage.ByteArray, Set<TxOutput>> proofOfBurnOpReturnTxOutputByHash = getProofOfBurnOpReturnTxOutputByHash(chainHeight);
 
         // Add contributors who made a compensation request
@@ -120,8 +121,7 @@ public class BurningManService {
                 .forEach(issuance -> {
                             getCompensationProposalsForIssuance(issuance).forEach(compensationProposal -> {
                                 String name = compensationProposal.getName();
-                                burningManCandidatesByName.putIfAbsent(name, new BurningManCandidate());
-                                BurningManCandidate candidate = burningManCandidatesByName.get(name);
+                                BurningManCandidate candidate = burningManCandidatesByName.computeIfAbsent(name, n -> new BurningManCandidate());
 
                                 // Issuance
                                 Optional<String> customAddress = compensationProposal.getBurningManReceiverAddress();
