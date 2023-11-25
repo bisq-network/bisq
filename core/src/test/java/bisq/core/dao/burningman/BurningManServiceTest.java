@@ -129,6 +129,42 @@ public class BurningManServiceTest {
         }
 
         @Test
+        public void testGetBurningManCandidatesByName_inactiveAndExpiredCandidates() {
+            addCompensationIssuanceAndPayloads(
+                    compensationIssuanceAndPayload("alice", "0000", 760000, 10000),
+                    compensationIssuanceAndPayload("bob", "0001", 690000, 20000), // expired
+                    compensationIssuanceAndPayload("carol", "0002", 770000, 20000),
+                    compensationIssuanceAndPayload("dave", "0003", 770000, 20000) // inactive
+            );
+            addProofOfBurnTxs(
+                    proofOfBurnTx("alice", "1000", 780000, 400000),
+                    proofOfBurnTx("bob", "1001", 790000, 300000),
+                    proofOfBurnTx("carol", "1002", 740000, 300000) // expired
+            );
+            var candidateMap = burningManService.getBurningManCandidatesByName(800000);
+
+            assertEquals(0.11, candidateMap.get("alice").getMaxBoostedCompensationShare());
+            assertEquals(0.0, candidateMap.get("bob").getMaxBoostedCompensationShare());
+            assertEquals(0.11, candidateMap.get("carol").getMaxBoostedCompensationShare());
+            assertEquals(0.11, candidateMap.get("dave").getMaxBoostedCompensationShare());
+
+            assertEquals(0.5, candidateMap.get("alice").getBurnAmountShare());
+            assertEquals(0.5, candidateMap.get("bob").getBurnAmountShare());
+            assertEquals(0.0, candidateMap.get("carol").getBurnAmountShare());
+            assertEquals(0.0, candidateMap.get("dave").getBurnAmountShare());
+
+            assertEquals(0.5, candidateMap.get("alice").getAdjustedBurnAmountShare(), 1e-10);
+            assertEquals(0.5, candidateMap.get("bob").getAdjustedBurnAmountShare(), 1e-10);
+            assertEquals(0.0, candidateMap.get("carol").getAdjustedBurnAmountShare(), 1e-10);
+            assertEquals(0.0, candidateMap.get("dave").getAdjustedBurnAmountShare(), 1e-10);
+
+            assertEquals(0.11, candidateMap.get("alice").getCappedBurnAmountShare());
+            assertEquals(0.0, candidateMap.get("bob").getCappedBurnAmountShare());
+            assertEquals(0.0, candidateMap.get("carol").getCappedBurnAmountShare());
+            assertEquals(0.0, candidateMap.get("dave").getCappedBurnAmountShare());
+        }
+
+        @Test
         public void testGetBurningManCandidatesByName_capsSumToLessThanUnity_allCapped_oneCappingRoundNeeded() {
             addCompensationIssuanceAndPayloads(
                     compensationIssuanceAndPayload("alice", "0000", 760000, 10000),
@@ -142,6 +178,9 @@ public class BurningManServiceTest {
 
             assertEquals(0.5, candidateMap.get("alice").getBurnAmountShare());
             assertEquals(0.5, candidateMap.get("bob").getBurnAmountShare());
+
+            assertEquals(0.5, candidateMap.get("alice").getAdjustedBurnAmountShare(), 1e-10);
+            assertEquals(0.5, candidateMap.get("bob").getAdjustedBurnAmountShare(), 1e-10);
 
             assertEquals(0.11, candidateMap.get("alice").getCappedBurnAmountShare());
             assertEquals(0.11, candidateMap.get("bob").getCappedBurnAmountShare());
@@ -163,6 +202,7 @@ public class BurningManServiceTest {
                 var candidate = candidateMap.get("alice" + i);
                 assertEquals(0.11, candidate.getMaxBoostedCompensationShare());
                 assertEquals(0.1, candidate.getBurnAmountShare());
+                assertEquals(0.1, candidate.getAdjustedBurnAmountShare(), 1e-10);
                 assertEquals(0.1, candidate.getCappedBurnAmountShare());
             }));
         }
@@ -185,6 +225,7 @@ public class BurningManServiceTest {
                 var candidate = candidateMap.get("alice" + i);
                 assertEquals(0.11, candidate.getMaxBoostedCompensationShare());
                 assertEquals(i < 6 ? 0.125 : 0.0625, candidate.getBurnAmountShare());
+                assertEquals(i < 6 ? 0.125 : 0.085, candidate.getAdjustedBurnAmountShare(), 1e-10);
                 assertEquals(i < 6 ? 0.11 : 0.08499999999999999, candidate.getCappedBurnAmountShare());
             }));
             // Only two capping rounds were required to achieve a burn share total of 100%, so
@@ -211,6 +252,7 @@ public class BurningManServiceTest {
                 var candidate = candidateMap.get("alice" + i);
                 assertEquals(i < 8 ? 0.11 : 0.07, candidate.getMaxBoostedCompensationShare());
                 assertEquals(i < 6 ? 0.125 : 0.0625, candidate.getBurnAmountShare());
+                assertEquals(i < 6 ? 0.125 : 0.085, candidate.getAdjustedBurnAmountShare(), 1e-10);
                 assertEquals(i < 6 ? 0.11 : i < 8 ? 0.08499999999999999 : 0.07, candidate.getCappedBurnAmountShare());
             }));
             // Three capping rounds would have been required to achieve a burn share total of
@@ -242,6 +284,7 @@ public class BurningManServiceTest {
                 var candidate = candidateMap.get("alice" + i);
                 assertEquals(i < 6 ? 0.11 : i == 6 ? 0.106 : i == 7 ? 0.09 : 0.07, candidate.getMaxBoostedCompensationShare());
                 assertEquals(i < 6 ? 0.125 : 0.0625, candidate.getBurnAmountShare());
+                assertEquals(i < 6 ? 0.125 : 0.085, candidate.getAdjustedBurnAmountShare(), 1e-10);
                 assertEquals(i < 6 ? 0.11 : i < 8 ? 0.08499999999999999 : 0.07, candidate.getCappedBurnAmountShare());
             }));
             // Four capping rounds would have been required to achieve a maximum possible burn
