@@ -42,9 +42,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -112,6 +115,10 @@ public class BurningManService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     Map<String, BurningManCandidate> getBurningManCandidatesByName(int chainHeight) {
+        return getBurningManCandidatesByName(chainHeight, !DelayedPayoutTxReceiverService.isProposal412Activated());
+    }
+
+    Map<String, BurningManCandidate> getBurningManCandidatesByName(int chainHeight, boolean limitCappingRounds) {
         Map<String, BurningManCandidate> burningManCandidatesByName = new TreeMap<>();
         Map<P2PDataStorage.ByteArray, Set<TxOutput>> proofOfBurnOpReturnTxOutputByHash = getProofOfBurnOpReturnTxOutputByHash(chainHeight);
 
@@ -187,17 +194,46 @@ public class BurningManService {
                 .sum();
         burningManCandidates.forEach(candidate -> candidate.calculateShares(totalDecayedCompensationAmounts, totalDecayedBurnAmounts));
 
+        int numRoundsWithCapsApplied = imposeCaps(burningManCandidates, limitCappingRounds);
+
         double sumAllCappedBurnAmountShares = burningManCandidates.stream()
-                .filter(candidate -> candidate.getBurnAmountShare() >= candidate.getMaxBoostedCompensationShare())
+                .filter(candidate -> candidate.getRoundCapped().isPresent())
                 .mapToDouble(BurningManCandidate::getMaxBoostedCompensationShare)
                 .sum();
         double sumAllNonCappedBurnAmountShares = burningManCandidates.stream()
-                .filter(candidate -> candidate.getBurnAmountShare() < candidate.getMaxBoostedCompensationShare())
+                .filter(candidate -> candidate.getRoundCapped().isEmpty())
                 .mapToDouble(BurningManCandidate::getBurnAmountShare)
                 .sum();
-        burningManCandidates.forEach(candidate -> candidate.calculateCappedAndAdjustedShares(sumAllCappedBurnAmountShares, sumAllNonCappedBurnAmountShares));
+        burningManCandidates.forEach(candidate -> candidate.calculateCappedAndAdjustedShares(
+                sumAllCappedBurnAmountShares, sumAllNonCappedBurnAmountShares, numRoundsWithCapsApplied));
 
         return burningManCandidatesByName;
+    }
+
+    private static int imposeCaps(Collection<BurningManCandidate> burningManCandidates, boolean limitCappingRounds) {
+        List<BurningManCandidate> candidatesInDescendingBurnCapRatio = new ArrayList<>(burningManCandidates);
+        candidatesInDescendingBurnCapRatio.sort(Comparator.comparing(BurningManCandidate::getBurnCapRatio).reversed());
+        double thresholdBurnCapRatio = 1.0;
+        double remainingBurnShare = 1.0;
+        double remainingCapShare = 1.0;
+        int cappingRound = 0;
+        for (BurningManCandidate candidate : candidatesInDescendingBurnCapRatio) {
+            double invScaleFactor = remainingBurnShare / remainingCapShare;
+            double burnCapRatio = candidate.getBurnCapRatio();
+            if (remainingCapShare <= 0.0 || burnCapRatio <= 0.0 || burnCapRatio < invScaleFactor ||
+                    limitCappingRounds && burnCapRatio < 1.0) {
+                cappingRound++;
+                break;
+            }
+            if (burnCapRatio < thresholdBurnCapRatio) {
+                thresholdBurnCapRatio = invScaleFactor;
+                cappingRound++;
+            }
+            candidate.imposeCap(cappingRound, candidate.getBurnAmountShare() / thresholdBurnCapRatio);
+            remainingBurnShare -= candidate.getBurnAmountShare();
+            remainingCapShare -= candidate.getMaxBoostedCompensationShare();
+        }
+        return cappingRound;
     }
 
     String getLegacyBurningManAddress(int chainHeight) {
@@ -205,7 +241,11 @@ public class BurningManService {
     }
 
     Set<BurningManCandidate> getActiveBurningManCandidates(int chainHeight) {
-        return getBurningManCandidatesByName(chainHeight).values().stream()
+        return getActiveBurningManCandidates(chainHeight, !DelayedPayoutTxReceiverService.isProposal412Activated());
+    }
+
+    Set<BurningManCandidate> getActiveBurningManCandidates(int chainHeight, boolean limitCappingRounds) {
+        return getBurningManCandidatesByName(chainHeight, limitCappingRounds).values().stream()
                 .filter(burningManCandidate -> burningManCandidate.getCappedBurnAmountShare() > 0)
                 .filter(candidate -> candidate.getReceiverAddress().isPresent())
                 .collect(Collectors.toSet());
