@@ -34,8 +34,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
-import org.mockito.MockitoAnnotations;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -50,7 +48,6 @@ public class P2PDataStorageProcessGetDataResponse {
 
     @BeforeEach
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
         this.testState = new TestState();
 
         this.peerNodeAddress = new NodeAddress("peer", 8080);
@@ -111,7 +108,7 @@ public class P2PDataStorageProcessGetDataResponse {
     // XXXBUGXXX: We signal listeners w/ non ProcessOncePersistableNetworkPayloads
     @Test
     public void processGetDataResponse_newPNPUpdatesState() {
-        PersistableNetworkPayload persistableNetworkPayload = new PersistableNetworkPayloadStub(new byte[] { 1 });
+        PersistableNetworkPayload persistableNetworkPayload = new PersistableNetworkPayloadStub(new byte[]{1});
 
         GetDataResponse getDataResponse = buildGetDataResponse(persistableNetworkPayload);
 
@@ -137,7 +134,7 @@ public class P2PDataStorageProcessGetDataResponse {
     // TESTCASE: GetDataResponse w/ existing PNP changes no state
     @Test
     public void processGetDataResponse_duplicatePNPDoesNothing() {
-        PersistableNetworkPayload persistableNetworkPayload = new PersistableNetworkPayloadStub(new byte[] { 1 });
+        PersistableNetworkPayload persistableNetworkPayload = new PersistableNetworkPayloadStub(new byte[]{1});
         this.testState.mockedStorage.addPersistableNetworkPayload(persistableNetworkPayload,
                 this.peerNodeAddress, false);
 
@@ -152,7 +149,7 @@ public class P2PDataStorageProcessGetDataResponse {
     // TESTCASE: GetDataResponse w/ missing PNP is added with no broadcast or listener signal (ProcessOncePersistableNetworkPayload)
     @Test
     public void processGetDataResponse_newPNPUpdatesState_LazyProcessed() {
-        PersistableNetworkPayload persistableNetworkPayload = new LazyPersistableNetworkPayloadStub(new byte[] { 1 });
+        PersistableNetworkPayload persistableNetworkPayload = new LazyPersistableNetworkPayloadStub(new byte[]{1});
 
         GetDataResponse getDataResponse = buildGetDataResponse(persistableNetworkPayload);
 
@@ -165,7 +162,7 @@ public class P2PDataStorageProcessGetDataResponse {
     // TESTCASE: GetDataResponse w/ existing PNP changes no state (ProcessOncePersistableNetworkPayload)
     @Test
     public void processGetDataResponse_duplicatePNPDoesNothing_LazyProcessed() {
-        PersistableNetworkPayload persistableNetworkPayload = new LazyPersistableNetworkPayloadStub(new byte[] { 1 });
+        PersistableNetworkPayload persistableNetworkPayload = new LazyPersistableNetworkPayloadStub(new byte[]{1});
         this.testState.mockedStorage.addPersistableNetworkPayload(persistableNetworkPayload,
                 this.peerNodeAddress, false);
 
@@ -180,7 +177,7 @@ public class P2PDataStorageProcessGetDataResponse {
     // TESTCASE: Second call to processGetDataResponse adds PNP for non-ProcessOncePersistableNetworkPayloads
     @Test
     public void processGetDataResponse_secondProcessNewPNPUpdatesState() {
-        PersistableNetworkPayload addFromFirstProcess = new PersistableNetworkPayloadStub(new byte[] { 1 });
+        PersistableNetworkPayload addFromFirstProcess = new PersistableNetworkPayloadStub(new byte[]{1});
         GetDataResponse getDataResponse = buildGetDataResponse(addFromFirstProcess);
 
         TestState.SavedTestState beforeState = this.testState.saveTestState(addFromFirstProcess);
@@ -188,7 +185,7 @@ public class P2PDataStorageProcessGetDataResponse {
         this.testState.verifyPersistableAdd(
                 beforeState, addFromFirstProcess, true, true, false);
 
-        PersistableNetworkPayload addFromSecondProcess = new PersistableNetworkPayloadStub(new byte[] { 2 });
+        PersistableNetworkPayload addFromSecondProcess = new PersistableNetworkPayloadStub(new byte[]{2});
         getDataResponse = buildGetDataResponse(addFromSecondProcess);
         beforeState = this.testState.saveTestState(addFromSecondProcess);
         this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
@@ -199,7 +196,7 @@ public class P2PDataStorageProcessGetDataResponse {
     // TESTCASE: Second call to processGetDataResponse does not add any PNP (LazyProcessed)
     @Test
     public void processGetDataResponse_secondProcessNoPNPUpdates_LazyProcessed() {
-        PersistableNetworkPayload addFromFirstProcess = new LazyPersistableNetworkPayloadStub(new byte[] { 1 });
+        PersistableNetworkPayload addFromFirstProcess = new LazyPersistableNetworkPayloadStub(new byte[]{1});
         GetDataResponse getDataResponse = buildGetDataResponse(addFromFirstProcess);
 
         TestState.SavedTestState beforeState = this.testState.saveTestState(addFromFirstProcess);
@@ -207,7 +204,7 @@ public class P2PDataStorageProcessGetDataResponse {
         this.testState.verifyPersistableAdd(
                 beforeState, addFromFirstProcess, true, false, false);
 
-        PersistableNetworkPayload addFromSecondProcess = new LazyPersistableNetworkPayloadStub(new byte[] { 2 });
+        PersistableNetworkPayload addFromSecondProcess = new LazyPersistableNetworkPayloadStub(new byte[]{2});
         getDataResponse = buildGetDataResponse(addFromSecondProcess);
         beforeState = this.testState.saveTestState(addFromSecondProcess);
         this.testState.mockedStorage.processGetDataResponse(getDataResponse, this.peerNodeAddress);
