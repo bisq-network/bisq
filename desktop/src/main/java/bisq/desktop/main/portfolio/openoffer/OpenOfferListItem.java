@@ -44,19 +44,16 @@ import lombok.Getter;
 class OpenOfferListItem implements FilterableListItem {
     @Getter
     private final OpenOffer openOffer;
-    private final PriceUtil priceUtil;
     private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
     private final OpenOfferManager openOfferManager;
 
 
     OpenOfferListItem(OpenOffer openOffer,
-                      PriceUtil priceUtil,
                       CoinFormatter btcFormatter,
                       BsqFormatter bsqFormatter,
                       OpenOfferManager openOfferManager) {
         this.openOffer = openOffer;
-        this.priceUtil = priceUtil;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
         this.openOfferManager = openOfferManager;
@@ -111,10 +108,6 @@ class OpenOfferListItem implements FilterableListItem {
         Offer offer = getOffer();
         OfferDirection direction = openOfferManager.isMyOffer(offer) ? offer.getDirection() : offer.getMirroredDirection();
         return DisplayUtils.getDirectionWithCode(direction, getOffer().getCurrencyCode());
-    }
-
-    public boolean hasMakerFee() {
-        return getOffer().getMakerFee().isPositive();
     }
 
     public String getMakerFeeAsString() {

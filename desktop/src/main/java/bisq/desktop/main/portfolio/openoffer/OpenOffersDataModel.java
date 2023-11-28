@@ -50,6 +50,7 @@ class OpenOffersDataModel extends ActivatableDataModel {
     private final OpenOfferManager openOfferManager;
     private final OpenBsqSwapOfferService openBsqSwapOfferService;
     private final PriceFeedService priceFeedService;
+    private final TriggerPriceService triggerPriceService;
     private final PriceUtil priceUtil;
     private final CoinFormatter btcFormatter;
     private final BsqFormatter bsqFormatter;
@@ -57,29 +58,34 @@ class OpenOffersDataModel extends ActivatableDataModel {
     private final ObservableList<OpenOfferListItem> list = FXCollections.observableArrayList();
     private final ListChangeListener<OpenOffer> tradesListChangeListener;
     private final ChangeListener<Number> currenciesUpdateFlagPropertyListener;
+    private final ChangeListener<Number> triggerServiceListener;
 
     @Inject
     public OpenOffersDataModel(OpenOfferManager openOfferManager,
                                OpenBsqSwapOfferService openBsqSwapOfferService,
                                PriceFeedService priceFeedService,
+                               TriggerPriceService triggerPriceService,
                                PriceUtil priceUtil,
                                @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                                BsqFormatter bsqFormatter) {
         this.openOfferManager = openOfferManager;
         this.openBsqSwapOfferService = openBsqSwapOfferService;
         this.priceFeedService = priceFeedService;
+        this.triggerPriceService = triggerPriceService;
         this.priceUtil = priceUtil;
         this.btcFormatter = btcFormatter;
         this.bsqFormatter = bsqFormatter;
 
         tradesListChangeListener = change -> applyList();
         currenciesUpdateFlagPropertyListener = (observable, oldValue, newValue) -> applyList();
+        triggerServiceListener = (observable, oldValue, newValue) -> applyList();
     }
 
     @Override
     protected void activate() {
         openOfferManager.getObservableList().addListener(tradesListChangeListener);
         priceFeedService.updateCounterProperty().addListener(currenciesUpdateFlagPropertyListener);
+        triggerPriceService.updateCounter.addListener(triggerServiceListener);
         applyList();
     }
 
@@ -87,6 +93,7 @@ class OpenOffersDataModel extends ActivatableDataModel {
     protected void deactivate() {
         openOfferManager.getObservableList().removeListener(tradesListChangeListener);
         priceFeedService.updateCounterProperty().removeListener(currenciesUpdateFlagPropertyListener);
+        triggerPriceService.updateCounter.removeListener(triggerServiceListener);
     }
 
     void onActivateOpenOffer(OpenOffer openOffer,
@@ -123,7 +130,7 @@ class OpenOffersDataModel extends ActivatableDataModel {
 
         list.addAll(
                 openOfferManager.getObservableList().stream()
-                        .map(item -> new OpenOfferListItem(item, priceUtil, btcFormatter, bsqFormatter, openOfferManager))
+                        .map(item -> new OpenOfferListItem(item, btcFormatter, bsqFormatter, openOfferManager))
                         .collect(Collectors.toList())
         );
 
@@ -132,7 +139,6 @@ class OpenOffersDataModel extends ActivatableDataModel {
     }
 
     boolean wasTriggered(OpenOffer openOffer) {
-        return TriggerPriceService.wasTriggered(priceFeedService.getMarketPrice(openOffer.getOffer().getCurrencyCode()),
-                openOffer);
+        return TriggerPriceService.wasTriggered(priceFeedService.getMarketPrice(openOffer.getOffer().getCurrencyCode()), openOffer);
     }
 }

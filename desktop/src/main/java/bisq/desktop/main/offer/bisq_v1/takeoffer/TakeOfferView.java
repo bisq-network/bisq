@@ -58,6 +58,7 @@ import bisq.core.offer.Offer;
 import bisq.core.payment.FasterPaymentsAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.provider.mempool.FeeValidationStatus;
 import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
@@ -904,14 +905,13 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
     private void nextStepCheckMakerTx() {
         // the tx validation check has had plenty of time to complete, but if for some reason it has not returned
         // we continue anyway since the check is not crucial.
-        // note, it would be great if there was a real tri-state boolean we could use here, instead of -1, 0, and 1
-        int result = model.dataModel.mempoolStatus.get();
-        if (result == 0) {
-            new Popup().warning(Res.get("popup.warning.makerTxInvalid") + model.dataModel.getMempoolStatusText())
+        FeeValidationStatus result = model.dataModel.feeValidationStatus.get();
+        if (result.fail()) {
+            new Popup().warning(Res.get("popup.warning.makerTxInvalid", result))
                     .onClose(() -> cancelButton1.fire())
                     .show();
         } else {
-            if (result == -1) {
+            if (result == FeeValidationStatus.NOT_CHECKED_YET) {
                 log.warn("Fee check has not returned a result yet. We optimistically assume all is ok and continue.");
             }
             showNextStepAfterAmountIsSet();

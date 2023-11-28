@@ -18,12 +18,14 @@
 package bisq.core.offer.bisq_v1;
 
 import bisq.core.locale.CurrencyUtil;
+import bisq.core.locale.Res;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
+import bisq.core.provider.mempool.FeeValidationStatus;
 import bisq.core.provider.mempool.MempoolService;
 import bisq.core.provider.price.MarketPrice;
 import bisq.core.provider.price.PriceFeedService;
@@ -38,6 +40,9 @@ import org.bitcoinj.utils.Fiat;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+
 import javafx.collections.ListChangeListener;
 
 import java.util.HashMap;
@@ -46,11 +51,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.common.util.MathUtils.roundDoubleToLong;
 import static bisq.common.util.MathUtils.scaleUpByPowerOf10;
+
 
 @Slf4j
 @Singleton
@@ -60,6 +67,8 @@ public class TriggerPriceService {
     private final MempoolService mempoolService;
     private final PriceFeedService priceFeedService;
     private final Map<String, Set<OpenOffer>> openOffersByCurrency = new HashMap<>();
+    private Consumer<String> offerDisabledHandler;
+    public final IntegerProperty updateCounter = new SimpleIntegerProperty(0);
 
     @Inject
     public TriggerPriceService(P2PService p2PService,
@@ -72,7 +81,8 @@ public class TriggerPriceService {
         this.priceFeedService = priceFeedService;
     }
 
-    public void onAllServicesInitialized() {
+    public void onAllServicesInitialized(Consumer<String> offerDisabledHandler) {
+        this.offerDisabledHandler = offerDisabledHandler;
         if (p2PService.isBootstrapped()) {
             onBootstrapComplete();
         } else {
@@ -97,11 +107,11 @@ public class TriggerPriceService {
         });
         onAddedOpenOffers(openOfferManager.getObservableList());
 
-        priceFeedService.updateCounterProperty().addListener((observable, oldValue, newValue) -> onPriceFeedChanged());
-        onPriceFeedChanged();
+        priceFeedService.updateCounterProperty().addListener((observable, oldValue, newValue) -> onPriceFeedChanged(false));
+        onPriceFeedChanged(true);
     }
 
-    private void onPriceFeedChanged() {
+    private void onPriceFeedChanged(boolean bootstrapping) {
         openOffersByCurrency.keySet().stream()
                 .map(priceFeedService::getMarketPrice)
                 .filter(Objects::nonNull)
@@ -109,7 +119,12 @@ public class TriggerPriceService {
                 .forEach(marketPrice -> {
                     openOffersByCurrency.get(marketPrice.getCurrencyCode()).stream()
                             .filter(openOffer -> !openOffer.isDeactivated())
-                            .forEach(openOffer -> checkPriceThreshold(marketPrice, openOffer));
+                            .forEach(openOffer -> {
+                                checkPriceThreshold(marketPrice, openOffer);
+                                if (!bootstrapping) {
+                                    maybeCheckOfferFee(openOffer);
+                                }
+                            });
                 });
     }
 
@@ -161,27 +176,40 @@ public class TriggerPriceService {
                     marketPrice.getPrice(),
                     MathUtils.scaleDownByPowerOf10(triggerPrice, smallestUnitExponent)
             );
+            deactivateOpenOffer(openOffer, Res.get("openOffer.triggered", openOffer.getOffer().getShortId()));
+        }
+    }
 
-            openOfferManager.deactivateOpenOffer(openOffer, () -> {
-            }, errorMessage -> {
-            });
-        } else if (openOffer.getState() == OpenOffer.State.AVAILABLE) {
-            // check the mempool if it has not been done before
+    private void maybeCheckOfferFee(OpenOffer openOffer) {
+        Offer offer = openOffer.getOffer();
+        if (offer.isBsqSwapOffer()) {
+            return;
+        }
+
+        if (openOffer.getState() == OpenOffer.State.AVAILABLE) {
+            // check the offer fee if it has not been done before
             OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();
-            if (openOffer.getMempoolStatus() < 0 &&
+            if (openOffer.getFeeValidationStatus() == FeeValidationStatus.NOT_CHECKED_YET &&
                     mempoolService.canRequestBeMade(offerPayload)) {
                 mempoolService.validateOfferMakerTx(offerPayload, (txValidator -> {
-                    openOffer.setMempoolStatus(txValidator.isFail() ? 0 : 1);
+                    openOffer.setFeeValidationStatus(txValidator.getStatus());
+                    if (openOffer.getFeeValidationStatus().fail()) {
+                        deactivateOpenOffer(openOffer, Res.get("openOffer.deactivated.feeValidationIssue",
+                                openOffer.getOffer().getShortId(), openOffer.getFeeValidationStatus()));
+                    }
                 }));
             }
-            // if the mempool indicated failure then deactivate the open offer
-            if (openOffer.getMempoolStatus() == 0) {
-                log.info("Deactivating open offer {} due to mempool validation", offer.getShortId());
-                openOfferManager.deactivateOpenOffer(openOffer, () -> {
-                }, errorMessage -> {
-                });
-            }
         }
+    }
+
+    private void deactivateOpenOffer(OpenOffer openOffer, String message) {
+        openOfferManager.deactivateOpenOffer(openOffer, () -> { }, errorMessage -> { });
+        log.info(message);
+        if (offerDisabledHandler != null) {
+            offerDisabledHandler.accept(message);   // shows notification on screen
+        }
+        // tells the UI layer (Open Offers View) to update its contents
+        updateCounter.set(updateCounter.get() + 1);
     }
 
     private void onAddedOpenOffers(List<? extends OpenOffer> openOffers) {

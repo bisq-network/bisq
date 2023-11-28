@@ -400,6 +400,12 @@ public class MainViewModel implements ViewModel, BisqSetup.BisqSetupListener {
                 new Popup().warning(msg).show();
             }
         });
+        bisqSetup.setOfferDisabledHandler(msg -> {
+            new Notification().headLine("Offer Disabled")
+                    .notification(msg)
+                    .autoClose()
+                    .show();
+        });
         bisqSetup.setChainNotSyncedHandler(msg -> {
             if (PopupManager.isNoPopupDisplayed()) {
                 new Popup().warning(msg).show();

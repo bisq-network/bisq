@@ -104,7 +104,7 @@ public class MempoolService {
     public void validateOfferMakerTx(TxValidator txValidator, Consumer<TxValidator> resultHandler) {
         if (txValidator.getIsFeeCurrencyBtc() != null && txValidator.getIsFeeCurrencyBtc()) {
             if (!isServiceSupported()) {
-                UserThread.runAfter(() -> resultHandler.accept(txValidator.endResult("mempool request not supported, bypassing", true)), 1);
+                UserThread.runAfter(() -> resultHandler.accept(txValidator.endResult(FeeValidationStatus.ACK_CHECK_BYPASSED)), 1);
                 return;
             }
             MempoolRequest mempoolRequest = new MempoolRequest(preferences, socks5ProxyProvider);
@@ -123,7 +123,7 @@ public class MempoolService {
     public void validateOfferTakerTx(TxValidator txValidator, Consumer<TxValidator> resultHandler) {
         if (txValidator.getIsFeeCurrencyBtc() != null && txValidator.getIsFeeCurrencyBtc()) {
             if (!isServiceSupported()) {
-                UserThread.runAfter(() -> resultHandler.accept(txValidator.endResult("mempool request not supported, bypassing", true)), 1);
+                UserThread.runAfter(() -> resultHandler.accept(txValidator.endResult(FeeValidationStatus.ACK_CHECK_BYPASSED)), 1);
                 return;
             }
             MempoolRequest mempoolRequest = new MempoolRequest(preferences, socks5ProxyProvider);
@@ -137,7 +137,7 @@ public class MempoolService {
     public void checkTxIsConfirmed(String txId, Consumer<TxValidator> resultHandler) {
         TxValidator txValidator = new TxValidator(daoStateService, txId, filterManager);
         if (!isServiceSupported()) {
-            UserThread.runAfter(() -> resultHandler.accept(txValidator.endResult("mempool request not supported, bypassing", true)), 1);
+            UserThread.runAfter(() -> resultHandler.accept(txValidator.endResult(FeeValidationStatus.ACK_CHECK_BYPASSED)), 1);
             return;
         }
         MempoolRequest mempoolRequest = new MempoolRequest(preferences, socks5ProxyProvider);
@@ -191,7 +191,7 @@ public class MempoolService {
                         validateOfferMakerTx(theRequest, txValidator, resultHandler);
                     } else {
                         // exhausted all providers, let user know of failure
-                        resultHandler.accept(txValidator.endResult("Tx not found", false));
+                        resultHandler.accept(txValidator.endResult(FeeValidationStatus.NACK_BTC_TX_NOT_FOUND));
                     }
                 });
             }
@@ -221,7 +221,7 @@ public class MempoolService {
                         validateOfferTakerTx(theRequest, txValidator, resultHandler);
                     } else {
                         // exhausted all providers, let user know of failure
-                        resultHandler.accept(txValidator.endResult("Tx not found", false));
+                        resultHandler.accept(txValidator.endResult(FeeValidationStatus.NACK_BTC_TX_NOT_FOUND));
                     }
                 });
             }
@@ -248,7 +248,7 @@ public class MempoolService {
                 log.warn("onFailure - {}", throwable.toString());
                 UserThread.execute(() -> {
                     outstandingRequests--;
-                    resultHandler.accept(txValidator.endResult("Tx not found", false));
+                    resultHandler.accept(txValidator.endResult(FeeValidationStatus.NACK_BTC_TX_NOT_FOUND));
                 });
 
             }
