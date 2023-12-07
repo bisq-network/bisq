@@ -107,12 +107,12 @@ public class TxValidator {
             log.info(s);
             status = FeeValidationStatus.NACK_JSON_ERROR;
         }
-        return endResult("Maker tx validation", status);
+        return endResult("Maker tx validation (BTC)", status);
     }
 
     public TxValidator validateBsqFeeTx(boolean isMaker) {
         Optional<Tx> tx = daoStateService.getTx(txId);
-        String statusStr = (isMaker ? "Maker" : "Taker") + " tx validation";
+        String statusStr = (isMaker ? "Maker" : "Taker") + " tx validation (BSQ)";
         if (tx.isEmpty()) {
             long txAge = this.chainHeight - this.feePaymentBlockHeight;
             if (txAge > 48) {
@@ -144,7 +144,7 @@ public class TxValidator {
             log.info(s);
             status = FeeValidationStatus.NACK_JSON_ERROR;
         }
-        return endResult("Taker tx validation", status);
+        return endResult("Taker tx validation (BTC)", status);
     }
 
     public long parseJsonValidateTx() {

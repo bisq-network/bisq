@@ -102,17 +102,12 @@ public class MempoolService {
     }
 
     public void validateOfferMakerTx(TxValidator txValidator, Consumer<TxValidator> resultHandler) {
-        if (txValidator.getIsFeeCurrencyBtc() != null && txValidator.getIsFeeCurrencyBtc()) {
-            if (!isServiceSupported()) {
-                UserThread.runAfter(() -> resultHandler.accept(txValidator.endResult(FeeValidationStatus.ACK_CHECK_BYPASSED)), 1);
-                return;
-            }
-            MempoolRequest mempoolRequest = new MempoolRequest(preferences, socks5ProxyProvider);
-            validateOfferMakerTx(mempoolRequest, txValidator, resultHandler);
-        } else {
-            // using BSQ for fees
-            UserThread.runAfter(() -> resultHandler.accept(txValidator.validateBsqFeeTx(true)), 1);
+        if (!isServiceSupported()) {
+            UserThread.runAfter(() -> resultHandler.accept(txValidator.endResult(FeeValidationStatus.ACK_CHECK_BYPASSED)), 1);
+            return;
         }
+        MempoolRequest mempoolRequest = new MempoolRequest(preferences, socks5ProxyProvider);
+        validateOfferMakerTx(mempoolRequest, txValidator, resultHandler);
     }
 
     public void validateOfferTakerTx(Trade trade, Consumer<TxValidator> resultHandler) {
@@ -121,17 +116,12 @@ public class MempoolService {
     }
 
     public void validateOfferTakerTx(TxValidator txValidator, Consumer<TxValidator> resultHandler) {
-        if (txValidator.getIsFeeCurrencyBtc() != null && txValidator.getIsFeeCurrencyBtc()) {
-            if (!isServiceSupported()) {
-                UserThread.runAfter(() -> resultHandler.accept(txValidator.endResult(FeeValidationStatus.ACK_CHECK_BYPASSED)), 1);
-                return;
-            }
-            MempoolRequest mempoolRequest = new MempoolRequest(preferences, socks5ProxyProvider);
-            validateOfferTakerTx(mempoolRequest, txValidator, resultHandler);
-        } else {
-            // using BSQ for fees
-            resultHandler.accept(txValidator.validateBsqFeeTx(false));
+        if (!isServiceSupported()) {
+            UserThread.runAfter(() -> resultHandler.accept(txValidator.endResult(FeeValidationStatus.ACK_CHECK_BYPASSED)), 1);
+            return;
         }
+        MempoolRequest mempoolRequest = new MempoolRequest(preferences, socks5ProxyProvider);
+        validateOfferTakerTx(mempoolRequest, txValidator, resultHandler);
     }
 
     public void checkTxIsConfirmed(String txId, Consumer<TxValidator> resultHandler) {
@@ -178,7 +168,11 @@ public class MempoolService {
             public void onSuccess(@Nullable String jsonTxt) {
                 UserThread.execute(() -> {
                     outstandingRequests--;
-                    resultHandler.accept(txValidator.parseJsonValidateMakerFeeTx(jsonTxt, getAllBtcFeeReceivers()));
+                    if (txValidator.getIsFeeCurrencyBtc() != null && txValidator.getIsFeeCurrencyBtc()) {
+                        resultHandler.accept(txValidator.parseJsonValidateMakerFeeTx(jsonTxt, getAllBtcFeeReceivers()));
+                    } else {
+                        resultHandler.accept(txValidator.validateBsqFeeTx(true));
+                    }
                 });
             }
 
@@ -208,7 +202,11 @@ public class MempoolService {
             public void onSuccess(@Nullable String jsonTxt) {
                 UserThread.execute(() -> {
                     outstandingRequests--;
-                    resultHandler.accept(txValidator.parseJsonValidateTakerFeeTx(jsonTxt, getAllBtcFeeReceivers()));
+                    if (txValidator.getIsFeeCurrencyBtc() != null && txValidator.getIsFeeCurrencyBtc()) {
+                        resultHandler.accept(txValidator.parseJsonValidateTakerFeeTx(jsonTxt, getAllBtcFeeReceivers()));
+                    } else {
+                        resultHandler.accept(txValidator.validateBsqFeeTx(false));
+                    }
                 });
             }
 
