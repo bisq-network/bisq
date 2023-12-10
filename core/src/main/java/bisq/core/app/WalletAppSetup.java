@@ -191,6 +191,8 @@ public class WalletAppSetup {
                 exception -> {
                     if (exception instanceof InvalidHostException && showPopupIfInvalidBtcConfigHandler != null) {
                         showPopupIfInvalidBtcConfigHandler.run();
+                    } else if (exception instanceof IllegalStateException && spvFileCorruptedHandler != null) {
+                        spvFileCorruptedHandler.accept(Res.get("error.spvFileCorrupted", exception.getMessage()));
                     } else {
                         walletServiceException.set(exception);
                     }
