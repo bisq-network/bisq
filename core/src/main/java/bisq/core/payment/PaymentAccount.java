@@ -209,6 +209,14 @@ public abstract class PaymentAccount implements PersistablePayload {
         return Utilities.bytesAsHexString(getSalt());
     }
 
+    public void setHolderName(String value) {
+        paymentAccountPayload.setHolderName(value);
+    }
+
+    public String getHolderName() {
+        return paymentAccountPayload.getHolderName();
+    }
+
     public String getOwnerId() {
         return paymentAccountPayload.getOwnerId();
     }

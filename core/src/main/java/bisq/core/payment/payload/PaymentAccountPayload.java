@@ -23,6 +23,8 @@ import bisq.common.proto.network.NetworkPayload;
 import bisq.common.util.JsonExclude;
 import bisq.common.util.Utilities;
 
+import com.google.common.base.Strings;
+
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.nio.charset.StandardCharsets;
@@ -127,6 +129,14 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
 
     public void setSalt(byte[] salt) {
         excludeFromJsonDataMap.put(SALT, Utilities.encodeToHex(salt));
+    }
+
+    public String getHolderName() {
+        return excludeFromJsonDataMap.getOrDefault(HOLDER_NAME, "");
+    }
+
+    public void setHolderName(String holderName) {
+        excludeFromJsonDataMap.compute(HOLDER_NAME, (k, v) -> Strings.emptyToNull(holderName));
     }
 
     // Identifying data of payment account (e.g. IBAN).
