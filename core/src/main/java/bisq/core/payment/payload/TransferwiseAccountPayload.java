@@ -21,6 +21,8 @@ import bisq.core.locale.Res;
 
 import com.google.protobuf.Message;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
@@ -94,6 +96,10 @@ public final class TransferwiseAccountPayload extends PaymentAccountPayload {
 
     @Override
     public byte[] getAgeWitnessInputData() {
-        return super.getAgeWitnessInputData(email.getBytes(StandardCharsets.UTF_8));
+        // holderName will be included as part of the witness data.
+        // older accounts that don't have holderName still retain their existing witness.
+        return super.getAgeWitnessInputData(ArrayUtils.addAll(
+                email.getBytes(StandardCharsets.UTF_8),
+                getHolderName().getBytes(StandardCharsets.UTF_8)));
     }
 }

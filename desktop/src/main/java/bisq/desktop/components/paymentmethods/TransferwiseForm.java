@@ -45,6 +45,8 @@ public class TransferwiseForm extends PaymentMethodForm {
                                       PaymentAccountPayload paymentAccountPayload) {
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.email"),
                 ((TransferwiseAccountPayload) paymentAccountPayload).getEmail());
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+                paymentAccountPayload.getHolderName());
         return gridRow;
     }
 
@@ -64,6 +66,14 @@ public class TransferwiseForm extends PaymentMethodForm {
         emailInputTextField.setValidator(validator);
         emailInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             account.setEmail(newValue.trim());
+            updateFromInputs();
+        });
+
+        InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
+                Res.get("payment.account.owner"));
+        holderNameInputTextField.setValidator(inputValidator);
+        holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+            account.setHolderName(newValue);
             updateFromInputs();
         });
 
@@ -100,6 +110,8 @@ public class TransferwiseForm extends PaymentMethodForm {
         TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
                 account.getEmail()).second;
         field.setMouseTransparent(false);
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+                account.getHolderName());
         addLimitations(true);
         addCurrenciesGrid(false);
     }
@@ -108,6 +120,7 @@ public class TransferwiseForm extends PaymentMethodForm {
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
                 && validator.validate(account.getEmail()).isValid
+                && inputValidator.validate(account.getHolderName()).isValid
                 && account.getTradeCurrencies().size() > 0);
     }
 }

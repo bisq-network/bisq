@@ -136,6 +136,7 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
     }
 
     public void setHolderName(String holderName) {
+        // an empty string must result in the mapping removing the entry.
         excludeFromJsonDataMap.compute(HOLDER_NAME, (k, v) -> Strings.emptyToNull(holderName));
     }
 
