@@ -20,13 +20,13 @@ installDist {
 
         copy {
             from "$destinationDir/bin"
-            into rootProject.projectDir
+            into projectDir.parentFile
         }
         // copy libs required for generated shell script classpaths to 'lib' dir under
         // the project root directory
         copy {
             from "$destinationDir/lib"
-            into "${rootProject.projectDir}/lib"
+            into "${projectDir.parentFile}/lib"
         }
 
         // edit generated shell scripts such that they expect to be executed in the
