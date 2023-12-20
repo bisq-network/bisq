@@ -226,9 +226,10 @@ public final class Contract implements NetworkPayload {
                 .setTakerPayoutAddressString(takerPayoutAddressString)
                 .setMakerMultiSigPubKey(ByteString.copyFrom(makerMultiSigPubKey))
                 .setTakerMultiSigPubKey(ByteString.copyFrom(takerMultiSigPubKey))
-                .setLockTime(lockTime)
-                .setRefundAgentNodeAddress(refundAgentNodeAddress.toProtoMessage());
+                .setLockTime(lockTime);
 
+        Optional.ofNullable(refundAgentNodeAddress)  // bisq/issues/6953 refundAgentNodeAddress sometimes is null
+                .ifPresent(e -> builder.setRefundAgentNodeAddress(refundAgentNodeAddress.toProtoMessage()));
         Optional.ofNullable(hashOfMakersPaymentAccountPayload)
                 .ifPresent(e -> builder.setHashOfMakersPaymentAccountPayload(ByteString.copyFrom(hashOfMakersPaymentAccountPayload)));
         Optional.ofNullable(hashOfTakersPaymentAccountPayload)
