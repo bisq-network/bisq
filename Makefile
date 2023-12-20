@@ -147,7 +147,21 @@ localnet: .localnet
 # user, you'll need to manually run each of the targets listed below
 # commands manually in a separate terminal or as background jobs.
 deploy: setup
-	./gradlew :startRegtest
+	# ensure localnet is not already deployed
+	if screen -ls localnet | grep Detached; then false; fi
+	# create a new screen session named 'localnet'
+	screen -dmS localnet
+	# deploy each node in its own named screen window
+	for target in \
+			bitcoind \
+			seednode \
+			seednode2 \
+			alice \
+			bob \
+			mediator; do \
+		screen -S localnet -X screen -t $$target; \
+		screen -S localnet -p $$target -X stuff "make $$target\n"; \
+	done;
 	# give bitcoind rpc server time to start
 	sleep 5
 	# generate a block to ensure Bisq nodes get dao-synced
@@ -156,10 +170,24 @@ deploy: setup
 # Undeploy a running localnet by killing all Bitcoin and Bisq
 # node processes, then killing the localnet screen session altogether
 undeploy:
-	./gradlew :stopRegtest
+	# kill all Bitcoind and Bisq nodes running in screen windows
+	screen -S localnet -X at "#" stuff "^C"
+	# quit all screen windows which results in killing the session
+	screen -S localnet -X at "#" kill
+	# remove dead screens
+	screen -wipe || true
 
 bitcoind: .localnet
-	./gradlew :stopRegtestBitcoind :startRegtestBitcoind
+	bitcoind \
+		-regtest \
+		-prune=0 \
+		-txindex=1 \
+		-peerbloomfilters=1 \
+		-server \
+		-rpcuser=bisqdao \
+		-rpcpassword=bsq \
+		-datadir=.localnet/bitcoind \
+		-blocknotify='.localnet/bitcoind/blocknotify %s'
 
 seednode: seednode/build
 	./bisq-seednode \

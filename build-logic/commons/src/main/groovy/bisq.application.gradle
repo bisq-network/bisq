@@ -7,3 +7,41 @@ build.dependsOn installDist
 installDist.destinationDir = file('build/app')
 distZip.enabled = false
 distTar.enabled = false
+
+// the 'installDist' and 'startScripts' blocks below configure bisq executables to put
+// generated shell scripts in the root project directory, such that users can easily
+// discover and invoke e.g. ./bisq-desktop, ./bisq-seednode, etc.
+// See https://stackoverflow.com/q/46327736 for details.
+
+installDist {
+    doLast {
+        // copy generated shell scripts, e.g. `bisq-desktop` directly to the project
+        // root directory for discoverability and ease of use
+
+        copy {
+            from "$destinationDir/bin"
+            into projectDir.parentFile
+        }
+        // copy libs required for generated shell script classpaths to 'lib' dir under
+        // the project root directory
+        copy {
+            from "$destinationDir/lib"
+            into "${projectDir.parentFile}/lib"
+        }
+
+        // edit generated shell scripts such that they expect to be executed in the
+        // project root dir as opposed to a 'bin' subdirectory
+        def windowsScriptFile = file("${rootProject.projectDir}/bisq-${applicationName}.bat")
+        windowsScriptFile.text = windowsScriptFile.text.replace(
+                'set APP_HOME=%DIRNAME%..', 'set APP_HOME=%DIRNAME%')
+
+        def unixScriptFile = file("${rootProject.projectDir}/bisq-$applicationName")
+        unixScriptFile.text = unixScriptFile.text.replace(
+                'APP_HOME=$( cd "${APP_HOME:-./}.." && pwd -P ) || exit', 'APP_HOME=$( cd "${APP_HOME:-./}" && pwd -P ) || exit')
+    }
+}
+
+startScripts {
+    // rename scripts from, e.g. `desktop` to `bisq-desktop`
+    applicationName = "bisq-$applicationName"
+}
