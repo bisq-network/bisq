@@ -128,7 +128,7 @@ public class FilterManager {
         this.keyRing = keyRing;
         this.user = user;
         this.preferences = preferences;
-        this.configFileEditor = new ConfigFileEditor(config.configFile);
+        this.configFileEditor = new ConfigFileEditor(config.getConfigFile());
         this.providersRepository = providersRepository;
         this.ignoreDevMsg = ignoreDevMsg;
 

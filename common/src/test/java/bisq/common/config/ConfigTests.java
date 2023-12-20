@@ -53,7 +53,7 @@ public class ConfigTests {
         assertThat(config.appName, equalTo(config.defaultAppName));
         assertThat(config.userDataDir, equalTo(config.defaultUserDataDir));
         assertThat(config.appDataDir, equalTo(config.defaultAppDataDir));
-        assertThat(config.configFile, equalTo(config.defaultConfigFile));
+        assertThat(config.getConfigFile(), equalTo(config.defaultConfigFile));
     }
 
     @Test
@@ -62,7 +62,7 @@ public class ConfigTests {
         assertThat(config.appName, equalTo("My-Bisq"));
         assertThat(config.userDataDir, equalTo(config.defaultUserDataDir));
         assertThat(config.appDataDir, equalTo(new File(config.userDataDir, "My-Bisq")));
-        assertThat(config.configFile, equalTo(new File(config.appDataDir, DEFAULT_CONFIG_FILE_NAME)));
+        assertThat(config.getConfigFile(), equalTo(new File(config.appDataDir, DEFAULT_CONFIG_FILE_NAME)));
     }
 
     @Test
@@ -72,7 +72,7 @@ public class ConfigTests {
         assertThat(config.appName, equalTo(config.defaultAppName));
         assertThat(config.userDataDir, equalTo(config.defaultUserDataDir));
         assertThat(config.appDataDir, equalTo(appDataDir));
-        assertThat(config.configFile, equalTo(new File(config.appDataDir, DEFAULT_CONFIG_FILE_NAME)));
+        assertThat(config.getConfigFile(), equalTo(new File(config.appDataDir, DEFAULT_CONFIG_FILE_NAME)));
     }
 
     @Test
@@ -82,7 +82,7 @@ public class ConfigTests {
         assertThat(config.appName, equalTo(config.defaultAppName));
         assertThat(config.userDataDir, equalTo(userDataDir));
         assertThat(config.appDataDir, equalTo(new File(userDataDir, config.defaultAppName)));
-        assertThat(config.configFile, equalTo(new File(config.appDataDir, DEFAULT_CONFIG_FILE_NAME)));
+        assertThat(config.getConfigFile(), equalTo(new File(config.appDataDir, DEFAULT_CONFIG_FILE_NAME)));
     }
 
     @Test
@@ -92,7 +92,7 @@ public class ConfigTests {
         assertThat(config.appName, equalTo("My-Bisq"));
         assertThat(config.userDataDir, equalTo(config.defaultUserDataDir));
         assertThat(config.appDataDir, equalTo(appDataDir));
-        assertThat(config.configFile, equalTo(new File(config.appDataDir, DEFAULT_CONFIG_FILE_NAME)));
+        assertThat(config.getConfigFile(), equalTo(new File(config.appDataDir, DEFAULT_CONFIG_FILE_NAME)));
     }
 
     @Test
@@ -166,7 +166,7 @@ public class ConfigTests {
     public void whenConfigFileOptionIsSetToExistingFile_thenConfigFilePropertyReflectsItsValue() throws IOException {
         File configFile = File.createTempFile("bisq", "properties");
         Config config = configWithOpts(opt(CONFIG_FILE, configFile.getAbsolutePath()));
-        assertThat(config.configFile, equalTo(configFile));
+        assertThat(config.getConfigFile(), equalTo(configFile));
     }
 
     @Test
@@ -175,7 +175,7 @@ public class ConfigTests {
         File appDataDir = configFile.getParentFile();
         String relativeConfigFilePath = configFile.getName();
         Config config = configWithOpts(opt(APP_DATA_DIR, appDataDir), opt(CONFIG_FILE, relativeConfigFilePath));
-        assertThat(config.configFile, equalTo(configFile));
+        assertThat(config.getConfigFile(), equalTo(configFile));
     }
 
     @Test
@@ -188,7 +188,7 @@ public class ConfigTests {
         assertThat(config.appName, equalTo("My-Bisq"));
         assertThat(config.userDataDir, equalTo(config.defaultUserDataDir));
         assertThat(config.appDataDir, equalTo(new File(config.userDataDir, config.appName)));
-        assertThat(config.configFile, equalTo(configFile));
+        assertThat(config.getConfigFile(), equalTo(configFile));
     }
 
     @Test
