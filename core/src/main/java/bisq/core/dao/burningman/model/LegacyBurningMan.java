@@ -49,8 +49,14 @@ public final class LegacyBurningMan extends BurningManCandidate {
     }
 
     @Override
+    public void imposeCap(int cappingRound, double adjustedBurnAmountShare) {
+        // do nothing
+    }
+
+    @Override
     public void calculateCappedAndAdjustedShares(double sumAllCappedBurnAmountShares,
-                                                 double sumAllNonCappedBurnAmountShares) {
+                                                 double sumAllNonCappedBurnAmountShares,
+                                                 int numAppliedCappingRounds) {
         // do nothing
     }
 

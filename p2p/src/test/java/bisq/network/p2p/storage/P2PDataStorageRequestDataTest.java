@@ -35,8 +35,6 @@ import java.security.NoSuchAlgorithmException;
 
 import java.util.Set;
 
-import org.mockito.MockitoAnnotations;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -53,7 +51,6 @@ public class P2PDataStorageRequestDataTest {
 
     @BeforeEach
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
         this.testState = new TestState();
 
         this.localNodeAddress = new NodeAddress("localhost", 8080);
@@ -119,8 +116,8 @@ public class P2PDataStorageRequestDataTest {
     // correct GetDataRequestMessage with both sets of keys.
     @Test
     public void buildPreliminaryGetDataRequest_FilledP2PDataStore() throws NoSuchAlgorithmException {
-        PersistableNetworkPayload toAdd1 = new PersistableNetworkPayloadStub(new byte[] { 1 });
-        PersistableNetworkPayload toAdd2 = new PersistableNetworkPayloadStub(new byte[] { 2 });
+        PersistableNetworkPayload toAdd1 = new PersistableNetworkPayloadStub(new byte[]{1});
+        PersistableNetworkPayload toAdd2 = new PersistableNetworkPayloadStub(new byte[]{2});
         ProtectedStorageEntry toAdd3 = getProtectedStorageEntryForAdd();
         ProtectedStorageEntry toAdd4 = getProtectedStorageEntryForAdd();
 
@@ -147,8 +144,8 @@ public class P2PDataStorageRequestDataTest {
     // correct GetDataRequestMessage with both sets of keys.
     @Test
     public void requestData_FilledP2PDataStore_GetUpdatedDataRequest() throws NoSuchAlgorithmException {
-        PersistableNetworkPayload toAdd1 = new PersistableNetworkPayloadStub(new byte[] { 1 });
-        PersistableNetworkPayload toAdd2 = new PersistableNetworkPayloadStub(new byte[] { 2 });
+        PersistableNetworkPayload toAdd1 = new PersistableNetworkPayloadStub(new byte[]{1});
+        PersistableNetworkPayload toAdd2 = new PersistableNetworkPayloadStub(new byte[]{2});
         ProtectedStorageEntry toAdd3 = getProtectedStorageEntryForAdd();
         ProtectedStorageEntry toAdd4 = getProtectedStorageEntryForAdd();
 

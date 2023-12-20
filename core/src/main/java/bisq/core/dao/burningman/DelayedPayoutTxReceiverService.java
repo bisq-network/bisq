@@ -56,9 +56,16 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     // requests change address.
     // See: https://github.com/bisq-network/bisq/issues/6699
     public static final Date BUGFIX_6699_ACTIVATION_DATE = Utilities.getUTCDate(2023, GregorianCalendar.JULY, 24);
+    // See: https://github.com/bisq-network/proposals/issues/412
+    public static final Date PROPOSAL_412_ACTIVATION_DATE = Utilities.getUTCDate(2024, GregorianCalendar.JANUARY, 1);
 
     public static boolean isBugfix6699Activated() {
         return new Date().after(BUGFIX_6699_ACTIVATION_DATE);
+    }
+
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    public static boolean isProposal412Activated() {
+        return new Date().after(PROPOSAL_412_ACTIVATION_DATE);
     }
 
     // We don't allow to get further back than 767950 (the block height from Dec. 18th 2022).

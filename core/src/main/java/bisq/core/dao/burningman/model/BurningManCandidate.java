@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -68,6 +69,7 @@ public class BurningManCandidate {
     // The burnAmountShare adjusted in case there are cappedBurnAmountShare.
     // We redistribute the over-burned amounts to the group of not capped candidates.
     protected double adjustedBurnAmountShare;
+    private OptionalInt roundCapped = OptionalInt.empty();
 
     public BurningManCandidate() {
     }
@@ -142,11 +144,19 @@ public class BurningManCandidate {
         burnAmountShare = totalDecayedBurnAmounts > 0 ? accumulatedDecayedBurnAmount / totalDecayedBurnAmounts : 0;
     }
 
+    public void imposeCap(int cappingRound, double adjustedBurnAmountShare) {
+        roundCapped = OptionalInt.of(cappingRound);
+        // NOTE: The adjusted burn share set here will not affect the final capped burn share, only
+        //  the presentation service, so we need not worry about rounding errors affecting consensus.
+        this.adjustedBurnAmountShare = adjustedBurnAmountShare;
+    }
+
     public void calculateCappedAndAdjustedShares(double sumAllCappedBurnAmountShares,
-                                                 double sumAllNonCappedBurnAmountShares) {
+                                                 double sumAllNonCappedBurnAmountShares,
+                                                 int numAppliedCappingRounds) {
         double maxBoostedCompensationShare = getMaxBoostedCompensationShare();
-        adjustedBurnAmountShare = burnAmountShare;
-        if (burnAmountShare < maxBoostedCompensationShare) {
+        if (roundCapped.isEmpty()) {
+            adjustedBurnAmountShare = burnAmountShare;
             if (sumAllCappedBurnAmountShares == 0) {
                 // If no one is capped we do not need to do any adjustment
                 cappedBurnAmountShare = burnAmountShare;
@@ -165,7 +175,11 @@ public class BurningManCandidate {
                     } else {
                         // We exceeded the cap by the adjustment. This will lead to the legacy BM getting the
                         // difference of the adjusted amount and the maxBoostedCompensationShare.
+                        // NOTE: When the number of capping rounds are unlimited (that is post- Proposal 412
+                        //  activation), we should only get to this branch as a result of floating point rounding
+                        //  errors. In that case, the extra amount the LBM gets is negligible.
                         cappedBurnAmountShare = maxBoostedCompensationShare;
+                        roundCapped = OptionalInt.of(roundCapped.orElse(numAppliedCappingRounds));
                     }
                 }
             }
@@ -174,6 +188,12 @@ public class BurningManCandidate {
         }
     }
 
+    public double getBurnCapRatio() {
+        // NOTE: This is less than 1.0 precisely when burnAmountShare < maxBoostedCompensationShare,
+        //  in spite of any floating point rounding errors, since 1.0 is proportionately at least as
+        //  close to the previous double as any two consecutive nonzero doubles on the number line.
+        return burnAmountShare > 0.0 ? burnAmountShare / getMaxBoostedCompensationShare() : 0.0;
+    }
 
     public double getMaxBoostedCompensationShare() {
         return Math.min(BurningManService.MAX_BURN_SHARE, compensationShare * BurningManService.ISSUANCE_BOOST_FACTOR);
@@ -194,6 +214,7 @@ public class BurningManCandidate {
                 ",\r\n     burnAmountShare=" + burnAmountShare +
                 ",\r\n     cappedBurnAmountShare=" + cappedBurnAmountShare +
                 ",\r\n     adjustedBurnAmountShare=" + adjustedBurnAmountShare +
+                ",\r\n     roundCapped=" + roundCapped +
                 "\r\n}";
     }
 }
