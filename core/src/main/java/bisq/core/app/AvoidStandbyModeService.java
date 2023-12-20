@@ -77,6 +77,8 @@ public class AvoidStandbyModeService {
         this.inhibitorPathSpec = inhibitorPath();
         preferences.getUseStandbyModeProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
+                isStopped = true;
+                log.info("AvoidStandbyModeService stopped");
                 if (Utilities.isLinux() && runningInhibitorProcess().isPresent()) {
                     Objects.requireNonNull(stopLinuxInhibitorCountdownLatch).countDown();
                 }
