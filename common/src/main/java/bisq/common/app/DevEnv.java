@@ -19,6 +19,9 @@ package bisq.common.app;
 
 import bisq.common.config.Config;
 
+import java.util.Collections;
+import java.util.List;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,6 +37,10 @@ public class DevEnv {
     private static final String DEV_PRIVILEGE_PUB_KEY = "027a381b5333a56e1cc3d90d3a7d07f26509adf7029ed06fc997c656621f8da1ee";
     @Getter
     private static final String DEV_PRIVILEGE_PRIV_KEY = "6ac43ea1df2a290c1c8391736aa42e4339c5cb4f110ff0257a13b63211977b7a";
+
+    public static List<String> getDevPrivilegePubKeys() {
+        return Collections.singletonList(DEV_PRIVILEGE_PUB_KEY);
+    }
 
     public static void setup(Config config) {
         DevEnv.setDevMode(config.useDevMode);
