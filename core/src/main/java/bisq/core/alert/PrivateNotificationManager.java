@@ -106,7 +106,7 @@ public class PrivateNotificationManager implements MessageListener {
             this.mailboxMessageService.addDecryptedMailboxListener(this::handleMessage);
         }
         pubKeyAsHex = useDevPrivilegeKeys ?
-                DevEnv.DEV_PRIVILEGE_PUB_KEY :
+                DevEnv.getDEV_PRIVILEGE_PUB_KEY() :
                 "02ba7c5de295adfe57b60029f3637a2c6b1d0e969a8aaefb9e0ddc3a7963f26925";
     }
 

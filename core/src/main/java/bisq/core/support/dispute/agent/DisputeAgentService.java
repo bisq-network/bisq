@@ -63,7 +63,7 @@ public abstract class DisputeAgentService<T extends DisputeAgent> {
                                 ErrorMessageHandler errorMessageHandler) {
         log.debug("addDisputeAgent disputeAgent.hashCode() " + disputeAgent.hashCode());
         if (!Config.baseCurrencyNetwork().isMainnet() ||
-                !Utilities.encodeToHex(disputeAgent.getRegistrationPubKey()).equals(DevEnv.DEV_PRIVILEGE_PUB_KEY)) {
+                !Utilities.encodeToHex(disputeAgent.getRegistrationPubKey()).equals(DevEnv.getDEV_PRIVILEGE_PUB_KEY())) {
             boolean result = p2PService.addProtectedStorageEntry(disputeAgent);
             if (result) {
                 log.trace("Add disputeAgent to network was successful. DisputeAgent.hashCode() = {}", disputeAgent.hashCode());

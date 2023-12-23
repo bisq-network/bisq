@@ -108,7 +108,7 @@ public abstract class AccountingNode implements DaoSetupService, DaoStateListene
     }
 
     private static Set<String> getPermittedPubKeys(boolean useDevPrivilegeKeys) {
-        return useDevPrivilegeKeys ? Set.of(DevEnv.DEV_PRIVILEGE_PUB_KEY) : PERMITTED_PUB_KEYS;
+        return useDevPrivilegeKeys ? Set.of(DevEnv.getDEV_PRIVILEGE_PUB_KEY()) : PERMITTED_PUB_KEYS;
     }
 
 
