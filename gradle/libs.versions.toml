@@ -98,7 +98,8 @@ logback-core = { module = "ch.qos.logback:logback-core", version.ref = "logback"
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
-mockito = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 natpryce-make-it-easy = { module = "com.natpryce:make-it-easy", version.ref = "natpryce-make-it-easy" }
 
 netlayer-tor-external = { module = "com.github.bisq-network.netlayer:tor.external", version.ref = "netlayer" }
