@@ -17,6 +17,8 @@
 
 package bisq.apitest.method;
 
+import bisq.common.app.DevEnv;
+
 import io.grpc.StatusRuntimeException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +36,6 @@ import static bisq.apitest.config.ApiTestConfig.MEDIATOR;
 import static bisq.apitest.config.ApiTestConfig.REFUND_AGENT;
 import static bisq.apitest.config.BisqAppConfig.arbdaemon;
 import static bisq.apitest.config.BisqAppConfig.seednode;
-import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -60,7 +61,7 @@ public class RegisterDisputeAgentsTest extends MethodTest {
     @Order(1)
     public void testRegisterArbitratorShouldThrowException() {
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
-                arbClient.registerDisputeAgent(ARBITRATOR, DEV_PRIVILEGE_PRIV_KEY));
+                arbClient.registerDisputeAgent(ARBITRATOR, DevEnv.getDEV_PRIVILEGE_PRIV_KEY()));
         assertEquals("UNIMPLEMENTED: arbitrators must be registered in a Bisq UI",
                 exception.getMessage());
     }
@@ -69,7 +70,7 @@ public class RegisterDisputeAgentsTest extends MethodTest {
     @Order(2)
     public void testInvalidDisputeAgentTypeArgShouldThrowException() {
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
-                arbClient.registerDisputeAgent("badagent", DEV_PRIVILEGE_PRIV_KEY));
+                arbClient.registerDisputeAgent("badagent", DevEnv.getDEV_PRIVILEGE_PRIV_KEY()));
         assertEquals("INVALID_ARGUMENT: unknown dispute agent type 'badagent'",
                 exception.getMessage());
     }
@@ -78,7 +79,7 @@ public class RegisterDisputeAgentsTest extends MethodTest {
     @Order(3)
     public void testInvalidRegistrationKeyArgShouldThrowException() {
         Throwable exception = assertThrows(StatusRuntimeException.class, () ->
-                arbClient.registerDisputeAgent(REFUND_AGENT, "invalid" + DEV_PRIVILEGE_PRIV_KEY));
+                arbClient.registerDisputeAgent(REFUND_AGENT, "invalid" + DevEnv.getDEV_PRIVILEGE_PRIV_KEY()));
         assertEquals("INVALID_ARGUMENT: invalid registration key",
                 exception.getMessage());
     }
@@ -86,13 +87,13 @@ public class RegisterDisputeAgentsTest extends MethodTest {
     @Test
     @Order(4)
     public void testRegisterMediator() {
-        arbClient.registerDisputeAgent(MEDIATOR, DEV_PRIVILEGE_PRIV_KEY);
+        arbClient.registerDisputeAgent(MEDIATOR, DevEnv.getDEV_PRIVILEGE_PRIV_KEY());
     }
 
     @Test
     @Order(5)
     public void testRegisterRefundAgent() {
-        arbClient.registerDisputeAgent(REFUND_AGENT, DEV_PRIVILEGE_PRIV_KEY);
+        arbClient.registerDisputeAgent(REFUND_AGENT, DevEnv.getDEV_PRIVILEGE_PRIV_KEY());
     }
 
     @AfterAll

@@ -130,7 +130,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
         InputTextField keyTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("shared.unlock"), 10);
         if (useDevPrivilegeKeys) {
-            keyTF.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
+            keyTF.setText(DevEnv.getDEV_PRIVILEGE_PRIV_KEY());
         }
 
         InputTextField offerIdsTF = addInputTextField(gridPane, ++rowIndex,

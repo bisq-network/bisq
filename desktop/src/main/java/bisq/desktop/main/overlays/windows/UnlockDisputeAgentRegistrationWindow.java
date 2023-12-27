@@ -120,7 +120,7 @@ public class UnlockDisputeAgentRegistrationWindow extends Overlay<UnlockDisputeA
 
         keyInputTextField = labelInputTextFieldTuple2.second;
         if (useDevPrivilegeKeys)
-            keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
+            keyInputTextField.setText(DevEnv.getDEV_PRIVILEGE_PRIV_KEY());
         changeListener = (observable, oldValue, newValue) -> unlockButton.setDisable(newValue.length() == 0);
         keyInputTextField.textProperty().addListener(changeListener);
     }
