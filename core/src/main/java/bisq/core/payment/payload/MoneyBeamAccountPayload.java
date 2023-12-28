@@ -37,8 +37,9 @@ import lombok.extern.slf4j.Slf4j;
 @Setter
 @Getter
 @Slf4j
-public final class MoneyBeamAccountPayload extends PaymentAccountPayload {
+public final class MoneyBeamAccountPayload extends PaymentAccountPayload implements PayloadWithHolderName {
     private String accountId = "";
+    private String holderName = "";
 
     public MoneyBeamAccountPayload(String paymentMethod, String id) {
         super(paymentMethod, id);
@@ -52,6 +53,7 @@ public final class MoneyBeamAccountPayload extends PaymentAccountPayload {
     private MoneyBeamAccountPayload(String paymentMethod,
                                     String id,
                                     String accountId,
+                                    String holderName,
                                     long maxTradePeriod,
                                     Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
@@ -60,13 +62,15 @@ public final class MoneyBeamAccountPayload extends PaymentAccountPayload {
                 excludeFromJsonDataMap);
 
         this.accountId = accountId;
+        this.holderName = holderName;
     }
 
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
                 .setMoneyBeamAccountPayload(protobuf.MoneyBeamAccountPayload.newBuilder()
-                        .setAccountId(accountId))
+                        .setAccountId(accountId)
+                        .setHolderName(holderName))
                 .build();
     }
 
@@ -74,6 +78,7 @@ public final class MoneyBeamAccountPayload extends PaymentAccountPayload {
         return new MoneyBeamAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getMoneyBeamAccountPayload().getAccountId(),
+                proto.getMoneyBeamAccountPayload().getHolderName(),
                 proto.getMaxTradePeriod(),
                 new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
@@ -85,7 +90,7 @@ public final class MoneyBeamAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account") + " " + accountId;
+        return Res.get(paymentMethodId) + " - "  + Res.getWithCol("payment.account.owner") + " " + holderName + ", " + Res.getWithCol("payment.account") + " " + accountId;
     }
 
     @Override
@@ -96,5 +101,10 @@ public final class MoneyBeamAccountPayload extends PaymentAccountPayload {
     @Override
     public byte[] getAgeWitnessInputData() {
         return super.getAgeWitnessInputData(accountId.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public String getOwnerId() {
+        return holderName;
     }
 }

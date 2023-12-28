@@ -43,7 +43,10 @@ public class MoneyBeamForm extends PaymentMethodForm {
     private final MoneyBeamValidator validator;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
-        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.moneyBeam.accountId"), ((MoneyBeamAccountPayload) paymentAccountPayload).getAccountId());
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+                ((MoneyBeamAccountPayload) paymentAccountPayload).getHolderName());
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.moneyBeam.accountId"),
+                ((MoneyBeamAccountPayload) paymentAccountPayload).getAccountId());
         return gridRow;
     }
 
@@ -56,6 +59,14 @@ public class MoneyBeamForm extends PaymentMethodForm {
     @Override
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
+
+        InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
+                Res.get("payment.account.owner"));
+        holderNameInputTextField.setValidator(inputValidator);
+        holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+            account.setHolderName(newValue.trim());
+            updateFromInputs();
+        });
 
         InputTextField accountIdInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.moneyBeam.accountId"));
         accountIdInputTextField.setValidator(validator);
@@ -81,6 +92,8 @@ public class MoneyBeamForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"), Res.get(account.getPaymentMethod().getId()));
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+                account.getHolderName());
         TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.moneyBeam.accountId"), account.getAccountId()).second;
         field.setMouseTransparent(false);
         final TradeCurrency singleTradeCurrency = account.getSingleTradeCurrency();
@@ -92,6 +105,7 @@ public class MoneyBeamForm extends PaymentMethodForm {
     @Override
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
+                && inputValidator.validate(account.getHolderName()).isValid
                 && validator.validate(account.getAccountId()).isValid
                 && account.getTradeCurrencies().size() > 0);
     }

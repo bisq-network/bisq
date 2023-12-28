@@ -56,4 +56,12 @@ public final class MoneyBeamAccount extends PaymentAccount {
     public String getAccountId() {
         return ((MoneyBeamAccountPayload) paymentAccountPayload).getAccountId();
     }
+
+    public void setHolderName(String holderName) {
+        ((MoneyBeamAccountPayload) paymentAccountPayload).setHolderName(holderName);
+    }
+
+    public String getHolderName() {
+        return ((MoneyBeamAccountPayload) paymentAccountPayload).getHolderName();
+    }
 }
