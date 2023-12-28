@@ -31,6 +31,7 @@ import java.time.Clock;
 import java.nio.charset.StandardCharsets;
 
 import java.util.Collections;
+import java.util.List;
 
 import static org.bitcoinj.core.Utils.HEX;
 
@@ -60,6 +61,11 @@ public class TestFilter {
     }
 
     public static Filter createFilter(PublicKey ownerPublicKey, String signerPubKeyAsHex, long creationDate) {
+        return createFilter(ownerPublicKey, signerPubKeyAsHex, creationDate, Collections.emptyList());
+    }
+
+    public static Filter createFilter(PublicKey ownerPublicKey, String signerPubKeyAsHex,
+                                      long creationDate, List<String> bannedDevKeys) {
         return new Filter(
                 Collections.emptyList(),
                 Collections.emptyList(),
@@ -83,7 +89,7 @@ public class TestFilter {
                 null,
                 null,
                 signerPubKeyAsHex,
-                Collections.emptyList(),
+                bannedDevKeys,
                 false,
                 Collections.emptyList(),
                 Collections.emptySet(),
@@ -100,7 +106,7 @@ public class TestFilter {
         );
     }
 
-    private static Filter signFilter(Filter unsignedFilter, ECKey signerKey) {
+    public static Filter signFilter(Filter unsignedFilter, ECKey signerKey) {
         byte[] filterData = unsignedFilter.toProtoMessage().toByteArray();
         Sha256Hash hash = Sha256Hash.of(filterData);
 
