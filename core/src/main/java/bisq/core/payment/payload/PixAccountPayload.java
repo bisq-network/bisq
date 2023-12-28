@@ -39,8 +39,9 @@ import lombok.extern.slf4j.Slf4j;
 @Setter
 @Getter
 @Slf4j
-public final class PixAccountPayload extends CountryBasedPaymentAccountPayload {
+public final class PixAccountPayload extends CountryBasedPaymentAccountPayload implements PayloadWithHolderName {
     private String pixKey = "";
+    private String holderName = "";
 
     public PixAccountPayload(String paymentMethod, String id) {
         super(paymentMethod, id);
@@ -49,6 +50,7 @@ public final class PixAccountPayload extends CountryBasedPaymentAccountPayload {
     private PixAccountPayload(String paymentMethod,
                                 String id,
                                 String countryCode,
+                                String holderName,
                                 String pixKey,
                                 long maxTradePeriod,
                                 Map<String, String> excludeFromJsonDataMap) {
@@ -57,13 +59,15 @@ public final class PixAccountPayload extends CountryBasedPaymentAccountPayload {
                 countryCode,
                 maxTradePeriod,
                 excludeFromJsonDataMap);
-
+        
+        this.holderName = holderName;
         this.pixKey = pixKey;
     }
 
     @Override
     public Message toProtoMessage() {
         protobuf.PixAccountPayload.Builder builder = protobuf.PixAccountPayload.newBuilder()
+                .setHolderName(holderName)
                 .setPixKey(pixKey);
         final protobuf.CountryBasedPaymentAccountPayload.Builder countryBasedPaymentAccountPayload = getPaymentAccountPayloadBuilder()
                 .getCountryBasedPaymentAccountPayloadBuilder()
@@ -80,13 +84,14 @@ public final class PixAccountPayload extends CountryBasedPaymentAccountPayload {
                 proto.getId(),
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 paytmAccountPayloadPB.getPixKey(),
+                paytmAccountPayloadPB.getHolderName(),
                 proto.getMaxTradePeriod(),
                 new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
 
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner") + " " + holderName + ", " + Res.getWithCol("payment.pix.key") + " " + pixKey;
     }
 
     @Override
@@ -102,5 +107,10 @@ public final class PixAccountPayload extends CountryBasedPaymentAccountPayload {
         return super.getAgeWitnessInputData(ArrayUtils.addAll(
                 pixKey.getBytes(StandardCharsets.UTF_8),
                 getHolderName().getBytes(StandardCharsets.UTF_8)));
+    }
+
+    @Override
+    public String getOwnerId() {
+        return holderName;
     }
 }

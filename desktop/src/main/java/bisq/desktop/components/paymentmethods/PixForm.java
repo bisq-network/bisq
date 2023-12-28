@@ -43,6 +43,8 @@ public class PixForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+                ((PixAccountPayload) paymentAccountPayload).getHolderName());
         addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.pix.key"),
                 ((PixAccountPayload) paymentAccountPayload).getPixKey(), Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
@@ -64,6 +66,14 @@ public class PixForm extends PaymentMethodForm {
         CountryUtil.findCountryByCode("BR").ifPresent(c -> account.setCountry(c));
 
         gridRowFrom = gridRow + 1;
+
+        InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
+        Res.get("payment.account.owner"));
+        holderNameInputTextField.setValidator(inputValidator);
+        holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+            account.setHolderName(newValue.trim());
+            updateFromInputs();
+        });
 
         InputTextField pixKeyInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.pix.key"));
         pixKeyInputTextField.setValidator(inputValidator);
@@ -97,6 +107,8 @@ public class PixForm extends PaymentMethodForm {
         addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(account.getPaymentMethod().getId()));
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+                account.getHolderName());
         TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.pix.key"),
                 account.getPixKey()).second;
         field.setMouseTransparent(false);
