@@ -43,6 +43,8 @@ public class TransferwiseForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+                ((TransferwiseAccountPayload) paymentAccountPayload).getHolderName());
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.email"),
                 ((TransferwiseAccountPayload) paymentAccountPayload).getEmail());
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
@@ -61,6 +63,14 @@ public class TransferwiseForm extends PaymentMethodForm {
     @Override
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
+
+        InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
+        Res.get("payment.account.owner"));
+        holderNameInputTextField.setValidator(inputValidator);
+        holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
+            account.setHolderName(newValue.trim());
+            updateFromInputs();
+        });
 
         InputTextField emailInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.email"));
         emailInputTextField.setValidator(validator);
@@ -107,6 +117,8 @@ public class TransferwiseForm extends PaymentMethodForm {
         addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(account.getPaymentMethod().getId()));
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+                account.getHolderName());
         TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
                 account.getEmail()).second;
         field.setMouseTransparent(false);
@@ -119,6 +131,7 @@ public class TransferwiseForm extends PaymentMethodForm {
     @Override
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
+                && inputValidator.validate(account.getHolderName()).isValid
                 && validator.validate(account.getEmail()).isValid
                 && inputValidator.validate(account.getHolderName()).isValid
                 && account.getTradeCurrencies().size() > 0);

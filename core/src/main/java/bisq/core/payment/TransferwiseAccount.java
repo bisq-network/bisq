@@ -112,4 +112,12 @@ public final class TransferwiseAccount extends PaymentAccount {
     public String getEmail() {
         return ((TransferwiseAccountPayload) paymentAccountPayload).getEmail();
     }
+
+    public void setHolderName(String holderName) {
+        ((TransferwiseAccountPayload) paymentAccountPayload).setHolderName(holderName);
+    }
+
+    public String getHolderName() {
+        return ((TransferwiseAccountPayload) paymentAccountPayload).getHolderName();
+    }
 }

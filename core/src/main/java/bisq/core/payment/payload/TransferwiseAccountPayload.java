@@ -39,8 +39,9 @@ import lombok.extern.slf4j.Slf4j;
 @Setter
 @Getter
 @Slf4j
-public final class TransferwiseAccountPayload extends PaymentAccountPayload {
+public final class TransferwiseAccountPayload extends PaymentAccountPayload implements PayloadWithHolderName {
     private String email = "";
+    private String holderName = "";
 
     public TransferwiseAccountPayload(String paymentMethod, String id) {
         super(paymentMethod, id);
@@ -54,6 +55,7 @@ public final class TransferwiseAccountPayload extends PaymentAccountPayload {
     private TransferwiseAccountPayload(String paymentMethod,
                                        String id,
                                        String email,
+                                       String holderName,
                                        long maxTradePeriod,
                                        Map<String, String> excludeFromJsonDataMap) {
         super(paymentMethod,
@@ -62,12 +64,15 @@ public final class TransferwiseAccountPayload extends PaymentAccountPayload {
                 excludeFromJsonDataMap);
 
         this.email = email;
+        this.holderName = holderName;
     }
 
     @Override
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
-                .setTransferwiseAccountPayload(protobuf.TransferwiseAccountPayload.newBuilder().setEmail(email))
+                .setTransferwiseAccountPayload(protobuf.TransferwiseAccountPayload.newBuilder()
+                        .setEmail(email)
+                        .setHolderName(holderName))
                 .build();
     }
 
@@ -75,6 +80,7 @@ public final class TransferwiseAccountPayload extends PaymentAccountPayload {
         return new TransferwiseAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
                 proto.getTransferwiseAccountPayload().getEmail(),
+                proto.getTransferwiseAccountPayload().getHolderName(),
                 proto.getMaxTradePeriod(),
                 new HashMap<>(proto.getExcludeFromJsonDataMap()));
     }
@@ -86,7 +92,7 @@ public final class TransferwiseAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.email") + " " + email;
+        return Res.get(paymentMethodId) + " - "+ Res.getWithCol("payment.account.owner") + " " + holderName + ", " + Res.getWithCol("payment.email") + " " + email;
     }
 
     @Override
@@ -101,5 +107,10 @@ public final class TransferwiseAccountPayload extends PaymentAccountPayload {
         return super.getAgeWitnessInputData(ArrayUtils.addAll(
                 email.getBytes(StandardCharsets.UTF_8),
                 getHolderName().getBytes(StandardCharsets.UTF_8)));
+    }
+
+    @Override
+    public String getOwnerId() {
+        return holderName;
     }
 }
