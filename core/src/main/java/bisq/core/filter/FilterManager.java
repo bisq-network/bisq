@@ -60,7 +60,6 @@ import java.math.BigInteger;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -547,16 +546,17 @@ public class FilterManager {
 
                 addToInvalidFilters(newFilter);
                 return;
-            } else {
-                log.info("We received a new filter from the network and the creation date is newer than the " +
-                        "filter we have already. We ignore the old filter.");
-                addToInvalidFilters(currentFilter);
             }
 
             if (isPrivilegedDevPubKeyBanned(newFilter.getSignerPubKeyAsHex())) {
                 log.warn("Pub key of filter is banned. currentFilter={}, newFilter={}", currentFilter, newFilter);
                 return;
+            } else {
+                log.info("We received a new filter with a newer creation date and the signer is not banned. " +
+                        "We ignore the old filter.");
+                addToInvalidFilters(currentFilter);
             }
+
         }
 
         // Our new filter is newer so we apply it.
