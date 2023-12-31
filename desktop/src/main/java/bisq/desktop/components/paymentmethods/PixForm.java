@@ -35,6 +35,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
+import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
@@ -45,8 +46,8 @@ public class PixForm extends PaymentMethodForm {
                                       PaymentAccountPayload paymentAccountPayload) {
         addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.pix.key"),
                 ((PixAccountPayload) paymentAccountPayload).getPixKey(), Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
-                paymentAccountPayload.getHolderName());
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner"),
+                paymentAccountPayload.getHolderNameOrPromptIfEmpty());
         return gridRow;
     }
 

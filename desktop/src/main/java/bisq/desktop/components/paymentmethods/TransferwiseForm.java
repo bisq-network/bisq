@@ -19,6 +19,7 @@ package bisq.desktop.components.paymentmethods;
 
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.util.FormBuilder;
+import bisq.desktop.util.Layout;
 import bisq.desktop.util.validation.TransferwiseValidator;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
@@ -36,6 +37,7 @@ import javafx.scene.layout.GridPane;
 
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
+import static bisq.desktop.util.FormBuilder.addTopLabelTextFieldWithCopyIcon;
 
 public class TransferwiseForm extends PaymentMethodForm {
     private final TransferwiseAccount account;
@@ -43,10 +45,10 @@ public class TransferwiseForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
-        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.email"),
-                ((TransferwiseAccountPayload) paymentAccountPayload).getEmail());
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
-                paymentAccountPayload.getHolderName());
+        addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.email"),
+                ((TransferwiseAccountPayload) paymentAccountPayload).getEmail(), Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner"),
+                paymentAccountPayload.getHolderNameOrPromptIfEmpty());
         return gridRow;
     }
 
