@@ -28,6 +28,8 @@ import java.util.Optional;
 
 import ch.qos.logback.classic.Level;
 
+import lombok.Getter;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
@@ -157,7 +159,8 @@ public class Config {
 
     // Options supported only at the command-line interface (cli)
     public final boolean helpRequested;
-    public final File configFile;
+    @Getter
+    private final File configFile;
 
     // Options supported on cmd line and in the config file
     public final String appName;

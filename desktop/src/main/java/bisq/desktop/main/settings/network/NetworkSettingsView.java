@@ -158,7 +158,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
         this.localBitcoinNode = localBitcoinNode;
         this.torNetworkSettingsWindow = torNetworkSettingsWindow;
         this.clockWatcher = clockWatcher;
-        this.configFileEditor = new ConfigFileEditor(config.configFile);
+        this.configFileEditor = new ConfigFileEditor(config.getConfigFile());
     }
 
     public void initialize() {

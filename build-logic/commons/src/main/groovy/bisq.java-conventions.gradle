@@ -29,7 +29,8 @@ dependencies {
     testImplementation libs.hamcrest
     testImplementation libs.junit.jupiter.api
     testImplementation libs.junit.jupiter.params
-    testImplementation libs.mockito
+    testImplementation libs.mockito.core
+    testImplementation libs.mockito.junit.jupiter
 
     testRuntimeOnly libs.junit.jupiter.engine
 }
