@@ -164,7 +164,7 @@ public class BisqSetup {
             filterWarningHandler, displaySecurityRecommendationHandler, displayLocalhostHandler,
             wrongOSArchitectureHandler, displaySignedByArbitratorHandler,
             displaySignedByPeerHandler, displayPeerLimitLiftedHandler, displayPeerSignerHandler,
-            rejectedTxErrorMessageHandler, diskSpaceWarningHandler, chainNotSyncedHandler;
+            rejectedTxErrorMessageHandler, diskSpaceWarningHandler, offerDisabledHandler, chainNotSyncedHandler;
     @Setter
     @Nullable
     private Consumer<Boolean> displayTorNetworkSettingsHandler;
@@ -294,6 +294,11 @@ public class BisqSetup {
         }
     }
 
+    public void displayOfferDisabledMessage(String message) {
+        if (offerDisabledHandler != null) {
+            offerDisabledHandler.accept(message);
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Main startup tasks
@@ -482,6 +487,7 @@ public class BisqSetup {
                 daoWarnMessageHandler,
                 filterWarningHandler,
                 chainNotSyncedHandler,
+                offerDisabledHandler,
                 voteResultExceptionHandler,
                 revolutAccountsUpdateHandler,
                 amazonGiftCardAccountsUpdateHandler,

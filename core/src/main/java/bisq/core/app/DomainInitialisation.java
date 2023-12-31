@@ -205,6 +205,7 @@ public class DomainInitialisation {
                                    Consumer<String> daoWarnMessageHandler,
                                    Consumer<String> filterWarningHandler,
                                    Consumer<String> chainNotSyncedHandler,
+                                   Consumer<String> offerDisabledHandler,
                                    Consumer<VoteResultException> voteResultExceptionHandler,
                                    Consumer<List<RevolutAccount>> revolutAccountsUpdateHandler,
                                    Consumer<List<AmazonGiftCardAccount>> amazonGiftCardAccountsUpdateHandler,
@@ -280,7 +281,7 @@ public class DomainInitialisation {
         disputeMsgEvents.onAllServicesInitialized();
         priceAlert.onAllServicesInitialized();
         marketAlerts.onAllServicesInitialized();
-        triggerPriceService.onAllServicesInitialized();
+        triggerPriceService.onAllServicesInitialized(offerDisabledHandler);
         mempoolService.onAllServicesInitialized();
 
         mailboxMessageService.onAllServicesInitialized();

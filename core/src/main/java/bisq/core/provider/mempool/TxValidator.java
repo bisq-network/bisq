@@ -32,7 +32,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,7 +42,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 
 import static bisq.core.util.coin.CoinUtil.maxCoin;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @Getter
@@ -54,7 +52,7 @@ public class TxValidator {
     private final DaoStateService daoStateService;
     private final FilterManager filterManager;
     private long feePaymentBlockHeight; // applicable to maker and taker fees
-    private final List<String> errorList;
+    private FeeValidationStatus status;
     private final String txId;
     private Coin amount;
     @Nullable
@@ -76,8 +74,8 @@ public class TxValidator {
         this.feePaymentBlockHeight = feePaymentBlockHeight;
         this.chainHeight = (long) daoStateService.getChainHeight();
         this.filterManager = filterManager;
-        this.errorList = new ArrayList<>();
         this.jsonTxt = "";
+        this.status = FeeValidationStatus.NOT_CHECKED_YET;
     }
 
     public TxValidator(DaoStateService daoStateService, String txId, FilterManager filterManager) {
@@ -85,8 +83,8 @@ public class TxValidator {
         this.txId = txId;
         this.chainHeight = (long) daoStateService.getChainHeight();
         this.filterManager = filterManager;
-        this.errorList = new ArrayList<>();
         this.jsonTxt = "";
+        this.status = FeeValidationStatus.NOT_CHECKED_YET;
     }
 
 
@@ -96,37 +94,35 @@ public class TxValidator {
 
     public TxValidator parseJsonValidateMakerFeeTx(String jsonTxt, List<String> btcFeeReceivers) {
         this.jsonTxt = jsonTxt;
-        boolean status = initialSanityChecks(txId, jsonTxt);
+        FeeValidationStatus status = initialSanityChecks(txId, jsonTxt);
         try {
-            if (status) {
-                if (checkNotNull(isFeeCurrencyBtc)) {
-                    status = checkFeeAddressBTC(jsonTxt, btcFeeReceivers)
-                            && checkFeeAmountBTC(jsonTxt, amount, true, getBlockHeightForFeeCalculation(jsonTxt));
+            if (status.pass()) {
+                status = checkFeeAddressBTC(jsonTxt, btcFeeReceivers);
+                if (status.pass()) {
+                    status = checkFeeAmountBTC(jsonTxt, amount, true, getBlockHeightForFeeCalculation(jsonTxt));
                 }
             }
         } catch (JsonSyntaxException e) {
             String s = "The maker fee tx JSON validation failed with reason: " + e.toString();
             log.info(s);
-            errorList.add(s);
-            status = false;
+            status = FeeValidationStatus.NACK_JSON_ERROR;
         }
-        return endResult("Maker tx validation", status);
+        return endResult("Maker tx validation (BTC)", status);
     }
 
     public TxValidator validateBsqFeeTx(boolean isMaker) {
         Optional<Tx> tx = daoStateService.getTx(txId);
-        String statusStr = (isMaker ? "Maker" : "Taker") + " tx validation";
+        String statusStr = (isMaker ? "Maker" : "Taker") + " tx validation (BSQ)";
         if (tx.isEmpty()) {
             long txAge = this.chainHeight - this.feePaymentBlockHeight;
             if (txAge > 48) {
                 // still unconfirmed after 8 hours grace period we assume there may be SPV wallet issue.
                 // see github.com/bisq-network/bisq/issues/6603
                 statusStr = String.format("BSQ tx %s not found, age=%d: FAIL.", txId, txAge);
-                log.warn(statusStr);
-                return endResult(statusStr, false);
+                return endResult(statusStr, FeeValidationStatus.NACK_BSQ_FEE_NOT_FOUND);
             } else {
                 log.info("DAO does not yet have the tx {} (age={}), bypassing check of burnt BSQ amount.", txId, txAge);
-                return endResult(statusStr, true);
+                return endResult(statusStr, FeeValidationStatus.ACK_BSQ_TX_IS_NEW);
             }
         } else {
             return endResult(statusStr, checkFeeAmountBSQ(tx.get(), amount, isMaker, feePaymentBlockHeight));
@@ -135,28 +131,24 @@ public class TxValidator {
 
     public TxValidator parseJsonValidateTakerFeeTx(String jsonTxt, List<String> btcFeeReceivers) {
         this.jsonTxt = jsonTxt;
-        boolean status = initialSanityChecks(txId, jsonTxt);
+        FeeValidationStatus status = initialSanityChecks(txId, jsonTxt);
         try {
-            if (status) {
-                if (isFeeCurrencyBtc == null) {
-                    isFeeCurrencyBtc = checkFeeAddressBTC(jsonTxt, btcFeeReceivers);
-                }
-                if (isFeeCurrencyBtc) {
-                    status = checkFeeAddressBTC(jsonTxt, btcFeeReceivers)
-                            && checkFeeAmountBTC(jsonTxt, amount, false, getBlockHeightForFeeCalculation(jsonTxt));
+            if (status.pass()) {
+                status = checkFeeAddressBTC(jsonTxt, btcFeeReceivers);
+                if (status.pass()) {
+                    status = checkFeeAmountBTC(jsonTxt, amount, false, getBlockHeightForFeeCalculation(jsonTxt));
                 }
             }
         } catch (JsonSyntaxException e) {
             String s = "The taker fee tx JSON validation failed with reason: " + e.toString();
             log.info(s);
-            errorList.add(s);
-            status = false;
+            status = FeeValidationStatus.NACK_JSON_ERROR;
         }
-        return endResult("Taker tx validation", status);
+        return endResult("Taker tx validation (BTC)", status);
     }
 
     public long parseJsonValidateTx() {
-        if (!initialSanityChecks(txId, jsonTxt)) {
+        if (!initialSanityChecks(txId, jsonTxt).pass()) {
             return -1;
         }
         return getTxConfirms(jsonTxt, chainHeight);
@@ -164,31 +156,30 @@ public class TxValidator {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean checkFeeAddressBTC(String jsonTxt, List<String> btcFeeReceivers) {
+    private FeeValidationStatus checkFeeAddressBTC(String jsonTxt, List<String> btcFeeReceivers) {
         try {
             JsonArray jsonVout = getVinAndVout(jsonTxt).second;
             JsonObject jsonVout0 = jsonVout.get(0).getAsJsonObject();
             JsonElement jsonFeeAddress = jsonVout0.get("scriptpubkey_address");
             log.debug("fee address: {}", jsonFeeAddress.getAsString());
             if (btcFeeReceivers.contains(jsonFeeAddress.getAsString())) {
-                return true;
+                return FeeValidationStatus.ACK_FEE_OK;
             } else if (getBlockHeightForFeeCalculation(jsonTxt) < BLOCK_TOLERANCE) {
                 log.info("Leniency rule, unrecognised fee receiver but its a really old offer so let it pass, {}", jsonFeeAddress.getAsString());
-                return true;
+                return FeeValidationStatus.ACK_FEE_OK;
             } else {
                 String error = "fee address: " + jsonFeeAddress.getAsString() + " was not a known BTC fee receiver";
-                errorList.add(error);
                 log.info(error);
                 log.info("Known BTC fee receivers: {}", btcFeeReceivers.toString());
+                return FeeValidationStatus.NACK_UNKNOWN_FEE_RECEIVER;
             }
         } catch (JsonSyntaxException e) {
-            errorList.add(e.toString());
             log.warn(e.toString());
         }
-        return false;
+        return FeeValidationStatus.NACK_JSON_ERROR;
     }
 
-    private boolean checkFeeAmountBTC(String jsonTxt, Coin tradeAmount, boolean isMaker, long blockHeight) {
+    private FeeValidationStatus checkFeeAmountBTC(String jsonTxt, Coin tradeAmount, boolean isMaker, long blockHeight) {
         JsonArray jsonVin = getVinAndVout(jsonTxt).first;
         JsonArray jsonVout = getVinAndVout(jsonTxt).second;
         JsonObject jsonVin0 = jsonVin.get(0).getAsJsonObject();
@@ -212,19 +203,19 @@ public class TxValidator {
                 feeValueAsCoin + " sats";
         if (expectedFeeAsLong == feeValue) {
             log.debug("The fee matched. " + description);
-            return true;
+            return FeeValidationStatus.ACK_FEE_OK;
         }
 
         if (expectedFeeAsLong < feeValue) {
             log.info("The fee was more than what we expected: " + description);
-            return true;
+            return FeeValidationStatus.ACK_FEE_OK;
         }
 
         double leniencyCalc = feeValue / (double) expectedFeeAsLong;
         if (leniencyCalc > FEE_TOLERANCE) {
             log.info("Leniency rule: the fee was low, but above {} of what was expected {} {}",
                     FEE_TOLERANCE, leniencyCalc, description);
-            return true;
+            return FeeValidationStatus.ACK_FEE_OK;
         }
 
         Optional<Boolean> result = maybeCheckAgainstFeeFromFilter(tradeAmount,
@@ -234,22 +225,22 @@ public class TxValidator {
                 true,
                 description);
         if (result.isPresent()) {
-            return result.get();
+            return result.get() ? FeeValidationStatus.ACK_FEE_OK :
+                    isMaker ? FeeValidationStatus.NACK_MAKER_FEE_TOO_LOW : FeeValidationStatus.NACK_TAKER_FEE_TOO_LOW;
         }
 
         Param defaultFeeParam = isMaker ? Param.DEFAULT_MAKER_FEE_BTC : Param.DEFAULT_TAKER_FEE_BTC;
         if (feeExistsUsingDifferentDaoParam(tradeAmount, feeValueAsCoin, defaultFeeParam, minFeeParam)) {
             log.info("Leniency rule: the fee matches a different DAO parameter {}", description);
-            return true;
+            return FeeValidationStatus.ACK_FEE_OK;
         }
 
         String feeUnderpaidMessage = "UNDERPAID. " + description;
-        errorList.add(feeUnderpaidMessage);
         log.info(feeUnderpaidMessage);
-        return false;
+        return isMaker ? FeeValidationStatus.NACK_MAKER_FEE_TOO_LOW : FeeValidationStatus.NACK_TAKER_FEE_TOO_LOW;
     }
 
-    private boolean checkFeeAmountBSQ(Tx bsqTx, Coin tradeAmount, boolean isMaker, long blockHeight) {
+    private FeeValidationStatus checkFeeAmountBSQ(Tx bsqTx, Coin tradeAmount, boolean isMaker, long blockHeight) {
         Param minFeeParam = isMaker ? Param.MIN_MAKER_FEE_BSQ : Param.MIN_TAKER_FEE_BSQ;
         long expectedFeeAsLong = calculateFee(tradeAmount,
                 isMaker ? getMakerFeeRateBsq(blockHeight) : getTakerFeeRateBsq(blockHeight),
@@ -262,18 +253,18 @@ public class TxValidator {
 
         if (expectedFeeAsLong == feeValue) {
             log.debug("The fee matched. " + description);
-            return true;
+            return FeeValidationStatus.ACK_FEE_OK;
         }
 
         if (expectedFeeAsLong < feeValue) {
             log.info("The fee was more than what we expected. " + description + " Tx:" + bsqTx.getId());
-            return true;
+            return FeeValidationStatus.ACK_FEE_OK;
         }
 
         double leniencyCalc = feeValue / (double) expectedFeeAsLong;
         if (leniencyCalc > FEE_TOLERANCE) {
             log.info("Leniency rule: the fee was low, but above {} of what was expected {} {}", FEE_TOLERANCE, leniencyCalc, description);
-            return true;
+            return FeeValidationStatus.ACK_FEE_OK;
         }
         Coin feeValueAsCoin = Coin.valueOf(feeValue);
 
@@ -284,18 +275,18 @@ public class TxValidator {
                 false,
                 description);
         if (maybeTestFeeFromFilter.isPresent()) {
-            return maybeTestFeeFromFilter.get();
+            return maybeTestFeeFromFilter.get() ? FeeValidationStatus.ACK_FEE_OK :
+                    isMaker ? FeeValidationStatus.NACK_MAKER_FEE_TOO_LOW : FeeValidationStatus.NACK_TAKER_FEE_TOO_LOW;
         }
 
         Param defaultFeeParam = isMaker ? Param.DEFAULT_MAKER_FEE_BSQ : Param.DEFAULT_TAKER_FEE_BSQ;
         if (feeExistsUsingDifferentDaoParam(tradeAmount, Coin.valueOf(feeValue), defaultFeeParam, minFeeParam)) {
             log.info("Leniency rule: the fee matches a different DAO parameter {}", description);
-            return true;
+            return FeeValidationStatus.ACK_FEE_OK;
         }
 
-        errorList.add(description);
         log.info(description);
-        return false;
+        return isMaker ? FeeValidationStatus.NACK_MAKER_FEE_TOO_LOW : FeeValidationStatus.NACK_TAKER_FEE_TOO_LOW;
     }
 
     private static Tuple2<JsonArray, JsonArray> getVinAndVout(String jsonTxt) throws JsonSyntaxException {
@@ -313,26 +304,26 @@ public class TxValidator {
         return new Tuple2<>(jsonVin, jsonVout);
     }
 
-    private static boolean initialSanityChecks(String txId, String jsonTxt) {
+    private static FeeValidationStatus initialSanityChecks(String txId, String jsonTxt) {
         // there should always be "status" container element at the top level
         if (jsonTxt == null || jsonTxt.length() == 0) {
-            return false;
+            return FeeValidationStatus.NACK_JSON_ERROR;
         }
         JsonObject json = new Gson().fromJson(jsonTxt, JsonObject.class);
         if (json.get("status") == null) {
-            return false;
+            return FeeValidationStatus.NACK_JSON_ERROR;
         }
         // there should always be "txid" string element at the top level
         if (json.get("txid") == null) {
-            return false;
+            return FeeValidationStatus.NACK_JSON_ERROR;
         }
         // txid should match what we requested
         if (!txId.equals(json.get("txid").getAsString())) {
-            return false;
+            return FeeValidationStatus.NACK_JSON_ERROR;
         }
         JsonObject jsonStatus = json.get("status").getAsJsonObject();
         JsonElement jsonConfirmed = jsonStatus.get("confirmed");
-        return (jsonConfirmed != null);
+        return (jsonConfirmed != null ? FeeValidationStatus.ACK_FEE_OK : FeeValidationStatus.NACK_JSON_ERROR);
         // the json is valid and it contains a "confirmed" field then tx is known to mempool.space
         // we don't care if it is confirmed or not, just that it exists.
     }
@@ -472,27 +463,29 @@ public class TxValidator {
         return actualFeeValue.equals(calculateFee(tradeAmount, defaultRate, minFeeParam));
     }
 
-    public TxValidator endResult(String title, boolean status) {
-        log.info("{} : {}", title, status ? "SUCCESS" : "FAIL");
-        if (!status) {
-            errorList.add(title);
+    public TxValidator endResult(FeeValidationStatus status) {
+        return endResult(status.toString(), status);
+    }
+
+    private TxValidator endResult(String title, FeeValidationStatus status) {
+        this.status = status;
+        if (status.pass()) {
+            log.info("{} : {}", title, status);
+        } else {
+            log.warn("{} : {}", title, status);
         }
         return this;
     }
 
-    public boolean isFail() {
-        return errorList.size() > 0;
+    public FeeValidationStatus getStatus() {
+        return status;
     }
 
     public boolean getResult() {
-        return errorList.size() == 0;
-    }
-
-    public String errorSummary() {
-        return errorList.toString().substring(0, Math.min(85, errorList.toString().length()));
+        return status.pass();
     }
 
     public String toString() {
-        return errorList.toString();
+        return status.toString();
     }
 }

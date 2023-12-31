@@ -313,7 +313,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
             GUIUtil.exportCSV("openOffers.csv",
                     headerConverter,
                     contentConverter,
-                    new OpenOfferListItem(null, null, null, null, null),
+                    new OpenOfferListItem(null, null, null, null),
                     sortedList,
                     (Stage) root.getScene().getWindow());
         });
@@ -334,8 +334,7 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
 
     private void updateTriggerColumnVisibility() {
         triggerIconColumn.setVisible(model.dataModel.getList().stream()
-                .mapToLong(item -> item.getOpenOffer().getTriggerPrice())
-                .sum() > 0);
+                .anyMatch(item -> item.getOpenOffer().triggerInfoShouldBeShown()));
     }
 
     @Override
@@ -965,11 +964,15 @@ public class OpenOffersView extends ActivatableViewAndModel<VBox, OpenOffersView
                                     if (button == null) {
                                         button = getRegularIconButton(MaterialDesignIcon.SHIELD_HALF_FULL);
                                         boolean triggerPriceSet = item.getOpenOffer().getTriggerPrice() > 0;
-                                        button.setVisible(triggerPriceSet);
+                                        button.setVisible(triggerPriceSet || item.getOpenOffer().getFeeValidationStatus().fail());
 
                                         if (model.dataModel.wasTriggered(item.getOpenOffer())) {
                                             button.getGraphic().getStyleClass().add("warning");
-                                            button.setTooltip(new Tooltip(Res.get("openOffer.triggered")));
+                                            button.setTooltip(new Tooltip(Res.get("openOffer.triggered", item.getOpenOffer().getShortId())));
+                                        } else if (item.getOpenOffer().getFeeValidationStatus().fail()) {
+                                                button.getGraphic().getStyleClass().add("warning");
+                                                button.setTooltip(new Tooltip(Res.get("openOffer.deactivated.feeValidationIssue",
+                                                        item.getOpenOffer().getShortId(), item.getOpenOffer().getFeeValidationStatus().toString())));
                                         } else {
                                             button.getGraphic().getStyleClass().remove("warning");
                                             button.setTooltip(new Tooltip(Res.get("openOffer.triggerPrice", item.getTriggerPriceAsString())));

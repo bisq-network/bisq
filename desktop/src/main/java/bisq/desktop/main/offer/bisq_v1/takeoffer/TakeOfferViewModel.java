@@ -40,6 +40,7 @@ import bisq.core.offer.OfferUtil;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
+import bisq.core.provider.mempool.FeeValidationStatus;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
@@ -130,7 +131,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
     private ChangeListener<String> tradeErrorListener;
     private ChangeListener<Offer.State> offerStateListener;
     private ChangeListener<String> offerErrorListener;
-    private ChangeListener<Number> getMempoolStatusListener;
+    private ChangeListener<FeeValidationStatus> feeValidationStatusChangeListener;
     private ConnectionListener connectionListener;
     //  private Subscription isFeeSufficientSubscription;
     private Runnable takeOfferSucceededHandler;
@@ -481,7 +482,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         boolean inputDataValid = isBtcInputValid(amount.get()).isValid
                 && dataModel.isMinAmountLessOrEqualAmount()
                 && !dataModel.isAmountLargerThanOfferAmount()
-                && dataModel.mempoolStatus.get() >= 0 // TODO do we want to block in case response is slow (tor can be slow)?
+                && dataModel.feeValidationStatus.get() != FeeValidationStatus.NOT_CHECKED_YET
                 && isOfferAvailable.get()
                 && !dataModel.wouldCreateDustForMaker();
         isNextButtonDisabled.set(!inputDataValid);
@@ -524,8 +525,8 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         tradeErrorListener = (ov, oldValue, newValue) -> applyTradeErrorMessage(newValue);
         offerStateListener = (ov, oldValue, newValue) -> applyOfferState(newValue);
 
-        getMempoolStatusListener = (observable, oldValue, newValue) -> {
-            if (newValue.longValue() >= 0) {
+        feeValidationStatusChangeListener = (observable, oldValue, newValue) -> {
+            if (newValue != FeeValidationStatus.NOT_CHECKED_YET) {
                 updateButtonDisableState();
             }
         };
@@ -575,7 +576,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
         dataModel.getAmount().addListener(amountAsCoinListener);
 
         dataModel.getIsBtcWalletFunded().addListener(isWalletFundedListener);
-        dataModel.getMempoolStatus().addListener(getMempoolStatusListener);
+        dataModel.getFeeValidationStatus().addListener(feeValidationStatusChangeListener);
         p2PService.getNetworkNode().addConnectionListener(connectionListener);
        /* isFeeSufficientSubscription = EasyBind.subscribe(dataModel.isFeeFromFundingTxSufficient, newValue -> {
             updateButtonDisableState();
@@ -588,7 +589,7 @@ class TakeOfferViewModel extends ActivatableWithDataModel<TakeOfferDataModel> im
 
         // Binding with Bindings.createObjectBinding does not work because of bi-directional binding
         dataModel.getAmount().removeListener(amountAsCoinListener);
-        dataModel.getMempoolStatus().removeListener(getMempoolStatusListener);
+        dataModel.getFeeValidationStatus().removeListener(feeValidationStatusChangeListener);
 
         dataModel.getIsBtcWalletFunded().removeListener(isWalletFundedListener);
         if (offer != null) {

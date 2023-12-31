@@ -31,6 +31,7 @@ import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
 import bisq.core.provider.fee.FeeService;
+import bisq.core.provider.mempool.FeeValidationStatus;
 import bisq.core.provider.mempool.MempoolService;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.bisq_v1.TradeUtil;
@@ -58,10 +59,8 @@ import javax.inject.Named;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 import java.util.Date;
@@ -121,8 +120,6 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     private final ObjectProperty<MessageState> messageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
     private Subscription tradeStateSubscription;
     private Subscription messageStateSubscription;
-    @Getter
-    protected final IntegerProperty mempoolStatus = new SimpleIntegerProperty();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -210,12 +207,10 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
     }
 
     public void checkTakerFeeTx(Trade trade) {
-        mempoolStatus.setValue(-1);
         UserThread.runAfter(() -> {
             mempoolService.validateOfferTakerTx(trade, (txValidator -> {
-                mempoolStatus.setValue(txValidator.isFail() ? 0 : 1);
-                if (txValidator.isFail()) {
-                    String errorMessage = "Validation of Taker Tx returned: " + txValidator.toString();
+                if (txValidator.getStatus().fail()) {
+                    String errorMessage = txValidator.getStatus().toString();
                     log.warn(errorMessage);
                     // prompt user to open mediation
                     if (trade.getDisputeState() == Trade.DisputeState.NO_DISPUTE) {

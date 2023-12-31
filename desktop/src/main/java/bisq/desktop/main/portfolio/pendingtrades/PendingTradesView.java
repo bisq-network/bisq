@@ -37,6 +37,7 @@ import bisq.desktop.util.FormBuilder;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.bisq_v1.OfferPayload;
+import bisq.core.provider.mempool.FeeValidationStatus;
 import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.traderchat.TradeChatSession;
@@ -151,7 +152,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     private final Map<String, ListChangeListener<ChatMessage>> listenerByTrade = new HashMap<>();
     private ChangeListener<Trade.DisputeState> disputeStateListener;
     private ChangeListener<MediationResultState> mediationResultStateListener;
-    private ChangeListener<Number> getMempoolStatusListener;
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private final PeerInfoIconMap avatarMap = new PeerInfoIconMap();
 
@@ -270,15 +270,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         };
 
         tradesListChangeListener = c -> onListChanged();
-
-        getMempoolStatusListener = (observable, oldValue, newValue) -> {
-            // -1 status is unknown
-            // 0 status is FAIL
-            // 1 status is PASS
-            if (newValue.longValue() >= 0) {
-                log.info("Taker fee validation returned {}", newValue.longValue());
-            }
-        };
     }
 
     @Override
@@ -342,7 +333,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
         list.addListener(tradesListChangeListener);
         updateNewChatMessagesByTradeMap();
-        model.getMempoolStatus().addListener(getMempoolStatusListener);
     }
 
     @Override
@@ -355,7 +345,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
         removeSelectedSubView();
 
         model.dataModel.list.removeListener(tradesListChangeListener);
-        model.getMempoolStatus().removeListener(getMempoolStatusListener);
 
         if (scene != null)
             scene.removeEventHandler(KeyEvent.KEY_RELEASED, keyEventEventHandler);

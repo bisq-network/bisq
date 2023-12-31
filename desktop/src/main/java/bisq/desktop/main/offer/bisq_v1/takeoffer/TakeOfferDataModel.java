@@ -43,6 +43,7 @@ import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountUtil;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
+import bisq.core.provider.mempool.FeeValidationStatus;
 import bisq.core.provider.mempool.MempoolService;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.TradeManager;
@@ -63,10 +64,8 @@ import org.bitcoinj.wallet.Wallet;
 
 import com.google.inject.Inject;
 
-import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 import javafx.collections.ObservableList;
@@ -123,9 +122,7 @@ class TakeOfferDataModel extends OfferDataModel {
     private boolean freezeFee;
     private Coin txFeePerVbyteFromFeeService;
     @Getter
-    protected final IntegerProperty mempoolStatus = new SimpleIntegerProperty();
-    @Getter
-    protected String mempoolStatusText;
+    protected final ObjectProperty<FeeValidationStatus> feeValidationStatus = new SimpleObjectProperty<>();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -251,13 +248,12 @@ class TakeOfferDataModel extends OfferDataModel {
             log.info("Completed requestTxFee: txFeeFromFeeService={}", txFeeFromFeeService);
         }
 
-        mempoolStatus.setValue(-1);
+        feeValidationStatus.setValue(FeeValidationStatus.NOT_CHECKED_YET);
         OfferPayload offerPayload = offer.getOfferPayload().orElseThrow();
         mempoolService.validateOfferMakerTx(offerPayload, (txValidator -> {
-            mempoolStatus.setValue(txValidator.isFail() ? 0 : 1);
-            if (txValidator.isFail()) {
-                mempoolStatusText = txValidator.toString();
-                log.info("Mempool check of OfferFeePaymentTxId returned errors: [{}]", mempoolStatusText);
+            feeValidationStatus.setValue(txValidator.getStatus());
+            if (txValidator.getStatus().fail()) {
+                log.info("Offer Fee check returned errors: [{}]", txValidator.getStatus());
             }
         }));
 

@@ -18,6 +18,7 @@
 package bisq.core.offer;
 
 import bisq.core.offer.bsq_swap.BsqSwapOfferPayload;
+import bisq.core.provider.mempool.FeeValidationStatus;
 import bisq.core.trade.model.Tradable;
 
 import bisq.network.p2p.NodeAddress;
@@ -38,7 +39,7 @@ import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-@EqualsAndHashCode(exclude = {"bsqSwapOfferHasMissingFunds", "state", "timeoutTimer", "mempoolStatus"})
+@EqualsAndHashCode(exclude = {"bsqSwapOfferHasMissingFunds", "state", "timeoutTimer", "feeValidationStatus"})
 @Slf4j
 public final class OpenOffer implements Tradable {
     // Timeout for offer reservation during takeoffer process. If deposit tx is not completed in that time we reset the offer to AVAILABLE state.
@@ -78,7 +79,7 @@ public final class OpenOffer implements Tradable {
     private final long triggerPrice;
     @Getter
     @Setter
-    transient private long mempoolStatus = -1;
+    transient private FeeValidationStatus feeValidationStatus = FeeValidationStatus.NOT_CHECKED_YET;
     transient private Timer timeoutTimer;
 
     // Added at BsqSwap release. We do not persist that field
@@ -189,6 +190,10 @@ public final class OpenOffer implements Tradable {
 
     public boolean isCanceled() {
         return state == State.CANCELED;
+    }
+
+    public boolean triggerInfoShouldBeShown() {
+        return triggerPrice > 0 || feeValidationStatus.fail();
     }
 
     public BsqSwapOfferPayload getBsqSwapOfferPayload() {

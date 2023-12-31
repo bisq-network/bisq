@@ -36,6 +36,7 @@ import bisq.core.offer.bisq_v1.MarketPriceNotAvailableException;
 import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.offer.placeoffer.bisq_v1.PlaceOfferModel;
 import bisq.core.offer.placeoffer.bisq_v1.PlaceOfferProtocol;
+import bisq.core.provider.mempool.FeeValidationStatus;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.support.dispute.mediation.mediator.MediatorManager;
@@ -497,6 +498,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         offerBookService.activateOffer(offer,
                 () -> {
                     openOffer.setState(OpenOffer.State.AVAILABLE);
+                    openOffer.setFeeValidationStatus(FeeValidationStatus.NOT_CHECKED_YET);
                     requestPersistence();
                     log.debug("activateOpenOffer, offerId={}", offer.getId());
                     resultHandler.handleResult();
