@@ -34,3 +34,4 @@ deploy
 .localnet
 /apitest/src/main/resources/dao-setup*
 /.run
+/regtest/data_dirs
