@@ -99,7 +99,7 @@ public class SendPrivateNotificationWindow extends Overlay<SendPrivateNotificati
     private void addContent() {
         InputTextField keyInputTextField = addInputTextField(gridPane, ++rowIndex, Res.get("shared.unlock"), 10);
         if (useDevPrivilegeKeys)
-            keyInputTextField.setText(DevEnv.DEV_PRIVILEGE_PRIV_KEY);
+            keyInputTextField.setText(DevEnv.getDEV_PRIVILEGE_PRIV_KEY());
 
         Tuple2<Label, TextArea> labelTextAreaTuple2 = addTopLabelTextArea(gridPane, ++rowIndex,
                 Res.get("sendPrivateNotificationWindow.privateNotification"),

@@ -27,6 +27,7 @@ import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
 
+import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
 import bisq.common.crypto.KeyRing;
 
@@ -42,7 +43,6 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.common.app.DevEnv.DEV_PRIVILEGE_PRIV_KEY;
 import static bisq.core.support.SupportType.ARBITRATION;
 import static bisq.core.support.SupportType.MEDIATION;
 import static bisq.core.support.SupportType.REFUND;
@@ -87,7 +87,7 @@ class CoreDisputeAgentsService {
                 || !config.useLocalhostForP2P)
             throw new UnsupportedOperationException("dispute agents must be registered in a Bisq UI");
 
-        if (!registrationKey.equals(DEV_PRIVILEGE_PRIV_KEY))
+        if (!registrationKey.equals(DevEnv.getDEV_PRIVILEGE_PRIV_KEY()))
             throw new IllegalArgumentException("invalid registration key");
 
         Optional<SupportType> supportType = getSupportType(disputeAgentType);

@@ -92,8 +92,8 @@ public class AccountingFullNodeNetworkService implements MessageListener, PeerMa
         this.useDevPrivilegeKeys = useDevPrivilegeKeys;
 
         if (useDevPrivilegeKeys) {
-            bmOracleNodePubKey = DevEnv.DEV_PRIVILEGE_PUB_KEY;
-            bmOracleNodePrivKey = DevEnv.DEV_PRIVILEGE_PRIV_KEY;
+            bmOracleNodePubKey = DevEnv.getDEV_PRIVILEGE_PUB_KEY();
+            bmOracleNodePrivKey = DevEnv.getDEV_PRIVILEGE_PRIV_KEY();
         }
         this.bmOracleNodePubKey = bmOracleNodePubKey.isEmpty() ? null : bmOracleNodePubKey;
         this.bmOracleNodePrivKey = bmOracleNodePrivKey.isEmpty() ? null : toEcKey(bmOracleNodePrivKey);

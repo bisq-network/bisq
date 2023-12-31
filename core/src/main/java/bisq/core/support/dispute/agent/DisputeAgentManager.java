@@ -100,7 +100,7 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
         this.disputeAgentService = disputeAgentService;
         this.user = user;
         this.filterManager = filterManager;
-        publicKeys = useDevPrivilegeKeys ? Collections.singletonList(DevEnv.DEV_PRIVILEGE_PUB_KEY) : getPubKeyList();
+        publicKeys = useDevPrivilegeKeys ? Collections.singletonList(DevEnv.getDEV_PRIVILEGE_PUB_KEY()) : getPubKeyList();
     }
 
 
@@ -193,7 +193,7 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
                     String pubKeyAsHex = Utils.HEX.encode(e.getRegistrationPubKey());
                     boolean isInPublicKeyInList = isPublicKeyInList(pubKeyAsHex);
                     if (!isInPublicKeyInList) {
-                        if (DevEnv.DEV_PRIVILEGE_PUB_KEY.equals(pubKeyAsHex))
+                        if (DevEnv.getDEV_PRIVILEGE_PUB_KEY().equals(pubKeyAsHex))
                             log.info("We got the DEV_PRIVILEGE_PUB_KEY in our list of publicKeys. RegistrationPubKey={}, nodeAddress={}",
                                     Utilities.bytesAsHexString(e.getRegistrationPubKey()),
                                     e.getNodeAddress().getFullAddress());

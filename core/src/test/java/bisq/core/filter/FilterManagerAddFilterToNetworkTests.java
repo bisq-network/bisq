@@ -85,7 +85,7 @@ public class FilterManagerAddFilterToNetworkTests {
         KeyPair ownerKeyPair = keyPairGenerator.generateKeyPair();
         ownerPublicKey = ownerKeyPair.getPublic();
 
-        privilegedDevEcKey = ECKey.fromPrivate(new BigInteger(1, HEX.decode(DevEnv.DEV_PRIVILEGE_PRIV_KEY)));
+        privilegedDevEcKey = ECKey.fromPrivate(new BigInteger(1, HEX.decode(DevEnv.getDEV_PRIVILEGE_PRIV_KEY())));
         privilegedDevPubKeyHex = HEX.encode(privilegedDevEcKey.getPubKey());
     }
 
