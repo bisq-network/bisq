@@ -91,13 +91,6 @@ public final class OpenOffer implements Tradable {
         this(offer, 0);
     }
 
-    public OpenOffer(Offer offer, State state) {
-        this.offer = offer;
-        this.triggerPrice = 0;
-        this.state = state;
-        arbitratorNodeAddress = null;
-    }
-
     public OpenOffer(Offer offer, long triggerPrice) {
         this.offer = offer;
         this.triggerPrice = triggerPrice;

@@ -36,12 +36,6 @@ public class FeeValidationTests {
     }
 
     @Test
-    void createOpenBsqOfferWithSecondConstructor() {
-        var openOffer = new OpenOffer(mock(Offer.class), OpenOffer.State.AVAILABLE);
-        assertThat(openOffer.getFeeValidationStatus(), is(equalTo(FeeValidationStatus.NOT_CHECKED_YET)));
-    }
-
-    @Test
     void createOpenOfferWithTriggerPrice() {
         var openOffer = new OpenOffer(mock(Offer.class), 42_000);
         assertThat(openOffer.getFeeValidationStatus(), is(equalTo(FeeValidationStatus.NOT_CHECKED_YET)));
