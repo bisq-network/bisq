@@ -887,7 +887,7 @@ public class GUIUtil {
         UserThread.execute(node::requestFocus);
     }
 
-    public static void reSyncSPVChain(Preferences preferences) {
+    public static void reSyncSPVChain() {
         try {
             new Popup().information(Res.get("settings.net.reSyncSPVSuccess"))
                     .useShutDownButton()

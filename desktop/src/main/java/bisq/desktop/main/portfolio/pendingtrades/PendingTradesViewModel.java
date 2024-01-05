@@ -31,12 +31,12 @@ import bisq.core.network.MessageState;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferUtil;
 import bisq.core.provider.fee.FeeService;
-import bisq.core.provider.mempool.FeeValidationStatus;
 import bisq.core.provider.mempool.MempoolService;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.bisq_v1.TradeUtil;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.VolumeUtil;
@@ -62,6 +62,9 @@ import org.fxmisc.easybind.Subscription;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+
+import java.time.Duration;
+import java.time.Instant;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -204,6 +207,33 @@ public class PendingTradesViewModel extends ActivatableWithDataModel<PendingTrad
 
     private void onMessageStateChanged(MessageState messageState) {
         messageStateProperty.set(messageState);
+    }
+
+    public void checkForTimeoutAtTradeStep1() {
+        if (trade == null) {
+            return;
+        }
+        // Trade is waiting confirmation.  If it has been unconfirmed for too long, prompt the user.
+        long unconfirmedHours = Duration.between(trade.getDate().toInstant(), Instant.now()).toHours();
+        if (unconfirmedHours >= 24 && !trade.hasFailed()) {
+            // PR #6994 - only show a warning popup if a block explorer says it has confirmed
+            mempoolService.checkTxIsConfirmed(trade.getDepositTxId(), (validator -> {
+                long confirms = validator.parseJsonValidateTx();
+                log.info("Mempool lookup of deposit tx returned {} confirms for trade {}", confirms, trade.getShortId());
+                if (confirms < 1) {
+                    return;
+                }
+                String key = "tradeUnconfirmedTooLong_" + trade.getShortId();
+                if (DontShowAgainLookup.showAgain(key)) {
+                    new Popup().warning(Res.get("portfolio.pending.unconfirmedTooLong", trade.getShortId(), unconfirmedHours))
+                            .dontShowAgainId(key)
+                            .actionButtonText(Res.get("settings.net.reSyncSPVChainButton"))
+                            .closeButtonText(Res.get("shared.ok"))
+                            .onAction(GUIUtil::reSyncSPVChain)
+                            .show();
+                }
+            }));
+        }
     }
 
     public void checkTakerFeeTx(Trade trade) {

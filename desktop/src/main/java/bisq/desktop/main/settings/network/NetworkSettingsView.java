@@ -293,7 +293,7 @@ public class NetworkSettingsView extends ActivatableView<GridPane, Void> {
             }
         });
 
-        reSyncSPVChainButton.setOnAction(event -> GUIUtil.reSyncSPVChain(preferences));
+        reSyncSPVChainButton.setOnAction(event -> GUIUtil.reSyncSPVChain());
 
         bitcoinPeersSubscription = EasyBind.subscribe(walletsSetup.connectedPeersProperty(),
                 connectedPeers -> updateBitcoinPeersTable());
