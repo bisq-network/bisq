@@ -349,11 +349,21 @@ public class DaoStateService implements DaoSetupService {
     }
 
     public List<Block> getBlocksFromBlockHeight(int fromBlockHeight) {
-        return getBlocks().stream()
-                .filter(block -> block.getHeight() >= fromBlockHeight)
-                .collect(Collectors.toList());
+        return getBlocksFromBlockHeight(fromBlockHeight, Integer.MAX_VALUE);
     }
 
+    public List<Block> getBlocksFromBlockHeight(int fromBlockHeight, int numMaxBlocks) {
+        return getBlocksFromBlockHeightStream(fromBlockHeight, numMaxBlocks)
+                .collect(Collectors.toCollection(LinkedList::new));
+    }
+
+    public Stream<Block> getBlocksFromBlockHeightStream(int fromBlockHeight, int numMaxBlocks) {
+        // We limit requests to numMaxBlocks blocks, to avoid performance issues and too
+        // large network data in case a node requests too far back in history.
+        return getBlocks().stream()
+                .filter(block -> block.getHeight() >= fromBlockHeight)
+                .limit(numMaxBlocks);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Genesis
