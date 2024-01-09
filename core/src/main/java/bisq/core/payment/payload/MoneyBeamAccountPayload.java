@@ -21,6 +21,8 @@ import bisq.core.locale.Res;
 
 import com.google.protobuf.Message;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
@@ -85,16 +87,21 @@ public final class MoneyBeamAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account") + " " + accountId;
+        return Res.get(paymentMethodId) + " - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return getPaymentDetails();
+        return (getHolderName().isEmpty() ? "" : Res.getWithCol("payment.account.owner") + " " + getHolderName() + "\n") +
+                Res.getWithCol("payment.account") + " " + accountId;
     }
 
     @Override
     public byte[] getAgeWitnessInputData() {
-        return super.getAgeWitnessInputData(accountId.getBytes(StandardCharsets.UTF_8));
+        // holderName will be included as part of the witness data.
+        // older accounts that don't have holderName still retain their existing witness.
+        return super.getAgeWitnessInputData(ArrayUtils.addAll(
+                accountId.getBytes(StandardCharsets.UTF_8),
+                getHolderName().getBytes(StandardCharsets.UTF_8)));
     }
 }
