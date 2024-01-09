@@ -371,7 +371,7 @@ class CoreTradesService {
         failedTradesManager.getTradeById(tradeId).ifPresentOrElse(failedTrade -> {
             verifyCanUnfailTrade(failedTrade);
             failedTradesManager.removeTrade(failedTrade);
-            tradeManager.addFailedTradeToPendingTrades(failedTrade);
+            tradeManager.addTradeToPendingTrades(failedTrade);
             log.info("Failed trade {} changed to open trade.", tradeId);
         }, () -> {
             throw new NotFoundException(format("failed trade '%s' not found", tradeId));

@@ -102,7 +102,7 @@ class FailedTradesDataModel extends ActivatableDataModel {
         }
 
         failedTradesManager.removeTrade(trade);
-        tradeManager.addFailedTradeToPendingTrades(trade);
+        tradeManager.addTradeToPendingTrades(trade);
         return true;
     }
 

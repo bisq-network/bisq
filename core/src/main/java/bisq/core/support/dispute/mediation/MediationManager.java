@@ -37,6 +37,7 @@ import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.messages.SupportMessage;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
@@ -88,13 +89,14 @@ public final class MediationManager extends DisputeManager<MediationDisputeList>
                             WalletsSetup walletsSetup,
                             TradeManager tradeManager,
                             ClosedTradableManager closedTradableManager,
+                            FailedTradesManager failedTradesManager,
                             OpenOfferManager openOfferManager,
                             DaoFacade daoFacade,
                             KeyRing keyRing,
                             MediationDisputeListService mediationDisputeListService,
                             Config config,
                             PriceFeedService priceFeedService) {
-        super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
+        super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager, failedTradesManager,
                 openOfferManager, daoFacade, keyRing, mediationDisputeListService, config, priceFeedService);
         p2PService.getNetworkNode().addMessageListener(this);   // listening for FileTransferPart message
     }

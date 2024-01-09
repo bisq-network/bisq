@@ -801,7 +801,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         failedTradesManager.add(trade);
     }
 
-    public void addFailedTradeToPendingTrades(Trade trade) {
+    public void addTradeToPendingTrades(Trade trade) {
         if (!trade.isInitialized()) {
             initPersistedTrade(trade);
         }

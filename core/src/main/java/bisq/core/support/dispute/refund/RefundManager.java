@@ -39,6 +39,7 @@ import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.messages.SupportMessage;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.model.bisq_v1.Trade;
 
 import bisq.network.p2p.AckMessageSourceType;
@@ -55,6 +56,7 @@ import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
@@ -92,6 +94,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
                          WalletsSetup walletsSetup,
                          TradeManager tradeManager,
                          ClosedTradableManager closedTradableManager,
+                         FailedTradesManager failedTradesManager,
                          OpenOfferManager openOfferManager,
                          DaoFacade daoFacade,
                          DelayedPayoutTxReceiverService delayedPayoutTxReceiverService,
@@ -100,7 +103,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
                          Config config,
                          PriceFeedService priceFeedService,
                          MempoolService mempoolService) {
-        super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager,
+        super(p2PService, tradeWalletService, walletService, walletsSetup, tradeManager, closedTradableManager, failedTradesManager,
                 openOfferManager, daoFacade, keyRing, refundDisputeListService, config, priceFeedService);
         this.delayedPayoutTxReceiverService = delayedPayoutTxReceiverService;
 
