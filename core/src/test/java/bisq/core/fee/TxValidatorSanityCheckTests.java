@@ -70,6 +70,15 @@ public class TxValidatorSanityCheckTests {
         assertThat(status, is(equalTo(FeeValidationStatus.NACK_JSON_ERROR)));
     }
 
+    @Test
+    void invalidJsonResponse() {
+        String invalidJson = "in\"valid'json',";
+        TxValidator txValidator1 = txValidator.parseJsonValidateMakerFeeTx(invalidJson, FEE_RECEIVER_ADDRESSES);
+
+        FeeValidationStatus status = txValidator1.getStatus();
+        assertThat(status, is(equalTo(FeeValidationStatus.NACK_JSON_ERROR)));
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"status", "txid"})
     void mempoolResponseWithMissingField(String missingField) throws IOException {
