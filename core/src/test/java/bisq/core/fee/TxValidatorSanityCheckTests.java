@@ -124,6 +124,13 @@ public class TxValidatorSanityCheckTests {
     private JsonObject getValidBtcMakerFeeMempoolJsonResponse() throws IOException {
         URL resource = getClass().getClassLoader().getResource("mempool_test_data/valid_btc_maker_fee.json");
         String path = Objects.requireNonNull(resource).getPath();
+
+        if (System.getProperty("os.name").toLowerCase().startsWith("win")) {
+            // We need to remove the first character on Windows because the path starts with a
+            // leading slash "/C:/Users/..."
+            path = path.substring(1);
+        }
+
         String jsonContent = Files.readString(Path.of(path));
         return new Gson().fromJson(jsonContent, JsonObject.class);
     }
