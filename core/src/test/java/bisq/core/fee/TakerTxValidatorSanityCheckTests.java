@@ -49,6 +49,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
 public class TakerTxValidatorSanityCheckTests {
@@ -104,6 +105,20 @@ public class TakerTxValidatorSanityCheckTests {
 
         FeeValidationStatus status = txValidator1.getStatus();
         assertThat(status, is(equalTo(FeeValidationStatus.NACK_JSON_ERROR)));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"vin", "vout"})
+    void checkFeeAddressBtcTestVinOrVoutNotJsonArray(String vinOrVout) throws IOException {
+        JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
+        json.add(vinOrVout, new JsonPrimitive(1234));
+        assertThrows(IllegalStateException.class, () -> json.get(vinOrVout).getAsJsonArray());
+
+        String jsonContent = new Gson().toJson(json);
+        TxValidator txValidator1 = txValidator.parseJsonValidateMakerFeeTx(jsonContent,
+                MakerTxValidatorSanityCheckTests.FEE_RECEIVER_ADDRESSES);
+
+        assertThat(txValidator1.getStatus(), is(FeeValidationStatus.NACK_JSON_ERROR));
     }
 
     @Test
