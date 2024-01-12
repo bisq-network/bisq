@@ -51,8 +51,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @ExtendWith(MockitoExtension.class)
-public class TxValidatorSanityCheckTests {
-    private final List<String> FEE_RECEIVER_ADDRESSES = List.of("2MzBNTJDjjXgViKBGnatDU3yWkJ8pJkEg9w");
+public class MakerTxValidatorSanityCheckTests {
+    public static final List<String> FEE_RECEIVER_ADDRESSES = List.of("2MzBNTJDjjXgViKBGnatDU3yWkJ8pJkEg9w");
 
     private TxValidator txValidator;
 
@@ -121,8 +121,9 @@ public class TxValidatorSanityCheckTests {
         assertThat(status, is(equalTo(FeeValidationStatus.NACK_JSON_ERROR)));
     }
 
-    private JsonObject getValidBtcMakerFeeMempoolJsonResponse() throws IOException {
-        URL resource = getClass().getClassLoader().getResource("mempool_test_data/valid_btc_maker_fee.json");
+    public static JsonObject getValidBtcMakerFeeMempoolJsonResponse() throws IOException {
+        URL resource = MakerTxValidatorSanityCheckTests.class.getClassLoader()
+                .getResource("mempool_test_data/valid_btc_maker_fee.json");
         String path = Objects.requireNonNull(resource).getPath();
 
         if (System.getProperty("os.name").toLowerCase().startsWith("win")) {
