@@ -80,7 +80,7 @@ public class TakerTxValidatorSanityCheckTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"status", "txid"})
+    @ValueSource(strings = {"status", "txid", "vin", "vout"})
     void mempoolResponseWithMissingField(String missingField) throws IOException {
         JsonObject json = getValidBtcMakerFeeMempoolJsonResponse();
         json.remove(missingField);
