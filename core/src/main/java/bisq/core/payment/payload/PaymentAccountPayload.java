@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.core.locale.Res;
+
 import bisq.common.consensus.UsedForTradeContractJson;
 import bisq.common.crypto.CryptoUtils;
 import bisq.common.proto.network.NetworkPayload;
@@ -135,6 +137,9 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
         return excludeFromJsonDataMap.getOrDefault(HOLDER_NAME, "");
     }
 
+    public String getHolderNameOrPromptIfEmpty() {
+        return getHolderName().isEmpty() ? Res.get("payment.account.owner.ask") : getHolderName();
+    }
     public void setHolderName(String holderName) {
         // an empty string must result in the mapping removing the entry.
         excludeFromJsonDataMap.compute(HOLDER_NAME, (k, v) -> Strings.emptyToNull(holderName));

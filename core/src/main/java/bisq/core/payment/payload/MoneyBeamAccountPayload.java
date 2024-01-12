@@ -92,8 +92,8 @@ public final class MoneyBeamAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return (getHolderName().isEmpty() ? "" : Res.getWithCol("payment.account.owner") + " " + getHolderName() + "\n") +
-                Res.getWithCol("payment.account") + " " + accountId;
+        return Res.getWithCol("payment.account") + " " + accountId + "\n" +
+                Res.getWithCol("payment.account.owner") + " " + getHolderNameOrPromptIfEmpty();
     }
 
     @Override

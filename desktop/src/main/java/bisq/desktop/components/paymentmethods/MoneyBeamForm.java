@@ -45,7 +45,7 @@ public class MoneyBeamForm extends PaymentMethodForm {
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.moneyBeam.accountId"), ((MoneyBeamAccountPayload) paymentAccountPayload).getAccountId());
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.account.owner"),
-                paymentAccountPayload.getHolderName());
+                paymentAccountPayload.getHolderNameOrPromptIfEmpty());
         return gridRow;
     }
 
