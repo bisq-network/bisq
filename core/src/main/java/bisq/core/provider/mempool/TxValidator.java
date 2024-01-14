@@ -302,12 +302,17 @@ public class TxValidator {
         if (json.get("vin") == null || json.get("vout") == null) {
             throw new JsonSyntaxException("missing vin/vout");
         }
-        JsonArray jsonVin = json.get("vin").getAsJsonArray();
-        JsonArray jsonVout = json.get("vout").getAsJsonArray();
-        if (jsonVin == null || jsonVout == null || jsonVin.size() < 1 || jsonVout.size() < 2) {
-            throw new JsonSyntaxException("not enough vins/vouts");
+
+        try {
+            JsonArray jsonVin = json.get("vin").getAsJsonArray();
+            JsonArray jsonVout = json.get("vout").getAsJsonArray();
+            if (jsonVin == null || jsonVout == null || jsonVin.size() < 1 || jsonVout.size() < 2) {
+                throw new JsonSyntaxException("not enough vins/vouts");
+            }
+            return new Tuple2<>(jsonVin, jsonVout);
+        } catch (IllegalStateException e) {
+            throw new JsonSyntaxException("vin/vout no as JSON Array", e);
         }
-        return new Tuple2<>(jsonVin, jsonVout);
     }
 
     private static FeeValidationStatus initialSanityChecks(String txId, String jsonTxt) {

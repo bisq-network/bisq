@@ -49,10 +49,11 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
-public class TxValidatorSanityCheckTests {
-    private final List<String> FEE_RECEIVER_ADDRESSES = List.of("2MzBNTJDjjXgViKBGnatDU3yWkJ8pJkEg9w");
+public class MakerTxValidatorSanityCheckTests {
+    public static final List<String> FEE_RECEIVER_ADDRESSES = List.of("2MzBNTJDjjXgViKBGnatDU3yWkJ8pJkEg9w");
 
     private TxValidator txValidator;
 
@@ -80,7 +81,7 @@ public class TxValidatorSanityCheckTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"status", "txid"})
+    @ValueSource(strings = {"status", "txid", "vin", "vout"})
     void mempoolResponseWithMissingField(String missingField) throws IOException {
         JsonObject json = getValidBtcMakerFeeMempoolJsonResponse();
         json.remove(missingField);
@@ -106,6 +107,20 @@ public class TxValidatorSanityCheckTests {
         assertThat(status, is(equalTo(FeeValidationStatus.NACK_JSON_ERROR)));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"vin", "vout"})
+    void checkFeeAddressBtcTestVinOrVoutNotJsonArray(String vinOrVout) throws IOException {
+        JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
+        json.add(vinOrVout, new JsonPrimitive(1234));
+        assertThrows(IllegalStateException.class, () -> json.get(vinOrVout).getAsJsonArray());
+
+        String jsonContent = new Gson().toJson(json);
+        TxValidator txValidator1 = txValidator.parseJsonValidateMakerFeeTx(jsonContent,
+                MakerTxValidatorSanityCheckTests.FEE_RECEIVER_ADDRESSES);
+
+        assertThat(txValidator1.getStatus(), is(FeeValidationStatus.NACK_JSON_ERROR));
+    }
+
     @Test
     void responseHasDifferentTxId() throws IOException {
         String differentTxId = "abcde971ead7d03619e3a9eeaa771ed5adba14c448839e0299f857f7bb4ec07";
@@ -121,8 +136,9 @@ public class TxValidatorSanityCheckTests {
         assertThat(status, is(equalTo(FeeValidationStatus.NACK_JSON_ERROR)));
     }
 
-    private JsonObject getValidBtcMakerFeeMempoolJsonResponse() throws IOException {
-        URL resource = getClass().getClassLoader().getResource("mempool_test_data/valid_btc_maker_fee.json");
+    public static JsonObject getValidBtcMakerFeeMempoolJsonResponse() throws IOException {
+        URL resource = MakerTxValidatorSanityCheckTests.class.getClassLoader()
+                .getResource("mempool_test_data/valid_btc_maker_fee.json");
         String path = Objects.requireNonNull(resource).getPath();
 
         if (System.getProperty("os.name").toLowerCase().startsWith("win")) {
