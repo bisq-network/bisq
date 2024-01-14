@@ -135,6 +135,24 @@ public class MakerTxValidatorSanityCheckTests {
         assertThat(txValidator1.getStatus(), is(FeeValidationStatus.NACK_JSON_ERROR));
     }
 
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1})
+    void checkFeeAddressBtcNoTooFewVout(int numberOfVouts) throws IOException {
+        JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
+
+        var jsonArray = new JsonArray(numberOfVouts);
+        for (int i = 0; i < numberOfVouts; i++) {
+            jsonArray.add(i);
+        }
+        json.add("vout", jsonArray);
+        assertThat(json.get("vout").getAsJsonArray().size(), is(numberOfVouts));
+
+        String jsonContent = new Gson().toJson(json);
+        TxValidator txValidator1 = txValidator.parseJsonValidateMakerFeeTx(jsonContent,
+                MakerTxValidatorSanityCheckTests.FEE_RECEIVER_ADDRESSES);
+
+        assertThat(txValidator1.getStatus(), is(FeeValidationStatus.NACK_JSON_ERROR));
+    }
 
     @Test
     void responseHasDifferentTxId() throws IOException {
