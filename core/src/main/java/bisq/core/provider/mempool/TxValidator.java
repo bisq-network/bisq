@@ -94,8 +94,9 @@ public class TxValidator {
 
     public TxValidator parseJsonValidateMakerFeeTx(String jsonTxt, List<String> btcFeeReceivers) {
         this.jsonTxt = jsonTxt;
-        FeeValidationStatus status = initialSanityChecks(txId, jsonTxt);
+        FeeValidationStatus status;
         try {
+            status = initialSanityChecks(txId, jsonTxt);
             if (status.pass()) {
                 status = checkFeeAddressBTC(jsonTxt, btcFeeReceivers);
                 if (status.pass()) {
@@ -131,8 +132,9 @@ public class TxValidator {
 
     public TxValidator parseJsonValidateTakerFeeTx(String jsonTxt, List<String> btcFeeReceivers) {
         this.jsonTxt = jsonTxt;
-        FeeValidationStatus status = initialSanityChecks(txId, jsonTxt);
+        FeeValidationStatus status;
         try {
+            status = initialSanityChecks(txId, jsonTxt);
             if (status.pass()) {
                 status = checkFeeAddressBTC(jsonTxt, btcFeeReceivers);
                 if (status.pass()) {
@@ -148,10 +150,14 @@ public class TxValidator {
     }
 
     public long parseJsonValidateTx() {
-        if (!initialSanityChecks(txId, jsonTxt).pass()) {
+        try {
+            if (!initialSanityChecks(txId, jsonTxt).pass()) {
+                return -1;
+            }
+            return getTxConfirms(jsonTxt, chainHeight);
+        } catch (JsonSyntaxException e) {
             return -1;
         }
-        return getTxConfirms(jsonTxt, chainHeight);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
