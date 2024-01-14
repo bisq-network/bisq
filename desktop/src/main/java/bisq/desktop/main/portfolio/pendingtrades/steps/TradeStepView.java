@@ -34,7 +34,6 @@ import bisq.core.support.dispute.DisputeResult;
 import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
-import bisq.core.user.DontShowAgainLookup;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 
@@ -70,9 +69,6 @@ import org.fxmisc.easybind.Subscription;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.value.ChangeListener;
-
-import java.time.Duration;
-import java.time.Instant;
 
 import java.util.Optional;
 
@@ -735,19 +731,6 @@ public abstract class TradeStepView extends AnchorPane {
                 if (remaining <= 0) {
                     openMediationResultPopup(Res.get("portfolio.pending.mediationResult.popup.headline", trade.getShortId()));
                 }
-            }
-        }
-    }
-
-    protected void checkForTimeout() {
-        long unconfirmedHours = Duration.between(trade.getDate().toInstant(), Instant.now()).toHours();
-        if (unconfirmedHours >= 3 && !trade.hasFailed()) {
-            String key = "tradeUnconfirmedTooLong_" + trade.getShortId();
-            if (DontShowAgainLookup.showAgain(key)) {
-                new Popup().warning(Res.get("portfolio.pending.unconfirmedTooLong", trade.getShortId(), unconfirmedHours))
-                        .dontShowAgainId(key)
-                        .closeButtonText(Res.get("shared.ok"))
-                        .show();
             }
         }
     }
