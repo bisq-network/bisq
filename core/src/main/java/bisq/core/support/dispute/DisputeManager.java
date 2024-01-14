@@ -38,6 +38,7 @@ import bisq.core.support.dispute.messages.PeerOpenedDisputeMessage;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.TradeManager;
+import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
@@ -91,6 +92,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     protected final BtcWalletService btcWalletService;
     protected final TradeManager tradeManager;
     protected final ClosedTradableManager closedTradableManager;
+    private final FailedTradesManager failedTradesManager;
     protected final OpenOfferManager openOfferManager;
     protected final PubKeyRing pubKeyRing;
     protected final DisputeListService<T> disputeListService;
@@ -116,6 +118,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                           WalletsSetup walletsSetup,
                           TradeManager tradeManager,
                           ClosedTradableManager closedTradableManager,
+                          FailedTradesManager failedTradesManager,
                           OpenOfferManager openOfferManager,
                           DaoFacade daoFacade,
                           KeyRing keyRing,
@@ -128,6 +131,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         this.btcWalletService = btcWalletService;
         this.tradeManager = tradeManager;
         this.closedTradableManager = closedTradableManager;
+        this.failedTradesManager = failedTradesManager;
         this.openOfferManager = openOfferManager;
         this.daoFacade = daoFacade;
         this.pubKeyRing = keyRing.getPubKeyRing();
@@ -447,21 +451,37 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
 
     // Not-dispute-requester receives that msg from dispute agent
     protected void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
+        Dispute dispute = peerOpenedDisputeMessage.getDispute();
+        tradeManager.getTradeById(dispute.getTradeId()).ifPresentOrElse(
+            trade -> peerOpenedDisputeForTrade(peerOpenedDisputeMessage, dispute, trade),
+            () -> closedTradableManager.getTradableById(dispute.getTradeId()).ifPresentOrElse(
+                closedTradable -> newDisputeRevertsClosedTrade(peerOpenedDisputeMessage, dispute, (Trade)closedTradable),
+                () -> failedTradesManager.getTradeById(dispute.getTradeId()).ifPresent(
+                    trade -> newDisputeRevertsFailedTrade(peerOpenedDisputeMessage, dispute, trade))));
+    }
+
+    private void newDisputeRevertsFailedTrade(PeerOpenedDisputeMessage peerOpenedDisputeMessage, Dispute dispute, Trade trade) {
+        log.info("Peer dispute ticket received, reverting failed trade {} to pending", trade.getShortId());
+        failedTradesManager.removeTrade(trade);
+        tradeManager.addTradeToPendingTrades(trade);
+        peerOpenedDisputeForTrade(peerOpenedDisputeMessage, dispute, trade);
+    }
+
+    private void newDisputeRevertsClosedTrade(PeerOpenedDisputeMessage peerOpenedDisputeMessage, Dispute dispute, Trade trade) {
+        log.info("Peer dispute ticket received, reverting closed trade {} to pending", trade.getShortId());
+        closedTradableManager.remove(trade);
+        tradeManager.addTradeToPendingTrades(trade);
+        peerOpenedDisputeForTrade(peerOpenedDisputeMessage, dispute, trade);
+    }
+
+    private void peerOpenedDisputeForTrade(PeerOpenedDisputeMessage peerOpenedDisputeMessage, Dispute dispute, Trade trade) {
+        String errorMessage = null;
         T disputeList = getDisputeList();
         if (disputeList == null) {
             log.warn("disputes is null");
             return;
         }
 
-        String errorMessage = null;
-        Dispute dispute = peerOpenedDisputeMessage.getDispute();
-
-        Optional<Trade> optionalTrade = tradeManager.getTradeById(dispute.getTradeId());
-        if (optionalTrade.isEmpty()) {
-            return;
-        }
-
-        Trade trade = optionalTrade.get();
         try {
             DisputeValidation.validateDisputeData(dispute, btcWalletService);
             DisputeValidation.validateNodeAddresses(dispute, config);
