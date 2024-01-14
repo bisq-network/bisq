@@ -23,6 +23,7 @@ import bisq.core.provider.mempool.FeeValidationStatus;
 import bisq.core.provider.mempool.TxValidator;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
@@ -120,6 +121,20 @@ public class MakerTxValidatorSanityCheckTests {
 
         assertThat(txValidator1.getStatus(), is(FeeValidationStatus.NACK_JSON_ERROR));
     }
+
+    @Test
+    void checkFeeAddressBtcNoTooFewVin() throws IOException {
+        JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
+        json.add("vin", new JsonArray(0));
+        assertThat(json.get("vin").getAsJsonArray().size(), is(0));
+
+        String jsonContent = new Gson().toJson(json);
+        TxValidator txValidator1 = txValidator.parseJsonValidateMakerFeeTx(jsonContent,
+                MakerTxValidatorSanityCheckTests.FEE_RECEIVER_ADDRESSES);
+
+        assertThat(txValidator1.getStatus(), is(FeeValidationStatus.NACK_JSON_ERROR));
+    }
+
 
     @Test
     void responseHasDifferentTxId() throws IOException {
