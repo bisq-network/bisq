@@ -155,6 +155,24 @@ public class MakerTxValidatorSanityCheckTests {
     }
 
     @Test
+    void checkFeeAmountMissingVinPreVout() throws IOException {
+        JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
+        JsonObject firstInput = json.get("vin").getAsJsonArray().get(0).getAsJsonObject();
+        firstInput.remove("prevout");
+
+        boolean hasPreVout = json.get("vin").getAsJsonArray()
+                .get(0).getAsJsonObject()
+                .has("prevout");
+        assertThat(hasPreVout, is(false));
+
+        String jsonContent = new Gson().toJson(json);
+        TxValidator txValidator1 = txValidator.parseJsonValidateMakerFeeTx(jsonContent,
+                MakerTxValidatorSanityCheckTests.FEE_RECEIVER_ADDRESSES);
+
+        assertThat(txValidator1.getStatus(), is(FeeValidationStatus.NACK_JSON_ERROR));
+    }
+
+    @Test
     void responseHasDifferentTxId() throws IOException {
         String differentTxId = "abcde971ead7d03619e3a9eeaa771ed5adba14c448839e0299f857f7bb4ec07";
 
