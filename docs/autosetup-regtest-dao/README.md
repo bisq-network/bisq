@@ -147,7 +147,7 @@ Press enter to broadcast transaction, ctrl+c otherwise
 8. Once confirmed the script will broadcast the genesis tx to the regtest blockchain and setup the `config.sh` file in the `bisq` directory which is used by the `seed_node`, `alice` and `bob` scripts. It populates the genesis txid and genesis block height so the instances can be launched accordingly.
 Example output:
 ```
-... <output ommited - see step above>
+... <output omitted - see step above>
 Press enter to broadcast transaction, ctrl+c otherwise
 Genesis txid is:
 a876c877de410480530f7e8fa7e34034085db4db603d30a5635610fb59e646b2
