@@ -192,7 +192,7 @@ public class XmrForm extends AssetsForm {
         GridPane.setMargin(hBox, new Insets(0 + Layout.FLOATING_LABEL_DISTANCE, 0, 0, 0));
         gridPane.getChildren().add(hBox);
 
-        // subAddressTextField and addressInputTextField share the same row, they are used interchangably
+        // subAddressTextField and addressInputTextField share the same row, they are used interchangeably
         // depending on if subaddresses are in use
         addressInputTextField = FormBuilder.addInputTextField(gridPane, gridRow, Res.get("payment.altcoin.address"));
         addressInputTextField.setValidator(altCoinAddressValidator);
