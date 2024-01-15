@@ -318,7 +318,7 @@ public class BroadcastHandler implements PeerManager.Listener {
             // We check if number of open requests to peers is less than we need to reach numOfCompletedBroadcastsTarget.
             // Thus we never can reach required resilience as too many numOfFailedBroadcasts occurred.
             int maxPossibleSuccessCases = numPeersForBroadcast.get() - numOfFailedBroadcasts.get();
-            // We subtract 1 as we want to have it called only once, with a < comparision we would trigger repeatedly.
+            // We subtract 1 as we want to have it called only once, with a < comparison we would trigger repeatedly.
             boolean notEnoughSucceededOrOpen = maxPossibleSuccessCases == numOfCompletedBroadcastsTarget - 1;
             // We did not reach resilience level and timeout prevents to reach it later
             boolean timeoutAndNotEnoughSucceeded = timeoutTriggered.get() && numOfCompletedBroadcasts.get() < numOfCompletedBroadcastsTarget;
