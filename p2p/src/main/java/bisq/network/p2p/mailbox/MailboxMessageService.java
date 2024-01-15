@@ -522,7 +522,7 @@ public class MailboxMessageService implements HashMapChangedListener, PersistedD
         if (allServicesInitialized && isBootstrapped) {     // GH ISSUE 6367 only remove after fully initialized
             // After we notified our listeners we remove the data immediately from the network.
             // In case the client has not been ready it need to take it via getMailBoxMessages.
-            // We do not remove the data from our local map at that moment. This has to be called explicitely from the
+            // We do not remove the data from our local map at that moment. This has to be called explicitly from the
             // client after processing. In case processing fails for some reason we still have the local data which can
             // be applied after restart, but the network got cleaned from pending mailbox messages.
             removeMailboxEntryFromNetwork(mailboxItem.getProtectedMailboxStorageEntry());
