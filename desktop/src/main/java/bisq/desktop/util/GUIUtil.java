@@ -743,6 +743,20 @@ public class GUIUtil {
         return t.cast(parent);
     }
 
+    public static void showMaximizedToProtectPrivacyMessage(Runnable runnable) {
+        String msg = Res.get("shared.maximizedToProtectPrivacy");
+        String id = "shared.maximizedToProtectPrivacy";
+        if (preferences.showAgain(id)) {
+            new Popup().information(msg)
+                    .onClose(runnable)
+                    .useIUnderstandButton()
+                    .show();
+            DontShowAgainLookup.dontShowAgain(id, true);
+        } else {
+            runnable.run();
+        }
+    }
+
     public static void showTakeOfferFromUnsignedAccountWarning() {
         String key = "confirmTakeOfferFromUnsignedAccount";
         new Popup().warning(Res.get("payment.takeOfferFromUnsignedAccount.warning"))
