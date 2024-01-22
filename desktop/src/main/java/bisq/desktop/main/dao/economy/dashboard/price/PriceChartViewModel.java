@@ -80,6 +80,14 @@ public class PriceChartViewModel extends ChartViewModel<PriceChartDataModel> {
         return CompletableFuture.supplyAsync(() -> toChartDoubleData(dataModel.getBtcUsdPriceByInterval()));
     }
 
+    CompletableFuture<List<XYChart.Data<Number, Number>>> getBsqUsdMarketCapChartData() {
+        return CompletableFuture.supplyAsync(() -> toChartDoubleData(dataModel.getBsqUsdMarketCapByInterval()));
+    }
+
+    CompletableFuture<List<XYChart.Data<Number, Number>>> getBsqBtcMarketCapChartData() {
+        return CompletableFuture.supplyAsync(() -> toChartDoubleData(dataModel.getBsqBtcMarketCapByInterval()));
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Formatters/Converters
@@ -116,5 +124,18 @@ public class PriceChartViewModel extends ChartViewModel<PriceChartDataModel> {
     void setBtcUsdPriceFormatter() {
         priceFormat.setMaximumFractionDigits(0);
         yAxisFormatter = value -> priceFormat.format(value) + " BTC/USD";
+    }
+
+    void setBsqUsdMarketCapPriceFormatter() {
+        priceFormat.setMaximumFractionDigits(0);
+        yAxisFormatter = value -> priceFormat.format(value) + " USD";
+    }
+
+    void setBsqBtcMarketCapPriceFormatter() {
+        priceFormat.setMaximumFractionDigits(8);
+        yAxisFormatter = value -> {
+            value = MathUtils.scaleDownByPowerOf10(value.longValue(), 8);
+            return priceFormat.format(value) + " BTC";
+        };
     }
 }

@@ -42,7 +42,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class PriceChartView extends ChartView<PriceChartViewModel> {
-    private XYChart.Series<Number, Number> seriesBsqUsdPrice, seriesBsqBtcPrice, seriesBtcUsdPrice;
+    private XYChart.Series<Number, Number> seriesBsqUsdPrice, seriesBsqBtcPrice, seriesBtcUsdPrice,
+            seriesBsqUsdMarketCap, seriesBsqBtcMarketCap;
     private final DoubleProperty averageBsqUsdPriceProperty = new SimpleDoubleProperty();
     private final DoubleProperty averageBsqBtcPriceProperty = new SimpleDoubleProperty();
 
@@ -77,8 +78,12 @@ public class PriceChartView extends ChartView<PriceChartViewModel> {
             model.setBsqUsdPriceFormatter();
         } else if (series == seriesBsqBtcPrice) {
             model.setBsqBtcPriceFormatter();
-        } else {
+        } else if (series == seriesBtcUsdPrice){
             model.setBtcUsdPriceFormatter();
+        } else if (series == seriesBsqUsdMarketCap) {
+            model.setBsqUsdMarketCapPriceFormatter();
+        } else {
+            model.setBsqBtcMarketCapPriceFormatter();
         }
     }
 
@@ -88,7 +93,7 @@ public class PriceChartView extends ChartView<PriceChartViewModel> {
 
     @Override
     protected Collection<XYChart.Series<Number, Number>> getSeriesForLegend1() {
-        return List.of(seriesBsqUsdPrice, seriesBsqBtcPrice, seriesBtcUsdPrice);
+        return List.of(seriesBsqUsdPrice, seriesBsqBtcPrice, seriesBtcUsdPrice, seriesBsqUsdMarketCap, seriesBsqBtcMarketCap);
     }
 
 
@@ -108,17 +113,26 @@ public class PriceChartView extends ChartView<PriceChartViewModel> {
 
     @Override
     protected void createSeries() {
+        int index = -1;
         seriesBsqUsdPrice = new XYChart.Series<>();
         seriesBsqUsdPrice.setName(Res.get("dao.factsAndFigures.supply.bsqUsdPrice"));
-        seriesIndexMap.put(getSeriesId(seriesBsqUsdPrice), 0);
+        seriesIndexMap.put(getSeriesId(seriesBsqUsdPrice), ++index);
 
         seriesBsqBtcPrice = new XYChart.Series<>();
         seriesBsqBtcPrice.setName(Res.get("dao.factsAndFigures.supply.bsqBtcPrice"));
-        seriesIndexMap.put(getSeriesId(seriesBsqBtcPrice), 1);
+        seriesIndexMap.put(getSeriesId(seriesBsqBtcPrice), ++index);
 
         seriesBtcUsdPrice = new XYChart.Series<>();
         seriesBtcUsdPrice.setName(Res.get("dao.factsAndFigures.supply.btcUsdPrice"));
-        seriesIndexMap.put(getSeriesId(seriesBtcUsdPrice), 2);
+        seriesIndexMap.put(getSeriesId(seriesBtcUsdPrice), ++index);
+
+        seriesBsqUsdMarketCap = new XYChart.Series<>();
+        seriesBsqUsdMarketCap.setName(Res.get("dao.factsAndFigures.supply.bsqUsdMarketCap"));
+        seriesIndexMap.put(getSeriesId(seriesBsqUsdMarketCap), ++index);
+
+        seriesBsqBtcMarketCap = new XYChart.Series<>();
+        seriesBsqBtcMarketCap.setName(Res.get("dao.factsAndFigures.supply.bsqBtcMarketCap"));
+        seriesIndexMap.put(getSeriesId(seriesBsqBtcMarketCap), ++index);
     }
 
     @Override
@@ -150,6 +164,16 @@ public class PriceChartView extends ChartView<PriceChartViewModel> {
             CompletableFuture<Boolean> task3Done = new CompletableFuture<>();
             allFutures.add(task3Done);
             applyBtcUsdPriceChartData(task3Done);
+        }
+        if (activeSeries.contains(seriesBsqUsdMarketCap)) {
+            CompletableFuture<Boolean> taskDone = new CompletableFuture<>();
+            allFutures.add(taskDone);
+            applyBsqUsdMarketCapChartData(taskDone);
+        }
+        if (activeSeries.contains(seriesBsqBtcMarketCap)) {
+            CompletableFuture<Boolean> taskDone = new CompletableFuture<>();
+            allFutures.add(taskDone);
+            applyBsqBtcMarketCapChartData(taskDone);
         }
 
         CompletableFuture<Boolean> task4Done = new CompletableFuture<>();
@@ -200,6 +224,24 @@ public class PriceChartView extends ChartView<PriceChartViewModel> {
                 .whenComplete((data, t) ->
                         mapToUserThread(() -> {
                             seriesBsqBtcPrice.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
+    }
+
+    private void applyBsqUsdMarketCapChartData(CompletableFuture<Boolean> completeFuture) {
+        model.getBsqUsdMarketCapChartData()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            seriesBsqUsdMarketCap.getData().setAll(data);
+                            completeFuture.complete(true);
+                        }));
+    }
+
+    private void applyBsqBtcMarketCapChartData(CompletableFuture<Boolean> completeFuture) {
+        model.getBsqBtcMarketCapChartData()
+                .whenComplete((data, t) ->
+                        mapToUserThread(() -> {
+                            seriesBsqBtcMarketCap.getData().setAll(data);
                             completeFuture.complete(true);
                         }));
     }
