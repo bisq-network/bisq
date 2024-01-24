@@ -108,7 +108,7 @@ public class TakerTxValidatorSanityCheckTests {
         assertThrows(IllegalStateException.class, () -> json.get(vinOrVout).getAsJsonArray());
 
         String jsonContent = new Gson().toJson(json);
-        TxValidator txValidator1 = txValidator.parseJsonValidateMakerFeeTx(jsonContent,
+        TxValidator txValidator1 = txValidator.parseJsonValidateTakerFeeTx(jsonContent,
                 MakerTxValidatorSanityCheckTests.FEE_RECEIVER_ADDRESSES);
 
         assertThat(txValidator1.getStatus(), is(FeeValidationStatus.NACK_JSON_ERROR));
@@ -121,7 +121,7 @@ public class TakerTxValidatorSanityCheckTests {
         assertThat(json.get("vin").getAsJsonArray().size(), is(0));
 
         String jsonContent = new Gson().toJson(json);
-        TxValidator txValidator1 = txValidator.parseJsonValidateMakerFeeTx(jsonContent,
+        TxValidator txValidator1 = txValidator.parseJsonValidateTakerFeeTx(jsonContent,
                 MakerTxValidatorSanityCheckTests.FEE_RECEIVER_ADDRESSES);
 
         assertThat(txValidator1.getStatus(), is(FeeValidationStatus.NACK_JSON_ERROR));
@@ -140,7 +140,7 @@ public class TakerTxValidatorSanityCheckTests {
         assertThat(json.get("vout").getAsJsonArray().size(), is(numberOfVouts));
 
         String jsonContent = new Gson().toJson(json);
-        TxValidator txValidator1 = txValidator.parseJsonValidateMakerFeeTx(jsonContent,
+        TxValidator txValidator1 = txValidator.parseJsonValidateTakerFeeTx(jsonContent,
                 MakerTxValidatorSanityCheckTests.FEE_RECEIVER_ADDRESSES);
 
         assertThat(txValidator1.getStatus(), is(FeeValidationStatus.NACK_JSON_ERROR));
@@ -158,7 +158,7 @@ public class TakerTxValidatorSanityCheckTests {
         assertThat(hasPreVout, is(false));
 
         String jsonContent = new Gson().toJson(json);
-        TxValidator txValidator1 = txValidator.parseJsonValidateMakerFeeTx(jsonContent,
+        TxValidator txValidator1 = txValidator.parseJsonValidateTakerFeeTx(jsonContent,
                 MakerTxValidatorSanityCheckTests.FEE_RECEIVER_ADDRESSES);
 
         assertThat(txValidator1.getStatus(), is(FeeValidationStatus.NACK_JSON_ERROR));
