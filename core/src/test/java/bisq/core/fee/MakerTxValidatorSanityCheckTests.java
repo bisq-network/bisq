@@ -224,7 +224,7 @@ public class MakerTxValidatorSanityCheckTests {
         assertThat(status, is(equalTo(FeeValidationStatus.NACK_JSON_ERROR)));
     }
 
-    public static JsonObject getValidBtcMakerFeeMempoolJsonResponse() {
+    public static String getValidBtcMakerFeeMempoolJsonResponseString() {
         URL resource = MakerTxValidatorSanityCheckTests.class.getClassLoader()
                 .getResource("mempool_test_data/valid_btc_maker_fee.json");
         String path = Objects.requireNonNull(resource).getPath();
@@ -236,10 +236,14 @@ public class MakerTxValidatorSanityCheckTests {
         }
 
         try {
-            String jsonContent = Files.readString(Path.of(path));
-            return new Gson().fromJson(jsonContent, JsonObject.class);
+            return Files.readString(Path.of(path));
         } catch (IOException e) {
-            throw new IllegalStateException("Couldn't read valid_btc_maker_fee.json", e);
+            throw new IllegalStateException("Couldn't read valid_btc_maker_fee.json.", e);
         }
+    }
+
+    public static JsonObject getValidBtcMakerFeeMempoolJsonResponse() {
+        String jsonContent = getValidBtcMakerFeeMempoolJsonResponseString();
+        return new Gson().fromJson(jsonContent, JsonObject.class);
     }
 }
