@@ -27,15 +27,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
-import java.net.URL;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-import java.io.IOException;
-
 import java.util.List;
-import java.util.Objects;
 
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -83,8 +75,8 @@ public class TakerTxValidatorSanityCheckTests {
 
     @ParameterizedTest
     @ValueSource(strings = {"status", "txid", "vin", "vout"})
-    void mempoolResponseWithMissingField(String missingField) throws IOException {
-        JsonObject json = getValidBtcMakerFeeMempoolJsonResponse();
+    void mempoolResponseWithMissingField(String missingField) {
+        JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
         json.remove(missingField);
         assertThat(json.has(missingField), is(false));
 
@@ -96,8 +88,8 @@ public class TakerTxValidatorSanityCheckTests {
     }
 
     @Test
-    void mempoolResponseWithoutConfirmedField() throws IOException {
-        JsonObject json = getValidBtcMakerFeeMempoolJsonResponse();
+    void mempoolResponseWithoutConfirmedField() {
+        JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
         json.get("status").getAsJsonObject().remove("confirmed");
         assertThat(json.get("status").getAsJsonObject().has("confirmed"), is(false));
 
@@ -110,7 +102,7 @@ public class TakerTxValidatorSanityCheckTests {
 
     @ParameterizedTest
     @ValueSource(strings = {"vin", "vout"})
-    void checkFeeAddressBtcTestVinOrVoutNotJsonArray(String vinOrVout) throws IOException {
+    void checkFeeAddressBtcTestVinOrVoutNotJsonArray(String vinOrVout) {
         JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
         json.add(vinOrVout, new JsonPrimitive(1234));
         assertThrows(IllegalStateException.class, () -> json.get(vinOrVout).getAsJsonArray());
@@ -123,7 +115,7 @@ public class TakerTxValidatorSanityCheckTests {
     }
 
     @Test
-    void checkFeeAddressBtcNoTooFewVin() throws IOException {
+    void checkFeeAddressBtcNoTooFewVin() {
         JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
         json.add("vin", new JsonArray(0));
         assertThat(json.get("vin").getAsJsonArray().size(), is(0));
@@ -137,7 +129,7 @@ public class TakerTxValidatorSanityCheckTests {
 
     @ParameterizedTest
     @ValueSource(ints = {0, 1})
-    void checkFeeAddressBtcNoTooFewVout(int numberOfVouts) throws IOException {
+    void checkFeeAddressBtcNoTooFewVout(int numberOfVouts) {
         JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
 
         var jsonArray = new JsonArray(numberOfVouts);
@@ -155,7 +147,7 @@ public class TakerTxValidatorSanityCheckTests {
     }
 
     @Test
-    void checkFeeAmountMissingVinPreVout() throws IOException {
+    void checkFeeAmountMissingVinPreVout() {
         JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
         JsonObject firstInput = json.get("vin").getAsJsonArray().get(0).getAsJsonObject();
         firstInput.remove("prevout");
@@ -173,10 +165,10 @@ public class TakerTxValidatorSanityCheckTests {
     }
 
     @Test
-    void responseHasDifferentTxId() throws IOException {
+    void responseHasDifferentTxId() {
         String differentTxId = "abcde971ead7d03619e3a9eeaa771ed5adba14c448839e0299f857f7bb4ec07";
 
-        JsonObject json = getValidBtcMakerFeeMempoolJsonResponse();
+        JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
         json.add("txid", new JsonPrimitive(differentTxId));
         assertThat(json.get("txid").getAsString(), is(differentTxId));
 
@@ -185,19 +177,5 @@ public class TakerTxValidatorSanityCheckTests {
 
         FeeValidationStatus status = txValidator1.getStatus();
         assertThat(status, is(equalTo(FeeValidationStatus.NACK_JSON_ERROR)));
-    }
-
-    private JsonObject getValidBtcMakerFeeMempoolJsonResponse() throws IOException {
-        URL resource = getClass().getClassLoader().getResource("mempool_test_data/valid_btc_maker_fee.json");
-        String path = Objects.requireNonNull(resource).getPath();
-
-        if (System.getProperty("os.name").toLowerCase().startsWith("win")) {
-            // We need to remove the first character on Windows because the path starts with a
-            // leading slash "/C:/Users/..."
-            path = path.substring(1);
-        }
-
-        String jsonContent = Files.readString(Path.of(path));
-        return new Gson().fromJson(jsonContent, JsonObject.class);
     }
 }
