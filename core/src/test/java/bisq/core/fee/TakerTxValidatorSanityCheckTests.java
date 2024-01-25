@@ -23,6 +23,7 @@ import bisq.core.provider.mempool.FeeValidationStatus;
 import bisq.core.provider.mempool.TxValidator;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
@@ -113,6 +114,56 @@ public class TakerTxValidatorSanityCheckTests {
         JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
         json.add(vinOrVout, new JsonPrimitive(1234));
         assertThrows(IllegalStateException.class, () -> json.get(vinOrVout).getAsJsonArray());
+
+        String jsonContent = new Gson().toJson(json);
+        TxValidator txValidator1 = txValidator.parseJsonValidateMakerFeeTx(jsonContent,
+                MakerTxValidatorSanityCheckTests.FEE_RECEIVER_ADDRESSES);
+
+        assertThat(txValidator1.getStatus(), is(FeeValidationStatus.NACK_JSON_ERROR));
+    }
+
+    @Test
+    void checkFeeAddressBtcNoTooFewVin() throws IOException {
+        JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
+        json.add("vin", new JsonArray(0));
+        assertThat(json.get("vin").getAsJsonArray().size(), is(0));
+
+        String jsonContent = new Gson().toJson(json);
+        TxValidator txValidator1 = txValidator.parseJsonValidateMakerFeeTx(jsonContent,
+                MakerTxValidatorSanityCheckTests.FEE_RECEIVER_ADDRESSES);
+
+        assertThat(txValidator1.getStatus(), is(FeeValidationStatus.NACK_JSON_ERROR));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1})
+    void checkFeeAddressBtcNoTooFewVout(int numberOfVouts) throws IOException {
+        JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
+
+        var jsonArray = new JsonArray(numberOfVouts);
+        for (int i = 0; i < numberOfVouts; i++) {
+            jsonArray.add(i);
+        }
+        json.add("vout", jsonArray);
+        assertThat(json.get("vout").getAsJsonArray().size(), is(numberOfVouts));
+
+        String jsonContent = new Gson().toJson(json);
+        TxValidator txValidator1 = txValidator.parseJsonValidateMakerFeeTx(jsonContent,
+                MakerTxValidatorSanityCheckTests.FEE_RECEIVER_ADDRESSES);
+
+        assertThat(txValidator1.getStatus(), is(FeeValidationStatus.NACK_JSON_ERROR));
+    }
+
+    @Test
+    void checkFeeAmountMissingVinPreVout() throws IOException {
+        JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
+        JsonObject firstInput = json.get("vin").getAsJsonArray().get(0).getAsJsonObject();
+        firstInput.remove("prevout");
+
+        boolean hasPreVout = json.get("vin").getAsJsonArray()
+                .get(0).getAsJsonObject()
+                .has("prevout");
+        assertThat(hasPreVout, is(false));
 
         String jsonContent = new Gson().toJson(json);
         TxValidator txValidator1 = txValidator.parseJsonValidateMakerFeeTx(jsonContent,

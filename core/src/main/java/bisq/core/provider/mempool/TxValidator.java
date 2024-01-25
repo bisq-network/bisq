@@ -190,7 +190,13 @@ public class TxValidator {
         JsonArray jsonVout = getVinAndVout(jsonTxt).second;
         JsonObject jsonVin0 = jsonVin.get(0).getAsJsonObject();
         JsonObject jsonVout0 = jsonVout.get(0).getAsJsonObject();
-        JsonElement jsonVIn0Value = jsonVin0.getAsJsonObject("prevout").get("value");
+
+        JsonObject jsonVin0PreVout = jsonVin0.getAsJsonObject("prevout");
+        if (jsonVin0PreVout == null) {
+            throw new JsonSyntaxException("vin[0].prevout missing");
+        }
+
+        JsonElement jsonVIn0Value = jsonVin0PreVout.get("value");
         JsonElement jsonFeeValue = jsonVout0.get("value");
         if (jsonVIn0Value == null || jsonFeeValue == null) {
             throw new JsonSyntaxException("vin/vout missing data");
