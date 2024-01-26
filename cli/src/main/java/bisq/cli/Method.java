@@ -64,5 +64,6 @@ public enum Method {
     unlockwallet,
     unsettxfeerate,
     withdrawfunds,
-    stop
+    stop,
+    getdaostatus
 }

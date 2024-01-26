@@ -23,6 +23,7 @@ import bisq.proto.grpc.BsqBalanceInfo;
 import bisq.proto.grpc.BtcBalanceInfo;
 import bisq.proto.grpc.GetAddressBalanceRequest;
 import bisq.proto.grpc.GetBalancesRequest;
+import bisq.proto.grpc.GetDaoStatusRequest;
 import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetNetworkRequest;
 import bisq.proto.grpc.GetTransactionRequest;
@@ -59,6 +60,11 @@ public class WalletsServiceRequest {
     public String getNetwork() {
         var request = GetNetworkRequest.newBuilder().build();
         return grpcStubs.walletsService.getNetwork(request).getNetwork();
+    }
+
+    public boolean getDaoStatus() {
+        var request = GetDaoStatusRequest.newBuilder().build();
+        return grpcStubs.walletsService.getDaoStatus(request).getIsDaoStateReadyAndInSync();
     }
 
     public BalancesInfo getBalances() {

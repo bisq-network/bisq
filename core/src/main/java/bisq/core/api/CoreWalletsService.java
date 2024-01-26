@@ -40,6 +40,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
+import bisq.core.dao.DaoFacade;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
@@ -48,7 +49,6 @@ import bisq.core.util.coin.CoinFormatter;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.handlers.ResultHandler;
 import bisq.common.util.SingleThreadExecutorUtils;
 
 import org.bitcoinj.core.Address;
@@ -68,10 +68,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
@@ -81,7 +78,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -109,6 +105,7 @@ class CoreWalletsService {
     private final BtcWalletService btcWalletService;
     private final CoinFormatter btcFormatter;
     private final FeeService feeService;
+    private final DaoFacade daoFacade;
     private final Preferences preferences;
 
     @Nullable
@@ -130,6 +127,7 @@ class CoreWalletsService {
                               BtcWalletService btcWalletService,
                               @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                               FeeService feeService,
+                              DaoFacade daoFacade,
                               Preferences preferences) {
         this.appStartupState = appStartupState;
         this.coreContext = coreContext;
@@ -141,6 +139,7 @@ class CoreWalletsService {
         this.btcWalletService = btcWalletService;
         this.btcFormatter = btcFormatter;
         this.feeService = feeService;
+        this.daoFacade = daoFacade;
         this.preferences = preferences;
     }
 
@@ -164,6 +163,10 @@ class CoreWalletsService {
             default:
                 return "mainnet";
         }
+    }
+
+    boolean isDaoStateReadyAndInSync() {
+        return daoFacade.isDaoStateReadyAndInSync();
     }
 
     BalancesInfo getBalances(String currencyCode) {

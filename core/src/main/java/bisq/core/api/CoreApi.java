@@ -374,6 +374,10 @@ public class CoreApi {
         return walletsService.getNetworkName();
     }
 
+    public boolean isDaoStateReadyAndInSync() {
+        return walletsService.isDaoStateReadyAndInSync();
+    }
+
     public BalancesInfo getBalances(String currencyCode) {
         return walletsService.getBalances(currencyCode);
     }
