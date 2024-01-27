@@ -39,7 +39,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @ExtendWith(MockitoExtension.class)
-public class MakerInvalidFeeBtcValidationTests {
+public class InvalidFeeBtcAddressTests {
     private TxValidator txValidator;
 
     @BeforeEach
@@ -49,15 +49,26 @@ public class MakerInvalidFeeBtcValidationTests {
     }
 
     @Test
-    void makerCheckFeeAddressBtcInvalidFeeAddress() {
+    void makerInvalidFeeBtcAddressTest() {
+        String jsonContent = createJsonResponseString();
+        TxValidator txValidator1 = txValidator.parseJsonValidateMakerFeeTx(jsonContent, Collections.emptyList());
+        assertThat(txValidator1.getStatus(), is(FeeValidationStatus.NACK_UNKNOWN_FEE_RECEIVER));
+    }
+
+    @Test
+    void takerInvalidFeeBtcAddressTest() {
+        String jsonContent = createJsonResponseString();
+        TxValidator txValidator1 = txValidator.parseJsonValidateTakerFeeTx(jsonContent, Collections.emptyList());
+        assertThat(txValidator1.getStatus(), is(FeeValidationStatus.NACK_UNKNOWN_FEE_RECEIVER));
+    }
+
+    private String createJsonResponseString() {
         JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
         json.get("status").getAsJsonObject().add("block_height", new JsonPrimitive(600_000));
 
         var newBlockHeight = json.get("status").getAsJsonObject().get("block_height").getAsInt();
         assertThat(newBlockHeight, is(600_000));
 
-        String jsonContent = new Gson().toJson(json);
-        TxValidator txValidator1 = txValidator.parseJsonValidateMakerFeeTx(jsonContent, Collections.emptyList());
-        assertThat(txValidator1.getStatus(), is(FeeValidationStatus.NACK_UNKNOWN_FEE_RECEIVER));
+        return new Gson().toJson(json);
     }
 }
