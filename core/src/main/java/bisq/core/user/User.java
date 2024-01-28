@@ -26,6 +26,7 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.notifications.alerts.market.MarketAlertFilter;
 import bisq.core.notifications.alerts.price.PriceAlertFilter;
 import bisq.core.payment.BsqSwapAccount;
+import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
@@ -49,11 +50,13 @@ import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import lombok.AllArgsConstructor;
@@ -417,7 +420,17 @@ public class User implements PersistedDataHost {
 
     @Nullable
     public Set<PaymentAccount> getPaymentAccounts() {
-        return userPayload.getPaymentAccounts();
+        if (userPayload.getPaymentAccounts() == null) {
+            return Collections.emptySet();
+        }
+        // filter BSQ altcoin accounts to implement github #7011: remove legacy BSQ (altcoin) trading
+        Predicate<PaymentAccount> identifyBsqAltcoinAccount = p ->
+                p instanceof CryptoCurrencyAccount &&
+                        p.getSingleTradeCurrency() != null &&
+                        p.getSingleTradeCurrency().getCode().equalsIgnoreCase("BSQ");
+        return userPayload.getPaymentAccounts().stream()
+                .filter(identifyBsqAltcoinAccount.negate())
+                .collect(Collectors.toSet());
     }
 
     public ObservableSet<PaymentAccount> getPaymentAccountsAsObservable() {

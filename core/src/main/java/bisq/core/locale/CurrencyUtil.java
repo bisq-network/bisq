@@ -440,7 +440,7 @@ public class CurrencyUtil {
     public static List<CryptoCurrency> getActiveSortedCryptoCurrencies(AssetService assetService,
                                                                        FilterManager filterManager) {
         return getAllSortedCryptoCurrencies().stream()
-                .filter(e -> e.getCode().equals("BSQ") || assetService.isActive(e.getCode()))
+                .filter(e -> assetService.isActive(e.getCode()))
                 .filter(e -> !filterManager.isCurrencyBanned(e.getCode()))
                 .collect(Collectors.toList());
     }

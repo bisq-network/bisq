@@ -76,18 +76,8 @@ public class OfferBook {
                 // We filter here to only add new offers if the same offer (using equals) was not already added and it
                 // is not banned.
 
-                if (filterManager.isOfferIdBanned(offer.getId())) {
-                    log.debug("Ignored banned offer. ID={}", offer.getId());
-                    return;
-                }
-
-                if (offer.isBsqSwapOffer() && !filterManager.isProofOfWorkValid(offer)) {
-                    log.info("Proof of work of offer with id {} is not valid.", offer.getId());
-                    return;
-                }
-
-                if (OfferRestrictions.requiresNodeAddressUpdate() && !Utils.isV3Address(offer.getMakerNodeAddress().getHostName())) {
-                    log.debug("Ignored offer with Tor v2 node address. ID={}", offer.getId());
+                if (!isOfferAllowed(offer)) {
+                    log.debug("Offer {} is not allowed.", offer.getId());
                     return;
                 }
 
@@ -257,9 +247,11 @@ public class OfferBook {
     private boolean isOfferAllowed(Offer offer) {
         boolean isBanned = filterManager.isOfferIdBanned(offer.getId())
                 || filterManager.isNodeAddressBanned(offer.getMakerNodeAddress());
+        boolean isBannedBsqAltcoinsOffer = (offer.getPaymentMethod().isBlockchain() && offer.getBaseCurrencyCode().equalsIgnoreCase("BSQ"));
+        boolean invalidBsqSwap = offer.isBsqSwapOffer() && !filterManager.isProofOfWorkValid(offer);
         boolean isV3NodeAddressCompliant = !OfferRestrictions.requiresNodeAddressUpdate()
                 || Utils.isV3Address(offer.getMakerNodeAddress().getHostName());
-        return !isBanned && isV3NodeAddressCompliant;
+        return !isBanned && !isBannedBsqAltcoinsOffer && !invalidBsqSwap && isV3NodeAddressCompliant;
     }
 
     private void fillOfferCountMaps() {
