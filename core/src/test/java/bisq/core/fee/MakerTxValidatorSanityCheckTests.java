@@ -83,7 +83,7 @@ public class MakerTxValidatorSanityCheckTests {
 
     @ParameterizedTest
     @ValueSource(strings = {"status", "txid", "vin", "vout"})
-    void mempoolResponseWithMissingField(String missingField) throws IOException {
+    void mempoolResponseWithMissingField(String missingField) {
         JsonObject json = getValidBtcMakerFeeMempoolJsonResponse();
         json.remove(missingField);
         assertThat(json.has(missingField), is(false));
@@ -96,7 +96,7 @@ public class MakerTxValidatorSanityCheckTests {
     }
 
     @Test
-    void mempoolResponseWithoutConfirmedField() throws IOException {
+    void mempoolResponseWithoutConfirmedField() {
         JsonObject json = getValidBtcMakerFeeMempoolJsonResponse();
         json.get("status").getAsJsonObject().remove("confirmed");
         assertThat(json.get("status").getAsJsonObject().has("confirmed"), is(false));
@@ -110,7 +110,7 @@ public class MakerTxValidatorSanityCheckTests {
 
     @ParameterizedTest
     @ValueSource(strings = {"vin", "vout"})
-    void checkFeeAddressBtcTestVinOrVoutNotJsonArray(String vinOrVout) throws IOException {
+    void checkFeeAddressBtcTestVinOrVoutNotJsonArray(String vinOrVout) {
         JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
         json.add(vinOrVout, new JsonPrimitive(1234));
         assertThrows(IllegalStateException.class, () -> json.get(vinOrVout).getAsJsonArray());
@@ -123,7 +123,7 @@ public class MakerTxValidatorSanityCheckTests {
     }
 
     @Test
-    void checkFeeAddressBtcNoTooFewVin() throws IOException {
+    void checkFeeAddressBtcNoTooFewVin() {
         JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
         json.add("vin", new JsonArray(0));
         assertThat(json.get("vin").getAsJsonArray().size(), is(0));
@@ -137,7 +137,7 @@ public class MakerTxValidatorSanityCheckTests {
 
     @ParameterizedTest
     @ValueSource(ints = {0, 1})
-    void checkFeeAddressBtcNoTooFewVout(int numberOfVouts) throws IOException {
+    void checkFeeAddressBtcNoTooFewVout(int numberOfVouts) {
         JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
 
         var jsonArray = new JsonArray(numberOfVouts);
@@ -155,7 +155,7 @@ public class MakerTxValidatorSanityCheckTests {
     }
 
     @Test
-    void checkFeeAmountMissingVinPreVout() throws IOException {
+    void checkFeeAmountMissingVinPreVout() {
         JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
         JsonObject firstInput = json.get("vin").getAsJsonArray().get(0).getAsJsonObject();
         firstInput.remove("prevout");
@@ -173,7 +173,44 @@ public class MakerTxValidatorSanityCheckTests {
     }
 
     @Test
-    void responseHasDifferentTxId() throws IOException {
+    void checkFeeAmountMissingVinPreVoutValue() {
+        JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
+        JsonObject firstInput = json.get("vin").getAsJsonArray().get(0).getAsJsonObject();
+        firstInput.getAsJsonObject("prevout").remove("value");
+
+        boolean hasPreVout = json.get("vin").getAsJsonArray()
+                .get(0).getAsJsonObject()
+                .getAsJsonObject("prevout")
+                .has("value");
+        assertThat(hasPreVout, is(false));
+
+        String jsonContent = new Gson().toJson(json);
+        TxValidator txValidator1 = txValidator.parseJsonValidateMakerFeeTx(jsonContent,
+                MakerTxValidatorSanityCheckTests.FEE_RECEIVER_ADDRESSES);
+
+        assertThat(txValidator1.getStatus(), is(FeeValidationStatus.NACK_JSON_ERROR));
+    }
+
+    @Test
+    void checkFeeAmountMissingVoutValue() {
+        JsonObject json = MakerTxValidatorSanityCheckTests.getValidBtcMakerFeeMempoolJsonResponse();
+        JsonObject firstOutput = json.getAsJsonArray("vout").get(0).getAsJsonObject();
+        firstOutput.remove("value");
+
+        boolean hasPreVout = json.getAsJsonArray("vout")
+                .get(0).getAsJsonObject()
+                .has("value");
+        assertThat(hasPreVout, is(false));
+
+        String jsonContent = new Gson().toJson(json);
+        TxValidator txValidator1 = txValidator.parseJsonValidateMakerFeeTx(jsonContent,
+                MakerTxValidatorSanityCheckTests.FEE_RECEIVER_ADDRESSES);
+
+        assertThat(txValidator1.getStatus(), is(FeeValidationStatus.NACK_JSON_ERROR));
+    }
+
+    @Test
+    void responseHasDifferentTxId() {
         String differentTxId = "abcde971ead7d03619e3a9eeaa771ed5adba14c448839e0299f857f7bb4ec07";
 
         JsonObject json = getValidBtcMakerFeeMempoolJsonResponse();
@@ -187,7 +224,7 @@ public class MakerTxValidatorSanityCheckTests {
         assertThat(status, is(equalTo(FeeValidationStatus.NACK_JSON_ERROR)));
     }
 
-    public static JsonObject getValidBtcMakerFeeMempoolJsonResponse() throws IOException {
+    public static JsonObject getValidBtcMakerFeeMempoolJsonResponse() {
         URL resource = MakerTxValidatorSanityCheckTests.class.getClassLoader()
                 .getResource("mempool_test_data/valid_btc_maker_fee.json");
         String path = Objects.requireNonNull(resource).getPath();
@@ -198,7 +235,11 @@ public class MakerTxValidatorSanityCheckTests {
             path = path.substring(1);
         }
 
-        String jsonContent = Files.readString(Path.of(path));
-        return new Gson().fromJson(jsonContent, JsonObject.class);
+        try {
+            String jsonContent = Files.readString(Path.of(path));
+            return new Gson().fromJson(jsonContent, JsonObject.class);
+        } catch (IOException e) {
+            throw new IllegalStateException("Couldn't read valid_btc_maker_fee.json", e);
+        }
     }
 }
