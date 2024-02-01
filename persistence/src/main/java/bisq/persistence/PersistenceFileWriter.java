@@ -17,30 +17,45 @@
 
 package bisq.persistence;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
+
 public class PersistenceFileWriter {
-    public interface AsyncFileWriter {
-        int write(byte[] data, int offset);
-    }
-
-    public PersistenceFileWriter(AsyncFileWriter asyncWriter) {
-        this.asyncWriter = asyncWriter;
-    }
-
     private final AsyncFileWriter asyncWriter;
+    private final ExecutorService writeRequestScheduler;
 
-    public boolean write(byte[] data) {
-        int totalWrittenBytes = asyncWriter.write(data, 0);
-        if (totalWrittenBytes == data.length) {
-            return true;
-        }
+    public PersistenceFileWriter(AsyncFileWriter asyncWriter, ExecutorService writeRequestScheduler) {
+        this.asyncWriter = asyncWriter;
+        this.writeRequestScheduler = writeRequestScheduler;
+    }
 
-        int remainingBytes = data.length - totalWrittenBytes;
-        while (remainingBytes > 0) {
-            int writtenBytes = asyncWriter.write(data, totalWrittenBytes);
-            totalWrittenBytes += writtenBytes;
-            remainingBytes = data.length - totalWrittenBytes;
-        }
+    public CountDownLatch write(byte[] data) {
+        CountDownLatch writeFinished = new CountDownLatch(1);
+        scheduleAsyncWrite(data, 0, data.length, writeFinished);
+        return writeFinished;
+    }
 
-        return true;
+    private void scheduleAsyncWrite(byte[] data, int offset, int size, CountDownLatch writeFinished) {
+        asyncWriter.write(data, offset)
+                .thenAcceptAsync(writeUntilEndAsync(data, offset, size, writeFinished), writeRequestScheduler);
+    }
+
+    private Consumer<Integer> writeUntilEndAsync(byte[] data,
+                                                 int offset,
+                                                 int totalBytes,
+                                                 CountDownLatch writeFinished) {
+        return writtenBytes -> {
+            if (writtenBytes == totalBytes) {
+                writeFinished.countDown();
+                return;
+            }
+
+            int remainingBytes = totalBytes - writtenBytes;
+            if (remainingBytes > 0) {
+                int newOffset = offset + writtenBytes;
+                scheduleAsyncWrite(data, newOffset, remainingBytes, writeFinished);
+            }
+        };
     }
 }
