@@ -36,6 +36,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import java.util.Objects;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -52,7 +54,6 @@ import static org.mockito.Mockito.when;
 import com.googlecode.jsonrpc4j.HttpException;
 import com.googlecode.jsonrpc4j.JsonRpcClientException;
 import com.googlecode.jsonrpc4j.RequestIDGenerator;
-import kotlin.text.Charsets;
 
 public class BitcoindClientTest {
     private static final String TEST_BLOCK_HASH = "015f37a20d517645a11a6cdd316049f41bc77b4a4057b2dd092114b78147f42c";
@@ -66,7 +67,7 @@ public class BitcoindClientTest {
     private boolean canConnect = true;
     private ByteArrayInputStream mockResponse;
     private ByteArrayInputStream mockErrorResponse;
-    private ByteArrayOutputStream mockOutputStream = new ByteArrayOutputStream();
+    private final ByteArrayOutputStream mockOutputStream = new ByteArrayOutputStream();
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -116,7 +117,7 @@ public class BitcoindClientTest {
     }
 
     @Test
-    public void testGetBlockCount_wrongCredentials() throws Exception {
+    public void testGetBlockCount_wrongCredentials() {
         mockResponseCode = 401;
 //        mockResponseCustomHeaders.put("WWW-Authenticate", "[Basic realm=\"jsonrpc\"]");
         assertThrows(HttpException.class, () -> client.getBlockCount());
@@ -218,8 +219,8 @@ public class BitcoindClientTest {
 
     private static String readFromResourcesUnPrettified(String resourceName) {
         try {
-            var path = Paths.get(BitcoindClientTest.class.getResource(resourceName).toURI());
-            return new String(Files.readAllBytes(path), Charsets.UTF_8).replaceAll("(\\s+\\B|\\B\\s+|\\v)", "");
+            var path = Paths.get(Objects.requireNonNull(BitcoindClientTest.class.getResource(resourceName)).toURI());
+            return Files.readString(path).replaceAll("(\\s+\\B|\\B\\s+|\\v)", "");
         } catch (Exception e) {
             return "";
         }

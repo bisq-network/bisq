@@ -31,30 +31,31 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.junit.jupiter.api.Test;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Slf4j
 public class BisqInstallerTest {
     @Test
-    public void call() throws Exception {
+    public void call() {
     }
 
     @Test
     public void verifySignature() throws Exception {
-        URL url = this.getClass().getResource("/downloadUpdate/test.txt");
+        URL url = requireNonNull(getClass().getResource("/downloadUpdate/test.txt"));
         File dataFile = new File(url.toURI().getPath());
-        url = this.getClass().getResource("/downloadUpdate/test.txt.asc");
+        url = requireNonNull(getClass().getResource("/downloadUpdate/test.txt.asc"));
         File sigFile = new File(url.toURI().getPath());
-        url = this.getClass().getResource("/downloadUpdate/F379A1C6.asc");
+        url = requireNonNull(getClass().getResource("/downloadUpdate/F379A1C6.asc"));
         File pubKeyFile = new File(url.toURI().getPath());
 
         assertEquals(BisqInstaller.VerifyStatusEnum.OK, BisqInstaller.verifySignature(pubKeyFile, sigFile, dataFile));
 
-        url = this.getClass().getResource("/downloadUpdate/test_bad.txt");
+        url = requireNonNull(getClass().getResource("/downloadUpdate/test_bad.txt"));
         dataFile = new File(url.toURI().getPath());
-        url = this.getClass().getResource("/downloadUpdate/test_bad.txt.asc");
+        url = requireNonNull(getClass().getResource("/downloadUpdate/test_bad.txt.asc"));
         sigFile = new File(url.toURI().getPath());
-        url = this.getClass().getResource("/downloadUpdate/F379A1C6.asc");
+        url = requireNonNull(getClass().getResource("/downloadUpdate/F379A1C6.asc"));
         pubKeyFile = new File(url.toURI().getPath());
 
         BisqInstaller.verifySignature(pubKeyFile, sigFile, dataFile);
@@ -62,19 +63,19 @@ public class BisqInstallerTest {
     }
 
     @Test
-    public void getFileName() throws Exception {
+    public void getFileName() {
     }
 
     @Test
-    public void getDownloadType() throws Exception {
+    public void getDownloadType() {
     }
 
     @Test
-    public void getIndex() throws Exception {
+    public void getIndex() {
     }
 
     @Test
-    public void getSigFileDescriptors() throws Exception {
+    public void getSigFileDescriptors() {
         BisqInstaller bisqInstaller = new BisqInstaller();
         FileDescriptor installerFileDescriptor = FileDescriptor.builder().fileName("filename.txt").id("filename").loadUrl("url://filename.txt").build();
         FileDescriptor key1 = FileDescriptor.builder().fileName("key1").id("key1").loadUrl("").build();
@@ -84,6 +85,5 @@ public class BisqInstallerTest {
         sigFileDescriptors = bisqInstaller.getSigFileDescriptors(installerFileDescriptor, Lists.newArrayList(key1, key2));
         assertEquals(2, sigFileDescriptors.size());
         log.info("test");
-
     }
 }
