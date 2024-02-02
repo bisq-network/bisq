@@ -45,13 +45,13 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoSession;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -62,8 +62,9 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
 public class P2PDataStorageBuildGetDataResponseTest {
+    @ExtendWith(MockitoExtension.class)
+    @MockitoSettings(strictness = Strictness.LENIENT) // there are unused stubs in TestState & elsewhere
     abstract static class P2PDataStorageBuildGetDataResponseTestBase {
-        private MockitoSession mockitoSession;
         // GIVEN null & non-null supportedCapabilities
         private TestState testState;
 
@@ -76,10 +77,6 @@ public class P2PDataStorageBuildGetDataResponseTest {
 
         @BeforeEach
         public void setUp() {
-            mockitoSession = Mockito.mockitoSession()
-                    .initMocks(this)
-                    .strictness(Strictness.LENIENT) // there are unused stubs in TestState & elsewhere
-                    .startMocking();
             this.testState = new TestState();
 
             this.localNodeAddress = new NodeAddress("localhost", 8080);
@@ -87,11 +84,6 @@ public class P2PDataStorageBuildGetDataResponseTest {
 
             // Set up basic capabilities to ensure message contains it
             Capabilities.app.addAll(Capability.MEDIATION);
-        }
-
-        @AfterEach
-        public void tearDown() {
-            mockitoSession.finishMocking();
         }
 
         static class RequiredCapabilitiesPNPStub extends PersistableNetworkPayloadStub

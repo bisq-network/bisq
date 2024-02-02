@@ -36,23 +36,22 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoSession;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.mockito.Mockito.*;
-
 
 /**
  * Tests of the P2PDataStorage::onRemoved callback behavior to ensure that the proper number of signal events occur.
  */
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT) // the two stubs in setUp() are not used in every test
 public class ProposalServiceP2PDataStorageListenerTest {
-    private MockitoSession mockitoSession;
-
     private ProposalService proposalService;
     @Mock
     private PeriodService periodService;
@@ -63,11 +62,6 @@ public class ProposalServiceP2PDataStorageListenerTest {
 
     @BeforeEach
     public void setUp() {
-        mockitoSession = Mockito.mockitoSession()
-                .initMocks(this)
-                .strictness(Strictness.LENIENT) // the two stubs below are not used in every test
-                .startMocking();
-
         this.proposalService = new ProposalService(
                 mock(P2PService.class),
                 this.periodService,
@@ -81,11 +75,6 @@ public class ProposalServiceP2PDataStorageListenerTest {
         // Create a state so that all added/removed Proposals will actually update the tempProposals list.
         when(this.periodService.isInPhase(anyInt(), any(DaoPhase.Phase.class))).thenReturn(true);
         when(this.daoStateService.isParseBlockChainComplete()).thenReturn(false);
-    }
-
-    @AfterEach
-    public void tearDown() {
-        mockitoSession.finishMocking();
     }
 
     private static ProtectedStorageEntry buildProtectedStorageEntry() {
