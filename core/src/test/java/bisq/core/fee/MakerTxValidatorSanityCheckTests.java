@@ -30,9 +30,7 @@ import com.google.gson.JsonPrimitive;
 import java.net.URL;
 
 import java.nio.file.Files;
-import java.nio.file.Path;
-
-import java.io.IOException;
+import java.nio.file.Paths;
 
 import java.util.List;
 import java.util.Objects;
@@ -225,19 +223,12 @@ public class MakerTxValidatorSanityCheckTests {
     }
 
     public static String getValidBtcMakerFeeMempoolJsonResponseString() {
-        URL resource = MakerTxValidatorSanityCheckTests.class.getClassLoader()
-                .getResource("mempool_test_data/valid_btc_maker_fee.json");
-        String path = Objects.requireNonNull(resource).getPath();
-
-        if (System.getProperty("os.name").toLowerCase().startsWith("win")) {
-            // We need to remove the first character on Windows because the path starts with a
-            // leading slash "/C:/Users/..."
-            path = path.substring(1);
-        }
-
         try {
-            return Files.readString(Path.of(path));
-        } catch (IOException e) {
+            URL resource = MakerTxValidatorSanityCheckTests.class.getClassLoader()
+                    .getResource("mempool_test_data/valid_btc_maker_fee.json");
+            var path = Paths.get(Objects.requireNonNull(resource).toURI());
+            return Files.readString(path);
+        } catch (Exception e) {
             throw new IllegalStateException("Couldn't read valid_btc_maker_fee.json.", e);
         }
     }

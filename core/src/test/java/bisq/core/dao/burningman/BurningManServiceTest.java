@@ -52,13 +52,13 @@ import java.util.stream.IntStream;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoSession;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -91,8 +91,8 @@ public class BurningManServiceTest {
     }
 
     @Nested
+    @ExtendWith(MockitoExtension.class)
     public class BurnShareTest {
-        private MockitoSession mockitoSession;
         @Mock
         private DaoStateService daoStateService;
         @Mock
@@ -104,16 +104,10 @@ public class BurningManServiceTest {
 
         @BeforeEach
         public void setUp() {
-            mockitoSession = Mockito.mockitoSession().initMocks(this).startMocking();
             when(cyclesInDaoStateService.getChainHeightOfPastCycle(800000, BurningManService.NUM_CYCLES_BURN_AMOUNT_DECAY))
                     .thenReturn(750000);
             when(cyclesInDaoStateService.getChainHeightOfPastCycle(800000, BurningManService.NUM_CYCLES_COMP_REQUEST_DECAY))
                     .thenReturn(700000);
-        }
-
-        @AfterEach
-        public void tearDown() {
-            mockitoSession.finishMocking();
         }
 
         private void addProofOfBurnTxs(Tx... txs) {
