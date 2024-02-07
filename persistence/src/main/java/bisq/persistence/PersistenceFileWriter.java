@@ -17,6 +17,8 @@
 
 package bisq.persistence;
 
+import java.nio.file.Path;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
@@ -34,6 +36,10 @@ public class PersistenceFileWriter {
         CountDownLatch writeFinished = new CountDownLatch(1);
         scheduleAsyncWrite(data, 0, data.length, writeFinished);
         return writeFinished;
+    }
+
+    public Path getFilePath() {
+        return asyncWriter.getFilePath();
     }
 
     private void scheduleAsyncWrite(byte[] data, int offset, int size, CountDownLatch writeFinished) {
