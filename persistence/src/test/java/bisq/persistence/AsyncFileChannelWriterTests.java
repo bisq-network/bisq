@@ -47,7 +47,7 @@ public class AsyncFileChannelWriterTests {
     void setup(@TempDir Path tempDir) throws IOException {
         filePath = tempDir.resolve("file");
         fileChannel = AsynchronousFileChannel.open(filePath, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
-        asyncFileChannelWriter = new AsyncFileChannelWriter(fileChannel);
+        asyncFileChannelWriter = new AsyncFileChannelWriter(filePath, fileChannel);
     }
 
     @Test
