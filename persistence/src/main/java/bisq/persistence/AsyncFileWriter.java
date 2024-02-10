@@ -22,6 +22,8 @@ import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
 public interface AsyncFileWriter {
+    CompletableFuture<Void> truncate();
+
     CompletableFuture<Integer> write(byte[] data, int offset);
 
     Path getFilePath();
