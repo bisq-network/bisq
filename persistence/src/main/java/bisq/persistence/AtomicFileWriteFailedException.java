@@ -17,12 +17,8 @@
 
 package bisq.persistence;
 
-import java.nio.file.Path;
-
-import java.util.concurrent.CompletableFuture;
-
-public interface AsyncFileWriter {
-    CompletableFuture<Integer> write(byte[] data, int offset);
-
-    Path getFilePath();
+public class AtomicFileWriteFailedException extends RuntimeException {
+    public AtomicFileWriteFailedException(String message) {
+        super(message);
+    }
 }

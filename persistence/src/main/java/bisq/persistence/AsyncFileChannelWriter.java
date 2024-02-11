@@ -20,13 +20,19 @@ package bisq.persistence;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousFileChannel;
 import java.nio.channels.CompletionHandler;
+import java.nio.file.Path;
 
 import java.util.concurrent.CompletableFuture;
 
+import lombok.Getter;
+
 public class AsyncFileChannelWriter implements AsyncFileWriter {
+    @Getter
+    private final Path filePath;
     private final AsynchronousFileChannel fileChannel;
 
-    public AsyncFileChannelWriter(AsynchronousFileChannel fileChannel) {
+    public AsyncFileChannelWriter(Path filePath, AsynchronousFileChannel fileChannel) {
+        this.filePath = filePath;
         this.fileChannel = fileChannel;
     }
 
