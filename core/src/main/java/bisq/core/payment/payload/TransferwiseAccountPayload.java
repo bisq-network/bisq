@@ -86,12 +86,13 @@ public final class TransferwiseAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.email") + " " + email;
+        return Res.get(paymentMethodId) + " - " + getPaymentDetailsForTradePopup().replace("\n", ", ");
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return getPaymentDetails();
+        return Res.getWithCol("payment.email") + " " + email + "\n" +
+                Res.getWithCol("payment.account.owner") + " " + getHolderNameOrPromptIfEmpty();
     }
 
     @Override
