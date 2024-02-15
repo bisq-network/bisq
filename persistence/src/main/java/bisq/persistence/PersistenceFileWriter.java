@@ -34,7 +34,12 @@ public class PersistenceFileWriter {
 
     public CompletableFuture<Void> write(byte[] data) {
         CompletableFuture<Void> completableFuture = new CompletableFuture<>();
-        scheduleAsyncWrite(data, 0, data.length, completableFuture);
+        asyncWriter.truncate()
+                .thenRun(() -> scheduleAsyncWrite(data, 0, data.length, completableFuture))
+                .exceptionally(throwable -> {
+                    completableFuture.completeExceptionally(throwable);
+                    return null;
+                });
         return completableFuture;
     }
 
