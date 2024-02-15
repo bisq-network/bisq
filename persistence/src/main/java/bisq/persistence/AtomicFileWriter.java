@@ -21,8 +21,7 @@ import java.nio.file.Path;
 
 import java.io.File;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletableFuture;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,25 +39,19 @@ public class AtomicFileWriter {
         rollingFile = rollingFileWriter.getFilePath().toFile();
     }
 
-    public synchronized void write(byte[] data) {
-        try {
-            CountDownLatch countDownLatch = rollingFileWriter.write(data);
-            boolean isSuccess = countDownLatch.await(45, TimeUnit.SECONDS);
-            if (!isSuccess) {
-                throw new AtomicFileWriteFailedException("Async atomic file write timeout triggered after 45 seconds.");
-            }
+    public synchronized CompletableFuture<Void> write(byte[] data) {
+        return rollingFileWriter.write(data)
+                .thenRunAsync(this::swapActiveAndRollingFile);
+    }
 
-            isSuccess = rollingFile.renameTo(activeFile);
-            if (!isSuccess) {
-                throw new AtomicFileWriteFailedException("Couldn't rename rolling file to active file.");
-            }
-
-            File tmpFile = activeFile;
-            activeFile = rollingFile;
-            rollingFile = tmpFile;
-
-        } catch (InterruptedException e) {
-            log.error("AtomicFileWriter got interrupted during write.", e);
+    private void swapActiveAndRollingFile() {
+        var isSuccess = rollingFile.renameTo(activeFile);
+        if (!isSuccess) {
+            throw new AtomicFileWriteFailedException("Couldn't rename rolling file to active file.");
         }
+
+        File tmpFile = activeFile;
+        activeFile = rollingFile;
+        rollingFile = tmpFile;
     }
 }
