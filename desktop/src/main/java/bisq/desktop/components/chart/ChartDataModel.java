@@ -23,7 +23,9 @@ import java.time.Instant;
 import java.time.temporal.TemporalAdjuster;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BinaryOperator;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
@@ -89,13 +91,20 @@ public abstract class ChartDataModel extends ActivatableDataModel {
 
     protected abstract void invalidateCache();
 
-    protected Map<Long, Long> getMergedMap(Map<Long, Long> map1,
-                                           Map<Long, Long> map2,
-                                           BinaryOperator<Long> mergeFunction) {
-        return Stream.concat(map1.entrySet().stream(),
-                        map2.entrySet().stream())
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        mergeFunction));
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Utils
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected static <T, R> Function<T, R> memoize(Function<T, R> fn) {
+        Map<T, R> map = new ConcurrentHashMap<>();
+        return x -> map.computeIfAbsent(x, fn);
+    }
+
+    protected static <V> Map<Long, V> getMergedMap(Map<Long, V> map1,
+                                                   Map<Long, V> map2,
+                                                   BinaryOperator<V> mergeFunction) {
+        return Stream.concat(map1.entrySet().stream(), map2.entrySet().stream())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, mergeFunction));
     }
 }
