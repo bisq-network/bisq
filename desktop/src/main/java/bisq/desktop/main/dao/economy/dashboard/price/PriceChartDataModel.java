@@ -307,7 +307,7 @@ public class PriceChartDataModel extends ChartDataModel {
     private NavigableMap<Long, Double> getOutstandingBsqByInterval() {
         Stream<Tx> txStream = daoStateService.getBlocks().stream()
                 .flatMap(b -> b.getTxs().stream())
-                .filter(tx -> tx.getBurntFee() > 0);
+                .filter(tx -> tx.getBurntBsq() > 0);
         Map<Long, Double> simpleBurns = txStream
                 .collect(Collectors.groupingBy(
                         tx -> toTimeInterval(Instant.ofEpochMilli(tx.getTime())),

@@ -210,7 +210,7 @@ public class DaoChartDataModel extends ChartDataModel {
             return totalBurnedByInterval;
         }
 
-        totalBurnedByInterval = getBurntBsqByInterval(getBurntFeeTxStream(), getDateFilter());
+        totalBurnedByInterval = getBurntBsqByInterval(getBurntBsqTxStream(), getDateFilter());
         return totalBurnedByInterval;
     }
 
@@ -246,7 +246,7 @@ public class DaoChartDataModel extends ChartDataModel {
             return miscBurnByInterval;
         }
 
-        Map<Long, Long> allMiscBurnByInterval = getBurntFeeTxStream()
+        Map<Long, Long> allMiscBurnByInterval = getBurntBsqTxStream()
                 .filter(e -> e.getTxType() != TxType.PAY_TRADE_FEE)
                 .filter(e -> e.getTxType() != TxType.PROOF_OF_BURN)
                 .collect(Collectors.groupingBy(
@@ -295,7 +295,7 @@ public class DaoChartDataModel extends ChartDataModel {
         Collection<Issuance> issuanceSetForType = daoStateService.getIssuanceItems();
         // get all issued and burnt BSQ, not just the filtered date range
         Map<Long, Long> tmpIssuedByInterval = getIssuedBsqByInterval(issuanceSetForType, e -> true);
-        Map<Long, Long> tmpBurnedByInterval = getBurntBsqByInterval(getBurntFeeTxStream(), e -> true);
+        Map<Long, Long> tmpBurnedByInterval = getBurntBsqByInterval(getBurntBsqTxStream(), e -> true);
         tmpBurnedByInterval.replaceAll((k, v) -> -v);
 
         Map<Long, Long> tmpSupplyByInterval = new TreeMap<>(getMergedMap(tmpIssuedByInterval, tmpBurnedByInterval, Long::sum));
@@ -354,10 +354,10 @@ public class DaoChartDataModel extends ChartDataModel {
 
     // TODO: Consider moving these two methods to DaoStateService:
 
-    private Stream<Tx> getBurntFeeTxStream() {
+    private Stream<Tx> getBurntBsqTxStream() {
         return daoStateService.getBlocks().stream()
                 .flatMap(b -> b.getTxs().stream())
-                .filter(tx -> tx.getBurntFee() > 0);
+                .filter(tx -> tx.getBurntBsq() > 0);
     }
 
     private Stream<Tx> getTradeFeeTxStream() {
