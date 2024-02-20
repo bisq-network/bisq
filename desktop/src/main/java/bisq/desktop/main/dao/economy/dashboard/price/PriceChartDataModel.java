@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.function.Function;
+import java.util.function.LongPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -238,7 +239,7 @@ public class PriceChartDataModel extends ChartDataModel {
     private Map<Long, Double> getPriceByInterval(Collection<TradeStatistics3> collection,
                                                  Predicate<TradeStatistics3> collectionFilter,
                                                  Function<TradeStatistics3, Long> groupByDateFunction,
-                                                 Predicate<Long> dateFilter,
+                                                 LongPredicate dateFilter,
                                                  Function<List<TradeStatistics3>, Double> getAveragePriceFunction) {
         return collection.stream()
                 .filter(collectionFilter)
@@ -274,7 +275,7 @@ public class PriceChartDataModel extends ChartDataModel {
     private Map<Long, Double> getBsqMarketCapByInterval(Collection<TradeStatistics3> tradeStatistics3s,
                                                         Predicate<TradeStatistics3> collectionFilter,
                                                         Function<TradeStatistics3, Long> groupByDateFunction,
-                                                        Predicate<Long> dateFilter,
+                                                        LongPredicate dateFilter,
                                                         Function<List<TradeStatistics3>, Double> getAveragePriceFunction) {
         Map<Long, List<TradeStatistics3>> pricesGroupedByDate = tradeStatistics3s.stream()
                 .filter(collectionFilter)

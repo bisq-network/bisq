@@ -41,7 +41,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.function.LongPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -322,7 +322,7 @@ public class DaoChartDataModel extends ChartDataModel {
     // Aggregated collection data by interval
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Map<Long, Long> getIssuedBsqByInterval(Collection<Issuance> issuanceSet, Predicate<Long> dateFilter) {
+    private Map<Long, Long> getIssuedBsqByInterval(Collection<Issuance> issuanceSet, LongPredicate dateFilter) {
         var allIssuedBsq = issuanceSet.stream()
                 .collect(Collectors.groupingBy(
                         issuance -> toTimeInterval(Instant.ofEpochMilli(blockTimeOfIssuanceFunction.apply(issuance))),
@@ -330,8 +330,7 @@ public class DaoChartDataModel extends ChartDataModel {
         return getDateFilteredMap(allIssuedBsq, dateFilter);
     }
 
-    private Map<Long, Long> getHistoricalIssuedBsqByInterval(Map<Long, Long> historicalData,
-                                                             Predicate<Long> dateFilter) {
+    private Map<Long, Long> getHistoricalIssuedBsqByInterval(Map<Long, Long> historicalData, LongPredicate dateFilter) {
         return historicalData.entrySet().stream()
                 .filter(e -> dateFilter.test(e.getKey()))
                 .collect(Collectors.toMap(e -> toTimeInterval(Instant.ofEpochSecond(e.getKey())),
@@ -339,7 +338,7 @@ public class DaoChartDataModel extends ChartDataModel {
                         Long::sum));
     }
 
-    private Map<Long, Long> getBurntBsqByInterval(Stream<Tx> txStream, Predicate<Long> dateFilter) {
+    private Map<Long, Long> getBurntBsqByInterval(Stream<Tx> txStream, LongPredicate dateFilter) {
         var toTimeIntervalFn = toCachedTimeIntervalFn();
         var allBurntBsq = txStream.collect(Collectors.groupingBy(
                 tx -> toTimeIntervalFn.applyAsLong(Instant.ofEpochMilli(tx.getTime())),
@@ -347,7 +346,7 @@ public class DaoChartDataModel extends ChartDataModel {
         return getDateFilteredMap(allBurntBsq, dateFilter);
     }
 
-    private Predicate<Long> getPostTagDateFilter() {
+    private LongPredicate getPostTagDateFilter() {
         // We filter out old dates as it only makes sense since Nov 2021
         return date -> date >= TAG_DATE.getTimeInMillis() / 1000;  // we use seconds
     }
@@ -371,7 +370,7 @@ public class DaoChartDataModel extends ChartDataModel {
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static <V> Map<Long, V> getDateFilteredMap(Map<Long, V> map, Predicate<Long> dateFilter) {
+    private static <V> Map<Long, V> getDateFilteredMap(Map<Long, V> map, LongPredicate dateFilter) {
         return map.entrySet().stream()
                 .filter(e -> dateFilter.test(e.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> v, HashMap::new));
