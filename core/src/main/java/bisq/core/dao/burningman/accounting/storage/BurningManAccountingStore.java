@@ -74,7 +74,9 @@ public class BurningManAccountingStore implements PersistableEnvelope {
         Lock writeLock = readWriteLock.writeLock();
         writeLock.lock();
         try {
-            purgeLast10Blocks();
+            for (int i = 0; i < 10 && !blocks.isEmpty(); i++) {
+                blocks.removeLast();
+            }
         } finally {
             writeLock.unlock();
         }
@@ -145,17 +147,6 @@ public class BurningManAccountingStore implements PersistableEnvelope {
         } else {
             log.info("We have that block already. Height: {}", newBlock.getHeight());
         }
-    }
-
-    private void purgeLast10Blocks() {
-        if (blocks.size() <= 10) {
-            blocks.clear();
-            return;
-        }
-
-        List<AccountingBlock> purged = new ArrayList<>(blocks.subList(0, blocks.size() - 10));
-        blocks.clear();
-        blocks.addAll(purged);
     }
 
     public Message toProtoMessage() {
