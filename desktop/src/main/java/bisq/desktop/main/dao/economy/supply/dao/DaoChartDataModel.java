@@ -40,10 +40,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.function.LongPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -146,9 +144,7 @@ public class DaoChartDataModel extends ChartDataModel {
         Map<Long, Long> reimbursementMap = getReimbursementByInterval();
         Map<Long, Long> burnFromArbitrationMap = getProofOfBurnFromArbitrationByInterval();
         Map<Long, Long> mergedMap = getMergedMap(reimbursementMap, burnFromArbitrationMap, (a, b) -> a - b);
-        arbitrationDiffByInterval = mergedMap.entrySet().stream()
-                .filter(e -> getPostTagDateFilter().test(e.getKey()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        arbitrationDiffByInterval = getDateFilteredMap(mergedMap, getPostTagDateFilter());
         return arbitrationDiffByInterval;
     }
 
@@ -162,9 +158,7 @@ public class DaoChartDataModel extends ChartDataModel {
         Map<Long, Long> tradeFee = getBsqTradeFeeByInterval();
         Map<Long, Long> proofOfBurn = getProofOfBurnFromBtcFeesByInterval();
         Map<Long, Long> merged = getMergedMap(tradeFee, proofOfBurn, Long::sum);
-        totalTradeFeesByInterval = merged.entrySet().stream()
-                .filter(entry -> entry.getKey() * 1000 >= TAG_DATE.getTimeInMillis())
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        totalTradeFeesByInterval = getDateFilteredMap(merged, e -> e * 1000 >= TAG_DATE.getTimeInMillis());
         return totalTradeFeesByInterval;
     }
 
@@ -207,9 +201,7 @@ public class DaoChartDataModel extends ChartDataModel {
             return reimbursementByIntervalAfterTagging;
         }
 
-        reimbursementByIntervalAfterTagging = getReimbursementByInterval().entrySet().stream()
-                .filter(e -> getPostTagDateFilter().test(e.getKey()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        reimbursementByIntervalAfterTagging = getDateFilteredMap(getReimbursementByInterval(), getPostTagDateFilter());
         return reimbursementByIntervalAfterTagging;
     }
 
@@ -218,7 +210,7 @@ public class DaoChartDataModel extends ChartDataModel {
             return totalBurnedByInterval;
         }
 
-        totalBurnedByInterval = getBurntBsqByInterval(getBurntFeeTxStream(), getDateFilter());
+        totalBurnedByInterval = getBurntBsqByInterval(getBurntBsqTxStream(), getDateFilter());
         return totalBurnedByInterval;
     }
 
@@ -236,9 +228,7 @@ public class DaoChartDataModel extends ChartDataModel {
             return bsqTradeFeeByIntervalAfterTagging;
         }
 
-        bsqTradeFeeByIntervalAfterTagging = getBsqTradeFeeByInterval().entrySet().stream()
-                .filter(e -> getPostTagDateFilter().test(e.getKey()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        bsqTradeFeeByIntervalAfterTagging = getDateFilteredMap(getBsqTradeFeeByInterval(), getPostTagDateFilter());
         return bsqTradeFeeByIntervalAfterTagging;
     }
 
@@ -256,17 +246,14 @@ public class DaoChartDataModel extends ChartDataModel {
             return miscBurnByInterval;
         }
 
-        miscBurnByInterval = daoStateService.getBurntFeeTxs().stream()
+        Map<Long, Long> allMiscBurnByInterval = getBurntBsqTxStream()
                 .filter(e -> e.getTxType() != TxType.PAY_TRADE_FEE)
                 .filter(e -> e.getTxType() != TxType.PROOF_OF_BURN)
-                .collect(Collectors.groupingBy(tx -> toTimeInterval(Instant.ofEpochMilli(tx.getTime()))))
-                .entrySet()
-                .stream()
-                .filter(entry -> dateFilter.test(entry.getKey()))
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> entry.getValue().stream()
-                                .mapToLong(Tx::getBurntBsq)
-                                .sum()));
+                .collect(Collectors.groupingBy(
+                        tx -> toTimeInterval(Instant.ofEpochMilli(tx.getTime())),
+                        Collectors.summingLong(Tx::getBurntBsq)));
+
+        miscBurnByInterval = getDateFilteredMap(allMiscBurnByInterval, dateFilter);
         return miscBurnByInterval;
     }
 
@@ -308,21 +295,14 @@ public class DaoChartDataModel extends ChartDataModel {
         Collection<Issuance> issuanceSetForType = daoStateService.getIssuanceItems();
         // get all issued and burnt BSQ, not just the filtered date range
         Map<Long, Long> tmpIssuedByInterval = getIssuedBsqByInterval(issuanceSetForType, e -> true);
-        Map<Long, Long> tmpBurnedByInterval = new TreeMap<>(getBurntBsqByInterval(getBurntFeeTxStream(), e -> true)
-                .entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> -e.getValue())));
-        Map<Long, Long> tmpSupplyByInterval = getMergedMap(tmpIssuedByInterval, tmpBurnedByInterval, Long::sum);
+        Map<Long, Long> tmpBurnedByInterval = getBurntBsqByInterval(getBurntBsqTxStream(), e -> true);
+        tmpBurnedByInterval.replaceAll((k, v) -> -v);
 
-        totalSupplyByInterval = new TreeMap<>(tmpSupplyByInterval.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
-        AtomicReference<Long> atomicSum = new AtomicReference<>(genesisValue);
-        totalSupplyByInterval.entrySet().forEach(e -> e.setValue(
-                atomicSum.accumulateAndGet(e.getValue(), Long::sum)
-        ));
+        Map<Long, Long> tmpSupplyByInterval = new TreeMap<>(getMergedMap(tmpIssuedByInterval, tmpBurnedByInterval, Long::sum));
+        final long[] partialSum = {genesisValue};
+        tmpSupplyByInterval.replaceAll((k, v) -> partialSum[0] += v);
         // now apply the requested date filter
-        totalSupplyByInterval = totalSupplyByInterval.entrySet().stream()
-                .filter(e -> dateFilter.test(e.getKey()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-
+        totalSupplyByInterval = getDateFilteredMap(tmpSupplyByInterval, dateFilter);
         return totalSupplyByInterval;
     }
 
@@ -332,8 +312,8 @@ public class DaoChartDataModel extends ChartDataModel {
         }
 
         Map<Long, Long> issued = getTotalIssuedByInterval();
-        Map<Long, Long> burned = new TreeMap<>(getTotalBurnedByInterval().entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> -e.getValue())));
+        Map<Long, Long> burned = getTotalBurnedByInterval();
+        burned.replaceAll((k, v) -> -v);
         supplyChangeByInterval = getMergedMap(issued, burned, Long::sum);
         return supplyChangeByInterval;
     }
@@ -342,22 +322,15 @@ public class DaoChartDataModel extends ChartDataModel {
     // Aggregated collection data by interval
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Map<Long, Long> getIssuedBsqByInterval(Collection<Issuance> issuanceSet, Predicate<Long> dateFilter) {
-        return issuanceSet.stream()
-                .collect(Collectors.groupingBy(issuance ->
-                        toTimeInterval(Instant.ofEpochMilli(blockTimeOfIssuanceFunction.apply(issuance)))))
-                .entrySet()
-                .stream()
-                .filter(entry -> dateFilter.test(entry.getKey()))
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> entry.getValue().stream()
-                                .mapToLong(Issuance::getAmount)
-                                .sum()));
+    private Map<Long, Long> getIssuedBsqByInterval(Collection<Issuance> issuanceSet, LongPredicate dateFilter) {
+        var allIssuedBsq = issuanceSet.stream()
+                .collect(Collectors.groupingBy(
+                        issuance -> toTimeInterval(Instant.ofEpochMilli(blockTimeOfIssuanceFunction.apply(issuance))),
+                        Collectors.summingLong(Issuance::getAmount)));
+        return getDateFilteredMap(allIssuedBsq, dateFilter);
     }
 
-    private Map<Long, Long> getHistoricalIssuedBsqByInterval(Map<Long, Long> historicalData,
-                                                             Predicate<Long> dateFilter) {
-
+    private Map<Long, Long> getHistoricalIssuedBsqByInterval(Map<Long, Long> historicalData, LongPredicate dateFilter) {
         return historicalData.entrySet().stream()
                 .filter(e -> dateFilter.test(e.getKey()))
                 .collect(Collectors.toMap(e -> toTimeInterval(Instant.ofEpochSecond(e.getKey())),
@@ -365,30 +338,25 @@ public class DaoChartDataModel extends ChartDataModel {
                         Long::sum));
     }
 
-    private Map<Long, Long> getBurntBsqByInterval(Stream<Tx> txStream, Predicate<Long> dateFilter) {
+    private Map<Long, Long> getBurntBsqByInterval(Stream<Tx> txStream, LongPredicate dateFilter) {
         var toTimeIntervalFn = toCachedTimeIntervalFn();
-        return txStream
-                .collect(Collectors.groupingBy(tx -> toTimeIntervalFn.applyAsLong(Instant.ofEpochMilli(tx.getTime()))))
-                .entrySet()
-                .stream()
-                .filter(entry -> dateFilter.test(entry.getKey()))
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        entry -> entry.getValue().stream()
-                                .mapToLong(Tx::getBurntBsq)
-                                .sum()));
+        var allBurntBsq = txStream.collect(Collectors.groupingBy(
+                tx -> toTimeIntervalFn.applyAsLong(Instant.ofEpochMilli(tx.getTime())),
+                Collectors.summingLong(Tx::getBurntBsq)));
+        return getDateFilteredMap(allBurntBsq, dateFilter);
     }
 
-    private Predicate<Long> getPostTagDateFilter() {
+    private LongPredicate getPostTagDateFilter() {
         // We filter out old dates as it only makes sense since Nov 2021
         return date -> date >= TAG_DATE.getTimeInMillis() / 1000;  // we use seconds
     }
 
     // TODO: Consider moving these two methods to DaoStateService:
 
-    private Stream<Tx> getBurntFeeTxStream() {
+    private Stream<Tx> getBurntBsqTxStream() {
         return daoStateService.getBlocks().stream()
                 .flatMap(b -> b.getTxs().stream())
-                .filter(tx -> tx.getBurntFee() > 0);
+                .filter(tx -> tx.getBurntBsq() > 0);
     }
 
     private Stream<Tx> getTradeFeeTxStream() {
@@ -402,9 +370,10 @@ public class DaoChartDataModel extends ChartDataModel {
     // Utils
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private static <T, R> Function<T, R> memoize(Function<T, R> fn) {
-        Map<T, R> map = new ConcurrentHashMap<>();
-        return x -> map.computeIfAbsent(x, fn);
+    private static <V> Map<Long, V> getDateFilteredMap(Map<Long, V> map, LongPredicate dateFilter) {
+        return map.entrySet().stream()
+                .filter(e -> dateFilter.test(e.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> v, HashMap::new));
     }
 
 
