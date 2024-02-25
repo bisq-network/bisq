@@ -44,6 +44,7 @@ import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.TradeTxException;
+import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
@@ -341,6 +342,7 @@ public class BisqSetup {
         maybeShowLocalhostRunningInfo();
         maybeShowAccountSigningStateInfo();
         maybeShowTorAddressUpgradeInformation();
+        maybeUpgradeBsqExplorerUrl();
         checkInboundConnections();
     }
 
@@ -780,6 +782,14 @@ public class BisqSetup {
         if (signingStateFound && preferences.showAgain(key) &&
                 displayHandler != null) {
             displayHandler.accept(key);
+        }
+    }
+
+    private void maybeUpgradeBsqExplorerUrl() {
+        // if wiz BSQ explorer selected, replace with 1st explorer in the list of available.
+        if (preferences.getBsqBlockChainExplorer().name.equalsIgnoreCase("mempool.space (@wiz)") &&
+                preferences.getBsqBlockChainExplorers().size() > 0) {
+            preferences.setBsqBlockChainExplorer(preferences.getBsqBlockChainExplorers().get(0));
         }
     }
 
