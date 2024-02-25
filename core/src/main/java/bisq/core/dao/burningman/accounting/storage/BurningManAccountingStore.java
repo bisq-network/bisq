@@ -17,7 +17,6 @@
 
 package bisq.core.dao.burningman.accounting.storage;
 
-
 import bisq.core.dao.burningman.accounting.blockchain.AccountingBlock;
 import bisq.core.dao.burningman.accounting.exceptions.BlockHashNotConnectingException;
 import bisq.core.dao.burningman.accounting.exceptions.BlockHeightNotConnectingException;
@@ -75,7 +74,9 @@ public class BurningManAccountingStore implements PersistableEnvelope {
         Lock writeLock = readWriteLock.writeLock();
         writeLock.lock();
         try {
-            purgeLast10Blocks();
+            for (int i = 0; i < 10 && !blocks.isEmpty(); i++) {
+                blocks.removeLast();
+            }
         } finally {
             writeLock.unlock();
         }
@@ -148,21 +149,18 @@ public class BurningManAccountingStore implements PersistableEnvelope {
         }
     }
 
-    private void purgeLast10Blocks() {
-        if (blocks.size() <= 10) {
-            blocks.clear();
-            return;
-        }
-
-        List<AccountingBlock> purged = new ArrayList<>(blocks.subList(0, blocks.size() - 10));
-        blocks.clear();
-        blocks.addAll(purged);
-    }
-
     public Message toProtoMessage() {
+        List<AccountingBlock> blocksCopy;
+        Lock readLock = readWriteLock.readLock();
+        readLock.lock();
+        try {
+            blocksCopy = new ArrayList<>(blocks);
+        } finally {
+            readLock.unlock();
+        }
         return protobuf.PersistableEnvelope.newBuilder()
                 .setBurningManAccountingStore(protobuf.BurningManAccountingStore.newBuilder()
-                        .addAllBlocks(blocks.stream()
+                        .addAllBlocks(blocksCopy.stream()
                                 .map(AccountingBlock::toProtoMessage)
                                 .collect(Collectors.toList())))
                 .build();
