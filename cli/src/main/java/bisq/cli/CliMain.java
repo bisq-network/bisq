@@ -177,6 +177,14 @@ public class CliMain {
                     out.println(network);
                     return;
                 }
+                case getdaostatus: {
+                    if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
+                        out.println(client.getMethodHelp(method));
+                        return;
+                    }
+                    out.println(client.getDaoStatus());
+                    return;
+                }
                 case getbalance: {
                     var opts = new GetBalanceOptionParser(args).parse();
                     if (opts.isForHelp()) {
@@ -865,6 +873,8 @@ public class CliMain {
             stream.format(rowFormat, getversion.name(), "", "Get server version");
             stream.println();
             stream.format(rowFormat, getnetwork.name(), "", "Get BTC network:  mainnet, testnet3, or regtest");
+            stream.println();
+            stream.format(rowFormat, getdaostatus.name(), "", "Get DAO synchronized status:  true or false");
             stream.println();
             stream.format(rowFormat, getbalance.name(), "[--currency-code=<bsq|btc>]", "Get server wallet balances");
             stream.println();

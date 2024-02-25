@@ -31,6 +31,8 @@ import bisq.proto.grpc.GetFundingAddressesReply;
 import bisq.proto.grpc.GetFundingAddressesRequest;
 import bisq.proto.grpc.GetNetworkReply;
 import bisq.proto.grpc.GetNetworkRequest;
+import bisq.proto.grpc.GetDaoStatusReply;
+import bisq.proto.grpc.GetDaoStatusRequest;
 import bisq.proto.grpc.GetTransactionReply;
 import bisq.proto.grpc.GetTransactionRequest;
 import bisq.proto.grpc.GetTransactionsReply;
@@ -106,6 +108,19 @@ class GrpcWalletsService extends WalletsImplBase {
             var network = coreApi.getNetworkName();
             var reply = GetNetworkReply.newBuilder()
                     .setNetwork(network)
+                    .build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(log, cause, responseObserver);
+        }
+    }
+
+    @Override
+    public void getDaoStatus(GetDaoStatusRequest req, StreamObserver<GetDaoStatusReply> responseObserver) {
+        try {
+            var reply = GetDaoStatusReply.newBuilder()
+                    .setIsDaoStateReadyAndInSync(coreApi.isDaoStateReadyAndInSync())
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
@@ -403,6 +418,7 @@ class GrpcWalletsService extends WalletsImplBase {
                 .or(() -> Optional.of(CallRateMeteringInterceptor.valueOf(
                         new HashMap<>() {{
                             put(getGetNetworkMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
+                            put(getGetDaoStatusMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getGetBalancesMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getGetAddressBalanceMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getGetFundingAddressesMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));

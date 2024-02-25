@@ -732,6 +732,9 @@ service Wallets {
     // Get the name of the BTC / BSQ network (mainnet, testnet3, or regtest).
     rpc GetNetwork (GetNetworkRequest) returns (GetNetworkReply) {
     }
+    // Get status of the DAO.
+    rpc GetDaoStatus (GetDaoStatusRequest) returns (GetDaoStatusReply) {
+    }
     // Get the Bisq wallet's current BSQ and BTC balances.
     rpc GetBalances (GetBalancesRequest) returns (GetBalancesReply) {
     }
@@ -793,6 +796,13 @@ message GetNetworkRequest {
 
 message GetNetworkReply {
     string network = 1;         // The BTC network name (mainnet, testnet3, or regtest).
+}
+
+message GetDaoStatusRequest {
+}
+
+message GetDaoStatusReply {
+    bool is_dao_state_ready_and_in_sync = 1;
 }
 
 message GetBalancesRequest {

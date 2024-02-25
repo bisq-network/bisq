@@ -80,6 +80,10 @@ public final class GrpcClient {
         return walletsServiceRequest.getNetwork();
     }
 
+    public boolean getDaoStatus() {
+        return walletsServiceRequest.getDaoStatus();
+    }
+
     public BalancesInfo getBalances() {
         return walletsServiceRequest.getBalances();
     }

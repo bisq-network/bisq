@@ -1,0 +1,23 @@
+getdaostatus
+
+NAME
+----
+getdaostatus - get DAO status
+
+SYNOPSIS
+--------
+getdaostatus
+
+DESCRIPTION
+-----------
+Returns the operating status of the Bisq DAO:
+true - DAO is ready and in sync
+false - DAO is not ready
+
+At startup the status will return false until the DAO has completed synchronizing.
+Trading operations should not be performed when the status is false.
+While running, the status can be used to determine if DAO is in sync with the seed nodes.
+
+EXAMPLES
+--------
+$ ./bisq-cli --password=xyz --port=9998 getdaostatus
