@@ -93,6 +93,8 @@ public class TradeInfo implements Payload {
     private final boolean isCompleted;
     private final String contractAsJson;
     private final ContractInfo contract;
+    private final boolean hasFailed;
+    private final String errorMessage;
     // Optional BSQ swap trade protocol details (post v1).
     private BsqSwapTradeInfo bsqSwapTradeInfo;
     private final String closingStatus;
@@ -126,6 +128,8 @@ public class TradeInfo implements Payload {
         this.contract = builder.getContract();
         this.bsqSwapTradeInfo = null;
         this.closingStatus = builder.getClosingStatus();
+        this.hasFailed = builder.isHasFailed();
+        this.errorMessage = builder.getErrorMessage();
     }
 
     public static TradeInfo toNewTradeInfo(BsqSwapTrade trade, String role) {
@@ -243,6 +247,8 @@ public class TradeInfo implements Payload {
                 .withContractAsJson(trade.getContractAsJson())
                 .withContract(contractInfo)
                 .withClosingStatus(closingStatus)
+                .withHasFailed(trade.hasFailed())
+                .withErrorMessage(trade.hasErrorMessage() ? trade.getErrorMessage() : "")
                 .build();
     }
 
@@ -278,6 +284,8 @@ public class TradeInfo implements Payload {
                         .setIsPaymentReceivedMessageSent(isPaymentReceivedMessageSent)
                         .setIsPayoutPublished(isPayoutPublished)
                         .setIsCompleted(isCompleted)
+                        .setHasFailed(hasFailed)
+                        .setErrorMessage(errorMessage == null ? "" : errorMessage)
                         .setClosingStatus(closingStatus);
         if (offer.isBsqSwapOffer()) {
             protoBuilder.setBsqSwapTradeInfo(bsqSwapTradeInfo.toProtoMessage());
@@ -318,6 +326,8 @@ public class TradeInfo implements Payload {
                 .withContractAsJson(proto.getContractAsJson())
                 .withContract((ContractInfo.fromProto(proto.getContract())))
                 .withClosingStatus(proto.getClosingStatus())
+                .withHasFailed(proto.getHasFailed())
+                .withErrorMessage(proto.getErrorMessage())
                 .build();
 
         if (proto.getOffer().getIsBsqSwapOffer())
@@ -357,6 +367,8 @@ public class TradeInfo implements Payload {
                 ", contract=" + contract + "\n" +
                 ", bsqSwapTradeInfo=" + bsqSwapTradeInfo + "\n" +
                 ", closingStatus=" + closingStatus + "\n" +
+                ", hasFailed=" + hasFailed + "\n" +
+                ", errorMessage=" + errorMessage + "\n" +
                 '}';
     }
 }

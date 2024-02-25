@@ -56,9 +56,11 @@ public final class TradeInfoV1Builder {
     private boolean isPaymentReceivedMessageSent;
     private boolean isPayoutPublished;
     private boolean isCompleted;
+    private boolean hasFailed;
     private String contractAsJson;
     private ContractInfo contract;
     private String closingStatus;
+    private String errorMessage;
 
     public TradeInfoV1Builder withOffer(OfferInfo offer) {
         this.offer = offer;
@@ -177,6 +179,16 @@ public final class TradeInfoV1Builder {
 
     public TradeInfoV1Builder withIsCompleted(boolean isCompleted) {
         this.isCompleted = isCompleted;
+        return this;
+    }
+
+    public TradeInfoV1Builder withHasFailed(boolean hasFailed) {
+        this.hasFailed = hasFailed;
+        return this;
+    }
+
+    public TradeInfoV1Builder withErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
         return this;
     }
 
