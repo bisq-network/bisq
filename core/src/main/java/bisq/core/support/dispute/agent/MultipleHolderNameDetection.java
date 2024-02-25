@@ -146,7 +146,11 @@ public class MultipleHolderNameDetection {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void detectMultipleHolderNames() {
-        String previous = suspiciousDisputesByTraderMap.toString();
+        // compare the count of all suspicious disputes before/after updating
+        int previous = suspiciousDisputesByTraderMap.values().stream()
+                .mapToInt(List::size)
+                .sum();
+
         getAllDisputesByTraderMap().forEach((key, value) -> {
             Set<String> userNames = value.stream()
                     .map(dispute -> {
@@ -161,8 +165,12 @@ public class MultipleHolderNameDetection {
                 suspiciousDisputesByTraderMap.put(key, value);
             }
         });
-        String updated = suspiciousDisputesByTraderMap.toString();
-        if (!previous.equals(updated)) {
+
+        int updated = suspiciousDisputesByTraderMap.values().stream()
+                .mapToInt(List::size)
+                .sum();
+
+        if (previous != updated) {
             listeners.forEach(Listener::onSuspiciousDisputeDetected);
         }
     }
