@@ -21,8 +21,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
 import java.io.File;
+import java.io.IOException;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -32,9 +37,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
@@ -45,13 +51,10 @@ public class AtomicFileWriterTests {
     private PersistenceFileWriter persistenceFileWriter;
     @Mock
     private File rollingFile = mock(File.class);
-    @Mock
-    private CountDownLatch countDownLatch;
     private AtomicFileWriter atomicFileWriter;
 
     @BeforeEach
     void setup(@TempDir Path tempDir, @Mock Path rollingFilePath) {
-        doReturn(countDownLatch).when(persistenceFileWriter).write(any());
         doReturn(rollingFile).when(rollingFilePath).toFile();
         doReturn(rollingFilePath).when(persistenceFileWriter).getFilePath();
 
@@ -60,25 +63,49 @@ public class AtomicFileWriterTests {
     }
 
     @Test
-    void triggerFileWriteTimeout() throws InterruptedException {
-        doReturn(false).when(countDownLatch).await(anyLong(), any());
-        assertThrows(AtomicFileWriteFailedException.class,
-                () -> atomicFileWriter.write(DATA));
+    void writeFails() throws ExecutionException, InterruptedException, TimeoutException {
+        var ioException = new IOException();
+        doReturn(CompletableFuture.failedFuture(ioException))
+                .when(persistenceFileWriter).write(any());
+
+        CountDownLatch exceptionTriggeredLatch = new CountDownLatch(1);
+        atomicFileWriter.write(DATA)
+                .exceptionally(throwable -> {
+                    assertThat(throwable.getCause(), is(ioException));
+                    exceptionTriggeredLatch.countDown();
+                    return null;
+                })
+                .get(30, TimeUnit.SECONDS);
+
+        assertThat(exceptionTriggeredLatch.getCount(), is(0L));
     }
 
     @Test
-    void renameFailure() throws InterruptedException {
-        doReturn(true).when(countDownLatch).await(anyLong(), any());
+    void renameFailure() throws InterruptedException, ExecutionException, TimeoutException {
+        doReturn(CompletableFuture.<Void>completedFuture(null))
+                .when(persistenceFileWriter).write(any());
+
         doReturn(false).when(rollingFile).renameTo(any());
 
-        assertThrows(AtomicFileWriteFailedException.class,
-                () -> atomicFileWriter.write(DATA));
+        CountDownLatch exceptionTriggeredLatch = new CountDownLatch(1);
+        atomicFileWriter.write(DATA)
+                .exceptionally(throwable -> {
+                    assertThat(throwable.getCause(), instanceOf(AtomicFileWriteFailedException.class));
+                    exceptionTriggeredLatch.countDown();
+                    return null;
+                })
+                .get(30, TimeUnit.SECONDS);
+
+        assertThat(exceptionTriggeredLatch.getCount(), is(0L));
     }
 
     @Test
-    void write() throws InterruptedException {
-        doReturn(true).when(countDownLatch).await(anyLong(), any());
+    void write() throws InterruptedException, ExecutionException, TimeoutException {
+        doReturn(CompletableFuture.<Void>completedFuture(null))
+                .when(persistenceFileWriter).write(any());
+
         doReturn(true).when(rollingFile).renameTo(any());
-        atomicFileWriter.write(DATA);
+
+        atomicFileWriter.write(DATA).get(30, TimeUnit.SECONDS);
     }
 }

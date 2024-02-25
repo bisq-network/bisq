@@ -19,7 +19,7 @@ package bisq.persistence;
 
 import java.nio.file.Path;
 
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
@@ -32,35 +32,44 @@ public class PersistenceFileWriter {
         this.writeRequestScheduler = writeRequestScheduler;
     }
 
-    public CountDownLatch write(byte[] data) {
-        CountDownLatch writeFinished = new CountDownLatch(1);
-        scheduleAsyncWrite(data, 0, data.length, writeFinished);
-        return writeFinished;
+    public CompletableFuture<Void> write(byte[] data) {
+        CompletableFuture<Void> completableFuture = new CompletableFuture<>();
+        asyncWriter.truncate()
+                .thenRun(() -> scheduleAsyncWrite(data, 0, data.length, completableFuture))
+                .exceptionally(throwable -> {
+                    completableFuture.completeExceptionally(throwable);
+                    return null;
+                });
+        return completableFuture;
     }
 
     public Path getFilePath() {
         return asyncWriter.getFilePath();
     }
 
-    private void scheduleAsyncWrite(byte[] data, int offset, int size, CountDownLatch writeFinished) {
+    private void scheduleAsyncWrite(byte[] data, int offset, int size, CompletableFuture<Void> completableFuture) {
         asyncWriter.write(data, offset)
-                .thenAcceptAsync(writeUntilEndAsync(data, offset, size, writeFinished), writeRequestScheduler);
+                .thenAcceptAsync(writeUntilEndAsync(data, offset, size, completableFuture), writeRequestScheduler)
+                .exceptionally(throwable -> {
+                    completableFuture.completeExceptionally(throwable);
+                    return null;
+                });
     }
 
     private Consumer<Integer> writeUntilEndAsync(byte[] data,
                                                  int offset,
                                                  int totalBytes,
-                                                 CountDownLatch writeFinished) {
+                                                 CompletableFuture<Void> completableFuture) {
         return writtenBytes -> {
             if (writtenBytes == totalBytes) {
-                writeFinished.countDown();
+                completableFuture.complete(null);
                 return;
             }
 
             int remainingBytes = totalBytes - writtenBytes;
             if (remainingBytes > 0) {
                 int newOffset = offset + writtenBytes;
-                scheduleAsyncWrite(data, newOffset, remainingBytes, writeFinished);
+                scheduleAsyncWrite(data, newOffset, remainingBytes, completableFuture);
             }
         };
     }

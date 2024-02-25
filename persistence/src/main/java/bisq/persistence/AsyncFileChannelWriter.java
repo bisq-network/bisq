@@ -22,6 +22,8 @@ import java.nio.channels.AsynchronousFileChannel;
 import java.nio.channels.CompletionHandler;
 import java.nio.file.Path;
 
+import java.io.IOException;
+
 import java.util.concurrent.CompletableFuture;
 
 import lombok.Getter;
@@ -34,6 +36,18 @@ public class AsyncFileChannelWriter implements AsyncFileWriter {
     public AsyncFileChannelWriter(Path filePath, AsynchronousFileChannel fileChannel) {
         this.filePath = filePath;
         this.fileChannel = fileChannel;
+    }
+
+    @Override
+    public CompletableFuture<Void> truncate() {
+        var completableFuture = new CompletableFuture<Void>();
+        try {
+            fileChannel.truncate(0);
+            completableFuture.complete(null);
+        } catch (IOException e) {
+            completableFuture.completeExceptionally(e);
+        }
+        return completableFuture;
     }
 
     @Override

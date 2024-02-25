@@ -17,9 +17,14 @@
 
 package bisq.persistence;
 
+import java.io.IOException;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -30,11 +35,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static java.util.concurrent.CompletableFuture.failedFuture;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -57,40 +64,60 @@ public class PersistenceFileWriterTests {
     }
 
     @Test
-    void writeInOneGo() throws InterruptedException {
+    void failTruncation() throws ExecutionException, InterruptedException, TimeoutException {
+        var ioException = new IOException("Truncation failed.");
+        doReturn(failedFuture(ioException))
+                .when(asyncWriter).truncate();
+
+        CountDownLatch exceptionThrownLatch = new CountDownLatch(1);
+        fileWriter.write(DATA)
+                .exceptionally(throwable -> {
+                    assertThat(throwable.getCause(), is(ioException));
+                    exceptionThrownLatch.countDown();
+                    return null;
+                })
+                .get(30, TimeUnit.SECONDS);
+
+        assertThat(exceptionThrownLatch.getCount(), is(0L));
+        verify(asyncWriter, times(1)).truncate();
+        verify(asyncWriter, never()).write(any(), anyInt());
+    }
+
+    @Test
+    void writeInOneGo() throws InterruptedException, ExecutionException, TimeoutException {
+        doReturn(completedFuture(null)).when(asyncWriter).truncate();
         doReturn(completedFuture(DATA.length))
                 .when(asyncWriter).write(any(), anyInt());
 
-        boolean isSuccess = fileWriter.write(DATA)
-                .await(30, TimeUnit.SECONDS);
+        fileWriter.write(DATA)
+                .get(30, TimeUnit.SECONDS);
 
-        assertThat(isSuccess, is(true));
         verify(asyncWriter, times(1)).write(any(), anyInt());
     }
 
     @Test
-    void writeInTwoPhases() throws InterruptedException {
+    void writeInTwoPhases() throws InterruptedException, ExecutionException, TimeoutException {
+        doReturn(completedFuture(null)).when(asyncWriter).truncate();
         doReturn(completedFuture(25), completedFuture(75))
                 .when(asyncWriter).write(any(), anyInt());
 
-        boolean isSuccess = fileWriter.write(DATA)
-                .await(30, TimeUnit.SECONDS);
+        fileWriter.write(DATA)
+                .get(30, TimeUnit.SECONDS);
 
-        assertThat(isSuccess, is(true));
         verify(asyncWriter, times(2)).write(any(), anyInt());
     }
 
     @Test
-    void writeInFivePhases() throws InterruptedException {
+    void writeInFivePhases() throws InterruptedException, ExecutionException, TimeoutException {
+        doReturn(completedFuture(null)).when(asyncWriter).truncate();
         doReturn(completedFuture(10), completedFuture(20),
                 completedFuture(30), completedFuture(15),
                 completedFuture(25))
                 .when(asyncWriter).write(any(), anyInt());
 
-        boolean isSuccess = fileWriter.write(DATA)
-                .await(30, TimeUnit.SECONDS);
+        fileWriter.write(DATA)
+                .get(30, TimeUnit.SECONDS);
 
-        assertThat(isSuccess, is(true));
         verify(asyncWriter, times(5)).write(any(), anyInt());
     }
 }
