@@ -56,6 +56,8 @@ import java.util.function.Consumer;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static bisq.proto.grpc.EditOfferRequest.EditType;
 
 /**
@@ -318,8 +320,8 @@ public class CoreApi {
                 errorMessageHandler);
     }
 
-    public void confirmPaymentStarted(String tradeId) {
-        coreTradesService.confirmPaymentStarted(tradeId);
+    public void confirmPaymentStarted(String tradeId, @Nullable String txId, @Nullable String txKey) {
+        coreTradesService.confirmPaymentStarted(tradeId, txId, txKey);
     }
 
     public void confirmPaymentReceived(String tradeId) {

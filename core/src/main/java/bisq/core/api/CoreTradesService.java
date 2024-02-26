@@ -60,6 +60,8 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import static bisq.core.btc.model.AddressEntry.Context.TRADE_PAYOUT;
 import static bisq.proto.grpc.GetTradesRequest.Category.CLOSED;
 import static java.lang.String.format;
@@ -186,7 +188,7 @@ class CoreTradesService {
         );
     }
 
-    void confirmPaymentStarted(String tradeId) {
+    void confirmPaymentStarted(String tradeId, @Nullable String txId, @Nullable String txKey) {
         var trade = getTrade(tradeId);
         if (isFollowingBuyerProtocol(trade)) {
             if (!trade.isDepositConfirmed()) {
@@ -195,6 +197,11 @@ class CoreTradesService {
                                         + "until trade deposit tx '%s' is confirmed",
                                 trade.getId(),
                                 trade.getDepositTxId()));
+            }
+            // pass along counter currency tx proof info if provided
+            if (txId != null && txKey != null && !txId.isEmpty() && !txKey.isEmpty()) {
+                trade.setCounterCurrencyTxId(txId);
+                trade.setCounterCurrencyExtraData(txKey);
             }
             var tradeProtocol = tradeManager.getTradeProtocol(trade);
             ((BuyerProtocol) tradeProtocol).onPaymentStarted(

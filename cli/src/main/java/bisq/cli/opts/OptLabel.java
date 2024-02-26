@@ -56,4 +56,6 @@ public class OptLabel {
     public final static String OPT_TX_FEE_RATE = "tx-fee-rate";
     public final static String OPT_WALLET_PASSWORD = "wallet-password";
     public final static String OPT_NEW_WALLET_PASSWORD = "new-wallet-password";
+    public final static String OPT_TX_ID = "tx-id";
+    public final static String OPT_TX_KEY = "tx-key";
 }

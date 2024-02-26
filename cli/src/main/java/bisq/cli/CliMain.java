@@ -586,6 +586,19 @@ public class CliMain {
                     out.printf("trade %s payment started message sent%n", tradeId);
                     return;
                 }
+                case confirmpaymentstartedxmr: {
+                    var opts = new GetTradeOptionParser(args).parse();
+                    if (opts.isForHelp()) {
+                        out.println(client.getMethodHelp(method));
+                        return;
+                    }
+                    var tradeId = opts.getTradeId();
+                    var txId = opts.getTxId();
+                    var txKey = opts.getTxKey();
+                    client.confirmPaymentStartedXmr(tradeId, txId, txKey);
+                    out.printf("trade %s payment started message sent%n", tradeId);
+                    return;
+                }
                 case confirmpaymentreceived: {
                     var opts = new GetTradeOptionParser(args).parse();
                     if (opts.isForHelp()) {
