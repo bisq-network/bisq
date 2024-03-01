@@ -40,6 +40,7 @@ dependencies {
     implementation libs.fontawesomefx.commons
     implementation libs.fontawesomefx.materialdesign.font
     implementation libs.qrgen
+    implementation libs.javacv
     implementation libs.apache.commons.lang3
     implementation libs.bouncycastle.bcpg.jdk15on
     implementation libs.fxmisc.easybind

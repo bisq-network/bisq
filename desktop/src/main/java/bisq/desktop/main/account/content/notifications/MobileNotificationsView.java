@@ -21,7 +21,14 @@ import bisq.desktop.common.view.ActivatableView;
 import bisq.desktop.common.view.FxmlView;
 import bisq.desktop.components.InfoInputTextField;
 import bisq.desktop.components.InputTextField;
+import bisq.desktop.main.account.content.notifications.qr.FrameToBitmapConverter;
+import bisq.desktop.main.account.content.notifications.qr.FrameToImageConverter;
+import bisq.desktop.main.account.content.notifications.qr.ImageCaptureDeviceFinder;
+import bisq.desktop.main.account.content.notifications.qr.ImageCaptureDeviceNotFoundException;
+import bisq.desktop.main.account.content.notifications.qr.ImageCaptureReader;
+import bisq.desktop.main.account.content.notifications.qr.QrCodeProcessor;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.WebCamWindow;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
@@ -89,12 +96,15 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     private final MarketAlerts marketAlerts;
     private final MobileNotificationService mobileNotificationService;
 
+    private WebCamWindow webCamWindow;
+    private ImageCaptureReader<String> qrCodeReader;
+
     private TextField tokenInputTextField;
     private InputTextField priceAlertHighInputTextField, priceAlertLowInputTextField, marketAlertTriggerInputTextField;
     private ToggleButton useSoundToggleButton, tradeToggleButton, marketToggleButton, priceToggleButton;
     private ComboBox<TradeCurrency> currencyComboBox;
     private ComboBox<PaymentAccount> paymentAccountsComboBox;
-    private Button downloadButton, eraseButton, setPriceAlertButton,
+    private Button downloadButton, webCamButton, noWebCamButton, eraseButton, setPriceAlertButton,
             removePriceAlertButton, addMarketAlertButton, manageAlertsButton /*,testMsgButton*/;
 
     private ChangeListener<Boolean> useSoundCheckBoxListener, tradeCheckBoxListener, marketCheckBoxListener,
@@ -145,6 +155,8 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         // setup
         tokenInputTextField.textProperty().addListener(tokenInputTextFieldListener);
         downloadButton.setOnAction(e -> onDownload());
+        webCamButton.setOnAction(e -> onOpenWebCam());
+        noWebCamButton.setOnAction(e -> onNoWebCam());
         // testMsgButton.setOnAction(e -> onSendTestMsg());
         eraseButton.setOnAction(e -> onErase());
 
@@ -197,6 +209,8 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
         // setup
         tokenInputTextField.textProperty().removeListener(tokenInputTextFieldListener);
         downloadButton.setOnAction(null);
+        webCamButton.setOnAction(null);
+        noWebCamButton.setOnAction(null);
         //testMsgButton.setOnAction(null);
         eraseButton.setOnAction(null);
 
@@ -233,6 +247,63 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     // Setup
     private void onDownload() {
         GUIUtil.openWebPage("https://bisq.network/downloads");
+    }
+
+    private void onOpenWebCam() {
+        webCamButton.setDisable(true);
+        new ImageCaptureDeviceFinder(imageCaptureDevice -> {
+            imageCaptureDevice.setImageWidth(640);
+            imageCaptureDevice.setImageHeight(480);
+            webCamWindow = new WebCamWindow(
+                    imageCaptureDevice.getImageWidth(),
+                    imageCaptureDevice.getImageHeight()
+            ).onClose(() -> {
+                webCamButton.setDisable(false);
+                qrCodeReader.close();
+            });
+            webCamWindow.show();
+
+            qrCodeReader = new ImageCaptureReader<>(
+                    imageCaptureDevice,
+                    new FrameToImageConverter(),
+                    new QrCodeProcessor(new FrameToBitmapConverter()),
+                    webCamWindow.getImageView(),
+                    qrCode -> {
+                        webCamWindow.hide();
+                        webCamButton.setDisable(false);
+                        reset();
+                        tokenInputTextField.setText(qrCode);
+                        updateMarketAlertFields();
+                        updatePriceAlertFields();
+                    }, exception -> {
+                        if (exception instanceof ImageCaptureDeviceNotFoundException) {
+                            new Popup().warning(Res.get("account.notifications.noWebCamFound.warning")).show();
+                            webCamWindow.hide();
+                            webCamButton.setDisable(false);
+                            onNoWebCam();
+                        } else {
+                            log.error("{0}", exception);
+                            new Popup().error(Res.get("account.notifications.webcam.error")).show();
+                            webCamWindow.hide();
+                            webCamButton.setDisable(false);
+                        }
+                    });
+        }, exception -> {
+            if (exception instanceof ImageCaptureDeviceNotFoundException) {
+                new Popup().warning(Res.get("account.notifications.noWebCamFound.warning")).show();
+                webCamButton.setDisable(false);
+                onNoWebCam();
+            } else {
+                log.error("{0}", exception);
+                new Popup().error(Res.get("account.notifications.webcam.error")).show();
+            }
+        });
+    }
+
+    private void onNoWebCam() {
+        setPairingTokenFieldsVisible();
+        noWebCamButton.setManaged(false);
+        noWebCamButton.setVisible(false);
     }
 
     private void onErase() {
@@ -354,10 +425,18 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
                 Res.get("account.notifications.download.label"),
                 Layout.TWICE_FIRST_ROW_DISTANCE);
 
+        Tuple3<Label, Button, Button> tuple = addTopLabel2Buttons(root, ++gridRow,
+                Res.get("account.notifications.webcam.label"),
+                Res.get("account.notifications.webcam.button"), Res.get("account.notifications.noWebcam.button"), 0);
+        webCamButton = tuple.second;
+        noWebCamButton = tuple.third;
+
         tokenInputTextField = addInputTextField(root, ++gridRow,
                 Res.get("account.notifications.email.label"));
         tokenInputTextField.setPromptText(Res.get("account.notifications.email.prompt"));
         tokenInputTextFieldListener = (observable, oldValue, newValue) -> applyKeyAndToken(newValue);
+        tokenInputTextField.setManaged(false);
+        tokenInputTextField.setVisible(false);
 
         /*testMsgButton = FormBuilder.addTopLabelButton(root, ++gridRow, Res.get("account.notifications.testMsg.label"),
                 Res.get("account.notifications.testMsg.title")).second;
@@ -718,4 +797,3 @@ public class MobileNotificationsView extends ActivatableView<GridPane, Void> {
     }
 
 }
-

@@ -44,6 +44,7 @@ netlayer = { strictly = '2b459dc' }
 openjfx-javafx-plugin = { strictly = '0.0.10' }
 protobuf = { strictly = '3.19.1' }
 qrgen = { strictly = '1.3' }
+javacv = { strictly = '1.5.10' }
 slf4j = { strictly = '1.7.30' }
 
 [libraries]
@@ -108,4 +109,5 @@ netlayer-tor-native = { module = "com.github.bisq-network.netlayer:tor.native", 
 openjfx-javafx-plugin = { module = "org.openjfx:javafx-plugin", version.ref = "openjfx-javafx-plugin" }
 protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "protobuf" }
 qrgen = { module = "net.glxn:qrgen", version.ref = "qrgen" }
+javacv = { module = "org.bytedeco:javacv-platform", version.ref = "javacv" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
