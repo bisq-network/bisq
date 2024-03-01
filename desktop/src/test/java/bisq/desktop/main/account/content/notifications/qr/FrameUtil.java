@@ -17,16 +17,22 @@
 
 package bisq.desktop.main.account.content.notifications.qr;
 
+import org.apache.commons.io.IOUtils;
+
 import java.nio.ByteBuffer;
 
-import java.util.Objects;
+import java.io.IOException;
+import java.io.InputStream;
 
 import org.jetbrains.annotations.NotNull;
 
-import static org.bytedeco.opencv.global.opencv_imgcodecs.imread;
+import static org.bytedeco.opencv.global.opencv_imgcodecs.imdecode;
+import static org.opencv.imgcodecs.Imgcodecs.IMREAD_ANYCOLOR;
+import static org.opencv.imgcodecs.Imgcodecs.IMREAD_ANYDEPTH;
 
 
 
+import org.bytedeco.javacpp.BytePointer;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.bytedeco.opencv.opencv_core.Mat;
@@ -51,17 +57,20 @@ public class FrameUtil {
     }
 
     public static Frame createFrameFromImageResource(@NotNull final String imagePath) {
-        final String resImagePath = Objects.requireNonNull(
-                FrameUtil.class.getClassLoader().getResource(imagePath),
-                "Cannot find resource: " + imagePath
-        ).getPath();
-        final Mat imageMat = imread(resImagePath);
-        if (imageMat.empty()) {
-            throw new IllegalArgumentException("Image could not be loaded: " + imagePath);
-        }
-
-        try (OpenCVFrameConverter.ToMat converter = new OpenCVFrameConverter.ToMat()) {
+        try (
+                InputStream is = FrameUtil.class.getClassLoader().getResourceAsStream(imagePath);
+                OpenCVFrameConverter.ToMat converter = new OpenCVFrameConverter.ToMat()
+        ) {
+            if (is == null) {
+                throw new IllegalArgumentException("Image could not be loaded: " + imagePath);
+            }
+            Mat imageMat = imdecode(new Mat(new BytePointer(IOUtils.toByteArray(is))), IMREAD_ANYDEPTH | IMREAD_ANYCOLOR);
+            if (imageMat.empty()) {
+                throw new IllegalArgumentException("Image could not be loaded: " + imagePath);
+            }
             return converter.convert(imageMat);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }
