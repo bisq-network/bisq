@@ -76,7 +76,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
     private ListChangeListener<BondedRole> bondedRolesListener;
     private ListChangeListener<BondedReputation> bondedReputationListener;
 
-    private Bond selectedBond;
+    private Bond<?> selectedBond;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor, lifecycle
@@ -124,7 +124,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void setSelectedBond(Bond bond) {
+    public void setSelectedBond(Bond<?> bond) {
         // Set the selected bond if it's found in the tableView, which listens to sortedList.
         // If this is called before the sortedList has been populated the selected bond is stored and
         // we try to apply again after the next update.
@@ -141,7 +141,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void updateList() {
-        List<Bond> combined = new ArrayList<>(bondedReputationRepository.getBonds());
+        List<Bond<?>> combined = new ArrayList<>(bondedReputationRepository.getBonds());
         combined.addAll(bondedRolesRepository.getBonds());
         observableList.setAll(combined.stream()
                 .map(bond -> new BondListItem(bond, bsqFormatter))
@@ -149,7 +149,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
                 .collect(Collectors.toList()));
         GUIUtil.setFitToRowsForTableView(tableView, 37, 28, 2, 30);
         if (selectedBond != null) {
-            Bond bond = selectedBond;
+            Bond<?> bond = selectedBond;
             selectedBond = null;
             setSelectedBond(bond);
         }
@@ -259,8 +259,6 @@ public class BondsView extends ActivatableView<GridPane, Void> {
             @Override
             public TableCell<BondListItem, BondListItem> call(TableColumn<BondListItem, BondListItem> column) {
                 return new TableCell<>() {
-                    private InfoAutoTooltipLabel infoTextField;
-
                     @Override
                     public void updateItem(final BondListItem item, boolean empty) {
                         super.updateItem(item, empty);
@@ -271,7 +269,7 @@ public class BondsView extends ActivatableView<GridPane, Void> {
                                 info = item.getBondDetails() + "\n" + info;
                             }
 
-                            infoTextField = new InfoAutoTooltipLabel(item.getBondDetails(),
+                            InfoAutoTooltipLabel infoTextField = new InfoAutoTooltipLabel(item.getBondDetails(),
                                     AwesomeIcon.INFO_SIGN,
                                     ContentDisplay.LEFT,
                                     info,
