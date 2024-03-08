@@ -63,7 +63,10 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static void applyBondState(DaoStateService daoStateService, Bond bond, Tx lockupTx, TxOutput lockupTxOutput) {
+    public static void applyBondState(DaoStateService daoStateService,
+                                      Bond bond,
+                                      Tx lockupTx,
+                                      TxOutput lockupTxOutput) {
         if (bond.getBondState() != BondState.LOCKUP_TX_PENDING || bond.getBondState() != BondState.UNLOCK_TX_PENDING)
             bond.setBondState(BondState.LOCKUP_TX_CONFIRMED);
 
@@ -110,7 +113,9 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
                 .anyMatch(data -> Arrays.equals(BondConsensus.getHashFromOpReturnData(data), bondedAsset.getHash()));
     }
 
-    public static boolean isUnlockTxUnconfirmed(BsqWalletService bsqWalletService, DaoStateService daoStateService, BondedAsset bondedAsset) {
+    public static boolean isUnlockTxUnconfirmed(BsqWalletService bsqWalletService,
+                                                DaoStateService daoStateService,
+                                                BondedAsset bondedAsset) {
         return bsqWalletService.getPendingWalletTransactionsStream()
                 .filter(transaction -> transaction.getInputs().size() > 1)
                 .flatMap(transaction -> transaction.getInputs().stream()) // We need to iterate all inputs
@@ -211,12 +216,10 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
         log.debug("update");
         getBondedAssetStream().forEach(bondedAsset -> {
             String uid = bondedAsset.getUid();
-            bondByUidMap.putIfAbsent(uid, createBond(bondedAsset));
-            T bond = bondByUidMap.get(uid);
+            T bond = bondByUidMap.computeIfAbsent(uid, u -> createBond(bondedAsset));
 
-            daoStateService.getLockupTxOutputs().forEach(lockupTxOutput -> {
-                updateBond(bond, bondedAsset, lockupTxOutput);
-            });
+            daoStateService.getLockupTxOutputs().forEach(lockupTxOutput ->
+                    updateBond(bond, bondedAsset, lockupTxOutput));
         });
 
         updateBondStateFromUnconfirmedLockupTxs();
