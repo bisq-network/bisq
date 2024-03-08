@@ -45,7 +45,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Slf4j
-abstract class RequestStateHashesHandler<Req extends GetStateHashesRequest, Res extends GetStateHashesResponse> implements MessageListener {
+abstract class RequestStateHashesHandler<Req extends GetStateHashesRequest, Res extends GetStateHashesResponse<?>> implements MessageListener {
     private static final long TIMEOUT = 180;
 
 
@@ -53,7 +53,7 @@ abstract class RequestStateHashesHandler<Req extends GetStateHashesRequest, Res 
     // Listener
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public interface Listener<Res extends GetStateHashesResponse> {
+    public interface Listener<Res extends GetStateHashesResponse<?>> {
         void onComplete(Res getStateHashesResponse, Optional<NodeAddress> peersNodeAddress);
 
         @SuppressWarnings("UnusedParameters")

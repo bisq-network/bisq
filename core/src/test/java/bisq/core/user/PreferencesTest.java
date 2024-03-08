@@ -35,8 +35,14 @@ import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
 
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -44,10 +50,12 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT) // FIXME: Broken tests: stale persistenceManager stubbing
 public class PreferencesTest {
-
     private Preferences preferences;
-    private PersistenceManager persistenceManager;
+    @Mock
+    private PersistenceManager<PreferencesPayload> persistenceManager;
 
     @BeforeEach
     public void setUp() {
@@ -57,7 +65,6 @@ public class PreferencesTest {
         Res.setBaseCurrencyCode("BTC");
         Res.setBaseCurrencyName("Bitcoin");
 
-        persistenceManager = mock(PersistenceManager.class);
         Config config = new Config();
         LocalBitcoinNode localBitcoinNode = new LocalBitcoinNode(config);
         preferences = new Preferences(
@@ -114,9 +121,7 @@ public class PreferencesTest {
         when(payload.getPreferredTradeCurrency()).thenReturn(new FiatCurrency("USD"));
         when(payload.getCryptoCurrencies()).thenReturn(cryptoCurrencies);
 
-        preferences.readPersisted(() -> {
-            assertTrue(preferences.getCryptoCurrenciesAsObservable().contains(dash));
-        });
+        preferences.readPersisted(() -> assertTrue(preferences.getCryptoCurrenciesAsObservable().contains(dash)));
     }
 
     @Test
@@ -135,8 +140,7 @@ public class PreferencesTest {
         when(payload.getPreferredTradeCurrency()).thenReturn(usd);
         when(payload.getFiatCurrencies()).thenReturn(fiatCurrencies);
 
-        preferences.readPersisted(() -> {
-            assertEquals("US Dollar (USD)", preferences.getFiatCurrenciesAsObservable().get(0).getNameAndCode());
-        });
+        preferences.readPersisted(() ->
+                assertEquals("US Dollar (USD)", preferences.getFiatCurrenciesAsObservable().get(0).getNameAndCode()));
     }
 }

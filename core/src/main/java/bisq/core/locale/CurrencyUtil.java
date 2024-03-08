@@ -88,8 +88,8 @@ public class CurrencyUtil {
         return new ArrayList<>(fiatCurrencyMapSupplier.get().values());
     }
 
-    public static Collection<FiatCurrency> getAllSortedFiatCurrencies(Comparator comparator) {
-        return (List<FiatCurrency>) getAllSortedFiatCurrencies().stream()
+    public static Collection<FiatCurrency> getAllSortedFiatCurrencies(Comparator<? super FiatCurrency> comparator) {
+        return getAllSortedFiatCurrencies().stream()
                 .sorted(comparator)                     // sorted by comparator param
                 .collect(Collectors.toList());
     }

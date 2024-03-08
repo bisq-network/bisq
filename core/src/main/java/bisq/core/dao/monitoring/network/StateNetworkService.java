@@ -53,13 +53,13 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 
 @Slf4j
-public abstract class StateNetworkService<Msg extends NewStateHashMessage,
+public abstract class StateNetworkService<Msg extends NewStateHashMessage<StH>,
         Req extends GetStateHashesRequest,
         Res extends GetStateHashesResponse<StH>,
-        Han extends RequestStateHashesHandler,
+        Han extends RequestStateHashesHandler<Req, Res>,
         StH extends StateHash> implements MessageListener {
 
-    public interface Listener<Msg extends NewStateHashMessage, Req extends GetStateHashesRequest, StH extends StateHash> {
+    public interface Listener<Msg extends NewStateHashMessage<StH>, Req extends GetStateHashesRequest, StH extends StateHash> {
         void onNewStateHashMessage(Msg newStateHashMessage, Connection connection);
 
         void onGetStateHashRequest(Connection connection, Req getStateHashRequest);
