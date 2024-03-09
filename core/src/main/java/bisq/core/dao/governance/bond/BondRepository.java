@@ -213,6 +213,7 @@ public abstract class BondRepository<B extends Bond<T>, T extends BondedAsset> i
     protected abstract Stream<T> getBondedAssetStream();
 
     protected void update() {
+        long ts = System.currentTimeMillis();
         log.debug("update");
         getBondedAssetStream().forEach(bondedAsset -> {
             String uid = bondedAsset.getUid();
@@ -226,6 +227,7 @@ public abstract class BondRepository<B extends Bond<T>, T extends BondedAsset> i
         updateBondStateFromUnconfirmedUnlockTxs();
 
         bonds.setAll(bondByUidMap.values());
+        log.debug("update took {} ms", System.currentTimeMillis() - ts);
     }
 
 
