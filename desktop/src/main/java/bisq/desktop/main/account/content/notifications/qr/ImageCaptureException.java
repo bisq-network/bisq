@@ -15,10 +15,10 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.main.account.content.notifications;
+package bisq.desktop.main.account.content.notifications.qr;
 
-public class NoWebCamFoundException extends Throwable {
-    public NoWebCamFoundException(String msg) {
-        super(msg);
+public class ImageCaptureException extends RuntimeException {
+    public ImageCaptureException(Throwable cause) {
+        super(cause);
     }
 }

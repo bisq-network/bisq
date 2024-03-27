@@ -42,9 +42,8 @@ import lombok.extern.slf4j.Slf4j;
 public class WebCamWindow extends Overlay<WebCamWindow> {
 
     @Getter
-    private ImageView imageView = new ImageView();
+    private final ImageView imageView = new ImageView();
     private ChangeListener<Image> listener;
-
 
     public WebCamWindow(double width, double height) {
         type = Type.Feedback;
@@ -53,6 +52,7 @@ public class WebCamWindow extends Overlay<WebCamWindow> {
         imageView.setFitHeight(height);
     }
 
+    @Override
     public void show() {
         headLine = Res.get("account.notifications.webCamWindow.headline");
 
