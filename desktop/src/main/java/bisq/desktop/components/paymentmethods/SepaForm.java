@@ -45,25 +45,17 @@ import java.util.List;
 import java.util.Optional;
 
 import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextField;
-import static bisq.desktop.util.FormBuilder.addCompactTopLabelTextFieldWithCopyIcon;
 
 public class SepaForm extends GeneralSepaForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
-                                      PaymentAccountPayload paymentAccountPayload) {
+                                      PaymentAccountPayload paymentAccountPayload, String amount) {
         SepaAccountPayload sepaAccountPayload = (SepaAccountPayload) paymentAccountPayload;
-
-        final String title = Res.get("payment.account.owner");
-        final String value = sepaAccountPayload.getHolderName();
-        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, title, value);
-
-        addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1,
-                Res.get("payment.bank.country"),
-                CountryUtil.getNameAndCode(sepaAccountPayload.getCountryCode()));
-        // IBAN, BIC will not be translated
-        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, IBAN, sepaAccountPayload.getIban());
-        addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, BIC, sepaAccountPayload.getBic());
-        return gridRow;
+        return GeneralSepaForm.addFormForBuyer(gridPane, gridRow, amount,
+                sepaAccountPayload.getCountryCode(),
+                sepaAccountPayload.getHolderName(),
+                sepaAccountPayload.getBic(),
+                sepaAccountPayload.getIban());
     }
 
     private final SepaAccount sepaAccount;

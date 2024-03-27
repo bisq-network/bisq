@@ -283,10 +283,10 @@ public class BuyerStep2View extends TradeStepView {
                 gridRow = PerfectMoneyForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
             case PaymentMethod.SEPA_ID:
-                gridRow = SepaForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                gridRow = SepaForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, model.getFiatVolume());
                 break;
             case PaymentMethod.SEPA_INSTANT_ID:
-                gridRow = SepaInstantForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                gridRow = SepaInstantForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload, model.getFiatVolume());
                 break;
             case PaymentMethod.FASTER_PAYMENTS_ID:
                 gridRow = FasterPaymentsForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);

@@ -27,32 +27,21 @@ import net.glxn.qrgen.image.ImageType;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Region;
 
 import javafx.geometry.HPos;
 
 import java.io.ByteArrayInputStream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class QRCodeWindow extends Overlay<QRCodeWindow> {
-    private static final Logger log = LoggerFactory.getLogger(QRCodeWindow.class);
-    private final ImageView qrCodeImageView;
+    private ImageView qrCodeImageView;
     private final String bitcoinAddressOrURI;
+    private boolean showTextRepresentation = true;
+    private double prefWidth = 500, prefHeight = 500;
 
     public QRCodeWindow(String bitcoinAddressOrURI) {
         this.bitcoinAddressOrURI = bitcoinAddressOrURI;
-        final byte[] imageBytes = QRCode
-                .from(bitcoinAddressOrURI)
-                .withSize(250, 250)
-                .to(ImageType.PNG)
-                .stream()
-                .toByteArray();
-        Image qrImage = new Image(new ByteArrayInputStream(imageBytes));
-        qrCodeImageView = new ImageView(qrImage);
-
         type = Type.Information;
-        width = 468;
         headLine(Res.get("qRCodeWindow.headline"));
         message(Res.get("qRCodeWindow.msg"));
     }
@@ -60,7 +49,22 @@ public class QRCodeWindow extends Overlay<QRCodeWindow> {
     @Override
     public void show() {
         createGridPane();
+        gridPane.setPrefWidth(prefWidth);
+        gridPane.setMinHeight(prefHeight);
         addHeadLine();
+
+        Region spacer = new Region();
+        spacer.setMinHeight(prefHeight / 8);
+        gridPane.add(spacer, 0, ++rowIndex);
+
+        final byte[] imageBytes = QRCode
+                .from(bitcoinAddressOrURI)
+                .withSize((int) prefWidth / 2, (int) prefHeight / 2)
+                .to(ImageType.PNG)
+                .stream()
+                .toByteArray();
+        Image qrImage = new Image(new ByteArrayInputStream(imageBytes));
+        qrCodeImageView = new ImageView(qrImage);
 
         GridPane.setRowIndex(qrCodeImageView, ++rowIndex);
         GridPane.setColumnSpan(qrCodeImageView, 2);
@@ -69,11 +73,24 @@ public class QRCodeWindow extends Overlay<QRCodeWindow> {
 
         message = bitcoinAddressOrURI.replace("%20", " ").replace("?", "\n?").replace("&", "\n&");
         setTruncatedMessage();
-        addMessage();
-        GridPane.setHalignment(messageLabel, HPos.CENTER);
+        if (showTextRepresentation) {
+            addMessage();
+            GridPane.setHalignment(messageLabel, HPos.CENTER);
+        }
 
         addButtons();
         applyStyles();
         display();
+    }
+
+    public QRCodeWindow withoutText() {
+        showTextRepresentation = false;
+        return this;
+    }
+
+    public QRCodeWindow setWindowDimensions(double width, double height) {
+        this.prefWidth = width;
+        this.prefHeight = height;
+        return this;
     }
 }
