@@ -120,6 +120,11 @@ public class ImageCaptureReader<T> extends Thread implements AutoCloseable {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } finally {
+            try {
+                frameGrabber.close();
+            } catch (FrameGrabber.Exception ignored) {
+                // Don't care if this throws an exception at this point
+            }
             close();
         }
     }
@@ -127,10 +132,5 @@ public class ImageCaptureReader<T> extends Thread implements AutoCloseable {
     @Override
     public void close() {
         isRunning = false;
-        try {
-            frameGrabber.close();
-        } catch (FrameGrabber.Exception ignored) {
-            // Don't care if this throws an exception at this point
-        }
     }
 }
