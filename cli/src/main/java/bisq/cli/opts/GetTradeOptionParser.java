@@ -22,6 +22,8 @@ import joptsimple.OptionSpec;
 
 import static bisq.cli.opts.OptLabel.OPT_SHOW_CONTRACT;
 import static bisq.cli.opts.OptLabel.OPT_TRADE_ID;
+import static bisq.cli.opts.OptLabel.OPT_TX_ID;
+import static bisq.cli.opts.OptLabel.OPT_TX_KEY;
 
 public class GetTradeOptionParser extends AbstractMethodOptionParser implements MethodOpts {
 
@@ -32,6 +34,16 @@ public class GetTradeOptionParser extends AbstractMethodOptionParser implements 
             .withOptionalArg()
             .ofType(boolean.class)
             .defaultsTo(Boolean.FALSE);
+
+    final OptionSpec<String> txIdOpt = parser.accepts(OPT_TX_ID, "optional tx id")
+            .withOptionalArg()
+            .ofType(String.class)
+            .defaultsTo("");
+
+    final OptionSpec<String> txKeyOpt = parser.accepts(OPT_TX_KEY, "optional tx key")
+            .withOptionalArg()
+            .ofType(String.class)
+            .defaultsTo("");
 
     public GetTradeOptionParser(String[] args) {
         super(args);
@@ -56,5 +68,11 @@ public class GetTradeOptionParser extends AbstractMethodOptionParser implements 
 
     public boolean getShowContract() {
         return options.has(showContractOpt) ? options.valueOf(showContractOpt) : false;
+    }
+    public String getTxId() {
+        return options.has(txIdOpt) ? options.valueOf(txIdOpt) : "";
+    }
+    public String getTxKey() {
+        return options.has(txKeyOpt) ? options.valueOf(txKeyOpt) : "";
     }
 }

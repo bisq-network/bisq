@@ -496,6 +496,9 @@ service Trades {
     // Send a 'payment started' message to a trading peer (the BTC seller).
     rpc ConfirmPaymentStarted (ConfirmPaymentStartedRequest) returns (ConfirmPaymentStartedReply) {
     }
+    // Send a 'payment started' message with optional XMR specific parameters to a trading peer (the BTC seller).
+    rpc ConfirmPaymentStartedXmr (ConfirmPaymentStartedXmrRequest) returns (ConfirmPaymentStartedReply) {
+    }
     // Send a 'payment received' message to a trading peer (the BTC buyer).
     rpc ConfirmPaymentReceived (ConfirmPaymentReceivedRequest) returns (ConfirmPaymentReceivedReply) {
     }
@@ -536,6 +539,12 @@ message TakeOfferReply {
 
 message ConfirmPaymentStartedRequest {
     string trade_id = 1;    // The unique identifier of the open trade.
+}
+
+message ConfirmPaymentStartedXmrRequest {
+    string trade_id = 1;    // The unique identifier of the open trade.
+    string tx_id = 2;       // XMR txId for payment proof
+    string tx_key = 3;      // XMR txKey for payment proof
 }
 
 message ConfirmPaymentStartedReply {
@@ -664,6 +673,10 @@ message TradeInfo {
     bool has_failed = 30;
     // Error message applicable when trade is failed.
     string error_message = 31;
+    // txId used for XMR auto conf.
+    string auto_conf_tx_id = 32;
+    // tx key used for XMR auto conf.
+    string auto_conf_tx_key = 33;
 }
 
 message ContractInfo {

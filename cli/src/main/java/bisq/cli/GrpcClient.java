@@ -362,6 +362,9 @@ public final class GrpcClient {
     public void confirmPaymentStarted(String tradeId) {
         tradesServiceRequest.confirmPaymentStarted(tradeId);
     }
+    public void confirmPaymentStartedXmr(String tradeId, String txId, String txKey) {
+        tradesServiceRequest.confirmPaymentStartedXmr(tradeId, txId, txKey);
+    }
 
     public void confirmPaymentReceived(String tradeId) {
         tradesServiceRequest.confirmPaymentReceived(tradeId);

@@ -32,6 +32,7 @@ import bisq.proto.grpc.ConfirmPaymentReceivedReply;
 import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
 import bisq.proto.grpc.ConfirmPaymentStartedReply;
 import bisq.proto.grpc.ConfirmPaymentStartedRequest;
+import bisq.proto.grpc.ConfirmPaymentStartedXmrRequest;
 import bisq.proto.grpc.FailTradeReply;
 import bisq.proto.grpc.FailTradeRequest;
 import bisq.proto.grpc.GetTradeReply;
@@ -174,7 +175,20 @@ class GrpcTradesService extends TradesImplBase {
     public void confirmPaymentStarted(ConfirmPaymentStartedRequest req,
                                       StreamObserver<ConfirmPaymentStartedReply> responseObserver) {
         try {
-            coreApi.confirmPaymentStarted(req.getTradeId());
+            coreApi.confirmPaymentStarted(req.getTradeId(), null, null);
+            var reply = ConfirmPaymentStartedReply.newBuilder().build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        } catch (Throwable cause) {
+            exceptionHandler.handleException(log, cause, responseObserver);
+        }
+    }
+
+    @Override
+    public void confirmPaymentStartedXmr(ConfirmPaymentStartedXmrRequest req,
+                                         StreamObserver<ConfirmPaymentStartedReply> responseObserver) {
+        try {
+            coreApi.confirmPaymentStarted(req.getTradeId(), req.getTxId(), req.getTxKey());
             var reply = ConfirmPaymentStartedReply.newBuilder().build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();

@@ -61,6 +61,8 @@ public final class TradeInfoV1Builder {
     private ContractInfo contract;
     private String closingStatus;
     private String errorMessage;
+    private String autoConfTxId;
+    private String autoConfTxKey;
 
     public TradeInfoV1Builder withOffer(OfferInfo offer) {
         this.offer = offer;
@@ -204,6 +206,16 @@ public final class TradeInfoV1Builder {
 
     public TradeInfoV1Builder withClosingStatus(String closingStatus) {
         this.closingStatus = closingStatus;
+        return this;
+    }
+
+    public TradeInfoV1Builder withAutoConfTxId(String autoConfTxId) {
+        this.autoConfTxId = autoConfTxId;
+        return this;
+    }
+
+    public TradeInfoV1Builder withAutoConfTxKey(String autoConfTxKey) {
+        this.autoConfTxKey = autoConfTxKey;
         return this;
     }
 

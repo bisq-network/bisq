@@ -20,6 +20,7 @@ package bisq.cli.request;
 import bisq.proto.grpc.CloseTradeRequest;
 import bisq.proto.grpc.ConfirmPaymentReceivedRequest;
 import bisq.proto.grpc.ConfirmPaymentStartedRequest;
+import bisq.proto.grpc.ConfirmPaymentStartedXmrRequest;
 import bisq.proto.grpc.FailTradeRequest;
 import bisq.proto.grpc.GetTradeRequest;
 import bisq.proto.grpc.GetTradesRequest;
@@ -113,6 +114,16 @@ public class TradesServiceRequest {
                 .build();
         //noinspection ResultOfMethodCallIgnored
         grpcStubs.tradesService.confirmPaymentStarted(request);
+    }
+
+    public void confirmPaymentStartedXmr(String tradeId, String txId, String txKey) {
+        var request = ConfirmPaymentStartedXmrRequest.newBuilder()
+                .setTradeId(tradeId)
+                .setTxId(txId)
+                .setTxKey(txKey)
+                .build();
+        //noinspection ResultOfMethodCallIgnored
+        grpcStubs.tradesService.confirmPaymentStartedXmr(request);
     }
 
     public void confirmPaymentReceived(String tradeId) {

@@ -65,5 +65,6 @@ public enum Method {
     unsettxfeerate,
     withdrawfunds,
     stop,
-    getdaostatus
+    getdaostatus,
+    confirmpaymentstartedxmr
 }
