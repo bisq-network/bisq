@@ -62,6 +62,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     private static int NUM_SEEDS_FOR_PRELIMINARY_REQUEST = 2;
     // how many seeds additional to the first responding PreliminaryGetDataRequest seed we request the GetUpdatedDataRequest from
     private static int NUM_ADDITIONAL_SEEDS_FOR_UPDATE_REQUEST = 1;
+    private static int MAX_REPEATED_REQUESTS = 30;
     private boolean isPreliminaryDataRequest = true;
 
 
@@ -140,6 +141,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                 if (seedNodeRepository.isSeedNode(myAddress)) {
                     NUM_SEEDS_FOR_PRELIMINARY_REQUEST = 3;
                     NUM_ADDITIONAL_SEEDS_FOR_UPDATE_REQUEST = 2;
+                    MAX_REPEATED_REQUESTS = 100;
                 }
             }
         });
@@ -361,7 +363,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                 }
 
                                 if (wasTruncated) {
-                                    if (numRepeatedRequests < 20) {
+                                    if (numRepeatedRequests < MAX_REPEATED_REQUESTS) {
                                         // If we had allDataReceived already set to true but get a response with truncated flag,
                                         // we still repeat the request to that node for higher redundancy. Otherwise, one seed node
                                         // providing incomplete data would stop others to fill the gaps.
