@@ -400,7 +400,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
 
     @Override
     public int maxItems() {
-        return 3000;
+        return 15000;
     }
 
     public void pruneOptionalData() {
