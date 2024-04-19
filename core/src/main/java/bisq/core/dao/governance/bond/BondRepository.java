@@ -28,6 +28,8 @@ import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxType;
 
+import com.google.protobuf.ByteString;
+
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
@@ -141,8 +143,9 @@ public abstract class BondRepository<B extends Bond<T>, T extends BondedAsset> i
     protected final DaoStateService daoStateService;
     protected final BsqWalletService bsqWalletService;
 
-    // This map is just for convenience. The data which are used to fill the map are stored in the DaoState (role, txs).
+    // These maps are just for convenience. The data which are used to fill the maps are stored in the DaoState (role, txs).
     protected final Map<String, B> bondByUidMap = new HashMap<>();
+    private Map<ByteString, T> bondedAssetByHashMap;
     @Getter
     protected final ObservableList<B> bonds = FXCollections.observableArrayList();
 
@@ -212,9 +215,16 @@ public abstract class BondRepository<B extends Bond<T>, T extends BondedAsset> i
 
     protected abstract Stream<T> getBondedAssetStream();
 
+    protected Map<ByteString, T> getBondedAssetByHashMap() {
+        return bondedAssetByHashMap != null ? bondedAssetByHashMap
+                : (bondedAssetByHashMap = getBondedAssetStream()
+                .collect(Collectors.toMap(a -> ByteString.copyFrom(a.getHash()), a -> a, (a, b) -> a)));
+    }
+
     protected void update() {
         long ts = System.currentTimeMillis();
         log.debug("update");
+        bondedAssetByHashMap = null;
         getBondedAssetStream().forEach(bondedAsset -> {
             String uid = bondedAsset.getUid();
             B bond = bondByUidMap.computeIfAbsent(uid, u -> createBond(bondedAsset));
