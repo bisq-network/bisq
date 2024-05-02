@@ -534,6 +534,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         ImportBisq2ProfileIdWindow popup = new ImportBisq2ProfileIdWindow();
         popup.headLine(Res.get("account.fiat.exportAccountAge"))
                 .setProfileId(getProfileIdFromClipBoard(prefix))
+                .actionButtonText(Res.get("shared.nextStep"))
                 .onAction(() -> {
                     try {
                         AccountAgeWitnessUtils.signAccountAgeAndBisq2ProfileId(
@@ -541,7 +542,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                                 .ifPresent(json -> {
                                     Utilities.copyToClipboard(prefix + json);
                                     new Popup().information(Res.get("account.fiat.exportAccountAge.popup", json))
-                                            .width(900).show();
+                                            .width(900)
+                                            .show();
                                 });
                     } catch (Exception e) {
                         String error = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
@@ -556,6 +558,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         ImportBisq2ProfileIdWindow popup = new ImportBisq2ProfileIdWindow();
         popup.headLine(Res.get("account.fiat.signedWitness"))
                 .setProfileId(getProfileIdFromClipBoard(prefix))
+                .actionButtonText(Res.get("shared.nextStep"))
                 .onAction(() -> {
                     try {
                         AccountAgeWitnessUtils.signSignedWitnessAndBisq2ProfileId(
@@ -563,7 +566,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                                 .ifPresent(json -> {
                                     Utilities.copyToClipboard(prefix + json);
                                     new Popup().information(Res.get("account.fiat.signedWitness.popup", json))
-                                            .width(900).show();
+                                            .width(900)
+                                            .show();
                                 });
                     } catch (Exception e) {
                         String error = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
