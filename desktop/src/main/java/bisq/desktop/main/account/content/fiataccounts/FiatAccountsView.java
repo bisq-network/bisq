@@ -75,6 +75,7 @@ import bisq.desktop.components.paymentmethods.WeChatPayForm;
 import bisq.desktop.components.paymentmethods.WesternUnionForm;
 import bisq.desktop.main.account.content.PaymentAccountsView;
 import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.main.overlays.windows.ImportBisq2ProfileIdWindow;
 import bisq.desktop.util.FormBuilder;
 import bisq.desktop.util.GUIUtil;
 import bisq.desktop.util.Layout;
@@ -530,34 +531,46 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
 
     private void onExportAccountAgeForBisq2(PaymentAccount paymentAccount) {
         String prefix = "BISQ2_ACCOUNT_AGE:";
-        try {
-            String profileId = getProfileIdFromClipBoard(prefix);
-            AccountAgeWitnessUtils.signAccountAgeAndBisq2ProfileId(accountAgeWitnessService, paymentAccount, keyRing, profileId)
-                    .ifPresent(json -> {
-                        Utilities.copyToClipboard(prefix + json);
-                        new Popup().information(Res.get("account.fiat.exportAccountAge.popup", json))
-                                .width(900).show();
-                    });
-        } catch (Exception e) {
-            String error = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
-            new Popup().warning(error).show();
-        }
+        ImportBisq2ProfileIdWindow popup = new ImportBisq2ProfileIdWindow();
+        popup.headLine(Res.get("account.fiat.exportAccountAge"))
+                .setProfileId(getProfileIdFromClipBoard(prefix))
+                .onAction(() -> {
+                    try {
+                        AccountAgeWitnessUtils.signAccountAgeAndBisq2ProfileId(
+                                        accountAgeWitnessService, paymentAccount, keyRing, popup.getProfileId())
+                                .ifPresent(json -> {
+                                    Utilities.copyToClipboard(prefix + json);
+                                    new Popup().information(Res.get("account.fiat.exportAccountAge.popup", json))
+                                            .width(900).show();
+                                });
+                    } catch (Exception e) {
+                        String error = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
+                        new Popup().warning(error).show();
+                    }
+                })
+                .show();
     }
 
     private void onExportSignedWitnessForBisq2(PaymentAccount paymentAccount) {
         String prefix = "BISQ2_SIGNED_WITNESS:";
-        try {
-            String profileId = getProfileIdFromClipBoard(prefix);
-            AccountAgeWitnessUtils.signSignedWitnessAndBisq2ProfileId(accountAgeWitnessService, paymentAccount, keyRing, profileId)
-                    .ifPresent(json -> {
-                        Utilities.copyToClipboard(prefix + json);
-                        new Popup().information(Res.get("account.fiat.signedWitness.popup", json))
-                                .width(900).show();
-                    });
-        } catch (Exception e) {
-            String error = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
-            new Popup().warning(error).show();
-        }
+        ImportBisq2ProfileIdWindow popup = new ImportBisq2ProfileIdWindow();
+        popup.headLine(Res.get("account.fiat.signedWitness"))
+                .setProfileId(getProfileIdFromClipBoard(prefix))
+                .onAction(() -> {
+                    try {
+                        AccountAgeWitnessUtils.signSignedWitnessAndBisq2ProfileId(
+                                        accountAgeWitnessService, paymentAccount, keyRing, popup.getProfileId())
+                                .ifPresent(json -> {
+                                    Utilities.copyToClipboard(prefix + json);
+                                    new Popup().information(Res.get("account.fiat.signedWitness.popup", json))
+                                            .width(900).show();
+                                });
+                    } catch (Exception e) {
+                        String error = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
+                        new Popup().warning(error).show();
+                    }
+                })
+                .show();
     }
 
     private String getProfileIdFromClipBoard(String prefix) {
@@ -569,7 +582,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                 return profileId;
             }
         }
-        throw new RuntimeException("Clipboard text not in expected format. " + clipboardText);
+        return "";  // clipboard did not contain the expected hash, user will have option to enter it manually
     }
 
 
