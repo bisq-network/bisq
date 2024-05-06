@@ -985,9 +985,9 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                                 voteJson.addProperty("hashOfBlindVoteList", Utilities.bytesAsHexString(decryptedBallotsWithMerits.getHashOfBlindVoteList()));
                                 voteJson.addProperty("blindVoteTxId", decryptedBallotsWithMerits.getBlindVoteTxId());
                                 voteJson.addProperty("voteRevealTxId", decryptedBallotsWithMerits.getVoteRevealTxId());
-                                voteJson.addProperty("stake", decryptedBallotsWithMerits.getStake());
-
-                                voteJson.addProperty("voteWeight", meritStakeMap.get(decryptedBallotsWithMerits.getBlindVoteTxId()));
+                                long stake = decryptedBallotsWithMerits.getStake();
+                                voteJson.addProperty("stake", stake);
+                                voteJson.addProperty("voteWeight", stake + meritStakeMap.get(decryptedBallotsWithMerits.getBlindVoteTxId()));
                                 String voteResult = decryptedBallotsWithMerits.getVote(evaluatedProp.getProposalTxId())
                                         .map(vote -> vote.isAccepted() ? "Accepted" : "Rejected")
                                         .orElse("Ignored");
