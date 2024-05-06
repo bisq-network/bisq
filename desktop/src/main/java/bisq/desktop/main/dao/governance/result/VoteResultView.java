@@ -495,7 +495,6 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
         proposalsTableView.setItems(sortedProposalList);
         sortedProposalList.comparatorProperty().bind(proposalsTableView.comparatorProperty());
 
-        proposalList.forEach(ProposalListItem::resetTableRow);
         proposalList.clear();
 
         Map<String, Ballot> ballotByProposalTxIdMap = daoFacade.getAllValidBallots().stream()
