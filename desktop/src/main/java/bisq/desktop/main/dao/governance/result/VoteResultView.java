@@ -148,6 +148,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     private ProposalListItem selectedProposalListItem;
     private boolean isVoteIncludedInResult;
     private final Set<Cycle> cyclesAdded = new HashSet<>();
+    private Map<String, Ballot> ballotByProposalTxIdMap;
     private boolean hasCalculatedResult = false;
 
 
@@ -205,7 +206,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
         if (daoStateService.isParseBlockChainComplete()) {
             checkForResultPhase(daoStateService.getChainHeight());
-            fillCycleList();
+            fillCycleListAndBallotMap();
         }
 
         exportButton.setOnAction(event -> {
@@ -243,7 +244,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     @Override
     public void onParseBlockCompleteAfterBatchProcessing(Block block) {
         checkForResultPhase(daoStateService.getChainHeight());
-        fillCycleList();
+        fillCycleListAndBallotMap();
     }
 
     private void checkForResultPhase(int chainHeight) {
@@ -283,16 +284,9 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
             resultsOfCycle = item.getResultsOfCycle();
 
             // Check if my vote is included in result
-            isVoteIncludedInResult = false;
-            resultsOfCycle.getEvaluatedProposals().forEach(evProposal -> resultsOfCycle.getDecryptedVotesForCycle()
-                    .forEach(decryptedBallotsWithMerits -> {
-                        // Iterate through all included votes to see if any of those are ours
-                        if (!isVoteIncludedInResult) {
-                            isVoteIncludedInResult = bsqWalletService.isWalletTransaction(decryptedBallotsWithMerits
-                                    .getVoteRevealTxId()).isPresent();
-                        }
-                    }));
-
+            isVoteIncludedInResult = resultsOfCycle.getDecryptedVotesForCycle().stream()
+                    .anyMatch(decryptedBallotsWithMerits -> bsqWalletService.isWalletTransaction(decryptedBallotsWithMerits
+                            .getVoteRevealTxId()).isPresent());
 
             maybeShowVoteResultErrors(item.getResultsOfCycle().getCycle());
             createProposalsTable();
@@ -359,11 +353,8 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
         if (selectedProposalListItem != null) {
             EvaluatedProposal evaluatedProposal = selectedProposalListItem.getEvaluatedProposal();
-            Optional<Ballot> optionalBallot = daoFacade.getAllValidBallots().stream()
-                    .filter(ballot -> ballot.getTxId().equals(evaluatedProposal.getProposalTxId()))
-                    .findAny();
+            Ballot ballot = ballotByProposalTxIdMap.get(evaluatedProposal.getProposalTxId());
 
-            Ballot ballot = optionalBallot.orElse(null);
             voteListItemList.clear();
             resultsOfCycle.getEvaluatedProposals().stream()
                     .filter(evProposal -> evProposal.getProposal().equals(selectedProposalListItem.getEvaluatedProposal().getProposal()))
@@ -389,16 +380,19 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
     // Fill lists: Cycle
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void fillCycleList() {
+    private void fillCycleListAndBallotMap() {
         // At data creation we delay a bit so that the UI has a chance to display the placeholder.
         if (cyclesAdded.isEmpty()) {
-            UserThread.runAfter(this::doFillCycleList, 50, TimeUnit.MILLISECONDS);
+            UserThread.runAfter(this::doFillCycleListAndBallotMap, 50, TimeUnit.MILLISECONDS);
         } else {
-            doFillCycleList();
+            doFillCycleListAndBallotMap();
         }
     }
 
-    private void doFillCycleList() {
+    private void doFillCycleListAndBallotMap() {
+        ballotByProposalTxIdMap = daoFacade.getAllValidBallots().stream()
+                .collect(Collectors.toMap(Ballot::getTxId, ballot -> ballot));
+
         // Creating our data structure is a bit expensive so we ensure to only create the CycleListItems once.
         daoStateService.getCycles().stream()
                 .filter(cycle -> !cyclesAdded.contains(cycle))
@@ -464,8 +458,6 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
         cyclesTableView.setItems(sortedCycleListItemList);
         sortedCycleListItemList.comparatorProperty().bind(cyclesTableView.comparatorProperty());
-
-
     }
 
 
@@ -497,8 +489,6 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
 
         proposalList.clear();
 
-        Map<String, Ballot> ballotByProposalTxIdMap = daoFacade.getAllValidBallots().stream()
-                .collect(Collectors.toMap(Ballot::getTxId, ballot -> ballot));
         proposalList.setAll(resultsOfCycle.getEvaluatedProposals().stream()
                 .filter(evaluatedProposal -> {
                     boolean containsKey = ballotByProposalTxIdMap.containsKey(evaluatedProposal.getProposalTxId());
