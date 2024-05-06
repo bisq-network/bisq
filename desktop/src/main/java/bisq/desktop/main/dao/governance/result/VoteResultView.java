@@ -882,6 +882,12 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
             cycleJson.addProperty("totalAcceptedVotes", cycleListItem.getResultsOfCycle().getNumAcceptedVotes());
             cycleJson.addProperty("totalRejectedVotes", cycleListItem.getResultsOfCycle().getNumRejectedVotes());
 
+            List<DecryptedBallotsWithMerits> decryptedVotesForCycle = cycleListItem.getResultsOfCycle().getDecryptedVotesForCycle();
+            // Make sure the votes are sorted so we can easier compare json files from different users
+            decryptedVotesForCycle.sort(Comparator.comparing(DecryptedBallotsWithMerits::getBlindVoteTxId));
+            Map<String, Long> meritStakeMap = decryptedVotesForCycle.stream()
+                    .collect(Collectors.toMap(DecryptedBallotsWithMerits::getBlindVoteTxId, d -> d.getMerit(daoStateService)));
+
             JsonArray proposalsArray = new JsonArray();
             List<EvaluatedProposal> evaluatedProposals = cycleListItem.getResultsOfCycle().getEvaluatedProposals();
             evaluatedProposals.sort(Comparator.comparingLong(o -> o.getProposal().getCreationDate()));
@@ -973,9 +979,6 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                 evaluatedProposals.stream()
                         .filter(evaluatedProposal -> evaluatedProposal.getProposal().equals(proposal))
                         .forEach(evaluatedProposal -> {
-                            List<DecryptedBallotsWithMerits> decryptedVotesForCycle = cycleListItem.getResultsOfCycle().getDecryptedVotesForCycle();
-                            // Make sure the votes are sorted so we can easier compare json files from different users
-                            decryptedVotesForCycle.sort(Comparator.comparing(DecryptedBallotsWithMerits::getBlindVoteTxId));
                             decryptedVotesForCycle.forEach(decryptedBallotsWithMerits -> {
                                 JsonObject voteJson = new JsonObject();
                                 // Domain data of decryptedBallotsWithMerits
@@ -984,7 +987,7 @@ public class VoteResultView extends ActivatableView<GridPane, Void> implements D
                                 voteJson.addProperty("voteRevealTxId", decryptedBallotsWithMerits.getVoteRevealTxId());
                                 voteJson.addProperty("stake", decryptedBallotsWithMerits.getStake());
 
-                                voteJson.addProperty("voteWeight", decryptedBallotsWithMerits.getMerit(daoStateService));
+                                voteJson.addProperty("voteWeight", meritStakeMap.get(decryptedBallotsWithMerits.getBlindVoteTxId()));
                                 String voteResult = decryptedBallotsWithMerits.getVote(evaluatedProp.getProposalTxId())
                                         .map(vote -> vote.isAccepted() ? "Accepted" : "Rejected")
                                         .orElse("Ignored");
