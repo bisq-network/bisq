@@ -28,6 +28,8 @@ ExecStart=/bin/bash __BISQ_HOME__/__BISQ_REPO_NAME__/${BISQ_ENTRYPOINT} \
           --dumpBlockchainData=${BISQ_DUMP_BLOCKCHAIN} \
           --dumpStatistics=${BISQ_DUMP_STATISTICS} \
           --torControlPort=${BISQ_EXTERNAL_TOR_PORT} \
+          --torControlUseSafeCookieAuth=${BISQ_EXTERNAL_TOR_CONTROL_USE_COOKIE} \
+          --torControlCookieFile=${BISQ_EXTERNAL_TOR_CONTROL_COOKIE_FILE} \
 
 ExecStop=/bin/kill ${MAINPID} ; sleep 5
 Restart=on-failure
