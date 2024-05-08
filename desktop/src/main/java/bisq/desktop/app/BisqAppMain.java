@@ -19,11 +19,15 @@ package bisq.desktop.app;
 
 import bisq.desktop.common.UITimer;
 import bisq.desktop.common.view.guice.InjectorViewFactory;
+import bisq.desktop.components.TxIdTextField;
 import bisq.desktop.setup.DesktopPersistedDataHost;
+import bisq.desktop.util.GUIUtil;
 
 import bisq.core.app.AvoidStandbyModeService;
 import bisq.core.app.BisqExecutable;
 import bisq.core.app.TorSetup;
+import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Cookie;
 import bisq.core.user.CookieKey;
 import bisq.core.user.User;
@@ -115,6 +119,9 @@ public class BisqAppMain extends BisqExecutable {
 
         application.setInjector(injector);
         injector.getInstance(InjectorViewFactory.class).setInjector(injector);
+
+        GUIUtil.setFeeService(injector.getInstance(FeeService.class));
+        TxIdTextField.setWalletService(injector.getInstance(BtcWalletService.class));
     }
 
     @Override
