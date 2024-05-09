@@ -48,7 +48,6 @@ import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
@@ -60,14 +59,12 @@ import org.bitcoinj.wallet.SendRequest;
 import javax.inject.Inject;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -95,6 +92,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     private final DaoStateService daoStateService;
     private final UnconfirmedBsqChangeOutputListService unconfirmedBsqChangeOutputListService;
     private final List<Transaction> walletTransactions = new ArrayList<>();
+    private Map<String, Transaction> walletTransactionsById;
     private final CopyOnWriteArraySet<BsqBalanceListener> bsqBalanceListeners = new CopyOnWriteArraySet<>();
     private final List<WalletTransactionsChangeListener> walletTransactionsChangeListeners = new ArrayList<>();
     private boolean updateBsqWalletTransactionsPending;
@@ -233,7 +231,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     private void updateBsqBalance() {
         long ts = System.currentTimeMillis();
         unverifiedBalance = Coin.valueOf(
-                getTransactions(false).stream()
+                walletTransactions.stream()
                         .filter(tx -> tx.getConfidence().getConfidenceType() == PENDING)
                         .mapToLong(tx -> {
                             // Sum up outputs into BSQ wallet and subtract the inputs using lockup or unlocking
@@ -270,7 +268,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                         .sum()
         );
 
-        Set<String> confirmedTxIdSet = getTransactions(false).stream()
+        Set<String> confirmedTxIdSet = walletTransactions.stream()
                 .filter(tx -> tx.getConfidence().getConfidenceType() == BUILDING)
                 .map(Transaction::getTxId)
                 .map(Sha256Hash::toString)
@@ -343,13 +341,15 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
     // BSQ TransactionOutputs and Transactions
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    // not thread safe - call only from user thread
     public List<Transaction> getClonedWalletTransactions() {
         return new ArrayList<>(walletTransactions);
     }
 
+    // not thread safe - call only from user thread
     public Stream<Transaction> getPendingWalletTransactionsStream() {
         return walletTransactions.stream()
-                .filter(transaction -> transaction.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.PENDING);
+                .filter(transaction -> transaction.getConfidence().getConfidenceType() == PENDING);
     }
 
     private void updateBsqWalletTransactions() {
@@ -363,42 +363,12 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                 UserThread.runAfter(() -> {
                     walletTransactions.clear();
                     walletTransactions.addAll(getTransactions(false));
+                    walletTransactionsById = null;
                     walletTransactionsChangeListeners.forEach(WalletTransactionsChangeListener::onWalletTransactionsChange);
                     updateBsqBalance();
                     updateBsqWalletTransactionsPending = false;
                 }, 100, TimeUnit.MILLISECONDS);
             }
-        }
-    }
-
-    private Set<Transaction> getBsqWalletTransactions() {
-        return getTransactions(false).stream()
-                .filter(transaction -> transaction.getConfidence().getConfidenceType() == PENDING ||
-                        daoStateService.containsTx(transaction.getTxId().toString()))
-                .collect(Collectors.toSet());
-    }
-
-    public Set<Transaction> getUnverifiedBsqTransactions() {
-        Set<Transaction> bsqWalletTransactions = getBsqWalletTransactions();
-        Set<Transaction> walletTxs = new HashSet<>(getTransactions(false));
-        checkArgument(walletTxs.size() >= bsqWalletTransactions.size(),
-                "We cannot have more txsWithOutputsFoundInBsqTxo than walletTxs");
-        if (walletTxs.size() == bsqWalletTransactions.size()) {
-            // As expected
-            return new HashSet<>();
-        } else {
-            Map<String, Transaction> map = walletTxs.stream()
-                    .collect(Collectors.toMap(t -> t.getTxId().toString(), Function.identity()));
-
-            Set<String> walletTxIds = walletTxs.stream()
-                    .map(Transaction::getTxId).map(Sha256Hash::toString).collect(Collectors.toSet());
-            Set<String> bsqTxIds = bsqWalletTransactions.stream()
-                    .map(Transaction::getTxId).map(Sha256Hash::toString).collect(Collectors.toSet());
-
-            walletTxIds.stream()
-                    .filter(bsqTxIds::contains)
-                    .forEach(map::remove);
-            return new HashSet<>(map.values());
         }
     }
 
@@ -414,7 +384,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
                 // We grab the parent tx of the connected output
                 final Transaction parentTransaction = connectedOutput.getParentTransaction();
                 final boolean isConfirmed = parentTransaction != null &&
-                        parentTransaction.getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING;
+                        parentTransaction.getConfidence().getConfidenceType() == BUILDING;
                 if (connectedOutput.isMineOrWatched(wallet)) {
                     if (isConfirmed) {
                         // We lookup if we have a BSQ tx matching the parent tx
@@ -455,7 +425,7 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         for (int i = 0; i < transaction.getOutputs().size(); i++) {
             TransactionOutput output = transaction.getOutputs().get(i);
             final boolean isConfirmed = output.getParentTransaction() != null &&
-                    output.getParentTransaction().getConfidence().getConfidenceType() == TransactionConfidence.ConfidenceType.BUILDING;
+                    output.getParentTransaction().getConfidence().getConfidenceType() == BUILDING;
             if (output.isMineOrWatched(wallet)) {
                 if (isConfirmed) {
                     if (txOptional.isPresent()) {
@@ -484,8 +454,13 @@ public class BsqWalletService extends WalletService implements DaoStateListener 
         return result;
     }
 
+    // not thread safe - call only from user thread
     public Optional<Transaction> isWalletTransaction(String txId) {
-        return walletTransactions.stream().filter(e -> e.getTxId().toString().equals(txId)).findAny();
+        if (walletTransactionsById == null) {
+            walletTransactionsById = walletTransactions.stream()
+                    .collect(Collectors.toMap(tx -> tx.getTxId().toString(), tx -> tx));
+        }
+        return Optional.ofNullable(walletTransactionsById.get(txId));
     }
 
 
