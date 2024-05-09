@@ -17,12 +17,10 @@
 
 package bisq.network.p2p.mailbox;
 
-
 import bisq.common.proto.persistable.PersistableEnvelope;
-import bisq.common.util.CollectionUtils;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -32,17 +30,17 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode
 public class IgnoredMailboxMap implements PersistableEnvelope {
     @Getter
-    private final Map<String, Long> dataMap;
+    private final ConcurrentMap<String, Long> dataMap;
 
     public IgnoredMailboxMap() {
-        this.dataMap = new HashMap<>();
+        this.dataMap = new ConcurrentHashMap<>();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // PROTO BUFFER
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public IgnoredMailboxMap(Map<String, Long> ignored) {
+    private IgnoredMailboxMap(ConcurrentMap<String, Long> ignored) {
         this.dataMap = ignored;
     }
 
@@ -54,11 +52,7 @@ public class IgnoredMailboxMap implements PersistableEnvelope {
     }
 
     public static IgnoredMailboxMap fromProto(protobuf.IgnoredMailboxMap proto) {
-        return new IgnoredMailboxMap(CollectionUtils.isEmpty(proto.getDataMap()) ? new HashMap<>() : proto.getDataMap());
-    }
-
-    public void putAll(Map<String, Long> map) {
-        dataMap.putAll(map);
+        return new IgnoredMailboxMap(new ConcurrentHashMap<>(proto.getDataMap()));
     }
 
     public boolean containsKey(String uid) {
