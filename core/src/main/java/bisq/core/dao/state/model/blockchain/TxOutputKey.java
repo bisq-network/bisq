@@ -31,7 +31,7 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 @Value
-public final class TxOutputKey implements ImmutableDaoStateModel, Comparable {
+public final class TxOutputKey implements ImmutableDaoStateModel, Comparable<Object> {
     private final String txId;
     private final int index;
 
@@ -47,7 +47,7 @@ public final class TxOutputKey implements ImmutableDaoStateModel, Comparable {
 
     public static TxOutputKey getKeyFromString(String keyAsString) {
         final String[] tokens = keyAsString.split(":");
-        return new TxOutputKey(tokens[0], Integer.valueOf(tokens[1]));
+        return new TxOutputKey(tokens[0], Integer.parseInt(tokens[1]));
     }
 
     @Override

@@ -453,7 +453,7 @@ public class MakeProposalView extends ActivatableView<GridPane, Void> implements
             case CONFISCATE_BOND:
                 checkNotNull(proposalDisplay.confiscateBondComboBox,
                         "proposalDisplay.confiscateBondComboBox must not be null");
-                Bond bond = proposalDisplay.confiscateBondComboBox.getSelectionModel().getSelectedItem();
+                Bond<?> bond = proposalDisplay.confiscateBondComboBox.getSelectionModel().getSelectedItem();
 
                 if (!bond.isActive())
                     throw new VoteResultException.ValidationException("Bond is not locked and can't be confiscated");

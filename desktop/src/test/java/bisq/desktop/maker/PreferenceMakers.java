@@ -20,6 +20,7 @@ package bisq.desktop.maker;
 import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
+import bisq.core.user.PreferencesPayload;
 
 import bisq.common.config.Config;
 import bisq.common.persistence.PersistenceManager;
@@ -32,8 +33,7 @@ import static com.natpryce.makeiteasy.MakeItEasy.a;
 import static com.natpryce.makeiteasy.MakeItEasy.make;
 
 public class PreferenceMakers {
-
-    public static final Property<Preferences, PersistenceManager> storage = new Property<>();
+    public static final Property<Preferences, PersistenceManager<PreferencesPayload>> storage = new Property<>();
     public static final Property<Preferences, Config> config = new Property<>();
     public static final Property<Preferences, FeeService> feeService = new Property<>();
     public static final Property<Preferences, LocalBitcoinNode> localBitcoinNode = new Property<>();
@@ -41,14 +41,13 @@ public class PreferenceMakers {
     public static final Property<Preferences, String> referralID = new Property<>();
 
     public static final Instantiator<Preferences> Preferences = lookup -> new Preferences(
-            lookup.valueOf(storage, new SameValueDonor<PersistenceManager>(null)),
-            lookup.valueOf(config, new SameValueDonor<Config>(null)),
-            lookup.valueOf(feeService, new SameValueDonor<FeeService>(null)),
-            lookup.valueOf(localBitcoinNode, new SameValueDonor<LocalBitcoinNode>(null)),
-            lookup.valueOf(useTorFlagFromOptions, new SameValueDonor<String>(null)),
-            lookup.valueOf(referralID, new SameValueDonor<String>(null)),
+            lookup.valueOf(storage, new SameValueDonor<>(null)),
+            lookup.valueOf(config, new SameValueDonor<>(null)),
+            lookup.valueOf(feeService, new SameValueDonor<>(null)),
+            lookup.valueOf(localBitcoinNode, new SameValueDonor<>(null)),
+            lookup.valueOf(useTorFlagFromOptions, new SameValueDonor<>(null)),
+            lookup.valueOf(referralID, new SameValueDonor<>(null)),
             Config.DEFAULT_FULL_DAO_NODE, false, null, null, Config.UNSPECIFIED_PORT);
 
     public static final Preferences empty = make(a(Preferences));
-
 }

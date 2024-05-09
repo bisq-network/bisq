@@ -598,14 +598,14 @@ public class DaoFacade implements DaoSetupService {
     }
 
 
-    public List<Bond> getAllBonds() {
-        List<Bond> bonds = new ArrayList<>(bondedReputationRepository.getBonds());
+    public List<Bond<?>> getAllBonds() {
+        List<Bond<?>> bonds = new ArrayList<>(bondedReputationRepository.getBonds());
         bonds.addAll(bondedRolesRepository.getBonds());
         return bonds;
     }
 
-    public List<Bond> getAllActiveBonds() {
-        List<Bond> bonds = new ArrayList<>(bondedReputationRepository.getActiveBonds());
+    public List<Bond<?>> getAllActiveBonds() {
+        List<Bond<?>> bonds = new ArrayList<>(bondedReputationRepository.getActiveBonds());
         bonds.addAll(bondedRolesRepository.getActiveBonds());
         return bonds;
     }
@@ -739,7 +739,7 @@ public class DaoFacade implements DaoSetupService {
         return bondedRolesRepository.isMyRole(role);
     }
 
-    public Optional<Bond> getBondByLockupTxId(String lockupTxId) {
+    public Optional<Bond<?>> getBondByLockupTxId(String lockupTxId) {
         return getAllBonds().stream().filter(e -> lockupTxId.equals(e.getLockupTxId())).findAny();
     }
 
