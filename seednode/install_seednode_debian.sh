@@ -127,6 +127,7 @@ sudo -H -i -u "${ROOT_USER}" chown -R "${BISQ_USER}:${BISQ_GROUP}" "${BISQ_HOME}
 echo "[*] Installing Bisq init script"
 sudo -H -i -u "${ROOT_USER}" install -c -o "${ROOT_USER}" -g "${ROOT_GROUP}" -m 644 "${BISQ_HOME}/${BISQ_REPO_NAME}/seednode/bisq.service" "${SYSTEMD_SERVICE_HOME}/bisq.service"
 if [ "${BITCOIN_INSTALL}" = true ];then
+    sudo sed -i -e "s/After=network.target/After=bitcoin.service/" "${SYSTEMD_SERVICE_HOME}/bisq.service"
 	sudo sed -i -e "s/#Requires=bitcoin.service/Requires=bitcoin.service/" "${SYSTEMD_SERVICE_HOME}/bisq.service"
 	sudo sed -i -e "s/#BindsTo=bitcoin.service/BindsTo=bitcoin.service/" "${SYSTEMD_SERVICE_HOME}/bisq.service"
 fi

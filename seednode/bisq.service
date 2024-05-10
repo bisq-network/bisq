@@ -2,7 +2,7 @@
 
 [Unit]
 Description=Bisq Node
-After=bitcoin.service
+After=network.target
 #Requires=bitcoin.service
 #BindsTo=bitcoin.service
 
