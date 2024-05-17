@@ -25,21 +25,20 @@ import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
 import bisq.core.trade.protocol.bisq_v1.messages.CounterCurrencyTransferStartedMessage;
-import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureResponse;
 import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.trade.protocol.bisq_v1.tasks.VerifyPeersAccountAgeWitness;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerBroadcastPayoutTx;
-import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerFinalizesDelayedPayoutTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
-import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerProcessDelayedPayoutTxSignatureResponse;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerProcessShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerPublishesDepositTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerPublishesTradeStatistics;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSendPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSendsDepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSignAndFinalizePayoutTx;
+import bisq.core.trade.protocol.bisq_v5.messages.PreparedTxBuyerSignaturesMessage;
+import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerProcessPreparedTxBuyerSignaturesMessage;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -78,12 +77,12 @@ abstract class BaseSellerProtocol_v5 extends DisputeProtocol implements SellerPr
     // Incoming messages
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected void handle(DelayedPayoutTxSignatureResponse message, NodeAddress peer) {
+    protected void handle(PreparedTxBuyerSignaturesMessage message, NodeAddress peer) {
         expect(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
                 .with(message)
                 .from(peer))
-                .setup(tasks(SellerProcessDelayedPayoutTxSignatureResponse.class,
-                        SellerFinalizesDelayedPayoutTx.class,
+                .setup(tasks(SellerProcessPreparedTxBuyerSignaturesMessage.class,
+//                        SellerFinalizesDelayedPayoutTx.class,
                         SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
                         SellerPublishesDepositTx.class,
                         SellerPublishesTradeStatistics.class))
@@ -135,6 +134,7 @@ abstract class BaseSellerProtocol_v5 extends DisputeProtocol implements SellerPr
                 .executeTasks();
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // User interaction
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -168,6 +168,10 @@ abstract class BaseSellerProtocol_v5 extends DisputeProtocol implements SellerPr
     }
 
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Massage dispatcher
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     protected void onTradeMessage(TradeMessage message, NodeAddress peer) {
         log.info("Received {} from {} with tradeId {} and uid {}",
@@ -175,8 +179,8 @@ abstract class BaseSellerProtocol_v5 extends DisputeProtocol implements SellerPr
 
         super.onTradeMessage(message, peer);
 
-        if (message instanceof DelayedPayoutTxSignatureResponse) {
-            handle((DelayedPayoutTxSignatureResponse) message, peer);
+        if (message instanceof PreparedTxBuyerSignaturesMessage) {
+            handle((PreparedTxBuyerSignaturesMessage) message, peer);
         } else if (message instanceof ShareBuyerPaymentAccountMessage) {
             handle((ShareBuyerPaymentAccountMessage) message, peer);
         } else if (message instanceof CounterCurrencyTransferStartedMessage) {
@@ -185,5 +189,4 @@ abstract class BaseSellerProtocol_v5 extends DisputeProtocol implements SellerPr
     }
 
     abstract protected Class<? extends TradeTask> getVerifyPeersFeePaymentClass();
-
 }

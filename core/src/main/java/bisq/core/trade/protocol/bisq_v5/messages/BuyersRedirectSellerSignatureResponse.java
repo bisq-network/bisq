@@ -25,8 +25,6 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.app.Version;
 import bisq.common.util.Utilities;
 
-import com.google.protobuf.ByteString;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -61,26 +59,26 @@ public final class BuyersRedirectSellerSignatureResponse extends TradeMessage im
         this.buyersRedirectTxSellerSignature = buyersRedirectTxSellerSignature;
     }
 
-    @Override
-    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
-        return getNetworkEnvelopeBuilder()
-                .setBuyersRedirectSellerSignatureResponse(protobuf.BuyersRedirectSellerSignatureResponse.newBuilder()
-                        .setUid(uid)
-                        .setTradeId(tradeId)
-                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setBuyersRedirectTxSellerSignature(ByteString.copyFrom(buyersRedirectTxSellerSignature))
-                )
-                .build();
-    }
+//    @Override
+//    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+//        return getNetworkEnvelopeBuilder()
+//                .setBuyersRedirectSellerSignatureResponse(protobuf.BuyersRedirectSellerSignatureResponse.newBuilder()
+//                        .setUid(uid)
+//                        .setTradeId(tradeId)
+//                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+//                        .setBuyersRedirectTxSellerSignature(ByteString.copyFrom(buyersRedirectTxSellerSignature))
+//                )
+//                .build();
+//    }
 
-    public static BuyersRedirectSellerSignatureResponse fromProto(protobuf.BuyersRedirectSellerSignatureResponse proto,
-                                                                  int messageVersion) {
-        return new BuyersRedirectSellerSignatureResponse(messageVersion,
-                proto.getUid(),
-                proto.getTradeId(),
-                NodeAddress.fromProto(proto.getSenderNodeAddress()),
-                proto.getBuyersRedirectTxSellerSignature().toByteArray());
-    }
+//    public static BuyersRedirectSellerSignatureResponse fromProto(protobuf.BuyersRedirectSellerSignatureResponse proto,
+//                                                                  int messageVersion) {
+//        return new BuyersRedirectSellerSignatureResponse(messageVersion,
+//                proto.getUid(),
+//                proto.getTradeId(),
+//                NodeAddress.fromProto(proto.getSenderNodeAddress()),
+//                proto.getBuyersRedirectTxSellerSignature().toByteArray());
+//    }
 
     @Override
     public String toString() {

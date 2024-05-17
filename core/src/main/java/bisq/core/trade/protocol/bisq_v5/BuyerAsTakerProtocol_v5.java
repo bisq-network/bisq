@@ -17,34 +17,28 @@
 
 package bisq.core.trade.protocol.bisq_v5;
 
-
 import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.BuyerAsTakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.TakerProtocol;
 import bisq.core.trade.protocol.TradeMessage;
-import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureRequest;
 import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
-import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxResponse;
 import bisq.core.trade.protocol.bisq_v1.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bisq_v1.tasks.CheckIfDaoStateIsInSync;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
-import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerFinalizesDelayedPayoutTx;
-import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerProcessDelayedPayoutTxSignatureRequest;
-import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerSendsDelayedPayoutTxSignatureResponse;
 import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerSetupDepositTxListener;
-import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerSignsDelayedPayoutTx;
-import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerVerifiesPreparedDelayedPayoutTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.buyer_as_taker.BuyerAsTakerCreatesDepositTxInputs;
-import bisq.core.trade.protocol.bisq_v1.tasks.buyer_as_taker.BuyerAsTakerSendsDepositTxMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.buyer_as_taker.BuyerAsTakerSignsDepositTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.taker.CreateTakerFeeTx;
-import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerProcessesInputsForDepositTxResponse;
 import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerPublishFeeTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerSendInputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerVerifyAndSignContract;
 import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerVerifyMakerFeePayment;
+import bisq.core.trade.protocol.bisq_v5.messages.InputsForDepositTxResponse_v5;
+import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerSendsPreparedTxBuyerSignaturesMessage;
+import bisq.core.trade.protocol.bisq_v5.tasks.CreateFeeBumpAddressEntries;
+import bisq.core.trade.protocol.bisq_v5.tasks.taker.TakerProcessInputsForDepositTxResponse_v5;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -99,6 +93,7 @@ public class BuyerAsTakerProtocol_v5 extends BaseBuyerProtocol_v5 implements Tak
                         getVerifyPeersFeePaymentClass(),
                         CreateTakerFeeTx.class,
                         BuyerAsTakerCreatesDepositTxInputs.class,
+                        CreateFeeBumpAddressEntries.class,
                         TakerSendInputsForDepositTxRequest.class)
                         .withTimeout(120))
                 .run(() -> {
@@ -113,34 +108,34 @@ public class BuyerAsTakerProtocol_v5 extends BaseBuyerProtocol_v5 implements Tak
     // Incoming messages Take offer process
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void handle(InputsForDepositTxResponse message, NodeAddress peer) {
+    private void handle(InputsForDepositTxResponse_v5 message, NodeAddress peer) {
         expect(phase(Trade.Phase.INIT)
                 .with(message)
                 .from(peer))
-                .setup(tasks(TakerProcessesInputsForDepositTxResponse.class,
+                .setup(tasks(TakerProcessInputsForDepositTxResponse_v5.class,
                         ApplyFilter.class,
                         TakerVerifyAndSignContract.class,
                         TakerPublishFeeTx.class,
                         BuyerAsTakerSignsDepositTx.class,
                         BuyerSetupDepositTxListener.class,
-                        BuyerAsTakerSendsDepositTxMessage.class)
+                        BuyerSendsPreparedTxBuyerSignaturesMessage.class)
                         .withTimeout(120))
                 .executeTasks();
     }
 
-    protected void handle(DelayedPayoutTxSignatureRequest message, NodeAddress peer) {
-        expect(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
-                .with(message)
-                .from(peer))
-                .setup(tasks(
-                        BuyerProcessDelayedPayoutTxSignatureRequest.class,
-                        BuyerVerifiesPreparedDelayedPayoutTx.class,
-                        BuyerSignsDelayedPayoutTx.class,
-                        BuyerFinalizesDelayedPayoutTx.class,
-                        BuyerSendsDelayedPayoutTxSignatureResponse.class)
-                        .withTimeout(120))
-                .executeTasks();
-    }
+//    protected void handle(DelayedPayoutTxSignatureRequest message, NodeAddress peer) {
+//        expect(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
+//                .with(message)
+//                .from(peer))
+//                .setup(tasks(
+//                        BuyerProcessDelayedPayoutTxSignatureRequest.class,
+//                        BuyerVerifiesPreparedDelayedPayoutTx.class,
+//                        BuyerSignsDelayedPayoutTx.class,
+//                        BuyerFinalizesDelayedPayoutTx.class,
+//                        BuyerSendsDelayedPayoutTxSignatureResponse.class)
+//                        .withTimeout(120))
+//                .executeTasks();
+//    }
 
     @Override
     protected void handle(DepositTxAndDelayedPayoutTxMessage message, NodeAddress peer) {
@@ -176,8 +171,8 @@ public class BuyerAsTakerProtocol_v5 extends BaseBuyerProtocol_v5 implements Tak
     protected void onTradeMessage(TradeMessage message, NodeAddress peer) {
         super.onTradeMessage(message, peer);
 
-        if (message instanceof InputsForDepositTxResponse) {
-            handle((InputsForDepositTxResponse) message, peer);
+        if (message instanceof InputsForDepositTxResponse_v5) {
+            handle((InputsForDepositTxResponse_v5) message, peer);
         }
     }
 

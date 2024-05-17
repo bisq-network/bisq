@@ -24,7 +24,6 @@ import bisq.core.trade.protocol.FluentProtocol;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
-import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureRequest;
 import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
@@ -100,7 +99,7 @@ abstract class BaseBuyerProtocol_v5 extends DisputeProtocol implements BuyerProt
         }
     }
 
-    protected abstract void handle(DelayedPayoutTxSignatureRequest message, NodeAddress peer);
+//    protected abstract void handle(DelayedPayoutTxSignatureRequest message, NodeAddress peer);
 
     // The DepositTxAndDelayedPayoutTxMessage is a mailbox message. Earlier we used only the deposit tx which can
     // be set also when received by the network once published by the peer so that message was not mandatory and could
@@ -194,9 +193,7 @@ abstract class BaseBuyerProtocol_v5 extends DisputeProtocol implements BuyerProt
         log.info("Received {} from {} with tradeId {} and uid {}",
                 message.getClass().getSimpleName(), peer, message.getTradeId(), message.getUid());
 
-        if (message instanceof DelayedPayoutTxSignatureRequest) {
-            handle((DelayedPayoutTxSignatureRequest) message, peer);
-        } else if (message instanceof DepositTxAndDelayedPayoutTxMessage) {
+        if (message instanceof DepositTxAndDelayedPayoutTxMessage) {
             handle((DepositTxAndDelayedPayoutTxMessage) message, peer);
         } else if (message instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) message, peer);

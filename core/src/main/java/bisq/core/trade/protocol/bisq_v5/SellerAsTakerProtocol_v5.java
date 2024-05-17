@@ -17,14 +17,12 @@
 
 package bisq.core.trade.protocol.bisq_v5;
 
-
 import bisq.core.offer.Offer;
 import bisq.core.trade.model.bisq_v1.SellerAsTakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.TakerProtocol;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.CounterCurrencyTransferStartedMessage;
-import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureResponse;
 import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bisq_v1.tasks.CheckIfDaoStateIsInSync;
@@ -37,21 +35,16 @@ import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerPublishFeeTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerSendInputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerVerifyAndSignContract;
 import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerVerifyMakerFeePayment;
-import bisq.core.trade.protocol.bisq_v5.messages.BuyersRedirectSellerSignatureRequest;
 import bisq.core.trade.protocol.bisq_v5.messages.InputsForDepositTxResponse_v5;
+import bisq.core.trade.protocol.bisq_v5.messages.PreparedTxBuyerSignaturesMessage;
 import bisq.core.trade.protocol.bisq_v5.tasks.CreateRedirectTx;
-import bisq.core.trade.protocol.bisq_v5.tasks.CreateSignedClaimTx;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerCreatesWarningTx;
-import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerFinalizesOwnRedirectTx;
-import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerFinalizesOwnWarningTx;
-import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerProcessBuyersRedirectSellerSignatureRequest;
-import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSendStagedPayoutTxRequest;
-import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSendsBuyersRedirectSellerSignatureResponse;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSignsOwnRedirectTx;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSignsOwnWarningTx;
-import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSignsPeersRedirectTx;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSignsPeersWarningTx;
-import bisq.core.trade.protocol.bisq_v5.tasks.seller_as_taker.SellerAsTakerProcessesInputsForDepositTxResponse_v5;
+import bisq.core.trade.protocol.bisq_v5.tasks.seller_as_taker.SellerAsTakerSendsPreparedTxBuyerSignaturesRequest;
+import bisq.core.trade.protocol.bisq_v5.tasks.CreateFeeBumpAddressEntries;
+import bisq.core.trade.protocol.bisq_v5.tasks.taker.TakerProcessInputsForDepositTxResponse_v5;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -102,6 +95,7 @@ public class SellerAsTakerProtocol_v5 extends BaseSellerProtocol_v5 implements T
                         getVerifyPeersFeePaymentClass(),
                         CreateTakerFeeTx.class,
                         SellerAsTakerCreatesDepositTxInputs.class,
+                        CreateFeeBumpAddressEntries.class,
                         TakerSendInputsForDepositTxRequest.class)
                         .withTimeout(120))
                 .executeTasks();
@@ -117,7 +111,7 @@ public class SellerAsTakerProtocol_v5 extends BaseSellerProtocol_v5 implements T
                 .with(message)
                 .from(peer))
                 .setup(tasks(
-                        SellerAsTakerProcessesInputsForDepositTxResponse_v5.class,
+                        TakerProcessInputsForDepositTxResponse_v5.class,
 
                         ApplyFilter.class,
                         TakerVerifyAndSignContract.class,
@@ -135,47 +129,46 @@ public class SellerAsTakerProtocol_v5 extends BaseSellerProtocol_v5 implements T
                         CreateRedirectTx.class,
                         SellerSignsOwnRedirectTx.class,
 
-
                         // We sign the buyers warn tx
                         SellerSignsPeersWarningTx.class,
 
-                        // We send buyer sig for their warn tx and our warn and redirect tx including our signatures
-                        SellerSendStagedPayoutTxRequest.class)
+//                        // We send buyer sig for their warn tx and our warn and redirect tx including our signatures
+//                        SellerSendStagedPayoutTxRequest.class)
+                        SellerAsTakerSendsPreparedTxBuyerSignaturesRequest.class)
                         .withTimeout(120))
                 .executeTasks();
     }
 
-    protected void handle(BuyersRedirectSellerSignatureRequest message, NodeAddress peer) {
-        expect(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
-                .with(message)
-                .from(peer))
-                .setup(tasks(
-                        // We received the buyer's signature for our warn and redirect tx as well
-                        // as the buyer's redirect tx and signature
-                        SellerProcessBuyersRedirectSellerSignatureRequest.class,
-
-                        // We have now the buyers sig for our warn tx and finalize it
-                        SellerFinalizesOwnWarningTx.class,
-
-                        // We have now the buyers sig for our redirect tx and finalize it
-                        SellerFinalizesOwnRedirectTx.class,
-
-                        // We can now create the signed claim tx from out warn tx
-                        CreateSignedClaimTx.class,
-
-                        // We sign the buyers redirect tx
-                        SellerSignsPeersRedirectTx.class,
-
-                        // We have all transactions but missing still the buyer's witness for the deposit tx.
-
-                        // We send the buyer the requested signature for their redirect tx
-                        SellerSendsBuyersRedirectSellerSignatureResponse.class))
-                .executeTasks();
-    }
-
+//    protected void handle(BuyersRedirectSellerSignatureRequest message, NodeAddress peer) {
+//        expect(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
+//                .with(message)
+//                .from(peer))
+//                .setup(tasks(
+//                        // We received the buyer's signature for our warn and redirect tx as well
+//                        // as the buyer's redirect tx and signature
+//                        SellerProcessBuyersRedirectSellerSignatureRequest.class,
+//
+//                        // We have now the buyers sig for our warn tx and finalize it
+//                        SellerFinalizesOwnWarningTx.class,
+//
+//                        // We have now the buyers sig for our redirect tx and finalize it
+//                        SellerFinalizesOwnRedirectTx.class,
+//
+//                        // We can now create the signed claim tx from out warn tx
+//                        CreateSignedClaimTx.class,
+//
+//                        // We sign the buyers redirect tx
+//                        SellerSignsPeersRedirectTx.class,
+//
+//                        // We have all transactions but missing still the buyer's witness for the deposit tx.
+//
+//                        // We send the buyer the requested signature for their redirect tx
+//                        SellerSendsBuyersRedirectSellerSignatureResponse.class))
+//                .executeTasks();
+//    }
 
     @Override
-    protected void handle(DelayedPayoutTxSignatureResponse message, NodeAddress peer) {
+    protected void handle(PreparedTxBuyerSignaturesMessage message, NodeAddress peer) {
         super.handle(message, peer);
     }
 
@@ -213,13 +206,8 @@ public class SellerAsTakerProtocol_v5 extends BaseSellerProtocol_v5 implements T
     protected void onTradeMessage(TradeMessage message, NodeAddress peer) {
         super.onTradeMessage(message, peer);
 
-        log.info("Received {} from {} with tradeId {} and uid {}",
-                message.getClass().getSimpleName(), peer, message.getTradeId(), message.getUid());
-
         if (message instanceof InputsForDepositTxResponse_v5) {
             handle((InputsForDepositTxResponse_v5) message, peer);
-        } else if (message instanceof BuyersRedirectSellerSignatureRequest) {
-            handle((BuyersRedirectSellerSignatureRequest) message, peer);
         }
     }
 

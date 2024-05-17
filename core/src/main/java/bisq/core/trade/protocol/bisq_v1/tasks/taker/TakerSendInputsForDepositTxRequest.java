@@ -137,7 +137,9 @@ public class TakerSendInputsForDepositTxRequest extends TradeTask {
                     new Date().getTime(),
                     hashOfTakersPaymentAccountPayload,
                     takersPaymentMethodId,
-                    burningManSelectionHeight);
+                    burningManSelectionHeight,
+                    processModel.getWarningTxFeeBumpAddress(),
+                    processModel.getRedirectTxFeeBumpAddress());
             log.info("Send {} with offerId {} and uid {} to peer {}",
                     request.getClass().getSimpleName(), request.getTradeId(),
                     request.getUid(), trade.getTradingPeerNodeAddress());

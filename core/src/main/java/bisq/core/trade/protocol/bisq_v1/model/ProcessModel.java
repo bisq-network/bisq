@@ -106,6 +106,11 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Setter
+    transient private String warningTxFeeBumpAddress;
+    @Setter
+    transient private String redirectTxFeeBumpAddress;
+
+    @Setter
     transient private Transaction warningTx;
     @Setter
     transient private byte[] warningTxSellerSignature;
