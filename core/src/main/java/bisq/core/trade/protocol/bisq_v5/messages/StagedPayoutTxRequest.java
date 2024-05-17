@@ -25,8 +25,6 @@ import bisq.network.p2p.NodeAddress;
 import bisq.common.app.Version;
 import bisq.common.util.Utilities;
 
-import com.google.protobuf.ByteString;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -82,33 +80,33 @@ public final class StagedPayoutTxRequest extends TradeMessage implements DirectM
     }
 
 
-    @Override
-    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
-        return getNetworkEnvelopeBuilder()
-                .setStagedPayoutTxRequest(protobuf.StagedPayoutTxRequest.newBuilder()
-                        .setUid(uid)
-                        .setTradeId(tradeId)
-                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
-                        .setSellersWarningTx(ByteString.copyFrom(sellersWarningTx))
-                        .setSellersWarningTxSellerSignature(ByteString.copyFrom(sellersWarningTxSellerSignature))
-                        .setSellersRedirectionTx(ByteString.copyFrom(sellersRedirectionTx))
-                        .setSellersRedirectionTxSellerSignature(ByteString.copyFrom(sellersRedirectionTxSellerSignature))
-                        .setBuyersWarningTxSellerSignature(ByteString.copyFrom(buyersWarningTxSellerSignature)))
-                .build();
-    }
+//    @Override
+//    public protobuf.NetworkEnvelope toProtoNetworkEnvelope() {
+//        return getNetworkEnvelopeBuilder()
+//                .setStagedPayoutTxRequest(protobuf.StagedPayoutTxRequest.newBuilder()
+//                        .setUid(uid)
+//                        .setTradeId(tradeId)
+//                        .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
+//                        .setSellersWarningTx(ByteString.copyFrom(sellersWarningTx))
+//                        .setSellersWarningTxSellerSignature(ByteString.copyFrom(sellersWarningTxSellerSignature))
+//                        .setSellersRedirectionTx(ByteString.copyFrom(sellersRedirectionTx))
+//                        .setSellersRedirectionTxSellerSignature(ByteString.copyFrom(sellersRedirectionTxSellerSignature))
+//                        .setBuyersWarningTxSellerSignature(ByteString.copyFrom(buyersWarningTxSellerSignature)))
+//                .build();
+//    }
 
-    public static StagedPayoutTxRequest fromProto(protobuf.StagedPayoutTxRequest proto,
-                                                  int messageVersion) {
-        return new StagedPayoutTxRequest(messageVersion,
-                proto.getUid(),
-                proto.getTradeId(),
-                NodeAddress.fromProto(proto.getSenderNodeAddress()),
-                proto.getSellersWarningTx().toByteArray(),
-                proto.getSellersWarningTxSellerSignature().toByteArray(),
-                proto.getSellersRedirectionTx().toByteArray(),
-                proto.getSellersRedirectionTxSellerSignature().toByteArray(),
-                proto.getBuyersWarningTxSellerSignature().toByteArray());
-    }
+//    public static StagedPayoutTxRequest fromProto(protobuf.StagedPayoutTxRequest proto,
+//                                                  int messageVersion) {
+//        return new StagedPayoutTxRequest(messageVersion,
+//                proto.getUid(),
+//                proto.getTradeId(),
+//                NodeAddress.fromProto(proto.getSenderNodeAddress()),
+//                proto.getSellersWarningTx().toByteArray(),
+//                proto.getSellersWarningTxSellerSignature().toByteArray(),
+//                proto.getSellersRedirectionTx().toByteArray(),
+//                proto.getSellersRedirectionTxSellerSignature().toByteArray(),
+//                proto.getBuyersWarningTxSellerSignature().toByteArray());
+//    }
 
     @Override
     public String toString() {

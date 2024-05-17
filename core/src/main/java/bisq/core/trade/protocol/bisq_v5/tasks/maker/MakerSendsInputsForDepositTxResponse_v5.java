@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bisq_v5.tasks.buyer_as_maker;
+package bisq.core.trade.protocol.bisq_v5.tasks.maker;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
@@ -44,10 +44,10 @@ import lombok.extern.slf4j.Slf4j;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-// Copy of BuyerAsMakerSendsInputsForDepositTxResponse with added buyersUnsignedWarningTx and buyersWarningTxSignature
+// Copy of BuyerAsMakerSendsInputsForDepositTxResponse with added buyersUnsignedWarningTx and buyersWarningTxSignature FIXME: stale comment
 @Slf4j
-public class BuyerAsMakerSendsInputsForDepositTxResponse_v5 extends TradeTask {
-    public BuyerAsMakerSendsInputsForDepositTxResponse_v5(TaskRunner<Trade> taskHandler, Trade trade) {
+public class MakerSendsInputsForDepositTxResponse_v5 extends TradeTask {
+    public MakerSendsInputsForDepositTxResponse_v5(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -79,8 +79,13 @@ public class BuyerAsMakerSendsInputsForDepositTxResponse_v5 extends TradeTask {
             byte[] hashOfMakersPaymentAccountPayload = ProcessModel.hashOfPaymentAccountPayload(processModel.getPaymentAccountPayload(trade));
             String makersPaymentMethodId = checkNotNull(processModel.getPaymentAccountPayload(trade)).getPaymentMethodId();
 
-            byte[] buyersUnsignedWarningTx = processModel.getWarningTx().bitcoinSerialize();
-            byte[] buyersWarningTxSignature = processModel.getWarningTxBuyerSignature();
+//            byte[] buyersUnsignedWarningTx = processModel.getWarningTx().bitcoinSerialize();
+            String makersWarningTxFeeBumpAddress = processModel.getWarningTxFeeBumpAddress();
+            String makersRedirectTxFeeBumpAddress = processModel.getRedirectTxFeeBumpAddress();
+            byte[] buyersWarningTxMakerSignature = processModel.getWarningTxBuyerSignature();
+            byte[] sellersWarningTxMakerSignature = processModel.getTradePeer().getWarningTxBuyerSignature();
+            byte[] buyersRedirectTxMakerSignature = processModel.getRedirectTxBuyerSignature();
+            byte[] sellersRedirectTxMakerSignature = processModel.getTradePeer().getRedirectTxBuyerSignature();
 
             InputsForDepositTxResponse_v5 message = new InputsForDepositTxResponse_v5(
                     processModel.getOfferId(),
@@ -98,8 +103,12 @@ public class BuyerAsMakerSendsInputsForDepositTxResponse_v5 extends TradeTask {
                     trade.getLockTime(),
                     hashOfMakersPaymentAccountPayload,
                     makersPaymentMethodId,
-                    buyersUnsignedWarningTx,
-                    buyersWarningTxSignature);
+                    makersWarningTxFeeBumpAddress,
+                    makersRedirectTxFeeBumpAddress,
+                    buyersWarningTxMakerSignature,
+                    sellersWarningTxMakerSignature,
+                    buyersRedirectTxMakerSignature,
+                    sellersRedirectTxMakerSignature);
 
             trade.setState(Trade.State.MAKER_SENT_PUBLISH_DEPOSIT_TX_REQUEST);
             processModel.getTradeManager().requestPersistence();
@@ -136,11 +145,10 @@ public class BuyerAsMakerSendsInputsForDepositTxResponse_v5 extends TradeTask {
         }
     }
 
-
     protected byte[] getPreparedDepositTx() {
         Transaction preparedDepositTx = processModel.getBtcWalletService().getTxFromSerializedTx(processModel.getPreparedDepositTx());
-        // Remove witnesses from preparedDepositTx, so that the seller can still compute the final
-        // tx id, but cannot publish it before providing the buyer with a signed delayed payout tx.
+        // Remove witnesses from preparedDepositTx, so that the peer can still compute the final
+        // tx id, but cannot publish it before we have all the finalized staged txs.
         return preparedDepositTx.bitcoinSerialize(false);
     }
 }
