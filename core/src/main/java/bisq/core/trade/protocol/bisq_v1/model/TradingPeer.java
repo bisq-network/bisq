@@ -53,6 +53,11 @@ public final class TradingPeer implements TradePeer {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Setter
+    transient private String warningTxFeeBumpAddress;
+    @Setter
+    transient private String redirectTxFeeBumpAddress;
+
+    @Setter
     transient private Transaction warningTx;
     @Setter
     transient private byte[] warningTxSellerSignature;

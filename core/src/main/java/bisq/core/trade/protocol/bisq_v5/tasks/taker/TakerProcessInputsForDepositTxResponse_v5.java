@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bisq_v5.tasks.seller_as_taker;
+package bisq.core.trade.protocol.bisq_v5.tasks.taker;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
@@ -27,8 +27,6 @@ import bisq.core.trade.protocol.bisq_v5.messages.InputsForDepositTxResponse_v5;
 import bisq.common.config.Config;
 import bisq.common.taskrunner.TaskRunner;
 
-import org.bitcoinj.core.Transaction;
-
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
@@ -39,8 +37,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class SellerAsTakerProcessesInputsForDepositTxResponse_v5 extends TradeTask {
-    public SellerAsTakerProcessesInputsForDepositTxResponse_v5(TaskRunner<Trade> taskHandler, Trade trade) {
+public class TakerProcessInputsForDepositTxResponse_v5 extends TradeTask {
+    public TakerProcessInputsForDepositTxResponse_v5(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -55,7 +53,6 @@ public class SellerAsTakerProcessesInputsForDepositTxResponse_v5 extends TradeTa
             InputsForDepositTxResponse_v5 response = (InputsForDepositTxResponse_v5) processModel.getTradeMessage();
             checkTradeId(processModel.getOfferId(), response);
             checkNotNull(response);
-
 
             Optional.ofNullable(response.getHashOfMakersPaymentAccountPayload())
                     .ifPresent(e -> tradingPeer.setHashOfPaymentAccountPayload(response.getHashOfMakersPaymentAccountPayload()));
@@ -93,10 +90,12 @@ public class SellerAsTakerProcessesInputsForDepositTxResponse_v5 extends TradeTa
 
             checkArgument(response.getMakerInputs().size() > 0);
 
-            byte[] tx = checkNotNull(response.getBuyersUnsignedWarningTx());
-            Transaction buyersUnsignedWarningTx = btcWalletService.getTxFromSerializedTx(tx);
-            tradingPeer.setWarningTx(buyersUnsignedWarningTx);
-            tradingPeer.setWarningTxBuyerSignature(response.getBuyersWarningTxSignature());
+//            byte[] tx = checkNotNull(response.getBuyersUnsignedWarningTx());
+//            Transaction buyersUnsignedWarningTx = btcWalletService.getTxFromSerializedTx(tx);
+//            tradingPeer.setWarningTx(buyersUnsignedWarningTx);
+//            tradingPeer.setWarningTxBuyerSignature(response.getBuyersWarningTxSignature());
+            tradingPeer.setWarningTxFeeBumpAddress(response.getMakersWarningTxFeeBumpAddress());
+            tradingPeer.setRedirectTxFeeBumpAddress(response.getMakersRedirectTxFeeBumpAddress());
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());

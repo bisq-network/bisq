@@ -18,7 +18,6 @@
 package bisq.core.trade.protocol.bisq_v5.messages;
 
 import bisq.core.btc.model.RawTransactionInput;
-import bisq.core.proto.CoreProtoResolver;
 import bisq.core.trade.protocol.TradeMessage;
 
 import bisq.network.p2p.DirectMessage;
@@ -57,8 +56,12 @@ public final class InputsForDepositTxResponse_v5 extends TradeMessage implements
     private final long lockTime;
     private final byte[] hashOfMakersPaymentAccountPayload;
     private final String makersPaymentMethodId;
-    private final byte[] buyersUnsignedWarningTx;
-    private final byte[] buyersWarningTxSignature;
+    private final String makersWarningTxFeeBumpAddress;
+    private final String makersRedirectTxFeeBumpAddress;
+    private final byte[] buyersWarningTxMakerSignature;
+    private final byte[] sellersWarningTxMakerSignature;
+    private final byte[] buyersRedirectTxMakerSignature;
+    private final byte[] sellersRedirectTxMakerSignature;
 
     public InputsForDepositTxResponse_v5(String tradeId,
                                          String makerAccountId,
@@ -75,8 +78,12 @@ public final class InputsForDepositTxResponse_v5 extends TradeMessage implements
                                          long lockTime,
                                          byte[] hashOfMakersPaymentAccountPayload,
                                          String makersPaymentMethodId,
-                                         byte[] buyersUnsignedWarningTx,
-                                         byte[] buyersWarningTxSignature) {
+                                         String makersWarningTxFeeBumpAddress,
+                                         String makersRedirectTxFeeBumpAddress,
+                                         byte[] buyersWarningTxMakerSignature,
+                                         byte[] sellersWarningTxMakerSignature,
+                                         byte[] buyersRedirectTxMakerSignature,
+                                         byte[] sellersRedirectTxMakerSignature) {
         this(tradeId,
                 makerAccountId,
                 makerMultiSigPubKey,
@@ -93,8 +100,12 @@ public final class InputsForDepositTxResponse_v5 extends TradeMessage implements
                 lockTime,
                 hashOfMakersPaymentAccountPayload,
                 makersPaymentMethodId,
-                buyersUnsignedWarningTx,
-                buyersWarningTxSignature);
+                makersWarningTxFeeBumpAddress,
+                makersRedirectTxFeeBumpAddress,
+                buyersWarningTxMakerSignature,
+                sellersWarningTxMakerSignature,
+                buyersRedirectTxMakerSignature,
+                sellersRedirectTxMakerSignature);
     }
 
 
@@ -118,8 +129,12 @@ public final class InputsForDepositTxResponse_v5 extends TradeMessage implements
                                           long lockTime,
                                           byte[] hashOfMakersPaymentAccountPayload,
                                           String makersPaymentMethodId,
-                                          byte[] buyersUnsignedWarningTx,
-                                          byte[] buyersWarningTxSignature) {
+                                          String makersWarningTxFeeBumpAddress,
+                                          String makersRedirectTxFeeBumpAddress,
+                                          byte[] buyersWarningTxMakerSignature,
+                                          byte[] sellersWarningTxMakerSignature,
+                                          byte[] buyersRedirectTxMakerSignature,
+                                          byte[] sellersRedirectTxMakerSignature) {
         super(messageVersion, tradeId, uid);
         this.makerAccountId = makerAccountId;
         this.makerMultiSigPubKey = makerMultiSigPubKey;
@@ -134,8 +149,12 @@ public final class InputsForDepositTxResponse_v5 extends TradeMessage implements
         this.lockTime = lockTime;
         this.hashOfMakersPaymentAccountPayload = hashOfMakersPaymentAccountPayload;
         this.makersPaymentMethodId = makersPaymentMethodId;
-        this.buyersUnsignedWarningTx = buyersUnsignedWarningTx;
-        this.buyersWarningTxSignature = buyersWarningTxSignature;
+        this.makersWarningTxFeeBumpAddress = makersWarningTxFeeBumpAddress;
+        this.makersRedirectTxFeeBumpAddress = makersRedirectTxFeeBumpAddress;
+        this.buyersWarningTxMakerSignature = buyersWarningTxMakerSignature;
+        this.sellersWarningTxMakerSignature = sellersWarningTxMakerSignature;
+        this.buyersRedirectTxMakerSignature = buyersRedirectTxMakerSignature;
+        this.sellersRedirectTxMakerSignature = sellersRedirectTxMakerSignature;
     }
 
     @Override
@@ -152,8 +171,12 @@ public final class InputsForDepositTxResponse_v5 extends TradeMessage implements
                 .setSenderNodeAddress(senderNodeAddress.toProtoMessage())
                 .setUid(uid)
                 .setLockTime(lockTime)
-                .setBuyersUnsignedWarningTx(ByteString.copyFrom(buyersUnsignedWarningTx))
-                .setBuyersWarningTxSignature(ByteString.copyFrom(buyersWarningTxSignature));
+                .setMakersWarningTxFeeBumpAddress(makersWarningTxFeeBumpAddress)
+                .setMakersRedirectTxFeeBumpAddress(makersRedirectTxFeeBumpAddress)
+                .setBuyersWarningTxMakerSignature(ByteString.copyFrom(buyersWarningTxMakerSignature))
+                .setSellersWarningTxMakerSignature(ByteString.copyFrom(sellersWarningTxMakerSignature))
+                .setBuyersRedirectTxMakerSignature(ByteString.copyFrom(buyersRedirectTxMakerSignature))
+                .setSellersRedirectTxMakerSignature(ByteString.copyFrom(sellersRedirectTxMakerSignature));
 
         Optional.ofNullable(accountAgeWitnessSignatureOfPreparedDepositTx).ifPresent(e -> builder.setAccountAgeWitnessSignatureOfPreparedDepositTx(ByteString.copyFrom(e)));
         builder.setCurrentDate(currentDate);
@@ -165,7 +188,6 @@ public final class InputsForDepositTxResponse_v5 extends TradeMessage implements
     }
 
     public static InputsForDepositTxResponse_v5 fromProto(protobuf.InputsForDepositTxResponse_v5 proto,
-                                                          CoreProtoResolver coreProtoResolver,
                                                           int messageVersion) {
         List<RawTransactionInput> makerInputs = proto.getMakerInputsList().stream()
                 .map(RawTransactionInput::fromProto)
@@ -189,14 +211,18 @@ public final class InputsForDepositTxResponse_v5 extends TradeMessage implements
                 proto.getLockTime(),
                 hashOfMakersPaymentAccountPayload,
                 ProtoUtil.stringOrNullFromProto(proto.getMakersPayoutMethodId()),
-                ProtoUtil.byteArrayOrNullFromProto(proto.getBuyersUnsignedWarningTx()),
-                ProtoUtil.byteArrayOrNullFromProto(proto.getBuyersWarningTxSignature()));
+                proto.getMakersWarningTxFeeBumpAddress(),
+                proto.getMakersRedirectTxFeeBumpAddress(),
+                proto.getBuyersWarningTxMakerSignature().toByteArray(),
+                proto.getSellersWarningTxMakerSignature().toByteArray(),
+                proto.getBuyersRedirectTxMakerSignature().toByteArray(),
+                proto.getSellersRedirectTxMakerSignature().toByteArray());
     }
 
     @Override
     public String toString() {
         return "InputsForDepositTxResponse_v5{" +
-                ",\n     makerAccountId='" + makerAccountId + '\'' +
+                "\n     makerAccountId='" + makerAccountId + '\'' +
                 ",\n     makerMultiSigPubKey=" + Utilities.bytesAsHexString(makerMultiSigPubKey) +
                 ",\n     makerContractAsJson='" + makerContractAsJson + '\'' +
                 ",\n     makerContractSignature='" + makerContractSignature + '\'' +
@@ -204,14 +230,17 @@ public final class InputsForDepositTxResponse_v5 extends TradeMessage implements
                 ",\n     preparedDepositTx=" + Utilities.bytesAsHexString(preparedDepositTx) +
                 ",\n     makerInputs=" + makerInputs +
                 ",\n     senderNodeAddress=" + senderNodeAddress +
-                ",\n     uid='" + uid + '\'' +
                 ",\n     accountAgeWitnessSignatureOfPreparedDepositTx=" + Utilities.bytesAsHexString(accountAgeWitnessSignatureOfPreparedDepositTx) +
                 ",\n     currentDate=" + new Date(currentDate) +
                 ",\n     lockTime=" + lockTime +
                 ",\n     hashOfMakersPaymentAccountPayload=" + Utilities.bytesAsHexString(hashOfMakersPaymentAccountPayload) +
                 ",\n     makersPaymentMethodId=" + makersPaymentMethodId +
-                ",\n     buyersUnsignedWarningTx=" + Utilities.bytesAsHexString(buyersUnsignedWarningTx) +
-                ",\n     buyersWarningTxSignature=" + Utilities.bytesAsHexString(buyersWarningTxSignature) +
+                ",\n     makersWarningTxFeeBumpAddress=" + makersWarningTxFeeBumpAddress +
+                ",\n     makersRedirectTxFeeBumpAddress=" + makersRedirectTxFeeBumpAddress +
+                ",\n     buyersWarningTxMakerSignature=" + Utilities.bytesAsHexString(buyersWarningTxMakerSignature) +
+                ",\n     sellersWarningTxMakerSignature=" + Utilities.bytesAsHexString(sellersWarningTxMakerSignature) +
+                ",\n     buyersRedirectTxMakerSignature=" + Utilities.bytesAsHexString(buyersRedirectTxMakerSignature) +
+                ",\n     sellersRedirectTxMakerSignature=" + Utilities.bytesAsHexString(sellersRedirectTxMakerSignature) +
                 "\n} " + super.toString();
     }
 }

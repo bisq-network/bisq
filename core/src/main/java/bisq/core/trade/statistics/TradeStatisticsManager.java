@@ -42,6 +42,8 @@ import javax.inject.Singleton;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 
+import com.sun.javafx.collections.ObservableSetWrapper;
+
 import java.time.Instant;
 
 import java.io.File;
@@ -53,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Set;
+import java.util.Spliterator;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -230,5 +233,14 @@ public class TradeStatisticsManager {
                 });
         log.info("maybeRepublishTradeStatistics took {} ms. Number of tradeStatistics: {}. Number of own trades: {}",
                 System.currentTimeMillis() - ts, hashes.size(), trades.size());
+    }
+
+    private static <E> ObservableSet<E> observableSet(Set<E> set) {
+        return new ObservableSetWrapper<>(set) {
+            @Override
+            public Spliterator<E> spliterator() {
+                return set.spliterator();
+            }
+        };
     }
 }
