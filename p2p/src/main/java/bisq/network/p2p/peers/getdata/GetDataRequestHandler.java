@@ -43,7 +43,7 @@ import org.jetbrains.annotations.NotNull;
 public class GetDataRequestHandler {
     private static final long TIMEOUT = 240;
 
-    private static final int MAX_ENTRIES = 5000;
+    private static final int MAX_ENTRIES = 20_000; // Tradestatistics are about 20 000 in 2 months.
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
