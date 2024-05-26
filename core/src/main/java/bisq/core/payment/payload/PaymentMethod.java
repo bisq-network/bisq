@@ -23,6 +23,7 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.TradeLimits;
 
 import bisq.common.proto.persistable.PersistablePayload;
+import bisq.common.util.MathUtils;
 
 import org.bitcoinj.core.Coin;
 
@@ -381,9 +382,19 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
         // Hack for SF as the smallest unit is 1 SF ;-( and price is about 3 BTC!
         if (currencyCode.equals("SF"))
             return Coin.parseCoin("4");
-        // payment methods which define their own trade limits
+
+
+        TradeLimits tradeLimits = TradeLimits.getINSTANCE();
+        checkNotNull(tradeLimits, "tradeLimits must not be null");
+        long maxTradeLimitFromDaoPram = tradeLimits.getMaxTradeLimit().value;
+
+        // Payment methods which define their own trade limits
         if (id.equals(NEFT_ID) || id.equals(UPI_ID) || id.equals(PAYTM_ID) || id.equals(BIZUM_ID) || id.equals(TIKKIE_ID)) {
-            return Coin.valueOf(maxTradeLimit);
+            // We adjust the custom trade limits with the factor of the change of the DAO param. Initially it was set to 2 BTC.
+            long initialTradeLimit = 200000000;
+            double factor = maxTradeLimitFromDaoPram / (double) initialTradeLimit;
+            long value = MathUtils.roundDoubleToLong(Coin.valueOf(maxTradeLimit).getValue() * factor);
+            return Coin.valueOf(value);
         }
 
         // We use the class field maxTradeLimit only for mapping the risk factor.
@@ -403,10 +414,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
                     Coin.valueOf(maxTradeLimit).toFriendlyString(), this);
         }
 
-        TradeLimits tradeLimits = TradeLimits.getINSTANCE();
-        checkNotNull(tradeLimits, "tradeLimits must not be null");
-        long maxTradeLimit = tradeLimits.getMaxTradeLimit().value;
-        return Coin.valueOf(tradeLimits.getRoundedRiskBasedTradeLimit(maxTradeLimit, riskFactor));
+        return Coin.valueOf(tradeLimits.getRoundedRiskBasedTradeLimit(maxTradeLimitFromDaoPram, riskFactor));
     }
 
     public String getShortName() {
