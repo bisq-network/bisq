@@ -50,7 +50,9 @@ public class AccountPresentation {
 
         preferences.getDontShowAgainMapAsObservable().addListener((MapChangeListener<? super String, ? super Boolean>) change -> {
             if (change.getKey().equals(ACCOUNT_NEWS)) {
-                showNotification.set(!change.wasAdded());
+                // devs enable this when a news badge is required
+                // showNotification.set(!change.wasAdded());
+                showNotification.set(false);
             }
         });
     }
@@ -65,26 +67,26 @@ public class AccountPresentation {
 
     public void setup() {
         // devs enable this when a news badge is required
-        showNotification.set(preferences.showAgain(ACCOUNT_NEWS));
+        //showNotification.set(preferences.showAgain(ACCOUNT_NEWS));
+        showNotification.set(false);
     }
 
-    public void showOneTimeAccountSigningPopup(String key, String s) {
-        showOneTimeAccountSigningPopup(key, s, null);
+    public void showOneTimeAccountSigningPopup(String key, String message) {
+        showOneTimeAccountSigningPopup(key, message, null);
     }
 
-    public void showOneTimeAccountSigningPopup(String key, String s, String optionalParam) {
+    public void showOneTimeAccountSigningPopup(String key, String message, String optionalParam) {
         if (!DevEnv.isDevMode()) {
 
             DontShowAgainLookup.dontShowAgain(ACCOUNT_NEWS, false);
             showNotification.set(true);
 
             DontShowAgainLookup.dontShowAgain(key, true);
-            String message = optionalParam != null ?
-                    Res.get(s, optionalParam, Res.get("popup.accountSigning.generalInformation")) :
-                    Res.get(s, Res.get("popup.accountSigning.generalInformation"));
+            String information = optionalParam != null ?
+                    Res.get(message, optionalParam, Res.get("popup.accountSigning.generalInformation")) :
+                    Res.get(message, Res.get("popup.accountSigning.generalInformation"));
 
-            new Popup().information(message)
-                    .show();
+            new Popup().information(information).show();
         }
     }
 }
