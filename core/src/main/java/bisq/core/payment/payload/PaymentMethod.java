@@ -379,11 +379,6 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     }
 
     public Coin getMaxTradeLimitAsCoin(String currencyCode) {
-        // Hack for SF as the smallest unit is 1 SF ;-( and price is about 3 BTC!
-        if (currencyCode.equals("SF"))
-            return Coin.parseCoin("4");
-
-
         TradeLimits tradeLimits = TradeLimits.getINSTANCE();
         checkNotNull(tradeLimits, "tradeLimits must not be null");
         long maxTradeLimitFromDaoPram = tradeLimits.getMaxTradeLimit().value;
