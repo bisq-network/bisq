@@ -74,7 +74,7 @@ public class TradeLimits implements DaoStateListener {
      * @see bisq.core.payment.payload.PaymentMethod
      * @return the maximum trade limit set by the DAO.
      */
-    public Coin getMaxTradeLimit() {
+    public Coin getMaxTradeLimitFromDaoParam() {
         Coin limit = cachedMaxTradeLimit;
         if (limit == null) {
             cachedMaxTradeLimit = limit = daoStateService.getParamValueAsCoin(Param.MAX_TRADE_LIMIT, periodService.getChainHeight());
