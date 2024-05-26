@@ -24,6 +24,9 @@ import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.dao.DaoFacade;
 import bisq.core.dao.burningman.BtcFeeReceiverService;
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.Res;
@@ -102,7 +105,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMessageListener, PersistedDataHost {
+public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMessageListener, PersistedDataHost, DaoStateListener {
 
     private static final long RETRY_REPUBLISH_DELAY_SEC = 10;
     private static final long REPUBLISH_AGAIN_AT_STARTUP_DELAY_SEC = 30;
@@ -131,6 +134,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
     private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
     private final Broadcaster broadcaster;
     private final PersistenceManager<TradableList<OpenOffer>> persistenceManager;
+    private final DaoStateService daoStateService;
     private final Map<String, OpenOffer> offersToBeEdited = new HashMap<>();
     private final TradableList<OpenOffer> openOffers = new TradableList<>();
     private boolean stopped;
@@ -167,7 +171,8 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                             BtcFeeReceiverService btcFeeReceiverService,
                             DelayedPayoutTxReceiverService delayedPayoutTxReceiverService,
                             Broadcaster broadcaster,
-                            PersistenceManager<TradableList<OpenOffer>> persistenceManager) {
+                            PersistenceManager<TradableList<OpenOffer>> persistenceManager,
+                            DaoStateService daoStateService) {
         this.coreContext = coreContext;
         this.createOfferService = createOfferService;
         this.keyRing = keyRing;
@@ -190,6 +195,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
         this.delayedPayoutTxReceiverService = delayedPayoutTxReceiverService;
         this.broadcaster = broadcaster;
         this.persistenceManager = persistenceManager;
+        this.daoStateService = daoStateService;
 
         this.persistenceManager.initialize(openOffers, "OpenOffers", PersistenceManager.Source.PRIVATE);
     }
@@ -204,8 +210,30 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 completeHandler);
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // DaoStateListener implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
+        openOffers.stream()
+                .forEach(openOffer -> {
+                    Offer offer = openOffer.getOffer();
+                    if (OfferUtil.doesOfferAmountExceedTradeLimit(offer)) {
+                        String message = "Your offer with ID `" + offer.getShortId() + "` has become invalid because the max. allowed trade amount has been changed.\n\n" +
+                                "The new trade limit has been activated by DAO voting. See https://github.com/bisq-network/proposals/issues/453 for more details.\n\n" +
+                                "You can request a reimbursement from the Bisq DAO for the lost `maker-fee` at: https://github.com/bisq-network/support/issues.\n" +
+                                "If you have any questions please reach out to the Bisq community at: https://bisq.network/community.";
+                        invalidOffers.add(new Tuple2<>(openOffer, message));
+                    }
+                });
+    }
+
+
     public void onAllServicesInitialized() {
         p2PService.addDecryptedDirectMessageListener(this);
+        daoStateService.addDaoStateListener(this);
 
         if (p2PService.isBootstrapped()) {
             onBootstrapComplete();
@@ -243,6 +271,7 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     public void shutDown(@Nullable Runnable completeHandler) {
         stopped = true;
+        daoStateService.removeDaoStateListener(this);
         p2PService.getPeerManager().removeListener(this);
         p2PService.removeDecryptedDirectMessageListener(this);
 
