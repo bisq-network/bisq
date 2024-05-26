@@ -217,17 +217,19 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
 
     @Override
     public void onParseBlockCompleteAfterBatchProcessing(Block block) {
-        openOffers.stream()
-                .forEach(openOffer -> {
-                    Offer offer = openOffer.getOffer();
-                    if (OfferUtil.doesOfferAmountExceedTradeLimit(offer)) {
-                        String message = "Your offer with ID `" + offer.getShortId() + "` has become invalid because the max. allowed trade amount has been changed.\n\n" +
-                                "The new trade limit has been activated by DAO voting. See https://github.com/bisq-network/proposals/issues/453 for more details.\n\n" +
-                                "You can request a reimbursement from the Bisq DAO for the lost `maker-fee` at: https://github.com/bisq-network/support/issues.\n" +
-                                "If you have any questions please reach out to the Bisq community at: https://bisq.network/community.";
-                        invalidOffers.add(new Tuple2<>(openOffer, message));
-                    }
-                });
+        Set<String> invalidOfferIds = invalidOffers.stream().map(e -> e.first.getId()).collect(Collectors.toSet());
+        Set<Tuple2<OpenOffer, String>> exceedingOffers = openOffers.stream()
+                .filter(openOffer -> !invalidOfferIds.contains(openOffer.getId()))
+                .filter(openOffer -> OfferUtil.doesOfferAmountExceedTradeLimit(openOffer.getOffer()))
+                .map(openOffer -> {
+                    String message = "Your offer with ID `" + openOffer.getOffer().getShortId() + "` has become invalid because the max. allowed trade amount has been changed.\n\n" +
+                            "The new trade limit has been activated by DAO voting. See https://github.com/bisq-network/proposals/issues/453 for more details.\n\n" +
+                            "You can request a reimbursement from the Bisq DAO for the lost `maker-fee` at: https://github.com/bisq-network/support/issues.\n" +
+                            "If you have any questions please reach out to the Bisq community at: https://bisq.network/community.";
+                    return new Tuple2<>(openOffer, message);
+                })
+                .collect(Collectors.toSet());
+        invalidOffers.addAll(exceedingOffers);
     }
 
 
