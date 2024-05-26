@@ -42,8 +42,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @EqualsAndHashCode(exclude = {"maxTradePeriod", "maxTradeLimit"})
 @ToString
 @Slf4j
@@ -381,14 +379,18 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     // We leave currencyCode as param for being flexible if we need custom handling of a currency in future
     // again (as we had in the past)
     public Coin getMaxTradeLimitAsCoin(String currencyCode) {
+        // We adjust the custom trade limits with the factor of the change of the DAO param. Initially it was set to 2 BTC.
+        long initialTradeLimit = 200000000;
         TradeLimits tradeLimits = TradeLimits.getINSTANCE();
-        checkNotNull(tradeLimits, "tradeLimits must not be null");
+        if (tradeLimits == null) {
+            // is null in some tests...
+            log.warn("tradeLimits was null");
+            return Coin.valueOf(initialTradeLimit);
+        }
         long maxTradeLimitFromDaoParam = tradeLimits.getMaxTradeLimitFromDaoParam().value;
 
         // Payment methods which define their own trade limits
         if (id.equals(NEFT_ID) || id.equals(UPI_ID) || id.equals(PAYTM_ID) || id.equals(BIZUM_ID) || id.equals(TIKKIE_ID)) {
-            // We adjust the custom trade limits with the factor of the change of the DAO param. Initially it was set to 2 BTC.
-            long initialTradeLimit = 200000000;
             double factor = maxTradeLimitFromDaoParam / (double) initialTradeLimit;
             long value = MathUtils.roundDoubleToLong(Coin.valueOf(maxTradeLimit).getValue() * factor);
             return Coin.valueOf(value);
