@@ -378,16 +378,18 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
         return Optional.ofNullable(PAYMENT_METHOD_MAP.get(id));
     }
 
+    // We leave currencyCode as param for being flexible if we need custom handling of a currency in future
+    // again (as we had in the past)
     public Coin getMaxTradeLimitAsCoin(String currencyCode) {
         TradeLimits tradeLimits = TradeLimits.getINSTANCE();
         checkNotNull(tradeLimits, "tradeLimits must not be null");
-        long maxTradeLimitFromDaoPram = tradeLimits.getMaxTradeLimit().value;
+        long maxTradeLimitFromDaoParam = tradeLimits.getMaxTradeLimitFromDaoParam().value;
 
         // Payment methods which define their own trade limits
         if (id.equals(NEFT_ID) || id.equals(UPI_ID) || id.equals(PAYTM_ID) || id.equals(BIZUM_ID) || id.equals(TIKKIE_ID)) {
             // We adjust the custom trade limits with the factor of the change of the DAO param. Initially it was set to 2 BTC.
             long initialTradeLimit = 200000000;
-            double factor = maxTradeLimitFromDaoPram / (double) initialTradeLimit;
+            double factor = maxTradeLimitFromDaoParam / (double) initialTradeLimit;
             long value = MathUtils.roundDoubleToLong(Coin.valueOf(maxTradeLimit).getValue() * factor);
             return Coin.valueOf(value);
         }
@@ -409,7 +411,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
                     Coin.valueOf(maxTradeLimit).toFriendlyString(), this);
         }
 
-        return Coin.valueOf(tradeLimits.getRoundedRiskBasedTradeLimit(maxTradeLimitFromDaoPram, riskFactor));
+        return Coin.valueOf(tradeLimits.getRoundedRiskBasedTradeLimit(maxTradeLimitFromDaoParam, riskFactor));
     }
 
     public String getShortName() {
