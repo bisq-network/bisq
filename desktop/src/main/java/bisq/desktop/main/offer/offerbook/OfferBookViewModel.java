@@ -30,6 +30,9 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.api.CoreApi;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.state.DaoStateListener;
+import bisq.core.dao.state.DaoStateService;
+import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.CryptoCurrency;
@@ -41,6 +44,7 @@ import bisq.core.monetary.Volume;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
 import bisq.core.offer.OfferFilterService;
+import bisq.core.offer.OfferUtil;
 import bisq.core.offer.OpenOffer;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.PaymentAccount;
@@ -97,7 +101,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-abstract class OfferBookViewModel extends ActivatableViewModel {
+abstract class OfferBookViewModel extends ActivatableViewModel implements DaoStateListener {
     private final OpenOfferManager openOfferManager;
     private final User user;
     private final OfferBook offerBook;
@@ -117,6 +121,7 @@ abstract class OfferBookViewModel extends ActivatableViewModel {
     private final FilteredList<OfferBookListItem> filteredItems;
     private final BsqWalletService bsqWalletService;
     private final CoreApi coreApi;
+    private final DaoStateService daoStateService;
     private final SortedList<OfferBookListItem> sortedItems;
     private final ListChangeListener<TradeCurrency> tradeCurrencyListChangeListener;
     private final ListChangeListener<OfferBookListItem> filterItemsListener;
@@ -167,7 +172,8 @@ abstract class OfferBookViewModel extends ActivatableViewModel {
                               CoinFormatter btcFormatter,
                               BsqFormatter bsqFormatter,
                               BsqWalletService bsqWalletService,
-                              CoreApi coreApi) {
+                              CoreApi coreApi,
+                              DaoStateService daoStateService) {
         super();
 
         this.openOfferManager = openOfferManager;
@@ -189,6 +195,7 @@ abstract class OfferBookViewModel extends ActivatableViewModel {
         this.filteredItems = new FilteredList<>(offerBook.getOfferBookListItems());
         this.bsqWalletService = bsqWalletService;
         this.coreApi = coreApi;
+        this.daoStateService = daoStateService;
         this.sortedItems = new SortedList<>(filteredItems);
 
         tradeCurrencyListChangeListener = c -> fillCurrencies();
@@ -227,6 +234,17 @@ abstract class OfferBookViewModel extends ActivatableViewModel {
         };
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // DaoStateListener implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onParseBlockCompleteAfterBatchProcessing(Block block) {
+        filterOffers();
+    }
+
+
     @Override
     protected void activate() {
         filteredItems.addListener(filterItemsListener);
@@ -241,12 +259,14 @@ abstract class OfferBookViewModel extends ActivatableViewModel {
         setMarketPriceFeedCurrency();
 
         priceUtil.recalculateBsq30DayAveragePrice();
+        daoStateService.addDaoStateListener(this);
     }
 
     @Override
     protected void deactivate() {
         filteredItems.removeListener(filterItemsListener);
         preferences.getTradeCurrenciesAsObservable().removeListener(tradeCurrencyListChangeListener);
+        daoStateService.removeDaoStateListener(this);
     }
 
 
@@ -593,10 +613,12 @@ abstract class OfferBookViewModel extends ActivatableViewModel {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void filterOffers() {
-        Predicate<OfferBookListItem> predicate = useOffersMatchingMyAccountsFilter ?
+        Predicate<OfferBookListItem> predicate1 = useOffersMatchingMyAccountsFilter ?
                 getCurrencyAndMethodPredicate(direction, selectedTradeCurrency).and(getOffersMatchingMyAccountsPredicate()) :
                 getCurrencyAndMethodPredicate(direction, selectedTradeCurrency);
-        filteredItems.setPredicate(predicate);
+
+        Predicate<OfferBookListItem> predicate2 = item -> !OfferUtil.doesOfferAmountExceedTradeLimit(item.getOffer());
+        filteredItems.setPredicate(predicate1.and(predicate2));
     }
 
     abstract Predicate<OfferBookListItem> getCurrencyAndMethodPredicate(OfferDirection direction,
