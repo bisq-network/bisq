@@ -496,6 +496,10 @@ public class OfferUtil {
         return offer.getCounterCurrencyCode().equals("BTC") && !offer.isBsqSwapOffer();
     }
 
+    public static boolean doesOfferAmountExceedTradeLimit(Offer offer) {
+        return offer.getAmount().isGreaterThan(offer.getPaymentMethod().getMaxTradeLimitAsCoin(offer.getCurrencyCode()));
+    }
+
     public static Optional<String> getInvalidMakerFeeTxErrorMessage(Offer offer, BtcWalletService btcWalletService) {
         String offerFeePaymentTxId = offer.getOfferFeePaymentTxId();
         if (offerFeePaymentTxId == null) {

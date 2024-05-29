@@ -24,6 +24,7 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.api.CoreApi;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
@@ -73,8 +74,11 @@ public class TopAltcoinOfferBookViewModel extends OfferBookViewModel {
                                         @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter btcFormatter,
                                         BsqFormatter bsqFormatter,
                                         BsqWalletService bsqWalletService,
-                                        CoreApi coreApi) {
-        super(user, openOfferManager, offerBook, preferences, walletsSetup, p2PService, priceFeedService, closedTradableManager, bsqSwapTradeManager, accountAgeWitnessService, navigation, priceUtil, offerFilterService, btcFormatter, bsqFormatter, bsqWalletService, coreApi);
+                                        CoreApi coreApi,
+                                        DaoStateService daoStateService) {
+        super(user, openOfferManager, offerBook, preferences, walletsSetup, p2PService, priceFeedService,
+                closedTradableManager, bsqSwapTradeManager, accountAgeWitnessService, navigation, priceUtil,
+                offerFilterService, btcFormatter, bsqFormatter, bsqWalletService, coreApi, daoStateService);
     }
 
     @Override

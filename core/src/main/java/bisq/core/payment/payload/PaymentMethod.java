@@ -23,6 +23,7 @@ import bisq.core.locale.TradeCurrency;
 import bisq.core.payment.TradeLimits;
 
 import bisq.common.proto.persistable.PersistablePayload;
+import bisq.common.util.MathUtils;
 
 import org.bitcoinj.core.Coin;
 
@@ -40,8 +41,6 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.NotNull;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode(exclude = {"maxTradePeriod", "maxTradeLimit"})
 @ToString
@@ -377,13 +376,24 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
         return Optional.ofNullable(PAYMENT_METHOD_MAP.get(id));
     }
 
+    // We leave currencyCode as param for being flexible if we need custom handling of a currency in future
+    // again (as we had in the past)
     public Coin getMaxTradeLimitAsCoin(String currencyCode) {
-        // Hack for SF as the smallest unit is 1 SF ;-( and price is about 3 BTC!
-        if (currencyCode.equals("SF"))
-            return Coin.parseCoin("4");
-        // payment methods which define their own trade limits
+        // We adjust the custom trade limits with the factor of the change of the DAO param. Initially it was set to 2 BTC.
+        long initialTradeLimit = 200000000;
+        TradeLimits tradeLimits = TradeLimits.getINSTANCE();
+        if (tradeLimits == null) {
+            // is null in some tests...
+            log.warn("tradeLimits was null");
+            return Coin.valueOf(initialTradeLimit);
+        }
+        long maxTradeLimitFromDaoParam = tradeLimits.getMaxTradeLimitFromDaoParam().value;
+
+        // Payment methods which define their own trade limits
         if (id.equals(NEFT_ID) || id.equals(UPI_ID) || id.equals(PAYTM_ID) || id.equals(BIZUM_ID) || id.equals(TIKKIE_ID)) {
-            return Coin.valueOf(maxTradeLimit);
+            double factor = maxTradeLimitFromDaoParam / (double) initialTradeLimit;
+            long value = MathUtils.roundDoubleToLong(Coin.valueOf(maxTradeLimit).getValue() * factor);
+            return Coin.valueOf(value);
         }
 
         // We use the class field maxTradeLimit only for mapping the risk factor.
@@ -403,10 +413,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
                     Coin.valueOf(maxTradeLimit).toFriendlyString(), this);
         }
 
-        TradeLimits tradeLimits = TradeLimits.getINSTANCE();
-        checkNotNull(tradeLimits, "tradeLimits must not be null");
-        long maxTradeLimit = tradeLimits.getMaxTradeLimit().value;
-        return Coin.valueOf(tradeLimits.getRoundedRiskBasedTradeLimit(maxTradeLimit, riskFactor));
+        return Coin.valueOf(tradeLimits.getRoundedRiskBasedTradeLimit(maxTradeLimitFromDaoParam, riskFactor));
     }
 
     public String getShortName() {
