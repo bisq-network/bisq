@@ -809,7 +809,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                                     .show(),
                             1);
                 } else {
-                    closeAndGoToOpenOffers();
+                    close();
                 }
             }
         };
