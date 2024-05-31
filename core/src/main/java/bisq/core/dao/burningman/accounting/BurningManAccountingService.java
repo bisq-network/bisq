@@ -241,7 +241,7 @@ public class BurningManAccountingService implements DaoSetupService, DaoStateLis
         Date month = balanceEntry.getMonth();
         long receivedBtc = balanceEntry.getAmount();
         Price price = averageBsqPriceByMonth.get(month);
-        if (price == null) {
+        if (price == null || price.getValue() == 0) {
             return OptionalLong.empty();
         }
         long volume = price.getVolumeByAmount(Coin.valueOf(receivedBtc)).getValue();

@@ -27,12 +27,13 @@ import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Role;
 import bisq.core.dao.state.model.governance.RoleProposal;
 
+import com.google.protobuf.ByteString;
+
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 
 import javax.inject.Inject;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -107,16 +108,10 @@ public class BondedRolesRepository extends BondRepository<BondedRole, Role> {
             // We used the hash of the bonded bondedAsset object as our hash in OpReturn of the lock up tx to have a
             // unique binding of the tx to the data object.
             byte[] hash = BondConsensus.getHashFromOpReturnData(opReturnData);
-            Optional<Role> candidate = findBondedAssetByHash(hash);
-            if (candidate.isPresent() && bondedAsset.equals(candidate.get()))
+            Role candidateOrNull = getBondedAssetByHashMap().get(ByteString.copyFrom(hash));
+            if (bondedAsset.equals(candidateOrNull))
                 applyBondState(daoStateService, bond, lockupTx, lockupTxOutput);
         });
-    }
-
-    private Optional<Role> findBondedAssetByHash(byte[] hash) {
-        return getBondedAssetStream()
-                .filter(bondedAsset -> Arrays.equals(bondedAsset.getHash(), hash))
-                .findAny();
     }
 
     private Stream<RoleProposal> getBondedRoleProposalStream() {

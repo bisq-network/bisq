@@ -69,7 +69,8 @@ public class OpenOfferManagerTest {
                 null,
                 null,
                 null,
-                persistenceManager
+                persistenceManager,
+                null
         );
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
@@ -118,7 +119,8 @@ public class OpenOfferManagerTest {
                 null,
                 null,
                 null,
-                persistenceManager
+                persistenceManager,
+                null
         );
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);
@@ -159,7 +161,8 @@ public class OpenOfferManagerTest {
                 null,
                 null,
                 null,
-                persistenceManager
+                persistenceManager,
+                null
         );
 
         AtomicBoolean startEditOfferSuccessful = new AtomicBoolean(false);

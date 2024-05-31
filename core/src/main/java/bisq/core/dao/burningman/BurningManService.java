@@ -167,8 +167,7 @@ public class BurningManService {
         daoStateService.getGenesisTx()
                 .ifPresent(tx -> tx.getTxOutputs().forEach(txOutput -> {
                     String name = GENESIS_OUTPUT_PREFIX + txOutput.getIndex();
-                    burningManCandidatesByName.putIfAbsent(name, new BurningManCandidate());
-                    BurningManCandidate candidate = burningManCandidatesByName.get(name);
+                    BurningManCandidate candidate = burningManCandidatesByName.computeIfAbsent(name, n -> new BurningManCandidate());
 
                     // Issuance
                     int issuanceHeight = txOutput.getBlockHeight();
@@ -262,8 +261,7 @@ public class BurningManService {
                 .filter(txOutput -> txOutput.getBlockHeight() <= chainHeight)
                 .forEach(txOutput -> {
                     P2PDataStorage.ByteArray key = new P2PDataStorage.ByteArray(ProofOfBurnConsensus.getHashFromOpReturnData(txOutput.getOpReturnData()));
-                    map.putIfAbsent(key, new HashSet<>());
-                    map.get(key).add(txOutput);
+                    map.computeIfAbsent(key, k -> new HashSet<>()).add(txOutput);
                 });
         return map;
     }

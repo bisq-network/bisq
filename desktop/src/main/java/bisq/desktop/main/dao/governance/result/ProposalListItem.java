@@ -40,7 +40,6 @@ import org.bitcoinj.core.Coin;
 import de.jensd.fx.fontawesome.AwesomeIcon;
 
 import javafx.scene.control.Label;
-import javafx.scene.control.TableRow;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 
@@ -51,17 +50,13 @@ import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 public class ProposalListItem {
-
     @Getter
-    private EvaluatedProposal evaluatedProposal;
+    private final EvaluatedProposal evaluatedProposal;
     @Getter
     private final Proposal proposal;
     private final Vote vote;
     private final boolean isMyBallotIncluded;
     private final BsqFormatter bsqFormatter;
-
-    private TableRow tableRow;
-
 
     ProposalListItem(EvaluatedProposal evaluatedProposal, Ballot ballot, boolean isMyBallotIncluded,
                      BsqFormatter bsqFormatter) {
@@ -102,17 +97,6 @@ public class ProposalListItem {
         myVoteIcon = FormBuilder.getIcon(awesomeIcon);
         myVoteIcon.getStyleClass().add(s);
         return myVoteIcon;
-    }
-
-    public void setTableRow(TableRow tableRow) {
-        this.tableRow = tableRow;
-    }
-
-    public void resetTableRow() {
-        if (tableRow != null) {
-            tableRow.setStyle(null);
-            tableRow.requestLayout();
-        }
     }
 
     public String getProposalOwnerName() {

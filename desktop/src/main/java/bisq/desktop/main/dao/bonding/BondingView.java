@@ -50,7 +50,6 @@ import javax.annotation.Nullable;
 
 @FxmlView
 public class BondingView extends ActivatableView<AnchorPane, Void> {
-
     private final ViewLoader viewLoader;
     private final Navigation navigation;
 
@@ -138,8 +137,7 @@ public class BondingView extends ActivatableView<AnchorPane, Void> {
         else if (view instanceof BondsView) {
             toggleGroup.selectToggle(bonds);
             if (data instanceof Bond)
-                ((BondsView) view).setSelectedBond((Bond) data);
+                ((BondsView) view).setSelectedBond((Bond<?>) data);
         }
-
     }
 }

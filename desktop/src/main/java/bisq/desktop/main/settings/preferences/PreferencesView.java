@@ -913,7 +913,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         btcValidator.setMinValue(Coin.valueOf(Preferences.INITIAL_TRADE_LIMIT));
         TradeLimits tradeLimits = TradeLimits.getINSTANCE();
         checkNotNull(tradeLimits, "tradeLimits must not be null");
-        btcValidator.setMaxValue(tradeLimits.getMaxTradeLimit());
+        btcValidator.setMaxValue(tradeLimits.getMaxTradeLimitFromDaoParam());
         tradeLimitTf.setValidator(btcValidator);
         displayCurrenciesGridRowIndex++;
 

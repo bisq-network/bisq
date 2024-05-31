@@ -28,6 +28,8 @@ import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.blockchain.TxType;
 
+import com.google.protobuf.ByteString;
+
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
@@ -56,14 +58,17 @@ import lombok.extern.slf4j.Slf4j;
  * unconfirmed txs.
  */
 @Slf4j
-public abstract class BondRepository<T extends Bond, R extends BondedAsset> implements DaoSetupService,
+public abstract class BondRepository<B extends Bond<T>, T extends BondedAsset> implements DaoSetupService,
         BsqWalletService.WalletTransactionsChangeListener {
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public static void applyBondState(DaoStateService daoStateService, Bond bond, Tx lockupTx, TxOutput lockupTxOutput) {
+    public static void applyBondState(DaoStateService daoStateService,
+                                      Bond<?> bond,
+                                      Tx lockupTx,
+                                      TxOutput lockupTxOutput) {
         if (bond.getBondState() != BondState.LOCKUP_TX_PENDING || bond.getBondState() != BondState.UNLOCK_TX_PENDING)
             bond.setBondState(BondState.LOCKUP_TX_CONFIRMED);
 
@@ -110,7 +115,9 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
                 .anyMatch(data -> Arrays.equals(BondConsensus.getHashFromOpReturnData(data), bondedAsset.getHash()));
     }
 
-    public static boolean isUnlockTxUnconfirmed(BsqWalletService bsqWalletService, DaoStateService daoStateService, BondedAsset bondedAsset) {
+    public static boolean isUnlockTxUnconfirmed(BsqWalletService bsqWalletService,
+                                                DaoStateService daoStateService,
+                                                BondedAsset bondedAsset) {
         return bsqWalletService.getPendingWalletTransactionsStream()
                 .filter(transaction -> transaction.getInputs().size() > 1)
                 .flatMap(transaction -> transaction.getInputs().stream()) // We need to iterate all inputs
@@ -127,7 +134,7 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
                 .anyMatch(data -> Arrays.equals(BondConsensus.getHashFromOpReturnData(data), bondedAsset.getHash()));
     }
 
-    public static boolean isConfiscated(Bond bond, DaoStateService daoStateService) {
+    public static boolean isConfiscated(Bond<?> bond, DaoStateService daoStateService) {
         return (bond.getLockupTxId() != null && daoStateService.isConfiscatedLockupTxOutput(bond.getLockupTxId())) ||
                 (bond.getUnlockTxId() != null && daoStateService.isConfiscatedUnlockTxOutput(bond.getUnlockTxId()));
     }
@@ -136,10 +143,11 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
     protected final DaoStateService daoStateService;
     protected final BsqWalletService bsqWalletService;
 
-    // This map is just for convenience. The data which are used to fill the map are stored in the DaoState (role, txs).
-    protected final Map<String, T> bondByUidMap = new HashMap<>();
+    // These maps are just for convenience. The data which are used to fill the maps are stored in the DaoState (role, txs).
+    protected final Map<String, B> bondByUidMap = new HashMap<>();
+    private Map<ByteString, T> bondedAssetByHashMap;
     @Getter
-    protected final ObservableList<T> bonds = FXCollections.observableArrayList();
+    protected final ObservableList<B> bonds = FXCollections.observableArrayList();
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -187,12 +195,12 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public boolean isBondedAssetAlreadyInBond(R bondedAsset) {
+    public boolean isBondedAssetAlreadyInBond(T bondedAsset) {
         boolean contains = bondByUidMap.containsKey(bondedAsset.getUid());
         return contains && bondByUidMap.get(bondedAsset.getUid()).getLockupTxId() != null;
     }
 
-    public List<Bond> getActiveBonds() {
+    public List<B> getActiveBonds() {
         return bonds.stream().filter(Bond::isActive).collect(Collectors.toList());
     }
 
@@ -201,28 +209,35 @@ public abstract class BondRepository<T extends Bond, R extends BondedAsset> impl
     // Protected
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    protected abstract T createBond(R bondedAsset);
+    protected abstract B createBond(T bondedAsset);
 
-    protected abstract void updateBond(T bond, R bondedAsset, TxOutput lockupTxOutput);
+    protected abstract void updateBond(B bond, T bondedAsset, TxOutput lockupTxOutput);
 
-    protected abstract Stream<R> getBondedAssetStream();
+    protected abstract Stream<T> getBondedAssetStream();
+
+    protected Map<ByteString, T> getBondedAssetByHashMap() {
+        return bondedAssetByHashMap != null ? bondedAssetByHashMap
+                : (bondedAssetByHashMap = getBondedAssetStream()
+                .collect(Collectors.toMap(a -> ByteString.copyFrom(a.getHash()), a -> a, (a, b) -> a)));
+    }
 
     protected void update() {
+        long ts = System.currentTimeMillis();
         log.debug("update");
+        bondedAssetByHashMap = null;
         getBondedAssetStream().forEach(bondedAsset -> {
             String uid = bondedAsset.getUid();
-            bondByUidMap.putIfAbsent(uid, createBond(bondedAsset));
-            T bond = bondByUidMap.get(uid);
+            B bond = bondByUidMap.computeIfAbsent(uid, u -> createBond(bondedAsset));
 
-            daoStateService.getLockupTxOutputs().forEach(lockupTxOutput -> {
-                updateBond(bond, bondedAsset, lockupTxOutput);
-            });
+            daoStateService.getLockupTxOutputs().forEach(lockupTxOutput ->
+                    updateBond(bond, bondedAsset, lockupTxOutput));
         });
 
         updateBondStateFromUnconfirmedLockupTxs();
         updateBondStateFromUnconfirmedUnlockTxs();
 
         bonds.setAll(bondByUidMap.values());
+        log.debug("update took {} ms", System.currentTimeMillis() - ts);
     }
 
 

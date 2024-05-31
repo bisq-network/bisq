@@ -120,7 +120,7 @@ public class ProposalDisplay {
     @Nullable
     public ComboBox<Param> paramComboBox;
     @Nullable
-    public ComboBox<Bond> confiscateBondComboBox;
+    public ComboBox<Bond<?>> confiscateBondComboBox;
     @Nullable
     public ComboBox<BondedRoleType> bondedRoleTypeComboBox;
     @Nullable
@@ -371,7 +371,7 @@ public class ProposalDisplay {
                 confiscateBondComboBox.setItems(FXCollections.observableArrayList(daoFacade.getAllActiveBonds()));
                 confiscateBondComboBox.setConverter(new StringConverter<>() {
                     @Override
-                    public String toString(Bond bond) {
+                    public String toString(Bond<?> bond) {
                         String details = " (" + Res.get("dao.bond.table.column.lockupTxId") + ": " + bond.getLockupTxId() + ")";
                         if (bond instanceof BondedRole) {
                             return bond.getBondedAsset().getDisplayString() + details;
@@ -381,7 +381,7 @@ public class ProposalDisplay {
                     }
 
                     @Override
-                    public Bond fromString(String string) {
+                    public Bond<?> fromString(String string) {
                         return null;
                     }
                 });

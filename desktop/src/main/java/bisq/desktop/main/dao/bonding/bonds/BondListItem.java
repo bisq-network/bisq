@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Value
 @Slf4j
 class BondListItem {
-    private final Bond bond;
+    private final Bond<?> bond;
     private final String bondType;
     private final String lockupTxId;
     private final String amount;
@@ -47,7 +47,7 @@ class BondListItem {
     private final BondState bondState;
     private final String bondStateString;
 
-    BondListItem(Bond bond, BsqFormatter bsqFormatter) {
+    BondListItem(Bond<?> bond, BsqFormatter bsqFormatter) {
         this.bond = bond;
 
         amount = bsqFormatter.formatCoin(Coin.valueOf(bond.getAmount()));
