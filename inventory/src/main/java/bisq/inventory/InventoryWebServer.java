@@ -67,17 +67,9 @@ public class InventoryWebServer {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public InventoryWebServer(int port,
-                              List<NodeAddress> seedNodes,
-                              BufferedReader seedNodeFile) {
+    public InventoryWebServer(List<NodeAddress> seedNodes, BufferedReader seedNodeFile) {
         this.seedNodes = seedNodes;
         setupOperatorMap(seedNodeFile);
-
-        Spark.port(port);
-        Spark.get("/", (req, res) -> {
-            log.info("Incoming request from: {}", req.userAgent());
-            return html == null ? "Starting up..." : html;
-        });
     }
 
 
@@ -85,13 +77,21 @@ public class InventoryWebServer {
     // API
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public void onNewRequestInfo(Map<NodeAddress, List<RequestInfo>> requestInfoListByNode, int requestCounter) {
-        this.requestCounter = requestCounter;
-        html = generateHtml(requestInfoListByNode);
+    void start(int port) {
+        Spark.port(port);
+        Spark.get("/", (req, res) -> {
+            log.info("Incoming request from: {}", req.userAgent());
+            return html == null ? "Starting up..." : html;
+        });
     }
 
     public void shutDown() {
         Spark.stop();
+    }
+
+    public void onNewRequestInfo(Map<NodeAddress, List<RequestInfo>> requestInfoListByNode, int requestCounter) {
+        this.requestCounter = requestCounter;
+        html = generateHtml(requestInfoListByNode);
     }
 
 

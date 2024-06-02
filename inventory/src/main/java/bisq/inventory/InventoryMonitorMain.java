@@ -25,21 +25,21 @@ import bisq.common.app.AsciiLogo;
 import bisq.common.app.Log;
 import bisq.common.app.Version;
 import bisq.common.config.BaseCurrencyNetwork;
+import bisq.common.util.SingleThreadExecutorUtils;
 import bisq.common.util.Utilities;
-
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import java.nio.file.Paths;
 
 import java.io.File;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import ch.qos.logback.classic.Level;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static bisq.core.app.BisqExecutable.EXIT_SUCCESS;
 
 
 
@@ -51,42 +51,51 @@ public class InventoryMonitorMain {
     private static InventoryMonitor inventoryMonitor;
     private static boolean stopped;
 
-    // prog args for regtest: 10 1 BTC_REGTEST
+    // Example prog args:
+    // 8080 0 10 1 BTC_REGTEST
     public static void main(String[] args) {
         // Default values
+        int port = 80;
+        boolean cleanupTorFiles = false;
         int intervalSec = 120;
         boolean useLocalhostForP2P = false;
         BaseCurrencyNetwork network = BaseCurrencyNetwork.BTC_MAINNET;
-        int port = 8080;
+
+       /* port = 8080;
+        useLocalhostForP2P = true;
+        network = BaseCurrencyNetwork.BTC_REGTEST;*/
 
         if (args.length > 0) {
-            intervalSec = Integer.parseInt(args[0]);
+            port = Integer.parseInt(args[0]);
         }
         if (args.length > 1) {
-            useLocalhostForP2P = args[1].equals("1");
+            cleanupTorFiles = args[1].equals("1");
         }
         if (args.length > 2) {
-            network = BaseCurrencyNetwork.valueOf(args[2]);
+            intervalSec = Integer.parseInt(args[2]);
         }
         if (args.length > 3) {
-            port = Integer.parseInt(args[3]);
+            useLocalhostForP2P = args[3].equals("1");
         }
-
-        // todo
-        boolean cleanupTorFiles = false;
+        if (args.length > 4) {
+            network = BaseCurrencyNetwork.valueOf(args[4]);
+        }
 
         String appName = "bisq-inventory-monitor-" + network;
         File appDir = new File(Utilities.getUserDataDir(), appName);
         if (!appDir.exists() && !appDir.mkdir()) {
             log.warn("make appDir failed");
         }
-        inventoryMonitor = new InventoryMonitor(appDir, useLocalhostForP2P, network, intervalSec, port, cleanupTorFiles);
 
         setup(network, appDir);
 
-        // We shutdown after 5 days to avoid potential memory leak issue.
+        inventoryMonitor = new InventoryMonitor(appDir, useLocalhostForP2P, network, intervalSec, cleanupTorFiles);
+        inventoryMonitor.start(port);
+        // We shut down after 5 days to avoid potential memory leak issue.
         // The start script will restart the app.
         UserThread.runAfter(InventoryMonitorMain::shutDown, TimeUnit.DAYS.toSeconds(5));
+
+        keepRunning();
     }
 
     private static void setup(BaseCurrencyNetwork network, File appDir) {
@@ -99,29 +108,17 @@ public class InventoryMonitorMain {
         Res.setup(); // Used for some formatting in the webserver
 
         // We do not set any capabilities as we don't want to receive any network data beside our response.
-        // We also do not use capabilities for the request/response messages as we only connect to seeds nodes and
+        // We also do not use capabilities for the request/response messages as we only connect to seeds nodes
+        ExecutorService executorService = SingleThreadExecutorUtils.getSingleThreadExecutor(InventoryMonitorMain.class);
+        UserThread.setExecutor(executorService);
 
-        ThreadFactory threadFactory = new ThreadFactoryBuilder()
-                .setNameFormat(inventoryMonitor.getClass().getSimpleName())
-                .setDaemon(true)
-                .build();
-        UserThread.setExecutor(Executors.newSingleThreadExecutor(threadFactory));
-
-        Signal.handle(new Signal("INT"), signal -> {
-            UserThread.execute(InventoryMonitorMain::shutDown);
-        });
-
-        Signal.handle(new Signal("TERM"), signal -> {
-            UserThread.execute(InventoryMonitorMain::shutDown);
-        });
-        keepRunning();
+        Signal.handle(new Signal("INT"), signal -> UserThread.execute(InventoryMonitorMain::shutDown));
+        Signal.handle(new Signal("TERM"), signal -> UserThread.execute(InventoryMonitorMain::shutDown));
     }
 
     private static void shutDown() {
         stopped = true;
-        inventoryMonitor.shutDown(() -> {
-            System.exit(0);
-        });
+        inventoryMonitor.shutDown(() -> System.exit(EXIT_SUCCESS));
     }
 
     private static void keepRunning() {

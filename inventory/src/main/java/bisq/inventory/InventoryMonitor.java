@@ -40,6 +40,7 @@ import bisq.common.util.Tuple2;
 
 import java.time.Clock;
 
+import java.io.BufferedReader;
 import java.io.File;
 
 import java.util.ArrayList;
@@ -62,10 +63,10 @@ public class InventoryMonitor implements SetupListener {
     private final File appDir;
     private final boolean useLocalhostForP2P;
     private final int intervalSec;
-    private NetworkNode networkNode;
-    private GetInventoryRequestManager getInventoryRequestManager;
+    private final NetworkNode networkNode;
+    private final GetInventoryRequestManager getInventoryRequestManager;
 
-    private ArrayList<NodeAddress> seedNodes;
+    private final List<NodeAddress> seedNodes;
     private InventoryWebServer inventoryWebServer;
     private int requestCounter = 0;
 
@@ -78,40 +79,36 @@ public class InventoryMonitor implements SetupListener {
                             boolean useLocalhostForP2P,
                             BaseCurrencyNetwork network,
                             int intervalSec,
-                            int port,
                             boolean cleanupTorFiles) {
         this.appDir = appDir;
         this.useLocalhostForP2P = useLocalhostForP2P;
         this.intervalSec = intervalSec;
 
-        // We get more connectivity issues. Cleaning tor cache files helps usually for those problems.
         File torDir = new File(appDir, "tor");
-        if (!torDir.exists()) {
-            torDir.mkdir();
+        if (!torDir.exists() && !torDir.mkdir()) {
+            log.warn("make torDir failed");
         }
-        TorSetup torSetup = new TorSetup(torDir);
-        if (cleanupTorFiles) {
-            torSetup.cleanupTorFiles(() -> initialize(network, port, torDir), log::error);
-        } else {
-            initialize(network, port, torDir);
-        }
-    }
 
-    private void initialize(BaseCurrencyNetwork network, int port, File torDir) {
         networkNode = getNetworkNode(torDir);
         getInventoryRequestManager = new GetInventoryRequestManager(networkNode);
 
-        // We maintain our own list as we want to monitor also old v2 nodes which are not part of the normal seed
-        // node list anymore.
         String networkName = network.name().toLowerCase();
         String fileName = network.isMainnet() ? "inv_" + networkName : networkName;
-        DefaultSeedNodeRepository.readSeedNodePropertyFile(fileName)
-                .ifPresent(bufferedReader -> {
-                    seedNodes = new ArrayList<>(DefaultSeedNodeRepository.getSeedNodeAddressesFromPropertyFile(fileName));
-                    addJsonFileManagers(seedNodes);
-                    inventoryWebServer = new InventoryWebServer(port, seedNodes, bufferedReader);
-                    networkNode.start(this);
-                });
+        seedNodes = new ArrayList<>(DefaultSeedNodeRepository.getSeedNodeAddressesFromPropertyFile(fileName));
+        addJsonFileManagers(seedNodes);
+
+        BufferedReader bufferedReader = DefaultSeedNodeRepository.readSeedNodePropertyFile(fileName).orElseThrow();
+        inventoryWebServer = new InventoryWebServer(seedNodes, bufferedReader);
+
+        TorSetup torSetup = new TorSetup(torDir);
+        if (cleanupTorFiles) {
+            torSetup.cleanupTorFiles(() -> log.info("Tor directory cleaned up"), log::error);
+        }
+    }
+
+    void start(int port) {
+        networkNode.start(this);
+        inventoryWebServer.start(port);
     }
 
 
@@ -121,8 +118,8 @@ public class InventoryMonitor implements SetupListener {
 
     public void shutDown(Runnable shutDownCompleteHandler) {
         networkNode.shutDown(shutDownCompleteHandler);
-        jsonFileManagerByNodeAddress.values().forEach(JsonFileManager::shutDown);
         inventoryWebServer.shutDown();
+        jsonFileManagerByNodeAddress.values().forEach(JsonFileManager::shutDown);
     }
 
 
