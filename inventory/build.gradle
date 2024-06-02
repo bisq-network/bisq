@@ -7,51 +7,25 @@ mainClassName = 'bisq.inventory.InventoryMonitorMain'
 distTar.enabled = true
 
 dependencies {
-    implementation project(':proto')
+    implementation enforcedPlatform(project(':platform'))
     implementation project(':common')
+    implementation project(':proto')
     implementation project(':p2p')
     implementation project(':core')
+    implementation libs.protobuf.java
     annotationProcessor libs.lombok
-    compileOnly libs.javax.annotation
     compileOnly libs.lombok
+    implementation libs.jetbrains.annotations
     implementation libs.logback.classic
     implementation libs.logback.core
-    implementation libs.google.gson
     implementation libs.google.guava
-    implementation libs.protobuf.java
-    implementation libs.apache.commons.lang3
-    implementation libs.jetbrains.annotations
     implementation libs.slf4j.api
-    implementation(libs.bitcoinj) {
-        exclude(module: 'bcprov-jdk15on')
+    implementation(libs.google.guice) {
         exclude(module: 'guava')
-        exclude(module: 'jsr305')
-        exclude(module: 'okhttp')
-        exclude(module: 'okio')
-        exclude(module: 'protobuf-java')
-        exclude(module: 'slf4j-api')
     }
 
     implementation libs.spark.core
     implementation libs.pushy
     implementation libs.commons.codec
     implementation libs.grpc.auth
-
-    implementation(libs.google.guice) {
-        exclude(module: 'guava')
-    }
-    implementation(libs.grpc.protobuf) {
-        exclude(module: 'animal-sniffer-annotations')
-        exclude(module: 'guava')
-    }
-    implementation(libs.grpc.stub) {
-        exclude(module: 'animal-sniffer-annotations')
-        exclude(module: 'guava')
-    }
-    runtimeOnly(libs.grpc.netty.shaded) {
-        exclude(module: 'animal-sniffer-annotations')
-        exclude(module: 'guava')
-    }
-    testAnnotationProcessor libs.lombok
-    testCompileOnly libs.lombok
 }
