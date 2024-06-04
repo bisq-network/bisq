@@ -47,11 +47,6 @@ public class BtcNodes {
     public List<BtcNode> getProvidedBtcNodes() {
         return useProvidedBtcNodes() ?
                 Arrays.asList(
-                        // Devin Bileck
-                        new BtcNode("btc1.bisq.services", "devinbtctu7uctl7hly2juu3thbgeivfnvw3ckj3phy6nyvpnx66yeyd.onion", "172.105.21.216", BtcNode.DEFAULT_PORT, "@devinbileck"),
-                        new BtcNode(null, "devinbtcmwkuitvxl3tfi5of4zau46ymeannkjv6fpnylkgf3q5fa3id.onion", null, BtcNode.DEFAULT_PORT, "@devinbileck"),
-                        new BtcNode(null, "devinbtcyk643iruzfpaxw3on2jket7rbjmwygm42dmdyub3ietrbmid.onion", null, BtcNode.DEFAULT_PORT, "@devinbileck"),
-
                         // jester4042
                         new BtcNode(null, "uxu2kwzqakspsgojbzwazzmrmewwtgdle5uahb6oaonecamezc35vqyd.onion", null, BtcNode.DEFAULT_PORT, "@jester4042"),
                         new BtcNode(null, "l65ab4jecc62mjihifr7m3mx7ljehwoy2iutz2lue4ra5goor3f4xeqd.onion", null, BtcNode.DEFAULT_PORT, "@jester4042"),
