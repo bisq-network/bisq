@@ -52,12 +52,13 @@ public class InventoryMonitorMain {
     private static boolean stopped;
 
     // Example prog args:
-    // 8080 0 10 1 BTC_REGTEST
+    // 8080 0 10 5 1 BTC_REGTEST
     public static void main(String[] args) {
         // Default values
         int port = 80;
         boolean cleanupTorFiles = false;
         int intervalSec = 120;
+        int shutdownIntervalDays = 5;
         boolean useLocalhostForP2P = false;
         BaseCurrencyNetwork network = BaseCurrencyNetwork.BTC_MAINNET;
 
@@ -75,10 +76,13 @@ public class InventoryMonitorMain {
             intervalSec = Integer.parseInt(args[2]);
         }
         if (args.length > 3) {
-            useLocalhostForP2P = args[3].equals("1");
+            shutdownIntervalDays = Integer.parseInt(args[3]);
         }
         if (args.length > 4) {
-            network = BaseCurrencyNetwork.valueOf(args[4]);
+            useLocalhostForP2P = args[4].equals("1");
+        }
+        if (args.length > 5) {
+            network = BaseCurrencyNetwork.valueOf(args[5]);
         }
 
         String appName = "bisq-inventory-monitor-" + network;
@@ -93,7 +97,9 @@ public class InventoryMonitorMain {
         inventoryMonitor.start(port);
         // We shut down after 5 days to avoid potential memory leak issue.
         // The start script will restart the app.
-        UserThread.runAfter(InventoryMonitorMain::shutDown, TimeUnit.DAYS.toSeconds(5));
+        if (shutdownIntervalDays > 0) {
+            UserThread.runAfter(InventoryMonitorMain::shutDown, TimeUnit.DAYS.toSeconds(shutdownIntervalDays));
+        }
 
         keepRunning();
     }
