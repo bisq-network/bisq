@@ -56,12 +56,7 @@ public class BtcNodes {
 
                         // sqrrm
                         new BtcNode("btc1.sqrrm.net", "cwi3ekrwhig47dhhzfenr5hbvckj7fzaojygvazi2lucsenwbzwoyiqd.onion", "185.25.48.184", BtcNode.DEFAULT_PORT, "@sqrrm"),
-                        new BtcNode("btc2.sqrrm.net", "upvthy74hgvgbqi6w3zd2mlchoi5tvvw7b5hpmmhcddd5fnnwrixneid.onion", "81.171.22.143", BtcNode.DEFAULT_PORT, "@sqrrm"),
-
-                        // Devin Bileck
-                        new BtcNode("btc1.bisq.services", "devinbtctu7uctl7hly2juu3thbgeivfnvw3ckj3phy6nyvpnx66yeyd.onion", "172.105.21.216", BtcNode.DEFAULT_PORT, "@devinbileck"),
-                        new BtcNode(null, "devinbtcyk643iruzfpaxw3on2jket7rbjmwygm42dmdyub3ietrbmid.onion", null, BtcNode.DEFAULT_PORT, "@devinbileck"),
-                        new BtcNode(null, "devinbtcmwkuitvxl3tfi5of4zau46ymeannkjv6fpnylkgf3q5fa3id.onion", null, BtcNode.DEFAULT_PORT, "@devinbileck")
+                        new BtcNode("btc2.sqrrm.net", "upvthy74hgvgbqi6w3zd2mlchoi5tvvw7b5hpmmhcddd5fnnwrixneid.onion", "81.171.22.143", BtcNode.DEFAULT_PORT, "@sqrrm")
                 ) :
                 new ArrayList<>();
     }
