@@ -35,3 +35,10 @@ deploy
 /apitest/src/main/resources/dao-setup*
 /.run
 /regtest/data_dirs
+/build-logic/app-start-plugin/out/*
+/build-logic/docker-image-builder/out/*
+/build-logic/gradle-tasks/out/*
+/build-logic/packaging/out/*
+/build-logic/regtest/out/*
+/build-logic/toolchain-resolver/out/*
+/build-logic/tor-binary/out/*

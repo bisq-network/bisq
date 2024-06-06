@@ -17,6 +17,7 @@ fontawesomefx-materialdesign-font = { strictly = '2.0.26-9.1.2' }
 
 fxmisc-easybind = { strictly = '1.0.3' }
 
+glassfish-jaxb-lib = { strictly = '3.0.2' }
 google-findbugs = { strictly = '3.0.2' }
 google-gson = { strictly = '2.8.6' }
 google-guava = { strictly = '30.1.1-jre' }
@@ -28,6 +29,7 @@ hamcrest = { strictly = '2.2' }
 jackson = { strictly = '2.17.1' }
 javax-annotation = { strictly = '1.2' }
 jcsv = { strictly = '1.4.0' }
+jersey-lib = { strictly = '3.0.4' }
 jetbrains-annotations = { strictly = '13.0' }
 jfoenix = { strictly = '9.0.10' }
 jopt = { strictly = '5.0.4' }
@@ -48,7 +50,7 @@ qrgen = { strictly = '1.3' }
 javacv = { strictly = '1.5.10' }
 slf4j = { strictly = '1.7.30' }
 spark = { strictly = '2.9.4' }
-
+swagger-lib = { strictly = '2.2.0' }
 
 [libraries]
 apache-httpclient = { module = "org.apache.httpcomponents:httpclient", version.ref = "apache-httpclient" }
@@ -69,6 +71,7 @@ fontawesomefx-materialdesign-font = { module = "de.jensd:fontawesomefx-materiald
 
 fxmisc-easybind = { module = "org.fxmisc.easybind:easybind", version.ref = "fxmisc-easybind" }
 
+glassfish-jaxb = { module = 'org.glassfish.jaxb:jaxb-runtime', version.ref = 'glassfish-jaxb-lib' }
 google-findbugs = { module = "com.google.code.findbugs:jsr305", version.ref = "google-findbugs" }
 google-gson = { module = "com.google.code.gson:gson", version.ref = "google-gson" }
 google-guava = { module = "com.google.guava:guava", version.ref = "google-guava" }
@@ -88,6 +91,9 @@ jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", ver
 
 javax-annotation = { module = "javax.annotation:javax.annotation-api", version.ref = "javax-annotation" }
 jcsv = { module = "com.googlecode.jcsv:jcsv", version.ref = "jcsv" }
+jersey-container-jdk-http = { module = 'org.glassfish.jersey.containers:jersey-container-jdk-http', version.ref = 'jersey-lib' }
+jersey-media-json-jackson = { module = 'org.glassfish.jersey.media:jersey-media-json-jackson', version.ref = 'jersey-lib' }
+jersey-inject-jersey-hk2 = { module = 'org.glassfish.jersey.inject:jersey-hk2', version.ref = 'jersey-lib' }
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrains-annotations" }
 jfoenix = { module = "com.jfoenix:jfoenix", version.ref = "jfoenix" }
 jopt = { module = "net.sf.jopt-simple:jopt-simple", version.ref = "jopt" }
@@ -117,4 +123,9 @@ qrgen = { module = "net.glxn:qrgen", version.ref = "qrgen" }
 javacv = { module = "org.bytedeco:javacv-platform", version.ref = "javacv" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 spark-core = { module = "com.sparkjava:spark-core", version.ref = "spark" }
+swagger = { module = 'io.swagger.core.v3:swagger-jaxrs2-jakarta', version.ref = 'swagger-lib' }
+
+[bundles]
+jersey-libs = ['jersey-container-jdk-http', 'jersey-media-json-jackson', 'jersey-inject-jersey-hk2']
+
 
