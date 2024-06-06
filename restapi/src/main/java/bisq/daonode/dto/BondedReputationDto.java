@@ -18,6 +18,7 @@
 package bisq.daonode.dto;
 
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -30,6 +31,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  */
 @Getter
 @Slf4j
+@ToString
 @Schema(title = "BondedReputation")
 public class BondedReputationDto {
     private final long amount;

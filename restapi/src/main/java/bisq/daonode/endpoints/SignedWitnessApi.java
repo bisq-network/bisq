@@ -19,6 +19,8 @@ package bisq.daonode.endpoints;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 
+import java.util.Date;
+
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -53,10 +55,11 @@ import jakarta.ws.rs.core.MediaType;
 @Tag(name = "Signed witness API")
 public class SignedWitnessApi {
     private static final String DESC_HASH = "The hash of the signed account age witness as hex string";
-    private final RestApi restApi;
+    private final AccountAgeWitnessService accountAgeWitnessService;
 
     public SignedWitnessApi(@Context Application application) {
-        restApi = ((RestApiMain) application).getRestApi();
+        RestApi restApi = ((RestApiMain) application).getRestApi();
+        accountAgeWitnessService = checkNotNull(restApi.getAccountAgeWitnessService());
     }
 
     @Operation(description = "Request the signed witness date")
@@ -69,9 +72,10 @@ public class SignedWitnessApi {
     public Long getDate(@Parameter(description = DESC_HASH)
                         @PathParam("hash")
                         String hash) {
-        AccountAgeWitnessService accountAgeWitnessService = checkNotNull(restApi.getAccountAgeWitnessService());
-        return accountAgeWitnessService.getWitnessByHashAsHex(hash)
+        long result = accountAgeWitnessService.getWitnessByHashAsHex(hash)
                 .map(accountAgeWitnessService::getWitnessSignDate)
                 .orElse(-1L);
+        log.info("SignedWitness sign date for hash {}: {} ({})", hash, result, new Date(result));
+        return result;
     }
 }

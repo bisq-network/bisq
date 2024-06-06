@@ -18,6 +18,9 @@
 package bisq.daonode.endpoints;
 
 import bisq.core.account.witness.AccountAgeWitness;
+import bisq.core.account.witness.AccountAgeWitnessService;
+
+import java.util.Date;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,9 +57,11 @@ import jakarta.ws.rs.core.MediaType;
 public class AccountAgeApi {
     private static final String DESC_HASH = "The hash of the account age witness as hex string";
     private final RestApi restApi;
+    private final AccountAgeWitnessService accountAgeWitnessService;
 
     public AccountAgeApi(@Context Application application) {
         restApi = ((RestApiMain) application).getRestApi();
+        accountAgeWitnessService = checkNotNull(restApi.getAccountAgeWitnessService());
     }
 
     @Operation(description = "Request the account age date")
@@ -69,8 +74,10 @@ public class AccountAgeApi {
     public Long getDate(@Parameter(description = DESC_HASH)
                         @PathParam("hash")
                         String hash) {
-        return checkNotNull(restApi.getAccountAgeWitnessService()).getWitnessByHashAsHex(hash)
+        long result = accountAgeWitnessService.getWitnessByHashAsHex(hash)
                 .map(AccountAgeWitness::getDate)
                 .orElse(-1L);
+        log.info("Account age for hash {}: {} ({})", hash, result, new Date(result));
+        return result;
     }
 }

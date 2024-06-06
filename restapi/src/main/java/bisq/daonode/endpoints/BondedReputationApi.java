@@ -80,7 +80,7 @@ public class BondedReputationApi {
                                                          @PathParam("block-height")
                                                          int fromBlockHeight) {
         // We only consider lock time with at least 50 000 blocks as valid
-        return bondedReputationRepository.getActiveBonds().stream()
+        List<BondedReputationDto> result = bondedReputationRepository.getActiveBonds().stream()
                 .filter(bondedReputation -> bondedReputation.getLockTime() >= 50_000)
                 .map(bondedReputation -> {
                     Optional<Tx> optionalTx = daoStateService.getTx(bondedReputation.getLockupTxId());
@@ -102,5 +102,8 @@ public class BondedReputationApi {
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+
+        log.info("BondedReputation result list from block height {}: {}", fromBlockHeight, result);
+        return result;
     }
 }

@@ -18,6 +18,7 @@
 package bisq.daonode.endpoints;
 
 import bisq.core.dao.governance.proofofburn.ProofOfBurnService;
+import bisq.core.dao.state.DaoStateService;
 
 import bisq.common.util.Hex;
 
@@ -58,10 +59,11 @@ import jakarta.ws.rs.core.MediaType;
 @Tag(name = "Proof of burn API")
 public class ProofOfBurnApi {
     private static final String DESC_BLOCK_HEIGHT = "The block height from which we request the proof of burn data";
-    private final RestApi restApi;
+    private final DaoStateService daoStateService;
 
     public ProofOfBurnApi(@Context Application application) {
-        restApi = ((RestApiMain) application).getRestApi();
+        RestApi restApi = ((RestApiMain) application).getRestApi();
+        daoStateService = checkNotNull(restApi.getDaoStateService());
     }
 
     @Operation(description = "Request the proof of burn data")
@@ -74,12 +76,14 @@ public class ProofOfBurnApi {
     public List<ProofOfBurnDto> getProofOfBurn(@Parameter(description = DESC_BLOCK_HEIGHT)
                                                @PathParam("block-height")
                                                int fromBlockHeight) {
-        return checkNotNull(restApi.getDaoStateService()).getProofOfBurnTxs().stream()
+        List<ProofOfBurnDto> result = daoStateService.getProofOfBurnTxs().stream()
                 .filter(tx -> tx.getBlockHeight() >= fromBlockHeight)
                 .map(tx -> new ProofOfBurnDto(tx.getBurntBsq(),
                         tx.getTime(),
                         Hex.encode(ProofOfBurnService.getHashFromOpReturnData(tx)),
                         tx.getBlockHeight()))
                 .collect(Collectors.toList());
+        log.info("ProofOfBurn result list from block height {}: {}", fromBlockHeight, result);
+        return result;
     }
 }

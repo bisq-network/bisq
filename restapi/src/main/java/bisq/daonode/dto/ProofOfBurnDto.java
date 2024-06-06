@@ -18,6 +18,7 @@
 package bisq.daonode.dto;
 
 import lombok.Getter;
+import lombok.ToString;
 
 
 
@@ -28,6 +29,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * Need to be in sync with the Bisq 2 ProofOfBurnDto class.
  */
 @Getter
+@ToString
 @Schema(title = "ProofOfBurn")
 public class ProofOfBurnDto {
     private final long amount;
