@@ -69,7 +69,7 @@ public class RestApi extends ExecutableForAppWithP2p {
     private SignVerifyService signVerifyService;
 
     public RestApi() {
-        super("Bisq Data Node", "bisq-data-node", "bisq_data_node", Version.VERSION);
+        super("Bisq Rest Api", "bisq_restapi", "bisq_restapi", Version.VERSION);
     }
 
     public Config getConfig() {

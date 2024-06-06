@@ -5,6 +5,8 @@ plugins {
 
 mainClassName = 'bisq.restapi.RestApiMain'
 
+distTar.enabled = false
+
 dependencies {
     implementation project(':common')
     implementation project(':p2p')
