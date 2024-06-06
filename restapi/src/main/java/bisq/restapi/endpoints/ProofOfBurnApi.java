@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daonode.endpoints;
+package bisq.restapi.endpoints;
 
 import bisq.core.dao.governance.proofofburn.ProofOfBurnService;
 import bisq.core.dao.state.DaoStateService;
@@ -31,9 +31,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 
 
-import bisq.daonode.RestApi;
-import bisq.daonode.RestApiMain;
-import bisq.daonode.dto.ProofOfBurnDto;
+import bisq.restapi.RestApi;
+import bisq.restapi.RestApiMain;
+import bisq.restapi.dto.ProofOfBurnDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

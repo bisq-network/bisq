@@ -15,24 +15,16 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daonode.error;
+package bisq.restapi.error;
 
-import lombok.extern.slf4j.Slf4j;
+import lombok.Getter;
 
+@Getter
+public class ErrorMessage {
+    private final String error;
 
-
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.ext.ExceptionMapper;
-import jakarta.ws.rs.ext.Provider;
-
-@Slf4j
-@Provider
-public class CustomExceptionMapper implements ExceptionMapper<Exception> {
-    @Override
-    public Response toResponse(Exception exception) {
-        log.error("Exception: ", exception);
-        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(new ErrorMessage(exception.getMessage()))
-                .build();
+    public ErrorMessage(String error) {
+        this.error = error;
     }
 }
+

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daonode;
+package bisq.restapi;
 
 import bisq.common.config.Config;
 
@@ -28,15 +28,15 @@ import lombok.extern.slf4j.Slf4j;
 
 
 
-import bisq.daonode.endpoints.AccountAgeApi;
-import bisq.daonode.endpoints.BondedReputationApi;
-import bisq.daonode.endpoints.BondedRoleVerificationApi;
-import bisq.daonode.endpoints.ProofOfBurnApi;
-import bisq.daonode.endpoints.SignedWitnessApi;
-import bisq.daonode.error.CustomExceptionMapper;
-import bisq.daonode.error.StatusException;
-import bisq.daonode.swagger.StaticFileHandler;
-import bisq.daonode.swagger.SwaggerResolution;
+import bisq.restapi.endpoints.AccountAgeApi;
+import bisq.restapi.endpoints.BondedReputationApi;
+import bisq.restapi.endpoints.BondedRoleVerificationApi;
+import bisq.restapi.endpoints.ProofOfBurnApi;
+import bisq.restapi.endpoints.SignedWitnessApi;
+import bisq.restapi.error.CustomExceptionMapper;
+import bisq.restapi.error.StatusException;
+import bisq.restapi.swagger.StaticFileHandler;
+import bisq.restapi.swagger.SwaggerResolution;
 import com.sun.net.httpserver.HttpServer;
 import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;

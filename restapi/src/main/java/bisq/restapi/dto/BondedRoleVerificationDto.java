@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daonode.dto;
+package bisq.restapi.dto;
 
 import lombok.Getter;
 

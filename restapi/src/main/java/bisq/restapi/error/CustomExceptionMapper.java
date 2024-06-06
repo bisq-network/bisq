@@ -15,32 +15,24 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daonode.dto;
+package bisq.restapi.error;
 
-import lombok.Getter;
-import lombok.ToString;
-
+import lombok.extern.slf4j.Slf4j;
 
 
-import io.swagger.v3.oas.annotations.media.Schema;
 
-/**
- * Minimal data required for Bisq 2 proof of burn use case.
- * Need to be in sync with the Bisq 2 ProofOfBurnDto class.
- */
-@Getter
-@ToString
-@Schema(title = "ProofOfBurn")
-public class ProofOfBurnDto {
-    private final long amount;
-    private final long time;
-    private final String hash;
-    private final int blockHeight;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Provider;
 
-    public ProofOfBurnDto(long amount, long time, String hash, int blockHeight) {
-        this.amount = amount;
-        this.time = time;
-        this.hash = hash;
-        this.blockHeight = blockHeight;
+@Slf4j
+@Provider
+public class CustomExceptionMapper implements ExceptionMapper<Exception> {
+    @Override
+    public Response toResponse(Exception exception) {
+        log.error("Exception: ", exception);
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity(new ErrorMessage(exception.getMessage()))
+                .build();
     }
 }

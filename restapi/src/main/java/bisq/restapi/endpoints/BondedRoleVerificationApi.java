@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daonode.endpoints;
+package bisq.restapi.endpoints;
 
 import bisq.core.dao.SignVerifyService;
 import bisq.core.dao.governance.bond.BondState;
@@ -31,9 +31,9 @@ import lombok.extern.slf4j.Slf4j;
 
 
 
-import bisq.daonode.RestApi;
-import bisq.daonode.RestApiMain;
-import bisq.daonode.dto.BondedRoleVerificationDto;
+import bisq.restapi.RestApi;
+import bisq.restapi.RestApiMain;
+import bisq.restapi.dto.BondedRoleVerificationDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daonode.swagger;
+package bisq.restapi.swagger;
 
 import java.net.URI;
 

@@ -15,13 +15,13 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daonode.swagger;
+package bisq.restapi.swagger;
 
 import lombok.extern.slf4j.Slf4j;
 
 
 
-import bisq.daonode.RestApiMain;
+import bisq.restapi.RestApiMain;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.jaxrs2.Reader;
 import io.swagger.v3.oas.annotations.Hidden;

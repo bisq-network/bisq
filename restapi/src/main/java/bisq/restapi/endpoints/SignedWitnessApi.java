@@ -15,9 +15,8 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.daonode.endpoints;
+package bisq.restapi.endpoints;
 
-import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.account.witness.AccountAgeWitnessService;
 
 import java.util.Date;
@@ -28,9 +27,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 
 
-import bisq.daonode.RestApi;
-import bisq.daonode.RestApiMain;
-import bisq.daonode.dto.ProofOfBurnDto;
+import bisq.restapi.RestApi;
+import bisq.restapi.RestApiMain;
+import bisq.restapi.dto.ProofOfBurnDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -46,26 +45,25 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 
 /**
- * Endpoint for getting the account age date from a given hash as hex string.
+ * Endpoint for getting the signed witness date from a given hash as hex string.
  * Used for reputation system in Bisq 2.
- * <a href="http://localhost:8082/api/v1/account-age/get-date/dd75a7175c7c83fe9a4729e36b85f5fbc44e29ae">Request with hash</a>
+ * <a href="http://localhost:8082/api/v1/signed-witness/get-date/dd75a7175c7c83fe9a4729e36b85f5fbc44e29ae">Request with hash</a>
  */
 @Slf4j
-@Path("/account-age")
+@Path("/signed-witness")
 @Produces(MediaType.TEXT_PLAIN)
-@Tag(name = "Account age API")
-public class AccountAgeApi {
-    private static final String DESC_HASH = "The hash of the account age witness as hex string";
-    private final RestApi restApi;
+@Tag(name = "Signed witness API")
+public class SignedWitnessApi {
+    private static final String DESC_HASH = "The hash of the signed account age witness as hex string";
     private final AccountAgeWitnessService accountAgeWitnessService;
 
-    public AccountAgeApi(@Context Application application) {
-        restApi = ((RestApiMain) application).getRestApi();
+    public SignedWitnessApi(@Context Application application) {
+        RestApi restApi = ((RestApiMain) application).getRestApi();
         accountAgeWitnessService = checkNotNull(restApi.getAccountAgeWitnessService());
     }
 
-    @Operation(description = "Request the account age date")
-    @ApiResponse(responseCode = "200", description = "The account age date",
+    @Operation(description = "Request the signed witness date")
+    @ApiResponse(responseCode = "200", description = "The signed witness date",
             content = {@Content(mediaType = MediaType.TEXT_PLAIN,
                     schema = @Schema(allOf = ProofOfBurnDto.class))}
     )
@@ -75,9 +73,9 @@ public class AccountAgeApi {
                         @PathParam("hash")
                         String hash) {
         long result = accountAgeWitnessService.getWitnessByHashAsHex(hash)
-                .map(AccountAgeWitness::getDate)
+                .map(accountAgeWitnessService::getWitnessSignDate)
                 .orElse(-1L);
-        log.info("Account age for hash {}: {} ({})", hash, result, new Date(result));
+        log.info("SignedWitness sign date for hash {}: {} ({})", hash, result, new Date(result));
         return result;
     }
 }
