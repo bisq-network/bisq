@@ -39,7 +39,7 @@ public class BtcNodesSetupPreferencesTest {
         Preferences delegate = mock(Preferences.class);
         when(delegate.getBitcoinNodesOptionOrdinal()).thenReturn(PUBLIC.ordinal());
 
-        BtcNodesSetupPreferences preferences = new BtcNodesSetupPreferences(delegate, Config.DEFAULT_NUM_CONNECTIONS_FOR_BTC_PUBLIC);
+        BtcNodesSetupPreferences preferences = new BtcNodesSetupPreferences(delegate, Config.DEFAULT_NUM_CONNECTIONS_FOR_BTC_PUBLIC, null);
         List<BtcNode> nodes = preferences.selectPreferredNodes(mock(BtcNodes.class));
 
         assertTrue(nodes.isEmpty());
@@ -51,7 +51,7 @@ public class BtcNodesSetupPreferencesTest {
         when(delegate.getBitcoinNodesOptionOrdinal()).thenReturn(CUSTOM.ordinal());
         when(delegate.getBitcoinNodes()).thenReturn("aaa.onion,bbb.onion");
 
-        BtcNodesSetupPreferences preferences = new BtcNodesSetupPreferences(delegate, Config.DEFAULT_NUM_CONNECTIONS_FOR_BTC_PUBLIC);
+        BtcNodesSetupPreferences preferences = new BtcNodesSetupPreferences(delegate, Config.DEFAULT_NUM_CONNECTIONS_FOR_BTC_PUBLIC, null);
         List<BtcNode> nodes = preferences.selectPreferredNodes(mock(BtcNodes.class));
 
         assertEquals(2, nodes.size());
