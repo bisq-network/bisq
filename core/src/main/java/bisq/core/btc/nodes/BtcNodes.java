@@ -52,7 +52,6 @@ public class BtcNodes {
 
                         // mrosseel
                         new BtcNode("btc.vante.me", "bsqbtctulf2g4jtjsdfgl2ed7qs6zz5wqx27qnyiik7laockryvszqqd.onion", "94.23.21.80", BtcNode.DEFAULT_PORT, "@miker"),
-                        new BtcNode("btc2.vante.me", "bsqbtcparrfihlwolt4xgjbf4cgqckvrvsfyvy6vhiqrnh4w6ghixoid.onion", "94.23.205.110", BtcNode.DEFAULT_PORT, "@miker"),
 
                         // sqrrm
                         new BtcNode("btc1.sqrrm.net", "cwi3ekrwhig47dhhzfenr5hbvckj7fzaojygvazi2lucsenwbzwoyiqd.onion", "185.25.48.184", BtcNode.DEFAULT_PORT, "@sqrrm"),
