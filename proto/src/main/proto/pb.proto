@@ -767,6 +767,8 @@ message Filter {
     int64 taker_fee_bsq = 34;
     repeated int32 enabled_pow_versions = 35;
     repeated PaymentAccountFilter delayedPayoutPaymentAccounts = 36;
+    repeated string addedBtcNodes = 37;
+    repeated string addedSeedNodes = 38;
 }
 
 /* Deprecated */

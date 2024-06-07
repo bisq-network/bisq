@@ -85,6 +85,8 @@ public class FilterManager {
     private static final String BANNED_PRICE_RELAY_NODES = "bannedPriceRelayNodes";
     private static final String BANNED_SEED_NODES = "bannedSeedNodes";
     private static final String BANNED_BTC_NODES = "bannedBtcNodes";
+    private static final String FILTER_PROVIDED_SEED_NODES = "filterProvidedSeedNodes";
+    private static final String FILTER_PROVIDED_BTC_NODES = "filterProvidedBtcNodes";
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Listener
@@ -570,6 +572,8 @@ public class FilterManager {
         // We persist it to the property file which is read before any other initialisation.
         saveBannedNodes(BANNED_SEED_NODES, newFilter.getSeedNodes());
         saveBannedNodes(BANNED_BTC_NODES, newFilter.getBtcNodes());
+        saveBannedNodes(FILTER_PROVIDED_BTC_NODES, newFilter.getAddedBtcNodes());
+        saveBannedNodes(FILTER_PROVIDED_SEED_NODES, newFilter.getAddedSeedNodes());
 
         // Banned price relay nodes we can apply at runtime
         List<String> priceRelayNodes = newFilter.getPriceRelayNodes();
@@ -614,7 +618,9 @@ public class FilterManager {
     // Clears options files from banned nodes
     private void clearBannedNodes() {
         saveBannedNodes(BANNED_BTC_NODES, null);
+        saveBannedNodes(FILTER_PROVIDED_BTC_NODES, null);
         saveBannedNodes(BANNED_SEED_NODES, null);
+        saveBannedNodes(FILTER_PROVIDED_SEED_NODES, null);
         saveBannedNodes(BANNED_PRICE_RELAY_NODES, null);
 
         if (providersRepository.getBannedNodes() != null) {
