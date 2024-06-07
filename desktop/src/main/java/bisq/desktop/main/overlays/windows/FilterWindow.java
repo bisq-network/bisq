@@ -168,12 +168,16 @@ public class FilterWindow extends Overlay<FilterWindow> {
                 Res.get("filterWindow.btcFeeReceiverAddresses"));
         InputTextField seedNodesTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.seedNode"));
+        InputTextField addedSeedNodesTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.addedSeedNodes"));
         InputTextField priceRelayNodesTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.priceRelayNode"));
         InputTextField btcNodesTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.btcNode"));
+        InputTextField addedBtcNodesTF = addInputTextField(gridPane, ++rowIndex,
+                Res.get("filterWindow.addedBtcNodes"));
         CheckBox preventPublicBtcNetworkCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
-                Res.get("filterWindow.preventPublicBtcNetwork"));
+                Res.get("filterWindow.preventPublicBtcNetwork"), 15);
         CheckBox disableDaoCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
                 Res.get("filterWindow.disableDao"));
         CheckBox disableAutoConfCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
@@ -187,7 +191,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
         InputTextField autoConfExplorersTF = addTopLabelInputTextField(gridPane, ++rowIndex,
                 Res.get("filterWindow.autoConfExplorers")).second;
         CheckBox disableMempoolValidationCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
-                Res.get("filterWindow.disableMempoolValidation"));
+                Res.get("filterWindow.disableMempoolValidation"), 15);
         CheckBox disableApiCheckBox = addLabelCheckBox(gridPane, ++rowIndex,
                 Res.get("filterWindow.disableApi"));
         CheckBox disablePowMessage = addLabelCheckBox(gridPane, ++rowIndex,
@@ -220,8 +224,10 @@ public class FilterWindow extends Overlay<FilterWindow> {
             setupFieldFromList(refundAgentsTF, filter.getRefundAgents());
             setupFieldFromList(btcFeeReceiverAddressesTF, filter.getBtcFeeReceiverAddresses());
             setupFieldFromList(seedNodesTF, filter.getSeedNodes());
+            setupFieldFromList(addedSeedNodesTF, filter.getAddedSeedNodes());
             setupFieldFromList(priceRelayNodesTF, filter.getPriceRelayNodes());
             setupFieldFromList(btcNodesTF, filter.getBtcNodes());
+            setupFieldFromList(addedBtcNodesTF, filter.getAddedBtcNodes());
             setupFieldFromList(bannedPrivilegedDevPubKeysTF, filter.getBannedPrivilegedDevPubKeys());
             setupFieldFromList(autoConfExplorersTF, filter.getBannedAutoConfExplorers());
             setupFieldFromList(enabledPowVersionsTF, filter.getEnabledPowVersions());
@@ -284,7 +290,9 @@ public class FilterWindow extends Overlay<FilterWindow> {
                         ParsingUtils.parseToCoin(takerFeeBtcTF.getText(), btcFormatter).value,
                         ParsingUtils.parseToCoin(makerFeeBsqTF.getText(), bsqFormatter).value,
                         ParsingUtils.parseToCoin(takerFeeBsqTF.getText(), bsqFormatter).value,
-                        readAsPaymentAccountFiltersList(delayedPayoutTF)
+                        readAsPaymentAccountFiltersList(delayedPayoutTF),
+                        readAsList(addedBtcNodesTF),
+                        readAsList(addedSeedNodesTF)
                 );
 
                 // We remove first the old filter

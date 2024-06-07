@@ -123,6 +123,10 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     // Added at v1.9.13
     private final List<PaymentAccountFilter> delayedPayoutPaymentAccounts;
 
+    // Added at v 1.9.16
+    private final List<String> addedBtcNodes;
+    private final List<String> addedSeedNodes;
+
     // After we have created the signature from the filter data we clone it and apply the signature
     static Filter cloneWithSig(Filter filter, String signatureAsBase64) {
         return new Filter(filter.getBannedOfferIds(),
@@ -160,7 +164,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 filter.getTakerFeeBtc(),
                 filter.getMakerFeeBsq(),
                 filter.getTakerFeeBsq(),
-                filter.getDelayedPayoutPaymentAccounts());
+                filter.getDelayedPayoutPaymentAccounts(),
+                filter.getAddedBtcNodes(),
+                filter.getAddedSeedNodes());
     }
 
     // Used for signature verification as we created the sig without the signatureAsBase64 field we set it to null again
@@ -200,7 +206,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 filter.getTakerFeeBtc(),
                 filter.getMakerFeeBsq(),
                 filter.getTakerFeeBsq(),
-                filter.getDelayedPayoutPaymentAccounts());
+                filter.getDelayedPayoutPaymentAccounts(),
+                filter.getAddedBtcNodes(),
+                filter.getAddedSeedNodes());
     }
 
     public Filter(List<String> bannedOfferIds,
@@ -235,7 +243,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   long takerFeeBtc,
                   long makerFeeBsq,
                   long takerFeeBsq,
-                  List<PaymentAccountFilter> delayedPayoutPaymentAccounts) {
+                  List<PaymentAccountFilter> delayedPayoutPaymentAccounts,
+                  List<String> addedBtcNodes,
+                  List<String> addedSeedNodes) {
         this(bannedOfferIds,
                 nodeAddressesBannedFromTrading,
                 bannedPaymentAccounts,
@@ -271,7 +281,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 takerFeeBtc,
                 makerFeeBsq,
                 takerFeeBsq,
-                delayedPayoutPaymentAccounts);
+                delayedPayoutPaymentAccounts,
+                addedBtcNodes,
+                addedSeedNodes);
     }
 
 
@@ -315,7 +327,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                   long takerFeeBtc,
                   long makerFeeBsq,
                   long takerFeeBsq,
-                  List<PaymentAccountFilter> delayedPayoutPaymentAccounts) {
+                  List<PaymentAccountFilter> delayedPayoutPaymentAccounts,
+                  List<String> addedBtcNodes,
+                  List<String> addedSeedNodes) {
         this.bannedOfferIds = bannedOfferIds;
         this.nodeAddressesBannedFromTrading = nodeAddressesBannedFromTrading;
         this.bannedPaymentAccounts = bannedPaymentAccounts;
@@ -352,6 +366,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         this.makerFeeBsq = makerFeeBsq;
         this.takerFeeBsq = takerFeeBsq;
         this.delayedPayoutPaymentAccounts = delayedPayoutPaymentAccounts;
+        this.addedBtcNodes = addedBtcNodes;
+        this.addedSeedNodes = addedSeedNodes;
 
         // ownerPubKeyBytes can be null when called from tests
         if (ownerPubKeyBytes != null) {
@@ -403,7 +419,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 .setTakerFeeBtc(takerFeeBtc)
                 .setMakerFeeBsq(makerFeeBsq)
                 .setTakerFeeBsq(takerFeeBsq)
-                .addAllDelayedPayoutPaymentAccounts(delayedPayoutPaymentAccountList);
+                .addAllDelayedPayoutPaymentAccounts(delayedPayoutPaymentAccountList)
+                .addAllAddedBtcNodes(addedBtcNodes)
+                .addAllAddedSeedNodes(addedSeedNodes);
 
         Optional.ofNullable(signatureAsBase64).ifPresent(builder::setSignatureAsBase64);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
@@ -454,7 +472,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 proto.getTakerFeeBtc(),
                 proto.getMakerFeeBsq(),
                 proto.getTakerFeeBsq(),
-                delayedPayoutPaymentAccounts
+                delayedPayoutPaymentAccounts,
+                ProtoUtil.protocolStringListToList(proto.getAddedBtcNodesList()),
+                ProtoUtil.protocolStringListToList(proto.getAddedSeedNodesList())
         );
     }
 
@@ -512,6 +532,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
                 ",\n     takerFeeBtc=" + takerFeeBtc +
                 ",\n     makerFeeBsq=" + makerFeeBsq +
                 ",\n     takerFeeBsq=" + takerFeeBsq +
+                ",\n     addedBtcNodes=" + addedBtcNodes +
+                ",\n     addedSeedNodes=" + addedSeedNodes +
                 "\n}";
     }
 }
