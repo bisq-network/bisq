@@ -66,8 +66,10 @@ public class Config {
     public static final String MAX_MEMORY = "maxMemory";
     public static final String LOG_LEVEL = "logLevel";
     public static final String BANNED_BTC_NODES = "bannedBtcNodes";
+    private static final String FILTER_PROVIDED_BTC_NODES = "filterProvidedBtcNodes";
     public static final String BANNED_PRICE_RELAY_NODES = "bannedPriceRelayNodes";
     public static final String BANNED_SEED_NODES = "bannedSeedNodes";
+    private static final String FILTER_PROVIDED_SEED_NODES = "filterProvidedSeedNodes";
     public static final String BASE_CURRENCY_NETWORK = "baseCurrencyNetwork";
     public static final String REFERRAL_ID = "referralId";
     public static final String USE_DEV_MODE = "useDevMode";
@@ -170,8 +172,10 @@ public class Config {
     public final int maxMemory;
     public final String logLevel;
     public final List<String> bannedBtcNodes;
+    public final List<String> filterProvidedBtcNodes;
     public final List<String> bannedPriceRelayNodes;
     public final List<String> bannedSeedNodes;
+    public final List<String> filterProvidedSeedNodes;
     public final BaseCurrencyNetwork baseCurrencyNetwork;
     public final NetworkParameters networkParameters;
     public final boolean ignoreLocalBtcNode;
@@ -336,6 +340,12 @@ public class Config {
                         .ofType(String.class)
                         .withValuesSeparatedBy(',')
                         .describedAs("host:port[,...]");
+        ArgumentAcceptingOptionSpec<String> filterProvidedBtcNodesOpt =
+                parser.accepts(FILTER_PROVIDED_BTC_NODES, "List of filter provided Bitcoin nodes")
+                        .withRequiredArg()
+                        .ofType(String.class)
+                        .withValuesSeparatedBy(',')
+                        .describedAs("host:port[,...]");
 
         ArgumentAcceptingOptionSpec<String> bannedPriceRelayNodesOpt =
                 parser.accepts(BANNED_PRICE_RELAY_NODES, "List Bisq price nodes to ban")
@@ -346,6 +356,12 @@ public class Config {
 
         ArgumentAcceptingOptionSpec<String> bannedSeedNodesOpt =
                 parser.accepts(BANNED_SEED_NODES, "List Bisq seed nodes to ban")
+                        .withRequiredArg()
+                        .ofType(String.class)
+                        .withValuesSeparatedBy(',')
+                        .describedAs("host:port[,...]");
+        ArgumentAcceptingOptionSpec<String> filterProvidedSeedNodesOpt =
+                parser.accepts(FILTER_PROVIDED_SEED_NODES, "List of filer provided seed nodes")
                         .withRequiredArg()
                         .ofType(String.class)
                         .withValuesSeparatedBy(',')
@@ -539,9 +555,11 @@ public class Config {
                         .defaultsTo(50); // Pause in ms to sleep if we get too many messages to send
 
         ArgumentAcceptingOptionSpec<String> btcNodesOpt =
-                parser.accepts(BTC_NODES, "Custom nodes used for BitcoinJ as comma separated IP addresses.")
+                parser.accepts(BTC_NODES, "Override provided Bitcoin nodes as comma separated list e.g. " +
+                                "'rxdkppp3vicnbgqt.onion:8002,mfla72c4igh5ta2t.onion:8002'")
                         .withRequiredArg()
-                        .describedAs("ip[,...]")
+                        .withValuesSeparatedBy(',')
+                        .describedAs("host:port[,...]")
                         .defaultsTo("");
 
         ArgumentAcceptingOptionSpec<Boolean> useTorForBtcOpt =
@@ -780,8 +798,10 @@ public class Config {
             this.maxMemory = options.valueOf(maxMemoryOpt);
             this.logLevel = options.valueOf(logLevelOpt);
             this.bannedBtcNodes = options.valuesOf(bannedBtcNodesOpt);
+            this.filterProvidedBtcNodes = options.valuesOf(filterProvidedBtcNodesOpt);
             this.bannedPriceRelayNodes = options.valuesOf(bannedPriceRelayNodesOpt);
             this.bannedSeedNodes = options.valuesOf(bannedSeedNodesOpt);
+            this.filterProvidedSeedNodes = options.valuesOf(filterProvidedSeedNodesOpt);
             this.baseCurrencyNetwork = (BaseCurrencyNetwork) options.valueOf(baseCurrencyNetworkOpt);
             this.networkParameters = baseCurrencyNetwork.getParameters();
             this.ignoreLocalBtcNode = options.valueOf(ignoreLocalBtcNodeOpt);

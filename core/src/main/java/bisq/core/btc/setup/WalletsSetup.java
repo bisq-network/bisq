@@ -396,8 +396,7 @@ public class WalletsSetup {
     }
 
     private void configPeerNodes(@Nullable Socks5Proxy proxy) {
-        BtcNodesSetupPreferences btcNodesSetupPreferences = new BtcNodesSetupPreferences(preferences,
-                numConnectionsForBtc);
+        BtcNodesSetupPreferences btcNodesSetupPreferences = new BtcNodesSetupPreferences(preferences, numConnectionsForBtc, config);
 
         List<BtcNode> nodes = btcNodesSetupPreferences.selectPreferredNodes(btcNodes);
         int minBroadcastConnections = btcNodesSetupPreferences.calculateMinBroadcastConnections(nodes);
