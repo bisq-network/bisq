@@ -102,6 +102,8 @@ public class TestFilter {
                 1,
                 1,
                 1,
+                Collections.emptyList(),
+                Collections.emptyList(),
                 Collections.emptyList()
         );
     }
