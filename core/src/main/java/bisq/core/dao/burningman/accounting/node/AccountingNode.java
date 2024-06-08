@@ -60,7 +60,7 @@ public abstract class AccountingNode implements DaoSetupService, DaoStateListene
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static Sha256Hash getSha256Hash(AccountingBlock block) {
-        return Sha256Hash.of(block.toProtoMessage().toByteArray());
+        return Sha256Hash.of(block.serializeForHash());
     }
 
     @Nullable
@@ -68,7 +68,7 @@ public abstract class AccountingNode implements DaoSetupService, DaoStateListene
         long ts = System.currentTimeMillis();
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             for (AccountingBlock accountingBlock : blocks) {
-                outputStream.write(accountingBlock.toProtoMessage().toByteArray());
+                outputStream.write(accountingBlock.serializeForHash());
             }
             Sha256Hash hash = Sha256Hash.of(outputStream.toByteArray());
             // 2833 blocks takes about 23 ms

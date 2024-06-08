@@ -270,7 +270,7 @@ public class ProposalStateMonitoringService implements DaoSetupService, DaoState
                     .collect(Collectors.toList());
 
             // We use MyProposalList to get the serialized bytes from the proposals list
-            byte[] serializedProposals = new MyProposalList(proposals).toProtoMessage().toByteArray();
+            byte[] serializedProposals = new MyProposalList(proposals).serializeForHash();
 
             byte[] prevHash;
             if (proposalStateBlockChain.isEmpty()) {

@@ -44,7 +44,7 @@ public class ProposalPayload implements PersistableNetworkPayload, ConsensusCrit
     protected final byte[] hash;        // 20 byte
 
     public ProposalPayload(Proposal proposal) {
-        this(proposal, Hash.getRipemd160hash(proposal.toProtoMessage().toByteArray()));
+        this(proposal, Hash.getRipemd160hash(proposal.serializeForHash()));
     }
 
 

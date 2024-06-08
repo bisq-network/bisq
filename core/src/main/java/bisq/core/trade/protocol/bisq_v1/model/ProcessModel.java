@@ -87,7 +87,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class ProcessModel implements ProtocolModel<TradingPeer> {
 
     public static byte[] hashOfPaymentAccountPayload(PaymentAccountPayload paymentAccountPayload) {
-        return Hash.getRipemd160hash(checkNotNull(paymentAccountPayload).toProtoMessage().toByteArray());
+        return Hash.getRipemd160hash(checkNotNull(paymentAccountPayload).serializeForHash());
     }
 
     // Transient/Immutable (net set in constructor so they are not final, but at init)

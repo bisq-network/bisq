@@ -109,7 +109,7 @@ public class TestFilter {
     }
 
     public static Filter signFilter(Filter unsignedFilter, ECKey signerKey) {
-        byte[] filterData = unsignedFilter.toProtoMessage().toByteArray();
+        byte[] filterData = unsignedFilter.serializeForHash();
         Sha256Hash hash = Sha256Hash.of(filterData);
 
         ECKey.ECDSASignature ecdsaSignature = signerKey.sign(hash);

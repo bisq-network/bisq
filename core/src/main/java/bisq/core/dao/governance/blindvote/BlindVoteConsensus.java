@@ -84,14 +84,14 @@ public class BlindVoteConsensus {
     }
 
     public static byte[] getEncryptedVotes(VoteWithProposalTxIdList voteWithProposalTxIdList, SecretKey secretKey) throws CryptoException {
-        byte[] bytes = voteWithProposalTxIdList.toProtoMessage().toByteArray();
+        byte[] bytes = voteWithProposalTxIdList.serialize();
         byte[] encrypted = Encryption.encrypt(bytes, secretKey);
         log.info("EncryptedVotes: " + Utilities.bytesAsHexString(encrypted));
         return encrypted;
     }
 
     public static byte[] getEncryptedMeritList(MeritList meritList, SecretKey secretKey) throws CryptoException {
-        byte[] bytes = meritList.toProtoMessage().toByteArray();
+        byte[] bytes = meritList.serialize();
         return Encryption.encrypt(bytes, secretKey);
     }
 

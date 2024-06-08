@@ -701,7 +701,7 @@ public class FilterManager {
     }
 
     private Sha256Hash getSha256Hash(Filter filter) {
-        byte[] filterData = filter.toProtoMessage().toByteArray();
+        byte[] filterData = filter.serializeForHash();
         return Sha256Hash.of(filterData);
     }
 
