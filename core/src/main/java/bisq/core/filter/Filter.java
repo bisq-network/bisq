@@ -132,6 +132,10 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
     private final List<String> addedBtcNodes;
     @ExcludeForHash
     private final List<String> addedSeedNodes;
+    // As we might add more ExcludeForHash we want to ensure to have a unique identifier.
+    // The hash of the data is not unique anymore if the only change have been at
+    // the ExcludeForHash annotated fields.
+    private final String uid;
 
     // After we have created the signature from the filter data we clone it and apply the signature
     static Filter cloneWithSig(Filter filter, String signatureAsBase64) {
@@ -172,7 +176,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 filter.getTakerFeeBsq(),
                 filter.getDelayedPayoutPaymentAccounts(),
                 filter.getAddedBtcNodes(),
-                filter.getAddedSeedNodes());
+                filter.getAddedSeedNodes(),
+                filter.getUid());
     }
 
     // Used for signature verification as we created the sig without the signatureAsBase64 field we set it to null again
@@ -214,7 +219,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 filter.getTakerFeeBsq(),
                 filter.getDelayedPayoutPaymentAccounts(),
                 filter.getAddedBtcNodes(),
-                filter.getAddedSeedNodes());
+                filter.getAddedSeedNodes(),
+                filter.getUid());
     }
 
     public Filter(List<String> bannedOfferIds,
@@ -251,7 +257,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                   long takerFeeBsq,
                   List<PaymentAccountFilter> delayedPayoutPaymentAccounts,
                   List<String> addedBtcNodes,
-                  List<String> addedSeedNodes) {
+                  List<String> addedSeedNodes,
+                  String uid) {
         this(bannedOfferIds,
                 nodeAddressesBannedFromTrading,
                 bannedPaymentAccounts,
@@ -289,7 +296,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 takerFeeBsq,
                 delayedPayoutPaymentAccounts,
                 addedBtcNodes,
-                addedSeedNodes);
+                addedSeedNodes,
+                uid);
     }
 
 
@@ -335,7 +343,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                   long takerFeeBsq,
                   List<PaymentAccountFilter> delayedPayoutPaymentAccounts,
                   List<String> addedBtcNodes,
-                  List<String> addedSeedNodes) {
+                  List<String> addedSeedNodes,
+                  String uid) {
         this.bannedOfferIds = bannedOfferIds;
         this.nodeAddressesBannedFromTrading = nodeAddressesBannedFromTrading;
         this.bannedPaymentAccounts = bannedPaymentAccounts;
@@ -374,6 +383,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
         this.delayedPayoutPaymentAccounts = delayedPayoutPaymentAccounts;
         this.addedBtcNodes = addedBtcNodes;
         this.addedSeedNodes = addedSeedNodes;
+        this.uid = uid;
 
         // ownerPubKeyBytes can be null when called from tests
         if (ownerPubKeyBytes != null) {
@@ -445,7 +455,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 .setTakerFeeBsq(takerFeeBsq)
                 .addAllDelayedPayoutPaymentAccounts(delayedPayoutPaymentAccountList)
                 .addAllAddedBtcNodes(addedBtcNodes)
-                .addAllAddedSeedNodes(addedSeedNodes);
+                .addAllAddedSeedNodes(addedSeedNodes)
+                .setUid(uid);
 
         Optional.ofNullable(signatureAsBase64).ifPresent(builder::setSignatureAsBase64);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
@@ -498,7 +509,8 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 proto.getTakerFeeBsq(),
                 delayedPayoutPaymentAccounts,
                 ProtoUtil.protocolStringListToList(proto.getAddedBtcNodesList()),
-                ProtoUtil.protocolStringListToList(proto.getAddedSeedNodesList())
+                ProtoUtil.protocolStringListToList(proto.getAddedSeedNodesList()),
+                proto.getUid()
         );
     }
 
@@ -558,6 +570,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 ",\n     takerFeeBsq=" + takerFeeBsq +
                 ",\n     addedBtcNodes=" + addedBtcNodes +
                 ",\n     addedSeedNodes=" + addedSeedNodes +
+                ",\n     uid=" + uid +
                 "\n}";
     }
 }

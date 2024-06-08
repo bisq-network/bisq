@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import static org.bitcoinj.core.Utils.HEX;
 
@@ -104,7 +105,8 @@ public class TestFilter {
                 1,
                 Collections.emptyList(),
                 List.of("test1.onion:1221"),
-                List.of("test2.onion:1221")
+                List.of("test2.onion:1221"),
+                UUID.randomUUID().toString()
         );
     }
 
