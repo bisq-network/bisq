@@ -103,8 +103,8 @@ public class TestFilter {
                 1,
                 1,
                 Collections.emptyList(),
-                Collections.emptyList(),
-                Collections.emptyList()
+                List.of("test1.onion:1221"),
+                List.of("test2.onion:1221")
         );
     }
 

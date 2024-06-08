@@ -20,12 +20,16 @@ package bisq.core.filter;
 import bisq.network.p2p.storage.payload.ExpirablePayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
+import bisq.common.ExcludeForHash;
+import bisq.common.ExcludeForHashAwareProto;
 import bisq.common.crypto.Sig;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.GetDataResponsePriority;
 import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
 import bisq.common.util.Utilities;
+
+import protobuf.StoragePayload;
 
 import com.google.protobuf.ByteString;
 
@@ -49,7 +53,7 @@ import javax.annotation.Nullable;
 @Slf4j
 @Getter
 @EqualsAndHashCode
-public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
+public final class Filter implements ProtectedStoragePayload, ExpirablePayload, ExcludeForHashAwareProto {
     public static final long TTL = TimeUnit.DAYS.toMillis(180);
 
     private final List<String> bannedOfferIds;
@@ -124,7 +128,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
     private final List<PaymentAccountFilter> delayedPayoutPaymentAccounts;
 
     // Added at v 1.9.16
+    @ExcludeForHash
     private final List<String> addedBtcNodes;
+    @ExcludeForHash
     private final List<String> addedSeedNodes;
 
     // After we have created the signature from the filter data we clone it and apply the signature
@@ -379,6 +385,24 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
 
     @Override
     public protobuf.StoragePayload toProtoMessage() {
+        return toProto(false);
+    }
+
+    @Override
+    public protobuf.StoragePayload toProto(boolean serializeForHash) {
+        return resolveProto(serializeForHash);
+    }
+
+    @Override
+    public protobuf.StoragePayload.Builder getBuilder(boolean serializeForHash) {
+        return StoragePayload.newBuilder().setFilter(toFilterProto(serializeForHash));
+    }
+
+    private protobuf.Filter toFilterProto(boolean serializeForHash) {
+        return resolveBuilder(getFilterBuilder(serializeForHash), serializeForHash).build();
+    }
+
+    private protobuf.Filter.Builder getFilterBuilder(boolean serializeForHash) {
         List<protobuf.PaymentAccountFilter> paymentAccountFilterList = bannedPaymentAccounts.stream()
                 .map(PaymentAccountFilter::toProtoMessage)
                 .collect(Collectors.toList());
@@ -426,7 +450,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload {
         Optional.ofNullable(signatureAsBase64).ifPresent(builder::setSignatureAsBase64);
         Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
 
-        return protobuf.StoragePayload.newBuilder().setFilter(builder).build();
+        return builder;
     }
 
     public static Filter fromProto(protobuf.Filter proto) {
