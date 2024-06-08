@@ -55,6 +55,7 @@ import bisq.network.p2p.storage.persistence.RemovedPayloadsService;
 import bisq.network.p2p.storage.persistence.ResourceDataStoreService;
 import bisq.network.p2p.storage.persistence.SequenceNumberMap;
 
+import bisq.common.ExcludeForHashAwareProto;
 import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
@@ -70,6 +71,8 @@ import bisq.common.proto.persistable.PersistedDataHost;
 import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
 import bisq.common.util.Utilities;
+
+import protobuf.StoragePayload;
 
 import com.google.protobuf.ByteString;
 
@@ -1253,8 +1256,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      */
     @EqualsAndHashCode
     @ToString
-    public static final class DataAndSeqNrPair implements NetworkPayload {
-        // data are only used for calculating cryptographic hash from both values so they are kept private
+    public static final class DataAndSeqNrPair implements NetworkPayload, ExcludeForHashAwareProto {
+        // data are only used for calculating cryptographic hash from both values, so they are kept private
         private final ProtectedStoragePayload protectedStoragePayload;
         private final int sequenceNumber;
 
@@ -1263,13 +1266,31 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
             this.sequenceNumber = sequenceNumber;
         }
 
-        // Used only for calculating hash of byte array from PB object
         @Override
-        public com.google.protobuf.Message toProtoMessage() {
+        public protobuf.DataAndSeqNrPair toProtoMessage() {
+            return toProto(false);
+        }
+
+        @Override
+        public protobuf.DataAndSeqNrPair toProto(boolean serializeForHash) {
+            return resolveProto(serializeForHash);
+        }
+
+        @Override
+        public protobuf.DataAndSeqNrPair.Builder getBuilder(boolean serializeForHash) {
             return protobuf.DataAndSeqNrPair.newBuilder()
-                    .setPayload((protobuf.StoragePayload) protectedStoragePayload.toProtoMessage())
-                    .setSequenceNumber(sequenceNumber)
-                    .build();
+                    .setPayload(toStoragePayloadProto(serializeForHash))
+                    .setSequenceNumber(sequenceNumber);
+        }
+
+        private protobuf.StoragePayload toStoragePayloadProto(boolean serializeForHash) {
+            if (protectedStoragePayload instanceof ExcludeForHashAwareProto) {
+                ExcludeForHashAwareProto proto = (ExcludeForHashAwareProto) protectedStoragePayload;
+                StoragePayload.Builder builder = (StoragePayload.Builder) proto.getBuilder(serializeForHash);
+                return resolveBuilder(builder, serializeForHash).build();
+            } else {
+                return (StoragePayload) protectedStoragePayload.toProtoMessage();
+            }
         }
     }
 
