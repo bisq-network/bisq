@@ -701,8 +701,7 @@ public class FilterManager {
     }
 
     private Sha256Hash getSha256Hash(Filter filter) {
-        byte[] filterData = filter.serializeForHash();
-        return Sha256Hash.of(filterData);
+        return Sha256Hash.of(filter.serializeForHash());
     }
 
     private String getPubKeyAsHex(ECKey ecKey) {
