@@ -17,21 +17,12 @@
 
 package bisq.common;
 
-import com.google.protobuf.Message;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-/**
- * Base interface for Envelope and Payload.
- */
-public interface Proto {
-    Message toProtoMessage();
-
-    default byte[] serialize() {
-        return toProtoMessage().toByteArray();
-    }
-
-    // If the class implements ExcludedFieldsProto this method will be overwritten so that
-    // fields annotated with ExcludeForHash will be excluded.
-    default byte[] serializeForHash() {
-        return serialize();
-    }
+@Target({ElementType.FIELD})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface ExcludeForHash {
 }
