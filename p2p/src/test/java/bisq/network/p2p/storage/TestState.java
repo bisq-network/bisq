@@ -359,6 +359,8 @@ public class TestState {
         when(payloadMock.getOwnerPubKey()).thenReturn(receiverKey);
         when(payloadMock.getSenderPubKeyForAddOperation()).thenReturn(senderKey);
         when(payloadMock.toProtoMessage()).thenReturn(messageMock);
+        when(payloadMock.serialize()).thenReturn(new byte[]{});
+        when(payloadMock.serializeForHash()).thenReturn(new byte[]{});
 
         return payloadMock;
     }

@@ -129,6 +129,8 @@ public class P2PDataStorageBuildGetDataResponseTest {
             Message messageMock = mock(Message.class);
             when(messageMock.toByteArray()).thenReturn(Sig.getPublicKeyBytes(ownerKeys.getPublic()));
             when(protectedStoragePayload.toProtoMessage()).thenReturn(messageMock);
+            when(protectedStoragePayload.serialize()).thenReturn(new byte[]{});
+            when(protectedStoragePayload.serializeForHash()).thenReturn(new byte[]{});
 
             // Entry stub
             ProtectedStorageEntry stub = mock(ProtectedStorageEntry.class);
