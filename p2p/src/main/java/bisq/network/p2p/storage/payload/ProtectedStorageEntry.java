@@ -32,6 +32,8 @@ import com.google.protobuf.Message;
 
 import com.google.common.base.Preconditions;
 
+import org.bouncycastle.util.encoders.Hex;
+
 import java.security.PublicKey;
 
 import java.time.Clock;
@@ -215,7 +217,9 @@ public class ProtectedStorageEntry implements NetworkPayload, PersistablePayload
             boolean result = Sig.verify(this.ownerPubKey, hashOfDataAndSeqNr, this.signature);
 
             if (!result)
-                log.warn("ProtectedStorageEntry::isSignatureValid() failed.\n{}}", this);
+                log.warn("Invalid signature for {}.\nSerialized data as hex={}}",
+                        protectedStoragePayload.getClass().getSimpleName(),
+                        Hex.toHexString(protectedStoragePayload.toProtoMessage().toByteArray()));
 
             return result;
         } catch (CryptoException e) {
