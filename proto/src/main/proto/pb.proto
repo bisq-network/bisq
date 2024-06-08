@@ -769,6 +769,7 @@ message Filter {
     repeated PaymentAccountFilter delayedPayoutPaymentAccounts = 36;
     repeated string addedBtcNodes = 37;
     repeated string addedSeedNodes = 38;
+    string uid = 39;
 }
 
 /* Deprecated */

@@ -60,6 +60,7 @@ import javafx.geometry.Insets;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static bisq.desktop.util.FormBuilder.addInputTextField;
@@ -129,6 +130,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
 
         InputTextField keyTF = addInputTextField(gridPane, ++rowIndex,
                 Res.get("shared.unlock"), 10);
+        InputTextField uidTF = addInputTextField(gridPane, ++rowIndex,
+                "UID", 10);
         if (useDevPrivilegeKeys) {
             keyTF.setText(DevEnv.getDEV_PRIVILEGE_PRIV_KEY());
         }
@@ -212,6 +215,7 @@ public class FilterWindow extends Overlay<FilterWindow> {
 
         Filter filter = filterManager.getDevFilter();
         if (filter != null) {
+            uidTF.setText(filter.getUid());
             setupFieldFromList(offerIdsTF, filter.getBannedOfferIds());
             setupFieldFromList(bannedFromTradingTF, filter.getNodeAddressesBannedFromTrading());
             setupFieldFromList(bannedFromNetworkTF, filter.getNodeAddressesBannedFromNetwork());
@@ -247,6 +251,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
             makerFeeBsqTF.setText(bsqFormatter.formatBSQSatoshis(filter.getMakerFeeBsq()));
             takerFeeBsqTF.setText(bsqFormatter.formatBSQSatoshis(filter.getTakerFeeBsq()));
             setupFieldFromPaymentAccountFiltersList(delayedPayoutTF, filter.getDelayedPayoutPaymentAccounts());
+        } else {
+            uidTF.setText(UUID.randomUUID().toString());
         }
 
         Button removeFilterMessageButton = new AutoTooltipButton(Res.get("filterWindow.remove"));
@@ -292,7 +298,8 @@ public class FilterWindow extends Overlay<FilterWindow> {
                         ParsingUtils.parseToCoin(takerFeeBsqTF.getText(), bsqFormatter).value,
                         readAsPaymentAccountFiltersList(delayedPayoutTF),
                         readAsList(addedBtcNodesTF),
-                        readAsList(addedSeedNodesTF)
+                        readAsList(addedSeedNodesTF),
+                        uidTF.getText()
                 );
 
                 // We remove first the old filter
