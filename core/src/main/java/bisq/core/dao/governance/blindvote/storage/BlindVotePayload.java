@@ -48,7 +48,7 @@ public final class BlindVotePayload implements PersistableNetworkPayload, Consen
     protected final byte[] hash;        // 20 byte
 
     public BlindVotePayload(BlindVote blindVote) {
-        this(blindVote, Hash.getRipemd160hash(blindVote.toProtoMessage().toByteArray()));
+        this(blindVote, Hash.getRipemd160hash(blindVote.serializeForHash()));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

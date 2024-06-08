@@ -41,7 +41,7 @@ public class VoteRevealConsensus {
     public static byte[] getHashOfBlindVoteList(List<BlindVote> blindVotes) {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         blindVotes.forEach(blindVote -> {
-            byte[] data = blindVote.toProtoMessage().toByteArray();
+            byte[] data = blindVote.serializeForHash();
             try {
                 outputStream.write(data);
             } catch (IOException e) {
