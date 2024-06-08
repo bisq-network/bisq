@@ -218,7 +218,7 @@ public final class OfferPayload extends OfferPayloadBase {
         if (this.hash == null && this.offerFeePaymentTxId != null) {
             // A proto message can be created only after the offerFeePaymentTxId is
             // set to a non-null value;  now is the time to cache the payload hash.
-            this.hash = Hash.getSha256Hash(this.toProtoMessage().toByteArray());
+            this.hash = Hash.getSha256Hash(serializeForHash());
         }
         return this.hash;
     }

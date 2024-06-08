@@ -1240,7 +1240,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      * @return Hash of data
      */
     public static byte[] get32ByteHash(NetworkPayload data) {
-        return Hash.getSha256Hash(data.toProtoMessage().toByteArray());
+        return Hash.getSha256Hash(data.serializeForHash());
     }
 
 

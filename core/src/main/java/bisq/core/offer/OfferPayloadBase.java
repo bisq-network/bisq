@@ -99,7 +99,7 @@ public abstract class OfferPayloadBase implements ProtectedStoragePayload, Expir
 
     public byte[] getHash() {
         if (this.hash == null) {
-            this.hash = Hash.getSha256Hash(this.toProtoMessage().toByteArray());
+            this.hash = Hash.getSha256Hash(serializeForHash());
         }
         return this.hash;
     }

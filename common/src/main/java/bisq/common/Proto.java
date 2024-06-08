@@ -24,4 +24,12 @@ import com.google.protobuf.Message;
  */
 public interface Proto {
     Message toProtoMessage();
+
+    default byte[] serialize() {
+        return toProtoMessage().toByteArray();
+    }
+
+    default byte[] serializeForHash() {
+        return serialize();
+    }
 }
