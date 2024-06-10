@@ -1,0 +1,37 @@
+plugins {
+    id 'bisq.application'
+    id 'bisq.gradle.app_start_plugin.AppStartPlugin'
+}
+
+mainClassName = 'bisq.btcnodemonitor.BtcNodeMonitorMain'
+
+distTar.enabled = true
+
+dependencies {
+    implementation enforcedPlatform(project(':platform'))
+    implementation project(':proto')
+    implementation project(':common')
+    implementation project(':core')
+    implementation project(':p2p')
+    annotationProcessor libs.lombok
+    compileOnly libs.javax.annotation
+    compileOnly libs.lombok
+    implementation libs.logback.classic
+    implementation libs.logback.core
+    implementation libs.google.guava
+    implementation libs.apache.commons.lang3
+    implementation libs.jetbrains.annotations
+    implementation libs.slf4j.api
+    implementation(libs.netlayer.tor.external) {
+        exclude(module: 'slf4j-api')
+    }
+    implementation(libs.bitcoinj) {
+        exclude(module: 'bcprov-jdk15on')
+        exclude(module: 'guava')
+        exclude(module: 'jsr305')
+        exclude(module: 'okhttp')
+        exclude(module: 'okio')
+        exclude(module: 'slf4j-api')
+    }
+    implementation libs.spark.core
+}
