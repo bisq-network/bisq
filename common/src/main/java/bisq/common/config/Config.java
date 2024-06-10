@@ -138,6 +138,7 @@ public class Config {
     public static final String BM_ORACLE_NODE_PUB_KEY = "bmOracleNodePubKey";
     public static final String BM_ORACLE_NODE_PRIV_KEY = "bmOracleNodePrivKey";
     public static final String SEED_NODE_REPORTING_SERVER_URL = "seedNodeReportingServerUrl";
+    public static final String USE_TOR_FOR_BTC_MONITOR = "useTorForBtcMonitor";
 
     // Default values for certain options
     public static final int UNSPECIFIED_PORT = -1;
@@ -237,6 +238,7 @@ public class Config {
     public final String bmOracleNodePubKey;
     public final String bmOracleNodePrivKey;
     public final String seedNodeReportingServerUrl;
+    public final boolean useTorForBtcMonitor;
 
     // Properties derived from options but not exposed as options themselves
     public final File torDir;
@@ -738,6 +740,12 @@ public class Config {
                         .ofType(String.class)
                         .defaultsTo("");
 
+        ArgumentAcceptingOptionSpec<Boolean> useTorForBtcMonitorOpt =
+                parser.accepts(USE_TOR_FOR_BTC_MONITOR, "If set to true BitcoinJ is routed over tor (socks 5 proxy) for Bitcoin monitor.")
+                        .withRequiredArg()
+                        .ofType(Boolean.class)
+                        .defaultsTo(true);
+
         try {
             CompositeOptionSet options = new CompositeOptionSet();
 
@@ -864,6 +872,7 @@ public class Config {
             this.bmOracleNodePubKey = options.valueOf(bmOracleNodePubKey);
             this.bmOracleNodePrivKey = options.valueOf(bmOracleNodePrivKey);
             this.seedNodeReportingServerUrl = options.valueOf(seedNodeReportingServerUrlOpt);
+            this.useTorForBtcMonitor = options.valueOf(useTorForBtcMonitorOpt);
         } catch (OptionException ex) {
             throw new ConfigException("problem parsing option '%s': %s",
                     ex.options().get(0),
