@@ -161,5 +161,11 @@ public class BtcNodes {
                     ", port='" + port + '\'' +
                     ", operator='" + operator;
         }
+
+        public String getId() {
+            String address = this.address == null ? "" : this.address + ", ";
+            String onionAddress = this.onionAddress == null ? "" : this.onionAddress;
+            return operator + ": [" + address + onionAddress + "]";
+        }
     }
 }
