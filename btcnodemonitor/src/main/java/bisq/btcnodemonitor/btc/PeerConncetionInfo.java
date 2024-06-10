@@ -103,20 +103,24 @@ public class PeerConncetionInfo {
 
     public long getLastSuccessfulConnectTime() {
         return getReverseConnectionAttempts().stream().filter(e -> e.versionMessage.isPresent()).findFirst()
-                .map(ConnectionAttempt::getTimeToConnect)
+                .map(ConnectionAttempt::getDurationUntilConnection)
                 .orElse(0L);
     }
 
     public double getAverageTimeToConnect() {
-        return connectionAttempts.stream().mapToLong(ConnectionAttempt::getTimeToConnect).average().orElse(0d);
+        return connectionAttempts.stream().mapToLong(ConnectionAttempt::getDurationUntilConnection).average().orElse(0d);
     }
 
     public Optional<String> getLastExceptionMessage() {
-        return getReverseConnectionAttempts().stream()
-                .filter(e -> e.exception.isPresent())
-                .findFirst()
+        return getLastAttemptWithException()
                 .flatMap(ConnectionAttempt::getException)
                 .map(Throwable::getMessage);
+    }
+
+    public Optional<ConnectionAttempt> getLastAttemptWithException() {
+        return getReverseConnectionAttempts().stream()
+                .filter(e -> e.exception.isPresent())
+                .findFirst();
     }
 
     public String getAllExceptionMessages() {
@@ -147,11 +151,15 @@ public class PeerConncetionInfo {
         private final long connectTs;
         private boolean isConnected;
         @Setter
-        private long timeToConnect;
+        private long connectionStartedTs;
         @Setter
-        private long timeToDisconnect;
+        private long connectionSuccessTs;
         @Setter
-        private long timeToFailure;
+        private long durationUntilConnection;
+        @Setter
+        private long durationUntilDisConnection;
+        @Setter
+        private long durationUntilFailure;
         private Optional<Throwable> exception = Optional.empty();
         private Optional<VersionMessage> versionMessage = Optional.empty();
 

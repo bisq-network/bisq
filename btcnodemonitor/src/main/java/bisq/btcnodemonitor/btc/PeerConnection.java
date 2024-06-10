@@ -95,20 +95,23 @@ public class PeerConnection {
             Peer peer = createPeer(peerConncetionInfo.getPeerAddress());
             PeerConncetionInfo.ConnectionAttempt connectionAttempt = peerConncetionInfo.newConnectionAttempt(peer);
             long ts = System.currentTimeMillis();
+            connectionAttempt.setConnectionStartedTs(ts);
             try {
                 peer.addConnectedEventListener((peer1, peerCount) -> {
-                    connectionAttempt.setTimeToConnect(System.currentTimeMillis() - ts);
+                    connectionAttempt.setDurationUntilConnection(System.currentTimeMillis() - ts);
+                    connectionAttempt.setConnectionSuccessTs(System.currentTimeMillis());
                     connectionAttempt.onConnected();
                     startAutoDisconnectAndReconnect();
                 });
                 peer.addDisconnectedEventListener((peer1, peerCount) -> {
                     long passed = System.currentTimeMillis() - ts;
-                    if (Math.abs(passed - connectTimeoutMillis) < 100) {
-                        // timeout is not handled as error in bitcoinj, but it simply disconnects
-                        connectionAttempt.setTimeToFailure(passed);
+                    // Timeout is not handled as error in bitcoinj, but it simply disconnects
+                    // If we had a successful connect before we got versionMessage set, otherwise its from an error.
+                    if (connectionAttempt.getVersionMessage().isEmpty()) {
+                        connectionAttempt.setDurationUntilFailure(passed);
                         connectionAttempt.onException(new TimeoutException("Connection timeout. Could not connect after " + passed / 1000 + " sec."));
                     } else {
-                        connectionAttempt.setTimeToDisconnect(passed);
+                        connectionAttempt.setDurationUntilDisConnection(passed);
                         connectionAttempt.onDisconnected();
                     }
                     startAutoDisconnectAndReconnect();
@@ -116,7 +119,7 @@ public class PeerConnection {
                 openConnection(peer).join();
             } catch (Exception exception) {
                 log.warn("Error at opening connection to peer {}", peerConncetionInfo, exception);
-                connectionAttempt.setTimeToFailure(System.currentTimeMillis() - ts);
+                connectionAttempt.setDurationUntilFailure(System.currentTimeMillis() - ts);
                 connectionAttempt.onException(exception);
                 startAutoDisconnectAndReconnect();
             }

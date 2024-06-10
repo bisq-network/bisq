@@ -201,9 +201,19 @@ public class SimpleHttpServer {
         sb.append("FailureRate (success/failures): ").append(failureRateString)
                 .append("(").append(info.getNumSuccess()).append(" / ")
                 .append(info.getNumFailures()).append(")").append("<br/>");
-        info.getLastExceptionMessage().ifPresent(errorMessage ->
-                sb.append(asError("LastExceptionMessage: " + errorMessage, info.getAllExceptionMessages()))
-                        .append("<br/>"));
+
+        info.getLastExceptionMessage().ifPresent(errorMessage -> {
+            String allExceptionMessages = info.getAllExceptionMessages();
+            int indexOfLastError = info.getLastAttemptWithException().map(info::getIndex).orElse(-1);
+            String msg;
+            String value = "Last error (connection attempt " + indexOfLastError + "): " + errorMessage;
+            if (indexOfLastError >= info.getConnectionAttempts().size() - 2) {
+                msg = asError(value, allExceptionMessages);
+            } else {
+                msg = asWarn(value, allExceptionMessages);
+            }
+            sb.append(msg).append("<br/>");
+        });
         sb.append("Duration to connect: ").append(MathUtils.roundDouble(info.getLastSuccessfulConnectTime() / 1000d, 2)).append(" sec").append("<br/>");
         return sb.toString();
     }
@@ -220,13 +230,17 @@ public class SimpleHttpServer {
 
         StringBuilder sb = new StringBuilder();
         VersionMessage versionMessage = attempt.getVersionMessage().get();
-        sb.append("Result from connection attempt: ").append(index).append("<br/>");
+        long peerTime = versionMessage.time * 1000;
+        long passed = System.currentTimeMillis() - attempt.getConnectionSuccessTs();
+        sb.append("Result from connection attempt '").append(index)
+                .append("'. Connected ").append(MathUtils.roundDouble(passed / 1000d, 2)).append(" sec. ago")
+                .append("<br/>");
         sb.append("Height: ").append(versionMessage.bestHeight).append("<br/>");
         sb.append("Version: ").append(versionMessage.subVer).append(" (").append(versionMessage.clientVersion).append(")").append("<br/>");
         String serviceBits = ServiceBits.toString(versionMessage.localServices);
         sb.append("Services: ").append(serviceBits)
                 .append(" (").append(versionMessage.localServices).append(")").append("<br/>");
-        long peerTime = versionMessage.time * 1000;
+
         sb.append("Time: ").append(String.format(Locale.US, "%tF %tT", peerTime, peerTime));
         return sb.toString();
     }
