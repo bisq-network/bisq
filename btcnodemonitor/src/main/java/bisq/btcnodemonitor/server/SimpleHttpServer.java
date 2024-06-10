@@ -193,9 +193,9 @@ public class SimpleHttpServer {
         sb.append("Num connection attempts: ").append(info.getNumConnectionAttempts()).append("<br/>");
         double failureRate = info.getFailureRate();
         String failureRateString = MathUtils.roundDouble(failureRate * 100, 2) + "%";
-        if (failureRate > 0.9) {
+        if (failureRate > 0.5) {
             failureRateString = asError(failureRateString, failureRateString);
-        } else if (failureRate > 0.3) {
+        } else if (failureRate > 0.25) {
             failureRateString = asWarn(failureRateString, failureRateString);
         }
         sb.append("FailureRate (success/failures): ").append(failureRateString)
