@@ -199,7 +199,7 @@ public class SimpleHttpServer {
             failureRateString = asWarn(failureRateString, failureRateString);
         }
         sb.append("FailureRate (success/failures): ").append(failureRateString)
-                .append("(").append(info.getNumFailures()).append(" / ")
+                .append("(").append(info.getNumSuccess()).append(" / ")
                 .append(info.getNumFailures()).append(")").append("<br/>");
         info.getLastExceptionMessage().ifPresent(errorMessage ->
                 sb.append(asError("LastExceptionMessage: " + errorMessage, info.getAllExceptionMessages()))
