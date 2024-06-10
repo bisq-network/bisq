@@ -39,7 +39,6 @@ import java.net.SocketAddress;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.extern.slf4j.Slf4j;
@@ -109,7 +108,7 @@ public class PeerConnection {
                     // If we had a successful connect before we got versionMessage set, otherwise its from an error.
                     if (connectionAttempt.getVersionMessage().isEmpty()) {
                         connectionAttempt.setDurationUntilFailure(passed);
-                        connectionAttempt.onException(new TimeoutException("Connection timeout. Could not connect after " + passed / 1000 + " sec."));
+                        connectionAttempt.onException(new RuntimeException("Connection failed"));
                     } else {
                         connectionAttempt.setDurationUntilDisConnection(passed);
                         connectionAttempt.onDisconnected();
