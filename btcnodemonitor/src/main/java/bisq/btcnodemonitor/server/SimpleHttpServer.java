@@ -216,7 +216,7 @@ public class SimpleHttpServer {
         if (attempt.getVersionMessage().isEmpty()) {
             return "";
         }
-        int index = info.getIndex(attempt);
+        int index = info.getIndex(attempt) + 1;
 
         StringBuilder sb = new StringBuilder();
         VersionMessage versionMessage = attempt.getVersionMessage().get();
