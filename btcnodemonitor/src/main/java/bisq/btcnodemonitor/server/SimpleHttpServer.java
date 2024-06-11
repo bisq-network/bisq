@@ -207,10 +207,13 @@ public class SimpleHttpServer {
             int indexOfLastError = info.getLastAttemptWithException().map(info::getIndex).orElse(-1);
             String msg;
             String value = "Last error (connection attempt " + indexOfLastError + "): " + errorMessage;
-            if (indexOfLastError >= info.getConnectionAttempts().size() - 2) {
+            int tip = info.getConnectionAttempts().size() - 1;
+            if (indexOfLastError >= tip - 1) {
                 msg = asError(value, allExceptionMessages);
-            } else {
+            } else if (indexOfLastError >= tip - 10) {
                 msg = asWarn(value, allExceptionMessages);
+            } else {
+                msg = value;
             }
             sb.append(msg).append("<br/>");
         });
@@ -232,9 +235,12 @@ public class SimpleHttpServer {
         VersionMessage versionMessage = attempt.getVersionMessage().get();
         long peerTime = versionMessage.time * 1000;
         long passed = System.currentTimeMillis() - attempt.getConnectionSuccessTs();
+        String passedString = MathUtils.roundDouble(passed / 1000d, 2) + " sec. ago";
+        if (passed > 300_000) {
+            passedString = asWarn(passedString, passedString);
+        }
         sb.append("Result from connection attempt '").append(index)
-                .append("'. Connected ").append(MathUtils.roundDouble(passed / 1000d, 2)).append(" sec. ago")
-                .append("<br/>");
+                .append("'. Connected ").append(passedString).append("<br/>");
         sb.append("Height: ").append(versionMessage.bestHeight).append("<br/>");
         sb.append("Version: ").append(versionMessage.subVer).append(" (").append(versionMessage.clientVersion).append(")").append("<br/>");
         String serviceBits = ServiceBits.toString(versionMessage.localServices);
