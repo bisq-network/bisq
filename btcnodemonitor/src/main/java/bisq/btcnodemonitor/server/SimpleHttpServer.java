@@ -28,6 +28,8 @@ import bisq.common.util.SingleThreadExecutorUtils;
 
 import org.bitcoinj.core.VersionMessage;
 
+import org.apache.commons.lang3.time.DurationFormatUtils;
+
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -133,6 +135,7 @@ public class SimpleHttpServer {
                         "   a {" +
                         "      text-decoration:none; color: black;" +
                         "   }" +
+                        " #info { color: #333333; } " +
                         " #warn { color: #ff7700; } " +
                         " #error { color: #ff0000; } " +
                         "table, th, td {border: 1px solid black;}" +
@@ -193,10 +196,12 @@ public class SimpleHttpServer {
         sb.append("Num connection attempts: ").append(info.getNumConnectionAttempts()).append("<br/>");
         double failureRate = info.getFailureRate();
         String failureRateString = MathUtils.roundDouble(failureRate * 100, 2) + "%";
-        if (failureRate > 0.5) {
+        if (failureRate >= 0.5) {
             failureRateString = asError(failureRateString, failureRateString);
-        } else if (failureRate > 0.25) {
+        } else if (failureRate >= 0.25) {
             failureRateString = asWarn(failureRateString, failureRateString);
+        } else if (failureRate > 0.) {
+            failureRateString = asInfo(failureRateString, failureRateString);
         }
         sb.append("FailureRate (success/failures): ").append(failureRateString)
                 .append("(").append(info.getNumSuccess()).append(" / ")
@@ -213,7 +218,8 @@ public class SimpleHttpServer {
             } else if (indexOfLastError >= tip - 10) {
                 msg = asWarn(value, allExceptionMessages);
             } else {
-                msg = value;
+                msg = asInfo(value, allExceptionMessages);
+                ;
             }
             sb.append(msg).append("<br/>");
         });
@@ -235,14 +241,15 @@ public class SimpleHttpServer {
         VersionMessage versionMessage = attempt.getVersionMessage().get();
         long peerTime = versionMessage.time * 1000;
         long passed = System.currentTimeMillis() - attempt.getConnectionSuccessTs();
-        String passedString = MathUtils.roundDouble(passed / 1000d, 2) + " sec. ago";
+        String passedString = DurationFormatUtils.formatDurationWords(passed, true, true) + " ago";
+        // String passedString = MathUtils.roundDouble(passed / 1000d, 2) + " sec. ago";
         if (passed > 300_000) {
             passedString = asWarn(passedString, passedString);
         }
-        sb.append("Result from connection attempt '").append(index)
-                .append("'. Connected ").append(passedString).append("<br/>");
-        sb.append("Height: ").append(versionMessage.bestHeight).append("<br/>");
-        sb.append("Version: ").append(versionMessage.subVer).append(" (").append(versionMessage.clientVersion).append(")").append("<br/>");
+        sb.append("Result from connection attempt ").append(index).append(":<br/>");
+        sb.append("Connected ").append(passedString).append("<br/>");
+        sb.append("Block height: ").append(versionMessage.bestHeight).append("<br/>");
+        sb.append("Version: ").append(versionMessage.subVer.replace("/", "")).append(" (").append(versionMessage.clientVersion).append(")").append("<br/>");
         String serviceBits = ServiceBits.toString(versionMessage.localServices);
         sb.append("Services: ").append(serviceBits)
                 .append(" (").append(versionMessage.localServices).append(")").append("<br/>");
@@ -253,6 +260,10 @@ public class SimpleHttpServer {
 
     private static String decorate(String style, String value, String tooltip) {
         return "<b><a id=\"" + style + "\" href=\"#\" title=\"" + tooltip + "\">" + value + "</a></b>";
+    }
+
+    private static String asInfo(String value, String tooltip) {
+        return decorate("info", value, tooltip);
     }
 
     private static String asWarn(String value, String tooltip) {
