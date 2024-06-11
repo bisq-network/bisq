@@ -22,12 +22,31 @@ import com.google.common.base.Joiner;
 import java.util.LinkedList;
 import java.util.List;
 
-import static org.bitcoinj.core.VersionMessage.*;
 
 /**
- * Borrowed from VersionMessage and added NODE_P2P_V2
+ * Borrowed from VersionMessage and updated to be in sync with
+ * https://github.com/bitcoin/bitcoin/blob/b1ba1b178f501daa1afdd91f9efec34e5ec1e294/src/protocol.h#L324
  */
 public class ServiceBits {
+
+    public static final int NODE_NONE = 0;
+    // NODE_NETWORK means that the node is capable of serving the complete block chain. It is currently
+    // set by all Bitcoin Core non pruned nodes, and is unset by SPV clients or other light clients.
+    public static final int NODE_NETWORK = 1 << 0;
+
+    // NODE_BLOOM means the node is capable and willing to handle bloom-filtered connections.
+    public static final int NODE_BLOOM = 1 << 2;
+    // NODE_WITNESS indicates that a node can be asked for blocks and transactions including
+    // witness data.
+    public static final int NODE_WITNESS = 1 << 3;
+    // NODE_COMPACT_FILTERS means the node will service basic block filter requests.
+    // See BIP157 and BIP158 for details on how this is implemented.
+    public static final int NODE_COMPACT_FILTERS = 1 << 6;
+    // NODE_NETWORK_LIMITED means the same as NODE_NETWORK with the limitation of only
+    // serving the last 288 (2 day) blocks
+    // See BIP159 for details on how this is implemented.
+    public static final int NODE_NETWORK_LIMITED = 1 << 10;
+    // NODE_P2P_V2 means the node supports BIP324 transport
     public static final int NODE_P2P_V2 = 1 << 11;
 
     public static String toString(long services) {
@@ -36,10 +55,6 @@ public class ServiceBits {
             strings.add("NETWORK");
             services &= ~NODE_NETWORK;
         }
-        if ((services & NODE_GETUTXOS) == NODE_GETUTXOS) {
-            strings.add("GETUTXOS");
-            services &= ~NODE_GETUTXOS;
-        }
         if ((services & NODE_BLOOM) == NODE_BLOOM) {
             strings.add("BLOOM");
             services &= ~NODE_BLOOM;
@@ -47,6 +62,10 @@ public class ServiceBits {
         if ((services & NODE_WITNESS) == NODE_WITNESS) {
             strings.add("WITNESS");
             services &= ~NODE_WITNESS;
+        }
+        if ((services & NODE_COMPACT_FILTERS) == NODE_COMPACT_FILTERS) {
+            strings.add("COMPACT_FILTERS");
+            services &= ~NODE_COMPACT_FILTERS;
         }
         if ((services & NODE_NETWORK_LIMITED) == NODE_NETWORK_LIMITED) {
             strings.add("NETWORK_LIMITED");
