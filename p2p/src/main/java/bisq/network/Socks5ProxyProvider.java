@@ -17,11 +17,11 @@
 
 package bisq.network;
 
-import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
-
-import bisq.network.p2p.network.NetworkNode;
+import bisq.network.p2p.network.Socks5ProxyInternalFactory;
 
 import bisq.common.config.Config;
+
+import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
 import com.google.inject.Inject;
 
@@ -49,7 +49,7 @@ public class Socks5ProxyProvider {
     private static final Logger log = LoggerFactory.getLogger(Socks5ProxyProvider.class);
 
     @Nullable
-    private NetworkNode socks5ProxyInternalFactory;
+    private Socks5ProxyInternalFactory socks5ProxyInternalFactory;
 
     // proxy used for btc network
     @Nullable
@@ -91,7 +91,7 @@ public class Socks5ProxyProvider {
         return socks5ProxyInternalFactory.getSocksProxy();
     }
 
-    public void setSocks5ProxyInternal(@Nullable NetworkNode bisqSocks5ProxyFactory) {
+    public void setSocks5ProxyInternal(@Nullable Socks5ProxyInternalFactory bisqSocks5ProxyFactory) {
         this.socks5ProxyInternalFactory = bisqSocks5ProxyFactory;
     }
 

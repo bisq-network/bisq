@@ -30,12 +30,16 @@ public class Profiler {
     }
 
     public static void printSystemLoad() {
+        log.info(getSystemLoad());
+    }
+
+    public static String getSystemLoad() {
         Runtime runtime = Runtime.getRuntime();
         long free = runtime.freeMemory();
         long total = runtime.totalMemory();
         long used = total - free;
 
-        log.info("Total memory: {}; Used memory: {}; Free memory: {}; Max memory: {}; No. of threads: {}",
+        return String.format("Total memory: %s; Used memory: %s; Free memory: %s; Max memory: %s; No. of threads: %s",
                 Utilities.readableFileSize(total),
                 Utilities.readableFileSize(used),
                 Utilities.readableFileSize(free),

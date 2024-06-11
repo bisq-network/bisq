@@ -64,7 +64,7 @@ import org.jetbrains.annotations.Nullable;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 // Run in UserThread
-public abstract class NetworkNode implements MessageListener {
+public abstract class NetworkNode implements MessageListener, Socks5ProxyInternalFactory {
     private static final Logger log = LoggerFactory.getLogger(NetworkNode.class);
     private static final int CREATE_SOCKET_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(120);
 
@@ -277,6 +277,7 @@ public abstract class NetworkNode implements MessageListener {
         }
     }
 
+    @Override
     @Nullable
     public Socks5Proxy getSocksProxy() {
         return null;

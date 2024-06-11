@@ -104,6 +104,7 @@ public class TorNetworkNode extends NetworkNode {
         return new TorSocket(peerNodeAddress.getHostName(), peerNodeAddress.getPort(), torControlHost, null);
     }
 
+    @Override
     public Socks5Proxy getSocksProxy() {
         try {
             String stream = null;
