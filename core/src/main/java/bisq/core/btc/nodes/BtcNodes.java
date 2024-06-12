@@ -51,7 +51,7 @@ public class BtcNodes {
                         new BtcNode("btcnode1.emzy.de", "emzybtc3ewh7zihpkdvuwlgxrhzcxy2p5fvjggp7ngjbxcytxvt4rjid.onion", "167.86.90.239", BtcNode.DEFAULT_PORT, "@emzy"),
                         // emzy unstable
                         // new BtcNode("btcnode2.emzy.de", "emzybtc25oddoa2prol2znpz2axnrg6k77xwgirmhv7igoiucddsxiad.onion", "62.171.129.32", BtcNode.DEFAULT_PORT, "@emzy (unstable)"),
-                        //new BtcNode("btcnode4.emzy.de", "emzybtc454ewbviqnmgtgx3rgublsgkk23r4onbhidcv36wremue4kqd.onion", "135.181.215.237", BtcNode.DEFAULT_PORT, "@emzy (very unstable)"),
+                        // new BtcNode("btcnode4.emzy.de", "emzybtc454ewbviqnmgtgx3rgublsgkk23r4onbhidcv36wremue4kqd.onion", "135.181.215.237", BtcNode.DEFAULT_PORT, "@emzy (very unstable)"),
 
                         // mrosseel unstable
                         // new BtcNode("btc.vante.me", "bsqbtctulf2g4jtjsdfgl2ed7qs6zz5wqx27qnyiik7laockryvszqqd.onion", "94.23.21.80", BtcNode.DEFAULT_PORT, "@miker (unstable)"),
@@ -73,8 +73,8 @@ public class BtcNodes {
                         // jester4042
                         new BtcNode(null, "nhpftqp3kmcnksw2ev6tkwq47jhy37movbjimnd577jcrtwmadtirrqd.onion", null, BtcNode.DEFAULT_PORT, "@jester4042"),
 
-                        // node_op_324
-                        new BtcNode(null, "qs535l32ne43rxr5iqexbhu4r6zifrfez653pm7j3rpi7c7omaz7xcqd.onion", null, BtcNode.DEFAULT_PORT, "@node_op_324"),
+                        // node_op_324 (not working yet)
+                        // new BtcNode(null, "qs535l32ne43rxr5iqexbhu4r6zifrfez653pm7j3rpi7c7omaz7xcqd.onion", null, BtcNode.DEFAULT_PORT, "@node_op_324"),
 
                         // btcNodl
                         new BtcNode(null, "2oalsctcn76axnrnaqjddiiu5qhrc7hv3raik2lyfxb7eoktk4vw6sad.onion", null, BtcNode.DEFAULT_PORT, "@btcNodl"),
