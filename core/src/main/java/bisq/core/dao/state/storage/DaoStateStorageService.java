@@ -205,9 +205,8 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     }
 
     public void resyncDaoStateFromGenesis(Runnable resultHandler) {
-        String backupDirName = "out_of_sync_dao_data";
         try {
-            removeAndBackupDaoConsensusFiles(storageDir, backupDirName);
+            removeAndBackupDaoConsensusFiles(storageDir);
         } catch (Throwable t) {
             log.error(t.toString());
         }
@@ -219,20 +218,21 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     }
 
     public void resyncDaoStateFromResources(File storageDir) throws IOException {
-        // We delete all DAO consensus data and remove the daoState so it will rebuild from latest
+        // We delete all DAO consensus data and remove the daoState, so it will rebuild from latest
         // resource files.
-        String backupDirName = "out_of_sync_dao_data";
-        removeAndBackupDaoConsensusFiles(storageDir, backupDirName);
+        removeAndBackupDaoConsensusFiles(storageDir);
 
         String newFileName = "DaoStateStore_" + System.currentTimeMillis();
+        String backupDirName = "out_of_sync_dao_data";
         FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "DaoStateStore"), newFileName, backupDirName);
 
         bsqBlocksStorageService.removeBlocksDirectory();
     }
 
-    private void removeAndBackupDaoConsensusFiles(File storageDir, String backupDirName) throws IOException {
-        // We delete all DAO related data. Some will be rebuild from resources.
+    private void removeAndBackupDaoConsensusFiles(File storageDir) throws IOException {
+        // We delete all DAO related data. At re-start they will get rebuilt from resources.
         long currentTime = System.currentTimeMillis();
+        String backupDirName = "out_of_sync_dao_data";
         String newFileName = "BlindVoteStore_" + currentTime;
         FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "BlindVoteStore"), newFileName, backupDirName);
 
