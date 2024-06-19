@@ -104,23 +104,23 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         }
 
         future = Optional.of(executorService.submit(() -> {
-           try {
-               Thread.currentThread().setName("Write-blocks-and-DaoState");
-               bsqBlocksStorageService.persistBlocks(blocks);
-               store.setDaoStateAsProto(daoStateAsProto);
-               store.setDaoStateHashChain(daoStateHashChain);
-               long ts = System.currentTimeMillis();
-               persistenceManager.persistNow(() -> {
-                   // After we have written to disk we remove the daoStateAsProto in the store to avoid that it stays in
-                   // memory there until the next persist call.
-                   log.info("Persist daoState took {} ms", System.currentTimeMillis() - ts);
-                   store.clear();
-                   GcUtil.maybeReleaseMemory();
-                   UserThread.execute(completeHandler);
-               });
-           } catch (Exception e) {
-               log.error("Exception at persisting BSQ blocks and DaoState", e);
-           }
+            try {
+                Thread.currentThread().setName("Write-blocks-and-DaoState");
+                bsqBlocksStorageService.persistBlocks(blocks);
+                store.setDaoStateAsProto(daoStateAsProto);
+                store.setDaoStateHashChain(daoStateHashChain);
+                long ts = System.currentTimeMillis();
+                persistenceManager.persistNow(() -> {
+                    // After we have written to disk we remove the daoStateAsProto in the store to avoid that it stays in
+                    // memory there until the next persist call.
+                    log.info("Persist daoState took {} ms", System.currentTimeMillis() - ts);
+                    store.clear();
+                    GcUtil.maybeReleaseMemory();
+                    UserThread.execute(completeHandler);
+                });
+            } catch (Exception e) {
+                log.error("Exception at persisting BSQ blocks and DaoState", e);
+            }
         }));
     }
 
@@ -174,6 +174,20 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
             return daoState;
         }
         return new DaoState();
+    }
+
+    public boolean isChainHeighMatchingLastBlockHeight() {
+        DaoState persistedDaoState = getPersistedBsqState();
+        int heightOfPersistedLastBlock = persistedDaoState.getLastBlock().getHeight();
+        int chainHeightOfPersistedDaoState = persistedDaoState.getChainHeight();
+        boolean isMatching = heightOfPersistedLastBlock == chainHeightOfPersistedDaoState;
+        if (!isMatching) {
+            log.warn("heightOfPersistedLastBlock is not same as chainHeightOfPersistedDaoState. " +
+                            "We call resyncDaoStateFromResources.\n" +
+                            "heightOfPersistedLastBlock={}; chainHeightOfPersistedDaoState={}",
+                    heightOfPersistedLastBlock, chainHeightOfPersistedDaoState);
+        }
+        return isMatching;
     }
 
     public LinkedList<DaoStateHash> getPersistedDaoStateHashChain() {
