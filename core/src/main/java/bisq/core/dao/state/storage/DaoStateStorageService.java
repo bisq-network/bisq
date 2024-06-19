@@ -206,19 +206,23 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
 
     public void resyncDaoStateFromGenesis(Runnable resultHandler) {
         try {
-            // We do not delete the DaoStateStore file. It got reset instead.
+            // We do not delete the DaoStateStore file.
+            // It got reset instead, so we will start to rebuild it from genesis.
             removeAndBackupDaoConsensusFiles(storageDir, false);
         } catch (Throwable t) {
             log.error(t.toString());
         }
 
+        // Reset to empty DaoState and DaoStateHashChain
         store.setDaoStateAsProto(DaoState.getBsqStateCloneExcludingBlocks(new DaoState()));
         store.setDaoStateHashChain(new LinkedList<>());
         persistenceManager.persistNow(resultHandler);
+
+        // Remove BsqBlocks and recreate directory to avoid that it gets filled from resources
         bsqBlocksStorageService.removeBlocksInDirectory();
     }
 
-    public void removeAndBackupDaoData(File storageDir) throws IOException {
+    public void removeAndBackupAllDaoData(File storageDir) throws IOException {
         removeAndBackupDaoConsensusFiles(storageDir, true);
         bsqBlocksStorageService.removeBlocksDirectory();
     }

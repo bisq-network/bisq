@@ -90,7 +90,7 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
 
         statusTextField = FormBuilder.addTopLabelTextField(root, ++gridRow,
                 Res.get("dao.monitor.state")).second;
-        resyncButton = FormBuilder.addButton(root, ++gridRow, Res.get("dao.monitor.resync"), 10);
+        resyncFromResourcesButton = FormBuilder.addButton(root, ++gridRow, Res.get("dao.monitor.resync"), 10);
 
         super.initialize();
     }
