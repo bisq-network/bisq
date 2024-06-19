@@ -286,7 +286,7 @@ public abstract class StateMonitorView<StH extends StateHash,
 
     private void resyncDaoState() {
         try {
-            daoFacade.resyncDaoStateFromResources(storageDir);
+            daoFacade.removeAndBackupDaoData(storageDir);
             new Popup().attention(Res.get("setting.preferences.dao.resyncFromResources.popup"))
                     .useShutDownButton()
                     .hideCloseButton()

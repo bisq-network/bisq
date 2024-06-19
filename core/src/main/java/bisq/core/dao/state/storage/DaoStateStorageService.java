@@ -218,7 +218,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         bsqBlocksStorageService.removeBlocksInDirectory();
     }
 
-    public void resyncDaoStateFromResources(File storageDir) throws IOException {
+    public void removeAndBackupDaoData(File storageDir) throws IOException {
         removeAndBackupDaoConsensusFiles(storageDir, true);
         bsqBlocksStorageService.removeBlocksDirectory();
     }

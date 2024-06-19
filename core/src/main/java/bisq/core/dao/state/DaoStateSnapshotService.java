@@ -348,7 +348,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
             return;
         }
         try {
-            daoStateStorageService.resyncDaoStateFromResources(storageDir);
+            daoStateStorageService.removeAndBackupDaoData(storageDir);
             // the restart handler informs the user of the need to restart bisq (in desktop mode)
             if (daoRequiresRestartHandler == null) {
                 log.error("No daoRequiresRestartHandler");
