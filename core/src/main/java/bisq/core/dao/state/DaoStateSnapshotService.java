@@ -215,7 +215,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                 snapshotHeight != chainHeight;
         if (isSnapshotHeight(chainHeight) &&
                 !daoStateService.getBlocks().isEmpty() &&
-                isValidHeight(daoStateService.getBlockHeightOfLastBlock()) &&
+                isHeightAtLeastGenesisHeight(daoStateService.getBlockHeightOfLastBlock()) &&
                 noSnapshotCandidateOrDifferentHeight) {
 
             // We protect to get called while we are not completed with persisting the daoState. This can take about
@@ -301,7 +301,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
 
         int heightOfPersistedLastBlock = persistedDaoState.getLastBlock().getHeight();
         int chainHeightOfPersistedDaoState = persistedDaoState.getChainHeight();
-        if (isValidHeight(heightOfPersistedLastBlock)) {
+        if (isHeightAtLeastGenesisHeight(heightOfPersistedLastBlock)) {
             if (chainHeightOfLastApplySnapshot != chainHeightOfPersistedDaoState) {
                 chainHeightOfLastApplySnapshot = chainHeightOfPersistedDaoState;
                 daoStateService.applySnapshot(persistedDaoState);
@@ -338,7 +338,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean isValidHeight(int heightOfLastBlock) {
+    private boolean isHeightAtLeastGenesisHeight(int heightOfLastBlock) {
         return heightOfLastBlock >= genesisTxInfo.getGenesisBlockHeight();
     }
 
