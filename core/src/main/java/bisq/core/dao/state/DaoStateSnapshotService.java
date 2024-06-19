@@ -278,6 +278,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         applySnapshot(true);
     }
 
+    //TODO check if we get repeated trys with same snapshot failing. Could be an edge case with reorgs
     public void revertToLastSnapshot() {
         applySnapshot(false);
     }
