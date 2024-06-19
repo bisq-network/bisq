@@ -274,7 +274,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         log.info("Cloned new daoStateCandidate at height {} took {} ms.", snapshotHeight, System.currentTimeMillis() - ts);
     }
 
-    public void applySnapshot(boolean fromReorg) {
+    public void applySnapshot(boolean fromInitialize) {
         DaoState persistedDaoState = daoStateStorageService.getPersistedBsqState();
         if (persistedDaoState == null) {
             log.info("Try to apply snapshot but no stored snapshot available. That is expected at first blocks.");
@@ -282,7 +282,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         }
 
         if (persistedDaoState.getBlocks().isEmpty()) {
-            if (fromReorg) {
+            if (!fromInitialize) {
                 log.info("We got a reorg and we want to apply the snapshot but it is empty. " +
                         "That is expected in the first blocks until the first snapshot has been created. " +
                         "We remove all dao store files and shutdown. " +
