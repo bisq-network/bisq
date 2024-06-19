@@ -39,8 +39,8 @@ import bisq.common.file.JsonFileManager;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.setup.GracefulShutDownHandler;
-import bisq.common.util.SingleThreadExecutorUtils;
 import bisq.common.util.Profiler;
+import bisq.common.util.SingleThreadExecutorUtils;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -147,21 +147,21 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
         int myIndex = seedNodeAddresses.indexOf(myAddress);
 
         if (myIndex == -1) {
-            log.warn("We did not find our node address in the seed nodes repository. " +
-                            "We use a 24 hour delay after startup as shut down strategy." +
+            log.info("We did not find our node address in the seed nodes repository.\n" +
+                            "This is expected for seed nodes not present in the hard coded seed node list.\n" +
+                            "We use a 24 hour delay after startup as shut down strategy.\n" +
                             "myAddress={}, seedNodeAddresses={}",
                     myAddress, seedNodeAddresses);
 
             UserThread.runPeriodically(() -> {
                 if (System.currentTimeMillis() - startTime > SHUTDOWN_INTERVAL) {
-                    log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
-                                    "Shut down as node was running longer as {} hours" +
+                    log.info("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
+                                    "Scheduled shutdown as node was running longer as {} hours" +
                                     "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
                             SHUTDOWN_INTERVAL / 3600000);
 
                     shutDown(gracefulShutDownHandler);
                 }
-
             }, CHECK_SHUTDOWN_SEC);
             return;
         }
@@ -182,10 +182,10 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
                 long target = Math.round(24d / seedNodeAddresses.size() * myIndex) % 24;
                 if (currentHour == target) {
                     log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
-                                    "Shut down node at hour {} (UTC time is {})" +
+                                    "Scheduled shutdown node at hour {} (UTC time is {})" +
                                     "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
                             target,
-                            ZonedDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")).toString());
+                            ZonedDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")));
                     shutDown(gracefulShutDownHandler);
                 }
             }, TimeUnit.MINUTES.toSeconds(10));
