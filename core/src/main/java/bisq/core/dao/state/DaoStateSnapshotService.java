@@ -282,6 +282,10 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         }
 
         if (!persistedDaoState.getBlocks().isEmpty()) {
+            if (!isChainHeighMatchingLastBlockHeight(persistedDaoState)) {
+                resyncDaoStateFromResources();
+                return;
+            }
             int heightOfPersistedLastBlock = persistedDaoState.getLastBlock().getHeight();
             int chainHeightOfPersistedDaoState = persistedDaoState.getChainHeight();
             if (heightOfPersistedLastBlock != chainHeightOfPersistedDaoState) {
@@ -318,6 +322,19 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         } else {
             log.info("No Bsq blocks in DaoState. Expected if no data are provided yet from resources or persisted data.");
         }
+    }
+
+    private boolean isChainHeighMatchingLastBlockHeight(DaoState persistedDaoState) {
+        int heightOfPersistedLastBlock = persistedDaoState.getLastBlock().getHeight();
+        int chainHeightOfPersistedDaoState = persistedDaoState.getChainHeight();
+        boolean isMatching = heightOfPersistedLastBlock == chainHeightOfPersistedDaoState;
+        if (!isMatching) {
+            log.warn("heightOfPersistedLastBlock is not same as chainHeightOfPersistedDaoState. " +
+                            "We call resyncDaoStateFromResources.\n" +
+                            "heightOfPersistedLastBlock={}; chainHeightOfPersistedDaoState={}",
+                    heightOfPersistedLastBlock, chainHeightOfPersistedDaoState);
+        }
+        return isMatching;
     }
 
 
