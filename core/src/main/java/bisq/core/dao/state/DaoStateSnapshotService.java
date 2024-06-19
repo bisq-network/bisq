@@ -275,21 +275,21 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     }
 
     public void applySnapshot(boolean fromReorg) {
-        DaoState persistedBsqState = daoStateStorageService.getPersistedBsqState();
+        DaoState persistedDaoState = daoStateStorageService.getPersistedBsqState();
         LinkedList<DaoStateHash> persistedDaoStateHashChain = daoStateStorageService.getPersistedDaoStateHashChain();
-        if (persistedBsqState != null) {
-            int chainHeightOfPersisted = persistedBsqState.getChainHeight();
-            if (!persistedBsqState.getBlocks().isEmpty()) {
-                int heightOfLastBlock = persistedBsqState.getLastBlock().getHeight();
-                if (heightOfLastBlock != chainHeightOfPersisted) {
-                    log.warn("chainHeightOfPersisted must be same as heightOfLastBlock");
+        if (persistedDaoState != null) {
+            int chainHeightOfPersistedDaoState = persistedDaoState.getChainHeight();
+            if (!persistedDaoState.getBlocks().isEmpty()) {
+                int heightOfPersistedLastBlock = persistedDaoState.getLastBlock().getHeight();
+                if (heightOfPersistedLastBlock != chainHeightOfPersistedDaoState) {
+                    log.warn("chainHeightOfPersistedDaoState must be same as heightOfPersistedLastBlock");
                     resyncDaoStateFromResources();
                     return;
                 }
-                if (isValidHeight(heightOfLastBlock)) {
-                    if (chainHeightOfLastApplySnapshot != chainHeightOfPersisted) {
-                        chainHeightOfLastApplySnapshot = chainHeightOfPersisted;
-                        daoStateService.applySnapshot(persistedBsqState);
+                if (isValidHeight(heightOfPersistedLastBlock)) {
+                    if (chainHeightOfLastApplySnapshot != chainHeightOfPersistedDaoState) {
+                        chainHeightOfLastApplySnapshot = chainHeightOfPersistedDaoState;
+                        daoStateService.applySnapshot(persistedDaoState);
                         daoStateMonitoringService.applySnapshot(persistedDaoStateHashChain);
                         daoStateStorageService.releaseMemory();
                     } else {
