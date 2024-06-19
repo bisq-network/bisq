@@ -195,11 +195,6 @@ public abstract class BsqNode implements DaoSetupService {
         maybeExportToJson();
     }
 
-    @SuppressWarnings("WeakerAccess")
-    protected void startReOrgFromLastSnapshot() {
-        daoStateSnapshotService.applySnapshot(false);
-    }
-
     protected Optional<Block> doParseBlock(RawBlock rawBlock) throws RequiredReorgFromSnapshotException {
         if (shutdownInProgress) {
             return Optional.empty();
@@ -272,7 +267,7 @@ public abstract class BsqNode implements DaoSetupService {
                     lastBlock.isPresent() ? lastBlock.get().getHash() : "lastBlock not present");
 
             pendingBlocks.clear();
-            startReOrgFromLastSnapshot();
+            daoStateSnapshotService.applySnapshot(false);
             startParseBlocks();
             throw new RequiredReorgFromSnapshotException(rawBlock);
         }
