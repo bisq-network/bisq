@@ -169,7 +169,7 @@ public abstract class BsqNode implements DaoSetupService {
 
     @SuppressWarnings("WeakerAccess")
     protected void onInitialized() {
-        daoStateSnapshotService.applySnapshot(true);
+        daoStateSnapshotService.applyPersistedSnapshot();
 
         if (p2PService.isBootstrapped()) {
             log.info("onAllServicesInitialized: isBootstrapped");
@@ -267,7 +267,7 @@ public abstract class BsqNode implements DaoSetupService {
                     lastBlock.isPresent() ? lastBlock.get().getHash() : "lastBlock not present");
 
             pendingBlocks.clear();
-            daoStateSnapshotService.applySnapshot(false);
+            daoStateSnapshotService.revertToLastSnapshot();
             startParseBlocks();
             throw new RequiredReorgFromSnapshotException(rawBlock);
         }

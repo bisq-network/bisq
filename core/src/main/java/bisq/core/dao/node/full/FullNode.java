@@ -270,7 +270,7 @@ public class FullNode extends BsqNode {
             if (numExceptions > 10) {
                 log.warn("We got {} RPC HttpExceptions at our block handler.", numExceptions);
                 pendingBlocks.clear();
-                applySnapshot();
+                revertToPersistedSnapshot();
                 startParseBlocks();
                 numExceptions = 0;
             }
@@ -301,7 +301,7 @@ public class FullNode extends BsqNode {
                         return;
                     } else if (cause instanceof NotificationHandlerException) {
                         log.error("Error from within block notification daemon: {}", cause.getCause().toString());
-                        applySnapshot();
+                        revertToPersistedSnapshot();
                         startParseBlocks();
                         return;
                     } else if (cause instanceof Error) {
@@ -315,7 +315,7 @@ public class FullNode extends BsqNode {
         }
     }
 
-    private void applySnapshot() {
-        daoStateSnapshotService.applySnapshot(false);
+    private void revertToPersistedSnapshot() {
+        daoStateSnapshotService.revertToLastSnapshot();
     }
 }
