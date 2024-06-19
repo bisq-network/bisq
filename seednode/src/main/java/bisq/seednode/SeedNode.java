@@ -32,12 +32,16 @@ import com.google.inject.name.Names;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 @Slf4j
 public class SeedNode {
     @Setter
     private Injector injector;
     private AppSetup appSetup;
+    @Nullable
     private GetInventoryRequestHandler getInventoryRequestHandler;
+    @Nullable
     private SeedNodeReportingService seedNodeReportingService;
 
     public SeedNode() {
