@@ -135,7 +135,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
             bsqBlocksStorageService.copyFromResources(postFix);
 
             super.readFromResources(postFix, () -> {
-                // We got mapped back to user thread so we need to create a new thread again as we dont want to
+                // We got mapped back to user thread, so we need to create a new thread again as we don't want to
                 // execute on user thread
                 new Thread(() -> {
                     Thread.currentThread().setName("Read-BsqBlocksStore");
@@ -148,8 +148,12 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
                             if (!list.isEmpty()) {
                                 int heightOfLastBlock = list.getLast().getHeight();
                                 if (heightOfLastBlock != chainHeight) {
-                                    log.warn("heightOfLastBlock {} must match chainHeight {}", heightOfLastBlock, chainHeight);
-                                    // this error scenario is handled by DaoStateSnapshotService, it will resync from resources & reboot
+                                    log.error("Error at readFromResources. " +
+                                                    "heightOfLastBlock not same as chainHeight.\n" +
+                                                    "heightOfLastBlock={}; chainHeight={}.\n" +
+                                                    "This error scenario is handled by DaoStateSnapshotService, " +
+                                                    "it will resync from resources & reboot",
+                                            heightOfLastBlock, chainHeight);
                                 }
                             }
                         } else {
