@@ -28,8 +28,8 @@ import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
 import bisq.common.persistence.PersistenceManager;
-import bisq.common.util.SingleThreadExecutorUtils;
 import bisq.common.util.GcUtil;
+import bisq.common.util.SingleThreadExecutorUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -114,7 +114,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
                    // After we have written to disk we remove the daoStateAsProto in the store to avoid that it stays in
                    // memory there until the next persist call.
                    log.info("Persist daoState took {} ms", System.currentTimeMillis() - ts);
-                   store.releaseMemory();
+                   store.clear();
                    GcUtil.maybeReleaseMemory();
                    UserThread.execute(completeHandler);
                });
@@ -182,7 +182,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
 
     public void releaseMemory() {
         blocks.clear();
-        store.releaseMemory();
+        store.clear();
         GcUtil.maybeReleaseMemory();
     }
 
