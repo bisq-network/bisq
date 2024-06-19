@@ -208,7 +208,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         try {
             // We do not delete the DaoStateStore file.
             // It got reset instead, so we will start to rebuild it from genesis.
-            removeAndBackupDaoConsensusFiles(storageDir, false);
+            removeAndBackupDaoConsensusFiles(false);
         } catch (Throwable t) {
             log.error(t.toString());
         }
@@ -222,27 +222,26 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         bsqBlocksStorageService.removeBlocksInDirectory();
     }
 
-    public void removeAndBackupAllDaoData(File storageDir) throws IOException {
-        removeAndBackupDaoConsensusFiles(storageDir, true);
+    public void removeAndBackupAllDaoData() throws IOException {
+        removeAndBackupDaoConsensusFiles(true);
         bsqBlocksStorageService.removeBlocksDirectory();
     }
 
-    private void removeAndBackupDaoConsensusFiles(File storageDir, boolean removeDaoStateStore) throws IOException {
+    private void removeAndBackupDaoConsensusFiles(boolean removeDaoStateStore) throws IOException {
         // We delete all DAO related data. At re-start they will get rebuilt from resources.
         long currentTime = System.currentTimeMillis();
         String backupDirName = "out_of_sync_dao_data";
-        removeAndBackupFile("BlindVoteStore", storageDir, currentTime, backupDirName);
-        removeAndBackupFile("ProposalStore", storageDir, currentTime, backupDirName);
+        removeAndBackupFile("BlindVoteStore", currentTime, backupDirName);
+        removeAndBackupFile("ProposalStore", currentTime, backupDirName);
         // We also need to remove ballot list as it contains the proposals as well. It will be recreated at resync
-        removeAndBackupFile("BallotList", storageDir, currentTime, backupDirName);
-        removeAndBackupFile("UnconfirmedBsqChangeOutputList", storageDir, currentTime, backupDirName);
+        removeAndBackupFile("BallotList", currentTime, backupDirName);
+        removeAndBackupFile("UnconfirmedBsqChangeOutputList", currentTime, backupDirName);
         if (removeDaoStateStore) {
-            removeAndBackupFile("DaoStateStore", storageDir, currentTime, backupDirName);
+            removeAndBackupFile("DaoStateStore", currentTime, backupDirName);
         }
     }
 
     private void removeAndBackupFile(String fileName,
-                                     File storageDir,
                                      long currentTime,
                                      String backupDirName) throws IOException {
         String newFileName = fileName + "_" + currentTime;

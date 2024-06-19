@@ -33,10 +33,7 @@ import bisq.core.locale.Res;
 
 import bisq.network.p2p.seed.SeedNodeRepository;
 
-import bisq.common.config.Config;
-
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -44,8 +41,6 @@ import javafx.scene.control.TableColumn;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 
 import javafx.util.Callback;
-
-import java.io.File;
 
 import java.util.Comparator;
 import java.util.Map;
@@ -68,9 +63,8 @@ public class BlindVoteStateMonitorView extends StateMonitorView<BlindVoteStateHa
                                       BlindVoteStateMonitoringService blindVoteStateMonitoringService,
                                       CycleService cycleService,
                                       PeriodService periodService,
-                                      SeedNodeRepository seedNodeRepository,
-                                      @Named(Config.STORAGE_DIR) File storageDir) {
-        super(daoStateService, daoFacade, cycleService, periodService, seedNodeRepository, storageDir);
+                                      SeedNodeRepository seedNodeRepository) {
+        super(daoStateService, daoFacade, cycleService, periodService, seedNodeRepository);
 
         this.blindVoteStateMonitoringService = blindVoteStateMonitoringService;
     }
