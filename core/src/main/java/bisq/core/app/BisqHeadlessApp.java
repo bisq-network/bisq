@@ -100,7 +100,7 @@ public class BisqHeadlessApp implements HeadlessApp {
         bisqSetup.setDownGradePreventionHandler(lastVersion -> log.info("Downgrade from version {} to version {} is not supported",
                 lastVersion, Version.VERSION));
         bisqSetup.setDaoRequiresRestartHandler(() -> {
-            log.info("There was a problem with synchronizing the DAO state. " +
+            log.warn("There was a problem with synchronizing the DAO state. " +
                     "A restart of the application is required to fix the issue.");
             gracefulShutDownHandler.gracefulShutDown(() -> {
             });
