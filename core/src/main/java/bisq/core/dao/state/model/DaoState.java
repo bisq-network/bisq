@@ -351,8 +351,9 @@ public class DaoState implements PersistablePayload {
                 ",\n     paramChangeList=" + paramChangeList +
                 ",\n     evaluatedProposalList=" + evaluatedProposalList +
                 ",\n     decryptedBallotsWithMeritsList=" + decryptedBallotsWithMeritsList +
-                ",\n     txCache=" + txCache +
-                ",\n     txOutputsByTxOutputType=" + txOutputsByTxOutputType +
+               /* ",\n     txCache=" + txCache +
+                ",\n     blocksByHeight=" + blocksByHeight +
+                ",\n     txOutputsByTxOutputType=" + txOutputsByTxOutputType +*/
                 "\n}";
     }
 }
