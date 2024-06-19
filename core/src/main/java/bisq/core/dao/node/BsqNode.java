@@ -56,7 +56,7 @@ public abstract class BsqNode implements DaoSetupService {
     private final String genesisTxId;
     private final int genesisBlockHeight;
     private final ExportJsonFilesService exportJsonFilesService;
-    private final DaoStateSnapshotService daoStateSnapshotService;
+    protected final DaoStateSnapshotService daoStateSnapshotService;
     private final P2PServiceListener p2PServiceListener;
     protected boolean parseBlockchainComplete;
     protected boolean p2pNetworkReady;
@@ -199,7 +199,6 @@ public abstract class BsqNode implements DaoSetupService {
     protected void startReOrgFromLastSnapshot() {
         daoStateSnapshotService.applySnapshot(false);
     }
-
 
     protected Optional<Block> doParseBlock(RawBlock rawBlock) throws RequiredReorgFromSnapshotException {
         if (shutdownInProgress) {
