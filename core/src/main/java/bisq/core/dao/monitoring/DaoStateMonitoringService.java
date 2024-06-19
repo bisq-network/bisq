@@ -467,21 +467,20 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                 .findAny()
                 .ifPresent(daoStateHash -> {
                     if (Arrays.equals(daoStateHash.getHash(), checkpoint.getHash())) {
-                        log.info("Passed checkpoint {}", checkpoint.toString());
+                        log.info("Passed checkpoint {}", checkpoint);
                     } else {
                         if (checkpointFailed) {
                             return;
                         }
                         checkpointFailed = true;
+                        log.error("Failed checkpoint {}", checkpoint);
                         try {
                             // Delete state and stop
                             removeFile("DaoStateStore");
                             removeFile("BlindVoteStore");
                             removeFile("ProposalStore");
                             removeFile("TempProposalStore");
-
                             listeners.forEach(Listener::onCheckpointFail);
-                            log.error("Failed checkpoint {}", checkpoint.toString());
                         } catch (Throwable t) {
                             t.printStackTrace();
                             log.error(t.toString());

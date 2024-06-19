@@ -131,7 +131,6 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
                 log.info("Graceful shutdown resulted in an error. Exiting now.");
                 UserThread.runAfter(() -> System.exit(BisqExecutable.EXIT_FAILURE), 1);
             });
-
         }
     }
 
@@ -229,7 +228,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
                         log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                         "We are over our memory limit ({}) and trigger a shutdown. usedMemory: {} MB. freeMemory: {} MB" +
                                         "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
-                                (int) maxMemory, usedMemory, Profiler.getFreeMemoryInMB());
+                                maxMemory, usedMemory, Profiler.getFreeMemoryInMB());
                         shutDown(gracefulShutDownHandler);
                     }
                 }, 5);
