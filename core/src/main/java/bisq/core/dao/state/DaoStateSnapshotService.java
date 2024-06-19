@@ -342,10 +342,15 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
 
     private void resyncDaoStateFromResources() {
         log.info("resyncDaoStateFromResources called");
-        if (daoRequiresRestartHandler == null && ++daoRequiresRestartHandlerAttempts <= 3) {
-            log.warn("daoRequiresRestartHandler has not been initialized yet, will try again in 10 seconds");
-            UserThread.runAfter(this::resyncDaoStateFromResources, 10);  // a delay for the app to init
-            return;
+        if (daoRequiresRestartHandler == null) {
+            if (++daoRequiresRestartHandlerAttempts <= 3) {
+                log.warn("daoRequiresRestartHandler has not been initialized yet, will try again in 10 seconds");
+                UserThread.runAfter(this::resyncDaoStateFromResources, 10);  // a delay for the app to init
+                return;
+            } else {
+                log.warn("No daoRequiresRestartHandler has not been set. We shutdown non-gracefully with a failure code on exit");
+                System.exit(1);
+            }
         }
         try {
             daoStateStorageService.removeAndBackupAllDaoData();
