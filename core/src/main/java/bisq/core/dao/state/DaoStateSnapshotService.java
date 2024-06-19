@@ -281,10 +281,9 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
             return;
         }
 
-        LinkedList<DaoStateHash> persistedDaoStateHashChain = daoStateStorageService.getPersistedDaoStateHashChain();
-        int chainHeightOfPersistedDaoState = persistedDaoState.getChainHeight();
         if (!persistedDaoState.getBlocks().isEmpty()) {
             int heightOfPersistedLastBlock = persistedDaoState.getLastBlock().getHeight();
+            int chainHeightOfPersistedDaoState = persistedDaoState.getChainHeight();
             if (heightOfPersistedLastBlock != chainHeightOfPersistedDaoState) {
                 log.warn("heightOfPersistedLastBlock is not same as chainHeightOfPersistedDaoState. " +
                                 "We call resyncDaoStateFromResources.\n" +
@@ -297,6 +296,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                 if (chainHeightOfLastApplySnapshot != chainHeightOfPersistedDaoState) {
                     chainHeightOfLastApplySnapshot = chainHeightOfPersistedDaoState;
                     daoStateService.applySnapshot(persistedDaoState);
+                    LinkedList<DaoStateHash> persistedDaoStateHashChain = daoStateStorageService.getPersistedDaoStateHashChain();
                     daoStateMonitoringService.applySnapshot(persistedDaoStateHashChain);
                     daoStateStorageService.releaseMemory();
                 } else {
