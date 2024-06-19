@@ -74,7 +74,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     private LinkedList<DaoStateHash> hashChainCandidate = new LinkedList<>();
     private List<Block> blocksCandidate;
     private int snapshotHeight;
-    private int chainHeightOfLastApplySnapshot;
+    private int chainHeightOfLastAppliedSnapshot;
     @Setter
     @Nullable
     private Runnable daoRequiresRestartHandler;
@@ -305,8 +305,8 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
             return;
         }
 
-        if (chainHeightOfLastApplySnapshot != chainHeightOfPersistedDaoState) {
-            chainHeightOfLastApplySnapshot = chainHeightOfPersistedDaoState;
+        if (chainHeightOfLastAppliedSnapshot != chainHeightOfPersistedDaoState) {
+            chainHeightOfLastAppliedSnapshot = chainHeightOfPersistedDaoState;
             daoStateService.applySnapshot(persistedDaoState);
             LinkedList<DaoStateHash> persistedDaoStateHashChain = daoStateStorageService.getPersistedDaoStateHashChain();
             daoStateMonitoringService.applySnapshot(persistedDaoStateHashChain);
@@ -317,7 +317,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
             log.warn("We applied already a snapshot with chainHeight {}. " +
                             "We remove all dao store files and shutdown. After a restart resource files will " +
                             "be applied if available.",
-                    chainHeightOfLastApplySnapshot);
+                    chainHeightOfLastAppliedSnapshot);
             resyncDaoStateFromResources();
         }
     }
