@@ -57,6 +57,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class ExecutableForAppWithP2p extends BisqExecutable {
     private static final long CHECK_MEMORY_PERIOD_SEC = 300;
+    //TODO use shorter check interval
     private static final long CHECK_SHUTDOWN_SEC = TimeUnit.HOURS.toSeconds(1);
     private static final long SHUTDOWN_INTERVAL = TimeUnit.HOURS.toMillis(24);
     private volatile boolean stopped;
@@ -167,6 +168,8 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
 
         // We interpret the value of myIndex as hour of day (0-23). That way we avoid the risk of a restart of
         // multiple nodes around the same time in case it would be not deterministic.
+
+        //TODO use check of 24h is exceeded for shutdown logic, allow shorter check interval
 
         // We wrap our periodic check in a delay of 2 hours to avoid that we get
         // triggered multiple times after a restart while being in the same hour. It can be that we miss our target

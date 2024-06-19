@@ -120,6 +120,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     @Getter
     private final ObservableList<UtxoMismatch> utxoMismatches = FXCollections.observableArrayList();
 
+    // TODO add recent checkpoint
     private final List<Checkpoint> checkpoints = Arrays.asList(
             new Checkpoint(586920, Utilities.decodeFromHex("523aaad4e760f6ac6196fec1b3ec9a2f42e5b272"))
     );
@@ -475,6 +476,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                         checkpointFailed = true;
                         log.error("Failed checkpoint {}", checkpoint);
                         try {
+                            // todo use resync from resources code instead. Missing deleting of blocks
                             // Delete state and stop
                             removeFile("DaoStateStore");
                             removeFile("BlindVoteStore");

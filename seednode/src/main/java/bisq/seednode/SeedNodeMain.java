@@ -127,6 +127,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
         seedNode.setInjector(injector);
 
+        // TODO Increase delay to give more time for startup + datarequest + parsing
         injector.getInstance(DaoStateSnapshotService.class).setDaoRequiresRestartHandler(
                 // We shut down with a deterministic delay per seed to avoid that all seeds shut down at the
                 // same time in case of a reorg. We use 30 sec. as distance delay between the seeds to be on the
@@ -152,6 +153,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
     protected void startApplication() {
         super.startApplication();
 
+        //TODO reactivate
      /*   Cookie cookie = injector.getInstance(User.class).getCookie();
         cookie.getAsOptionalBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART).ifPresent(wasCleanTorDirSet -> {
             if (wasCleanTorDirSet) {
@@ -162,6 +164,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
             }
         });*/
 
+        // TODO remove
         // Reset tor files at startup
         // We observe slow tor start at seed nodes. Not sure what caused that but cleaning the tor files might help.
         injector.getInstance(TorSetup.class).cleanupTorFiles(() -> {

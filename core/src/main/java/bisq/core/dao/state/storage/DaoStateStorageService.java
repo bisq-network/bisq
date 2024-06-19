@@ -231,6 +231,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         // We delete all DAO related data. At re-start they will get rebuilt from resources.
         long currentTime = System.currentTimeMillis();
         String backupDirName = "out_of_sync_dao_data";
+        // TODO delete also TempProposalStore and BurningManAccountingStore_v3
         removeAndBackupFile("BlindVoteStore", currentTime, backupDirName);
         removeAndBackupFile("ProposalStore", currentTime, backupDirName);
         // We also need to remove ballot list as it contains the proposals as well. It will be recreated at resync
