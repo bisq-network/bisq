@@ -282,7 +282,10 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
             if (!persistedDaoState.getBlocks().isEmpty()) {
                 int heightOfPersistedLastBlock = persistedDaoState.getLastBlock().getHeight();
                 if (heightOfPersistedLastBlock != chainHeightOfPersistedDaoState) {
-                    log.warn("chainHeightOfPersistedDaoState must be same as heightOfPersistedLastBlock");
+                    log.warn("heightOfPersistedLastBlock is not same as chainHeightOfPersistedDaoState. " +
+                                    "We call resyncDaoStateFromResources.\n" +
+                                    "heightOfPersistedLastBlock={}; chainHeightOfPersistedDaoState={}",
+                            heightOfPersistedLastBlock, chainHeightOfPersistedDaoState);
                     resyncDaoStateFromResources();
                     return;
                 }
