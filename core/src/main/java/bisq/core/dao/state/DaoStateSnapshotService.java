@@ -300,23 +300,27 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         }
 
         int heightOfPersistedLastBlock = persistedDaoState.getLastBlock().getHeight();
+        if (!isHeightAtLeastGenesisHeight(heightOfPersistedLastBlock)) {
+            log.error("heightOfPersistedLastBlock is below genesis height. This should never happen.");
+            return;
+        }
+
+
         int chainHeightOfPersistedDaoState = persistedDaoState.getChainHeight();
-        if (isHeightAtLeastGenesisHeight(heightOfPersistedLastBlock)) {
-            if (chainHeightOfLastApplySnapshot != chainHeightOfPersistedDaoState) {
-                chainHeightOfLastApplySnapshot = chainHeightOfPersistedDaoState;
-                daoStateService.applySnapshot(persistedDaoState);
-                LinkedList<DaoStateHash> persistedDaoStateHashChain = daoStateStorageService.getPersistedDaoStateHashChain();
-                daoStateMonitoringService.applySnapshot(persistedDaoStateHashChain);
-                daoStateStorageService.releaseMemory();
-            } else {
-                // The reorg might have been caused by the previous parsing which might contains a range of
-                // blocks.
-                log.warn("We applied already a snapshot with chainHeight {}. " +
-                                "We remove all dao store files and shutdown. After a restart resource files will " +
-                                "be applied if available.",
-                        chainHeightOfLastApplySnapshot);
-                resyncDaoStateFromResources();
-            }
+        if (chainHeightOfLastApplySnapshot != chainHeightOfPersistedDaoState) {
+            chainHeightOfLastApplySnapshot = chainHeightOfPersistedDaoState;
+            daoStateService.applySnapshot(persistedDaoState);
+            LinkedList<DaoStateHash> persistedDaoStateHashChain = daoStateStorageService.getPersistedDaoStateHashChain();
+            daoStateMonitoringService.applySnapshot(persistedDaoStateHashChain);
+            daoStateStorageService.releaseMemory();
+        } else {
+            // The reorg might have been caused by the previous parsing which might contains a range of
+            // blocks.
+            log.warn("We applied already a snapshot with chainHeight {}. " +
+                            "We remove all dao store files and shutdown. After a restart resource files will " +
+                            "be applied if available.",
+                    chainHeightOfLastApplySnapshot);
+            resyncDaoStateFromResources();
         }
     }
 
