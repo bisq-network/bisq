@@ -305,13 +305,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
             return;
         }
 
-        if (chainHeightOfLastAppliedSnapshot != chainHeightOfPersistedDaoState) {
-            chainHeightOfLastAppliedSnapshot = chainHeightOfPersistedDaoState;
-            daoStateService.applySnapshot(persistedDaoState);
-            LinkedList<DaoStateHash> persistedDaoStateHashChain = daoStateStorageService.getPersistedDaoStateHashChain();
-            daoStateMonitoringService.applySnapshot(persistedDaoStateHashChain);
-            daoStateStorageService.releaseMemory();
-        } else {
+        if (chainHeightOfLastAppliedSnapshot == chainHeightOfPersistedDaoState) {
             // The reorg might have been caused by the previous parsing which might contains a range of
             // blocks.
             log.warn("We applied already a snapshot with chainHeight {}. " +
@@ -319,7 +313,14 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                             "be applied if available.",
                     chainHeightOfLastAppliedSnapshot);
             resyncDaoStateFromResources();
+            return;
         }
+
+        chainHeightOfLastAppliedSnapshot = chainHeightOfPersistedDaoState;
+        daoStateService.applySnapshot(persistedDaoState);
+        LinkedList<DaoStateHash> persistedDaoStateHashChain = daoStateStorageService.getPersistedDaoStateHashChain();
+        daoStateMonitoringService.applySnapshot(persistedDaoStateHashChain);
+        daoStateStorageService.releaseMemory();
     }
 
     private boolean isChainHeighMatchingLastBlockHeight(DaoState persistedDaoState) {
