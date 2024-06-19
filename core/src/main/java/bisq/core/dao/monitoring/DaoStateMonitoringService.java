@@ -455,8 +455,8 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         // confiscated funds are still in the utxo set
         long sumUtxo = daoStateService.getUnspentTxOutputMap().values().stream().mapToLong(BaseTxOutput::getValue).sum();
         long sumBsq = genesisTotalSupply + compensationIssuance + reimbursementIssuance - totalAmountOfBurntBsq;
-
         if (sumBsq != sumUtxo) {
+            log.error("BSQ Utxos are not matching. sumBsq={}; sumUtxo={}", sumBsq, sumUtxo);
             utxoMismatches.add(new UtxoMismatch(block.getHeight(), sumUtxo, sumBsq));
         }
     }
