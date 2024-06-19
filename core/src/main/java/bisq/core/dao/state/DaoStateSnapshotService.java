@@ -299,14 +299,12 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
             return;
         }
 
-        int heightOfPersistedLastBlock = persistedDaoState.getLastBlock().getHeight();
-        if (!isHeightAtLeastGenesisHeight(heightOfPersistedLastBlock)) {
+        int chainHeightOfPersistedDaoState = persistedDaoState.getChainHeight();
+        if (!isHeightAtLeastGenesisHeight(chainHeightOfPersistedDaoState)) {
             log.error("heightOfPersistedLastBlock is below genesis height. This should never happen.");
             return;
         }
 
-
-        int chainHeightOfPersistedDaoState = persistedDaoState.getChainHeight();
         if (chainHeightOfLastApplySnapshot != chainHeightOfPersistedDaoState) {
             chainHeightOfLastApplySnapshot = chainHeightOfPersistedDaoState;
             daoStateService.applySnapshot(persistedDaoState);
