@@ -33,6 +33,7 @@ import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
+import bisq.common.app.Version;
 import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
@@ -48,10 +49,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SeedNodeMain extends ExecutableForAppWithP2p {
     private static final long CHECK_CONNECTION_LOSS_SEC = 30;
-    private static final String VERSION = "1.9.17";
 
     public static void main(String[] args) {
-        System.out.println("SeedNode.VERSION: " + VERSION);
         new SeedNodeMain().execute(args);
     }
 
@@ -59,7 +58,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
     private Timer checkConnectionLossTime;
 
     public SeedNodeMain() {
-        super("Bisq Seednode", "bisq-seednode", "bisq_seednode", VERSION);
+        super("Bisq Seednode", "bisq-seednode", "bisq_seednode", Version.VERSION);
         seedNode = new SeedNode();
     }
 

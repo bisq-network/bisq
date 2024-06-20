@@ -19,21 +19,21 @@ package bisq.statistics;
 
 import bisq.core.app.misc.ExecutableForAppWithP2p;
 
+import bisq.common.app.Version;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class StatisticsMain extends ExecutableForAppWithP2p {
-    private static final String VERSION = "1.0.1";
 
     public static void main(String[] args) {
-        log.info("Statistics.VERSION: " + VERSION);
         new StatisticsMain().execute(args);
     }
 
     private final Statistics statistics;
 
     public StatisticsMain() {
-        super("Bisq Statsnode", "bisq-statistics", "bisq_statistics", VERSION);
+        super("Bisq Statsnode", "bisq-statistics", "bisq_statistics", Version.VERSION);
 
         statistics = new Statistics();
     }
