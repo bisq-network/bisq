@@ -49,16 +49,18 @@ import lombok.extern.slf4j.Slf4j;
 public class SeedNodeMain extends ExecutableForAppWithP2p {
     private static final long CHECK_CONNECTION_LOSS_SEC = 30;
     private static final String VERSION = "1.9.17";
-    private SeedNode seedNode;
-    private Timer checkConnectionLossTime;
-
-    public SeedNodeMain() {
-        super("Bisq Seednode", "bisq-seednode", "bisq_seednode", VERSION);
-    }
 
     public static void main(String[] args) {
         System.out.println("SeedNode.VERSION: " + VERSION);
         new SeedNodeMain().execute(args);
+    }
+
+    private final SeedNode seedNode;
+    private Timer checkConnectionLossTime;
+
+    public SeedNodeMain() {
+        super("Bisq Seednode", "bisq-seednode", "bisq_seednode", VERSION);
+        seedNode = new SeedNode();
     }
 
     @Override
@@ -77,7 +79,6 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
     @Override
     protected void launchApplication() {
-        seedNode = new SeedNode();
         onApplicationLaunched();
     }
 
