@@ -49,10 +49,6 @@ public class StatisticsMain extends ExecutableForAppWithP2p {
     }
 
     @Override
-    protected void addCapabilities() {
-    }
-
-    @Override
     protected void launchApplication() {
         UserThread.execute(() -> {
             try {

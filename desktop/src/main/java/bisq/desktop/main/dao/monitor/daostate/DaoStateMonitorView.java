@@ -125,9 +125,6 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
         }
     }
 
-    @Override
-    public void onCheckpointFailed() {
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Implementation abstract methods
