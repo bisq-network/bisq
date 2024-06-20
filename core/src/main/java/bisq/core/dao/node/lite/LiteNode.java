@@ -278,7 +278,7 @@ public class LiteNode extends BsqNode {
                 doParseBlock(block);
                 runDelayedBatchProcessing(blocks, resultHandler);
             } catch (RequiredReorgFromSnapshotException e) {
-                log.warn("Interrupt batch processing because if a blockchain reorg. {}", e.toString());
+                log.warn("doParseBlock failed at runDelayedBatchProcessing because of a blockchain reorg. {}", e.toString());
             }
         });
     }
@@ -296,7 +296,8 @@ public class LiteNode extends BsqNode {
 
         try {
             doParseBlock(block);
-        } catch (RequiredReorgFromSnapshotException ignore) {
+        } catch (RequiredReorgFromSnapshotException e) {
+            log.warn("doParseBlock failed at onNewBlockReceived because of a blockchain reorg. {}", e.toString());
         }
 
         maybeExportToJson();

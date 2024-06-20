@@ -327,7 +327,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     }
 
     private void resyncDaoStateFromResources() {
-        log.info("removeAndBackupAllDaoData called");
+        log.info("resyncDaoStateFromResources called");
         if (resyncDaoStateFromResourcesHandler == null && ++daoRequiresRestartHandlerAttempts <= 3) {
             log.warn("resyncDaoStateFromResourcesHandler has not been initialized yet, will try again in 10 seconds");
             UserThread.runAfter(this::resyncDaoStateFromResources, 10);  // a delay for the app to init
@@ -343,7 +343,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                 resyncDaoStateFromResourcesHandler.run();
             }
         } catch (IOException e) {
-            log.error("Error at removeAndBackupAllDaoData: {}", e.toString());
+            log.error("Error at resyncDaoStateFromResources: {}", e.toString());
         }
     }
 

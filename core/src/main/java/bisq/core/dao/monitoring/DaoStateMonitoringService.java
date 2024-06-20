@@ -42,6 +42,7 @@ import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.crypto.Hash;
 import bisq.common.file.FileUtil;
+import bisq.common.util.Hex;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -120,6 +121,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     @Getter
     private final ObservableList<UtxoMismatch> utxoMismatches = FXCollections.observableArrayList();
 
+    // TODO add recent checkpoint
     private final List<Checkpoint> checkpoints = Arrays.asList(
             new Checkpoint(586920, Utilities.decodeFromHex("523aaad4e760f6ac6196fec1b3ec9a2f42e5b272"))
     );
@@ -454,8 +456,8 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         // confiscated funds are still in the utxo set
         long sumUtxo = daoStateService.getUnspentTxOutputMap().values().stream().mapToLong(BaseTxOutput::getValue).sum();
         long sumBsq = genesisTotalSupply + compensationIssuance + reimbursementIssuance - totalAmountOfBurntBsq;
-
         if (sumBsq != sumUtxo) {
+            log.error("BSQ Utxos are not matching. sumBsq={}; sumUtxo={}", sumBsq, sumUtxo);
             utxoMismatches.add(new UtxoMismatch(block.getHeight(), sumUtxo, sumBsq));
         }
     }
@@ -467,12 +469,17 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                 .findAny()
                 .ifPresent(daoStateHash -> {
                     if (Arrays.equals(daoStateHash.getHash(), checkpoint.getHash())) {
-                        log.info("Passed checkpoint {}", checkpoint.toString());
+                        log.info("Passed checkpoint {}", checkpoint);
                     } else {
                         if (checkpointFailed) {
                             return;
                         }
                         checkpointFailed = true;
+                        log.warn("verifyCheckpoints failed. We resunc from resources " +
+                                        "daoStateHash.getHash()={}, checkpoint.getHash()={}, checkpoint {}",
+                                Hex.encode(daoStateHash.getHash()),
+                                Hex.encode(checkpoint.getHash()),
+                                checkpoint);
                         try {
                             // Delete state and stop
                             removeFile("DaoStateStore");
@@ -481,10 +488,8 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                             removeFile("TempProposalStore");
 
                             listeners.forEach(Listener::onCheckpointFailed);
-                            log.error("Failed checkpoint {}", checkpoint.toString());
                         } catch (Throwable t) {
-                            t.printStackTrace();
-                            log.error(t.toString());
+                            log.error("removeAndBackupAllDaoData failed", t);
                         }
                     }
                 }));

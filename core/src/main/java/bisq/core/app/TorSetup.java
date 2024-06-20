@@ -51,11 +51,11 @@ public class TorSetup {
         File hiddenservice = new File(Paths.get(torDir.getAbsolutePath(), "hiddenservice").toString());
         try {
             FileUtil.deleteDirectory(torDir, hiddenservice, true);
+            log.info("All Tor files except hiddenservice directory got deleted");
             if (resultHandler != null)
                 resultHandler.run();
         } catch (IOException e) {
-            e.printStackTrace();
-            log.error(e.toString());
+            log.error("cleanupTorFiles failed", e);
             if (errorMessageHandler != null)
                 errorMessageHandler.handleErrorMessage(e.toString());
         }
