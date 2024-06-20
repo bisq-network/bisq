@@ -19,7 +19,6 @@ package bisq.seednode;
 
 import bisq.core.app.TorSetup;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
-import bisq.core.app.misc.ModuleForAppWithP2p;
 import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.core.user.CookieKey;
 import bisq.core.user.User;
@@ -32,7 +31,6 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.AppModule;
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.config.BaseCurrencyNetwork;
@@ -106,11 +104,6 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // We continue with a series of synchronous execution tasks
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    protected AppModule getModule() {
-        return new ModuleForAppWithP2p(config);
-    }
 
     @Override
     protected void applyInjector() {

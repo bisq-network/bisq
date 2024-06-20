@@ -18,10 +18,8 @@
 package bisq.statistics;
 
 import bisq.core.app.misc.ExecutableForAppWithP2p;
-import bisq.core.app.misc.ModuleForAppWithP2p;
 
 import bisq.common.UserThread;
-import bisq.common.app.AppModule;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -64,11 +62,6 @@ public class StatisticsMain extends ExecutableForAppWithP2p {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // We continue with a series of synchronous execution tasks
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    protected AppModule getModule() {
-        return new ModuleForAppWithP2p(config);
-    }
 
     @Override
     protected void applyInjector() {
