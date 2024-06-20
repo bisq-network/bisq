@@ -84,11 +84,7 @@ public class RestApi extends ExecutableForAppWithP2p {
     @Override
     protected void launchApplication() {
         UserThread.execute(() -> {
-            try {
-                onApplicationLaunched();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            onApplicationLaunched();
         });
     }
 
