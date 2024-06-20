@@ -86,7 +86,7 @@ public abstract class StateMonitorView<StH extends StateHash,
     private final File storageDir;
 
     protected TextField statusTextField;
-    protected Button resyncButton;
+    protected Button resyncFromResourcesButton;
     protected TableView<BLI> tableView;
     protected TableView<CLI> conflictTableView;
 
@@ -135,12 +135,12 @@ public abstract class StateMonitorView<StH extends StateHash,
 
         daoStateService.addDaoStateListener(this);
 
-        resyncButton.visibleProperty().bind(isInConflictWithSeedNode
+        resyncFromResourcesButton.visibleProperty().bind(isInConflictWithSeedNode
                 .or(isDaoStateBlockChainNotConnecting));
-        resyncButton.managedProperty().bind(isInConflictWithSeedNode
+        resyncFromResourcesButton.managedProperty().bind(isInConflictWithSeedNode
                 .or(isDaoStateBlockChainNotConnecting));
 
-        resyncButton.setOnAction(ev -> resyncDaoState());
+        resyncFromResourcesButton.setOnAction(ev -> resyncFromResources());
 
         if (daoStateService.isParseBlockChainComplete()) {
             onDataUpdate();
@@ -159,10 +159,10 @@ public abstract class StateMonitorView<StH extends StateHash,
 
         daoStateService.removeDaoStateListener(this);
 
-        resyncButton.visibleProperty().unbind();
-        resyncButton.managedProperty().unbind();
+        resyncFromResourcesButton.visibleProperty().unbind();
+        resyncFromResourcesButton.managedProperty().unbind();
 
-        resyncButton.setOnAction(null);
+        resyncFromResourcesButton.setOnAction(null);
     }
 
 
@@ -284,9 +284,9 @@ public abstract class StateMonitorView<StH extends StateHash,
         GUIUtil.setFitToRowsForTableView(tableView, 25, 28, 2, 5);
     }
 
-    private void resyncDaoState() {
+    private void resyncFromResources() {
         try {
-            daoFacade.resyncDaoStateFromResources(storageDir);
+            daoFacade.removeAndBackupAllDaoData(storageDir);
             new Popup().attention(Res.get("setting.preferences.dao.resyncFromResources.popup"))
                     .useShutDownButton()
                     .hideCloseButton()

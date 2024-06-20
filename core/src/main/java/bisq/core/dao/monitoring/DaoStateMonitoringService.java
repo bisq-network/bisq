@@ -93,7 +93,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         default void onDaoStateHashesChanged() {
         }
 
-        default void onCheckpointFail() {
+        default void onCheckpointFailed() {
         }
 
         default void onDaoStateBlockCreated() {
@@ -480,7 +480,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                             removeFile("ProposalStore");
                             removeFile("TempProposalStore");
 
-                            listeners.forEach(Listener::onCheckpointFail);
+                            listeners.forEach(Listener::onCheckpointFailed);
                             log.error("Failed checkpoint {}", checkpoint.toString());
                         } catch (Throwable t) {
                             t.printStackTrace();

@@ -123,7 +123,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
         seedNode.setInjector(injector);
 
-        injector.getInstance(DaoStateSnapshotService.class).setDaoRequiresRestartHandler(
+        injector.getInstance(DaoStateSnapshotService.class).setResyncDaoStateFromResourcesHandler(
                 // We shut down with a deterministic delay per seed to avoid that all seeds shut down at the
                 // same time in case of a reorg. We use 30 sec. as distance delay between the seeds to be on the
                 // safe side. We have 12 seeds so that's 6 minutes.
@@ -149,8 +149,8 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         super.startApplication();
 
      /*   Cookie cookie = injector.getInstance(User.class).getCookie();
-        cookie.getAsOptionalBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART).ifPresent(wasCleanTorDirSet -> {
-            if (wasCleanTorDirSet) {
+        cookie.getAsOptionalBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART).ifPresent(cleanTorDirAtRestart -> {
+            if (cleanTorDirAtRestart) {
                 injector.getInstance(TorSetup.class).cleanupTorFiles(() -> {
                     log.info("Tor directory reset");
                     cookie.remove(CookieKey.CLEAN_TOR_DIR_AT_RESTART);

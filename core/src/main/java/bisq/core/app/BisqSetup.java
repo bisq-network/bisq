@@ -44,7 +44,6 @@ import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.TradeTxException;
-import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
@@ -201,7 +200,7 @@ public class BisqSetup {
     private Runnable qubesOSInfoHandler;
     @Setter
     @Nullable
-    private Runnable daoRequiresRestartHandler;
+    private Runnable resyncDaoStateFromResourcesHandler;
     @Setter
     @Nullable
     private Runnable torAddressUpgradeHandler;
@@ -493,7 +492,7 @@ public class BisqSetup {
                 voteResultExceptionHandler,
                 revolutAccountsUpdateHandler,
                 amazonGiftCardAccountsUpdateHandler,
-                daoRequiresRestartHandler);
+                resyncDaoStateFromResourcesHandler);
 
         if (walletsSetup.downloadPercentageProperty().get() == 1) {
             checkForLockedUpFunds();
