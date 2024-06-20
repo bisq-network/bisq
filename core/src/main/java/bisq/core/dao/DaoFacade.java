@@ -95,7 +95,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 
-import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -731,8 +730,8 @@ public class DaoFacade implements DaoSetupService {
         daoStateStorageService.resyncDaoStateFromGenesis(resultHandler);
     }
 
-    public void removeAndBackupAllDaoData(File storageDir) throws IOException {
-        daoStateStorageService.removeAndBackupAllDaoData(storageDir);
+    public void removeAndBackupAllDaoData() throws IOException {
+        daoStateStorageService.removeAndBackupAllDaoData();
     }
 
     public boolean isMyRole(Role role) {

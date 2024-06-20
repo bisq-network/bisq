@@ -34,11 +34,9 @@ import bisq.common.config.Config;
 import bisq.common.util.GcUtil;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import java.io.File;
 import java.io.IOException;
 
 import java.util.LinkedList;
@@ -68,7 +66,6 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     private final BsqWalletService bsqWalletService;
     private final Preferences preferences;
     private final Config config;
-    private final File storageDir;
 
     private protobuf.DaoState daoStateCandidate;
     private LinkedList<DaoStateHash> hashChainCandidate = new LinkedList<>();
@@ -95,8 +92,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                                    WalletsSetup walletsSetup,
                                    BsqWalletService bsqWalletService,
                                    Preferences preferences,
-                                   Config config,
-                                   @Named(Config.STORAGE_DIR) File storageDir) {
+                                   Config config) {
         this.daoStateService = daoStateService;
         this.genesisTxInfo = genesisTxInfo;
         this.daoStateStorageService = daoStateStorageService;
@@ -105,7 +101,6 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
         this.config = config;
-        this.storageDir = storageDir;
     }
 
 
@@ -334,7 +329,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
             return;
         }
         try {
-            daoStateStorageService.removeAndBackupAllDaoData(storageDir);
+            daoStateStorageService.removeAndBackupAllDaoData();
             // the restart handler informs the user of the need to restart bisq (in desktop mode)
             if (resyncDaoStateFromResourcesHandler == null) {
                 log.error("resyncDaoStateFromResourcesHandler COULD NOT be called as it has not been initialized yet");
