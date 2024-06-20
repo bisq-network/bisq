@@ -19,8 +19,6 @@ package bisq.statistics;
 
 import bisq.core.app.misc.ExecutableForAppWithP2p;
 
-import bisq.common.UserThread;
-
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -48,10 +46,8 @@ public class StatisticsMain extends ExecutableForAppWithP2p {
 
     @Override
     protected void launchApplication() {
-        UserThread.execute(() -> {
-                statistics = new Statistics();
-                UserThread.execute(this::onApplicationLaunched);
-        });
+        statistics = new Statistics();
+        onApplicationLaunched();
     }
 
 

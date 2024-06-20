@@ -77,10 +77,8 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
     @Override
     protected void launchApplication() {
-        UserThread.execute(() -> {
-            seedNode = new SeedNode();
-            onApplicationLaunched();
-        });
+        seedNode = new SeedNode();
+        onApplicationLaunched();
     }
 
 
