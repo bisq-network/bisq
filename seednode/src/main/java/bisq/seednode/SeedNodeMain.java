@@ -237,11 +237,6 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
     }
 
-    private void gracefulShutDown() {
-        gracefulShutDown(() -> {
-        });
-    }
-
     @Override
     public void gracefulShutDown(ResultHandler resultHandler) {
         seedNode.shutDown();

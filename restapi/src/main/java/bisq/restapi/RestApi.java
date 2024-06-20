@@ -206,11 +206,6 @@ public class RestApi extends ExecutableForAppWithP2p {
 
     }
 
-    public void gracefulShutDown() {
-        gracefulShutDown(() -> {
-        });
-    }
-
     @Override
     public void gracefulShutDown(ResultHandler resultHandler) {
         super.gracefulShutDown(resultHandler);
