@@ -86,6 +86,11 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
     }
 
     @Override
+    protected void launchApplication() {
+        onApplicationLaunched();
+    }
+
+    @Override
     public void onSetupComplete() {
         log.info("onSetupComplete");
     }

@@ -81,11 +81,6 @@ public class RestApi extends ExecutableForAppWithP2p {
         checkMemory(config, this);
     }
 
-    @Override
-    protected void launchApplication() {
-        onApplicationLaunched();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // We continue with a series of synchronous execution tasks

@@ -59,6 +59,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
     public SeedNodeMain() {
         super("Bisq Seednode", "bisq-seednode", "bisq_seednode", Version.VERSION);
+
         seedNode = new SeedNode();
     }
 
@@ -67,18 +68,12 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         super.doExecute();
 
         checkMemory(config, this);
-
         keepRunning();
     }
 
     @Override
     protected void addCapabilities() {
         Capabilities.app.addAll(Capability.SEED_NODE);
-    }
-
-    @Override
-    protected void launchApplication() {
-        onApplicationLaunched();
     }
 
 
