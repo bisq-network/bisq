@@ -60,11 +60,6 @@ public class StatisticsMain extends ExecutableForAppWithP2p {
         });
     }
 
-    @Override
-    protected void onApplicationLaunched() {
-        super.onApplicationLaunched();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // We continue with a series of synchronous execution tasks

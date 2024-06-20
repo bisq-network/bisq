@@ -89,11 +89,6 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         });
     }
 
-    @Override
-    protected void onApplicationLaunched() {
-        super.onApplicationLaunched();
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // UncaughtExceptionHandler implementation
