@@ -3,6 +3,7 @@ plugins {
     id 'bisq.javafx'
     id 'bisq.gradle.app_start_plugin.AppStartPlugin'
     id 'bisq.gradle.packaging.PackagingPlugin'
+    alias(libs.plugins.gradle.javacpp.platform)
 }
 
 application {
