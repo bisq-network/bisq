@@ -28,7 +28,6 @@ import java.util.function.Consumer;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -40,13 +39,6 @@ import static org.mockito.Mockito.*;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.FrameGrabber;
 
-// TODO fix dependency problems
-// If tests are run via gradle I get an error:
-// `Loading library prism_es2 from resource failed: java.lang.UnsatisfiedLinkError: Can't load library: /Users/dev/.openjfx/cache/16/libprism_es2.dylib`
-// If run from the IDE it works.
-// CI on windows also fails, other OS work.
-// Seems that there are some platfomr specific dependency issues...
-@Disabled
 @ExtendWith(MockitoExtension.class)
 class ImageCaptureReaderTest {
     @Mock
