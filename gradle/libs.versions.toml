@@ -111,3 +111,6 @@ protobuf-java = { module = "com.google.protobuf:protobuf-java", version.ref = "p
 qrgen = { module = "net.glxn:qrgen", version.ref = "qrgen" }
 javacv = { module = "org.bytedeco:javacv-platform", version.ref = "javacv" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+
+[plugins]
+gradle-javacpp-platform = { id = "org.bytedeco.gradle-javacpp-platform", version.ref = "javacv" }
