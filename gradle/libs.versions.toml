@@ -128,4 +128,5 @@ swagger = { module = 'io.swagger.core.v3:swagger-jaxrs2-jakarta', version.ref = 
 [bundles]
 jersey-libs = ['jersey-container-jdk-http', 'jersey-media-json-jackson', 'jersey-inject-jersey-hk2']
 
-
+[plugins]
+gradle-javacpp-platform = { id = "org.bytedeco.gradle-javacpp-platform", version.ref = "javacv" }
