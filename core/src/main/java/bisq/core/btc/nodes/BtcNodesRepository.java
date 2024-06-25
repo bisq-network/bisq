@@ -42,6 +42,10 @@ public class BtcNodesRepository {
         this.nodes = nodes;
     }
 
+    public List<PeerAddress> getPeerAddresses(@Nullable Socks5Proxy proxy) {
+        return getPeerAddresses(proxy, false);
+    }
+
     public List<PeerAddress> getPeerAddresses(@Nullable Socks5Proxy proxy, boolean isUseClearNodesWithProxies) {
         List<PeerAddress> result;
         // We connect to onion nodes only in case we use Tor for BitcoinJ (default) to avoid privacy leaks at
