@@ -47,7 +47,7 @@ openjfx-javafx-plugin = { strictly = '0.0.10' }
 protobuf = { strictly = '3.19.1' }
 pushy = { strictly = '0.13.10' }
 qrgen = { strictly = '1.3' }
-javacv = { strictly = '1.5.10' }
+javacv = { strictly = '1.5.9' }
 slf4j = { strictly = '1.7.30' }
 spark = { strictly = '2.9.4' }
 swagger-lib = { strictly = '2.2.0' }
