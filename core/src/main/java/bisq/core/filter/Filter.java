@@ -37,6 +37,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.security.PublicKey;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -532,7 +533,9 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
     @Override
     public String toString() {
         return "Filter{" +
-                "\n     bannedOfferIds=" + bannedOfferIds +
+                "\n     creationDate=" + creationDate + " (" + new Date(creationDate) + ")" +
+                ",\n     uid=" + uid +
+                ",\n     bannedOfferIds=" + bannedOfferIds +
                 ",\n     nodeAddressesBannedFromTrading=" + nodeAddressesBannedFromTrading +
                 ",\n     bannedAutoConfExplorers=" + bannedAutoConfExplorers +
                 ",\n     bannedPaymentAccounts=" + bannedPaymentAccounts +
@@ -553,7 +556,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 ",\n     refundAgents=" + refundAgents +
                 ",\n     bannedAccountWitnessSignerPubKeys=" + bannedAccountWitnessSignerPubKeys +
                 ",\n     btcFeeReceiverAddresses=" + btcFeeReceiverAddresses +
-                ",\n     creationDate=" + creationDate +
                 ",\n     bannedPrivilegedDevPubKeys=" + bannedPrivilegedDevPubKeys +
                 ",\n     extraDataMap=" + extraDataMap +
                 ",\n     ownerPubKey=" + ownerPubKey +
@@ -570,7 +572,6 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 ",\n     takerFeeBsq=" + takerFeeBsq +
                 ",\n     addedBtcNodes=" + addedBtcNodes +
                 ",\n     addedSeedNodes=" + addedSeedNodes +
-                ",\n     uid=" + uid +
                 "\n}";
     }
 }
