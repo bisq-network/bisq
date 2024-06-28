@@ -32,6 +32,7 @@ import bisq.core.dao.state.GenesisTxInfo;
 import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.IssuanceType;
+import bisq.core.dao.state.storage.DaoStateStorageService;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;
@@ -41,7 +42,6 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.crypto.Hash;
-import bisq.common.file.FileUtil;
 import bisq.common.util.Hex;
 import bisq.common.util.Utilities;
 
@@ -102,6 +102,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     }
 
     private final DaoStateService daoStateService;
+    private final DaoStateStorageService daoStateStorageService;
     private final DaoStateNetworkService daoStateNetworkService;
     private final GenesisTxInfo genesisTxInfo;
     private final Set<String> seedNodeAddresses;
@@ -144,6 +145,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
 
     @Inject
     public DaoStateMonitoringService(DaoStateService daoStateService,
+                                     DaoStateStorageService daoStateStorageService,
                                      DaoStateNetworkService daoStateNetworkService,
                                      GenesisTxInfo genesisTxInfo,
                                      SeedNodeRepository seedNodeRepository,
@@ -151,6 +153,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                                      @Named(Config.STORAGE_DIR) File storageDir,
                                      @Named(Config.IGNORE_DEV_MSG) boolean ignoreDevMsg) {
         this.daoStateService = daoStateService;
+        this.daoStateStorageService = daoStateStorageService;
         this.daoStateNetworkService = daoStateNetworkService;
         this.genesisTxInfo = genesisTxInfo;
         this.preferences = preferences;
@@ -481,33 +484,13 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                                 Hex.encode(checkpoint.getHash()),
                                 checkpoint);
                         try {
-                            // Delete state and stop
-                            removeFile("DaoStateStore");
-                            removeFile("BlindVoteStore");
-                            removeFile("ProposalStore");
-                            removeFile("TempProposalStore");
-
-                            listeners.forEach(Listener::onCheckpointFailed);
+                            daoStateStorageService.removeAndBackupAllDaoData();
                         } catch (Throwable t) {
                             log.error("removeAndBackupAllDaoData failed", t);
                         }
+                        listeners.forEach(Listener::onCheckpointFailed);
                     }
                 }));
-    }
-
-    private void removeFile(String storeName) {
-        long currentTime = System.currentTimeMillis();
-        String newFileName = storeName + "_" + currentTime;
-        String backupDirName = "out_of_sync_dao_data";
-        File corrupted = new File(storageDir, storeName);
-        try {
-            if (corrupted.exists()) {
-                FileUtil.removeAndBackupFile(storageDir, corrupted, newFileName, backupDirName);
-            }
-        } catch (Throwable t) {
-            t.printStackTrace();
-            log.error(t.toString());
-        }
     }
 
     private boolean isSeedNode(String peersNodeAddress) {
