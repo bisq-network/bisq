@@ -54,6 +54,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
     private volatile boolean stopped;
     private final long startTime = System.currentTimeMillis();
     private TradeLimits tradeLimits;
+    private AppSetupWithP2PAndDAO appSetupWithP2PAndDAO;
 
     public ExecutableForAppWithP2p(String fullName, String scriptName, String appName, String version) {
         super(fullName, scriptName, appName, version);
@@ -71,9 +72,17 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
     }
 
     @Override
-    protected void startApplication() {
+    protected void applyInjector() {
+        super.applyInjector();
+
+        appSetupWithP2PAndDAO = injector.getInstance(AppSetupWithP2PAndDAO.class);
         // Pin that as it is used in PaymentMethods and verification in TradeStatistics
         tradeLimits = injector.getInstance(TradeLimits.class);
+    }
+
+    @Override
+    protected void startApplication() {
+        appSetupWithP2PAndDAO.start();
     }
 
     @Override

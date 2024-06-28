@@ -30,12 +30,10 @@ public class StatisticsMain extends ExecutableForAppWithP2p {
         new StatisticsMain().execute(args);
     }
 
-    private final Statistics statistics;
+    private Statistics statistics;
 
     public StatisticsMain() {
         super("Bisq Statsnode", "bisq-statistics", "bisq_statistics", Version.VERSION);
-
-        statistics = new Statistics();
     }
 
     @Override
@@ -54,14 +52,12 @@ public class StatisticsMain extends ExecutableForAppWithP2p {
     @Override
     protected void applyInjector() {
         super.applyInjector();
-
-        statistics.setInjector(injector);
+        statistics = new Statistics(injector);
     }
 
     @Override
     protected void startApplication() {
         super.startApplication();
-
         statistics.startApplication();
     }
 }

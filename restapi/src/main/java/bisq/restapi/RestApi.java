@@ -20,7 +20,6 @@ package bisq.restapi;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.app.TorSetup;
-import bisq.core.app.misc.AppSetupWithP2PAndDAO;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
 import bisq.core.dao.SignVerifyService;
 import bisq.core.dao.governance.bond.reputation.BondedReputationRepository;
@@ -107,7 +106,6 @@ public class RestApi extends ExecutableForAppWithP2p {
         });
 
         injector.getInstance(Preferences.class).setUseFullModeDaoMonitor(false);
-        injector.getInstance(AppSetupWithP2PAndDAO.class).start();
 
         daoStateService = injector.getInstance(DaoStateService.class);
         accountAgeWitnessService = injector.getInstance(AccountAgeWitnessService.class);

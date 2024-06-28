@@ -19,8 +19,6 @@ package bisq.seednode;
 
 import bisq.seednode.reporting.SeedNodeReportingService;
 
-import bisq.core.app.misc.AppSetup;
-import bisq.core.app.misc.AppSetupWithP2PAndDAO;
 import bisq.core.network.p2p.inventory.GetInventoryRequestHandler;
 
 import bisq.common.config.Config;
@@ -33,13 +31,11 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SeedNode {
-    private final AppSetup appSetup;
     private final GetInventoryRequestHandler getInventoryRequestHandler;
     private final SeedNodeReportingService seedNodeReportingService;
     private final boolean useSeedNodeReportingService;
 
     public SeedNode(Injector injector) {
-        appSetup = injector.getInstance(AppSetupWithP2PAndDAO.class);
         getInventoryRequestHandler = injector.getInstance(GetInventoryRequestHandler.class);
         seedNodeReportingService = injector.getInstance(SeedNodeReportingService.class);
 
@@ -48,7 +44,6 @@ public class SeedNode {
     }
 
     public void startApplication() {
-        appSetup.start();
         if (useSeedNodeReportingService) {
             seedNodeReportingService.initialize();
         }
