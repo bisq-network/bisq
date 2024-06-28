@@ -323,20 +323,20 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
 
     private void resyncDaoStateFromResources() {
         log.info("resyncDaoStateFromResources called");
-        if (resyncDaoStateFromResourcesHandler == null && ++daoRequiresRestartHandlerAttempts <= 3) {
-            log.warn("resyncDaoStateFromResourcesHandler has not been initialized yet, will try again in 10 seconds");
-            UserThread.runAfter(this::resyncDaoStateFromResources, 10);  // a delay for the app to init
-            return;
+        if (resyncDaoStateFromResourcesHandler == null) {
+            if (++daoRequiresRestartHandlerAttempts <= 3) {
+                log.warn("resyncDaoStateFromResourcesHandler has not been initialized yet, will try again in 10 seconds");
+                UserThread.runAfter(this::resyncDaoStateFromResources, 10);  // a delay for the app to init
+                return;
+            } else {
+                log.warn("No resyncDaoStateFromResourcesHandler has not been set. We shutdown non-gracefully with a failure code on exit");
+                System.exit(1);
+            }
         }
         try {
             daoStateStorageService.removeAndBackupAllDaoData();
             // the restart handler informs the user of the need to restart bisq (in desktop mode)
-            if (resyncDaoStateFromResourcesHandler == null) {
-                log.error("resyncDaoStateFromResourcesHandler COULD NOT be called as it has not been initialized yet");
-            } else {
-                log.info("calling resyncDaoStateFromResourcesHandler...");
-                resyncDaoStateFromResourcesHandler.run();
-            }
+            resyncDaoStateFromResourcesHandler.run();
         } catch (IOException e) {
             log.error("Error at resyncDaoStateFromResources: {}", e.toString());
         }
