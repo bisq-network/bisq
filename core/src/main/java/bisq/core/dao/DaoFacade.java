@@ -731,8 +731,8 @@ public class DaoFacade implements DaoSetupService {
         daoStateStorageService.resyncDaoStateFromGenesis(resultHandler);
     }
 
-    public void resyncDaoStateFromResources(File storageDir) throws IOException {
-        daoStateStorageService.resyncDaoStateFromResources(storageDir);
+    public void removeAndBackupAllDaoData(File storageDir) throws IOException {
+        daoStateStorageService.removeAndBackupAllDaoData(storageDir);
     }
 
     public boolean isMyRole(Role role) {

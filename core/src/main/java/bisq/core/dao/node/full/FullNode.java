@@ -164,7 +164,8 @@ public class FullNode extends BsqNode {
                                 chainTipHeight = blockHeight;
 
                             doParseBlock(rawBlock).ifPresent(this::onNewBlock);
-                        } catch (RequiredReorgFromSnapshotException ignore) {
+                        } catch (RequiredReorgFromSnapshotException e) {
+                            log.warn("doParseBlock at addBlockHandler failed because of a blockchain reorg. {}", e.toString());
                         }
                     },
                     this::handleError);
@@ -256,8 +257,8 @@ public class FullNode extends BsqNode {
                             // We are done
                             resultHandler.handleResult();
                         }
-                    } catch (RequiredReorgFromSnapshotException ignore) {
-                        // If we get a reorg we don't continue to call parseBlockRecursively
+                    } catch (RequiredReorgFromSnapshotException e) {
+                        log.warn("doParseBlock at parseBlockRecursively failed because of a blockchain reorg. {}", e.toString());
                     }
                 },
                 errorHandler);

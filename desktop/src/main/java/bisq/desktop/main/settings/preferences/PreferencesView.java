@@ -1225,7 +1225,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         resyncDaoFromResourcesButton.setOnAction(e -> {
             try {
-                daoFacade.resyncDaoStateFromResources(storageDir);
+                daoFacade.removeAndBackupAllDaoData(storageDir);
                 new Popup().attention(Res.get("setting.preferences.dao.resyncFromResources.popup"))
                         .useShutDownButton()
                         .hideCloseButton()

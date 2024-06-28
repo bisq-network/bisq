@@ -39,8 +39,8 @@ import bisq.common.file.JsonFileManager;
 import bisq.common.handlers.ResultHandler;
 import bisq.common.persistence.PersistenceManager;
 import bisq.common.setup.GracefulShutDownHandler;
-import bisq.common.util.SingleThreadExecutorUtils;
 import bisq.common.util.Profiler;
+import bisq.common.util.SingleThreadExecutorUtils;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -229,7 +229,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
                         log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
                                         "We are over our memory limit ({}) and trigger a shutdown. usedMemory: {} MB. freeMemory: {} MB" +
                                         "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
-                                (int) maxMemory, usedMemory, Profiler.getFreeMemoryInMB());
+                                maxMemory, usedMemory, Profiler.getFreeMemoryInMB());
                         shutDown(gracefulShutDownHandler);
                     }
                 }, 5);

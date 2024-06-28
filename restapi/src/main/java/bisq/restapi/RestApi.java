@@ -108,7 +108,7 @@ public class RestApi extends ExecutableForAppWithP2p {
     protected void applyInjector() {
         super.applyInjector();
 
-        injector.getInstance(DaoStateSnapshotService.class).setDaoRequiresRestartHandler(this::gracefulShutDown);
+        injector.getInstance(DaoStateSnapshotService.class).setResyncDaoStateFromResourcesHandler(this::gracefulShutDown);
     }
 
     @Override
@@ -116,8 +116,8 @@ public class RestApi extends ExecutableForAppWithP2p {
         super.startApplication();
 
         Cookie cookie = injector.getInstance(User.class).getCookie();
-        cookie.getAsOptionalBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART).ifPresent(wasCleanTorDirSet -> {
-            if (wasCleanTorDirSet) {
+        cookie.getAsOptionalBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART).ifPresent(cleanTorDirAtRestart -> {
+            if (cleanTorDirAtRestart) {
                 injector.getInstance(TorSetup.class).cleanupTorFiles(() -> {
                     log.info("Tor directory reset");
                     cookie.remove(CookieKey.CLEAN_TOR_DIR_AT_RESTART);

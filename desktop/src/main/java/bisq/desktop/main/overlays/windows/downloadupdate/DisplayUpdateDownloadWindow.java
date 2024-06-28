@@ -29,7 +29,6 @@ import bisq.core.locale.Res;
 import bisq.core.user.CookieKey;
 import bisq.core.user.User;
 
-import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
@@ -272,8 +271,7 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
                                                     BisqApp.getShutDownHandler().run();
                                                     doClose();
                                                 } catch (IOException e2) {
-                                                    log.error(e2.getMessage());
-                                                    e2.printStackTrace();
+                                                    log.error("Error at Utilities.openFile", e2);
                                                 }
                                             })
                                             .onClose(this::doClose)

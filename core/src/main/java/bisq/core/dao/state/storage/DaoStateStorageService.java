@@ -28,8 +28,8 @@ import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
 import bisq.common.persistence.PersistenceManager;
-import bisq.common.util.SingleThreadExecutorUtils;
 import bisq.common.util.GcUtil;
+import bisq.common.util.SingleThreadExecutorUtils;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -104,23 +104,23 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         }
 
         future = Optional.of(executorService.submit(() -> {
-           try {
-               Thread.currentThread().setName("Write-blocks-and-DaoState");
-               bsqBlocksStorageService.persistBlocks(blocks);
-               store.setDaoStateAsProto(daoStateAsProto);
-               store.setDaoStateHashChain(daoStateHashChain);
-               long ts = System.currentTimeMillis();
-               persistenceManager.persistNow(() -> {
-                   // After we have written to disk we remove the daoStateAsProto in the store to avoid that it stays in
-                   // memory there until the next persist call.
-                   log.info("Persist daoState took {} ms", System.currentTimeMillis() - ts);
-                   store.releaseMemory();
-                   GcUtil.maybeReleaseMemory();
-                   UserThread.execute(completeHandler);
-               });
-           } catch (Exception e) {
-               log.error("Exception at persisting BSQ blocks and DaoState", e);
-           }
+            try {
+                Thread.currentThread().setName("Write-blocks-and-DaoState");
+                bsqBlocksStorageService.persistBlocks(blocks);
+                store.setDaoStateAsProto(daoStateAsProto);
+                store.setDaoStateHashChain(daoStateHashChain);
+                long ts = System.currentTimeMillis();
+                persistenceManager.persistNow(() -> {
+                    // After we have written to disk we remove the daoStateAsProto in the store to avoid that it stays in
+                    // memory there until the next persist call.
+                    log.info("Persist daoState took {} ms", System.currentTimeMillis() - ts);
+                    store.clear();
+                    GcUtil.maybeReleaseMemory();
+                    UserThread.execute(completeHandler);
+                });
+            } catch (Exception e) {
+                log.error("Exception at persisting BSQ blocks and DaoState", e);
+            }
         }));
     }
 
@@ -135,7 +135,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
             bsqBlocksStorageService.copyFromResources(postFix);
 
             super.readFromResources(postFix, () -> {
-                // We got mapped back to user thread so we need to create a new thread again as we dont want to
+                // We got mapped back to user thread, so we need to create a new thread again as we don't want to
                 // execute on user thread
                 new Thread(() -> {
                     Thread.currentThread().setName("Read-BsqBlocksStore");
@@ -148,8 +148,12 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
                             if (!list.isEmpty()) {
                                 int heightOfLastBlock = list.getLast().getHeight();
                                 if (heightOfLastBlock != chainHeight) {
-                                    log.warn("heightOfLastBlock {} must match chainHeight {}", heightOfLastBlock, chainHeight);
-                                    // this error scenario is handled by DaoStateSnapshotService, it will resync from resources & reboot
+                                    log.error("Error at readFromResources. " +
+                                                    "heightOfLastBlock not same as chainHeight.\n" +
+                                                    "heightOfLastBlock={}; chainHeight={}.\n" +
+                                                    "This error scenario is handled by DaoStateSnapshotService, " +
+                                                    "it will resync from resources & reboot",
+                                            heightOfLastBlock, chainHeight);
                                 }
                             }
                         } else {
@@ -182,7 +186,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
 
     public void releaseMemory() {
         blocks.clear();
-        store.releaseMemory();
+        store.clear();
         GcUtil.maybeReleaseMemory();
     }
 
@@ -200,7 +204,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         bsqBlocksStorageService.removeBlocksInDirectory();
     }
 
-    public void resyncDaoStateFromResources(File storageDir) throws IOException {
+    public void removeAndBackupAllDaoData(File storageDir) throws IOException {
         // We delete all DAO consensus data and remove the daoState so it will rebuild from latest
         // resource files.
         String backupDirName = "out_of_sync_dao_data";
