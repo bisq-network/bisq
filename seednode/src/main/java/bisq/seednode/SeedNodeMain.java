@@ -99,26 +99,6 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         super.applyInjector();
 
         seedNode.setInjector(injector);
-
-        injector.getInstance(DaoStateSnapshotService.class).setResyncDaoStateFromResourcesHandler(
-                // We shut down with a deterministic delay per seed to avoid that all seeds shut down at the
-                // same time in case of a reorg. We use 30 sec. as distance delay between the seeds to be on the
-                // safe side. We have 12 seeds so that's 6 minutes.
-                () -> UserThread.runAfter(this::gracefulShutDown, 1 + (getMyIndex() * 30L))
-        );
-    }
-
-    private int getMyIndex() {
-        P2PService p2PService = injector.getInstance(P2PService.class);
-        SeedNodeRepository seedNodeRepository = injector.getInstance(SeedNodeRepository.class);
-        List<NodeAddress> seedNodes = new ArrayList<>(seedNodeRepository.getSeedNodeAddresses());
-        NodeAddress myAddress = p2PService.getAddress();
-        for (int i = 0; i < seedNodes.size(); i++) {
-            if (seedNodes.get(i).equals(myAddress)) {
-                return i;
-            }
-        }
-        return 0;
     }
 
     @Override
@@ -143,6 +123,13 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
                 gracefulShutDown();
             }
         });
+
+        injector.getInstance(DaoStateSnapshotService.class).setResyncDaoStateFromResourcesHandler(
+                // We shut down with a deterministic delay per seed to avoid that all seeds shut down at the
+                // same time in case of a reorg. We use 30 sec. as distance delay between the seeds to be on the
+                // safe side. We have 12 seeds so that's 6 minutes.
+                () -> UserThread.runAfter(this::gracefulShutDown, 1 + (getMyIndex() * 30L))
+        );
 
         injector.getInstance(P2PService.class).addP2PServiceListener(new P2PServiceListener() {
             @Override
@@ -218,5 +205,19 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
     public void gracefulShutDown(ResultHandler resultHandler) {
         seedNode.shutDown();
         super.gracefulShutDown(resultHandler);
+    }
+
+
+    private int getMyIndex() {
+        P2PService p2PService = injector.getInstance(P2PService.class);
+        SeedNodeRepository seedNodeRepository = injector.getInstance(SeedNodeRepository.class);
+        List<NodeAddress> seedNodes = new ArrayList<>(seedNodeRepository.getSeedNodeAddresses());
+        NodeAddress myAddress = p2PService.getAddress();
+        for (int i = 0; i < seedNodes.size(); i++) {
+            if (seedNodes.get(i).equals(myAddress)) {
+                return i;
+            }
+        }
+        return 0;
     }
 }
