@@ -433,6 +433,7 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
     public void onCheckpointFailed() {
         new Popup().attention(Res.get("dao.monitor.daoState.checkpoint.popup"))
                 .useShutDownButton()
+                .hideCloseButton()
                 .show();
     }
 
