@@ -193,7 +193,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     public void resyncDaoStateFromGenesis(Runnable resultHandler) {
         String backupDirName = "out_of_sync_dao_data";
         try {
-            removeAndBackupDaoConsensusFiles(storageDir, backupDirName);
+            removeAndBackupDaoConsensusFiles(backupDirName);
         } catch (Throwable t) {
             log.error(t.toString());
         }
@@ -205,10 +205,10 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     }
 
     public void removeAndBackupAllDaoData() throws IOException {
-        // We delete all DAO consensus data and remove the daoState so it will rebuild from latest
+        // We delete all DAO consensus data and remove the daoState, so it will rebuild from latest
         // resource files.
         String backupDirName = "out_of_sync_dao_data";
-        removeAndBackupDaoConsensusFiles(storageDir, backupDirName);
+        removeAndBackupDaoConsensusFiles(backupDirName);
 
         String newFileName = "DaoStateStore_" + System.currentTimeMillis();
         FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "DaoStateStore"), newFileName, backupDirName);
@@ -216,8 +216,8 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         bsqBlocksStorageService.removeBlocksDirectory();
     }
 
-    private void removeAndBackupDaoConsensusFiles(File storageDir, String backupDirName) throws IOException {
-        // We delete all DAO related data. Some will be rebuild from resources.
+    private void removeAndBackupDaoConsensusFiles(String backupDirName) throws IOException {
+        // We delete all DAO related data. Some will be rebuilt from resources.
         long currentTime = System.currentTimeMillis();
         String newFileName = "BlindVoteStore_" + currentTime;
         FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "BlindVoteStore"), newFileName, backupDirName);
