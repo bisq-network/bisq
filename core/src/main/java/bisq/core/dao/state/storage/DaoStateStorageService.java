@@ -191,9 +191,11 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     }
 
     public void resyncDaoStateFromGenesis(Runnable resultHandler) {
-        String backupDirName = "out_of_sync_dao_data";
         try {
-            removeAndBackupDaoConsensusFiles(backupDirName);
+            removeAndBackupDaoConsensusFiles(false);
+            // We recreate the directory so that we don't fill the blocks after restart from resources
+            // In copyFromResources we only check for the directory not the files inside.
+            bsqBlocksStorageService.makeBlocksDirectory();
         } catch (Throwable t) {
             log.error(t.toString());
         }
@@ -201,42 +203,33 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         store.setDaoStateAsProto(DaoState.getBsqStateCloneExcludingBlocks(new DaoState()));
         store.setDaoStateHashChain(new LinkedList<>());
         persistenceManager.persistNow(resultHandler);
-        bsqBlocksStorageService.removeBlocksInDirectory();
     }
 
     public void removeAndBackupAllDaoData() throws IOException {
-        // We delete all DAO consensus data and remove the daoState, so it will rebuild from latest
+        // We delete all DAO consensus data and remove the daoState and blocks, so it will rebuild from latest
         // resource files.
-        String backupDirName = "out_of_sync_dao_data";
-        removeAndBackupDaoConsensusFiles(backupDirName);
+        removeAndBackupDaoConsensusFiles(true);
+    }
 
-        String newFileName = "DaoStateStore_" + System.currentTimeMillis();
-        FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "DaoStateStore"), newFileName, backupDirName);
-
+    private void removeAndBackupDaoConsensusFiles(boolean removeDaoStateStore) throws IOException {
+        // We delete all DAO related data. Some will be rebuilt from resources.
+        if (removeDaoStateStore) {
+            removeAndBackupFile("DaoStateStore");
+        }
+        removeAndBackupFile("BlindVoteStore");
+        removeAndBackupFile("ProposalStore");
+        // We also need to remove ballot list as it contains the proposals as well. It will be recreated at resync
+        removeAndBackupFile("BallotList");
+        removeAndBackupFile("UnconfirmedBsqChangeOutputList");
+        removeAndBackupFile("TempProposalStore");
+        removeAndBackupFile("BurningManAccountingStore_v3");
         bsqBlocksStorageService.removeBlocksDirectory();
     }
 
-    private void removeAndBackupDaoConsensusFiles(String backupDirName) throws IOException {
-        // We delete all DAO related data. Some will be rebuilt from resources.
-        long currentTime = System.currentTimeMillis();
-        String newFileName = "BlindVoteStore_" + currentTime;
-        FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "BlindVoteStore"), newFileName, backupDirName);
-
-        newFileName = "ProposalStore_" + currentTime;
-        FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "ProposalStore"), newFileName, backupDirName);
-
-        // We also need to remove ballot list as it contains the proposals as well. It will be recreated at resync
-        newFileName = "BallotList_" + currentTime;
-        FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "BallotList"), newFileName, backupDirName);
-
-        newFileName = "UnconfirmedBsqChangeOutputList_" + currentTime;
-        FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "UnconfirmedBsqChangeOutputList"), newFileName, backupDirName);
-
-        newFileName = "TempProposalStore_" + currentTime;
-        FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "TempProposalStore"), newFileName, backupDirName);
-
-        newFileName = "BurningManAccountingStore_v3_" + currentTime;
-        FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "BurningManAccountingStore_v3"), newFileName, backupDirName);
+    private void removeAndBackupFile(String fileName) throws IOException {
+        String backupDirName = "out_of_sync_dao_data";
+        String newFileName = fileName + "_" + System.currentTimeMillis();
+        FileUtil.removeAndBackupFile(storageDir, new File(storageDir, fileName), newFileName, backupDirName);
     }
 
 
