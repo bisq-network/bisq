@@ -19,6 +19,7 @@ package bisq.seednode;
 
 import bisq.core.app.TorSetup;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
+import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.core.user.CookieKey;
 import bisq.core.user.User;
@@ -143,6 +144,13 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
             seedNode.startApplication();
         }, log::error);
 
+
+        injector.getInstance(DaoStateMonitoringService.class).addListener(new DaoStateMonitoringService.Listener() {
+            @Override
+            public void onCheckpointFailed() {
+                gracefulShutDown();
+            }
+        });
 
         injector.getInstance(P2PService.class).addP2PServiceListener(new P2PServiceListener() {
             @Override
