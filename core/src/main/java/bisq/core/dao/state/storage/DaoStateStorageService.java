@@ -213,6 +213,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
             log.error(t.toString());
         }
 
+        // Reset to empty DaoState and DaoStateHashChain
         store.setDaoStateAsProto(DaoState.getBsqStateCloneExcludingBlocks(new DaoState()));
         store.setDaoStateHashChain(new LinkedList<>());
         persistenceManager.persistNow(resultHandler);
@@ -225,7 +226,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
     }
 
     private void removeAndBackupDaoConsensusFiles(boolean removeDaoStateStore) throws IOException {
-        // We delete all DAO related data. Some will be rebuilt from resources.
+        // We delete all DAO related data. At re-start they will get rebuilt from resources.
         if (removeDaoStateStore) {
             removeAndBackupFile("DaoStateStore");
         }
