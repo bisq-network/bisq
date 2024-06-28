@@ -180,6 +180,19 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         return new DaoState();
     }
 
+    public boolean isChainHeighMatchingLastBlockHeight() {
+        DaoState persistedDaoState = getPersistedBsqState();
+        int heightOfPersistedLastBlock = persistedDaoState.getLastBlock().getHeight();
+        int chainHeightOfPersistedDaoState = persistedDaoState.getChainHeight();
+        boolean isMatching = heightOfPersistedLastBlock == chainHeightOfPersistedDaoState;
+        if (!isMatching) {
+            log.warn("heightOfPersistedLastBlock is not same as chainHeightOfPersistedDaoState.\n" +
+                            "heightOfPersistedLastBlock={}; chainHeightOfPersistedDaoState={}",
+                    heightOfPersistedLastBlock, chainHeightOfPersistedDaoState);
+        }
+        return isMatching;
+    }
+
     public LinkedList<DaoStateHash> getPersistedDaoStateHashChain() {
         return store.getDaoStateHashChain();
     }
