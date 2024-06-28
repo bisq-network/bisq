@@ -25,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class StatisticsMain extends ExecutableForAppWithP2p {
-
     public static void main(String[] args) {
         new StatisticsMain().execute(args);
     }
@@ -43,11 +42,6 @@ public class StatisticsMain extends ExecutableForAppWithP2p {
         checkMemory(config, this);
         keepRunning();
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // We continue with a series of synchronous execution tasks
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     protected void applyInjector() {

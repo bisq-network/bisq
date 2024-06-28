@@ -17,32 +17,22 @@
 
 package bisq.seednode;
 
-import bisq.core.app.TorSetup;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
-import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.state.DaoStateSnapshotService;
-import bisq.core.user.Cookie;
 import bisq.core.user.CookieKey;
 import bisq.core.user.User;
 
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
-import bisq.network.p2p.P2PServiceListener;
-import bisq.network.p2p.peers.PeerManager;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
-import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
 import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
-import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
-
-import com.google.inject.Key;
-import com.google.inject.name.Names;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -57,14 +47,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SeedNodeMain extends ExecutableForAppWithP2p {
-    private static final long CHECK_CONNECTION_LOSS_SEC = 30;
-
     public static void main(String[] args) {
         new SeedNodeMain().execute(args);
     }
 
     private SeedNode seedNode;
-    private Timer checkConnectionLossTimer;
+    private DaoStateSnapshotService daoStateSnapshotService;
 
     public SeedNodeMain() {
         super("Bisq Seednode", "bisq-seednode", "bisq_seednode", Version.VERSION);
@@ -85,19 +73,6 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
-    // UncaughtExceptionHandler implementation
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public void handleUncaughtException(Throwable throwable, boolean doShutDown) {
-        if (throwable instanceof OutOfMemoryError || doShutDown) {
-            log.error("We got an OutOfMemoryError and shut down");
-            gracefulShutDown(() -> log.info("gracefulShutDown complete"));
-        }
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
     // We continue with a series of synchronous execution tasks
     ///////////////////////////////////////////////////////////////////////////////////////////
 
@@ -105,14 +80,12 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
     protected void applyInjector() {
         super.applyInjector();
 
+        daoStateSnapshotService = injector.getInstance(DaoStateSnapshotService.class);
         seedNode = new SeedNode(injector);
     }
 
     @Override
     protected void startApplication() {
-        super.startApplication();
-
-        Cookie cookie = injector.getInstance(User.class).getCookie();
         if (cookie.getAsOptionalBoolean(CookieKey.DELAY_STARTUP).orElse(false)) {
             cookie.remove(CookieKey.DELAY_STARTUP);
             try {
@@ -125,24 +98,10 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
             }
         }
 
-        cookie.getAsOptionalBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART).ifPresent(cleanTorDirAtRestart -> {
-            if (cleanTorDirAtRestart) {
-                injector.getInstance(TorSetup.class).cleanupTorFiles(() ->
-                                cookie.remove(CookieKey.CLEAN_TOR_DIR_AT_RESTART),
-                        log::error);
-            }
-        });
-
+        super.startApplication();
         seedNode.startApplication();
 
-        injector.getInstance(DaoStateMonitoringService.class).addListener(new DaoStateMonitoringService.Listener() {
-            @Override
-            public void onCheckpointFailed() {
-                gracefulShutDown();
-            }
-        });
-
-        injector.getInstance(DaoStateSnapshotService.class).setResyncDaoStateFromResourcesHandler(
+        daoStateSnapshotService.setResyncDaoStateFromResourcesHandler(
                 // We set DELAY_STARTUP and shut down. At start up we delay with a deterministic delay to avoid
                 // that all seeds get restarted at the same time.
                 () -> {
@@ -150,61 +109,12 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
                     shutDown(this);
                 }
         );
-
-        injector.getInstance(P2PService.class).addP2PServiceListener(new P2PServiceListener() {
-            @Override
-            public void onDataReceived() {
-                // Do nothing
-            }
-
-            @Override
-            public void onNoSeedNodeAvailable() {
-                // Do nothing
-            }
-
-            @Override
-            public void onNoPeersAvailable() {
-                // Do nothing
-            }
-
-            @Override
-            public void onUpdatedDataReceived() {
-                // Do nothing
-            }
-
-            @Override
-            public void onTorNodeReady() {
-                // Do nothing
-            }
-
-            @Override
-            public void onHiddenServicePublished() {
-                boolean preventPeriodicShutdownAtSeedNode = injector.getInstance(Key.get(boolean.class,
-                        Names.named(Config.PREVENT_PERIODIC_SHUTDOWN_AT_SEED_NODE)));
-                if (!preventPeriodicShutdownAtSeedNode) {
-                    startShutDownInterval();
-                }
-                UserThread.runAfter(() -> setupConnectionLossCheck(), 60);
-            }
-
-            @Override
-            public void onSetupFailed(Throwable throwable) {
-                // Do nothing
-            }
-
-            @Override
-            public void onRequestCustomBridges() {
-                // Do nothing
-            }
-        });
     }
 
     @Override
     public void gracefulShutDown(ResultHandler resultHandler) {
         seedNode.shutDown();
-        if (checkConnectionLossTimer != null) {
-            checkConnectionLossTimer.stop();
-        }
+
         super.gracefulShutDown(resultHandler);
     }
 
@@ -254,26 +164,5 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
 
         NodeAddress myAddress = injector.getInstance(P2PService.class).getAddress();
         return seedNodeAddresses.indexOf(myAddress);
-    }
-
-    private void setupConnectionLossCheck() {
-        // For dev testing (usually on BTC_REGTEST) we don't want to get the seed shut
-        // down as it is normal that the seed is the only actively running node.
-        if (Config.baseCurrencyNetwork() == BaseCurrencyNetwork.BTC_REGTEST) {
-            return;
-        }
-
-        if (checkConnectionLossTimer != null) {
-            return;
-        }
-
-        checkConnectionLossTimer = UserThread.runPeriodically(() -> {
-            if (injector.getInstance(PeerManager.class).getNumAllConnectionsLostEvents() > 1) {
-                // We set a flag to clear tor cache files at re-start. We cannot clear it now as Tor is used and
-                // that can cause problems.
-                injector.getInstance(User.class).getCookie().putAsBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART, true);
-                shutDown(this);
-            }
-        }, CHECK_CONNECTION_LOSS_SEC);
     }
 }

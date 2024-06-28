@@ -18,21 +18,30 @@
 package bisq.core.app.misc;
 
 import bisq.core.app.BisqExecutable;
+import bisq.core.app.TorSetup;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.dao.DaoSetup;
+import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.node.full.RpcService;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.offer.bsq_swap.OpenBsqSwapOfferService;
 import bisq.core.payment.TradeLimits;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
+import bisq.core.user.Cookie;
+import bisq.core.user.CookieKey;
+import bisq.core.user.User;
 
 import bisq.network.p2p.P2PService;
+import bisq.network.p2p.P2PServiceListener;
+import bisq.network.p2p.peers.PeerManager;
 
+import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.AppModule;
 import bisq.common.app.DevEnv;
+import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.file.JsonFileManager;
 import bisq.common.handlers.ResultHandler;
@@ -40,6 +49,9 @@ import bisq.common.persistence.PersistenceManager;
 import bisq.common.setup.GracefulShutDownHandler;
 import bisq.common.util.Profiler;
 import bisq.common.util.SingleThreadExecutorUtils;
+
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -51,10 +63,18 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
     private static final long CHECK_MEMORY_PERIOD_SEC = 300;
     protected static final long CHECK_SHUTDOWN_SEC = TimeUnit.HOURS.toSeconds(1);
     protected static final long SHUTDOWN_INTERVAL = TimeUnit.HOURS.toMillis(24);
+    private static final long CHECK_CONNECTION_LOSS_SEC = 30;
+
     private volatile boolean stopped;
     private final long startTime = System.currentTimeMillis();
     private TradeLimits tradeLimits;
     private AppSetupWithP2PAndDAO appSetupWithP2PAndDAO;
+    protected P2PService p2PService;
+    protected DaoStateMonitoringService daoStateMonitoringService;
+
+    protected Cookie cookie;
+    private Timer checkConnectionLossTimer;
+    private Boolean preventPeriodicShutdownAtSeedNode;
 
     public ExecutableForAppWithP2p(String fullName, String scriptName, String appName, String version) {
         super(fullName, scriptName, appName, version);
@@ -76,13 +96,67 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
         super.applyInjector();
 
         appSetupWithP2PAndDAO = injector.getInstance(AppSetupWithP2PAndDAO.class);
+        p2PService = injector.getInstance(P2PService.class);
+        cookie = injector.getInstance(User.class).getCookie();
         // Pin that as it is used in PaymentMethods and verification in TradeStatistics
         tradeLimits = injector.getInstance(TradeLimits.class);
+        daoStateMonitoringService = injector.getInstance(DaoStateMonitoringService.class);
+        preventPeriodicShutdownAtSeedNode = injector.getInstance(Key.get(boolean.class,
+                Names.named(Config.PREVENT_PERIODIC_SHUTDOWN_AT_SEED_NODE)));
     }
 
     @Override
     protected void startApplication() {
+        cookie.getAsOptionalBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART).ifPresent(cleanTorDirAtRestart -> {
+            if (cleanTorDirAtRestart) {
+                injector.getInstance(TorSetup.class).cleanupTorFiles(() ->
+                                cookie.remove(CookieKey.CLEAN_TOR_DIR_AT_RESTART),
+                        log::error);
+            }
+        });
+
+        daoStateMonitoringService.addListener(new DaoStateMonitoringService.Listener() {
+            @Override
+            public void onCheckpointFailed() {
+                gracefulShutDown();
+            }
+        });
+
+        p2PService.addP2PServiceListener(new P2PServiceListener() {
+            @Override
+            public void onDataReceived() {
+            }
+
+            @Override
+            public void onNoSeedNodeAvailable() {
+            }
+
+            @Override
+            public void onNoPeersAvailable() {
+            }
+
+            @Override
+            public void onUpdatedDataReceived() {
+            }
+
+            @Override
+            public void onTorNodeReady() {
+            }
+
+            @Override
+            public void onHiddenServicePublished() {
+                ExecutableForAppWithP2p.this.onHiddenServicePublished();
+            }
+        });
+
         appSetupWithP2PAndDAO.start();
+    }
+
+    protected void onHiddenServicePublished() {
+        if (!preventPeriodicShutdownAtSeedNode) {
+            startShutDownInterval();
+        }
+        UserThread.runAfter(this::setupConnectionLossCheck, 60);
     }
 
     @Override
@@ -95,10 +169,26 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
         log.info("onSetupComplete");
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // UncaughtExceptionHandler implementation
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void handleUncaughtException(Throwable throwable, boolean doShutDown) {
+        if (throwable instanceof OutOfMemoryError || doShutDown) {
+            log.error("We got an OutOfMemoryError and shut down");
+            gracefulShutDown(() -> log.info("gracefulShutDown complete"));
+        }
+    }
+
     // We don't use the gracefulShutDown implementation of the super class as we have a limited set of modules
     @Override
     public void gracefulShutDown(ResultHandler resultHandler) {
         log.info("gracefulShutDown");
+        if (checkConnectionLossTimer != null) {
+            checkConnectionLossTimer.stop();
+        }
         try {
             if (injector != null) {
                 JsonFileManager.shutDownAllInstances();
@@ -215,5 +305,26 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
             log.info("Shutdown complete");
             System.exit(1);
         });
+    }
+
+    protected void setupConnectionLossCheck() {
+        // For dev testing (usually on BTC_REGTEST) we don't want to get the seed shut
+        // down as it is normal that the seed is the only actively running node.
+        if (Config.baseCurrencyNetwork() == BaseCurrencyNetwork.BTC_REGTEST) {
+            return;
+        }
+
+        if (checkConnectionLossTimer != null) {
+            return;
+        }
+
+        checkConnectionLossTimer = UserThread.runPeriodically(() -> {
+            if (injector.getInstance(PeerManager.class).getNumAllConnectionsLostEvents() > 1) {
+                // We set a flag to clear tor cache files at re-start. We cannot clear it now as Tor is used and
+                // that can cause problems.
+                injector.getInstance(User.class).getCookie().putAsBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART, true);
+                shutDown(this);
+            }
+        }, CHECK_CONNECTION_LOSS_SEC);
     }
 }
