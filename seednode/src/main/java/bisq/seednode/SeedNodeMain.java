@@ -115,6 +115,18 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         super.startApplication();
 
         Cookie cookie = injector.getInstance(User.class).getCookie();
+        if (cookie.getAsOptionalBoolean(CookieKey.DELAY_STARTUP).orElse(false)) {
+            cookie.remove(CookieKey.DELAY_STARTUP);
+            try {
+                // We create a deterministic delay per seed to avoid that all seeds start up at the
+                // same time in case of a reorg.
+                long delay = getMyIndex() * TimeUnit.SECONDS.toMillis(30);
+                Thread.sleep(delay);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         cookie.getAsOptionalBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART).ifPresent(cleanTorDirAtRestart -> {
             if (cleanTorDirAtRestart) {
                 injector.getInstance(TorSetup.class).cleanupTorFiles(() ->
@@ -133,10 +145,12 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         });
 
         injector.getInstance(DaoStateSnapshotService.class).setResyncDaoStateFromResourcesHandler(
-                // We shut down with a deterministic delay per seed to avoid that all seeds shut down at the
-                // same time in case of a reorg. We use 30 sec. as distance delay between the seeds to be on the
-                // safe side. We have 12 seeds so that's 6 minutes.
-                () -> UserThread.runAfter(this::gracefulShutDown, 1 + (getMyIndex() * 30L))
+                // We set DELAY_STARTUP and shut down. At start up we delay with a deterministic delay to avoid
+                // that all seeds get restarted at the same time.
+                () -> {
+                    injector.getInstance(User.class).getCookie().putAsBoolean(CookieKey.DELAY_STARTUP, true);
+                    shutDown(this);
+                }
         );
 
         injector.getInstance(P2PService.class).addP2PServiceListener(new P2PServiceListener() {
