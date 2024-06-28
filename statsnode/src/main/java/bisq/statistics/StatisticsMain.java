@@ -25,17 +25,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class StatisticsMain extends ExecutableForAppWithP2p {
-
     public static void main(String[] args) {
         new StatisticsMain().execute(args);
     }
 
-    private final Statistics statistics;
+    private Statistics statistics;
 
     public StatisticsMain() {
         super("Bisq Statsnode", "bisq-statistics", "bisq_statistics", Version.VERSION);
-
-        statistics = new Statistics();
     }
 
     @Override
@@ -46,22 +43,15 @@ public class StatisticsMain extends ExecutableForAppWithP2p {
         keepRunning();
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // We continue with a series of synchronous execution tasks
-    ///////////////////////////////////////////////////////////////////////////////////////////
-
     @Override
     protected void applyInjector() {
         super.applyInjector();
-
-        statistics.setInjector(injector);
+        statistics = new Statistics(injector);
     }
 
     @Override
     protected void startApplication() {
         super.startApplication();
-
         statistics.startApplication();
     }
 }
