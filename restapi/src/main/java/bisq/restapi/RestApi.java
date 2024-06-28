@@ -100,10 +100,9 @@ public class RestApi extends ExecutableForAppWithP2p {
         Cookie cookie = injector.getInstance(User.class).getCookie();
         cookie.getAsOptionalBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART).ifPresent(cleanTorDirAtRestart -> {
             if (cleanTorDirAtRestart) {
-                injector.getInstance(TorSetup.class).cleanupTorFiles(() -> {
-                    log.info("Tor directory reset");
-                    cookie.remove(CookieKey.CLEAN_TOR_DIR_AT_RESTART);
-                }, log::error);
+                injector.getInstance(TorSetup.class).cleanupTorFiles(() ->
+                                cookie.remove(CookieKey.CLEAN_TOR_DIR_AT_RESTART),
+                        log::error);
             }
         });
 
@@ -147,7 +146,7 @@ public class RestApi extends ExecutableForAppWithP2p {
                 boolean preventPeriodicShutdownAtSeedNode = injector.getInstance(Key.get(boolean.class,
                         Names.named(Config.PREVENT_PERIODIC_SHUTDOWN_AT_SEED_NODE)));
                 if (!preventPeriodicShutdownAtSeedNode) {
-                    startShutDownInterval(RestApi.this);
+                    startShutDownInterval();
                 }
                 UserThread.runAfter(() -> setupConnectionLossCheck(), 60);
 

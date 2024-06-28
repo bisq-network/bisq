@@ -29,29 +29,28 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SeedNode {
-    @Setter
-    private Injector injector;
-    private AppSetup appSetup;
-    private GetInventoryRequestHandler getInventoryRequestHandler;
-    private SeedNodeReportingService seedNodeReportingService;
+    private final AppSetup appSetup;
+    private final GetInventoryRequestHandler getInventoryRequestHandler;
+    private final SeedNodeReportingService seedNodeReportingService;
+    private final boolean useSeedNodeReportingService;
 
-    public SeedNode() {
+    public SeedNode(Injector injector) {
+        appSetup = injector.getInstance(AppSetupWithP2PAndDAO.class);
+        getInventoryRequestHandler = injector.getInstance(GetInventoryRequestHandler.class);
+        seedNodeReportingService = injector.getInstance(SeedNodeReportingService.class);
+
+        String seedNodeReportingServerUrl = injector.getInstance(Key.get(String.class, Names.named(Config.SEED_NODE_REPORTING_SERVER_URL)));
+        useSeedNodeReportingService = seedNodeReportingServerUrl != null && !seedNodeReportingServerUrl.trim().isEmpty();
     }
 
     public void startApplication() {
-        appSetup = injector.getInstance(AppSetupWithP2PAndDAO.class);
         appSetup.start();
-
-        getInventoryRequestHandler = injector.getInstance(GetInventoryRequestHandler.class);
-
-        String seedNodeReportingServerUrl = injector.getInstance(Key.get(String.class, Names.named(Config.SEED_NODE_REPORTING_SERVER_URL)));
-        if (seedNodeReportingServerUrl != null && !seedNodeReportingServerUrl.trim().isEmpty()) {
-            seedNodeReportingService = injector.getInstance(SeedNodeReportingService.class);
+        if (useSeedNodeReportingService) {
+            seedNodeReportingService.initialize();
         }
     }
 
