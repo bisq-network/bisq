@@ -17,9 +17,11 @@
 
 package bisq.seednode;
 
+import bisq.core.app.TorSetup;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.state.DaoStateSnapshotService;
+import bisq.core.user.Cookie;
 import bisq.core.user.CookieKey;
 import bisq.core.user.User;
 
@@ -105,15 +107,14 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
     protected void startApplication() {
         super.startApplication();
 
-     /*   Cookie cookie = injector.getInstance(User.class).getCookie();
+        Cookie cookie = injector.getInstance(User.class).getCookie();
         cookie.getAsOptionalBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART).ifPresent(cleanTorDirAtRestart -> {
             if (cleanTorDirAtRestart) {
-                injector.getInstance(TorSetup.class).cleanupTorFiles(() -> {
-                    log.info("Tor directory reset");
-                    cookie.remove(CookieKey.CLEAN_TOR_DIR_AT_RESTART);
-                }, log::error);
+                injector.getInstance(TorSetup.class).cleanupTorFiles(() ->
+                                cookie.remove(CookieKey.CLEAN_TOR_DIR_AT_RESTART),
+                        log::error);
             }
-        });*/
+        });
 
         seedNode.startApplication();
 

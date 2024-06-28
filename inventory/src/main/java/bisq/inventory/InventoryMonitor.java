@@ -102,7 +102,8 @@ public class InventoryMonitor implements SetupListener {
 
         TorSetup torSetup = new TorSetup(torDir);
         if (cleanupTorFiles) {
-            torSetup.cleanupTorFiles(() -> log.info("Tor directory cleaned up"), log::error);
+            torSetup.cleanupTorFiles(() -> {
+            }, log::error);
         }
     }
 
