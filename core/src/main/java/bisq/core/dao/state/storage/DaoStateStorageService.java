@@ -231,6 +231,12 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
 
         newFileName = "UnconfirmedBsqChangeOutputList_" + currentTime;
         FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "UnconfirmedBsqChangeOutputList"), newFileName, backupDirName);
+
+        newFileName = "TempProposalStore_" + currentTime;
+        FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "TempProposalStore"), newFileName, backupDirName);
+
+        newFileName = "BurningManAccountingStore_v3_" + currentTime;
+        FileUtil.removeAndBackupFile(storageDir, new File(storageDir, "BurningManAccountingStore_v3"), newFileName, backupDirName);
     }
 
 
