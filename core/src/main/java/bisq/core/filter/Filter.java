@@ -27,6 +27,7 @@ import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.GetDataResponsePriority;
 import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
+import bisq.common.util.Hex;
 import bisq.common.util.Utilities;
 
 import protobuf.StoragePayload;
@@ -558,7 +559,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 ",\n     btcFeeReceiverAddresses=" + btcFeeReceiverAddresses +
                 ",\n     bannedPrivilegedDevPubKeys=" + bannedPrivilegedDevPubKeys +
                 ",\n     extraDataMap=" + extraDataMap +
-                ",\n     ownerPubKey=" + ownerPubKey +
+                ",\n     ownerPubKey=" + Hex.encode(ownerPubKeyBytes) +
                 ",\n     disableAutoConf=" + disableAutoConf +
                 ",\n     nodeAddressesBannedFromNetwork=" + nodeAddressesBannedFromNetwork +
                 ",\n     disableMempoolValidation=" + disableMempoolValidation +
