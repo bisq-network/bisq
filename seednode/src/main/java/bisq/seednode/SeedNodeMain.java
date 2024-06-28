@@ -35,6 +35,7 @@ import bisq.common.Timer;
 import bisq.common.UserThread;
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
+import bisq.common.app.DevEnv;
 import bisq.common.app.Version;
 import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
@@ -43,8 +44,14 @@ import bisq.common.handlers.ResultHandler;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,7 +64,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
     }
 
     private final SeedNode seedNode;
-    private Timer checkConnectionLossTime;
+    private Timer checkConnectionLossTimer;
 
     public SeedNodeMain() {
         super("Bisq Seednode", "bisq-seednode", "bisq_seednode", Version.VERSION);
@@ -163,7 +170,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
                 boolean preventPeriodicShutdownAtSeedNode = injector.getInstance(Key.get(boolean.class,
                         Names.named(Config.PREVENT_PERIODIC_SHUTDOWN_AT_SEED_NODE)));
                 if (!preventPeriodicShutdownAtSeedNode) {
-                    startShutDownInterval(SeedNodeMain.this);
+                    startShutDownInterval();
                 }
                 UserThread.runAfter(() -> setupConnectionLossCheck(), 60);
             }
@@ -180,6 +187,63 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         });
     }
 
+    @Override
+    public void gracefulShutDown(ResultHandler resultHandler) {
+        seedNode.shutDown();
+        if (checkConnectionLossTimer != null) {
+            checkConnectionLossTimer.stop();
+        }
+        super.gracefulShutDown(resultHandler);
+    }
+
+    @Override
+    public void startShutDownInterval() {
+        if (DevEnv.isDevMode() || injector.getInstance(Config.class).useLocalhostForP2P) {
+            return;
+        }
+
+        int myIndex = getMyIndex();
+        if (myIndex == -1) {
+            super.startShutDownInterval();
+            return;
+        }
+
+        // We interpret the value of myIndex as hour of day (0-23). That way we avoid the risk of a restart of
+        // multiple nodes around the same time in case it would be not deterministic.
+
+        // We wrap our periodic check in a delay of 2 hours to avoid that we get
+        // triggered multiple times after a restart while being in the same hour. It can be that we miss our target
+        // hour during that delay but that is not considered problematic, the seed would just restart a bit longer than
+        // 24 hours.
+        UserThread.runAfter(() -> {
+            // We check every hour if we are in the target hour.
+            UserThread.runPeriodically(() -> {
+                int currentHour = ZonedDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")).getHour();
+
+                // distribute evenly between 0-23
+                int size = injector.getInstance(SeedNodeRepository.class).getSeedNodeAddresses().size();
+                long target = Math.round(24d / size * myIndex) % 24;
+                if (currentHour == target) {
+                    log.warn("\n\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n" +
+                                    "Shut down node at hour {} (UTC time is {})" +
+                                    "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n\n",
+                            target,
+                            ZonedDateTime.ofInstant(Instant.now(), ZoneId.of("UTC")).toString());
+                    shutDown(this);
+                }
+            }, TimeUnit.MINUTES.toSeconds(10));
+        }, TimeUnit.HOURS.toSeconds(2));
+    }
+
+    private int getMyIndex() {
+        SeedNodeRepository seedNodeRepository = injector.getInstance(SeedNodeRepository.class);
+        List<NodeAddress> seedNodeAddresses = new ArrayList<>(seedNodeRepository.getSeedNodeAddresses());
+        seedNodeAddresses.sort(Comparator.comparing(NodeAddress::getFullAddress));
+
+        NodeAddress myAddress = injector.getInstance(P2PService.class).getAddress();
+        return seedNodeAddresses.indexOf(myAddress);
+    }
+
     private void setupConnectionLossCheck() {
         // For dev testing (usually on BTC_REGTEST) we don't want to get the seed shut
         // down as it is normal that the seed is the only actively running node.
@@ -187,11 +251,11 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
             return;
         }
 
-        if (checkConnectionLossTime != null) {
+        if (checkConnectionLossTimer != null) {
             return;
         }
 
-        checkConnectionLossTime = UserThread.runPeriodically(() -> {
+        checkConnectionLossTimer = UserThread.runPeriodically(() -> {
             if (injector.getInstance(PeerManager.class).getNumAllConnectionsLostEvents() > 1) {
                 // We set a flag to clear tor cache files at re-start. We cannot clear it now as Tor is used and
                 // that can cause problems.
@@ -199,26 +263,5 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
                 shutDown(this);
             }
         }, CHECK_CONNECTION_LOSS_SEC);
-
-    }
-
-    @Override
-    public void gracefulShutDown(ResultHandler resultHandler) {
-        seedNode.shutDown();
-        super.gracefulShutDown(resultHandler);
-    }
-
-
-    private int getMyIndex() {
-        P2PService p2PService = injector.getInstance(P2PService.class);
-        SeedNodeRepository seedNodeRepository = injector.getInstance(SeedNodeRepository.class);
-        List<NodeAddress> seedNodes = new ArrayList<>(seedNodeRepository.getSeedNodeAddresses());
-        NodeAddress myAddress = p2PService.getAddress();
-        for (int i = 0; i < seedNodes.size(); i++) {
-            if (seedNodes.get(i).equals(myAddress)) {
-                return i;
-            }
-        }
-        return 0;
     }
 }
