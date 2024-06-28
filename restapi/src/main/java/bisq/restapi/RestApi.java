@@ -146,7 +146,7 @@ public class RestApi extends ExecutableForAppWithP2p {
                 boolean preventPeriodicShutdownAtSeedNode = injector.getInstance(Key.get(boolean.class,
                         Names.named(Config.PREVENT_PERIODIC_SHUTDOWN_AT_SEED_NODE)));
                 if (!preventPeriodicShutdownAtSeedNode) {
-                    startShutDownInterval(RestApi.this);
+                    startShutDownInterval();
                 }
                 UserThread.runAfter(() -> setupConnectionLossCheck(), 60);
 
