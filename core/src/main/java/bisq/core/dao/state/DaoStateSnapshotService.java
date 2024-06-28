@@ -283,40 +283,44 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
             log.info("Try to apply snapshot but no stored snapshot available. That is expected at first blocks.");
             return;
         }
-        LinkedList<DaoStateHash> persistedDaoStateHashChain = daoStateStorageService.getPersistedDaoStateHashChain();
-        int chainHeightOfPersisted = persistedBsqState.getChainHeight();
-        if (!persistedBsqState.getBlocks().isEmpty()) {
-            int heightOfLastBlock = persistedBsqState.getLastBlock().getHeight();
-            if (heightOfLastBlock != chainHeightOfPersisted) {
-                log.warn("chainHeightOfPersisted must be same as heightOfLastBlock. heightOfLastBlock={}, chainHeightOfPersisted={}",
-                        heightOfLastBlock, chainHeightOfPersisted);
+
+        if (persistedBsqState.getBlocks().isEmpty()) {
+            if (fromInitialize) {
+                log.info("No Bsq blocks in DaoState. Expected if no data are provided yet from resources or persisted data.");
+            } else {
+                log.info("We got a reorg and we want to apply the snapshot but it is empty. " +
+                        "That is expected in the first blocks until the first snapshot has been created. " +
+                        "We remove all dao store files and shutdown. " +
+                        "After a restart resource files will be applied if available.");
                 resyncDaoStateFromResources();
-                return;
             }
-            if (isHeightAtLeastGenesisHeight(heightOfLastBlock)) {
-                if (chainHeightOfLastAppliedSnapshot != chainHeightOfPersisted) {
-                    chainHeightOfLastAppliedSnapshot = chainHeightOfPersisted;
-                    daoStateService.applySnapshot(persistedBsqState);
-                    daoStateMonitoringService.applySnapshot(persistedDaoStateHashChain);
-                    daoStateStorageService.releaseMemory();
-                } else {
-                    // The reorg might have been caused by the previous parsing which might contains a range of
-                    // blocks.
-                    log.warn("We applied already a snapshot with chainHeight {}. " +
-                                    "We remove all dao store files and shutdown. After a restart resource files will " +
-                                    "be applied if available.",
-                            chainHeightOfLastAppliedSnapshot);
-                    resyncDaoStateFromResources();
-                }
-            }
-        } else if (fromInitialize) {
-            log.info("No Bsq blocks in DaoState. Expected if no data are provided yet from resources or persisted data.");
-        } else {
-            log.info("We got a reorg and we want to apply the snapshot but it is empty. " +
-                    "That is expected in the first blocks until the first snapshot has been created. " +
-                    "We remove all dao store files and shutdown. " +
-                    "After a restart resource files will be applied if available.");
+            return;
+        }
+
+        int chainHeightOfPersisted = persistedBsqState.getChainHeight();
+        int heightOfLastBlock = persistedBsqState.getLastBlock().getHeight();
+        if (heightOfLastBlock != chainHeightOfPersisted) {
+            log.warn("chainHeightOfPersisted must be same as heightOfLastBlock. heightOfLastBlock={}, chainHeightOfPersisted={}",
+                    heightOfLastBlock, chainHeightOfPersisted);
             resyncDaoStateFromResources();
+            return;
+        }
+        if (isHeightAtLeastGenesisHeight(heightOfLastBlock)) {
+            if (chainHeightOfLastAppliedSnapshot != chainHeightOfPersisted) {
+                chainHeightOfLastAppliedSnapshot = chainHeightOfPersisted;
+                daoStateService.applySnapshot(persistedBsqState);
+                LinkedList<DaoStateHash> persistedDaoStateHashChain = daoStateStorageService.getPersistedDaoStateHashChain();
+                daoStateMonitoringService.applySnapshot(persistedDaoStateHashChain);
+                daoStateStorageService.releaseMemory();
+            } else {
+                // The reorg might have been caused by the previous parsing which might contains a range of
+                // blocks.
+                log.warn("We applied already a snapshot with chainHeight {}. " +
+                                "We remove all dao store files and shutdown. After a restart resource files will " +
+                                "be applied if available.",
+                        chainHeightOfLastAppliedSnapshot);
+                resyncDaoStateFromResources();
+            }
         }
     }
 
