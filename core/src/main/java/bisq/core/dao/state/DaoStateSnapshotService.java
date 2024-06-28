@@ -39,6 +39,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -78,7 +79,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     private int daoRequiresRestartHandlerAttempts = 0;
     private boolean readyForPersisting = true;
     private boolean isParseBlockChainComplete;
-
+    private final List<Integer> heightsOfLastAppliedSnapshots = new ArrayList<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -285,6 +286,16 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         }
 
         int chainHeightOfPersistedDaoState = persistedDaoState.getChainHeight();
+        int numSameAppliedSnapshots = (int) heightsOfLastAppliedSnapshots.stream()
+                .filter(height -> height == chainHeightOfPersistedDaoState)
+                .count();
+        if (numSameAppliedSnapshots >= 3) {
+            log.warn("We got called applySnapshot the 3rd time with the same snapshot height. " +
+                    "We abort and call resyncDaoStateFromResources.");
+            resyncDaoStateFromResources();
+            return;
+        }
+        heightsOfLastAppliedSnapshots.add(chainHeightOfPersistedDaoState);
 
         if (persistedDaoState.getBlocks().isEmpty()) {
             if (fromInitialize) {
