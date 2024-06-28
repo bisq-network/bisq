@@ -41,7 +41,6 @@ public class DaoStateSnapshotServiceTest {
                 null,
                 null,
                 null,
-                null,
                 null);
     }
 
