@@ -1,10 +1,21 @@
-# nodeaddress.onion:port [(@owner,@backup)]
-devinv3rhon24gqf5v6ondoqgyrbzyqihzyouzv7ptltsewhfmox2zqd.onion:8000 (@devinbileck)
-devinsn2teu33efff62bnvwbxmfgbfjlgqsu3ad4b4fudx3a725eqnyd.onion:8000 (@devinbileck)
-devinsn3xuzxhj6pmammrxpydhwwmwp75qkksedo5dn2tlmu7jggo7id.onion:8000 (@devinbileck)
+# Expected format: nodeaddress.onion:port (@owner)
+# removed in 1.9.16
 sn3emzy56u3mxzsr4geysc52feoq5qt7ja56km6gygwnszkshunn2sid.onion:8000 (@emzy)
 sn4emzywye3dhjouv7jig677qepg7fnusjidw74fbwneieruhmi7fuyd.onion:8000 (@emzy)
 sn5emzyvxuildv34n6jewfp2zeota4aq63fsl5yyilnvksezr3htveqd.onion:8000 (@emzy)
+# removed in 1.9.16
+sn4o3kdfxz6pidvafxv5i5dv3jrk6twtptm7s7wchwwwb5xy37y4x5id.onion:8000 (@403State)
+sn4o3s5peekvk333vkrguw3gmd6mfy6bawynejslcnva2ibdbdrxakyd.onion:8000 (@403State)
+sn4o3zbnlnivbolvsgzapzmfzh6q27z5owrhqbxjlhmcsfrvbo2rd2ad.onion:8000 (@403State)
+# from 1.9.15, to be removed in 1.9.18
+devinv3rhon24gqf5v6ondoqgyrbzyqihzyouzv7ptltsewhfmox2zqd.onion:8000 (@devinbileck)
+devinsn2teu33efff62bnvwbxmfgbfjlgqsu3ad4b4fudx3a725eqnyd.onion:8000 (@devinbileck)
+devinsn3xuzxhj6pmammrxpydhwwmwp75qkksedo5dn2tlmu7jggo7id.onion:8000 (@devinbileck)
+# new in 1.9.16
 y6mvobc6tfp7l3rq2rae7hayvkmy35su33cun2mfdbzd4uw536pqtlyd.onion:8000 (@jester4042)
 xaebw6lpcckkyb2anyzyfynthebek2abqzyhchenfrdqlfktezgtrtqd.onion:8000 (@jester4042)
 33ol66i7crfrnypjlpd7kem3imo6zmjkvxdr6ipcdx3e2skbpcrfzuqd.onion:8000 (@jester4042)
+# new in 1.9.16
+runbtcsd42pwlfna32ibcrrykrcmozgv6x73sxjrdohkm55v5f6nh6ad.onion:8000 (@runbtc)
+runbtcsdojm6hiyqotmhq7y5k4ws5bda6t3tv7y63c46rt7fx7lt7aid.onion:8000 (@runbtc)
+runbtcsdomqb4rnqg2zokjk4zjzs7pcswzrcgow4zji2qt4toyiabhyd.onion:8000 (@runbtc)
