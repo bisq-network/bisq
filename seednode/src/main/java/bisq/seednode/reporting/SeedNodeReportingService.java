@@ -87,6 +87,7 @@ public class SeedNodeReportingService {
     private final static long HEART_BEAT_DELAY_SEC = TimeUnit.MINUTES.toSeconds(1);
 
     private final P2PService p2PService;
+    private final DaoFacade daoFacade;
     private final NetworkNode networkNode;
     private final PeerManager peerManager;
     private final P2PDataStorage p2PDataStorage;
@@ -94,13 +95,14 @@ public class SeedNodeReportingService {
     private final DaoStateMonitoringService daoStateMonitoringService;
     private final ProposalStateMonitoringService proposalStateMonitoringService;
     private final BlindVoteStateMonitoringService blindVoteStateMonitoringService;
+    private final RequestDataManager requestDataManager;
+    private final FullNodeNetworkService fullNodeNetworkService;
     private final int maxConnections;
     private final String seedNodeReportingServerUrl;
     private final DaoStateListener daoStateListener;
     private final HttpClient httpClient;
     private final ExecutorService executor;
-    private final Timer heartBeatTimer;
-    private Timer dataReportTimer;
+    private Timer heartBeatTimer, dataReportTimer;
 
     @Inject
     public SeedNodeReportingService(P2PService p2PService,
@@ -117,6 +119,7 @@ public class SeedNodeReportingService {
                                     @Named(Config.MAX_CONNECTIONS) int maxConnections,
                                     @Named(Config.SEED_NODE_REPORTING_SERVER_URL) String seedNodeReportingServerUrl) {
         this.p2PService = p2PService;
+        this.daoFacade = daoFacade;
         this.networkNode = networkNode;
         this.peerManager = peerManager;
         this.p2PDataStorage = p2PDataStorage;
@@ -124,6 +127,8 @@ public class SeedNodeReportingService {
         this.daoStateMonitoringService = daoStateMonitoringService;
         this.proposalStateMonitoringService = proposalStateMonitoringService;
         this.blindVoteStateMonitoringService = blindVoteStateMonitoringService;
+        this.requestDataManager = requestDataManager;
+        this.fullNodeNetworkService = fullNodeNetworkService;
         this.maxConnections = maxConnections;
         this.seedNodeReportingServerUrl = seedNodeReportingServerUrl;
 
@@ -131,8 +136,6 @@ public class SeedNodeReportingService {
         // internally for asynchronous and dependent tasks.
         executor = Utilities.getThreadPoolExecutor("SeedNodeReportingService", 20, 40, 100, 8 * 60);
         httpClient = HttpClient.newBuilder().executor(executor).build();
-
-        heartBeatTimer = UserThread.runPeriodically(this::sendHeartBeat, HEART_BEAT_DELAY_SEC);
 
         daoStateListener = new DaoStateListener() {
             @Override
@@ -152,6 +155,11 @@ public class SeedNodeReportingService {
                 });
             }
         };
+    }
+
+    public void initialize() {
+        heartBeatTimer = UserThread.runPeriodically(this::sendHeartBeat, HEART_BEAT_DELAY_SEC);
+
         daoFacade.addBsqStateListener(daoStateListener);
 
         p2PService.getNetworkNode().addMessageListener((networkEnvelope, connection) -> {

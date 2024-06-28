@@ -63,13 +63,11 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         new SeedNodeMain().execute(args);
     }
 
-    private final SeedNode seedNode;
+    private SeedNode seedNode;
     private Timer checkConnectionLossTimer;
 
     public SeedNodeMain() {
         super("Bisq Seednode", "bisq-seednode", "bisq_seednode", Version.VERSION);
-
-        seedNode = new SeedNode();
     }
 
     @Override
@@ -107,7 +105,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
     protected void applyInjector() {
         super.applyInjector();
 
-        seedNode.setInjector(injector);
+        seedNode = new SeedNode(injector);
     }
 
     @Override
