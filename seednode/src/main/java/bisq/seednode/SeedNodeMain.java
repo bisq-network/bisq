@@ -17,7 +17,6 @@
 
 package bisq.seednode;
 
-import bisq.core.app.TorSetup;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
 import bisq.core.dao.monitoring.DaoStateMonitoringService;
 import bisq.core.dao.state.DaoStateSnapshotService;
@@ -136,14 +135,7 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
             }
         });*/
 
-        // Reset tor files at startup
-        // We observe slow tor start at seed nodes. Not sure what caused that but cleaning the tor files might help.
-        injector.getInstance(TorSetup.class).cleanupTorFiles(() -> {
-            log.info("Tor directory reset");
-
-            seedNode.startApplication();
-        }, log::error);
-
+        seedNode.startApplication();
 
         injector.getInstance(DaoStateMonitoringService.class).addListener(new DaoStateMonitoringService.Listener() {
             @Override
