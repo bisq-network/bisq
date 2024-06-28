@@ -19,6 +19,7 @@ package bisq.desktop.main.account.content.notifications.qr;
 
 import java.util.Optional;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static bisq.desktop.main.account.content.notifications.qr.FrameUtil.createFrameFromImageResource;
@@ -32,6 +33,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.zxing.BinaryBitmap;
 import org.bytedeco.javacv.Frame;
 
+// TODO Disabled until UnsatisfiedLinkError on MacOS is resolved
+
+@Disabled
 class QrCodeProcessorTest {
     private final FrameConverter<BinaryBitmap> converter = new FrameToBitmapConverter();
     private final QrCodeProcessor processor = new QrCodeProcessor(converter);
