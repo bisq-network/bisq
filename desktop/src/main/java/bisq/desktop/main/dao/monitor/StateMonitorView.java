@@ -65,8 +65,6 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
-import java.io.File;
-
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
@@ -83,7 +81,6 @@ public abstract class StateMonitorView<StH extends StateHash,
     protected final CycleService cycleService;
     protected final PeriodService periodService;
     protected final Set<NodeAddress> seedNodeAddresses;
-    private final File storageDir;
 
     protected TextField statusTextField;
     protected Button resyncFromResourcesButton;
@@ -110,14 +107,12 @@ public abstract class StateMonitorView<StH extends StateHash,
                                DaoFacade daoFacade,
                                CycleService cycleService,
                                PeriodService periodService,
-                               SeedNodeRepository seedNodeRepository,
-                               File storageDir) {
+                               SeedNodeRepository seedNodeRepository) {
         this.daoStateService = daoStateService;
         this.daoFacade = daoFacade;
         this.cycleService = cycleService;
         this.periodService = periodService;
         this.seedNodeAddresses = new HashSet<>(seedNodeRepository.getSeedNodeAddresses());
-        this.storageDir = storageDir;
     }
 
     @Override
@@ -286,7 +281,7 @@ public abstract class StateMonitorView<StH extends StateHash,
 
     private void resyncFromResources() {
         try {
-            daoFacade.removeAndBackupAllDaoData(storageDir);
+            daoFacade.removeAndBackupAllDaoData();
             new Popup().attention(Res.get("setting.preferences.dao.resyncFromResources.popup"))
                     .useShutDownButton()
                     .hideCloseButton()

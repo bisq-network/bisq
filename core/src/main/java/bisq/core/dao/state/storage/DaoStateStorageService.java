@@ -204,7 +204,7 @@ public class DaoStateStorageService extends StoreService<DaoStateStore> {
         bsqBlocksStorageService.removeBlocksInDirectory();
     }
 
-    public void removeAndBackupAllDaoData(File storageDir) throws IOException {
+    public void removeAndBackupAllDaoData() throws IOException {
         // We delete all DAO consensus data and remove the daoState so it will rebuild from latest
         // resource files.
         String backupDirName = "out_of_sync_dao_data";

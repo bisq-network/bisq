@@ -22,7 +22,6 @@ import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.app.TorSetup;
 import bisq.core.app.misc.AppSetupWithP2PAndDAO;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
-import bisq.core.app.misc.ModuleForAppWithP2p;
 import bisq.core.dao.SignVerifyService;
 import bisq.core.dao.governance.bond.reputation.BondedReputationRepository;
 import bisq.core.dao.governance.bond.role.BondedRolesRepository;
@@ -39,7 +38,6 @@ import bisq.network.p2p.peers.PeerManager;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.AppModule;
 import bisq.common.app.Version;
 import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
@@ -83,26 +81,10 @@ public class RestApi extends ExecutableForAppWithP2p {
         checkMemory(config, this);
     }
 
-    @Override
-    protected void launchApplication() {
-        UserThread.execute(() -> {
-            try {
-                onApplicationLaunched();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // We continue with a series of synchronous execution tasks
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    protected AppModule getModule() {
-        return new ModuleForAppWithP2p(config);
-    }
 
     @Override
     protected void applyInjector() {
@@ -204,11 +186,6 @@ public class RestApi extends ExecutableForAppWithP2p {
             }
         }, CHECK_CONNECTION_LOSS_SEC);
 
-    }
-
-    public void gracefulShutDown() {
-        gracefulShutDown(() -> {
-        });
     }
 
     @Override

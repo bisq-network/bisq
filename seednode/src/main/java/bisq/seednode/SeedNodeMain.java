@@ -19,7 +19,6 @@ package bisq.seednode;
 
 import bisq.core.app.TorSetup;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
-import bisq.core.app.misc.ModuleForAppWithP2p;
 import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.core.user.CookieKey;
 import bisq.core.user.User;
@@ -32,9 +31,9 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.Timer;
 import bisq.common.UserThread;
-import bisq.common.app.AppModule;
 import bisq.common.app.Capabilities;
 import bisq.common.app.Capability;
+import bisq.common.app.Version;
 import bisq.common.config.BaseCurrencyNetwork;
 import bisq.common.config.Config;
 import bisq.common.handlers.ResultHandler;
@@ -50,17 +49,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SeedNodeMain extends ExecutableForAppWithP2p {
     private static final long CHECK_CONNECTION_LOSS_SEC = 30;
-    private static final String VERSION = "1.9.17";
-    private SeedNode seedNode;
+
+    public static void main(String[] args) {
+        new SeedNodeMain().execute(args);
+    }
+
+    private final SeedNode seedNode;
     private Timer checkConnectionLossTime;
 
     public SeedNodeMain() {
-        super("Bisq Seednode", "bisq-seednode", "bisq_seednode", VERSION);
-    }
+        super("Bisq Seednode", "bisq-seednode", "bisq_seednode", Version.VERSION);
 
-    public static void main(String[] args) {
-        System.out.println("SeedNode.VERSION: " + VERSION);
-        new SeedNodeMain().execute(args);
+        seedNode = new SeedNode();
     }
 
     @Override
@@ -68,30 +68,12 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
         super.doExecute();
 
         checkMemory(config, this);
-
         keepRunning();
     }
 
     @Override
     protected void addCapabilities() {
         Capabilities.app.addAll(Capability.SEED_NODE);
-    }
-
-    @Override
-    protected void launchApplication() {
-        UserThread.execute(() -> {
-            try {
-                seedNode = new SeedNode();
-                onApplicationLaunched();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-    }
-
-    @Override
-    protected void onApplicationLaunched() {
-        super.onApplicationLaunched();
     }
 
 
@@ -111,11 +93,6 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // We continue with a series of synchronous execution tasks
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    protected AppModule getModule() {
-        return new ModuleForAppWithP2p(config);
-    }
 
     @Override
     protected void applyInjector() {
@@ -235,11 +212,6 @@ public class SeedNodeMain extends ExecutableForAppWithP2p {
             }
         }, CHECK_CONNECTION_LOSS_SEC);
 
-    }
-
-    private void gracefulShutDown() {
-        gracefulShutDown(() -> {
-        });
     }
 
     @Override

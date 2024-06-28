@@ -33,6 +33,7 @@ import bisq.network.p2p.P2PService;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.UserThread;
+import bisq.common.app.AppModule;
 import bisq.common.app.DevEnv;
 import bisq.common.config.Config;
 import bisq.common.file.JsonFileManager;
@@ -74,9 +75,19 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
     }
 
     @Override
+    protected AppModule getModule() {
+        return new ModuleForAppWithP2p(config);
+    }
+
+    @Override
     protected void startApplication() {
         // Pin that as it is used in PaymentMethods and verification in TradeStatistics
         tradeLimits = injector.getInstance(TradeLimits.class);
+    }
+
+    @Override
+    protected void launchApplication() {
+        onApplicationLaunched();
     }
 
     @Override
