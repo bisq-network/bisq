@@ -26,10 +26,8 @@ import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.alert.Alert;
 import bisq.core.locale.Res;
-import bisq.core.user.CookieKey;
 import bisq.core.user.User;
 
-import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
@@ -260,9 +258,6 @@ public class DisplayUpdateDownloadWindow extends Overlay<DisplayUpdateDownloadWi
                                 if (verifyResults == null || verifyResults.isEmpty() || verifyFailed.isPresent()) {
                                     showErrorMessage(downloadButton, statusLabel, Res.get("displayUpdateDownloadWindow.verify.failed"));
                                 } else {
-                                    // We set a flag to clear tor cache files at re-start. We cannot clear it now as Tor is used and
-                                    // that can cause problems.
-                                    user.getCookie().putAsBoolean(CookieKey.CLEAN_TOR_DIR_AT_RESTART, true);
                                     verifiedSigLabel.getStyleClass().add("success-text");
                                     new Popup().feedback(Res.get("displayUpdateDownloadWindow.success"))
                                             .actionButtonText(Res.get("displayUpdateDownloadWindow.download.openDir"))
