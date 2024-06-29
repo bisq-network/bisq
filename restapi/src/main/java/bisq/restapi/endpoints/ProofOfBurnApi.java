@@ -77,11 +77,18 @@ public class ProofOfBurnApi {
                                                @PathParam("block-height")
                                                int fromBlockHeight) {
         List<ProofOfBurnDto> result = daoStateService.getProofOfBurnTxs().stream()
-                .filter(tx -> tx.getBlockHeight() >= fromBlockHeight)
-                .map(tx -> new ProofOfBurnDto(tx.getBurntBsq(),
-                        tx.getTime(),
-                        Hex.encode(ProofOfBurnService.getHashFromOpReturnData(tx)),
-                        tx.getBlockHeight()))
+                .filter(tx -> {
+                    int blockHeight = tx.getBlockHeight();
+                    return blockHeight >= fromBlockHeight;
+                })
+                .map(tx -> {
+                    ProofOfBurnDto proofOfBurnDto = new ProofOfBurnDto(tx.getBurntBsq(),
+                            tx.getTime(),
+                            Hex.encode(ProofOfBurnService.getHashFromOpReturnData(tx)),
+                            tx.getBlockHeight(),
+                            tx.getId());
+                    return proofOfBurnDto;
+                })
                 .collect(Collectors.toList());
         log.info("ProofOfBurn result list from block height {}: {}", fromBlockHeight, result);
         return result;
