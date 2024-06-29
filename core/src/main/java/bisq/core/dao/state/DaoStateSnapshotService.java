@@ -50,7 +50,7 @@ import javax.annotation.Nullable;
 
 /**
  * Manages periodical snapshots of the DaoState.
- * At startup we apply a snapshot if available.
+ * At startup, we apply a snapshot if available.
  * At each trigger height we persist the latest snapshot candidate and set the current daoState as new candidate.
  * The trigger height is determined by the SNAPSHOT_GRID. The latest persisted snapshot is min. the height of
  * SNAPSHOT_GRID old not less than 2 times the SNAPSHOT_GRID old.
@@ -122,6 +122,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         daoStateStorageService.shutDown();
     }
 
+
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DaoStateListener
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -147,9 +148,9 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     @Override
     public void onDaoStateChanged(Block block) {
         // If we have isUseDaoMonitor activated we apply the hash and snapshots at each new block during initial parsing.
-        // Otherwise we do it only after the initial blockchain parsing is completed to not delay the parsing.
+        // Otherwise, we do it only after the initial blockchain parsing is completed to not delay the parsing.
         // In that case we get the missing hashes from the seed nodes. At any new block we do the hash calculation
-        // ourself and therefore get back confidence that our DAO state is in sync with the network.
+        // ourselves and therefore get back confidence that our DAO state is in sync with the network.
         if (preferences.isUseFullModeDaoMonitor() || isParseBlockChainComplete) {
             // We need to execute first the daoStateMonitoringService.createHashFromBlock to get the hash created
             daoStateMonitoringService.createHashFromBlock(block);
@@ -203,15 +204,16 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
 
     // We need to process during batch processing as well to write snapshots during that process.
     public void maybeCreateSnapshot(Block block) {
+        if (!isHeightAtLeastGenesisHeight(daoStateService.getBlockHeightOfLastBlock())) {
+            return;
+        }
         int chainHeight = block.getHeight();
 
         // Either we don't have a snapshot candidate yet, or if we have one the height at that snapshot candidate must be
         // different to our current height.
-        boolean noSnapshotCandidateOrDifferentHeight = daoStateCandidate == null ||
-                snapshotHeight != chainHeight;
+        boolean noSnapshotCandidateOrDifferentHeight = daoStateCandidate == null || snapshotHeight != chainHeight;
         if (isSnapshotHeight(chainHeight) &&
                 !daoStateService.getBlocks().isEmpty() &&
-                isHeightAtLeastGenesisHeight(daoStateService.getBlockHeightOfLastBlock()) &&
                 noSnapshotCandidateOrDifferentHeight) {
 
             // We protect to get called while we are not completed with persisting the daoState. This can take about
@@ -316,7 +318,6 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         }
 
         if (!isHeightAtLeastGenesisHeight(chainHeightOfPersistedDaoState)) {
-            log.error("heightOfPersistedLastBlock is below genesis height. This should never happen.");
             return;
         }
 
@@ -344,7 +345,11 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean isHeightAtLeastGenesisHeight(int heightOfLastBlock) {
-        return heightOfLastBlock >= genesisTxInfo.getGenesisBlockHeight();
+        boolean isHeightAtLeastGenesisHeight = heightOfLastBlock >= genesisTxInfo.getGenesisBlockHeight();
+        if (!isHeightAtLeastGenesisHeight) {
+            log.error("heightOfPersistedLastBlock is below genesis height. This should never happen. heightOfLastBlock={}", heightOfLastBlock);
+        }
+        return isHeightAtLeastGenesisHeight;
     }
 
     private void resyncDaoStateFromResources() {
