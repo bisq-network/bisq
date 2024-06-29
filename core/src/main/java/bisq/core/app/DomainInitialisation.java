@@ -209,7 +209,7 @@ public class DomainInitialisation {
                                    Consumer<VoteResultException> voteResultExceptionHandler,
                                    Consumer<List<RevolutAccount>> revolutAccountsUpdateHandler,
                                    Consumer<List<AmazonGiftCardAccount>> amazonGiftCardAccountsUpdateHandler,
-                                   Runnable daoRequiresRestartHandler) {
+                                   Runnable resyncDaoStateFromResourcesHandler) {
         clockWatcher.start();
 
         PersistenceManager.onAllServicesInitialized();
@@ -256,7 +256,7 @@ public class DomainInitialisation {
                 daoWarnMessageHandler.accept(warningMessage);
         });
 
-        daoStateSnapshotService.setDaoRequiresRestartHandler(daoRequiresRestartHandler);
+        daoStateSnapshotService.setResyncDaoStateFromResourcesHandler(resyncDaoStateFromResourcesHandler);
 
         tradeStatisticsManager.onAllServicesInitialized();
 

@@ -46,7 +46,7 @@ public class BsqBlocksStorageService {
     public final static String NAME = "BsqBlocks";
 
     private final int genesisBlockHeight;
-    private final File storageDir;
+    private final File blocksDir;
     private final BlocksPersistence blocksPersistence;
     @Getter
     private int chainHeightOfPersistedBlocks;
@@ -54,10 +54,10 @@ public class BsqBlocksStorageService {
     @Inject
     public BsqBlocksStorageService(GenesisTxInfo genesisTxInfo,
                                    PersistenceProtoResolver persistenceProtoResolver,
-                                   @Named(Config.STORAGE_DIR) File dbStorageDir) {
+                                   @Named(Config.STORAGE_DIR) File storageDir) {
         genesisBlockHeight = genesisTxInfo.getGenesisBlockHeight();
-        storageDir = new File(dbStorageDir.getAbsolutePath() + File.separator + NAME);
-        blocksPersistence = new BlocksPersistence(storageDir, NAME, persistenceProtoResolver);
+        blocksDir = new File(storageDir.getAbsolutePath() + File.separator + NAME);
+        blocksPersistence = new BlocksPersistence(blocksDir, NAME, persistenceProtoResolver);
     }
 
     public void persistBlocks(List<Block> blocks) {
@@ -108,7 +108,7 @@ public class BsqBlocksStorageService {
         String dirName = BsqBlocksStorageService.NAME;
         String resourceDir = dirName + postFix;
         try {
-            if (storageDir.exists()) {
+            if (blocksDir.exists()) {
                 log.info("No resource directory was copied. {} exists already.", dirName);
                 return;
             }
@@ -118,11 +118,11 @@ public class BsqBlocksStorageService {
                 log.info("No files in directory. {}", resourceDir);
                 return;
             }
-            if (!storageDir.exists()) {
-                storageDir.mkdir();
+            if (!blocksDir.exists()) {
+                blocksDir.mkdir();
             }
             for (String fileName : fileNames) {
-                File destinationFile = new File(storageDir, fileName);
+                File destinationFile = new File(blocksDir, fileName);
                 //  File.separator doesn't appear to work on Windows. It has to be "/", not "\".
                 // See: https://github.com/bisq-network/bisq/pull/5909#pullrequestreview-827992563
                 FileUtil.resourceToFile(resourceDir + "/" + fileName, destinationFile);
@@ -144,12 +144,9 @@ public class BsqBlocksStorageService {
         blocksPersistence.removeBlocksDirectory();
     }
 
-    // We recreate the directory so that we don't fill the blocks after restart from resources
-    // In copyFromResources we only check for the directory not the files inside.
-    public void removeBlocksInDirectory() {
-        blocksPersistence.removeBlocksDirectory();
-        if (!storageDir.exists()) {
-            storageDir.mkdir();
+    public void makeBlocksDirectory() {
+        if (!blocksDir.exists()) {
+            blocksDir.mkdir();
         }
     }
 }

@@ -35,11 +35,9 @@ import bisq.core.locale.Res;
 
 import bisq.network.p2p.seed.SeedNodeRepository;
 
-import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -49,8 +47,6 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
 
 import javafx.util.Callback;
-
-import java.io.File;
 
 import java.util.Comparator;
 import java.util.Map;
@@ -75,9 +71,8 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
                                 DaoStateMonitoringService daoStateMonitoringService,
                                 CycleService cycleService,
                                 PeriodService periodService,
-                                SeedNodeRepository seedNodeRepository,
-                                @Named(Config.STORAGE_DIR) File storageDir) {
-        super(daoStateService, daoFacade, cycleService, periodService, seedNodeRepository, storageDir);
+                                SeedNodeRepository seedNodeRepository) {
+        super(daoStateService, daoFacade, cycleService, periodService, seedNodeRepository);
 
         this.daoStateMonitoringService = daoStateMonitoringService;
     }
@@ -90,7 +85,7 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
 
         statusTextField = FormBuilder.addTopLabelTextField(root, ++gridRow,
                 Res.get("dao.monitor.state")).second;
-        resyncButton = FormBuilder.addButton(root, ++gridRow, Res.get("dao.monitor.resync"), 10);
+        resyncFromResourcesButton = FormBuilder.addButton(root, ++gridRow, Res.get("dao.monitor.resync"), 10);
 
         super.initialize();
     }
@@ -125,9 +120,6 @@ public class DaoStateMonitorView extends StateMonitorView<DaoStateHash, DaoState
         }
     }
 
-    @Override
-    public void onCheckpointFail() {
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Implementation abstract methods

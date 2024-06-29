@@ -34,13 +34,12 @@ import bisq.common.config.Config;
 import bisq.common.util.GcUtil;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import java.io.File;
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -68,20 +67,19 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     private final BsqWalletService bsqWalletService;
     private final Preferences preferences;
     private final Config config;
-    private final File storageDir;
 
     private protobuf.DaoState daoStateCandidate;
     private LinkedList<DaoStateHash> hashChainCandidate = new LinkedList<>();
     private List<Block> blocksCandidate;
     private int snapshotHeight;
-    private int chainHeightOfLastApplySnapshot;
+    private int chainHeightOfLastAppliedSnapshot;
     @Setter
     @Nullable
-    private Runnable daoRequiresRestartHandler;
+    private Runnable resyncDaoStateFromResourcesHandler;
     private int daoRequiresRestartHandlerAttempts = 0;
     private boolean readyForPersisting = true;
     private boolean isParseBlockChainComplete;
-
+    private final List<Integer> heightsOfLastAppliedSnapshots = new ArrayList<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
@@ -95,8 +93,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                                    WalletsSetup walletsSetup,
                                    BsqWalletService bsqWalletService,
                                    Preferences preferences,
-                                   Config config,
-                                   @Named(Config.STORAGE_DIR) File storageDir) {
+                                   Config config) {
         this.daoStateService = daoStateService;
         this.genesisTxInfo = genesisTxInfo;
         this.daoStateStorageService = daoStateStorageService;
@@ -105,7 +102,6 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
         this.config = config;
-        this.storageDir = storageDir;
     }
 
 
@@ -215,7 +211,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                 snapshotHeight != chainHeight;
         if (isSnapshotHeight(chainHeight) &&
                 !daoStateService.getBlocks().isEmpty() &&
-                isValidHeight(daoStateService.getBlockHeightOfLastBlock()) &&
+                isHeightAtLeastGenesisHeight(daoStateService.getBlockHeightOfLastBlock()) &&
                 noSnapshotCandidateOrDifferentHeight) {
 
             // We protect to get called while we are not completed with persisting the daoState. This can take about
@@ -274,47 +270,72 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         log.info("Cloned new daoStateCandidate at height {} took {} ms.", snapshotHeight, System.currentTimeMillis() - ts);
     }
 
-    public void applySnapshot(boolean fromReorg) {
-        DaoState persistedBsqState = daoStateStorageService.getPersistedBsqState();
-        LinkedList<DaoStateHash> persistedDaoStateHashChain = daoStateStorageService.getPersistedDaoStateHashChain();
-        if (persistedBsqState != null) {
-            int chainHeightOfPersisted = persistedBsqState.getChainHeight();
-            if (!persistedBsqState.getBlocks().isEmpty()) {
-                int heightOfLastBlock = persistedBsqState.getLastBlock().getHeight();
-                if (heightOfLastBlock != chainHeightOfPersisted) {
-                    log.warn("chainHeightOfPersisted must be same as heightOfLastBlock. heightOfLastBlock={}, chainHeightOfPersisted={}",
-                            heightOfLastBlock, chainHeightOfPersisted);
-                    resyncDaoStateFromResources();
-                    return;
-                }
-                if (isValidHeight(heightOfLastBlock)) {
-                    if (chainHeightOfLastApplySnapshot != chainHeightOfPersisted) {
-                        chainHeightOfLastApplySnapshot = chainHeightOfPersisted;
-                        daoStateService.applySnapshot(persistedBsqState);
-                        daoStateMonitoringService.applySnapshot(persistedDaoStateHashChain);
-                        daoStateStorageService.releaseMemory();
-                    } else {
-                        // The reorg might have been caused by the previous parsing which might contains a range of
-                        // blocks.
-                        log.warn("We applied already a snapshot with chainHeight {}. " +
-                                        "We remove all dao store files and shutdown. After a restart resource files will " +
-                                        "be applied if available.",
-                                chainHeightOfLastApplySnapshot);
-                        resyncDaoStateFromResources();
-                    }
-                }
-            } else if (fromReorg) {
-                log.info("We got a reorg and we want to apply the snapshot but it is empty. " +
+    public void applyPersistedSnapshot() {
+        applySnapshot(true);
+    }
+
+    public void revertToLastSnapshot() {
+        applySnapshot(false);
+    }
+
+    private void applySnapshot(boolean fromInitialize) {
+        DaoState persistedDaoState = daoStateStorageService.getPersistedBsqState();
+        if (persistedDaoState == null) {
+            log.info("Try to apply snapshot but no stored snapshot available. That is expected at first blocks.");
+            return;
+        }
+
+        int chainHeightOfPersistedDaoState = persistedDaoState.getChainHeight();
+        int numSameAppliedSnapshots = (int) heightsOfLastAppliedSnapshots.stream()
+                .filter(height -> height == chainHeightOfPersistedDaoState)
+                .count();
+        if (numSameAppliedSnapshots >= 3) {
+            log.warn("We got called applySnapshot the 3rd time with the same snapshot height. " +
+                    "We abort and call resyncDaoStateFromResources.");
+            resyncDaoStateFromResources();
+            return;
+        }
+        heightsOfLastAppliedSnapshots.add(chainHeightOfPersistedDaoState);
+
+        if (persistedDaoState.getBlocks().isEmpty()) {
+            if (fromInitialize) {
+                log.info("No Bsq blocks in DaoState. Expected if no data are provided yet from resources or persisted data.");
+            } else {
+                log.info("We got a reorg or error and we want to apply the snapshot but it is empty. " +
                         "That is expected in the first blocks until the first snapshot has been created. " +
                         "We remove all dao store files and shutdown. " +
                         "After a restart resource files will be applied if available.");
                 resyncDaoStateFromResources();
-            } else {
-                log.info("No Bsq blocks in DaoState. Expected if no data are provided yet from resources or persisted data.");
             }
-        } else {
-            log.info("Try to apply snapshot but no stored snapshot available. That is expected at first blocks.");
+            return;
         }
+
+        if (!daoStateStorageService.isChainHeighMatchingLastBlockHeight()) {
+            resyncDaoStateFromResources();
+            return;
+        }
+
+        if (!isHeightAtLeastGenesisHeight(chainHeightOfPersistedDaoState)) {
+            log.error("heightOfPersistedLastBlock is below genesis height. This should never happen.");
+            return;
+        }
+
+        if (chainHeightOfLastAppliedSnapshot == chainHeightOfPersistedDaoState) {
+            // The reorg might have been caused by the previous parsing which might contains a range of
+            // blocks.
+            log.warn("We applied already a snapshot with chainHeight {}. " +
+                            "We remove all dao store files and shutdown. After a restart resource files will " +
+                            "be applied if available.",
+                    chainHeightOfLastAppliedSnapshot);
+            resyncDaoStateFromResources();
+            return;
+        }
+
+        chainHeightOfLastAppliedSnapshot = chainHeightOfPersistedDaoState;
+        daoStateService.applySnapshot(persistedDaoState);
+        LinkedList<DaoStateHash> persistedDaoStateHashChain = daoStateStorageService.getPersistedDaoStateHashChain();
+        daoStateMonitoringService.applySnapshot(persistedDaoStateHashChain);
+        daoStateStorageService.releaseMemory();
     }
 
 
@@ -322,26 +343,26 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean isValidHeight(int heightOfLastBlock) {
+    private boolean isHeightAtLeastGenesisHeight(int heightOfLastBlock) {
         return heightOfLastBlock >= genesisTxInfo.getGenesisBlockHeight();
     }
 
     private void resyncDaoStateFromResources() {
         log.info("resyncDaoStateFromResources called");
-        if (daoRequiresRestartHandler == null && ++daoRequiresRestartHandlerAttempts <= 3) {
-            log.warn("daoRequiresRestartHandler has not been initialized yet, will try again in 10 seconds");
-            UserThread.runAfter(this::resyncDaoStateFromResources, 10);  // a delay for the app to init
-            return;
+        if (resyncDaoStateFromResourcesHandler == null) {
+            if (++daoRequiresRestartHandlerAttempts <= 3) {
+                log.warn("resyncDaoStateFromResourcesHandler has not been initialized yet, will try again in 10 seconds");
+                UserThread.runAfter(this::resyncDaoStateFromResources, 10);  // a delay for the app to init
+                return;
+            } else {
+                log.warn("No resyncDaoStateFromResourcesHandler has not been set. We shutdown non-gracefully with a failure code on exit");
+                System.exit(1);
+            }
         }
         try {
-            daoStateStorageService.resyncDaoStateFromResources(storageDir);
+            daoStateStorageService.removeAndBackupAllDaoData();
             // the restart handler informs the user of the need to restart bisq (in desktop mode)
-            if (daoRequiresRestartHandler == null) {
-                log.error("daoRequiresRestartHandler COULD NOT be called as it has not been initialized yet");
-            } else {
-                log.info("calling daoRequiresRestartHandler...");
-                daoRequiresRestartHandler.run();
-            }
+            resyncDaoStateFromResourcesHandler.run();
         } catch (IOException e) {
             log.error("Error at resyncDaoStateFromResources: {}", e.toString());
         }

@@ -32,6 +32,7 @@ import bisq.core.dao.state.GenesisTxInfo;
 import bisq.core.dao.state.model.blockchain.BaseTxOutput;
 import bisq.core.dao.state.model.blockchain.Block;
 import bisq.core.dao.state.model.governance.IssuanceType;
+import bisq.core.dao.state.storage.DaoStateStorageService;
 import bisq.core.user.Preferences;
 
 import bisq.network.p2p.NodeAddress;
@@ -41,7 +42,7 @@ import bisq.network.p2p.seed.SeedNodeRepository;
 import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.crypto.Hash;
-import bisq.common.file.FileUtil;
+import bisq.common.util.Hex;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -93,7 +94,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         default void onDaoStateHashesChanged() {
         }
 
-        default void onCheckpointFail() {
+        default void onCheckpointFailed() {
         }
 
         default void onDaoStateBlockCreated() {
@@ -101,6 +102,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     }
 
     private final DaoStateService daoStateService;
+    private final DaoStateStorageService daoStateStorageService;
     private final DaoStateNetworkService daoStateNetworkService;
     private final GenesisTxInfo genesisTxInfo;
     private final Set<String> seedNodeAddresses;
@@ -120,6 +122,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
     @Getter
     private final ObservableList<UtxoMismatch> utxoMismatches = FXCollections.observableArrayList();
 
+    // TODO add recent checkpoint
     private final List<Checkpoint> checkpoints = Arrays.asList(
             new Checkpoint(586920, Utilities.decodeFromHex("523aaad4e760f6ac6196fec1b3ec9a2f42e5b272"))
     );
@@ -142,6 +145,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
 
     @Inject
     public DaoStateMonitoringService(DaoStateService daoStateService,
+                                     DaoStateStorageService daoStateStorageService,
                                      DaoStateNetworkService daoStateNetworkService,
                                      GenesisTxInfo genesisTxInfo,
                                      SeedNodeRepository seedNodeRepository,
@@ -149,6 +153,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                                      @Named(Config.STORAGE_DIR) File storageDir,
                                      @Named(Config.IGNORE_DEV_MSG) boolean ignoreDevMsg) {
         this.daoStateService = daoStateService;
+        this.daoStateStorageService = daoStateStorageService;
         this.daoStateNetworkService = daoStateNetworkService;
         this.genesisTxInfo = genesisTxInfo;
         this.preferences = preferences;
@@ -454,8 +459,8 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
         // confiscated funds are still in the utxo set
         long sumUtxo = daoStateService.getUnspentTxOutputMap().values().stream().mapToLong(BaseTxOutput::getValue).sum();
         long sumBsq = genesisTotalSupply + compensationIssuance + reimbursementIssuance - totalAmountOfBurntBsq;
-
         if (sumBsq != sumUtxo) {
+            log.error("BSQ Utxos are not matching. sumBsq={}; sumUtxo={}", sumBsq, sumUtxo);
             utxoMismatches.add(new UtxoMismatch(block.getHeight(), sumUtxo, sumBsq));
         }
     }
@@ -467,42 +472,25 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
                 .findAny()
                 .ifPresent(daoStateHash -> {
                     if (Arrays.equals(daoStateHash.getHash(), checkpoint.getHash())) {
-                        log.info("Passed checkpoint {}", checkpoint.toString());
+                        log.info("Passed checkpoint {}", checkpoint);
                     } else {
                         if (checkpointFailed) {
                             return;
                         }
                         checkpointFailed = true;
+                        log.warn("verifyCheckpoints failed. We resunc from resources " +
+                                        "daoStateHash.getHash()={}, checkpoint.getHash()={}, checkpoint {}",
+                                Hex.encode(daoStateHash.getHash()),
+                                Hex.encode(checkpoint.getHash()),
+                                checkpoint);
                         try {
-                            // Delete state and stop
-                            removeFile("DaoStateStore");
-                            removeFile("BlindVoteStore");
-                            removeFile("ProposalStore");
-                            removeFile("TempProposalStore");
-
-                            listeners.forEach(Listener::onCheckpointFail);
-                            log.error("Failed checkpoint {}", checkpoint.toString());
+                            daoStateStorageService.removeAndBackupAllDaoData();
                         } catch (Throwable t) {
-                            t.printStackTrace();
-                            log.error(t.toString());
+                            log.error("removeAndBackupAllDaoData failed", t);
                         }
+                        listeners.forEach(Listener::onCheckpointFailed);
                     }
                 }));
-    }
-
-    private void removeFile(String storeName) {
-        long currentTime = System.currentTimeMillis();
-        String newFileName = storeName + "_" + currentTime;
-        String backupDirName = "out_of_sync_dao_data";
-        File corrupted = new File(storageDir, storeName);
-        try {
-            if (corrupted.exists()) {
-                FileUtil.removeAndBackupFile(storageDir, corrupted, newFileName, backupDirName);
-            }
-        } catch (Throwable t) {
-            t.printStackTrace();
-            log.error(t.toString());
-        }
     }
 
     private boolean isSeedNode(String peersNodeAddress) {
