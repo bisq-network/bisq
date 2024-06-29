@@ -15,14 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bisq_v1;
+package bisq.core.trade.protocol.bisq_v5;
 
 import bisq.core.trade.model.bisq_v1.BuyerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.BuyerProtocol;
 import bisq.core.trade.protocol.FluentProtocol;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.TradeTaskRunner;
-import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureRequest;
+import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
 import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
@@ -45,7 +46,7 @@ import bisq.common.handlers.ResultHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class BuyerProtocol extends DisputeProtocol {
+abstract class BaseBuyerProtocol_v5 extends DisputeProtocol implements BuyerProtocol {
     enum BuyerEvent implements FluentProtocol.Event {
         STARTUP,
         PAYMENT_SENT
@@ -55,7 +56,7 @@ public abstract class BuyerProtocol extends DisputeProtocol {
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    public BuyerProtocol(BuyerTrade trade) {
+    protected BaseBuyerProtocol_v5(BuyerTrade trade) {
         super(trade);
     }
 
@@ -82,6 +83,11 @@ public abstract class BuyerProtocol extends DisputeProtocol {
                 .executeTasks();
     }
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Mailbox
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
     public void onMailboxMessage(TradeMessage message, NodeAddress peer) {
         super.onMailboxMessage(message, peer);
@@ -93,7 +99,7 @@ public abstract class BuyerProtocol extends DisputeProtocol {
         }
     }
 
-    protected abstract void handle(DelayedPayoutTxSignatureRequest message, NodeAddress peer);
+//    protected abstract void handle(DelayedPayoutTxSignatureRequest message, NodeAddress peer);
 
     // The DepositTxAndDelayedPayoutTxMessage is a mailbox message. Earlier we used only the deposit tx which can
     // be set also when received by the network once published by the peer so that message was not mandatory and could
@@ -135,6 +141,7 @@ public abstract class BuyerProtocol extends DisputeProtocol {
     // User interaction
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
     public void onPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         BuyerEvent event = BuyerEvent.PAYMENT_SENT;
         expect(phase(Trade.Phase.DEPOSIT_CONFIRMED)
@@ -186,9 +193,7 @@ public abstract class BuyerProtocol extends DisputeProtocol {
         log.info("Received {} from {} with tradeId {} and uid {}",
                 message.getClass().getSimpleName(), peer, message.getTradeId(), message.getUid());
 
-        if (message instanceof DelayedPayoutTxSignatureRequest) {
-            handle((DelayedPayoutTxSignatureRequest) message, peer);
-        } else if (message instanceof DepositTxAndDelayedPayoutTxMessage) {
+        if (message instanceof DepositTxAndDelayedPayoutTxMessage) {
             handle((DepositTxAndDelayedPayoutTxMessage) message, peer);
         } else if (message instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) message, peer);

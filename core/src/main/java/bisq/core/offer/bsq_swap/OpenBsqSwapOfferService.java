@@ -220,7 +220,7 @@ public class OpenBsqSwapOfferService {
                                 proofOfWork,
                                 null,
                                 Version.VERSION,
-                                Version.TRADE_PROTOCOL_VERSION);
+                                Version.getTradeProtocolVersion());
                         resultHandler.accept(new Offer(bsqSwapOfferPayload));
                     });
                 });
