@@ -77,7 +77,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     @Nullable
     private Runnable resyncDaoStateFromResourcesHandler;
     private int daoRequiresRestartHandlerAttempts = 0;
-    private boolean readyForPersisting = true;
+    private boolean persistingBlockInProgress;
     private boolean isParseBlockChainComplete;
     private final List<Integer> heightsOfLastAppliedSnapshots = new ArrayList<>();
 
@@ -222,13 +222,13 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         // different to our current height.
         if (daoStateCandidate == null || snapshotHeight != chainHeight) {
             // We protect to get called while we are not completed with persisting the daoState. This can take about
-            // 20 seconds and it is not expected that we get triggered another snapshot event in that period, but this
+            // 20 seconds, and it is not expected that we get triggered another snapshot event in that period, but this
             // check guards that we would skip such calls.
-            if (!readyForPersisting) {
+            if (persistingBlockInProgress) {
                 if (preferences.isUseFullModeDaoMonitor()) {
-                    // In case we dont use isUseFullModeDaoMonitor we might called here too often as the parsing is much
-                    // faster than the persistence and we likely create only 1 snapshot during initial parsing, so
-                    // we log only if isUseFullModeDaoMonitor is true as then parsing is likely slower and we would
+                    // In case we don't use isUseFullModeDaoMonitor we might get called here too often as the parsing is much
+                    // faster than the persistence, and we likely create only 1 snapshot during initial parsing, so
+                    // we log only if isUseFullModeDaoMonitor is true as then parsing is likely slower, and we would
                     // expect that we do a snapshot at each trigger block.
                     log.info("We try to persist a daoState but the previous call has not completed yet. " +
                             "We ignore that call and skip that snapshot. " +
@@ -248,7 +248,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
 
     private void persist() {
         long ts = System.currentTimeMillis();
-        readyForPersisting = false;
+        persistingBlockInProgress = true;
         daoStateStorageService.requestPersistence(daoStateCandidate,
                 blocksCandidate,
                 hashChainCandidate,
@@ -257,7 +257,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                             snapshotHeight, System.currentTimeMillis() - ts);
 
                     createSnapshot();
-                    readyForPersisting = true;
+                    persistingBlockInProgress = false;
                 });
     }
 
