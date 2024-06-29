@@ -34,6 +34,7 @@ import bisq.common.config.Config;
 import bisq.common.util.GcUtil;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -67,6 +68,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     private final BsqWalletService bsqWalletService;
     private final Preferences preferences;
     private final Config config;
+    private final boolean fullDaoNode;
 
     private protobuf.DaoState daoStateCandidate;
     private LinkedList<DaoStateHash> hashChainCandidate = new LinkedList<>();
@@ -93,7 +95,8 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                                    WalletsSetup walletsSetup,
                                    BsqWalletService bsqWalletService,
                                    Preferences preferences,
-                                   Config config) {
+                                   Config config,
+                                   @Named(Config.FULL_DAO_NODE) boolean fullDaoNode) {
         this.daoStateService = daoStateService;
         this.genesisTxInfo = genesisTxInfo;
         this.daoStateStorageService = daoStateStorageService;
@@ -102,6 +105,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
         this.config = config;
+        this.fullDaoNode = fullDaoNode;
     }
 
 
@@ -155,6 +159,9 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
             // We need to execute first the daoStateMonitoringService.createHashFromBlock to get the hash created
             daoStateMonitoringService.createHashFromBlock(block);
             maybeCreateSnapshot(block);
+        } else if (fullDaoNode) {
+            // If we run as full DAO node we want to create a snapshot at each trigger block.
+            maybeCreateSnapshot(block);
         }
     }
 
@@ -162,7 +169,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     public void onParseBlockChainComplete() {
         isParseBlockChainComplete = true;
 
-        // In case we have dao monitoring deactivated we create the snapshot after we are completed with parsing
+        // In case we have dao monitoring deactivated we create the snapshot after we are completed with parsing,
         // and we got called back from daoStateMonitoringService once the hashes are created from peers data.
         if (!preferences.isUseFullModeDaoMonitor()) {
             // We register a callback handler once the daoStateMonitoringService has received the missing hashes from
