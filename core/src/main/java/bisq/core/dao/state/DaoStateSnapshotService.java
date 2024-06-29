@@ -204,7 +204,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
 
     // We need to process during batch processing as well to write snapshots during that process.
     public void maybeCreateSnapshot(Block block) {
-        if (!isHeightAtLeastGenesisHeight(daoStateService.getBlockHeightOfLastBlock())) {
+        if (isHeightBelowGenesisHeight(daoStateService.getBlockHeightOfLastBlock())) {
             return;
         }
         int chainHeight = block.getHeight();
@@ -317,7 +317,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
             return;
         }
 
-        if (!isHeightAtLeastGenesisHeight(chainHeightOfPersistedDaoState)) {
+        if (isHeightBelowGenesisHeight(chainHeightOfPersistedDaoState)) {
             return;
         }
 
@@ -344,12 +344,12 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean isHeightAtLeastGenesisHeight(int heightOfLastBlock) {
-        boolean isHeightAtLeastGenesisHeight = heightOfLastBlock >= genesisTxInfo.getGenesisBlockHeight();
-        if (!isHeightAtLeastGenesisHeight) {
-            log.error("heightOfPersistedLastBlock is below genesis height. This should never happen. heightOfLastBlock={}", heightOfLastBlock);
+    private boolean isHeightBelowGenesisHeight(int height) {
+        boolean isHeightBelowGenesisHeight = height < genesisTxInfo.getGenesisBlockHeight();
+        if (isHeightBelowGenesisHeight) {
+            log.error("height is below genesis height. This should never happen. height={}", height);
         }
-        return isHeightAtLeastGenesisHeight;
+        return isHeightBelowGenesisHeight;
     }
 
     private void resyncDaoStateFromResources() {
