@@ -218,10 +218,8 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
             return;
         }
 
-        // Either we don't have a snapshot candidate yet, or if we have one the height at that snapshot candidate must be
-        // different to our current height.
-        boolean noSnapshotCandidateOrDifferentHeight = daoStateCandidate == null || snapshotHeight != chainHeight;
-        if (!noSnapshotCandidateOrDifferentHeight) {
+        if (daoStateCandidate != null && snapshotHeight == chainHeight) {
+            log.error("snapshotHeight is same as chainHeight. This should never happen. chainHeight={}", chainHeight);
             return;
         }
 
