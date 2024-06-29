@@ -204,21 +204,26 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
 
     // We need to process during batch processing as well to write snapshots during that process.
     public void maybeCreateSnapshot(Block block) {
+        int chainHeight = block.getHeight();
+        if (!isSnapshotHeight(chainHeight)) {
+            return;
+        }
+
         if (isHeightBelowGenesisHeight(daoStateService.getBlockHeightOfLastBlock())) {
             return;
         }
-        int chainHeight = block.getHeight();
+
+        if (daoStateService.getBlocks().isEmpty()) {
+            log.error("No snapshot to be created as blocks are empty. This should never happen.");
+            return;
+        }
 
         // Either we don't have a snapshot candidate yet, or if we have one the height at that snapshot candidate must be
         // different to our current height.
-        boolean noSnapshotCandidateOrDifferentHeight = daoStateCandidate == null || snapshotHeight != chainHeight;
-        if (isSnapshotHeight(chainHeight) &&
-                !daoStateService.getBlocks().isEmpty() &&
-                noSnapshotCandidateOrDifferentHeight) {
-
+        if (daoStateCandidate == null || snapshotHeight != chainHeight) {
             // We protect to get called while we are not completed with persisting the daoState. This can take about
             // 20 seconds and it is not expected that we get triggered another snapshot event in that period, but this
-            // check guards that we would skip such calls..
+            // check guards that we would skip such calls.
             if (!readyForPersisting) {
                 if (preferences.isUseFullModeDaoMonitor()) {
                     // In case we dont use isUseFullModeDaoMonitor we might called here too often as the parsing is much
