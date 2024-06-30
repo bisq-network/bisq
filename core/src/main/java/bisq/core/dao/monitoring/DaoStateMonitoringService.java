@@ -203,7 +203,7 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
             verifyCheckpoints();
         }
 
-        log.info("ParseBlockChainComplete: Accumulated updateHashChain() calls for {} block took {} ms " +
+        log.info("ParseBlockChainComplete: Accumulated updateHashChain() calls for {} blocks took {} ms " +
                         "({} ms in average / block)",
                 numCalls,
                 accumulatedDuration,
@@ -370,12 +370,19 @@ public class DaoStateMonitoringService implements DaoSetupService, DaoStateListe
             UserThread.runAfter(() -> daoStateNetworkService.broadcastMyStateHash(myDaoStateHash), delayInSec);
         }
         long duration = System.currentTimeMillis() - ts;
-        // We don't want to spam the output. We log accumulated time after parsing is completed.
         log.trace("updateHashChain for block {} took {} ms",
                 block.getHeight(),
                 duration);
         accumulatedDuration += duration;
         numCalls++;
+
+        if (numCalls % 10 == 0) {
+            log.info("Accumulated updateHashChain() calls for {} blocks took {} ms " +
+                            "({} ms in average / block)",
+                    numCalls,
+                    accumulatedDuration,
+                    (int) ((double) accumulatedDuration / (double) numCalls));
+        }
         listeners.forEach(Listener::onDaoStateBlockCreated);
         return Optional.of(daoStateBlock);
     }

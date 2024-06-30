@@ -225,6 +225,7 @@ public class DaoModule extends AppModule {
         bindConstant().annotatedWith(named(Config.IS_BM_FULL_NODE)).to(config.isBmFullNode);
         bindConstant().annotatedWith(named(Config.BM_ORACLE_NODE_PUB_KEY)).to(config.bmOracleNodePubKey);
         bindConstant().annotatedWith(named(Config.BM_ORACLE_NODE_PRIV_KEY)).to(config.bmOracleNodePrivKey);
+        bindConstant().annotatedWith(named(Config.USE_FULL_MODE_DAO_MONITOR)).to(config.useFullModeDaoMonitor);
     }
 }
 

@@ -34,6 +34,7 @@ import bisq.common.config.Config;
 import bisq.common.util.GcUtil;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -50,7 +51,7 @@ import javax.annotation.Nullable;
 
 /**
  * Manages periodical snapshots of the DaoState.
- * At startup we apply a snapshot if available.
+ * At startup, we apply a snapshot if available.
  * At each trigger height we persist the latest snapshot candidate and set the current daoState as new candidate.
  * The trigger height is determined by the SNAPSHOT_GRID. The latest persisted snapshot is min. the height of
  * SNAPSHOT_GRID old not less than 2 times the SNAPSHOT_GRID old.
@@ -67,6 +68,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     private final BsqWalletService bsqWalletService;
     private final Preferences preferences;
     private final Config config;
+    private final boolean fullDaoNode;
 
     private protobuf.DaoState daoStateCandidate;
     private LinkedList<DaoStateHash> hashChainCandidate = new LinkedList<>();
@@ -77,7 +79,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     @Nullable
     private Runnable resyncDaoStateFromResourcesHandler;
     private int daoRequiresRestartHandlerAttempts = 0;
-    private boolean readyForPersisting = true;
+    private boolean persistingBlockInProgress;
     private boolean isParseBlockChainComplete;
     private final List<Integer> heightsOfLastAppliedSnapshots = new ArrayList<>();
 
@@ -93,7 +95,8 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                                    WalletsSetup walletsSetup,
                                    BsqWalletService bsqWalletService,
                                    Preferences preferences,
-                                   Config config) {
+                                   Config config,
+                                   @Named(Config.FULL_DAO_NODE) boolean fullDaoNode) {
         this.daoStateService = daoStateService;
         this.genesisTxInfo = genesisTxInfo;
         this.daoStateStorageService = daoStateStorageService;
@@ -102,6 +105,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         this.bsqWalletService = bsqWalletService;
         this.preferences = preferences;
         this.config = config;
+        this.fullDaoNode = fullDaoNode;
     }
 
 
@@ -121,6 +125,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     public void shutDown() {
         daoStateStorageService.shutDown();
     }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // DaoStateListener
@@ -147,12 +152,15 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     @Override
     public void onDaoStateChanged(Block block) {
         // If we have isUseDaoMonitor activated we apply the hash and snapshots at each new block during initial parsing.
-        // Otherwise we do it only after the initial blockchain parsing is completed to not delay the parsing.
+        // Otherwise, we do it only after the initial blockchain parsing is completed to not delay the parsing.
         // In that case we get the missing hashes from the seed nodes. At any new block we do the hash calculation
-        // ourself and therefore get back confidence that our DAO state is in sync with the network.
+        // ourselves and therefore get back confidence that our DAO state is in sync with the network.
         if (preferences.isUseFullModeDaoMonitor() || isParseBlockChainComplete) {
             // We need to execute first the daoStateMonitoringService.createHashFromBlock to get the hash created
             daoStateMonitoringService.createHashFromBlock(block);
+            maybeCreateSnapshot(block);
+        } else if (fullDaoNode) {
+            // If we run as full DAO node we want to create a snapshot at each trigger block.
             maybeCreateSnapshot(block);
         }
     }
@@ -161,7 +169,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     public void onParseBlockChainComplete() {
         isParseBlockChainComplete = true;
 
-        // In case we have dao monitoring deactivated we create the snapshot after we are completed with parsing
+        // In case we have dao monitoring deactivated we create the snapshot after we are completed with parsing,
         // and we got called back from daoStateMonitoringService once the hashes are created from peers data.
         if (!preferences.isUseFullModeDaoMonitor()) {
             // We register a callback handler once the daoStateMonitoringService has received the missing hashes from
@@ -204,44 +212,51 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     // We need to process during batch processing as well to write snapshots during that process.
     public void maybeCreateSnapshot(Block block) {
         int chainHeight = block.getHeight();
+        if (!isSnapshotHeight(chainHeight)) {
+            return;
+        }
 
-        // Either we don't have a snapshot candidate yet, or if we have one the height at that snapshot candidate must be
-        // different to our current height.
-        boolean noSnapshotCandidateOrDifferentHeight = daoStateCandidate == null ||
-                snapshotHeight != chainHeight;
-        if (isSnapshotHeight(chainHeight) &&
-                !daoStateService.getBlocks().isEmpty() &&
-                isHeightAtLeastGenesisHeight(daoStateService.getBlockHeightOfLastBlock()) &&
-                noSnapshotCandidateOrDifferentHeight) {
+        if (isHeightBelowGenesisHeight(daoStateService.getBlockHeightOfLastBlock())) {
+            return;
+        }
 
-            // We protect to get called while we are not completed with persisting the daoState. This can take about
-            // 20 seconds and it is not expected that we get triggered another snapshot event in that period, but this
-            // check guards that we would skip such calls..
-            if (!readyForPersisting) {
-                if (preferences.isUseFullModeDaoMonitor()) {
-                    // In case we dont use isUseFullModeDaoMonitor we might called here too often as the parsing is much
-                    // faster than the persistence and we likely create only 1 snapshot during initial parsing, so
-                    // we log only if isUseFullModeDaoMonitor is true as then parsing is likely slower and we would
-                    // expect that we do a snapshot at each trigger block.
-                    log.info("We try to persist a daoState but the previous call has not completed yet. " +
-                            "We ignore that call and skip that snapshot. " +
-                            "Snapshot will be created at next snapshot height again. This is not to be expected with live " +
-                            "blockchain data.");
-                }
-                return;
+        if (daoStateService.getBlocks().isEmpty()) {
+            log.error("No snapshot to be created as blocks are empty. This should never happen.");
+            return;
+        }
+
+        if (daoStateCandidate != null && snapshotHeight == chainHeight) {
+            log.error("snapshotHeight is same as chainHeight. This should never happen. chainHeight={}", chainHeight);
+            return;
+        }
+
+        // We protect to get called while we are not completed with persisting the daoState. This can take about
+        // 20 seconds, and it is not expected that we get triggered another snapshot event in that period, but this
+        // check guards that we would skip such calls.
+        if (persistingBlockInProgress) {
+            if (preferences.isUseFullModeDaoMonitor()) {
+                // In case we don't use isUseFullModeDaoMonitor we might get called here too often as the parsing is much
+                // faster than the persistence, and we likely create only 1 snapshot during initial parsing, so
+                // we log only if isUseFullModeDaoMonitor is true as then parsing is likely slower, and we would
+                // expect that we do a snapshot at each trigger block.
+                log.info("We try to persist a daoState but the previous call has not completed yet. " +
+                        "We ignore that call and skip that snapshot. " +
+                        "Snapshot will be created at next snapshot height again. This is not to be expected with live " +
+                        "blockchain data.");
             }
+            return;
+        }
 
-            if (daoStateCandidate != null) {
-                persist();
-            } else {
-                createSnapshot();
-            }
+        if (daoStateCandidate != null) {
+            persist();
+        } else {
+            createSnapshot();
         }
     }
 
     private void persist() {
         long ts = System.currentTimeMillis();
-        readyForPersisting = false;
+        persistingBlockInProgress = true;
         daoStateStorageService.requestPersistence(daoStateCandidate,
                 blocksCandidate,
                 hashChainCandidate,
@@ -250,7 +265,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                             snapshotHeight, System.currentTimeMillis() - ts);
 
                     createSnapshot();
-                    readyForPersisting = true;
+                    persistingBlockInProgress = false;
                 });
     }
 
@@ -315,8 +330,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
             return;
         }
 
-        if (!isHeightAtLeastGenesisHeight(chainHeightOfPersistedDaoState)) {
-            log.error("heightOfPersistedLastBlock is below genesis height. This should never happen.");
+        if (isHeightBelowGenesisHeight(chainHeightOfPersistedDaoState)) {
             return;
         }
 
@@ -343,8 +357,12 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private boolean isHeightAtLeastGenesisHeight(int heightOfLastBlock) {
-        return heightOfLastBlock >= genesisTxInfo.getGenesisBlockHeight();
+    private boolean isHeightBelowGenesisHeight(int height) {
+        boolean isHeightBelowGenesisHeight = height < genesisTxInfo.getGenesisBlockHeight();
+        if (isHeightBelowGenesisHeight) {
+            log.error("height is below genesis height. This should never happen. height={}", height);
+        }
+        return isHeightBelowGenesisHeight;
     }
 
     private void resyncDaoStateFromResources() {

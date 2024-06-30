@@ -69,7 +69,7 @@ public class PreferencesTest {
         LocalBitcoinNode localBitcoinNode = new LocalBitcoinNode(config);
         preferences = new Preferences(
                 persistenceManager, config, null, localBitcoinNode, null, null, Config.DEFAULT_FULL_DAO_NODE,
-                false, null, null, Config.UNSPECIFIED_PORT);
+                false, null, null, Config.UNSPECIFIED_PORT, true);
     }
 
     @SuppressWarnings("unchecked")

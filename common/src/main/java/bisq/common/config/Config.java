@@ -139,6 +139,7 @@ public class Config {
     public static final String BM_ORACLE_NODE_PRIV_KEY = "bmOracleNodePrivKey";
     public static final String SEED_NODE_REPORTING_SERVER_URL = "seedNodeReportingServerUrl";
     public static final String USE_TOR_FOR_BTC_MONITOR = "useTorForBtcMonitor";
+    public static final String USE_FULL_MODE_DAO_MONITOR = "useFullModeDaoMonitor";
 
     // Default values for certain options
     public static final int UNSPECIFIED_PORT = -1;
@@ -239,6 +240,8 @@ public class Config {
     public final String bmOracleNodePrivKey;
     public final String seedNodeReportingServerUrl;
     public final boolean useTorForBtcMonitor;
+    public final boolean useFullModeDaoMonitor;
+    public final boolean useFullModeDaoMonitorSetExplicitly;
 
     // Properties derived from options but not exposed as options themselves
     public final File torDir;
@@ -716,7 +719,7 @@ public class Config {
                 parser.accepts(DAO_NODE_API_PORT, "Dao node API port")
                         .withRequiredArg()
                         .ofType(Integer.class)
-                        .defaultsTo(8082);
+                        .defaultsTo(8081);
 
         ArgumentAcceptingOptionSpec<Boolean> isBmFullNode =
                 parser.accepts(IS_BM_FULL_NODE, "Run as Burningman full node")
@@ -745,6 +748,14 @@ public class Config {
                         .withRequiredArg()
                         .ofType(Boolean.class)
                         .defaultsTo(true);
+
+        ArgumentAcceptingOptionSpec<Boolean> useFullModeDaoMonitorOpt =
+                parser.accepts(USE_FULL_MODE_DAO_MONITOR, "If set to true full mode DAO monitor is activated. " +
+                                "By that at each block during parsing the dao state hash is created, " +
+                                "otherwise only after block parsing is complete and on new blocks.")
+                        .withRequiredArg()
+                        .ofType(Boolean.class)
+                        .defaultsTo(false);
 
         try {
             CompositeOptionSet options = new CompositeOptionSet();
@@ -873,6 +884,8 @@ public class Config {
             this.bmOracleNodePrivKey = options.valueOf(bmOracleNodePrivKey);
             this.seedNodeReportingServerUrl = options.valueOf(seedNodeReportingServerUrlOpt);
             this.useTorForBtcMonitor = options.valueOf(useTorForBtcMonitorOpt);
+            this.useFullModeDaoMonitor = options.valueOf(useFullModeDaoMonitorOpt);
+            this.useFullModeDaoMonitorSetExplicitly = options.has(useFullModeDaoMonitorOpt);
         } catch (OptionException ex) {
             throw new ConfigException("problem parsing option '%s': %s",
                     ex.options().get(0),

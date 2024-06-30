@@ -47,7 +47,7 @@ public class PreferenceMakers {
             lookup.valueOf(localBitcoinNode, new SameValueDonor<>(null)),
             lookup.valueOf(useTorFlagFromOptions, new SameValueDonor<>(null)),
             lookup.valueOf(referralID, new SameValueDonor<>(null)),
-            Config.DEFAULT_FULL_DAO_NODE, false, null, null, Config.UNSPECIFIED_PORT);
+            Config.DEFAULT_FULL_DAO_NODE, false, null, null, Config.UNSPECIFIED_PORT, false);
 
     public static final Preferences empty = make(a(Preferences));
 }
