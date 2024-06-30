@@ -35,16 +35,18 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(title = "BondedReputation")
 public class BondedReputationDto {
     private final long amount;
-    private final long time;
+    private final long blockTime;
     private final String hash;
     private final int blockHeight;
     private final int lockTime;
+    private final String txId;
 
-    public BondedReputationDto(long amount, long time, String hash, int blockHeight, int lockTime) {
+    public BondedReputationDto(long amount, long blockTime, String hash, int blockHeight, int lockTime, String txId) {
         this.amount = amount;
-        this.time = time;
+        this.blockTime = blockTime;
         this.hash = hash;
         this.blockHeight = blockHeight;
         this.lockTime = lockTime;
+        this.txId = txId;
     }
 }
