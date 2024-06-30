@@ -99,7 +99,7 @@ public class BondedReputationRepository extends BondRepository<BondedReputation,
         bonds.setAll(bondByUidMap.values());
     }
 
-    private Stream<BondedReputation> getBondedReputationStream() {
+    public Stream<BondedReputation> getBondedReputationStream() {
         return getLockupTxOutputsForBondedReputation()
                 .map(lockupTxOutput -> {
                     String lockupTxId = lockupTxOutput.getTxId();
