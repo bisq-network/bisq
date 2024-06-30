@@ -96,7 +96,8 @@ public class BondedReputationApi {
                                 tx.getTime(),
                                 Hex.encode(bondedReputation.getBondedAsset().getHash()),
                                 blockHeight,
-                                bondedReputation.getLockTime()
+                                bondedReputation.getLockTime(),
+                                tx.getId()
                         );
                     } else {
                         return null;
