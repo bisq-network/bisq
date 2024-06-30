@@ -719,7 +719,7 @@ public class Config {
                 parser.accepts(DAO_NODE_API_PORT, "Dao node API port")
                         .withRequiredArg()
                         .ofType(Integer.class)
-                        .defaultsTo(8082);
+                        .defaultsTo(8081);
 
         ArgumentAcceptingOptionSpec<Boolean> isBmFullNode =
                 parser.accepts(IS_BM_FULL_NODE, "Run as Burningman full node")
