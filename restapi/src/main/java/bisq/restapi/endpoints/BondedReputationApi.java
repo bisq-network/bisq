@@ -17,6 +17,7 @@
 
 package bisq.restapi.endpoints;
 
+import bisq.core.dao.governance.bond.reputation.BondedReputation;
 import bisq.core.dao.governance.bond.reputation.BondedReputationRepository;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
@@ -80,7 +81,8 @@ public class BondedReputationApi {
                                                          @PathParam("block-height")
                                                          int fromBlockHeight) {
         // We only consider lock time with at least 50 000 blocks as valid
-        List<BondedReputationDto> result = bondedReputationRepository.getActiveBonds().stream()
+        List<BondedReputationDto> result = bondedReputationRepository.getBondedReputationStream()
+                .filter(BondedReputation::isActive)
                 .filter(bondedReputation -> bondedReputation.getLockTime() >= 50_000)
                 .map(bondedReputation -> {
                     Optional<Tx> optionalTx = daoStateService.getTx(bondedReputation.getLockupTxId());
