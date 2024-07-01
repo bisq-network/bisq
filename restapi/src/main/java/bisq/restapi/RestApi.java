@@ -80,7 +80,6 @@ public class RestApi extends ExecutableForAppWithP2p {
     protected void startApplication() {
         super.startApplication();
 
-        preferences.setUseFullModeDaoMonitor(false);
         daoStateSnapshotService.setResyncDaoStateFromResourcesHandler(this::gracefulShutDown);
     }
 
