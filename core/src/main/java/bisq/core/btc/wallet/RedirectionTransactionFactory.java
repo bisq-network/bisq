@@ -43,7 +43,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class RedirectionTransactionFactory {
-
     private final NetworkParameters params;
 
     public RedirectionTransactionFactory(NetworkParameters params) {
@@ -97,6 +96,8 @@ public class RedirectionTransactionFactory {
 
     public Transaction finalizeRedirectionTransaction(TransactionOutput warningTxOutput,
                                                       Transaction redirectionTx,
+                                                      byte[] buyerPubKey,
+                                                      byte[] sellerPubKey,
                                                       byte[] buyerSignature,
                                                       byte[] sellerSignature,
                                                       Coin inputValue)
@@ -105,6 +106,8 @@ public class RedirectionTransactionFactory {
         TransactionInput input = redirectionTx.getInput(0);
         input.setScriptSig(ScriptBuilder.createEmpty());
 
+        // FIXME: This redeem script is all wrong. It needs to be build from pubKeys, not signatures,
+        //  and we cannot use TransactionWitness.redeemP2WSH with it, as it isn't a simple multisig script.
         Script redeemScript = createRedeemScript(buyerSignature, sellerSignature);
         TransactionWitness witness = TransactionWitness.redeemP2WSH(redeemScript);
         input.setWitness(witness);

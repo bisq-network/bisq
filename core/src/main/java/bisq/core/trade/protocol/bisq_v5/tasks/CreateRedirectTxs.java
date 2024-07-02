@@ -17,8 +17,6 @@
 
 package bisq.core.trade.protocol.bisq_v5.tasks;
 
-import bisq.core.btc.model.AddressEntry;
-import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
@@ -35,9 +33,11 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
-public class CreateRedirectTx extends TradeTask {
-    public CreateRedirectTx(TaskRunner<Trade> taskHandler, Trade trade) {
+public class CreateRedirectTxs extends TradeTask {
+    public CreateRedirectTxs(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -47,27 +47,43 @@ public class CreateRedirectTx extends TradeTask {
             runInterceptHook();
 
             TradeWalletService tradeWalletService = processModel.getTradeWalletService();
-            BtcWalletService btcWalletService = processModel.getBtcWalletService();
-            String tradeId = processModel.getOffer().getId();
             TradingPeer tradingPeer = processModel.getTradePeer();
 
+            // Get receiver amounts and addresses.
+            TransactionOutput warningTxOutput = processModel.getWarningTx().getOutput(0);
             TransactionOutput peersWarningTxOutput = tradingPeer.getWarningTx().getOutput(0);
+
             long inputAmount = peersWarningTxOutput.getValue().value;
+            checkArgument(warningTxOutput.getValue().value == inputAmount,
+                    "Different warningTx output amounts. Ours: {}; Peer's: {}", warningTxOutput.getValue().value, inputAmount);
+
             long depositTxFee = trade.getTradeTxFeeAsLong(); // Used for fee rate calculation inside getDelayedPayoutTxReceiverService
+            long inputAmountMinusFeeForFeeBumpOutput = inputAmount - 32 * depositTxFee;
             int selectionHeight = processModel.getBurningManSelectionHeight();
             List<Tuple2<Long, String>> burningMen = processModel.getDelayedPayoutTxReceiverService().getReceivers(
                     selectionHeight,
-                    inputAmount,
+                    inputAmountMinusFeeForFeeBumpOutput,
                     depositTxFee);
-            log.info("Create redirectionTx using selectionHeight {} and receivers {}", selectionHeight, burningMen);
 
-            AddressEntry feeBumpAddressEntry = btcWalletService.getOrCreateAddressEntry(tradeId, AddressEntry.Context.REDIRECT_TX_FEE_BUMP);
-            Tuple2<Long, String> feeBumpOutputAmountAndAddress = new Tuple2<>(StagedPayoutTxParameters.REDIRECT_TX_FEE_BUMP_OUTPUT_VALUE, feeBumpAddressEntry.getAddressString());
+            log.info("Create redirectionTxs using selectionHeight {} and receivers {}", selectionHeight, burningMen);
+
+            // Create our redirect tx.
+            String feeBumpAddress = processModel.getRedirectTxFeeBumpAddress();
+            var feeBumpOutputAmountAndAddress = new Tuple2<>(StagedPayoutTxParameters.REDIRECT_TX_FEE_BUMP_OUTPUT_VALUE, feeBumpAddress);
 
             Transaction unsignedRedirectionTx = tradeWalletService.createUnsignedRedirectionTx(peersWarningTxOutput,
                     burningMen,
                     feeBumpOutputAmountAndAddress);
             processModel.setRedirectTx(unsignedRedirectionTx);
+
+            // Create peer's redirect tx.
+            String peersFeeBumpAddress = tradingPeer.getRedirectTxFeeBumpAddress();
+            var peersFeeBumpOutputAmountAndAddress = new Tuple2<>(StagedPayoutTxParameters.REDIRECT_TX_FEE_BUMP_OUTPUT_VALUE, peersFeeBumpAddress);
+
+            Transaction peersUnsignedRedirectionTx = tradeWalletService.createUnsignedRedirectionTx(warningTxOutput,
+                    burningMen,
+                    peersFeeBumpOutputAmountAndAddress);
+            tradingPeer.setRedirectTx(peersUnsignedRedirectionTx);
 
             processModel.getTradeManager().requestPersistence();
 

@@ -41,8 +41,16 @@ import bisq.core.trade.protocol.bisq_v1.tasks.seller_as_maker.SellerAsMakerCreat
 import bisq.core.trade.protocol.bisq_v1.tasks.seller_as_maker.SellerAsMakerFinalizesDepositTx;
 import bisq.core.trade.protocol.bisq_v5.messages.PreparedTxBuyerSignaturesMessage;
 import bisq.core.trade.protocol.bisq_v5.tasks.CreateFeeBumpAddressEntries;
+import bisq.core.trade.protocol.bisq_v5.tasks.CreateRedirectTxs;
+import bisq.core.trade.protocol.bisq_v5.tasks.CreateWarningTxs;
+import bisq.core.trade.protocol.bisq_v5.tasks.FinalizeRedirectTxs;
+import bisq.core.trade.protocol.bisq_v5.tasks.FinalizeWarningTxs;
 import bisq.core.trade.protocol.bisq_v5.tasks.maker.MakerSendsInputsForDepositTxResponse_v5;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerProcessPreparedTxBuyerSignaturesMessage;
+import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSignsOwnRedirectTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSignsOwnWarningTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSignsPeersRedirectTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSignsPeersWarningTx;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -93,7 +101,15 @@ public class SellerAsMakerProtocol_v5 extends BaseSellerProtocol_v5 implements M
                         MakerSetsLockTime.class,
                         MakerCreateAndSignContract.class,
                         SellerAsMakerCreatesUnsignedDepositTx.class,
+
                         CreateFeeBumpAddressEntries.class,
+                        CreateWarningTxs.class,
+                        CreateRedirectTxs.class,
+                        SellerSignsOwnWarningTx.class,
+                        SellerSignsPeersWarningTx.class,
+                        SellerSignsOwnRedirectTx.class,
+                        SellerSignsPeersRedirectTx.class,
+
                         MakerSendsInputsForDepositTxResponse_v5.class)
                         .using(new TradeTaskRunner(trade,
                                 () -> handleTaskRunnerSuccess(message),
@@ -132,8 +148,9 @@ public class SellerAsMakerProtocol_v5 extends BaseSellerProtocol_v5 implements M
                 .from(peer))
                 .setup(tasks(
                         SellerProcessPreparedTxBuyerSignaturesMessage.class,
+                        FinalizeWarningTxs.class,
+                        FinalizeRedirectTxs.class,
                         SellerAsMakerFinalizesDepositTx.class,
-//                        SellerFinalizesDelayedPayoutTx.class,
                         MakerRemovesOpenOffer.class,
                         SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
                         SellerPublishesDepositTx.class,

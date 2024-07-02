@@ -31,8 +31,6 @@ import org.bitcoinj.crypto.DeterministicKey;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 @Slf4j
 public class SellerSignsPeersWarningTx extends TradeTask {
     public SellerSignsPeersWarningTx(TaskRunner<Trade> taskHandler, Trade trade) {
@@ -50,7 +48,8 @@ public class SellerSignsPeersWarningTx extends TradeTask {
             TradingPeer tradingPeer = processModel.getTradePeer();
 
             Transaction peersWarningTx = tradingPeer.getWarningTx();
-            TransactionOutput depositTxOutput = checkNotNull(processModel.getDepositTx()).getOutput(0);
+            Transaction depositTx = btcWalletService.getTxFromSerializedTx(processModel.getPreparedDepositTx());
+            TransactionOutput depositTxOutput = depositTx.getOutput(0);
             byte[] sellerPubKey = processModel.getMyMultiSigPubKey();
             DeterministicKey myMultiSigKeyPair = btcWalletService.getMultiSigKeyPair(tradeId, sellerPubKey);
             byte[] buyerPubKey = tradingPeer.getMultiSigPubKey();

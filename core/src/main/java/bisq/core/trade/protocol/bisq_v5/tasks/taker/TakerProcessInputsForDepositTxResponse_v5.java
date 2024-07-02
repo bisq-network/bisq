@@ -19,6 +19,7 @@ package bisq.core.trade.protocol.bisq_v5.tasks.taker;
 
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.Restrictions;
+import bisq.core.trade.model.bisq_v1.SellerAsTakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
@@ -90,12 +91,19 @@ public class TakerProcessInputsForDepositTxResponse_v5 extends TradeTask {
 
             checkArgument(response.getMakerInputs().size() > 0);
 
-//            byte[] tx = checkNotNull(response.getBuyersUnsignedWarningTx());
-//            Transaction buyersUnsignedWarningTx = btcWalletService.getTxFromSerializedTx(tx);
-//            tradingPeer.setWarningTx(buyersUnsignedWarningTx);
-//            tradingPeer.setWarningTxBuyerSignature(response.getBuyersWarningTxSignature());
             tradingPeer.setWarningTxFeeBumpAddress(response.getMakersWarningTxFeeBumpAddress());
             tradingPeer.setRedirectTxFeeBumpAddress(response.getMakersRedirectTxFeeBumpAddress());
+            if (trade instanceof SellerAsTakerTrade) {
+                processModel.setWarningTxBuyerSignature(response.getSellersWarningTxMakerSignature());
+                tradingPeer.setWarningTxBuyerSignature(response.getBuyersWarningTxMakerSignature());
+                processModel.setRedirectTxBuyerSignature(response.getSellersRedirectTxMakerSignature());
+                tradingPeer.setRedirectTxBuyerSignature(response.getBuyersRedirectTxMakerSignature());
+            } else {
+                processModel.setWarningTxSellerSignature(response.getBuyersWarningTxMakerSignature());
+                tradingPeer.setWarningTxSellerSignature(response.getSellersWarningTxMakerSignature());
+                processModel.setRedirectTxSellerSignature(response.getBuyersRedirectTxMakerSignature());
+                tradingPeer.setRedirectTxSellerSignature(response.getSellersRedirectTxMakerSignature());
+            }
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());

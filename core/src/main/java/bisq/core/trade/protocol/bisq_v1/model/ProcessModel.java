@@ -78,7 +78,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // persist them.
 
 /**
- * This is the base model for the trade protocol. It is persisted with the trade (non transient fields).
+ * This is the base model for the trade protocol. It is persisted with the trade (non-transient fields).
  * It uses the {@link Provider} for access to domain services.
  */
 

@@ -886,6 +886,8 @@ public class TradeWalletService {
 
     public Transaction finalizeRedirectionTx(TransactionOutput warningTxOutput,
                                              Transaction redirectionTx,
+                                             byte[] buyerPubKey,
+                                             byte[] sellerPubKey,
                                              byte[] buyerSignature,
                                              byte[] sellerSignature,
                                              Coin inputValue)
@@ -893,6 +895,8 @@ public class TradeWalletService {
         return redirectionTransactionFactory.finalizeRedirectionTransaction(
                 warningTxOutput,
                 redirectionTx,
+                buyerPubKey,
+                sellerPubKey,
                 buyerSignature,
                 sellerSignature,
                 inputValue
