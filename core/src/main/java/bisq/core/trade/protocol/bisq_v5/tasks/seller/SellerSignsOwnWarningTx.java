@@ -46,7 +46,8 @@ public class SellerSignsOwnWarningTx extends TradeTask {
             String tradeId = processModel.getOffer().getId();
 
             Transaction unsignedWarningTx = processModel.getWarningTx();
-            TransactionOutput depositTxOutput = processModel.getDepositTx().getOutput(0);
+            Transaction depositTx = btcWalletService.getTxFromSerializedTx(processModel.getPreparedDepositTx());
+            TransactionOutput depositTxOutput = depositTx.getOutput(0);
             byte[] sellerPubKey = processModel.getMyMultiSigPubKey();
             DeterministicKey myMultiSigKeyPair = btcWalletService.getMultiSigKeyPair(tradeId, sellerPubKey);
             byte[] buyerPubKey = processModel.getTradePeer().getMultiSigPubKey();

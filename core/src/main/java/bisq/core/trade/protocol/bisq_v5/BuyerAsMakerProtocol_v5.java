@@ -37,9 +37,15 @@ import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerSetsLockTime;
 import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerVerifyTakerFeePayment;
 import bisq.core.trade.protocol.bisq_v5.messages.PreparedTxBuyerSignaturesRequest;
 import bisq.core.trade.protocol.bisq_v5.tasks.CreateFeeBumpAddressEntries;
-import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerCreatesWarningTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.CreateRedirectTxs;
+import bisq.core.trade.protocol.bisq_v5.tasks.CreateWarningTxs;
+import bisq.core.trade.protocol.bisq_v5.tasks.FinalizeRedirectTxs;
+import bisq.core.trade.protocol.bisq_v5.tasks.FinalizeWarningTxs;
 import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerSendsPreparedTxBuyerSignaturesMessage;
+import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerSignsOwnRedirectTx;
 import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerSignsOwnWarningTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerSignsPeersRedirectTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerSignsPeersWarningTx;
 import bisq.core.trade.protocol.bisq_v5.tasks.buyer_as_maker.BuyerAsMakerProcessPreparedTxBuyerSignaturesRequest;
 import bisq.core.trade.protocol.bisq_v5.tasks.maker.MakerSendsInputsForDepositTxResponse_v5;
 
@@ -101,10 +107,14 @@ public class BuyerAsMakerProtocol_v5 extends BaseBuyerProtocol_v5 implements Mak
                         BuyerAsMakerCreatesAndSignsDepositTx.class,
                         BuyerSetupDepositTxListener.class,
 
-                        // We create our warn tx and our signature for the MS script
+//                        // We create our warn tx and our signature for the MS script
                         CreateFeeBumpAddressEntries.class,
-                        BuyerCreatesWarningTx.class,
+                        CreateWarningTxs.class,
+                        CreateRedirectTxs.class,
                         BuyerSignsOwnWarningTx.class,
+                        BuyerSignsPeersWarningTx.class,
+                        BuyerSignsOwnRedirectTx.class,
+                        BuyerSignsPeersRedirectTx.class,
 
                         MakerSendsInputsForDepositTxResponse_v5.class)
 
@@ -130,6 +140,8 @@ public class BuyerAsMakerProtocol_v5 extends BaseBuyerProtocol_v5 implements Mak
                 .from(peer))
                 .setup(tasks(
                         BuyerAsMakerProcessPreparedTxBuyerSignaturesRequest.class,
+                        FinalizeWarningTxs.class,
+                        FinalizeRedirectTxs.class,
                         MakerRemovesOpenOffer.class,
                         BuyerSendsPreparedTxBuyerSignaturesMessage.class)
                         .withTimeout(120))

@@ -63,6 +63,8 @@ public final class TradingPeer implements TradePeer {
     transient private byte[] warningTxSellerSignature;
     @Setter
     transient private byte[] warningTxBuyerSignature;
+    @Setter
+    private Transaction finalizedWarningTx;
 
     @Setter
     transient private Transaction redirectTx;
@@ -70,6 +72,8 @@ public final class TradingPeer implements TradePeer {
     transient private byte[] redirectTxSellerSignature;
     @Setter
     transient private byte[] redirectTxBuyerSignature;
+    @Setter
+    private Transaction finalizedRedirectTx;
 
 
     // Transient/Mutable

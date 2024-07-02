@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.bisq_v5.tasks.seller;
 
+import bisq.core.trade.model.bisq_v1.SellerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.trade.protocol.bisq_v5.messages.PreparedTxBuyerSignaturesMessage;
@@ -43,11 +44,13 @@ public class SellerProcessPreparedTxBuyerSignaturesMessage extends TradeTask {
             checkNotNull(message);
             checkTradeId(processModel.getOfferId(), message);
 
-            // TODO: Maybe check other signatures match what the seller-as-taker would have already got.
-            processModel.getTradePeer().setWarningTxBuyerSignature(message.getBuyersWarningTxBuyerSignature());
-            processModel.setWarningTxBuyerSignature(message.getSellersWarningTxBuyerSignature());
-            processModel.getTradePeer().setRedirectTxBuyerSignature(message.getBuyersRedirectTxBuyerSignature());
-            processModel.setRedirectTxBuyerSignature(message.getSellersRedirectTxBuyerSignature());
+            // TODO: Maybe check signatures in the message match what the seller-as-taker would have already got.
+            if (trade instanceof SellerAsMakerTrade) {
+                processModel.getTradePeer().setWarningTxBuyerSignature(message.getBuyersWarningTxBuyerSignature());
+                processModel.setWarningTxBuyerSignature(message.getSellersWarningTxBuyerSignature());
+                processModel.getTradePeer().setRedirectTxBuyerSignature(message.getBuyersRedirectTxBuyerSignature());
+                processModel.setRedirectTxBuyerSignature(message.getSellersRedirectTxBuyerSignature());
+            }
 
             processModel.getTradeWalletService().sellerAddsBuyerWitnessesToDepositTx(
                     processModel.getDepositTx(),

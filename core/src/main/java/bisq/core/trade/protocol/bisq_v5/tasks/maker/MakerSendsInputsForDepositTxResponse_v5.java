@@ -19,8 +19,10 @@ package bisq.core.trade.protocol.bisq_v5.tasks.maker;
 
 import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
+import bisq.core.trade.model.bisq_v1.BuyerAsMakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
+import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.trade.protocol.bisq_v5.messages.InputsForDepositTxResponse_v5;
 
@@ -56,6 +58,7 @@ public class MakerSendsInputsForDepositTxResponse_v5 extends TradeTask {
         try {
             runInterceptHook();
 
+            TradingPeer tradePeer = processModel.getTradePeer();
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
 
@@ -79,13 +82,13 @@ public class MakerSendsInputsForDepositTxResponse_v5 extends TradeTask {
             byte[] hashOfMakersPaymentAccountPayload = ProcessModel.hashOfPaymentAccountPayload(processModel.getPaymentAccountPayload(trade));
             String makersPaymentMethodId = checkNotNull(processModel.getPaymentAccountPayload(trade)).getPaymentMethodId();
 
-//            byte[] buyersUnsignedWarningTx = processModel.getWarningTx().bitcoinSerialize();
             String makersWarningTxFeeBumpAddress = processModel.getWarningTxFeeBumpAddress();
             String makersRedirectTxFeeBumpAddress = processModel.getRedirectTxFeeBumpAddress();
-            byte[] buyersWarningTxMakerSignature = processModel.getWarningTxBuyerSignature();
-            byte[] sellersWarningTxMakerSignature = processModel.getTradePeer().getWarningTxBuyerSignature();
-            byte[] buyersRedirectTxMakerSignature = processModel.getRedirectTxBuyerSignature();
-            byte[] sellersRedirectTxMakerSignature = processModel.getTradePeer().getRedirectTxBuyerSignature();
+            boolean isBuyerMaker = trade instanceof BuyerAsMakerTrade;
+            byte[] buyersWarningTxMakerSignature = isBuyerMaker ? processModel.getWarningTxBuyerSignature() : tradePeer.getWarningTxSellerSignature();
+            byte[] sellersWarningTxMakerSignature = isBuyerMaker ? tradePeer.getWarningTxBuyerSignature() : processModel.getWarningTxSellerSignature();
+            byte[] buyersRedirectTxMakerSignature = isBuyerMaker ? processModel.getRedirectTxBuyerSignature() : tradePeer.getRedirectTxSellerSignature();
+            byte[] sellersRedirectTxMakerSignature = isBuyerMaker ? tradePeer.getRedirectTxBuyerSignature() : processModel.getRedirectTxSellerSignature();
 
             InputsForDepositTxResponse_v5 message = new InputsForDepositTxResponse_v5(
                     processModel.getOfferId(),
@@ -117,7 +120,7 @@ public class MakerSendsInputsForDepositTxResponse_v5 extends TradeTask {
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
             processModel.getP2PService().sendEncryptedDirectMessage(
                     peersNodeAddress,
-                    processModel.getTradePeer().getPubKeyRing(),
+                    tradePeer.getPubKeyRing(),
                     message,
                     new SendDirectMessageListener() {
                         @Override

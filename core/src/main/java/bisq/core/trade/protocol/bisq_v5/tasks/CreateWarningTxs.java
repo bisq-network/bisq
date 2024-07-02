@@ -15,11 +15,11 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bisq_v5.tasks.buyer;
+package bisq.core.trade.protocol.bisq_v5.tasks;
 
-import bisq.core.btc.model.AddressEntry;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.trade.model.bisq_v1.BuyerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.trade.protocol.bisq_v5.model.StagedPayoutTxParameters;
@@ -33,8 +33,8 @@ import org.bitcoinj.core.TransactionOutput;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BuyerCreatesWarningTx extends TradeTask {
-    public BuyerCreatesWarningTx(TaskRunner<Trade> taskHandler, Trade trade) {
+public class CreateWarningTxs extends TradeTask {
+    public CreateWarningTxs(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -43,21 +43,23 @@ public class BuyerCreatesWarningTx extends TradeTask {
         try {
             runInterceptHook();
 
+            boolean amBuyer = trade instanceof BuyerTrade;
             TradeWalletService tradeWalletService = processModel.getTradeWalletService();
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
-            String tradeId = processModel.getOffer().getId();
 
             Transaction depositTx = btcWalletService.getTxFromSerializedTx(processModel.getPreparedDepositTx());
             TransactionOutput depositTxOutput = depositTx.getOutput(0);
             long lockTime = trade.getLockTime();
-            byte[] buyerPubKey = processModel.getMyMultiSigPubKey();
-            byte[] sellerPubKey = processModel.getTradePeer().getMultiSigPubKey();
-            long claimDelay = StagedPayoutTxParameters.CLAIM_DELAY;
+            byte[] buyerPubKey = amBuyer ? processModel.getMyMultiSigPubKey() : processModel.getTradePeer().getMultiSigPubKey();
+            byte[] sellerPubKey = amBuyer ? processModel.getTradePeer().getMultiSigPubKey() : processModel.getMyMultiSigPubKey();
+            long claimDelay = StagedPayoutTxParameters.CLAIM_DELAY; // FIXME: Make sure this is a low value off mainnet
             long miningFee = StagedPayoutTxParameters.getWarningTxMiningFee(trade.getDepositTxFeeRate());
-            AddressEntry feeBumpAddressEntry = btcWalletService.getOrCreateAddressEntry(tradeId, AddressEntry.Context.WARNING_TX_FEE_BUMP);
-            Tuple2<Long, String> feeBumpOutputAmountAndAddress = new Tuple2<>(StagedPayoutTxParameters.WARNING_TX_FEE_BUMP_OUTPUT_VALUE, feeBumpAddressEntry.getAddressString());
 
-            Transaction unsignedWarningTx = tradeWalletService.createUnsignedWarningTx(true,
+            // Create our warning tx.
+            String feeBumpAddress = processModel.getWarningTxFeeBumpAddress();
+            var feeBumpOutputAmountAndAddress = new Tuple2<>(StagedPayoutTxParameters.WARNING_TX_FEE_BUMP_OUTPUT_VALUE, feeBumpAddress);
+
+            Transaction unsignedWarningTx = tradeWalletService.createUnsignedWarningTx(amBuyer,
                     depositTxOutput,
                     lockTime,
                     buyerPubKey,
@@ -66,6 +68,20 @@ public class BuyerCreatesWarningTx extends TradeTask {
                     miningFee,
                     feeBumpOutputAmountAndAddress);
             processModel.setWarningTx(unsignedWarningTx);
+
+            // Create peer's warning tx.
+            String peersFeeBumpAddress = processModel.getWarningTxFeeBumpAddress();
+            var peersFeeBumpOutputAmountAndAddress = new Tuple2<>(StagedPayoutTxParameters.WARNING_TX_FEE_BUMP_OUTPUT_VALUE, peersFeeBumpAddress);
+
+            Transaction peersUnsignedWarningTx = tradeWalletService.createUnsignedWarningTx(!amBuyer,
+                    depositTxOutput,
+                    lockTime,
+                    buyerPubKey,
+                    sellerPubKey,
+                    claimDelay,
+                    miningFee,
+                    peersFeeBumpOutputAmountAndAddress);
+            processModel.getTradePeer().setWarningTx(peersUnsignedWarningTx);
 
             processModel.getTradeManager().requestPersistence();
 

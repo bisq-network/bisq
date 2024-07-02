@@ -36,8 +36,16 @@ import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerSendInputsForDepositTxR
 import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerVerifyAndSignContract;
 import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerVerifyMakerFeePayment;
 import bisq.core.trade.protocol.bisq_v5.messages.InputsForDepositTxResponse_v5;
+import bisq.core.trade.protocol.bisq_v5.tasks.CreateRedirectTxs;
+import bisq.core.trade.protocol.bisq_v5.tasks.CreateWarningTxs;
+import bisq.core.trade.protocol.bisq_v5.tasks.FinalizeRedirectTxs;
+import bisq.core.trade.protocol.bisq_v5.tasks.FinalizeWarningTxs;
 import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerSendsPreparedTxBuyerSignaturesMessage;
 import bisq.core.trade.protocol.bisq_v5.tasks.CreateFeeBumpAddressEntries;
+import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerSignsOwnRedirectTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerSignsOwnWarningTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerSignsPeersRedirectTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerSignsPeersWarningTx;
 import bisq.core.trade.protocol.bisq_v5.tasks.taker.TakerProcessInputsForDepositTxResponse_v5;
 
 import bisq.network.p2p.NodeAddress;
@@ -114,6 +122,16 @@ public class BuyerAsTakerProtocol_v5 extends BaseBuyerProtocol_v5 implements Tak
                 .from(peer))
                 .setup(tasks(TakerProcessInputsForDepositTxResponse_v5.class,
                         ApplyFilter.class,
+
+                        CreateWarningTxs.class,
+                        CreateRedirectTxs.class,
+                        BuyerSignsOwnWarningTx.class,
+                        BuyerSignsPeersWarningTx.class,
+                        BuyerSignsOwnRedirectTx.class,
+                        BuyerSignsPeersRedirectTx.class,
+                        FinalizeWarningTxs.class,
+                        FinalizeRedirectTxs.class,
+
                         TakerVerifyAndSignContract.class,
                         TakerPublishFeeTx.class,
                         BuyerAsTakerSignsDepositTx.class,

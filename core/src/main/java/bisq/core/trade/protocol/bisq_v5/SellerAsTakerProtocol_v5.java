@@ -37,13 +37,16 @@ import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerVerifyAndSignContract;
 import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerVerifyMakerFeePayment;
 import bisq.core.trade.protocol.bisq_v5.messages.InputsForDepositTxResponse_v5;
 import bisq.core.trade.protocol.bisq_v5.messages.PreparedTxBuyerSignaturesMessage;
-import bisq.core.trade.protocol.bisq_v5.tasks.CreateRedirectTx;
-import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerCreatesWarningTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.CreateFeeBumpAddressEntries;
+import bisq.core.trade.protocol.bisq_v5.tasks.CreateRedirectTxs;
+import bisq.core.trade.protocol.bisq_v5.tasks.CreateWarningTxs;
+import bisq.core.trade.protocol.bisq_v5.tasks.FinalizeRedirectTxs;
+import bisq.core.trade.protocol.bisq_v5.tasks.FinalizeWarningTxs;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSignsOwnRedirectTx;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSignsOwnWarningTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSignsPeersRedirectTx;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSignsPeersWarningTx;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller_as_taker.SellerAsTakerSendsPreparedTxBuyerSignaturesRequest;
-import bisq.core.trade.protocol.bisq_v5.tasks.CreateFeeBumpAddressEntries;
 import bisq.core.trade.protocol.bisq_v5.tasks.taker.TakerProcessInputsForDepositTxResponse_v5;
 
 import bisq.network.p2p.NodeAddress;
@@ -112,25 +115,33 @@ public class SellerAsTakerProtocol_v5 extends BaseSellerProtocol_v5 implements T
                 .from(peer))
                 .setup(tasks(
                         TakerProcessInputsForDepositTxResponse_v5.class,
-
                         ApplyFilter.class,
+
+                        CreateWarningTxs.class,
+                        CreateRedirectTxs.class,
+                        SellerSignsOwnWarningTx.class,
+                        SellerSignsPeersWarningTx.class,
+                        SellerSignsOwnRedirectTx.class,
+                        SellerSignsPeersRedirectTx.class,
+                        FinalizeWarningTxs.class,
+                        FinalizeRedirectTxs.class,
+
                         TakerVerifyAndSignContract.class,
                         TakerPublishFeeTx.class,
                         SellerAsTakerSignsDepositTx.class,
 
-                        // We create our warn tx and our signature for the MS script.
-                        SellerCreatesWarningTx.class,
-                        SellerSignsOwnWarningTx.class,
+//                        // We create our warn tx and our signature for the MS script.
+//                        SellerCreatesWarningTx.class,
+//                        SellerSignsOwnWarningTx.class,
 
                         // We can now create the signed claim tx from out warn tx
                         // CreateSignedClaimTx.class,
 
-                        // We create our redirect tx using the buyers warn tx output and our signature for the MS script
-                        CreateRedirectTx.class,
-                        SellerSignsOwnRedirectTx.class,
+//                        // We create our redirect tx using the buyers warn tx output and our signature for the MS script
+//                        SellerSignsOwnRedirectTx.class,
 
-                        // We sign the buyers warn tx
-                        SellerSignsPeersWarningTx.class,
+//                        // We sign the buyers warn tx
+//                        SellerSignsPeersWarningTx.class,
 
 //                        // We send buyer sig for their warn tx and our warn and redirect tx including our signatures
 //                        SellerSendStagedPayoutTxRequest.class)
