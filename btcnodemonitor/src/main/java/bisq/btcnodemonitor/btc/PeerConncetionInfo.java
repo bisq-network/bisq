@@ -64,7 +64,9 @@ public class PeerConncetionInfo {
     }
 
     public String getShortId() {
-        return getAddress().substring(0, 12) + "...";
+        String address = getAddress();
+        int endIndex = Math.min(address.length(), 12);
+        return address.substring(0, endIndex) + "...";
     }
 
     public int getNumConnectionAttempts() {

@@ -56,28 +56,24 @@ public class SimpleHttpServer {
     private final static String CLOSE_TAG = "</font><br/>";
     private final static String WARNING_ICON = "&#9888; ";
     private final static String ALERT_ICON = "&#9760; "; // &#9889;  &#9889;
-    private final Config config;
     @Getter
     private final List<BtcNodes.BtcNode> providedBtcNodes;
     private final Map<String, BtcNodes.BtcNode> btcNodeByAddress;
     private final int port;
     private final PeerConncetionModel peerConncetionModel;
     private final String started;
-
+    private final String networkInfo;
     private String html;
-    private int requestCounter;
-    private String networkInfo;
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructor
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public SimpleHttpServer(Config config, PeerConncetionModel peerConncetionModel) {
-        this.config = config;
         this.peerConncetionModel = peerConncetionModel;
         started = new Date().toString();
-
-        this.providedBtcNodes = peerConncetionModel.getProvidedBtcNodes();
+        providedBtcNodes = peerConncetionModel.getProvidedBtcNodes();
 
         BaseCurrencyNetwork network = config.baseCurrencyNetwork;
         if (config.useTorForBtcMonitor) {
@@ -121,9 +117,9 @@ public class SimpleHttpServer {
 
     public CompletableFuture<Void> shutdown() {
         return CompletableFuture.runAsync(() -> {
-            log.info("shutDown");
+            log.info("stop Spark server");
             Spark.stop();
-            log.info("shutDown completed");
+            log.info("Spark server stopped");
         });
     }
 

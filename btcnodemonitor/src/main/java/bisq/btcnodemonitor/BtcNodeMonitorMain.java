@@ -51,6 +51,7 @@ public class BtcNodeMonitorMain implements GracefulShutDownHandler {
 
     @Override
     public void gracefulShutDown(ResultHandler resultHandler) {
+        log.info("gracefulShutDown");
         btcNodeMonitor.shutdown().join();
         System.exit(0);
         resultHandler.handleResult();

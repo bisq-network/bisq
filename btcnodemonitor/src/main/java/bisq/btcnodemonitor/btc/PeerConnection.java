@@ -17,8 +17,6 @@
 
 package bisq.btcnodemonitor.btc;
 
-import bisq.common.Timer;
-import bisq.common.UserThread;
 import bisq.common.util.SingleThreadExecutorUtils;
 
 import org.bitcoinj.core.Context;
@@ -27,6 +25,8 @@ import org.bitcoinj.core.Peer;
 import org.bitcoinj.core.PeerAddress;
 import org.bitcoinj.core.Utils;
 import org.bitcoinj.core.VersionMessage;
+import org.bitcoinj.core.listeners.PeerConnectedEventListener;
+import org.bitcoinj.core.listeners.PeerDisconnectedEventListener;
 import org.bitcoinj.net.BlockingClientManager;
 import org.bitcoinj.net.ClientConnectionManager;
 
@@ -39,6 +39,8 @@ import java.net.SocketAddress;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.extern.slf4j.Slf4j;
@@ -55,9 +57,15 @@ public class PeerConnection {
     private final int connectTimeoutMillis;
     private final int vMinRequiredProtocolVersion;
     private final PeerConncetionInfo peerConncetionInfo;
-    private Optional<Timer> disconnectScheduler = Optional.empty();
-    private Optional<Timer> reconnectScheduler = Optional.empty();
     private final AtomicBoolean shutdownCalled = new AtomicBoolean();
+    private final ExecutorService connectionExecutor;
+    private final ExecutorService onConnectionExecutor;
+    private final ExecutorService onDisConnectionExecutor;
+    private Optional<PeerConnectedEventListener> peerConnectedEventListener = Optional.empty();
+    private Optional<PeerDisconnectedEventListener> peerDisconnectedEventListener = Optional.empty();
+    private Optional<CompletableFuture<Void>> connectAndDisconnectFuture = Optional.empty();
+    private Optional<CompletableFuture<Void>> innerConnectAndDisconnectFuture = Optional.empty();
+    private Optional<CompletableFuture<SocketAddress>> openConnectionFuture = Optional.empty();
 
     public PeerConnection(Context context,
                           PeerConncetionInfo peerConncetionInfo,
@@ -72,37 +80,110 @@ public class PeerConnection {
         this.disconnectIntervalSec = disconnectIntervalSec;
         this.reconnectIntervalSec = reconnectIntervalSec;
 
+        connectionExecutor = SingleThreadExecutorUtils.getSingleThreadExecutor("connection-" + peerConncetionInfo.getShortId());
+        onConnectionExecutor = SingleThreadExecutorUtils.getSingleThreadExecutor("onConnection-" + peerConncetionInfo.getShortId());
+        onDisConnectionExecutor = SingleThreadExecutorUtils.getSingleThreadExecutor("onDisConnection-" + peerConncetionInfo.getShortId());
+
         this.params = context.getParams();
         vMinRequiredProtocolVersion = params.getProtocolVersionNum(NetworkParameters.ProtocolVersion.BLOOM_FILTER);
     }
 
+    public void start() {
+        CompletableFuture.runAsync(() -> {
+            do {
+                connectAndDisconnectFuture = Optional.of(connectAndDisconnect());
+                try {
+                    connectAndDisconnectFuture.get().join();
+                } catch (Exception ignore) {
+                }
+            }
+            while (!shutdownCalled.get() && !Thread.currentThread().isInterrupted());
+            log.info("Exiting startConnectAndDisconnectLoop loop. Expected at shutdown");
+        }, connectionExecutor);
+    }
+
     public CompletableFuture<Void> shutdown() {
+        log.info("Shutdown");
         shutdownCalled.set(true);
-        disconnectScheduler.ifPresent(Timer::stop);
-        reconnectScheduler.ifPresent(Timer::stop);
+        peerConncetionInfo.getCurrentConnectionAttempt().ifPresent(connectionAttempt -> {
+            Peer peer = connectionAttempt.getPeer();
+            peerDisconnectedEventListener.ifPresent(peer::removeDisconnectedEventListener);
+            peerDisconnectedEventListener = Optional.empty();
+            peerConnectedEventListener.ifPresent(peer::removeConnectedEventListener);
+            peerConnectedEventListener = Optional.empty();
+        });
+
         return CompletableFuture.runAsync(() -> {
-            log.info("shutdown {}", peerConncetionInfo);
             Context.propagate(context);
-            disconnect();
+            peerConncetionInfo.getCurrentConnectionAttempt()
+                    .ifPresent(currentConnectionAttempt -> currentConnectionAttempt.getPeer().close());
+
+            connectAndDisconnectFuture.ifPresent(connectFuture -> connectFuture.complete(null));
+            innerConnectAndDisconnectFuture.ifPresent(connectFuture -> connectFuture.complete(null));
+
+            connectionExecutor.shutdownNow();
+            onConnectionExecutor.shutdownNow();
+            onDisConnectionExecutor.shutdownNow();
         }, SingleThreadExecutorUtils.getSingleThreadExecutor("shutdown-" + peerConncetionInfo.getShortId()));
     }
 
-    public void connect() {
-        CompletableFuture.runAsync(() -> {
-            log.info("connect {}", peerConncetionInfo);
+    private CompletableFuture<Void> connectAndDisconnect() {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        innerConnectAndDisconnectFuture = Optional.of(CompletableFuture.runAsync(() -> {
+            log.info("\n>> Connect to {}", peerConncetionInfo.getAddress());
             Context.propagate(context);
             Peer peer = createPeer(peerConncetionInfo.getPeerAddress());
             PeerConncetionInfo.ConnectionAttempt connectionAttempt = peerConncetionInfo.newConnectionAttempt(peer);
             long ts = System.currentTimeMillis();
             connectionAttempt.setConnectionStartedTs(ts);
-            try {
-                peer.addConnectedEventListener((peer1, peerCount) -> {
-                    connectionAttempt.setDurationUntilConnection(System.currentTimeMillis() - ts);
-                    connectionAttempt.setConnectionSuccessTs(System.currentTimeMillis());
+
+            peerConnectedEventListener = Optional.of((p, peerCount) -> {
+                peerConnectedEventListener.ifPresent(peer::removeConnectedEventListener);
+                peerConnectedEventListener = Optional.empty();
+                if (shutdownCalled.get()) {
+                    return;
+                }
+                try {
+                    log.info("\n## Successfully connected to {}", peer.getAddress());
+                    long now = System.currentTimeMillis();
+                    connectionAttempt.setDurationUntilConnection(now - ts);
+                    connectionAttempt.setConnectionSuccessTs(now);
                     connectionAttempt.onConnected();
-                    startAutoDisconnectAndReconnect();
-                });
-                peer.addDisconnectedEventListener((peer1, peerCount) -> {
+
+                    try {
+                        Thread.sleep(disconnectIntervalSec * 1000L); // 2 sec
+                    } catch (InterruptedException ignore) {
+                    }
+                    if (shutdownCalled.get()) {
+                        return;
+                    }
+                    log.info("Close peer {}", peer.getAddress());
+                    peer.close();
+                } catch (Exception exception) {
+                    log.warn("Exception at onConnection handler. {}", exception.toString());
+                    handleException(exception, peer, connectionAttempt, ts, future);
+                }
+            });
+            peer.addConnectedEventListener(onConnectionExecutor, peerConnectedEventListener.get());
+
+            peerDisconnectedEventListener = Optional.of((p, peerCount) -> {
+                // At socket timeouts we get called twice from Bitcoinj
+                if (peerDisconnectedEventListener.isEmpty()) {
+                    log.error("We got called twice at socketimeout from BitcoinJ and ignore the 2nd call.");
+                    return;
+                }
+                peerDisconnectedEventListener.ifPresent(peer::removeDisconnectedEventListener);
+                peerDisconnectedEventListener = Optional.empty();
+                if (shutdownCalled.get()) {
+                    return;
+                }
+                if (openConnectionFuture.isPresent() && !openConnectionFuture.get().isDone()) {
+                    // BitcoinJ calls onDisconnect at sockettimeout without throwing an error on the open connection future.
+                    openConnectionFuture.get().completeExceptionally(new TimeoutException("Open connection failed due timeout at PeerSocketHandler"));
+                    return;
+                }
+                try {
+                    log.info("\n<< Disconnected from {}", peer.getAddress());
                     long passed = System.currentTimeMillis() - ts;
                     // Timeout is not handled as error in bitcoinj, but it simply disconnects
                     // If we had a successful connect before we got versionMessage set, otherwise its from an error.
@@ -113,52 +194,62 @@ public class PeerConnection {
                         connectionAttempt.setDurationUntilDisConnection(passed);
                         connectionAttempt.onDisconnected();
                     }
-                    startAutoDisconnectAndReconnect();
-                });
-                openConnection(peer).join();
+                    try {
+                        Thread.sleep(reconnectIntervalSec * 2000L); // 120 sec
+                    } catch (InterruptedException ignore) {
+                    }
+                    if (shutdownCalled.get()) {
+                        return;
+                    }
+                    future.complete(null);
+                } catch (Exception exception) {
+                    log.warn("Exception at onDisconnection handler. {}", exception.toString());
+                    handleException(exception, peer, connectionAttempt, ts, future);
+                }
+            });
+            peer.addDisconnectedEventListener(onDisConnectionExecutor, peerDisconnectedEventListener.get());
+
+            try {
+                openConnectionFuture = Optional.of(openConnection(peer));
+                openConnectionFuture.get().join();
             } catch (Exception exception) {
-                log.warn("Error at opening connection to peer {}", peerConncetionInfo, exception);
-                connectionAttempt.setDurationUntilFailure(System.currentTimeMillis() - ts);
-                connectionAttempt.onException(exception);
-                startAutoDisconnectAndReconnect();
+                log.warn("Error at opening connection to peer {}. {}", peerConncetionInfo, exception.toString());
+                handleException(exception, peer, connectionAttempt, ts, future);
             }
-        }, SingleThreadExecutorUtils.getSingleThreadExecutor("connect-" + peerConncetionInfo.getShortId()));
+        }, MoreExecutors.directExecutor()));
+
+        return future;
     }
 
-    private CompletableFuture<Void> disconnect() {
-        return peerConncetionInfo.getCurrentConnectionAttempt()
-                .map(currentConnectionAttempt -> CompletableFuture.runAsync(() -> {
-                            log.info("disconnect {}", peerConncetionInfo);
-                            Context.propagate(context);
-                            currentConnectionAttempt.getPeer().close();
-                        },
-                        SingleThreadExecutorUtils.getSingleThreadExecutor("disconnect-" + peerConncetionInfo.getShortId())))
-                .orElse(CompletableFuture.completedFuture(null));
-    }
-
-    private void startAutoDisconnectAndReconnect() {
+    private void handleException(Throwable throwable,
+                                 Peer peer,
+                                 PeerConncetionInfo.ConnectionAttempt connectionAttempt,
+                                 long ts,
+                                 CompletableFuture<Void> future) {
+        peerDisconnectedEventListener.ifPresent(peer::removeDisconnectedEventListener);
+        peerDisconnectedEventListener = Optional.empty();
+        peerConnectedEventListener.ifPresent(peer::removeConnectedEventListener);
+        peerConnectedEventListener = Optional.empty();
         if (shutdownCalled.get()) {
             return;
         }
-        disconnectScheduler.ifPresent(Timer::stop);
-        disconnectScheduler = Optional.of(UserThread.runAfter(() -> {
-            if (shutdownCalled.get()) {
-                return;
-            }
-            disconnect()
-                    .thenRun(() -> {
-                        if (shutdownCalled.get()) {
-                            return;
-                        }
-                        reconnectScheduler.ifPresent(Timer::stop);
-                        reconnectScheduler = Optional.of(UserThread.runAfter(() -> {
-                            if (shutdownCalled.get()) {
-                                return;
-                            }
-                            connect();
-                        }, reconnectIntervalSec));
-                    });
-        }, disconnectIntervalSec));
+        connectionAttempt.setDurationUntilFailure(System.currentTimeMillis() - ts);
+        connectionAttempt.onException(throwable);
+        try {
+            // Try disconnect
+            log.info("Try close peer {}", peer.getAddress());
+            peer.close();
+        } catch (Exception ignore) {
+        }
+
+        try {
+            Thread.sleep(reconnectIntervalSec * 1000L); // 120 sec
+        } catch (InterruptedException ignore) {
+        }
+        if (shutdownCalled.get()) {
+            return;
+        }
+        future.completeExceptionally(throwable);
     }
 
     private Peer createPeer(PeerAddress address) {

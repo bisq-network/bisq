@@ -54,8 +54,7 @@ public class BtcNodeMonitor {
         return simpleHttpServer.start()
                 .thenCompose(nil -> proxySetup.createSocksProxy())
                 .thenAccept(peerGroupService::applySocks5Proxy)
-                .thenCompose(nil -> peerGroupService.start())
-                .thenRun(peerGroupService::connectToAll);
+                .thenCompose(nil -> peerGroupService.start());
     }
 
     public CompletableFuture<Void> shutdown() {
