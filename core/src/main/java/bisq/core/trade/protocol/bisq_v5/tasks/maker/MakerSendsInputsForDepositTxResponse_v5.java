@@ -58,7 +58,7 @@ public class MakerSendsInputsForDepositTxResponse_v5 extends TradeTask {
         try {
             runInterceptHook();
 
-            TradingPeer tradePeer = processModel.getTradePeer();
+            TradingPeer tradingPeer = processModel.getTradePeer();
             BtcWalletService walletService = processModel.getBtcWalletService();
             String id = processModel.getOffer().getId();
 
@@ -85,10 +85,10 @@ public class MakerSendsInputsForDepositTxResponse_v5 extends TradeTask {
             String makersWarningTxFeeBumpAddress = processModel.getWarningTxFeeBumpAddress();
             String makersRedirectTxFeeBumpAddress = processModel.getRedirectTxFeeBumpAddress();
             boolean isBuyerMaker = trade instanceof BuyerAsMakerTrade;
-            byte[] buyersWarningTxMakerSignature = isBuyerMaker ? processModel.getWarningTxBuyerSignature() : tradePeer.getWarningTxSellerSignature();
-            byte[] sellersWarningTxMakerSignature = isBuyerMaker ? tradePeer.getWarningTxBuyerSignature() : processModel.getWarningTxSellerSignature();
-            byte[] buyersRedirectTxMakerSignature = isBuyerMaker ? processModel.getRedirectTxBuyerSignature() : tradePeer.getRedirectTxSellerSignature();
-            byte[] sellersRedirectTxMakerSignature = isBuyerMaker ? tradePeer.getRedirectTxBuyerSignature() : processModel.getRedirectTxSellerSignature();
+            byte[] buyersWarningTxMakerSignature = isBuyerMaker ? processModel.getWarningTxBuyerSignature() : tradingPeer.getWarningTxSellerSignature();
+            byte[] sellersWarningTxMakerSignature = isBuyerMaker ? tradingPeer.getWarningTxBuyerSignature() : processModel.getWarningTxSellerSignature();
+            byte[] buyersRedirectTxMakerSignature = isBuyerMaker ? processModel.getRedirectTxBuyerSignature() : tradingPeer.getRedirectTxSellerSignature();
+            byte[] sellersRedirectTxMakerSignature = isBuyerMaker ? tradingPeer.getRedirectTxBuyerSignature() : processModel.getRedirectTxSellerSignature();
 
             InputsForDepositTxResponse_v5 message = new InputsForDepositTxResponse_v5(
                     processModel.getOfferId(),
@@ -120,7 +120,7 @@ public class MakerSendsInputsForDepositTxResponse_v5 extends TradeTask {
                     message.getClass().getSimpleName(), peersNodeAddress, message.getTradeId(), message.getUid());
             processModel.getP2PService().sendEncryptedDirectMessage(
                     peersNodeAddress,
-                    tradePeer.getPubKeyRing(),
+                    tradingPeer.getPubKeyRing(),
                     message,
                     new SendDirectMessageListener() {
                         @Override
@@ -148,7 +148,7 @@ public class MakerSendsInputsForDepositTxResponse_v5 extends TradeTask {
         }
     }
 
-    protected byte[] getPreparedDepositTx() {
+    private byte[] getPreparedDepositTx() {
         Transaction preparedDepositTx = processModel.getBtcWalletService().getTxFromSerializedTx(processModel.getPreparedDepositTx());
         // Remove witnesses from preparedDepositTx, so that the peer can still compute the final
         // tx id, but cannot publish it before we have all the finalized staged txs.

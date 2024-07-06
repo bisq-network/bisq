@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CreateFeeBumpAddressEntries extends TradeTask {
-    protected CreateFeeBumpAddressEntries(TaskRunner<Trade> taskHandler, Trade trade) {
+    public CreateFeeBumpAddressEntries(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

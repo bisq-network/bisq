@@ -30,7 +30,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BuyerAsMakerProcessPreparedTxBuyerSignaturesRequest extends TradeTask {
-    protected BuyerAsMakerProcessPreparedTxBuyerSignaturesRequest(TaskRunner<Trade> taskHandler, Trade trade) {
+    public BuyerAsMakerProcessPreparedTxBuyerSignaturesRequest(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -47,6 +47,14 @@ public class BuyerAsMakerProcessPreparedTxBuyerSignaturesRequest extends TradeTa
             processModel.getTradePeer().setWarningTxSellerSignature(request.getSellersWarningTxSellerSignature());
             processModel.setRedirectTxSellerSignature(request.getBuyersRedirectTxSellerSignature());
             processModel.getTradePeer().setRedirectTxSellerSignature(request.getSellersRedirectTxSellerSignature());
+
+            // TODO: takerFeeTxTd:
+            // When we receive that message the taker has published the taker fee, so we apply it to the trade.
+            // The takerFeeTx was sent in the first message. It should be part of DelayedPayoutTxSignatureRequest
+            // but that cannot be changed due backward compatibility issues. It is a left over from the old trade protocol.
+            trade.setTakerFeeTxId(processModel.getTakeOfferFeeTxId());
+
+            trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
             processModel.getTradeManager().requestPersistence();
 

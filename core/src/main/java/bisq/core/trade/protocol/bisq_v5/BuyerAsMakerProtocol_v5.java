@@ -22,7 +22,6 @@ import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.MakerProtocol;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.TradeTaskRunner;
-import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
@@ -35,6 +34,7 @@ import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerProcessesInputsForDepos
 import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerRemovesOpenOffer;
 import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerSetsLockTime;
 import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerVerifyTakerFeePayment;
+import bisq.core.trade.protocol.bisq_v5.messages.DepositTxAndSellerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v5.messages.PreparedTxBuyerSignaturesRequest;
 import bisq.core.trade.protocol.bisq_v5.tasks.CreateFeeBumpAddressEntries;
 import bisq.core.trade.protocol.bisq_v5.tasks.CreateRedirectTxs;
@@ -208,7 +208,7 @@ public class BuyerAsMakerProtocol_v5 extends BaseBuyerProtocol_v5 implements Mak
 //    }
 
     @Override
-    protected void handle(DepositTxAndDelayedPayoutTxMessage message, NodeAddress peer) {
+    protected void handle(DepositTxAndSellerPaymentAccountMessage message, NodeAddress peer) {
         super.handle(message, peer);
     }
 

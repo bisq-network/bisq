@@ -36,9 +36,7 @@ import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerVerifyTakerFeePayment;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.MaybeCreateSubAccount;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerPublishesDepositTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerPublishesTradeStatistics;
-import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSendsDepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller_as_maker.SellerAsMakerCreatesUnsignedDepositTx;
-import bisq.core.trade.protocol.bisq_v1.tasks.seller_as_maker.SellerAsMakerFinalizesDepositTx;
 import bisq.core.trade.protocol.bisq_v5.messages.PreparedTxBuyerSignaturesMessage;
 import bisq.core.trade.protocol.bisq_v5.tasks.CreateFeeBumpAddressEntries;
 import bisq.core.trade.protocol.bisq_v5.tasks.CreateRedirectTxs;
@@ -47,6 +45,7 @@ import bisq.core.trade.protocol.bisq_v5.tasks.FinalizeRedirectTxs;
 import bisq.core.trade.protocol.bisq_v5.tasks.FinalizeWarningTxs;
 import bisq.core.trade.protocol.bisq_v5.tasks.maker.MakerSendsInputsForDepositTxResponse_v5;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerProcessPreparedTxBuyerSignaturesMessage;
+import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSendsDepositTxAndSellerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSignsOwnRedirectTx;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSignsOwnWarningTx;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSignsPeersRedirectTx;
@@ -150,9 +149,8 @@ public class SellerAsMakerProtocol_v5 extends BaseSellerProtocol_v5 implements M
                         SellerProcessPreparedTxBuyerSignaturesMessage.class,
                         FinalizeWarningTxs.class,
                         FinalizeRedirectTxs.class,
-                        SellerAsMakerFinalizesDepositTx.class,
                         MakerRemovesOpenOffer.class,
-                        SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
+                        SellerSendsDepositTxAndSellerPaymentAccountMessage.class,
                         SellerPublishesDepositTx.class,
                         SellerPublishesTradeStatistics.class))
                 .executeTasks();

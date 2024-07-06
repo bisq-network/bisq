@@ -24,19 +24,18 @@ import bisq.core.trade.protocol.FluentProtocol;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.TradeTaskRunner;
 import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
-import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.trade.protocol.bisq_v1.tasks.VerifyPeersAccountAgeWitness;
-import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerProcessDepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerProcessPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerSendCounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerSendsShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerSetupDepositTxListener;
 import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerSetupPayoutTxListener;
 import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerSignPayoutTx;
-import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerVerifiesFinalDelayedPayoutTx;
+import bisq.core.trade.protocol.bisq_v5.messages.DepositTxAndSellerPaymentAccountMessage;
+import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerProcessDepositTxAndSellerPaymentAccountMessage;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -92,8 +91,8 @@ abstract class BaseBuyerProtocol_v5 extends DisputeProtocol implements BuyerProt
     public void onMailboxMessage(TradeMessage message, NodeAddress peer) {
         super.onMailboxMessage(message, peer);
 
-        if (message instanceof DepositTxAndDelayedPayoutTxMessage) {
-            handle((DepositTxAndDelayedPayoutTxMessage) message, peer);
+        if (message instanceof DepositTxAndSellerPaymentAccountMessage) {
+            handle((DepositTxAndSellerPaymentAccountMessage) message, peer);
         } else if (message instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) message, peer);
         }
@@ -110,7 +109,7 @@ abstract class BaseBuyerProtocol_v5 extends DisputeProtocol implements BuyerProt
     // For backward compatibility and extra resilience we still keep DepositTxAndDelayedPayoutTxMessage as a
     // mailbox message but the stored in mailbox case is not expected and the seller would try to send the message again
     // in the hope to reach the buyer directly in case of network issues.
-    protected void handle(DepositTxAndDelayedPayoutTxMessage message, NodeAddress peer) {
+    protected void handle(DepositTxAndSellerPaymentAccountMessage message, NodeAddress peer) {
         expect(anyPhase(Trade.Phase.TAKER_FEE_PUBLISHED, Trade.Phase.DEPOSIT_PUBLISHED)
                 .with(message)
                 .from(peer)
@@ -123,11 +122,10 @@ abstract class BaseBuyerProtocol_v5 extends DisputeProtocol implements BuyerProt
                             sendAckMessage(message, true, null);
                             removeMailboxMessageAfterProcessing(message);
                         }))
-                .setup(tasks(BuyerProcessDepositTxAndDelayedPayoutTxMessage.class,
+                .setup(tasks(BuyerProcessDepositTxAndSellerPaymentAccountMessage.class,
                         ApplyFilter.class,
                         VerifyPeersAccountAgeWitness.class,
-                        BuyerSendsShareBuyerPaymentAccountMessage.class,
-                        BuyerVerifiesFinalDelayedPayoutTx.class)
+                        BuyerSendsShareBuyerPaymentAccountMessage.class)
                         .using(new TradeTaskRunner(trade,
                                 () -> {
                                     stopTimeout();
@@ -193,8 +191,8 @@ abstract class BaseBuyerProtocol_v5 extends DisputeProtocol implements BuyerProt
         log.info("Received {} from {} with tradeId {} and uid {}",
                 message.getClass().getSimpleName(), peer, message.getTradeId(), message.getUid());
 
-        if (message instanceof DepositTxAndDelayedPayoutTxMessage) {
-            handle((DepositTxAndDelayedPayoutTxMessage) message, peer);
+        if (message instanceof DepositTxAndSellerPaymentAccountMessage) {
+            handle((DepositTxAndSellerPaymentAccountMessage) message, peer);
         } else if (message instanceof PayoutTxPublishedMessage) {
             handle((PayoutTxPublishedMessage) message, peer);
         }
