@@ -27,11 +27,13 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.SignatureDecodeException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.core.TransactionWitness;
 import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 
@@ -40,7 +42,6 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class RedirectionTransactionFactory {
     private final NetworkParameters params;
@@ -71,22 +72,23 @@ public class RedirectionTransactionFactory {
         return redirectionTx;
     }
 
-    public byte[] signRedirectionTransaction(Transaction redirectionTx,
-                                             TransactionOutput warningTxOutput,
+    public byte[] signRedirectionTransaction(TransactionOutput warningTxOutput,
+                                             Transaction redirectionTx,
+                                             boolean isBuyer,
+                                             long claimDelay,
+                                             byte[] buyerPubKey,
+                                             byte[] sellerPubKey,
                                              DeterministicKey myMultiSigKeyPair,
                                              KeyParameter aesKey)
-            throws AddressFormatException, TransactionVerificationException {
+            throws TransactionVerificationException {
 
-        Script redeemScript = warningTxOutput.getScriptPubKey();
+        Script redeemScript = WarningTransactionFactory.createRedeemScript(!isBuyer, buyerPubKey, sellerPubKey, claimDelay);
+        checkArgument(ScriptBuilder.createP2WSHOutputScript(redeemScript).equals(warningTxOutput.getScriptPubKey()),
+                "Redeem script does not hash to expected ScriptPubKey");
+
         Coin redirectionTxInputValue = warningTxOutput.getValue();
-
         Sha256Hash sigHash = redirectionTx.hashForWitnessSignature(0, redeemScript,
                 redirectionTxInputValue, Transaction.SigHash.ALL, false);
-
-        checkNotNull(myMultiSigKeyPair, "myMultiSigKeyPair must not be null");
-        if (myMultiSigKeyPair.isEncrypted()) {
-            checkNotNull(aesKey);
-        }
 
         ECKey.ECDSASignature mySignature = myMultiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
         WalletService.printTx("redirectionTx for sig creation", redirectionTx);
@@ -96,38 +98,43 @@ public class RedirectionTransactionFactory {
 
     public Transaction finalizeRedirectionTransaction(TransactionOutput warningTxOutput,
                                                       Transaction redirectionTx,
+                                                      boolean isBuyer,
+                                                      long claimDelay,
                                                       byte[] buyerPubKey,
                                                       byte[] sellerPubKey,
                                                       byte[] buyerSignature,
-                                                      byte[] sellerSignature,
-                                                      Coin inputValue)
-            throws AddressFormatException, TransactionVerificationException {
+                                                      byte[] sellerSignature)
+            throws TransactionVerificationException, SignatureDecodeException {
+
+        Script redeemScript = WarningTransactionFactory.createRedeemScript(!isBuyer, buyerPubKey, sellerPubKey, claimDelay);
+        ECKey.ECDSASignature buyerECDSASignature = ECKey.ECDSASignature.decodeFromDER(buyerSignature);
+        ECKey.ECDSASignature sellerECDSASignature = ECKey.ECDSASignature.decodeFromDER(sellerSignature);
+
+        TransactionSignature buyerTxSig = new TransactionSignature(buyerECDSASignature, Transaction.SigHash.ALL, false);
+        TransactionSignature sellerTxSig = new TransactionSignature(sellerECDSASignature, Transaction.SigHash.ALL, false);
 
         TransactionInput input = redirectionTx.getInput(0);
-        input.setScriptSig(ScriptBuilder.createEmpty());
-
-        // FIXME: This redeem script is all wrong. It needs to be build from pubKeys, not signatures,
-        //  and we cannot use TransactionWitness.redeemP2WSH with it, as it isn't a simple multisig script.
-        Script redeemScript = createRedeemScript(buyerSignature, sellerSignature);
-        TransactionWitness witness = TransactionWitness.redeemP2WSH(redeemScript);
+        TransactionWitness witness = redeemP2WSH(redeemScript, buyerTxSig, sellerTxSig);
         input.setWitness(witness);
 
         WalletService.printTx("finalizeRedirectionTransaction", redirectionTx);
         WalletService.verifyTransaction(redirectionTx);
 
+        Coin inputValue = warningTxOutput.getValue();
         Script scriptPubKey = warningTxOutput.getScriptPubKey();
-        // todo we get ScriptException: Attempted OP_IF on an empty stack
-        // Probably we cannot call that before the full chain of transactions is in place.
-        //input.getScriptSig().correctlySpends(redirectionTx, 0, witness, inputValue, scriptPubKey, Script.ALL_VERIFY_FLAGS);
+        input.getScriptSig().correctlySpends(redirectionTx, 0, witness, inputValue, scriptPubKey, Script.ALL_VERIFY_FLAGS);
         return redirectionTx;
     }
 
-    private Script createRedeemScript(byte[] buyerSignature, byte[] sellerSignature) {
-        return new ScriptBuilder()
-                .number(0)
-                .data(buyerSignature)
-                .data(sellerSignature)
-                .number(1)
-                .build();
+    private static TransactionWitness redeemP2WSH(Script witnessScript,
+                                                  TransactionSignature buyerSignature,
+                                                  TransactionSignature sellerSignature) {
+        var witness = new TransactionWitness(5);
+        witness.setPush(0, new byte[]{});
+        witness.setPush(1, buyerSignature.encodeToBitcoin());
+        witness.setPush(2, sellerSignature.encodeToBitcoin());
+        witness.setPush(3, new byte[]{1});
+        witness.setPush(4, witnessScript.getProgram());
+        return witness;
     }
 }

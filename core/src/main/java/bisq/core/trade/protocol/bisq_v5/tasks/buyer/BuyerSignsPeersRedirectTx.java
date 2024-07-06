@@ -22,6 +22,7 @@ import bisq.core.btc.wallet.TradeWalletService;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.protocol.bisq_v5.model.StagedPayoutTxParameters;
 
 import bisq.common.taskrunner.TaskRunner;
 
@@ -30,8 +31,6 @@ import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.crypto.DeterministicKey;
 
 import lombok.extern.slf4j.Slf4j;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class BuyerSignsPeersRedirectTx extends TradeTask {
@@ -50,11 +49,17 @@ public class BuyerSignsPeersRedirectTx extends TradeTask {
             TradingPeer tradingPeer = processModel.getTradePeer();
 
             Transaction peersRedirectTx = tradingPeer.getRedirectTx();
-            TransactionOutput warningTxOutput = checkNotNull(processModel.getWarningTx()).getOutput(0);
+            TransactionOutput warningTxOutput = processModel.getWarningTx().getOutput(0);
+            long claimDelay = StagedPayoutTxParameters.CLAIM_DELAY; // FIXME: Make sure this is a low value off mainnet
             byte[] myMultiSigPubKey = processModel.getMyMultiSigPubKey();
+            byte[] peersMultiSigPubKey = tradingPeer.getMultiSigPubKey();
             DeterministicKey myMultiSigKeyPair = btcWalletService.getMultiSigKeyPair(tradeId, myMultiSigPubKey);
-            byte[] signature = tradeWalletService.signRedirectionTx(peersRedirectTx,
-                    warningTxOutput,
+            byte[] signature = tradeWalletService.signRedirectionTx(warningTxOutput,
+                    peersRedirectTx,
+                    false,
+                    claimDelay,
+                    myMultiSigPubKey,
+                    peersMultiSigPubKey,
                     myMultiSigKeyPair);
             tradingPeer.setRedirectTxBuyerSignature(signature);
 

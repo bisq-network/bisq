@@ -39,7 +39,6 @@ import org.bitcoinj.script.ScriptBuilder;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static org.bitcoinj.script.ScriptOpCodes.*;
 
 public class WarningTransactionFactory {
@@ -57,7 +56,7 @@ public class WarningTransactionFactory {
                                                         long claimDelay,
                                                         long miningFee,
                                                         Tuple2<Long, String> feeBumpOutputAmountAndAddress)
-            throws TransactionVerificationException {
+            throws AddressFormatException, TransactionVerificationException {
         Transaction warningTx = new Transaction(params);
 
         warningTx.addInput(depositTxOutput);
@@ -65,7 +64,8 @@ public class WarningTransactionFactory {
         Coin warningTxOutputCoin = depositTxOutput.getValue()
                 .subtract(Coin.valueOf(miningFee))
                 .subtract(Coin.valueOf(feeBumpOutputAmountAndAddress.first));
-        Script outputScript = createOutputScript(isBuyer, buyerPubKey, sellerPubKey, claimDelay);
+        Script redeemScript = createRedeemScript(isBuyer, buyerPubKey, sellerPubKey, claimDelay);
+        Script outputScript = ScriptBuilder.createP2WSHOutputScript(redeemScript);
         warningTx.addOutput(warningTxOutputCoin, outputScript);
 
         warningTx.addOutput(
@@ -86,18 +86,13 @@ public class WarningTransactionFactory {
                                          byte[] buyerPubKey,
                                          byte[] sellerPubKey,
                                          KeyParameter aesKey)
-            throws AddressFormatException, TransactionVerificationException {
+            throws TransactionVerificationException {
 
         Script redeemScript = TradeWalletService.get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
         Coin warningTxInputValue = depositTxOutput.getValue();
 
         Sha256Hash sigHash = warningTx.hashForWitnessSignature(0, redeemScript,
                 warningTxInputValue, Transaction.SigHash.ALL, false);
-
-        checkNotNull(myMultiSigKeyPair, "myMultiSigKeyPair must not be null");
-        if (myMultiSigKeyPair.isEncrypted()) {
-            checkNotNull(aesKey);
-        }
 
         ECKey.ECDSASignature mySignature = myMultiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
         WalletService.printTx("warningTx for sig creation", warningTx);
@@ -111,7 +106,7 @@ public class WarningTransactionFactory {
                                                   byte[] buyerSignature,
                                                   byte[] sellerSignature,
                                                   Coin inputValue)
-            throws AddressFormatException, TransactionVerificationException, SignatureDecodeException {
+            throws TransactionVerificationException, SignatureDecodeException {
 
         Script redeemScript = TradeWalletService.get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
         ECKey.ECDSASignature buyerECDSASignature = ECKey.ECDSASignature.decodeFromDER(buyerSignature);
@@ -121,7 +116,6 @@ public class WarningTransactionFactory {
         TransactionSignature sellerTxSig = new TransactionSignature(sellerECDSASignature, Transaction.SigHash.ALL, false);
 
         TransactionInput input = warningTx.getInput(0);
-        input.setScriptSig(ScriptBuilder.createEmpty());
         TransactionWitness witness = TransactionWitness.redeemP2WSH(redeemScript, sellerTxSig, buyerTxSig);
         input.setWitness(witness);
 
@@ -133,7 +127,8 @@ public class WarningTransactionFactory {
         return warningTx;
     }
 
-    private Script createOutputScript(boolean isBuyer, byte[] buyerPubKey, byte[] sellerPubKey, long claimDelay) {
+    // TODO: Should probably reverse order of pubKeys & signatures, for consistency with deposit tx redeem script.
+    static Script createRedeemScript(boolean isBuyer, byte[] buyerPubKey, byte[] sellerPubKey, long claimDelay) {
         var scriptBuilder = new ScriptBuilder();
         scriptBuilder.op(OP_IF)
                 .number(2)
