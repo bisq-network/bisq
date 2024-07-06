@@ -35,7 +35,7 @@ import lombok.Getter;
 @Getter
 public class PreparedTxBuyerSignaturesMessage extends TradeMessage implements DirectMessage {
     private final NodeAddress senderNodeAddress;
-    private final byte[] depositTxWithBuyerWitnesses; // TODO: Rename to depositTxWithBuyerWitnesses
+    private final byte[] depositTxWithBuyerWitnesses;
     private final byte[] buyersWarningTxBuyerSignature;
     private final byte[] sellersWarningTxBuyerSignature;
     private final byte[] buyersRedirectTxBuyerSignature;

@@ -31,7 +31,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 public class SellerProcessPreparedTxBuyerSignaturesMessage extends TradeTask {
-    protected SellerProcessPreparedTxBuyerSignaturesMessage(TaskRunner<Trade> taskHandler, Trade trade) {
+    public SellerProcessPreparedTxBuyerSignaturesMessage(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -44,18 +44,27 @@ public class SellerProcessPreparedTxBuyerSignaturesMessage extends TradeTask {
             checkNotNull(message);
             checkTradeId(processModel.getOfferId(), message);
 
-            // TODO: Maybe check signatures in the message match what the seller-as-taker would have already got.
+            // If the seller is the taker, we already have the warning & redirect buyer signatures, so just ignore them.
+            // Also, the deposit tx was already set earlier in the task SellerAsTakerSignsDepositTx, in that case.
             if (trade instanceof SellerAsMakerTrade) {
                 processModel.getTradePeer().setWarningTxBuyerSignature(message.getBuyersWarningTxBuyerSignature());
                 processModel.setWarningTxBuyerSignature(message.getSellersWarningTxBuyerSignature());
                 processModel.getTradePeer().setRedirectTxBuyerSignature(message.getBuyersRedirectTxBuyerSignature());
                 processModel.setRedirectTxBuyerSignature(message.getSellersRedirectTxBuyerSignature());
+                processModel.setDepositTx(processModel.getBtcWalletService().getTxFromSerializedTx(processModel.getPreparedDepositTx()));
             }
 
+            // The deposit tx is finalized by adding all the buyer witnesses.
             processModel.getTradeWalletService().sellerAddsBuyerWitnessesToDepositTx(
                     processModel.getDepositTx(),
                     processModel.getBtcWalletService().getTxFromSerializedTx(message.getDepositTxWithBuyerWitnesses())
             );
+
+            // TODO: takerFeeTxTd:
+            // When we receive that message the taker has published the taker fee, so we apply it to the trade.
+            // The takerFeeTx was sent in the first message. It should be part of DelayedPayoutTxSignatureRequest
+            // but that cannot be changed due backward compatibility issues. It is a left over from the old trade protocol.
+            trade.setTakerFeeTxId(processModel.getTakeOfferFeeTxId());
 
             // update to the latest peer address of our peer if the message is correct
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());

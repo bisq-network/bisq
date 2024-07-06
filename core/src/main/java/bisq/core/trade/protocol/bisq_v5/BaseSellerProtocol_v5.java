@@ -35,10 +35,10 @@ import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerProcessShareBuyerPaym
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerPublishesDepositTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerPublishesTradeStatistics;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSendPayoutTxPublishedMessage;
-import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSendsDepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSignAndFinalizePayoutTx;
 import bisq.core.trade.protocol.bisq_v5.messages.PreparedTxBuyerSignaturesMessage;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerProcessPreparedTxBuyerSignaturesMessage;
+import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSendsDepositTxAndSellerPaymentAccountMessage;
 
 import bisq.network.p2p.NodeAddress;
 
@@ -82,8 +82,7 @@ abstract class BaseSellerProtocol_v5 extends DisputeProtocol implements SellerPr
                 .with(message)
                 .from(peer))
                 .setup(tasks(SellerProcessPreparedTxBuyerSignaturesMessage.class,
-//                        SellerFinalizesDelayedPayoutTx.class,
-                        SellerSendsDepositTxAndDelayedPayoutTxMessage.class,
+                        SellerSendsDepositTxAndSellerPaymentAccountMessage.class,
                         SellerPublishesDepositTx.class,
                         SellerPublishesTradeStatistics.class))
                 .executeTasks();
@@ -98,7 +97,7 @@ abstract class BaseSellerProtocol_v5 extends DisputeProtocol implements SellerPr
                         VerifyPeersAccountAgeWitness.class))
                 .run(() -> {
                     // We stop timeout here and don't start a new one as the
-                    // SellerSendsDepositTxAndDelayedPayoutTxMessage repeats to send the message and has it's own
+                    // SellerSendsDepositTxAndSellerPaymentAccountMessage repeats to send the message and has it's own
                     // timeout if it never succeeds.
                     stopTimeout();
                 })

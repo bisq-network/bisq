@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BuyerSendsPreparedTxBuyerSignaturesMessage extends TradeTask {
-    protected BuyerSendsPreparedTxBuyerSignaturesMessage(TaskRunner<Trade> taskHandler, Trade trade) {
+    public BuyerSendsPreparedTxBuyerSignaturesMessage(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 
@@ -42,7 +42,9 @@ public class BuyerSendsPreparedTxBuyerSignaturesMessage extends TradeTask {
         try {
             runInterceptHook();
 
-            byte[] depositTxWithBuyerWitnesses = processModel.getPreparedDepositTx(); // FIXME
+            byte[] depositTxWithBuyerWitnesses = processModel.getDepositTx() != null
+                    ? processModel.getDepositTx().bitcoinSerialize() // set in BuyerAsTakerSignsDepositTx task
+                    : processModel.getPreparedDepositTx();           // set in BuyerAsMakerCreatesAndSignsDepositTx task
             byte[] buyersWarningTxBuyerSignature = processModel.getWarningTxBuyerSignature();
             byte[] sellersWarningTxBuyerSignature = processModel.getTradePeer().getWarningTxBuyerSignature();
             byte[] buyersRedirectTxBuyerSignature = processModel.getRedirectTxBuyerSignature();

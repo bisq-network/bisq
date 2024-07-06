@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SellerAsTakerSendsPreparedTxBuyerSignaturesRequest extends TradeTask {
-    protected SellerAsTakerSendsPreparedTxBuyerSignaturesRequest(TaskRunner<Trade> taskHandler, Trade trade) {
+    public SellerAsTakerSendsPreparedTxBuyerSignaturesRequest(TaskRunner<Trade> taskHandler, Trade trade) {
         super(taskHandler, trade);
     }
 

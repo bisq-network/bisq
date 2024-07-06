@@ -22,7 +22,6 @@ import bisq.core.trade.model.bisq_v1.BuyerAsTakerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.TakerProtocol;
 import bisq.core.trade.protocol.TradeMessage;
-import bisq.core.trade.protocol.bisq_v1.messages.DepositTxAndDelayedPayoutTxMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.PayoutTxPublishedMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bisq_v1.tasks.CheckIfDaoStateIsInSync;
@@ -35,13 +34,14 @@ import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerPublishFeeTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerSendInputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerVerifyAndSignContract;
 import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerVerifyMakerFeePayment;
+import bisq.core.trade.protocol.bisq_v5.messages.DepositTxAndSellerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v5.messages.InputsForDepositTxResponse_v5;
+import bisq.core.trade.protocol.bisq_v5.tasks.CreateFeeBumpAddressEntries;
 import bisq.core.trade.protocol.bisq_v5.tasks.CreateRedirectTxs;
 import bisq.core.trade.protocol.bisq_v5.tasks.CreateWarningTxs;
 import bisq.core.trade.protocol.bisq_v5.tasks.FinalizeRedirectTxs;
 import bisq.core.trade.protocol.bisq_v5.tasks.FinalizeWarningTxs;
 import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerSendsPreparedTxBuyerSignaturesMessage;
-import bisq.core.trade.protocol.bisq_v5.tasks.CreateFeeBumpAddressEntries;
 import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerSignsOwnRedirectTx;
 import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerSignsOwnWarningTx;
 import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerSignsPeersRedirectTx;
@@ -156,7 +156,7 @@ public class BuyerAsTakerProtocol_v5 extends BaseBuyerProtocol_v5 implements Tak
 //    }
 
     @Override
-    protected void handle(DepositTxAndDelayedPayoutTxMessage message, NodeAddress peer) {
+    protected void handle(DepositTxAndSellerPaymentAccountMessage message, NodeAddress peer) {
         super.handle(message, peer);
     }
 

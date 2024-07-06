@@ -66,6 +66,7 @@ import bisq.core.trade.protocol.bisq_v1.messages.PeerPublishedDelayedPayoutTxMes
 import bisq.core.trade.protocol.bisq_v1.messages.RefreshTradeStateRequest;
 import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.TraderSignedWitnessMessage;
+import bisq.core.trade.protocol.bisq_v5.messages.DepositTxAndSellerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v5.messages.InputsForDepositTxResponse_v5;
 import bisq.core.trade.protocol.bisq_v5.messages.PreparedTxBuyerSignaturesMessage;
 import bisq.core.trade.protocol.bisq_v5.messages.PreparedTxBuyerSignaturesRequest;
@@ -274,6 +275,8 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return PreparedTxBuyerSignaturesRequest.fromProto(proto.getPreparedTxBuyerSignaturesRequest(), messageVersion);
                 case PREPARED_TX_BUYER_SIGNATURES_MESSAGE:
                     return PreparedTxBuyerSignaturesMessage.fromProto(proto.getPreparedTxBuyerSignaturesMessage(), messageVersion);
+                case DEPOSIT_TX_AND_SELLER_PAYMENT_ACCOUNT_MESSAGE:
+                    return DepositTxAndSellerPaymentAccountMessage.fromProto(proto.getDepositTxAndSellerPaymentAccountMessage(), this, messageVersion);
 
                 default:
                     throw new ProtobufferException("Unknown proto message case (PB.NetworkEnvelope). messageCase=" +

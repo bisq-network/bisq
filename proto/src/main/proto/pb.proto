@@ -110,6 +110,7 @@ message NetworkEnvelope {
         //        BuyersRedirectSellerSignatureResponse buyers_redirect_seller_signature_response = 68;
         PreparedTxBuyerSignaturesRequest prepared_tx_buyer_signatures_request = 65;
         PreparedTxBuyerSignaturesMessage prepared_tx_buyer_signatures_message = 66;
+        DepositTxAndSellerPaymentAccountMessage deposit_tx_and_seller_payment_account_message = 67;
     }
 }
 
@@ -433,6 +434,14 @@ message DepositTxAndDelayedPayoutTxMessage {
     bytes deposit_tx = 4;
     bytes delayed_payout_tx = 5;
     PaymentAccountPayload seller_payment_account_payload = 6;
+}
+
+message DepositTxAndSellerPaymentAccountMessage {
+    string uid = 1;
+    string trade_id = 2;
+    NodeAddress sender_node_address = 3;
+    bytes deposit_tx = 4;
+    PaymentAccountPayload seller_payment_account_payload = 5;
 }
 
 message ShareBuyerPaymentAccountMessage {
