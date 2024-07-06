@@ -812,7 +812,7 @@ public class TradeWalletService {
                                                long claimDelay,
                                                long miningFee,
                                                Tuple2<Long, String> feeBumpOutputAmountAndAddress)
-            throws TransactionVerificationException {
+            throws AddressFormatException, TransactionVerificationException {
         return warningTransactionFactory.createUnsignedWarningTransaction(
                 isBuyer,
                 depositTxOutput,
@@ -830,7 +830,7 @@ public class TradeWalletService {
                                 DeterministicKey myMultiSigKeyPair,
                                 byte[] buyerPubKey,
                                 byte[] sellerPubKey)
-            throws AddressFormatException, TransactionVerificationException {
+            throws TransactionVerificationException {
         return warningTransactionFactory.signWarningTransaction(
                 warningTx,
                 depositTxOutput,
@@ -847,7 +847,7 @@ public class TradeWalletService {
                                          byte[] buyerSignature,
                                          byte[] sellerSignature,
                                          Coin inputValue)
-            throws AddressFormatException, TransactionVerificationException, SignatureDecodeException {
+            throws TransactionVerificationException, SignatureDecodeException {
         return warningTransactionFactory.finalizeWarningTransaction(
                 warningTx,
                 buyerPubKey,
@@ -873,13 +873,21 @@ public class TradeWalletService {
         );
     }
 
-    public byte[] signRedirectionTx(Transaction redirectionTx,
-                                    TransactionOutput warningTxOutput,
+    public byte[] signRedirectionTx(TransactionOutput warningTxOutput,
+                                    Transaction redirectionTx,
+                                    boolean isBuyer,
+                                    long claimDelay,
+                                    byte[] buyerPubKey,
+                                    byte[] sellerPubKey,
                                     DeterministicKey myMultiSigKeyPair)
-            throws AddressFormatException, TransactionVerificationException {
+            throws TransactionVerificationException {
         return redirectionTransactionFactory.signRedirectionTransaction(
-                redirectionTx,
                 warningTxOutput,
+                redirectionTx,
+                isBuyer,
+                claimDelay,
+                buyerPubKey,
+                sellerPubKey,
                 myMultiSigKeyPair,
                 aesKey
         );
@@ -887,20 +895,22 @@ public class TradeWalletService {
 
     public Transaction finalizeRedirectionTx(TransactionOutput warningTxOutput,
                                              Transaction redirectionTx,
+                                             boolean isBuyer,
+                                             long claimDelay,
                                              byte[] buyerPubKey,
                                              byte[] sellerPubKey,
                                              byte[] buyerSignature,
-                                             byte[] sellerSignature,
-                                             Coin inputValue)
-            throws AddressFormatException, TransactionVerificationException {
+                                             byte[] sellerSignature)
+            throws TransactionVerificationException, SignatureDecodeException {
         return redirectionTransactionFactory.finalizeRedirectionTransaction(
                 warningTxOutput,
                 redirectionTx,
+                isBuyer,
+                claimDelay,
                 buyerPubKey,
                 sellerPubKey,
                 buyerSignature,
-                sellerSignature,
-                inputValue
+                sellerSignature
         );
     }
 
@@ -909,12 +919,23 @@ public class TradeWalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public Transaction createSignedClaimTx(TransactionOutput warningTxOutput,
-                                           long nSequence,
+                                           boolean isBuyer,
+                                           long claimDelay,
                                            Address payoutAddress,
                                            long miningFee,
-                                           DeterministicKey myMultiSigKeyPair) throws TransactionVerificationException {
-        return new ClaimTransactionFactory(params)
-                .createSignedClaimTransaction(warningTxOutput, nSequence, payoutAddress, miningFee, myMultiSigKeyPair, aesKey);
+                                           byte[] peersMultiSigPubKey,
+                                           DeterministicKey myMultiSigKeyPair)
+            throws AddressFormatException, TransactionVerificationException {
+        return new ClaimTransactionFactory(params).createSignedClaimTransaction(
+                warningTxOutput,
+                isBuyer,
+                claimDelay,
+                payoutAddress,
+                miningFee,
+                peersMultiSigPubKey,
+                myMultiSigKeyPair,
+                aesKey
+        );
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////

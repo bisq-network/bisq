@@ -15,11 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bisq_v5.tasks;
+package bisq.core.trade.protocol.bisq_v5.tasks.arbitration;
 
 import bisq.core.btc.model.AddressEntry;
+import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.provider.fee.FeeService;
+import bisq.core.trade.model.bisq_v1.BuyerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
 import bisq.core.trade.protocol.bisq_v5.model.StagedPayoutTxParameters;
 
@@ -44,18 +48,28 @@ public class CreateSignedClaimTx extends TradeTask {
             runInterceptHook();
 
             TradeWalletService tradeWalletService = processModel.getTradeWalletService();
+            BtcWalletService btcWalletService = processModel.getBtcWalletService();
+            FeeService feeService = processModel.getProvider().getFeeService();
+            String tradeId = processModel.getOffer().getId();
+            TradingPeer tradingPeer = processModel.getTradePeer();
 
             TransactionOutput myWarningTxOutput = processModel.getWarningTx().getOutput(0);
-            long claimDelay = StagedPayoutTxParameters.CLAIM_DELAY;
-            AddressEntry addressEntry = processModel.getBtcWalletService().getOrCreateAddressEntry(processModel.getOffer().getId(), AddressEntry.Context.CLAIM_TX_FEE_BUMP);
+            AddressEntry addressEntry = processModel.getBtcWalletService().getOrCreateAddressEntry(tradeId, AddressEntry.Context.TRADE_PAYOUT);
             Address payoutAddress = addressEntry.getAddress();
-            long miningFee = StagedPayoutTxParameters.getClaimTxMiningFee(trade.getDepositTxFeeRate());
-            DeterministicKey keyPair = addressEntry.getKeyPair();
+//            long miningFee = StagedPayoutTxParameters.getClaimTxMiningFee(trade.getDepositTxFeeRate());
+            long miningFee = StagedPayoutTxParameters.getClaimTxMiningFee(feeService.getTxFeePerVbyte().value);
+            long claimDelay = StagedPayoutTxParameters.CLAIM_DELAY; // FIXME: Make sure this is a low value off mainnet
+            byte[] myMultiSigPubKey = processModel.getMyMultiSigPubKey();
+            byte[] peersMultiSigPubKey = tradingPeer.getMultiSigPubKey();
+            DeterministicKey myMultiSigKeyPair = btcWalletService.getMultiSigKeyPair(tradeId, myMultiSigPubKey);
+            boolean amBuyer = trade instanceof BuyerTrade;
             Transaction claimTx = tradeWalletService.createSignedClaimTx(myWarningTxOutput,
+                    amBuyer,
                     claimDelay,
                     payoutAddress,
                     miningFee,
-                    keyPair);
+                    peersMultiSigPubKey,
+                    myMultiSigKeyPair);
             processModel.setSignedClaimTx(claimTx);
 
             processModel.getTradeManager().requestPersistence();

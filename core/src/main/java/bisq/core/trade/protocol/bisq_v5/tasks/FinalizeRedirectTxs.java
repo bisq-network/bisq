@@ -22,16 +22,14 @@ import bisq.core.trade.model.bisq_v1.BuyerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.protocol.bisq_v5.model.StagedPayoutTxParameters;
 
 import bisq.common.taskrunner.TaskRunner;
 
-import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
 import lombok.extern.slf4j.Slf4j;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class FinalizeRedirectTxs extends TradeTask {
@@ -47,44 +45,42 @@ public class FinalizeRedirectTxs extends TradeTask {
             TradeWalletService tradeWalletService = processModel.getTradeWalletService();
             TradingPeer tradingPeer = processModel.getTradePeer();
 
-            // Get pubKeys and input value.
-            TransactionOutput warningTxOutput = processModel.getWarningTx().getOutput(0);
-            TransactionOutput peersWarningTxOutput = tradingPeer.getWarningTx().getOutput(0);
-
-            Coin inputValue = peersWarningTxOutput.getValue();
-            checkArgument(warningTxOutput.getValue().equals(inputValue),
-                    "Different warningTx output values. Ours: {}; Peer's: {}", warningTxOutput.getValue(), inputValue);
-
+            // Get pubKeys and claim delay.
             boolean amBuyer = trade instanceof BuyerTrade;
             byte[] buyerPubKey = amBuyer ? processModel.getMyMultiSigPubKey() : tradingPeer.getMultiSigPubKey();
             byte[] sellerPubKey = amBuyer ? tradingPeer.getMultiSigPubKey() : processModel.getMyMultiSigPubKey();
+            long claimDelay = StagedPayoutTxParameters.CLAIM_DELAY; // FIXME: Make sure this is a low value off mainnet
 
             // Finalize our redirect tx.
+            TransactionOutput peersWarningTxOutput = tradingPeer.getWarningTx().getOutput(0);
             Transaction redirectTx = processModel.getRedirectTx();
             byte[] buyerSignature = processModel.getRedirectTxBuyerSignature();
             byte[] sellerSignature = processModel.getRedirectTxSellerSignature();
 
             Transaction finalizedRedirectTx = tradeWalletService.finalizeRedirectionTx(peersWarningTxOutput,
                     redirectTx,
+                    amBuyer,
+                    claimDelay,
                     buyerPubKey,
                     sellerPubKey,
                     buyerSignature,
-                    sellerSignature,
-                    inputValue);
+                    sellerSignature);
             processModel.setFinalizedRedirectTx(finalizedRedirectTx);
 
             // Finalize peer's redirect tx.
+            TransactionOutput warningTxOutput = processModel.getWarningTx().getOutput(0);
             Transaction peersRedirectTx = tradingPeer.getRedirectTx();
             byte[] peerBuyerSignature = tradingPeer.getRedirectTxBuyerSignature();
             byte[] peerSellerSignature = tradingPeer.getRedirectTxSellerSignature();
 
             Transaction peersFinalizedRedirectTx = tradeWalletService.finalizeRedirectionTx(warningTxOutput,
                     peersRedirectTx,
+                    !amBuyer,
+                    claimDelay,
                     buyerPubKey,
                     sellerPubKey,
                     peerBuyerSignature,
-                    peerSellerSignature,
-                    inputValue);
+                    peerSellerSignature);
             tradingPeer.setFinalizedRedirectTx(peersFinalizedRedirectTx);
 
             processModel.getTradeManager().requestPersistence();
