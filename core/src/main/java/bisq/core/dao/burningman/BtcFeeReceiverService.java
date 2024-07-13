@@ -27,7 +27,6 @@ import javax.inject.Singleton;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -69,7 +68,7 @@ public class BtcFeeReceiverService implements DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String getAddress() {
-        List<BurningManCandidate> activeBurningManCandidates = new ArrayList<>(burningManService.getActiveBurningManCandidates(currentChainHeight));
+        List<BurningManCandidate> activeBurningManCandidates = burningManService.getActiveBurningManCandidates(currentChainHeight);
         if (activeBurningManCandidates.isEmpty()) {
             // If there are no compensation requests (e.g. at dev testing) we fall back to the default address
             return burningManService.getLegacyBurningManAddress(currentChainHeight);

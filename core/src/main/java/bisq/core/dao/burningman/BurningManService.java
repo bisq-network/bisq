@@ -205,51 +205,20 @@ public class BurningManService {
         return burningManCandidatesByName;
     }
 
-    private static int imposeCaps(Collection<BurningManCandidate> burningManCandidates, boolean limitCappingRounds) {
-        List<BurningManCandidate> candidatesInDescendingBurnCapRatio = new ArrayList<>(burningManCandidates);
-        candidatesInDescendingBurnCapRatio.sort(Comparator.comparing(BurningManCandidate::getBurnCapRatio).reversed());
-        double thresholdBurnCapRatio = 1.0;
-        double remainingBurnShare = 1.0;
-        double remainingCapShare = 1.0;
-        int cappingRound = 0;
-        for (BurningManCandidate candidate : candidatesInDescendingBurnCapRatio) {
-            double invScaleFactor = remainingBurnShare / remainingCapShare;
-            double burnCapRatio = candidate.getBurnCapRatio();
-            if (remainingCapShare <= 0.0 || burnCapRatio <= 0.0 || burnCapRatio < invScaleFactor ||
-                    limitCappingRounds && burnCapRatio < 1.0) {
-                cappingRound++;
-                break;
-            }
-            if (burnCapRatio < thresholdBurnCapRatio) {
-                thresholdBurnCapRatio = invScaleFactor;
-                cappingRound++;
-            }
-            candidate.imposeCap(cappingRound, candidate.getBurnAmountShare() / thresholdBurnCapRatio);
-            remainingBurnShare -= candidate.getBurnAmountShare();
-            remainingCapShare -= candidate.getMaxBoostedCompensationShare();
-        }
-        return cappingRound;
-    }
-
     String getLegacyBurningManAddress(int chainHeight) {
         return daoStateService.getParamValue(Param.RECIPIENT_BTC_ADDRESS, chainHeight);
     }
 
-    Set<BurningManCandidate> getActiveBurningManCandidates(int chainHeight) {
+    List<BurningManCandidate> getActiveBurningManCandidates(int chainHeight) {
         return getActiveBurningManCandidates(chainHeight, !DelayedPayoutTxReceiverService.isProposal412Activated());
     }
 
-    Set<BurningManCandidate> getActiveBurningManCandidates(int chainHeight, boolean limitCappingRounds) {
+    List<BurningManCandidate> getActiveBurningManCandidates(int chainHeight, boolean limitCappingRounds) {
         return getBurningManCandidatesByName(chainHeight, limitCappingRounds).values().stream()
                 .filter(burningManCandidate -> burningManCandidate.getCappedBurnAmountShare() > 0)
                 .filter(candidate -> candidate.getReceiverAddress().isPresent())
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     Map<P2PDataStorage.ByteArray, Set<TxOutput>> getProofOfBurnOpReturnTxOutputByHash(int chainHeight) {
         Map<P2PDataStorage.ByteArray, Set<TxOutput>> map = new HashMap<>();
@@ -261,6 +230,11 @@ public class BurningManService {
                 });
         return map;
     }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
 
     private void forEachCompensationIssuance(int chainHeight, BiConsumer<Issuance, CompensationProposal> action) {
         proposalService.getProposalPayloads().stream()
@@ -377,5 +351,31 @@ public class BurningManService {
 
     private long getDecayedGenesisOutputAmount(long amount) {
         return Math.round(amount * GENESIS_OUTPUT_AMOUNT_FACTOR);
+    }
+
+    private static int imposeCaps(Collection<BurningManCandidate> burningManCandidates, boolean limitCappingRounds) {
+        List<BurningManCandidate> candidatesInDescendingBurnCapRatio = new ArrayList<>(burningManCandidates);
+        candidatesInDescendingBurnCapRatio.sort(Comparator.comparing(BurningManCandidate::getBurnCapRatio).reversed());
+        double thresholdBurnCapRatio = 1.0;
+        double remainingBurnShare = 1.0;
+        double remainingCapShare = 1.0;
+        int cappingRound = 0;
+        for (BurningManCandidate candidate : candidatesInDescendingBurnCapRatio) {
+            double invScaleFactor = remainingBurnShare / remainingCapShare;
+            double burnCapRatio = candidate.getBurnCapRatio();
+            if (remainingCapShare <= 0.0 || burnCapRatio <= 0.0 || burnCapRatio < invScaleFactor ||
+                    limitCappingRounds && burnCapRatio < 1.0) {
+                cappingRound++;
+                break;
+            }
+            if (burnCapRatio < thresholdBurnCapRatio) {
+                thresholdBurnCapRatio = invScaleFactor;
+                cappingRound++;
+            }
+            candidate.imposeCap(cappingRound, candidate.getBurnAmountShare() / thresholdBurnCapRatio);
+            remainingBurnShare -= candidate.getBurnAmountShare();
+            remainingCapShare -= candidate.getMaxBoostedCompensationShare();
+        }
+        return cappingRound;
     }
 }
