@@ -32,6 +32,7 @@ import java.util.OptionalInt;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +57,7 @@ public class BurningManCandidate {
     // enforce the version by the filter to ensure users have updated.
     // See: https://github.com/bisq-network/bisq/issues/6699
     @EqualsAndHashCode.Exclude
+    @Getter(AccessLevel.NONE)
     protected Optional<String> mostRecentAddress = Optional.empty();
 
     private final Set<BurnOutputModel> burnOutputModels = new HashSet<>();
@@ -80,11 +82,6 @@ public class BurningManCandidate {
 
     public Optional<String> getReceiverAddress(boolean isBugfix6699Activated) {
         return isBugfix6699Activated ? receiverAddress : mostRecentAddress;
-    }
-
-    public Optional<String> getMostRecentAddress() {
-        // Lombok getter is set for class, so we would get a getMostRecentAddress but want to ensure it's not accidentally used.
-        throw new UnsupportedOperationException("getMostRecentAddress must not be used. Use getReceiverAddress instead.");
     }
 
     public void addBurnOutputModel(BurnOutputModel burnOutputModel) {
@@ -115,16 +112,20 @@ public class BurningManCandidate {
                 .anyMatch(CompensationModel::isCustomAddress);
         if (hasAnyCustomAddress) {
             // If any custom address was defined, we only consider custom addresses and sort them to take the
-            // most recent one.
+            // most recent one. If more than one compensation request from a candidate somehow got accepted in
+            // the same cycle, break the tie by choosing the lexicographically smallest custom address.
             receiverAddress = compensationModels.stream()
                     .filter(CompensationModel::isCustomAddress)
-                    .max(Comparator.comparing(CompensationModel::getHeight))
+                    .max(Comparator.comparing(CompensationModel::getHeight)
+                            .thenComparing(Comparator.comparing(CompensationModel::getAddress).reversed()))
                     .map(CompensationModel::getAddress);
         } else {
             // If no custom addresses ever have been defined, we take the change address of the compensation request
-            // and use the earliest address. This helps to avoid change of address with every new comp. request.
+            // and use the earliest address (similarly taking the lexicographically smallest in the unlikely case of
+            // a tie). This helps to avoid change of address with every new comp. request.
             receiverAddress = compensationModels.stream()
-                    .min(Comparator.comparing(CompensationModel::getHeight))
+                    .min(Comparator.comparing(CompensationModel::getHeight)
+                            .thenComparing(CompensationModel::getAddress))
                     .map(CompensationModel::getAddress);
         }
 
