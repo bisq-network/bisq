@@ -120,10 +120,12 @@ public class BurningManServiceTest {
         }
 
         private void addCompensationIssuanceAndPayloads(Collection<Tuple2<Issuance, ProposalPayload>> tuples) {
-            when(daoStateService.getIssuanceSetForType(IssuanceType.COMPENSATION))
-                    .thenReturn(tuples.stream().map(t -> t.first).collect(Collectors.toSet()));
+            var issuanceMap = tuples.stream()
+                    .collect(Collectors.toMap(t -> t.first.getTxId(), t -> t.first));
             when(proposalService.getProposalPayloads())
                     .thenReturn(tuples.stream().map(t -> t.second).collect(Collectors.toCollection(FXCollections::observableArrayList)));
+            when(daoStateService.getIssuance(Mockito.anyString()))
+                    .thenAnswer((Answer<Optional<Issuance>>) inv -> Optional.ofNullable(issuanceMap.get(inv.getArgument(0, String.class))));
         }
 
         @SafeVarargs

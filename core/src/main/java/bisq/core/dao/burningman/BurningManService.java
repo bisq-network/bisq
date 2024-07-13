@@ -31,9 +31,10 @@ import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.governance.CompensationProposal;
 import bisq.core.dao.state.model.governance.Issuance;
-import bisq.core.dao.state.model.governance.IssuanceType;
 
 import bisq.network.p2p.storage.P2PDataStorage;
+
+import bisq.common.util.Tuple2;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -52,8 +53,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -123,45 +124,40 @@ public class BurningManService {
         Map<P2PDataStorage.ByteArray, Set<TxOutput>> proofOfBurnOpReturnTxOutputByHash = getProofOfBurnOpReturnTxOutputByHash(chainHeight);
 
         // Add contributors who made a compensation request
-        daoStateService.getIssuanceSetForType(IssuanceType.COMPENSATION).stream()
-                .filter(issuance -> issuance.getChainHeight() <= chainHeight)
-                .forEach(issuance -> {
-                            getCompensationProposalsForIssuance(issuance).forEach(compensationProposal -> {
-                                String name = compensationProposal.getName();
-                                BurningManCandidate candidate = burningManCandidatesByName.computeIfAbsent(name, n -> new BurningManCandidate());
+        forEachCompensationIssuance(chainHeight, (issuance, compensationProposal) -> {
+            String name = compensationProposal.getName();
+            BurningManCandidate candidate = burningManCandidatesByName.computeIfAbsent(name, n -> new BurningManCandidate());
 
-                                // Issuance
-                                Optional<String> customAddress = compensationProposal.getBurningManReceiverAddress();
-                                boolean isCustomAddress = customAddress.isPresent();
-                                Optional<String> receiverAddress;
-                                if (isCustomAddress) {
-                                    receiverAddress = customAddress;
-                                } else {
-                                    // We take change address from compensation request
-                                    receiverAddress = daoStateService.getTx(compensationProposal.getTxId())
-                                            .map(this::getAddressFromCompensationRequest);
-                                }
-                                if (receiverAddress.isPresent()) {
-                                    int issuanceHeight = issuance.getChainHeight();
-                                    long issuanceAmount = getIssuanceAmountForCompensationRequest(issuance);
-                                    int cycleIndex = cyclesInDaoStateService.getCycleIndexAtChainHeight(issuanceHeight);
-                                    if (isValidCompensationRequest(name, cycleIndex, issuanceAmount)) {
-                                        long decayedIssuanceAmount = getDecayedCompensationAmount(issuanceAmount, issuanceHeight, chainHeight);
-                                        long issuanceDate = daoStateService.getBlockTime(issuanceHeight);
-                                        candidate.addCompensationModel(CompensationModel.fromCompensationRequest(receiverAddress.get(),
-                                                isCustomAddress,
-                                                issuanceAmount,
-                                                decayedIssuanceAmount,
-                                                issuanceHeight,
-                                                issuance.getTxId(),
-                                                issuanceDate,
-                                                cycleIndex));
-                                    }
-                                }
-                                addBurnOutputModel(chainHeight, proofOfBurnOpReturnTxOutputByHash, name, candidate);
-                            });
-                        }
-                );
+            // Issuance
+            Optional<String> customAddress = compensationProposal.getBurningManReceiverAddress();
+            boolean isCustomAddress = customAddress.isPresent();
+            Optional<String> receiverAddress;
+            if (isCustomAddress) {
+                receiverAddress = customAddress;
+            } else {
+                // We take change address from compensation request
+                receiverAddress = daoStateService.getTx(compensationProposal.getTxId())
+                        .map(this::getAddressFromCompensationRequest);
+            }
+            if (receiverAddress.isPresent()) {
+                int issuanceHeight = issuance.getChainHeight();
+                long issuanceAmount = getIssuanceAmountForCompensationRequest(issuance);
+                int cycleIndex = cyclesInDaoStateService.getCycleIndexAtChainHeight(issuanceHeight);
+                if (isValidCompensationRequest(name, cycleIndex, issuanceAmount)) {
+                    long decayedIssuanceAmount = getDecayedCompensationAmount(issuanceAmount, issuanceHeight, chainHeight);
+                    long issuanceDate = daoStateService.getBlockTime(issuanceHeight);
+                    candidate.addCompensationModel(CompensationModel.fromCompensationRequest(receiverAddress.get(),
+                            isCustomAddress,
+                            issuanceAmount,
+                            decayedIssuanceAmount,
+                            issuanceHeight,
+                            issuance.getTxId(),
+                            issuanceDate,
+                            cycleIndex));
+                }
+            }
+            addBurnOutputModel(chainHeight, proofOfBurnOpReturnTxOutputByHash, name, candidate);
+        });
 
         // Add output receivers of genesis transaction
         daoStateService.getGenesisTx()
@@ -266,14 +262,16 @@ public class BurningManService {
         return map;
     }
 
-    private Stream<CompensationProposal> getCompensationProposalsForIssuance(Issuance issuance) {
-        return proposalService.getProposalPayloads().stream()
+    private void forEachCompensationIssuance(int chainHeight, BiConsumer<Issuance, CompensationProposal> action) {
+        proposalService.getProposalPayloads().stream()
                 .map(ProposalPayload::getProposal)
-                .filter(proposal -> issuance.getTxId().equals(proposal.getTxId()))
                 .filter(proposal -> proposal instanceof CompensationProposal)
-                .map(proposal -> (CompensationProposal) proposal);
+                .flatMap(proposal -> daoStateService.getIssuance(proposal.getTxId())
+                        .filter(issuance -> issuance.getChainHeight() <= chainHeight)
+                        .map(issuance -> new Tuple2<>(issuance, (CompensationProposal) proposal))
+                        .stream())
+                .forEach(pair -> action.accept(pair.first, pair.second));
     }
-
 
     private String getAddressFromCompensationRequest(Tx tx) {
         ImmutableList<TxOutput> txOutputs = tx.getTxOutputs();
