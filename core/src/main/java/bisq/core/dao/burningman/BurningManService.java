@@ -116,7 +116,7 @@ public class BurningManService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     Map<String, BurningManCandidate> getBurningManCandidatesByName(int chainHeight) {
-        return getBurningManCandidatesByName(chainHeight, !DelayedPayoutTxReceiverService.isProposal412Activated());
+        return getBurningManCandidatesByName(chainHeight, false);
     }
 
     Map<String, BurningManCandidate> getBurningManCandidatesByName(int chainHeight, boolean limitCappingRounds) {
@@ -210,7 +210,7 @@ public class BurningManService {
     }
 
     List<BurningManCandidate> getActiveBurningManCandidates(int chainHeight) {
-        return getActiveBurningManCandidates(chainHeight, !DelayedPayoutTxReceiverService.isProposal412Activated());
+        return getActiveBurningManCandidates(chainHeight, false);
     }
 
     List<BurningManCandidate> getActiveBurningManCandidates(int chainHeight, boolean limitCappingRounds) {

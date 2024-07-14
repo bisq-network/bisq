@@ -18,7 +18,6 @@
 package bisq.core.dao.burningman.model;
 
 import bisq.core.dao.burningman.BurningManService;
-import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 
 import bisq.common.util.DateUtil;
 
@@ -77,7 +76,7 @@ public class BurningManCandidate {
     }
 
     public Optional<String> getReceiverAddress() {
-        return getReceiverAddress(DelayedPayoutTxReceiverService.isBugfix6699Activated());
+        return getReceiverAddress(true);
     }
 
     public Optional<String> getReceiverAddress(boolean isBugfix6699Activated) {

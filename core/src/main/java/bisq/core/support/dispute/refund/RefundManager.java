@@ -56,7 +56,6 @@ import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
 import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
@@ -195,7 +194,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         checkNotNull(chatMessage, "chatMessage must not be null");
         Optional<Dispute> disputeOptional = findDispute(disputeResult);
         String uid = disputeResultMessage.getUid();
-        if (!disputeOptional.isPresent()) {
+        if (disputeOptional.isEmpty()) {
             log.warn("We got a dispute result msg but we don't have a matching dispute. " +
                     "That might happen when we get the disputeResultMessage before the dispute was created. " +
                     "We try again after 2 sec. to apply the disputeResultMessage. TradeId = " + tradeId);
@@ -333,11 +332,13 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         int selectionHeight = dispute.getBurningManSelectionHeight();
 
         boolean wasBugfix6699ActivatedAtTradeDate = dispute.getTradeDate().after(DelayedPayoutTxReceiverService.BUGFIX_6699_ACTIVATION_DATE);
+        boolean wasProposal412ActivatedAtTradeDate = dispute.getTradeDate().after(DelayedPayoutTxReceiverService.PROPOSAL_412_ACTIVATION_DATE);
         List<Tuple2<Long, String>> delayedPayoutTxReceivers = delayedPayoutTxReceiverService.getReceivers(
                 selectionHeight,
                 inputAmount,
                 dispute.getTradeTxFee(),
-                wasBugfix6699ActivatedAtTradeDate);
+                wasBugfix6699ActivatedAtTradeDate,
+                wasProposal412ActivatedAtTradeDate);
         log.info("Verify delayedPayoutTx using selectionHeight {} and receivers {}", selectionHeight, delayedPayoutTxReceivers);
         checkArgument(delayedPayoutTx.getOutputs().size() == delayedPayoutTxReceivers.size(),
                 "Size of outputs and delayedPayoutTxReceivers must be the same");

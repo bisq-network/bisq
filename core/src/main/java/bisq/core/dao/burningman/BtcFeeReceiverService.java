@@ -96,9 +96,7 @@ public class BtcFeeReceiverService implements DaoStateListener {
             // the burningManCandidates as we added for the legacy BM an entry at the end.
             return burningManService.getLegacyBurningManAddress(currentChainHeight);
         }
-        // For the fee selection we do not need to wait for activation date of the bugfix for
-        // the receiver address (https://github.com/bisq-network/bisq/issues/6699) as it has no impact on the trade protocol.
-        return activeBurningManCandidates.get(winnerIndex).getReceiverAddress(true)
+        return activeBurningManCandidates.get(winnerIndex).getReceiverAddress()
                 .orElse(burningManService.getLegacyBurningManAddress(currentChainHeight));
     }
 
