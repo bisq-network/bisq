@@ -18,6 +18,7 @@
 package bisq.core.dao.burningman.model;
 
 import bisq.core.dao.burningman.BurningManService;
+import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.common.util.DateUtil;
 
@@ -36,6 +37,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 /**
  * Contains all relevant data for a burningman candidate (any contributor who has made a compensation request or was
  * a receiver of a genesis output).
@@ -50,9 +53,13 @@ public class BurningManCandidate {
     private double compensationShare;           // Share of accumulated decayed compensation amounts in relation to total issued amounts
 
     protected Optional<String> receiverAddress = Optional.empty();
+    @EqualsAndHashCode.Exclude
+    @Getter(AccessLevel.NONE)
+    @Nullable
+    private Boolean receiverAddressValid;
 
     // For deploying a bugfix with mostRecentAddress we need to maintain the old version to avoid breaking the
-    // trade protocol. We use the legacyMostRecentAddress until the activation date where we
+    // trade protocol. We use the legacy mostRecentAddress until the activation date where we
     // enforce the version by the filter to ensure users have updated.
     // See: https://github.com/bisq-network/bisq/issues/6699
     @EqualsAndHashCode.Exclude
@@ -106,6 +113,7 @@ public class BurningManCandidate {
 
         accumulatedDecayedCompensationAmount += compensationModel.getDecayedAmount();
         accumulatedCompensationAmount += compensationModel.getAmount();
+        receiverAddressValid = null;
 
         boolean hasAnyCustomAddress = compensationModels.stream()
                 .anyMatch(CompensationModel::isCustomAddress);
@@ -133,6 +141,17 @@ public class BurningManCandidate {
         mostRecentAddress = compensationModels.stream()
                 .max(Comparator.comparing(CompensationModel::getHeight))
                 .map(CompensationModel::getAddress);
+    }
+
+    public boolean isReceiverAddressValid() {
+        // Since address parsing is a little slow (due to use of exception control flow in bitcoinj), cache the
+        // result of the validation check and clear the cache for every compensation model added to the candidate.
+        Boolean receiverAddressValid = this.receiverAddressValid;
+        if (receiverAddressValid == null) {
+            BtcAddressValidator validator = new BtcAddressValidator();
+            this.receiverAddressValid = receiverAddressValid = validator.validate(receiverAddress.orElse(null)).isValid;
+        }
+        return receiverAddressValid;
     }
 
     public Set<String> getAllAddresses() {
@@ -196,7 +215,12 @@ public class BurningManCandidate {
     }
 
     public double getMaxBoostedCompensationShare() {
-        return Math.min(BurningManService.MAX_BURN_SHARE, compensationShare * BurningManService.ISSUANCE_BOOST_FACTOR);
+        // Set the burn cap to zero if the receiver address is missing or invalid (which can never
+        // happen by accident, due to checks in the UI). This is preferable to simply excluding such
+        // receivers from the active burning men, as it minimises the chance of funds going to the LBM,
+        // or DPT outputs failing to pass a sanity check after redistributing the receiver's share.
+        return isReceiverAddressValid() ?
+                Math.min(BurningManService.MAX_BURN_SHARE, compensationShare * BurningManService.ISSUANCE_BOOST_FACTOR) : 0.0;
     }
 
     @Override
@@ -207,6 +231,7 @@ public class BurningManCandidate {
                 ",\r\n     accumulatedDecayedCompensationAmount=" + accumulatedDecayedCompensationAmount +
                 ",\r\n     compensationShare=" + compensationShare +
                 ",\r\n     receiverAddress=" + receiverAddress +
+                ",\r\n     receiverAddressValid=" + isReceiverAddressValid() +
                 ",\r\n     mostRecentAddress=" + mostRecentAddress +
                 ",\r\n     burnOutputModels=" + burnOutputModels +
                 ",\r\n     accumulatedBurnAmount=" + accumulatedBurnAmount +
