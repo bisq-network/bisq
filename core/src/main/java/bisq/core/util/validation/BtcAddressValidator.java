@@ -47,9 +47,9 @@ public final class BtcAddressValidator extends InputValidator {
             return new ValidationResult(true);
         }
         try {
-            Address.fromString(Config.baseCurrencyNetworkParameters(), input);
+            Address.fromString(Config.baseCurrencyNetworkParameters(), input).getOutputScriptType();
             return new ValidationResult(true);
-        } catch (AddressFormatException e) {
+        } catch (AddressFormatException | IllegalStateException e) {
             return new ValidationResult(false, Res.get("validation.btc.invalidFormat"));
         }
     }

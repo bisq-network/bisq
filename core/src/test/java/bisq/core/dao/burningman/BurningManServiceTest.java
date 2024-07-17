@@ -73,6 +73,9 @@ public class BurningManServiceTest {
     private static final String VALID_P2WPKH_ADDRESS = "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4";
     private static final String VALID_P2TR_ADDRESS = "bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqzk5jj0"; // unsupported
     private static final String INVALID_ADDRESS = "invalid_address";
+    // Valid Bech32 encoding of a witness v2 program, which is standard in outputs, but anyone-can-spend (as of 2024).
+    // Bitcoinj should be upgraded to reject such addresses, as only Bech32m should be used for witness v1 and above.
+    private static final String BADLY_ENCODED_ADDRESS = "bc1zw508d6qejxtdg4y5r3zarvaryvg6kdaj";
 
     @Test
     public void testGetDecayedAmount() {
@@ -147,13 +150,15 @@ public class BurningManServiceTest {
                     compensationIssuanceAndPayload("alice", "0000", 790000, 10000, VALID_P2SH_ADDRESS),
                     compensationIssuanceAndPayload("bob", "0001", 790000, 10000, VALID_P2WPKH_ADDRESS),
                     compensationIssuanceAndPayload("carol", "0002", 790000, 10000, VALID_P2TR_ADDRESS),
-                    compensationIssuanceAndPayload("dave", "0003", 790000, 10000, INVALID_ADDRESS)
+                    compensationIssuanceAndPayload("dave", "0003", 790000, 10000, INVALID_ADDRESS),
+                    compensationIssuanceAndPayload("earl", "0004", 790000, 10000, BADLY_ENCODED_ADDRESS)
             );
             addProofOfBurnTxs(
                     proofOfBurnTx("alice", "1000", 790000, 10000),
                     proofOfBurnTx("bob", "1001", 790000, 10000),
                     proofOfBurnTx("carol", "1002", 790000, 10000),
-                    proofOfBurnTx("dave", "1003", 790000, 10000)
+                    proofOfBurnTx("dave", "1003", 790000, 10000),
+                    proofOfBurnTx("earl", "1004", 790000, 10000)
             );
             var candidateMap = burningManService.getBurningManCandidatesByName(800000, limitCappingRounds);
 
@@ -161,9 +166,10 @@ public class BurningManServiceTest {
             assertEquals(0.11, candidateMap.get("bob").getMaxBoostedCompensationShare());
             assertEquals(0.0, candidateMap.get("carol").getMaxBoostedCompensationShare());
             assertEquals(0.0, candidateMap.get("dave").getMaxBoostedCompensationShare());
+            assertEquals(0.0, candidateMap.get("earl").getMaxBoostedCompensationShare());
 
             assertAll(candidateMap.values().stream().map(candidate -> () -> {
-                assertEquals(0.25, candidate.getBurnAmountShare());
+                assertEquals(0.2, candidate.getBurnAmountShare());
                 assertEquals(candidate.getMaxBoostedCompensationShare(), candidate.getCappedBurnAmountShare());
             }));
         }
