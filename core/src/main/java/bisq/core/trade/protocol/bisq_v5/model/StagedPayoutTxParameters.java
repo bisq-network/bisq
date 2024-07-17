@@ -17,27 +17,34 @@
 
 package bisq.core.trade.protocol.bisq_v5.model;
 
+import bisq.common.config.Config;
+
 public class StagedPayoutTxParameters {
     // 10 days
-    public static final long CLAIM_DELAY = 144 * 10;
+    private static final long CLAIM_DELAY = 144 * 10;
     //todo find what is min value (we filter dust values in the wallet, so better not go that low)
     public static final long WARNING_TX_FEE_BUMP_OUTPUT_VALUE = 2000;
     public static final long REDIRECT_TX_FEE_BUMP_OUTPUT_VALUE = 2000;
 
-    // todo find out size
-    private static final long WARNING_TX_EXPECTED_SIZE = 1000;   // todo find out size
-    private static final long CLAIM_TX_EXPECTED_SIZE = 1000;  // todo find out size
-    // Min. fee rate for DPT. If fee rate used at take offer time was higher we use that.
-    // We prefer a rather high fee rate to not risk that the DPT gets stuck if required fee rate would
+    private static final long WARNING_TX_EXPECTED_WEIGHT = 722; // 125 tx bytes, 220-222 witness bytes
+    private static final long CLAIM_TX_EXPECTED_WEIGHT = 520;   //  82 tx bytes, 191-192 witness bytes
+    public static final long REDIRECT_TX_MIN_WEIGHT = 595;      //  82 tx bytes, 265-267 witness bytes
+
+    // Min. fee rate for staged payout txs. If fee rate used at take offer time was higher we use that.
+    // We prefer a rather high fee rate to not risk that the tx gets stuck if required fee rate would
     // spike when opening arbitration.
     private static final long MIN_TX_FEE_RATE = 10;
 
-    public static long getWarningTxMiningFee(long depositTxFeeRate) {
-        return getFeePerVByte(depositTxFeeRate) * StagedPayoutTxParameters.WARNING_TX_EXPECTED_SIZE;
+    public static long getClaimDelay() {
+        return Config.baseCurrencyNetwork().isRegtest() ? 5 : CLAIM_DELAY;
     }
 
-    public static long getClaimTxMiningFee(long depositTxFeeRate) {
-        return getFeePerVByte(depositTxFeeRate) * StagedPayoutTxParameters.CLAIM_TX_EXPECTED_SIZE;
+    public static long getWarningTxMiningFee(long depositTxFeeRate) {
+        return (getFeePerVByte(depositTxFeeRate) * StagedPayoutTxParameters.WARNING_TX_EXPECTED_WEIGHT + 3) / 4;
+    }
+
+    public static long getClaimTxMiningFee(long txFeePerVByte) {
+        return (txFeePerVByte * StagedPayoutTxParameters.CLAIM_TX_EXPECTED_WEIGHT + 3) / 4;
     }
 
     private static long getFeePerVByte(long depositTxFeeRate) {

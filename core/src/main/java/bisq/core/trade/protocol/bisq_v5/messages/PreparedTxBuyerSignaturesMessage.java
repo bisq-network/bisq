@@ -22,6 +22,7 @@ import bisq.core.trade.protocol.TradeMessage;
 import bisq.network.p2p.DirectMessage;
 import bisq.network.p2p.NodeAddress;
 
+import bisq.common.app.Version;
 import bisq.common.util.Utilities;
 
 import protobuf.NetworkEnvelope;
@@ -41,8 +42,7 @@ public class PreparedTxBuyerSignaturesMessage extends TradeMessage implements Di
     private final byte[] buyersRedirectTxBuyerSignature;
     private final byte[] sellersRedirectTxBuyerSignature;
 
-    public PreparedTxBuyerSignaturesMessage(int messageVersion,
-                                            String tradeId,
+    public PreparedTxBuyerSignaturesMessage(String tradeId,
                                             String uid,
                                             NodeAddress senderNodeAddress,
                                             byte[] depositTxWithBuyerWitnesses,
@@ -50,6 +50,29 @@ public class PreparedTxBuyerSignaturesMessage extends TradeMessage implements Di
                                             byte[] sellersWarningTxBuyerSignature,
                                             byte[] buyersRedirectTxBuyerSignature,
                                             byte[] sellersRedirectTxBuyerSignature) {
+        this(Version.getP2PMessageVersion(), tradeId, uid,
+                senderNodeAddress,
+                depositTxWithBuyerWitnesses,
+                buyersWarningTxBuyerSignature,
+                sellersWarningTxBuyerSignature,
+                buyersRedirectTxBuyerSignature,
+                sellersRedirectTxBuyerSignature);
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // PROTO BUFFER
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private PreparedTxBuyerSignaturesMessage(int messageVersion,
+                                             String tradeId,
+                                             String uid,
+                                             NodeAddress senderNodeAddress,
+                                             byte[] depositTxWithBuyerWitnesses,
+                                             byte[] buyersWarningTxBuyerSignature,
+                                             byte[] sellersWarningTxBuyerSignature,
+                                             byte[] buyersRedirectTxBuyerSignature,
+                                             byte[] sellersRedirectTxBuyerSignature) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
         this.depositTxWithBuyerWitnesses = depositTxWithBuyerWitnesses;
@@ -58,11 +81,6 @@ public class PreparedTxBuyerSignaturesMessage extends TradeMessage implements Di
         this.buyersRedirectTxBuyerSignature = buyersRedirectTxBuyerSignature;
         this.sellersRedirectTxBuyerSignature = sellersRedirectTxBuyerSignature;
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // PROTO BUFFER
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public NetworkEnvelope toProtoNetworkEnvelope() {

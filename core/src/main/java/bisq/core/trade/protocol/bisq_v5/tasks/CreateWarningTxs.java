@@ -54,7 +54,7 @@ public class CreateWarningTxs extends TradeTask {
             long lockTime = trade.getLockTime();
             byte[] buyerPubKey = amBuyer ? processModel.getMyMultiSigPubKey() : tradingPeer.getMultiSigPubKey();
             byte[] sellerPubKey = amBuyer ? tradingPeer.getMultiSigPubKey() : processModel.getMyMultiSigPubKey();
-            long claimDelay = StagedPayoutTxParameters.CLAIM_DELAY; // FIXME: Make sure this is a low value off mainnet
+            long claimDelay = StagedPayoutTxParameters.getClaimDelay();
             long miningFee = StagedPayoutTxParameters.getWarningTxMiningFee(trade.getDepositTxFeeRate());
 
             // Create our warning tx.

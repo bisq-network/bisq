@@ -24,7 +24,6 @@ import bisq.core.trade.protocol.bisq_v5.messages.PreparedTxBuyerSignaturesMessag
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SendDirectMessageListener;
 
-import bisq.common.app.Version;
 import bisq.common.taskrunner.TaskRunner;
 
 import java.util.UUID;
@@ -50,7 +49,7 @@ public class BuyerSendsPreparedTxBuyerSignaturesMessage extends TradeTask {
             byte[] buyersRedirectTxBuyerSignature = processModel.getRedirectTxBuyerSignature();
             byte[] sellersRedirectTxBuyerSignature = processModel.getTradePeer().getRedirectTxBuyerSignature();
 
-            PreparedTxBuyerSignaturesMessage message = new PreparedTxBuyerSignaturesMessage(Version.getP2PMessageVersion(), // TODO: Add extra constructor
+            PreparedTxBuyerSignaturesMessage message = new PreparedTxBuyerSignaturesMessage(
                     processModel.getOfferId(),
                     UUID.randomUUID().toString(),
                     processModel.getMyNodeAddress(),

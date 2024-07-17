@@ -56,9 +56,8 @@ public class CreateSignedClaimTx extends TradeTask {
             TransactionOutput myWarningTxOutput = processModel.getWarningTx().getOutput(0);
             AddressEntry addressEntry = processModel.getBtcWalletService().getOrCreateAddressEntry(tradeId, AddressEntry.Context.TRADE_PAYOUT);
             Address payoutAddress = addressEntry.getAddress();
-//            long miningFee = StagedPayoutTxParameters.getClaimTxMiningFee(trade.getDepositTxFeeRate());
             long miningFee = StagedPayoutTxParameters.getClaimTxMiningFee(feeService.getTxFeePerVbyte().value);
-            long claimDelay = StagedPayoutTxParameters.CLAIM_DELAY; // FIXME: Make sure this is a low value off mainnet
+            long claimDelay = StagedPayoutTxParameters.getClaimDelay();
             byte[] myMultiSigPubKey = processModel.getMyMultiSigPubKey();
             byte[] peersMultiSigPubKey = tradingPeer.getMultiSigPubKey();
             DeterministicKey myMultiSigKeyPair = btcWalletService.getMultiSigKeyPair(tradeId, myMultiSigPubKey);
