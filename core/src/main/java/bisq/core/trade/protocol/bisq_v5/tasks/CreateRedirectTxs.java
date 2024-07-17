@@ -58,12 +58,15 @@ public class CreateRedirectTxs extends TradeTask {
                     "Different warningTx output amounts. Ours: {}; Peer's: {}", warningTxOutput.getValue().value, inputAmount);
 
             long depositTxFee = trade.getTradeTxFeeAsLong(); // Used for fee rate calculation inside getDelayedPayoutTxReceiverService
-            long inputAmountMinusFeeForFeeBumpOutput = inputAmount - 32 * depositTxFee;
+            long inputAmountMinusFeeBumpAmount = inputAmount - StagedPayoutTxParameters.REDIRECT_TX_FEE_BUMP_OUTPUT_VALUE;
             int selectionHeight = processModel.getBurningManSelectionHeight();
             List<Tuple2<Long, String>> burningMen = processModel.getDelayedPayoutTxReceiverService().getReceivers(
                     selectionHeight,
-                    inputAmountMinusFeeForFeeBumpOutput,
-                    depositTxFee);
+                    inputAmountMinusFeeBumpAmount,
+                    depositTxFee,
+                    StagedPayoutTxParameters.REDIRECT_TX_MIN_WEIGHT,
+                    true,
+                    true);
 
             log.info("Create redirectionTxs using selectionHeight {} and receivers {}", selectionHeight, burningMen);
 

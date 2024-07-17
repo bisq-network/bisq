@@ -79,6 +79,10 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     // spike when opening arbitration.
     private static final long DPT_MIN_TX_FEE_RATE = 10;
 
+    // The DPT weight (= 4 * size) without any outputs. This should actually be higher (426 wu, once the
+    // witness data is taken into account), but must be kept at this value for compatibility with the peer.
+    private static final long DPT_MIN_WEIGHT = 204;
+
     private final DaoStateService daoStateService;
     private final BurningManService burningManService;
     private int currentChainHeight;
@@ -122,12 +126,21 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     public List<Tuple2<Long, String>> getReceivers(int burningManSelectionHeight,
                                                    long inputAmount,
                                                    long tradeTxFee) {
-        return getReceivers(burningManSelectionHeight, inputAmount, tradeTxFee, true, true);
+        return getReceivers(burningManSelectionHeight, inputAmount, tradeTxFee, DPT_MIN_WEIGHT, true, true);
     }
 
     public List<Tuple2<Long, String>> getReceivers(int burningManSelectionHeight,
                                                    long inputAmount,
                                                    long tradeTxFee,
+                                                   boolean isBugfix6699Activated,
+                                                   boolean isProposal412Activated) {
+        return getReceivers(burningManSelectionHeight, inputAmount, tradeTxFee, DPT_MIN_WEIGHT, isBugfix6699Activated, isProposal412Activated);
+    }
+
+    public List<Tuple2<Long, String>> getReceivers(int burningManSelectionHeight,
+                                                   long inputAmount,
+                                                   long tradeTxFee,
+                                                   long minTxWeight,
                                                    boolean isBugfix6699Activated,
                                                    boolean isProposal412Activated) {
         checkArgument(burningManSelectionHeight >= MIN_SNAPSHOT_HEIGHT, "Selection height must be >= " + MIN_SNAPSHOT_HEIGHT);
@@ -150,11 +163,13 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
 
         if (burningManCandidates.isEmpty()) {
             // If there are no compensation requests (e.g. at dev testing) we fall back to the legacy BM
-            long spendableAmount = getSpendableAmount(1, inputAmount, txFeePerVbyte);
-            return List.of(new Tuple2<>(spendableAmount, burningManService.getLegacyBurningManAddress(burningManSelectionHeight)));
+            long spendableAmount = getSpendableAmount(1, inputAmount, txFeePerVbyte, minTxWeight);
+            return spendableAmount > DPT_MIN_REMAINDER_TO_LEGACY_BM
+                    ? List.of(new Tuple2<>(spendableAmount, burningManService.getLegacyBurningManAddress(burningManSelectionHeight)))
+                    : List.of();
         }
 
-        long spendableAmount = getSpendableAmount(burningManCandidates.size(), inputAmount, txFeePerVbyte);
+        long spendableAmount = getSpendableAmount(burningManCandidates.size(), inputAmount, txFeePerVbyte, minTxWeight);
         // We only use outputs >= 1000 sat or at least 2 times the cost for the output (32 bytes).
         // If we remove outputs it will be distributed to the remaining receivers.
         long minOutputAmount = Math.max(DPT_MIN_OUTPUT_AMOUNT, txFeePerVbyte * 32 * 2);
@@ -162,6 +177,8 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
         long maxOutputAmount = Math.round(spendableAmount * (BurningManService.MAX_BURN_SHARE * 1.2));
         // We accumulate small amounts which gets filtered out and subtract it from 1 to get an adjustment factor
         // used later to be applied to the remaining burningmen share.
+        // FIXME: We should take into account the increase in spendable amount every time a small output is filtered out
+        //  of the receivers list, due to the saving in tx fees.
         double adjustment = 1 - burningManCandidates.stream()
                 .filter(candidate -> candidate.getReceiverAddress(isBugfix6699Activated).isPresent())
                 .mapToDouble(candidate -> {
@@ -187,6 +204,8 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
                         .thenComparing(tuple -> tuple.second))
                 .collect(Collectors.toList());
         long totalOutputValue = receivers.stream().mapToLong(e -> e.first).sum();
+        // FIXME: The balance given to the LBM burning man needs to take into account the tx size increase due to the
+        //  extra output, to avoid underpaying the tx fee.
         if (totalOutputValue < spendableAmount) {
             long available = spendableAmount - totalOutputValue;
             // If the available is larger than DPT_MIN_REMAINDER_TO_LEGACY_BM we send it to legacy BM
@@ -198,14 +217,19 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
         return receivers;
     }
 
-    private static long getSpendableAmount(int numOutputs, long inputAmount, long txFeePerVbyte) {
+    // TODO: For the v5 trade protocol, should we compute a more precise fee estimate taking into account the individual
+    //  receiver output script types? (P2SH costs 32 bytes per output, P2WPKH costs 31, etc.) This has the advantage of
+    //  avoiding the slight overestimate at present (32 vs 31) and could allow future support for P2TR receiver outputs,
+    //  which cost 43 bytes each. (Note that bitcoinj has already added partial taproot support upstream, and recognises
+    //  P2TR addresses & ScriptPubKey types.)
+    private static long getSpendableAmount(int numOutputs, long inputAmount, long txFeePerVbyte, long minTxWeight) {
         // Output size: 32 bytes
         // Tx size without outputs: 51 bytes
-        int txSize = 51 + numOutputs * 32; // Min value: txSize=83
-        long minerFee = txFeePerVbyte * txSize; // Min value: minerFee=830
+        long txWeight = minTxWeight + numOutputs * 128L; // Min value: txWeight=332 (for DPT with 1 output)
+        long minerFee = (txFeePerVbyte * txWeight + 3) / 4; // Min value: minerFee=830
         // We need to make sure we have at least 1000 sat as defined in TradeWalletService
         minerFee = Math.max(TradeWalletService.MIN_DELAYED_PAYOUT_TX_FEE.value, minerFee);
-        return inputAmount - minerFee;
+        return Math.max(inputAmount - minerFee, 0);
     }
 
     private static int getSnapshotHeight(int genesisHeight, int height, int grid) {

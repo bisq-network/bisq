@@ -24,7 +24,6 @@ import bisq.core.trade.protocol.bisq_v5.messages.PreparedTxBuyerSignaturesReques
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.SendDirectMessageListener;
 
-import bisq.common.app.Version;
 import bisq.common.taskrunner.TaskRunner;
 
 import java.util.UUID;
@@ -47,7 +46,7 @@ public class SellerAsTakerSendsPreparedTxBuyerSignaturesRequest extends TradeTas
             byte[] buyersRedirectTxSellerSignature = processModel.getTradePeer().getRedirectTxSellerSignature();
             byte[] sellersRedirectTxSellerSignature = processModel.getRedirectTxSellerSignature();
 
-            PreparedTxBuyerSignaturesRequest message = new PreparedTxBuyerSignaturesRequest(Version.getP2PMessageVersion(), // TODO: Add extra constructor
+            PreparedTxBuyerSignaturesRequest message = new PreparedTxBuyerSignaturesRequest(
                     processModel.getOfferId(),
                     UUID.randomUUID().toString(),
                     processModel.getMyNodeAddress(),

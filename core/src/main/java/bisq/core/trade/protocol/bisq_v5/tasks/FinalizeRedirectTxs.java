@@ -49,7 +49,7 @@ public class FinalizeRedirectTxs extends TradeTask {
             boolean amBuyer = trade instanceof BuyerTrade;
             byte[] buyerPubKey = amBuyer ? processModel.getMyMultiSigPubKey() : tradingPeer.getMultiSigPubKey();
             byte[] sellerPubKey = amBuyer ? tradingPeer.getMultiSigPubKey() : processModel.getMyMultiSigPubKey();
-            long claimDelay = StagedPayoutTxParameters.CLAIM_DELAY; // FIXME: Make sure this is a low value off mainnet
+            long claimDelay = StagedPayoutTxParameters.getClaimDelay();
 
             // Finalize our redirect tx.
             TransactionOutput peersWarningTxOutput = tradingPeer.getWarningTx().getOutput(0);

@@ -50,7 +50,7 @@ public class SellerSignsPeersRedirectTx extends TradeTask {
 
             Transaction peersRedirectTx = tradingPeer.getRedirectTx();
             TransactionOutput warningTxOutput = processModel.getWarningTx().getOutput(0);
-            long claimDelay = StagedPayoutTxParameters.CLAIM_DELAY; // FIXME: Make sure this is a low value off mainnet
+            long claimDelay = StagedPayoutTxParameters.getClaimDelay();
             byte[] myMultiSigPubKey = processModel.getMyMultiSigPubKey();
             byte[] peersMultiSigPubKey = tradingPeer.getMultiSigPubKey();
             DeterministicKey myMultiSigKeyPair = btcWalletService.getMultiSigKeyPair(tradeId, myMultiSigPubKey);
