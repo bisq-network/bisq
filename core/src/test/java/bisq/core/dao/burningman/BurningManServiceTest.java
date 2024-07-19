@@ -27,6 +27,7 @@ import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.governance.CompensationProposal;
 import bisq.core.dao.state.model.governance.Issuance;
 import bisq.core.dao.state.model.governance.IssuanceType;
+import bisq.core.locale.Res;
 
 import bisq.common.util.Tuple2;
 
@@ -68,6 +69,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 public class BurningManServiceTest {
+    private static final String VALID_P2SH_ADDRESS = "3AdD7ZaJQw9m1maN39CeJ1zVyXQLn2MEHR";
+    private static final String VALID_P2WPKH_ADDRESS = "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4";
+    private static final String VALID_P2TR_ADDRESS = "bc1p0xlxvlhemja6c4dqv22uapctqupfhlxm9h8z3k2e72q4k9hcz7vqzk5jj0"; // unsupported
+    private static final String INVALID_ADDRESS = "invalid_address";
+    // Valid Bech32 encoding of a witness v2 program, which is standard in outputs, but anyone-can-spend (as of 2024).
+    // Bitcoinj should be upgraded to reject such addresses, as only Bech32m should be used for witness v1 and above.
+    private static final String BADLY_ENCODED_ADDRESS = "bc1zw508d6qejxtdg4y5r3zarvaryvg6kdaj";
+
     @Test
     public void testGetDecayedAmount() {
         long amount = 100;
@@ -104,6 +113,7 @@ public class BurningManServiceTest {
 
         @BeforeEach
         public void setUp() {
+            Res.setup();
             when(cyclesInDaoStateService.getChainHeightOfPastCycle(800000, BurningManService.NUM_CYCLES_BURN_AMOUNT_DECAY))
                     .thenReturn(750000);
             when(cyclesInDaoStateService.getChainHeightOfPastCycle(800000, BurningManService.NUM_CYCLES_COMP_REQUEST_DECAY))
@@ -120,15 +130,48 @@ public class BurningManServiceTest {
         }
 
         private void addCompensationIssuanceAndPayloads(Collection<Tuple2<Issuance, ProposalPayload>> tuples) {
-            when(daoStateService.getIssuanceSetForType(IssuanceType.COMPENSATION))
-                    .thenReturn(tuples.stream().map(t -> t.first).collect(Collectors.toSet()));
+            var issuanceMap = tuples.stream()
+                    .collect(Collectors.toMap(t -> t.first.getTxId(), t -> t.first));
             when(proposalService.getProposalPayloads())
                     .thenReturn(tuples.stream().map(t -> t.second).collect(Collectors.toCollection(FXCollections::observableArrayList)));
+            when(daoStateService.getIssuance(Mockito.anyString()))
+                    .thenAnswer((Answer<Optional<Issuance>>) inv -> Optional.ofNullable(issuanceMap.get(inv.getArgument(0, String.class))));
         }
 
         @SafeVarargs
         private void addCompensationIssuanceAndPayloads(Tuple2<Issuance, ProposalPayload>... tuples) {
             addCompensationIssuanceAndPayloads(Arrays.asList(tuples));
+        }
+
+        @ValueSource(booleans = {true, false})
+        @ParameterizedTest(name = "[{index}] limitCappingRounds={0}")
+        public void testGetBurningManCandidatesByName_invalidReceiverAddresses(boolean limitCappingRounds) {
+            addCompensationIssuanceAndPayloads(
+                    compensationIssuanceAndPayload("alice", "0000", 790000, 10000, VALID_P2SH_ADDRESS),
+                    compensationIssuanceAndPayload("bob", "0001", 790000, 10000, VALID_P2WPKH_ADDRESS),
+                    compensationIssuanceAndPayload("carol", "0002", 790000, 10000, VALID_P2TR_ADDRESS),
+                    compensationIssuanceAndPayload("dave", "0003", 790000, 10000, INVALID_ADDRESS),
+                    compensationIssuanceAndPayload("earl", "0004", 790000, 10000, BADLY_ENCODED_ADDRESS)
+            );
+            addProofOfBurnTxs(
+                    proofOfBurnTx("alice", "1000", 790000, 10000),
+                    proofOfBurnTx("bob", "1001", 790000, 10000),
+                    proofOfBurnTx("carol", "1002", 790000, 10000),
+                    proofOfBurnTx("dave", "1003", 790000, 10000),
+                    proofOfBurnTx("earl", "1004", 790000, 10000)
+            );
+            var candidateMap = burningManService.getBurningManCandidatesByName(800000, limitCappingRounds);
+
+            assertEquals(0.11, candidateMap.get("alice").getMaxBoostedCompensationShare());
+            assertEquals(0.11, candidateMap.get("bob").getMaxBoostedCompensationShare());
+            assertEquals(0.0, candidateMap.get("carol").getMaxBoostedCompensationShare());
+            assertEquals(0.0, candidateMap.get("dave").getMaxBoostedCompensationShare());
+            assertEquals(0.0, candidateMap.get("earl").getMaxBoostedCompensationShare());
+
+            assertAll(candidateMap.values().stream().map(candidate -> () -> {
+                assertEquals(0.2, candidate.getBurnAmountShare());
+                assertEquals(candidate.getMaxBoostedCompensationShare(), candidate.getCappedBurnAmountShare());
+            }));
         }
 
         @ValueSource(booleans = {true, false})
@@ -339,8 +382,16 @@ public class BurningManServiceTest {
                                                                                     String txId,
                                                                                     int chainHeight,
                                                                                     long amount) {
+        return compensationIssuanceAndPayload(name, txId, chainHeight, amount, VALID_P2WPKH_ADDRESS);
+    }
+
+    private static Tuple2<Issuance, ProposalPayload> compensationIssuanceAndPayload(String name,
+                                                                                    String txId,
+                                                                                    int chainHeight,
+                                                                                    long amount,
+                                                                                    String receiverAddress) {
         var issuance = new Issuance(txId, chainHeight, amount, null, IssuanceType.COMPENSATION);
-        var extraDataMap = Map.of(CompensationProposal.BURNING_MAN_RECEIVER_ADDRESS, "receiverAddress");
+        var extraDataMap = Map.of(CompensationProposal.BURNING_MAN_RECEIVER_ADDRESS, receiverAddress);
         var proposal = new CompensationProposal(name, "link", Coin.valueOf(amount), "bsqAddress", extraDataMap);
         return new Tuple2<>(issuance, new ProposalPayload(proposal.cloneProposalAndAddTxId(txId)));
     }

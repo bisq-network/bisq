@@ -31,9 +31,10 @@ import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.governance.CompensationProposal;
 import bisq.core.dao.state.model.governance.Issuance;
-import bisq.core.dao.state.model.governance.IssuanceType;
 
 import bisq.network.p2p.storage.P2PDataStorage;
+
+import bisq.common.util.Tuple2;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -52,8 +53,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -115,7 +116,7 @@ public class BurningManService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     Map<String, BurningManCandidate> getBurningManCandidatesByName(int chainHeight) {
-        return getBurningManCandidatesByName(chainHeight, !DelayedPayoutTxReceiverService.isProposal412Activated());
+        return getBurningManCandidatesByName(chainHeight, false);
     }
 
     Map<String, BurningManCandidate> getBurningManCandidatesByName(int chainHeight, boolean limitCappingRounds) {
@@ -123,45 +124,40 @@ public class BurningManService {
         Map<P2PDataStorage.ByteArray, Set<TxOutput>> proofOfBurnOpReturnTxOutputByHash = getProofOfBurnOpReturnTxOutputByHash(chainHeight);
 
         // Add contributors who made a compensation request
-        daoStateService.getIssuanceSetForType(IssuanceType.COMPENSATION).stream()
-                .filter(issuance -> issuance.getChainHeight() <= chainHeight)
-                .forEach(issuance -> {
-                            getCompensationProposalsForIssuance(issuance).forEach(compensationProposal -> {
-                                String name = compensationProposal.getName();
-                                BurningManCandidate candidate = burningManCandidatesByName.computeIfAbsent(name, n -> new BurningManCandidate());
+        forEachCompensationIssuance(chainHeight, (issuance, compensationProposal) -> {
+            String name = compensationProposal.getName();
+            BurningManCandidate candidate = burningManCandidatesByName.computeIfAbsent(name, n -> new BurningManCandidate());
 
-                                // Issuance
-                                Optional<String> customAddress = compensationProposal.getBurningManReceiverAddress();
-                                boolean isCustomAddress = customAddress.isPresent();
-                                Optional<String> receiverAddress;
-                                if (isCustomAddress) {
-                                    receiverAddress = customAddress;
-                                } else {
-                                    // We take change address from compensation request
-                                    receiverAddress = daoStateService.getTx(compensationProposal.getTxId())
-                                            .map(this::getAddressFromCompensationRequest);
-                                }
-                                if (receiverAddress.isPresent()) {
-                                    int issuanceHeight = issuance.getChainHeight();
-                                    long issuanceAmount = getIssuanceAmountForCompensationRequest(issuance);
-                                    int cycleIndex = cyclesInDaoStateService.getCycleIndexAtChainHeight(issuanceHeight);
-                                    if (isValidCompensationRequest(name, cycleIndex, issuanceAmount)) {
-                                        long decayedIssuanceAmount = getDecayedCompensationAmount(issuanceAmount, issuanceHeight, chainHeight);
-                                        long issuanceDate = daoStateService.getBlockTime(issuanceHeight);
-                                        candidate.addCompensationModel(CompensationModel.fromCompensationRequest(receiverAddress.get(),
-                                                isCustomAddress,
-                                                issuanceAmount,
-                                                decayedIssuanceAmount,
-                                                issuanceHeight,
-                                                issuance.getTxId(),
-                                                issuanceDate,
-                                                cycleIndex));
-                                    }
-                                }
-                                addBurnOutputModel(chainHeight, proofOfBurnOpReturnTxOutputByHash, name, candidate);
-                            });
-                        }
-                );
+            // Issuance
+            Optional<String> customAddress = compensationProposal.getBurningManReceiverAddress();
+            boolean isCustomAddress = customAddress.isPresent();
+            Optional<String> receiverAddress;
+            if (isCustomAddress) {
+                receiverAddress = customAddress;
+            } else {
+                // We take change address from compensation request
+                receiverAddress = daoStateService.getTx(compensationProposal.getTxId())
+                        .map(this::getAddressFromCompensationRequest);
+            }
+            if (receiverAddress.isPresent()) {
+                int issuanceHeight = issuance.getChainHeight();
+                long issuanceAmount = getIssuanceAmountForCompensationRequest(issuance);
+                int cycleIndex = cyclesInDaoStateService.getCycleIndexAtChainHeight(issuanceHeight);
+                if (isValidCompensationRequest(name, cycleIndex, issuanceAmount)) {
+                    long decayedIssuanceAmount = getDecayedCompensationAmount(issuanceAmount, issuanceHeight, chainHeight);
+                    long issuanceDate = daoStateService.getBlockTime(issuanceHeight);
+                    candidate.addCompensationModel(CompensationModel.fromCompensationRequest(receiverAddress.get(),
+                            isCustomAddress,
+                            issuanceAmount,
+                            decayedIssuanceAmount,
+                            issuanceHeight,
+                            issuance.getTxId(),
+                            issuanceDate,
+                            cycleIndex));
+                }
+            }
+            addBurnOutputModel(chainHeight, proofOfBurnOpReturnTxOutputByHash, name, candidate);
+        });
 
         // Add output receivers of genesis transaction
         daoStateService.getGenesisTx()
@@ -209,51 +205,20 @@ public class BurningManService {
         return burningManCandidatesByName;
     }
 
-    private static int imposeCaps(Collection<BurningManCandidate> burningManCandidates, boolean limitCappingRounds) {
-        List<BurningManCandidate> candidatesInDescendingBurnCapRatio = new ArrayList<>(burningManCandidates);
-        candidatesInDescendingBurnCapRatio.sort(Comparator.comparing(BurningManCandidate::getBurnCapRatio).reversed());
-        double thresholdBurnCapRatio = 1.0;
-        double remainingBurnShare = 1.0;
-        double remainingCapShare = 1.0;
-        int cappingRound = 0;
-        for (BurningManCandidate candidate : candidatesInDescendingBurnCapRatio) {
-            double invScaleFactor = remainingBurnShare / remainingCapShare;
-            double burnCapRatio = candidate.getBurnCapRatio();
-            if (remainingCapShare <= 0.0 || burnCapRatio <= 0.0 || burnCapRatio < invScaleFactor ||
-                    limitCappingRounds && burnCapRatio < 1.0) {
-                cappingRound++;
-                break;
-            }
-            if (burnCapRatio < thresholdBurnCapRatio) {
-                thresholdBurnCapRatio = invScaleFactor;
-                cappingRound++;
-            }
-            candidate.imposeCap(cappingRound, candidate.getBurnAmountShare() / thresholdBurnCapRatio);
-            remainingBurnShare -= candidate.getBurnAmountShare();
-            remainingCapShare -= candidate.getMaxBoostedCompensationShare();
-        }
-        return cappingRound;
-    }
-
     String getLegacyBurningManAddress(int chainHeight) {
         return daoStateService.getParamValue(Param.RECIPIENT_BTC_ADDRESS, chainHeight);
     }
 
-    Set<BurningManCandidate> getActiveBurningManCandidates(int chainHeight) {
-        return getActiveBurningManCandidates(chainHeight, !DelayedPayoutTxReceiverService.isProposal412Activated());
+    List<BurningManCandidate> getActiveBurningManCandidates(int chainHeight) {
+        return getActiveBurningManCandidates(chainHeight, false);
     }
 
-    Set<BurningManCandidate> getActiveBurningManCandidates(int chainHeight, boolean limitCappingRounds) {
+    List<BurningManCandidate> getActiveBurningManCandidates(int chainHeight, boolean limitCappingRounds) {
         return getBurningManCandidatesByName(chainHeight, limitCappingRounds).values().stream()
                 .filter(burningManCandidate -> burningManCandidate.getCappedBurnAmountShare() > 0)
-                .filter(candidate -> candidate.getReceiverAddress().isPresent())
-                .collect(Collectors.toSet());
+                .filter(BurningManCandidate::isReceiverAddressValid)
+                .collect(Collectors.toList());
     }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////
-    // Private
-    ///////////////////////////////////////////////////////////////////////////////////////////
 
     Map<P2PDataStorage.ByteArray, Set<TxOutput>> getProofOfBurnOpReturnTxOutputByHash(int chainHeight) {
         Map<P2PDataStorage.ByteArray, Set<TxOutput>> map = new HashMap<>();
@@ -266,14 +231,21 @@ public class BurningManService {
         return map;
     }
 
-    private Stream<CompensationProposal> getCompensationProposalsForIssuance(Issuance issuance) {
-        return proposalService.getProposalPayloads().stream()
-                .map(ProposalPayload::getProposal)
-                .filter(proposal -> issuance.getTxId().equals(proposal.getTxId()))
-                .filter(proposal -> proposal instanceof CompensationProposal)
-                .map(proposal -> (CompensationProposal) proposal);
-    }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Private
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    private void forEachCompensationIssuance(int chainHeight, BiConsumer<Issuance, CompensationProposal> action) {
+        proposalService.getProposalPayloads().stream()
+                .map(ProposalPayload::getProposal)
+                .filter(proposal -> proposal instanceof CompensationProposal)
+                .flatMap(proposal -> daoStateService.getIssuance(proposal.getTxId())
+                        .filter(issuance -> issuance.getChainHeight() <= chainHeight)
+                        .map(issuance -> new Tuple2<>(issuance, (CompensationProposal) proposal))
+                        .stream())
+                .forEach(pair -> action.accept(pair.first, pair.second));
+    }
 
     private String getAddressFromCompensationRequest(Tx tx) {
         ImmutableList<TxOutput> txOutputs = tx.getTxOutputs();
@@ -379,5 +351,31 @@ public class BurningManService {
 
     private long getDecayedGenesisOutputAmount(long amount) {
         return Math.round(amount * GENESIS_OUTPUT_AMOUNT_FACTOR);
+    }
+
+    private static int imposeCaps(Collection<BurningManCandidate> burningManCandidates, boolean limitCappingRounds) {
+        List<BurningManCandidate> candidatesInDescendingBurnCapRatio = new ArrayList<>(burningManCandidates);
+        candidatesInDescendingBurnCapRatio.sort(Comparator.comparing(BurningManCandidate::getBurnCapRatio).reversed());
+        double thresholdBurnCapRatio = 1.0;
+        double remainingBurnShare = 1.0;
+        double remainingCapShare = 1.0;
+        int cappingRound = 0;
+        for (BurningManCandidate candidate : candidatesInDescendingBurnCapRatio) {
+            double invScaleFactor = remainingBurnShare / remainingCapShare;
+            double burnCapRatio = candidate.getBurnCapRatio();
+            if (remainingCapShare <= 0.0 || burnCapRatio <= 0.0 || burnCapRatio < invScaleFactor ||
+                    limitCappingRounds && burnCapRatio < 1.0) {
+                cappingRound++;
+                break;
+            }
+            if (burnCapRatio < thresholdBurnCapRatio) {
+                thresholdBurnCapRatio = invScaleFactor;
+                cappingRound++;
+            }
+            candidate.imposeCap(cappingRound, candidate.getBurnAmountShare() / thresholdBurnCapRatio);
+            remainingBurnShare -= candidate.getBurnAmountShare();
+            remainingCapShare -= candidate.getMaxBoostedCompensationShare();
+        }
+        return cappingRound;
     }
 }
