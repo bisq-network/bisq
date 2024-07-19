@@ -171,7 +171,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     private final String btcNodesFromOptions, referralIdFromOptions,
             rpcUserFromOptions, rpcPwFromOptions;
     private final int blockNotifyPortFromOptions;
-    private final boolean fullDaoNodeFromOptions, fullAccountingNodeFromOptions;
+    private final boolean fullDaoNodeFromOptions, fullAccountingNodeFromOptions, useFullModeDaoMonitorFromOptions;
     @Getter
     private final BooleanProperty useStandbyModeProperty = new SimpleBooleanProperty(prefPayload.isUseStandbyMode());
 
@@ -191,7 +191,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                        @Named(Config.IS_BM_FULL_NODE) boolean fullAccountingNode,
                        @Named(Config.RPC_USER) String rpcUser,
                        @Named(Config.RPC_PASSWORD) String rpcPassword,
-                       @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockNotificationPort) {
+                       @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockNotificationPort,
+                       @Named(Config.USE_FULL_MODE_DAO_MONITOR) boolean useFullModeDaoMonitor) {
 
         this.persistenceManager = persistenceManager;
         this.config = config;
@@ -204,6 +205,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         this.rpcUserFromOptions = rpcUser;
         this.rpcPwFromOptions = rpcPassword;
         this.blockNotifyPortFromOptions = rpcBlockNotificationPort;
+        this.useFullModeDaoMonitorFromOptions = useFullModeDaoMonitor;
 
         useAnimationsProperty.addListener((ov) -> {
             prefPayload.setUseAnimations(useAnimationsProperty.get());
@@ -828,8 +830,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public void setUseFullModeDaoMonitor(boolean value) {
-        prefPayload.setUseFullModeDaoMonitor(value);
-        requestPersistence();
+        // We only persist if we have not set the program argument
+        if (!config.useFullModeDaoMonitorSetExplicitly) {
+            prefPayload.setUseFullModeDaoMonitor(value);
+            requestPersistence();
+        }
     }
 
     public void setUseBitcoinUrisInQrCodes(boolean value) {
@@ -1031,6 +1036,14 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         return prefPayload.isFullBMAccountingNode();
     }
 
+    public boolean isUseFullModeDaoMonitor() {
+        if (config.useFullModeDaoMonitorSetExplicitly) {
+            return useFullModeDaoMonitorFromOptions;
+        } else {
+            return prefPayload.isUseFullModeDaoMonitor();
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -1202,5 +1215,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setProcessBurningManAccountingData(boolean processBurningManAccountingData);
 
         void setFullBMAccountingNode(boolean isFullBMAccountingNode);
+
+        boolean isUseFullModeDaoMonitor();
     }
 }
