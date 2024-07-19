@@ -31,6 +31,7 @@ import bisq.core.payment.TradeLimits;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.user.Cookie;
 import bisq.core.user.CookieKey;
+import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
 import bisq.network.p2p.P2PService;
@@ -70,6 +71,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
     private TradeLimits tradeLimits;
     private AppSetupWithP2PAndDAO appSetupWithP2PAndDAO;
     protected P2PService p2PService;
+    protected Preferences preferences;
     protected DaoStateMonitoringService daoStateMonitoringService;
 
     protected Cookie cookie;
@@ -101,6 +103,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
         // Pin that as it is used in PaymentMethods and verification in TradeStatistics
         tradeLimits = injector.getInstance(TradeLimits.class);
         daoStateMonitoringService = injector.getInstance(DaoStateMonitoringService.class);
+        preferences = injector.getInstance(Preferences.class);
         preventPeriodicShutdownAtSeedNode = injector.getInstance(Key.get(boolean.class,
                 Names.named(Config.PREVENT_PERIODIC_SHUTDOWN_AT_SEED_NODE)));
     }
@@ -114,6 +117,10 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
                         log::error);
             }
         });
+
+        // If the option useFullModeDaoMonitor is set the preferences value is ignored, otherwise we default to true
+        // as we expect that headless nodes run as full dao nodes
+        preferences.setUseFullModeDaoMonitor(true);
 
         daoStateMonitoringService.addListener(new DaoStateMonitoringService.Listener() {
             @Override
