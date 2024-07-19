@@ -119,21 +119,24 @@ public class PeerGroupService {
             Context.propagate(context);
             blockingClientManager.startAsync();
             blockingClientManager.awaitRunning();
-        }, SingleThreadExecutorUtils.getSingleThreadExecutor("start"));
-    }
 
-    public void connectToAll() {
-        peerConnections.forEach(PeerConnection::connect);
+            peerConnections.forEach(PeerConnection::start);
+        }, SingleThreadExecutorUtils.getSingleThreadExecutor("start"));
     }
 
     public CompletableFuture<Void> shutdown() {
         return CompletableFuture.runAsync(() -> {
-            log.info("shutdown");
+            log.info("Shutdown all peerConnections");
             Context.propagate(context);
             CountDownLatch latch = new CountDownLatch(peerConnections.size());
-            peerConnections.forEach(e -> e.shutdown().thenRun(latch::countDown));
+            peerConnections.forEach(peerConnection -> peerConnection.shutdown()
+                    .thenRun(latch::countDown));
             try {
-                latch.await(5, TimeUnit.SECONDS);
+                if (latch.await(3, TimeUnit.SECONDS)) {
+                    log.info("All peerConnections shut down.");
+                } else {
+                    log.info("Shutdown of peerConnections not completed in time.");
+                }
                 blockingClientManager.stopAsync();
                 blockingClientManager.awaitTerminated(Duration.ofSeconds(2));
             } catch (Exception e) {

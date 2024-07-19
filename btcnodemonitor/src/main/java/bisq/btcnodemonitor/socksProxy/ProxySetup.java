@@ -81,12 +81,12 @@ public class ProxySetup {
     }
 
     public CompletableFuture<Void> shutdown() {
-        log.warn("start shutdown");
+        log.info("Shutdown tor");
         return CompletableFuture.runAsync(() -> {
                     if (tor != null) {
                         tor.shutdown();
+                        log.info("Tor shutdown completed");
                     }
-                    log.warn("shutdown completed");
                 })
                 .orTimeout(2, TimeUnit.SECONDS);
     }

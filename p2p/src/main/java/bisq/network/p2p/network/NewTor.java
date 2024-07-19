@@ -17,19 +17,20 @@
 
 package bisq.network.p2p.network;
 
+import org.berndpruenster.netlayer.tor.NativeTor;
+import org.berndpruenster.netlayer.tor.Tor;
+import org.berndpruenster.netlayer.tor.TorCtlException;
+import org.berndpruenster.netlayer.tor.Torrc;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.stream.Collectors;
-
-import org.berndpruenster.netlayer.tor.NativeTor;
-import org.berndpruenster.netlayer.tor.Tor;
-import org.berndpruenster.netlayer.tor.TorCtlException;
-import org.berndpruenster.netlayer.tor.Torrc;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,7 +66,7 @@ public class NewTor extends TorMode {
         long ts1 = new Date().getTime();
 
         Collection<String> bridgeEntries = bridgeAddressProvider.getBridgeAddresses();
-        if (bridgeEntries != null)
+        if (bridgeEntries != null && !bridgeEntries.isEmpty())
             log.info("Using bridges: {}", bridgeEntries.stream().collect(Collectors.joining(",")));
 
         Torrc override = null;
