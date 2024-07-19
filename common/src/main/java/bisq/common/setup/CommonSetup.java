@@ -111,8 +111,6 @@ public class CommonSetup {
     }
 
     protected static void setSystemProperties() {
-        if (Utilities.isLinux())
-            System.setProperty("prism.lcdtext", "false");
     }
 
     protected static void setupSigIntHandlers(GracefulShutDownHandler gracefulShutDownHandler) {

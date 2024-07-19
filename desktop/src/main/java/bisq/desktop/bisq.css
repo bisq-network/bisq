@@ -26,6 +26,11 @@
     -fx-font-family: "IBM Plex Sans";
 }
 
+/* Avoid color artefacts at antialias */
+.text {
+    -fx-font-smoothing-type: gray;
+}
+
 /********************************************************************************************************************
  *                                                                                                                  *
  * General                                                                                                          *
