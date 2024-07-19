@@ -33,14 +33,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(title = "ProofOfBurn")
 public class ProofOfBurnDto {
     private final long amount;
-    private final long time;
+    private final long blockTime;
     private final String hash;
     private final int blockHeight;
+    private final String txId;
 
-    public ProofOfBurnDto(long amount, long time, String hash, int blockHeight) {
+    public ProofOfBurnDto(long amount, long blockTime, String hash, int blockHeight, String txId) {
         this.amount = amount;
-        this.time = time;
+        this.blockTime = blockTime;
         this.hash = hash;
         this.blockHeight = blockHeight;
+        this.txId = txId;
     }
 }
