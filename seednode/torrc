@@ -3,16 +3,8 @@ SOCKSPort 9050
 ControlPort 9051
 Log notice syslog
 
-CookieAuthentication 0
+CookieAuthentication 1
+CookieAuthFile /var/lib/tor/control_auth_cookie
 CookieAuthFileGroupReadable 1
+
 DataDirectoryGroupReadable 1
-
-SafeSocks 0
-HiddenServiceStatistics 0
-AvoidDiskWrites 1
-
-#MaxClientCircuitsPending 64
-#KeepalivePeriod 2
-#CircuitBuildTimeout 5
-#NewCircuitPeriod 15
-#NumEntryGuards 8
