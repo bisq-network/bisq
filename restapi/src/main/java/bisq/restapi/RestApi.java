@@ -29,6 +29,7 @@ import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateSnapshotService;
 import bisq.core.offer.OfferBookService;
+import bisq.core.provider.price.PriceFeedService;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 
@@ -53,8 +54,6 @@ public class RestApi extends ExecutableForAppWithP2p {
     private DaoStateSnapshotService daoStateSnapshotService;
     private Preferences preferences;
     @Getter
-    private DaoExplorerService daoExplorerService;
-    @Getter
     private DaoFacade daoFacade;
     @Getter
     private ProposalService proposalService;
@@ -64,6 +63,7 @@ public class RestApi extends ExecutableForAppWithP2p {
     private TradeStatisticsManager tradeStatisticsManager;
     @Getter
     private OfferBookService offerBookService;
+    private PriceFeedService priceFeedService;
 
     public RestApi() {
         super("Bisq Rest Api", "bisq_restapi", "bisq_restapi", Version.VERSION);
@@ -91,12 +91,12 @@ public class RestApi extends ExecutableForAppWithP2p {
         bondedRolesRepository = injector.getInstance(BondedRolesRepository.class);
         signVerifyService = injector.getInstance(SignVerifyService.class);
         daoStateSnapshotService = injector.getInstance(DaoStateSnapshotService.class);
-        daoExplorerService = injector.getInstance(DaoExplorerService.class);
         daoFacade = injector.getInstance(DaoFacade.class);
         proposalService = injector.getInstance(ProposalService.class);
         cycleService = injector.getInstance(CycleService.class);
         tradeStatisticsManager = injector.getInstance(TradeStatisticsManager.class);
         offerBookService = injector.getInstance(OfferBookService.class);
+        priceFeedService = injector.getInstance(PriceFeedService.class);
     }
 
     @Override
@@ -111,5 +111,7 @@ public class RestApi extends ExecutableForAppWithP2p {
         super.onHiddenServicePublished();
 
         accountAgeWitnessService.onAllServicesInitialized();
+        priceFeedService.setCurrencyCodeOnInit();
+        priceFeedService.initialRequestPriceFeed();
     }
 }

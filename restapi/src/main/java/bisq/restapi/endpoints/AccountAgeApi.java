@@ -56,11 +56,10 @@ import jakarta.ws.rs.core.MediaType;
 @Tag(name = "Account age API")
 public class AccountAgeApi {
     private static final String DESC_HASH = "The hash of the account age witness as hex string";
-    private final RestApi restApi;
     private final AccountAgeWitnessService accountAgeWitnessService;
 
     public AccountAgeApi(@Context Application application) {
-        restApi = ((RestApiMain) application).getRestApi();
+        RestApi restApi = ((RestApiMain) application).getRestApi();
         accountAgeWitnessService = checkNotNull(restApi.getAccountAgeWitnessService());
     }
 

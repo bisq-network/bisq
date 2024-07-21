@@ -17,6 +17,7 @@
 
 package bisq.restapi.endpoints;
 
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.BaseTx;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxType;
@@ -33,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 
 
-import bisq.restapi.DaoExplorerService;
+import bisq.restapi.BlockDataToJsonConverter;
 import bisq.restapi.RestApi;
 import bisq.restapi.RestApiMain;
 import bisq.restapi.dto.JsonTx;
@@ -52,21 +53,20 @@ import jakarta.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "TRANSACTIONS API")
 public class ExplorerTransactionsApi {
-    private final RestApi restApi;
-    private final DaoExplorerService daoExplorerService;
+    private final DaoStateService daoStateService;
 
     public ExplorerTransactionsApi(@Context Application application) {
-        restApi = ((RestApiMain) application).getRestApi();
-        daoExplorerService = restApi.getDaoExplorerService();
+        RestApi restApi = ((RestApiMain) application).getRestApi();
+        daoStateService = restApi.getDaoStateService();
     }
 
     @GET
     @Path("get-bsq-tx/{txid}")
     public JsonTx getTx(@Parameter(description = "TxId")
                         @PathParam("txid") String txId) {
-        Optional<JsonTx> jsonTx = restApi.getDaoStateService().getUnorderedTxStream()
+        Optional<JsonTx> jsonTx = daoStateService.getUnorderedTxStream()
                 .filter(t -> t.getId().equals(txId))
-                .map(this::getJsonTx)
+                .map(tx -> BlockDataToJsonConverter.getJsonTx(daoStateService, tx))
                 .findFirst();
         if (jsonTx.isPresent()) {
             log.info("supplying tx {} to client.", txId);
@@ -79,12 +79,12 @@ public class ExplorerTransactionsApi {
     @GET
     @Path("get-bsq-tx-for-addr/{addr}")
     public List<JsonTx> getBisqTxForAddr(@PathParam("addr") String address) {
-        Map<String, Set<String>> addressToTxIds = daoExplorerService.getTxIdsByAddress();
+        Map<String, Set<String>> addressToTxIds = daoStateService.getTxIdSetByAddress();
         List<JsonTx> result = new ArrayList<>();
         Set<String> strings = addressToTxIds.get(address);
         strings.forEach(txId -> {
-            restApi.getDaoStateService().getTx(txId).stream()
-                    .map(this::getJsonTx)
+            daoStateService.getTx(txId).stream()
+                    .map(tx -> BlockDataToJsonConverter.getJsonTx(daoStateService, tx))
                     .forEach(result::add);
         });
         log.info("getBisqTxForAddr: returning {} items.", result.size());
@@ -97,12 +97,12 @@ public class ExplorerTransactionsApi {
                                           @PathParam("count") int count,
                                           @PathParam("filters") String filters) {
         log.info("filters: {}", filters);
-        List<JsonTx> jsonTxs = restApi.getDaoStateService().getUnorderedTxStream()
+        List<JsonTx> jsonTxs = daoStateService.getUnorderedTxStream()
                 .sorted(Comparator.comparing(BaseTx::getTime).reversed())
                 .filter(tx -> hasMatchingTxType(tx, filters))
                 .skip(start)
                 .limit(count)
-                .map(this::getJsonTx)
+                .map(tx -> BlockDataToJsonConverter.getJsonTx(daoStateService, tx))
                 .collect(Collectors.toList());
         log.info("supplying {} jsonTxs to client from index {}", jsonTxs.size(), start);
         return jsonTxs;
@@ -127,7 +127,4 @@ public class ExplorerTransactionsApi {
         return false;
     }
 
-    private JsonTx getJsonTx(Tx tx) {
-        return daoExplorerService.getJsonTx(tx);
-    }
 }

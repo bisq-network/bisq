@@ -2,6 +2,7 @@ package bisq.restapi.endpoints;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.offer.OfferBookService;
 import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 
@@ -39,10 +40,13 @@ import jakarta.ws.rs.core.MediaType;
 public class ExplorerMarketsApi {
     private static final long MONTH = TimeUnit.DAYS.toMillis(30);
 
-    private final RestApi restApi;
+    private final OfferBookService offerBookService;
+    private final TradeStatisticsManager tradeStatisticsManager;
 
     public ExplorerMarketsApi(@Context Application application) {
-        restApi = ((RestApiMain) application).getRestApi();
+        RestApi restApi = ((RestApiMain) application).getRestApi();
+        offerBookService = restApi.getOfferBookService();
+        tradeStatisticsManager = restApi.getTradeStatisticsManager();
     }
 
     // http://localhost:8081/api/v1/explorer/markets/get-currencies
@@ -63,7 +67,7 @@ public class ExplorerMarketsApi {
     @GET
     @Path("get-offers")
     public List<JsonOffer> getBisqOffers() {
-        List<JsonOffer> result = restApi.getOfferBookService().getOfferForJsonList().stream()
+        List<JsonOffer> result = offerBookService.getOfferForJsonList().stream()
                 .map(offerForJson -> new JsonOffer(
                         offerForJson.direction.name(),
                         offerForJson.currencyCode,
@@ -101,7 +105,6 @@ public class ExplorerMarketsApi {
 
         long to = new Date().getTime();
         long from = newestTimestamp > 0 ? newestTimestamp : to - MONTH;    // 30 days default
-        TradeStatisticsManager tradeStatisticsManager = restApi.getTradeStatisticsManager();
         ArrayList<JsonTradeInfo> result = new ArrayList<>();
         List<TradeStatistics3> tradeStatisticsList = tradeStatisticsManager.getTradeStatisticsList(from, to);
         log.info("requesting a fresh batch of trades {}", tradeStatisticsList.size());

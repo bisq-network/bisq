@@ -20,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 
 
 
-import bisq.restapi.DaoExplorerService;
 import bisq.restapi.RestApi;
 import bisq.restapi.RestApiMain;
 import bisq.restapi.dto.BsqStatsDto;
@@ -38,27 +37,23 @@ import jakarta.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "EXPLORER API")
 public class ExplorerDaoApi {
-    private final RestApi restApi;
     private final DaoStateService daoStateService;
-    private final DaoExplorerService daoExplorerService;
+    private final DaoFacade daoFacade;
+    private final ProposalService proposalService;
+    private final CycleService cycleService;
 
     public ExplorerDaoApi(@Context Application application) {
-        restApi = ((RestApiMain) application).getRestApi();
+        RestApi restApi = ((RestApiMain) application).getRestApi();
         daoStateService = restApi.getDaoStateService();
-        daoExplorerService = restApi.getDaoExplorerService();
+        proposalService = restApi.getProposalService();
+        cycleService = restApi.getCycleService();
+        daoFacade = restApi.getDaoFacade();
     }
 
     //http://localhost:8081/api/v1/explorer/dao/get-bsq-stats
     @GET
     @Path("get-bsq-stats")
     public BsqStatsDto getBsqStats() {
-        DaoFacade daoFacade = restApi.getDaoFacade();
-        if (daoExplorerService.getLastKnownBlockHeight() != daoFacade.getChainHeight()) {
-            log.info("we recalculate the BSQ address map {} / {}", daoExplorerService.getLastKnownBlockHeight(), daoFacade.getChainHeight());
-            daoExplorerService.updateTxIdsByAddress();
-            daoExplorerService.setLastKnownBlockHeight(daoFacade.getChainHeight());
-        }
-        DaoStateService daoStateService = restApi.getDaoStateService();
         long genesisSupply = daoFacade.getGenesisTotalSupply().getValue();
         long issuedByCompensations = daoStateService.getIssuanceSetForType(IssuanceType.COMPENSATION).stream().mapToLong(Issuance::getAmount).sum();
         long issuedByReimbursements = daoStateService.getIssuanceSetForType(IssuanceType.REIMBURSEMENT).stream().mapToLong(Issuance::getAmount).sum();
@@ -66,10 +61,10 @@ public class ExplorerDaoApi {
         long burnt = daoStateService.getTotalAmountOfBurntBsq();
         int unspentTxos = daoStateService.getUnspentTxOutputMap().size();
         int spentTxos = daoStateService.getSpentInfoMap().size();
-        int numAddresses = daoExplorerService.getNumAddresses();
-        log.info("client requested BSQ stats, height={}", daoExplorerService.getLastKnownBlockHeight());
+        int numAddresses = daoStateService.getTxIdSetByAddress().size();
+        log.info("client requested BSQ stats, height={}", daoFacade.getChainHeight());
         return new BsqStatsDto(minted, burnt, numAddresses, unspentTxos, spentTxos,
-                daoExplorerService.getLastKnownBlockHeight(), daoFacade.getGenesisBlockHeight());
+                daoFacade.getChainHeight(), daoFacade.getGenesisBlockHeight());
     }
 
     @GET
@@ -77,9 +72,6 @@ public class ExplorerDaoApi {
     public List<JsonDaoCycle> queryDaoCycles() {
         Set<Integer> cyclesAdded = new HashSet<>();
         List<JsonDaoCycle> result = new ArrayList<>();
-        ProposalService proposalService = restApi.getProposalService();
-        CycleService cycleService = restApi.getCycleService();
-        DaoFacade daoFacade = restApi.getDaoFacade();
         // Creating our data structure is a bit expensive so we ensure to only create the CycleListItems once.
         daoStateService.getCycles().stream()
                 .filter(cycle -> !cyclesAdded.contains(cycle.getHeightOfFirstBlock()))

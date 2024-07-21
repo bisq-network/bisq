@@ -1,5 +1,6 @@
 package bisq.restapi.endpoints;
 
+import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Block;
 
 import java.util.List;
@@ -11,7 +12,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 
 
-import bisq.restapi.DaoExplorerService;
+import bisq.restapi.BlockDataToJsonConverter;
 import bisq.restapi.RestApi;
 import bisq.restapi.RestApiMain;
 import bisq.restapi.dto.JsonBlock;
@@ -34,12 +35,11 @@ import jakarta.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "BLOCKS API")
 public class ExplorerBlocksApi {
-    private final DaoExplorerService daoExplorerService;
-    private final RestApi restApi;
+    private final DaoStateService daoStateService;
 
     public ExplorerBlocksApi(@Context Application application) {
-        restApi = ((RestApiMain) application).getRestApi();
-        daoExplorerService = restApi.getDaoExplorerService();
+        RestApi restApi = ((RestApiMain) application).getRestApi();
+        daoStateService = restApi.getDaoStateService();
     }
 
     // http://localhost:8081/api/v1/explorer/blocks/get-bsq-block-by-height/139
@@ -51,10 +51,10 @@ public class ExplorerBlocksApi {
     @GET
     @Path("get-bsq-block-by-height/{block-height}")
     public JsonBlock getBsqBlockByHeight(@Parameter(description = "Block Height") @PathParam("block-height") int blockHeight) {
-        List<Block> blocks = restApi.getDaoStateService().getBlocks();
+        List<Block> blocks = daoStateService.getBlocks();
         Optional<JsonBlock> jsonBlock = checkNotNull(blocks.stream())
                 .filter(block -> block.getHeight() == blockHeight)
-                .map(this::getJsonBlock)
+                .map(block -> BlockDataToJsonConverter.getJsonBlock(daoStateService, block))
                 .findFirst();
         if (jsonBlock.isPresent()) {
             log.info("supplying block at height {} to client.", blockHeight);
@@ -68,10 +68,10 @@ public class ExplorerBlocksApi {
     @GET
     @Path("get-bsq-block-by-hash/{block-hash}")
     public JsonBlock getBsqBlockByHash(@Parameter(description = "Block Hash") @PathParam("block-hash") String hash) {
-        List<Block> blocks = restApi.getDaoStateService().getBlocks();
+        List<Block> blocks = daoStateService.getBlocks();
         Optional<JsonBlock> jsonBlock = checkNotNull(blocks.stream())
                 .filter(block -> block.getHash().equalsIgnoreCase(hash))
-                .map(this::getJsonBlock)
+                .map(block -> BlockDataToJsonConverter.getJsonBlock(daoStateService, block))
                 .findFirst();
         if (jsonBlock.isPresent()) {
             log.info("supplying block {} to client.", hash);
@@ -79,9 +79,5 @@ public class ExplorerBlocksApi {
         }
         log.warn("block {} not found!", hash);
         return null;
-    }
-
-    private JsonBlock getJsonBlock(Block block) {
-        return daoExplorerService.getJsonBlock(block);
     }
 }
