@@ -97,15 +97,15 @@ public class CycleService implements DaoStateListener, DaoSetupService {
         return daoStateService.getTx(txId).filter(tx -> isBlockHeightInCycle(tx.getBlockHeight(), cycle)).isPresent();
     }
 
+    public boolean isBlockHeightInCycle(int blockHeight, Cycle cycle) {
+        return blockHeight >= cycle.getHeightOfFirstBlock() &&
+                blockHeight <= cycle.getHeightOfLastBlock();
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
     ///////////////////////////////////////////////////////////////////////////////////////////
-
-    private boolean isBlockHeightInCycle(int blockHeight, Cycle cycle) {
-        return blockHeight >= cycle.getHeightOfFirstBlock() &&
-                blockHeight <= cycle.getHeightOfLastBlock();
-    }
 
     private Optional<Cycle> maybeCreateNewCycle(int blockHeight, LinkedList<Cycle> cycles) {
         // We want to set the correct phase and cycle before we start parsing a new block.

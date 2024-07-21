@@ -493,6 +493,10 @@ public class DaoStateService implements DaoSetupService {
         return daoState.getUnspentTxOutputMap();
     }
 
+    public TreeMap<TxOutputKey, SpentInfo> getSpentInfoMap() {
+        return daoState.getSpentInfoMap();
+    }
+
     public void addUnspentTxOutput(TxOutput txOutput) {
         assertDaoStateChange();
         getUnspentTxOutputMap().put(txOutput.getKey(), txOutput);

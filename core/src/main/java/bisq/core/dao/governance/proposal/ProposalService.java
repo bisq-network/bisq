@@ -202,6 +202,11 @@ public class ProposalService implements HashMapChangedListener, AppendOnlyDataSt
         return daoStateService.getParamValueAsPercentDouble(proposal.getThresholdParam(), chainHeight);
     }
 
+    // We use it in the RestApi do not have a dependency to javafx/
+    public List<Proposal> getTempProposalsAsArrayList() {
+        return new ArrayList<>(tempProposals);
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
