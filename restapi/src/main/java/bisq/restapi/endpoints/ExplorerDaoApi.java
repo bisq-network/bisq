@@ -41,9 +41,10 @@ public class ExplorerDaoApi {
     private final DaoFacade daoFacade;
     private final ProposalService proposalService;
     private final CycleService cycleService;
+    private final RestApi restApi;
 
     public ExplorerDaoApi(@Context Application application) {
-        RestApi restApi = ((RestApiMain) application).getRestApi();
+        restApi = ((RestApiMain) application).getRestApi();
         daoStateService = restApi.getDaoStateService();
         proposalService = restApi.getProposalService();
         cycleService = restApi.getCycleService();
@@ -54,6 +55,7 @@ public class ExplorerDaoApi {
     @GET
     @Path("get-bsq-stats")
     public BsqStatsDto getBsqStats() {
+        restApi.checkDaoReady();
         long genesisSupply = daoFacade.getGenesisTotalSupply().getValue();
         long issuedByCompensations = daoStateService.getIssuanceSetForType(IssuanceType.COMPENSATION).stream().mapToLong(Issuance::getAmount).sum();
         long issuedByReimbursements = daoStateService.getIssuanceSetForType(IssuanceType.REIMBURSEMENT).stream().mapToLong(Issuance::getAmount).sum();
@@ -70,6 +72,7 @@ public class ExplorerDaoApi {
     @GET
     @Path("query-dao-cycles")
     public List<JsonDaoCycle> queryDaoCycles() {
+        restApi.checkDaoReady();
         Set<Integer> cyclesAdded = new HashSet<>();
         List<JsonDaoCycle> result = new ArrayList<>();
         // Creating our data structure is a bit expensive so we ensure to only create the CycleListItems once.

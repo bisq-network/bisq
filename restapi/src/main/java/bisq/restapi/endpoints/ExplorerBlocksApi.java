@@ -36,9 +36,10 @@ import jakarta.ws.rs.core.MediaType;
 @Tag(name = "BLOCKS API")
 public class ExplorerBlocksApi {
     private final DaoStateService daoStateService;
+    private final RestApi restApi;
 
     public ExplorerBlocksApi(@Context Application application) {
-        RestApi restApi = ((RestApiMain) application).getRestApi();
+        restApi = ((RestApiMain) application).getRestApi();
         daoStateService = restApi.getDaoStateService();
     }
 
@@ -51,6 +52,7 @@ public class ExplorerBlocksApi {
     @GET
     @Path("get-bsq-block-by-height/{block-height}")
     public JsonBlock getBsqBlockByHeight(@Parameter(description = "Block Height") @PathParam("block-height") int blockHeight) {
+        restApi.checkDaoReady();
         List<Block> blocks = daoStateService.getBlocks();
         Optional<JsonBlock> jsonBlock = checkNotNull(blocks.stream())
                 .filter(block -> block.getHeight() == blockHeight)
@@ -68,6 +70,7 @@ public class ExplorerBlocksApi {
     @GET
     @Path("get-bsq-block-by-hash/{block-hash}")
     public JsonBlock getBsqBlockByHash(@Parameter(description = "Block Hash") @PathParam("block-hash") String hash) {
+        restApi.checkDaoReady();
         List<Block> blocks = daoStateService.getBlocks();
         Optional<JsonBlock> jsonBlock = checkNotNull(blocks.stream())
                 .filter(block -> block.getHash().equalsIgnoreCase(hash))
