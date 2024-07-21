@@ -378,12 +378,20 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             setUsePriceNotifications(true);
         }
 
-        if (prefPayload.getAutoConfirmSettingsList().isEmpty()) {
+        // Remove retired XMR AutoConfirm address
+        var doApplyDefaults = prefPayload.getAutoConfirmSettingsList().stream()
+                .map(autoConfirmSettings -> autoConfirmSettings.getServiceAddresses().stream()
+                        .anyMatch(address -> address.contains("monero3bec7m26vx6si6qo7q7imlaoz45ot5m2b5z2ppgoooo6jx2rqd")))
+                .findAny()
+                .orElse(true);
+        if (doApplyDefaults) {
+            prefPayload.getAutoConfirmSettingsList().clear();
             List<String> defaultXmrTxProofServices = getDefaultXmrTxProofServices();
             AutoConfirmSettings.getDefault(defaultXmrTxProofServices, "XMR")
                     .ifPresent(xmrAutoConfirmSettings -> {
                         getAutoConfirmSettingsList().add(xmrAutoConfirmSettings);
                     });
+            persistenceManager.forcePersistNow();
         }
 
         // We set the capability in CoreNetworkCapabilities if the program argument is set.
