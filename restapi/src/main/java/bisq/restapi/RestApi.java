@@ -20,11 +20,16 @@ package bisq.restapi;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.app.misc.ExecutableForAppWithP2p;
+import bisq.core.dao.DaoFacade;
 import bisq.core.dao.SignVerifyService;
 import bisq.core.dao.governance.bond.reputation.BondedReputationRepository;
 import bisq.core.dao.governance.bond.role.BondedRolesRepository;
+import bisq.core.dao.governance.period.CycleService;
+import bisq.core.dao.governance.proposal.ProposalService;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.DaoStateSnapshotService;
+import bisq.core.offer.OfferBookService;
+import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 
 import bisq.common.app.Version;
@@ -47,6 +52,18 @@ public class RestApi extends ExecutableForAppWithP2p {
     private SignVerifyService signVerifyService;
     private DaoStateSnapshotService daoStateSnapshotService;
     private Preferences preferences;
+    @Getter
+    private DaoExplorerService daoExplorerService;
+    @Getter
+    private DaoFacade daoFacade;
+    @Getter
+    private ProposalService proposalService;
+    @Getter
+    private CycleService cycleService;
+    @Getter
+    private TradeStatisticsManager tradeStatisticsManager;
+    @Getter
+    private OfferBookService offerBookService;
 
     public RestApi() {
         super("Bisq Rest Api", "bisq_restapi", "bisq_restapi", Version.VERSION);
@@ -74,6 +91,12 @@ public class RestApi extends ExecutableForAppWithP2p {
         bondedRolesRepository = injector.getInstance(BondedRolesRepository.class);
         signVerifyService = injector.getInstance(SignVerifyService.class);
         daoStateSnapshotService = injector.getInstance(DaoStateSnapshotService.class);
+        daoExplorerService = injector.getInstance(DaoExplorerService.class);
+        daoFacade = injector.getInstance(DaoFacade.class);
+        proposalService = injector.getInstance(ProposalService.class);
+        cycleService = injector.getInstance(CycleService.class);
+        tradeStatisticsManager = injector.getInstance(TradeStatisticsManager.class);
+        offerBookService = injector.getInstance(OfferBookService.class);
     }
 
     @Override

@@ -19,7 +19,6 @@ package bisq.restapi.dto;
 
 import lombok.Getter;
 import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
 
 
 
@@ -30,7 +29,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * Need to be in sync with the Bisq 2 BondedReputationDto class.
  */
 @Getter
-@Slf4j
 @ToString
 @Schema(title = "BondedReputation")
 public class BondedReputationDto {
