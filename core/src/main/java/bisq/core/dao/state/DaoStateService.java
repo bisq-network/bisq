@@ -1055,6 +1055,7 @@ public class DaoStateService implements DaoSetupService {
                     tx.getTxOutputs().stream()
                             .filter(this::isBsqTxOutputType)
                             .filter(txOutput -> txOutput.getAddress() != null)
+                            .filter(txOutput -> !txOutput.getAddress().isEmpty())
                             .forEach(txOutput -> {
                                 String address = txOutput.getAddress();
                                 Set<String> txIdSet = cachedTxIdSetByAddress.getOrDefault(address, new HashSet<>());
@@ -1071,6 +1072,7 @@ public class DaoStateService implements DaoSetupService {
         getUnorderedTxOutputStream()
                 .filter(this::isBsqTxOutputType)
                 .filter(txOutput -> txOutput.getAddress() != null)
+                .filter(txOutput -> !txOutput.getAddress().isEmpty())
                 .forEach(txOutput -> {
                     String txId = txIdByConnectedTxOutputKey.get(txOutput.getKey());
                     if (txId != null) {
