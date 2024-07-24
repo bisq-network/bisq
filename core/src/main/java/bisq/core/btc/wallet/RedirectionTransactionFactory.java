@@ -61,9 +61,12 @@ public class RedirectionTransactionFactory {
         checkArgument(!receivers.isEmpty(), "receivers must not be empty");
         receivers.forEach(receiver -> redirectionTx.addOutput(Coin.valueOf(receiver.first), Address.fromString(params, receiver.second)));
 
+        Address feeBumpAddress = Address.fromString(params, feeBumpOutputAmountAndAddress.second);
+        checkArgument(feeBumpAddress.getOutputScriptType() == Script.ScriptType.P2WPKH, "fee bump address must be P2WPKH");
+
         redirectionTx.addOutput(
                 Coin.valueOf(feeBumpOutputAmountAndAddress.first),
-                Address.fromString(params, feeBumpOutputAmountAndAddress.second)
+                feeBumpAddress
         );
 
         WalletService.printTx("Unsigned redirectionTx", redirectionTx);
