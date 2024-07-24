@@ -24,6 +24,7 @@ import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 import bisq.network.p2p.NodeAddress;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.Transaction;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -92,5 +93,33 @@ public abstract class BuyerTrade extends Trade {
     @Override
     public boolean confirmPermitted() {
         return !getDisputeState().isArbitrated();
+    }
+
+    @Nullable
+    @Override
+    public Transaction getBuyersWarningTx(BtcWalletService btcWalletService) {
+        byte[] finalizedWarningTx = getProcessModel().getFinalizedWarningTx();
+        return finalizedWarningTx != null ? btcWalletService.getTxFromSerializedTx(finalizedWarningTx) : null;
+    }
+
+    @Nullable
+    @Override
+    public Transaction getSellersWarningTx(BtcWalletService btcWalletService) {
+        byte[] finalizedWarningTx = getProcessModel().getTradePeer().getFinalizedWarningTx();
+        return finalizedWarningTx != null ? btcWalletService.getTxFromSerializedTx(finalizedWarningTx) : null;
+    }
+
+    @Nullable
+    @Override
+    public Transaction getBuyersRedirectTx(BtcWalletService btcWalletService) {
+        byte[] finalizedRedirectTx = getProcessModel().getFinalizedRedirectTx();
+        return finalizedRedirectTx != null ? btcWalletService.getTxFromSerializedTx(finalizedRedirectTx) : null;
+    }
+
+    @Nullable
+    @Override
+    public Transaction getSellersRedirectTx(BtcWalletService btcWalletService) {
+        byte[] finalizedRedirectTx = getProcessModel().getTradePeer().getFinalizedRedirectTx();
+        return finalizedRedirectTx != null ? btcWalletService.getTxFromSerializedTx(finalizedRedirectTx) : null;
     }
 }
