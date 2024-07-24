@@ -18,6 +18,7 @@
 package bisq.core.trade.protocol.bisq_v5.tasks;
 
 import bisq.core.btc.wallet.TradeWalletService;
+import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v1.model.TradingPeer;
 import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
@@ -29,6 +30,7 @@ import bisq.common.util.Tuple2;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
 
+import java.util.Date;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
@@ -65,8 +67,7 @@ public class CreateRedirectTxs extends TradeTask {
                     inputAmountMinusFeeBumpAmount,
                     depositTxFee,
                     StagedPayoutTxParameters.REDIRECT_TX_MIN_WEIGHT,
-                    true,
-                    true);
+                    DelayedPayoutTxReceiverService.ReceiverFlag.flagsActivatedBy(new Date()));
 
             log.info("Create redirectionTxs using selectionHeight {} and receivers {}", selectionHeight, burningMen);
 

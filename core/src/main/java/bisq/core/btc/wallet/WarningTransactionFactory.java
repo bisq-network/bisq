@@ -39,6 +39,7 @@ import org.bitcoinj.script.ScriptBuilder;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.bitcoinj.script.ScriptOpCodes.*;
 
 public class WarningTransactionFactory {
@@ -68,9 +69,12 @@ public class WarningTransactionFactory {
         Script outputScript = ScriptBuilder.createP2WSHOutputScript(redeemScript);
         warningTx.addOutput(warningTxOutputCoin, outputScript);
 
+        Address feeBumpAddress = Address.fromString(params, feeBumpOutputAmountAndAddress.second);
+        checkArgument(feeBumpAddress.getOutputScriptType() == Script.ScriptType.P2WPKH, "fee bump address must be P2WPKH");
+
         warningTx.addOutput(
                 Coin.valueOf(feeBumpOutputAmountAndAddress.first),
-                Address.fromString(params, feeBumpOutputAmountAndAddress.second)
+                feeBumpAddress
         );
 
         TradeWalletService.applyLockTime(lockTime, warningTx);
