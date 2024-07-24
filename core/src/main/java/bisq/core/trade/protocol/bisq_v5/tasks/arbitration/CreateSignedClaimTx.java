@@ -69,7 +69,7 @@ public class CreateSignedClaimTx extends TradeTask {
                     miningFee,
                     peersMultiSigPubKey,
                     myMultiSigKeyPair);
-            processModel.setSignedClaimTx(claimTx);
+            processModel.setSignedClaimTx(claimTx.bitcoinSerialize());
 
             processModel.getTradeManager().requestPersistence();
 

@@ -62,7 +62,7 @@ public class FinalizeWarningTxs extends TradeTask {
                     buyerSignature,
                     sellerSignature,
                     inputValue);
-            processModel.setFinalizedWarningTx(finalizedWarningTx);
+            processModel.setFinalizedWarningTx(finalizedWarningTx.bitcoinSerialize());
 
             // Finalize peer's warning tx.
             Transaction peersWarningTx = tradingPeer.getWarningTx();
@@ -75,7 +75,7 @@ public class FinalizeWarningTxs extends TradeTask {
                     peerBuyerSignature,
                     peerSellerSignature,
                     inputValue);
-            tradingPeer.setFinalizedWarningTx(peersFinalizedWarningTx);
+            tradingPeer.setFinalizedWarningTx(peersFinalizedWarningTx.bitcoinSerialize());
 
             processModel.getTradeManager().requestPersistence();
 

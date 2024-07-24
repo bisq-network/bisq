@@ -103,11 +103,7 @@ message NetworkEnvelope {
         GetAccountingBlocksResponse get_accounting_blocks_response = 62;
         NewAccountingBlockBroadcastMessage new_accounting_block_broadcast_message = 63;
 
-        //        InputsForDepositTxRequest_v5 inputs_for_deposit_tx_request_v_5 = 64;
         InputsForDepositTxResponse_v5 inputs_for_deposit_tx_response_v_5 = 64;
-        //        StagedPayoutTxRequest staged_payout_tx_request = 66;
-        //        BuyersRedirectSellerSignatureRequest buyers_redirect_seller_signature_request = 67;
-        //        BuyersRedirectSellerSignatureResponse buyers_redirect_seller_signature_response = 68;
         PreparedTxBuyerSignaturesRequest prepared_tx_buyer_signatures_request = 65;
         PreparedTxBuyerSignaturesMessage prepared_tx_buyer_signatures_message = 66;
         DepositTxAndSellerPaymentAccountMessage deposit_tx_and_seller_payment_account_message = 67;
@@ -280,40 +276,6 @@ message InputsForDepositTxRequest {
     string takers_redirect_tx_fee_bump_address = 30;  // Added for v5 protocol
 }
 
-//message InputsForDepositTxRequest_v5 {
-//    string trade_id = 1;
-//    NodeAddress sender_node_address = 2;
-//    int64 trade_amount = 3;
-//    int64 trade_price = 4;
-//    int64 tx_fee = 5;
-//    int64 taker_fee = 6;
-//    bool is_currency_for_taker_fee_btc = 7;
-//    repeated RawTransactionInput raw_transaction_inputs = 8;
-//    int64 change_output_value = 9;
-//    string change_output_address = 10;
-//    bytes taker_multi_sig_pub_key = 11;
-//    string taker_payout_address_string = 12;
-//    PubKeyRing taker_pub_key_ring = 13;
-//    // Not used anymore from 1.7.0 but kept for backward compatibility.
-//    PaymentAccountPayload taker_payment_account_payload = 14;
-//    string taker_account_id = 15;
-//    string taker_fee_tx_id = 16;
-//    repeated NodeAddress accepted_arbitrator_node_addresses = 17;
-//    repeated NodeAddress accepted_mediator_node_addresses = 18;
-//    NodeAddress arbitrator_node_address = 19;
-//    NodeAddress mediator_node_address = 20;
-//    string uid = 21;
-//    bytes account_age_witness_signature_of_offer_id = 22;
-//    int64 current_date = 23;
-//    repeated NodeAddress accepted_refund_agent_node_addresses = 24;
-//    NodeAddress refund_agent_node_address = 25;
-//    bytes hash_of_takers_payment_account_payload = 26;
-//    string takers_payout_method_id = 27;
-//    int32 burning_man_selection_height = 28;  // Added in v 1.9.7
-//    string takers_warning_tx_fee_bump_address = 29;
-//    string takers_redirect_tx_fee_bump_address = 30;
-//}
-
 // Used in protocol version 4 only
 message InputsForDepositTxResponse {
     string trade_id = 1;
@@ -351,8 +313,6 @@ message InputsForDepositTxResponse_v5 {
     int64 lock_time = 14;
     bytes hash_of_makers_payment_account_payload = 15;
     string makers_payout_method_id = 16;
-    //    bytes buyers_unsigned_warning_tx = 17;
-    //    bytes buyers_warning_tx_signature = 18;
     string makers_warning_tx_fee_bump_address = 17;
     string makers_redirect_tx_fee_bump_address = 18;
     bytes buyers_warning_tx_maker_signature = 19;
@@ -390,17 +350,6 @@ message DelayedPayoutTxSignatureRequest {
     bytes delayed_payout_tx_seller_signature = 5;
 }
 
-//message StagedPayoutTxRequest {
-//    string uid = 1;
-//    string trade_id = 2;
-//    NodeAddress sender_node_address = 3;
-//    bytes sellers_warning_tx = 4;
-//    bytes sellers_warning_tx_seller_signature = 5;
-//    bytes sellers_redirection_tx = 6;
-//    bytes sellers_redirection_tx_seller_signature = 7;
-//    bytes buyers_warning_tx_seller_signature = 8;
-//}
-
 message DelayedPayoutTxSignatureResponse {
     string uid = 1;
     string trade_id = 2;
@@ -408,23 +357,6 @@ message DelayedPayoutTxSignatureResponse {
     bytes delayed_payout_tx_buyer_signature = 4;
     bytes deposit_tx = 5;
 }
-
-//message BuyersRedirectSellerSignatureRequest {
-//    string uid = 1;
-//    string trade_id = 2;
-//    NodeAddress sender_node_address = 3;
-//    bytes sellers_warning_tx_buyer_signature = 4;
-//    bytes sellers_redirect_tx_buyer_signature = 5;
-//    bytes buyers_redirect_tx = 6;
-//    bytes buyers_redirect_tx_buyer_signature = 7;
-//}
-
-//message BuyersRedirectSellerSignatureResponse {
-//    string uid = 1;
-//    string trade_id = 2;
-//    NodeAddress sender_node_address = 3;
-//    bytes buyers_redirect_tx_seller_signature = 7;
-//}
 
 
 message DepositTxAndDelayedPayoutTxMessage {
@@ -1974,6 +1906,9 @@ message ProcessModel {
     int64 seller_payout_amount_from_mediation = 20;
     PaymentAccount payment_account = 21;
     int32 burning_man_selection_height = 22;  // Added in v 1.9.7
+    bytes finalized_warning_tx = 23;  // Added for v5 protocol
+    bytes finalized_redirect_tx = 24;  // Added for v5 protocol
+    bytes signed_claim_tx = 25;  // Added for v5 protocol
 }
 
 message TradingPeer {
@@ -1993,6 +1928,8 @@ message TradingPeer {
     int64 current_date = 14;
     bytes mediated_payout_tx_signature = 15;
     bytes hash_of_payment_account_payload = 16;
+    bytes finalized_warning_tx = 17;  // Added for v5 protocol
+    bytes finalized_redirect_tx = 18;  // Added for v5 protocol
 }
 
 message BsqSwapProtocolModel {

@@ -30,6 +30,7 @@ import org.bitcoinj.core.Transaction;
 
 import lombok.extern.slf4j.Slf4j;
 
+// TODO: Should this extend BroadcastPayoutTx?
 @Slf4j
 public class PublishRedirectTx extends TradeTask {
     public PublishRedirectTx(TaskRunner<Trade> taskHandler, Trade trade) {
@@ -41,8 +42,8 @@ public class PublishRedirectTx extends TradeTask {
         try {
             runInterceptHook();
 
-            Transaction redirectTx = processModel.getRedirectTx(); // FIXME: Should probably be field of Trade.
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
+            Transaction redirectTx = btcWalletService.getTxFromSerializedTx(processModel.getFinalizedRedirectTx());
 
             // We have spent the funds from the warning tx with the redirectTx
             btcWalletService.resetCoinLockedInMultiSigAddressEntry(trade.getId());
