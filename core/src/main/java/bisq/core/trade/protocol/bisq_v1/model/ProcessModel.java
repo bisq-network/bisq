@@ -117,7 +117,8 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     @Setter
     transient private byte[] warningTxBuyerSignature;
     @Setter
-    private Transaction finalizedWarningTx;
+    @Nullable
+    private byte[] finalizedWarningTx;
 
     @Setter
     transient private Transaction redirectTx;
@@ -126,10 +127,12 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     @Setter
     transient private byte[] redirectTxBuyerSignature;
     @Setter
-    private Transaction finalizedRedirectTx;
+    @Nullable
+    byte[] finalizedRedirectTx;
 
     @Setter
-    private Transaction signedClaimTx;
+    @Nullable
+    private byte[] signedClaimTx;
 
 
     // Added in v1.2.0
@@ -147,7 +150,6 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     @Setter
     transient protected ObjectProperty<MessageState> depositTxMessageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
     @Setter
-    @Getter
     transient protected Transaction depositTx;
 
     // Persistable Immutable
@@ -213,7 +215,6 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
 
     // Added in v 1.9.7
     @Setter
-    @Getter
     protected int burningManSelectionHeight;
 
     public ProcessModel(String offerId, String accountId, PubKeyRing pubKeyRing) {
@@ -263,6 +264,9 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         Optional.ofNullable(takeOfferFeeTxId).ifPresent(builder::setTakeOfferFeeTxId);
         Optional.ofNullable(payoutTxSignature).ifPresent(e -> builder.setPayoutTxSignature(ByteString.copyFrom(payoutTxSignature)));
         Optional.ofNullable(preparedDepositTx).ifPresent(e -> builder.setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx)));
+        Optional.ofNullable(finalizedWarningTx).ifPresent(e -> builder.setFinalizedWarningTx(ByteString.copyFrom(finalizedWarningTx)));
+        Optional.ofNullable(finalizedRedirectTx).ifPresent(e -> builder.setFinalizedRedirectTx(ByteString.copyFrom(finalizedRedirectTx)));
+        Optional.ofNullable(signedClaimTx).ifPresent(e -> builder.setSignedClaimTx(ByteString.copyFrom(signedClaimTx)));
         Optional.ofNullable(rawTransactionInputs).ifPresent(e -> builder.addAllRawTransactionInputs(
                 ProtoUtil.collectionToProto(rawTransactionInputs, protobuf.RawTransactionInput.class)));
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
@@ -288,6 +292,9 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         processModel.setTakeOfferFeeTxId(ProtoUtil.stringOrNullFromProto(proto.getTakeOfferFeeTxId()));
         processModel.setPayoutTxSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getPayoutTxSignature()));
         processModel.setPreparedDepositTx(ProtoUtil.byteArrayOrNullFromProto(proto.getPreparedDepositTx()));
+        processModel.setFinalizedWarningTx(ProtoUtil.byteArrayOrNullFromProto(proto.getFinalizedWarningTx()));
+        processModel.setFinalizedRedirectTx(ProtoUtil.byteArrayOrNullFromProto(proto.getFinalizedRedirectTx()));
+        processModel.setSignedClaimTx(ProtoUtil.byteArrayOrNullFromProto(proto.getSignedClaimTx()));
         List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().isEmpty() ?
                 null : proto.getRawTransactionInputsList().stream()
                 .map(RawTransactionInput::fromProto).collect(Collectors.toList());

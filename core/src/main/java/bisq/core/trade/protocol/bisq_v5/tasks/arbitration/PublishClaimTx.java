@@ -42,8 +42,8 @@ public class PublishClaimTx extends TradeTask {
         try {
             runInterceptHook();
 
-            Transaction claimTx = processModel.getSignedClaimTx();
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
+            Transaction claimTx = btcWalletService.getTxFromSerializedTx(processModel.getSignedClaimTx());
 
             // We have spent the funds from the warning tx with the claimTx
             btcWalletService.resetCoinLockedInMultiSigAddressEntry(trade.getId());

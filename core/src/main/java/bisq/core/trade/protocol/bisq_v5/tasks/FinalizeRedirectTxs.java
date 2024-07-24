@@ -65,7 +65,7 @@ public class FinalizeRedirectTxs extends TradeTask {
                     sellerPubKey,
                     buyerSignature,
                     sellerSignature);
-            processModel.setFinalizedRedirectTx(finalizedRedirectTx);
+            processModel.setFinalizedRedirectTx(finalizedRedirectTx.bitcoinSerialize());
 
             // Finalize peer's redirect tx.
             TransactionOutput warningTxOutput = processModel.getWarningTx().getOutput(0);
@@ -81,7 +81,7 @@ public class FinalizeRedirectTxs extends TradeTask {
                     sellerPubKey,
                     peerBuyerSignature,
                     peerSellerSignature);
-            tradingPeer.setFinalizedRedirectTx(peersFinalizedRedirectTx);
+            tradingPeer.setFinalizedRedirectTx(peersFinalizedRedirectTx.bitcoinSerialize());
 
             processModel.getTradeManager().requestPersistence();
 
