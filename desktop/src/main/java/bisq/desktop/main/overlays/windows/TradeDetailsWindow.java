@@ -288,9 +288,26 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                     depositTxId, depositTxIdFromTx, depositTx);
         }
 
-        Transaction delayedPayoutTx = trade.getDelayedPayoutTx(btcWalletService);
-        String delayedPayoutTxString = delayedPayoutTx != null ? delayedPayoutTx.getTxId().toString() : null;
-        addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.delayedPayoutTxId"), delayedPayoutTxString);
+        Transaction buyersWarningTx = trade.getBuyersWarningTx(btcWalletService);
+        Transaction sellersWarningTx = trade.getSellersWarningTx(btcWalletService);
+        Transaction buyersRedirectTx = trade.getBuyersRedirectTx(btcWalletService);
+        Transaction sellersRedirectTx = trade.getSellersRedirectTx(btcWalletService);
+        if (buyersWarningTx != null && sellersWarningTx != null && buyersRedirectTx != null && sellersRedirectTx != null) {
+            // v5 trade protocol
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.buyersWarningTxId"), buyersWarningTx.getTxId().toString());
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.sellersWarningTxId"), sellersWarningTx.getTxId().toString());
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.sellersRedirectTxId"), sellersRedirectTx.getTxId().toString());
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.buyersRedirectTxId"), buyersRedirectTx.getTxId().toString());
+            Transaction claimTx = trade.getClaimTx(btcWalletService);
+            if (claimTx != null) {
+                addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.claimTxId"), claimTx.getTxId().toString());
+            }
+        } else {
+            // v4 trade protocol
+            Transaction delayedPayoutTx = trade.getDelayedPayoutTx(btcWalletService);
+            String delayedPayoutTxId = delayedPayoutTx != null ? delayedPayoutTx.getTxId().toString() : null;
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.delayedPayoutTxId"), delayedPayoutTxId);
+        }
 
         if (trade.getPayoutTx() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.payoutTxId"),

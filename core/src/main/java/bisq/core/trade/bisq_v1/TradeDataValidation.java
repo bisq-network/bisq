@@ -56,6 +56,11 @@ public class TradeDataValidation {
                                                @Nullable Consumer<String> addressConsumer)
             throws DisputeValidation.AddressException, MissingTxException,
             InvalidTxException, InvalidLockTimeException, InvalidAmountException {
+        // No delayedPayoutTx to validate if v5 protocol
+        if (trade.hasV5Protocol()) {
+            return;
+        }
+
         String errorMsg;
         if (delayedPayoutTx == null) {
             errorMsg = "DelayedPayoutTx must not be null";
