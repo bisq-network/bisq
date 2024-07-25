@@ -17,6 +17,14 @@ dependencies {
     implementation(libs.google.guice) {
         exclude(module: 'guava')
     }
+    implementation(libs.bitcoinj) {
+        exclude(module: 'bcprov-jdk15on')
+        exclude(module: 'guava')
+        exclude(module: 'jsr305')
+        exclude(module: 'okhttp')
+        exclude(module: 'okio')
+        exclude(module: 'slf4j-api')
+    }
 
     implementation libs.google.guava
     implementation libs.google.guice

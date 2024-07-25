@@ -37,6 +37,7 @@ import bisq.core.dao.governance.myvote.MyVoteListService;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.governance.proposal.IssuanceProposal;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.governance.proposal.ProposalConsensus;
 import bisq.core.dao.governance.proposal.ProposalListPresentation;
@@ -66,6 +67,7 @@ import bisq.core.dao.state.model.governance.Ballot;
 import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.dao.state.model.governance.Cycle;
 import bisq.core.dao.state.model.governance.DaoPhase;
+import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Role;
@@ -804,5 +806,15 @@ public class DaoFacade implements DaoSetupService {
 
     public boolean isParseBlockChainComplete() {
         return daoStateService.isParseBlockChainComplete();
+    }
+
+    public long getIssuanceForCycle(Cycle cycle) {
+        return daoStateService.getEvaluatedProposalList().stream()
+                .filter(EvaluatedProposal::isAccepted)
+                .filter(evaluatedProposal -> cycleService.isTxInCycle(cycle, evaluatedProposal.getProposal().getTxId()))
+                .filter(e -> e.getProposal() instanceof IssuanceProposal)
+                .map(e -> (IssuanceProposal) e.getProposal())
+                .mapToLong(e -> e.getRequestedBsq().value)
+                .sum();
     }
 }

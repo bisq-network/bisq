@@ -17,31 +17,15 @@
 
 package bisq.restapi.dto;
 
-import lombok.Getter;
-import lombok.ToString;
+import lombok.Value;
 
-import javax.annotation.Nullable;
-
-
-
-import io.swagger.v3.oas.annotations.media.Schema;
-
-/**
- * Minimal data required for Bisq 2 bonded roles use case.
- * Need to be in sync with the Bisq 2 BondedRoleDto class.
- */
-@Getter
-@ToString
-@Schema(title = "BondedRoleVerification")
-public class BondedRoleVerificationDto {
-    @Nullable
-    private final String errorMessage;
-
-    public BondedRoleVerificationDto() {
-        errorMessage = null;
-    }
-
-    public BondedRoleVerificationDto(String errorMessage) {
-        this.errorMessage = errorMessage;
-    }
+@Value
+public class JsonDaoCycle {
+    int heightOfFirstBlock;
+    int cycleIndex;
+    long startDate; // in ms
+    int proposalCount;
+    long burnedAmount;
+    long issuedAmount;
+    Boolean inProgress;
 }

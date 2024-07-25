@@ -135,6 +135,13 @@ public class TradeStatisticsManager {
         return observableTradeStatisticsSet;
     }
 
+    public List<TradeStatistics3> getTradeStatisticsList(long dateStart, long dateEnd) {
+        return observableTradeStatisticsSet.stream()
+                .filter(x -> x.getDateAsLong() > dateStart && x.getDateAsLong() <= dateEnd)
+                .sorted((o1, o2) -> (Long.compare(o2.getDateAsLong(), o1.getDateAsLong())))
+                .collect(Collectors.toList());
+    }
+
     private void maybeDumpStatistics() {
         if (!dumpStatistics) {
             return;

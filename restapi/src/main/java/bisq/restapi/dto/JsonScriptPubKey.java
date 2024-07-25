@@ -17,31 +17,27 @@
 
 package bisq.restapi.dto;
 
-import lombok.Getter;
-import lombok.ToString;
+import bisq.core.dao.state.model.blockchain.PubKeyScript;
 
-import javax.annotation.Nullable;
+import java.util.List;
 
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+@Value
+public class JsonScriptPubKey {
+    List<String> addresses;
+    String asm;
+    String hex;
+    int reqSigs;
+    String type;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
-/**
- * Minimal data required for Bisq 2 bonded roles use case.
- * Need to be in sync with the Bisq 2 BondedRoleDto class.
- */
-@Getter
-@ToString
-@Schema(title = "BondedRoleVerification")
-public class BondedRoleVerificationDto {
-    @Nullable
-    private final String errorMessage;
-
-    public BondedRoleVerificationDto() {
-        errorMessage = null;
-    }
-
-    public BondedRoleVerificationDto(String errorMessage) {
-        this.errorMessage = errorMessage;
+    public JsonScriptPubKey(PubKeyScript pubKeyScript) {
+        addresses = pubKeyScript.getAddresses();
+        asm = pubKeyScript.getAsm();
+        hex = pubKeyScript.getHex();
+        reqSigs = pubKeyScript.getReqSigs();
+        type = pubKeyScript.getScriptType().toString();
     }
 }

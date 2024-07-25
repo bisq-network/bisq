@@ -18,6 +18,7 @@
 package bisq.core.offer;
 
 import bisq.core.filter.FilterManager;
+import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.provider.price.PriceFeedService;
 import bisq.core.util.JsonUtil;
@@ -211,6 +212,32 @@ public class OfferBookService {
 
     public void addOfferBookChangedListener(OfferBookChangedListener offerBookChangedListener) {
         offerBookChangedListeners.add(offerBookChangedListener);
+    }
+
+    public List<OfferForJson> getOfferForJsonList() {
+        return getOffers().stream()
+                .map(offer -> {
+                    try {
+                        OfferDirection inverseDirection = offer.getDirection() == OfferDirection.BUY ? OfferDirection.SELL : OfferDirection.BUY;
+                        OfferDirection offerDirection = CurrencyUtil.isCryptoCurrency(offer.getCurrencyCode()) ? inverseDirection : offer.getDirection();
+                        return new OfferForJson(offerDirection,
+                                offer.getCurrencyCode(),
+                                offer.getMinAmount(),
+                                offer.getAmount(),
+                                offer.getPrice(),
+                                offer.getDate(),
+                                offer.getId(),
+                                offer.isUseMarketBasedPrice(),
+                                offer.getMarketPriceMargin(),
+                                offer.getPaymentMethod()
+                        );
+                    } catch (Throwable t) {
+                        // In case an offer was corrupted with null values we ignore it
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
 

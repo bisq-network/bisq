@@ -31,6 +31,10 @@ import lombok.extern.slf4j.Slf4j;
 import bisq.restapi.endpoints.AccountAgeApi;
 import bisq.restapi.endpoints.BondedReputationApi;
 import bisq.restapi.endpoints.BondedRoleVerificationApi;
+import bisq.restapi.endpoints.ExplorerBlocksApi;
+import bisq.restapi.endpoints.ExplorerDaoApi;
+import bisq.restapi.endpoints.ExplorerMarketsApi;
+import bisq.restapi.endpoints.ExplorerTransactionsApi;
 import bisq.restapi.endpoints.ProofOfBurnApi;
 import bisq.restapi.endpoints.SignedWitnessApi;
 import bisq.restapi.error.CustomExceptionMapper;
@@ -63,6 +67,10 @@ public class RestApiMain extends ResourceConfig {
                     .register(BondedRoleVerificationApi.class)
                     .register(AccountAgeApi.class)
                     .register(SignedWitnessApi.class)
+                    .register(ExplorerMarketsApi.class)
+                    .register(ExplorerDaoApi.class)
+                    .register(ExplorerBlocksApi.class)
+                    .register(ExplorerTransactionsApi.class)
                     .register(SwaggerResolution.class);
             daoNodeApplication.startServer(config.daoNodeApiUrl, config.daoNodeApiPort);
         });
