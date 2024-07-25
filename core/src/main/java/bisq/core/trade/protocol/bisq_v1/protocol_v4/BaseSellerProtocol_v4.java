@@ -15,13 +15,15 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bisq_v1;
+package bisq.core.trade.protocol.bisq_v1.protocol_v4;
 
 import bisq.core.trade.model.bisq_v1.SellerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.FluentProtocol;
+import bisq.core.trade.protocol.SellerProtocol;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.TradeTaskRunner;
+import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
 import bisq.core.trade.protocol.bisq_v1.messages.CounterCurrencyTransferStartedMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.DelayedPayoutTxSignatureResponse;
 import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
@@ -47,13 +49,13 @@ import bisq.common.handlers.ResultHandler;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class SellerProtocol extends DisputeProtocol {
+abstract class BaseSellerProtocol_v4 extends DisputeProtocol implements SellerProtocol {
     enum SellerEvent implements FluentProtocol.Event {
         STARTUP,
         PAYMENT_RECEIVED
     }
 
-    public SellerProtocol(SellerTrade trade) {
+    protected BaseSellerProtocol_v4(SellerTrade trade) {
         super(trade);
     }
 
@@ -137,6 +139,7 @@ public abstract class SellerProtocol extends DisputeProtocol {
     // User interaction
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @Override
     public void onPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         SellerEvent event = SellerEvent.PAYMENT_RECEIVED;
         expect(anyPhase(Trade.Phase.FIAT_SENT, Trade.Phase.PAYOUT_PUBLISHED)

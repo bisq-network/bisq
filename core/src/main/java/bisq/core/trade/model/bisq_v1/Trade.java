@@ -289,10 +289,10 @@ public abstract class Trade extends TradeModel {
     private final long tradeTxFeeAsLong;
     @Getter
     private final long takerFeeAsLong;
+    @Getter
+    private final ProcessModel processModel;
 
     //  Mutable
-    @Getter
-    private ProcessModel processModel;
     @Nullable
     @Getter
     @Setter
@@ -478,7 +478,6 @@ public abstract class Trade extends TradeModel {
 
 
     // taker
-    @SuppressWarnings("NullableProblems")
     protected Trade(Offer offer,
                     Coin amount,
                     Coin txFee,
@@ -670,7 +669,7 @@ public abstract class Trade extends TradeModel {
     // If called from a not initialized trade (or a closed or failed trade)
     // we need to pass the btcWalletService
     @Nullable
-    public Transaction getDelayedPayoutTx(BtcWalletService btcWalletService) {
+    public Transaction getDelayedPayoutTx(@Nullable BtcWalletService btcWalletService) {
         if (delayedPayoutTx == null) {
             if (btcWalletService == null) {
                 log.warn("btcWalletService is null. You might call that method before the tradeManager has " +
@@ -679,13 +678,33 @@ public abstract class Trade extends TradeModel {
             }
 
             if (delayedPayoutTxBytes == null) {
-                log.warn("delayedPayoutTxBytes are null");
+                if (!hasV5Protocol()) {
+                    log.warn("delayedPayoutTxBytes are null");
+                }
                 return null;
             }
 
             delayedPayoutTx = btcWalletService.getTxFromSerializedTx(delayedPayoutTxBytes);
         }
         return delayedPayoutTx;
+    }
+
+    @Nullable
+    public abstract Transaction getBuyersWarningTx(BtcWalletService btcWalletService);
+
+    @Nullable
+    public abstract Transaction getSellersWarningTx(BtcWalletService btcWalletService);
+
+    @Nullable
+    public abstract Transaction getBuyersRedirectTx(BtcWalletService btcWalletService);
+
+    @Nullable
+    public abstract Transaction getSellersRedirectTx(BtcWalletService btcWalletService);
+
+    @Nullable
+    public Transaction getClaimTx(BtcWalletService btcWalletService) {
+        byte[] signedClaimTx = processModel.getSignedClaimTx();
+        return signedClaimTx != null ? btcWalletService.getTxFromSerializedTx(signedClaimTx) : null;
     }
 
     public void addAndPersistChatMessage(ChatMessage chatMessage) {
@@ -722,7 +741,7 @@ public abstract class Trade extends TradeModel {
             change += "processModel;";
         }
         if (contractAsJson != null) {
-            String edited = contract.sanitizeContractAsJson(contractAsJson);
+            String edited = Contract.sanitizeContractAsJson(contractAsJson);
             if (!edited.equals(contractAsJson)) {
                 contractAsJson = edited;
                 change += "contractAsJson;";
@@ -1059,7 +1078,10 @@ public abstract class Trade extends TradeModel {
                 getTakerFeeTxId() == null ||
                 getDepositTxId() == null ||
                 getDepositTx() == null ||
-                getDelayedPayoutTxBytes() == null;
+                getDelayedPayoutTxBytes() == null && (processModel.getFinalizedWarningTx() == null ||
+                        processModel.getFinalizedRedirectTx() == null ||
+                        processModel.getTradePeer().getFinalizedWarningTx() == null ||
+                        processModel.getTradePeer().getFinalizedRedirectTx() == null);
     }
 
     public byte[] getArbitratorBtcPubKey() {
@@ -1083,6 +1105,20 @@ public abstract class Trade extends TradeModel {
     // the new burningmen receivers or with legacy BM.
     public boolean isUsingLegacyBurningMan() {
         return processModel.getBurningManSelectionHeight() == 0;
+    }
+
+    public boolean hasV5Protocol() {
+        // TODO: We should try to be able to correctly determine earlier in the protocol whether it is v5.
+        return processModel.getFinalizedWarningTx() != null;
+    }
+
+    /**
+     * @return Fee rate per Vbyte based on tradeTxFeeAsLong (deposit tx) and the max. expected size of the deposit tx.
+     */
+    public long getDepositTxFeeRate() {
+        // Deposit tx has a clearly defined structure, so we know the size. It is only one optional output if range amount offer was taken.
+        // Smallest tx size is 246. With additional change output we add 32. To be safe we use the largest expected size.
+        return Math.round(tradeTxFeeAsLong / 278d);
     }
 
 
@@ -1173,6 +1209,7 @@ public abstract class Trade extends TradeModel {
                 ",\n     errorMessage='" + errorMessage + '\'' +
                 ",\n     counterCurrencyTxId='" + counterCurrencyTxId + '\'' +
                 ",\n     counterCurrencyExtraData='" + counterCurrencyExtraData + '\'' +
+                ",\n     sellerConfirmedPaymentReceiptDate=" + new Date(sellerConfirmedPaymentReceiptDate) +
                 ",\n     assetTxProofResult='" + assetTxProofResult + '\'' +
                 ",\n     chatMessages=" + chatMessages +
                 ",\n     tradeTxFee=" + tradeTxFee +

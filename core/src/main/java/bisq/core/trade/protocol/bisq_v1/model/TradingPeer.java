@@ -28,6 +28,8 @@ import bisq.common.proto.ProtoUtil;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 
+import org.bitcoinj.core.Transaction;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -45,12 +47,31 @@ import javax.annotation.Nullable;
 @Getter
 @Setter
 public final class TradingPeer implements TradePeer {
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Added in v 1.9.13 for trade protocol 5
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    transient private String warningTxFeeBumpAddress;
+    transient private String redirectTxFeeBumpAddress;
+
+    transient private Transaction warningTx;
+    transient private byte[] warningTxSellerSignature;
+    transient private byte[] warningTxBuyerSignature;
+    @Nullable
+    private byte[] finalizedWarningTx;
+
+    transient private Transaction redirectTx;
+    transient private byte[] redirectTxSellerSignature;
+    transient private byte[] redirectTxBuyerSignature;
+    @Nullable
+    private byte[] finalizedRedirectTx;
+
+
     // Transient/Mutable
     // Added in v1.2.0
-    @Setter
     @Nullable
     transient private byte[] delayedPayoutTxSignature;
-    @Setter
     @Nullable
     transient private byte[] preparedDepositTx;
 
@@ -116,6 +137,8 @@ public final class TradingPeer implements TradePeer {
         Optional.ofNullable(accountAgeWitnessSignature).ifPresent(e -> builder.setAccountAgeWitnessSignature(ByteString.copyFrom(e)));
         Optional.ofNullable(mediatedPayoutTxSignature).ifPresent(e -> builder.setMediatedPayoutTxSignature(ByteString.copyFrom(e)));
         Optional.ofNullable(hashOfPaymentAccountPayload).ifPresent(e -> builder.setHashOfPaymentAccountPayload(ByteString.copyFrom(e)));
+        Optional.ofNullable(finalizedWarningTx).ifPresent(e -> builder.setFinalizedWarningTx(ByteString.copyFrom(e)));
+        Optional.ofNullable(finalizedRedirectTx).ifPresent(e -> builder.setFinalizedRedirectTx(ByteString.copyFrom(e)));
         builder.setCurrentDate(currentDate);
         return builder.build();
     }
@@ -143,9 +166,11 @@ public final class TradingPeer implements TradePeer {
             tradingPeer.setChangeOutputAddress(ProtoUtil.stringOrNullFromProto(proto.getChangeOutputAddress()));
             tradingPeer.setAccountAgeWitnessNonce(ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessNonce()));
             tradingPeer.setAccountAgeWitnessSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getAccountAgeWitnessSignature()));
-            tradingPeer.setCurrentDate(proto.getCurrentDate());
             tradingPeer.setMediatedPayoutTxSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getMediatedPayoutTxSignature()));
             tradingPeer.setHashOfPaymentAccountPayload(ProtoUtil.byteArrayOrNullFromProto(proto.getHashOfPaymentAccountPayload()));
+            tradingPeer.setFinalizedWarningTx(ProtoUtil.byteArrayOrNullFromProto(proto.getFinalizedWarningTx()));
+            tradingPeer.setFinalizedRedirectTx(ProtoUtil.byteArrayOrNullFromProto(proto.getFinalizedRedirectTx()));
+            tradingPeer.setCurrentDate(proto.getCurrentDate());
             return tradingPeer;
         }
     }
