@@ -790,6 +790,10 @@ public class BisqSetup {
                 preferences.getBsqBlockChainExplorers().size() > 0) {
             preferences.setBsqBlockChainExplorer(preferences.getBsqBlockChainExplorers().get(0));
         }
+        if (preferences.getBsqBlockChainExplorer().name.equalsIgnoreCase("bisq.mempool.emzy.de (@emzy)") &&
+                preferences.getBsqBlockChainExplorers().size() > 0) {
+            preferences.setBsqBlockChainExplorer(preferences.getBsqBlockChainExplorers().get(0));
+        }
     }
 
     private void maybeShowTorAddressUpgradeInformation() {

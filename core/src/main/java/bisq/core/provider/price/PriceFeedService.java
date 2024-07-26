@@ -21,8 +21,8 @@ import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
+import bisq.core.provider.PriceFeedNodeAddressProvider;
 import bisq.core.provider.PriceHttpClient;
-import bisq.core.provider.ProvidersRepository;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 
@@ -66,7 +66,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Slf4j
 public class PriceFeedService {
     private final HttpClient httpClient;
-    private final ProvidersRepository providersRepository;
+    private final PriceFeedNodeAddressProvider priceFeedNodeAddressProvider;
     private final Preferences preferences;
     private final FeeService feeService;
 
@@ -101,15 +101,15 @@ public class PriceFeedService {
     @Inject
     public PriceFeedService(PriceHttpClient httpClient,
                             FeeService feeService,
-                            @SuppressWarnings("SameParameterValue") ProvidersRepository providersRepository,
+                            @SuppressWarnings("SameParameterValue") PriceFeedNodeAddressProvider priceFeedNodeAddressProvider,
                             @SuppressWarnings("SameParameterValue") Preferences preferences) {
         this.httpClient = httpClient;
-        this.providersRepository = providersRepository;
+        this.priceFeedNodeAddressProvider = priceFeedNodeAddressProvider;
         this.preferences = preferences;
         this.feeService = feeService;
 
         // Do not use Guice for PriceProvider as we might create multiple instances
-        this.priceProvider = new PriceProvider(httpClient, providersRepository.getBaseUrl());
+        this.priceProvider = new PriceProvider(httpClient, priceFeedNodeAddressProvider.getBaseUrl());
     }
 
 
@@ -161,10 +161,10 @@ public class PriceFeedService {
     private void request(boolean repeatRequests) {
         if (requestTs == 0)
             log.debug("request from provider {}",
-                    providersRepository.getBaseUrl());
+                    priceFeedNodeAddressProvider.getBaseUrl());
         else
             log.debug("request from provider {} {} sec. after last request",
-                    providersRepository.getBaseUrl(),
+                    priceFeedNodeAddressProvider.getBaseUrl(),
                     (System.currentTimeMillis() - requestTs) / 1000d);
 
         requestTs = System.currentTimeMillis();
@@ -256,9 +256,9 @@ public class PriceFeedService {
     }
 
     private void setNewPriceProvider() {
-        providersRepository.selectNextProviderBaseUrl();
-        if (!providersRepository.getBaseUrl().isEmpty())
-            priceProvider = new PriceProvider(httpClient, providersRepository.getBaseUrl());
+        priceFeedNodeAddressProvider.selectNextProviderBaseUrl();
+        if (!priceFeedNodeAddressProvider.getBaseUrl().isEmpty())
+            priceProvider = new PriceProvider(httpClient, priceFeedNodeAddressProvider.getBaseUrl());
         else
             log.warn("We cannot create a new priceProvider because new base url is empty.");
     }
