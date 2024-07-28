@@ -23,7 +23,6 @@ import bisq.core.dao.burningman.model.BurningManCandidate;
 import bisq.common.util.DateUtil;
 
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -54,8 +53,7 @@ public class BalanceModel {
         receivedBtcBalanceEntries.add(balanceEntry);
 
         Date month = balanceEntry.getMonth();
-        receivedBtcBalanceEntriesByMonth.putIfAbsent(month, new HashSet<>());
-        receivedBtcBalanceEntriesByMonth.get(month).add(balanceEntry);
+        receivedBtcBalanceEntriesByMonth.computeIfAbsent(month, m -> new HashSet<>()).add(balanceEntry);
     }
 
     public Set<ReceivedBtcBalanceEntry> getReceivedBtcBalanceEntries() {
@@ -63,11 +61,7 @@ public class BalanceModel {
     }
 
     public Set<ReceivedBtcBalanceEntry> getReceivedBtcBalanceEntriesByMonth(Date month) {
-        return receivedBtcBalanceEntriesByMonth.entrySet().stream()
-                        .filter(e -> e.getKey().equals(month))
-                        .map(Map.Entry::getValue)
-                        .flatMap(Collection::stream)
-                        .collect(Collectors.toSet());
+        return receivedBtcBalanceEntriesByMonth.getOrDefault(month, Set.of());
     }
 
     public Stream<BurnedBsqBalanceEntry> getBurnedBsqBalanceEntries(Set<BurnOutputModel> burnOutputModels) {
