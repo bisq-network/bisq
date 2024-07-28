@@ -22,11 +22,10 @@ import bisq.core.dao.state.model.blockchain.BaseTx;
 import bisq.core.dao.state.model.blockchain.Tx;
 import bisq.core.dao.state.model.blockchain.TxType;
 
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -86,10 +85,7 @@ public class ExplorerTransactionsApi {
             address = address.substring(1, address.length());
         }
         String finalAddress = address;
-        List<JsonTx> result = daoStateService.getTxIdSetByAddress().entrySet().stream()
-                .filter(e -> e.getKey().equals(finalAddress))
-                .map(Map.Entry::getValue)
-                .flatMap(Collection::stream)
+        List<JsonTx> result = daoStateService.getTxIdSetByAddress().getOrDefault(finalAddress, Set.of()).stream()
                 .flatMap(txId -> daoStateService.getTx(txId).stream())
                 .map(tx -> BlockDataToJsonConverter.getJsonTx(daoStateService, tx))
                 .collect(Collectors.toList());
