@@ -318,7 +318,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         // a list of previously-used federated explorers
         // if user preference references any deprecated explorers we need to select a new valid explorer
-        String deprecatedExplorers = "(bsq.bisq.cc|bsq.vante.me|bsq.emzy.de|bsq.sqrrm.net|bsq.bisq.services|bsq.ninja).*";
+        String deprecatedExplorers = "(bsq.bisq.cc|bsq.vante.me|bsq.emzy.de|bsq.sqrrm.net|bsq.bisq.services|bsq.ninja|bisq.mempool.emzy.de).*";
 
         // if no valid Bitcoin block explorer is set, select the 1st valid Bitcoin block explorer
         ArrayList<BlockChainExplorer> btcExplorers = getBlockChainExplorers();
