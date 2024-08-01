@@ -36,6 +36,8 @@ import org.bitcoinj.script.ScriptBuilder;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 public class ClaimTransactionFactory {
@@ -52,7 +54,7 @@ public class ClaimTransactionFactory {
                                                     long miningFee,
                                                     byte[] peersMultiSigPubKey,
                                                     DeterministicKey myMultiSigKeyPair,
-                                                    KeyParameter aesKey)
+                                                    @Nullable KeyParameter aesKey)
             throws AddressFormatException, TransactionVerificationException {
 
         Transaction claimTx = createUnsignedClaimTransaction(warningTxOutput, claimDelay, payoutAddress, miningFee);
@@ -90,7 +92,7 @@ public class ClaimTransactionFactory {
                                                       byte[] buyerPubKey,
                                                       byte[] sellerPubKey,
                                                       DeterministicKey myMultiSigKeyPair,
-                                                      KeyParameter aesKey)
+                                                      @Nullable KeyParameter aesKey)
             throws TransactionVerificationException {
 
         Script redeemScript = WarningTransactionFactory.createRedeemScript(isBuyer, buyerPubKey, sellerPubKey, claimDelay);

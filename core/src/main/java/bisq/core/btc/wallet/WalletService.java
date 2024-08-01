@@ -284,7 +284,7 @@ public abstract class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static void signTx(Wallet wallet,
-                              KeyParameter aesKey,
+                              @Nullable KeyParameter aesKey,
                               Transaction tx)
             throws WalletException, TransactionVerificationException {
         for (int i = 0; i < tx.getInputs().size(); i++) {
@@ -310,7 +310,7 @@ public abstract class WalletService {
     }
 
     public static void signTransactionInput(Wallet wallet,
-                                            KeyParameter aesKey,
+                                            @Nullable KeyParameter aesKey,
                                             Transaction tx,
                                             TransactionInput txIn,
                                             int index) {
@@ -635,7 +635,7 @@ public abstract class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void emptyBtcWallet(String toAddress,
-                               KeyParameter aesKey,
+                               @Nullable KeyParameter aesKey,
                                ResultHandler resultHandler,
                                ErrorMessageHandler errorMessageHandler)
             throws InsufficientMoneyException, AddressFormatException {

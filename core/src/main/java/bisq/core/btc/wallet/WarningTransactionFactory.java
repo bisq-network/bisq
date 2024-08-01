@@ -39,6 +39,8 @@ import org.bitcoinj.script.ScriptBuilder;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkArgument;
 import static org.bitcoinj.script.ScriptOpCodes.*;
 
@@ -89,7 +91,7 @@ public class WarningTransactionFactory {
                                          DeterministicKey myMultiSigKeyPair,
                                          byte[] buyerPubKey,
                                          byte[] sellerPubKey,
-                                         KeyParameter aesKey)
+                                         @Nullable KeyParameter aesKey)
             throws TransactionVerificationException {
 
         Script redeemScript = TradeWalletService.get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);

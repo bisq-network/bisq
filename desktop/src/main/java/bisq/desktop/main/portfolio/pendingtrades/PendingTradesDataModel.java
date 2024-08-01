@@ -222,7 +222,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public void onWithdrawRequest(String toAddress,
                                   Coin amount,
                                   Coin fee,
-                                  KeyParameter aesKey,
+                                  @Nullable KeyParameter aesKey,
                                   @Nullable String memo,
                                   ResultHandler resultHandler,
                                   FaultHandler faultHandler) {

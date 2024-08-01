@@ -41,6 +41,8 @@ import org.bouncycastle.crypto.params.KeyParameter;
 
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import static com.google.common.base.Preconditions.checkArgument;
 
 public class RedirectionTransactionFactory {
@@ -82,7 +84,7 @@ public class RedirectionTransactionFactory {
                                              byte[] buyerPubKey,
                                              byte[] sellerPubKey,
                                              DeterministicKey myMultiSigKeyPair,
-                                             KeyParameter aesKey)
+                                             @Nullable KeyParameter aesKey)
             throws TransactionVerificationException {
 
         Script redeemScript = WarningTransactionFactory.createRedeemScript(!isBuyer, buyerPubKey, sellerPubKey, claimDelay);

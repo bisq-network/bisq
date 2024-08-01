@@ -679,7 +679,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     public void onWithdrawRequest(String toAddress,
                                   Coin amount,
                                   Coin fee,
-                                  KeyParameter aesKey,
+                                  @Nullable KeyParameter aesKey,
                                   Trade trade,
                                   @Nullable String memo,
                                   ResultHandler resultHandler,
@@ -688,7 +688,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 AddressEntry.Context.TRADE_PAYOUT).getAddressString();
         FutureCallback<Transaction> callback = new FutureCallback<>() {
             @Override
-            public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
+            public void onSuccess(@Nullable Transaction transaction) {
                 if (transaction != null) {
                     log.debug("onWithdraw onSuccess tx ID:" + transaction.getTxId().toString());
                     onTradeCompleted(trade);

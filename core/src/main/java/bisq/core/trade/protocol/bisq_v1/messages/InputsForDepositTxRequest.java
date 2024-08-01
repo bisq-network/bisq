@@ -84,7 +84,9 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
     private final int burningManSelectionHeight;
 
     // Added for v5 protocol
+    @Nullable
     private final String takersWarningTxFeeBumpAddress;
+    @Nullable
     private final String takersRedirectTxFeeBumpAddress;
 
     public InputsForDepositTxRequest(String tradeId,
@@ -116,8 +118,8 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                                      @Nullable byte[] hashOfTakersPaymentAccountPayload,
                                      @Nullable String takersPaymentMethodId,
                                      int burningManSelectionHeight,
-                                     String takersWarningTxFeeBumpAddress,
-                                     String takersRedirectTxFeeBumpAddress) {
+                                     @Nullable String takersWarningTxFeeBumpAddress,
+                                     @Nullable String takersRedirectTxFeeBumpAddress) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
         this.tradeAmount = tradeAmount;

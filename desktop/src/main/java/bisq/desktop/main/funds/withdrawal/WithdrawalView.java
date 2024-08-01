@@ -114,6 +114,8 @@ import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nullable;
+
 import static bisq.desktop.util.FormBuilder.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -457,7 +459,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                                 .actionButtonText(Res.get("shared.yes"))
                                 .onAction(() -> doWithdraw(sendersAmount, fee, new FutureCallback<>() {
                                     @Override
-                                    public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
+                                    public void onSuccess(@Nullable Transaction transaction) {
                                         if (transaction != null) {
                                             String key = "showTransactionSent";
                                             if (DontShowAgainLookup.showAgain(key)) {
@@ -561,12 +563,13 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
         }
     }
 
-    private void sendFunds(Coin amount, Coin fee, KeyParameter aesKey, FutureCallback<Transaction> callback) {
+    private void sendFunds(Coin amount, Coin fee, @Nullable KeyParameter aesKey, FutureCallback<Transaction> callback) {
         try {
             String memo = withdrawMemoTextField.getText();
             if (memo.isEmpty()) {
                 memo = null;
             }
+            //noinspection unused
             Transaction transaction = btcWalletService.sendFundsForMultipleAddresses(fromAddresses,
                     withdrawToTextField.getText(),
                     amount,
@@ -705,8 +708,7 @@ public class WithdrawalView extends ActivatableView<VBox, Void> {
                     public TableCell<WithdrawalListItem, WithdrawalListItem> call(TableColumn<WithdrawalListItem,
                             WithdrawalListItem> column) {
                         return new TableCell<>() {
-
-                            CheckBox checkBox = new AutoTooltipCheckBox();
+                            final CheckBox checkBox = new AutoTooltipCheckBox();
 
                             @Override
                             public void updateItem(final WithdrawalListItem item, boolean empty) {
