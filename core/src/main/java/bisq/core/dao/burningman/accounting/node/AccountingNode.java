@@ -17,6 +17,7 @@
 
 package bisq.core.dao.burningman.accounting.node;
 
+import bisq.core.crypto.LowRSigningKey;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.burningman.accounting.BurningManAccountingService;
 import bisq.core.dao.burningman.accounting.blockchain.AccountingBlock;
@@ -80,7 +81,7 @@ public abstract class AccountingNode implements DaoSetupService, DaoStateListene
     }
 
     public static byte[] getSignature(Sha256Hash sha256Hash, ECKey privKey) {
-        ECKey.ECDSASignature ecdsaSignature = privKey.sign(sha256Hash);
+        ECKey.ECDSASignature ecdsaSignature = LowRSigningKey.from(privKey).sign(sha256Hash);
         return ecdsaSignature.encodeToDER();
     }
 

@@ -18,6 +18,7 @@
 package bisq.core.filter;
 
 import bisq.core.btc.nodes.BtcNodes;
+import bisq.core.crypto.LowRSigningKey;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
@@ -654,7 +655,7 @@ public class FilterManager {
 
     private String getSignature(Filter filterWithoutSig) {
         Sha256Hash hash = getSha256Hash(filterWithoutSig);
-        ECKey.ECDSASignature ecdsaSignature = filterSigningKey.sign(hash);
+        ECKey.ECDSASignature ecdsaSignature = LowRSigningKey.from(filterSigningKey).sign(hash);
         byte[] encodeToDER = ecdsaSignature.encodeToDER();
         return new String(Base64.encode(encodeToDER), StandardCharsets.UTF_8);
     }

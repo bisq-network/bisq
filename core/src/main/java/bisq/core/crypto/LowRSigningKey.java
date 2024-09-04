@@ -40,7 +40,7 @@ public class LowRSigningKey extends ECKey {
     }
 
     public static LowRSigningKey from(ECKey key) {
-        return key != null ? new LowRSigningKey(key) : null;
+        return key != null ? key instanceof LowRSigningKey ? (LowRSigningKey) key : new LowRSigningKey(key) : null;
     }
 
     @Override

@@ -17,6 +17,8 @@
 
 package bisq.core.alert;
 
+import bisq.core.crypto.LowRSigningKey;
+
 import bisq.network.p2p.DecryptedMessageWithPubKey;
 import bisq.network.p2p.NodeAddress;
 import bisq.network.p2p.P2PService;
@@ -175,7 +177,7 @@ public class PrivateNotificationManager implements MessageListener {
 
     private void signAndAddSignatureToPrivateNotificationMessage(PrivateNotificationPayload privateNotification) {
         String privateNotificationMessageAsHex = Utils.HEX.encode(privateNotification.getMessage().getBytes(Charsets.UTF_8));
-        String signatureAsBase64 = privateNotificationSigningKey.signMessage(privateNotificationMessageAsHex);
+        String signatureAsBase64 = LowRSigningKey.from(privateNotificationSigningKey).signMessage(privateNotificationMessageAsHex);
         privateNotification.setSigAndPubKey(signatureAsBase64, keyRing.getSignatureKeyPair().getPublic());
     }
 

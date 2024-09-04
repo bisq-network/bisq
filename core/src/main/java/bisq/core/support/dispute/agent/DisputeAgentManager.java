@@ -17,6 +17,7 @@
 
 package bisq.core.support.dispute.agent;
 
+import bisq.core.crypto.LowRSigningKey;
 import bisq.core.filter.FilterManager;
 import bisq.core.user.User;
 
@@ -257,7 +258,7 @@ public abstract class DisputeAgentManager<T extends DisputeAgent> {
     // Other users will check the signature with the list of public keys hardcoded in the app.
     public String signStorageSignaturePubKey(ECKey key) {
         String keyToSignAsHex = Utils.HEX.encode(keyRing.getPubKeyRing().getSignaturePubKey().getEncoded());
-        return key.signMessage(keyToSignAsHex);
+        return LowRSigningKey.from(key).signMessage(keyToSignAsHex);
     }
 
     @Nullable
