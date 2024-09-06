@@ -106,6 +106,7 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
 
             val additionalArgs = listOf(
                 "--fullDaoNode=true",
+                "--isBmFullNode=true",
                 "--rpcUser=bisqdao",
                 "--rpcPassword=bsq",
                 "--rpcBlockNotificationPort=5122",
@@ -177,6 +178,7 @@ class RegtestPlugin @Inject constructor(private val javaToolchainService: JavaTo
         createBisqCommonArgs(nodePort) +
                 listOf(
                     "--fullDaoNode=true",
+                    "--isBmFullNode=true",
 
                     "--rpcUser=${RPC_USER}",
                     "--rpcPassword=${RPC_PASSWORD}",
