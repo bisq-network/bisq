@@ -21,6 +21,7 @@ import bisq.core.trade.model.Tradable;
 
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionInput;
 
 import java.util.stream.IntStream;
 
@@ -28,6 +29,7 @@ import javax.annotation.Nullable;
 
 interface TransactionAwareTradable {
     int TX_FILTER_SIZE = 64;
+    // Delayed payout, warning, redirect and claim txs all go into one bucket (as there shouldn't be too many of them).
     int DELAYED_PAYOUT_TX_BUCKET_INDEX = TX_FILTER_SIZE - 1;
 
     boolean isRelatedToTransaction(Transaction transaction);
@@ -38,16 +40,28 @@ interface TransactionAwareTradable {
     IntStream getRelatedTransactionFilter();
 
     static int bucketIndex(Transaction tx) {
-        return tx.getLockTime() == 0 ? bucketIndex(tx.getTxId()) : DELAYED_PAYOUT_TX_BUCKET_INDEX;
+        return tx.getInputs().size() == 1 && (tx.getLockTime() != 0 || isPossibleRedirectOrClaimTx(tx)) &&
+                isPossibleEscrowSpend(tx.getInput(0)) ? DELAYED_PAYOUT_TX_BUCKET_INDEX : bucketIndex(tx.getTxId());
     }
 
     static int bucketIndex(Sha256Hash hash) {
         int i = hash.getBytes()[31] & 255;
-        return i % TX_FILTER_SIZE != DELAYED_PAYOUT_TX_BUCKET_INDEX ?
-                i % TX_FILTER_SIZE : i / TX_FILTER_SIZE;
+        return i % TX_FILTER_SIZE != DELAYED_PAYOUT_TX_BUCKET_INDEX ? i % TX_FILTER_SIZE : i / TX_FILTER_SIZE;
     }
 
     static int bucketIndex(@Nullable String txId) {
         return txId != null ? bucketIndex(Sha256Hash.wrap(txId)) : -1;
+    }
+
+    static boolean isPossibleRedirectOrClaimTx(Transaction tx) {
+        return tx.getInput(0).getWitness().getPushCount() == 5 || tx.hasRelativeLockTime();
+    }
+
+    static boolean isPossibleEscrowSpend(TransactionInput input) {
+        // The maximum ScriptSig length of a (canonically signed) P2PKH or P2SH-P2WH input is 107 bytes, whereas
+        // multisig P2SH will always be longer than that. P2PKH, P2SH-P2WPKH and P2WPKH have a witness push count less
+        // than 3, but all Segwit trade escrow spends have a witness push count of at least 3. So we catch all escrow
+        // spends this way, without too many false positives.
+        return input.getScriptBytes().length > 107 || input.getWitness().getPushCount() > 2;
     }
 }

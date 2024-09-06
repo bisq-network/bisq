@@ -41,9 +41,12 @@ import com.google.common.collect.ImmutableSet;
 import javafx.collections.ObservableList;
 
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 import static bisq.desktop.main.funds.transactions.TransactionAwareTradable.bucketIndex;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -88,16 +91,18 @@ class TransactionAwareTrade implements TransactionAwareTradable {
             boolean isTakerOfferFeeTx = txId.equals(trade.getTakerFeeTxId());
             boolean isOfferFeeTx = isOfferFeeTx(txId);
             boolean isDepositTx = isDepositTx(txId);
-            boolean isPayoutTx = isPayoutTx(txId);
+            boolean isPayoutTx = isPayoutTx(trade, txId);
             boolean isDisputedPayoutTx = isDisputedPayoutTx(txId);
-            boolean isDelayedPayoutTx = transaction.getLockTime() != 0 && isDelayedPayoutTx(txId);
+            boolean isDelayedPayoutOrWarningTx = isDelayedPayoutOrWarningTx(transaction, txId);
+            boolean isRedirectOrClaimTx = isRedirectOrClaimTx(transaction, txId);
             boolean isRefundPayoutTx = isRefundPayoutTx(trade, txId);
             tradeRelated = isTakerOfferFeeTx ||
                     isOfferFeeTx ||
                     isDepositTx ||
                     isPayoutTx ||
                     isDisputedPayoutTx ||
-                    isDelayedPayoutTx ||
+                    isDelayedPayoutOrWarningTx ||
+                    isRedirectOrClaimTx ||
                     isRefundPayoutTx;
         }
         boolean isBsqSwapTrade = isBsqSwapTrade(txId);
@@ -105,11 +110,7 @@ class TransactionAwareTrade implements TransactionAwareTradable {
         return tradeRelated || isBsqSwapTrade;
     }
 
-    private boolean isPayoutTx(String txId) {
-        if (isBsqSwapTrade())
-            return false;
-
-        Trade trade = (Trade) tradeModel;
+    private boolean isPayoutTx(Trade trade, String txId) {
         return txId.equals(trade.getPayoutTxId());
     }
 
@@ -122,17 +123,11 @@ class TransactionAwareTrade implements TransactionAwareTradable {
     }
 
     private boolean isOfferFeeTx(String txId) {
-        if (isBsqSwapTrade())
-            return false;
-
         Offer offer = tradeModel.getOffer();
         return offer != null && txId.equals(offer.getOfferFeePaymentTxId());
     }
 
     private boolean isDisputedPayoutTx(String txId) {
-        if (isBsqSwapTrade())
-            return false;
-
         String delegateId = tradeModel.getId();
         ObservableList<Dispute> disputes = arbitrationManager.getDisputesAsObservableList();
 
@@ -151,37 +146,58 @@ class TransactionAwareTrade implements TransactionAwareTradable {
     }
 
     boolean isDelayedPayoutTx(String txId) {
-        if (isBsqSwapTrade())
-            return false;
+        return isDelayedPayoutOrWarningTx(txId) && !((Trade) tradeModel).hasV5Protocol();
+    }
 
+    private boolean isWarningTx(String txId) {
+        return isDelayedPayoutOrWarningTx(txId) && ((Trade) tradeModel).hasV5Protocol();
+    }
+
+    private boolean isDelayedPayoutOrWarningTx(String txId) {
+        if (isBsqSwapTrade()) {
+            return false;
+        }
         Transaction transaction = btcWalletService.getTransaction(txId);
-        if (transaction == null)
-            return false;
+        return transaction != null && isDelayedPayoutOrWarningTx(transaction, null);
+    }
 
-        if (transaction.getLockTime() == 0)
+    private boolean isDelayedPayoutOrWarningTx(Transaction transaction, @Nullable String txId) {
+        if (transaction.getLockTime() == 0 || transaction.getInputs().size() != 1) {
             return false;
-
-        if (transaction.getInputs() == null || transaction.getInputs().size() != 1)
+        }
+        if (!TransactionAwareTradable.isPossibleEscrowSpend(transaction.getInput(0))) {
             return false;
+        }
+        return firstParent(this::isDepositTx, transaction, txId);
+    }
 
-        return transaction.getInputs().stream()
-                .anyMatch(input -> {
-                    TransactionOutput connectedOutput = input.getConnectedOutput();
-                    if (connectedOutput == null) {
-                        return false;
-                    }
-                    Transaction parentTransaction = connectedOutput.getParentTransaction();
-                    if (parentTransaction == null) {
-                        return false;
-                    }
-                    return isDepositTx(parentTransaction.getTxId().toString());
-                });
+    private boolean isRedirectOrClaimTx(Transaction transaction, @Nullable String txId) {
+        if (transaction.getInputs().size() != 1) {
+            return false;
+        }
+        if (!TransactionAwareTradable.isPossibleRedirectOrClaimTx(transaction)) {
+            return false;
+        }
+        return firstParent(this::isWarningTx, transaction, txId);
+    }
+
+    private boolean firstParent(Predicate<String> parentPredicate, Transaction transaction, @Nullable String txId) {
+        Transaction walletTransaction = txId != null ? btcWalletService.getTransaction(txId) : transaction;
+        if (walletTransaction == null) {
+            return false;
+        }
+        TransactionOutput connectedOutput = walletTransaction.getInput(0).getConnectedOutput();
+        if (connectedOutput == null) {
+            return false;
+        }
+        Transaction parentTransaction = connectedOutput.getParentTransaction();
+        if (parentTransaction == null) {
+            return false;
+        }
+        return parentPredicate.test(parentTransaction.getTxId().toString());
     }
 
     private boolean isRefundPayoutTx(Trade trade, String txId) {
-        if (isBsqSwapTrade())
-            return false;
-
         String tradeId = tradeModel.getId();
         boolean isAnyDisputeRelatedToThis = refundManager.getDisputedTradeIds().contains(tradeId);
 
