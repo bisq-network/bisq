@@ -195,6 +195,7 @@ seednode: seednode/build
 		--useLocalhostForP2P=true \
 		--useDevPrivilegeKeys=true \
 		--fullDaoNode=true \
+		--isBmFullNode=true \
 		--rpcUser=bisqdao \
 		--rpcPassword=bsq \
 		--rpcBlockNotificationPort=5120 \
@@ -208,6 +209,7 @@ seednode2: seednode/build
 		--useLocalhostForP2P=true \
 		--useDevPrivilegeKeys=true \
 		--fullDaoNode=true \
+		--isBmFullNode=true \
 		--rpcUser=bisqdao \
 		--rpcPassword=bsq \
 		--rpcBlockNotificationPort=5121 \
@@ -231,6 +233,7 @@ alice: setup
 		--useDevPrivilegeKeys=true \
 		--nodePort=5555 \
 		--fullDaoNode=true \
+		--isBmFullNode=true \
 		--rpcUser=bisqdao \
 		--rpcPassword=bsq \
 		--rpcBlockNotificationPort=5122 \
