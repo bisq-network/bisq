@@ -22,7 +22,7 @@ import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.provider.ProvidersRepository;
+import bisq.core.provider.PriceFeedNodeAddressProvider;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 
@@ -101,7 +101,7 @@ public class FilterManager {
     private final User user;
     private final Preferences preferences;
     private final ConfigFileEditor configFileEditor;
-    private final ProvidersRepository providersRepository;
+    private final PriceFeedNodeAddressProvider priceFeedNodeAddressProvider;
     private final boolean ignoreDevMsg;
     private final ObjectProperty<Filter> filterProperty = new SimpleObjectProperty<>();
     private final List<Listener> listeners = new CopyOnWriteArrayList<>();
@@ -121,7 +121,7 @@ public class FilterManager {
                          User user,
                          Preferences preferences,
                          Config config,
-                         ProvidersRepository providersRepository,
+                         PriceFeedNodeAddressProvider priceFeedNodeAddressProvider,
                          BanFilter banFilter,
                          @Named(Config.IGNORE_DEV_MSG) boolean ignoreDevMsg,
                          @Named(Config.USE_DEV_PRIVILEGE_KEYS) boolean useDevPrivilegeKeys) {
@@ -130,7 +130,7 @@ public class FilterManager {
         this.user = user;
         this.preferences = preferences;
         this.configFileEditor = new ConfigFileEditor(config.getConfigFile());
-        this.providersRepository = providersRepository;
+        this.priceFeedNodeAddressProvider = priceFeedNodeAddressProvider;
         this.ignoreDevMsg = ignoreDevMsg;
 
         publicKeys = useDevPrivilegeKeys ?
@@ -583,7 +583,7 @@ public class FilterManager {
         saveBannedNodes(BANNED_PRICE_RELAY_NODES, priceRelayNodes);
 
         //TODO should be moved to client with listening on onFilterAdded
-        providersRepository.applyBannedNodes(priceRelayNodes);
+        priceFeedNodeAddressProvider.applyBannedNodes(priceRelayNodes);
 
         //TODO should be moved to client with listening on onFilterAdded
         if (filterFromNetwork.isPreventPublicBtcNetwork() &&
@@ -626,8 +626,8 @@ public class FilterManager {
         saveBannedNodes(FILTER_PROVIDED_SEED_NODES, null);
         saveBannedNodes(BANNED_PRICE_RELAY_NODES, null);
 
-        if (providersRepository.getBannedNodes() != null) {
-            providersRepository.applyBannedNodes(null);
+        if (priceFeedNodeAddressProvider.getBannedNodes() != null) {
+            priceFeedNodeAddressProvider.applyBannedNodes(null);
         }
     }
 
