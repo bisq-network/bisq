@@ -115,7 +115,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     ));
 
     public static final ArrayList<BlockChainExplorer> BSQ_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("bisq.mempool.emzy.de (@emzy)", "https://bisq.mempool.emzy.de/tx/", "https://bisq.mempool.emzy.de/address/")
+            new BlockChainExplorer("mempool.bisq.services (@devinbileck)", "https://mempool.bisq.services/bisq/tx/", "https://mempool.bisq.services/bisq/address/")
     ));
 
     private static final ArrayList<String> XMR_TX_PROOF_SERVICES_CLEAR_NET = new ArrayList<>(Arrays.asList(
