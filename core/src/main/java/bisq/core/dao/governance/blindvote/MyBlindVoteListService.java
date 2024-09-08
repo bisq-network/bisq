@@ -24,6 +24,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
+import bisq.core.crypto.LowRSigningKey;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.exceptions.PublishToP2PNetworkException;
 import bisq.core.dao.governance.ballot.BallotListService;
@@ -61,7 +62,6 @@ import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
-import org.bitcoinj.crypto.DeterministicKey;
 
 import javax.inject.Inject;
 
@@ -228,7 +228,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
 
             publishTx(resultHandler, exceptionHandler, blindVoteTx);
         } catch (CryptoException | TransactionVerificationException | InsufficientMoneyException |
-                 WalletException | IOException exception) {
+                WalletException | IOException exception) {
             log.error(exception.toString());
             exception.printStackTrace();
             exceptionHandler.handleException(exception);
@@ -299,7 +299,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
                             return null;
                         }
 
-                        DeterministicKey key = bsqWalletService.findKeyFromPubKey(Utilities.decodeFromHex(pubKey));
+                        ECKey key = LowRSigningKey.from(bsqWalletService.findKeyFromPubKey(Utilities.decodeFromHex(pubKey)));
                         if (key == null) {
                             // Maybe add exception
                             log.error("We did not find the key for our compensation request. txId={}",
@@ -318,7 +318,7 @@ public class MyBlindVoteListService implements PersistedDataHost, DaoStateListen
                         ECKey.ECDSASignature signature = bsqWalletService.isEncrypted() ?
                                 key.sign(Sha256Hash.wrap(blindVoteTxId), bsqWalletService.getAesKey()) :
                                 key.sign(Sha256Hash.wrap(blindVoteTxId));
-                        signatureAsBytes = signature.toCanonicalised().encodeToDER();
+                        signatureAsBytes = signature.encodeToDER();
                     } else {
                         // In case we use it for requesting the currently available merit we don't apply a signature
                         signatureAsBytes = new byte[0];

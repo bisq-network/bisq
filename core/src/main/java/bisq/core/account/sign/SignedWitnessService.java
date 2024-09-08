@@ -18,6 +18,7 @@
 package bisq.core.account.sign;
 
 import bisq.core.account.witness.AccountAgeWitness;
+import bisq.core.crypto.LowRSigningKey;
 import bisq.core.filter.FilterManager;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.user.User;
@@ -280,7 +281,7 @@ public class SignedWitnessService {
         }
 
         String accountAgeWitnessHashAsHex = Utilities.encodeToHex(accountAgeWitness.getHash());
-        String signatureBase64 = key.signMessage(accountAgeWitnessHashAsHex);
+        String signatureBase64 = LowRSigningKey.from(key).signMessage(accountAgeWitnessHashAsHex);
         SignedWitness signedWitness = new SignedWitness(SignedWitness.VerificationMethod.ARBITRATOR,
                 accountAgeWitness.getHash(),
                 signatureBase64.getBytes(Charsets.UTF_8),
@@ -289,7 +290,7 @@ public class SignedWitnessService {
                 time,
                 tradeAmount.value);
         publishSignedWitness(signedWitness);
-        log.info("Arbitrator signed witness {}", signedWitness.toString());
+        log.info("Arbitrator signed witness {}", signedWitness);
         return "";
     }
 
@@ -322,7 +323,7 @@ public class SignedWitnessService {
                 new Date().getTime(),
                 tradeAmount.value);
         publishSignedWitness(signedWitness);
-        log.info("Trader signed witness {}", signedWitness.toString());
+        log.info("Trader signed witness {}", signedWitness);
         return Optional.of(signedWitness);
     }
 
@@ -537,7 +538,7 @@ public class SignedWitnessService {
 
     private void publishSignedWitness(SignedWitness signedWitness) {
         if (!signedWitnessMap.containsKey(signedWitness.getHashAsByteArray())) {
-            log.info("broadcast signed witness {}", signedWitness.toString());
+            log.info("broadcast signed witness {}", signedWitness);
             // We set reBroadcast to true to achieve better resilience.
             p2PService.addPersistableNetworkPayload(signedWitness, true);
             addToMap(signedWitness);

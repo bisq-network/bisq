@@ -24,6 +24,7 @@ import bisq.core.btc.listeners.BalanceListener;
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.http.MemPoolSpaceTxBroadcaster;
+import bisq.core.crypto.LowRSigningKey;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.user.Preferences;
 
@@ -359,8 +360,8 @@ public abstract class WalletService {
                 if (pubKey instanceof DeterministicKey)
                     propTx.keyPaths.put(scriptPubKey, (((DeterministicKey) pubKey).getPath()));
 
-                ECKey key;
-                if ((key = redeemData.getFullKey()) == null) {
+                ECKey key = LowRSigningKey.from(redeemData.getFullKey());
+                if (key == null) {
                     log.warn("No local key found for input {}", index);
                     return;
                 }

@@ -24,6 +24,7 @@ import bisq.core.btc.wallet.BsqWalletService;
 import bisq.core.btc.wallet.BtcWalletService;
 import bisq.core.btc.wallet.TxBroadcaster;
 import bisq.core.btc.wallet.WalletsManager;
+import bisq.core.crypto.LowRSigningKey;
 import bisq.core.dao.DaoSetupService;
 import bisq.core.dao.governance.proposal.TxException;
 import bisq.core.dao.state.DaoStateListener;
@@ -73,7 +74,7 @@ public class ProofOfBurnService implements DaoSetupService, DaoStateListener {
     private final DaoStateService daoStateService;
 
     @Getter
-    private IntegerProperty updateFlag = new SimpleIntegerProperty(0);
+    private final IntegerProperty updateFlag = new SimpleIntegerProperty(0);
     @Getter
     private final List<Tx> proofOfBurnTxList = new ArrayList<>();
 
@@ -194,7 +195,7 @@ public class ProofOfBurnService implements DaoSetupService, DaoStateListener {
 
     public Optional<String> sign(String proofOfBurnTxId, String message) {
         byte[] pubKey = getPubKey(proofOfBurnTxId);
-        ECKey key = bsqWalletService.findKeyFromPubKey(pubKey);
+        ECKey key = LowRSigningKey.from(bsqWalletService.findKeyFromPubKey(pubKey));
         if (key == null)
             return Optional.empty();
 

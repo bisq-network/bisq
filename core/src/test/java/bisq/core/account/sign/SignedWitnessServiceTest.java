@@ -19,6 +19,7 @@ package bisq.core.account.sign;
 
 
 import bisq.core.account.witness.AccountAgeWitness;
+import bisq.core.crypto.LowRSigningKey;
 import bisq.core.filter.FilterManager;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 
@@ -104,7 +105,7 @@ public class SignedWitnessServiceTest {
         aew1 = new AccountAgeWitness(account1DataHash, account1CreationTime);
         aew2 = new AccountAgeWitness(account2DataHash, account2CreationTime);
         aew3 = new AccountAgeWitness(account3DataHash, account3CreationTime);
-        arbitrator1Key = new ECKey();
+        arbitrator1Key = LowRSigningKey.from(new ECKey());
         peer1KeyPair = Sig.generateKeyPair();
         peer2KeyPair = Sig.generateKeyPair();
         peer3KeyPair = Sig.generateKeyPair();
@@ -320,7 +321,7 @@ public class SignedWitnessServiceTest {
             byte[] signerPubKey;
             if (i == 0) {
                 // use arbitrator key
-                ECKey arbitratorKey = new ECKey();
+                ECKey arbitratorKey = LowRSigningKey.from(new ECKey());
                 signedKeyPair = Sig.generateKeyPair();
                 String signature1String = arbitratorKey.signMessage(accountDataHashAsHexString);
                 signature = signature1String.getBytes(Charsets.UTF_8);

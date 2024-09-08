@@ -23,6 +23,7 @@ import bisq.desktop.components.InputTextField;
 import bisq.desktop.main.overlays.popups.Popup;
 
 import bisq.core.btc.wallet.WalletsManager;
+import bisq.core.crypto.LowRSigningKey;
 
 import bisq.common.config.Config;
 
@@ -80,7 +81,7 @@ public class SignVerifyPane extends CommonPane {
                 new Popup().information("Key not found in wallet").show();
             } else {
                 ECKey myPrivateKey = ECKey.fromPrivate(Utils.HEX.decode(privKeyHex));
-                String signatureBase64 = myPrivateKey.signMessage(messageText.getText());
+                String signatureBase64 = LowRSigningKey.from(myPrivateKey).signMessage(messageText.getText());
                 messageSig.setText(signatureBase64);
             }
         });
