@@ -36,6 +36,7 @@ import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerVerifyAndSignContract;
 import bisq.core.trade.protocol.bisq_v1.tasks.taker.TakerVerifyMakerFeePayment;
 import bisq.core.trade.protocol.bisq_v5.messages.DepositTxAndSellerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v5.messages.InputsForDepositTxResponse_v5;
+import bisq.core.trade.protocol.bisq_v5.tasks.AddWatchedScriptsToWallet;
 import bisq.core.trade.protocol.bisq_v5.tasks.CreateFeeBumpAddressEntries;
 import bisq.core.trade.protocol.bisq_v5.tasks.CreateRedirectTxs;
 import bisq.core.trade.protocol.bisq_v5.tasks.CreateWarningTxs;
@@ -135,6 +136,7 @@ public class BuyerAsTakerProtocol_v5 extends BaseBuyerProtocol_v5 implements Tak
                         TakerVerifyAndSignContract.class,
                         TakerPublishFeeTx.class,
                         BuyerAsTakerSignsDepositTx.class,
+                        AddWatchedScriptsToWallet.class,
                         BuyerSetupDepositTxListener.class,
                         BuyerSendsPreparedTxBuyerSignaturesMessage.class)
                         .withTimeout(120))

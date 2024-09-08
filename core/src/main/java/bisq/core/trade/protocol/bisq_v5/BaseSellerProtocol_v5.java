@@ -37,6 +37,7 @@ import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerPublishesTradeStatist
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSendPayoutTxPublishedMessage;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSignAndFinalizePayoutTx;
 import bisq.core.trade.protocol.bisq_v5.messages.PreparedTxBuyerSignaturesMessage;
+import bisq.core.trade.protocol.bisq_v5.tasks.AddWatchedScriptsToWallet;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerProcessPreparedTxBuyerSignaturesMessage;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSendsDepositTxAndSellerPaymentAccountMessage;
 
@@ -82,6 +83,7 @@ abstract class BaseSellerProtocol_v5 extends DisputeProtocol implements SellerPr
                 .with(message)
                 .from(peer))
                 .setup(tasks(SellerProcessPreparedTxBuyerSignaturesMessage.class,
+                        AddWatchedScriptsToWallet.class,
                         SellerSendsDepositTxAndSellerPaymentAccountMessage.class,
                         SellerPublishesDepositTx.class,
                         SellerPublishesTradeStatistics.class))

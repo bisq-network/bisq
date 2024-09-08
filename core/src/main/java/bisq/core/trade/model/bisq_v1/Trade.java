@@ -49,6 +49,8 @@ import com.google.protobuf.Message;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.script.Script;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -65,6 +67,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -705,6 +708,29 @@ public abstract class Trade extends TradeModel {
     public Transaction getClaimTx(BtcWalletService btcWalletService) {
         byte[] signedClaimTx = processModel.getSignedClaimTx();
         return signedClaimTx != null ? btcWalletService.getTxFromSerializedTx(signedClaimTx) : null;
+    }
+
+    public List<Script> getWatchedScripts(BtcWalletService btcWalletService) {
+        if (!hasV5Protocol()) {
+            return List.of();
+        }
+        Transaction depositTx = btcWalletService.getTxFromSerializedTx(processModel.getPreparedDepositTx());
+        TransactionOutput depositTxOutput = depositTx.getOutput(0);
+        Script depositScriptPubKey = depositTxOutput.getScriptPubKey();
+
+        Transaction warningTx = btcWalletService.getTxFromSerializedTx(processModel.getFinalizedWarningTx());
+        TransactionOutput warningTxOutput = warningTx.getOutput(0);
+        Script warningScriptPubKey = warningTxOutput.getScriptPubKey();
+
+        if (processModel.getTradePeer().getFinalizedWarningTx() == null) {
+            log.warn("Missing peer's finalized warning tx. Cannot find watched script for its escrow output.");
+            return List.of(depositScriptPubKey, warningScriptPubKey);
+        }
+        Transaction peersWarningTx = btcWalletService.getTxFromSerializedTx(processModel.getTradePeer().getFinalizedWarningTx());
+        TransactionOutput peersWarningTxOutput = peersWarningTx.getOutput(0);
+        Script peersWarningScriptPubKey = peersWarningTxOutput.getScriptPubKey();
+
+        return List.of(depositScriptPubKey, warningScriptPubKey, peersWarningScriptPubKey);
     }
 
     public void addAndPersistChatMessage(ChatMessage chatMessage) {

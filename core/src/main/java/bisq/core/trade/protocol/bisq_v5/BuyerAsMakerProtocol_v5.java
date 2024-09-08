@@ -36,6 +36,7 @@ import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerSetsLockTime;
 import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerVerifyTakerFeePayment;
 import bisq.core.trade.protocol.bisq_v5.messages.DepositTxAndSellerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v5.messages.PreparedTxBuyerSignaturesRequest;
+import bisq.core.trade.protocol.bisq_v5.tasks.AddWatchedScriptsToWallet;
 import bisq.core.trade.protocol.bisq_v5.tasks.CreateFeeBumpAddressEntries;
 import bisq.core.trade.protocol.bisq_v5.tasks.CreateRedirectTxs;
 import bisq.core.trade.protocol.bisq_v5.tasks.CreateWarningTxs;
@@ -143,6 +144,7 @@ public class BuyerAsMakerProtocol_v5 extends BaseBuyerProtocol_v5 implements Mak
                         FinalizeWarningTxs.class,
                         FinalizeRedirectTxs.class,
                         MakerRemovesOpenOffer.class,
+                        AddWatchedScriptsToWallet.class,
                         BuyerSendsPreparedTxBuyerSignaturesMessage.class)
                         .withTimeout(120))
                 .executeTasks();

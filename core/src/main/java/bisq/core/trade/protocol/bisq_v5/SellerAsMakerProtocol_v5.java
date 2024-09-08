@@ -38,6 +38,7 @@ import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerPublishesDepositTx;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerPublishesTradeStatistics;
 import bisq.core.trade.protocol.bisq_v1.tasks.seller_as_maker.SellerAsMakerCreatesUnsignedDepositTx;
 import bisq.core.trade.protocol.bisq_v5.messages.PreparedTxBuyerSignaturesMessage;
+import bisq.core.trade.protocol.bisq_v5.tasks.AddWatchedScriptsToWallet;
 import bisq.core.trade.protocol.bisq_v5.tasks.CreateFeeBumpAddressEntries;
 import bisq.core.trade.protocol.bisq_v5.tasks.CreateRedirectTxs;
 import bisq.core.trade.protocol.bisq_v5.tasks.CreateWarningTxs;
@@ -150,6 +151,7 @@ public class SellerAsMakerProtocol_v5 extends BaseSellerProtocol_v5 implements M
                         FinalizeWarningTxs.class,
                         FinalizeRedirectTxs.class,
                         MakerRemovesOpenOffer.class,
+                        AddWatchedScriptsToWallet.class,
                         SellerSendsDepositTxAndSellerPaymentAccountMessage.class,
                         SellerPublishesDepositTx.class,
                         SellerPublishesTradeStatistics.class))

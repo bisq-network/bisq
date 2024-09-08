@@ -92,6 +92,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.script.Script;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -723,6 +724,11 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
         // TODO The address entry should have been removed already. Check and if its the case remove that.
         btcWalletService.resetAddressEntriesForPendingTrade(trade.getId());
+        // FIXME: If the trade fails, any watched scripts will remain in the wallet permanently, which is not ideal.
+        List<Script> watchedScripts = trade.getWatchedScripts(btcWalletService);
+        if (!watchedScripts.isEmpty()) {
+            btcWalletService.getWallet().removeWatchedScripts(watchedScripts);
+        }
         requestPersistence();
     }
 
