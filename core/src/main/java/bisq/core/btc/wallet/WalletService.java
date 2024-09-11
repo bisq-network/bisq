@@ -44,6 +44,7 @@ import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
+import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.core.TransactionWitness;
 import org.bitcoinj.core.VerificationException;
@@ -66,6 +67,7 @@ import org.bitcoinj.wallet.KeyBag;
 import org.bitcoinj.wallet.RedeemData;
 import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
+import org.bitcoinj.wallet.WalletTransaction;
 import org.bitcoinj.wallet.listeners.WalletChangeEventListener;
 import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
 import org.bitcoinj.wallet.listeners.WalletCoinsSentEventListener;
@@ -89,6 +91,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicReference;
@@ -818,11 +821,33 @@ public abstract class WalletService {
     }*/
 
     public Coin getValueSentFromMeForTransaction(Transaction transaction) throws ScriptException {
-        return transaction.getValueSentFromMe(wallet);
+        // Does the same thing as transaction.getValueSentFromMe(wallet), except that watched connected
+        // outputs don't count towards the total, only outputs with pubKeys belonging to the wallet.
+        long satoshis = transaction.getInputs().stream()
+                .flatMap(input -> getConnectedOutput(input, WalletTransaction.Pool.UNSPENT)
+                        .or(() -> getConnectedOutput(input, WalletTransaction.Pool.SPENT))
+                        .or(() -> getConnectedOutput(input, WalletTransaction.Pool.PENDING))
+                        .filter(o -> o.isMine(wallet))
+                        .stream())
+                .mapToLong(o -> o.getValue().value)
+                .sum();
+        return Coin.valueOf(satoshis);
+    }
+
+    private Optional<TransactionOutput> getConnectedOutput(TransactionInput input, WalletTransaction.Pool pool) {
+        TransactionOutPoint outpoint = input.getOutpoint();
+        return Optional.ofNullable(wallet.getTransactionPool(pool).get(outpoint.getHash()))
+                .map(tx -> tx.getOutput(outpoint.getIndex()));
     }
 
     public Coin getValueSentToMeForTransaction(Transaction transaction) throws ScriptException {
-        return transaction.getValueSentToMe(wallet);
+        // Does the same thing as transaction.getValueSentToMe(wallet), except that watched outputs
+        // don't count towards the total, only outputs with pubKeys belonging to the wallet.
+        long satoshis = transaction.getOutputs().stream()
+                .filter(o -> o.isMine(wallet))
+                .mapToLong(o -> o.getValue().value)
+                .sum();
+        return Coin.valueOf(satoshis);
     }
 
 

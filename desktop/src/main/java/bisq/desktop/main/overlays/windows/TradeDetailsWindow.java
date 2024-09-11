@@ -288,17 +288,27 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
                     depositTxId, depositTxIdFromTx, depositTx);
         }
 
-        Transaction buyersWarningTx = trade.getBuyersWarningTx(btcWalletService);
-        Transaction sellersWarningTx = trade.getSellersWarningTx(btcWalletService);
-        Transaction buyersRedirectTx = trade.getBuyersRedirectTx(btcWalletService);
-        Transaction sellersRedirectTx = trade.getSellersRedirectTx(btcWalletService);
-        if (buyersWarningTx != null && sellersWarningTx != null && buyersRedirectTx != null && sellersRedirectTx != null) {
+        Transaction claimTx = trade.getClaimTx(btcWalletService);
+        if (trade.hasV5Protocol()) {
             // v5 trade protocol
-            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.buyersWarningTxId"), buyersWarningTx.getTxId().toString());
-            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.sellersWarningTxId"), sellersWarningTx.getTxId().toString());
-            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.sellersRedirectTxId"), sellersRedirectTx.getTxId().toString());
-            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.buyersRedirectTxId"), buyersRedirectTx.getTxId().toString());
-            Transaction claimTx = trade.getClaimTx(btcWalletService);
+            Transaction buyersWarningTx = trade.getBuyersWarningTx(btcWalletService);
+            Transaction sellersWarningTx = trade.getSellersWarningTx(btcWalletService);
+            Transaction buyersRedirectTx = trade.getBuyersRedirectTx(btcWalletService);
+            Transaction sellersRedirectTx = trade.getSellersRedirectTx(btcWalletService);
+            // Because the peer's warning & redirect txs could have been cleared as sensitive data for a failed or
+            // closed trade (as they contain the peer's fee bump address), we need to check for null here.
+            if (buyersWarningTx != null) {
+                addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.buyersWarningTxId"), buyersWarningTx.getTxId().toString());
+            }
+            if (sellersWarningTx != null) {
+                addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.sellersWarningTxId"), sellersWarningTx.getTxId().toString());
+            }
+            if (sellersRedirectTx != null) {
+                addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.sellersRedirectTxId"), sellersRedirectTx.getTxId().toString());
+            }
+            if (buyersRedirectTx != null) {
+                addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.buyersRedirectTxId"), buyersRedirectTx.getTxId().toString());
+            }
             if (claimTx != null) {
                 addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.claimTxId"), claimTx.getTxId().toString());
             }
@@ -309,7 +319,7 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.delayedPayoutTxId"), delayedPayoutTxId);
         }
 
-        if (trade.getPayoutTx() != null)
+        if (trade.getPayoutTx() != null && !trade.getPayoutTx().equals(claimTx))
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.payoutTxId"),
                     trade.getPayoutTx().getTxId().toString());
         if (showDisputedTx)

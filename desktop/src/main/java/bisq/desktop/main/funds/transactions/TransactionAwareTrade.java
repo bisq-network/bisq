@@ -149,7 +149,7 @@ class TransactionAwareTrade implements TransactionAwareTradable {
         return isDelayedPayoutOrWarningTx(txId) && !((Trade) tradeModel).hasV5Protocol();
     }
 
-    private boolean isWarningTx(String txId) {
+    boolean isWarningTx(String txId) {
         return isDelayedPayoutOrWarningTx(txId) && ((Trade) tradeModel).hasV5Protocol();
     }
 
@@ -169,6 +169,22 @@ class TransactionAwareTrade implements TransactionAwareTradable {
             return false;
         }
         return firstParent(this::isDepositTx, transaction, txId);
+    }
+
+    boolean isRedirectTx(String txId) {
+        if (isBsqSwapTrade()) {
+            return false;
+        }
+        Transaction transaction = btcWalletService.getTransaction(txId);
+        return transaction != null && !transaction.hasRelativeLockTime() && isRedirectOrClaimTx(transaction, null);
+    }
+
+    boolean isClaimTx(String txId) {
+        if (isBsqSwapTrade()) {
+            return false;
+        }
+        Transaction transaction = btcWalletService.getTransaction(txId);
+        return transaction != null && transaction.hasRelativeLockTime() && isRedirectOrClaimTx(transaction, null);
     }
 
     private boolean isRedirectOrClaimTx(Transaction transaction, @Nullable String txId) {
