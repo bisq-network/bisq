@@ -90,7 +90,7 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     private static final long DPT_MIN_TX_FEE_RATE = 10;
 
     // The DPT weight (= 4 * size) without any outputs.
-    private static final long DPT_MIN_WEIGHT = 426;
+    private static final long DPT_MIN_WEIGHT = 425; // (would be 1 less if we could guarantee peer signature is low-R)
     private static final long UNSIGNED_DPT_MIN_WEIGHT = 204;
 
     private final DaoStateService daoStateService;

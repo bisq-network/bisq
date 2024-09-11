@@ -18,6 +18,7 @@
 package bisq.core.btc.wallet;
 
 import bisq.core.btc.exceptions.TransactionVerificationException;
+import bisq.core.crypto.LowRSigningKey;
 
 import bisq.common.util.Tuple2;
 
@@ -100,7 +101,7 @@ public class WarningTransactionFactory {
         Sha256Hash sigHash = warningTx.hashForWitnessSignature(0, redeemScript,
                 warningTxInputValue, Transaction.SigHash.ALL, false);
 
-        ECKey.ECDSASignature mySignature = myMultiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
+        ECKey.ECDSASignature mySignature = LowRSigningKey.from(myMultiSigKeyPair).sign(sigHash, aesKey);
         WalletService.printTx("warningTx for sig creation", warningTx);
         WalletService.verifyTransaction(warningTx);
         return mySignature.encodeToDER();
@@ -117,6 +118,9 @@ public class WarningTransactionFactory {
         Script redeemScript = TradeWalletService.get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
         ECKey.ECDSASignature buyerECDSASignature = ECKey.ECDSASignature.decodeFromDER(buyerSignature);
         ECKey.ECDSASignature sellerECDSASignature = ECKey.ECDSASignature.decodeFromDER(sellerSignature);
+
+        checkArgument(!buyerECDSASignature.r.testBit(255), "buyer signature should be low-R");
+        checkArgument(!sellerECDSASignature.r.testBit(255), "seller signature should be low-R");
 
         TransactionSignature buyerTxSig = new TransactionSignature(buyerECDSASignature, Transaction.SigHash.ALL, false);
         TransactionSignature sellerTxSig = new TransactionSignature(sellerECDSASignature, Transaction.SigHash.ALL, false);

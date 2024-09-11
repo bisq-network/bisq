@@ -18,6 +18,7 @@
 package bisq.core.btc.wallet;
 
 import bisq.core.btc.exceptions.TransactionVerificationException;
+import bisq.core.crypto.LowRSigningKey;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.AddressFormatException;
@@ -103,7 +104,7 @@ public class ClaimTransactionFactory {
         Sha256Hash sigHash = claimTx.hashForWitnessSignature(0, redeemScript, claimTxInputValue,
                 Transaction.SigHash.ALL, false);
 
-        ECKey.ECDSASignature mySignature = myMultiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
+        ECKey.ECDSASignature mySignature = LowRSigningKey.from(myMultiSigKeyPair).sign(sigHash, aesKey);
         WalletService.printTx("claimTx for sig creation", claimTx);
         WalletService.verifyTransaction(claimTx);
         return mySignature;
