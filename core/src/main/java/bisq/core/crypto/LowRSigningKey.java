@@ -34,8 +34,10 @@ public class LowRSigningKey extends ECKey {
 
     protected LowRSigningKey(ECKey key) {
         super(key.hasPrivKey() ? key.getPrivKey() : null, new LazyECPoint(CURVE.getCurve(), key.getPubKey()));
-        this.keyCrypter = key.getKeyCrypter();
-        this.encryptedPrivateKey = key.getEncryptedPrivateKey();
+        if (this.priv == null) {
+            this.keyCrypter = key.getKeyCrypter();
+            this.encryptedPrivateKey = key.getEncryptedPrivateKey();
+        }
         originalKey = key;
     }
 
