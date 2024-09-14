@@ -235,7 +235,15 @@ public abstract class Trade extends TradeModel {
         // refund
         REFUND_REQUESTED,
         REFUND_REQUEST_STARTED_BY_PEER,
-        REFUND_REQUEST_CLOSED;
+        REFUND_REQUEST_CLOSED,
+
+        // warning
+        WARNING_SENT,
+        WARNING_SENT_BY_PEER,
+
+        // claim
+        ESCROW_CLAIMED,
+        ESCROW_CLAIMED_BY_PEER;
 
         public static Trade.DisputeState fromProto(protobuf.Trade.DisputeState disputeState) {
             return ProtoUtil.enumFromProto(Trade.DisputeState.class, disputeState.name());
@@ -255,13 +263,13 @@ public abstract class Trade extends TradeModel {
                     this == Trade.DisputeState.MEDIATION_CLOSED;
         }
 
+        public boolean isEscalated() {
+            return !isNotDisputed() && !isMediated();
+        }
+
         public boolean isArbitrated() {
-            return this == Trade.DisputeState.DISPUTE_REQUESTED ||
-                    this == Trade.DisputeState.DISPUTE_STARTED_BY_PEER ||
-                    this == Trade.DisputeState.DISPUTE_CLOSED ||
-                    this == Trade.DisputeState.REFUND_REQUESTED ||
-                    this == Trade.DisputeState.REFUND_REQUEST_STARTED_BY_PEER ||
-                    this == Trade.DisputeState.REFUND_REQUEST_CLOSED;
+            return isEscalated() && this != WARNING_SENT && this != WARNING_SENT_BY_PEER &&
+                    this != ESCROW_CLAIMED && this != ESCROW_CLAIMED_BY_PEER;
         }
     }
 
@@ -1029,10 +1037,12 @@ public abstract class Trade extends TradeModel {
         }
 
         // In refund agent case the funds are spent anyway with the time locked payout. We do not consider that as
-        // locked in funds.
+        // locked in funds. Similarly, if the funds were claimed after a timed-out warning by either peer.
         return disputeState != DisputeState.REFUND_REQUESTED &&
                 disputeState != DisputeState.REFUND_REQUEST_STARTED_BY_PEER &&
-                disputeState != DisputeState.REFUND_REQUEST_CLOSED;
+                disputeState != DisputeState.REFUND_REQUEST_CLOSED &&
+                disputeState != DisputeState.ESCROW_CLAIMED &&
+                disputeState != DisputeState.ESCROW_CLAIMED_BY_PEER;
     }
 
     public boolean isDepositConfirmed() {

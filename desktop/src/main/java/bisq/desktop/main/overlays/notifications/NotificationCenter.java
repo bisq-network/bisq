@@ -234,7 +234,6 @@ public class NotificationCenter {
                     Res.get("shared.dispute");
             switch (disputeState) {
                 case NO_DISPUTE:
-                    break;
                 case REFUND_REQUESTED:
                     break;
                 case REFUND_REQUEST_STARTED_BY_PEER:

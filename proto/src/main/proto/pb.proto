@@ -1778,6 +1778,11 @@ message Trade {
         REFUND_REQUESTED = 8;
         REFUND_REQUEST_STARTED_BY_PEER = 9;
         REFUND_REQUEST_CLOSED = 10;
+        // Added for v5 protocol:
+        WARNING_SENT = 11;
+        WARNING_SENT_BY_PEER = 12;
+        ESCROW_CLAIMED = 13;
+        ESCROW_CLAIMED_BY_PEER = 14;
     }
 
     enum TradePeriodState {
