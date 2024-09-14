@@ -253,6 +253,19 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         tryOpenDispute(false);
     }
 
+    public void onSendWarning() {
+        Trade trade = getTrade();
+        if (trade == null) {
+            log.error("Trade is null");
+            return;
+        }
+        // TODO: What if the peer has already broadcast his warning tx? We need to detect that.
+        trade.setDisputeState(Trade.DisputeState.WARNING_SENT);
+        ((DisputeProtocol) tradeManager.getTradeProtocol(trade)).onPublishWarningTx(
+                () -> log.info("Warning tx published"),
+                errorMessage -> new Popup().error(errorMessage).show());
+    }
+
     public void onOpenSupportTicket() {
         tryOpenDispute(true);
     }

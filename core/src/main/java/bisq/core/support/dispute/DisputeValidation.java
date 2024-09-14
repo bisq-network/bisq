@@ -218,22 +218,16 @@ public class DisputeValidation {
             String uid = dispute.getUid();
 
             String tradeId = dispute.getTradeId();
-            disputesPerTradeId.putIfAbsent(tradeId, new HashSet<>());
-            Set<String> set = disputesPerTradeId.get(tradeId);
-            set.add(uid);
+            disputesPerTradeId.computeIfAbsent(tradeId, id -> new HashSet<>()).add(uid);
 
             String delayedPayoutTxId = dispute.getDelayedPayoutTxId();
             if (delayedPayoutTxId != null) {
-                disputesPerDelayedPayoutTxId.putIfAbsent(delayedPayoutTxId, new HashSet<>());
-                set = disputesPerDelayedPayoutTxId.get(delayedPayoutTxId);
-                set.add(uid);
+                disputesPerDelayedPayoutTxId.computeIfAbsent(delayedPayoutTxId, id -> new HashSet<>()).add(uid);
             }
 
             String depositTxId = dispute.getDepositTxId();
             if (depositTxId != null) {
-                disputesPerDepositTxId.putIfAbsent(depositTxId, new HashSet<>());
-                set = disputesPerDepositTxId.get(depositTxId);
-                set.add(uid);
+                disputesPerDepositTxId.computeIfAbsent(depositTxId, id -> new HashSet<>()).add(uid);
             }
         });
 
@@ -255,6 +249,7 @@ public class DisputeValidation {
             // So until all users have updated to 1.4.0 we only check in refund agent case. With 1.4.0 we send the
             // delayed payout tx also in mediation cases and that if check can be removed.
             if (disputeToTest.getSupportType() == SupportType.REFUND) {
+                // TODO: Handle v5 protocol trades, which have no delayed payout tx.
                 checkNotNull(disputeToTestDelayedPayoutTxId,
                         "Delayed payout transaction ID is null. " +
                                 "Trade ID: " + disputeToTestTradeId);
@@ -265,20 +260,20 @@ public class DisputeValidation {
                     "agentsUid must not be null. Trade ID: " + disputeToTestTradeId);
 
             Set<String> disputesPerTradeIdItems = disputesPerTradeId.get(disputeToTestTradeId);
-            checkArgument(disputesPerTradeIdItems != null && disputesPerTradeIdItems.size() <= 2,
-                    "We found more then 2 disputes with the same trade ID. " +
-                            "Trade ID: " + disputeToTestTradeId);
+            checkArgument(disputesPerTradeIdItems == null || disputesPerTradeIdItems.size() <= 2,
+                    "We found more than 2 disputes with the same trade ID. " +
+                            "Trade ID: %s", disputeToTestTradeId);
             if (!disputesPerDelayedPayoutTxId.isEmpty()) {
                 Set<String> disputesPerDelayedPayoutTxIdItems = disputesPerDelayedPayoutTxId.get(disputeToTestDelayedPayoutTxId);
-                checkArgument(disputesPerDelayedPayoutTxIdItems != null && disputesPerDelayedPayoutTxIdItems.size() <= 2,
-                        "We found more then 2 disputes with the same delayedPayoutTxId. " +
-                                "Trade ID: " + disputeToTestTradeId);
+                checkArgument(disputesPerDelayedPayoutTxIdItems == null || disputesPerDelayedPayoutTxIdItems.size() <= 2,
+                        "We found more than 2 disputes with the same delayedPayoutTxId. " +
+                                "Trade ID: %s", disputeToTestTradeId);
             }
             if (!disputesPerDepositTxId.isEmpty()) {
                 Set<String> disputesPerDepositTxIdItems = disputesPerDepositTxId.get(disputeToTestDepositTxId);
-                checkArgument(disputesPerDepositTxIdItems != null && disputesPerDepositTxIdItems.size() <= 2,
-                        "We found more then 2 disputes with the same depositTxId. " +
-                                "Trade ID: " + disputeToTestTradeId);
+                checkArgument(disputesPerDepositTxIdItems == null || disputesPerDepositTxIdItems.size() <= 2,
+                        "We found more than 2 disputes with the same depositTxId. " +
+                                "Trade ID: %s", disputeToTestTradeId);
             }
         } catch (IllegalArgumentException e) {
             throw new DisputeReplayException(disputeToTest, e.getMessage());
@@ -287,7 +282,7 @@ public class DisputeValidation {
                             "disputeToTest={}, disputesPerTradeId={}, disputesPerDelayedPayoutTxId={}, " +
                             "disputesPerDepositTxId={}",
                     disputeToTest, disputesPerTradeId, disputesPerDelayedPayoutTxId, disputesPerDepositTxId);
-            throw new DisputeReplayException(disputeToTest, e.toString() + " at dispute " + disputeToTest.toString());
+            throw new DisputeReplayException(disputeToTest, e + " at dispute " + disputeToTest);
         }
     }
 
