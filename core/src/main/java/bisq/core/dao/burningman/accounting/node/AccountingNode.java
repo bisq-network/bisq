@@ -50,11 +50,10 @@ import static org.bitcoinj.core.Utils.HEX;
 
 @Slf4j
 public abstract class AccountingNode implements DaoSetupService, DaoStateListener {
-    public static final Set<String> PERMITTED_PUB_KEYS = Set.of("034527b1c2b644283c19c180efbcc9ba51258fbe5c5ce0c95b522f1c9b07896e48",
-            "02a06121632518eef4400419a3aaf944534e8cf357138dd82bba3ad78ce5902f27",
-            "029ff0da89aa03507dfe0529eb74a53bc65fbee7663ceba04f014b0ee4520973b5",
-            "0205c992604969bc70914fc89a6daa43cd5157ac886224a8c0901dd1dc6dd1df45",
-            "023e699281b3ee41f35991f064a5c12cb1b61286dda22c8220b3f707aa21235efb");
+    public static final Set<String> PERMITTED_PUB_KEYS = Set.of(
+            "02640325af0cc68462664cfacdb4b59754156f293c04aae32b5c8b1650f914fe61", // @jester4042
+            "027056a287f80591bde6fff24451c99b2e518bd40a8a04d079aba477e1180f603d" // @runbtc
+    );
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Oracle verification
