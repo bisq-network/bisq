@@ -122,7 +122,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             "xmrchain.net"
     ));
     private static final ArrayList<String> XMR_TX_PROOF_SERVICES = new ArrayList<>(Arrays.asList(
-            "xmrexplrthytnunr4jasr3vnjc6jo5idsyxzv74a7ep7dy7lwcv2eoyd.onion"  // @runbtc
+            "xmrexplrthytnunr4jasr3vnjc6jo5idsyxzv74a7ep7dy7lwcv2eoyd.onion",     // @runbtc
+            "nklwsomtuok6dhqqecp3a26xzgokfgmeuaplcdkaxehncg57yzarvbad.onion"      // @suddenwhipvapor
     ));
 
 
