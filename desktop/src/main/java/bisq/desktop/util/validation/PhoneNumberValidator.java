@@ -40,6 +40,11 @@ public class PhoneNumberValidator extends InputValidator {
     @Nullable
     @Getter
     private String normalizedPhoneNumber;
+    /**
+     * Required length of phone number (excluding country code).
+     */
+    @Getter
+    private int requiredLength;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -49,11 +54,16 @@ public class PhoneNumberValidator extends InputValidator {
     // but isoCountryCode must be set before validation.
     public PhoneNumberValidator() {
     }
-    
+
     public PhoneNumberValidator(String isoCountryCode) {
         this.isoCountryCode = isoCountryCode;
         this.callingCode = CountryCallingCodes.getCallingCode(isoCountryCode);
         this.normalizedCallingCode = CountryCallingCodes.getNormalizedCallingCode(isoCountryCode);
+    }
+
+    public PhoneNumberValidator(String isoCountryCode, int requiredLength) {
+        this(isoCountryCode);
+        this.requiredLength = requiredLength;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -95,6 +105,8 @@ public class PhoneNumberValidator extends InputValidator {
             } else {
                 normalizedPhoneNumber = "+" + getCallingCode() + pureNumber;
             }
+
+            result = validateRequiredLength(normalizedPhoneNumber, normalizedCallingCode);
         }
         return result;
     }
@@ -157,6 +169,16 @@ public class PhoneNumberValidator extends InputValidator {
             } else {
                 return new ValidationResult(true);
             }
+        } catch (Throwable t) {
+            return new ValidationResult(false, Res.get("validation.invalidInput", t.getMessage()));
+        }
+    }
+
+    private ValidationResult validateRequiredLength(String normalizedPhoneNumber, String normalizedCallingCode) {
+        try {
+            return ((0 == requiredLength) || ((normalizedPhoneNumber.length() - normalizedCallingCode.length() - 1) == requiredLength))
+                    ? new ValidationResult(true)
+                    : new ValidationResult(false, Res.get("validation.phone.incorrectLength", requiredLength));
         } catch (Throwable t) {
             return new ValidationResult(false, Res.get("validation.invalidInput", t.getMessage()));
         }
