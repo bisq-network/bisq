@@ -106,7 +106,11 @@ public class PhoneNumberValidator extends InputValidator {
                 normalizedPhoneNumber = "+" + getCallingCode() + pureNumber;
             }
 
+            //  If the 'requiredLength' was set, there's still one more check to apply on the normalizedNumber itself
             result = validateRequiredLength(normalizedPhoneNumber, normalizedCallingCode);
+            if (!result.isValid) {
+                normalizedPhoneNumber = null;
+            }
         }
         return result;
     }

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PhoneNumberValidatorTest {
@@ -296,4 +297,78 @@ public class PhoneNumberValidatorTest {
         // TODO validator incorrectly treats input as if it were +1 (202) 53-0000
         /// assertEquals("+1202530000", validator.getNormalizedPhoneNumber());
     }
+
+    @Test
+    public void testPhoneNumberLength() {
+        // Construct the validator to be used in these test cases
+        validator = new PhoneNumberValidator("US");  // No requiredLength passed in these tests
+
+        // Most important, does the validator work for correct phone numbers?
+        validationResult = validator.validate("+1 512 888 0150");
+        assertTrue(validationResult.isValid, "+1 512 888 0150 should be a valid number in US");
+        assertNotNull(validator.getNormalizedPhoneNumber());
+        assertEquals(validator.getNormalizedPhoneNumber(), "+15128880150");
+
+        // If no country code provided by user, normalized number should have it added
+        validationResult = validator.validate("5128880150");
+        assertTrue(validationResult.isValid, "5128880150 should be a valid number in US");
+        assertNotNull(validator.getNormalizedPhoneNumber());
+        assertEquals(validator.getNormalizedPhoneNumber(), "+15128880150");
+
+        // If no phone number too short, there's a message for that
+        validationResult = validator.validate("+15121");
+        assertFalse(validationResult.isValid, "+15121 should be too short");
+        assertNull(validator.getNormalizedPhoneNumber());
+        assertEquals(Res.get("validation.phone.insufficientDigits", "+15121"), validationResult.errorMessage);
+
+        // If no phone number too long, there's a message for that
+        validationResult = validator.validate("51288801505128880150");
+        assertFalse(validationResult.isValid, "51288801505128880150 should be too long");
+        assertNull(validator.getNormalizedPhoneNumber());
+        assertEquals(Res.get("validation.phone.tooManyDigits", "51288801505128880150"), validationResult.errorMessage);
+
+        // If phone number is not exactly the requiredLength, it still may be okay if length in the range 4-12
+        validationResult = validator.validate("123456");
+        assertTrue(validationResult.isValid, "123456 should be a considered a valid number");
+        assertNotNull(validator.getNormalizedPhoneNumber());
+        assertEquals(validator.getNormalizedPhoneNumber(), "+123456");
+    }
+
+    @Test
+    public void testPhoneNumberRequiredLength() {
+        // Construct the validator to be used in these test cases
+        final int REQUIRED_LENGTH = 10;
+        validator = new PhoneNumberValidator("US", REQUIRED_LENGTH);  // requiredLength passed for these tests
+
+        // Most important, does the validator work for correct phone numbers?
+        validationResult = validator.validate("+1 512 888 0150");
+        assertTrue(validationResult.isValid, "+1 512 888 0150 should be a valid number in US");
+        assertNotNull(validator.getNormalizedPhoneNumber());
+        assertEquals(validator.getNormalizedPhoneNumber(), "+15128880150");
+
+        // If no country code provided by user, normalized number should have it added
+        validationResult = validator.validate("5128880150");
+        assertTrue(validationResult.isValid, "5128880150 should be a valid number in US");
+        assertNotNull(validator.getNormalizedPhoneNumber());
+        assertEquals(validator.getNormalizedPhoneNumber(), "+15128880150");
+
+        // If no phone number too short, there's a message for that
+        validationResult = validator.validate("+15121");
+        assertFalse(validationResult.isValid, "+15121 should be too short");
+        assertNull(validator.getNormalizedPhoneNumber());
+        assertEquals(Res.get("validation.phone.insufficientDigits", "+15121"), validationResult.errorMessage);
+
+        // If no phone number too long, there's a message for that
+        validationResult = validator.validate("51288801505128880150");
+        assertFalse(validationResult.isValid, "51288801505128880150 should be too long");
+        assertNull(validator.getNormalizedPhoneNumber());
+        assertEquals(Res.get("validation.phone.tooManyDigits", "51288801505128880150"), validationResult.errorMessage);
+
+        // If phone number not exactly the requiredLength, there's a message for that too
+        validationResult = validator.validate("+1 888 123 456");
+        assertFalse(validationResult.isValid, "+1 888 123 456 should not be a valid number in US");
+        assertNull(validator.getNormalizedPhoneNumber());
+        assertEquals(Res.get("validation.phone.incorrectLength", validator.getRequiredLength()), validationResult.errorMessage);
+    }
+
 }
