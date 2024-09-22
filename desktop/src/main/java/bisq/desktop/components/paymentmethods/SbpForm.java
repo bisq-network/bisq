@@ -122,8 +122,8 @@ public class SbpForm extends PaymentMethodForm {
     @Override
     public void updateAllInputsValid() {
         allInputsValid.set(isAccountNameValid()
-                && SbpValidator.validate(SbpAccount.getMobileNumber()).isValid
                 && inputValidator.validate(SbpAccount.getHolderName()).isValid
+                && SbpValidator.validate(SbpAccount.getMobileNumber()).isValid
                 && inputValidator.validate(SbpAccount.getBankName()).isValid
                 && SbpAccount.getTradeCurrencies().size() > 0);
     }

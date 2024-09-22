@@ -40,8 +40,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @Slf4j
 public final class SbpAccountPayload extends PaymentAccountPayload implements PayloadWithHolderName {
-    private String mobileNumber = "";
     private String holderName = "";
+    private String mobileNumber = "";
     private String bankName = "";
 
     public SbpAccountPayload(String paymentMethod, String id) {
@@ -55,8 +55,8 @@ public final class SbpAccountPayload extends PaymentAccountPayload implements Pa
 
     private SbpAccountPayload(String paymentMethod,
                                        String id,
-                                       String mobileNumber,
                                        String holderName,
+                                       String mobileNumber,
                                        String bankName,
                                        long maxTradePeriod,
                                        Map<String, String> excludeFromJsonDataMap) {
@@ -65,8 +65,8 @@ public final class SbpAccountPayload extends PaymentAccountPayload implements Pa
                 maxTradePeriod,
                 excludeFromJsonDataMap);
 
-        this.mobileNumber = mobileNumber;
         this.holderName = holderName;
+        this.mobileNumber = mobileNumber;
         this.bankName = bankName;
     }
 
@@ -74,8 +74,8 @@ public final class SbpAccountPayload extends PaymentAccountPayload implements Pa
     public Message toProtoMessage() {
         return getPaymentAccountPayloadBuilder()
                 .setSbpAccountPayload(protobuf.SbpAccountPayload.newBuilder()
-                        .setMobileNumber(mobileNumber)
                         .setHolderName(holderName)
+                        .setMobileNumber(mobileNumber)
                         .setBankName(bankName))
                 .build();
     }
@@ -83,8 +83,8 @@ public final class SbpAccountPayload extends PaymentAccountPayload implements Pa
     public static SbpAccountPayload fromProto(protobuf.PaymentAccountPayload proto) {
         return new SbpAccountPayload(proto.getPaymentMethodId(),
                 proto.getId(),
-                proto.getSbpAccountPayload().getMobileNumber(),
                 proto.getSbpAccountPayload().getHolderName(),
+                proto.getSbpAccountPayload().getMobileNumber(),
                 proto.getSbpAccountPayload().getBankName(),
                 proto.getMaxTradePeriod(),
                 new HashMap<>(proto.getExcludeFromJsonDataMap()));
