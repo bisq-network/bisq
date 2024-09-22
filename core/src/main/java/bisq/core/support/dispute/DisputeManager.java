@@ -324,9 +324,9 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
                     disputedTradeUpdate(newValue.toString(), dispute, false);
                 }
             });
-            // user rejected mediation after lockup period: opening arbitration
+            // user rejected mediation after lockup period: opening arbitration after peer redirects
             trade.disputeStateProperty().addListener((observable, oldValue, newValue) -> {
-                if (newValue.isArbitrated()) {
+                if (newValue.isEscalated()) {
                     disputedTradeUpdate(newValue.toString(), dispute, true);
                 }
             });
@@ -453,28 +453,34 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
     protected void onPeerOpenedDisputeMessage(PeerOpenedDisputeMessage peerOpenedDisputeMessage) {
         Dispute dispute = peerOpenedDisputeMessage.getDispute();
         tradeManager.getTradeById(dispute.getTradeId()).ifPresentOrElse(
-            trade -> peerOpenedDisputeForTrade(peerOpenedDisputeMessage, dispute, trade),
-            () -> closedTradableManager.getTradableById(dispute.getTradeId()).ifPresentOrElse(
-                closedTradable -> newDisputeRevertsClosedTrade(peerOpenedDisputeMessage, dispute, (Trade)closedTradable),
-                () -> failedTradesManager.getTradeById(dispute.getTradeId()).ifPresent(
-                    trade -> newDisputeRevertsFailedTrade(peerOpenedDisputeMessage, dispute, trade))));
+                trade -> peerOpenedDisputeForTrade(peerOpenedDisputeMessage, dispute, trade),
+                () -> closedTradableManager.getTradableById(dispute.getTradeId()).ifPresentOrElse(
+                        closedTradable -> newDisputeRevertsClosedTrade(peerOpenedDisputeMessage, dispute, (Trade) closedTradable),
+                        () -> failedTradesManager.getTradeById(dispute.getTradeId()).ifPresent(
+                                trade -> newDisputeRevertsFailedTrade(peerOpenedDisputeMessage, dispute, trade))));
     }
 
-    private void newDisputeRevertsFailedTrade(PeerOpenedDisputeMessage peerOpenedDisputeMessage, Dispute dispute, Trade trade) {
+    private void newDisputeRevertsFailedTrade(PeerOpenedDisputeMessage peerOpenedDisputeMessage,
+                                              Dispute dispute,
+                                              Trade trade) {
         log.info("Peer dispute ticket received, reverting failed trade {} to pending", trade.getShortId());
         failedTradesManager.removeTrade(trade);
         tradeManager.addTradeToPendingTrades(trade);
         peerOpenedDisputeForTrade(peerOpenedDisputeMessage, dispute, trade);
     }
 
-    private void newDisputeRevertsClosedTrade(PeerOpenedDisputeMessage peerOpenedDisputeMessage, Dispute dispute, Trade trade) {
+    private void newDisputeRevertsClosedTrade(PeerOpenedDisputeMessage peerOpenedDisputeMessage,
+                                              Dispute dispute,
+                                              Trade trade) {
         log.info("Peer dispute ticket received, reverting closed trade {} to pending", trade.getShortId());
         closedTradableManager.remove(trade);
         tradeManager.addTradeToPendingTrades(trade);
         peerOpenedDisputeForTrade(peerOpenedDisputeMessage, dispute, trade);
     }
 
-    private void peerOpenedDisputeForTrade(PeerOpenedDisputeMessage peerOpenedDisputeMessage, Dispute dispute, Trade trade) {
+    private void peerOpenedDisputeForTrade(PeerOpenedDisputeMessage peerOpenedDisputeMessage,
+                                           Dispute dispute,
+                                           Trade trade) {
         String errorMessage = null;
         T disputeList = getDisputeList();
         if (disputeList == null) {
