@@ -259,8 +259,10 @@ public class PendingTradesDataModel extends ActivatableDataModel {
             log.error("Trade is null");
             return;
         }
-        // TODO: What if the peer has already broadcast his warning tx? We need to detect that.
-        trade.setDisputeState(Trade.DisputeState.WARNING_SENT);
+        if (trade.getDisputeState().isEscalated()) {
+            log.error("A warning tx has already been seen for trade");
+            return;
+        }
         ((DisputeProtocol) tradeManager.getTradeProtocol(trade)).onPublishWarningTx(
                 () -> log.info("Warning tx published"),
                 errorMessage -> new Popup().error(errorMessage).show());

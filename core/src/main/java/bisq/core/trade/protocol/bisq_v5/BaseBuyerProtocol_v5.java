@@ -19,6 +19,7 @@ package bisq.core.trade.protocol.bisq_v5;
 
 import bisq.core.trade.model.bisq_v1.BuyerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.model.bisq_v1.Trade.Phase;
 import bisq.core.trade.protocol.BuyerProtocol;
 import bisq.core.trade.protocol.FluentProtocol;
 import bisq.core.trade.protocol.TradeMessage;
@@ -35,6 +36,7 @@ import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerSetupDepositTxListener;
 import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerSetupPayoutTxListener;
 import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerSignPayoutTx;
 import bisq.core.trade.protocol.bisq_v5.messages.DepositTxAndSellerPaymentAccountMessage;
+import bisq.core.trade.protocol.bisq_v5.tasks.SetupWarningTxListener;
 import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerProcessDepositTxAndSellerPaymentAccountMessage;
 
 import bisq.network.p2p.NodeAddress;
@@ -64,17 +66,23 @@ abstract class BaseBuyerProtocol_v5 extends DisputeProtocol implements BuyerProt
         super.onInitialized();
         // We get called the constructor with any possible state and phase. As we don't want to log an error for such
         // cases we use the alternative 'given' method instead of 'expect'.
-        given(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
+        given(phase(Phase.TAKER_FEE_PUBLISHED)
                 .with(BuyerEvent.STARTUP))
                 .setup(tasks(BuyerSetupDepositTxListener.class))
                 .executeTasks();
 
-        given(anyPhase(Trade.Phase.FIAT_SENT, Trade.Phase.FIAT_RECEIVED)
+        given(anyPhase(Phase.DEPOSIT_PUBLISHED, Phase.DEPOSIT_CONFIRMED, Phase.FIAT_SENT, Phase.FIAT_RECEIVED)
+                .preCondition(trade.hasV5Protocol()) // FIXME: If trade opened with v4 protocol, should use BaseBuyerProtocol_v4.
+                .with(BuyerEvent.STARTUP))
+                .setup(tasks(SetupWarningTxListener.class))
+                .executeTasks();
+
+        given(anyPhase(Phase.FIAT_SENT, Phase.FIAT_RECEIVED)
                 .with(BuyerEvent.STARTUP))
                 .setup(tasks(BuyerSetupPayoutTxListener.class))
                 .executeTasks();
 
-        given(anyPhase(Trade.Phase.FIAT_SENT, Trade.Phase.FIAT_RECEIVED)
+        given(anyPhase(Phase.FIAT_SENT, Phase.FIAT_RECEIVED)
                 .anyState(Trade.State.BUYER_STORED_IN_MAILBOX_FIAT_PAYMENT_INITIATED_MSG,
                         Trade.State.BUYER_SEND_FAILED_FIAT_PAYMENT_INITIATED_MSG)
                 .with(BuyerEvent.STARTUP))
@@ -110,13 +118,13 @@ abstract class BaseBuyerProtocol_v5 extends DisputeProtocol implements BuyerProt
     // mailbox message but the stored in mailbox case is not expected and the seller would try to send the message again
     // in the hope to reach the buyer directly in case of network issues.
     protected void handle(DepositTxAndSellerPaymentAccountMessage message, NodeAddress peer) {
-        expect(anyPhase(Trade.Phase.TAKER_FEE_PUBLISHED, Trade.Phase.DEPOSIT_PUBLISHED)
+        expect(anyPhase(Phase.TAKER_FEE_PUBLISHED, Phase.DEPOSIT_PUBLISHED)
                 .with(message)
                 .from(peer)
                 .preCondition(trade.getDepositTx() == null || processModel.getTradePeer().getPaymentAccountPayload() == null,
                         () -> {
-                            log.warn("We received a DepositTxAndDelayedPayoutTxMessage but we have already processed the deposit and " +
-                                    "delayed payout tx so we ignore the message. This can happen if the ACK message to the peer did not " +
+                            log.warn("We received a DepositTxAndSellerPaymentAccountMessage but we have already processed the deposit tx and " +
+                                    "seller payment account so we ignore the message. This can happen if the ACK message to the peer did not " +
                                     "arrive and the peer repeats sending us the message. We send another ACK msg.");
                             stopTimeout();
                             sendAckMessage(message, true, null);
@@ -124,6 +132,7 @@ abstract class BaseBuyerProtocol_v5 extends DisputeProtocol implements BuyerProt
                         }))
                 .setup(tasks(BuyerProcessDepositTxAndSellerPaymentAccountMessage.class,
                         ApplyFilter.class,
+                        SetupWarningTxListener.class,
                         VerifyPeersAccountAgeWitness.class,
                         BuyerSendsShareBuyerPaymentAccountMessage.class)
                         .using(new TradeTaskRunner(trade,
@@ -142,7 +151,7 @@ abstract class BaseBuyerProtocol_v5 extends DisputeProtocol implements BuyerProt
     @Override
     public void onPaymentStarted(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         BuyerEvent event = BuyerEvent.PAYMENT_SENT;
-        expect(phase(Trade.Phase.DEPOSIT_CONFIRMED)
+        expect(phase(Phase.DEPOSIT_CONFIRMED)
                 .with(event)
                 .preCondition(trade.confirmPermitted()))
                 .setup(tasks(ApplyFilter.class,
@@ -171,7 +180,7 @@ abstract class BaseBuyerProtocol_v5 extends DisputeProtocol implements BuyerProt
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void handle(PayoutTxPublishedMessage message, NodeAddress peer) {
-        expect(anyPhase(Trade.Phase.FIAT_SENT, Trade.Phase.PAYOUT_PUBLISHED)
+        expect(anyPhase(Phase.FIAT_SENT, Phase.PAYOUT_PUBLISHED)
                 .with(message)
                 .from(peer))
                 .setup(tasks(BuyerProcessPayoutTxPublishedMessage.class))

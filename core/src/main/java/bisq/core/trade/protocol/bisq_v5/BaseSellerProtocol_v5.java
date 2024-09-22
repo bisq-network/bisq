@@ -19,6 +19,7 @@ package bisq.core.trade.protocol.bisq_v5;
 
 import bisq.core.trade.model.bisq_v1.SellerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.model.bisq_v1.Trade.Phase;
 import bisq.core.trade.protocol.FluentProtocol;
 import bisq.core.trade.protocol.SellerProtocol;
 import bisq.core.trade.protocol.TradeMessage;
@@ -38,6 +39,7 @@ import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSendPayoutTxPublished
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSignAndFinalizePayoutTx;
 import bisq.core.trade.protocol.bisq_v5.messages.PreparedTxBuyerSignaturesMessage;
 import bisq.core.trade.protocol.bisq_v5.tasks.AddWatchedScriptsToWallet;
+import bisq.core.trade.protocol.bisq_v5.tasks.SetupWarningTxListener;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerProcessPreparedTxBuyerSignaturesMessage;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSendsDepositTxAndSellerPaymentAccountMessage;
 
@@ -55,8 +57,24 @@ abstract class BaseSellerProtocol_v5 extends DisputeProtocol implements SellerPr
         PAYMENT_RECEIVED
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
     protected BaseSellerProtocol_v5(SellerTrade trade) {
         super(trade);
+    }
+
+    @Override
+    protected void onInitialized() {
+        super.onInitialized();
+        // We get called the constructor with any possible state and phase. As we don't want to log an error for such
+        // cases we use the alternative 'given' method instead of 'expect'.
+        given(anyPhase(Phase.DEPOSIT_PUBLISHED, Phase.DEPOSIT_CONFIRMED, Phase.FIAT_SENT, Phase.FIAT_RECEIVED)
+                .preCondition(trade.hasV5Protocol()) // FIXME: If trade opened with v4 protocol, should use BaseSellerProtocol_v4.
+                .with(SellerEvent.STARTUP))
+                .setup(tasks(SetupWarningTxListener.class))
+                .executeTasks();
     }
 
 
@@ -79,19 +97,20 @@ abstract class BaseSellerProtocol_v5 extends DisputeProtocol implements SellerPr
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     protected void handle(PreparedTxBuyerSignaturesMessage message, NodeAddress peer) {
-        expect(phase(Trade.Phase.TAKER_FEE_PUBLISHED)
+        expect(phase(Phase.TAKER_FEE_PUBLISHED)
                 .with(message)
                 .from(peer))
                 .setup(tasks(SellerProcessPreparedTxBuyerSignaturesMessage.class,
                         AddWatchedScriptsToWallet.class,
                         SellerSendsDepositTxAndSellerPaymentAccountMessage.class,
                         SellerPublishesDepositTx.class,
+                        SetupWarningTxListener.class,
                         SellerPublishesTradeStatistics.class))
                 .executeTasks();
     }
 
     protected void handle(ShareBuyerPaymentAccountMessage message, NodeAddress peer) {
-        expect(anyPhase(Trade.Phase.TAKER_FEE_PUBLISHED, Trade.Phase.DEPOSIT_PUBLISHED, Trade.Phase.DEPOSIT_CONFIRMED)
+        expect(anyPhase(Phase.TAKER_FEE_PUBLISHED, Phase.DEPOSIT_PUBLISHED, Phase.DEPOSIT_CONFIRMED)
                 .with(message)
                 .from(peer))
                 .setup(tasks(SellerProcessShareBuyerPaymentAccountMessage.class,
@@ -117,7 +136,7 @@ abstract class BaseSellerProtocol_v5 extends DisputeProtocol implements SellerPr
         // a mailbox message with CounterCurrencyTransferStartedMessage.
         // TODO A better fix would be to add a listener for the wallet sync state and process
         // the mailbox msg once wallet is ready and trade state set.
-        expect(anyPhase(Trade.Phase.DEPOSIT_CONFIRMED, Trade.Phase.DEPOSIT_PUBLISHED)
+        expect(anyPhase(Phase.DEPOSIT_CONFIRMED, Phase.DEPOSIT_PUBLISHED)
                 .with(message)
                 .from(peer)
                 .preCondition(trade.getPayoutTx() == null,
@@ -143,7 +162,7 @@ abstract class BaseSellerProtocol_v5 extends DisputeProtocol implements SellerPr
     @Override
     public void onPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
         SellerEvent event = SellerEvent.PAYMENT_RECEIVED;
-        expect(anyPhase(Trade.Phase.FIAT_SENT, Trade.Phase.PAYOUT_PUBLISHED)
+        expect(anyPhase(Phase.FIAT_SENT, Phase.PAYOUT_PUBLISHED)
                 .with(event)
                 .preCondition(trade.confirmPermitted()))
                 .setup(tasks(
