@@ -60,6 +60,7 @@ import bisq.desktop.components.paymentmethods.RevolutForm;
 import bisq.desktop.components.paymentmethods.RtgsForm;
 import bisq.desktop.components.paymentmethods.SameBankForm;
 import bisq.desktop.components.paymentmethods.SatispayForm;
+import bisq.desktop.components.paymentmethods.SbpForm;
 import bisq.desktop.components.paymentmethods.SepaForm;
 import bisq.desktop.components.paymentmethods.SepaInstantForm;
 import bisq.desktop.components.paymentmethods.SpecificBankForm;
@@ -102,6 +103,7 @@ import bisq.core.payment.payload.HalCashAccountPayload;
 import bisq.core.payment.payload.MoneyGramAccountPayload;
 import bisq.core.payment.payload.PaymentAccountPayload;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.payment.payload.SbpAccountPayload;
 import bisq.core.payment.payload.SepaAccountPayload;
 import bisq.core.payment.payload.SepaInstantAccountPayload;
 import bisq.core.payment.payload.SwiftAccountPayload;
@@ -430,6 +432,9 @@ public class BuyerStep2View extends TradeStepView {
             case PaymentMethod.MERCADO_PAGO_ID:
                 gridRow = MercadoPagoForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
                 break;
+            case PaymentMethod.SBP_ID:
+                gridRow = SbpForm.addFormForBuyer(gridPane, gridRow, paymentAccountPayload);
+                break;
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethodId);
         }
@@ -713,6 +718,8 @@ public class BuyerStep2View extends TradeStepView {
                 message += Res.get("portfolio.pending.step2_buyer.pay", amount) +
                         refTextWarn + "\n\n" +
                         Res.get("portfolio.pending.step2_buyer.fees.swift");
+            } else if (paymentAccountPayload instanceof SbpAccountPayload) {
+                message += Res.get("portfolio.pending.step2_buyer.sbp", amount);
             } else {
                 message += Res.get("portfolio.pending.step2_buyer.pay", amount) +
                         refTextWarn + "\n\n" +

@@ -64,6 +64,7 @@ import bisq.core.payment.payload.RevolutAccountPayload;
 import bisq.core.payment.payload.RtgsAccountPayload;
 import bisq.core.payment.payload.SameBankAccountPayload;
 import bisq.core.payment.payload.SatispayAccountPayload;
+import bisq.core.payment.payload.SbpAccountPayload;
 import bisq.core.payment.payload.SepaAccountPayload;
 import bisq.core.payment.payload.SepaInstantAccountPayload;
 import bisq.core.payment.payload.SpecificBanksAccountPayload;
@@ -236,6 +237,8 @@ public class CoreProtoResolver implements ProtoResolver {
                     return SwiftAccountPayload.fromProto(proto);
                 case BSQ_SWAP_ACCOUNT_PAYLOAD:
                     return BsqSwapAccountPayload.fromProto(proto);
+                case SBP_ACCOUNT_PAYLOAD:
+                    return SbpAccountPayload.fromProto(proto);
 
                 // Cannot be deleted as it would break old trade history entries
                 case O_K_PAY_ACCOUNT_PAYLOAD:

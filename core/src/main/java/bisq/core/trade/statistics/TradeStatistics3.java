@@ -197,7 +197,8 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         TIKKIE,
         TRANSFERWISE_USD,
         ACH_TRANSFER,
-        DOMESTIC_WIRE_TRANSFER;
+        DOMESTIC_WIRE_TRANSFER,
+        SBP;
 
         private static final PaymentMethodMapper[] values = values(); // cache for perf gain
     }
