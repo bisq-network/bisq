@@ -67,6 +67,9 @@ public final class TradingPeer implements TradePeer {
     @Nullable
     private byte[] finalizedRedirectTx;
 
+    @Nullable
+    private byte[] signedClaimTx;
+
 
     // Transient/Mutable
     // Added in v1.2.0
@@ -139,6 +142,7 @@ public final class TradingPeer implements TradePeer {
         Optional.ofNullable(hashOfPaymentAccountPayload).ifPresent(e -> builder.setHashOfPaymentAccountPayload(ByteString.copyFrom(e)));
         Optional.ofNullable(finalizedWarningTx).ifPresent(e -> builder.setFinalizedWarningTx(ByteString.copyFrom(e)));
         Optional.ofNullable(finalizedRedirectTx).ifPresent(e -> builder.setFinalizedRedirectTx(ByteString.copyFrom(e)));
+        Optional.ofNullable(signedClaimTx).ifPresent(e -> builder.setFinalizedRedirectTx(ByteString.copyFrom(e)));
         builder.setCurrentDate(currentDate);
         return builder.build();
     }
@@ -170,6 +174,7 @@ public final class TradingPeer implements TradePeer {
             tradingPeer.setHashOfPaymentAccountPayload(ProtoUtil.byteArrayOrNullFromProto(proto.getHashOfPaymentAccountPayload()));
             tradingPeer.setFinalizedWarningTx(ProtoUtil.byteArrayOrNullFromProto(proto.getFinalizedWarningTx()));
             tradingPeer.setFinalizedRedirectTx(ProtoUtil.byteArrayOrNullFromProto(proto.getFinalizedRedirectTx()));
+            tradingPeer.setSignedClaimTx(ProtoUtil.byteArrayOrNullFromProto(proto.getSignedClaimTx()));
             tradingPeer.setCurrentDate(proto.getCurrentDate());
             return tradingPeer;
         }

@@ -718,6 +718,12 @@ public abstract class Trade extends TradeModel {
         return signedClaimTx != null ? btcWalletService.getTxFromSerializedTx(signedClaimTx) : null;
     }
 
+    @Nullable
+    public Transaction getPeersClaimTx(BtcWalletService btcWalletService) {
+        byte[] signedClaimTx = processModel.getTradePeer().getSignedClaimTx();
+        return signedClaimTx != null ? btcWalletService.getTxFromSerializedTx(signedClaimTx) : null;
+    }
+
     public List<Script> getWatchedScripts(BtcWalletService btcWalletService) {
         if (!hasV5Protocol()) {
             return List.of();
@@ -771,7 +777,7 @@ public abstract class Trade extends TradeModel {
         if (contract != null && contract.maybeClearSensitiveData()) {
             change += "contract;";
         }
-        if (processModel != null && processModel.maybeClearSensitiveData()) {
+        if (processModel != null && processModel.maybeClearSensitiveData(disputeState.isEscalated())) {
             change += "processModel;";
         }
         if (contractAsJson != null) {

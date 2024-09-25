@@ -309,8 +309,12 @@ public class TradeDetailsWindow extends Overlay<TradeDetailsWindow> {
             if (buyersRedirectTx != null) {
                 addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.buyersRedirectTxId"), buyersRedirectTx.getTxId().toString());
             }
+            Transaction peersClaimTx = trade.getPeersClaimTx(btcWalletService);
             if (claimTx != null) {
                 addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.claimTxId"), claimTx.getTxId().toString());
+            }
+            if (peersClaimTx != null) {
+                addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.peersClaimTxId"), peersClaimTx.getTxId().toString());
             }
         } else {
             // v4 trade protocol

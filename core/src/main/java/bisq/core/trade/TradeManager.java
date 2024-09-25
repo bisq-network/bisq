@@ -725,8 +725,9 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
         // TODO The address entry should have been removed already. Check and if its the case remove that.
         btcWalletService.resetAddressEntriesForPendingTrade(trade.getId());
         // FIXME: If the trade fails, any watched scripts will remain in the wallet permanently, which is not ideal.
+        // If any staged tx was broadcast, we also keep watched scripts so that it won't disappear after an SPV resync.
         List<Script> watchedScripts = trade.getWatchedScripts(btcWalletService);
-        if (!watchedScripts.isEmpty()) {
+        if (!watchedScripts.isEmpty() && !trade.getDisputeState().isEscalated()) {
             btcWalletService.getWallet().removeWatchedScripts(watchedScripts);
         }
         requestPersistence();

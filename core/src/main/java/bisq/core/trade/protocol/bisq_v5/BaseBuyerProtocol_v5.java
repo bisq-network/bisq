@@ -36,7 +36,7 @@ import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerSetupDepositTxListener;
 import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerSetupPayoutTxListener;
 import bisq.core.trade.protocol.bisq_v1.tasks.buyer.BuyerSignPayoutTx;
 import bisq.core.trade.protocol.bisq_v5.messages.DepositTxAndSellerPaymentAccountMessage;
-import bisq.core.trade.protocol.bisq_v5.tasks.SetupWarningTxListener;
+import bisq.core.trade.protocol.bisq_v5.tasks.SetupStagedTxListeners;
 import bisq.core.trade.protocol.bisq_v5.tasks.buyer.BuyerProcessDepositTxAndSellerPaymentAccountMessage;
 
 import bisq.network.p2p.NodeAddress;
@@ -74,7 +74,7 @@ abstract class BaseBuyerProtocol_v5 extends DisputeProtocol implements BuyerProt
         given(anyPhase(Phase.DEPOSIT_PUBLISHED, Phase.DEPOSIT_CONFIRMED, Phase.FIAT_SENT, Phase.FIAT_RECEIVED)
                 .preCondition(trade.hasV5Protocol()) // FIXME: If trade opened with v4 protocol, should use BaseBuyerProtocol_v4.
                 .with(BuyerEvent.STARTUP))
-                .setup(tasks(SetupWarningTxListener.class))
+                .setup(tasks(SetupStagedTxListeners.class))
                 .executeTasks();
 
         given(anyPhase(Phase.FIAT_SENT, Phase.FIAT_RECEIVED)
@@ -132,7 +132,7 @@ abstract class BaseBuyerProtocol_v5 extends DisputeProtocol implements BuyerProt
                         }))
                 .setup(tasks(BuyerProcessDepositTxAndSellerPaymentAccountMessage.class,
                         ApplyFilter.class,
-                        SetupWarningTxListener.class,
+                        SetupStagedTxListeners.class,
                         VerifyPeersAccountAgeWitness.class,
                         BuyerSendsShareBuyerPaymentAccountMessage.class)
                         .using(new TradeTaskRunner(trade,

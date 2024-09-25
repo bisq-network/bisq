@@ -39,7 +39,7 @@ import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSendPayoutTxPublished
 import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSignAndFinalizePayoutTx;
 import bisq.core.trade.protocol.bisq_v5.messages.PreparedTxBuyerSignaturesMessage;
 import bisq.core.trade.protocol.bisq_v5.tasks.AddWatchedScriptsToWallet;
-import bisq.core.trade.protocol.bisq_v5.tasks.SetupWarningTxListener;
+import bisq.core.trade.protocol.bisq_v5.tasks.SetupStagedTxListeners;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerProcessPreparedTxBuyerSignaturesMessage;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSendsDepositTxAndSellerPaymentAccountMessage;
 
@@ -73,7 +73,7 @@ abstract class BaseSellerProtocol_v5 extends DisputeProtocol implements SellerPr
         given(anyPhase(Phase.DEPOSIT_PUBLISHED, Phase.DEPOSIT_CONFIRMED, Phase.FIAT_SENT, Phase.FIAT_RECEIVED)
                 .preCondition(trade.hasV5Protocol()) // FIXME: If trade opened with v4 protocol, should use BaseSellerProtocol_v4.
                 .with(SellerEvent.STARTUP))
-                .setup(tasks(SetupWarningTxListener.class))
+                .setup(tasks(SetupStagedTxListeners.class))
                 .executeTasks();
     }
 
@@ -104,7 +104,7 @@ abstract class BaseSellerProtocol_v5 extends DisputeProtocol implements SellerPr
                         AddWatchedScriptsToWallet.class,
                         SellerSendsDepositTxAndSellerPaymentAccountMessage.class,
                         SellerPublishesDepositTx.class,
-                        SetupWarningTxListener.class,
+                        SetupStagedTxListeners.class,
                         SellerPublishesTradeStatistics.class))
                 .executeTasks();
     }

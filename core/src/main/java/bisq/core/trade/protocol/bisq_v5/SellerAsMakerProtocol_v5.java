@@ -44,6 +44,7 @@ import bisq.core.trade.protocol.bisq_v5.tasks.CreateRedirectTxs;
 import bisq.core.trade.protocol.bisq_v5.tasks.CreateWarningTxs;
 import bisq.core.trade.protocol.bisq_v5.tasks.FinalizeRedirectTxs;
 import bisq.core.trade.protocol.bisq_v5.tasks.FinalizeWarningTxs;
+import bisq.core.trade.protocol.bisq_v5.tasks.SetupStagedTxListeners;
 import bisq.core.trade.protocol.bisq_v5.tasks.maker.MakerSendsInputsForDepositTxResponse_v5;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerProcessPreparedTxBuyerSignaturesMessage;
 import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSendsDepositTxAndSellerPaymentAccountMessage;
@@ -154,6 +155,7 @@ public class SellerAsMakerProtocol_v5 extends BaseSellerProtocol_v5 implements M
                         AddWatchedScriptsToWallet.class,
                         SellerSendsDepositTxAndSellerPaymentAccountMessage.class,
                         SellerPublishesDepositTx.class,
+                        SetupStagedTxListeners.class,
                         SellerPublishesTradeStatistics.class))
                 .executeTasks();
     }

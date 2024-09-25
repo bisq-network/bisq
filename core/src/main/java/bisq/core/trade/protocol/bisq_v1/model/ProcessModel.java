@@ -392,11 +392,19 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         }
     }
 
-    public boolean maybeClearSensitiveData() {
+    public boolean maybeClearSensitiveData(boolean keepStagedTxs) {
         boolean changed = false;
         if (tradingPeer.getPaymentAccountPayload() != null || tradingPeer.getContractAsJson() != null) {
             // If tradingPeer was null in persisted data from some error cases we set a new one to not cause nullPointers
-            this.tradingPeer = new TradingPeer();
+            var newTradingPeer = new TradingPeer();
+            // Try to keep peer's staged txs (which are sensitive due to fee bump outputs) if any staged tx was broadcast.
+            // (They might have been deleted anyway if the trade was un-failed, but are not essential.)
+            if (keepStagedTxs) {
+                newTradingPeer.setFinalizedWarningTx(tradingPeer.getFinalizedWarningTx());
+                newTradingPeer.setFinalizedRedirectTx(tradingPeer.getFinalizedRedirectTx());
+                newTradingPeer.setSignedClaimTx(tradingPeer.getSignedClaimTx());
+            }
+            this.tradingPeer = newTradingPeer;
             changed = true;
         }
         return changed;
