@@ -1103,6 +1103,7 @@ message PaymentAccountPayload {
         MoneseAccountPayload monese_account_payload = 38;
         VerseAccountPayload verse_account_payload = 39;
         BsqSwapAccountPayload bsq_swap_account_payload = 40;
+        SbpAccountPayload sbp_account_payload = 41;
     }
     map<string, string> exclude_from_json_data = 15;
 }
@@ -1456,6 +1457,12 @@ message SwiftAccountPayload {
     string intermediary_name = 14;
     string intermediary_branch = 15;
     string intermediary_address = 16;
+}
+
+message SbpAccountPayload {
+    string holder_name = 1;
+    string mobile_number = 2;
+    string bank_name = 3;
 }
 
 message PersistableEnvelope {
