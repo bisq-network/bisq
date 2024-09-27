@@ -7,6 +7,8 @@ import lombok.Getter;
 
 import javax.annotation.Nullable;
 
+import java.util.Optional;
+
 /**
  * Performs lenient validation of international phone numbers, and transforms given
  * input numbers into E.164 international form.  The E.164 normalized phone number
@@ -40,6 +42,11 @@ public class PhoneNumberValidator extends InputValidator {
     @Nullable
     @Getter
     private String normalizedPhoneNumber;
+    /**
+     * Required length of phone number (excluding country code).
+     */
+    @Getter
+    private Optional<Integer> requiredLength;
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Constructors
@@ -49,11 +56,12 @@ public class PhoneNumberValidator extends InputValidator {
     // but isoCountryCode must be set before validation.
     public PhoneNumberValidator() {
     }
-    
+
     public PhoneNumberValidator(String isoCountryCode) {
         this.isoCountryCode = isoCountryCode;
         this.callingCode = CountryCallingCodes.getCallingCode(isoCountryCode);
         this.normalizedCallingCode = CountryCallingCodes.getNormalizedCallingCode(isoCountryCode);
+        this.requiredLength = Optional.ofNullable(PhoneNumberRequiredLengths.getRequiredLength(isoCountryCode));
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -94,6 +102,14 @@ public class PhoneNumberValidator extends InputValidator {
                 normalizedPhoneNumber = "+" + pureNumber;
             } else {
                 normalizedPhoneNumber = "+" + getCallingCode() + pureNumber;
+            }
+
+            //  If the 'requiredLength' was set, there's still one more check to apply on the normalizedNumber itself
+            if (requiredLength.isPresent()) {
+                result = validateRequiredLength(normalizedPhoneNumber, normalizedCallingCode);
+                if (!result.isValid) {
+                   normalizedPhoneNumber = null;
+                }
             }
         }
         return result;
@@ -157,6 +173,16 @@ public class PhoneNumberValidator extends InputValidator {
             } else {
                 return new ValidationResult(true);
             }
+        } catch (Throwable t) {
+            return new ValidationResult(false, Res.get("validation.invalidInput", t.getMessage()));
+        }
+    }
+
+    private ValidationResult validateRequiredLength(String normalizedPhoneNumber, String normalizedCallingCode) {
+        try {
+            return ((normalizedPhoneNumber.length() - normalizedCallingCode.length() - 1) == requiredLength.get())
+                    ? new ValidationResult(true)
+                    : new ValidationResult(false, Res.get("validation.phone.incorrectLength", requiredLength.get()));
         } catch (Throwable t) {
             return new ValidationResult(false, Res.get("validation.invalidInput", t.getMessage()));
         }

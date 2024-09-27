@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PhoneNumberValidatorTest {
@@ -284,16 +285,75 @@ public class PhoneNumberValidatorTest {
         validator = new PhoneNumberValidator("US");
         assertEquals(validator.getCallingCode(), "1");
         validationResult = validator.validate("1 (1) 253 0000");
-        assertTrue(validationResult.isValid);
-        assertEquals("+112530000", validator.getNormalizedPhoneNumber());
+        assertFalse(validationResult.isValid);
+        assertNull(validator.getNormalizedPhoneNumber());
 
         validationResult = validator.validate("1-120-253 0000");
         assertTrue(validationResult.isValid);
+        assertNull(validationResult.errorMessage);
         assertEquals("+11202530000", validator.getNormalizedPhoneNumber());
 
         validationResult = validator.validate("(120) 253 0000");
-        assertTrue(validationResult.isValid);
-        // TODO validator incorrectly treats input as if it were +1 (202) 53-0000
-        /// assertEquals("+1202530000", validator.getNormalizedPhoneNumber());
+        assertFalse(validationResult.isValid);
+        assertNull(validator.getNormalizedPhoneNumber());
     }
+
+    @Test
+    public void testPhoneNumberLength() {
+        // Construct the validator to be used in these test cases
+        validator = new PhoneNumberValidator("US");  // requiredLength=10 to pass these tests
+
+        // Most important, does the validator work for correct phone numbers?
+        validationResult = validator.validate("+1 512 888 0150");
+        assertTrue(validationResult.isValid, "+1 512 888 0150 should be a valid number in US");
+        assertNull(validationResult.errorMessage);
+        assertNotNull(validator.getNormalizedPhoneNumber());
+        assertEquals(validator.getNormalizedPhoneNumber(), "+15128880150");
+
+        // If no country code provided by user, normalized number should have it added
+        validationResult = validator.validate("5128880150");
+        assertTrue(validationResult.isValid, "5128880150 should be a valid number in US");
+        assertNull(validationResult.errorMessage);
+        assertNotNull(validator.getNormalizedPhoneNumber());
+        assertEquals(validator.getNormalizedPhoneNumber(), "+15128880150");
+
+        // If no phone number too short, there's a message for that
+        validationResult = validator.validate("+15121");
+        assertFalse(validationResult.isValid, "+15121 should be too short");
+        assertNull(validator.getNormalizedPhoneNumber());
+        assertEquals(Res.get("validation.phone.insufficientDigits", "+15121"), validationResult.errorMessage);
+
+        // If no phone number too long, there's a message for that
+        validationResult = validator.validate("51288801505128880150");
+        assertFalse(validationResult.isValid, "51288801505128880150 should be too long");
+        assertNull(validator.getNormalizedPhoneNumber());
+        assertEquals(Res.get("validation.phone.tooManyDigits", "51288801505128880150"), validationResult.errorMessage);
+
+        // If phone number not exactly the requiredLength, there's a message for that too
+        validationResult = validator.validate("+1 888 123 456");
+        assertFalse(validationResult.isValid, "+1 888 123 456 should not be a valid number in US");
+        assertNull(validator.getNormalizedPhoneNumber());
+        assertEquals(Res.get("validation.phone.incorrectLength", validator.getRequiredLength().get()), validationResult.errorMessage);
+    }
+
+    @Test
+    public void testVariablePhoneNumberLengthCountry() {
+        // Construct the validator to be used in these test cases
+        validator = new PhoneNumberValidator("KP");  // requiredLength not defined for this country (North Korea +850)
+        assertFalse(validator.getRequiredLength().isPresent());   // If this fails, find another country to test with
+
+        // If phone number requiredLength is not defined, it is considered okay if length in the range 4-12
+        validationResult = validator.validate("12345678");
+        assertTrue(validationResult.isValid, "12345678 should be a considered a valid number");
+        assertNull(validationResult.errorMessage);
+        assertNotNull(validator.getNormalizedPhoneNumber());
+        assertEquals(validator.getNormalizedPhoneNumber(), "+85012345678");
+        
+        validationResult = validator.validate("12345678901234");
+        assertTrue(validationResult.isValid, "12345678901234 should be a considered a valid number");
+        assertNull(validationResult.errorMessage);
+        assertNotNull(validator.getNormalizedPhoneNumber());
+        assertEquals(validator.getNormalizedPhoneNumber(), "+85012345678901234");
+    }
+
 }
