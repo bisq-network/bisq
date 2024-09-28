@@ -720,8 +720,8 @@ public abstract class Trade extends TradeModel {
 
     @Nullable
     public Transaction getPeersClaimTx(BtcWalletService btcWalletService) {
-        byte[] signedClaimTx = processModel.getTradePeer().getSignedClaimTx();
-        return signedClaimTx != null ? btcWalletService.getTxFromSerializedTx(signedClaimTx) : null;
+        byte[] claimTx = processModel.getTradePeer().getClaimTx();
+        return claimTx != null ? btcWalletService.getTxFromSerializedTx(claimTx) : null;
     }
 
     public List<Script> getWatchedScripts(BtcWalletService btcWalletService) {

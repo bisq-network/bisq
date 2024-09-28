@@ -136,7 +136,7 @@ public class SetupStagedTxListeners extends TradeTask {
                 newDisputeState = isMine ? Trade.DisputeState.ESCROW_CLAIMED : Trade.DisputeState.ESCROW_CLAIMED_BY_PEER;
                 if (!isMine) {
                     // Set the peer's claim tx, so that it shows up in the details window for past trades.
-                    processModel.getTradePeer().setSignedClaimTx(redirectOrClaimTx.bitcoinSerialize());
+                    processModel.getTradePeer().setClaimTx(redirectOrClaimTx.bitcoinSerialize());
                 }
             } else {
                 Transaction myRedirectTx = walletService.getTxFromSerializedTx(processModel.getFinalizedRedirectTx());

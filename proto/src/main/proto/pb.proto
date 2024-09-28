@@ -1935,7 +1935,7 @@ message TradingPeer {
     bytes hash_of_payment_account_payload = 16;
     bytes finalized_warning_tx = 17;  // Added for v5 protocol
     bytes finalized_redirect_tx = 18;  // Added for v5 protocol
-    bytes signed_claim_tx = 19;  // Added for v5 protocol
+    bytes claim_tx = 19;  // Added for v5 protocol
 }
 
 message BsqSwapProtocolModel {

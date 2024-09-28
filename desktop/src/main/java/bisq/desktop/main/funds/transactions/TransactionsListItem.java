@@ -214,6 +214,16 @@ class TransactionsListItem implements FilterableListItem {
                         if (amountAsCoin.isZero()) {
                             initialTxConfidenceVisibility = false;
                         }
+                    } else if (transactionAwareTrade.isWarningTx(txId)) {
+                        details = valueSentToMe.isPositive()
+                                ? Res.get("funds.tx.warningTx")
+                                : Res.get("funds.tx.peersWarningTx");
+                    } else if (transactionAwareTrade.isRedirectTx(txId)) {
+                        details = Res.get("funds.tx.collateralForRefund");
+                    } else if (transactionAwareTrade.isClaimTx(txId)) {
+                        details = valueSentToMe.isPositive()
+                                ? Res.get("funds.tx.claimTx")
+                                : Res.get("funds.tx.peersClaimTx");
                     } else {
                         Trade.DisputeState disputeState = trade.getDisputeState();
                         if (disputeState == Trade.DisputeState.DISPUTE_CLOSED) {
@@ -223,9 +233,9 @@ class TransactionsListItem implements FilterableListItem {
                                 details = Res.get("funds.tx.disputeLost");
                                 initialTxConfidenceVisibility = false;
                             }
-                        } else if ((disputeState == Trade.DisputeState.REFUND_REQUEST_CLOSED ||
+                        } else if (disputeState == Trade.DisputeState.REFUND_REQUEST_CLOSED ||
                                 disputeState == Trade.DisputeState.REFUND_REQUESTED ||
-                                disputeState == Trade.DisputeState.REFUND_REQUEST_STARTED_BY_PEER) && !trade.hasV5Protocol()) {
+                                disputeState == Trade.DisputeState.REFUND_REQUEST_STARTED_BY_PEER) {
                             if (valueSentToMe.isPositive()) { // FIXME: This will give a false positive if user is a BM.
                                 details = Res.get("funds.tx.refund");
                             } else {
@@ -239,17 +249,7 @@ class TransactionsListItem implements FilterableListItem {
                                 initialTxConfidenceVisibility = false;
                             }
                         } else {
-                            if (transactionAwareTrade.isWarningTx(txId)) {
-                                details = valueSentToMe.isPositive()
-                                        ? Res.get("funds.tx.warningTx")
-                                        : Res.get("funds.tx.peersWarningTx");
-                            } else if (transactionAwareTrade.isRedirectTx(txId)) {
-                                details = Res.get("funds.tx.collateralForRefund");
-                            } else if (transactionAwareTrade.isClaimTx(txId)) {
-                                details = valueSentToMe.isPositive()
-                                        ? Res.get("funds.tx.claimTx")
-                                        : Res.get("funds.tx.peersClaimTx");
-                            } else if (transactionAwareTrade.isDelayedPayoutTx(txId)) {
+                            if (transactionAwareTrade.isDelayedPayoutTx(txId)) {
                                 details = Res.get("funds.tx.timeLockedPayoutTx");
                                 initialTxConfidenceVisibility = false;
                             } else {

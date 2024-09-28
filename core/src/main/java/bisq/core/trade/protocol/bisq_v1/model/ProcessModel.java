@@ -402,7 +402,7 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
             if (keepStagedTxs) {
                 newTradingPeer.setFinalizedWarningTx(tradingPeer.getFinalizedWarningTx());
                 newTradingPeer.setFinalizedRedirectTx(tradingPeer.getFinalizedRedirectTx());
-                newTradingPeer.setSignedClaimTx(tradingPeer.getSignedClaimTx());
+                newTradingPeer.setClaimTx(tradingPeer.getClaimTx());
             }
             this.tradingPeer = newTradingPeer;
             changed = true;

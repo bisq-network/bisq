@@ -54,7 +54,11 @@ interface TransactionAwareTradable {
     }
 
     static boolean isPossibleRedirectOrClaimTx(Transaction tx) {
-        return tx.getInput(0).getWitness().getPushCount() == 5 || tx.hasRelativeLockTime();
+        // The txs bitcoinj retrieves from the network frequently have missing witness data, so we must be lenient in
+        // that case (hence the last possibility checked for here), and similarly in the method below.
+        TransactionInput input = tx.getInput(0);
+        return input.getWitness().getPushCount() == 5 || tx.hasRelativeLockTime() || (tx.getVersion() == 1 &&
+                !input.hasWitness() && input.getScriptBytes().length == 0);
     }
 
     static boolean isPossibleEscrowSpend(TransactionInput input) {
@@ -62,6 +66,7 @@ interface TransactionAwareTradable {
         // multisig P2SH will always be longer than that. P2PKH, P2SH-P2WPKH and P2WPKH have a witness push count less
         // than 3, but all Segwit trade escrow spends have a witness push count of at least 3. So we catch all escrow
         // spends this way, without too many false positives.
-        return input.getScriptBytes().length > 107 || input.getWitness().getPushCount() > 2;
+        return input.getScriptBytes().length > 107 || input.getWitness().getPushCount() > 2 || (!input.hasWitness() &&
+                input.getScriptBytes().length == 0);
     }
 }
