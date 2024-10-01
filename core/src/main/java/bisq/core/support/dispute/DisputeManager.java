@@ -357,7 +357,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         log.info("{} checking closed disputes eligibility for having sensitive data cleared", super.getClass().getSimpleName());
         Instant safeDate = closedTradableManager.getSafeDateForSensitiveDataClearing();
         getDisputeList().getList().stream()
-                .filter(e -> e.isClosed())
+                .filter(Dispute::isClosed)
                 .filter(e -> e.getOpeningDate().toInstant().isBefore(safeDate))
                 .forEach(Dispute::maybeClearSensitiveData);
         requestPersistence();
@@ -491,7 +491,7 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         try {
             DisputeValidation.validateDisputeData(dispute, btcWalletService);
             DisputeValidation.validateNodeAddresses(dispute, config);
-            DisputeValidation.validateTradeAndDispute(dispute, trade);
+            DisputeValidation.validateTradeAndDispute(dispute, trade, btcWalletService);
             TradeDataValidation.validateDelayedPayoutTx(trade,
                     trade.getDelayedPayoutTx(),
                     btcWalletService);
@@ -713,6 +713,8 @@ public abstract class DisputeManager<T extends DisputeList<Dispute>> extends Sup
         dispute.setDonationAddressOfDelayedPayoutTx(disputeFromOpener.getDonationAddressOfDelayedPayoutTx());
         dispute.setBurningManSelectionHeight(disputeFromOpener.getBurningManSelectionHeight());
         dispute.setTradeTxFee(disputeFromOpener.getTradeTxFee());
+        dispute.setWarningTxId(disputeFromOpener.getWarningTxId());
+        dispute.setRedirectTxId(disputeFromOpener.getRedirectTxId());
 
         Optional<Dispute> storedDisputeOptional = findDispute(dispute);
 

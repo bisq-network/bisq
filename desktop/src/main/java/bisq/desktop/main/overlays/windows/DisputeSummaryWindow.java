@@ -168,13 +168,12 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         width = 1150;
         createGridPane();
         addContent();
+        // TODO: In case of v5 protocol, check confirmation of redirect tx instead.
         checkDelayedPayoutTransaction();
         display();
 
         if (DevEnv.isDevMode()) {
-            UserThread.execute(() -> {
-                summaryNotesTextArea.setText("dummy result....");
-            });
+            UserThread.execute(() -> summaryNotesTextArea.setText("dummy result...."));
         }
     }
 
@@ -224,11 +223,9 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addContent() {
-        Contract contract = dispute.getContract();
-        if (dispute.getDisputeResultProperty().get() == null)
-            disputeResult = new DisputeResult(dispute.getTradeId(), dispute.getTraderId());
-        else
-            disputeResult = dispute.getDisputeResultProperty().get();
+        disputeResult = dispute.getDisputeResultProperty().get() == null
+                ? new DisputeResult(dispute.getTradeId(), dispute.getTraderId())
+                : dispute.getDisputeResultProperty().get();
 
         peersDisputeOptional = checkNotNull(getDisputeManager(dispute)).getDisputesAsObservableList().stream()
                 .filter(d -> dispute.getTradeId().equals(d.getTradeId()) && dispute.getTraderId() != d.getTraderId())
@@ -322,11 +319,11 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 }
             }
             if (dispute.getExtraDataMap() != null && dispute.getExtraDataMap().size() > 0) {
-                String extraDataSummary = "";
+                var extraDataSummary = new StringBuilder();
                 for (Map.Entry<String, String> entry : dispute.getExtraDataMap().entrySet()) {
-                    extraDataSummary += "[" + entry.getKey() + ":" + entry.getValue() + "] ";
+                    extraDataSummary.append('[').append(entry.getKey()).append(':').append(entry.getValue()).append("] ");
                 }
-                addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.extraInfo"), extraDataSummary);
+                addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.extraInfo"), extraDataSummary.toString());
             }
         } else {
             delayedPayoutTxStatus = addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.delayedPayoutStatus"), "Checking...").second;
@@ -377,14 +374,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         buyerPayoutAmountListener = (observable, oldValue, newValue) -> applyCustomAmounts(buyerPayoutAmountInputTextField, oldValue, newValue);
         sellerPayoutAmountListener = (observable, oldValue, newValue) -> applyCustomAmounts(sellerPayoutAmountInputTextField, oldValue, newValue);
 
-        buyerGetsTradeAmountSelectedListener = (observable, oldValue, newValue) -> {
-            compensationOrPenalty.setEditable(!newValue);
-        };
+        buyerGetsTradeAmountSelectedListener = (observable, oldValue, newValue) -> compensationOrPenalty.setEditable(!newValue);
         buyerGetsTradeAmountRadioButton.selectedProperty().addListener(buyerGetsTradeAmountSelectedListener);
 
-        sellerGetsTradeAmountSelectedListener = (observable, oldValue, newValue) -> {
-            compensationOrPenalty.setEditable(!newValue);
-        };
+        sellerGetsTradeAmountSelectedListener = (observable, oldValue, newValue) -> compensationOrPenalty.setEditable(!newValue);
         sellerGetsTradeAmountRadioButton.selectedProperty().addListener(sellerGetsTradeAmountSelectedListener);
 
         customRadioButtonSelectedListener = (observable, oldValue, newValue) -> {
@@ -532,9 +525,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         GridPane.setColumnIndex(vBox, 1);
         gridPane.getChildren().add(vBox);
 
-        compensationOrPenaltyListener = (observable, oldValue, newValue) -> {
-            applyUpdateFromUi(tradeAmountToggleGroup.selectedToggleProperty().get());
-        };
+        compensationOrPenaltyListener = (observable, oldValue, newValue) ->
+                applyUpdateFromUi(tradeAmountToggleGroup.selectedToggleProperty().get());
 
         compensationOrPenalty.textProperty().addListener(compensationOrPenaltyListener);
     }
@@ -692,29 +684,29 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Button cancelButton = tuple.second;
 
         closeTicketButton.setOnAction(e -> {
-                    if (dispute.getDepositTxSerialized() == null) {
-                        log.warn("dispute.getDepositTxSerialized is null");
-                        return;
-                    }
+            if (dispute.getDepositTxSerialized() == null) {
+                log.warn("dispute.getDepositTxSerialized is null");
+                return;
+            }
 
-                    if (peersDisputeOptional.isPresent() && peersDisputeOptional.get().isClosed()) {
-                        applyDisputeResult(closeTicketButton); // all checks done already on peers ticket
-                    } else {
-                        maybeCheckTransactions().thenAccept(continue1 -> {
-                            if (continue1) {
-                                checkGeneralValidity().thenAccept(continue2 -> {
-                                    if (continue2) {
-                                        maybeMakePayout().thenAccept(continue3 -> {
-                                            if (continue3) {
-                                                applyDisputeResult(closeTicketButton);
-                                            }
-                                        });
+            if (peersDisputeOptional.isPresent() && peersDisputeOptional.get().isClosed()) {
+                applyDisputeResult(closeTicketButton); // all checks done already on peers ticket
+            } else {
+                maybeCheckTransactions().thenAccept(continue1 -> {
+                    if (continue1) {
+                        checkGeneralValidity().thenAccept(continue2 -> {
+                            if (continue2) {
+                                maybeMakePayout().thenAccept(continue3 -> {
+                                    if (continue3) {
+                                        applyDisputeResult(closeTicketButton);
                                     }
                                 });
                             }
                         });
                     }
                 });
+            }
+        });
 
         cancelButton.setOnAction(e -> {
             dispute.setDisputeResult(disputeResult);
@@ -848,6 +840,11 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         }
     }
 
+    // TODO: Need to adapt this to the v5 protocol case. Also, in that case, we should probably check that the tx fees
+    //  paid by the warning & redirect txs don't reduce the amount going to the BM by too much, say by no more than the
+    //  trade security deposit amount, as the fees could spike (or be manipulated) and in general the redirect tx pays
+    //  out a final sum that will be less than the total trade collateral (due to fees). Finally, we should make sure
+    //  that the refund agent can see from the UI whether the redirect tx has confirmed, before paying out.
     private CompletableFuture<Boolean> maybeCheckTransactions() {
         final CompletableFuture<Boolean> asyncStatus = new CompletableFuture<>();
         var disputeManager = getDisputeManager(dispute);
@@ -865,41 +862,39 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                     takerFeeTxId,
                     depositTxId,
                     delayedPayoutTxId
-            ).whenComplete((txList, throwable) -> {
-                UserThread.execute(() -> {
-                    requestingTxsPopup.hide();
+            ).whenComplete((txList, throwable) -> UserThread.execute(() -> {
+                requestingTxsPopup.hide();
 
-                    if (throwable == null) {
-                        try {
-                            refundManager.verifyTradeTxChain(txList);
-                            if (!dispute.isUsingLegacyBurningMan()) {
-                                Transaction delayedPayoutTx = txList.get(3);
-                                refundManager.verifyDelayedPayoutTxReceivers(delayedPayoutTx, dispute);
-                            }
-                            asyncStatus.complete(true);
-                        } catch (Throwable error) {
-                            UserThread.runAfter(() -> {
-                                        Popup popup = new Popup();
-                                        popup.warning(Res.get("disputeSummaryWindow.delayedPayoutTxVerificationFailed", error.getMessage()))
-                                                .actionButtonText(Res.get("shared.continueAnyway"))
-                                                .onAction(() -> asyncStatus.complete(true))
-                                                .onClose(() -> asyncStatus.complete(false))
-                                                .show();
-                                    },
-                                    100,
-                                    TimeUnit.MILLISECONDS);
+                if (throwable == null) {
+                    try {
+                        refundManager.verifyTradeTxChain(txList);
+                        if (!dispute.isUsingLegacyBurningMan()) {
+                            Transaction delayedPayoutTx = txList.get(3);
+                            refundManager.verifyDelayedPayoutTxReceivers(delayedPayoutTx, dispute);
                         }
-                    } else {
-                        UserThread.runAfter(() ->
-                                        new Popup().warning(Res.get("disputeSummaryWindow.requestTransactionsError", throwable.getMessage()))
-                                                .onAction(() -> asyncStatus.complete(true))
-                                                .onClose(() -> asyncStatus.complete(false))
-                                                .show(),
+                        asyncStatus.complete(true);
+                    } catch (Throwable error) {
+                        UserThread.runAfter(() -> {
+                                    Popup popup = new Popup();
+                                    popup.warning(Res.get("disputeSummaryWindow.delayedPayoutTxVerificationFailed", error.getMessage()))
+                                            .actionButtonText(Res.get("shared.continueAnyway"))
+                                            .onAction(() -> asyncStatus.complete(true))
+                                            .onClose(() -> asyncStatus.complete(false))
+                                            .show();
+                                },
                                 100,
                                 TimeUnit.MILLISECONDS);
                     }
-                });
-            });
+                } else {
+                    UserThread.runAfter(() ->
+                                    new Popup().warning(Res.get("disputeSummaryWindow.requestTransactionsError", throwable.getMessage()))
+                                            .onAction(() -> asyncStatus.complete(true))
+                                            .onClose(() -> asyncStatus.complete(false))
+                                            .show(),
+                            100,
+                            TimeUnit.MILLISECONDS);
+                }
+            }));
         } else {
             asyncStatus.complete(true);
         }
@@ -1131,10 +1126,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             disputeResult.setBuyerPayoutAmount(totalPot.subtract(minRefundAtDispute));
         }
 
-        // winner is the one who receives most from the multisig, or if equal, the buyer.
+        // winner is the one who receives most from the multisig, or if equal, the seller.
         // (winner is used to decide who publishes the tx)
         disputeResult.setWinner(disputeResult.getSellerPayoutAmount().isLessThan(disputeResult.getBuyerPayoutAmount()) ?
-                DisputeResult.Winner.BUYER : DisputeResult.Winner.BUYER);
+                DisputeResult.Winner.BUYER : DisputeResult.Winner.SELLER);
     }
 
     private void applyDisputeResultToUiControls() {

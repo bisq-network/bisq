@@ -49,9 +49,9 @@ public class PublishRedirectTx extends TradeTask {
             btcWalletService.resetCoinLockedInMultiSigAddressEntry(trade.getId());
             // We might receive funds on AddressEntry.Context.TRADE_PAYOUT so we don't swap that
 
-            Transaction committedWarningTx = WalletService.maybeAddSelfTxToWallet(redirectTx, btcWalletService.getWallet());
+            Transaction committedRedirectTx = WalletService.maybeAddSelfTxToWallet(redirectTx, btcWalletService.getWallet());
 
-            processModel.getTradeWalletService().broadcastTx(committedWarningTx, new TxBroadcaster.Callback() {
+            processModel.getTradeWalletService().broadcastTx(committedRedirectTx, new TxBroadcaster.Callback() {
                 @Override
                 public void onSuccess(Transaction transaction) {
                     log.info("publishRedirectTx onSuccess " + transaction);

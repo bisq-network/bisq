@@ -41,6 +41,9 @@ import bisq.core.trade.protocol.bisq_v1.tasks.mediation.SendMediatedPayoutTxPubl
 import bisq.core.trade.protocol.bisq_v1.tasks.mediation.SetupMediatedPayoutTxListener;
 import bisq.core.trade.protocol.bisq_v1.tasks.mediation.SignMediatedPayoutTx;
 import bisq.core.trade.protocol.bisq_v5.messages.DepositTxAndSellerPaymentAccountMessage;
+import bisq.core.trade.protocol.bisq_v5.tasks.arbitration.CreateSignedClaimTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.arbitration.PublishClaimTx;
+import bisq.core.trade.protocol.bisq_v5.tasks.arbitration.PublishRedirectTx;
 import bisq.core.trade.protocol.bisq_v5.tasks.arbitration.PublishWarningTx;
 
 import bisq.network.p2p.AckMessage;
@@ -56,11 +59,12 @@ public class DisputeProtocol extends TradeProtocol {
     protected Trade trade;
     protected final ProcessModel processModel;
 
-    enum DisputeEvent implements FluentProtocol.Event {
+    protected enum DisputeEvent implements FluentProtocol.Event {
         MEDIATION_RESULT_ACCEPTED,
         MEDIATION_RESULT_REJECTED,
         WARNING_SENT,
-        ARBITRATION_REQUESTED
+        ARBITRATION_REQUESTED,
+        COLLATERAL_CLAIMED
     }
 
     public DisputeProtocol(Trade trade) {
@@ -209,6 +213,7 @@ public class DisputeProtocol extends TradeProtocol {
                 .executeTasks();
     }
 
+    // TODO: Consider refactoring the onPublish* methods below, by moving them into a subclass (& maybe also the above method).
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Warning tx
@@ -221,7 +226,64 @@ public class DisputeProtocol extends TradeProtocol {
                 Trade.Phase.FIAT_RECEIVED)
                 .with(event)
                 .preCondition(trade.hasV5Protocol()))
-                .setup(tasks(PublishWarningTx.class))
+                .setup(tasks(PublishWarningTx.class)
+                        .using(new TradeTaskRunner(trade,
+                                () -> {
+                                    resultHandler.handleResult();
+                                    handleTaskRunnerSuccess(event);
+                                },
+                                errorMessage -> {
+                                    errorMessageHandler.handleErrorMessage(errorMessage);
+                                    handleTaskRunnerFault(event, errorMessage);
+                                })))
+                .executeTasks();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Redirect tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void onPublishRedirectTx(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        DisputeEvent event = DisputeEvent.ARBITRATION_REQUESTED;
+        expect(anyPhase(Trade.Phase.DEPOSIT_CONFIRMED,
+                Trade.Phase.FIAT_SENT,
+                Trade.Phase.FIAT_RECEIVED)
+                .with(event)
+                .preCondition(trade.hasV5Protocol()))
+                .setup(tasks(PublishRedirectTx.class)
+                        .using(new TradeTaskRunner(trade,
+                                () -> {
+                                    resultHandler.handleResult();
+                                    handleTaskRunnerSuccess(event);
+                                },
+                                errorMessage -> {
+                                    errorMessageHandler.handleErrorMessage(errorMessage);
+                                    handleTaskRunnerFault(event, errorMessage);
+                                })))
+                .executeTasks();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Claim tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public void onPublishClaimTx(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        DisputeEvent event = DisputeEvent.COLLATERAL_CLAIMED;
+        expect(anyPhase(Trade.Phase.DEPOSIT_CONFIRMED,
+                Trade.Phase.FIAT_SENT,
+                Trade.Phase.FIAT_RECEIVED)
+                .with(event)
+                .preCondition(trade.hasV5Protocol()))
+                .setup(tasks(CreateSignedClaimTx.class, PublishClaimTx.class)
+                        .using(new TradeTaskRunner(trade,
+                                () -> {
+                                    resultHandler.handleResult();
+                                    handleTaskRunnerSuccess(event);
+                                },
+                                errorMessage -> {
+                                    errorMessageHandler.handleErrorMessage(errorMessage);
+                                    handleTaskRunnerFault(event, errorMessage);
+                                })))
                 .executeTasks();
     }
 

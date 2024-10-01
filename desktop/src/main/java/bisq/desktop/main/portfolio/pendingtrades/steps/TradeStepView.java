@@ -107,7 +107,7 @@ public abstract class TradeStepView extends AnchorPane {
     private final ClockWatcher.Listener clockListener;
     private final ChangeListener<String> errorMessageListener;
     protected Label infoLabel;
-    private Popup acceptMediationResultPopup;
+    private Popup acceptMediationResultPopup; // TODO: Should we rename this, as it's no longer just being used for the mediation result?
     private BootstrapListener bootstrapListener;
     private TradeSubView.ChatCallback chatCallback;
     private final NewBestBlockListener newBestBlockListener;
@@ -559,14 +559,6 @@ public abstract class TradeStepView extends AnchorPane {
         return new Tuple2<>(remaining, claimTxLockTime);
     }
 
-    private void openRedirectToArbitrationPopup() {
-        // TODO: Implement.
-    }
-
-    private void openClaimCollateralPopup() {
-        // TODO: Implement.
-    }
-
     protected void updateMediationResultState(boolean blockOpeningOfResultAcceptedPopup) {
         if (isInArbitration()) {
             if (isRefundRequestStartedByPeer()) {
@@ -714,6 +706,40 @@ public abstract class TradeStepView extends AnchorPane {
         acceptMediationResultPopup.show();
     }
 
+    private void openRedirectToArbitrationPopup() {
+        if (acceptMediationResultPopup != null || trade.getPayoutTx() != null) {
+            return;
+        }
+        // TODO: Improve/elaborate display strings:
+        String headLine = Res.get("portfolio.pending.warningSentByPeer.popup.headline");
+        String message = Res.get("portfolio.pending.warningSentByPeer.popup.info");
+        String actionButtonText = Res.get("portfolio.pending.warningSentByPeer.popup.openArbitration");
+        acceptMediationResultPopup = new Popup()
+                .headLine(headLine)
+                .instruction(message)
+                .actionButtonText(actionButtonText)
+                .onAction(this::startArbitration)
+                .onClose(() -> acceptMediationResultPopup = null);
+        acceptMediationResultPopup.show();
+    }
+
+    private void openClaimCollateralPopup() {
+        if (acceptMediationResultPopup != null || trade.getPayoutTx() != null) {
+            return;
+        }
+        // TODO: Improve/elaborate display strings:
+        String headLine = Res.get("portfolio.pending.warningSent.popup.headline");
+        String message = Res.get("portfolio.pending.warningSent.popup.info");
+        String actionButtonText = Res.get("portfolio.pending.warningSent.popup.claim");
+        acceptMediationResultPopup = new Popup()
+                .headLine(headLine)
+                .instruction(message)
+                .actionButtonText(actionButtonText)
+                .onAction(this::claimCollateral)
+                .onClose(() -> acceptMediationResultPopup = null);
+        acceptMediationResultPopup.show();
+    }
+
     private void acceptProposal() {
         model.dataModel.mediationManager.onAcceptMediationResult(trade,
                 () -> {
@@ -731,13 +757,18 @@ public abstract class TradeStepView extends AnchorPane {
         acceptMediationResultPopup = null;
     }
 
+    private void sendWarning() {
+        model.dataModel.onSendWarning();
+        acceptMediationResultPopup = null;
+    }
+
     private void startArbitration() {
         model.dataModel.onOpenDispute();
         acceptMediationResultPopup = null;
     }
 
-    private void sendWarning() {
-        model.dataModel.onSendWarning();
+    private void claimCollateral() {
+        model.dataModel.onClaimCollateral();
         acceptMediationResultPopup = null;
     }
 

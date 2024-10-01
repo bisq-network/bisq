@@ -1010,6 +1010,8 @@ message Dispute {
     map<string, string> extra_data = 30;
     int32 burning_man_selection_height = 31;  // Added in v 1.9.7
     int64 trade_tx_fee = 32;  // Added in v 1.9.7
+    string warning_tx_id = 33;  // Added for v5 protocol
+    string redirect_tx_id = 34;  // Added for v5 protocol
 }
 
 message Attachment {

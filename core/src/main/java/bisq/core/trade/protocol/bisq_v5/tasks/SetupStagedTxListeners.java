@@ -91,7 +91,7 @@ public class SetupStagedTxListeners extends TradeTask {
                 // In case the peer's warning tx was cleared out as sensitive data, restore it.
                 processModel.getTradePeer().setFinalizedWarningTx(warningTx.bitcoinSerialize());
             }
-            log.info("Setting dispute state to {} for tradeId {}.", newDisputeState, processModel.getOfferId());
+            log.info("Setting dispute state to {} for tradeId {}.", newDisputeState, trade.getId());
             trade.setDisputeState(newDisputeState);
             processModel.getTradeManager().requestPersistence();
 
@@ -100,13 +100,13 @@ public class SetupStagedTxListeners extends TradeTask {
             TransactionConfidence spendConfidence = spentBy != null ? spentBy.getParentTransaction().getConfidence() : null;
             // TODO: Should sanity check that we really do have a redirect or claim tx, and not any kind of custom
             //  payout from the warning escrow output, cooperatively constructed with the peer:
-            if (isTxInNetwork(spendConfidence)) {
+            if (isInNetwork(spendConfidence)) {
                 applyRedirectOrClaimConfidence(spendConfidence);
             } else {
                 redirectOrClaimConfidenceListener = new OutputSpendConfidenceListener(warningTxOutput) {
                     @Override
-                    public void onOutputSpendConfidenceChanged(TransactionConfidence confidence) {
-                        if (isTxInNetwork(spendConfidence)) {
+                    public void onOutputSpendConfidenceChanged(TransactionConfidence spendConfidence) {
+                        if (isInNetwork(spendConfidence)) {
                             applyRedirectOrClaimConfidence(spendConfidence);
                         }
                     }
@@ -138,6 +138,9 @@ public class SetupStagedTxListeners extends TradeTask {
                     // Set the peer's claim tx, so that it shows up in the details window for past trades.
                     processModel.getTradePeer().setClaimTx(redirectOrClaimTx.bitcoinSerialize());
                 }
+                // TODO: Ensure mediator picks up the updated dispute state, in order to close the ticket at their end.
+                log.info("Closing trade with dispute state {} for tradeId {}.", newDisputeState, trade.getId());
+                processModel.getTradeManager().closeDisputedTrade(trade.getId(), newDisputeState);
             } else {
                 Transaction myRedirectTx = walletService.getTxFromSerializedTx(processModel.getFinalizedRedirectTx());
                 boolean isMine = redirectOrClaimTx.equals(myRedirectTx);
@@ -146,10 +149,10 @@ public class SetupStagedTxListeners extends TradeTask {
                     // In case the peer's redirect tx was cleared out as sensitive data, restore it.
                     processModel.getTradePeer().setFinalizedRedirectTx(redirectOrClaimTx.bitcoinSerialize());
                 }
+                log.info("Setting dispute state to {} for tradeId {}.", newDisputeState, trade.getId());
+                trade.setDisputeState(newDisputeState);
+                processModel.getTradeManager().requestPersistence();
             }
-            log.info("Setting dispute state to {} for tradeId {}.", newDisputeState, processModel.getOfferId());
-            trade.setDisputeState(newDisputeState);
-            processModel.getTradeManager().requestPersistence();
         } else {
             log.info("Ignoring received redirect/claim tx, as trade funds have already been released.");
         }
@@ -161,7 +164,7 @@ public class SetupStagedTxListeners extends TradeTask {
 
     @Contract("null -> false") // (IDEA really should be able to deduce this by itself.)
     private boolean isWarningTxInNetwork(TransactionConfidence confidence) {
-        if (isTxInNetwork(confidence)) {
+        if (isInNetwork(confidence)) {
             BtcWalletService btcWalletService = processModel.getBtcWalletService();
             Transaction tx = Objects.requireNonNull(btcWalletService.getTransaction(confidence.getTransactionHash()));
             return tx.getLockTime() != 0;
@@ -169,7 +172,7 @@ public class SetupStagedTxListeners extends TradeTask {
         return false;
     }
 
-    private static boolean isTxInNetwork(TransactionConfidence confidence) {
+    private static boolean isInNetwork(TransactionConfidence confidence) {
         return confidence != null &&
                 (confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING) ||
                         confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.PENDING));

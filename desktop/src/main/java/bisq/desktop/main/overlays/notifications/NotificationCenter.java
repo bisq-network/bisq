@@ -228,6 +228,10 @@ public class NotificationCenter {
 
     private void onDisputeStateChanged(Trade trade, Trade.DisputeState disputeState) {
         String message = null;
+        // FIXME: If a redirect tx is picked up from the bitcoin network before receipt of the peer's Dispute object,
+        //  the dispute state would have already been changed to REFUND_REQUEST_STARTED_BY_PEER, so the branch below
+        //  won't ever be reached. Need to use a listener to detect receipt of Dispute objects in addition to changes
+        //  in the dispute state. (Or maybe just add another dispute state.)
         if (refundManager.findOwnDispute(trade.getId()).isPresent()) {
             String disputeOrTicket = refundManager.findOwnDispute(trade.getId()).get().isSupportTicket() ?
                     Res.get("shared.supportTicket") :

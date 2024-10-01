@@ -53,7 +53,8 @@ public class CreateSignedClaimTx extends TradeTask {
             String tradeId = processModel.getOffer().getId();
             TradingPeer tradingPeer = processModel.getTradePeer();
 
-            TransactionOutput myWarningTxOutput = processModel.getWarningTx().getOutput(0);
+            Transaction myWarningTx = btcWalletService.getTxFromSerializedTx(processModel.getFinalizedWarningTx());
+            TransactionOutput myWarningTxOutput = myWarningTx.getOutput(0);
             // TODO: At present, the claim tx can be picked up by the payout tx listener and set as the trade payout tx.
             //  It's not clear we want this, or perhaps we should always consider a claim as the trade payout.
             AddressEntry addressEntry = processModel.getBtcWalletService().getOrCreateAddressEntry(tradeId, AddressEntry.Context.TRADE_PAYOUT);

@@ -31,7 +31,7 @@ import bisq.common.config.Config;
 import bisq.common.crypto.CryptoException;
 import bisq.common.crypto.Hash;
 import bisq.common.crypto.Sig;
-import bisq.common.util.Tuple3;
+import bisq.common.util.Tuple5;
 
 import org.bitcoinj.core.Address;
 import org.bitcoinj.core.NetworkParameters;
@@ -50,6 +50,8 @@ import java.util.function.Consumer;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -93,16 +95,36 @@ public class DisputeValidation {
         }
     }
 
-    public static void validateTradeAndDispute(Dispute dispute, Trade trade)
+    public static void validateTradeAndDispute(Dispute dispute, Trade trade, BtcWalletService btcWalletService)
             throws ValidationException {
         try {
             checkArgument(dispute.getContract().equals(trade.getContract()),
                     "contract must match contract from trade");
 
-            checkNotNull(trade.getDelayedPayoutTx(), "trade.getDelayedPayoutTx() must not be null");
-            checkNotNull(dispute.getDelayedPayoutTxId(), "delayedPayoutTxId must not be null");
-            checkArgument(dispute.getDelayedPayoutTxId().equals(trade.getDelayedPayoutTx().getTxId().toString()),
-                    "delayedPayoutTxId must match delayedPayoutTxId from trade");
+            if (trade.hasV5Protocol()) {
+                String buyersWarningTxId = toTxId(trade.getBuyersWarningTx(btcWalletService));
+                String sellersWarningTxId = toTxId(trade.getSellersWarningTx(btcWalletService));
+                String buyersRedirectTxId = toTxId(trade.getBuyersRedirectTx(btcWalletService));
+                String sellersRedirectTxId = toTxId(trade.getSellersRedirectTx(btcWalletService));
+                checkNotNull(dispute.getWarningTxId(), "warningTxId must not be null");
+                checkArgument(Arrays.asList(buyersWarningTxId, sellersWarningTxId).contains(dispute.getWarningTxId()),
+                        "warningTxId must match either buyer's or seller's warningTxId from trade");
+                checkNotNull(dispute.getRedirectTxId(), "redirectTxId must not be null");
+                checkArgument(Arrays.asList(buyersRedirectTxId, sellersRedirectTxId).contains(dispute.getRedirectTxId()),
+                        "redirectTxId must match either buyer's or seller's redirectTxId from trade");
+                boolean isBuyerWarning = dispute.getWarningTxId().equals(buyersWarningTxId);
+                boolean isBuyerRedirect = dispute.getRedirectTxId().equals(buyersRedirectTxId);
+                if (isBuyerWarning) {
+                    checkArgument(!isBuyerRedirect, "buyer's redirectTx must be used with seller's warningTx");
+                } else {
+                    checkArgument(isBuyerRedirect, "seller's redirectTx must be used with buyer's warningTx");
+                }
+            } else {
+                checkNotNull(trade.getDelayedPayoutTx(), "trade.getDelayedPayoutTx() must not be null");
+                checkNotNull(dispute.getDelayedPayoutTxId(), "delayedPayoutTxId must not be null");
+                checkArgument(dispute.getDelayedPayoutTxId().equals(trade.getDelayedPayoutTx().getTxId().toString()),
+                        "delayedPayoutTxId must match delayedPayoutTxId from trade");
+            }
 
             checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
             checkNotNull(dispute.getDepositTxId(), "depositTxId must not be null");
@@ -113,6 +135,11 @@ public class DisputeValidation {
         } catch (Throwable t) {
             throw new ValidationException(dispute, t.getMessage());
         }
+    }
+
+    @Nullable
+    private static String toTxId(@Nullable Transaction tx) {
+        return tx != null ? tx.getTxId().toString() : null;
     }
 
 
@@ -176,18 +203,23 @@ public class DisputeValidation {
                         "; dispute.getDonationAddressOfDelayedPayoutTx()=" + dispute.getDonationAddressOfDelayedPayoutTx());
     }
 
+    // TODO: Refactor:
     public static void testIfAnyDisputeTriedReplay(List<Dispute> disputeList,
                                                    Consumer<DisputeReplayException> exceptionHandler) {
         var tuple = getTestReplayHashMaps(disputeList);
         Map<String, Set<String>> disputesPerTradeId = tuple.first;
         Map<String, Set<String>> disputesPerDelayedPayoutTxId = tuple.second;
-        Map<String, Set<String>> disputesPerDepositTxId = tuple.third;
+        Map<String, Set<String>> disputesPerWarningId = tuple.third;
+        Map<String, Set<String>> disputesPerRedirectTxId = tuple.fourth;
+        Map<String, Set<String>> disputesPerDepositTxId = tuple.fifth;
 
         disputeList.forEach(disputeToTest -> {
             try {
                 testIfDisputeTriesReplay(disputeToTest,
                         disputesPerTradeId,
                         disputesPerDelayedPayoutTxId,
+                        disputesPerWarningId,
+                        disputesPerRedirectTxId,
                         disputesPerDepositTxId);
 
             } catch (DisputeReplayException e) {
@@ -196,23 +228,31 @@ public class DisputeValidation {
         });
     }
 
+    // TODO: Refactor:
     public static void testIfDisputeTriesReplay(Dispute dispute,
                                                 List<Dispute> disputeList) throws DisputeReplayException {
         var tuple = getTestReplayHashMaps(disputeList);
         Map<String, Set<String>> disputesPerTradeId = tuple.first;
         Map<String, Set<String>> disputesPerDelayedPayoutTxId = tuple.second;
-        Map<String, Set<String>> disputesPerDepositTxId = tuple.third;
+        Map<String, Set<String>> disputesPerWarningTxId = tuple.third;
+        Map<String, Set<String>> disputesPerRedirectTxId = tuple.fourth;
+        Map<String, Set<String>> disputesPerDepositTxId = tuple.fifth;
 
         testIfDisputeTriesReplay(dispute,
                 disputesPerTradeId,
                 disputesPerDelayedPayoutTxId,
+                disputesPerWarningTxId,
+                disputesPerRedirectTxId,
                 disputesPerDepositTxId);
     }
 
-    private static Tuple3<Map<String, Set<String>>, Map<String, Set<String>>, Map<String, Set<String>>> getTestReplayHashMaps(
+    // TODO: Refactor:
+    private static Tuple5<Map<String, Set<String>>, Map<String, Set<String>>, Map<String, Set<String>>, Map<String, Set<String>>, Map<String, Set<String>>> getTestReplayHashMaps(
             List<Dispute> disputeList) {
         Map<String, Set<String>> disputesPerTradeId = new HashMap<>();
         Map<String, Set<String>> disputesPerDelayedPayoutTxId = new HashMap<>();
+        Map<String, Set<String>> disputesPerWarningTxId = new HashMap<>();
+        Map<String, Set<String>> disputesPerRedirectTxId = new HashMap<>();
         Map<String, Set<String>> disputesPerDepositTxId = new HashMap<>();
         disputeList.forEach(dispute -> {
             String uid = dispute.getUid();
@@ -224,24 +264,37 @@ public class DisputeValidation {
             if (delayedPayoutTxId != null) {
                 disputesPerDelayedPayoutTxId.computeIfAbsent(delayedPayoutTxId, id -> new HashSet<>()).add(uid);
             }
-
+            String warningTxId = dispute.getWarningTxId();
+            if (warningTxId != null) {
+                disputesPerWarningTxId.computeIfAbsent(warningTxId, id -> new HashSet<>()).add(uid);
+            }
+            String redirectTxId = dispute.getRedirectTxId();
+            if (redirectTxId != null) {
+                disputesPerRedirectTxId.computeIfAbsent(redirectTxId, id -> new HashSet<>()).add(uid);
+            }
             String depositTxId = dispute.getDepositTxId();
             if (depositTxId != null) {
                 disputesPerDepositTxId.computeIfAbsent(depositTxId, id -> new HashSet<>()).add(uid);
             }
         });
 
-        return new Tuple3<>(disputesPerTradeId, disputesPerDelayedPayoutTxId, disputesPerDepositTxId);
+        return new Tuple5<>(disputesPerTradeId, disputesPerDelayedPayoutTxId, disputesPerWarningTxId,
+                disputesPerRedirectTxId, disputesPerDepositTxId);
     }
 
+    // TODO: Refactor:
     private static void testIfDisputeTriesReplay(Dispute disputeToTest,
                                                  Map<String, Set<String>> disputesPerTradeId,
                                                  Map<String, Set<String>> disputesPerDelayedPayoutTxId,
+                                                 Map<String, Set<String>> disputesPerWarningTxId,
+                                                 Map<String, Set<String>> disputesPerRedirectTxId,
                                                  Map<String, Set<String>> disputesPerDepositTxId)
             throws DisputeReplayException {
         try {
             String disputeToTestTradeId = disputeToTest.getTradeId();
             String disputeToTestDelayedPayoutTxId = disputeToTest.getDelayedPayoutTxId();
+            String disputeToTestWarningTxId = disputeToTest.getWarningTxId();
+            String disputeToTestRedirectTxId = disputeToTest.getRedirectTxId();
             String disputeToTestDepositTxId = disputeToTest.getDepositTxId();
             String disputeToTestUid = disputeToTest.getUid();
 
@@ -249,39 +302,50 @@ public class DisputeValidation {
             // So until all users have updated to 1.4.0 we only check in refund agent case. With 1.4.0 we send the
             // delayed payout tx also in mediation cases and that if check can be removed.
             if (disputeToTest.getSupportType() == SupportType.REFUND) {
-                // TODO: Handle v5 protocol trades, which have no delayed payout tx.
-                checkNotNull(disputeToTestDelayedPayoutTxId,
-                        "Delayed payout transaction ID is null. " +
-                                "Trade ID: " + disputeToTestTradeId);
+                if (disputeToTestWarningTxId == null) {
+                    checkNotNull(disputeToTestDelayedPayoutTxId,
+                            "Delayed payout transaction ID is null. " +
+                                    "Trade ID: %s", disputeToTestTradeId);
+                } else {
+                    checkNotNull(disputeToTestRedirectTxId,
+                            "Redirect transaction ID is null. " +
+                                    "Trade ID: %s", disputeToTestTradeId);
+                }
             }
             checkNotNull(disputeToTestDepositTxId,
-                    "depositTxId must not be null. Trade ID: " + disputeToTestTradeId);
+                    "depositTxId must not be null. Trade ID: %s", disputeToTestTradeId);
             checkNotNull(disputeToTestUid,
-                    "agentsUid must not be null. Trade ID: " + disputeToTestTradeId);
+                    "agentsUid must not be null. Trade ID: %s", disputeToTestTradeId);
 
             Set<String> disputesPerTradeIdItems = disputesPerTradeId.get(disputeToTestTradeId);
             checkArgument(disputesPerTradeIdItems == null || disputesPerTradeIdItems.size() <= 2,
                     "We found more than 2 disputes with the same trade ID. " +
                             "Trade ID: %s", disputeToTestTradeId);
-            if (!disputesPerDelayedPayoutTxId.isEmpty()) {
-                Set<String> disputesPerDelayedPayoutTxIdItems = disputesPerDelayedPayoutTxId.get(disputeToTestDelayedPayoutTxId);
-                checkArgument(disputesPerDelayedPayoutTxIdItems == null || disputesPerDelayedPayoutTxIdItems.size() <= 2,
-                        "We found more than 2 disputes with the same delayedPayoutTxId. " +
-                                "Trade ID: %s", disputeToTestTradeId);
-            }
-            if (!disputesPerDepositTxId.isEmpty()) {
-                Set<String> disputesPerDepositTxIdItems = disputesPerDepositTxId.get(disputeToTestDepositTxId);
-                checkArgument(disputesPerDepositTxIdItems == null || disputesPerDepositTxIdItems.size() <= 2,
-                        "We found more than 2 disputes with the same depositTxId. " +
-                                "Trade ID: %s", disputeToTestTradeId);
-            }
+            Set<String> disputesPerDelayedPayoutTxIdItems = disputesPerDelayedPayoutTxId.get(disputeToTestDelayedPayoutTxId);
+            checkArgument(disputesPerDelayedPayoutTxIdItems == null || disputesPerDelayedPayoutTxIdItems.size() <= 2,
+                    "We found more than 2 disputes with the same delayedPayoutTxId. " +
+                            "Trade ID: %s", disputeToTestTradeId);
+            Set<String> disputesPerWarningTxIdItems = disputesPerWarningTxId.get(disputeToTestWarningTxId);
+            checkArgument(disputesPerWarningTxIdItems == null || disputesPerWarningTxIdItems.size() <= 2,
+                    "We found more than 2 disputes with the same warningTxId. " +
+                            "Trade ID: %s", disputeToTestTradeId);
+            Set<String> disputesPerRedirectTxIdItems = disputesPerRedirectTxId.get(disputeToTestRedirectTxId);
+            checkArgument(disputesPerRedirectTxIdItems == null || disputesPerRedirectTxIdItems.size() <= 2,
+                    "We found more than 2 disputes with the same redirectTxId. " +
+                            "Trade ID: %s", disputeToTestTradeId);
+            Set<String> disputesPerDepositTxIdItems = disputesPerDepositTxId.get(disputeToTestDepositTxId);
+            checkArgument(disputesPerDepositTxIdItems == null || disputesPerDepositTxIdItems.size() <= 2,
+                    "We found more than 2 disputes with the same depositTxId. " +
+                            "Trade ID: %s", disputeToTestTradeId);
         } catch (IllegalArgumentException e) {
             throw new DisputeReplayException(disputeToTest, e.getMessage());
         } catch (NullPointerException e) {
             log.error("NullPointerException at testIfDisputeTriesReplay: " +
                             "disputeToTest={}, disputesPerTradeId={}, disputesPerDelayedPayoutTxId={}, " +
+                            "disputesPerWarningTxId={}, disputesPerRedirectTxId={}, " +
                             "disputesPerDepositTxId={}",
-                    disputeToTest, disputesPerTradeId, disputesPerDelayedPayoutTxId, disputesPerDepositTxId);
+                    disputeToTest, disputesPerTradeId, disputesPerDelayedPayoutTxId, disputesPerWarningTxId,
+                    disputesPerRedirectTxId, disputesPerDepositTxId);
             throw new DisputeReplayException(disputeToTest, e + " at dispute " + disputeToTest);
         }
     }
