@@ -116,8 +116,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import lombok.Getter;
 
@@ -149,7 +149,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
         private final String displayString;
 
         FilterResult(String displayString) {
-
             this.displayString = displayString;
         }
     }
@@ -187,10 +186,10 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     private ListChangeListener<Dispute> disputesListener; // Only set in mediation cases
     protected Label alertIconLabel;
     protected TableColumn<Dispute, Dispute> stateColumn;
-    private Map<String, ListChangeListener<ChatMessage>> listenerByDispute = new HashMap<>();
-    private Map<String, Button> chatButtonByDispute = new HashMap<>();
-    private Map<String, JFXBadge> chatBadgeByDispute = new HashMap<>();
-    private Map<String, JFXBadge> newBadgeByDispute = new HashMap<>();
+    private final Map<String, ListChangeListener<ChatMessage>> listenerByDispute = new HashMap<>();
+    private final Map<String, Button> chatButtonByDispute = new HashMap<>();
+    private final Map<String, JFXBadge> chatBadgeByDispute = new HashMap<>();
+    private final Map<String, JFXBadge> newBadgeByDispute = new HashMap<>();
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private final PeerInfoIconMap avatarMap = new PeerInfoIconMap();
     protected DisputeChatPopup chatPopup;
@@ -274,31 +273,23 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
         sendPrivateNotificationButton.setVisible(false);
         sendPrivateNotificationButton.setManaged(false);
         HBox.setHgrow(sendPrivateNotificationButton, Priority.NEVER);
-        sendPrivateNotificationButton.setOnAction(e -> {
-            sendPrivateNotification();
-        });
+        sendPrivateNotificationButton.setOnAction(e -> sendPrivateNotification());
 
         reportButton = new AutoTooltipButton(Res.get("support.reportButton.label"));
         reportButton.setVisible(false);
         reportButton.setManaged(false);
         HBox.setHgrow(reportButton, Priority.NEVER);
-        reportButton.setOnAction(e -> {
-            showCompactReport();
-        });
+        reportButton.setOnAction(e -> showCompactReport());
 
         fullReportButton = new AutoTooltipButton(Res.get("support.fullReportButton.label"));
         fullReportButton.setVisible(false);
         fullReportButton.setManaged(false);
         HBox.setHgrow(fullReportButton, Priority.NEVER);
-        fullReportButton.setOnAction(e -> {
-            showFullReport();
-        });
+        fullReportButton.setOnAction(e -> showFullReport());
 
         sigCheckButton = new AutoTooltipButton(Res.get("support.sigCheck.button"));
         HBox.setHgrow(sigCheckButton, Priority.NEVER);
-        sigCheckButton.setOnAction(e -> {
-            new VerifyDisputeResultSignatureWindow(mediatorManager, refundAgentManager).show();
-        });
+        sigCheckButton.setOnAction(e -> new VerifyDisputeResultSignatureWindow(mediatorManager, refundAgentManager).show());
 
         Pane spacer = new Pane();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -342,7 +333,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
         tableView.setItems(sortedList);
 
         // double-click on a row opens chat window
-        tableView.setRowFactory( tv -> {
+        tableView.setRowFactory(tv -> {
             TableRow<Dispute> row = new TableRow<>();
             row.setOnMouseClicked(event -> {
                 if (event.getClickCount() == 2 && (!row.isEmpty())) {
@@ -515,21 +506,13 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     // traders -> only allow them to close the dispute if the trade is paid out
     // the reason for having this is that sometimes traders end up with closed disputes that are not "closed" @pazza
     protected void closeDisputeFromButton() {
-        disputeManager.findTrade(selectedDispute).ifPresentOrElse(
-                (trade) -> {
-                    if (trade.isFundsLockedIn()) {
-                        new Popup().warning(Res.get("support.warning.traderCloseOwnDisputeWarning")).show();
-                    } else {
-                        selectedDispute.setIsClosed();
-                        disputeManager.requestPersistence();
-                        onSelectDispute(selectedDispute);
-                    }
-                },
-                () -> {
-                    selectedDispute.setIsClosed();
-                    disputeManager.requestPersistence();
-                    onSelectDispute(selectedDispute);
-                });
+        if (disputeManager.findTrade(selectedDispute).filter(Trade::isFundsLockedIn).isPresent()) {
+            new Popup().warning(Res.get("support.warning.traderCloseOwnDisputeWarning")).show();
+        } else {
+            selectedDispute.setIsClosed();
+            disputeManager.requestPersistence();
+            onSelectDispute(selectedDispute);
+        }
     }
 
     protected void handleOnProcessDispute(Dispute dispute) {
@@ -537,10 +520,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     }
 
     protected boolean reOpenDispute() {
-        if (selectedDispute != null &&
-                selectedDispute.isClosed() &&
-                isNodeAddressOk(selectedDispute,
-                        !disputeManager.isTrader(selectedDispute))) {
+        if (selectedDispute != null && selectedDispute.isClosed() &&
+                isNodeAddressOk(selectedDispute, !disputeManager.isTrader(selectedDispute))) {
             selectedDispute.reOpen();
             disputeManager.requestPersistence();
             onSelectDispute(selectedDispute);
@@ -573,19 +554,14 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     }
 
     private void onSelectDispute(Dispute dispute) {
+        selectedDispute = dispute;
         if (dispute == null) {
-            selectedDispute = null;
-        } else if (selectedDispute != dispute) {
-            selectedDispute = dispute;
-        }
-
-        if (selectedDispute == null) {
             openOrCloseButton.setDisable(true);
             sendPrivateNotificationButton.setDisable(true);
         } else {
             openOrCloseButton.setDisable(false);
             sendPrivateNotificationButton.setDisable(false);
-            openOrCloseButton.setText(selectedDispute.isClosed() ?
+            openOrCloseButton.setText(dispute.isClosed() ?
                     Res.get("support.reOpenButton.label").toUpperCase() : Res.get("support.closeTicket").toUpperCase());
         }
     }
@@ -634,13 +610,9 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     private void sendPrivateNotification() {
         if (selectedDispute != null) {
             PubKeyRing pubKeyRing = selectedDispute.getTraderPubKeyRing();
-            NodeAddress nodeAddress;
             Contract contract = selectedDispute.getContract();
-            if (pubKeyRing.equals(contract.getBuyerPubKeyRing())) {
-                nodeAddress = contract.getBuyerNodeAddress();
-            } else {
-                nodeAddress = contract.getSellerNodeAddress();
-            }
+            NodeAddress nodeAddress = pubKeyRing.equals(contract.getBuyerPubKeyRing()) ?
+                    contract.getBuyerNodeAddress() : contract.getSellerNodeAddress();
 
             new SendPrivateNotificationWindow(
                     privateNotificationManager,
@@ -652,21 +624,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     }
 
     private void showCompactReport() {
-        Map<String, List<Dispute>> map = new HashMap<>();
-        Map<String, List<Dispute>> disputesByReason = new HashMap<>();
-        disputeManager.getDisputesAsObservableList().forEach(dispute -> {
-            String tradeId = dispute.getTradeId();
-            List<Dispute> list;
-            if (!map.containsKey(tradeId))
-                map.put(tradeId, new ArrayList<>());
-
-            list = map.get(tradeId);
-            list.add(dispute);
-        });
-
-        List<List<Dispute>> allDisputes = new ArrayList<>();
-        map.forEach((key, value) -> allDisputes.add(value));
-        allDisputes.sort(Comparator.comparing(o -> !o.isEmpty() ? o.get(0).getOpeningDate() : new Date(0)));
         StringBuilder stringBuilder = new StringBuilder();
         StringBuilder csvStringBuilder = new StringBuilder();
         csvStringBuilder.append("Dispute nr").append(";")
@@ -695,169 +652,165 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                 .append("Summary notes").append(";")
                 .append("Summary notes (other trader)");
 
+        List<List<Dispute>> allDisputes = getDisputeGroupsByTrade();
+        Map<String, List<Dispute>> disputesByReason = new HashMap<>();
         Map<Integer, Date> blockStartDateByCycleIndex = daoFacade.getBlockStartDateByCycleIndex();
 
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy MM dd HH:mm:ss");
-        AtomicInteger disputeIndex = new AtomicInteger();
-        allDisputes.forEach(disputesPerTrade -> {
-            if (disputesPerTrade.size() > 0) {
-                Dispute firstDispute = disputesPerTrade.get(0);
-                Date openingDate = firstDispute.getOpeningDate();
-                Contract contract = firstDispute.getContract();
-                String buyersRole = contract.isBuyerMakerAndSellerTaker() ? "Buyer as maker" : "Buyer as taker";
-                String sellersRole = contract.isBuyerMakerAndSellerTaker() ? "Seller as taker" : "Seller as maker";
-                String opener = firstDispute.isDisputeOpenerIsBuyer() ? buyersRole : sellersRole;
-                DisputeResult disputeResult = firstDispute.getDisputeResultProperty().get();
-                String winner = disputeResult != null &&
-                        disputeResult.getWinner() == DisputeResult.Winner.BUYER ? "Buyer" : "Seller";
-                String buyerPayoutAmount = disputeResult != null ? disputeResult.getBuyerPayoutAmount().toFriendlyString() : "";
-                String sellerPayoutAmount = disputeResult != null ? disputeResult.getSellerPayoutAmount().toFriendlyString() : "";
+        int disputeIndex = 0;
+        for (var disputesPerTrade : allDisputes) {
+            Dispute firstDispute = disputesPerTrade.get(0);
+            Date openingDate = firstDispute.getOpeningDate();
+            Contract contract = firstDispute.getContract();
+            String buyersRole = contract.isBuyerMakerAndSellerTaker() ? "Buyer as maker" : "Buyer as taker";
+            String sellersRole = contract.isBuyerMakerAndSellerTaker() ? "Seller as taker" : "Seller as maker";
+            String opener = firstDispute.isDisputeOpenerIsBuyer() ? buyersRole : sellersRole;
+            DisputeResult disputeResult = firstDispute.getDisputeResultProperty().get();
+            String winner = disputeResult != null &&
+                    disputeResult.getWinner() == DisputeResult.Winner.BUYER ? "Buyer" : "Seller";
+            String buyerPayoutAmount = disputeResult != null ? disputeResult.getBuyerPayoutAmount().toFriendlyString() : "";
+            String sellerPayoutAmount = disputeResult != null ? disputeResult.getSellerPayoutAmount().toFriendlyString() : "";
 
-                int index = disputeIndex.incrementAndGet();
-                String tradeDateString = dateFormatter.format(firstDispute.getTradeDate());
-                String openingDateString = dateFormatter.format(openingDate);
+            String tradeDateString = dateFormatter.format(firstDispute.getTradeDate());
+            String openingDateString = dateFormatter.format(openingDate);
 
-                // Index we display starts with 1 not with 0
-                int cycleIndex = 0;
-                if (disputeResult != null) {
-                    Date closeDate = disputeResult.getCloseDate();
-                    cycleIndex = blockStartDateByCycleIndex.entrySet().stream()
-                            .filter(e -> e.getValue().after(closeDate))
-                            .findFirst()
-                            .map(Map.Entry::getKey)
-                            .orElse(0);
-                }
-                stringBuilder.append("\n").append("Dispute nr.: ").append(index).append("\n");
+            // Index we display starts with 1 not with 0
+            int cycleIndex = 0;
+            if (disputeResult != null) {
+                Date closeDate = disputeResult.getCloseDate();
+                cycleIndex = blockStartDateByCycleIndex.entrySet().stream()
+                        .filter(e -> e.getValue().after(closeDate))
+                        .findFirst()
+                        .map(Map.Entry::getKey)
+                        .orElse(0);
+            }
+            stringBuilder.append("\n").append("Dispute nr.: ").append(++disputeIndex).append("\n");
 
-                if (cycleIndex > 0) {
-                    stringBuilder.append("Closed during cycle: ").append(cycleIndex).append("\n");
-                }
-                stringBuilder.append("Trade date: ").append(tradeDateString)
-                        .append("\n")
-                        .append("Opening date: ").append(openingDateString)
-                        .append("\n");
-                String tradeId = firstDispute.getTradeId();
-                csvStringBuilder.append("\n").append(index).append(";");
-                if (cycleIndex > 0) {
-                    csvStringBuilder.append(cycleIndex).append(";");
+            if (cycleIndex > 0) {
+                stringBuilder.append("Closed during cycle: ").append(cycleIndex).append("\n");
+            }
+            stringBuilder.append("Trade date: ").append(tradeDateString)
+                    .append("\n")
+                    .append("Opening date: ").append(openingDateString)
+                    .append("\n");
+            String tradeId = firstDispute.getTradeId();
+            csvStringBuilder.append("\n").append(disputeIndex).append(";");
+            if (cycleIndex > 0) {
+                csvStringBuilder.append(cycleIndex).append(";");
+            } else {
+                csvStringBuilder.append(";");
+            }
+            csvStringBuilder.append(firstDispute.isClosed() ? "Closed" : "Open").append(";")
+                    .append(tradeDateString).append(";")
+                    .append(firstDispute.getShortTradeId()).append(";")
+                    .append(tradeId, tradeId.length() - 3, tradeId.length()).append(";")
+                    .append(openingDateString).append(";");
+
+            String summaryNotes = "";
+            if (disputeResult != null) {
+                Date closeDate = disputeResult.getCloseDate();
+                long duration = closeDate.getTime() - openingDate.getTime();
+
+                String closeDateString = dateFormatter.format(closeDate);
+                String durationAsWords = FormattingUtils.formatDurationAsWords(duration);
+                stringBuilder.append("Close date: ").append(closeDateString).append("\n")
+                        .append("Dispute duration: ").append(durationAsWords).append("\n");
+                csvStringBuilder.append(closeDateString).append(";")
+                        .append(durationAsWords).append(";");
+            } else {
+                csvStringBuilder.append(";").append(";");
+            }
+
+            String paymentMethod = Res.get(contract.getPaymentMethodId());
+            String currency = CurrencyUtil.getNameAndCode(contract.getOfferPayload().getCurrencyCode());
+            String tradeAmount = contract.getTradeAmount().toFriendlyString();
+            String buyerDeposit = Coin.valueOf(contract.getOfferPayload().getBuyerSecurityDeposit()).toFriendlyString();
+            String sellerDeposit = Coin.valueOf(contract.getOfferPayload().getSellerSecurityDeposit()).toFriendlyString();
+            stringBuilder.append("Payment method: ")
+                    .append(paymentMethod)
+                    .append("\n")
+                    .append("Currency: ")
+                    .append(currency)
+                    .append("\n")
+                    .append("Trade amount: ")
+                    .append(tradeAmount)
+                    .append("\n")
+                    .append("Buyer/seller security deposit: ")
+                    .append(buyerDeposit)
+                    .append("/")
+                    .append(sellerDeposit)
+                    .append("\n")
+                    .append("Dispute opened by: ")
+                    .append(opener)
+                    .append("\n")
+                    .append("Payout to buyer/seller (winner): ")
+                    .append(buyerPayoutAmount).append("/")
+                    .append(sellerPayoutAmount).append(" (")
+                    .append(winner)
+                    .append(")\n");
+
+            String buyerPaymentAccountPayload = Utilities.toTruncatedString(
+                    contract.getBuyerPaymentAccountPayload() != null ? contract.getBuyerPaymentAccountPayload().getPaymentDetails().
+                            replace("\n", " ").replace(";", ".") : "NA", 100);
+            String sellerPaymentAccountPayload = Utilities.toTruncatedString(
+                    contract.getSellerPaymentAccountPayload() != null ? contract.getSellerPaymentAccountPayload().getPaymentDetails()
+                            .replace("\n", " ").replace(";", ".") : "NA", 100);
+            String buyerNodeAddress = contract.getBuyerNodeAddress().getFullAddress();
+            String sellerNodeAddress = contract.getSellerNodeAddress().getFullAddress();
+            csvStringBuilder.append(currency).append(";")
+                    .append(tradeAmount.replace(" BTC", "")).append(";")
+                    .append(paymentMethod).append(";")
+                    .append(buyerPaymentAccountPayload).append(";")
+                    .append(sellerPaymentAccountPayload).append(";")
+                    .append(buyerNodeAddress.replace(".onion:9999", "")).append(";")
+                    .append(sellerNodeAddress.replace(".onion:9999", "")).append(";")
+                    .append(buyerDeposit.replace(" BTC", "")).append(";")
+                    .append(sellerDeposit.replace(" BTC", "")).append(";")
+                    .append(opener).append(";")
+                    .append(buyerPayoutAmount.replace(" BTC", "")).append(";")
+                    .append(sellerPayoutAmount.replace(" BTC", "")).append(";")
+                    .append(winner).append(";");
+
+            if (disputeResult != null) {
+                DisputeResult.Reason reason = disputeResult.getReason();
+                if (firstDispute.disputeResultProperty().get().getReason() != null) {
+                    disputesByReason.computeIfAbsent(reason.name(), k -> new ArrayList<>()).add(firstDispute);
+                    stringBuilder.append("Reason: ")
+                            .append(reason.name())
+                            .append("\n");
+
+                    csvStringBuilder.append(reason.name()).append(";");
                 } else {
                     csvStringBuilder.append(";");
                 }
-                csvStringBuilder.append(firstDispute.isClosed() ? "Closed" : "Open").append(";")
-                        .append(tradeDateString).append(";")
-                        .append(firstDispute.getShortTradeId()).append(";")
-                        .append(tradeId, tradeId.length() - 3, tradeId.length()).append(";")
-                        .append(openingDateString).append(";");
 
-                String summaryNotes = "";
-                if (disputeResult != null) {
-                    Date closeDate = disputeResult.getCloseDate();
-                    long duration = closeDate.getTime() - openingDate.getTime();
+                summaryNotes = disputeResult.getSummaryNotesProperty().get();
+                stringBuilder.append("Summary notes: ").append(summaryNotes).append("\n");
 
-                    String closeDateString = dateFormatter.format(closeDate);
-                    String durationAsWords = FormattingUtils.formatDurationAsWords(duration);
-                    stringBuilder.append("Close date: ").append(closeDateString).append("\n")
-                            .append("Dispute duration: ").append(durationAsWords).append("\n");
-                    csvStringBuilder.append(closeDateString).append(";")
-                            .append(durationAsWords).append(";");
-                } else {
-                    csvStringBuilder.append(";").append(";");
-                }
+                csvStringBuilder.append(summaryNotes).append(";");
+            } else {
+                csvStringBuilder.append(";");
+            }
 
-                String paymentMethod = Res.get(contract.getPaymentMethodId());
-                String currency = CurrencyUtil.getNameAndCode(contract.getOfferPayload().getCurrencyCode());
-                String tradeAmount = contract.getTradeAmount().toFriendlyString();
-                String buyerDeposit = Coin.valueOf(contract.getOfferPayload().getBuyerSecurityDeposit()).toFriendlyString();
-                String sellerDeposit = Coin.valueOf(contract.getOfferPayload().getSellerSecurityDeposit()).toFriendlyString();
-                stringBuilder.append("Payment method: ")
-                        .append(paymentMethod)
-                        .append("\n")
-                        .append("Currency: ")
-                        .append(currency)
-                        .append("\n")
-                        .append("Trade amount: ")
-                        .append(tradeAmount)
-                        .append("\n")
-                        .append("Buyer/seller security deposit: ")
-                        .append(buyerDeposit)
-                        .append("/")
-                        .append(sellerDeposit)
-                        .append("\n")
-                        .append("Dispute opened by: ")
-                        .append(opener)
-                        .append("\n")
-                        .append("Payout to buyer/seller (winner): ")
-                        .append(buyerPayoutAmount).append("/")
-                        .append(sellerPayoutAmount).append(" (")
-                        .append(winner)
-                        .append(")\n");
+            // We might have a different summary notes at second trader. Only if it
+            // is different we show it.
+            if (disputesPerTrade.size() > 1) {
+                Dispute dispute1 = disputesPerTrade.get(1);
+                DisputeResult disputeResult1 = dispute1.getDisputeResultProperty().get();
+                if (disputeResult1 != null) {
+                    String summaryNotes1 = disputeResult1.getSummaryNotesProperty().get();
+                    if (!summaryNotes1.equals(summaryNotes)) {
+                        stringBuilder.append("Summary notes (different message to other trader was used): ").append(summaryNotes1).append("\n");
 
-                String buyerPaymentAccountPayload = Utilities.toTruncatedString(
-                        contract.getBuyerPaymentAccountPayload() != null ? contract.getBuyerPaymentAccountPayload().getPaymentDetails().
-                                replace("\n", " ").replace(";", ".") : "NA", 100);
-                String sellerPaymentAccountPayload = Utilities.toTruncatedString(
-                        contract.getSellerPaymentAccountPayload() != null ? contract.getSellerPaymentAccountPayload().getPaymentDetails()
-                                .replace("\n", " ").replace(";", ".") : "NA", 100);
-                String buyerNodeAddress = contract.getBuyerNodeAddress().getFullAddress();
-                String sellerNodeAddress = contract.getSellerNodeAddress().getFullAddress();
-                csvStringBuilder.append(currency).append(";")
-                        .append(tradeAmount.replace(" BTC", "")).append(";")
-                        .append(paymentMethod).append(";")
-                        .append(buyerPaymentAccountPayload).append(";")
-                        .append(sellerPaymentAccountPayload).append(";")
-                        .append(buyerNodeAddress.replace(".onion:9999", "")).append(";")
-                        .append(sellerNodeAddress.replace(".onion:9999", "")).append(";")
-                        .append(buyerDeposit.replace(" BTC", "")).append(";")
-                        .append(sellerDeposit.replace(" BTC", "")).append(";")
-                        .append(opener).append(";")
-                        .append(buyerPayoutAmount.replace(" BTC", "")).append(";")
-                        .append(sellerPayoutAmount.replace(" BTC", "")).append(";")
-                        .append(winner).append(";");
-
-                if (disputeResult != null) {
-                    DisputeResult.Reason reason = disputeResult.getReason();
-                    if (firstDispute.disputeResultProperty().get().getReason() != null) {
-                        disputesByReason.putIfAbsent(reason.name(), new ArrayList<>());
-                        disputesByReason.get(reason.name()).add(firstDispute);
-                        stringBuilder.append("Reason: ")
-                                .append(reason.name())
-                                .append("\n");
-
-                        csvStringBuilder.append(reason.name()).append(";");
+                        csvStringBuilder.append(summaryNotes1).append(";");
                     } else {
                         csvStringBuilder.append(";");
                     }
-
-                    summaryNotes = disputeResult.getSummaryNotesProperty().get();
-                    stringBuilder.append("Summary notes: ").append(summaryNotes).append("\n");
-
-                    csvStringBuilder.append(summaryNotes).append(";");
-                } else {
-                    csvStringBuilder.append(";");
-                }
-
-                // We might have a different summary notes at second trader. Only if it
-                // is different we show it.
-                if (disputesPerTrade.size() > 1) {
-                    Dispute dispute1 = disputesPerTrade.get(1);
-                    DisputeResult disputeResult1 = dispute1.getDisputeResultProperty().get();
-                    if (disputeResult1 != null) {
-                        String summaryNotes1 = disputeResult1.getSummaryNotesProperty().get();
-                        if (!summaryNotes1.equals(summaryNotes)) {
-                            stringBuilder.append("Summary notes (different message to other trader was used): ").append(summaryNotes1).append("\n");
-
-                            csvStringBuilder.append(summaryNotes1).append(";");
-                        } else {
-                            csvStringBuilder.append(";");
-                        }
-                    }
                 }
             }
-        });
+        }
         stringBuilder.append("\n").append("Summary of reasons for disputes: ").append("\n");
-        disputesByReason.forEach((k, v) -> {
-            stringBuilder.append(k).append(": ").append(v.size()).append("\n");
-        });
+        disputesByReason.forEach((k, v) -> stringBuilder.append(k).append(": ").append(v.size()).append("\n"));
 
         String message = stringBuilder.toString();
         new Popup().headLine("Report for " + allDisputes.size() + " disputes")
@@ -872,23 +825,11 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     }
 
     private void showFullReport() {
-        Map<String, List<Dispute>> map = new HashMap<>();
-        disputeManager.getDisputesAsObservableList().forEach(dispute -> {
-            String tradeId = dispute.getTradeId();
-            List<Dispute> list;
-            if (!map.containsKey(tradeId))
-                map.put(tradeId, new ArrayList<>());
-
-            list = map.get(tradeId);
-            list.add(dispute);
-        });
-        List<List<Dispute>> disputeGroups = new ArrayList<>();
-        map.forEach((key, value) -> disputeGroups.add(value));
-        disputeGroups.sort(Comparator.comparing(o -> !o.isEmpty() ? o.get(0).getOpeningDate() : new Date(0)));
         StringBuilder stringBuilder = new StringBuilder();
+        List<List<Dispute>> disputeGroups = getDisputeGroupsByTrade();
 
         // We don't translate that as it is not intended for the public
-        disputeGroups.forEach(disputeGroup -> {
+        for (var disputeGroup : disputeGroups) {
             Dispute dispute0 = disputeGroup.get(0);
             stringBuilder.append("##########################################################################################/\n")
                     .append("## Trade ID: ")
@@ -923,7 +864,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                 stringBuilder.append("\n");
             });
             stringBuilder.append("\n");
-        });
+        }
         String message = stringBuilder.toString();
         // We don't translate that as it is not intended for the public
         new Popup().headLine("Detailed text dump for " + disputeGroups.size() + " disputes")
@@ -933,6 +874,14 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                 .actionButtonText("Copy to clipboard")
                 .onAction(() -> Utilities.copyToClipboard(message))
                 .show();
+    }
+
+    private List<List<Dispute>> getDisputeGroupsByTrade() {
+        Map<String, List<Dispute>> map = disputeManager.getDisputesAsObservableList().stream()
+                .collect(Collectors.groupingBy(Dispute::getTradeId));
+        List<List<Dispute>> disputeGroups = new ArrayList<>(map.values());
+        disputeGroups.sort(Comparator.comparing(list -> !list.isEmpty() ? list.get(0).getOpeningDate() : new Date(0)));
+        return disputeGroups;
     }
 
 
@@ -979,7 +928,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
         dateColumn.setComparator(Comparator.comparing(Dispute::getOpeningDate));
         buyerOnionAddressColumn.setComparator(Comparator.comparing(this::getBuyerOnionAddressColumnLabel));
         sellerOnionAddressColumn.setComparator(Comparator.comparing(this::getSellerOnionAddressColumnLabel));
-        marketColumn.setComparator((o1, o2) -> CurrencyUtil.getCurrencyPair(o1.getContract().getOfferPayload().getCurrencyCode()).compareTo(o2.getContract().getOfferPayload().getCurrencyCode()));
+        marketColumn.setComparator(Comparator.comparing(dispute ->
+                CurrencyUtil.getCurrencyPair(dispute.getContract().getOfferPayload().getCurrencyCode())));
 
         dateColumn.setSortType(TableColumn.SortType.DESCENDING);
         tableView.getSortOrder().add(dateColumn);
@@ -1408,8 +1358,6 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                     @Override
                     public TableCell<Dispute, Dispute> call(TableColumn<Dispute, Dispute> column) {
                         return new TableCell<>() {
-
-
                             ReadOnlyStringProperty closedProperty;
                             ChangeListener<String> listener;
 
@@ -1433,7 +1381,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
                                     boolean isClosed = item.isClosed();
                                     setText(closedProperty.get());
                                     if (getTableRow() != null)
-                                        getTableRow().setOpacity(isClosed && item.getBadgeCountProperty().get() == 0  ? 0.4 : 1);
+                                        getTableRow().setOpacity(isClosed && item.getBadgeCountProperty().get() == 0 ? 0.4 : 1);
                                 } else {
                                     if (closedProperty != null) {
                                         closedProperty.removeListener(listener);
@@ -1490,7 +1438,7 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
     private PeerInfoIconDispute createAvatar(Integer tableRowId, Contract contract, boolean isBuyer) {
         NodeAddress nodeAddress = isBuyer ? contract.getBuyerNodeAddress() : contract.getSellerNodeAddress();
         String key = tableRowId + nodeAddress.getHostNameWithoutPostFix() + (isBuyer ? "BUYER" : "SELLER");
-        Long accountAge = isBuyer ?
+        long accountAge = isBuyer ?
                 accountAgeWitnessService.getAccountAge(contract.getBuyerPaymentAccountPayload(), contract.getBuyerPubKeyRing()) :
                 accountAgeWitnessService.getAccountAge(contract.getSellerPaymentAccountPayload(), contract.getSellerPubKeyRing());
         PeerInfoIconDispute peerInfoIcon = new PeerInfoIconDispute(
