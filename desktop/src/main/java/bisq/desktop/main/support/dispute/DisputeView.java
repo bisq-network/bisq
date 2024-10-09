@@ -140,6 +140,8 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
         DEPOSIT_TX("Deposit tx ID"),
         PAYOUT_TX("Payout tx ID"),
         DEL_PAYOUT_TX("Delayed payout tx ID"),
+        WARNING_TX("Warning tx ID"),
+        REDIRECT_TX("Redirect tx ID"),
         RESULT_MESSAGE("Result message"),
         REASON("Reason"),
         JSON("Contract as json");
@@ -477,6 +479,12 @@ public abstract class DisputeView extends ActivatableView<VBox, Void> implements
 
         if (dispute.getDelayedPayoutTxId() != null && dispute.getDelayedPayoutTxId().contains(filter)) {
             return FilterResult.DEL_PAYOUT_TX;
+        }
+        if (dispute.getWarningTxId() != null && dispute.getWarningTxId().contains(filter)) {
+            return FilterResult.WARNING_TX;
+        }
+        if (dispute.getRedirectTxId() != null && dispute.getRedirectTxId().contains(filter)) {
+            return FilterResult.REDIRECT_TX;
         }
 
         DisputeResult disputeResult = dispute.getDisputeResultProperty().get();

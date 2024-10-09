@@ -25,7 +25,6 @@ import bisq.desktop.util.Layout;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 import bisq.core.locale.CountryUtil;
-import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
 import bisq.core.offer.Offer;
 import bisq.core.payment.payload.PaymentAccountPayload;
@@ -45,7 +44,6 @@ import bisq.core.util.coin.CoinFormatter;
 import bisq.network.p2p.NodeAddress;
 
 import bisq.common.UserThread;
-import bisq.common.crypto.PubKeyRing;
 
 import org.bitcoinj.core.Utils;
 
@@ -142,6 +140,10 @@ public class ContractWindow extends Overlay<ContractWindow> {
         if (dispute.getPayoutTxSerialized() != null)
             rows++;
         if (dispute.getDelayedPayoutTxId() != null)
+            rows++;
+        if (dispute.getWarningTxId() != null)
+            rows++;
+        if (dispute.getRedirectTxId() != null)
             rows++;
         if (dispute.getDonationAddressOfDelayedPayoutTx() != null)
             rows++;
@@ -270,6 +272,12 @@ public class ContractWindow extends Overlay<ContractWindow> {
 
         if (dispute.getDelayedPayoutTxId() != null)
             addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.delayedPayoutTxId"), dispute.getDelayedPayoutTxId());
+
+        if (dispute.getWarningTxId() != null)
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.publishedWarningTxId"), dispute.getWarningTxId());
+
+        if (dispute.getRedirectTxId() != null)
+            addLabelTxIdTextField(gridPane, ++rowIndex, Res.get("shared.publishedRedirectTxId"), dispute.getRedirectTxId());
 
         if (dispute.getDonationAddressOfDelayedPayoutTx() != null) {
             addLabelExplorerAddressTextField(gridPane, ++rowIndex, Res.get("shared.delayedPayoutTxReceiverAddress"),
