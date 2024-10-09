@@ -41,6 +41,7 @@ import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.protocol.bisq_v5.model.StagedPayoutTxParameters;
 
 import bisq.network.p2p.AckMessageSourceType;
 import bisq.network.p2p.NodeAddress;
@@ -64,6 +65,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -262,10 +264,7 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         return dispute.getContract().getRefundAgentNodeAddress();
     }
 
-    public CompletableFuture<List<Transaction>> requestBlockchainTransactions(String makerFeeTxId,
-                                                                              String takerFeeTxId,
-                                                                              String depositTxId,
-                                                                              String delayedPayoutTxId) {
+    public CompletableFuture<List<Transaction>> requestBlockchainTransactions(List<String> txIds) {
         // in regtest mode, simulate a delay & failure obtaining the blockchain transactions
         // since we cannot request them in regtest anyway.  this is useful for checking failure scenarios
         if (!Config.baseCurrencyNetwork().isMainnet()) {
@@ -276,28 +275,28 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
 
         NetworkParameters params = btcWalletService.getParams();
         List<Transaction> txs = new ArrayList<>();
-        return mempoolService.requestTxAsHex(makerFeeTxId)
-                .thenCompose(txAsHex -> {
-                    txs.add(new Transaction(params, Hex.decode(txAsHex)));
-                    return mempoolService.requestTxAsHex(takerFeeTxId);
-                }).thenCompose(txAsHex -> {
-                    txs.add(new Transaction(params, Hex.decode(txAsHex)));
-                    return mempoolService.requestTxAsHex(depositTxId);
-                }).thenCompose(txAsHex -> {
-                    txs.add(new Transaction(params, Hex.decode(txAsHex)));
-                    return mempoolService.requestTxAsHex(delayedPayoutTxId);
-                })
-                .thenApply(txAsHex -> {
-                    txs.add(new Transaction(params, Hex.decode(txAsHex)));
-                    return txs;
-                });
+        Iterator<String> txIdIterator = txIds.iterator();
+        if (!txIdIterator.hasNext()) {
+            return CompletableFuture.completedFuture(txs);
+        }
+        CompletableFuture<String> future = mempoolService.requestTxAsHex(txIdIterator.next());
+        while (txIdIterator.hasNext()) {
+            String txId = txIdIterator.next();
+            future = future.thenCompose(txAsHex -> {
+                txs.add(new Transaction(params, Hex.decode(txAsHex)));
+                return mempoolService.requestTxAsHex(txId);
+            });
+        }
+        return future.thenApply(txAsHex -> {
+            txs.add(new Transaction(params, Hex.decode(txAsHex)));
+            return txs;
+        });
     }
 
     public void verifyTradeTxChain(List<Transaction> txs) {
         Transaction makerFeeTx = txs.get(0);
         Transaction takerFeeTx = txs.get(1);
         Transaction depositTx = txs.get(2);
-        Transaction delayedPayoutTx = txs.get(3);
 
         // The order and number of buyer and seller inputs are not part of the trade protocol consensus.
         // In the current implementation buyer inputs come before seller inputs at depositTx and there is
@@ -316,38 +315,85 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
         }
         checkArgument(makerFeeTxFoundAtInputs, "makerFeeTx not found at depositTx inputs");
         checkArgument(takerFeeTxFoundAtInputs, "takerFeeTx not found at depositTx inputs");
-        checkArgument(depositTx.getInputs().size() >= 2,
-                "DepositTx must have at least 2 inputs");
-        checkArgument(delayedPayoutTx.getInputs().size() == 1,
-                "DelayedPayoutTx must have 1 input");
-        TransactionOutPoint delayedPayoutTxInputOutpoint = delayedPayoutTx.getInputs().get(0).getOutpoint();
-        String fundingTxId = delayedPayoutTxInputOutpoint.getHash().toString();
-        checkArgument(fundingTxId.equals(depositTx.getTxId().toString()),
-                "First input at delayedPayoutTx does not connect to depositTx");
+        checkArgument(depositTx.getInputs().size() >= 2, "depositTx must have at least 2 inputs");
+        if (txs.size() == 4) {
+            Transaction delayedPayoutTx = txs.get(3);
+            checkArgument(delayedPayoutTx.getInputs().size() == 1, "delayedPayoutTx must have 1 input");
+            checkArgument(firstOutputConnectsToFirstInput(depositTx, delayedPayoutTx),
+                    "First input at delayedPayoutTx does not connect to depositTx");
+        } else {
+            Transaction warningTx = txs.get(3);
+            Transaction redirectTx = txs.get(4);
+
+            checkArgument(warningTx.getInputs().size() == 1, "warningTx must have 1 input");
+            checkArgument(warningTx.getOutputs().size() == 2, "warningTx must have 2 outputs");
+            checkArgument(warningTx.getOutput(1).getValue().value ==
+                            StagedPayoutTxParameters.WARNING_TX_FEE_BUMP_OUTPUT_VALUE,
+                    "Second warningTx output is wrong amount for a fee bump output");
+
+            checkArgument(redirectTx.getInputs().size() == 1, "redirectTx must have 1 input");
+            int numReceivers = redirectTx.getOutputs().size() - 1;
+            checkArgument(redirectTx.getOutput(numReceivers).getValue().value ==
+                            StagedPayoutTxParameters.REDIRECT_TX_FEE_BUMP_OUTPUT_VALUE,
+                    "Last redirectTx output is wrong amount for a fee bump output");
+
+            checkArgument(firstOutputConnectsToFirstInput(depositTx, warningTx),
+                    "First input at warningTx does not connect to depositTx");
+            checkArgument(firstOutputConnectsToFirstInput(warningTx, redirectTx),
+                    "First input at redirectTx does not connect to warningTx");
+        }
     }
 
-    public void verifyDelayedPayoutTxReceivers(Transaction delayedPayoutTx, Dispute dispute) {
-        Transaction depositTx = dispute.findDepositTx(btcWalletService).orElseThrow();
+    private static boolean firstOutputConnectsToFirstInput(Transaction parent, Transaction child) {
+        TransactionOutPoint childTxInputOutpoint = child.getInput(0).getOutpoint();
+        String fundingTxId = childTxInputOutpoint.getHash().toString();
+        return fundingTxId.equals(parent.getTxId().toString());
+    }
+
+    public void verifyDelayedPayoutTxReceivers(Transaction depositTx, Transaction delayedPayoutTx, Dispute dispute) {
         long inputAmount = depositTx.getOutput(0).getValue().value;
         int selectionHeight = dispute.getBurningManSelectionHeight();
 
-        List<Tuple2<Long, String>> delayedPayoutTxReceivers = delayedPayoutTxReceiverService.getReceivers(
+        List<Tuple2<Long, String>> receivers = delayedPayoutTxReceiverService.getReceivers(
                 selectionHeight,
                 inputAmount,
                 dispute.getTradeTxFee(),
                 DelayedPayoutTxReceiverService.ReceiverFlag.flagsActivatedBy(dispute.getTradeDate()));
-        log.info("Verify delayedPayoutTx using selectionHeight {} and receivers {}", selectionHeight, delayedPayoutTxReceivers);
-        checkArgument(delayedPayoutTx.getOutputs().size() == delayedPayoutTxReceivers.size(),
-                "Size of outputs and delayedPayoutTxReceivers must be the same");
+        log.info("Verify delayedPayoutTx using selectionHeight {} and receivers {}", selectionHeight, receivers);
+        checkArgument(delayedPayoutTx.getOutputs().size() == receivers.size(),
+                "Number of outputs must equal number of receivers");
+        checkOutputsPrefixMatchesReceivers(delayedPayoutTx, receivers);
+    }
 
+    public void verifyRedirectTxReceivers(Transaction warningTx, Transaction redirectTx, Dispute dispute) {
+        long inputAmount = warningTx.getOutput(0).getValue().value;
+        long inputAmountMinusFeeBumpAmount = inputAmount - StagedPayoutTxParameters.REDIRECT_TX_FEE_BUMP_OUTPUT_VALUE;
+        int selectionHeight = dispute.getBurningManSelectionHeight();
+
+        List<Tuple2<Long, String>> receivers = delayedPayoutTxReceiverService.getReceivers(
+                selectionHeight,
+                inputAmountMinusFeeBumpAmount,
+                dispute.getTradeTxFee(),
+                StagedPayoutTxParameters.REDIRECT_TX_MIN_WEIGHT,
+                DelayedPayoutTxReceiverService.ReceiverFlag.flagsActivatedBy(dispute.getTradeDate()));
+        log.info("Verify redirectTx using selectionHeight {} and receivers {}", selectionHeight, receivers);
+        checkArgument(redirectTx.getOutputs().size() == receivers.size() + 1,
+                "Number of outputs must equal number of receivers plus 1");
+        checkOutputsPrefixMatchesReceivers(redirectTx, receivers);
+    }
+
+    private void checkOutputsPrefixMatchesReceivers(Transaction delayedPayoutOrRedirectTx,
+                                                    List<Tuple2<Long, String>> receivers) {
         NetworkParameters params = btcWalletService.getParams();
-        for (int i = 0; i < delayedPayoutTx.getOutputs().size(); i++) {
-            TransactionOutput transactionOutput = delayedPayoutTx.getOutputs().get(i);
-            Tuple2<Long, String> receiverTuple = delayedPayoutTxReceivers.get(0);
+        for (int i = 0; i < receivers.size(); i++) {
+            TransactionOutput transactionOutput = delayedPayoutOrRedirectTx.getOutput(i);
+            Tuple2<Long, String> receiverTuple = receivers.get(i);
             checkArgument(transactionOutput.getScriptPubKey().getToAddress(params).toString().equals(receiverTuple.second),
-                    "output address does not match delayedPayoutTxReceivers address. transactionOutput=" + transactionOutput);
+                    "Output address does not match receiver address (%s). transactionOutput=%s",
+                    receiverTuple.second, transactionOutput);
             checkArgument(transactionOutput.getValue().value == receiverTuple.first,
-                    "output value does not match delayedPayoutTxReceivers value. transactionOutput=" + transactionOutput);
+                    "Output value does not match receiver value (%s). transactionOutput=%s",
+                    receiverTuple.first, transactionOutput);
         }
     }
 }

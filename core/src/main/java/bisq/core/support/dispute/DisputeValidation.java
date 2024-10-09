@@ -104,7 +104,12 @@ public class DisputeValidation {
             checkArgument(dispute.getContract().equals(trade.getContract()),
                     "contract must match contract from trade");
 
-            if (trade.hasV5Protocol()) {
+            if (!trade.hasV5Protocol()) {
+                checkNotNull(trade.getDelayedPayoutTx(), "trade.getDelayedPayoutTx() must not be null");
+                checkNotNull(dispute.getDelayedPayoutTxId(), "delayedPayoutTxId must not be null");
+                checkArgument(dispute.getDelayedPayoutTxId().equals(trade.getDelayedPayoutTx().getTxId().toString()),
+                        "delayedPayoutTxId must match delayedPayoutTxId from trade");
+            } else if (dispute.getSupportType() == SupportType.REFUND) {
                 String buyersWarningTxId = toTxId(trade.getBuyersWarningTx(btcWalletService));
                 String sellersWarningTxId = toTxId(trade.getSellersWarningTx(btcWalletService));
                 String buyersRedirectTxId = toTxId(trade.getBuyersRedirectTx(btcWalletService));
@@ -123,15 +128,12 @@ public class DisputeValidation {
                     checkArgument(isBuyerRedirect, "seller's redirectTx must be used with buyer's warningTx");
                 }
             } else {
-                checkNotNull(trade.getDelayedPayoutTx(), "trade.getDelayedPayoutTx() must not be null");
-                checkNotNull(dispute.getDelayedPayoutTxId(), "delayedPayoutTxId must not be null");
-                checkArgument(dispute.getDelayedPayoutTxId().equals(trade.getDelayedPayoutTx().getTxId().toString()),
-                        "delayedPayoutTxId must match delayedPayoutTxId from trade");
+                checkArgument(dispute.getDelayedPayoutTxId() == null, "delayedPayoutTxId should be null");
             }
 
+            checkTxIdFieldCombination(dispute);
             checkNotNull(trade.getDepositTx(), "trade.getDepositTx() must not be null");
-            checkNotNull(dispute.getDepositTxId(), "depositTxId must not be null");
-            checkArgument(dispute.getDepositTxId().equals(trade.getDepositTx().getTxId().toString()),
+            checkArgument(trade.getDepositTx().getTxId().toString().equals(dispute.getDepositTxId()),
                     "depositTx must match depositTx from trade");
 
             checkNotNull(dispute.getDepositTxSerialized(), "depositTxSerialized must not be null");
@@ -245,22 +247,7 @@ public class DisputeValidation {
         try {
             String disputeToTestTradeId = disputeToTest.getTradeId();
 
-            // For pre v1.4.0 we do not get the delayed payout tx sent in mediation cases but in refund agent case we do.
-            // With 1.4.0 we send the delayed payout tx also in mediation cases. For v5 protocol trades, there is no DPT
-            // and it is unknown which staged txs will be published, if any, so they are only sent in refund agent cases.
-            if (disputeToTest.getSupportType() == SupportType.REFUND) {
-                if (disputeToTest.getWarningTxId() == null) {
-                    checkNotNull(disputeToTest.getDelayedPayoutTxId(),
-                            "Delayed payout transaction ID is null. " +
-                                    "Trade ID: %s", disputeToTestTradeId);
-                } else {
-                    checkNotNull(disputeToTest.getRedirectTxId(),
-                            "Redirect transaction ID is null. " +
-                                    "Trade ID: %s", disputeToTestTradeId);
-                }
-            }
-            checkNotNull(disputeToTest.getDepositTxId(),
-                    "depositTxId must not be null. Trade ID: %s", disputeToTestTradeId);
+            checkTxIdFieldCombination(disputeToTest);
             checkNotNull(disputeToTest.getUid(),
                     "agentsUid must not be null. Trade ID: %s", disputeToTestTradeId);
 
@@ -278,6 +265,27 @@ public class DisputeValidation {
                     "disputeToTest={}, disputesPerIdMap={}", disputeToTest, disputesPerIdMap);
             throw new DisputeReplayException(disputeToTest, e + " at dispute " + disputeToTest);
         }
+    }
+
+    private static void checkTxIdFieldCombination(Dispute dispute) {
+        // For pre v1.4.0 we do not get the delayed payout tx sent in mediation cases but in refund agent case we do.
+        // With 1.4.0 we send the delayed payout tx also in mediation cases. For v5 protocol trades, there is no DPT
+        // and it is unknown which staged txs will be published, if any, so they are only sent in refund agent cases.
+        String tradeId = dispute.getTradeId();
+        if (dispute.getWarningTxId() != null || dispute.getRedirectTxId() != null) {
+            checkNotNull(dispute.getWarningTxId(), "warningTxId must not be null. Trade ID: %s", tradeId);
+            checkNotNull(dispute.getRedirectTxId(), "redirectTxId must not be null. Trade ID: %s", tradeId);
+            checkArgument(dispute.getDelayedPayoutTxId() == null,
+                    "delayedPayoutTxId should be null. Trade ID: %s", tradeId);
+            checkArgument(!dispute.isUsingLegacyBurningMan(),
+                    "Legacy BM use not permitted. Trade ID: %s", tradeId);
+            checkArgument(dispute.getSupportType() == SupportType.REFUND,
+                    "Mediation not permitted after staged txs published. Trade ID: %s", tradeId);
+        } else if (dispute.getSupportType() == SupportType.REFUND) {
+            checkNotNull(dispute.getDelayedPayoutTxId(),
+                    "delayedPayoutTxId must not be null. Trade ID: %s", tradeId);
+        }
+        checkNotNull(dispute.getDepositTxId(), "depositTxId must not be null. Trade ID: %s", tradeId);
     }
 
     private enum DisputeIdField implements Function<Dispute, String> {
