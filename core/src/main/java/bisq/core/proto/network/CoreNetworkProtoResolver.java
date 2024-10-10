@@ -66,6 +66,10 @@ import bisq.core.trade.protocol.bisq_v1.messages.PeerPublishedDelayedPayoutTxMes
 import bisq.core.trade.protocol.bisq_v1.messages.RefreshTradeStateRequest;
 import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
 import bisq.core.trade.protocol.bisq_v1.messages.TraderSignedWitnessMessage;
+import bisq.core.trade.protocol.bisq_v5.messages.DepositTxAndSellerPaymentAccountMessage;
+import bisq.core.trade.protocol.bisq_v5.messages.InputsForDepositTxResponse_v5;
+import bisq.core.trade.protocol.bisq_v5.messages.PreparedTxBuyerSignaturesMessage;
+import bisq.core.trade.protocol.bisq_v5.messages.PreparedTxBuyerSignaturesRequest;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapFinalizeTxRequest;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapFinalizedTxMessage;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapTxInputsMessage;
@@ -264,9 +268,19 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                 case NEW_ACCOUNTING_BLOCK_BROADCAST_MESSAGE:
                     return NewAccountingBlockBroadcastMessage.fromProto(proto.getNewAccountingBlockBroadcastMessage(), messageVersion);
 
+                // Trade protocol v5 messages
+                case INPUTS_FOR_DEPOSIT_TX_RESPONSE_V_5:
+                    return InputsForDepositTxResponse_v5.fromProto(proto.getInputsForDepositTxResponseV5(), messageVersion);
+                case PREPARED_TX_BUYER_SIGNATURES_REQUEST:
+                    return PreparedTxBuyerSignaturesRequest.fromProto(proto.getPreparedTxBuyerSignaturesRequest(), messageVersion);
+                case PREPARED_TX_BUYER_SIGNATURES_MESSAGE:
+                    return PreparedTxBuyerSignaturesMessage.fromProto(proto.getPreparedTxBuyerSignaturesMessage(), messageVersion);
+                case DEPOSIT_TX_AND_SELLER_PAYMENT_ACCOUNT_MESSAGE:
+                    return DepositTxAndSellerPaymentAccountMessage.fromProto(proto.getDepositTxAndSellerPaymentAccountMessage(), this, messageVersion);
+
                 default:
                     throw new ProtobufferException("Unknown proto message case (PB.NetworkEnvelope). messageCase=" +
-                            proto.getMessageCase() + "; proto raw data=" + proto.toString());
+                            proto.getMessageCase() + "; proto raw data=" + proto);
             }
         } else {
             log.error("PersistableEnvelope.fromProto: PB.NetworkEnvelope is null");
@@ -283,7 +297,7 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return ProtectedStorageEntry.fromProto(proto.getProtectedStorageEntry(), this);
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case(PB.StorageEntryWrapper). " +
-                            "messageCase=" + proto.getMessageCase() + "; proto raw data=" + proto.toString());
+                            "messageCase=" + proto.getMessageCase() + "; proto raw data=" + proto);
             }
         } else {
             log.error("PersistableEnvelope.fromProto: PB.StorageEntryWrapper is null");
@@ -314,7 +328,7 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
                     return TempProposalPayload.fromProto(proto.getTempProposalPayload());
                 default:
                     throw new ProtobufferRuntimeException("Unknown proto message case (PB.StoragePayload). messageCase="
-                            + proto.getMessageCase() + "; proto raw data=" + proto.toString());
+                            + proto.getMessageCase() + "; proto raw data=" + proto);
             }
         } else {
             log.error("PersistableEnvelope.fromProto: PB.StoragePayload is null");
