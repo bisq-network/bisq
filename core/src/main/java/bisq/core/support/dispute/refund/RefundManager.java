@@ -40,6 +40,7 @@ import bisq.core.support.messages.SupportMessage;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.FailedTradesManager;
+import bisq.core.trade.model.bisq_v1.Contract;
 import bisq.core.trade.model.bisq_v1.Trade;
 import bisq.core.trade.protocol.bisq_v5.model.StagedPayoutTxParameters;
 
@@ -55,6 +56,7 @@ import bisq.common.crypto.KeyRing;
 import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
 
+import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionInput;
@@ -351,21 +353,34 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
     }
 
     public void verifyDelayedPayoutTxReceivers(Transaction depositTx, Transaction delayedPayoutTx, Dispute dispute) {
-        long inputAmount = depositTx.getOutput(0).getValue().value;
-        int selectionHeight = dispute.getBurningManSelectionHeight();
+        if (dispute.isUsingLegacyBurningMan()) {
+            checkArgument(delayedPayoutTx.getOutputs().size() == 1,
+                    "delayedPayoutTx must have 1 output when using legacy BM");
+            NetworkParameters params = btcWalletService.getParams();
+            TransactionOutput transactionOutput = delayedPayoutTx.getOutput(0);
+            String outputAddress = transactionOutput.getScriptPubKey().getToAddress(params).toString();
+            checkArgument(outputAddress.equals(dispute.getDonationAddressOfDelayedPayoutTx()),
+                    "Output address does not match donation address (%s). transactionOutput=%s",
+                    dispute.getDonationAddressOfDelayedPayoutTx(), transactionOutput);
+        } else {
+            long inputAmount = depositTx.getOutput(0).getValue().value;
+            int selectionHeight = dispute.getBurningManSelectionHeight();
 
-        List<Tuple2<Long, String>> receivers = delayedPayoutTxReceiverService.getReceivers(
-                selectionHeight,
-                inputAmount,
-                dispute.getTradeTxFee(),
-                DelayedPayoutTxReceiverService.ReceiverFlag.flagsActivatedBy(dispute.getTradeDate()));
-        log.info("Verify delayedPayoutTx using selectionHeight {} and receivers {}", selectionHeight, receivers);
-        checkArgument(delayedPayoutTx.getOutputs().size() == receivers.size(),
-                "Number of outputs must equal number of receivers");
-        checkOutputsPrefixMatchesReceivers(delayedPayoutTx, receivers);
+            List<Tuple2<Long, String>> receivers = delayedPayoutTxReceiverService.getReceivers(
+                    selectionHeight,
+                    inputAmount,
+                    dispute.getTradeTxFee(),
+                    DelayedPayoutTxReceiverService.ReceiverFlag.flagsActivatedBy(dispute.getTradeDate()));
+            log.info("Verify delayedPayoutTx using selectionHeight {} and receivers {}", selectionHeight, receivers);
+            checkArgument(delayedPayoutTx.getOutputs().size() == receivers.size(),
+                    "Number of outputs must equal number of receivers");
+            checkOutputsPrefixMatchesReceivers(delayedPayoutTx, receivers);
+        }
     }
 
     public void verifyRedirectTxReceivers(Transaction warningTx, Transaction redirectTx, Dispute dispute) {
+        checkArgument(!dispute.isUsingLegacyBurningMan(), "Legacy BM use not permitted with redirectTx");
+
         long inputAmount = warningTx.getOutput(0).getValue().value;
         long inputAmountMinusFeeBumpAmount = inputAmount - StagedPayoutTxParameters.REDIRECT_TX_FEE_BUMP_OUTPUT_VALUE;
         int selectionHeight = dispute.getBurningManSelectionHeight();
@@ -389,11 +404,33 @@ public final class RefundManager extends DisputeManager<RefundDisputeList> {
             TransactionOutput transactionOutput = delayedPayoutOrRedirectTx.getOutput(i);
             Tuple2<Long, String> receiverTuple = receivers.get(i);
             checkArgument(transactionOutput.getScriptPubKey().getToAddress(params).toString().equals(receiverTuple.second),
-                    "Output address does not match receiver address (%s). transactionOutput=%s",
-                    receiverTuple.second, transactionOutput);
+                    "Output address does not match receiver address (%s). transactionOutput=%s, index=%s",
+                    receiverTuple.second, transactionOutput, i);
             checkArgument(transactionOutput.getValue().value == receiverTuple.first,
-                    "Output value does not match receiver value (%s). transactionOutput=%s",
-                    receiverTuple.first, transactionOutput);
+                    "Output value does not match receiver value (%s). transactionOutput=%s, index=%s",
+                    receiverTuple.first, transactionOutput, i);
         }
+    }
+
+    public void validateCollateralAndPayoutTotals(Transaction depositTx,
+                                                  Transaction delayedPayoutOrRedirectTx,
+                                                  Dispute dispute,
+                                                  DisputeResult disputeResult) {
+        Contract contract = dispute.getContract();
+        Coin expectedCollateral = contract.getTradeAmount()
+                .add(Coin.valueOf(contract.getOfferPayload().getBuyerSecurityDeposit()))
+                .add(Coin.valueOf(contract.getOfferPayload().getSellerSecurityDeposit()));
+        Coin depositOutputValue = depositTx.getOutput(0).getValue();
+
+        checkArgument(!depositOutputValue.isLessThan(expectedCollateral),
+                "First depositTx output value (%s) is less than expected trade collateral: %s sats",
+                depositOutputValue, expectedCollateral);
+
+        Coin totalPayoutAmount = disputeResult.getBuyerPayoutAmount().add(disputeResult.getSellerPayoutAmount());
+        Coin totalReceiverPlusPossibleFeeBumpOutputAmount = delayedPayoutOrRedirectTx.getOutputSum();
+
+        checkArgument(!totalReceiverPlusPossibleFeeBumpOutputAmount.isLessThan(totalPayoutAmount),
+                "DPT/redirectTx output sum (%s) is less than proposed refund of %s sats to traders",
+                totalReceiverPlusPossibleFeeBumpOutputAmount, totalPayoutAmount);
     }
 }

@@ -842,10 +842,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         }
     }
 
-    // TODO: We should probably check that the tx fees paid by the warning & redirect txs (or DPT for v4) don't reduce
-    //  the amount going to the BM by too much, say by no more than the trade security deposit amount, as the fees could
-    //  spike (or be manipulated) and in general the redirect tx pays out a final sum that will be less than the total
-    //  trade collateral (due to fees).
     private CompletableFuture<Boolean> maybeCheckTransactions() {
         final CompletableFuture<Boolean> asyncStatus = new CompletableFuture<>();
         var disputeManager = getDisputeManager();
@@ -862,16 +858,16 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 if (throwable == null) {
                     try {
                         refundManager.verifyTradeTxChain(txList);
-                        if (!dispute.isUsingLegacyBurningMan()) {
-                            Transaction depositTx = txList.get(2);
-                            if (txList.size() == 4) {
-                                Transaction delayedPayoutTx = txList.get(3);
-                                refundManager.verifyDelayedPayoutTxReceivers(depositTx, delayedPayoutTx, dispute);
-                            } else {
-                                Transaction warningTx = txList.get(3);
-                                Transaction redirectTx = txList.get(4);
-                                refundManager.verifyRedirectTxReceivers(warningTx, redirectTx, dispute);
-                            }
+                        Transaction depositTx = txList.get(2);
+                        if (txList.size() == 4) {
+                            Transaction delayedPayoutTx = txList.get(3);
+                            refundManager.verifyDelayedPayoutTxReceivers(depositTx, delayedPayoutTx, dispute);
+                            refundManager.validateCollateralAndPayoutTotals(depositTx, delayedPayoutTx, dispute, disputeResult);
+                        } else {
+                            Transaction warningTx = txList.get(3);
+                            Transaction redirectTx = txList.get(4);
+                            refundManager.verifyRedirectTxReceivers(warningTx, redirectTx, dispute);
+                            refundManager.validateCollateralAndPayoutTotals(depositTx, redirectTx, dispute, disputeResult);
                         }
                         asyncStatus.complete(true);
                     } catch (Throwable error) {
