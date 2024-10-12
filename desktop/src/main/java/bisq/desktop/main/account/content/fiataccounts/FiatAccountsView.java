@@ -322,7 +322,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                     .onAction(() -> {
                         final String currencyName = Config.baseCurrencyNetwork().getCurrencyName();
                         if (paymentAccount instanceof ClearXchangeAccount) {
-                            new Popup().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
+                            new Popup().information(Res.get("payment.clearXchange.info"))
                                     .width(900)
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .actionButtonText(Res.get("shared.iConfirm"))
@@ -364,14 +364,14 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
                         } else if (paymentAccount instanceof AustraliaPayidAccount) {
-                            new Popup().information(Res.get("payment.payid.info", currencyName, currencyName))
+                            new Popup().information(Res.get("payment.payid.info"))
                                     .width(900)
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .actionButtonText(Res.get("shared.iConfirm"))
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
                         } else if (paymentAccount instanceof AmazonGiftCardAccount) {
-                            new Popup().information(Res.get("payment.amazonGiftCard.info", currencyName, currencyName))
+                            new Popup().information(Res.get("payment.amazonGiftCard.info"))
                                     .width(900)
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .actionButtonText(Res.get("shared.iUnderstand"))
