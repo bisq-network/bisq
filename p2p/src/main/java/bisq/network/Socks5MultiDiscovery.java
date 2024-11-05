@@ -75,7 +75,7 @@ public class Socks5MultiDiscovery implements PeerDiscovery {
             list.addAll(Arrays.asList(discovery.getPeers(services, timeoutValue, timeoutUnit)));
         }
 
-        return list.toArray(new InetSocketAddress[list.size()]);
+        return list.toArray(new InetSocketAddress[0]);
     }
 
     @Override
