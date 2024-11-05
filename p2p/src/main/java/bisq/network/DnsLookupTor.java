@@ -60,16 +60,14 @@ public class DnsLookupTor {
      * Performs DNS lookup and returns a single InetAddress
      */
     public static InetAddress lookup(Socks5Proxy proxy, String host) throws DnsLookupException {
-        try {
-            // note:  This is creating a new connection to our proxy, without any authentication.
-            //        This works fine when connecting to bisq's internal Tor proxy, but
-            //        would fail if user has configured an external proxy that requires auth.
-            //        It would be much better to use the already connected proxy socket, but when I
-            //        tried that I get weird errors and the lookup fails.
-            //
-            //        So this is an area for future improvement.
-            Socket proxySocket = new Socket(proxy.getInetAddress(), proxy.getPort());
-
+        // note:  This is creating a new connection to our proxy, without any authentication.
+        //        This works fine when connecting to bisq's internal Tor proxy, but
+        //        would fail if user has configured an external proxy that requires auth.
+        //        It would be much better to use the already connected proxy socket, but when I
+        //        tried that I get weird errors and the lookup fails.
+        //
+        //        So this is an area for future improvement.
+        try (Socket proxySocket = new Socket(proxy.getInetAddress(), proxy.getPort())) {
             proxySocket.getOutputStream().write(new byte[]{b('\u0005'), b('\u0001'), b('\u0000')});
             byte[] buf = new byte[2];
             //noinspection ResultOfMethodCallIgnored
