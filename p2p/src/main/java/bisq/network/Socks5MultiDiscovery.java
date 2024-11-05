@@ -80,6 +80,6 @@ public class Socks5MultiDiscovery implements PeerDiscovery {
 
     @Override
     public void shutdown() {
-        //TODO should we add a DnsLookupTor.shutdown() ?
+        discoveryList.forEach(PeerDiscovery::shutdown);
     }
 }
