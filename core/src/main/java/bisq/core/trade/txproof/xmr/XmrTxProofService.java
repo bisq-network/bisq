@@ -28,7 +28,7 @@ import bisq.core.trade.bisq_v1.FailedTradesManager;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.model.bisq_v1.SellerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
-import bisq.core.trade.protocol.bisq_v1.SellerProtocol;
+import bisq.core.trade.protocol.SellerProtocol;
 import bisq.core.trade.txproof.AssetTxProofResult;
 import bisq.core.trade.txproof.AssetTxProofService;
 import bisq.core.user.AutoConfirmSettings;
