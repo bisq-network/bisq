@@ -36,6 +36,6 @@ include 'statsnode'
 include 'apitest'
 include 'platform'
 include 'code-coverage-report'
-include 'bitcoind'
+includeBuild 'bitcoind'
 
 rootProject.name = 'bisq'
