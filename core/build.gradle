@@ -68,6 +68,14 @@ dependencies {
     integrationTestImplementation('bitcoind:regtest') {
         exclude(module: 'kotlin-stdlib-jdk8')
     }
+    integrationTestImplementation libs.hamcrest
+    integrationTestImplementation libs.mockito.core
+    integrationTestImplementation libs.mockito.junit.jupiter
+
+    integrationTestImplementation libs.junit.jupiter.api
+    integrationTestImplementation libs.junit.jupiter.params
+
+    integrationTestRuntimeOnly libs.junit.jupiter.engine
 }
 
 test {

@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  * We lookup for spendable outputs which matches any of our addresses.
  */
 @Slf4j
-class BtcCoinSelector extends BisqDefaultCoinSelector {
+public class BtcCoinSelector extends BisqDefaultCoinSelector {
     private final Set<Address> addresses;
     private final long ignoreDustThreshold;
 
