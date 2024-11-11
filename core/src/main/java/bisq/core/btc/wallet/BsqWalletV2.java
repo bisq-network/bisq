@@ -47,6 +47,9 @@ public class BsqWalletV2 {
         bsqTx.addOutput(receiverAmount, receiverAddress);
 
         CoinSelection selection = bsqCoinSelector.select(receiverAmount, bsqWallet.calculateAllSpendCandidates());
+        if (selection.valueGathered.isLessThan(receiverAmount)) {
+            throw new InsufficientMoneyException(receiverAmount, "Wallet doesn't have " + receiverAmount + " BSQ.");
+        }
         selection.gathered.forEach(bsqTx::addInput);
 
         Coin change = bsqCoinSelector.getChange(receiverAmount, selection);
