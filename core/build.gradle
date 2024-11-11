@@ -63,9 +63,11 @@ dependencies {
     testCompileOnly libs.lombok
     testImplementation libs.natpryce.make.it.easy
 
-    integrationTestImplementation libs.junit.jupiter
     integrationTestAnnotationProcessor libs.lombok
     integrationTestCompileOnly libs.lombok
+    integrationTestImplementation('bitcoind:regtest') {
+        exclude(module: 'kotlin-stdlib-jdk8')
+    }
 }
 
 test {
