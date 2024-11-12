@@ -1,6 +1,7 @@
 plugins {
     id 'bisq.java-conventions'
     id 'bisq.javafx'
+    id 'bisq.java-integration-tests'
 }
 
 javafx {
@@ -61,6 +62,10 @@ dependencies {
     testAnnotationProcessor libs.lombok
     testCompileOnly libs.lombok
     testImplementation libs.natpryce.make.it.easy
+
+    integrationTestImplementation libs.junit.jupiter
+    integrationTestAnnotationProcessor libs.lombok
+    integrationTestCompileOnly libs.lombok
 }
 
 test {
