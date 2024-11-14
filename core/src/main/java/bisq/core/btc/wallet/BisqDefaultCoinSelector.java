@@ -134,7 +134,7 @@ public abstract class BisqDefaultCoinSelector implements CoinSelector {
         return isConfirmed || (isPending && (permitForeignPendingTx || isOwnTx));
     }
 
-    abstract boolean isTxOutputSpendable(TransactionOutput output);
+    protected abstract boolean isTxOutputSpendable(TransactionOutput output);
 
     // TODO Why it uses coin age and not try to minimize number of inputs as the highest priority?
     //      Asked Oscar and he also don't knows why coin age is used. Should be changed so that min. number of inputs is
