@@ -56,7 +56,7 @@ public class BtcNetworkConfig {
     public void proposePeers(List<PeerAddress> peers) {
         if (!peers.isEmpty()) {
             log.info("You connect with peerAddresses: {}", peers);
-            PeerAddress[] peerAddresses = peers.toArray(new PeerAddress[peers.size()]);
+            PeerAddress[] peerAddresses = peers.toArray(new PeerAddress[0]);
             delegate.setPeerNodes(peerAddresses);
         } else if (proxy != null) {
             if (log.isWarnEnabled()) {
