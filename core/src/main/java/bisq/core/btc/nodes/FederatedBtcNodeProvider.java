@@ -2,8 +2,6 @@ package bisq.core.btc.nodes;
 
 import bisq.network.p2p.NodeAddress;
 
-import bisq.common.config.Config;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -16,8 +14,10 @@ import org.jetbrains.annotations.Nullable;
 @Slf4j
 public class FederatedBtcNodeProvider {
 
-    static List<BtcNodes.BtcNode> getNodes(List<BtcNodes.BtcNode> hardcodedBtcNodes, Config config) {
-        Set<BtcNodes.BtcNode> filterProvidedBtcNodes = config.filterProvidedBtcNodes.stream()
+    static List<BtcNodes.BtcNode> getNodes(List<BtcNodes.BtcNode> hardcodedBtcNodes,
+                                           List<String> filterProvidedBtcNodesConfig,
+                                           List<String> bannedBtcNodesConfig) {
+        Set<BtcNodes.BtcNode> filterProvidedBtcNodes = filterProvidedBtcNodesConfig.stream()
                 .filter(n -> !n.isEmpty())
                 .map(FederatedBtcNodeProvider::getNodeAddress)
                 .filter(Objects::nonNull)
@@ -25,7 +25,7 @@ public class FederatedBtcNodeProvider {
                 .collect(Collectors.toSet());
         hardcodedBtcNodes.addAll(filterProvidedBtcNodes);
 
-        Set<String> bannedBtcNodeHostNames = config.bannedBtcNodes.stream()
+        Set<String> bannedBtcNodeHostNames = bannedBtcNodesConfig.stream()
                 .filter(n -> !n.isEmpty())
                 .map(FederatedBtcNodeProvider::getNodeAddress)
                 .filter(Objects::nonNull)
