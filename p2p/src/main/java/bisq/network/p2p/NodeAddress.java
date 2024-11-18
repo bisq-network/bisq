@@ -47,10 +47,19 @@ public final class NodeAddress implements PersistablePayload, NetworkPayload, Us
     }
 
     public NodeAddress(String fullAddress) {
-        final String[] split = fullAddress.split(Pattern.quote(":"));
-        checkArgument(split.length == 2, "fullAddress must contain ':'");
-        this.hostName = split[0];
-        this.port = Integer.parseInt(split[1]);
+        String[] split = fullAddress.split("]");
+        boolean isIpV6Address = split.length == 2 && fullAddress.startsWith("[");
+        if (isIpV6Address) {
+            this.hostName = split[0].replace("[", "");
+            String portString = split[1].replace(":", "");
+            this.port = Integer.parseInt(portString);
+        } else {
+            split = fullAddress.split(Pattern.quote(":"));
+            checkArgument(split.length == 2, "fullAddress must contain ':'");
+            this.hostName = split[0];
+
+            this.port = Integer.parseInt(split[1]);
+        }
     }
 
 
