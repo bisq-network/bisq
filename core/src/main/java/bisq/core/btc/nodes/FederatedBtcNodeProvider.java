@@ -31,8 +31,13 @@ public class FederatedBtcNodeProvider {
                 .filter(Objects::nonNull)
                 .map(NodeAddress::getHostName)
                 .collect(Collectors.toSet());
+
         return hardcodedBtcNodes.stream()
-                .filter(e -> !bannedBtcNodeHostNames.contains(e.getHostName()))
+                .filter(btcNode -> {
+                    String nodeAddress = btcNode.hasOnionAddress() ? btcNode.getOnionAddress() :
+                            btcNode.getHostNameOrAddress();
+                    return !bannedBtcNodeHostNames.contains(nodeAddress);
+                })
                 .collect(Collectors.toList());
     }
 
