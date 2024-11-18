@@ -66,7 +66,8 @@ public class BtcNodesSetupPreferences {
                 break;
             case PROVIDED:
             default:
-                result = FederatedBtcNodeProvider.getNodes(btcNodes, config);
+                List<BtcNode> hardcodedBtcNodes = btcNodes.getProvidedBtcNodes();
+                result = FederatedBtcNodeProvider.getNodes(hardcodedBtcNodes, config);
                 break;
         }
 
