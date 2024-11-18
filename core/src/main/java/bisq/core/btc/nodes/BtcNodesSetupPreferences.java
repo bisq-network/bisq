@@ -20,23 +20,15 @@ package bisq.core.btc.nodes;
 import bisq.core.btc.nodes.BtcNodes.BtcNode;
 import bisq.core.user.Preferences;
 
-import bisq.network.p2p.NodeAddress;
-
 import bisq.common.config.Config;
 import bisq.common.util.Utilities;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.jetbrains.annotations.Nullable;
-
 
 public class BtcNodesSetupPreferences {
     private static final Logger log = LoggerFactory.getLogger(BtcNodesSetupPreferences.class);
@@ -74,24 +66,7 @@ public class BtcNodesSetupPreferences {
                 break;
             case PROVIDED:
             default:
-                Set<BtcNode> providedBtcNodes = new HashSet<>(btcNodes.getProvidedBtcNodes());
-                Set<BtcNode> filterProvidedBtcNodes = config.filterProvidedBtcNodes.stream()
-                        .filter(n -> !n.isEmpty())
-                        .map(this::getNodeAddress)
-                        .filter(Objects::nonNull)
-                        .map(nodeAddress -> new BtcNode(null, nodeAddress.getHostName(), null, nodeAddress.getPort(), "Provided by filter"))
-                        .collect(Collectors.toSet());
-                providedBtcNodes.addAll(filterProvidedBtcNodes);
-
-                Set<String> bannedBtcNodeHostNames = config.bannedBtcNodes.stream()
-                        .filter(n -> !n.isEmpty())
-                        .map(this::getNodeAddress)
-                        .filter(Objects::nonNull)
-                        .map(NodeAddress::getHostName)
-                        .collect(Collectors.toSet());
-                result = providedBtcNodes.stream()
-                        .filter(e -> !bannedBtcNodeHostNames.contains(e.getHostName()))
-                        .collect(Collectors.toList());
+                result = FederatedBtcNodeProvider.getNodes(btcNodes, config);
                 break;
         }
 
@@ -124,15 +99,5 @@ public class BtcNodesSetupPreferences {
                 break;
         }
         return result;
-    }
-
-    @Nullable
-    private NodeAddress getNodeAddress(String address) {
-        try {
-            return new NodeAddress(address);
-        } catch (Throwable t) {
-            log.error("exception when filtering banned seednodes", t);
-        }
-        return null;
     }
 }
