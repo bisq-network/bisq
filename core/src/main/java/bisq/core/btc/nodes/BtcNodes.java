@@ -113,7 +113,7 @@ public class BtcNodes {
         @Nullable
         private final String address; // IPv4 address
         @EqualsAndHashCode.Include
-        private int port = DEFAULT_PORT;
+        private final int port;
 
         /**
          * @param fullAddress [IPv4 address:port or onion:port]
