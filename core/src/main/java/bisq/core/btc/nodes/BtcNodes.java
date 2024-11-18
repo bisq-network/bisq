@@ -96,19 +96,23 @@ public class BtcNodes {
                 .collect(Collectors.toList());
     }
 
-    @EqualsAndHashCode
+    @EqualsAndHashCode(onlyExplicitlyIncluded = true)
     @Getter
     public static class BtcNode {
-        private static final int DEFAULT_PORT = Config.baseCurrencyNetworkParameters().getPort(); //8333
+        static final int DEFAULT_PORT = Config.baseCurrencyNetworkParameters().getPort(); //8333
 
+        @EqualsAndHashCode.Include
         @Nullable
         private final String onionAddress;
+        @EqualsAndHashCode.Include
         @Nullable
         private final String hostName;
         @Nullable
         private final String operator; // null in case the user provides a list of custom btc nodes
+        @EqualsAndHashCode.Include
         @Nullable
         private final String address; // IPv4 address
+        @EqualsAndHashCode.Include
         private int port = DEFAULT_PORT;
 
         /**
