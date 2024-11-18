@@ -25,18 +25,29 @@ public class FederatedBtcNodeProvider {
                 .collect(Collectors.toSet());
         hardcodedBtcNodes.addAll(filterProvidedBtcNodes);
 
-        Set<String> bannedBtcNodeHostNames = bannedBtcNodesConfig.stream()
+        Set<NodeAddress> bannedBtcNodeHostNames = bannedBtcNodesConfig.stream()
                 .filter(n -> !n.isEmpty())
                 .map(FederatedBtcNodeProvider::getNodeAddress)
                 .filter(Objects::nonNull)
-                .map(NodeAddress::getHostName)
                 .collect(Collectors.toSet());
 
         return hardcodedBtcNodes.stream()
                 .filter(btcNode -> {
                     String nodeAddress = btcNode.hasOnionAddress() ? btcNode.getOnionAddress() :
                             btcNode.getHostNameOrAddress();
-                    return !bannedBtcNodeHostNames.contains(nodeAddress);
+                    Objects.requireNonNull(nodeAddress);
+
+                    int port = btcNode.getPort();
+
+                    for (NodeAddress bannedAddress : bannedBtcNodeHostNames) {
+                        boolean isBanned = nodeAddress.equals(bannedAddress.getHostName()) &&
+                                port == bannedAddress.getPort();
+                        if (isBanned) {
+                            return false;
+                        }
+                    }
+
+                    return true;
                 })
                 .collect(Collectors.toList());
     }
