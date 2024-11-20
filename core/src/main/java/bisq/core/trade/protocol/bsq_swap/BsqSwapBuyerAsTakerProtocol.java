@@ -37,7 +37,7 @@ import bisq.network.p2p.NodeAddress;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.core.trade.model.bsq_swap.BsqSwapTrade.State.PREPARATION;
-import static bisq.core.trade.protocol.bisq_v1.TakerProtocol.TakerEvent.TAKE_OFFER;
+import static bisq.core.trade.protocol.TakerProtocol.TakerEvent.TAKE_OFFER;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j

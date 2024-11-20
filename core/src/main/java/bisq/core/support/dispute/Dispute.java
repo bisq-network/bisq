@@ -151,6 +151,14 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
     @Setter
     private long tradeTxFee;
 
+    // Added for v5 protocol
+    @Setter
+    @Nullable
+    private String warningTxId;
+    @Setter
+    @Nullable
+    private String redirectTxId;
+
 
     // Should be only used in emergency case if we need to add data but do not want to break backward compatibility
     // at the P2P network storage checks. The hash of the object will be used to verify if the data is valid. Any new
@@ -282,12 +290,14 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
         Optional.ofNullable(disputePayoutTxId).ifPresent(builder::setDisputePayoutTxId);
         Optional.ofNullable(makerContractSignature).ifPresent(builder::setMakerContractSignature);
         Optional.ofNullable(takerContractSignature).ifPresent(builder::setTakerContractSignature);
-        Optional.ofNullable(disputeResultProperty.get()).ifPresent(result -> builder.setDisputeResult(disputeResultProperty.get().toProtoMessage()));
-        Optional.ofNullable(supportType).ifPresent(result -> builder.setSupportType(SupportType.toProtoMessage(supportType)));
-        Optional.ofNullable(mediatorsDisputeResult).ifPresent(result -> builder.setMediatorsDisputeResult(mediatorsDisputeResult));
-        Optional.ofNullable(delayedPayoutTxId).ifPresent(result -> builder.setDelayedPayoutTxId(delayedPayoutTxId));
-        Optional.ofNullable(donationAddressOfDelayedPayoutTx).ifPresent(result -> builder.setDonationAddressOfDelayedPayoutTx(donationAddressOfDelayedPayoutTx));
+        Optional.ofNullable(disputeResultProperty.get()).ifPresent(e -> builder.setDisputeResult(e.toProtoMessage()));
+        Optional.ofNullable(supportType).ifPresent(e -> builder.setSupportType(SupportType.toProtoMessage(e)));
+        Optional.ofNullable(mediatorsDisputeResult).ifPresent(builder::setMediatorsDisputeResult);
+        Optional.ofNullable(delayedPayoutTxId).ifPresent(builder::setDelayedPayoutTxId);
+        Optional.ofNullable(donationAddressOfDelayedPayoutTx).ifPresent(builder::setDonationAddressOfDelayedPayoutTx);
         Optional.ofNullable(getExtraDataMap()).ifPresent(builder::putAllExtraData);
+        Optional.ofNullable(warningTxId).ifPresent(builder::setWarningTxId);
+        Optional.ofNullable(redirectTxId).ifPresent(builder::setRedirectTxId);
         return builder.build();
     }
 
@@ -320,27 +330,20 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
                 .map(ChatMessage::fromPayloadProto)
                 .collect(Collectors.toList()));
 
-        if (proto.hasDisputeResult())
+        if (proto.hasDisputeResult()) {
             dispute.disputeResultProperty.set(DisputeResult.fromProto(proto.getDisputeResult()));
+        }
         dispute.disputePayoutTxId = ProtoUtil.stringOrNullFromProto(proto.getDisputePayoutTxId());
 
-        String mediatorsDisputeResult = proto.getMediatorsDisputeResult();
-        if (!mediatorsDisputeResult.isEmpty()) {
-            dispute.setMediatorsDisputeResult(mediatorsDisputeResult);
-        }
-
-        String delayedPayoutTxId = proto.getDelayedPayoutTxId();
-        if (!delayedPayoutTxId.isEmpty()) {
-            dispute.setDelayedPayoutTxId(delayedPayoutTxId);
-        }
-
-        String donationAddressOfDelayedPayoutTx = proto.getDonationAddressOfDelayedPayoutTx();
-        if (!donationAddressOfDelayedPayoutTx.isEmpty()) {
-            dispute.setDonationAddressOfDelayedPayoutTx(donationAddressOfDelayedPayoutTx);
-        }
+        dispute.setMediatorsDisputeResult(ProtoUtil.stringOrNullFromProto(proto.getMediatorsDisputeResult()));
+        dispute.setDelayedPayoutTxId(ProtoUtil.stringOrNullFromProto(proto.getDelayedPayoutTxId()));
+        dispute.setDonationAddressOfDelayedPayoutTx(ProtoUtil.stringOrNullFromProto(proto.getDonationAddressOfDelayedPayoutTx()));
 
         dispute.setBurningManSelectionHeight(proto.getBurningManSelectionHeight());
         dispute.setTradeTxFee(proto.getTradeTxFee());
+
+        dispute.setWarningTxId(ProtoUtil.stringOrNullFromProto(proto.getWarningTxId()));
+        dispute.setRedirectTxId(ProtoUtil.stringOrNullFromProto(proto.getRedirectTxId()));
 
         if (Dispute.State.fromProto(proto.getState()) == State.NEEDS_UPGRADE) {
             // old disputes did not have a state field, so choose an appropriate state:
@@ -387,7 +390,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
         if (contract.maybeClearSensitiveData()) {
             change += "contract;";
         }
-        String edited = contract.sanitizeContractAsJson(contractAsJson);
+        String edited = Contract.sanitizeContractAsJson(contractAsJson);
         if (!edited.equals(contractAsJson)) {
             contractAsJson = edited;
             change += "contractAsJson;";
@@ -571,6 +574,8 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
                 ",\n     cachedDepositTx='" + cachedDepositTx + '\'' +
                 ",\n     burningManSelectionHeight='" + burningManSelectionHeight + '\'' +
                 ",\n     tradeTxFee='" + tradeTxFee + '\'' +
+                ",\n     warningTxId='" + warningTxId + '\'' +
+                ",\n     redirectTxId='" + redirectTxId + '\'' +
                 "\n}";
     }
 }

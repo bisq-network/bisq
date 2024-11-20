@@ -549,7 +549,7 @@ public class WalletConfig extends AbstractIdleService {
         return directory;
     }
 
-    public void maybeAddSegwitKeychain(Wallet wallet, KeyParameter aesKey, boolean isBsqWallet) {
+    public void maybeAddSegwitKeychain(Wallet wallet, @Nullable KeyParameter aesKey, boolean isBsqWallet) {
         var nonSegwitAccountPath = isBsqWallet
                 ? BisqKeyChainGroupStructure.BIP44_BSQ_NON_SEGWIT_ACCOUNT_PATH
                 : BisqKeyChainGroupStructure.BIP44_BTC_NON_SEGWIT_ACCOUNT_PATH;
