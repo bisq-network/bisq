@@ -66,7 +66,10 @@ public class BtcNodesSetupPreferences {
                 break;
             case PROVIDED:
             default:
-                result = FederatedBtcNodeProvider.getNodes(btcNodes, config);
+                List<BtcNode> hardcodedBtcNodes = btcNodes.getProvidedBtcNodes();
+                List<String> filterProvidedBtcNodes = config.filterProvidedBtcNodes;
+                List<String> bannedBtcNodes = config.bannedBtcNodes;
+                result = FederatedBtcNodeProvider.getNodes(hardcodedBtcNodes, filterProvidedBtcNodes, bannedBtcNodes);
                 break;
         }
 
