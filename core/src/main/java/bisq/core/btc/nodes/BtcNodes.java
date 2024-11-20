@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import lombok.EqualsAndHashCode;
@@ -125,6 +126,10 @@ public class BtcNodes {
                 host = parts[0];
                 if (parts.length == 2)
                     port = Integer.parseInt(parts[1]);
+
+                if (isHostName(host)) {
+                    return new BtcNode(host, null, null, port, null);
+                }
             }
 
             checkArgument(host.length() > 0, "BtcNode address format not recognised");
@@ -171,6 +176,12 @@ public class BtcNodes {
             String address = this.address == null ? "" : this.address + ", ";
             String onionAddress = this.onionAddress == null ? "" : this.onionAddress;
             return operator + ": [" + address + onionAddress + "]";
+        }
+
+        private static boolean isHostName(String hostName) {
+            String ipV4RegEx = "^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}";
+            boolean isIpV4Address = Pattern.matches(ipV4RegEx, hostName);
+            return !isIpV4Address && !hostName.endsWith(".onion");
         }
     }
 }
