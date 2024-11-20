@@ -36,5 +36,5 @@ jobs:
                       Feel free to reopen it if you think it is still relevant.
                   stale-issue-label: was:dropped
                   stale-pr-label: was:dropped
-                  exempt-issue-labels: a:bug,re:security,re:privacy,re:Tor,in:dao,$BSQ bounty,good first issue,Epic,a:feature,is:priority
-                  exempt-pr-labels: a:bug,re:security,re:privacy,re:Tor,in:dao,$BSQ bounty,good first issue,Epic,a:feature,is:priority
+                  exempt-issue-labels: a:bug,re:security,re:privacy,re:Tor,in:dao,$BSQ bounty,good first issue,Epic,a:feature,is:priority,no-bot
+                  exempt-pr-labels: a:bug,re:security,re:privacy,re:Tor,in:dao,$BSQ bounty,good first issue,Epic,a:feature,is:priority,no-bot
