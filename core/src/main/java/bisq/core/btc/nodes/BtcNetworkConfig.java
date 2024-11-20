@@ -29,6 +29,7 @@ import org.bitcoinj.params.MainNetParams;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -56,7 +57,8 @@ public class BtcNetworkConfig {
     public void proposePeers(List<PeerAddress> peers) {
         if (!peers.isEmpty()) {
             log.info("You connect with peerAddresses: {}", peers);
-            PeerAddress[] peerAddresses = peers.toArray(new PeerAddress[peers.size()]);
+            Collections.shuffle(peers);
+            PeerAddress[] peerAddresses = peers.toArray(new PeerAddress[0]);
             delegate.setPeerNodes(peerAddresses);
         } else if (proxy != null) {
             if (log.isWarnEnabled()) {
