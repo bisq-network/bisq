@@ -1,10 +1,10 @@
 #!/bin/bash
 
-cd ../../
+cd ../../../
 
 version="1.9.17-SNAPSHOT"
 
-target_dir="releases/$version"
+target_dir="desktop/releases/$version"
 
 # Set BISQ_GPG_USER as environment var to the email address used for gpg signing. e.g. BISQ_GPG_USER=manfred@bitsquare.io
 # Set BISQ_VM_PATH as environment var to the directory where your shared folders for virtual box are residing
@@ -20,33 +20,49 @@ rm -r $target_dir
 
 mkdir -p $target_dir
 
-# Save the current working dir (assumed to be "desktop"), and
+# make sure the releases are ready
+./gradlew cli:build
+./gradlew daemon:build
+
+# Save the current working dir (assumed to be "root"), and
 # build the API daemon and cli distributions in the target dir.
-script_working_directory=$(pwd)
+script_working_directory="$(pwd)"
 # Copy the build's cli and daemon tarballs to target_dir.
-cp -v ../cli/build/distributions/cli.tar $target_dir
-cp -v ../daemon/build/distributions/daemon.tar $target_dir
-# Copy the cli and daemon zip creation scripts to target_dir.
-cp -v ../cli/package/create-cli-dist.sh $target_dir
-cp -v ../daemon/package/create-daemon-dist.sh $target_dir
-# Run the zip creation scripts in target_dir.
-cd $target_dir
+cp -v ./cli/build/distributions/cli.tar $target_dir
+cp -v ./daemon/build/distributions/daemon.tar $target_dir
+
+DIR=(`pwd`)
+# Execute and copy results
+cd ./cli/package
 ./create-cli-dist.sh $version
+cd $DIR
+cp -v ./cli/package/* $target_dir
+rm -vf ./cli/package/bisq*
+
+cd ./daemon/package
 ./create-daemon-dist.sh $version
+cd $DIR
+cp -v ./daemon/package/* $target_dir
+rm -vf ./daemon/package/bisq*
+
+echo "cd into $target_dir"
+cd $target_dir
 # Clean up.
 rm -v create-cli-dist.sh
 rm -v create-daemon-dist.sh
 # Done building cli and daemon zip files;  return to the original current working directory.
+echo "cd into $script_working_directory"
+
 cd "$script_working_directory"
 
 # sig key Alejandro García
-cp "$target_dir/../../package/E222AA02.asc" "$target_dir/"
+cp -v "./desktop/package/E222AA02.asc" "$target_dir/"
 # sig key Gabriel Bernard
-cp "$target_dir/../../package/4A133008.asc" "$target_dir/"
+cp -v "./desktop/package/4A133008.asc" "$target_dir/"
 # sig key Christoph Atteneder
-cp "$target_dir/../../package/29CDFD3B.asc" "$target_dir/"
+cp -v "./desktop/package/29CDFD3B.asc" "$target_dir/"
 # signing key
-cp "$target_dir/../../package/signingkey.asc" "$target_dir/"
+cp -v "./desktop/package/signingkey.asc" "$target_dir/"
 
 dmg="Bisq-$version.dmg"
 cp "$macos/$dmg" "$target_dir/"
@@ -71,7 +87,7 @@ cat "$macos/desktop-$version-all-mac.jar.SHA-256" \
 "$linux64/desktop-$version-all-linux.jar.SHA-256" \
 "$win64/desktop-$version-all-win.jar.SHA-256" > "$target_dir/Bisq-$version.jar.txt"
 
-cd "$target_dir"
+cd -v "$script_working_directory/$target_dir"
 
 echo Create signatures
 gpg --digest-algo SHA256 --local-user "$BISQ_GPG_USER" --output "$dmg.asc" --detach-sig --armor "$dmg"
@@ -92,4 +108,4 @@ gpg --digest-algo SHA256 --verify $daemon{.asc*,}
 mkdir $win64/$version
 cp -r . $win64/$version
 
-open "."
+open "./desktop/releases/$version"
