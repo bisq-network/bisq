@@ -140,8 +140,8 @@ public class RedirectionTransactionFactory {
                                                   TransactionSignature sellerSignature) {
         var witness = new TransactionWitness(5);
         witness.setPush(0, new byte[]{});
-        witness.setPush(1, buyerSignature.encodeToBitcoin());
-        witness.setPush(2, sellerSignature.encodeToBitcoin());
+        witness.setPush(1, sellerSignature.encodeToBitcoin());
+        witness.setPush(2, buyerSignature.encodeToBitcoin());
         witness.setPush(3, new byte[]{1});
         witness.setPush(4, witnessScript.getProgram());
         return witness;

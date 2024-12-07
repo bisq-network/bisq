@@ -27,8 +27,8 @@ public class StagedPayoutTxParameters {
     public static final long REDIRECT_TX_FEE_BUMP_OUTPUT_VALUE = 2000;
 
     private static final long WARNING_TX_EXPECTED_WEIGHT = 720; // 125 direct tx bytes, 220 witness bytes
-    private static final long CLAIM_TX_EXPECTED_WEIGHT = 519;   //  82 direct tx bytes, 191 witness bytes
-    public static final long REDIRECT_TX_MIN_WEIGHT = 593;      //  82 direct tx bytes, 265 witness bytes
+    private static final long CLAIM_TX_EXPECTED_WEIGHT = 487;   //  82 direct tx bytes, 159 witness bytes
+    public static final long REDIRECT_TX_MIN_WEIGHT = 561;      //  82 direct tx bytes, 233 witness bytes
 
     // Min. fee rate for staged payout txs. If fee rate used at take offer time was higher we use that.
     // We prefer a rather high fee rate to not risk that the tx gets stuck if required fee rate would

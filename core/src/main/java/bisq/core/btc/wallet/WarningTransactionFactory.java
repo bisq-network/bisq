@@ -137,21 +137,31 @@ public class WarningTransactionFactory {
         return warningTx;
     }
 
-    // TODO: Should probably reverse order of pubKeys & signatures, for consistency with deposit tx redeem script.
     static Script createRedeemScript(boolean isBuyer, byte[] buyerPubKey, byte[] sellerPubKey, long claimDelay) {
-        var scriptBuilder = new ScriptBuilder();
-        scriptBuilder.op(OP_IF)
-                .number(2)
-                .data(buyerPubKey)
-                .data(sellerPubKey)
-                .number(2)
-                .op(OP_CHECKMULTISIG);
+        var scriptBuilder = new ScriptBuilder()
+                .data(isBuyer ? buyerPubKey : sellerPubKey)
+                .op(OP_SWAP);
+
+        if (isBuyer) {
+            scriptBuilder.op(OP_IF)
+                    .number(2)
+                    .data(sellerPubKey)
+                    .op(OP_ROT)
+                    .number(2)
+                    .op(OP_CHECKMULTISIG);
+        } else {
+            scriptBuilder.op(OP_IF)
+                    .number(2)
+                    .op(OP_SWAP)
+                    .data(buyerPubKey)
+                    .number(2)
+                    .op(OP_CHECKMULTISIG);
+        }
 
         scriptBuilder.op(OP_ELSE)
                 .number(claimDelay)
                 .op(OP_CHECKSEQUENCEVERIFY)
                 .op(OP_DROP)
-                .data(isBuyer ? buyerPubKey : sellerPubKey)
                 .op(OP_CHECKSIG);
 
         return scriptBuilder.op(OP_ENDIF)
