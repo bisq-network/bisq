@@ -83,6 +83,9 @@ public class TradeWalletService {
     private final Preferences preferences;
     private final NetworkParameters params;
 
+    private final WarningTransactionFactory warningTransactionFactory;
+    private final RedirectionTransactionFactory redirectionTransactionFactory;
+
     @Nullable
     private Wallet wallet;
     @Nullable
@@ -100,6 +103,8 @@ public class TradeWalletService {
         this.walletsSetup = walletsSetup;
         this.preferences = preferences;
         this.params = Config.baseCurrencyNetworkParameters();
+        this.warningTransactionFactory = new WarningTransactionFactory(params);
+        this.redirectionTransactionFactory = new RedirectionTransactionFactory(params);
         walletsSetup.addSetupCompletedHandler(() -> {
             walletConfig = walletsSetup.getWalletConfig();
             wallet = walletsSetup.getBtcWallet();
@@ -795,6 +800,143 @@ public class TradeWalletService {
         return delayedPayoutTx;
     }
 
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Warning tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Transaction createUnsignedWarningTx(boolean isBuyer,
+                                               TransactionOutput depositTxOutput,
+                                               long lockTime,
+                                               byte[] buyerPubKey,
+                                               byte[] sellerPubKey,
+                                               long claimDelay,
+                                               long miningFee,
+                                               Tuple2<Long, String> feeBumpOutputAmountAndAddress)
+            throws AddressFormatException, TransactionVerificationException {
+        return warningTransactionFactory.createUnsignedWarningTransaction(
+                isBuyer,
+                depositTxOutput,
+                lockTime,
+                buyerPubKey,
+                sellerPubKey,
+                claimDelay,
+                miningFee,
+                feeBumpOutputAmountAndAddress
+        );
+    }
+
+    public byte[] signWarningTx(Transaction warningTx,
+                                TransactionOutput depositTxOutput,
+                                DeterministicKey myMultiSigKeyPair,
+                                byte[] buyerPubKey,
+                                byte[] sellerPubKey)
+            throws TransactionVerificationException {
+        return warningTransactionFactory.signWarningTransaction(
+                warningTx,
+                depositTxOutput,
+                myMultiSigKeyPair,
+                buyerPubKey,
+                sellerPubKey,
+                aesKey
+        );
+    }
+
+    public Transaction finalizeWarningTx(Transaction warningTx,
+                                         byte[] buyerPubKey,
+                                         byte[] sellerPubKey,
+                                         byte[] buyerSignature,
+                                         byte[] sellerSignature,
+                                         Coin inputValue)
+            throws TransactionVerificationException, SignatureDecodeException {
+        return warningTransactionFactory.finalizeWarningTransaction(
+                warningTx,
+                buyerPubKey,
+                sellerPubKey,
+                buyerSignature,
+                sellerSignature,
+                inputValue
+        );
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Redirection tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Transaction createUnsignedRedirectionTx(TransactionOutput warningTxOutput,
+                                                   List<Tuple2<Long, String>> receivers,
+                                                   Tuple2<Long, String> feeBumpOutputAmountAndAddress)
+            throws AddressFormatException, TransactionVerificationException {
+        return redirectionTransactionFactory.createUnsignedRedirectionTransaction(
+                warningTxOutput,
+                receivers,
+                feeBumpOutputAmountAndAddress
+        );
+    }
+
+    public byte[] signRedirectionTx(TransactionOutput warningTxOutput,
+                                    Transaction redirectionTx,
+                                    boolean isBuyer,
+                                    long claimDelay,
+                                    byte[] buyerPubKey,
+                                    byte[] sellerPubKey,
+                                    DeterministicKey myMultiSigKeyPair)
+            throws TransactionVerificationException {
+        return redirectionTransactionFactory.signRedirectionTransaction(
+                warningTxOutput,
+                redirectionTx,
+                isBuyer,
+                claimDelay,
+                buyerPubKey,
+                sellerPubKey,
+                myMultiSigKeyPair,
+                aesKey
+        );
+    }
+
+    public Transaction finalizeRedirectionTx(TransactionOutput warningTxOutput,
+                                             Transaction redirectionTx,
+                                             boolean isBuyer,
+                                             long claimDelay,
+                                             byte[] buyerPubKey,
+                                             byte[] sellerPubKey,
+                                             byte[] buyerSignature,
+                                             byte[] sellerSignature)
+            throws TransactionVerificationException, SignatureDecodeException {
+        return redirectionTransactionFactory.finalizeRedirectionTransaction(
+                warningTxOutput,
+                redirectionTx,
+                isBuyer,
+                claimDelay,
+                buyerPubKey,
+                sellerPubKey,
+                buyerSignature,
+                sellerSignature
+        );
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Claim tx
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    public Transaction createSignedClaimTx(TransactionOutput warningTxOutput,
+                                           boolean isBuyer,
+                                           long claimDelay,
+                                           Address payoutAddress,
+                                           long miningFee,
+                                           byte[] peersMultiSigPubKey,
+                                           DeterministicKey myMultiSigKeyPair)
+            throws AddressFormatException, TransactionVerificationException {
+        return new ClaimTransactionFactory(params).createSignedClaimTransaction(
+                warningTxOutput,
+                isBuyer,
+                claimDelay,
+                payoutAddress,
+                miningFee,
+                peersMultiSigPubKey,
+                myMultiSigKeyPair,
+                aesKey
+        );
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Standard payout tx
@@ -1372,7 +1514,7 @@ public class TradeWalletService {
         return ScriptBuilder.createMultiSigOutputScript(2, keys);
     }
 
-    private Script get2of2MultiSigRedeemScript(byte[] buyerPubKey, byte[] sellerPubKey) {
+    static Script get2of2MultiSigRedeemScript(byte[] buyerPubKey, byte[] sellerPubKey) {
         ECKey buyerKey = ECKey.fromPublicOnly(buyerPubKey);
         ECKey sellerKey = ECKey.fromPublicOnly(sellerPubKey);
         // Take care of sorting! Need to reverse to the order we use normally (buyer, seller)
@@ -1380,7 +1522,7 @@ public class TradeWalletService {
         return ScriptBuilder.createMultiSigOutputScript(2, keys);
     }
 
-    private Script get2of2MultiSigOutputScript(byte[] buyerPubKey, byte[] sellerPubKey, boolean legacy) {
+    static Script get2of2MultiSigOutputScript(byte[] buyerPubKey, byte[] sellerPubKey, boolean legacy) {
         Script redeemScript = get2of2MultiSigRedeemScript(buyerPubKey, sellerPubKey);
         if (legacy) {
             return ScriptBuilder.createP2SHOutputScript(redeemScript);
@@ -1470,7 +1612,7 @@ public class TradeWalletService {
         }
     }
 
-    private void applyLockTime(long lockTime, Transaction tx) {
+    static void applyLockTime(long lockTime, Transaction tx) {
         checkArgument(!tx.getInputs().isEmpty(), "The tx must have inputs. tx={}", tx);
         tx.getInputs().forEach(input -> input.setSequenceNumber(TransactionInput.NO_SEQUENCE - 1));
         tx.setLockTime(lockTime);
