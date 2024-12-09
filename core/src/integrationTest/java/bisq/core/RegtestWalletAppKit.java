@@ -2,7 +2,9 @@ package bisq.core;
 
 import bisq.core.btc.wallet.WalletFactory;
 
+import org.bitcoinj.core.BlockChain;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.PeerGroup;
 import org.bitcoinj.kits.WalletAppKit;
 import org.bitcoinj.wallet.Wallet;
 
@@ -15,6 +17,7 @@ import lombok.Getter;
 @Getter
 public class RegtestWalletAppKit {
     private final WalletAppKit walletAppKit;
+    private final WalletFactory walletFactory;
 
     public RegtestWalletAppKit(NetworkParameters networkParams, Path dataDirPath, List<Wallet> wallets) {
         walletAppKit = new WalletAppKit(networkParams, dataDirPath.toFile(), "dataDirFilePrefix") {
@@ -27,15 +30,25 @@ public class RegtestWalletAppKit {
                 });
             }
         };
+
+        walletFactory = new WalletFactory(networkParams);
     }
 
     public void initialize() {
         walletAppKit.connectToLocalHost();
-
-        var walletFactory = new WalletFactory(walletAppKit.params());
         walletAppKit.setWalletFactory((params, keyChainGroup) -> walletFactory.createBsqWallet());
 
         walletAppKit.startAsync();
         walletAppKit.awaitRunning();
+    }
+
+    public Wallet createNewBsqWallet() {
+        Wallet bsqWallet = walletFactory.createBsqWallet();
+        BlockChain blockChain = walletAppKit.chain();
+        blockChain.addWallet(bsqWallet);
+
+        PeerGroup peerGroup = walletAppKit.peerGroup();
+        peerGroup.addWallet(bsqWallet);
+        return bsqWallet;
     }
 }
