@@ -2,6 +2,7 @@ package bisq.core;
 
 import bisq.core.btc.exceptions.BsqChangeBelowDustException;
 import bisq.core.btc.wallet.BisqDefaultCoinSelector;
+import bisq.core.btc.wallet.BisqRegtestNetworkParams;
 import bisq.core.btc.wallet.BsqCoinSelector;
 import bisq.core.btc.wallet.BsqWalletV2;
 import bisq.core.btc.wallet.BtcWalletV2;
@@ -15,7 +16,6 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.kits.WalletAppKit;
-import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.wallet.Wallet;
 
 import java.nio.file.Path;
@@ -44,12 +44,6 @@ import bisq.wallets.regtest.bitcoind.BitcoindRegtestSetup;
 @ExtendWith(BitcoindExtension.class)
 @Slf4j
 public class BitcoinjBsqTests {
-
-    private static class BisqRegtestNetworkParams extends RegTestParams {
-        public void setPort(int port) {
-            this.port = port;
-        }
-    }
 
     private final BitcoindRegtestSetup regtestSetup;
     private final BisqRegtestNetworkParams networkParams;
