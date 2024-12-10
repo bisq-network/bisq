@@ -55,10 +55,9 @@ public class BitcoinjBsqTests {
     private final BisqRegtestNetworkParams networkParams;
     private PeerGroup peerGroup;
 
+    private RegtestWalletAppKit regtestWalletAppKit;
     private final Wallet btcWallet;
     private Wallet bsqWallet;
-    private final Wallet secondBsqWallet;
-    private final Wallet emptyBsqWallet;
 
     private final BisqDefaultCoinSelector btcCoinSelector = new BisqDefaultCoinSelector(true) {
         @Override
@@ -84,14 +83,11 @@ public class BitcoinjBsqTests {
 
         var walletFactory = new WalletFactory(networkParams);
         btcWallet = walletFactory.createBtcWallet();
-        secondBsqWallet = walletFactory.createBsqWallet();
-        emptyBsqWallet = walletFactory.createBsqWallet();
     }
 
     @BeforeAll
     void setup(@TempDir Path tempDir) throws InterruptedException {
-        var wallets = List.of(btcWallet, secondBsqWallet);
-        var regtestWalletAppKit = new RegtestWalletAppKit(networkParams, tempDir, wallets);
+        regtestWalletAppKit = new RegtestWalletAppKit(networkParams, tempDir, List.of(btcWallet));
         regtestWalletAppKit.initialize();
 
         WalletAppKit walletAppKit = regtestWalletAppKit.getWalletAppKit();
@@ -117,6 +113,7 @@ public class BitcoinjBsqTests {
                 bsqWallet,
                 bsqCoinSelector);
 
+        Wallet secondBsqWallet = regtestWalletAppKit.createNewBsqWallet();
         var secondBsqWalletReceivedLatch = new CountDownLatch(1);
         secondBsqWallet.addCoinsReceivedEventListener((wallet, tx, prevBalance, newBalance) ->
                 secondBsqWalletReceivedLatch.countDown());
@@ -138,6 +135,7 @@ public class BitcoinjBsqTests {
 
     @Test
     void sendBsqButNotEnoughBsqTest() {
+        Wallet emptyBsqWallet = regtestWalletAppKit.createNewBsqWallet();
         var bsqWalletV2 = new BsqWalletV2(networkParams,
                 peerGroup,
                 btcWalletV2,
@@ -164,6 +162,7 @@ public class BitcoinjBsqTests {
                 bsqWallet,
                 bsqCoinSelector);
 
+        Wallet secondBsqWallet = regtestWalletAppKit.createNewBsqWallet();
         var secondBsqWalletReceivedLatch = new CountDownLatch(1);
         secondBsqWallet.addCoinsReceivedEventListener((wallet, tx, prevBalance, newBalance) ->
                 secondBsqWalletReceivedLatch.countDown());
