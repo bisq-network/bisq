@@ -155,4 +155,24 @@ public class BitcoinjBsqTests {
         assertThrows(InsufficientMoneyException.class, () ->
                 bsqWalletV2.sendBsq(receiverAddress, receiverAmount, Coin.ofSat(10)));
     }
+
+    @Test
+    void sendMoreBsqThanInWalletTest() {
+        var bsqWalletV2 = new BsqWalletV2(networkParams,
+                peerGroup,
+                btcWalletV2,
+                bsqWallet,
+                bsqCoinSelector);
+
+        var secondBsqWalletReceivedLatch = new CountDownLatch(1);
+        secondBsqWallet.addCoinsReceivedEventListener((wallet, tx, prevBalance, newBalance) ->
+                secondBsqWalletReceivedLatch.countDown());
+
+        Address receiverAddress = secondBsqWallet.currentReceiveAddress();
+        Coin receiverAmount = bsqWallet.getBalance()
+                .add(Coin.valueOf(100));
+
+        assertThrows(InsufficientMoneyException.class, () ->
+                bsqWalletV2.sendBsq(receiverAddress, receiverAmount, Coin.ofSat(10)));
+    }
 }
