@@ -12,7 +12,6 @@ EnvironmentFile=/etc/default/bisq.env
 
 ExecStart=/bin/bash __BISQ_HOME__/__BISQ_REPO_NAME__/${BISQ_ENTRYPOINT} \
           --fullDaoNode=${BISQ_DAO_FULLNODE} \
-          --isBmFullNode=${BISQ_DAO_FULLNODE} \
           --userDataDir=${BISQ_HOME} \
           --appName=${BISQ_APP_NAME} \
           --baseCurrencyNetwork=${BISQ_BASE_CURRENCY} \
@@ -31,6 +30,9 @@ ExecStart=/bin/bash __BISQ_HOME__/__BISQ_REPO_NAME__/${BISQ_ENTRYPOINT} \
           --torControlPort=${BISQ_EXTERNAL_TOR_PORT} \
           --torControlUseSafeCookieAuth=${BISQ_EXTERNAL_TOR_CONTROL_USE_COOKIE} \
           --torControlCookieFile=${BISQ_EXTERNAL_TOR_CONTROL_COOKIE_FILE} \
+          --isBmFullNode=${BISQ_BM_FULLNODE} \
+          --bmOracleNodePubKey=${BISQ_BM_ORACLE_NODE_PUBKEY} \
+          --bmOracleNodePrivKey=${BISQ_BM_ORACLE_NODE_PRIVKEY} \
 
 ExecStop=/bin/kill ${MAINPID} ; sleep 5
 Restart=on-failure
