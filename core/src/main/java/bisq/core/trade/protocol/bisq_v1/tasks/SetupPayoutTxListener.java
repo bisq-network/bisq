@@ -46,7 +46,6 @@ public abstract class SetupPayoutTxListener extends TradeTask {
         super(taskHandler, trade);
     }
 
-
     protected abstract void setState();
 
     @Override
@@ -60,15 +59,16 @@ public abstract class SetupPayoutTxListener extends TradeTask {
 
                 // check if the payout already happened (ensuring it was > deposit block height, see GH #5725)
                 TransactionConfidence confidence = walletService.getConfidenceForAddressFromBlockHeight(address,
-                    Objects.requireNonNull(trade.getDepositTx()).getConfidence().getAppearedAtChainHeight());
-                if (isInNetwork(confidence)) {
+                        Objects.requireNonNull(trade.getDepositTx()).getConfidence().getAppearedAtChainHeight());
+                if (isNonClaimTxInNetwork(confidence)) {
                     applyConfidence(confidence);
                 } else {
                     confidenceListener = new AddressConfidenceListener(address) {
                         @Override
                         public void onTransactionConfidenceChanged(TransactionConfidence confidence) {
-                            if (isInNetwork(confidence))
+                            if (isNonClaimTxInNetwork(confidence)) {
                                 applyConfidence(confidence);
+                            }
                         }
                     };
                     walletService.addAddressConfidenceListener(confidenceListener);
@@ -108,7 +108,16 @@ public abstract class SetupPayoutTxListener extends TradeTask {
         UserThread.execute(this::unSubscribe);
     }
 
-    private boolean isInNetwork(TransactionConfidence confidence) {
+    private boolean isNonClaimTxInNetwork(TransactionConfidence confidence) {
+        if (isInNetwork(confidence)) {
+            BtcWalletService btcWalletService = processModel.getBtcWalletService();
+            Transaction tx = Objects.requireNonNull(btcWalletService.getTransaction(confidence.getTransactionHash()));
+            return !tx.hasRelativeLockTime();
+        }
+        return false;
+    }
+
+    private static boolean isInNetwork(TransactionConfidence confidence) {
         return confidence != null &&
                 (confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.BUILDING) ||
                         confidence.getConfidenceType().equals(TransactionConfidence.ConfidenceType.PENDING));

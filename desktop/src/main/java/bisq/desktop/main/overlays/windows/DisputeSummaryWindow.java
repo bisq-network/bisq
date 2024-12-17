@@ -86,7 +86,9 @@ import javafx.beans.value.ChangeListener;
 
 import java.time.Instant;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -123,7 +125,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     // Dispute object of other trade peer. The dispute field is the one from which we opened the close dispute window.
     private Optional<Dispute> peersDisputeOptional;
     private String role;
-    private Label delayedPayoutTxStatus;
+    private Label delayedPayoutOrRedirectTxStatus;
     private TextArea summaryNotesTextArea;
 
     private ChangeListener<Boolean> customRadioButtonSelectedListener, buyerGetsTradeAmountSelectedListener, sellerGetsTradeAmountSelectedListener;
@@ -168,13 +170,11 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         width = 1150;
         createGridPane();
         addContent();
-        checkDelayedPayoutTransaction();
+        checkDelayedPayoutOrRedirectTransaction();
         display();
 
         if (DevEnv.isDevMode()) {
-            UserThread.execute(() -> {
-                summaryNotesTextArea.setText("dummy result....");
-            });
+            UserThread.execute(() -> summaryNotesTextArea.setText("dummy result...."));
         }
     }
 
@@ -224,13 +224,11 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void addContent() {
-        Contract contract = dispute.getContract();
-        if (dispute.getDisputeResultProperty().get() == null)
-            disputeResult = new DisputeResult(dispute.getTradeId(), dispute.getTraderId());
-        else
-            disputeResult = dispute.getDisputeResultProperty().get();
+        disputeResult = dispute.getDisputeResultProperty().get() == null
+                ? new DisputeResult(dispute.getTradeId(), dispute.getTraderId())
+                : dispute.getDisputeResultProperty().get();
 
-        peersDisputeOptional = checkNotNull(getDisputeManager(dispute)).getDisputesAsObservableList().stream()
+        peersDisputeOptional = checkNotNull(getDisputeManager()).getDisputesAsObservableList().stream()
                 .filter(d -> dispute.getTradeId().equals(d.getTradeId()) && dispute.getTraderId() != d.getTraderId())
                 .findFirst();
 
@@ -240,9 +238,9 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         addPayoutAmountTextFields();
         addReasonControls();
         applyDisputeResultToUiControls();
-        boolean applyPeersDisputeResult = peersDisputeOptional.isPresent() && (
-                peersDisputeOptional.get().getDisputeState() == Dispute.State.RESULT_PROPOSED ||
-                peersDisputeOptional.get().getDisputeState() == Dispute.State.CLOSED);
+        boolean applyPeersDisputeResult = peersDisputeOptional.map(Dispute::getDisputeState)
+                .map(s -> s == Dispute.State.RESULT_PROPOSED || s == Dispute.State.CLOSED)
+                .orElse(false);
         if (applyPeersDisputeResult) {
             // If the other peers dispute has been closed we apply the result to ourselves
             DisputeResult peersDisputeResult = peersDisputeOptional.get().getDisputeResultProperty().get();
@@ -322,14 +320,15 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 }
             }
             if (dispute.getExtraDataMap() != null && dispute.getExtraDataMap().size() > 0) {
-                String extraDataSummary = "";
+                var extraDataSummary = new StringBuilder();
                 for (Map.Entry<String, String> entry : dispute.getExtraDataMap().entrySet()) {
-                    extraDataSummary += "[" + entry.getKey() + ":" + entry.getValue() + "] ";
+                    extraDataSummary.append('[').append(entry.getKey()).append(':').append(entry.getValue()).append("] ");
                 }
-                addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.extraInfo"), extraDataSummary);
+                addConfirmationLabelTextField(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.extraInfo"), extraDataSummary.toString());
             }
         } else {
-            delayedPayoutTxStatus = addConfirmationLabelLabel(gridPane, ++rowIndex, Res.get("disputeSummaryWindow.delayedPayoutStatus"), "Checking...").second;
+            delayedPayoutOrRedirectTxStatus = addConfirmationLabelLabel(gridPane, ++rowIndex,
+                    Res.get("disputeSummaryWindow.delayedPayoutStatus"), "Checking...").second;
         }
     }
 
@@ -377,14 +376,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         buyerPayoutAmountListener = (observable, oldValue, newValue) -> applyCustomAmounts(buyerPayoutAmountInputTextField, oldValue, newValue);
         sellerPayoutAmountListener = (observable, oldValue, newValue) -> applyCustomAmounts(sellerPayoutAmountInputTextField, oldValue, newValue);
 
-        buyerGetsTradeAmountSelectedListener = (observable, oldValue, newValue) -> {
-            compensationOrPenalty.setEditable(!newValue);
-        };
+        buyerGetsTradeAmountSelectedListener = (observable, oldValue, newValue) -> compensationOrPenalty.setEditable(!newValue);
         buyerGetsTradeAmountRadioButton.selectedProperty().addListener(buyerGetsTradeAmountSelectedListener);
 
-        sellerGetsTradeAmountSelectedListener = (observable, oldValue, newValue) -> {
-            compensationOrPenalty.setEditable(!newValue);
-        };
+        sellerGetsTradeAmountSelectedListener = (observable, oldValue, newValue) -> compensationOrPenalty.setEditable(!newValue);
         sellerGetsTradeAmountRadioButton.selectedProperty().addListener(sellerGetsTradeAmountSelectedListener);
 
         customRadioButtonSelectedListener = (observable, oldValue, newValue) -> {
@@ -420,7 +415,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                 .add(offer.getSellerSecurityDeposit());
         Coin totalAmount = buyerAmount.add(sellerAmount);
 
-        boolean isRefundAgent = getDisputeManager(dispute) instanceof RefundManager;
+        boolean isRefundAgent = getDisputeManager() instanceof RefundManager;
         if (isRefundAgent) {
             // We allow to spend less in case of RefundAgent or even zero to both, so in that case no payout tx will
             // be made
@@ -532,9 +527,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         GridPane.setColumnIndex(vBox, 1);
         gridPane.getChildren().add(vBox);
 
-        compensationOrPenaltyListener = (observable, oldValue, newValue) -> {
-            applyUpdateFromUi(tradeAmountToggleGroup.selectedToggleProperty().get());
-        };
+        compensationOrPenaltyListener = (observable, oldValue, newValue) ->
+                applyUpdateFromUi(tradeAmountToggleGroup.selectedToggleProperty().get());
 
         compensationOrPenalty.textProperty().addListener(compensationOrPenaltyListener);
     }
@@ -692,33 +686,33 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         Button cancelButton = tuple.second;
 
         closeTicketButton.setOnAction(e -> {
-                    if (dispute.getDepositTxSerialized() == null) {
-                        log.warn("dispute.getDepositTxSerialized is null");
-                        return;
-                    }
+            if (dispute.getDepositTxSerialized() == null) {
+                log.warn("dispute.getDepositTxSerialized is null");
+                return;
+            }
 
-                    if (peersDisputeOptional.isPresent() && peersDisputeOptional.get().isClosed()) {
-                        applyDisputeResult(closeTicketButton); // all checks done already on peers ticket
-                    } else {
-                        maybeCheckTransactions().thenAccept(continue1 -> {
-                            if (continue1) {
-                                checkGeneralValidity().thenAccept(continue2 -> {
-                                    if (continue2) {
-                                        maybeMakePayout().thenAccept(continue3 -> {
-                                            if (continue3) {
-                                                applyDisputeResult(closeTicketButton);
-                                            }
-                                        });
+            if (peersDisputeOptional.isPresent() && peersDisputeOptional.get().isClosed()) {
+                applyDisputeResult(closeTicketButton); // all checks done already on peers ticket
+            } else {
+                maybeCheckTransactions().thenAccept(continue1 -> {
+                    if (continue1) {
+                        checkGeneralValidity().thenAccept(continue2 -> {
+                            if (continue2) {
+                                maybeMakePayout().thenAccept(continue3 -> {
+                                    if (continue3) {
+                                        applyDisputeResult(closeTicketButton);
                                     }
                                 });
                             }
                         });
                     }
                 });
+            }
+        });
 
         cancelButton.setOnAction(e -> {
             dispute.setDisputeResult(disputeResult);
-            checkNotNull(getDisputeManager(dispute)).requestPersistence();
+            checkNotNull(getDisputeManager()).requestPersistence();
             hide();
         });
     }
@@ -850,70 +844,80 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private CompletableFuture<Boolean> maybeCheckTransactions() {
         final CompletableFuture<Boolean> asyncStatus = new CompletableFuture<>();
-        var disputeManager = getDisputeManager(dispute);
+        var disputeManager = getDisputeManager();
         // Only RefundAgent need to verify transactions to ensure payout is safe
         if (disputeManager instanceof RefundManager) {
             RefundManager refundManager = (RefundManager) disputeManager;
-            Contract contract = dispute.getContract();
-            String makerFeeTxId = contract.getOfferPayload().getOfferFeePaymentTxId();
-            String takerFeeTxId = contract.getTakerFeeTxID();
-            String depositTxId = dispute.getDepositTxId();
-            String delayedPayoutTxId = dispute.getDelayedPayoutTxId();
+            List<String> txIdChain = getTradeTxIdChain();
             Popup requestingTxsPopup = new Popup().information(Res.get("disputeSummaryWindow.requestingTxs")).hideCloseButton();
             requestingTxsPopup.show();
-            refundManager.requestBlockchainTransactions(makerFeeTxId,
-                    takerFeeTxId,
-                    depositTxId,
-                    delayedPayoutTxId
-            ).whenComplete((txList, throwable) -> {
-                UserThread.execute(() -> {
-                    requestingTxsPopup.hide();
+            refundManager.requestBlockchainTransactions(txIdChain
+            ).whenComplete((txList, throwable) -> UserThread.execute(() -> {
+                requestingTxsPopup.hide();
 
-                    if (throwable == null) {
-                        try {
-                            refundManager.verifyTradeTxChain(txList);
-                            if (!dispute.isUsingLegacyBurningMan()) {
-                                Transaction delayedPayoutTx = txList.get(3);
-                                refundManager.verifyDelayedPayoutTxReceivers(delayedPayoutTx, dispute);
-                            }
-                            asyncStatus.complete(true);
-                        } catch (Throwable error) {
-                            UserThread.runAfter(() -> {
-                                        Popup popup = new Popup();
-                                        popup.warning(Res.get("disputeSummaryWindow.delayedPayoutTxVerificationFailed", error.getMessage()))
-                                                .actionButtonText(Res.get("shared.continueAnyway"))
-                                                .onAction(() -> asyncStatus.complete(true))
-                                                .onClose(() -> asyncStatus.complete(false))
-                                                .show();
-                                    },
-                                    100,
-                                    TimeUnit.MILLISECONDS);
+                if (throwable == null) {
+                    try {
+                        refundManager.verifyTradeTxChain(txList);
+                        Transaction depositTx = txList.get(2);
+                        if (txList.size() == 4) {
+                            Transaction delayedPayoutTx = txList.get(3);
+                            refundManager.verifyDelayedPayoutTxReceivers(depositTx, delayedPayoutTx, dispute);
+                            refundManager.validateCollateralAndPayoutTotals(depositTx, delayedPayoutTx, dispute, disputeResult);
+                        } else {
+                            Transaction warningTx = txList.get(3);
+                            Transaction redirectTx = txList.get(4);
+                            refundManager.verifyRedirectTxReceivers(warningTx, redirectTx, dispute);
+                            refundManager.validateCollateralAndPayoutTotals(depositTx, redirectTx, dispute, disputeResult);
                         }
-                    } else {
-                        UserThread.runAfter(() ->
-                                        new Popup().warning(Res.get("disputeSummaryWindow.requestTransactionsError", throwable.getMessage()))
-                                                .onAction(() -> asyncStatus.complete(true))
-                                                .onClose(() -> asyncStatus.complete(false))
-                                                .show(),
+                        asyncStatus.complete(true);
+                    } catch (Throwable error) {
+                        UserThread.runAfter(() -> new Popup()
+                                        .warning(Res.get("disputeSummaryWindow.delayedPayoutTxVerificationFailed",
+                                                error.getMessage()))
+                                        .actionButtonText(Res.get("shared.continueAnyway"))
+                                        .onAction(() -> asyncStatus.complete(true))
+                                        .onClose(() -> asyncStatus.complete(false))
+                                        .show(),
                                 100,
                                 TimeUnit.MILLISECONDS);
                     }
-                });
-            });
+                } else {
+                    UserThread.runAfter(() -> new Popup()
+                                    .warning(Res.get("disputeSummaryWindow.requestTransactionsError",
+                                            txIdChain.size(), throwable.getMessage()))
+                                    .onAction(() -> asyncStatus.complete(true))
+                                    .onClose(() -> asyncStatus.complete(false))
+                                    .show(),
+                            100,
+                            TimeUnit.MILLISECONDS);
+                }
+            }));
         } else {
             asyncStatus.complete(true);
         }
         return asyncStatus;
     }
 
+    private List<String> getTradeTxIdChain() {
+        Contract contract = dispute.getContract();
+        String makerFeeTxId = contract.getOfferPayload().getOfferFeePaymentTxId();
+        String takerFeeTxId = contract.getTakerFeeTxID();
+        String depositTxId = dispute.getDepositTxId();
+        String warningTxId = dispute.getWarningTxId();
+        return warningTxId != null
+                ? Arrays.asList(makerFeeTxId, takerFeeTxId, depositTxId, warningTxId, dispute.getRedirectTxId())
+                : Arrays.asList(makerFeeTxId, takerFeeTxId, depositTxId, dispute.getDelayedPayoutTxId());
+    }
+
 
     private CompletableFuture<Boolean> checkGeneralValidity() {
         final CompletableFuture<Boolean> asyncStatus = new CompletableFuture<>();
-        var disputeManager = checkNotNull(getDisputeManager(dispute));
+        var disputeManager = checkNotNull(getDisputeManager());
         try {
             DisputeValidation.testIfDisputeTriesReplay(dispute, disputeManager.getDisputesAsObservableList());
             if (dispute.isUsingLegacyBurningMan()) {
-                DisputeValidation.validateDonationAddressMatchesAnyPastParamValues(dispute, dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
+                DisputeValidation.validateDonationAddressMatchesAnyPastParamValues(dispute,
+                        dispute.getDonationAddressOfDelayedPayoutTx(), daoFacade);
             }
             asyncStatus.complete(true);
         } catch (DisputeValidation.AddressException exception) {
@@ -966,7 +970,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     }
 
     private void applyDisputeResult(Button closeTicketButton) {
-        DisputeManager<? extends DisputeList<Dispute>> disputeManager = getDisputeManager(dispute);
+        DisputeManager<? extends DisputeList<Dispute>> disputeManager = getDisputeManager();
         if (disputeManager == null) {
             return;
         }
@@ -1033,7 +1037,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         hide();
     }
 
-    private DisputeManager<? extends DisputeList<Dispute>> getDisputeManager(Dispute dispute) {
+    private DisputeManager<? extends DisputeList<Dispute>> getDisputeManager() {
         if (dispute.getSupportType() != null) {
             switch (dispute.getSupportType()) {
                 case ARBITRATION:
@@ -1055,7 +1059,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean isMediationDispute() {
-        return getDisputeManager(dispute) instanceof MediationManager;
+        return getDisputeManager() instanceof MediationManager;
     }
 
     // called when a radio button or amount box ui control is changed
@@ -1131,10 +1135,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             disputeResult.setBuyerPayoutAmount(totalPot.subtract(minRefundAtDispute));
         }
 
-        // winner is the one who receives most from the multisig, or if equal, the buyer.
+        // winner is the one who receives most from the multisig, or if equal, the seller.
         // (winner is used to decide who publishes the tx)
         disputeResult.setWinner(disputeResult.getSellerPayoutAmount().isLessThan(disputeResult.getBuyerPayoutAmount()) ?
-                DisputeResult.Winner.BUYER : DisputeResult.Winner.BUYER);
+                DisputeResult.Winner.BUYER : DisputeResult.Winner.SELLER);
     }
 
     private void applyDisputeResultToUiControls() {
@@ -1186,24 +1190,30 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         updatingUi = false;
     }
 
-    private void checkDelayedPayoutTransaction() {
-        if (dispute.getDelayedPayoutTxId() == null)
-            return;
-        mempoolService.checkTxIsConfirmed(dispute.getDelayedPayoutTxId(), (validator -> {
-            long confirms = validator.parseJsonValidateTx();
-            log.info("Mempool check confirmation status of DelayedPayoutTxId returned: [{}]", confirms);
-            displayPayoutStatus(confirms);
-        }));
+    private void checkDelayedPayoutOrRedirectTransaction() {
+        if (dispute.getRedirectTxId() != null) {
+            mempoolService.checkTxIsConfirmed(dispute.getRedirectTxId(), (validator -> {
+                long confirms = validator.parseJsonValidateTx();
+                log.info("Mempool check confirmation status of redirectTxId returned: [{}]", confirms);
+                displayPayoutStatus(confirms);
+            }));
+        } else if (dispute.getDelayedPayoutTxId() != null) {
+            mempoolService.checkTxIsConfirmed(dispute.getDelayedPayoutTxId(), (validator -> {
+                long confirms = validator.parseJsonValidateTx();
+                log.info("Mempool check confirmation status of delayedPayoutTxId returned: [{}]", confirms);
+                displayPayoutStatus(confirms);
+            }));
+        }
     }
 
     private void displayPayoutStatus(long nConfirmStatus) {
-        if (delayedPayoutTxStatus != null) {
+        if (delayedPayoutOrRedirectTxStatus != null) {
             String status = Res.get("confidence.unknown");
             if (nConfirmStatus == 0)
                 status = Res.get("confidence.seen", 1);
             else if (nConfirmStatus > 0)
                 status = Res.get("confidence.confirmed", nConfirmStatus);
-            delayedPayoutTxStatus.setText(status);
+            delayedPayoutOrRedirectTxStatus.setText(status);
         }
     }
 }
