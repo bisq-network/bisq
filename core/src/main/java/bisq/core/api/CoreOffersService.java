@@ -213,7 +213,6 @@ class CoreOffersService {
             return offerBookService.getOffers().stream()
                     .filter(o -> !o.isMyOffer(keyRing))
                     .filter(o -> offerMatchesDirectionAndCurrency(o, direction, upperCaseCurrencyCode))
-                    .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
                     .sorted(priceComparator(direction, true))
                     .collect(Collectors.toList());
         } else {
@@ -226,7 +225,6 @@ class CoreOffersService {
                         .filter(o -> !o.isMyOffer(keyRing))
                         .filter(o -> offerMatchesDirectionAndCurrency(o, direction, "BTC"))
                         .filter(o -> o.getBaseCurrencyCode().equalsIgnoreCase(upperCaseCurrencyCode))
-                        .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
                         .sorted(priceComparator(direction, false))
                         .collect(Collectors.toList());
             else
