@@ -231,24 +231,23 @@ public class OffersServiceRequest {
         return grpcStubs.offersService.getBsqSwapOffers(request).getBsqSwapOffersList();
     }
 
-    public List<OfferInfo> getOffers(String direction, String currencyCode, boolean all) {
+    public List<OfferInfo> getOffers(String direction, String currencyCode) {
         var request = GetOffersRequest.newBuilder()
                 .setDirection(direction)
                 .setCurrencyCode(currencyCode)
-                .setAll(all)
                 .build();
         return grpcStubs.offersService.getOffers(request).getOffersList();
     }
 
-    public List<OfferInfo> getOffersSortedByDate(String currencyCode, boolean all) {
+    public List<OfferInfo> getOffersSortedByDate(String currencyCode) {
         ArrayList<OfferInfo> offers = new ArrayList<>();
-        offers.addAll(getOffers(BUY.name(), currencyCode, all));
-        offers.addAll(getOffers(SELL.name(), currencyCode, all));
+        offers.addAll(getOffers(BUY.name(), currencyCode));
+        offers.addAll(getOffers(SELL.name(), currencyCode));
         return offers.isEmpty() ? offers : sortOffersByDate(offers);
     }
 
-    public List<OfferInfo> getOffersSortedByDate(String direction, String currencyCode, boolean all) {
-        var offers = getOffers(direction, currencyCode, all);
+    public List<OfferInfo> getOffersSortedByDate(String direction, String currencyCode) {
+        var offers = getOffers(direction, currencyCode);
         return offers.isEmpty() ? offers : sortOffersByDate(offers);
     }
 
@@ -293,8 +292,8 @@ public class OffersServiceRequest {
         return sortOffersByDate(offers);
     }
 
-    public OfferInfo getMostRecentOffer(String direction, String currencyCode, boolean all) {
-        List<OfferInfo> offers = getOffersSortedByDate(direction, currencyCode, all);
+    public OfferInfo getMostRecentOffer(String direction, String currencyCode) {
+        List<OfferInfo> offers = getOffersSortedByDate(direction, currencyCode);
         return offers.isEmpty() ? null : offers.get(offers.size() - 1);
     }
 

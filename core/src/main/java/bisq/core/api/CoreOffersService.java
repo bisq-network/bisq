@@ -206,14 +206,14 @@ class CoreOffersService {
                 .collect(Collectors.toList());
     }
 
-    List<Offer> getOffers(String direction, String currencyCode, boolean all) {
+    List<Offer> getOffers(String direction, String currencyCode) {
         var upperCaseCurrencyCode = currencyCode.toUpperCase();
         var isFiat = isFiatCurrency(upperCaseCurrencyCode);
         if (isFiat) {
             return offerBookService.getOffers().stream()
                     .filter(o -> !o.isMyOffer(keyRing))
                     .filter(o -> offerMatchesDirectionAndCurrency(o, direction, upperCaseCurrencyCode))
-                    .filter(o -> all || offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
+                    .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
                     .sorted(priceComparator(direction, true))
                     .collect(Collectors.toList());
         } else {
@@ -226,7 +226,7 @@ class CoreOffersService {
                         .filter(o -> !o.isMyOffer(keyRing))
                         .filter(o -> offerMatchesDirectionAndCurrency(o, direction, "BTC"))
                         .filter(o -> o.getBaseCurrencyCode().equalsIgnoreCase(upperCaseCurrencyCode))
-                        .filter(o -> all || offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
+                        .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
                         .sorted(priceComparator(direction, false))
                         .collect(Collectors.toList());
             else

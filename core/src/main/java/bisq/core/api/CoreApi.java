@@ -166,8 +166,8 @@ public class CoreApi {
         return coreOffersService.getBsqSwapOffers(direction);
     }
 
-    public List<Offer> getOffers(String direction, String currencyCode, boolean all) {
-        return coreOffersService.getOffers(direction, currencyCode, all);
+    public List<Offer> getOffers(String direction, String currencyCode) {
+        return coreOffersService.getOffers(direction, currencyCode);
     }
 
     public List<OpenOffer> getMyOffers(String direction, String currencyCode) {

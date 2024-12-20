@@ -77,7 +77,7 @@ public class TakeBuyBTCOfferTest extends AbstractTradeTest {
             // Wait for Alice's AddToOfferBook task.
             // Wait times vary;  my logs show >= 2-second delay.
             var timeout = System.currentTimeMillis() + 3000;
-            while (bobClient.getOffersSortedByDate(USD, true).size() < 1) {
+            while (bobClient.getOffersSortedByDate(USD).size() < 1) {
                 sleep(100);
                 if (System.currentTimeMillis() > timeout)
                     fail(new TimeoutException("Timed out waiting for Offer to be added to OfferBook"));
