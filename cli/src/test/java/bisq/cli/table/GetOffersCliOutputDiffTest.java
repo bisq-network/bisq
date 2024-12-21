@@ -59,12 +59,12 @@ public class GetOffersCliOutputDiffTest extends AbstractCliTest {
     }
 
     private void getAvailableBuyUsdOffers() {
-        var offers = bobClient.getOffers(BUY.name(), "USD", false);
+        var offers = bobClient.getOffers(BUY.name(), "USD");
         printAndCheckDiffs(offers, BUY.name(), "USD");
     }
 
     private void getAvailableSellUsdOffers() {
-        var offers = bobClient.getOffers(SELL.name(), "USD", false);
+        var offers = bobClient.getOffers(SELL.name(), "USD");
         printAndCheckDiffs(offers, SELL.name(), "USD");
     }
 
@@ -79,12 +79,12 @@ public class GetOffersCliOutputDiffTest extends AbstractCliTest {
     }
 
     private void getAvailableBuyXmrOffers() {
-        var offers = bobClient.getOffers(BUY.name(), "XMR", false);
+        var offers = bobClient.getOffers(BUY.name(), "XMR");
         printAndCheckDiffs(offers, BUY.name(), "XMR");
     }
 
     private void getAvailableSellXmrOffers() {
-        var offers = bobClient.getOffers(SELL.name(), "XMR", false);
+        var offers = bobClient.getOffers(SELL.name(), "XMR");
         printAndCheckDiffs(offers, SELL.name(), "XMR");
     }
 
@@ -99,12 +99,12 @@ public class GetOffersCliOutputDiffTest extends AbstractCliTest {
     }
 
     private void getAvailableBuyBsqOffers() {
-        var offers = bobClient.getOffers(BUY.name(), "BSQ", false);
+        var offers = bobClient.getOffers(BUY.name(), "BSQ");
         printAndCheckDiffs(offers, BUY.name(), "BSQ");
     }
 
     private void getAvailableSellBsqOffers() {
-        var offers = bobClient.getOffers(SELL.name(), "BSQ", false);
+        var offers = bobClient.getOffers(SELL.name(), "BSQ");
         printAndCheckDiffs(offers, SELL.name(), "BSQ");
     }
 

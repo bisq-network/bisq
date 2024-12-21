@@ -148,7 +148,7 @@ message GetMyOfferReply {
 message GetOffersRequest {
     string direction = 1;       // The offer's BUY (BTC) or SELL (BTC) direction.
     string currency_code = 2;   // The offer's fiat or altcoin currency code.
-    bool all = 3;               // Return all or only these matching my account
+    reserved 3; // This was the "all" field before.
 }
 
 message GetOffersReply {
