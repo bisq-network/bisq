@@ -31,6 +31,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -45,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public abstract class HistoricalDataStoreService<T extends PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> extends MapStoreService<T, PersistableNetworkPayload> {
+    private static final int MAX_ITEMS = 100;
     protected ImmutableMap<String, PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> storesByVersion;
     // Cache to avoid that we have to recreate the historical data at each request
     private ImmutableMap<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalPayloads;
@@ -66,7 +68,8 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
     // We give back a map of our live map and all historical maps newer than the requested version.
     // If requestersVersion is null we return all historical data.
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMapSinceVersion(String requestersVersion,
-                                                                                       Set<P2PDataStorage.ByteArray> keysToExclude) {
+                                                                                       Set<P2PDataStorage.ByteArray> keysToExclude,
+                                                                                       AtomicBoolean wasPersistableNetworkPayloadsTruncated) {
         // Get live data stream
         Stream<Map.Entry<P2PDataStorage.ByteArray, PersistableNetworkPayload>> liveDataStream =
                 store.getMap().entrySet().stream();
@@ -74,19 +77,25 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
 
         if (requestersVersion == null) {
             log.warn("The requester did not send a version but the field was added in v1.4.0. " +
-                    "Returning capped live data (100 items).");
+                    "Returning capped live data (" + MAX_ITEMS + " items).");
 
             return liveDataStream
-                    .limit(100)
+                    .limit(MAX_ITEMS)
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         }
 
         boolean isRequesterVersionNewer = Version.isNewVersion(requestersVersion, Version.VERSION);
         if (isRequesterVersionNewer) {
-            log.warn("The requester's version is newer than ours. Returning capped live data (100 items).");
+            log.warn("The requester's version is newer than ours. Returning capped live data (" +
+                    MAX_ITEMS + " items).");
+
+            var numberOfLiveData = store.getMap().size();
+            if (numberOfLiveData > MAX_ITEMS) {
+                wasPersistableNetworkPayloadsTruncated.set(true);
+            }
 
             return liveDataStream
-                    .limit(100)
+                    .limit(MAX_ITEMS)
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         }
 

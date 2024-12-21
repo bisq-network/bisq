@@ -314,7 +314,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // mapForDataResponse contains the filtered by version data from HistoricalDataStoreService as well as all other
         // maps of the remaining appendOnlyDataStoreServices.
         Map<ByteArray, PersistableNetworkPayload> mapForDataResponse =
-                getMapForDataResponse(getDataRequest.getVersion(), excludedKeysAsByteArray);
+                getMapForDataResponse(getDataRequest.getVersion(),
+                        excludedKeysAsByteArray, wasPersistableNetworkPayloadsTruncated);
 
         // Give a bit of tolerance for message overhead
         double maxSize = Connection.getMaxPermittedMessageSize() * 0.6;
@@ -393,14 +394,16 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return map;
     }
 
-    public Map<ByteArray, PersistableNetworkPayload> getMapForDataResponse(String requestersVersion, Set<P2PDataStorage.ByteArray> keysToExclude) {
+    public Map<ByteArray, PersistableNetworkPayload> getMapForDataResponse(String requestersVersion,
+                                                                           Set<P2PDataStorage.ByteArray> keysToExclude,
+                                                                           AtomicBoolean arePayloadsTruncated) {
         Map<ByteArray, PersistableNetworkPayload> map = new HashMap<>();
         appendOnlyDataStoreService.getServices()
                 .forEach(service -> {
                     Map<ByteArray, PersistableNetworkPayload> serviceMap;
                     if (service instanceof HistoricalDataStoreService) {
                         var historicalDataStoreService = (HistoricalDataStoreService<? extends PersistableNetworkPayloadStore>) service;
-                        serviceMap = historicalDataStoreService.getMapSinceVersion(requestersVersion, keysToExclude);
+                        serviceMap = historicalDataStoreService.getMapSinceVersion(requestersVersion, keysToExclude, arePayloadsTruncated);
                     } else {
                         serviceMap = service.getMap();
                     }

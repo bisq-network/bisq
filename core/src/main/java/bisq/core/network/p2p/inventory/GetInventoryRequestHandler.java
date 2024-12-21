@@ -55,6 +55,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import java.lang.management.ManagementFactory;
 
@@ -101,7 +102,7 @@ public class GetInventoryRequestHandler implements MessageListener {
             // Data
             GetInventoryRequest getInventoryRequest = (GetInventoryRequest) networkEnvelope;
             Map<InventoryItem, Integer> dataObjects = new HashMap<>();
-            p2PDataStorage.getMapForDataResponse(getInventoryRequest.getVersion(), Collections.emptySet())
+            p2PDataStorage.getMapForDataResponse(getInventoryRequest.getVersion(), Collections.emptySet(), new AtomicBoolean(false))
                     .values().stream()
                     .map(e -> e.getClass().getSimpleName())
                     .forEach(className -> addClassNameToMap(dataObjects, className));

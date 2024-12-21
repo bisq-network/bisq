@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ import static org.hamcrest.Matchers.is;
 
 
 public class AccountAgeWitnessStorageServiceTest {
+    private final AtomicBoolean payloadsTruncated = new AtomicBoolean(false);
     private DummyHistoricalDataStoreService storageService;
 
     @BeforeEach
@@ -37,8 +39,9 @@ public class AccountAgeWitnessStorageServiceTest {
     @Test
     void emptyStore() {
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapSinceVersion =
-                storageService.getMapSinceVersion(Version.VERSION, Collections.emptySet());
+                storageService.getMapSinceVersion(Version.VERSION, Collections.emptySet(), payloadsTruncated);
         assertThat(mapSinceVersion, is(anEmptyMap()));
+        assertThat(payloadsTruncated.get(), is(false));
     }
 
     @Test
@@ -47,7 +50,7 @@ public class AccountAgeWitnessStorageServiceTest {
         DummyAccountAgeWitnessFactory.addNewAccountAgeWitnessesToMap(liveDataMap, 2);
 
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapSinceVersion =
-                storageService.getMapSinceVersion(Version.VERSION, Collections.emptySet());
+                storageService.getMapSinceVersion(Version.VERSION, Collections.emptySet(), payloadsTruncated);
 
         P2PDataStorage.ByteArray firstByteArray = new P2PDataStorage.ByteArray(new byte[]{0});
         P2PDataStorage.ByteArray secondByteArray = new P2PDataStorage.ByteArray(new byte[]{1});
@@ -57,6 +60,7 @@ public class AccountAgeWitnessStorageServiceTest {
                 secondByteArray, liveDataMap.get(secondByteArray));
 
         assertThat(mapSinceVersion, is(expected));
+        assertThat(payloadsTruncated.get(), is(false));
     }
 
     @Test
@@ -70,10 +74,11 @@ public class AccountAgeWitnessStorageServiceTest {
         storageService.setStoresByVersion(storeByVersion);
 
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapSinceVersion =
-                storageService.getMapSinceVersion("1.7.0", Collections.emptySet());
+                storageService.getMapSinceVersion("1.7.0", Collections.emptySet(), payloadsTruncated);
 
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> expected = new HashMap<>(versionStore.getMap());
         assertThat(mapSinceVersion, is(expected));
+        assertThat(payloadsTruncated.get(), is(false));
     }
 
     @Test
@@ -93,7 +98,7 @@ public class AccountAgeWitnessStorageServiceTest {
         storageService.setStoresByVersion(storeByVersion);
 
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapSinceVersion =
-                storageService.getMapSinceVersion(null, Collections.emptySet());
+                storageService.getMapSinceVersion(null, Collections.emptySet(), payloadsTruncated);
 
         int mapSize = mapSinceVersion.size();
         assertThat(mapSize, is(100));
@@ -102,6 +107,8 @@ public class AccountAgeWitnessStorageServiceTest {
             var expected = liveDataMap.get(entry.getKey());
             assertThat(entry.getValue(), is(expected));
         }
+
+        assertThat(payloadsTruncated.get(), is(false));
     }
 
     @Test
@@ -121,7 +128,7 @@ public class AccountAgeWitnessStorageServiceTest {
         storageService.setStoresByVersion(storeByVersion);
 
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapSinceVersion =
-                storageService.getMapSinceVersion("1.2.3", Collections.emptySet());
+                storageService.getMapSinceVersion("1.2.3", Collections.emptySet(), payloadsTruncated);
 
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> expected = new HashMap<>();
         expected.putAll(liveDataMap);
@@ -129,6 +136,7 @@ public class AccountAgeWitnessStorageServiceTest {
         expected.putAll(secondVersionStore.getMap());
 
         assertThat(mapSinceVersion, is(expected));
+        assertThat(payloadsTruncated.get(), is(false));
     }
 
     @Test
@@ -148,13 +156,14 @@ public class AccountAgeWitnessStorageServiceTest {
         storageService.setStoresByVersion(storeByVersion);
 
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapSinceVersion =
-                storageService.getMapSinceVersion("1.8.5", Collections.emptySet());
+                storageService.getMapSinceVersion("1.8.5", Collections.emptySet(), payloadsTruncated);
 
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> expected = new HashMap<>();
         expected.putAll(liveDataMap);
         expected.putAll(secondVersionStore.getMap());
 
         assertThat(mapSinceVersion, is(expected));
+        assertThat(payloadsTruncated.get(), is(false));
     }
 
     @Test
@@ -174,10 +183,11 @@ public class AccountAgeWitnessStorageServiceTest {
         storageService.setStoresByVersion(storeByVersion);
 
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapSinceVersion =
-                storageService.getMapSinceVersion("1.9.5", Collections.emptySet());
+                storageService.getMapSinceVersion("1.9.5", Collections.emptySet(), payloadsTruncated);
 
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> expected = new HashMap<>(liveDataMap);
         assertThat(mapSinceVersion, is(expected));
+        assertThat(payloadsTruncated.get(), is(false));
     }
 
     @Test
@@ -201,7 +211,7 @@ public class AccountAgeWitnessStorageServiceTest {
                 Version.getMinorVersion(version) + "." + (Version.getPatchVersion(version) + 1);
 
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapSinceVersion =
-                storageService.getMapSinceVersion(higherVersion, Collections.emptySet());
+                storageService.getMapSinceVersion(higherVersion, Collections.emptySet(), payloadsTruncated);
 
         int mapSize = mapSinceVersion.size();
         assertThat(mapSize, is(100));
@@ -210,6 +220,8 @@ public class AccountAgeWitnessStorageServiceTest {
             var expected = liveDataMap.get(entry.getKey());
             assertThat(entry.getValue(), is(expected));
         }
+
+        assertThat(payloadsTruncated.get(), is(true));
     }
 
     @Test
@@ -240,7 +252,7 @@ public class AccountAgeWitnessStorageServiceTest {
         Set<P2PDataStorage.ByteArray> knownHashes = Set.of(excludeFromLiveMap, excludeFromSecondStore);
 
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapSinceVersion =
-                storageService.getMapSinceVersion("1.7.0", knownHashes);
+                storageService.getMapSinceVersion("1.7.0", knownHashes, payloadsTruncated);
 
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> expected = new HashMap<>(liveDataMap);
         expected.putAll(firstVersionStore.getMap());
@@ -250,6 +262,7 @@ public class AccountAgeWitnessStorageServiceTest {
         expected.remove(excludeFromSecondStore);
 
         assertThat(mapSinceVersion, is(expected));
+        assertThat(payloadsTruncated.get(), is(false));
     }
 
     @Test
@@ -273,9 +286,10 @@ public class AccountAgeWitnessStorageServiceTest {
         knownHashes.addAll(secondStoreKeys);
 
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapSinceVersion =
-                storageService.getMapSinceVersion("1.8.5", knownHashes);
+                storageService.getMapSinceVersion("1.8.5", knownHashes, payloadsTruncated);
 
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> expected = Collections.emptyMap();
         assertThat(mapSinceVersion, is(expected));
+        assertThat(payloadsTruncated.get(), is(false));
     }
 }
