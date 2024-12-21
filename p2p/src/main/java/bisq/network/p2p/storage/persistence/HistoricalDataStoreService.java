@@ -72,17 +72,20 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
         Stream<Map.Entry<P2PDataStorage.ByteArray, PersistableNetworkPayload>> liveDataStream =
                 store.getMap().entrySet().stream();
 
+        if (requestersVersion == null) {
+            log.warn("The requester did not send a version but the field was added in v1.4.0. " +
+                    "Returning capped live data (100 items).");
+
+            return liveDataStream
+                    .limit(100)
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        }
+
         // If we have a store with a newer version than the requesters version we will add those as well.
         Stream<Map.Entry<P2PDataStorage.ByteArray, PersistableNetworkPayload>> entryStream =
                 storesByVersion.entrySet().stream()
                         .filter(entry -> {
-                            // Old nodes not sending the version will get delivered all data
-                            if (requestersVersion == null) {
-                                log.info("The requester did not send a version. This is expected for not updated nodes.");
-                                return true;
-                            }
-
-                            // Otherwise we only add data if the requesters version is older then
+                            // Only add data if the requesters version is older then
                             // the version of the particular store.
                             String storeVersion = entry.getKey();
                             boolean newVersion = Version.isNewVersion(storeVersion, requestersVersion);
