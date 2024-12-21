@@ -158,14 +158,14 @@ public class AccountAgeWitnessStorageServiceTest {
     }
 
     @Test
-    void testRequesterVersionIsNewer() {
+    void testRequesterHasHistoricalDataStores() {
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> liveDataMap = storageService.getStore().getMap();
-        DummyAccountAgeWitnessFactory.addNewAccountAgeWitnessToMap(liveDataMap);
+        DummyAccountAgeWitnessFactory.addNewAccountAgeWitnessesToMap(liveDataMap, 150);
 
         AccountAgeWitnessStore firstVersionStore = DummyAccountAgeWitnessFactory.
-                createAccountAgeWitnessStore(1, 100);
-        AccountAgeWitnessStore secondVersionStore = DummyAccountAgeWitnessFactory.
                 createAccountAgeWitnessStore(1, 200);
+        AccountAgeWitnessStore secondVersionStore = DummyAccountAgeWitnessFactory.
+                createAccountAgeWitnessStore(1, 300);
 
         Map<String, PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> storeByVersion = Map.of(
                 "1.8.0", firstVersionStore,
@@ -178,6 +178,38 @@ public class AccountAgeWitnessStorageServiceTest {
 
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> expected = new HashMap<>(liveDataMap);
         assertThat(mapSinceVersion, is(expected));
+    }
+
+    @Test
+    void testRequesterVersionIsNewerCapped() {
+        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> liveDataMap = storageService.getStore().getMap();
+        DummyAccountAgeWitnessFactory.addNewAccountAgeWitnessesToMap(liveDataMap, 150);
+
+        AccountAgeWitnessStore firstVersionStore = DummyAccountAgeWitnessFactory
+                .createAccountAgeWitnessStore(1, 200);
+        AccountAgeWitnessStore secondVersionStore = DummyAccountAgeWitnessFactory
+                .createAccountAgeWitnessStore(1, 300);
+
+        Map<String, PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> storeByVersion = Map.of(
+                "1.8.0", firstVersionStore,
+                "1.9.0", secondVersionStore);
+
+        storageService.setStoresByVersion(storeByVersion);
+
+        String version = Version.VERSION;
+        String higherVersion = Version.getMajorVersion(version) + "." +
+                Version.getMinorVersion(version) + "." + (Version.getPatchVersion(version) + 1);
+
+        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> mapSinceVersion =
+                storageService.getMapSinceVersion(higherVersion, Collections.emptySet());
+
+        int mapSize = mapSinceVersion.size();
+        assertThat(mapSize, is(100));
+
+        for (Map.Entry<P2PDataStorage.ByteArray, PersistableNetworkPayload> entry : mapSinceVersion.entrySet()) {
+            var expected = liveDataMap.get(entry.getKey());
+            assertThat(entry.getValue(), is(expected));
+        }
     }
 
     @Test

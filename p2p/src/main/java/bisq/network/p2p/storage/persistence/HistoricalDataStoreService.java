@@ -32,7 +32,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -72,9 +71,19 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
         Stream<Map.Entry<P2PDataStorage.ByteArray, PersistableNetworkPayload>> liveDataStream =
                 store.getMap().entrySet().stream();
 
+
         if (requestersVersion == null) {
             log.warn("The requester did not send a version but the field was added in v1.4.0. " +
                     "Returning capped live data (100 items).");
+
+            return liveDataStream
+                    .limit(100)
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        }
+
+        boolean isRequesterVersionNewer = Version.isNewVersion(requestersVersion, Version.VERSION);
+        if (isRequesterVersionNewer) {
+            log.warn("The requester's version is newer than ours. Returning capped live data (100 items).");
 
             return liveDataStream
                     .limit(100)
