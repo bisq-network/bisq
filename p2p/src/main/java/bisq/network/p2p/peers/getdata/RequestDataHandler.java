@@ -43,6 +43,7 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -73,7 +74,7 @@ class RequestDataHandler implements MessageListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public interface Listener {
-        void onComplete(boolean wasTruncated);
+        void onComplete(boolean wasTruncated, String responderVersion);
 
         @SuppressWarnings("UnusedParameters")
         void onFault(String errorMessage, @SuppressWarnings("SameParameterValue") @Nullable Connection connection);
@@ -87,6 +88,7 @@ class RequestDataHandler implements MessageListener {
     private final NetworkNode networkNode;
     private final P2PDataStorage dataStorage;
     private final PeerManager peerManager;
+    private final Optional<String> responderVersion;
     private final Listener listener;
     private Timer timeoutTimer;
     private final int nonce = new Random().nextInt();
@@ -100,10 +102,12 @@ class RequestDataHandler implements MessageListener {
     RequestDataHandler(NetworkNode networkNode,
                        P2PDataStorage dataStorage,
                        PeerManager peerManager,
+                       Optional<String> responderVersion,
                        Listener listener) {
         this.networkNode = networkNode;
         this.dataStorage = dataStorage;
         this.peerManager = peerManager;
+        this.responderVersion = responderVersion;
         this.listener = listener;
     }
 
@@ -124,7 +128,7 @@ class RequestDataHandler implements MessageListener {
             if (isPreliminaryDataRequest)
                 getDataRequest = dataStorage.buildPreliminaryGetDataRequest(nonce);
             else
-                getDataRequest = dataStorage.buildGetUpdatedDataRequest(networkNode.getNodeAddress(), nonce);
+                getDataRequest = dataStorage.buildGetUpdatedDataRequest(networkNode.getNodeAddress(), nonce, responderVersion);
 
             if (timeoutTimer == null) {
                 timeoutTimer = UserThread.runAfter(() -> {  // setup before sending to avoid race conditions
@@ -201,7 +205,7 @@ class RequestDataHandler implements MessageListener {
                                 connection.getPeersNodeAddressOptional().get());
 
                         cleanup();
-                        listener.onComplete(getDataResponse.isWasTruncated());
+                        listener.onComplete(getDataResponse.isWasTruncated(), getDataResponse.getVersion());
                     } else {
                         log.warn("Nonce not matching. That can happen rarely if we get a response after a canceled " +
                                         "handshake (timeout causes connection close but peer might have sent a msg before " +

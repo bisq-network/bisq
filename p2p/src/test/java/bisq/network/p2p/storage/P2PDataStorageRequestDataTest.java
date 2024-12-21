@@ -33,6 +33,7 @@ import bisq.common.app.Capability;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 
+import java.util.Optional;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -105,7 +106,7 @@ public class P2PDataStorageRequestDataTest {
     @Test
     public void buildGetUpdatedDataRequest_EmptyP2PDataStore() {
         GetUpdatedDataRequest getDataRequest =
-                this.testState.mockedStorage.buildGetUpdatedDataRequest(this.localNodeAddress, 1);
+                this.testState.mockedStorage.buildGetUpdatedDataRequest(this.localNodeAddress, 1, Optional.empty());
 
         assertEquals(getDataRequest.getNonce(), 1);
         assertEquals(getDataRequest.getSenderNodeAddress(), this.localNodeAddress);
@@ -156,7 +157,7 @@ public class P2PDataStorageRequestDataTest {
         this.testState.mockedStorage.addProtectedStorageEntry(toAdd4, this.localNodeAddress, null);
 
         GetUpdatedDataRequest getDataRequest =
-                this.testState.mockedStorage.buildGetUpdatedDataRequest(this.localNodeAddress, 1);
+                this.testState.mockedStorage.buildGetUpdatedDataRequest(this.localNodeAddress, 1, Optional.empty());
 
         assertEquals(getDataRequest.getNonce(), 1);
         assertEquals(getDataRequest.getSenderNodeAddress(), this.localNodeAddress);

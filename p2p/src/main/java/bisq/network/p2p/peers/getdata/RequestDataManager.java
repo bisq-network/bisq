@@ -177,7 +177,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                 nodeAddresses.remove(nodeAddress);
                 // We clone list to avoid mutable change during iterations
                 List<NodeAddress> remainingNodeAddresses = new ArrayList<>(nodeAddresses);
-                UserThread.runAfter(() -> requestData(nodeAddress, remainingNodeAddresses), (i * 200 + 1), TimeUnit.MILLISECONDS);
+                UserThread.runAfter(() -> requestData(nodeAddress, remainingNodeAddresses, Optional.empty()), (i * 200 + 1), TimeUnit.MILLISECONDS);
             }
 
             isPreliminaryDataRequest = true;
@@ -195,7 +195,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
             // We use the node we have already connected to to request again
             nodeAddressOfPreliminaryDataRequest.ifPresent(candidate -> {
                 nodeAddresses.remove(candidate);
-                requestData(candidate, nodeAddresses);
+                requestData(candidate, nodeAddresses, Optional.empty());
 
                 ArrayList<NodeAddress> finalNodeAddresses = new ArrayList<>(nodeAddresses);
                 int numRequests = 0;
@@ -205,7 +205,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
 
                     // It might be that we have a prelim. request open for the same seed, if so we skip to the next.
                     if (!handlerMap.containsKey(nodeAddress)) {
-                        UserThread.runAfter(() -> requestData(nodeAddress, nodeAddresses), (i * 200 + 1), TimeUnit.MILLISECONDS);
+                        UserThread.runAfter(() -> requestData(nodeAddress, nodeAddresses, Optional.empty()), (i * 200 + 1), TimeUnit.MILLISECONDS);
                         numRequests++;
                     }
                 }
@@ -333,13 +333,15 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
     // RequestData
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private void requestData(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses) {
+    private void requestData(NodeAddress nodeAddress, List<NodeAddress> remainingNodeAddresses,
+                             Optional<String> responderVersion) {
         if (!stopped) {
             if (!handlerMap.containsKey(nodeAddress)) {
                 RequestDataHandler requestDataHandler = new RequestDataHandler(networkNode, dataStorage, peerManager,
+                        responderVersion,
                         new RequestDataHandler.Listener() {
                             @Override
-                            public void onComplete(boolean wasTruncated) {
+                            public void onComplete(boolean wasTruncated, String responderVersion) {
                                 log.trace("RequestDataHandshake of outbound connection complete. nodeAddress={}",
                                         nodeAddress);
                                 stopRetryTimer();
@@ -363,12 +365,20 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                 }
 
                                 if (wasTruncated) {
-                                    if (numRepeatedRequests < MAX_REPEATED_REQUESTS) {
+                                    boolean isResponderOlderVersion = Version.isNewVersion(Version.VERSION, responderVersion);
+                                    if (isResponderOlderVersion) {
+                                        log.info("The responder's version is older than hours. " +
+                                                "We need to include the hashes from our historical store (since {}) " +
+                                                "to the next request.", responderVersion);
+                                        UserThread.runAfter(() -> requestData(nodeAddress, remainingNodeAddresses, Optional.of(responderVersion)), 2);
+                                    }
+
+                                    else if (numRepeatedRequests < MAX_REPEATED_REQUESTS) {
                                         // If we had allDataReceived already set to true but get a response with truncated flag,
                                         // we still repeat the request to that node for higher redundancy. Otherwise, one seed node
                                         // providing incomplete data would stop others to fill the gaps.
                                         log.info("DataResponse did not contain all data, so we repeat request until we got all data");
-                                        UserThread.runAfter(() -> requestData(nodeAddress, remainingNodeAddresses), 2);
+                                        UserThread.runAfter(() -> requestData(nodeAddress, remainingNodeAddresses, Optional.of(responderVersion)), 2);
                                     } else if (!allDataReceived) {
                                         allDataReceived = true;
                                         log.warn("\n#################################################################\n" +
@@ -398,7 +408,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                                             "We will try requestDataFromPeers again.");
                                     NodeAddress nextCandidate = remainingNodeAddresses.get(0);
                                     remainingNodeAddresses.remove(nextCandidate);
-                                    requestData(nextCandidate, remainingNodeAddresses);
+                                    requestData(nextCandidate, remainingNodeAddresses, Optional.empty());
                                 } else if (handlerMap.isEmpty()) {
                                     // If not other connection attempts are in the handlerMap we assume that no seed
                                     // nodes are available.
@@ -455,7 +465,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
         if (!list.isEmpty()) {
             NodeAddress nextCandidate = list.get(0);
             list.remove(nextCandidate);
-            requestData(nextCandidate, list);
+            requestData(nextCandidate, list, Optional.empty());
         }
     }
 
@@ -482,7 +492,7 @@ public class RequestDataManager implements MessageListener, ConnectionListener, 
                         if (!list.isEmpty()) {
                             NodeAddress nextCandidate = list.get(0);
                             list.remove(nextCandidate);
-                            requestData(nextCandidate, list);
+                            requestData(nextCandidate, list, Optional.empty());
                         }
                     },
                     RETRY_DELAY_SEC);
