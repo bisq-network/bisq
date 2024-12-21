@@ -5,8 +5,8 @@
    ```sh
    git clone https://github.com/bisq-network/bisq
    # if you intend to do testing on the latest release, you can clone the respective branch selectively, without downloading the whole repository
-   # for the 1.9.18 release, you would do it like this:
-   git clone --recurse-submodules --branch release/v1.9.18 https://github.com/bisq-network/bisq
+   # for the 1.9.3 release, you would do it like this:
+   git clone --recurse-submodules --branch release/v1.9.3 https://github.com/bisq-network/bisq
    cd bisq
    ```
 
@@ -33,18 +33,6 @@
 
    ```sh
    javac -version
-   ```
-
-   If you have multiple JDK versions installed, check which one Gradle will use, with:
-
-   ```sh
-   ./gradlew --version
-   ```
-
-   and if the version number on the JVM line is not a supported one, you can pick the correct JDK at runtime with this syntax (verify your system path):
-
-   ```sh
-   ./gradlew build -Dorg.gradle.java.home=/usr/lib/jvm/java-11-openjdk-amd64/
    ```
 
 If you do not have JDK 11 installed, check out scripts in the [scripts](../scripts) directory or download it manually from https://jdk.java.net/archive/.
