@@ -51,6 +51,7 @@ import com.google.common.base.Enums;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -100,7 +101,8 @@ public class GetInventoryRequestHandler implements MessageListener {
             // Data
             GetInventoryRequest getInventoryRequest = (GetInventoryRequest) networkEnvelope;
             Map<InventoryItem, Integer> dataObjects = new HashMap<>();
-            p2PDataStorage.getMapForDataResponse(getInventoryRequest.getVersion()).values().stream()
+            p2PDataStorage.getMapForDataResponse(getInventoryRequest.getVersion(), Collections.emptySet())
+                    .values().stream()
                     .map(e -> e.getClass().getSimpleName())
                     .forEach(className -> addClassNameToMap(dataObjects, className));
             p2PDataStorage.getMap().values().stream()

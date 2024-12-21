@@ -313,7 +313,8 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // The methods in HistoricalDataStoreService will return all historical data in that case.
         // mapForDataResponse contains the filtered by version data from HistoricalDataStoreService as well as all other
         // maps of the remaining appendOnlyDataStoreServices.
-        Map<ByteArray, PersistableNetworkPayload> mapForDataResponse = getMapForDataResponse(getDataRequest.getVersion());
+        Map<ByteArray, PersistableNetworkPayload> mapForDataResponse =
+                getMapForDataResponse(getDataRequest.getVersion(), excludedKeysAsByteArray);
 
         // Give a bit of tolerance for message overhead
         double maxSize = Connection.getMaxPermittedMessageSize() * 0.6;
@@ -392,14 +393,14 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return map;
     }
 
-    public Map<ByteArray, PersistableNetworkPayload> getMapForDataResponse(String requestersVersion) {
+    public Map<ByteArray, PersistableNetworkPayload> getMapForDataResponse(String requestersVersion, Set<P2PDataStorage.ByteArray> keysToExclude) {
         Map<ByteArray, PersistableNetworkPayload> map = new HashMap<>();
         appendOnlyDataStoreService.getServices()
                 .forEach(service -> {
                     Map<ByteArray, PersistableNetworkPayload> serviceMap;
                     if (service instanceof HistoricalDataStoreService) {
                         var historicalDataStoreService = (HistoricalDataStoreService<? extends PersistableNetworkPayloadStore>) service;
-                        serviceMap = historicalDataStoreService.getMapSinceVersion(requestersVersion);
+                        serviceMap = historicalDataStoreService.getMapSinceVersion(requestersVersion, keysToExclude);
                     } else {
                         serviceMap = service.getMap();
                     }

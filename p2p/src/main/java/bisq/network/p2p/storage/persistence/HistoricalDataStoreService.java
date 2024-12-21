@@ -30,7 +30,9 @@ import java.io.File;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,7 +64,8 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
 
     // We give back a map of our live map and all historical maps newer than the requested version.
     // If requestersVersion is null we return all historical data.
-    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMapSinceVersion(String requestersVersion) {
+    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMapSinceVersion(String requestersVersion,
+                                                                                       Set<P2PDataStorage.ByteArray> keysToExclude) {
         // We add all our live data
         Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> result = new HashMap<>(store.getMap());
 
@@ -90,9 +93,15 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
                 .map(e -> e.getValue().getMap())
                 .forEach(result::putAll);
 
+        // Exclude items client has already
+        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> filteredResult = result.entrySet()
+                .stream()
+                .filter(hashAndItem -> !keysToExclude.contains(hashAndItem.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
         log.info("We found {} entries since requesters version {}",
-                result.size(), requestersVersion);
-        return result;
+                filteredResult.size(), requestersVersion);
+        return filteredResult;
     }
 
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMapOfLiveData() {
