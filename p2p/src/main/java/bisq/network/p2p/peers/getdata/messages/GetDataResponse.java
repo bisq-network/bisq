@@ -59,6 +59,9 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
     // Added at v1.9.6
     private final boolean wasTruncated;
 
+    // Added at v1.9.19
+    private final String version;
+
     public GetDataResponse(@NotNull Set<ProtectedStorageEntry> dataSet,
                            @NotNull Set<PersistableNetworkPayload> persistableNetworkPayloadSet,
                            int requestNonce,
@@ -70,7 +73,8 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
                 isGetUpdatedDataResponse,
                 wasTruncated,
                 Capabilities.app,
-                Version.getP2PMessageVersion());
+                Version.getP2PMessageVersion(),
+                Version.VERSION);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -83,7 +87,8 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
                             boolean isGetUpdatedDataResponse,
                             boolean wasTruncated,
                             @NotNull Capabilities supportedCapabilities,
-                            int messageVersion) {
+                            int messageVersion,
+                            String version) {
         super(messageVersion);
 
         this.dataSet = dataSet;
@@ -92,6 +97,7 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
         this.isGetUpdatedDataResponse = isGetUpdatedDataResponse;
         this.wasTruncated = wasTruncated;
         this.supportedCapabilities = supportedCapabilities;
+        this.version = version;
     }
 
     @Override
@@ -113,6 +119,7 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
                 .setRequestNonce(requestNonce)
                 .setIsGetUpdatedDataResponse(isGetUpdatedDataResponse)
                 .setWasTruncated(wasTruncated)
+                .setVersion(version)
                 .addAllSupportedCapabilities(Capabilities.toIntList(supportedCapabilities));
 
         protobuf.NetworkEnvelope proto = getNetworkEnvelopeBuilder()
@@ -139,7 +146,8 @@ public final class GetDataResponse extends NetworkEnvelope implements SupportedC
                 proto.getIsGetUpdatedDataResponse(),
                 wasTruncated,
                 Capabilities.fromIntList(proto.getSupportedCapabilitiesList()),
-                messageVersion);
+                messageVersion,
+                proto.getVersion());
     }
 
     @Override
