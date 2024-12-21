@@ -30,7 +30,11 @@ import java.io.File;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,7 +46,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public abstract class HistoricalDataStoreService<T extends PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> extends MapStoreService<T, PersistableNetworkPayload> {
-    private ImmutableMap<String, PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> storesByVersion;
+    private static final int MAX_ITEMS = 100;
+    protected ImmutableMap<String, PersistableNetworkPayloadStore<? extends PersistableNetworkPayload>> storesByVersion;
     // Cache to avoid that we have to recreate the historical data at each request
     private ImmutableMap<P2PDataStorage.ByteArray, PersistableNetworkPayload> allHistoricalPayloads;
 
@@ -62,37 +67,68 @@ public abstract class HistoricalDataStoreService<T extends PersistableNetworkPay
 
     // We give back a map of our live map and all historical maps newer than the requested version.
     // If requestersVersion is null we return all historical data.
-    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMapSinceVersion(String requestersVersion) {
-        // We add all our live data
-        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> result = new HashMap<>(store.getMap());
+    public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMapSinceVersion(String requestersVersion,
+                                                                                       Set<P2PDataStorage.ByteArray> keysToExclude,
+                                                                                       AtomicBoolean wasPersistableNetworkPayloadsTruncated) {
+        // Get live data stream
+        Stream<Map.Entry<P2PDataStorage.ByteArray, PersistableNetworkPayload>> liveDataStream =
+                store.getMap().entrySet().stream();
+
+
+        if (requestersVersion == null) {
+            log.warn("The requester did not send a version but the field was added in v1.4.0. " +
+                    "Returning capped live data (" + MAX_ITEMS + " items).");
+
+            return liveDataStream
+                    .limit(MAX_ITEMS)
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        }
+
+        boolean isRequesterVersionNewer = Version.isNewVersion(requestersVersion, Version.VERSION);
+        if (isRequesterVersionNewer) {
+            log.warn("The requester's version is newer than ours. Returning capped live data (" +
+                    MAX_ITEMS + " items).");
+
+            var numberOfLiveData = store.getMap().size();
+            if (numberOfLiveData > MAX_ITEMS) {
+                wasPersistableNetworkPayloadsTruncated.set(true);
+            }
+
+            return liveDataStream
+                    .limit(MAX_ITEMS)
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        }
 
         // If we have a store with a newer version than the requesters version we will add those as well.
-        storesByVersion.entrySet().stream()
-                .filter(entry -> {
-                    // Old nodes not sending the version will get delivered all data
-                    if (requestersVersion == null) {
-                        log.info("The requester did not send a version. This is expected for not updated nodes.");
-                        return true;
-                    }
+        Stream<Map.Entry<P2PDataStorage.ByteArray, PersistableNetworkPayload>> entryStream =
+                storesByVersion.entrySet().stream()
+                        .filter(entry -> {
+                            // Only add data if the requesters version is older then
+                            // the version of the particular store.
+                            String storeVersion = entry.getKey();
+                            boolean newVersion = Version.isNewVersion(storeVersion, requestersVersion);
+                            String details = newVersion ?
+                                    "As our historical store is a newer version we add the data to our result map." :
+                                    "As the requester version is not older as our historical store we do not " +
+                                            "add the data to the result map.";
+                            log.trace("The requester had version {}. Our historical data store has version {}.\n{}",
+                                    requestersVersion, storeVersion, details);
+                            return newVersion;
+                        })
+                        .map(e -> e.getValue().getMap())
+                        .flatMap(dataMap -> dataMap.entrySet().stream());
 
-                    // Otherwise we only add data if the requesters version is older then
-                    // the version of the particular store.
-                    String storeVersion = entry.getKey();
-                    boolean newVersion = Version.isNewVersion(storeVersion, requestersVersion);
-                    String details = newVersion ?
-                            "As our historical store is a newer version we add the data to our result map." :
-                            "As the requester version is not older as our historical store we do not " +
-                                    "add the data to the result map.";
-                    log.trace("The requester had version {}. Our historical data store has version {}.\n{}",
-                            requestersVersion, storeVersion, details);
-                    return newVersion;
-                })
-                .map(e -> e.getValue().getMap())
-                .forEach(result::putAll);
+        Stream<Map.Entry<P2PDataStorage.ByteArray, PersistableNetworkPayload>> allDataStream =
+                Stream.concat(liveDataStream, entryStream);
+
+        // Exclude items client has already
+        Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> filteredResult = allDataStream
+                .filter(hashAndItem -> !keysToExclude.contains(hashAndItem.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         log.info("We found {} entries since requesters version {}",
-                result.size(), requestersVersion);
-        return result;
+                filteredResult.size(), requestersVersion);
+        return filteredResult;
     }
 
     public Map<P2PDataStorage.ByteArray, PersistableNetworkPayload> getMapOfLiveData() {
