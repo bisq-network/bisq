@@ -43,6 +43,8 @@ public class DisputeAgentLookupMap {
             case "d7m3j3u4jo2yuymgvxisklpitd3n5xbsnnpyz2mjh6bl6gmj5rjdxead.onion:9999":
             case "6c4cim7h7t3bm4bnchbf727qrhdfrfr6lhod25wjtizm2sifpkktvwad.onion:9999": //old
                 return "pazza83";
+            case "5wmuzi76l4ogbdh6ahvdafzlebk4c3sp3q5njhz5h5qa5fwbalexa7id.onion:9999":
+                return "suddenwhipvapor";
             default:
                 log.warn("No user name for dispute agent with address {} found.", fullAddress);
                 return Res.get("shared.na");
