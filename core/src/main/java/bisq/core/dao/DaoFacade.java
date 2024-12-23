@@ -37,6 +37,7 @@ import bisq.core.dao.governance.myvote.MyVoteListService;
 import bisq.core.dao.governance.param.Param;
 import bisq.core.dao.governance.period.CycleService;
 import bisq.core.dao.governance.period.PeriodService;
+import bisq.core.dao.governance.proposal.IssuanceProposal;
 import bisq.core.dao.governance.proposal.MyProposalListService;
 import bisq.core.dao.governance.proposal.ProposalConsensus;
 import bisq.core.dao.governance.proposal.ProposalListPresentation;
@@ -66,6 +67,7 @@ import bisq.core.dao.state.model.governance.Ballot;
 import bisq.core.dao.state.model.governance.BondedRoleType;
 import bisq.core.dao.state.model.governance.Cycle;
 import bisq.core.dao.state.model.governance.DaoPhase;
+import bisq.core.dao.state.model.governance.EvaluatedProposal;
 import bisq.core.dao.state.model.governance.IssuanceType;
 import bisq.core.dao.state.model.governance.Proposal;
 import bisq.core.dao.state.model.governance.Role;
@@ -95,7 +97,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 
-import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -731,8 +732,8 @@ public class DaoFacade implements DaoSetupService {
         daoStateStorageService.resyncDaoStateFromGenesis(resultHandler);
     }
 
-    public void resyncDaoStateFromResources(File storageDir) throws IOException {
-        daoStateStorageService.resyncDaoStateFromResources(storageDir);
+    public void removeAndBackupAllDaoData() throws IOException {
+        daoStateStorageService.removeAndBackupAllDaoData();
     }
 
     public boolean isMyRole(Role role) {
@@ -805,5 +806,15 @@ public class DaoFacade implements DaoSetupService {
 
     public boolean isParseBlockChainComplete() {
         return daoStateService.isParseBlockChainComplete();
+    }
+
+    public long getIssuanceForCycle(Cycle cycle) {
+        return daoStateService.getEvaluatedProposalList().stream()
+                .filter(EvaluatedProposal::isAccepted)
+                .filter(evaluatedProposal -> cycleService.isTxInCycle(cycle, evaluatedProposal.getProposal().getTxId()))
+                .filter(e -> e.getProposal() instanceof IssuanceProposal)
+                .map(e -> (IssuanceProposal) e.getProposal())
+                .mapToLong(e -> e.getRequestedBsq().value)
+                .sum();
     }
 }

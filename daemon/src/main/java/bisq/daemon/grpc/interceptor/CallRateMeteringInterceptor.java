@@ -103,8 +103,8 @@ public final class CallRateMeteringInterceptor implements ServerInterceptor {
 
     private Optional<Map.Entry<String, GrpcCallRateMeter>> getRateMeterKV(ServerCall<?, ?> serverCall) {
         String rateMeterKey = getRateMeterKey(serverCall);
-        return serviceCallRateMeters.entrySet().stream()
-                .filter((e) -> e.getKey().equals(rateMeterKey)).findFirst();
+        return Optional.ofNullable(serviceCallRateMeters.get(rateMeterKey))
+                .map(meter -> Map.entry(rateMeterKey, meter));
     }
 
     private String getRateMeterKey(ServerCall<?, ?> serverCall) {

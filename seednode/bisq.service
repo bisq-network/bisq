@@ -2,7 +2,7 @@
 
 [Unit]
 Description=Bisq Node
-After=bitcoin.service
+After=network.target
 #Requires=bitcoin.service
 #BindsTo=bitcoin.service
 
@@ -10,8 +10,9 @@ After=bitcoin.service
 SyslogIdentifier=bisq
 EnvironmentFile=/etc/default/bisq.env
 
-ExecStart=__BISQ_HOME__/__BISQ_REPO_NAME__/${BISQ_ENTRYPOINT} \
+ExecStart=/bin/bash __BISQ_HOME__/__BISQ_REPO_NAME__/${BISQ_ENTRYPOINT} \
           --fullDaoNode=${BISQ_DAO_FULLNODE} \
+          --isBmFullNode=${BISQ_DAO_FULLNODE} \
           --userDataDir=${BISQ_HOME} \
           --appName=${BISQ_APP_NAME} \
           --baseCurrencyNetwork=${BISQ_BASE_CURRENCY} \
@@ -28,11 +29,13 @@ ExecStart=__BISQ_HOME__/__BISQ_REPO_NAME__/${BISQ_ENTRYPOINT} \
           --dumpBlockchainData=${BISQ_DUMP_BLOCKCHAIN} \
           --dumpStatistics=${BISQ_DUMP_STATISTICS} \
           --torControlPort=${BISQ_EXTERNAL_TOR_PORT} \
+          --torControlUseSafeCookieAuth=${BISQ_EXTERNAL_TOR_CONTROL_USE_COOKIE} \
+          --torControlCookieFile=${BISQ_EXTERNAL_TOR_CONTROL_COOKIE_FILE} \
 
 ExecStop=/bin/kill ${MAINPID} ; sleep 5
 Restart=on-failure
 
-ExecStartPre=+/bin/bash -c "if [ $BISQ_DUMP_BLOCKCHAIN = true ];then mount -t tmpfs none -o size=2000M,uid=bisq,gid=bisq $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/db/json;else true;fi"
+ExecStartPre=+/bin/bash -c "if [ $BISQ_DUMP_BLOCKCHAIN = true ];then mkdir -p $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/db/json && mount -t tmpfs none -o size=8000M,uid=bisq,gid=bisq $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/db/json;else true;fi"
 ExecStopPost=+/bin/bash -c "if [ $BISQ_DUMP_BLOCKCHAIN = true ];then umount $BISQ_HOME/$BISQ_APP_NAME/$BISQ_BASE_CURRENCY/db/json;else true;fi"
 
 User=bisq

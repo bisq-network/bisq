@@ -430,13 +430,10 @@ public class MainView extends InitializableView<StackPane, MainViewModel>
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public void onDaoStateHashesChanged() {
-    }
-
-    @Override
-    public void onCheckpointFail() {
+    public void onCheckpointFailed() {
         new Popup().attention(Res.get("dao.monitor.daoState.checkpoint.popup"))
                 .useShutDownButton()
+                .hideCloseButton()
                 .show();
     }
 

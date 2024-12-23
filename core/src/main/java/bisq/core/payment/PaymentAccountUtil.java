@@ -216,6 +216,8 @@ public class PaymentAccountUtil {
                 return VerseAccount.SUPPORTED_CURRENCIES;
             case MERCADO_PAGO_ID:
                 return MercadoPagoAccount.SUPPORTED_CURRENCIES();
+            case SBP_ID:
+                return SbpAccount.SUPPORTED_CURRENCIES;
             default:
                 return Collections.emptyList();
         }

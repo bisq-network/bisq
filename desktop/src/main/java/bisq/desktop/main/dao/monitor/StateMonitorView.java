@@ -65,8 +65,6 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
-import java.io.File;
-
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
@@ -83,10 +81,9 @@ public abstract class StateMonitorView<StH extends StateHash,
     protected final CycleService cycleService;
     protected final PeriodService periodService;
     protected final Set<NodeAddress> seedNodeAddresses;
-    private final File storageDir;
 
     protected TextField statusTextField;
-    protected Button resyncButton;
+    protected Button resyncFromResourcesButton;
     protected TableView<BLI> tableView;
     protected TableView<CLI> conflictTableView;
 
@@ -110,14 +107,12 @@ public abstract class StateMonitorView<StH extends StateHash,
                                DaoFacade daoFacade,
                                CycleService cycleService,
                                PeriodService periodService,
-                               SeedNodeRepository seedNodeRepository,
-                               File storageDir) {
+                               SeedNodeRepository seedNodeRepository) {
         this.daoStateService = daoStateService;
         this.daoFacade = daoFacade;
         this.cycleService = cycleService;
         this.periodService = periodService;
         this.seedNodeAddresses = new HashSet<>(seedNodeRepository.getSeedNodeAddresses());
-        this.storageDir = storageDir;
     }
 
     @Override
@@ -135,12 +130,12 @@ public abstract class StateMonitorView<StH extends StateHash,
 
         daoStateService.addDaoStateListener(this);
 
-        resyncButton.visibleProperty().bind(isInConflictWithSeedNode
+        resyncFromResourcesButton.visibleProperty().bind(isInConflictWithSeedNode
                 .or(isDaoStateBlockChainNotConnecting));
-        resyncButton.managedProperty().bind(isInConflictWithSeedNode
+        resyncFromResourcesButton.managedProperty().bind(isInConflictWithSeedNode
                 .or(isDaoStateBlockChainNotConnecting));
 
-        resyncButton.setOnAction(ev -> resyncDaoState());
+        resyncFromResourcesButton.setOnAction(ev -> resyncFromResources());
 
         if (daoStateService.isParseBlockChainComplete()) {
             onDataUpdate();
@@ -159,10 +154,10 @@ public abstract class StateMonitorView<StH extends StateHash,
 
         daoStateService.removeDaoStateListener(this);
 
-        resyncButton.visibleProperty().unbind();
-        resyncButton.managedProperty().unbind();
+        resyncFromResourcesButton.visibleProperty().unbind();
+        resyncFromResourcesButton.managedProperty().unbind();
 
-        resyncButton.setOnAction(null);
+        resyncFromResourcesButton.setOnAction(null);
     }
 
 
@@ -284,9 +279,9 @@ public abstract class StateMonitorView<StH extends StateHash,
         GUIUtil.setFitToRowsForTableView(tableView, 25, 28, 2, 5);
     }
 
-    private void resyncDaoState() {
+    private void resyncFromResources() {
         try {
-            daoFacade.resyncDaoStateFromResources(storageDir);
+            daoFacade.removeAndBackupAllDaoData();
             new Popup().attention(Res.get("setting.preferences.dao.resyncFromResources.popup"))
                     .useShutDownButton()
                     .hideCloseButton()

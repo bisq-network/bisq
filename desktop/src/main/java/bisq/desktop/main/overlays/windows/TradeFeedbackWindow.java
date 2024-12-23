@@ -45,7 +45,7 @@ public class TradeFeedbackWindow extends Overlay<TradeFeedbackWindow> {
     @Override
     public void show() {
         headLine(Res.get("tradeFeedbackWindow.title"));
-        message(Res.get("tradeFeedbackWindow.msg.part1"));
+        message(Res.get("tradeFeedbackWindow.msg.feedback"));
         hideCloseButton();
         actionButtonText(Res.get("shared.close"));
 
@@ -56,25 +56,12 @@ public class TradeFeedbackWindow extends Overlay<TradeFeedbackWindow> {
     protected void addMessage() {
         super.addMessage();
 
-        HyperlinkWithIcon survey = addHyperlinkWithIcon(gridPane, ++rowIndex, "https://bisq.network/survey",
-                "https://bisq.network/survey");
-        GridPane.setMargin(survey, new Insets(-6, 0, 10, 0));
-
-        AutoTooltipLabel messageLabel2 = new AutoTooltipLabel(Res.get("tradeFeedbackWindow.msg.part2"));
-        messageLabel2.setMouseTransparent(true);
-        messageLabel2.setWrapText(true);
-        GridPane.setHalignment(messageLabel2, HPos.LEFT);
-        GridPane.setHgrow(messageLabel2, Priority.ALWAYS);
-        GridPane.setRowIndex(messageLabel2, ++rowIndex);
-        GridPane.setColumnIndex(messageLabel2, 0);
-        GridPane.setColumnSpan(messageLabel2, 2);
-        gridPane.getChildren().add(messageLabel2);
 
         HyperlinkWithIcon forum = addHyperlinkWithIcon(gridPane, ++rowIndex, "https://bisq.community",
                 "https://bisq.community", 40);
         GridPane.setMargin(forum, new Insets(-6, 0, 10, 0));
 
-        AutoTooltipLabel messageLabel3 = new AutoTooltipLabel(Res.get("tradeFeedbackWindow.msg.part3"));
+        AutoTooltipLabel messageLabel3 = new AutoTooltipLabel(Res.get("tradeFeedbackWindow.msg.thanks"));
         messageLabel3.setMouseTransparent(true);
         messageLabel3.setWrapText(true);
         GridPane.setHalignment(messageLabel3, HPos.LEFT);

@@ -42,7 +42,7 @@ public class DaoStateSnapshotServiceTest {
                 null,
                 null,
                 null,
-                null);
+                true);
     }
 
     @Test

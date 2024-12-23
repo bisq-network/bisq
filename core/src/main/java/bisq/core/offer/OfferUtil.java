@@ -30,6 +30,8 @@ import bisq.core.offer.bisq_v1.OfferPayload;
 import bisq.core.payment.CashByMailAccount;
 import bisq.core.payment.F2FAccount;
 import bisq.core.payment.PaymentAccount;
+import bisq.core.payment.SameBankAccount;
+import bisq.core.payment.SpecificBanksAccount;
 import bisq.core.payment.payload.PaymentMethod;
 import bisq.core.provider.fee.FeeService;
 import bisq.core.provider.price.MarketPrice;
@@ -60,6 +62,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -389,7 +392,8 @@ public class OfferUtil {
     public void validateOfferData(double buyerSecurityDeposit,
                                   PaymentAccount paymentAccount,
                                   String currencyCode,
-                                  Coin makerFeeAsCoin) {
+                                  Coin makerFeeAsCoin,
+                                  List<String> acceptedBanks) {
         validateBasicOfferData(paymentAccount.getPaymentMethod(), currencyCode);
         checkNotNull(makerFeeAsCoin, "makerFee must not be null");
         checkArgument(buyerSecurityDeposit <= getMaxBuyerSecurityDepositAsPercent(),
@@ -398,6 +402,9 @@ public class OfferUtil {
         checkArgument(buyerSecurityDeposit >= getMinBuyerSecurityDepositAsPercent(),
                 "securityDeposit must not be less than " +
                         getMinBuyerSecurityDepositAsPercent());
+        if ((paymentAccount instanceof SameBankAccount) || (paymentAccount instanceof SpecificBanksAccount) ) {
+            checkArgument(!acceptedBanks.contains(null), "acceptedBanks must not be null for SAME_BANK or SPECIFIC_BANKS accounts");
+        }
     }
 
     public void validateBasicOfferData(PaymentMethod paymentMethod, String currencyCode) {

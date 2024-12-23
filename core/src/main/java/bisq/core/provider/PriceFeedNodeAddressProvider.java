@@ -34,9 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
-public class ProvidersRepository {
+public class PriceFeedNodeAddressProvider {
     public static final List<String> DEFAULT_NODES = Arrays.asList(
-            "http://devinpndvdwll4wiqcyq5e7itezmarg7rzicrvf6brzkwxdm374kmmyd.onion/", // @devinbileck
             "http://ro7nv73awqs3ga2qtqeqawrjpbxwarsazznszvr6whv7tes5ehffopid.onion/", // @alexej996
             "http://runbtcpn7gmbj5rgqeyfyvepqokrijem6rbw7o5wgqbguimuoxrmcdyd.onion"   // @runbtc
     );
@@ -59,9 +58,9 @@ public class ProvidersRepository {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     @Inject
-    public ProvidersRepository(Config config,
-                               @Named(Config.PROVIDERS) List<String> providers,
-                               @Named(Config.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P) {
+    public PriceFeedNodeAddressProvider(Config config,
+                                        @Named(Config.PROVIDERS) List<String> providers,
+                                        @Named(Config.USE_LOCALHOST_FOR_P2P) boolean useLocalhostForP2P) {
 
         this.config = config;
         this.providersFromProgramArgs = providers;

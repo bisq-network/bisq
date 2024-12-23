@@ -49,4 +49,14 @@ public class PaymentAccountFilter implements NetworkPayload {
                 proto.getGetMethodName(),
                 proto.getValue());
     }
+
+    @Override
+    public String toString() {
+        return "PaymentAccountFilter{" +
+                "paymentMethodId='" + paymentMethodId + '\'' +
+                ", getMethodName='" + getMethodName + '\'' +
+                /*  ", value='" + value + '\'' +*/
+                ", value='" + "[HIDDEN]" + '\'' +
+                '}';
+    }
 }

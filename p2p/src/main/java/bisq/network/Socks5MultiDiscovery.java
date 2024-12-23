@@ -20,8 +20,6 @@ package bisq.network;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.net.discovery.PeerDiscovery;
 import org.bitcoinj.net.discovery.PeerDiscoveryException;
-import org.bitcoinj.net.discovery.SeedPeers;
-import org.bitcoinj.params.MainNetParams;
 
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 
@@ -59,13 +57,9 @@ public class Socks5MultiDiscovery implements PeerDiscovery {
      *               SOCKS5_DISCOVER_ALL
      */
     public Socks5MultiDiscovery(Socks5Proxy proxy, NetworkParameters params, int mode) {
-        if ((mode & SOCKS5_DISCOVER_ONION) != 0)
-            discoveryList.add(new Socks5SeedOnionDiscovery(proxy, params));
-
-        // Testnet has no addrSeeds so SeedPeers is not supported (would throw a nullPointer)
-        if ((mode & SOCKS5_DISCOVER_ADDR) != 0 && params == MainNetParams.get())
-            // note:  SeedPeers does not perform any network operations, so does not use proxy.
-            discoveryList.add(new SeedPeers(params));
+        if ((mode & SOCKS5_DISCOVER_ONION) != 0 || (mode & SOCKS5_DISCOVER_ADDR) != 0) {
+            discoveryList.add(new BitcoinCoreSeedListDiscovery(mode));
+        }
 
         if ((mode & SOCKS5_DISCOVER_DNS) != 0)
             discoveryList.add(new Socks5DnsDiscovery(proxy, params));
@@ -81,11 +75,11 @@ public class Socks5MultiDiscovery implements PeerDiscovery {
             list.addAll(Arrays.asList(discovery.getPeers(services, timeoutValue, timeoutUnit)));
         }
 
-        return list.toArray(new InetSocketAddress[list.size()]);
+        return list.toArray(new InetSocketAddress[0]);
     }
 
     @Override
     public void shutdown() {
-        //TODO should we add a DnsLookupTor.shutdown() ?
+        discoveryList.forEach(PeerDiscovery::shutdown);
     }
 }

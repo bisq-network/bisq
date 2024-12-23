@@ -92,6 +92,7 @@ echo %1 | ncat -w 1 127.0.0.1 5123
  - `--genesisBlockHeight`: If set it overrides the hard coded block height of the genesis tx. Set it to your local genesis tx height.
  - `--genesisTxId`: If set it overrides the hard coded genesis tx ID. Set it to your local genesis tx ID.
  - `--fullDaoNode`: If true it enables full DAO node mode (in contrast to default lite node mode). At least one seed node must be running as a full DAO node to support other lite nodes.
+- `--isBmFullNode`: If true it enables full Burningman node mode which provides accounting data to lite nodes.
  - `--rpcUser`: RPC user as defined in bitcoin.conf
  - `--rpcPassword`: RPC pw as defined in bitcoin.conf
  - `--rpcPort`: RPC port. For regtest 18443
@@ -104,7 +105,7 @@ If you want to run any instance in DAO mode, use the following program arguments
 
 Full node mode:
 
-`--daoActivated=true --genesisBlockHeight=111 --genesisTxId=30af0050040befd8af25068cc697e418e09c2d8ebd8d411d2240591b9ec203cf --baseCurrencyNetwork=BTC_REGTEST --useDevPrivilegeKeys=true --useLocalhostForP2P=true --nodePort=7777 --appName=bisq-BTC_REGTEST_Alice_dao --fullDaoNode=true --rpcUser=YOUR_USER_NAME --rpcPassword=YOUR_PW --rpcPort=18443 --rpcBlockNotificationPort=5120`
+`--daoActivated=true --genesisBlockHeight=111 --genesisTxId=30af0050040befd8af25068cc697e418e09c2d8ebd8d411d2240591b9ec203cf --baseCurrencyNetwork=BTC_REGTEST --useDevPrivilegeKeys=true --useLocalhostForP2P=true --nodePort=7777 --appName=bisq-BTC_REGTEST_Alice_dao --fullDaoNode=true --isBmFullNode=true --rpcUser=YOUR_USER_NAME --rpcPassword=YOUR_PW --rpcPort=18443 --rpcBlockNotificationPort=5120`
 
 Lite node mode:
 

@@ -19,6 +19,7 @@ package bisq.core.account.witness;
 
 import bisq.core.account.sign.SignedWitness;
 import bisq.core.account.sign.SignedWitnessService;
+import bisq.core.crypto.LowRSigningKey;
 import bisq.core.filter.FilterManager;
 import bisq.core.locale.CountryUtil;
 import bisq.core.offer.bisq_v1.OfferPayload;
@@ -236,7 +237,7 @@ public class AccountAgeWitnessServiceTest {
         assertEquals(2, items.size());
 
         // Setup a mocked arbitrator key
-        ECKey arbitratorKey = mock(ECKey.class);
+        ECKey arbitratorKey = mock(LowRSigningKey.class);
         when(arbitratorKey.signMessage(any())).thenReturn("1");
         when(arbitratorKey.signMessage(any())).thenReturn("2");
         when(arbitratorKey.getPubKey()).thenReturn("1".getBytes());
@@ -250,14 +251,14 @@ public class AccountAgeWitnessServiceTest {
 
         // Check that both accountAgeWitnesses are signed
         SignedWitness foundBuyerSignedWitness = signedWitnessService.getSignedWitnessSetByOwnerPubKey(
-                buyerPubKeyRing.getSignaturePubKeyBytes()).stream()
+                        buyerPubKeyRing.getSignaturePubKeyBytes()).stream()
                 .findFirst()
                 .orElse(null);
         assert foundBuyerSignedWitness != null;
         assertEquals(Utilities.bytesAsHexString(foundBuyerSignedWitness.getAccountAgeWitnessHash()),
                 Utilities.bytesAsHexString(buyerAccountAgeWitness.getHash()));
         SignedWitness foundSellerSignedWitness = signedWitnessService.getSignedWitnessSetByOwnerPubKey(
-                sellerPubKeyRing.getSignaturePubKeyBytes()).stream()
+                        sellerPubKeyRing.getSignaturePubKeyBytes()).stream()
                 .findFirst()
                 .orElse(null);
         assert foundSellerSignedWitness != null;

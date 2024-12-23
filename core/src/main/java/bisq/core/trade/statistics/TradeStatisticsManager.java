@@ -33,11 +33,14 @@ import bisq.network.p2p.storage.persistence.AppendOnlyDataStoreService;
 
 import bisq.common.config.Config;
 import bisq.common.file.JsonFileManager;
+import bisq.common.util.RangeUtils;
 
 import com.google.inject.Inject;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
+
+import com.google.common.collect.Range;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
@@ -133,6 +136,13 @@ public class TradeStatisticsManager {
 
     public ObservableSet<TradeStatistics3> getObservableTradeStatisticsSet() {
         return observableTradeStatisticsSet;
+    }
+
+    public List<TradeStatistics3> getTradeStatisticsList(long dateStart, long dateEnd) {
+        return new ArrayList<>(RangeUtils.subSet(navigableTradeStatisticsSet)
+                .withKey(TradeStatistics3::getDateAsLong)
+                .overRange(Range.openClosed(Math.min(dateStart, dateEnd), dateEnd))
+                .descendingSet());
     }
 
     private void maybeDumpStatistics() {

@@ -44,7 +44,6 @@ import bisq.core.support.dispute.mediation.MediationManager;
 import bisq.core.support.dispute.refund.RefundManager;
 import bisq.core.trade.TradeManager;
 import bisq.core.trade.bisq_v1.TradeTxException;
-import bisq.core.user.BlockChainExplorer;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
 import bisq.core.util.FormattingUtils;
@@ -201,7 +200,7 @@ public class BisqSetup {
     private Runnable qubesOSInfoHandler;
     @Setter
     @Nullable
-    private Runnable daoRequiresRestartHandler;
+    private Runnable resyncDaoStateFromResourcesHandler;
     @Setter
     @Nullable
     private Runnable torAddressUpgradeHandler;
@@ -493,7 +492,7 @@ public class BisqSetup {
                 voteResultExceptionHandler,
                 revolutAccountsUpdateHandler,
                 amazonGiftCardAccountsUpdateHandler,
-                daoRequiresRestartHandler);
+                resyncDaoStateFromResourcesHandler);
 
         if (walletsSetup.downloadPercentageProperty().get() == 1) {
             checkForLockedUpFunds();
@@ -788,6 +787,10 @@ public class BisqSetup {
     private void maybeUpgradeBsqExplorerUrl() {
         // if wiz BSQ explorer selected, replace with 1st explorer in the list of available.
         if (preferences.getBsqBlockChainExplorer().name.equalsIgnoreCase("mempool.space (@wiz)") &&
+                preferences.getBsqBlockChainExplorers().size() > 0) {
+            preferences.setBsqBlockChainExplorer(preferences.getBsqBlockChainExplorers().get(0));
+        }
+        if (preferences.getBsqBlockChainExplorer().name.equalsIgnoreCase("bisq.mempool.emzy.de (@emzy)") &&
                 preferences.getBsqBlockChainExplorers().size() > 0) {
             preferences.setBsqBlockChainExplorer(preferences.getBsqBlockChainExplorers().get(0));
         }

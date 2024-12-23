@@ -26,6 +26,7 @@ import bisq.core.btc.model.PreparedDepositTxAndMakerInputs;
 import bisq.core.btc.model.RawTransactionInput;
 import bisq.core.btc.setup.WalletConfig;
 import bisq.core.btc.setup.WalletsSetup;
+import bisq.core.crypto.LowRSigningKey;
 import bisq.core.locale.Res;
 import bisq.core.user.Preferences;
 
@@ -744,7 +745,7 @@ public class TradeWalletService {
             checkNotNull(aesKey);
         }
 
-        ECKey.ECDSASignature mySignature = myMultiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
+        ECKey.ECDSASignature mySignature = LowRSigningKey.from(myMultiSigKeyPair).sign(sigHash, aesKey);
         WalletService.printTx("delayedPayoutTx for sig creation", delayedPayoutTx);
         WalletService.verifyTransaction(delayedPayoutTx);
         return mySignature.encodeToDER();
@@ -841,7 +842,7 @@ public class TradeWalletService {
         if (multiSigKeyPair.isEncrypted()) {
             checkNotNull(aesKey);
         }
-        ECKey.ECDSASignature buyerSignature = multiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
+        ECKey.ECDSASignature buyerSignature = LowRSigningKey.from(multiSigKeyPair).sign(sigHash, aesKey);
         WalletService.printTx("prepared payoutTx", preparedPayoutTx);
         WalletService.verifyTransaction(preparedPayoutTx);
         return buyerSignature.encodeToDER();
@@ -893,7 +894,7 @@ public class TradeWalletService {
         if (multiSigKeyPair.isEncrypted()) {
             checkNotNull(aesKey);
         }
-        ECKey.ECDSASignature sellerSignature = multiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
+        ECKey.ECDSASignature sellerSignature = LowRSigningKey.from(multiSigKeyPair).sign(sigHash, aesKey);
         TransactionSignature buyerTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(buyerSignature),
                 Transaction.SigHash.ALL, false);
         TransactionSignature sellerTxSig = new TransactionSignature(sellerSignature, Transaction.SigHash.ALL, false);
@@ -948,7 +949,7 @@ public class TradeWalletService {
         if (myMultiSigKeyPair.isEncrypted()) {
             checkNotNull(aesKey);
         }
-        ECKey.ECDSASignature mySignature = myMultiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
+        ECKey.ECDSASignature mySignature = LowRSigningKey.from(myMultiSigKeyPair).sign(sigHash, aesKey);
         WalletService.printTx("prepared mediated payoutTx for sig creation", preparedPayoutTx);
         WalletService.verifyTransaction(preparedPayoutTx);
         return mySignature.encodeToDER();
@@ -1058,7 +1059,7 @@ public class TradeWalletService {
         if (tradersMultiSigKeyPair.isEncrypted()) {
             checkNotNull(aesKey);
         }
-        ECKey.ECDSASignature tradersSignature = tradersMultiSigKeyPair.sign(sigHash, aesKey).toCanonicalised();
+        ECKey.ECDSASignature tradersSignature = LowRSigningKey.from(tradersMultiSigKeyPair).sign(sigHash, aesKey);
         TransactionSignature tradersTxSig = new TransactionSignature(tradersSignature, Transaction.SigHash.ALL, false);
         TransactionSignature arbitratorTxSig = new TransactionSignature(ECKey.ECDSASignature.decodeFromDER(arbitratorSignature),
                 Transaction.SigHash.ALL, false);
@@ -1137,7 +1138,7 @@ public class TradeWalletService {
 
         ECKey myPrivateKey = ECKey.fromPrivate(Utils.HEX.decode(myPrivKeyAsHex));
         checkNotNull(myPrivateKey, "key must not be null");
-        ECKey.ECDSASignature myECDSASignature = myPrivateKey.sign(sigHash, aesKey).toCanonicalised();
+        ECKey.ECDSASignature myECDSASignature = LowRSigningKey.from(myPrivateKey).sign(sigHash, aesKey);
         TransactionSignature myTxSig = new TransactionSignature(myECDSASignature, Transaction.SigHash.ALL, false);
         return Utils.HEX.encode(myTxSig.encodeToBitcoin());
     }
@@ -1409,9 +1410,8 @@ public class TradeWalletService {
     private void signInput(Transaction transaction, TransactionInput input, int inputIndex) throws SigningException {
         checkNotNull(input.getConnectedOutput(), "input.getConnectedOutput() must not be null");
         Script scriptPubKey = input.getConnectedOutput().getScriptPubKey();
-        ECKey sigKey = input.getOutpoint().getConnectedKey(wallet);
-        checkNotNull(sigKey, "signInput: sigKey must not be null. input.getOutpoint()=" +
-                input.getOutpoint().toString());
+        ECKey sigKey = LowRSigningKey.from(input.getOutpoint().getConnectedKey(wallet));
+        checkNotNull(sigKey, "signInput: sigKey must not be null. input.getOutpoint()=%s", input.getOutpoint());
         if (sigKey.isEncrypted()) {
             checkNotNull(aesKey);
         }

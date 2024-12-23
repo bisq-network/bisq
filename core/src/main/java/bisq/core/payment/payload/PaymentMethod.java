@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -50,6 +51,9 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Static
     ///////////////////////////////////////////////////////////////////////////////////////////
+
+    // For sorting payment methods, we want names that contain only ASCII and Extended-ASCII to go *below* other languages
+    private static final Pattern ASCII_PATTERN = Pattern.compile("[\\x00-\\xFF]*");
 
     // time in blocks (average 10 min for one block confirmation
     private static final long DAY = TimeUnit.HOURS.toMillis(24);
@@ -124,6 +128,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static final String DOMESTIC_WIRE_TRANSFER_ID = "DOMESTIC_WIRE_TRANSFER";
     public static final String BSQ_SWAP_ID = "BSQ_SWAP";
     public static final String MERCADO_PAGO_ID = "MERCADO_PAGO";
+    public static final String SBP_ID = "SBP";
 
     // Cannot be deleted as it would break old trade history entries
     @Deprecated
@@ -188,6 +193,7 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
     public static PaymentMethod DOMESTIC_WIRE_TRANSFER;
     public static PaymentMethod BSQ_SWAP;
     public static PaymentMethod MERCADO_PAGO;
+    public static PaymentMethod SBP;
 
     // Cannot be deleted as it would break old trade history entries
     @Deprecated
@@ -275,6 +281,9 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
 
             // Thailand
             PROMPT_PAY = new PaymentMethod(PROMPT_PAY_ID, DAY, DEFAULT_TRADE_LIMIT_LOW_RISK),
+
+            // Russia
+            SBP = new PaymentMethod(SBP_ID, DAY, DEFAULT_TRADE_LIMIT_HIGH_RISK),
 
             // Altcoins
             BLOCK_CHAINS = new PaymentMethod(BLOCK_CHAINS_ID, DAY, DEFAULT_TRADE_LIMIT_VERY_LOW_RISK),
@@ -424,7 +433,14 @@ public final class PaymentMethod implements PersistablePayload, Comparable<Payme
 
     @Override
     public int compareTo(@NotNull PaymentMethod other) {
-        return Res.get(id).compareTo(Res.get(other.id));
+        // Not all accounts have translations into other languages, and when mixed with Latin they sort to the bottom.
+        // So we need some extra logic to get the Latin to sort separately underneath the non-Latin.
+        boolean isLatin = ASCII_PATTERN.matcher(Res.get(id)).matches();
+        boolean otherIsLatin = ASCII_PATTERN.matcher(Res.get(other.id)).matches();
+        if(isLatin == otherIsLatin)
+            return Res.get(id).compareTo(Res.get(other.id));
+        else
+            return isLatin ? 1 : -1;
     }
 
     public String getDisplayString() {

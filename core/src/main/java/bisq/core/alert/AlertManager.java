@@ -17,6 +17,7 @@
 
 package bisq.core.alert;
 
+import bisq.core.crypto.LowRSigningKey;
 import bisq.core.user.User;
 
 import bisq.network.p2p.P2PService;
@@ -160,7 +161,7 @@ public class AlertManager {
 
     private void signAndAddSignatureToAlertMessage(Alert alert) {
         String alertMessageAsHex = Utils.HEX.encode(alert.getMessage().getBytes(Charsets.UTF_8));
-        String signatureAsBase64 = alertSigningKey.signMessage(alertMessageAsHex);
+        String signatureAsBase64 = LowRSigningKey.from(alertSigningKey).signMessage(alertMessageAsHex);
         alert.setSigAndPubKey(signatureAsBase64, keyRing.getSignatureKeyPair().getPublic());
     }
 

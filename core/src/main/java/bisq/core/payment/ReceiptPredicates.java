@@ -58,6 +58,10 @@ class ReceiptPredicates {
         return (account instanceof BankAccount) && isSameOrSpecificBank;
     }
 
+    private boolean containsCaseInsensitive(String str, List<String> list){
+        return list.stream().anyMatch(x -> x.equalsIgnoreCase(str));
+    }
+
     boolean isMatchingBankId(Offer offer, PaymentAccount account) {
         final List<String> acceptedBanksForOffer = offer.getAcceptedBankIds();
         Preconditions.checkNotNull(acceptedBanksForOffer, "offer.getAcceptedBankIds() must not be null");
@@ -66,14 +70,14 @@ class ReceiptPredicates {
 
         if (account instanceof SpecificBanksAccount) {
             // check if we have a matching bank
-            boolean offerSideMatchesBank = (accountBankId != null) && acceptedBanksForOffer.contains(accountBankId);
+            boolean offerSideMatchesBank = (accountBankId != null) && containsCaseInsensitive(accountBankId, acceptedBanksForOffer);
             List<String> acceptedBanksForAccount = ((SpecificBanksAccount) account).getAcceptedBanks();
-            boolean paymentAccountSideMatchesBank = acceptedBanksForAccount.contains(offer.getBankId());
+            boolean paymentAccountSideMatchesBank = containsCaseInsensitive(offer.getBankId(), acceptedBanksForAccount);
 
             return offerSideMatchesBank && paymentAccountSideMatchesBank;
         } else {
             // national or same bank
-            return (accountBankId != null) && acceptedBanksForOffer.contains(accountBankId);
+            return (accountBankId != null) && containsCaseInsensitive(accountBankId, acceptedBanksForOffer);
         }
     }
 

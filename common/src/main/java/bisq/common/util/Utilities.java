@@ -63,7 +63,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -144,9 +143,9 @@ public class Utilities {
         return executor;
     }
 
-    public static void shutdownAndAwaitTermination(ExecutorService executor, long timeout, TimeUnit unit) {
+    public static boolean shutdownAndAwaitTermination(ExecutorService executor, long timeout, TimeUnit unit) {
         //noinspection UnstableApiUsage
-        MoreExecutors.shutdownAndAwaitTermination(executor, timeout, unit);
+        return MoreExecutors.shutdownAndAwaitTermination(executor, timeout, unit);
     }
 
     public static <V> FutureCallback<V> failureCallback(Consumer<Throwable> errorHandler) {

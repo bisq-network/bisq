@@ -18,6 +18,7 @@
 package bisq.core.dao;
 
 import bisq.core.btc.wallet.BsqWalletService;
+import bisq.core.crypto.LowRSigningKey;
 import bisq.core.dao.state.DaoStateService;
 import bisq.core.dao.state.model.blockchain.Tx;
 
@@ -76,7 +77,7 @@ public class SignVerifyService {
 
     public Optional<String> sign(String txId, String message) {
         byte[] pubKey = getPubKey(txId);
-        ECKey key = bsqWalletService.findKeyFromPubKey(pubKey);
+        ECKey key = LowRSigningKey.from(bsqWalletService.findKeyFromPubKey(pubKey));
         if (key == null)
             return Optional.empty();
 

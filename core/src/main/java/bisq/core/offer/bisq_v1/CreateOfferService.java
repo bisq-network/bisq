@@ -177,7 +177,8 @@ public class CreateOfferService {
                 buyerSecurityDepositAsDouble,
                 paymentAccount,
                 currencyCode,
-                makerFeeAsCoin);
+                makerFeeAsCoin,
+                acceptedBanks);
 
         OfferPayload offerPayload = new OfferPayload(offerId,
                 creationTime,

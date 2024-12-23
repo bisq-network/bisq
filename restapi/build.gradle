@@ -1,0 +1,44 @@
+plugins {
+    id 'bisq.application'
+    id 'bisq.gradle.app_start_plugin.AppStartPlugin'
+}
+
+mainClassName = 'bisq.restapi.RestApiMain'
+
+distTar.enabled = false
+
+dependencies {
+    implementation project(':common')
+    implementation project(':p2p')
+    implementation project(':core')
+    annotationProcessor libs.lombok
+    compileOnly libs.lombok
+    implementation libs.slf4j.api
+    implementation(libs.google.guice) {
+        exclude(module: 'guava')
+    }
+    implementation(libs.bitcoinj) {
+        exclude(module: 'bcprov-jdk15on')
+        exclude(module: 'guava')
+        exclude(module: 'jsr305')
+        exclude(module: 'okhttp')
+        exclude(module: 'okio')
+        exclude(module: 'slf4j-api')
+    }
+
+    implementation libs.google.guava
+    implementation libs.google.guice
+
+    implementation libs.glassfish.jaxb
+    implementation libs.bundles.jersey.libs
+    implementation libs.swagger
+
+    implementation libs.logback.core
+    implementation libs.logback.classic
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
+    implementation libs.slf4j.api
+
+    testAnnotationProcessor libs.lombok
+    testCompileOnly libs.lombok
+}

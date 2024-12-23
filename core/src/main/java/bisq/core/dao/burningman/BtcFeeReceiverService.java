@@ -27,7 +27,6 @@ import javax.inject.Singleton;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -69,7 +68,7 @@ public class BtcFeeReceiverService implements DaoStateListener {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public String getAddress() {
-        List<BurningManCandidate> activeBurningManCandidates = new ArrayList<>(burningManService.getActiveBurningManCandidates(currentChainHeight));
+        List<BurningManCandidate> activeBurningManCandidates = burningManService.getActiveBurningManCandidates(currentChainHeight);
         if (activeBurningManCandidates.isEmpty()) {
             // If there are no compensation requests (e.g. at dev testing) we fall back to the default address
             return burningManService.getLegacyBurningManAddress(currentChainHeight);
@@ -97,9 +96,7 @@ public class BtcFeeReceiverService implements DaoStateListener {
             // the burningManCandidates as we added for the legacy BM an entry at the end.
             return burningManService.getLegacyBurningManAddress(currentChainHeight);
         }
-        // For the fee selection we do not need to wait for activation date of the bugfix for
-        // the receiver address (https://github.com/bisq-network/bisq/issues/6699) as it has no impact on the trade protocol.
-        return activeBurningManCandidates.get(winnerIndex).getReceiverAddress(true)
+        return activeBurningManCandidates.get(winnerIndex).getReceiverAddress()
                 .orElse(burningManService.getLegacyBurningManAddress(currentChainHeight));
     }
 

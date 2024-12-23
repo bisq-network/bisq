@@ -1,4 +1,5 @@
 fullDaoNode=true
+isBmFullNode=true
 userDataDir=/bisq
 appName=bisq-seednode
 baseCurrencyNetwork=btc_mainnet

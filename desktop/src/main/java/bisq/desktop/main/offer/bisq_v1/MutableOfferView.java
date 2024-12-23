@@ -258,7 +258,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
 
             currencyComboBox.getSelectionModel().select(model.getTradeCurrency());
             paymentAccountsComboBox.setItems(getPaymentAccounts());
-            UserThread.execute(() -> paymentAccountsComboBox.getSelectionModel().select(model.getPaymentAccount()));
+            paymentAccountsComboBox.getSelectionModel().select(model.getPaymentAccount());
             onPaymentAccountsComboBoxSelected();
 
             balanceTextField.setTargetAmount(model.getDataModel().totalToPayAsCoinProperty().get());
@@ -809,7 +809,7 @@ public abstract class MutableOfferView<M extends MutableOfferViewModel<?>> exten
                                     .show(),
                             1);
                 } else {
-                    closeAndGoToOpenOffers();
+                    close();
                 }
             }
         };

@@ -26,7 +26,7 @@ import lombok.Getter;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class DaoStateHash extends StateHash {
-    // If we have built the hash by ourself opposed to that we got delivered the hash from seed nodes or resources
+    // If we have built the hash by ourselves opposed to that we got delivered the hash from seed nodes or resources
     private final boolean isSelfCreated;
 
     public DaoStateHash(int height, byte[] hash, boolean isSelfCreated) {

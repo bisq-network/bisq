@@ -58,6 +58,7 @@ import bisq.desktop.components.paymentmethods.RevolutForm;
 import bisq.desktop.components.paymentmethods.RtgsForm;
 import bisq.desktop.components.paymentmethods.SameBankForm;
 import bisq.desktop.components.paymentmethods.SatispayForm;
+import bisq.desktop.components.paymentmethods.SbpForm;
 import bisq.desktop.components.paymentmethods.SepaForm;
 import bisq.desktop.components.paymentmethods.SepaInstantForm;
 import bisq.desktop.components.paymentmethods.SpecificBankForm;
@@ -96,6 +97,7 @@ import bisq.desktop.util.validation.PerfectMoneyValidator;
 import bisq.desktop.util.validation.PopmoneyValidator;
 import bisq.desktop.util.validation.PromptPayValidator;
 import bisq.desktop.util.validation.RevolutValidator;
+import bisq.desktop.util.validation.SbpValidator;
 import bisq.desktop.util.validation.SwishValidator;
 import bisq.desktop.util.validation.TransferwiseValidator;
 import bisq.desktop.util.validation.USPostalMoneyOrderValidator;
@@ -186,6 +188,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
     private final PromptPayValidator promptPayValidator;
     private final AdvancedCashValidator advancedCashValidator;
     private final TransferwiseValidator transferwiseValidator;
+    private final SbpValidator sbpValidator;
     private final CoinFormatter formatter;
     private ComboBox<PaymentMethod> paymentMethodComboBox;
     private PaymentMethodForm paymentMethodForm;
@@ -217,6 +220,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                             PromptPayValidator promptPayValidator,
                             AdvancedCashValidator advancedCashValidator,
                             TransferwiseValidator transferwiseValidator,
+                            SbpValidator sbpValidator,
                             AccountAgeWitnessService accountAgeWitnessService,
                             KeyRing keyRing,
                             @Named(FormattingUtils.BTC_FORMATTER_KEY) CoinFormatter formatter) {
@@ -247,6 +251,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
         this.promptPayValidator = promptPayValidator;
         this.advancedCashValidator = advancedCashValidator;
         this.transferwiseValidator = transferwiseValidator;
+        this.sbpValidator = sbpValidator;
         this.formatter = formatter;
     }
 
@@ -317,7 +322,7 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                     .onAction(() -> {
                         final String currencyName = Config.baseCurrencyNetwork().getCurrencyName();
                         if (paymentAccount instanceof ClearXchangeAccount) {
-                            new Popup().information(Res.get("payment.clearXchange.info", currencyName, currencyName))
+                            new Popup().information(Res.get("payment.clearXchange.info"))
                                     .width(900)
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .actionButtonText(Res.get("shared.iConfirm"))
@@ -359,14 +364,14 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
                         } else if (paymentAccount instanceof AustraliaPayidAccount) {
-                            new Popup().information(Res.get("payment.payid.info", currencyName, currencyName))
+                            new Popup().information(Res.get("payment.payid.info"))
                                     .width(900)
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .actionButtonText(Res.get("shared.iConfirm"))
                                     .onAction(() -> doSaveNewAccount(paymentAccount))
                                     .show();
                         } else if (paymentAccount instanceof AmazonGiftCardAccount) {
-                            new Popup().information(Res.get("payment.amazonGiftCard.info", currencyName, currencyName))
+                            new Popup().information(Res.get("payment.amazonGiftCard.info"))
                                     .width(900)
                                     .closeButtonText(Res.get("shared.cancel"))
                                     .actionButtonText(Res.get("shared.iUnderstand"))
@@ -710,6 +715,8 @@ public class FiatAccountsView extends PaymentAccountsView<GridPane, FiatAccounts
                 return new DomesticWireTransferForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
             case PaymentMethod.MERCADO_PAGO_ID:
                 return new MercadoPagoForm(paymentAccount, accountAgeWitnessService, inputValidator, root, gridRow, formatter);
+            case PaymentMethod.SBP_ID:
+                return new SbpForm(paymentAccount, accountAgeWitnessService, sbpValidator, inputValidator, root, gridRow, formatter);
             default:
                 log.error("Not supported PaymentMethod: " + paymentMethod);
                 return null;

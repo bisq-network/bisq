@@ -59,15 +59,6 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     // See: https://github.com/bisq-network/proposals/issues/412
     public static final Date PROPOSAL_412_ACTIVATION_DATE = Utilities.getUTCDate(2024, GregorianCalendar.MAY, 1);
 
-    public static boolean isBugfix6699Activated() {
-        return new Date().after(BUGFIX_6699_ACTIVATION_DATE);
-    }
-
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    public static boolean isProposal412Activated() {
-        return new Date().after(PROPOSAL_412_ACTIVATION_DATE);
-    }
-
     // We don't allow to get further back than 767950 (the block height from Dec. 18th 2022).
     static final int MIN_SNAPSHOT_HEIGHT = Config.baseCurrencyNetwork().isRegtest() ? 0 : 767950;
 
@@ -131,15 +122,17 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     public List<Tuple2<Long, String>> getReceivers(int burningManSelectionHeight,
                                                    long inputAmount,
                                                    long tradeTxFee) {
-        return getReceivers(burningManSelectionHeight, inputAmount, tradeTxFee, isBugfix6699Activated());
+        return getReceivers(burningManSelectionHeight, inputAmount, tradeTxFee, true, true);
     }
 
     public List<Tuple2<Long, String>> getReceivers(int burningManSelectionHeight,
                                                    long inputAmount,
                                                    long tradeTxFee,
-                                                   boolean isBugfix6699Activated) {
+                                                   boolean isBugfix6699Activated,
+                                                   boolean isProposal412Activated) {
         checkArgument(burningManSelectionHeight >= MIN_SNAPSHOT_HEIGHT, "Selection height must be >= " + MIN_SNAPSHOT_HEIGHT);
-        Collection<BurningManCandidate> burningManCandidates = burningManService.getActiveBurningManCandidates(burningManSelectionHeight);
+        Collection<BurningManCandidate> burningManCandidates = burningManService.getActiveBurningManCandidates(burningManSelectionHeight,
+                !isProposal412Activated);
 
         // We need to use the same txFeePerVbyte value for both traders.
         // We use the tradeTxFee value which is calculated from the average of taker fee tx size and deposit tx size.
@@ -162,8 +155,8 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
         }
 
         long spendableAmount = getSpendableAmount(burningManCandidates.size(), inputAmount, txFeePerVbyte);
-        // We only use outputs > 1000 sat or at least 2 times the cost for the output (32 bytes).
-        // If we remove outputs it will be spent as miner fee.
+        // We only use outputs >= 1000 sat or at least 2 times the cost for the output (32 bytes).
+        // If we remove outputs it will be distributed to the remaining receivers.
         long minOutputAmount = Math.max(DPT_MIN_OUTPUT_AMOUNT, txFeePerVbyte * 32 * 2);
         // Sanity check that max share of a non-legacy BM is 20% over MAX_BURN_SHARE (taking into account potential increase due adjustment)
         long maxOutputAmount = Math.round(spendableAmount * (BurningManService.MAX_BURN_SHARE * 1.2));
@@ -178,6 +171,9 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
                 })
                 .sum();
 
+        // FIXME: The small outputs should be filtered out before adjustment, not afterwards. Otherwise, outputs of
+        //  amount just under 1000 sats or 64 * fee-rate could get erroneously included and lead to significant
+        //  underpaying of the DPT (by perhaps around 5-10% per erroneously included output).
         List<Tuple2<Long, String>> receivers = burningManCandidates.stream()
                 .filter(candidate -> candidate.getReceiverAddress(isBugfix6699Activated).isPresent())
                 .map(candidate -> {

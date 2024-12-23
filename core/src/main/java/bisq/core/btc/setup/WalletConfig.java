@@ -20,6 +20,7 @@ package bisq.core.btc.setup;
 import bisq.core.btc.nodes.LocalBitcoinNode;
 import bisq.core.btc.nodes.ProxySocketFactory;
 import bisq.core.btc.wallet.BisqRiskAnalysis;
+import bisq.core.btc.wallet.BisqWallet;
 
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
@@ -405,7 +406,7 @@ public class WalletConfig extends AbstractIdleService {
             WalletExtension[] extArray = new WalletExtension[]{};
             Protos.Wallet proto = WalletProtobufSerializer.parseToProto(walletStream);
             final WalletProtobufSerializer serializer;
-            serializer = new WalletProtobufSerializer();
+            serializer = new WalletProtobufSerializer(BisqWallet::new);
             // Hack to convert bitcoinj 0.14 wallets to bitcoinj 0.15 format
             serializer.setKeyChainFactory(new BisqKeyChainFactory(isBsqWallet));
             wallet = serializer.readWallet(params, extArray, proto);
@@ -432,7 +433,7 @@ public class WalletConfig extends AbstractIdleService {
                 kcgBuilder.fromSeed(vBtcWallet.getKeyChainSeed(), preferredOutputScriptType);
             }
         }
-        return new Wallet(params, kcgBuilder.build());
+        return new BisqWallet(params, kcgBuilder.build());
     }
 
     private void maybeMoveOldWalletOutOfTheWay(File walletFile) {

@@ -41,7 +41,6 @@ import bisq.desktop.main.presentation.AccountPresentation;
 import bisq.core.locale.Res;
 import bisq.core.user.DontShowAgainLookup;
 
-import bisq.common.app.DevEnv;
 import bisq.common.util.Utilities;
 
 import javax.inject.Inject;
@@ -272,14 +271,6 @@ public class AccountView extends ActivatableView<TabPane, Void> {
                     .headLine(Res.get("account.info.headline"))
                     .backgroundInfo(Res.get("account.info.msg"))
                     .dontShowAgainId(key)
-                    .show();
-        } else {
-            // news badge leads to the XMR subaddress info page (added in v1.9.2)
-            new Popup()
-                    .headLine(Res.get("account.altcoin.popup.xmr.dataDirWarningHeadline"))
-                    .backgroundInfo(Res.get("account.altcoin.popup.xmr.dataDirWarning"))
-                    .dontShowAgainId("accountSubAddressInfo")
-                    .width(700)
                     .show();
         }
     }

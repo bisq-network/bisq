@@ -1,6 +1,7 @@
 plugins {
     id 'bisq.java-conventions'
     id 'bisq.javafx'
+    id 'bisq.java-integration-tests'
 }
 
 javafx {
@@ -61,6 +62,20 @@ dependencies {
     testAnnotationProcessor libs.lombok
     testCompileOnly libs.lombok
     testImplementation libs.natpryce.make.it.easy
+
+    integrationTestAnnotationProcessor libs.lombok
+    integrationTestCompileOnly libs.lombok
+    integrationTestImplementation('bitcoind:regtest') {
+        exclude(module: 'kotlin-stdlib-jdk8')
+    }
+    integrationTestImplementation libs.hamcrest
+    integrationTestImplementation libs.mockito.core
+    integrationTestImplementation libs.mockito.junit.jupiter
+
+    integrationTestImplementation libs.junit.jupiter.api
+    integrationTestImplementation libs.junit.jupiter.params
+
+    integrationTestRuntimeOnly libs.junit.jupiter.engine
 }
 
 test {

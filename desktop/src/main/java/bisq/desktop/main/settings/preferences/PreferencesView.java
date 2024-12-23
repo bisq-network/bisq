@@ -107,8 +107,6 @@ import javafx.util.Callback;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
 
-import java.io.File;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -151,7 +149,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     private final FilterManager filterManager;
     private final DaoFacade daoFacade;
     private final boolean isBmFullNodeFromOptions;
-    private final File storageDir;
 
     private ListView<FiatCurrency> fiatCurrenciesListView;
     private ComboBox<FiatCurrency> fiatCurrenciesComboBox;
@@ -198,8 +195,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                            @Named(Config.IS_BM_FULL_NODE) boolean isBmFullNodeFromOptions,
                            @Named(Config.RPC_USER) String rpcUser,
                            @Named(Config.RPC_PASSWORD) String rpcPassword,
-                           @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockNotificationPort,
-                           @Named(Config.STORAGE_DIR) File storageDir) {
+                           @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockNotificationPort) {
         super(model);
         this.user = user;
         this.burningManAccountingService = burningManAccountingService;
@@ -211,7 +207,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         this.filterManager = filterManager;
         this.daoFacade = daoFacade;
         this.isBmFullNodeFromOptions = isBmFullNodeFromOptions;
-        this.storageDir = storageDir;
         daoFullModeFromOptionsSet = config.fullDaoNodeOptionSetExplicitly &&
                 rpcUser != null && !rpcUser.isEmpty() &&
                 rpcPassword != null && !rpcPassword.isEmpty() &&
@@ -1225,7 +1220,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
 
         resyncDaoFromResourcesButton.setOnAction(e -> {
             try {
-                daoFacade.resyncDaoStateFromResources(storageDir);
+                daoFacade.removeAndBackupAllDaoData();
                 new Popup().attention(Res.get("setting.preferences.dao.resyncFromResources.popup"))
                         .useShutDownButton()
                         .hideCloseButton()

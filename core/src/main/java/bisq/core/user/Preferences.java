@@ -84,8 +84,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             new BlockChainExplorer("mempool.space Tor V3", "http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/tx/", "http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/address/"),
             new BlockChainExplorer("mempool.emzy.de (@emzy)", "https://mempool.emzy.de/tx/", "https://mempool.emzy.de/address/"),
             new BlockChainExplorer("mempool.emzy.de Tor V3", "http://mempool4t6mypeemozyterviq3i5de4kpoua65r3qkn5i3kknu5l2cad.onion/tx/", "http://mempool4t6mypeemozyterviq3i5de4kpoua65r3qkn5i3kknu5l2cad.onion/address/"),
-            new BlockChainExplorer("mempool.bisq.services (@devinbileck)", "https://mempool.bisq.services/tx/", "https://mempool.bisq.services/address/"),
-            new BlockChainExplorer("mempool.bisq.services Tor V3", "http://mempoolcutehjtynu4k4rd746acmssvj2vz4jbz4setb72clbpx2dfqd.onion/tx/", "http://mempoolcutehjtynu4k4rd746acmssvj2vz4jbz4setb72clbpx2dfqd.onion/address/"),
             new BlockChainExplorer("mempool Tor V3 (@runbtc)", "http://runbtcx3wfygbq2wdde6qzjnpyrqn3gvbks7t5jdymmunxttdvvttpyd.onion/tx/", "http://runbtcx3wfygbq2wdde6qzjnpyrqn3gvbks7t5jdymmunxttdvvttpyd.onion/address/"),
             new BlockChainExplorer("Blockstream.info", "https://blockstream.info/tx/", "https://blockstream.info/address/"),
             new BlockChainExplorer("Blockstream.info Tor V3", "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/tx/", "http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/address/"),
@@ -117,29 +115,26 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     ));
 
     public static final ArrayList<BlockChainExplorer> BSQ_MAIN_NET_EXPLORERS = new ArrayList<>(Arrays.asList(
-            new BlockChainExplorer("bisq.mempool.emzy.de (@emzy)", "https://bisq.mempool.emzy.de/tx/", "https://bisq.mempool.emzy.de/address/"),
-            new BlockChainExplorer("mempool.bisq.services (@devinbileck)", "https://mempool.bisq.services/bisq/tx/", "https://mempool.bisq.services/bisq/address/")
+            new BlockChainExplorer("mempool.bisq.services (@devinbileck)", "https://mempool.bisq.services/tx/", "https://mempool.bisq.services/address/")
     ));
 
     private static final ArrayList<String> XMR_TX_PROOF_SERVICES_CLEAR_NET = new ArrayList<>(Arrays.asList(
-            "xmrblocks.bisq.services" // @devinbileck
+            "xmrchain.net"
     ));
     private static final ArrayList<String> XMR_TX_PROOF_SERVICES = new ArrayList<>(Arrays.asList(
-            "devinxmrwu4jrfq2zmq5kqjpxb44hx7i7didebkwrtvmvygj4uuop2ad.onion", // @devinbileck
-            "xmrexplrthytnunr4jasr3vnjc6jo5idsyxzv74a7ep7dy7lwcv2eoyd.onion"  // @runbtc
+            "xmrexplrthytnunr4jasr3vnjc6jo5idsyxzv74a7ep7dy7lwcv2eoyd.onion",     // @runbtc
+            "nklwsomtuok6dhqqecp3a26xzgokfgmeuaplcdkaxehncg57yzarvbad.onion"      // @suddenwhipvapor
     ));
 
 
     private static final ArrayList<String> TX_BROADCAST_SERVICES_CLEAR_NET = new ArrayList<>(Arrays.asList(
             "https://mempool.space/api/tx",         // @wiz
-            "https://mempool.emzy.de/api/tx",       // @emzy
-            "https://mempool.bisq.services/api/tx"  // @devinbileck
+            "https://mempool.emzy.de/api/tx"        // @emzy
     ));
 
     private static final ArrayList<String> TX_BROADCAST_SERVICES = new ArrayList<>(Arrays.asList(
             "http://mempoolhqx4isw62xs7abwphsq7ldayuidyx2v2oethdhhj6mlo2r6ad.onion/api/tx",     // @wiz
             "http://mempool4t6mypeemozyterviq3i5de4kpoua65r3qkn5i3kknu5l2cad.onion/api/tx",     // @emzy
-            "http://mempoolcutehjtynu4k4rd746acmssvj2vz4jbz4setb72clbpx2dfqd.onion/api/tx",     // @devinbileck
             "http://runbtcx3wfygbq2wdde6qzjnpyrqn3gvbks7t5jdymmunxttdvvttpyd.onion/api/tx"      // @runbtc
     ));
 
@@ -171,7 +166,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     private final String btcNodesFromOptions, referralIdFromOptions,
             rpcUserFromOptions, rpcPwFromOptions;
     private final int blockNotifyPortFromOptions;
-    private final boolean fullDaoNodeFromOptions, fullAccountingNodeFromOptions;
+    private final boolean fullDaoNodeFromOptions, fullAccountingNodeFromOptions, useFullModeDaoMonitorFromOptions;
     @Getter
     private final BooleanProperty useStandbyModeProperty = new SimpleBooleanProperty(prefPayload.isUseStandbyMode());
 
@@ -191,7 +186,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                        @Named(Config.IS_BM_FULL_NODE) boolean fullAccountingNode,
                        @Named(Config.RPC_USER) String rpcUser,
                        @Named(Config.RPC_PASSWORD) String rpcPassword,
-                       @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockNotificationPort) {
+                       @Named(Config.RPC_BLOCK_NOTIFICATION_PORT) int rpcBlockNotificationPort,
+                       @Named(Config.USE_FULL_MODE_DAO_MONITOR) boolean useFullModeDaoMonitor) {
 
         this.persistenceManager = persistenceManager;
         this.config = config;
@@ -204,6 +200,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         this.rpcUserFromOptions = rpcUser;
         this.rpcPwFromOptions = rpcPassword;
         this.blockNotifyPortFromOptions = rpcBlockNotificationPort;
+        this.useFullModeDaoMonitorFromOptions = useFullModeDaoMonitor;
 
         useAnimationsProperty.addListener((ov) -> {
             prefPayload.setUseAnimations(useAnimationsProperty.get());
@@ -320,25 +317,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         useStandbyModeProperty.set(prefPayload.isUseStandbyMode());
         cssThemeProperty.set(prefPayload.getCssTheme());
 
-        // a list of previously-used federated explorers
-        // if user preference references any deprecated explorers we need to select a new valid explorer
-        String deprecatedExplorers = "(bsq.bisq.cc|bsq.vante.me|bsq.emzy.de|bsq.sqrrm.net|bsq.bisq.services|bsq.ninja).*";
-
-        // if no valid Bitcoin block explorer is set, select the 1st valid Bitcoin block explorer
-        ArrayList<BlockChainExplorer> btcExplorers = getBlockChainExplorers();
-        if (getBlockChainExplorer() == null ||
-                getBlockChainExplorer().name.length() == 0 ||
-                getBlockChainExplorer().name.matches(deprecatedExplorers)) {
-            setBlockChainExplorer(btcExplorers.get(0));
-        }
-
-        // if no valid BSQ block explorer is set, randomly select a valid BSQ block explorer
-        ArrayList<BlockChainExplorer> bsqExplorers = getBsqBlockChainExplorers();
-        if (getBsqBlockChainExplorer() == null ||
-                getBsqBlockChainExplorer().name.length() == 0 ||
-                getBsqBlockChainExplorer().name.matches(deprecatedExplorers)) {
-            setBsqBlockChainExplorer(bsqExplorers.get((new Random()).nextInt(bsqExplorers.size())));
-        }
+        clearRetiredNodes();
 
         tradeCurrenciesAsObservable.addAll(prefPayload.getFiatCurrencies());
         tradeCurrenciesAsObservable.addAll(prefPayload.getCryptoCurrencies());
@@ -376,20 +355,50 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             setUsePriceNotifications(true);
         }
 
-        if (prefPayload.getAutoConfirmSettingsList().isEmpty()) {
-            List<String> defaultXmrTxProofServices = getDefaultXmrTxProofServices();
-            AutoConfirmSettings.getDefault(defaultXmrTxProofServices, "XMR")
-                    .ifPresent(xmrAutoConfirmSettings -> {
-                        getAutoConfirmSettingsList().add(xmrAutoConfirmSettings);
-                    });
-        }
-
         // We set the capability in CoreNetworkCapabilities if the program argument is set.
         // If we have set it in the preferences view we handle it here.
         CoreNetworkCapabilities.maybeApplyDaoFullMode(config);
 
         initialReadDone = true;
         requestPersistence();
+    }
+
+    private void clearRetiredNodes() {
+        // a list of previously-used federated explorers
+        // if user preference references any deprecated explorers we need to select a new valid explorer
+        String deprecatedExplorers = "(bsq.bisq.cc|bsq.vante.me|bsq.emzy.de|bsq.sqrrm.net|bsq.bisq.services|bsq.ninja|bisq.mempool.emzy.de).*";
+
+        // if no valid Bitcoin block explorer is set, select the 1st valid Bitcoin block explorer
+        ArrayList<BlockChainExplorer> btcExplorers = getBlockChainExplorers();
+        if (getBlockChainExplorer() == null ||
+                getBlockChainExplorer().name.length() == 0 ||
+                getBlockChainExplorer().name.matches(deprecatedExplorers)) {
+            setBlockChainExplorer(btcExplorers.get(0));
+        }
+
+        // if no valid BSQ block explorer is set, randomly select a valid BSQ block explorer
+        ArrayList<BlockChainExplorer> bsqExplorers = getBsqBlockChainExplorers();
+        if (getBsqBlockChainExplorer() == null ||
+                getBsqBlockChainExplorer().name.length() == 0 ||
+                getBsqBlockChainExplorer().name.matches(deprecatedExplorers)) {
+            setBsqBlockChainExplorer(bsqExplorers.get((new Random()).nextInt(bsqExplorers.size())));
+        }
+
+        // Remove retired XMR AutoConfirm address
+        var doApplyDefaults = prefPayload.getAutoConfirmSettingsList().stream()
+                .map(autoConfirmSettings -> autoConfirmSettings.getServiceAddresses().stream()
+                        .anyMatch(address -> address.contains("monero3bec7m26vx6si6qo7q7imlaoz45ot5m2b5z2ppgoooo6jx2rqd")))
+                .findAny()
+                .orElse(true);
+        if (doApplyDefaults) {
+            prefPayload.getAutoConfirmSettingsList().clear();
+            List<String> defaultXmrTxProofServices = getDefaultXmrTxProofServices();
+            AutoConfirmSettings.getDefault(defaultXmrTxProofServices, "XMR")
+                    .ifPresent(xmrAutoConfirmSettings -> {
+                        getAutoConfirmSettingsList().add(xmrAutoConfirmSettings);
+                    });
+            persistenceManager.forcePersistNow();
+        }
     }
 
 
@@ -828,8 +837,11 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     }
 
     public void setUseFullModeDaoMonitor(boolean value) {
-        prefPayload.setUseFullModeDaoMonitor(value);
-        requestPersistence();
+        // We only persist if we have not set the program argument
+        if (!config.useFullModeDaoMonitorSetExplicitly) {
+            prefPayload.setUseFullModeDaoMonitor(value);
+            requestPersistence();
+        }
     }
 
     public void setUseBitcoinUrisInQrCodes(boolean value) {
@@ -1031,6 +1043,14 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         return prefPayload.isFullBMAccountingNode();
     }
 
+    public boolean isUseFullModeDaoMonitor() {
+        if (config.useFullModeDaoMonitorSetExplicitly) {
+            return useFullModeDaoMonitorFromOptions;
+        } else {
+            return prefPayload.isUseFullModeDaoMonitor();
+        }
+    }
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Private
@@ -1202,5 +1222,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         void setProcessBurningManAccountingData(boolean processBurningManAccountingData);
 
         void setFullBMAccountingNode(boolean isFullBMAccountingNode);
+
+        boolean isUseFullModeDaoMonitor();
     }
 }

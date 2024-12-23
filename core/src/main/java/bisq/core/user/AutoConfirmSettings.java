@@ -29,8 +29,10 @@ import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+@ToString
 @Slf4j
 @Getter
 public final class AutoConfirmSettings implements PersistablePayload {
@@ -43,7 +45,7 @@ public final class AutoConfirmSettings implements PersistablePayload {
     private long tradeLimit;
     private List<String> serviceAddresses;
     private String currencyCode;
-    private List<Listener> listeners = new CopyOnWriteArrayList<>();
+    private final List<Listener> listeners = new CopyOnWriteArrayList<>();
 
     @SuppressWarnings("SameParameterValue")
     static Optional<AutoConfirmSettings> getDefault(List<String> serviceAddresses, String currencyCode) {

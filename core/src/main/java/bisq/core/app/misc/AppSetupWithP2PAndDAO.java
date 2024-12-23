@@ -88,8 +88,5 @@ public class AppSetupWithP2PAndDAO extends AppSetupWithP2P {
         super.onBasicServicesInitialized();
 
         daoSetup.onAllServicesInitialized(log::error, log::warn);
-
-        // For seed nodes we need to set default value to true
-        preferences.setUseFullModeDaoMonitor(true);
     }
 }

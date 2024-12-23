@@ -17,6 +17,8 @@
 
 package bisq.core.filter;
 
+import bisq.core.crypto.LowRSigningKey;
+
 import bisq.network.p2p.storage.payload.ProtectedStorageEntry;
 
 import org.bitcoinj.core.ECKey;
@@ -114,7 +116,7 @@ public class TestFilter {
         byte[] filterData = unsignedFilter.serializeForHash();
         Sha256Hash hash = Sha256Hash.of(filterData);
 
-        ECKey.ECDSASignature ecdsaSignature = signerKey.sign(hash);
+        ECKey.ECDSASignature ecdsaSignature = LowRSigningKey.from(signerKey).sign(hash);
         byte[] encodeToDER = ecdsaSignature.encodeToDER();
 
         String signatureAsBase64 = new String(Base64.encode(encodeToDER), StandardCharsets.UTF_8);

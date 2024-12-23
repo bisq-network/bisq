@@ -18,7 +18,7 @@
 package bisq.core.dao.burningman.model;
 
 import bisq.core.dao.burningman.BurningManService;
-import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
+import bisq.core.util.validation.BtcAddressValidator;
 
 import bisq.common.util.DateUtil;
 
@@ -32,9 +32,12 @@ import java.util.OptionalInt;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nullable;
 
 /**
  * Contains all relevant data for a burningman candidate (any contributor who has made a compensation request or was
@@ -50,12 +53,17 @@ public class BurningManCandidate {
     private double compensationShare;           // Share of accumulated decayed compensation amounts in relation to total issued amounts
 
     protected Optional<String> receiverAddress = Optional.empty();
+    @EqualsAndHashCode.Exclude
+    @Getter(AccessLevel.NONE)
+    @Nullable
+    private Boolean receiverAddressValid;
 
     // For deploying a bugfix with mostRecentAddress we need to maintain the old version to avoid breaking the
-    // trade protocol. We use the legacyMostRecentAddress until the activation date where we
+    // trade protocol. We use the legacy mostRecentAddress until the activation date where we
     // enforce the version by the filter to ensure users have updated.
     // See: https://github.com/bisq-network/bisq/issues/6699
     @EqualsAndHashCode.Exclude
+    @Getter(AccessLevel.NONE)
     protected Optional<String> mostRecentAddress = Optional.empty();
 
     private final Set<BurnOutputModel> burnOutputModels = new HashSet<>();
@@ -75,16 +83,11 @@ public class BurningManCandidate {
     }
 
     public Optional<String> getReceiverAddress() {
-        return getReceiverAddress(DelayedPayoutTxReceiverService.isBugfix6699Activated());
+        return getReceiverAddress(true);
     }
 
     public Optional<String> getReceiverAddress(boolean isBugfix6699Activated) {
         return isBugfix6699Activated ? receiverAddress : mostRecentAddress;
-    }
-
-    public Optional<String> getMostRecentAddress() {
-        // Lombok getter is set for class, so we would get a getMostRecentAddress but want to ensure it's not accidentally used.
-        throw new UnsupportedOperationException("getMostRecentAddress must not be used. Use getReceiverAddress instead.");
     }
 
     public void addBurnOutputModel(BurnOutputModel burnOutputModel) {
@@ -110,21 +113,26 @@ public class BurningManCandidate {
 
         accumulatedDecayedCompensationAmount += compensationModel.getDecayedAmount();
         accumulatedCompensationAmount += compensationModel.getAmount();
+        receiverAddressValid = null;
 
         boolean hasAnyCustomAddress = compensationModels.stream()
                 .anyMatch(CompensationModel::isCustomAddress);
         if (hasAnyCustomAddress) {
             // If any custom address was defined, we only consider custom addresses and sort them to take the
-            // most recent one.
+            // most recent one. If more than one compensation request from a candidate somehow got accepted in
+            // the same cycle, break the tie by choosing the lexicographically smallest custom address.
             receiverAddress = compensationModels.stream()
                     .filter(CompensationModel::isCustomAddress)
-                    .max(Comparator.comparing(CompensationModel::getHeight))
+                    .max(Comparator.comparing(CompensationModel::getHeight)
+                            .thenComparing(Comparator.comparing(CompensationModel::getAddress).reversed()))
                     .map(CompensationModel::getAddress);
         } else {
             // If no custom addresses ever have been defined, we take the change address of the compensation request
-            // and use the earliest address. This helps to avoid change of address with every new comp. request.
+            // and use the earliest address (similarly taking the lexicographically smallest in the unlikely case of
+            // a tie). This helps to avoid change of address with every new comp. request.
             receiverAddress = compensationModels.stream()
-                    .min(Comparator.comparing(CompensationModel::getHeight))
+                    .min(Comparator.comparing(CompensationModel::getHeight)
+                            .thenComparing(CompensationModel::getAddress))
                     .map(CompensationModel::getAddress);
         }
 
@@ -133,6 +141,17 @@ public class BurningManCandidate {
         mostRecentAddress = compensationModels.stream()
                 .max(Comparator.comparing(CompensationModel::getHeight))
                 .map(CompensationModel::getAddress);
+    }
+
+    public boolean isReceiverAddressValid() {
+        // Since address parsing is a little slow (due to use of exception control flow in bitcoinj), cache the
+        // result of the validation check and clear the cache for every compensation model added to the candidate.
+        Boolean receiverAddressValid = this.receiverAddressValid;
+        if (receiverAddressValid == null) {
+            BtcAddressValidator validator = new BtcAddressValidator();
+            this.receiverAddressValid = receiverAddressValid = validator.validate(receiverAddress.orElse(null)).isValid;
+        }
+        return receiverAddressValid;
     }
 
     public Set<String> getAllAddresses() {
@@ -196,7 +215,12 @@ public class BurningManCandidate {
     }
 
     public double getMaxBoostedCompensationShare() {
-        return Math.min(BurningManService.MAX_BURN_SHARE, compensationShare * BurningManService.ISSUANCE_BOOST_FACTOR);
+        // Set the burn cap to zero if the receiver address is missing or invalid (which can never
+        // happen by accident, due to checks in the UI). This is preferable to simply excluding such
+        // receivers from the active burning men, as it minimises the chance of funds going to the LBM,
+        // or DPT outputs failing to pass a sanity check after redistributing the receiver's share.
+        return isReceiverAddressValid() ?
+                Math.min(BurningManService.MAX_BURN_SHARE, compensationShare * BurningManService.ISSUANCE_BOOST_FACTOR) : 0.0;
     }
 
     @Override
@@ -207,6 +231,7 @@ public class BurningManCandidate {
                 ",\r\n     accumulatedDecayedCompensationAmount=" + accumulatedDecayedCompensationAmount +
                 ",\r\n     compensationShare=" + compensationShare +
                 ",\r\n     receiverAddress=" + receiverAddress +
+                ",\r\n     receiverAddressValid=" + isReceiverAddressValid() +
                 ",\r\n     mostRecentAddress=" + mostRecentAddress +
                 ",\r\n     burnOutputModels=" + burnOutputModels +
                 ",\r\n     accumulatedBurnAmount=" + accumulatedBurnAmount +
