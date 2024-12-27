@@ -37,6 +37,7 @@ import bisq.core.offer.OfferDirection;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
+import bisq.core.user.DontShowAgainLookup;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
@@ -67,6 +68,7 @@ import javafx.collections.FXCollections;
 import javafx.util.StringConverter;
 
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -118,8 +120,13 @@ public abstract class PaymentMethodForm {
             }
         });
         currencyComboBox.setOnAction(e -> {
-            paymentAccount.setSingleTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
+            TradeCurrency selectedCurrency = currencyComboBox.getSelectionModel().getSelectedItem();
+            paymentAccount.setSingleTradeCurrency(selectedCurrency);
             updateFromInputs();
+
+            if (isArgentinePesos(selectedCurrency)) {
+                maybeShowArgentinePesosBlueRatePopup();
+            }
         });
     }
 
@@ -299,19 +306,32 @@ public abstract class PaymentMethodForm {
                                       TradeCurrency e, PaymentAccount paymentAccount) {
         CheckBox checkBox = new AutoTooltipCheckBox(e.getCode());
         checkBox.setMouseTransparent(!isEditable);
-        checkBox.setSelected(paymentAccount.getTradeCurrencies().contains(e));
+
+        boolean isCurrencySelected = paymentAccount.getTradeCurrencies().contains(e);
+        checkBox.setSelected(isCurrencySelected);
+
         checkBox.setMinWidth(60);
         checkBox.setMaxWidth(checkBox.getMinWidth());
         checkBox.setTooltip(new Tooltip(e.getName()));
         checkBox.setOnAction(event -> {
-            if (checkBox.isSelected())
+            if (checkBox.isSelected()) {
                 paymentAccount.addCurrency(e);
-            else
+
+                if (isArgentinePesos(e)) {
+                    maybeShowArgentinePesosBlueRatePopup();
+                }
+
+            } else {
                 paymentAccount.removeCurrency(e);
+            }
 
             updateAllInputsValid();
         });
         flowPane.getChildren().add(checkBox);
+
+        if (isCurrencySelected && isArgentinePesos(e)) {
+            maybeShowArgentinePesosBlueRatePopup();
+        }
     }
 
     protected abstract void autoFillNameTextField();
@@ -351,5 +371,23 @@ public abstract class PaymentMethodForm {
     }
 
     void addAcceptedCountry(String countryCode) {
+    }
+
+    public static boolean isArgentinePesos(TradeCurrency tradeCurrency) {
+        FiatCurrency arsCurrency = new FiatCurrency("ARS");
+        return tradeCurrency.equals(arsCurrency);
+    }
+
+    public static void maybeShowArgentinePesosBlueRatePopup() {
+        String key = "arsBlueMarketNotificationPopup";
+        if (DontShowAgainLookup.showAgain(key)) {
+            new Popup()
+                    .headLine(Res.get("popup.arsBlueMarket.title"))
+                    .information(Res.get("popup.arsBlueMarket.info"))
+                    .actionButtonText(Res.get("shared.iUnderstand"))
+                    .hideCloseButton()
+                    .dontShowAgainId(key)
+                    .show();
+        }
     }
 }

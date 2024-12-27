@@ -24,6 +24,7 @@ import bisq.desktop.components.BisqScrollPane;
 import bisq.desktop.components.BisqTextArea;
 import bisq.desktop.components.InfoAutoTooltipLabel;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
+import bisq.desktop.components.paymentmethods.PaymentMethodForm;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
@@ -1103,8 +1104,14 @@ public class GUIUtil {
         });
         currencyComboBox.setDisable(true);
 
-        currencyComboBox.setOnAction(e ->
-                onTradeCurrencySelectedHandler.accept(currencyComboBox.getSelectionModel().getSelectedItem()));
+        currencyComboBox.setOnAction(e -> {
+            TradeCurrency selectedCurrency = currencyComboBox.getSelectionModel().getSelectedItem();
+            onTradeCurrencySelectedHandler.accept(selectedCurrency);
+
+            if (PaymentMethodForm.isArgentinePesos(selectedCurrency)) {
+                PaymentMethodForm.maybeShowArgentinePesosBlueRatePopup();
+            }
+        });
 
         return new Tuple2<>(currencyComboBox, gridRow);
     }

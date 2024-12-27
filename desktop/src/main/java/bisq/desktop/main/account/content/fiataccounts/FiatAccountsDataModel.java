@@ -126,19 +126,6 @@ class FiatAccountsDataModel extends ActivatableDataModel {
 
         accountAgeWitnessService.publishMyAccountAgeWitness(paymentAccount.getPaymentAccountPayload());
         accountAgeWitnessService.signAndPublishSameNameAccounts();
-
-        if (paymentAccount.getSingleTradeCurrency().getCode().equals("ARS")) {
-            String key = "arsBlueMarketNotificationPopup";
-            if (DontShowAgainLookup.showAgain(key)) {
-                new Popup()
-                        .headLine(Res.get("popup.arsBlueMarket.title"))
-                        .information(Res.get("popup.arsBlueMarket.info"))
-                        .actionButtonText(Res.get("shared.iUnderstand"))
-                        .hideCloseButton()
-                        .dontShowAgainId(key)
-                        .show();
-            }
-        }
     }
 
     public void onUpdateAccount(PaymentAccount paymentAccount) {
