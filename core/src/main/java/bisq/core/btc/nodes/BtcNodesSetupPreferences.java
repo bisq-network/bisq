@@ -26,6 +26,7 @@ import bisq.common.util.Utilities;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,9 +67,9 @@ public class BtcNodesSetupPreferences {
                 break;
             case PROVIDED:
             default:
-                List<BtcNode> hardcodedBtcNodes = btcNodes.getProvidedBtcNodes();
-                List<String> filterProvidedBtcNodes = config.filterProvidedBtcNodes;
-                List<String> bannedBtcNodes = config.bannedBtcNodes;
+                Stream<BtcNode> hardcodedBtcNodes = btcNodes.getProvidedBtcNodes().stream();
+                Stream<String> filterProvidedBtcNodes = config.filterProvidedBtcNodes.stream();
+                Stream<String> bannedBtcNodes = config.bannedBtcNodes.stream();
                 result = FederatedBtcNodeProvider.getNodes(hardcodedBtcNodes, filterProvidedBtcNodes, bannedBtcNodes);
                 break;
         }
