@@ -1109,7 +1109,7 @@ public class GUIUtil {
             onTradeCurrencySelectedHandler.accept(selectedCurrency);
 
             if (ArsBlueRatePopup.isTradeCurrencyArgentinePesos(selectedCurrency)) {
-                ArsBlueRatePopup.showMaybe();
+                ArsBlueRatePopup.show();
             }
         });
 

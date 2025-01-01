@@ -123,7 +123,7 @@ public abstract class PaymentMethodForm {
             updateFromInputs();
 
             if (ArsBlueRatePopup.isTradeCurrencyArgentinePesos(selectedCurrency)) {
-                ArsBlueRatePopup.showMaybe();
+                ArsBlueRatePopup.show();
             }
         });
     }
@@ -316,7 +316,7 @@ public abstract class PaymentMethodForm {
                 paymentAccount.addCurrency(e);
 
                 if (ArsBlueRatePopup.isTradeCurrencyArgentinePesos(e)) {
-                    ArsBlueRatePopup.showMaybe();
+                    ArsBlueRatePopup.show();
                 }
 
             } else {
@@ -328,7 +328,7 @@ public abstract class PaymentMethodForm {
         flowPane.getChildren().add(checkBox);
 
         if (isCurrencySelected && ArsBlueRatePopup.isTradeCurrencyArgentinePesos(e)) {
-            ArsBlueRatePopup.showMaybe();
+            ArsBlueRatePopup.show();
         }
     }
 
