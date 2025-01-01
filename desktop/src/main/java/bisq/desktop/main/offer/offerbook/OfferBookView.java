@@ -31,6 +31,7 @@ import bisq.desktop.components.InfoAutoTooltipLabel;
 import bisq.desktop.components.PeerInfoIconMap;
 import bisq.desktop.components.PeerInfoIconTrading;
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.components.paymentmethods.ArsBlueRatePopup;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.account.content.altcoinaccounts.AltCoinAccountsView;
@@ -363,12 +364,17 @@ abstract public class OfferBookView<R extends GridPane, M extends OfferBookViewM
         currencyComboBox.setOnChangeConfirmed(e -> {
             if (currencyComboBox.getEditor().getText().isEmpty())
                 currencyComboBox.getSelectionModel().select(SHOW_ALL);
-            model.onSetTradeCurrency(currencyComboBox.getSelectionModel().getSelectedItem());
+            TradeCurrency selectedCurrency = currencyComboBox.getSelectionModel().getSelectedItem();
+            model.onSetTradeCurrency(selectedCurrency);
             paymentMethodComboBox.setAutocompleteItems(model.getPaymentMethods());
             model.updateSelectedPaymentMethod();
             updatePaymentMethodComboBoxEditor();
             model.onSetPaymentMethod(paymentMethodComboBox.getSelectionModel().getSelectedItem());
             updateCreateOfferButton();
+
+            if (ArsBlueRatePopup.isTradeCurrencyArgentinePesos(selectedCurrency)) {
+                ArsBlueRatePopup.showMaybe();
+            }
         });
         updateCurrencyComboBoxFromModel();
 
