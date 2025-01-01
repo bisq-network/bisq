@@ -25,6 +25,7 @@ import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
 import bisq.desktop.components.PeerInfoIconSmall;
+import bisq.desktop.components.paymentmethods.ArsBlueRatePopup;
 import bisq.desktop.main.offer.offerbook.OfferBookListItem;
 import bisq.desktop.util.CurrencyListItem;
 import bisq.desktop.util.DisplayUtils;
@@ -32,6 +33,7 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.Offer;
 import bisq.core.offer.OfferDirection;
 import bisq.core.util.FormattingUtils;
@@ -203,8 +205,13 @@ public class OfferBookChartView extends ActivatableViewAndModel<VBox, OfferBookC
         currencyComboBox.setOnChangeConfirmed(e -> {
             CurrencyListItem selectedItem = currencyComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
-                model.onSetTradeCurrency(selectedItem.tradeCurrency);
+                TradeCurrency selectedCurrency = selectedItem.tradeCurrency;
+                model.onSetTradeCurrency(selectedCurrency);
                 updateChartData();
+
+                if (ArsBlueRatePopup.isTradeCurrencyArgentinePesos(selectedCurrency)) {
+                    ArsBlueRatePopup.showMaybe();
+                }
             }
         });
 
