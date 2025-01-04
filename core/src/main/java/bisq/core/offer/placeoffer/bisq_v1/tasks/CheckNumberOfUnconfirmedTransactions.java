@@ -13,8 +13,10 @@ public class CheckNumberOfUnconfirmedTransactions extends Task<PlaceOfferModel> 
 
     @Override
     protected void run() {
-        if (model.getWalletService().isUnconfirmedTransactionsLimitHit() || model.getBsqWalletService().isUnconfirmedTransactionsLimitHit())
-            return failed(Res.get("shared.unconfirmedTransactionsLimitReached"));
-        complete();
+        if (model.getWalletService().isUnconfirmedTransactionsLimitHit() || model.getBsqWalletService().isUnconfirmedTransactionsLimitHit()) {
+            failed(Res.get("shared.unconfirmedTransactionsLimitReached"));
+        } else {
+            complete();
+        }
     }
 }
