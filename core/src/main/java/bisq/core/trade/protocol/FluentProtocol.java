@@ -218,6 +218,7 @@ public class FluentProtocol {
             return this;
         }
 
+        /** Calling this more than once discards the previous conditionFailedHandler */
         public Condition preCondition(boolean preCondition, Runnable conditionFailedHandler) {
             checkArgument(result == null);
             preCondition(preCondition);
