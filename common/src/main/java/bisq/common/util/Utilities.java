@@ -485,7 +485,7 @@ public class Utilities {
     @SuppressWarnings("SameParameterValue")
     public static String getShortId(String id, String sep) {
         String[] chunks = id.split(sep);
-        if (chunks.length > 0)
+        if (chunks.length > 1 && chunks[0].length() <= 8)
             return chunks[0];
         else
             return id.substring(0, Math.min(8, id.length()));
