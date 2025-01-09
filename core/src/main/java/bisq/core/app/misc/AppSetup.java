@@ -33,7 +33,7 @@ public abstract class AppSetup {
         // we need to reference it so the seed node stores tradeStatistics
         this.config = config;
 
-        Version.setBaseCryptoNetworkId(this.config.baseCurrencyNetwork.ordinal());
+        Version.setBaseCryptoNetworkId(this.config.getBaseCurrencyNetwork().ordinal());
         Version.printVersion();
     }
 

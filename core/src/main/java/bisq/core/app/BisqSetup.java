@@ -380,7 +380,7 @@ public class BisqSetup {
     }
 
     private void readMapsFromResources(Runnable completeHandler) {
-        String postFix = "_" + config.baseCurrencyNetwork.name();
+        String postFix = "_" + config.getBaseCurrencyNetwork().name();
         p2PService.getP2PDataStorage().readFromResources(postFix, completeHandler);
     }
 

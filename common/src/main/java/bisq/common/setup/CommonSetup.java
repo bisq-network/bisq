@@ -52,7 +52,7 @@ public class CommonSetup {
     public static void setup(Config config, GracefulShutDownHandler gracefulShutDownHandler) {
         setupLog(config);
         AsciiLogo.showAsciiLogo();
-        Version.setBaseCryptoNetworkId(config.baseCurrencyNetwork.ordinal());
+        Version.setBaseCryptoNetworkId(config.getBaseCurrencyNetwork().ordinal());
         Version.printVersion();
         maybePrintPathOfCodeSource();
         Profiler.printSystemLoad();

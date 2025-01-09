@@ -90,7 +90,7 @@ public class PriceFeedNodeAddressProvider {
             baseUrl = providerList.get(index);
             index++;
 
-            if (providerList.size() == 1 && config.baseCurrencyNetwork.isMainnet())
+            if (providerList.size() == 1 && config.getBaseCurrencyNetwork().isMainnet())
                 log.warn("We only have one provider");
         } else {
             baseUrl = "";

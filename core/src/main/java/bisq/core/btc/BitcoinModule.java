@@ -57,9 +57,9 @@ public class BitcoinModule extends AppModule {
         // otherwise the specified host or default (localhost)
         String regTestHost = config.bitcoinRegtestHost;
         if (regTestHost.isEmpty()) {
-            regTestHost = config.baseCurrencyNetwork.isDaoTestNet() ?
+            regTestHost = config.getBaseCurrencyNetwork().isDaoTestNet() ?
                     "104.248.31.39" :
-                    config.baseCurrencyNetwork.isDaoRegTest() ?
+                    config.getBaseCurrencyNetwork().isDaoRegTest() ?
                             "134.209.242.206" :
                             Config.DEFAULT_REGTEST_HOST;
         }
