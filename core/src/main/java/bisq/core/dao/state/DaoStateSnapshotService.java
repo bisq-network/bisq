@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -79,7 +80,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     @Setter
     @Nullable
     private Runnable resyncDaoStateFromResourcesHandler;
-    private int daoRequiresRestartHandlerAttempts = 0;
+    private final AtomicInteger daoRequiresRestartHandlerAttempts = new AtomicInteger();
     private final AtomicBoolean persistingBlockInProgress = new AtomicBoolean();
     private final AtomicBoolean isParseBlockChainComplete = new AtomicBoolean();
     private final List<Integer> heightsOfLastAppliedSnapshots = new ArrayList<>();
@@ -369,7 +370,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     private void resyncDaoStateFromResources() {
         log.info("resyncDaoStateFromResources called");
         if (resyncDaoStateFromResourcesHandler == null) {
-            if (++daoRequiresRestartHandlerAttempts <= 3) {
+            if (daoRequiresRestartHandlerAttempts.addAndGet(1) <= 3) {
                 log.warn("resyncDaoStateFromResourcesHandler has not been initialized yet, will try again in 10 seconds");
                 UserThread.runAfter(this::resyncDaoStateFromResources, 10);  // a delay for the app to init
                 return;
@@ -378,12 +379,15 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                 System.exit(1);
             }
         }
-        try {
-            daoStateStorageService.removeAndBackupAllDaoData();
-            // the restart handler informs the user of the need to restart bisq (in desktop mode)
-            resyncDaoStateFromResourcesHandler.run();
-        } catch (IOException e) {
-            log.error("Error at resyncDaoStateFromResources: {}", e.toString());
+
+        synchronized (this) {
+            try {
+                daoStateStorageService.removeAndBackupAllDaoData();
+                // the restart handler informs the user of the need to restart bisq (in desktop mode)
+                resyncDaoStateFromResourcesHandler.run();
+            } catch (IOException e) {
+                log.error("Error at resyncDaoStateFromResources: {}", e.toString());
+            }
         }
     }
 
