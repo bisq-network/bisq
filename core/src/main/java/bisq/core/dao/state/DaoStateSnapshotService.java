@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -79,7 +80,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     @Nullable
     private Runnable resyncDaoStateFromResourcesHandler;
     private int daoRequiresRestartHandlerAttempts = 0;
-    private boolean persistingBlockInProgress;
+    private final AtomicBoolean persistingBlockInProgress = new AtomicBoolean();
     private boolean isParseBlockChainComplete;
     private final List<Integer> heightsOfLastAppliedSnapshots = new ArrayList<>();
 
@@ -233,7 +234,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         // We protect to get called while we are not completed with persisting the daoState. This can take about
         // 20 seconds, and it is not expected that we get triggered another snapshot event in that period, but this
         // check guards that we would skip such calls.
-        if (persistingBlockInProgress) {
+        if (persistingBlockInProgress.get()) {
             if (preferences.isUseFullModeDaoMonitor()) {
                 // In case we don't use isUseFullModeDaoMonitor we might get called here too often as the parsing is much
                 // faster than the persistence, and we likely create only 1 snapshot during initial parsing, so
@@ -256,7 +257,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
 
     private void persist() {
         long ts = System.currentTimeMillis();
-        persistingBlockInProgress = true;
+        persistingBlockInProgress.set(true);
         daoStateStorageService.requestPersistence(daoStateCandidate,
                 blocksCandidate,
                 hashChainCandidate,
@@ -265,7 +266,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
                             snapshotHeight, System.currentTimeMillis() - ts);
 
                     createSnapshot();
-                    persistingBlockInProgress = false;
+                    persistingBlockInProgress.set(false);
                 });
     }
 
