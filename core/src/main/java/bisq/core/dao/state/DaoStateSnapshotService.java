@@ -212,6 +212,23 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
 
     // We need to process during batch processing as well to write snapshots during that process.
     public void maybeCreateSnapshot(Block block) {
+        // We protect to get called while we are not completed with persisting the daoState. This can take about
+        // 20 seconds, and it is not expected that we get triggered another snapshot event in that period, but this
+        // check guards that we would skip such calls.
+        if (persistingBlockInProgress.get()) {
+            if (preferences.isUseFullModeDaoMonitor()) {
+                // In case we don't use isUseFullModeDaoMonitor we might get called here too often as the parsing is much
+                // faster than the persistence, and we likely create only 1 snapshot during initial parsing, so
+                // we log only if isUseFullModeDaoMonitor is true as then parsing is likely slower, and we would
+                // expect that we do a snapshot at each trigger block.
+                log.info("We try to persist a daoState but the previous call has not completed yet. " +
+                        "We ignore that call and skip that snapshot. " +
+                        "Snapshot will be created at next snapshot height again. This is not to be expected with live " +
+                        "blockchain data.");
+            }
+            return;
+        }
+
         int chainHeight = block.getHeight();
         if (!isSnapshotHeight(chainHeight)) {
             return;
@@ -228,23 +245,6 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
 
         if (daoStateCandidate != null && snapshotHeight == chainHeight) {
             log.error("snapshotHeight is same as chainHeight. This should never happen. chainHeight={}", chainHeight);
-            return;
-        }
-
-        // We protect to get called while we are not completed with persisting the daoState. This can take about
-        // 20 seconds, and it is not expected that we get triggered another snapshot event in that period, but this
-        // check guards that we would skip such calls.
-        if (persistingBlockInProgress.get()) {
-            if (preferences.isUseFullModeDaoMonitor()) {
-                // In case we don't use isUseFullModeDaoMonitor we might get called here too often as the parsing is much
-                // faster than the persistence, and we likely create only 1 snapshot during initial parsing, so
-                // we log only if isUseFullModeDaoMonitor is true as then parsing is likely slower, and we would
-                // expect that we do a snapshot at each trigger block.
-                log.info("We try to persist a daoState but the previous call has not completed yet. " +
-                        "We ignore that call and skip that snapshot. " +
-                        "Snapshot will be created at next snapshot height again. This is not to be expected with live " +
-                        "blockchain data.");
-            }
             return;
         }
 
