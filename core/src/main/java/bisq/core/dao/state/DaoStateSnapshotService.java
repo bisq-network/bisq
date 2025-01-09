@@ -294,7 +294,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         applySnapshot(false);
     }
 
-    private void applySnapshot(boolean fromInitialize) {
+    private synchronized void applySnapshot(boolean fromInitialize) {
         DaoState persistedDaoState = daoStateStorageService.getPersistedBsqState();
         if (persistedDaoState == null) {
             log.info("Try to apply snapshot but no stored snapshot available. That is expected at first blocks.");
