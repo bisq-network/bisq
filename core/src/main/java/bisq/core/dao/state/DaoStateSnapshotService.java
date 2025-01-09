@@ -81,7 +81,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
     private Runnable resyncDaoStateFromResourcesHandler;
     private int daoRequiresRestartHandlerAttempts = 0;
     private final AtomicBoolean persistingBlockInProgress = new AtomicBoolean();
-    private boolean isParseBlockChainComplete;
+    private final AtomicBoolean isParseBlockChainComplete = new AtomicBoolean();
     private final List<Integer> heightsOfLastAppliedSnapshots = new ArrayList<>();
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -156,7 +156,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
         // Otherwise, we do it only after the initial blockchain parsing is completed to not delay the parsing.
         // In that case we get the missing hashes from the seed nodes. At any new block we do the hash calculation
         // ourselves and therefore get back confidence that our DAO state is in sync with the network.
-        if (preferences.isUseFullModeDaoMonitor() || isParseBlockChainComplete) {
+        if (preferences.isUseFullModeDaoMonitor() || isParseBlockChainComplete.get()) {
             // We need to execute first the daoStateMonitoringService.createHashFromBlock to get the hash created
             daoStateMonitoringService.createHashFromBlock(block);
             maybeCreateSnapshot(block);
@@ -168,7 +168,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
 
     @Override
     public void onParseBlockChainComplete() {
-        isParseBlockChainComplete = true;
+        isParseBlockChainComplete.set(true);
 
         // In case we have dao monitoring deactivated we create the snapshot after we are completed with parsing,
         // and we got called back from daoStateMonitoringService once the hashes are created from peers data.
