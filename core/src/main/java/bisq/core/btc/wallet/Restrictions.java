@@ -32,7 +32,7 @@ public class Restrictions {
     private static Coin MIN_BUYER_SECURITY_DEPOSIT;
     // For the seller we use a fixed one as there is no way the seller can cancel the trade
     // To make it editable would just increase complexity.
-    private static Coin SELLER_SECURITY_DEPOSIT;
+    private static Coin MIN_SELLER_SECURITY_DEPOSIT;
     // At mediation we require a min. payout to the losing party to keep incentive for the trader to accept the
     // mediated payout. For Refund agent cases we do not have that restriction.
     private static Coin MIN_REFUND_AT_MEDIATED_DISPUTE;
@@ -98,15 +98,15 @@ public class Restrictions {
     public static Coin getMinSellerSecurityDepositAsCoin() {
         Date now = new Date();
         if (now.after(MIN_SECURITY_DEPOSIT_CHANGE_ACTIVATION_DATE)) {
-            if (SELLER_SECURITY_DEPOSIT == null || SELLER_SECURITY_DEPOSIT.equals(Coin.parseCoin("0.001"))) {
-                SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.0003"); // 0.0003 BTC is 27 USD @ 90000 USD/BTC
+            if (MIN_SELLER_SECURITY_DEPOSIT == null || MIN_SELLER_SECURITY_DEPOSIT.equals(Coin.parseCoin("0.001"))) {
+                MIN_SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.0003"); // 0.0003 BTC is 27 USD @ 90000 USD/BTC
             }
-            return SELLER_SECURITY_DEPOSIT;
+            return MIN_SELLER_SECURITY_DEPOSIT;
         } else {
-            if (SELLER_SECURITY_DEPOSIT == null) {
-                SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.001"); // 0.001 BTC is 60 USD @ 60000 USD/BTC
+            if (MIN_SELLER_SECURITY_DEPOSIT == null) {
+                MIN_SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.001"); // 0.001 BTC is 60 USD @ 60000 USD/BTC
             }
-            return SELLER_SECURITY_DEPOSIT;
+            return MIN_SELLER_SECURITY_DEPOSIT;
         }
     }
 
