@@ -18,10 +18,16 @@
 package bisq.core.btc.wallet;
 
 import bisq.common.config.Config;
+import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
 
+import java.util.Date;
+import java.util.GregorianCalendar;
+
 public class Restrictions {
+    private static final Date MIN_SECURITY_DEPOSIT_CHANGE_ACTIVATION_DATE = Utilities.getUTCDate(2025, GregorianCalendar.MARCH, 1);
+
     private static Coin MIN_TRADE_AMOUNT;
     private static Coin MIN_BUYER_SECURITY_DEPOSIT;
     // For the seller we use a fixed one as there is no way the seller can cancel the trade
@@ -66,10 +72,17 @@ public class Restrictions {
     }
 
     // We use MIN_BUYER_SECURITY_DEPOSIT as well as lower bound in case of small trade amounts.
-    // So 0.0005 BTC is the min. buyer security deposit even with amount of 0.0001 BTC and 0.05% percentage value.
     public static Coin getMinBuyerSecurityDepositAsCoin() {
-        if (MIN_BUYER_SECURITY_DEPOSIT == null)
-            MIN_BUYER_SECURITY_DEPOSIT = Coin.parseCoin("0.001"); // 0.001 BTC is 60 USD @ 60000 USD/BTC
+        Date now = new Date();
+        if (now.after(MIN_SECURITY_DEPOSIT_CHANGE_ACTIVATION_DATE)) {
+            if (MIN_BUYER_SECURITY_DEPOSIT == null || MIN_BUYER_SECURITY_DEPOSIT.equals(Coin.parseCoin("0.001"))) {
+                MIN_BUYER_SECURITY_DEPOSIT = Coin.parseCoin("0.0003"); // 0.0003 BTC is 27 USD @ 90000 USD/BTC
+            }
+        } else {
+            if (MIN_BUYER_SECURITY_DEPOSIT == null) {
+                MIN_BUYER_SECURITY_DEPOSIT = Coin.parseCoin("0.001"); // 0.001 BTC is 60 USD @ 60000 USD/BTC
+            }
+        }
         return MIN_BUYER_SECURITY_DEPOSIT;
     }
 
@@ -83,9 +96,18 @@ public class Restrictions {
     }
 
     public static Coin getMinSellerSecurityDepositAsCoin() {
-        if (SELLER_SECURITY_DEPOSIT == null)
-            SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.001"); // 0.001 BTC is 60 USD @ 60000 USD/BTC
-        return SELLER_SECURITY_DEPOSIT;
+        Date now = new Date();
+        if (now.after(MIN_SECURITY_DEPOSIT_CHANGE_ACTIVATION_DATE)) {
+            if (SELLER_SECURITY_DEPOSIT == null || SELLER_SECURITY_DEPOSIT.equals(Coin.parseCoin("0.001"))) {
+                SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.0003"); // 0.0003 BTC is 27 USD @ 90000 USD/BTC
+            }
+            return SELLER_SECURITY_DEPOSIT;
+        } else {
+            if (SELLER_SECURITY_DEPOSIT == null) {
+                SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.001"); // 0.001 BTC is 60 USD @ 60000 USD/BTC
+            }
+            return SELLER_SECURITY_DEPOSIT;
+        }
     }
 
     // This value must be lower than MIN_BUYER_SECURITY_DEPOSIT and SELLER_SECURITY_DEPOSIT
