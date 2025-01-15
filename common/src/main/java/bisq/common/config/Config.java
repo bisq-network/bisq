@@ -29,6 +29,7 @@ import java.util.Optional;
 import ch.qos.logback.classic.Level;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
@@ -178,7 +179,8 @@ public class Config {
     public final List<String> bannedPriceRelayNodes;
     public final List<String> bannedSeedNodes;
     public final List<String> filterProvidedSeedNodes;
-    public final BaseCurrencyNetwork baseCurrencyNetwork;
+    @Getter
+    private final BaseCurrencyNetwork baseCurrencyNetwork;
     public final NetworkParameters networkParameters;
     public final boolean ignoreLocalBtcNode;
     public final String bitcoinRegtestHost;

@@ -75,7 +75,7 @@ public class SimpleHttpServer {
         started = new Date().toString();
         providedBtcNodes = peerConncetionModel.getProvidedBtcNodes();
 
-        BaseCurrencyNetwork network = config.baseCurrencyNetwork;
+        BaseCurrencyNetwork network = config.getBaseCurrencyNetwork();
         if (config.useTorForBtcMonitor) {
             port = network.isMainnet() ? 8000 : 8001;
             networkInfo = network.isMainnet() ? "TOR/MAIN_NET" : "TOR/REG_TEST";

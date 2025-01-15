@@ -93,7 +93,7 @@ public class AppSetupWithP2P extends AppSetup {
 
     @Override
     protected void initBasicServices() {
-        String postFix = "_" + config.baseCurrencyNetwork.name();
+        String postFix = "_" + config.getBaseCurrencyNetwork().name();
         p2PDataStorage.readFromResources(postFix, this::startInitP2PNetwork);
     }
 

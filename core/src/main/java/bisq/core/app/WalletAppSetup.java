@@ -284,6 +284,6 @@ public class WalletAppSetup {
             postFix = " " + Res.get("mainView.footer.usingTor");
         else
             postFix = "";
-        return Res.get(config.baseCurrencyNetwork.name()) + postFix;
+        return Res.get(config.getBaseCurrencyNetwork().name()) + postFix;
     }
 }

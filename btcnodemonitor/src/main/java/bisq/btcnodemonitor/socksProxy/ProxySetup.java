@@ -57,7 +57,7 @@ public class ProxySetup {
         socksProxyFactory = new SocksProxyFactory("127.0.0.1");
         Socks5ProxyProvider socks5ProxyProvider = new Socks5ProxyProvider("", "");
         socks5ProxyProvider.setSocks5ProxyInternal(socksProxyFactory);
-        String networkDirName = config.baseCurrencyNetwork.name().toLowerCase();
+        String networkDirName = config.getBaseCurrencyNetwork().name().toLowerCase();
         torDir = Paths.get(config.appDataDir.getPath(), networkDirName, "tor").toFile();
     }
 

@@ -133,7 +133,7 @@ public class DaoStateSnapshotService implements DaoSetupService, DaoStateListene
 
     @Override
     public void onParseBlockCompleteAfterBatchProcessing(Block block) {
-        if (config.baseCurrencyNetwork.isMainnet() &&
+        if (config.getBaseCurrencyNetwork().isMainnet() &&
                 walletsSetup.isDownloadComplete() &&
                 daoStateService.getChainHeight() == bsqWalletService.getBestChainHeight()) {
             // In case the DAO state is invalid we might get an outdated RECIPIENT_BTC_ADDRESS. In that case we trigger

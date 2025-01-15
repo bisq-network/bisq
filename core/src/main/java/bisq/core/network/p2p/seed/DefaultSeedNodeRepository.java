@@ -71,7 +71,7 @@ public class DefaultSeedNodeRepository implements SeedNodeRepository {
             }
 
             cache.clear();
-            List<NodeAddress> result = getSeedNodeAddressesFromPropertyFile(config.baseCurrencyNetwork.name().toLowerCase(Locale.ENGLISH));
+            List<NodeAddress> result = getSeedNodeAddressesFromPropertyFile(config.getBaseCurrencyNetwork().name().toLowerCase(Locale.ENGLISH));
             cache.addAll(result);
 
             Set<NodeAddress> filterProvidedSeedNodes = config.filterProvidedSeedNodes.stream()

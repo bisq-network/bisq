@@ -51,7 +51,7 @@ public class LocalBitcoinNode {
      * Returns whether Bisq should ignore a local Bitcoin node even if it is usable.
      */
     public boolean shouldBeIgnored() {
-        BaseCurrencyNetwork baseCurrencyNetwork = config.baseCurrencyNetwork;
+        BaseCurrencyNetwork baseCurrencyNetwork = config.getBaseCurrencyNetwork();
 
         // For dao testnet (server side regtest) we disable the use of local bitcoin node
         // to avoid confusion if local btc node is not synced with our dao testnet master
