@@ -1,8 +1,7 @@
 package bisq.core.btc.nodes;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 
@@ -20,12 +19,11 @@ public class FederatedBtcNodeProviderTest {
                         BtcNodes.BtcNode.DEFAULT_PORT, "@charlie")
         );
 
-        List<BtcNodes.BtcNode> mutableHardcodedList = new ArrayList<>(hardcodedNodes);
-        List<String> filterProvidedBtcNodes = Collections.emptyList();
-        List<String> bannedBtcNodes = Collections.emptyList();
+        Stream<String> filterProvidedBtcNodes = Stream.empty();
+        Stream<String> bannedBtcNodes = Stream.empty();
 
         List<BtcNodes.BtcNode> selectedNodes = FederatedBtcNodeProvider
-                .getNodes(mutableHardcodedList, filterProvidedBtcNodes, bannedBtcNodes);
+                .getNodes(hardcodedNodes.stream(), filterProvidedBtcNodes, bannedBtcNodes);
 
         assertIterableEquals(hardcodedNodes, selectedNodes);
     }
@@ -43,13 +41,12 @@ public class FederatedBtcNodeProviderTest {
                         BtcNodes.BtcNode.DEFAULT_PORT, "@charlie")
         );
 
-        List<BtcNodes.BtcNode> mutableHardcodedList = new ArrayList<>(hardcodedNodes);
-        List<String> filterProvidedBtcNodes = Collections.emptyList();
+        Stream<String> filterProvidedBtcNodes = Stream.empty();
         String bannedFullAddress = bannedAddress + ":" + port;
-        List<String> bannedBtcNodes = List.of(bannedFullAddress);
+        Stream<String> bannedBtcNodes = Stream.of(bannedFullAddress);
 
         List<BtcNodes.BtcNode> selectedNodes = FederatedBtcNodeProvider
-                .getNodes(mutableHardcodedList, filterProvidedBtcNodes, bannedBtcNodes);
+                .getNodes(hardcodedNodes.stream(), filterProvidedBtcNodes, bannedBtcNodes);
 
         var expected = List.of(
                 new BtcNodes.BtcNode(null, "alice.onion", null,
@@ -72,13 +69,12 @@ public class FederatedBtcNodeProviderTest {
                         BtcNodes.BtcNode.DEFAULT_PORT, "@charlie")
         );
 
-        List<BtcNodes.BtcNode> mutableHardcodedList = new ArrayList<>(hardcodedNodes);
-        List<String> filterProvidedBtcNodes = Collections.emptyList();
+        Stream<String> filterProvidedBtcNodes = Stream.empty();
         String bannedFullAddress = bannedAddress + ":" + 1234;
-        List<String> bannedBtcNodes = List.of(bannedFullAddress);
+        Stream<String> bannedBtcNodes = Stream.of(bannedFullAddress);
 
         List<BtcNodes.BtcNode> selectedNodes = FederatedBtcNodeProvider
-                .getNodes(mutableHardcodedList, filterProvidedBtcNodes, bannedBtcNodes);
+                .getNodes(hardcodedNodes.stream(), filterProvidedBtcNodes, bannedBtcNodes);
 
         assertIterableEquals(hardcodedNodes, selectedNodes);
     }
@@ -96,13 +92,12 @@ public class FederatedBtcNodeProviderTest {
                         BtcNodes.BtcNode.DEFAULT_PORT, "@charlie")
         );
 
-        List<BtcNodes.BtcNode> mutableHardcodedList = new ArrayList<>(hardcodedNodes);
-        List<String> filterProvidedBtcNodes = Collections.emptyList();
+        Stream<String> filterProvidedBtcNodes = Stream.empty();
         String bannedFullAddress = "[" + bannedAddress + "]" + ":" + port;
-        List<String> bannedBtcNodes = List.of(bannedFullAddress);
+        Stream<String> bannedBtcNodes = Stream.of(bannedFullAddress);
 
         List<BtcNodes.BtcNode> selectedNodes = FederatedBtcNodeProvider
-                .getNodes(mutableHardcodedList, filterProvidedBtcNodes, bannedBtcNodes);
+                .getNodes(hardcodedNodes.stream(), filterProvidedBtcNodes, bannedBtcNodes);
 
         var expected = List.of(
                 new BtcNodes.BtcNode(null, "alice.onion", null,
@@ -125,13 +120,12 @@ public class FederatedBtcNodeProviderTest {
                         BtcNodes.BtcNode.DEFAULT_PORT, "@charlie")
         );
 
-        List<BtcNodes.BtcNode> mutableHardcodedList = new ArrayList<>(hardcodedNodes);
-        List<String> filterProvidedBtcNodes = Collections.emptyList();
+        Stream<String> filterProvidedBtcNodes = Stream.empty();
         String bannedFullAddress = "[" + bannedAddress + "]" + ":" + 1234;
-        List<String> bannedBtcNodes = List.of(bannedFullAddress);
+        Stream<String> bannedBtcNodes = Stream.of(bannedFullAddress);
 
         List<BtcNodes.BtcNode> selectedNodes = FederatedBtcNodeProvider
-                .getNodes(mutableHardcodedList, filterProvidedBtcNodes, bannedBtcNodes);
+                .getNodes(hardcodedNodes.stream(), filterProvidedBtcNodes, bannedBtcNodes);
 
         assertIterableEquals(hardcodedNodes, selectedNodes);
     }
@@ -149,12 +143,11 @@ public class FederatedBtcNodeProviderTest {
                         BtcNodes.BtcNode.DEFAULT_PORT, "@charlie")
         );
 
-        List<BtcNodes.BtcNode> mutableHardcodedList = new ArrayList<>(hardcodedNodes);
-        List<String> filterProvidedBtcNodes = Collections.emptyList();
-        List<String> bannedBtcNodes = List.of(bannedHostName + ":" + port);
+        Stream<String> filterProvidedBtcNodes = Stream.empty();
+        Stream<String> bannedBtcNodes = Stream.of(bannedHostName + ":" + port);
 
         List<BtcNodes.BtcNode> selectedNodes = FederatedBtcNodeProvider
-                .getNodes(mutableHardcodedList, filterProvidedBtcNodes, bannedBtcNodes);
+                .getNodes(hardcodedNodes.stream(), filterProvidedBtcNodes, bannedBtcNodes);
 
         var expected = List.of(
                 new BtcNodes.BtcNode(null, "alice.onion", null,
@@ -177,12 +170,11 @@ public class FederatedBtcNodeProviderTest {
                         BtcNodes.BtcNode.DEFAULT_PORT, "@charlie")
         );
 
-        List<BtcNodes.BtcNode> mutableHardcodedList = new ArrayList<>(hardcodedNodes);
-        List<String> filterProvidedBtcNodes = Collections.emptyList();
-        List<String> bannedBtcNodes = List.of(bannedHostName + ":" + 1234);
+        Stream<String> filterProvidedBtcNodes = Stream.empty();
+        Stream<String> bannedBtcNodes = Stream.of(bannedHostName + ":" + 1234);
 
         List<BtcNodes.BtcNode> selectedNodes = FederatedBtcNodeProvider
-                .getNodes(mutableHardcodedList, filterProvidedBtcNodes, bannedBtcNodes);
+                .getNodes(hardcodedNodes.stream(), filterProvidedBtcNodes, bannedBtcNodes);
 
         assertIterableEquals(hardcodedNodes, selectedNodes);
     }
@@ -200,12 +192,11 @@ public class FederatedBtcNodeProviderTest {
                         BtcNodes.BtcNode.DEFAULT_PORT, "@charlie")
         );
 
-        List<BtcNodes.BtcNode> mutableHardcodedList = new ArrayList<>(hardcodedNodes);
-        List<String> filterProvidedBtcNodes = Collections.emptyList();
-        List<String> bannedBtcNodes = List.of(bannedOnionAddress + ":" + BtcNodes.BtcNode.DEFAULT_PORT);
+        Stream<String> filterProvidedBtcNodes = Stream.empty();
+        Stream<String> bannedBtcNodes = Stream.of(bannedOnionAddress + ":" + BtcNodes.BtcNode.DEFAULT_PORT);
 
         List<BtcNodes.BtcNode> selectedNodes = FederatedBtcNodeProvider
-                .getNodes(mutableHardcodedList, filterProvidedBtcNodes, bannedBtcNodes);
+                .getNodes(hardcodedNodes.stream(), filterProvidedBtcNodes, bannedBtcNodes);
 
         var expected = List.of(
                 new BtcNodes.BtcNode(null, "alice.onion", null,
@@ -229,12 +220,11 @@ public class FederatedBtcNodeProviderTest {
                         BtcNodes.BtcNode.DEFAULT_PORT, "@charlie")
         );
 
-        List<BtcNodes.BtcNode> mutableHardcodedList = new ArrayList<>(hardcodedNodes);
-        List<String> filterProvidedBtcNodes = Collections.emptyList();
-        List<String> bannedBtcNodes = List.of(bannedOnionAddress + ":" + 1234);
+        Stream<String> filterProvidedBtcNodes = Stream.empty();
+        Stream<String> bannedBtcNodes = Stream.of(bannedOnionAddress + ":" + 1234);
 
         List<BtcNodes.BtcNode> selectedNodes = FederatedBtcNodeProvider
-                .getNodes(mutableHardcodedList, filterProvidedBtcNodes, bannedBtcNodes);
+                .getNodes(hardcodedNodes.stream(), filterProvidedBtcNodes, bannedBtcNodes);
 
         assertIterableEquals(hardcodedNodes, selectedNodes);
     }

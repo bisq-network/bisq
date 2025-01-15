@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,24 +15,23 @@ import org.jetbrains.annotations.Nullable;
 @Slf4j
 public class FederatedBtcNodeProvider {
 
-    static List<BtcNodes.BtcNode> getNodes(List<BtcNodes.BtcNode> hardcodedBtcNodes,
-                                           List<String> filterProvidedBtcNodesConfig,
-                                           List<String> bannedBtcNodesConfig) {
-        Set<BtcNodes.BtcNode> filterProvidedBtcNodes = filterProvidedBtcNodesConfig.stream()
+    static List<BtcNodes.BtcNode> getNodes(Stream<BtcNodes.BtcNode> hardcodedBtcNodes,
+                                           Stream<String> filterProvidedBtcNodesConfig,
+                                           Stream<String> bannedBtcNodesConfig) {
+        Stream<BtcNodes.BtcNode> filterProvidedBtcNodes = filterProvidedBtcNodesConfig
                 .filter(n -> !n.isEmpty())
                 .map(FederatedBtcNodeProvider::getNodeAddress)
                 .filter(Objects::nonNull)
-                .map(nodeAddress -> new BtcNodes.BtcNode(null, nodeAddress.getHostName(), null, nodeAddress.getPort(), "Provided by filter"))
-                .collect(Collectors.toSet());
-        hardcodedBtcNodes.addAll(filterProvidedBtcNodes);
+                .map(nodeAddress -> new BtcNodes.BtcNode(null, nodeAddress.getHostName(), null,
+                        nodeAddress.getPort(), "Provided by filter"));
 
-        Set<NodeAddress> bannedBtcNodeHostNames = bannedBtcNodesConfig.stream()
+        Set<NodeAddress> bannedBtcNodeHostNames = bannedBtcNodesConfig
                 .filter(n -> !n.isEmpty())
                 .map(FederatedBtcNodeProvider::getNodeAddress)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
-        return hardcodedBtcNodes.stream()
+        return Stream.concat(hardcodedBtcNodes, filterProvidedBtcNodes)
                 .filter(btcNode -> {
                     String nodeAddress = btcNode.hasOnionAddress() ? btcNode.getOnionAddress() :
                             btcNode.getHostNameOrAddress();
