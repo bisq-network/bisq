@@ -218,10 +218,16 @@ public class FluentProtocol {
             return this;
         }
 
+        /** Calling this more than once discards the previous conditionFailedHandler */
         public Condition preCondition(boolean preCondition, Runnable conditionFailedHandler) {
             checkArgument(result == null);
             preCondition(preCondition);
 
+            // warn if we are replacing it with another preConditionHandler:
+            if (this.preConditionFailedHandler != null) {
+                log.warn("preCondition with conditionFailedHandler was called more than once." +
+                         "previous conditionFailedHandler will be discarded.");
+            }
             this.preConditionFailedHandler = conditionFailedHandler;
             return this;
         }

@@ -109,10 +109,11 @@ public class DisputeProtocol extends TradeProtocol {
                 Trade.Phase.FIAT_SENT,
                 Trade.Phase.FIAT_RECEIVED)
                 .with(event)
-                .preCondition(trade.getProcessModel().getTradePeer().getMediatedPayoutTxSignature() == null,
-                        () -> errorMessageHandler.handleErrorMessage("We have received already the signature from the peer."))
-                .preCondition(trade.getPayoutTx() == null,
-                        () -> errorMessageHandler.handleErrorMessage("Payout tx is already published.")))
+                .preCondition(
+                        (trade.getProcessModel().getTradePeer().getMediatedPayoutTxSignature() == null) ||
+                        (trade.getPayoutTx() == null),
+                        () -> errorMessageHandler.handleErrorMessage("We either have received already the signature from the peer or payout tx is already published."))
+                )
                 .setup(tasks(ApplyFilter.class,
                         SignMediatedPayoutTx.class,
                         SendMediatedPayoutSignatureMessage.class,
