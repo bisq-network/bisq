@@ -790,9 +790,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         // We only persist if we have not set the program argument
         if (!rpcUserFromOptions.isEmpty()) {
             prefPayload.setRpcUser(value);
+            requestPersistence();
         }
-        prefPayload.setRpcUser(value);
-        requestPersistence();
     }
 
     public void setRpcPw(String value) {

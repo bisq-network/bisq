@@ -917,7 +917,7 @@ public abstract class Trade extends TradeModel {
         long now = System.currentTimeMillis();
         long startTime;
         Transaction depositTx = getDepositTx();
-        if (depositTx != null && getDate() != null) {
+        if (depositTx != null) {
             if (depositTx.getConfidence().getDepthInBlocks() > 0) {
                 final long tradeTime = getDate().getTime();
                 // Use tx.getIncludedInBestChainAt() when available, otherwise use tx.getUpdateTime()

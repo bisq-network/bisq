@@ -18,7 +18,7 @@
 package bisq.core.trade.model.bsq_swap;
 
 import bisq.core.offer.Offer;
-import bisq.core.trade.model.TakerTrade;
+import bisq.core.trade.model.MakerTrade;
 import bisq.core.trade.model.Tradable;
 import bisq.core.trade.protocol.bsq_swap.model.BsqSwapProtocolModel;
 
@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 
 @Slf4j
-public final class BsqSwapBuyerAsMakerTrade extends BsqSwapBuyerTrade implements TakerTrade {
+public final class BsqSwapBuyerAsMakerTrade extends BsqSwapBuyerTrade implements MakerTrade {
     public BsqSwapBuyerAsMakerTrade(Offer offer,
                                     Coin amount,
                                     long takeOfferDate,
