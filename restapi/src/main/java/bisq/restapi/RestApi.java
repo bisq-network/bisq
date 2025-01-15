@@ -38,6 +38,8 @@ import bisq.core.user.Preferences;
 import bisq.common.app.Version;
 import bisq.common.config.Config;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -69,7 +71,7 @@ public class RestApi extends ExecutableForAppWithP2p {
     private OfferBookService offerBookService;
     private PriceFeedService priceFeedService;
     @Getter
-    private boolean parseBlockCompleteAfterBatchProcessing;
+    private final AtomicBoolean parseBlockCompleteAfterBatchProcessing = new AtomicBoolean();
 
     public RestApi() {
         super("Bisq Rest Api", "bisq_restapi", "bisq_restapi", Version.VERSION);
@@ -108,7 +110,7 @@ public class RestApi extends ExecutableForAppWithP2p {
             @Override
             public void onParseBlockCompleteAfterBatchProcessing(Block block) {
                 log.error("onParseBlockCompleteAfterBatchProcessing");
-                parseBlockCompleteAfterBatchProcessing = true;
+                parseBlockCompleteAfterBatchProcessing.set(true);
             }
         });
     }
@@ -130,6 +132,6 @@ public class RestApi extends ExecutableForAppWithP2p {
     }
 
     public void checkDaoReady() {
-        checkArgument(parseBlockCompleteAfterBatchProcessing, "DAO not ready yet");
+        checkArgument(parseBlockCompleteAfterBatchProcessing.get(), "DAO not ready yet");
     }
 }
