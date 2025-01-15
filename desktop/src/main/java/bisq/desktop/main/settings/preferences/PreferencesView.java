@@ -26,6 +26,7 @@ import bisq.desktop.components.AutoTooltipSlideToggleButton;
 import bisq.desktop.components.InputTextField;
 import bisq.desktop.components.PasswordTextField;
 import bisq.desktop.components.TitledGroupBg;
+import bisq.desktop.components.paymentmethods.ArsBlueRatePopup;
 import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.main.overlays.windows.EditCustomExplorerWindow;
 import bisq.desktop.util.GUIUtil;
@@ -1029,8 +1030,13 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         preferredTradeCurrencyComboBox.setVisibleRowCount(12);
         preferredTradeCurrencyComboBox.setOnAction(e -> {
             TradeCurrency selectedItem = preferredTradeCurrencyComboBox.getSelectionModel().getSelectedItem();
-            if (selectedItem != null)
+            if (selectedItem != null) {
                 preferences.setPreferredTradeCurrency(selectedItem);
+
+                if (ArsBlueRatePopup.isTradeCurrencyArgentinePesos(selectedItem)) {
+                    ArsBlueRatePopup.showMaybe();
+                }
+            }
             GUIUtil.updateTopAltcoin(preferences);
         });
 

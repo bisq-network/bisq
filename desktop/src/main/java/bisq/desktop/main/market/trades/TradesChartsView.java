@@ -25,6 +25,7 @@ import bisq.desktop.components.AutoTooltipTableColumn;
 import bisq.desktop.components.AutoTooltipToggleButton;
 import bisq.desktop.components.AutocompleteComboBox;
 import bisq.desktop.components.ColoredDecimalPlacesWithZerosText;
+import bisq.desktop.components.paymentmethods.ArsBlueRatePopup;
 import bisq.desktop.main.market.trades.charts.price.CandleStickChart;
 import bisq.desktop.main.market.trades.charts.volume.VolumeChart;
 import bisq.desktop.util.CurrencyListItem;
@@ -33,6 +34,7 @@ import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.CurrencyUtil;
 import bisq.core.locale.Res;
+import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.trade.statistics.TradeStatistics3;
 import bisq.core.user.CookieKey;
@@ -309,7 +311,12 @@ public class TradesChartsView extends ActivatableViewAndModel<VBox, TradesCharts
                 currencyComboBox.getSelectionModel().select(SHOW_ALL);
             CurrencyListItem selectedItem = currencyComboBox.getSelectionModel().getSelectedItem();
             if (selectedItem != null) {
-                model.onSetTradeCurrency(selectedItem.tradeCurrency);
+                TradeCurrency selectedCurrency = selectedItem.tradeCurrency;
+                model.onSetTradeCurrency(selectedCurrency);
+
+                if (ArsBlueRatePopup.isTradeCurrencyArgentinePesos(selectedCurrency)) {
+                    ArsBlueRatePopup.showMaybe();
+                }
             }
         });
 
