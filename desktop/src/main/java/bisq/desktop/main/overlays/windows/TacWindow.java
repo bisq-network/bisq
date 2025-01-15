@@ -112,17 +112,26 @@ public class TacWindow extends Overlay<TacWindow> {
         String fontStyleClass = smallScreen ? "small-text" : "normal-text";
         messageLabel.getStyleClass().add(fontStyleClass);
 
-        Label label = new AutoTooltipLabel("    - For more details and a general overview please read the full documentation about ");
+        Label rulesLinkLabel = new AutoTooltipLabel("    - Read the complete ");
+        rulesLinkLabel.getStyleClass().add(fontStyleClass);
+
+        Label label = new AutoTooltipLabel(", and find more details and general overview in the full documentation about ");
         label.getStyleClass().add(fontStyleClass);
+
+        //not translated, as noted in String text of show()
+        HyperlinkWithIcon rulesLinkWithIcon = new ExternalHyperlink("trading rules");
+        rulesLinkWithIcon.setOnAction(e -> GUIUtil.openWebPage("https://bisq.wiki/Trading_rules"));
+        rulesLinkWithIcon.getStyleClass().add(fontStyleClass);
+        HBox.setMargin(rulesLinkWithIcon, new Insets(-0.5, 0, 0, 0));
 
         HyperlinkWithIcon hyperlinkWithIcon = new ExternalHyperlink(Res.get("tacWindow.arbitrationSystem").toLowerCase() + ".");
         hyperlinkWithIcon.setOnAction(e -> GUIUtil.openWebPage("https://bisq.wiki/Dispute_resolution"));
         hyperlinkWithIcon.getStyleClass().add(fontStyleClass);
         HBox.setMargin(hyperlinkWithIcon, new Insets(-0.5, 0, 0, 0));
 
-        HBox hBox = new HBox(label, hyperlinkWithIcon);
+        HBox hBox = new HBox(rulesLinkLabel, rulesLinkWithIcon, label, hyperlinkWithIcon);
         GridPane.setRowIndex(hBox, ++rowIndex);
-        GridPane.setMargin(hBox, new Insets(-5, 0, -20, 0));
+        GridPane.setMargin(hBox, new Insets(-12, 0, -20, 0));
         gridPane.getChildren().add(hBox);
     }
 
