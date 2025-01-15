@@ -24,7 +24,7 @@ import bisq.desktop.components.BisqScrollPane;
 import bisq.desktop.components.BisqTextArea;
 import bisq.desktop.components.InfoAutoTooltipLabel;
 import bisq.desktop.components.indicator.TxConfidenceIndicator;
-import bisq.desktop.components.paymentmethods.PaymentMethodForm;
+import bisq.desktop.components.paymentmethods.ArsBlueRatePopup;
 import bisq.desktop.main.MainView;
 import bisq.desktop.main.account.AccountView;
 import bisq.desktop.main.account.content.fiataccounts.FiatAccountsView;
@@ -1108,8 +1108,8 @@ public class GUIUtil {
             TradeCurrency selectedCurrency = currencyComboBox.getSelectionModel().getSelectedItem();
             onTradeCurrencySelectedHandler.accept(selectedCurrency);
 
-            if (PaymentMethodForm.isArgentinePesos(selectedCurrency)) {
-                PaymentMethodForm.maybeShowArgentinePesosBlueRatePopup();
+            if (ArsBlueRatePopup.isTradeCurrencyArgentinePesos(selectedCurrency)) {
+                ArsBlueRatePopup.show();
             }
         });
 

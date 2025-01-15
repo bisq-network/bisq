@@ -37,7 +37,6 @@ import bisq.core.offer.OfferDirection;
 import bisq.core.payment.AssetAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.payload.PaymentMethod;
-import bisq.core.user.DontShowAgainLookup;
 import bisq.core.util.coin.CoinFormatter;
 import bisq.core.util.validation.InputValidator;
 
@@ -68,7 +67,6 @@ import javafx.collections.FXCollections;
 import javafx.util.StringConverter;
 
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -124,8 +122,8 @@ public abstract class PaymentMethodForm {
             paymentAccount.setSingleTradeCurrency(selectedCurrency);
             updateFromInputs();
 
-            if (isArgentinePesos(selectedCurrency)) {
-                maybeShowArgentinePesosBlueRatePopup();
+            if (ArsBlueRatePopup.isTradeCurrencyArgentinePesos(selectedCurrency)) {
+                ArsBlueRatePopup.show();
             }
         });
     }
@@ -317,8 +315,8 @@ public abstract class PaymentMethodForm {
             if (checkBox.isSelected()) {
                 paymentAccount.addCurrency(e);
 
-                if (isArgentinePesos(e)) {
-                    maybeShowArgentinePesosBlueRatePopup();
+                if (ArsBlueRatePopup.isTradeCurrencyArgentinePesos(e)) {
+                    ArsBlueRatePopup.show();
                 }
 
             } else {
@@ -329,8 +327,8 @@ public abstract class PaymentMethodForm {
         });
         flowPane.getChildren().add(checkBox);
 
-        if (isCurrencySelected && isArgentinePesos(e)) {
-            maybeShowArgentinePesosBlueRatePopup();
+        if (isCurrencySelected && ArsBlueRatePopup.isTradeCurrencyArgentinePesos(e)) {
+            ArsBlueRatePopup.show();
         }
     }
 
@@ -371,23 +369,5 @@ public abstract class PaymentMethodForm {
     }
 
     void addAcceptedCountry(String countryCode) {
-    }
-
-    public static boolean isArgentinePesos(TradeCurrency tradeCurrency) {
-        FiatCurrency arsCurrency = new FiatCurrency("ARS");
-        return tradeCurrency.equals(arsCurrency);
-    }
-
-    public static void maybeShowArgentinePesosBlueRatePopup() {
-        String key = "arsBlueMarketNotificationPopup";
-        if (DontShowAgainLookup.showAgain(key)) {
-            new Popup()
-                    .headLine(Res.get("popup.arsBlueMarket.title"))
-                    .information(Res.get("popup.arsBlueMarket.info"))
-                    .actionButtonText(Res.get("shared.iUnderstand"))
-                    .hideCloseButton()
-                    .dontShowAgainId(key)
-                    .show();
-        }
     }
 }
