@@ -43,6 +43,8 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
+
 import static bisq.desktop.util.FormBuilder.addInputTextField;
 import static bisq.desktop.util.FormBuilder.addMultilineLabel;
 import static bisq.desktop.util.FormBuilder.addTopLabelTextField;
@@ -142,7 +144,7 @@ public final class BtcEmptyWalletWindow extends Overlay<BtcEmptyWalletWindow> {
         GridPane.setMargin(hBox, new Insets(10, 0, 0, 0));
     }
 
-    private void doEmptyWallet(KeyParameter aesKey) {
+    private void doEmptyWallet(@Nullable KeyParameter aesKey) {
         if (GUIUtil.isReadyForTxBroadcastOrShowPopup(p2PService, walletsSetup)) {
             if (!openOfferManager.getObservableList().isEmpty()) {
                 UserThread.runAfter(() ->
@@ -156,7 +158,7 @@ public final class BtcEmptyWalletWindow extends Overlay<BtcEmptyWalletWindow> {
         }
     }
 
-    private void doEmptyWallet2(KeyParameter aesKey) {
+    private void doEmptyWallet2(@Nullable KeyParameter aesKey) {
         emptyWalletButton.setDisable(true);
         openOfferManager.removeAllOpenOffers(() -> {
             try {

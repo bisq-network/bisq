@@ -49,6 +49,8 @@ import com.google.protobuf.Message;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.script.Script;
 
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -65,6 +67,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -232,7 +235,15 @@ public abstract class Trade extends TradeModel {
         // refund
         REFUND_REQUESTED,
         REFUND_REQUEST_STARTED_BY_PEER,
-        REFUND_REQUEST_CLOSED;
+        REFUND_REQUEST_CLOSED,
+
+        // warning
+        WARNING_SENT,
+        WARNING_SENT_BY_PEER,
+
+        // claim
+        ESCROW_CLAIMED,
+        ESCROW_CLAIMED_BY_PEER;
 
         public static Trade.DisputeState fromProto(protobuf.Trade.DisputeState disputeState) {
             return ProtoUtil.enumFromProto(Trade.DisputeState.class, disputeState.name());
@@ -252,13 +263,13 @@ public abstract class Trade extends TradeModel {
                     this == Trade.DisputeState.MEDIATION_CLOSED;
         }
 
+        public boolean isEscalated() {
+            return !isNotDisputed() && !isMediated();
+        }
+
         public boolean isArbitrated() {
-            return this == Trade.DisputeState.DISPUTE_REQUESTED ||
-                    this == Trade.DisputeState.DISPUTE_STARTED_BY_PEER ||
-                    this == Trade.DisputeState.DISPUTE_CLOSED ||
-                    this == Trade.DisputeState.REFUND_REQUESTED ||
-                    this == Trade.DisputeState.REFUND_REQUEST_STARTED_BY_PEER ||
-                    this == Trade.DisputeState.REFUND_REQUEST_CLOSED;
+            return isEscalated() && this != WARNING_SENT && this != WARNING_SENT_BY_PEER &&
+                    this != ESCROW_CLAIMED && this != ESCROW_CLAIMED_BY_PEER;
         }
     }
 
@@ -289,10 +300,10 @@ public abstract class Trade extends TradeModel {
     private final long tradeTxFeeAsLong;
     @Getter
     private final long takerFeeAsLong;
+    @Getter
+    private final ProcessModel processModel;
 
     //  Mutable
-    @Getter
-    private ProcessModel processModel;
     @Nullable
     @Getter
     @Setter
@@ -478,7 +489,6 @@ public abstract class Trade extends TradeModel {
 
 
     // taker
-    @SuppressWarnings("NullableProblems")
     protected Trade(Offer offer,
                     Coin amount,
                     Coin txFee,
@@ -670,7 +680,7 @@ public abstract class Trade extends TradeModel {
     // If called from a not initialized trade (or a closed or failed trade)
     // we need to pass the btcWalletService
     @Nullable
-    public Transaction getDelayedPayoutTx(BtcWalletService btcWalletService) {
+    public Transaction getDelayedPayoutTx(@Nullable BtcWalletService btcWalletService) {
         if (delayedPayoutTx == null) {
             if (btcWalletService == null) {
                 log.warn("btcWalletService is null. You might call that method before the tradeManager has " +
@@ -679,13 +689,62 @@ public abstract class Trade extends TradeModel {
             }
 
             if (delayedPayoutTxBytes == null) {
-                log.warn("delayedPayoutTxBytes are null");
+                if (!hasV5Protocol()) {
+                    log.warn("delayedPayoutTxBytes are null");
+                }
                 return null;
             }
 
             delayedPayoutTx = btcWalletService.getTxFromSerializedTx(delayedPayoutTxBytes);
         }
         return delayedPayoutTx;
+    }
+
+    @Nullable
+    public abstract Transaction getBuyersWarningTx(BtcWalletService btcWalletService);
+
+    @Nullable
+    public abstract Transaction getSellersWarningTx(BtcWalletService btcWalletService);
+
+    @Nullable
+    public abstract Transaction getBuyersRedirectTx(BtcWalletService btcWalletService);
+
+    @Nullable
+    public abstract Transaction getSellersRedirectTx(BtcWalletService btcWalletService);
+
+    @Nullable
+    public Transaction getClaimTx(BtcWalletService btcWalletService) {
+        byte[] signedClaimTx = processModel.getSignedClaimTx();
+        return signedClaimTx != null ? btcWalletService.getTxFromSerializedTx(signedClaimTx) : null;
+    }
+
+    @Nullable
+    public Transaction getPeersClaimTx(BtcWalletService btcWalletService) {
+        byte[] claimTx = processModel.getTradePeer().getClaimTx();
+        return claimTx != null ? btcWalletService.getTxFromSerializedTx(claimTx) : null;
+    }
+
+    public List<Script> getWatchedScripts(BtcWalletService btcWalletService) {
+        if (!hasV5Protocol()) {
+            return List.of();
+        }
+        Transaction depositTx = btcWalletService.getTxFromSerializedTx(processModel.getPreparedDepositTx());
+        TransactionOutput depositTxOutput = depositTx.getOutput(0);
+        Script depositScriptPubKey = depositTxOutput.getScriptPubKey();
+
+        Transaction warningTx = btcWalletService.getTxFromSerializedTx(processModel.getFinalizedWarningTx());
+        TransactionOutput warningTxOutput = warningTx.getOutput(0);
+        Script warningScriptPubKey = warningTxOutput.getScriptPubKey();
+
+        if (processModel.getTradePeer().getFinalizedWarningTx() == null) {
+            log.warn("Missing peer's finalized warning tx. Cannot find watched script for its escrow output.");
+            return List.of(depositScriptPubKey, warningScriptPubKey);
+        }
+        Transaction peersWarningTx = btcWalletService.getTxFromSerializedTx(processModel.getTradePeer().getFinalizedWarningTx());
+        TransactionOutput peersWarningTxOutput = peersWarningTx.getOutput(0);
+        Script peersWarningScriptPubKey = peersWarningTxOutput.getScriptPubKey();
+
+        return List.of(depositScriptPubKey, warningScriptPubKey, peersWarningScriptPubKey);
     }
 
     public void addAndPersistChatMessage(ChatMessage chatMessage) {
@@ -718,11 +777,11 @@ public abstract class Trade extends TradeModel {
         if (contract != null && contract.maybeClearSensitiveData()) {
             change += "contract;";
         }
-        if (processModel != null && processModel.maybeClearSensitiveData()) {
+        if (processModel != null && processModel.maybeClearSensitiveData(disputeState.isEscalated())) {
             change += "processModel;";
         }
         if (contractAsJson != null) {
-            String edited = contract.sanitizeContractAsJson(contractAsJson);
+            String edited = Contract.sanitizeContractAsJson(contractAsJson);
             if (!edited.equals(contractAsJson)) {
                 contractAsJson = edited;
                 change += "contractAsJson;";
@@ -984,10 +1043,12 @@ public abstract class Trade extends TradeModel {
         }
 
         // In refund agent case the funds are spent anyway with the time locked payout. We do not consider that as
-        // locked in funds.
+        // locked in funds. Similarly, if the funds were claimed after a timed-out warning by either peer.
         return disputeState != DisputeState.REFUND_REQUESTED &&
                 disputeState != DisputeState.REFUND_REQUEST_STARTED_BY_PEER &&
-                disputeState != DisputeState.REFUND_REQUEST_CLOSED;
+                disputeState != DisputeState.REFUND_REQUEST_CLOSED &&
+                disputeState != DisputeState.ESCROW_CLAIMED &&
+                disputeState != DisputeState.ESCROW_CLAIMED_BY_PEER;
     }
 
     public boolean isDepositConfirmed() {
@@ -1059,7 +1120,10 @@ public abstract class Trade extends TradeModel {
                 getTakerFeeTxId() == null ||
                 getDepositTxId() == null ||
                 getDepositTx() == null ||
-                getDelayedPayoutTxBytes() == null;
+                getDelayedPayoutTxBytes() == null && (processModel.getFinalizedWarningTx() == null ||
+                        processModel.getFinalizedRedirectTx() == null ||
+                        processModel.getTradePeer().getFinalizedWarningTx() == null ||
+                        processModel.getTradePeer().getFinalizedRedirectTx() == null);
     }
 
     public byte[] getArbitratorBtcPubKey() {
@@ -1083,6 +1147,20 @@ public abstract class Trade extends TradeModel {
     // the new burningmen receivers or with legacy BM.
     public boolean isUsingLegacyBurningMan() {
         return processModel.getBurningManSelectionHeight() == 0;
+    }
+
+    public boolean hasV5Protocol() {
+        // TODO: We should try to be able to correctly determine earlier in the protocol whether it is v5.
+        return processModel.getFinalizedWarningTx() != null;
+    }
+
+    /**
+     * @return Fee rate per Vbyte based on tradeTxFeeAsLong (deposit tx) and the max. expected size of the deposit tx.
+     */
+    public long getDepositTxFeeRate() {
+        // Deposit tx has a clearly defined structure, so we know the size. It is only one optional output if range amount offer was taken.
+        // Smallest tx size is 246. With additional change output we add 32. To be safe we use the largest expected size.
+        return Math.round(tradeTxFeeAsLong / 278d);
     }
 
 
@@ -1173,6 +1251,7 @@ public abstract class Trade extends TradeModel {
                 ",\n     errorMessage='" + errorMessage + '\'' +
                 ",\n     counterCurrencyTxId='" + counterCurrencyTxId + '\'' +
                 ",\n     counterCurrencyExtraData='" + counterCurrencyExtraData + '\'' +
+                ",\n     sellerConfirmedPaymentReceiptDate=" + new Date(sellerConfirmedPaymentReceiptDate) +
                 ",\n     assetTxProofResult='" + assetTxProofResult + '\'' +
                 ",\n     chatMessages=" + chatMessages +
                 ",\n     tradeTxFee=" + tradeTxFee +
