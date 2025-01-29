@@ -26,7 +26,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 public class Restrictions {
-    private static final Date MIN_SECURITY_DEPOSIT_CHANGE_ACTIVATION_DATE = Utilities.getUTCDate(2025, GregorianCalendar.MARCH, 1);
+    private static final Date MIN_SECURITY_DEPOSIT_CHANGE_ACTIVATION_DATE = Utilities.getUTCDate(2025, GregorianCalendar.APRIL, 1);
 
     private static Coin MIN_TRADE_AMOUNT;
     private static Coin MIN_BUYER_SECURITY_DEPOSIT;
