@@ -384,10 +384,15 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             setBsqBlockChainExplorer(bsqExplorers.get((new Random()).nextInt(bsqExplorers.size())));
         }
 
-        // Remove retired XMR AutoConfirm address
+        // Remove retired XMR AutoConfirm addresses
+        List<String> retiredAddresses = List.of(
+                "monero3bec7m26vx6si6qo7q7imlaoz45ot5m2b5z2ppgoooo6jx2rqd",
+                "devinxmrwu4jrfq2zmq5kqjpxb44hx7i7didebkwrtvmvygj4uuop2ad"
+        );
         var doApplyDefaults = prefPayload.getAutoConfirmSettingsList().stream()
                 .map(autoConfirmSettings -> autoConfirmSettings.getServiceAddresses().stream()
-                        .anyMatch(address -> address.contains("monero3bec7m26vx6si6qo7q7imlaoz45ot5m2b5z2ppgoooo6jx2rqd")))
+                        .anyMatch(address -> retiredAddresses.stream()
+                                .anyMatch(address::contains)))
                 .findAny()
                 .orElse(true);
         if (doApplyDefaults) {
