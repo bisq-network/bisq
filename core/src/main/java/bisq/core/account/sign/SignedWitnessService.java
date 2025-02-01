@@ -20,6 +20,7 @@ package bisq.core.account.sign;
 import bisq.core.account.witness.AccountAgeWitness;
 import bisq.core.crypto.LowRSigningKey;
 import bisq.core.filter.FilterManager;
+import bisq.core.offer.OfferRestrictions;
 import bisq.core.support.dispute.arbitration.arbitrator.ArbitratorManager;
 import bisq.core.user.User;
 
@@ -69,7 +70,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SignedWitnessService {
     public static final long SIGNER_AGE_DAYS = 30;
     private static final long SIGNER_AGE = SIGNER_AGE_DAYS * ChronoUnit.DAYS.getDuration().toMillis();
-    public static final Coin MINIMUM_TRADE_AMOUNT_FOR_SIGNING = Coin.parseCoin("0.0025");
+    public static final Coin MINIMUM_TRADE_AMOUNT_FOR_SIGNING = OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.divide(4);
 
     private final KeyRing keyRing;
     private final P2PService p2PService;
