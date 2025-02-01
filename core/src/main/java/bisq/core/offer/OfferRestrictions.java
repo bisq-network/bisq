@@ -31,7 +31,7 @@ import java.util.GregorianCalendar;
 import java.util.Map;
 
 public class OfferRestrictions {
-    public static final Date TOLERATED_SMALL_TRADE_AMOUNT_CHANGE_ACTIVATION_DATE = Utilities.getUTCDate(2025, GregorianCalendar.APRIL, 1);
+    public static final Date TOLERATED_SMALL_TRADE_AMOUNT_CHANGE_ACTIVATION_DATE = Utilities.getUTCDate(2025, GregorianCalendar.FEBRUARY, 17);
 
     // The date when traders who have not upgraded to a Tor v3 Node Address cannot take offers and their offers become
     // invisible.
