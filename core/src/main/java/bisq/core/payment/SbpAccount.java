@@ -67,12 +67,4 @@ public final class SbpAccount extends PaymentAccount {
     public String getBankName() {
         return ((SbpAccountPayload) paymentAccountPayload).getBankName();
     }
-
-    public void setHolderName(String holderName) {
-        ((SbpAccountPayload) paymentAccountPayload).setHolderName(holderName);
-    }
-
-    public String getHolderName() {
-        return ((SbpAccountPayload) paymentAccountPayload).getHolderName();
-    }
 }
