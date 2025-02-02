@@ -1257,7 +1257,7 @@ public class TakeOfferView extends ActivatableViewAndModel<AnchorPane, TakeOffer
         // warn if you are selling BTC to unsigned account (#5343)
         if (model.isSellingToAnUnsignedAccount(offer) && !takeOfferFromUnsignedAccountWarningDisplayed) {
             takeOfferFromUnsignedAccountWarningDisplayed = true;
-            UserThread.runAfter(GUIUtil::showTakeOfferFromUnsignedAccountWarning, 500, TimeUnit.MILLISECONDS);
+            UserThread.runAfter(GUIUtil::showUnsignedAccountWarningForSellerAsTaker, 500, TimeUnit.MILLISECONDS);
         }
     }
 
