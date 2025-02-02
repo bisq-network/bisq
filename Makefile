@@ -100,6 +100,7 @@
 
 # Set up everything necessary for deploying your localnet. This is the
 # default target.
+.PHONY: build bitcoind seednode seednode2 mediator alice bob block blocks
 setup: build .localnet
 
 clean: clean-build clean-localnet
@@ -279,5 +280,3 @@ blocks:
     				-rpcuser=bisqdao \
 					-rpcpassword=bsq \
     				generatetoaddress $(n)
-
-.PHONY: build seednode
