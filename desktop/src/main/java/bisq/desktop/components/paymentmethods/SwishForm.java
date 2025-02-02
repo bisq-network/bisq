@@ -59,7 +59,7 @@ public class SwishForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
-        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner"),
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner.fullname"),
                 ((SwishAccountPayload) paymentAccountPayload).getHolderName());
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.mobile"),
                 ((SwishAccountPayload) paymentAccountPayload).getMobileNr());
@@ -71,7 +71,7 @@ public class SwishForm extends PaymentMethodForm {
         gridRowFrom = gridRow + 1;
 
         InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
-                Res.get("payment.account.owner"));
+                Res.get("payment.account.owner.fullname"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             swishAccount.setHolderName(newValue);
@@ -104,7 +104,7 @@ public class SwishForm extends PaymentMethodForm {
         addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(swishAccount.getPaymentMethod().getId()));
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner.fullname"),
                 swishAccount.getHolderName());
         TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.mobile"),
                 swishAccount.getMobileNr()).second;

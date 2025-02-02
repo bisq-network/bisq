@@ -110,7 +110,7 @@ public final class DomesticWireTransferAccountPayload extends BankAccountPayload
     @Override
     public String getPaymentDetails() {
         String paymentDetails = (Res.get(paymentMethodId) + " - " +
-                Res.getWithCol("payment.account.owner") + " " + holderName + ", " +
+                Res.getWithCol("payment.account.owner.fullname") + " " + holderName + ", " +
                 BankUtil.getBankNameLabel(countryCode) + ": " + this.bankName + ", " +
                 BankUtil.getBranchIdLabel(countryCode) + ": " + this.branchId + ", " +
                 BankUtil.getAccountNrLabel(countryCode) + ": " + this.accountNr);

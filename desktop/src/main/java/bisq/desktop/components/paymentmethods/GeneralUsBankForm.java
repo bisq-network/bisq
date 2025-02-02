@@ -52,7 +52,7 @@ public abstract class GeneralUsBankForm extends GeneralBankForm {
         int colIndex = 1;
 
         addTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++),
-                Res.get("payment.account.owner"), bankAccountPayload.getHolderName(), Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
+                Res.get("payment.account.owner.fullname"), bankAccountPayload.getHolderName(), Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
 
         String branchIdLabel = BankUtil.getBranchIdLabel(countryCode);
         String accountNrLabel = BankUtil.getAccountNrLabel(countryCode);
@@ -87,7 +87,7 @@ public abstract class GeneralUsBankForm extends GeneralBankForm {
         addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(paymentAccount.getPaymentMethod().getId()));
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"), bankAccountPayload.getHolderName());
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner.fullname"), bankAccountPayload.getHolderName());
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner.address"), cleanString(holderAddress));
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.bank.name"), bankAccountPayload.getBankName());
         addCompactTopLabelTextField(gridPane, ++gridRow, BankUtil.getBranchIdLabel(country.code), bankAccountPayload.getBranchId());
@@ -105,7 +105,7 @@ public abstract class GeneralUsBankForm extends GeneralBankForm {
         CountryUtil.findCountryByCode("US").ifPresent(c -> onCountrySelected(c));
         Country country = ((CountryBasedPaymentAccount) paymentAccount).getCountry();
 
-        InputTextField holderNameInputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.account.owner"));
+        InputTextField holderNameInputTextField = addInputTextField(gridPane, ++gridRow, Res.get("payment.account.owner.fullname"));
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             bankAccountPayload.setHolderName(newValue);
             updateFromInputs();

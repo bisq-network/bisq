@@ -56,11 +56,11 @@ abstract class BankForm extends GeneralBankForm {
         int colIndex = 0;
 
         if (data.getHolderTaxId() != null) {
-            final String title = Res.get("payment.account.owner") + " / " + BankUtil.getHolderIdLabelShort(countryCode);
+            final String title = Res.get("payment.account.owner.fullname") + " / " + BankUtil.getHolderIdLabelShort(countryCode);
             final String value = data.getHolderName() + " / " + data.getHolderTaxId();
             addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++), title, value);
         } else {
-            final String title = Res.get("payment.account.owner");
+            final String title = Res.get("payment.account.owner.fullname");
             final String value = data.getHolderName();
             addCompactTopLabelTextFieldWithCopyIcon(gridPane, getIndexOfColumn(colIndex) == 0 ? ++gridRow : gridRow, getIndexOfColumn(colIndex++), title, value);
         }
@@ -375,7 +375,7 @@ abstract class BankForm extends GeneralBankForm {
 
     private void addHolderNameAndId() {
         Tuple2<InputTextField, InputTextField> tuple = addInputTextFieldInputTextField(gridPane,
-                ++gridRow, Res.get("payment.account.owner"), BankUtil.getHolderIdLabel(""));
+                ++gridRow, Res.get("payment.account.owner.fullname"), BankUtil.getHolderIdLabel(""));
         holderNameInputTextField = tuple.first;
         holderNameInputTextField.setMinWidth(250);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -419,13 +419,13 @@ abstract class BankForm extends GeneralBankForm {
         String countryCode = bankAccountPayload.getCountryCode();
         if (BankUtil.isHolderIdRequired(countryCode)) {
             Tuple4<Label, TextField, Label, TextField> tuple = addCompactTopLabelTextFieldTopLabelTextField(gridPane, ++gridRow,
-                    Res.get("payment.account.owner"), BankUtil.getHolderIdLabel(countryCode));
+                    Res.get("payment.account.owner.fullname"), BankUtil.getHolderIdLabel(countryCode));
             TextField holderNameTextField = tuple.second;
             holderNameTextField.setText(bankAccountPayload.getHolderName());
             holderNameTextField.setMinWidth(250);
             tuple.fourth.setText(bankAccountPayload.getHolderTaxId());
         } else {
-            addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"), bankAccountPayload.getHolderName());
+            addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner.fullname"), bankAccountPayload.getHolderName());
         }
     }
 

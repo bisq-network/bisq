@@ -47,7 +47,7 @@ public class TransferwiseForm extends PaymentMethodForm {
                                       PaymentAccountPayload paymentAccountPayload) {
         addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.email"),
                 ((TransferwiseAccountPayload) paymentAccountPayload).getEmail(), Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
-        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner"),
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner.fullname"),
                 paymentAccountPayload.getHolderNameOrPromptIfEmpty());
         return gridRow;
     }
@@ -72,7 +72,7 @@ public class TransferwiseForm extends PaymentMethodForm {
         });
 
         InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
-                Res.get("payment.account.owner"));
+                Res.get("payment.account.owner.fullname"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             account.setHolderName(newValue);
@@ -112,7 +112,7 @@ public class TransferwiseForm extends PaymentMethodForm {
         TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
                 account.getEmail()).second;
         field.setMouseTransparent(false);
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner.fullname"),
                 account.getHolderName());
         addLimitations(true);
         addCurrenciesGrid(false);

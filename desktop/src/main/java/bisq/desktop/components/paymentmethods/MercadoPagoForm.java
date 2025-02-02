@@ -52,7 +52,7 @@ public class MercadoPagoForm extends PaymentMethodForm {
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
         MercadoPagoAccountPayload mercadoPagoAccountPayload = (MercadoPagoAccountPayload) paymentAccountPayload;
 
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner.fullname"),
                 mercadoPagoAccountPayload.getAccountHolderName());
         addCompactTopLabelTextField(gridPane, gridRow, 1, Res.get("shared.country"),
                 CountryUtil.getNameAndCode(mercadoPagoAccountPayload.getCountryCode()));
@@ -78,7 +78,7 @@ public class MercadoPagoForm extends PaymentMethodForm {
         gridRowFrom = gridRow + 1;
 
         InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
-                Res.get("payment.account.owner"));
+                Res.get("payment.account.owner.fullname"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             mercadoPagoAccount.setAccountHolderName(newValue);
@@ -132,7 +132,7 @@ public class MercadoPagoForm extends PaymentMethodForm {
         addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(mercadoPagoAccount.getPaymentMethod().getId()));
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner.fullname"),
                 mercadoPagoAccount.getAccountHolderName());
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.mercadoPago.holderId"),
                 mercadoPagoAccount.getAccountHolderId());

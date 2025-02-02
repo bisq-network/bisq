@@ -162,7 +162,7 @@ public class CashDepositAccountPayload extends BankAccountPayload {
         String emailString = holderEmail != null ?
                 (Res.getWithCol("payment.email") + " " + holderEmail + "\n") : "";
 
-        return Res.getWithCol("payment.account.owner") + " " + holderName + "\n" +
+        return Res.getWithCol("payment.account.owner.fullname") + " " + holderName + "\n" +
                 emailString +
                 bankName +
                 bankId +

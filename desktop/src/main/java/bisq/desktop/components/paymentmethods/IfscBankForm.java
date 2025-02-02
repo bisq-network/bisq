@@ -46,7 +46,7 @@ public class IfscBankForm extends PaymentMethodForm {
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
         IfscBasedAccountPayload ifscAccountPayload = (IfscBasedAccountPayload) paymentAccountPayload;
-        addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.account.owner"), ifscAccountPayload.getHolderName(), Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
+        addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.account.owner.fullname"), ifscAccountPayload.getHolderName(), Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.accountNr"), ifscAccountPayload.getAccountNr());
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.ifsc"), ifscAccountPayload.getIfsc());
         return gridRow;
@@ -71,7 +71,7 @@ public class IfscBankForm extends PaymentMethodForm {
         gridRowFrom = gridRow + 1;
 
         InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
-                Res.get("payment.account.owner"));
+                Res.get("payment.account.owner.fullname"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             ifscBasedAccountPayload.setHolderName(newValue.trim());
@@ -109,7 +109,7 @@ public class IfscBankForm extends PaymentMethodForm {
         gridRowFrom = gridRow;
         addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"), Res.get(paymentAccount.getPaymentMethod().getId()));
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner.fullname"),
                 ifscBasedAccountPayload.getHolderName());
         TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.accountNr"), ifscBasedAccountPayload.getAccountNr()).second;
         field.setMouseTransparent(false);

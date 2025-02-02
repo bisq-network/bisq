@@ -44,7 +44,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
         if (!((FasterPaymentsAccountPayload) paymentAccountPayload).getHolderName().isEmpty()) {
-            addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+            addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner.fullname"),
                     ((FasterPaymentsAccountPayload) paymentAccountPayload).getHolderName());
         }
         // do not translate as it is used in English only
@@ -78,7 +78,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
     @Override
     public void addFormForAddAccount() {
         gridRowFrom = gridRow + 1;
-        holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.account.owner"));
+        holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow, Res.get("payment.account.owner.fullname"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             fasterPaymentsAccount.setHolderName(newValue);
@@ -121,7 +121,7 @@ public class FasterPaymentsForm extends PaymentMethodForm {
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(fasterPaymentsAccount.getPaymentMethod().getId()));
         if (!fasterPaymentsAccount.getHolderName().isEmpty()) {
-            addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+            addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner.fullname"),
                     fasterPaymentsAccount.getHolderName());
         }
         // do not translate as it is used in English only

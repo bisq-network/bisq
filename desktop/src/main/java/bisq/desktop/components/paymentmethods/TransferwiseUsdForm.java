@@ -46,7 +46,7 @@ public class TransferwiseUsdForm extends PaymentMethodForm {
     public static int addFormForBuyer(GridPane gridPane, int gridRow,
                                       PaymentAccountPayload paymentAccountPayload) {
 
-        addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.account.owner"),
+        addTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.account.owner.fullname"),
                 ((TransferwiseUsdAccountPayload) paymentAccountPayload).getHolderName(),
                 Layout.COMPACT_FIRST_ROW_AND_GROUP_DISTANCE);
 
@@ -86,7 +86,7 @@ public class TransferwiseUsdForm extends PaymentMethodForm {
             updateFromInputs();
         });
 
-        InputTextField holderNameField = addInputTextField(gridPane, ++gridRow, Res.get("payment.account.owner"));
+        InputTextField holderNameField = addInputTextField(gridPane, ++gridRow, Res.get("payment.account.owner.fullname"));
         holderNameField.setValidator(inputValidator);
         holderNameField.textProperty().addListener((ov, oldValue, newValue) -> {
             account.setHolderName(newValue.trim());
@@ -119,7 +119,7 @@ public class TransferwiseUsdForm extends PaymentMethodForm {
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(account.getPaymentMethod().getId()));
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"), account.getEmail());
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"), account.getHolderName());
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner.fullname"), account.getHolderName());
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.address"), cleanString(account.getBeneficiaryAddress()));
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"), account.getSingleTradeCurrency().getNameAndCode());
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.country"), account.getCountry().name);

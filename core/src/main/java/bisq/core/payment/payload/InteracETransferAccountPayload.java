@@ -101,14 +101,14 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
 
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner") + " " + holderName + ", " +
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner.fullname") + " " + holderName + ", " +
                 Res.get("payment.email") + " " + email + ", " + Res.getWithCol("payment.secret") + " " +
                 question + ", " + Res.getWithCol("payment.answer") + " " + answer;
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return Res.getWithCol("payment.account.owner") + " " + holderName + "\n" +
+        return Res.getWithCol("payment.account.owner.fullname") + " " + holderName + "\n" +
                 Res.getWithCol("payment.email") + " " + email + "\n" +
                 Res.getWithCol("payment.secret") + " " + question + "\n" +
                 Res.getWithCol("payment.answer") + " " + answer;

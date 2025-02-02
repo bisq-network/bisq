@@ -92,7 +92,7 @@ public final class MercadoPagoAccountPayload extends CountryBasedPaymentAccountP
     @Override
     public String getPaymentDetailsForTradePopup() {
         return Res.get("payment.mercadoPago.holderId") + ": " + accountHolderId + "\n" +
-               Res.get("payment.account.owner") + ": " + accountHolderName;
+               Res.get("payment.account.owner.fullname") + ": " + accountHolderName;
     }
 
     @Override

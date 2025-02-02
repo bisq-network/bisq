@@ -90,13 +90,13 @@ public final class ClearXchangeAccountPayload extends PaymentAccountPayload impl
 
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner") + " " + holderName + ", " +
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner.fullname") + " " + holderName + ", " +
                 Res.getWithCol("payment.emailOrMobile") + " " + emailOrMobileNr;
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return Res.getWithCol("payment.account.owner") + " " + holderName + "\n" +
+        return Res.getWithCol("payment.account.owner.fullname") + " " + holderName + "\n" +
                 Res.getWithCol("payment.emailOrMobile") + " " + emailOrMobileNr;
     }
 

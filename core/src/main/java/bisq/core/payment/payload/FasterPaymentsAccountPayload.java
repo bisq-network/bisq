@@ -112,7 +112,7 @@ public final class FasterPaymentsAccountPayload extends PaymentAccountPayload {
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return (getHolderName().isEmpty() ? "" : Res.getWithCol("payment.account.owner") + " " + getHolderName() + "\n") +
+        return (getHolderName().isEmpty() ? "" : Res.getWithCol("payment.account.owner.fullname") + " " + getHolderName() + "\n") +
                 "UK Sort code: " + sortCode + "\n" +
                 Res.getWithCol("payment.accountNr") + " " + accountNr;
     }

@@ -92,7 +92,7 @@ public final class ImpsAccountPayload extends IfscBasedAccountPayload {
 
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner") + " " + holderName + ", " +
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner.fullname") + " " + holderName + ", " +
                 Res.getWithCol("payment.account.no") + " " + accountNr +
                 Res.getWithCol("payment.ifsc") + " " + ifsc;
     }

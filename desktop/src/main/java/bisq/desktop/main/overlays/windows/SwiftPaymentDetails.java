@@ -92,7 +92,7 @@ public class SwiftPaymentDetails extends Overlay<SwiftPaymentDetails> {
         }
 
         gridPane.add(new Label(""), 0, ++rowIndex);  // spacer
-        addLabelsAndCopy(Res.get("payment.account.owner"), payload.getBeneficiaryName());
+        addLabelsAndCopy(Res.get("payment.account.owner.fullname"), payload.getBeneficiaryName());
         addLabelsAndCopy(Res.get(SWIFT_ACCOUNT), payload.getBeneficiaryAccountNr());
         addLabelsAndCopy(Res.get(ADDRESS + BENEFICIARYPOSTFIX), cleanString(payload.getBeneficiaryAddress()));
         addLabelsAndCopy(Res.get(PHONE + BENEFICIARYPOSTFIX), payload.getBeneficiaryPhone());

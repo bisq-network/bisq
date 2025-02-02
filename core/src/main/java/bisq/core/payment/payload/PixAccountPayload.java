@@ -92,7 +92,7 @@ public final class PixAccountPayload extends CountryBasedPaymentAccountPayload {
     @Override
     public String getPaymentDetailsForTradePopup() {
         return Res.getWithCol("payment.pix.key") + " " + pixKey + "\n" +
-                Res.getWithCol("payment.account.owner") + " " + getHolderNameOrPromptIfEmpty();
+                Res.getWithCol("payment.account.owner.fullname") + " " + getHolderNameOrPromptIfEmpty();
     }
 
     @Override
