@@ -75,7 +75,7 @@ public abstract class IfscBasedAccountPayload extends CountryBasedPaymentAccount
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return Res.getWithCol("payment.account.owner") + " " + holderName + "\n" +
+        return Res.getWithCol("payment.account.owner.fullname") + " " + holderName + "\n" +
                 BankUtil.getAccountNrLabel(countryCode) + ": " + accountNr + "\n" +
                 BankUtil.getBankIdLabel(countryCode) + ": " + ifsc + "\n" +
                 Res.getWithCol("payment.bank.country") + " " + CountryUtil.getNameByCode(countryCode);

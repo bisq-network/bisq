@@ -106,7 +106,7 @@ public class SwiftForm extends PaymentMethodForm {
             addCompactTopLabelTextField(gridPane, ++gridRow, Res.get(ADDRESS + INTERMEDIARYPOSTFIX), cleanString(formData.getIntermediaryAddress()));
         }
 
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"), formData.getBeneficiaryName(), Layout.GROUP_DISTANCE_WITHOUT_SEPARATOR);
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner.fullname"), formData.getBeneficiaryName(), Layout.GROUP_DISTANCE_WITHOUT_SEPARATOR);
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get(SWIFT_ACCOUNT), formData.getBeneficiaryAccountNr());
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get(ADDRESS + BENEFICIARYPOSTFIX), cleanString(formData.getBeneficiaryAddress()));
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get(PHONE + BENEFICIARYPOSTFIX), formData.getBeneficiaryPhone());
@@ -233,7 +233,7 @@ public class SwiftForm extends PaymentMethodForm {
     }
 
     private void addFieldsForBeneficiaryEdit() {
-        String label = Res.get("payment.account.owner");
+        String label = Res.get("payment.account.owner.fullname");
         InputTextField beneficiaryNameField = addInputTextField(gridPane, ++gridRow, label);
         beneficiaryNameField.setPromptText(label);
         beneficiaryNameField.setValidator(defaultValidator);

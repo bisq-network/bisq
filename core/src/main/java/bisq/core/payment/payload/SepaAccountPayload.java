@@ -152,13 +152,13 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
 
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner") + " " + holderName + ", IBAN: " +
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner.fullname") + " " + holderName + ", IBAN: " +
                 iban + ", BIC: " + bic + ", " + Res.getWithCol("payment.bank.country") + " " + getCountryCode();
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return Res.getWithCol("payment.account.owner") + " " + holderName + "\n" +
+        return Res.getWithCol("payment.account.owner.fullname") + " " + holderName + "\n" +
                 "IBAN: " + iban + "\n" +
                 "BIC: " + bic + "\n" +
                 Res.getWithCol("payment.bank.country") + " " + CountryUtil.getNameByCode(countryCode);

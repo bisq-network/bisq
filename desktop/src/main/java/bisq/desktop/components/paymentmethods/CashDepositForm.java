@@ -414,7 +414,7 @@ public class CashDepositForm extends GeneralBankForm {
 
     private void addHolderNameAndId() {
         Tuple2<InputTextField, InputTextField> tuple = addInputTextFieldInputTextField(gridPane,
-                ++gridRow, Res.get("payment.account.owner"), BankUtil.getHolderIdLabel(""));
+                ++gridRow, Res.get("payment.account.owner.fullname"), BankUtil.getHolderIdLabel(""));
         holderNameInputTextField = tuple.first;
         holderNameInputTextField.setMinWidth(300);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
@@ -468,13 +468,13 @@ public class CashDepositForm extends GeneralBankForm {
         String countryCode = cashDepositAccountPayload.getCountryCode();
         if (BankUtil.isHolderIdRequired(countryCode)) {
             Tuple4<Label, TextField, Label, TextField> tuple = addCompactTopLabelTextFieldTopLabelTextField(gridPane, ++gridRow,
-                    Res.get("payment.account.owner"), BankUtil.getHolderIdLabel(countryCode));
+                    Res.get("payment.account.owner.fullname"), BankUtil.getHolderIdLabel(countryCode));
             TextField holderNameTextField = tuple.second;
             holderNameTextField.setText(cashDepositAccountPayload.getHolderName());
             holderNameTextField.setMinWidth(300);
             tuple.fourth.setText(cashDepositAccountPayload.getHolderTaxId());
         } else {
-            addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+            addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner.fullname"),
                     cashDepositAccountPayload.getHolderName());
         }
     }

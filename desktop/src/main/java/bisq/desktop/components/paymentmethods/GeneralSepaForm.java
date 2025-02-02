@@ -69,7 +69,7 @@ public abstract class GeneralSepaForm extends PaymentMethodForm {
                             gridPane.getScene().getWindow().getHeight() * 1.05)
                     .show()));
 
-        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner"), recipient);
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner.fullname"), recipient);
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, BIC, bic);
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow,
                 Res.get("payment.bank.country"), CountryUtil.getNameAndCode(countryCode));

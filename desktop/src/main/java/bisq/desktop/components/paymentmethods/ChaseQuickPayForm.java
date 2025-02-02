@@ -43,7 +43,7 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
     private final ChaseQuickPayValidator chaseQuickPayValidator;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner.fullname"),
                 ((ChaseQuickPayAccountPayload) paymentAccountPayload).getHolderName());
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
                 ((ChaseQuickPayAccountPayload) paymentAccountPayload).getEmail());
@@ -62,7 +62,7 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
         gridRowFrom = gridRow + 1;
 
         InputTextField holderNameInputTextField = FormBuilder.addInputTextField(gridPane, ++gridRow,
-                Res.get("payment.account.owner"));
+                Res.get("payment.account.owner.fullname"));
         holderNameInputTextField.setValidator(inputValidator);
         holderNameInputTextField.textProperty().addListener((ov, oldValue, newValue) -> {
             chaseQuickPayAccount.setHolderName(newValue);
@@ -94,7 +94,7 @@ public class ChaseQuickPayForm extends PaymentMethodForm {
         addAccountNameTextFieldWithAutoFillToggleButton();
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.paymentMethod"),
                 Res.get(chaseQuickPayAccount.getPaymentMethod().getId()));
-        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner"),
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.account.owner.fullname"),
                 chaseQuickPayAccount.getHolderName());
         TextField field = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.email"),
                 chaseQuickPayAccount.getEmail()).second;

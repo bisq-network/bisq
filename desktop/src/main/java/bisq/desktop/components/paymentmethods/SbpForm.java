@@ -43,8 +43,8 @@ public class SbpForm extends PaymentMethodForm {
     private final SbpValidator SbpValidator;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
-        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner.sbp"),
-                ((SbpAccountPayload) paymentAccountPayload).getHolderName());
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner.name"),
+                paymentAccountPayload.getHolderName());
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.mobile"),
                 ((SbpAccountPayload) paymentAccountPayload).getMobileNumber());
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.bank.name"),
@@ -110,8 +110,7 @@ public class SbpForm extends PaymentMethodForm {
         TextField mobileNrField = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.mobile"),
                 SbpAccount.getMobileNumber()).second;
         mobileNrField.setMouseTransparent(false);
-        TextField BankNameField = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.bank.name"),
-                SbpAccount.getBankName()).second;
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.bank.name"), SbpAccount.getBankName());
         final TradeCurrency singleTradeCurrency = SbpAccount.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),

@@ -93,13 +93,13 @@ public final class ChaseQuickPayAccountPayload extends PaymentAccountPayload imp
 
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner") + " " + holderName + ", " +
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner.fullname") + " " + holderName + ", " +
                 Res.get("payment.email") + " " + email;
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return Res.getWithCol("payment.account.owner") + " " + holderName + "\n" +
+        return Res.getWithCol("payment.account.owner.fullname") + " " + holderName + "\n" +
                 Res.getWithCol("payment.email") + " " + email;
     }
 

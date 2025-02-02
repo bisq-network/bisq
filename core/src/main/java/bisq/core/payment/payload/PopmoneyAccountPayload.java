@@ -90,7 +90,7 @@ public final class PopmoneyAccountPayload extends PaymentAccountPayload implemen
 
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner") + " " + holderName + ", " +
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner.fullname") + " " + holderName + ", " +
                 Res.getWithCol("payment.popmoney.accountId") + " " + accountId;
     }
 

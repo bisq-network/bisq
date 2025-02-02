@@ -95,14 +95,14 @@ public final class CashByMailAccountPayload extends PaymentAccountPayload implem
 
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner") + " " + contact + ", " +
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner.fullname") + " " + contact + ", " +
                 Res.getWithCol("payment.postal.address") + " " + postalAddress + ", " +
                 Res.getWithCol("payment.shared.extraInfo") + " " + extraInfo;
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return Res.getWithCol("payment.account.owner") + " " + contact + "\n" +
+        return Res.getWithCol("payment.account.owner.fullname") + " " + contact + "\n" +
                 Res.getWithCol("payment.postal.address") + " " + postalAddress;
     }
 

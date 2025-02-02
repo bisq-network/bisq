@@ -131,7 +131,7 @@ public abstract class BankAccountPayload extends CountryBasedPaymentAccountPaylo
         String holderTaxIdString = BankUtil.isHolderIdRequired(countryCode) ?
                 (BankUtil.getHolderIdLabel(countryCode) + ": " + holderTaxId + "\n") : "";
 
-        return Res.getWithCol("payment.account.owner") + " " + holderName + "\n" +
+        return Res.getWithCol("payment.account.owner.fullname") + " " + holderName + "\n" +
                 bankName +
                 bankId +
                 branchId +

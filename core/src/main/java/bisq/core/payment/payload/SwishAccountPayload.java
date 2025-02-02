@@ -88,13 +88,13 @@ public final class SwishAccountPayload extends PaymentAccountPayload implements 
 
     @Override
     public String getPaymentDetails() {
-        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner") + " " + holderName +
+        return Res.get(paymentMethodId) + " - " + Res.getWithCol("payment.account.owner.fullname") + " " + holderName +
                 ", " + Res.getWithCol("payment.mobile") + " " + mobileNr;
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return Res.getWithCol("payment.account.owner") + " " + holderName + "\n" +
+        return Res.getWithCol("payment.account.owner.fullname") + " " + holderName + "\n" +
                 Res.getWithCol("payment.mobile") + " " + mobileNr;
     }
 

@@ -103,11 +103,11 @@ public final class UpholdAccountPayload extends PaymentAccountPayload {
         if (accountOwner.isEmpty()) {
             return
                     Res.get("payment.account") + ": " + accountId + "\n" +
-                            Res.get("payment.account.owner") + ": N/A";
+                            Res.get("payment.account.owner.fullname") + ": N/A";
         } else {
             return
                     Res.get("payment.account") + ": " + accountId + "\n" +
-                            Res.get("payment.account.owner") + ": " + accountOwner;
+                            Res.get("payment.account.owner.fullname") + ": " + accountOwner;
         }
     }
 
