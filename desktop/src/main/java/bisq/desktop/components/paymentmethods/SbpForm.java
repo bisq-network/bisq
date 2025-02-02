@@ -44,7 +44,7 @@ public class SbpForm extends PaymentMethodForm {
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner.sbp"),
-                ((SbpAccountPayload) paymentAccountPayload).getHolderName());
+                paymentAccountPayload.getHolderName());
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.mobile"),
                 ((SbpAccountPayload) paymentAccountPayload).getMobileNumber());
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.bank.name"),
