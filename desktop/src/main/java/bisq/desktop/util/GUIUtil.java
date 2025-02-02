@@ -41,6 +41,7 @@ import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.monetary.Price;
 import bisq.core.monetary.Volume;
+import bisq.core.offer.OfferRestrictions;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.payment.PaymentAccountList;
 import bisq.core.payment.payload.PaymentMethod;
@@ -758,20 +759,22 @@ public class GUIUtil {
         }
     }
 
-    public static void showTakeOfferFromUnsignedAccountWarning() {
-        String key = "confirmTakeOfferFromUnsignedAccount";
-        new Popup().warning(Res.get("payment.takeOfferFromUnsignedAccount.warning"))
+    public static void showUnsignedAccountWarningForSellerAsTaker() {
+        String key = "unsignedAccountWarningForSellerAsTaker";
+        String amount = OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.toFriendlyString();
+        new Popup().warning(Res.get("payment.unsignedAccountWarningForSellerAsTaker.warning", amount))
                 .width(900)
-                .closeButtonText(Res.get("shared.iConfirm"))
+                .closeButtonText(Res.get("shared.iUnderstand"))
                 .dontShowAgainId(key)
                 .show();
     }
 
-    public static void showMakeOfferToUnsignedAccountWarning() {
-        String key = "confirmMakeOfferToUnsignedAccount";
-        new Popup().warning(Res.get("payment.makeOfferToUnsignedAccount.warning"))
+    public static void showUnsignedAccountWarningForSellerAsMaker() {
+        String key = "unsignedAccountWarningForSellerAsMaker";
+        String amount = OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.toFriendlyString();
+        new Popup().warning(Res.get("payment.unsignedAccountWarningForSellerAsMaker.warning", amount, amount))
                 .width(900)
-                .closeButtonText(Res.get("shared.iConfirm"))
+                .closeButtonText(Res.get("shared.iUnderstand"))
                 .dontShowAgainId(key)
                 .show();
     }

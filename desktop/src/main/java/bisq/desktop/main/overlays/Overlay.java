@@ -894,6 +894,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                 Label label = new Label(String.format("[%d]", i + 1));
                 Hyperlink link = new Hyperlink(messageHyperlinks.get(i));
                 link.setOnAction(event -> GUIUtil.openWebPageNoPopup(link.getText()));
+                HBox.setMargin(link, new Insets(-2, 0, 0, 0));
                 footerBox.getChildren().addAll(new HBox(label, link));
             }
         }
