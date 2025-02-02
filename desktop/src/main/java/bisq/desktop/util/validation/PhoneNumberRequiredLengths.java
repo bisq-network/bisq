@@ -23,14 +23,14 @@ final class PhoneNumberRequiredLengths {
             entry("DO", 10),  // CountryCode: "1"     (DO has three area codes 809,829,849; let user define hers)
             entry("GD", 7 ),  // CountryCode: "1-473"
             entry("GU", 7 ),  // CountryCode: "1-671"
-            entry("JM", 7 ),  // CountryCode: "1-876"
+            entry("JM", 10 ), // CountryCode: "1" (has two codes 876, 658)
             entry("KN", 7 ),  // CountryCode: "1-869"
             entry("KY", 7 ),  // CountryCode: "1-345"
             entry("KZ", 10),  // CountryCode: "7"
             entry("LC", 7 ),  // CountryCode: "1-758"
             entry("MP", 7 ),  // CountryCode: "1-670"
             entry("MS", 7 ),  // CountryCode: "1-664"
-            entry("PR", 10),  // CountryCode: "1"
+            entry("PR", 10),  // CountryCode: "1" (has two codes 787, 939)
             entry("RU", 10),  // CountryCode: "7"
             entry("SX", 7 ),  // CountryCode: "1-721"
             entry("TC", 7 ),  // CountryCode: "1-649"
