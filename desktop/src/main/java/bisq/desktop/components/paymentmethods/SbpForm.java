@@ -110,8 +110,7 @@ public class SbpForm extends PaymentMethodForm {
         TextField mobileNrField = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.mobile"),
                 SbpAccount.getMobileNumber()).second;
         mobileNrField.setMouseTransparent(false);
-        TextField BankNameField = addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.bank.name"),
-                SbpAccount.getBankName()).second;
+        addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("payment.bank.name"), SbpAccount.getBankName());
         final TradeCurrency singleTradeCurrency = SbpAccount.getSingleTradeCurrency();
         final String nameAndCode = singleTradeCurrency != null ? singleTradeCurrency.getNameAndCode() : "";
         addCompactTopLabelTextField(gridPane, ++gridRow, Res.get("shared.currency"),
