@@ -23,7 +23,7 @@ final class PhoneNumberRequiredLengths {
             entry("DO", 10),  // CountryCode: "1"     (DO has three area codes 809,829,849; let user define hers)
             entry("GD", 7 ),  // CountryCode: "1-473"
             entry("GU", 7 ),  // CountryCode: "1-671"
-            entry("JM", 7 ),  // CountryCode: "1-876"
+            entry("JM", 10 ), // CountryCode: "1" (has two codes 876, 658)
             entry("KN", 7 ),  // CountryCode: "1-869"
             entry("KY", 7 ),  // CountryCode: "1-345"
             entry("KZ", 10),  // CountryCode: "7"
