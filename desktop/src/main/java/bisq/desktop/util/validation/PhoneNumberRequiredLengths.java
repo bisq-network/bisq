@@ -30,7 +30,7 @@ final class PhoneNumberRequiredLengths {
             entry("LC", 7 ),  // CountryCode: "1-758"
             entry("MP", 7 ),  // CountryCode: "1-670"
             entry("MS", 7 ),  // CountryCode: "1-664"
-            entry("PR", 10),  // CountryCode: "1"
+            entry("PR", 10),  // CountryCode: "1" (has two codes 787, 939)
             entry("RU", 10),  // CountryCode: "7"
             entry("SX", 7 ),  // CountryCode: "1-721"
             entry("TC", 7 ),  // CountryCode: "1-649"
