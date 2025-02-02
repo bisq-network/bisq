@@ -98,14 +98,14 @@ public final class SbpAccountPayload extends PaymentAccountPayload implements Pa
     @Override
     public String getPaymentDetails() {
         return Res.get(paymentMethodId) + " - " +
-                Res.getWithCol("payment.account.owner.sbp") + " " + holderName + ", " +
+                Res.getWithCol("payment.account.owner.name") + " " + holderName + ", " +
                 Res.getWithCol("payment.mobile") + " " + mobileNumber + ", " +
                 Res.getWithCol("payment.bank.name") + " " + bankName;
     }
 
     @Override
     public String getPaymentDetailsForTradePopup() {
-        return Res.getWithCol("payment.account.owner.sbp") + " " + holderName + "\n" +
+        return Res.getWithCol("payment.account.owner.name") + " " + holderName + "\n" +
                 Res.getWithCol("payment.mobile") + " " + mobileNumber + "\n" +
                 Res.getWithCol("payment.bank.name") + " " + bankName;
     }

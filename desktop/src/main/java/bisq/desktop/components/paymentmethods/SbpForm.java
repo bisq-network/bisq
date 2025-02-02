@@ -43,7 +43,7 @@ public class SbpForm extends PaymentMethodForm {
     private final SbpValidator SbpValidator;
 
     public static int addFormForBuyer(GridPane gridPane, int gridRow, PaymentAccountPayload paymentAccountPayload) {
-        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner.sbp"),
+        addCompactTopLabelTextFieldWithCopyIcon(gridPane, ++gridRow, Res.get("payment.account.owner.name"),
                 paymentAccountPayload.getHolderName());
         addCompactTopLabelTextFieldWithCopyIcon(gridPane, gridRow, 1, Res.get("payment.mobile"),
                 ((SbpAccountPayload) paymentAccountPayload).getMobileNumber());
