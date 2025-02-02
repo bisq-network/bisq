@@ -83,9 +83,9 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
         CapabilityRequiringPayload, DateSortedTruncatablePayload, ComparableExt<TradeStatistics3> {
 
     @JsonExclude
-    private transient static final ZoneId ZONE_ID = ZoneId.systemDefault();
+    private static final ZoneId ZONE_ID = ZoneId.systemDefault();
     @JsonExclude
-    private transient static final long STRICT_FILTER_DATE = new GregorianCalendar(2021, Calendar.NOVEMBER, 1).getTime().getTime();
+    private static final long STRICT_FILTER_DATE = new GregorianCalendar(2021, Calendar.NOVEMBER, 1).getTime().getTime();
 
     public static TradeStatistics3 from(Trade trade,
                                         @Nullable String referralId,
