@@ -597,11 +597,11 @@ public class AccountAgeWitnessService {
         // TOLERATED_SMALL_TRADE_AMOUNT (0.01 BTC) and only in that case return false.
         return findWitness(offer)
                 .map(witness -> verifyPeersTradeLimit(offer, tradeAmount, witness, new Date(), errorMessageHandler))
-                .orElse(isToleratedSmallestAmount(tradeAmount));
+                .orElse(isToleratedSmalleAmount(tradeAmount));
     }
 
-    private boolean isToleratedSmallestAmount(Coin tradeAmount) {
-        return tradeAmount.value >= OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
+    private boolean isToleratedSmalleAmount(Coin tradeAmount) {
+        return tradeAmount.value <= OfferRestrictions.TOLERATED_SMALL_TRADE_AMOUNT.value;
     }
 
 
