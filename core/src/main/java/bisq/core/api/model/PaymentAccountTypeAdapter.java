@@ -281,7 +281,7 @@ class PaymentAccountTypeAdapter extends TypeAdapter<PaymentAccount> {
     }
 
     private boolean isSetterOnPaymentAccountClass(Method setter, PaymentAccount account) {
-        return isSetterOnClass(setter, account.getClass());
+        return isSetterOnClass(setter, account.getClass())  || isSetterOnClass(setter, account.getClass().getSuperclass());
     }
 
     private boolean isSetterOnPaymentAccountPayloadClass(Method setter, PaymentAccount account) {
