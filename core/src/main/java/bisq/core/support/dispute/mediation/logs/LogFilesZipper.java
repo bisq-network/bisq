@@ -21,6 +21,8 @@ public class LogFilesZipper {
 
     public void zip(List<Path> filesToZip) throws IOException {
         try (ZipOutputStream zipOutputStream = openZipOutputStream()) {
+            zipOutputStream.setLevel(ZipOutputStream.DEFLATED);
+
             for (Path path : filesToZip) {
                 ZipEntry zipEntry = new ZipEntry(path.getFileName().toString());
                 zipOutputStream.putNextEntry(zipEntry);
