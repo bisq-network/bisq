@@ -81,7 +81,7 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
         fillAndSortPaymentAccounts();
 
         paymentAccounts.stream()
-                .filter(e -> e.getSingleTradeCurrency().getCode().equals("XMR"))
+                .filter(this::isXmrPaymentAccount)
                 .forEach(e -> {
                     if (!xmrAccountUsesSubAddresses(e)) {
                         XmrForm.showXmrSubAddressPopup();
@@ -96,6 +96,11 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
                     .collect(Collectors.toList()));
             paymentAccounts.sort(Comparator.comparing(PaymentAccount::getAccountName));
         }
+    }
+
+    private boolean isXmrPaymentAccount(PaymentAccount paymentAccount) {
+        TradeCurrency tradeCurrency = paymentAccount.getSingleTradeCurrency();
+        return tradeCurrency != null && tradeCurrency.getCode().equals("XMR");
     }
 
     private boolean xmrAccountUsesSubAddresses(PaymentAccount paymentAccount) {
