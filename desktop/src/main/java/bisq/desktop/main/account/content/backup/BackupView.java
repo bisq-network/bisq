@@ -23,7 +23,8 @@ import bisq.desktop.main.overlays.popups.Popup;
 import bisq.desktop.util.Layout;
 
 import bisq.core.locale.Res;
-import bisq.core.support.dispute.mediation.FileTransferSender;
+import bisq.core.support.dispute.mediation.logs.LogFilesFinder;
+import bisq.core.support.dispute.mediation.logs.LogFilesZipper;
 import bisq.core.user.Preferences;
 
 import bisq.common.config.Config;
@@ -45,13 +46,15 @@ import javafx.beans.value.ChangeListener;
 
 import java.text.SimpleDateFormat;
 
-import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import java.io.File;
 import java.io.IOException;
 
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import javax.annotation.Nullable;
 
@@ -155,18 +158,10 @@ public class BackupView extends ActivatableView<GridPane, Void> {
                 });
             }
         });
+
         zipLogsButton.setOnAction(event -> {
-            String zipId = "BisqLogsArchive_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-            String zipFilePath = Utilities.getSystemHomeDirectory() + FileSystems.getDefault().getSeparator() + zipId + ".zip";
-            String tradeId = null;
-            FileTransferSender.createZipFileOfLogs(zipFilePath, zipId, tradeId);
-            try {
-                Utilities.openFile(new File(Utilities.getSystemHomeDirectory()));
-            } catch (IOException e) {
-                e.printStackTrace();
-                log.error(e.getMessage());
-                showWrongPathWarningAndReset(e);
-            }
+            CompletableFuture.runAsync(this::zipLogFileAsync)
+                    .thenRun(this::openFileDialogInHomeDirectory);
         });
     }
 
@@ -217,6 +212,37 @@ public class BackupView extends ActivatableView<GridPane, Void> {
 
     private boolean isPathValid(String path) {
         return path == null || path.isEmpty() || Utilities.isDirectory(path);
+    }
+
+    private void zipLogFileAsync() {
+        try {
+            log.info("Compressing log files to zip file.");
+
+            File appDataDir = Config.appDataDir();
+            LogFilesFinder logFilesFinder = new LogFilesFinder(appDataDir);
+            List<File> logFiles = logFilesFinder.find();
+
+            Date now = new Date();
+            String currentTimeAndDate = new SimpleDateFormat("yyyyMMdd_HHmmss").format(now);
+            String zipFileName = "BisqLogsArchive_" + currentTimeAndDate + ".zip";
+
+            Path destinationPath = Path.of(Utilities.getSystemHomeDirectory(), zipFileName);
+            LogFilesZipper logFilesZipper = new LogFilesZipper(destinationPath);
+            logFilesZipper.zip(logFiles);
+
+        } catch (IOException e) {
+            log.error("Couldn't compress log files to zip file.", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void openFileDialogInHomeDirectory() {
+        try {
+            Utilities.openFile(new File(Utilities.getSystemHomeDirectory()));
+        } catch (IOException e) {
+            log.error("Couldn't open file dialog in home directory.");
+            throw new RuntimeException(e);
+        }
     }
 }
 

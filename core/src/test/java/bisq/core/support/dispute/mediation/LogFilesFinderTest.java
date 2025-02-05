@@ -23,7 +23,7 @@ public class LogFilesFinderTest {
 
     @Test
     void noLogFilesTest() {
-        var logFilesFinder = new LogFilesFinder(dataDir);
+        var logFilesFinder = new LogFilesFinder(dataDir.toFile());
         List<File> files = logFilesFinder.find();
         assertThat(files, is(empty()));
     }
@@ -33,7 +33,7 @@ public class LogFilesFinderTest {
         Path logFilePath = dataDir.resolve("bisq.log");
         Files.writeString(logFilePath, "Log file content");
 
-        var logFilesFinder = new LogFilesFinder(dataDir);
+        var logFilesFinder = new LogFilesFinder(dataDir.toFile());
         List<File> files = logFilesFinder.find();
 
         assertThat(files, hasSize(1));
@@ -48,7 +48,7 @@ public class LogFilesFinderTest {
         Path logFilePath = dataDir.resolve("bisq.log");
         Files.writeString(logFilePath, "Log file content");
 
-        var logFilesFinder = new LogFilesFinder(dataDir);
+        var logFilesFinder = new LogFilesFinder(dataDir.toFile());
         List<File> files = logFilesFinder.find();
 
         assertThat(files, hasSize(1));
@@ -69,7 +69,7 @@ public class LogFilesFinderTest {
             allLogFiles.add(logFilePath.toFile());
         }
 
-        var logFilesFinder = new LogFilesFinder(dataDir);
+        var logFilesFinder = new LogFilesFinder(dataDir.toFile());
         List<File> files = logFilesFinder.find();
 
         assertThat(files, hasSize(allLogFiles.size()));
@@ -93,7 +93,7 @@ public class LogFilesFinderTest {
             allLogFiles.add(logFilePath.toFile());
         }
 
-        var logFilesFinder = new LogFilesFinder(dataDir);
+        var logFilesFinder = new LogFilesFinder(dataDir.toFile());
         List<File> files = logFilesFinder.find();
 
         assertThat(files, hasSize(allLogFiles.size()));
@@ -113,7 +113,7 @@ public class LogFilesFinderTest {
             Files.writeString(logFilePath, "Log file content");
         }
 
-        var logFilesFinder = new LogFilesFinder(dataDir);
+        var logFilesFinder = new LogFilesFinder(dataDir.toFile());
         List<File> files = logFilesFinder.findForTradeId("invalid_trade_id");
 
         assertThat(files, empty());
@@ -127,7 +127,7 @@ public class LogFilesFinderTest {
         Path logFilePath = dataDir.resolve("bisq.log");
         Files.writeString(logFilePath, "Log file abcd content");
 
-        var logFilesFinder = new LogFilesFinder(dataDir);
+        var logFilesFinder = new LogFilesFinder(dataDir.toFile());
         List<File> files = logFilesFinder.findForTradeId("abcd");
 
         assertThat(files, hasSize(1));
@@ -158,7 +158,7 @@ public class LogFilesFinderTest {
             Files.writeString(logFilePath, logFileContent);
         }
 
-        var logFilesFinder = new LogFilesFinder(dataDir);
+        var logFilesFinder = new LogFilesFinder(dataDir.toFile());
         List<File> files = logFilesFinder.findForTradeId("abcd");
 
         assertThat(files, hasSize(logFilesContainingTradeId.size()));
