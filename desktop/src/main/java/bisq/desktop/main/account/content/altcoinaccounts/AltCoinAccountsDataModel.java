@@ -18,11 +18,10 @@
 package bisq.desktop.main.account.content.altcoinaccounts;
 
 import bisq.desktop.common.model.ActivatableDataModel;
-import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.components.paymentmethods.XmrForm;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.CryptoCurrency;
-import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AssetAccount;
@@ -85,12 +84,7 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
                 .filter(e -> e.getSingleTradeCurrency().getCode().equals("XMR"))
                 .forEach(e -> {
                     if (!xmrAccountUsesSubAddresses(e)) {
-                        new Popup()
-                                .headLine(Res.get("account.altcoin.popup.xmr.dataDirWarningHeadline"))
-                                .backgroundInfo(Res.get("account.altcoin.popup.xmr.dataDirWarning"))
-                                .dontShowAgainId("accountSubAddressInfo")
-                                .width(700)
-                                .show();
+                        XmrForm.showXmrSubAddressPopup();
                     }
                 });
     }
