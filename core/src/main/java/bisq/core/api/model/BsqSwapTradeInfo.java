@@ -105,7 +105,6 @@ public class BsqSwapTradeInfo implements Payload {
                 .setTakerBsqAddress(takerBsqAddress != null ? takerBsqAddress : "")
                 .setMakerBtcAddress(makerBtcAddress != null ? makerBtcAddress : "")
                 .setTakerBtcAddress(takerBtcAddress != null ? takerBtcAddress : "")
-                .setTakerBtcAddress(takerBtcAddress != null ? takerBtcAddress : "")
                 .setNumConfirmations(numConfirmations)
                 .setErrorMessage(errorMessage != null ? errorMessage : "")
                 .setPayout(payout)
