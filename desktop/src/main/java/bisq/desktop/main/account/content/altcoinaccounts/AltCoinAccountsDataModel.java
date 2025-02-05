@@ -18,14 +18,14 @@
 package bisq.desktop.main.account.content.altcoinaccounts;
 
 import bisq.desktop.common.model.ActivatableDataModel;
-import bisq.desktop.main.overlays.popups.Popup;
+import bisq.desktop.components.paymentmethods.XmrForm;
 import bisq.desktop.util.GUIUtil;
 
 import bisq.core.locale.CryptoCurrency;
-import bisq.core.locale.Res;
 import bisq.core.locale.TradeCurrency;
 import bisq.core.offer.OpenOfferManager;
 import bisq.core.payment.AssetAccount;
+import bisq.core.payment.CryptoCurrencyAccount;
 import bisq.core.payment.PaymentAccount;
 import bisq.core.trade.TradeManager;
 import bisq.core.user.Preferences;
@@ -44,6 +44,7 @@ import javafx.collections.SetChangeListener;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 class AltCoinAccountsDataModel extends ActivatableDataModel {
@@ -79,14 +80,12 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
         user.getPaymentAccountsAsObservable().addListener(setChangeListener);
         fillAndSortPaymentAccounts();
 
-        paymentAccounts.stream().filter(e -> e.getSingleTradeCurrency().getCode().equals("XMR"))
-                .findAny().ifPresent(e -> {
-                    new Popup()
-                            .headLine(Res.get("account.altcoin.popup.xmr.dataDirWarningHeadline"))
-                            .backgroundInfo(Res.get("account.altcoin.popup.xmr.dataDirWarning"))
-                            .dontShowAgainId("accountSubAddressInfo")
-                            .width(700)
-                            .show();
+        paymentAccounts.stream()
+                .filter(e -> e.getSingleTradeCurrency().getCode().equals("XMR"))
+                .forEach(e -> {
+                    if (!xmrAccountUsesSubAddresses(e)) {
+                        XmrForm.showXmrSubAddressPopup();
+                    }
                 });
     }
 
@@ -97,6 +96,21 @@ class AltCoinAccountsDataModel extends ActivatableDataModel {
                     .collect(Collectors.toList()));
             paymentAccounts.sort(Comparator.comparing(PaymentAccount::getAccountName));
         }
+    }
+
+    private boolean xmrAccountUsesSubAddresses(PaymentAccount paymentAccount) {
+        if (paymentAccount instanceof CryptoCurrencyAccount) {
+            CryptoCurrencyAccount account = (CryptoCurrencyAccount) paymentAccount;
+            Map<String, String> extraData = account.getExtraData();
+            if (extraData == null) {
+                return false;
+            }
+
+            String useXMmrSubAddresses = extraData.get("UseXMmrSubAddresses");
+            return useXMmrSubAddresses != null && useXMmrSubAddresses.equals("1");
+        }
+
+        return false;
     }
 
     @Override

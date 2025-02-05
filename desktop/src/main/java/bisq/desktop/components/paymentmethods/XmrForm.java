@@ -203,6 +203,8 @@ public class XmrForm extends AssetsForm {
         setFieldManagement(xmrAccountDelegate.isUsingSubAddresses());
         addLimitations(false);
         addAccountNameTextFieldWithAutoFillToggleButton();
+
+        showXmrSubAddressPopup();
     }
 
     void setFieldManagement(boolean useSubAddresses) {
@@ -360,6 +362,15 @@ public class XmrForm extends AssetsForm {
                         && xmrAccountDelegate.getAccount().getSingleTradeCurrency() != null);
             }
         }
+    }
+
+    public static void showXmrSubAddressPopup() {
+        new Popup()
+                .headLine(Res.get("account.altcoin.popup.xmr.dataDirWarningHeadline"))
+                .backgroundInfo(Res.get("account.altcoin.popup.xmr.dataDirWarning"))
+                .dontShowAgainId("accountSubAddressInfo")
+                .width(700)
+                .show();
     }
 
     private void maybeShowXmrSubAddressInfo() {
