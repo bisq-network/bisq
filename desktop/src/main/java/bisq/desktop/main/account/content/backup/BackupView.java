@@ -27,6 +27,7 @@ import bisq.core.support.dispute.mediation.logs.LogFilesFinder;
 import bisq.core.support.dispute.mediation.logs.LogFilesZipper;
 import bisq.core.user.Preferences;
 
+import bisq.common.UserThread;
 import bisq.common.config.Config;
 import bisq.common.file.FileUtil;
 import bisq.common.persistence.PersistenceManager;
@@ -161,7 +162,8 @@ public class BackupView extends ActivatableView<GridPane, Void> {
 
         zipLogsButton.setOnAction(event -> {
             CompletableFuture.runAsync(this::zipLogFileAsync)
-                    .thenRun(this::openFileDialogInHomeDirectory);
+                    .thenRun(this::openFileDialogInHomeDirectory)
+                    .exceptionally(this::onLogFileZippingFailed);
         });
     }
 
@@ -243,6 +245,14 @@ public class BackupView extends ActivatableView<GridPane, Void> {
             log.error("Couldn't open file dialog in home directory.");
             throw new RuntimeException(e);
         }
+    }
+
+    private Void onLogFileZippingFailed(Throwable throwable) {
+        UserThread.execute(() -> {
+            String error = throwable.getMessage();
+            new Popup().warning(Res.get("account.backup.zipLogFiles.failure", error)).show();
+        });
+        return null;
     }
 }
 
