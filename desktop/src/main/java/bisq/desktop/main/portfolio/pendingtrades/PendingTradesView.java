@@ -37,7 +37,6 @@ import bisq.desktop.util.FormBuilder;
 import bisq.core.alert.PrivateNotificationManager;
 import bisq.core.locale.Res;
 import bisq.core.offer.bisq_v1.OfferPayload;
-import bisq.core.provider.mempool.FeeValidationStatus;
 import bisq.core.support.dispute.mediation.MediationResultState;
 import bisq.core.support.messages.ChatMessage;
 import bisq.core.support.traderchat.TradeChatSession;
@@ -131,7 +130,6 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     @FXML
     TableColumn<PendingTradesListItem, PendingTradesListItem> priceColumn, volumeColumn, amountColumn, avatarColumn,
             marketColumn, roleColumn, paymentMethodColumn, tradeIdColumn, dateColumn, chatColumn, moveTradeToFailedColumn;
-    private FilteredList<PendingTradesListItem> filteredList;
     private SortedList<PendingTradesListItem> sortedList;
     private TradeSubView selectedSubView;
     private EventHandler<KeyEvent> keyEventEventHandler;
@@ -275,7 +273,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
     @Override
     protected void activate() {
         ObservableList<PendingTradesListItem> list = model.dataModel.list;
-        filteredList = new FilteredList<>(list);
+        FilteredList<PendingTradesListItem> filteredList = new FilteredList<>(list);
         sortedList = new SortedList<>(filteredList);
         sortedList.comparatorProperty().bind(tableView.comparatorProperty());
         tableView.setItems(sortedList);
@@ -387,7 +385,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
 
     private void onShowInfoForInvalidTrade(Trade trade) {
         new Popup().width(900).attention(Res.get("portfolio.pending.failedTrade.info.popup",
-                getInvalidTradeDetails(trade)))
+                        getInvalidTradeDetails(trade)))
                 .show();
     }
 
@@ -411,7 +409,7 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
             return Res.get("portfolio.pending.failedTrade.missingDepositTx");
         }
 
-        if (trade.getDelayedPayoutTx() == null) {
+        if (!trade.hasV5Protocol() && trade.getDelayedPayoutTx() == null) {
             return isMyRoleBuyer ?
                     Res.get("portfolio.pending.failedTrade.buyer.existingDepositTxButMissingDelayedPayoutTx") :
                     Res.get("portfolio.pending.failedTrade.seller.existingDepositTxButMissingDelayedPayoutTx");
@@ -727,11 +725,11 @@ public class PendingTradesView extends ActivatableViewAndModel<VBox, PendingTrad
                                     try {
                                         String volume = VolumeUtil.formatVolumeWithCode(item.getTrade().getVolume());
                                         setGraphic(new AutoTooltipLabel(volume));
-                                    } catch (Throwable ignore) {
-                                        log.debug(ignore.toString()); // Stupidity to make Codacy happy
+                                    } catch (Throwable ignore) { //NOPMD
                                     }
-                                } else
+                                } else {
                                     setGraphic(null);
+                                }
                             }
                         };
                     }
