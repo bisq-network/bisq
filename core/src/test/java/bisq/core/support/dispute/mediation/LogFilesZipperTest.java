@@ -5,6 +5,7 @@ import bisq.core.support.dispute.mediation.logs.LogFilesZipper;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -25,7 +26,7 @@ public class LogFilesZipperTest {
         String logFileContent = "Log file content";
         Files.writeString(logFilePath, logFileContent);
 
-        List<Path> filesToZip = List.of(logFilePath);
+        List<File> filesToZip = List.of(logFilePath.toFile());
         Path destinationPath = dataDir.resolve("logs.zip");
         new LogFilesZipper(destinationPath).zip(filesToZip);
 
@@ -49,7 +50,7 @@ public class LogFilesZipperTest {
         String secondLogFileContent = "Second log file content";
         Files.writeString(secondLogFilePath, secondLogFileContent);
 
-        List<Path> filesToZip = List.of(logFilePath, secondLogFilePath);
+        List<File> filesToZip = List.of(logFilePath.toFile(), secondLogFilePath.toFile());
         Path destinationPath = dataDir.resolve("logs.zip");
         new LogFilesZipper(destinationPath).zip(filesToZip);
 

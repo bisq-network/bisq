@@ -19,15 +19,13 @@ public class LogFilesZipper {
         this.destinationPath = destinationPath;
     }
 
-    public void zip(List<Path> filesToZip) throws IOException {
+    public void zip(List<File> filesToZip) throws IOException {
         try (ZipOutputStream zipOutputStream = openZipOutputStream()) {
             zipOutputStream.setLevel(ZipOutputStream.DEFLATED);
 
-            for (Path path : filesToZip) {
-                ZipEntry zipEntry = new ZipEntry(path.getFileName().toString());
+            for (File fileToZip : filesToZip) {
+                ZipEntry zipEntry = new ZipEntry(fileToZip.getName());
                 zipOutputStream.putNextEntry(zipEntry);
-
-                File fileToZip = path.toFile();
                 zipFile(fileToZip, zipOutputStream);
             }
         }
