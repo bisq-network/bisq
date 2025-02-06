@@ -125,6 +125,7 @@ public class PaymentAccountForm {
 
     // A list of PaymentAccount fields to exclude from json forms.
     private final String[] excludedFields = new String[]{
+            "extraData",
             "log",
             "id",
             "acceptedCountryCodes",
@@ -186,7 +187,7 @@ public class PaymentAccountForm {
      */
     public PaymentAccount toPaymentAccount(String jsonString) {
         Class<? extends PaymentAccount> clazz = getPaymentAccountClassFromJson(jsonString);
-        Gson gson = gsonBuilder.registerTypeAdapter(clazz, new PaymentAccountTypeAdapter(clazz)).create();
+        Gson gson = gsonBuilder.registerTypeAdapter(clazz, new PaymentAccountTypeAdapter(clazz, excludedFields)).create();
         return gson.fromJson(jsonString, clazz);
     }
 
