@@ -263,10 +263,11 @@ public class FileUtil {
     }
 
     public static boolean doesFileContainKeyword(File file, String keyword) throws FileNotFoundException {
-        Scanner s = new Scanner(file);
-        while (s.hasNextLine()) {
-            if (s.nextLine().contains(keyword)) {
-                return true;
+        try (Scanner s = new Scanner(file)) {
+            while (s.hasNextLine()) {
+                if (s.nextLine().contains(keyword)) {
+                    return true;
+                }
             }
         }
         return false;
