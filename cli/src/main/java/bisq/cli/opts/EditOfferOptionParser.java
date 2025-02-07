@@ -123,11 +123,9 @@ public class EditOfferOptionParser extends OfferIdOptionParser implements Method
 
         if (options.has(mktPriceMarginPctOpt)) {
             if (valueNotSpecified.test(mktPriceMarginPctOpt))
-                throw new IllegalArgumentException("no mkt price margin specified");
+                throw new IllegalArgumentException("no market price margin specified");
 
             String priceMarginPctAsString = options.valueOf(mktPriceMarginPctOpt);
-            if (priceMarginPctAsString.isEmpty())
-                throw new IllegalArgumentException("no market price margin specified");
 
             verifyStringIsValidDouble(priceMarginPctAsString);
 
@@ -140,6 +138,7 @@ public class EditOfferOptionParser extends OfferIdOptionParser implements Method
             }
 
             boolean mktPriceMarginOptAndEnableOptAreOnlyOpts = options.has(enableOpt)
+                    && !options.has(fixedPriceOpt)
                     && !options.has(triggerPriceOpt);
             if (mktPriceMarginOptAndEnableOptAreOnlyOpts) {
                 offerEditType = MKT_PRICE_MARGIN_AND_ACTIVATION_STATE;
@@ -151,7 +150,7 @@ public class EditOfferOptionParser extends OfferIdOptionParser implements Method
             if (valueNotSpecified.test(triggerPriceOpt))
                 throw new IllegalArgumentException("no trigger price specified");
 
-            String triggerPriceAsString = options.valueOf(fixedPriceOpt);
+            String triggerPriceAsString = options.valueOf(triggerPriceOpt);
             if (triggerPriceAsString.isEmpty())
                 throw new IllegalArgumentException("trigger price not specified");
 
