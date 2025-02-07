@@ -151,8 +151,6 @@ public class EditOfferOptionParser extends OfferIdOptionParser implements Method
                 throw new IllegalArgumentException("no trigger price specified");
 
             String triggerPriceAsString = options.valueOf(triggerPriceOpt);
-            if (triggerPriceAsString.isEmpty())
-                throw new IllegalArgumentException("trigger price not specified");
 
             verifyStringIsValidDouble(triggerPriceAsString);
 
