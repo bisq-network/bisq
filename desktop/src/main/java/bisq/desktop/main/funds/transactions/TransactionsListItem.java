@@ -208,12 +208,22 @@ class TransactionsListItem implements FilterableListItem {
                             trade.getDepositTx().getTxId().equals(Sha256Hash.wrap(txId))) {
                         details = Res.get("funds.tx.multiSigDeposit");
                     } else if (trade.getPayoutTx() != null &&
-                            trade.getPayoutTx().getTxId().equals(Sha256Hash.wrap(txId))) {
+                            trade.getPayoutTx().getTxId().equals(Sha256Hash.wrap(txId)) &&
+                            !transactionAwareTrade.isClaimTx(txId)) {
                         details = Res.get("funds.tx.multiSigPayout");
-
                         if (amountAsCoin.isZero()) {
                             initialTxConfidenceVisibility = false;
                         }
+                    } else if (transactionAwareTrade.isWarningTx(txId)) {
+                        details = valueSentToMe.isPositive()
+                                ? Res.get("funds.tx.warningTx")
+                                : Res.get("funds.tx.peersWarningTx");
+                    } else if (transactionAwareTrade.isRedirectTx(txId)) {
+                        details = Res.get("funds.tx.collateralForRefund");
+                    } else if (transactionAwareTrade.isClaimTx(txId)) {
+                        details = valueSentToMe.isPositive()
+                                ? Res.get("funds.tx.claimTx")
+                                : Res.get("funds.tx.peersClaimTx");
                     } else {
                         Trade.DisputeState disputeState = trade.getDisputeState();
                         if (disputeState == Trade.DisputeState.DISPUTE_CLOSED) {
@@ -226,7 +236,7 @@ class TransactionsListItem implements FilterableListItem {
                         } else if (disputeState == Trade.DisputeState.REFUND_REQUEST_CLOSED ||
                                 disputeState == Trade.DisputeState.REFUND_REQUESTED ||
                                 disputeState == Trade.DisputeState.REFUND_REQUEST_STARTED_BY_PEER) {
-                            if (valueSentToMe.isPositive()) {
+                            if (valueSentToMe.isPositive()) { // FIXME: This will give a false positive if user is a BM.
                                 details = Res.get("funds.tx.refund");
                             } else {
                                 // We have spent the deposit tx outputs to the Bisq donation address to enable

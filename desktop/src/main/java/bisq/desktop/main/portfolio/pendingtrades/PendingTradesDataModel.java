@@ -54,9 +54,9 @@ import bisq.core.trade.bisq_v1.TradeDataValidation;
 import bisq.core.trade.model.bisq_v1.BuyerTrade;
 import bisq.core.trade.model.bisq_v1.SellerTrade;
 import bisq.core.trade.model.bisq_v1.Trade;
-import bisq.core.trade.protocol.bisq_v1.BuyerProtocol;
+import bisq.core.trade.protocol.BuyerProtocol;
+import bisq.core.trade.protocol.SellerProtocol;
 import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
-import bisq.core.trade.protocol.bisq_v1.SellerProtocol;
 import bisq.core.user.Preferences;
 import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.CoinFormatter;
@@ -222,7 +222,7 @@ public class PendingTradesDataModel extends ActivatableDataModel {
     public void onWithdrawRequest(String toAddress,
                                   Coin amount,
                                   Coin fee,
-                                  KeyParameter aesKey,
+                                  @Nullable KeyParameter aesKey,
                                   @Nullable String memo,
                                   ResultHandler resultHandler,
                                   FaultHandler faultHandler) {
@@ -251,6 +251,36 @@ public class PendingTradesDataModel extends ActivatableDataModel {
 
     public void onOpenDispute() {
         tryOpenDispute(false);
+    }
+
+    public void onSendWarning() {
+        Trade trade = getTrade();
+        if (trade == null) {
+            log.error("Trade is null");
+            return;
+        }
+        if (trade.getDisputeState().isEscalated()) {
+            log.error("A warning tx has already been seen for trade");
+            return;
+        }
+        ((DisputeProtocol) tradeManager.getTradeProtocol(trade)).onPublishWarningTx(
+                () -> log.info("Warning tx published"),
+                errorMessage -> new Popup().error(errorMessage).show());
+    }
+
+    public void onClaimCollateral() {
+        Trade trade = getTrade();
+        if (trade == null) {
+            log.error("Trade is null");
+            return;
+        }
+        if (!trade.getDisputeState().equals(Trade.DisputeState.WARNING_SENT)) {
+            log.error("Wrong dispute state: expected WARNING_SENT but got {}", trade.getDisputeState());
+            return;
+        }
+        ((DisputeProtocol) tradeManager.getTradeProtocol(trade)).onPublishClaimTx(
+                () -> log.info("Claim tx published"),
+                errorMessage -> new Popup().error(errorMessage).show());
     }
 
     public void onOpenSupportTicket() {
@@ -509,7 +539,8 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         }
         Trade.DisputeState disputeState = trade.getDisputeState();
         DisputeManager<? extends DisputeList<Dispute>> disputeManager;
-        long lockTime = trade.getDelayedPayoutTx() == null ? trade.getLockTime() : trade.getDelayedPayoutTx().getLockTime();
+        Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
+        long lockTime = delayedPayoutTx == null ? trade.getLockTime() : delayedPayoutTx.getLockTime();
         long remainingLockTime = lockTime - btcWalletService.getBestChainHeight();
         // In case we re-open a dispute we allow Trade.DisputeState.MEDIATION_REQUESTED
         boolean useMediation = disputeState == Trade.DisputeState.NO_DISPUTE ||
@@ -519,7 +550,6 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                 disputeState == Trade.DisputeState.REFUND_REQUESTED || remainingLockTime <= 0;
 
         AtomicReference<String> donationAddressString = new AtomicReference<>(null);
-        Transaction delayedPayoutTx = trade.getDelayedPayoutTx();
         try {
             TradeDataValidation.validateDelayedPayoutTx(trade,
                     delayedPayoutTx,
@@ -584,9 +614,25 @@ public class PendingTradesDataModel extends ActivatableDataModel {
         } else if (useRefundAgent) {
             resultHandler = () -> navigation.navigateTo(MainView.class, SupportView.class, RefundClientView.class);
 
-            if (delayedPayoutTx == null) {
-                log.error("Delayed payout tx is missing");
-                return;
+            Transaction peersWarningTx = trade instanceof BuyerTrade ?
+                    trade.getSellersWarningTx(btcWalletService) : trade.getBuyersWarningTx(btcWalletService);
+            Transaction redirectTx = trade instanceof BuyerTrade ?
+                    trade.getBuyersRedirectTx(btcWalletService) : trade.getSellersRedirectTx(btcWalletService);
+
+            if (trade.hasV5Protocol()) {
+                if (peersWarningTx == null) {
+                    log.error("Peer's warning tx is missing");
+                    return;
+                }
+                if (redirectTx == null) {
+                    log.error("Redirect tx is missing");
+                    return;
+                }
+            } else {
+                if (delayedPayoutTx == null) {
+                    log.error("Delayed payout tx is missing");
+                    return;
+                }
             }
 
             // We only require for refund agent a confirmed deposit tx. For mediation we tolerate a unconfirmed tx as
@@ -648,15 +694,26 @@ public class PendingTradesDataModel extends ActivatableDataModel {
                     });
 
             dispute.setDonationAddressOfDelayedPayoutTx(donationAddressString.get());
-            dispute.setDelayedPayoutTxId(delayedPayoutTx.getTxId().toString());
-            trade.setDisputeState(Trade.DisputeState.REFUND_REQUESTED);
+            if (delayedPayoutTx != null) {
+                dispute.setDelayedPayoutTxId(delayedPayoutTx.getTxId().toString());
+                trade.setDisputeState(Trade.DisputeState.REFUND_REQUESTED);
+            } else {
+                dispute.setWarningTxId(peersWarningTx.getTxId().toString());
+                dispute.setRedirectTxId(redirectTx.getTxId().toString());
+            }
 
             dispute.setBurningManSelectionHeight(trade.getProcessModel().getBurningManSelectionHeight());
             dispute.setTradeTxFee(trade.getTradeTxFeeAsLong());
 
-            ((DisputeProtocol) tradeManager.getTradeProtocol(trade)).onPublishDelayedPayoutTx(
-                    () -> log.info("DelayedPayoutTx published and message sent to peer"),
-                    errorMessage -> new Popup().error(errorMessage).show());
+            if (delayedPayoutTx != null) {
+                ((DisputeProtocol) tradeManager.getTradeProtocol(trade)).onPublishDelayedPayoutTx(
+                        () -> log.info("DelayedPayoutTx published and message sent to peer"),
+                        errorMessage -> new Popup().error(errorMessage).show());
+            } else {
+                ((DisputeProtocol) tradeManager.getTradeProtocol(trade)).onPublishRedirectTx(
+                        () -> log.info("redirectTx published"),
+                        errorMessage -> new Popup().error(errorMessage).show());
+            }
             sendOpenDisputeMessage(disputeManager, resultHandler, dispute);
         } else {
             log.warn("Invalid dispute state {}", disputeState.name());
