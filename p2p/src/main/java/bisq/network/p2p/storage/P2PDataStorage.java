@@ -104,6 +104,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -271,25 +272,26 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
      * Returns a PreliminaryGetDataRequest that can be sent to a peer node to request missing Payload data.
      */
     public PreliminaryGetDataRequest buildPreliminaryGetDataRequest(int nonce) {
-        return new PreliminaryGetDataRequest(nonce, getKnownPayloadHashes());
+        return new PreliminaryGetDataRequest(nonce, getKnownPayloadHashes(Optional.empty()));
     }
 
     /**
      * Returns a GetUpdatedDataRequest that can be sent to a peer node to request missing Payload data.
      */
-    public GetUpdatedDataRequest buildGetUpdatedDataRequest(NodeAddress senderNodeAddress, int nonce) {
-        return new GetUpdatedDataRequest(senderNodeAddress, nonce, getKnownPayloadHashes());
+    public GetUpdatedDataRequest buildGetUpdatedDataRequest(NodeAddress senderNodeAddress, int nonce,
+                                                            Optional<String> responderVersion) {
+        return new GetUpdatedDataRequest(senderNodeAddress, nonce, getKnownPayloadHashes(responderVersion));
     }
 
     /**
      * Returns the set of known payload hashes. This is used in the GetData path to request missing data from peer nodes
      */
-    private Set<byte[]> getKnownPayloadHashes() {
+    private Set<byte[]> getKnownPayloadHashes(Optional<String> responderVersion) {
         // We collect the keys of the PersistableNetworkPayload items so we exclude them in our request.
         // PersistedStoragePayload items don't get removed, so we don't have an issue with the case that
         // an object gets removed in between PreliminaryGetDataRequest and the GetUpdatedDataRequest and we would
         // miss that event if we do not load the full set or use some delta handling.
-        Map<ByteArray, PersistableNetworkPayload> mapForDataRequest = getMapForDataRequest();
+        Map<ByteArray, PersistableNetworkPayload> mapForDataRequest = getMapForDataRequest(responderVersion);
         Set<byte[]> excludedKeys = getKeysAsByteSet(mapForDataRequest);
         Set<byte[]> excludedKeysFromProtectedStorageEntryMap = getKeysAsByteSet(map);
         excludedKeys.addAll(excludedKeysFromProtectedStorageEntryMap);
@@ -313,7 +315,9 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         // The methods in HistoricalDataStoreService will return all historical data in that case.
         // mapForDataResponse contains the filtered by version data from HistoricalDataStoreService as well as all other
         // maps of the remaining appendOnlyDataStoreServices.
-        Map<ByteArray, PersistableNetworkPayload> mapForDataResponse = getMapForDataResponse(getDataRequest.getVersion());
+        Map<ByteArray, PersistableNetworkPayload> mapForDataResponse =
+                getMapForDataResponse(getDataRequest.getVersion(),
+                        excludedKeysAsByteArray, wasPersistableNetworkPayloadsTruncated);
 
         // Give a bit of tolerance for message overhead
         double maxSize = Connection.getMaxPermittedMessageSize() * 0.6;
@@ -372,7 +376,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     // Utils for collecting the exclude hashes
     ///////////////////////////////////////////////////////////////////////////////////////////
 
-    private Map<ByteArray, PersistableNetworkPayload> getMapForDataRequest() {
+    private Map<ByteArray, PersistableNetworkPayload> getMapForDataRequest(Optional<String> responderVersion) {
         Map<ByteArray, PersistableNetworkPayload> map = new HashMap<>();
         appendOnlyDataStoreService.getServices()
                 .forEach(service -> {
@@ -381,7 +385,11 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
                         var historicalDataStoreService = (HistoricalDataStoreService<? extends PersistableNetworkPayloadStore>) service;
                         // As we add the version to our request we only use the live data. Eventually missing data will be
                         // derived from the version.
-                        serviceMap = historicalDataStoreService.getMapOfLiveData();
+                        if (responderVersion.isEmpty()) {
+                            serviceMap = historicalDataStoreService.getMapOfLiveData();
+                        } else {
+                            serviceMap = historicalDataStoreService.getMapSinceVersion(responderVersion.get(), Collections.emptySet(), new AtomicBoolean());
+                        }
                     } else {
                         serviceMap = service.getMap();
                     }
@@ -392,14 +400,16 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
         return map;
     }
 
-    public Map<ByteArray, PersistableNetworkPayload> getMapForDataResponse(String requestersVersion) {
+    public Map<ByteArray, PersistableNetworkPayload> getMapForDataResponse(String requestersVersion,
+                                                                           Set<P2PDataStorage.ByteArray> keysToExclude,
+                                                                           AtomicBoolean arePayloadsTruncated) {
         Map<ByteArray, PersistableNetworkPayload> map = new HashMap<>();
         appendOnlyDataStoreService.getServices()
                 .forEach(service -> {
                     Map<ByteArray, PersistableNetworkPayload> serviceMap;
                     if (service instanceof HistoricalDataStoreService) {
                         var historicalDataStoreService = (HistoricalDataStoreService<? extends PersistableNetworkPayloadStore>) service;
-                        serviceMap = historicalDataStoreService.getMapSinceVersion(requestersVersion);
+                        serviceMap = historicalDataStoreService.getMapSinceVersion(requestersVersion, keysToExclude, arePayloadsTruncated);
                     } else {
                         serviceMap = service.getMap();
                     }
@@ -543,7 +553,7 @@ public class P2PDataStorage implements MessageListener, ConnectionListener, Pers
     }
 
     public Collection<PersistableNetworkPayload> getPersistableNetworkPayloadCollection() {
-        return getMapForDataRequest().values();
+        return getMapForDataRequest(Optional.empty()).values();
     }
 
     private Set<byte[]> getKeysAsByteSet(Map<ByteArray, ? extends PersistablePayload> map) {
