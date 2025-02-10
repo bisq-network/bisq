@@ -138,9 +138,14 @@ Build output expected:
 
 * Install and run generated package
 
-### Sign release on macOS
+### Sign release & generate/include daemon and cli binaries
 
 * Run [finalize.sh](https://github.com/bisq-network/bisq/blob/master/desktop/package/macosx/finalize.sh)
+
+**PLEASE NOTE**:
+
+ - **Important**: even though finalize.sh script is on a macOS folder, **it should be ran for every platform**
+ - `finalize.sh` was designed to be ran from its own directory, so first make sure you cd into `./desktop/package/macosx` and set the environment variables it describes
 
 Build output expected:
 
