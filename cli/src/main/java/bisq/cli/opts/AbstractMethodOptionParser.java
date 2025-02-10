@@ -74,8 +74,7 @@ abstract class AbstractMethodOptionParser implements MethodOpts {
         }
     }
 
-    protected final Predicate<OptionSpec<String>> valueNotSpecified = (opt) ->
-            !options.hasArgument(opt) || options.valueOf(opt).isEmpty();
+    protected final Predicate<OptionSpec<String>> valueNotSpecified = (opt) -> !options.hasArgument(opt);
 
     private final Function<OptionException, String> cliExceptionMessageStyle = (ex) -> {
         if (ex.getMessage() == null)
