@@ -217,7 +217,7 @@ public class EditOfferOptionParserTest {
         };
         Throwable exception = assertThrows(RuntimeException.class, () ->
                 new EditOfferOptionParser(args).parse());
-        assertEquals("no mkt price margin specified",
+        assertEquals("no market price margin specified",
                 exception.getMessage());
     }
 
