@@ -21,8 +21,6 @@ import bisq.core.dao.burningman.BurningManPresentationService;
 
 import bisq.common.proto.network.NetworkPayload;
 
-import org.bitcoinj.core.Coin;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -70,7 +68,7 @@ public final class AccountingTxOutput implements NetworkPayload {
 
     @Override
     public protobuf.AccountingTxOutput toProtoMessage() {
-        checkArgument(value < Coin.valueOf(2147483647).getValue(),
+        checkArgument(value < 2147483647,
                 "We only support integer value in protobuf storage for the amount and it need to be below 21.47483647 BTC");
         return protobuf.AccountingTxOutput.newBuilder()
                 .setValue((int) value)
