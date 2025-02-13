@@ -17,6 +17,7 @@
 
 package bisq.core.trade.protocol.bisq_v1.tasks.maker;
 
+import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
 import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.offer.Offer;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
@@ -83,8 +84,12 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             checkArgument(takersBurningManSelectionHeight > 0, "takersBurningManSelectionHeight must not be 0");
 
             int makersBurningManSelectionHeight = processModel.getDelayedPayoutTxReceiverService().getBurningManSelectionHeight();
-            checkArgument(takersBurningManSelectionHeight == makersBurningManSelectionHeight,
+
+            boolean areBurningManSelectionHeightsValid = verifyBurningManSelectionHeight(
+                    takersBurningManSelectionHeight, makersBurningManSelectionHeight);
+            checkArgument(areBurningManSelectionHeightsValid,
                     "takersBurningManSelectionHeight does no match makersBurningManSelectionHeight");
+
             processModel.setBurningManSelectionHeight(makersBurningManSelectionHeight);
 
             // We set the taker fee only in the processModel yet not in the trade as the tx was only created but not
@@ -130,6 +135,23 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             complete();
         } catch (Throwable t) {
             failed(t);
+        }
+    }
+
+    public static boolean verifyBurningManSelectionHeight(int takersBurningManSelectionHeight,
+                                                   int makersBurningManSelectionHeight) {
+        if (takersBurningManSelectionHeight == makersBurningManSelectionHeight) {
+            return true;
+
+        } else if (takersBurningManSelectionHeight < makersBurningManSelectionHeight) {
+            int takersNextBlockBurningManSelectionHeight =
+                    takersBurningManSelectionHeight + DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE;
+            return takersNextBlockBurningManSelectionHeight == makersBurningManSelectionHeight;
+
+        } else {
+            int makersNextBlockBurningManSelectionHeight =
+                    makersBurningManSelectionHeight + DelayedPayoutTxReceiverService.SNAPSHOT_SELECTION_GRID_SIZE;
+            return takersBurningManSelectionHeight == makersNextBlockBurningManSelectionHeight;
         }
     }
 }
