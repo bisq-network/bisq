@@ -217,7 +217,7 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
 
     // Borrowed from DaoStateSnapshotService. We prefer to not reuse to avoid dependency to an unrelated domain.
     @VisibleForTesting
-    static int getSnapshotHeight(int genesisHeight, int height, int grid, int minSnapshotHeight) {
+    public static int getSnapshotHeight(int genesisHeight, int height, int grid, int minSnapshotHeight) {
         if (height > (genesisHeight + 3 * grid)) {
             int ratio = (int) Math.round(height / (double) grid);
             return Math.max(minSnapshotHeight, ratio * grid - grid);
