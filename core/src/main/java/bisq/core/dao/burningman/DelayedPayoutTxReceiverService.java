@@ -59,6 +59,8 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     // See: https://github.com/bisq-network/proposals/issues/412
     public static final Date PROPOSAL_412_ACTIVATION_DATE = Utilities.getUTCDate(2024, GregorianCalendar.MAY, 1);
 
+    public static final int SNAPSHOT_SELECTION_GRID_SIZE = 10;
+
     // We don't allow to get further back than 767950 (the block height from Dec. 18th 2022).
     static final int MIN_SNAPSHOT_HEIGHT = Config.baseCurrencyNetwork().isRegtest() ? 0 : 767950;
 
@@ -116,7 +118,8 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     // The block height is the last mod(10) height from the range of the last 10-20 blocks (139 -> 120; 140 -> 130, 141 -> 130).
     // We do not have the latest dao state by that but can ensure maker and taker have the same block.
     public int getBurningManSelectionHeight() {
-        return getSnapshotHeight(daoStateService.getGenesisBlockHeight(), currentChainHeight, 10);
+        return getSnapshotHeight(daoStateService.getGenesisBlockHeight(), currentChainHeight,
+                SNAPSHOT_SELECTION_GRID_SIZE);
     }
 
     public List<Tuple2<Long, String>> getReceivers(int burningManSelectionHeight,
