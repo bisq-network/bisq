@@ -319,6 +319,8 @@ public class DaoState implements PersistablePayload {
     }
 
     public void addBlock(Block block) {
+        // The block added here does not have any tx, 
+        // so we do not need to update the txCache or txOutputsByTxOutputType
         blocks.add(block);
         blocksByHeight.put(block.getHeight(), block);
     }
