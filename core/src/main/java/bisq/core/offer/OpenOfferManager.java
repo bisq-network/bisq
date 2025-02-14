@@ -47,6 +47,7 @@ import bisq.core.support.dispute.refund.refundagent.RefundAgentManager;
 import bisq.core.trade.ClosedTradableManager;
 import bisq.core.trade.bisq_v1.TransactionResultHandler;
 import bisq.core.trade.model.TradableList;
+import bisq.core.trade.protocol.bisq_v1.tasks.maker.MakerProcessesInputsForDepositTxRequest;
 import bisq.core.trade.statistics.TradeStatisticsManager;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
@@ -857,7 +858,10 @@ public class OpenOfferManager implements PeerManager.Listener, DecryptedDirectMe
                 checkArgument(takersBurningManSelectionHeight > 0, "takersBurningManSelectionHeight must not be 0");
 
                 int makersBurningManSelectionHeight = delayedPayoutTxReceiverService.getBurningManSelectionHeight();
-                checkArgument(takersBurningManSelectionHeight == makersBurningManSelectionHeight,
+
+                boolean areBurningManSelectionHeightsValid = MakerProcessesInputsForDepositTxRequest
+                        .verifyBurningManSelectionHeight(takersBurningManSelectionHeight, makersBurningManSelectionHeight);
+                checkArgument(areBurningManSelectionHeightsValid,
                         "takersBurningManSelectionHeight does no match makersBurningManSelectionHeight. " +
                                 "takersBurningManSelectionHeight=" + takersBurningManSelectionHeight + "; makersBurningManSelectionHeight=" + makersBurningManSelectionHeight);
             } catch (Throwable t) {
