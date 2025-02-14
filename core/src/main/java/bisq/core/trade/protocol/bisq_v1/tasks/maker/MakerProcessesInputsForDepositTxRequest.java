@@ -90,7 +90,7 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
             checkArgument(areBurningManSelectionHeightsValid,
                     "takersBurningManSelectionHeight does no match makersBurningManSelectionHeight");
 
-            processModel.setBurningManSelectionHeight(makersBurningManSelectionHeight);
+            processModel.setBurningManSelectionHeight(takersBurningManSelectionHeight);
 
             // We set the taker fee only in the processModel yet not in the trade as the tx was only created but not
             // published yet. Once it was published we move it to trade. The takerFeeTx should be sent in a later
