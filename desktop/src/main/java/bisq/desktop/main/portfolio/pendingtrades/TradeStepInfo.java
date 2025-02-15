@@ -39,7 +39,6 @@ import javax.annotation.Nullable;
 
 @Slf4j
 public class TradeStepInfo {
-
     public enum State {
         UNDEFINED,
         SHOW_GET_HELP_BUTTON,
@@ -48,6 +47,10 @@ public class TradeStepInfo {
         MEDIATION_RESULT,
         MEDIATION_RESULT_SELF_ACCEPTED,
         MEDIATION_RESULT_PEER_ACCEPTED,
+        WARNING_SENT_CLAIM_LOCKED,
+        WARNING_SENT_CLAIM_UNLOCKED,
+        WARNING_SENT_BY_PEER_CLAIM_LOCKED,
+        WARNING_SENT_BY_PEER_CLAIM_UNLOCKED,
         IN_ARBITRATION_SELF_REQUESTED,
         IN_ARBITRATION_PEER_REQUESTED,
         IN_REFUND_REQUEST_SELF_REQUESTED,
@@ -66,7 +69,9 @@ public class TradeStepInfo {
     private Trade trade;
     @Getter
     private State state = State.UNDEFINED;
+    @Setter
     private Supplier<String> firstHalfOverWarnTextSupplier = () -> "";
+    @Setter
     private Supplier<String> periodOverWarnTextSupplier = () -> "";
 
     TradeStepInfo(TitledGroupBg titledGroupBg,
@@ -92,15 +97,7 @@ public class TradeStepInfo {
         button.setOnAction(e);
     }
 
-    public void setFirstHalfOverWarnTextSupplier(Supplier<String> firstHalfOverWarnTextSupplier) {
-        this.firstHalfOverWarnTextSupplier = firstHalfOverWarnTextSupplier;
-    }
-
-    public void setPeriodOverWarnTextSupplier(Supplier<String> periodOverWarnTextSupplier) {
-        this.periodOverWarnTextSupplier = periodOverWarnTextSupplier;
-    }
-
-    public void setState(State state) {
+    public void setState(State state, Object... labelTextArguments) {
         this.state = state;
         switch (state) {
             case UNDEFINED:
@@ -157,6 +154,42 @@ public class TradeStepInfo {
                 button.setText(Res.get("portfolio.pending.mediationResult.button").toUpperCase());
                 button.setId(null);
                 button.getStyleClass().add("action-button");
+                button.setDisable(false);
+                break;
+            case WARNING_SENT_CLAIM_LOCKED:
+                // grey button disabled
+                titledGroupBg.setText(Res.get("portfolio.pending.warningSent.headline"));
+                label.updateContent(Res.get("portfolio.pending.warningSent.claimLocked.info", labelTextArguments));
+                button.setText(Res.get("portfolio.pending.warningSent.button").toUpperCase());
+                button.setId(null);
+                button.getStyleClass().add("action-button");
+                button.setDisable(true);
+                break;
+            case WARNING_SENT_CLAIM_UNLOCKED:
+                // green button
+                titledGroupBg.setText(Res.get("portfolio.pending.warningSent.headline"));
+                label.updateContent(Res.get("portfolio.pending.warningSent.claimUnlocked.info"));
+                button.setText(Res.get("portfolio.pending.warningSent.button").toUpperCase());
+                button.setId(null);
+                button.getStyleClass().add("action-button");
+                button.setDisable(false);
+                break;
+            case WARNING_SENT_BY_PEER_CLAIM_LOCKED:
+                // red button
+                titledGroupBg.setText(Res.get("portfolio.pending.warningSentByPeer.headline"));
+                label.updateContent(Res.get("portfolio.pending.warningSentByPeer.claimLocked.info", labelTextArguments));
+                button.setText(Res.get("portfolio.pending.warningSentByPeer.button").toUpperCase());
+                button.setId("open-dispute-button");
+                button.getStyleClass().remove("action-button");
+                button.setDisable(false);
+                break;
+            case WARNING_SENT_BY_PEER_CLAIM_UNLOCKED:
+                // red button
+                titledGroupBg.setText(Res.get("portfolio.pending.warningSentByPeer.headline"));
+                label.updateContent(Res.get("portfolio.pending.warningSentByPeer.claimUnlocked.info"));
+                button.setText(Res.get("portfolio.pending.warningSentByPeer.button").toUpperCase());
+                button.setId("open-dispute-button");
+                button.getStyleClass().remove("action-button");
                 button.setDisable(false);
                 break;
             case IN_REFUND_REQUEST_SELF_REQUESTED:

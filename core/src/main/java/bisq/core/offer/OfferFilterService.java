@@ -138,7 +138,7 @@ public class OfferFilterService {
     }
 
     public boolean hasSameProtocolVersion(Offer offer) {
-        return offer.getProtocolVersion() == Version.TRADE_PROTOCOL_VERSION;
+        return offer.getProtocolVersion() == Version.getTradeProtocolVersion();
     }
 
     public boolean isIgnored(Offer offer) {

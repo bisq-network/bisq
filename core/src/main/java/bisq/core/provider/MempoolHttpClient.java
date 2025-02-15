@@ -22,6 +22,8 @@ import bisq.network.http.HttpClientImpl;
 
 import bisq.common.app.Version;
 
+import org.bitcoinj.core.Sha256Hash;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -41,7 +43,7 @@ public class MempoolHttpClient extends HttpClientImpl {
     // returns JSON of the transaction details
     public String getTxDetails(String txId) throws IOException {
         super.shutDown(); // close any prior incomplete request
-        String api = "/" + txId;
+        String api = "/" + Sha256Hash.wrap(txId);
         return get(api, "User-Agent", "bisq/" + Version.VERSION);
     }
 
@@ -50,7 +52,7 @@ public class MempoolHttpClient extends HttpClientImpl {
         super.shutDown(); // close any prior incomplete request
 
         return CompletableFuture.supplyAsync(() -> {
-            String api = "/" + txId + "/hex";
+            String api = "/" + Sha256Hash.wrap(txId) + "/hex";
             try {
                 return get(api, "User-Agent", "bisq/" + Version.VERSION);
             } catch (IOException e) {

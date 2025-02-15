@@ -91,7 +91,7 @@ public class AboutView extends ActivatableView<GridPane, Void> {
                         Version.P2P_NETWORK_VERSION,
                         Version.getP2PMessageVersion(),
                         Version.LOCAL_DB_VERSION,
-                        Version.TRADE_PROTOCOL_VERSION));
+                        Version.getTradeProtocolVersion()));
 
         addTitledGroupBg(root, ++gridRow, 18, Res.get("setting.about.shortcuts"), Layout.GROUP_DISTANCE);
 

@@ -125,6 +125,9 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
 
             trade.setTradingPeerNodeAddress(processModel.getTempTradingPeerNodeAddress());
 
+            tradingPeer.setWarningTxFeeBumpAddress(request.getTakersWarningTxFeeBumpAddress());
+            tradingPeer.setRedirectTxFeeBumpAddress(request.getTakersRedirectTxFeeBumpAddress());
+
             processModel.getTradeManager().requestPersistence();
 
             complete();

@@ -52,11 +52,11 @@ import bisq.core.trade.model.bsq_swap.BsqSwapBuyerAsTakerTrade;
 import bisq.core.trade.model.bsq_swap.BsqSwapSellerAsMakerTrade;
 import bisq.core.trade.model.bsq_swap.BsqSwapSellerAsTakerTrade;
 import bisq.core.trade.model.bsq_swap.BsqSwapTrade;
+import bisq.core.trade.protocol.MakerProtocol;
 import bisq.core.trade.protocol.Provider;
+import bisq.core.trade.protocol.TakerProtocol;
 import bisq.core.trade.protocol.TradeProtocol;
 import bisq.core.trade.protocol.TradeProtocolFactory;
-import bisq.core.trade.protocol.bisq_v1.MakerProtocol;
-import bisq.core.trade.protocol.bisq_v1.TakerProtocol;
 import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
 import bisq.core.trade.protocol.bisq_v1.model.ProcessModel;
 import bisq.core.trade.protocol.bsq_swap.BsqSwapMakerProtocol;
@@ -92,6 +92,7 @@ import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.InsufficientMoneyException;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.script.Script;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -679,7 +680,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
     public void onWithdrawRequest(String toAddress,
                                   Coin amount,
                                   Coin fee,
-                                  KeyParameter aesKey,
+                                  @Nullable KeyParameter aesKey,
                                   Trade trade,
                                   @Nullable String memo,
                                   ResultHandler resultHandler,
@@ -688,7 +689,7 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
                 AddressEntry.Context.TRADE_PAYOUT).getAddressString();
         FutureCallback<Transaction> callback = new FutureCallback<>() {
             @Override
-            public void onSuccess(@javax.annotation.Nullable Transaction transaction) {
+            public void onSuccess(@Nullable Transaction transaction) {
                 if (transaction != null) {
                     log.debug("onWithdraw onSuccess tx ID:" + transaction.getTxId().toString());
                     onTradeCompleted(trade);
@@ -723,6 +724,12 @@ public class TradeManager implements PersistedDataHost, DecryptedDirectMessageLi
 
         // TODO The address entry should have been removed already. Check and if its the case remove that.
         btcWalletService.resetAddressEntriesForPendingTrade(trade.getId());
+        // FIXME: If the trade fails, any watched scripts will remain in the wallet permanently, which is not ideal.
+        // If any staged tx was broadcast, we also keep watched scripts so that it won't disappear after an SPV resync.
+        List<Script> watchedScripts = trade.getWatchedScripts(btcWalletService);
+        if (!watchedScripts.isEmpty() && !trade.getDisputeState().isEscalated()) {
+            btcWalletService.getWallet().removeWatchedScripts(watchedScripts);
+        }
         requestPersistence();
     }
 

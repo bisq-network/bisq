@@ -15,17 +15,20 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.core.trade.protocol.bisq_v1;
+package bisq.core.btc.listeners;
 
+import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.core.TransactionOutput;
 
-import bisq.core.trade.protocol.bisq_v1.messages.InputsForDepositTxRequest;
+import lombok.Getter;
 
-import bisq.network.p2p.NodeAddress;
+public abstract class OutputSpendConfidenceListener {
+    @Getter
+    private final TransactionOutput output;
 
-import bisq.common.handlers.ErrorMessageHandler;
+    public OutputSpendConfidenceListener(TransactionOutput output) {
+        this.output = output;
+    }
 
-public interface MakerProtocol {
-    void handleTakeOfferRequest(InputsForDepositTxRequest message,
-                                NodeAddress taker,
-                                ErrorMessageHandler errorMessageHandler);
+    public abstract void onOutputSpendConfidenceChanged(TransactionConfidence confidence);
 }

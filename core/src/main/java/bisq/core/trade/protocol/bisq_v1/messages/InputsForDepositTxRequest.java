@@ -83,6 +83,12 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
     // Added in v 1.9.7
     private final int burningManSelectionHeight;
 
+    // Added for v5 protocol
+    @Nullable
+    private final String takersWarningTxFeeBumpAddress;
+    @Nullable
+    private final String takersRedirectTxFeeBumpAddress;
+
     public InputsForDepositTxRequest(String tradeId,
                                      NodeAddress senderNodeAddress,
                                      long tradeAmount,
@@ -111,7 +117,9 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                                      long currentDate,
                                      @Nullable byte[] hashOfTakersPaymentAccountPayload,
                                      @Nullable String takersPaymentMethodId,
-                                     int burningManSelectionHeight) {
+                                     int burningManSelectionHeight,
+                                     @Nullable String takersWarningTxFeeBumpAddress,
+                                     @Nullable String takersRedirectTxFeeBumpAddress) {
         super(messageVersion, tradeId, uid);
         this.senderNodeAddress = senderNodeAddress;
         this.tradeAmount = tradeAmount;
@@ -139,6 +147,8 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
         this.hashOfTakersPaymentAccountPayload = hashOfTakersPaymentAccountPayload;
         this.takersPaymentMethodId = takersPaymentMethodId;
         this.burningManSelectionHeight = burningManSelectionHeight;
+        this.takersWarningTxFeeBumpAddress = takersWarningTxFeeBumpAddress;
+        this.takersRedirectTxFeeBumpAddress = takersRedirectTxFeeBumpAddress;
     }
 
 
@@ -178,10 +188,12 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 .setBurningManSelectionHeight(burningManSelectionHeight);
 
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
-        Optional.ofNullable(arbitratorNodeAddress).ifPresent(e -> builder.setArbitratorNodeAddress(arbitratorNodeAddress.toProtoMessage()));
-        Optional.ofNullable(takerPaymentAccountPayload).ifPresent(e -> builder.setTakerPaymentAccountPayload((protobuf.PaymentAccountPayload) takerPaymentAccountPayload.toProtoMessage()));
-        Optional.ofNullable(hashOfTakersPaymentAccountPayload).ifPresent(e -> builder.setHashOfTakersPaymentAccountPayload(ByteString.copyFrom(hashOfTakersPaymentAccountPayload)));
-        Optional.ofNullable(takersPaymentMethodId).ifPresent(e -> builder.setTakersPayoutMethodId(takersPaymentMethodId));
+        Optional.ofNullable(arbitratorNodeAddress).ifPresent(e -> builder.setArbitratorNodeAddress(e.toProtoMessage()));
+        Optional.ofNullable(takerPaymentAccountPayload).ifPresent(e -> builder.setTakerPaymentAccountPayload((protobuf.PaymentAccountPayload) e.toProtoMessage()));
+        Optional.ofNullable(hashOfTakersPaymentAccountPayload).ifPresent(e -> builder.setHashOfTakersPaymentAccountPayload(ByteString.copyFrom(e)));
+        Optional.ofNullable(takersPaymentMethodId).ifPresent(builder::setTakersPayoutMethodId);
+        Optional.ofNullable(takersWarningTxFeeBumpAddress).ifPresent(builder::setTakersWarningTxFeeBumpAddress);
+        Optional.ofNullable(takersRedirectTxFeeBumpAddress).ifPresent(builder::setTakersRedirectTxFeeBumpAddress);
         return getNetworkEnvelopeBuilder().setInputsForDepositTxRequest(builder).build();
     }
 
@@ -230,7 +242,9 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 proto.getCurrentDate(),
                 hashOfTakersPaymentAccountPayload,
                 ProtoUtil.stringOrNullFromProto(proto.getTakersPayoutMethodId()),
-                proto.getBurningManSelectionHeight());
+                proto.getBurningManSelectionHeight(),
+                ProtoUtil.stringOrNullFromProto(proto.getTakersWarningTxFeeBumpAddress()),
+                ProtoUtil.stringOrNullFromProto(proto.getTakersRedirectTxFeeBumpAddress()));
     }
 
     @Override
@@ -261,6 +275,8 @@ public final class InputsForDepositTxRequest extends TradeMessage implements Dir
                 ",\n     hashOfTakersPaymentAccountPayload=" + Utilities.bytesAsHexString(hashOfTakersPaymentAccountPayload) +
                 ",\n     takersPaymentMethodId=" + takersPaymentMethodId +
                 ",\n     burningManSelectionHeight=" + burningManSelectionHeight +
+                ",\n     takersWarningTxFeeBumpAddress=" + takersWarningTxFeeBumpAddress +
+                ",\n     takersRedirectTxFeeBumpAddress=" + takersRedirectTxFeeBumpAddress +
                 "\n} " + super.toString();
     }
 }

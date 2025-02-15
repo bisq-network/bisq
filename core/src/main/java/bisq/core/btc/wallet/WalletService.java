@@ -21,6 +21,7 @@ import bisq.core.btc.exceptions.TransactionVerificationException;
 import bisq.core.btc.exceptions.WalletException;
 import bisq.core.btc.listeners.AddressConfidenceListener;
 import bisq.core.btc.listeners.BalanceListener;
+import bisq.core.btc.listeners.OutputSpendConfidenceListener;
 import bisq.core.btc.listeners.TxConfidenceListener;
 import bisq.core.btc.setup.WalletsSetup;
 import bisq.core.btc.wallet.http.MemPoolSpaceTxBroadcaster;
@@ -44,6 +45,7 @@ import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionConfidence;
 import org.bitcoinj.core.TransactionInput;
+import org.bitcoinj.core.TransactionOutPoint;
 import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.core.TransactionWitness;
 import org.bitcoinj.core.VerificationException;
@@ -66,6 +68,7 @@ import org.bitcoinj.wallet.KeyBag;
 import org.bitcoinj.wallet.RedeemData;
 import org.bitcoinj.wallet.SendRequest;
 import org.bitcoinj.wallet.Wallet;
+import org.bitcoinj.wallet.WalletTransaction;
 import org.bitcoinj.wallet.listeners.WalletChangeEventListener;
 import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
 import org.bitcoinj.wallet.listeners.WalletCoinsSentEventListener;
@@ -89,6 +92,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicReference;
@@ -122,6 +126,7 @@ public abstract class WalletService {
     private final BisqWalletListener walletEventListener = new BisqWalletListener();
     private final CopyOnWriteArraySet<AddressConfidenceListener> addressConfidenceListeners = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<TxConfidenceListener> txConfidenceListeners = new CopyOnWriteArraySet<>();
+    private final CopyOnWriteArraySet<OutputSpendConfidenceListener> spendConfidenceListeners = new CopyOnWriteArraySet<>();
     private final CopyOnWriteArraySet<BalanceListener> balanceListeners = new CopyOnWriteArraySet<>();
     private final WalletChangeEventListener cacheInvalidationListener;
     private final AtomicReference<Multiset<Address>> txOutputAddressCache = new AtomicReference<>();
@@ -225,6 +230,14 @@ public abstract class WalletService {
         txConfidenceListeners.remove(listener);
     }
 
+    public void addSpendConfidenceListener(OutputSpendConfidenceListener listener) {
+        spendConfidenceListeners.add(listener);
+    }
+
+    public void removeSpendConfidenceListener(OutputSpendConfidenceListener listener) {
+        spendConfidenceListeners.remove(listener);
+    }
+
     public void addBalanceListener(BalanceListener listener) {
         balanceListeners.add(listener);
     }
@@ -284,7 +297,7 @@ public abstract class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public static void signTx(Wallet wallet,
-                              KeyParameter aesKey,
+                              @Nullable KeyParameter aesKey,
                               Transaction tx)
             throws WalletException, TransactionVerificationException {
         for (int i = 0; i < tx.getInputs().size(); i++) {
@@ -310,7 +323,7 @@ public abstract class WalletService {
     }
 
     public static void signTransactionInput(Wallet wallet,
-                                            KeyParameter aesKey,
+                                            @Nullable KeyParameter aesKey,
                                             Transaction tx,
                                             TransactionInput txIn,
                                             int index) {
@@ -443,29 +456,28 @@ public abstract class WalletService {
 
     @Nullable
     public TransactionConfidence getConfidenceForAddress(Address address) {
-        List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
         if (wallet != null) {
             Set<Transaction> transactions = getAddressToMatchingTxSetMultimap().get(address);
-            transactionConfidenceList.addAll(transactions.stream().map(tx ->
-                    getTransactionConfidence(tx, address)).collect(Collectors.toList()));
+            return getMostRecentConfidence(transactions.stream()
+                    .map(tx -> getTransactionConfidence(tx, address))
+                    .collect(Collectors.toList()));
         }
-        return getMostRecentConfidence(transactionConfidenceList);
+        return null;
     }
 
     @Nullable
     public TransactionConfidence getConfidenceForAddressFromBlockHeight(Address address, long targetHeight) {
-        List<TransactionConfidence> transactionConfidenceList = new ArrayList<>();
         if (wallet != null) {
             Set<Transaction> transactions = getAddressToMatchingTxSetMultimap().get(address);
             // "acceptable confidence" is either a new (pending) Tx, or a Tx confirmed after target block height
-            transactionConfidenceList.addAll(transactions.stream()
+            return getMostRecentConfidence(transactions.stream()
                     .map(tx -> getTransactionConfidence(tx, address))
                     .filter(Objects::nonNull)
                     .filter(con -> con.getConfidenceType() == PENDING ||
                             (con.getConfidenceType() == BUILDING && con.getAppearedAtChainHeight() > targetHeight))
                     .collect(Collectors.toList()));
         }
-        return getMostRecentConfidence(transactionConfidenceList);
+        return null;
     }
 
     private SetMultimap<Address, Transaction> getAddressToMatchingTxSetMultimap() {
@@ -497,7 +509,7 @@ public abstract class WalletService {
     }
 
     @Nullable
-    private TransactionConfidence getTransactionConfidence(Transaction tx, Address address) {
+    private static TransactionConfidence getTransactionConfidence(Transaction tx, Address address) {
         List<TransactionConfidence> transactionConfidenceList = getOutputsWithConnectedOutputs(tx).stream()
                 .filter(output -> address != null && address.equals(getAddressFromOutput(output)))
                 .flatMap(o -> Stream.ofNullable(o.getParentTransaction()))
@@ -507,7 +519,7 @@ public abstract class WalletService {
     }
 
 
-    private List<TransactionOutput> getOutputsWithConnectedOutputs(Transaction tx) {
+    private static List<TransactionOutput> getOutputsWithConnectedOutputs(Transaction tx) {
         List<TransactionOutput> transactionOutputs = tx.getOutputs();
         List<TransactionOutput> connectedOutputs = new ArrayList<>();
 
@@ -527,7 +539,7 @@ public abstract class WalletService {
     }
 
     @Nullable
-    private TransactionConfidence getMostRecentConfidence(List<TransactionConfidence> transactionConfidenceList) {
+    private static TransactionConfidence getMostRecentConfidence(List<TransactionConfidence> transactionConfidenceList) {
         TransactionConfidence transactionConfidence = null;
         for (TransactionConfidence confidence : transactionConfidenceList) {
             if (confidence != null) {
@@ -635,7 +647,7 @@ public abstract class WalletService {
     ///////////////////////////////////////////////////////////////////////////////////////////
 
     public void emptyBtcWallet(String toAddress,
-                               KeyParameter aesKey,
+                               @Nullable KeyParameter aesKey,
                                ResultHandler resultHandler,
                                ErrorMessageHandler errorMessageHandler)
             throws InsufficientMoneyException, AddressFormatException {
@@ -818,11 +830,33 @@ public abstract class WalletService {
     }*/
 
     public Coin getValueSentFromMeForTransaction(Transaction transaction) throws ScriptException {
-        return transaction.getValueSentFromMe(wallet);
+        // Does the same thing as transaction.getValueSentFromMe(wallet), except that watched connected
+        // outputs don't count towards the total, only outputs with pubKeys belonging to the wallet.
+        long satoshis = transaction.getInputs().stream()
+                .flatMap(input -> getConnectedOutput(input, WalletTransaction.Pool.UNSPENT)
+                        .or(() -> getConnectedOutput(input, WalletTransaction.Pool.SPENT))
+                        .or(() -> getConnectedOutput(input, WalletTransaction.Pool.PENDING))
+                        .filter(o -> o.isMine(wallet))
+                        .stream())
+                .mapToLong(o -> o.getValue().value)
+                .sum();
+        return Coin.valueOf(satoshis);
+    }
+
+    private Optional<TransactionOutput> getConnectedOutput(TransactionInput input, WalletTransaction.Pool pool) {
+        TransactionOutPoint outpoint = input.getOutpoint();
+        return Optional.ofNullable(wallet.getTransactionPool(pool).get(outpoint.getHash()))
+                .map(tx -> tx.getOutput(outpoint.getIndex()));
     }
 
     public Coin getValueSentToMeForTransaction(Transaction transaction) throws ScriptException {
-        return transaction.getValueSentToMe(wallet);
+        // Does the same thing as transaction.getValueSentToMe(wallet), except that watched outputs
+        // don't count towards the total, only outputs with pubKeys belonging to the wallet.
+        long satoshis = transaction.getOutputs().stream()
+                .filter(o -> o.isMine(wallet))
+                .mapToLong(o -> o.getValue().value)
+                .sum();
+        return Coin.valueOf(satoshis);
     }
 
 
@@ -907,7 +941,7 @@ public abstract class WalletService {
 
         @Override
         public void onReorganize(Wallet wallet) {
-            log.warn("onReorganize ");
+            log.warn("onReorganize");
         }
 
         @Override
@@ -916,13 +950,20 @@ public abstract class WalletService {
                 TransactionConfidence confidence = getTransactionConfidence(tx, addressConfidenceListener.getAddress());
                 addressConfidenceListener.onTransactionConfidenceChanged(confidence);
             }
-            txConfidenceListeners.stream()
-                    .filter(txConfidenceListener -> tx != null &&
-                            tx.getTxId().toString() != null &&
-                            txConfidenceListener != null &&
-                            tx.getTxId().toString().equals(txConfidenceListener.getTxId()))
-                    .forEach(txConfidenceListener ->
-                            txConfidenceListener.onTransactionConfidenceChanged(tx.getConfidence()));
+            for (OutputSpendConfidenceListener listener : spendConfidenceListeners) {
+                TransactionInput spentBy = listener.getOutput().getSpentBy();
+                if (spentBy != null && tx.equals(spentBy.getParentTransaction())) {
+                    listener.onOutputSpendConfidenceChanged(tx.getConfidence());
+                }
+            }
+            if (!txConfidenceListeners.isEmpty()) {
+                String txId = tx.getTxId().toString();
+                for (TxConfidenceListener listener : txConfidenceListeners) {
+                    if (txId.equals(listener.getTxId())) {
+                        listener.onTransactionConfidenceChanged(tx.getConfidence());
+                    }
+                }
+            }
         }
 
         void notifyBalanceListeners(Transaction tx) {

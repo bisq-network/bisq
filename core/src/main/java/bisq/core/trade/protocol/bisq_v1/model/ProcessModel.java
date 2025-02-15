@@ -78,7 +78,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // persist them.
 
 /**
- * This is the base model for the trade protocol. It is persisted with the trade (non transient fields).
+ * This is the base model for the trade protocol. It is persisted with the trade (non-transient fields).
  * It uses the {@link Provider} for access to domain services.
  */
 
@@ -91,97 +91,131 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
     }
 
     // Transient/Immutable (net set in constructor so they are not final, but at init)
-    transient private Provider provider;
-    transient private TradeManager tradeManager;
-    transient private Offer offer;
+    transient protected Provider provider;
+    transient protected TradeManager tradeManager;
+    transient protected Offer offer;
 
     // Transient/Mutable
-    transient private Transaction takeOfferFeeTx;
+    transient protected Transaction takeOfferFeeTx;
     @Setter
-    transient private TradeMessage tradeMessage;
+    transient protected TradeMessage tradeMessage;
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Added in v 1.9.13 for trade protocol 5
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Setter
+    transient private String warningTxFeeBumpAddress;
+    @Setter
+    transient private String redirectTxFeeBumpAddress;
+
+    @Setter
+    transient private Transaction warningTx;
+    @Setter
+    transient private byte[] warningTxSellerSignature;
+    @Setter
+    transient private byte[] warningTxBuyerSignature;
+    @Setter
+    @Nullable
+    private byte[] finalizedWarningTx;
+
+    @Setter
+    transient private Transaction redirectTx;
+    @Setter
+    transient private byte[] redirectTxSellerSignature;
+    @Setter
+    transient private byte[] redirectTxBuyerSignature;
+    @Setter
+    @Nullable
+    byte[] finalizedRedirectTx;
+
+    @Setter
+    @Nullable
+    private byte[] signedClaimTx;
+
 
     // Added in v1.2.0
     @Setter
     @Nullable
-    transient private byte[] delayedPayoutTxSignature;
+    transient protected byte[] delayedPayoutTxSignature;
     @Setter
     @Nullable
-    transient private Transaction preparedDelayedPayoutTx;
+    transient protected Transaction preparedDelayedPayoutTx;
+
 
     // Added in v1.4.0
     // MessageState of the last message sent from the seller to the buyer in the take offer process.
     // It is used only in a task which would not be executed after restart, so no need to persist it.
     @Setter
-    transient private ObjectProperty<MessageState> depositTxMessageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
+    transient protected ObjectProperty<MessageState> depositTxMessageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
     @Setter
-    @Getter
-    transient private Transaction depositTx;
+    transient protected Transaction depositTx;
 
     // Persistable Immutable
-    private final String offerId;
-    private final PubKeyRing pubKeyRing;
+    protected final String offerId;
+    protected final PubKeyRing pubKeyRing;
 
     // Persistable Mutable
-    private TradingPeer tradingPeer;
+    protected TradingPeer tradingPeer;
     @Nullable
     @Setter
-    private String takeOfferFeeTxId;
+    protected String takeOfferFeeTxId;
     @Nullable
     @Setter
-    private byte[] payoutTxSignature;
+    protected byte[] payoutTxSignature;
     @Nullable
     @Setter
-    private byte[] preparedDepositTx;
+    protected byte[] preparedDepositTx;
     @Nullable
     @Setter
-    private List<RawTransactionInput> rawTransactionInputs;
+    protected List<RawTransactionInput> rawTransactionInputs;
     @Setter
-    private long changeOutputValue;
+    protected long changeOutputValue;
     @Nullable
     @Setter
-    private String changeOutputAddress;
+    protected String changeOutputAddress;
     @Setter
-    private boolean useSavingsWallet;
+    protected boolean useSavingsWallet;
     @Setter
-    private long fundsNeededForTradeAsLong;
+    protected long fundsNeededForTradeAsLong;
     @Nullable
     @Setter
-    private byte[] myMultiSigPubKey;
+    protected byte[] myMultiSigPubKey;
     // that is used to store temp. the peers address when we get an incoming message before the message is verified.
     // After successful verified we copy that over to the trade.tradingPeerAddress
     @Nullable
     @Setter
-    private NodeAddress tempTradingPeerNodeAddress;
+    protected NodeAddress tempTradingPeerNodeAddress;
 
     // Added in v.1.1.6
     @Nullable
     @Setter
-    private byte[] mediatedPayoutTxSignature;
+    protected byte[] mediatedPayoutTxSignature;
     @Setter
-    private long buyerPayoutAmountFromMediation;
+    protected long buyerPayoutAmountFromMediation;
     @Setter
-    private long sellerPayoutAmountFromMediation;
+    protected long sellerPayoutAmountFromMediation;
 
     // Was changed at v1.9.2 from immutable to mutable
     @Setter
-    private String accountId;
+    protected String accountId;
 
     // Was added at v1.9.2
     @Setter
     @Nullable
-    private PaymentAccount paymentAccount;
+    protected PaymentAccount paymentAccount;
 
 
     // We want to indicate the user the state of the message delivery of the
     // CounterCurrencyTransferStartedMessage. As well we do an automatic re-send in case it was not ACKed yet.
     // To enable that even after restart we persist the state.
     @Setter
-    private ObjectProperty<MessageState> paymentStartedMessageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
+    protected ObjectProperty<MessageState> paymentStartedMessageStateProperty = new SimpleObjectProperty<>(MessageState.UNDEFINED);
 
     // Added in v 1.9.7
     @Setter
-    @Getter
-    private int burningManSelectionHeight;
+    protected int burningManSelectionHeight;
 
     public ProcessModel(String offerId, String accountId, PubKeyRing pubKeyRing) {
         this(offerId, accountId, pubKeyRing, new TradingPeer());
@@ -230,6 +264,9 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         Optional.ofNullable(takeOfferFeeTxId).ifPresent(builder::setTakeOfferFeeTxId);
         Optional.ofNullable(payoutTxSignature).ifPresent(e -> builder.setPayoutTxSignature(ByteString.copyFrom(payoutTxSignature)));
         Optional.ofNullable(preparedDepositTx).ifPresent(e -> builder.setPreparedDepositTx(ByteString.copyFrom(preparedDepositTx)));
+        Optional.ofNullable(finalizedWarningTx).ifPresent(e -> builder.setFinalizedWarningTx(ByteString.copyFrom(finalizedWarningTx)));
+        Optional.ofNullable(finalizedRedirectTx).ifPresent(e -> builder.setFinalizedRedirectTx(ByteString.copyFrom(finalizedRedirectTx)));
+        Optional.ofNullable(signedClaimTx).ifPresent(e -> builder.setSignedClaimTx(ByteString.copyFrom(signedClaimTx)));
         Optional.ofNullable(rawTransactionInputs).ifPresent(e -> builder.addAllRawTransactionInputs(
                 ProtoUtil.collectionToProto(rawTransactionInputs, protobuf.RawTransactionInput.class)));
         Optional.ofNullable(changeOutputAddress).ifPresent(builder::setChangeOutputAddress);
@@ -255,6 +292,9 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         processModel.setTakeOfferFeeTxId(ProtoUtil.stringOrNullFromProto(proto.getTakeOfferFeeTxId()));
         processModel.setPayoutTxSignature(ProtoUtil.byteArrayOrNullFromProto(proto.getPayoutTxSignature()));
         processModel.setPreparedDepositTx(ProtoUtil.byteArrayOrNullFromProto(proto.getPreparedDepositTx()));
+        processModel.setFinalizedWarningTx(ProtoUtil.byteArrayOrNullFromProto(proto.getFinalizedWarningTx()));
+        processModel.setFinalizedRedirectTx(ProtoUtil.byteArrayOrNullFromProto(proto.getFinalizedRedirectTx()));
+        processModel.setSignedClaimTx(ProtoUtil.byteArrayOrNullFromProto(proto.getSignedClaimTx()));
         List<RawTransactionInput> rawTransactionInputs = proto.getRawTransactionInputsList().isEmpty() ?
                 null : proto.getRawTransactionInputsList().stream()
                 .map(RawTransactionInput::fromProto).collect(Collectors.toList());
@@ -352,11 +392,19 @@ public class ProcessModel implements ProtocolModel<TradingPeer> {
         }
     }
 
-    public boolean maybeClearSensitiveData() {
+    public boolean maybeClearSensitiveData(boolean keepStagedTxs) {
         boolean changed = false;
         if (tradingPeer.getPaymentAccountPayload() != null || tradingPeer.getContractAsJson() != null) {
             // If tradingPeer was null in persisted data from some error cases we set a new one to not cause nullPointers
-            this.tradingPeer = new TradingPeer();
+            var newTradingPeer = new TradingPeer();
+            // Try to keep peer's staged txs (which are sensitive due to fee bump outputs) if any staged tx was broadcast.
+            // (They might have been deleted anyway if the trade was un-failed, but are not essential.)
+            if (keepStagedTxs) {
+                newTradingPeer.setFinalizedWarningTx(tradingPeer.getFinalizedWarningTx());
+                newTradingPeer.setFinalizedRedirectTx(tradingPeer.getFinalizedRedirectTx());
+                newTradingPeer.setClaimTx(tradingPeer.getClaimTx());
+            }
+            this.tradingPeer = newTradingPeer;
             changed = true;
         }
         return changed;

@@ -60,12 +60,14 @@ import static com.google.common.base.Preconditions.checkState;
 
 // Copied from DefaultRiskAnalysis as DefaultRiskAnalysis has mostly private methods and constructor so we cannot
 // override it.
-// The changes to DefaultRiskAnalysis are: removal of the RBF check and accept as standard an OP_RETURN outputs
-// with 0 value.
+// The changes to DefaultRiskAnalysis are: removal of the RBF check and removal of the relative lock-time check.
 // For Bisq's use cases RBF is not considered risky. Requiring a confirmation for RBF payments from a user's
 // external wallet to Bisq would hurt usability. The trade transaction requires anyway a confirmation and we don't see
 // a use case where a Bisq user accepts unconfirmed payment from untrusted peers and would not wait anyway for at least
 // one confirmation.
+// Relative lock-times are used by claim txs for the v5 trade protocol. It's doubtful that they would realistically
+// show up in any other context (maybe forced lightning channel closures spending straight to Bisq) or would ever be
+// replaced once broadcast, so we deem them non-risky.
 
 /**
  * <p>The default risk analysis. Currently, it only is concerned with whether a tx/dependency is non-final or not, and
@@ -122,12 +124,13 @@ public class BisqRiskAnalysis implements RiskAnalysis {
         //     return Result.NON_FINAL;
         // }
 
-        // Relative time-locked transactions are risky too. We can't check the locks because usually we don't know the
-        // spent outputs (to know when they were created).
-        if (tx.hasRelativeLockTime()) {
-            nonFinal = tx;
-            return Result.NON_FINAL;
-        }
+        // Commented out to accept claim txs for v5 trade protocol.
+        // // Relative time-locked transactions are risky too. We can't check the locks because usually we don't know the
+        // // spent outputs (to know when they were created).
+        // if (tx.hasRelativeLockTime()) {
+        //     nonFinal = tx;
+        //     return Result.NON_FINAL;
+        // }
 
         if (wallet == null)
             return null;

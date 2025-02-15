@@ -1,0 +1,212 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.core.trade.protocol.bisq_v5;
+
+import bisq.core.trade.model.bisq_v1.SellerTrade;
+import bisq.core.trade.model.bisq_v1.Trade;
+import bisq.core.trade.model.bisq_v1.Trade.Phase;
+import bisq.core.trade.protocol.FluentProtocol;
+import bisq.core.trade.protocol.SellerProtocol;
+import bisq.core.trade.protocol.TradeMessage;
+import bisq.core.trade.protocol.TradeTaskRunner;
+import bisq.core.trade.protocol.bisq_v1.DisputeProtocol;
+import bisq.core.trade.protocol.bisq_v1.messages.CounterCurrencyTransferStartedMessage;
+import bisq.core.trade.protocol.bisq_v1.messages.ShareBuyerPaymentAccountMessage;
+import bisq.core.trade.protocol.bisq_v1.tasks.ApplyFilter;
+import bisq.core.trade.protocol.bisq_v1.tasks.TradeTask;
+import bisq.core.trade.protocol.bisq_v1.tasks.VerifyPeersAccountAgeWitness;
+import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerBroadcastPayoutTx;
+import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerProcessCounterCurrencyTransferStartedMessage;
+import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerProcessShareBuyerPaymentAccountMessage;
+import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerPublishesDepositTx;
+import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerPublishesTradeStatistics;
+import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSendPayoutTxPublishedMessage;
+import bisq.core.trade.protocol.bisq_v1.tasks.seller.SellerSignAndFinalizePayoutTx;
+import bisq.core.trade.protocol.bisq_v5.messages.PreparedTxBuyerSignaturesMessage;
+import bisq.core.trade.protocol.bisq_v5.tasks.AddWatchedScriptsToWallet;
+import bisq.core.trade.protocol.bisq_v5.tasks.SetupStagedTxListeners;
+import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerProcessPreparedTxBuyerSignaturesMessage;
+import bisq.core.trade.protocol.bisq_v5.tasks.seller.SellerSendsDepositTxAndSellerPaymentAccountMessage;
+
+import bisq.network.p2p.NodeAddress;
+
+import bisq.common.handlers.ErrorMessageHandler;
+import bisq.common.handlers.ResultHandler;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+abstract class BaseSellerProtocol_v5 extends DisputeProtocol implements SellerProtocol {
+    enum SellerEvent implements FluentProtocol.Event {
+        STARTUP,
+        PAYMENT_RECEIVED
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Constructor
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected BaseSellerProtocol_v5(SellerTrade trade) {
+        super(trade);
+    }
+
+    @Override
+    protected void onInitialized() {
+        super.onInitialized();
+        // We get called the constructor with any possible state and phase. As we don't want to log an error for such
+        // cases we use the alternative 'given' method instead of 'expect'.
+        given(anyPhase(Phase.DEPOSIT_PUBLISHED, Phase.DEPOSIT_CONFIRMED, Phase.FIAT_SENT, Phase.FIAT_RECEIVED)
+                .preCondition(trade.hasV5Protocol()) // FIXME: If trade opened with v4 protocol, should use BaseSellerProtocol_v4.
+                .with(SellerEvent.STARTUP))
+                .setup(tasks(SetupStagedTxListeners.class))
+                .executeTasks();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Mailbox
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onMailboxMessage(TradeMessage message, NodeAddress peerNodeAddress) {
+        super.onMailboxMessage(message, peerNodeAddress);
+
+        if (message instanceof CounterCurrencyTransferStartedMessage) {
+            handle((CounterCurrencyTransferStartedMessage) message, peerNodeAddress);
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Incoming messages
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected void handle(PreparedTxBuyerSignaturesMessage message, NodeAddress peer) {
+        expect(phase(Phase.TAKER_FEE_PUBLISHED)
+                .with(message)
+                .from(peer))
+                .setup(tasks(SellerProcessPreparedTxBuyerSignaturesMessage.class,
+                        AddWatchedScriptsToWallet.class,
+                        SellerSendsDepositTxAndSellerPaymentAccountMessage.class,
+                        SellerPublishesDepositTx.class,
+                        SetupStagedTxListeners.class,
+                        SellerPublishesTradeStatistics.class))
+                .executeTasks();
+    }
+
+    protected void handle(ShareBuyerPaymentAccountMessage message, NodeAddress peer) {
+        expect(anyPhase(Phase.TAKER_FEE_PUBLISHED, Phase.DEPOSIT_PUBLISHED, Phase.DEPOSIT_CONFIRMED)
+                .with(message)
+                .from(peer))
+                .setup(tasks(SellerProcessShareBuyerPaymentAccountMessage.class,
+                        ApplyFilter.class,
+                        VerifyPeersAccountAgeWitness.class))
+                .run(() -> {
+                    // We stop timeout here and don't start a new one as the
+                    // SellerSendsDepositTxAndSellerPaymentAccountMessage repeats to send the message and has it's own
+                    // timeout if it never succeeds.
+                    stopTimeout();
+                })
+                .executeTasks();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Incoming message when buyer has clicked payment started button
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    protected void handle(CounterCurrencyTransferStartedMessage message, NodeAddress peer) {
+        // We are more tolerant with expected phase and allow also DEPOSIT_PUBLISHED as it can be the case
+        // that the wallet is still syncing and so the DEPOSIT_CONFIRMED state to yet triggered when we received
+        // a mailbox message with CounterCurrencyTransferStartedMessage.
+        // TODO A better fix would be to add a listener for the wallet sync state and process
+        // the mailbox msg once wallet is ready and trade state set.
+        expect(anyPhase(Phase.DEPOSIT_CONFIRMED, Phase.DEPOSIT_PUBLISHED)
+                .with(message)
+                .from(peer)
+                .preCondition(trade.getPayoutTx() == null,
+                        () -> {
+                            log.warn("We received a CounterCurrencyTransferStartedMessage but we have already created the payout tx " +
+                                    "so we ignore the message. This can happen if the ACK message to the peer did not " +
+                                    "arrive and the peer repeats sending us the message. We send another ACK msg.");
+                            sendAckMessage(message, true, null);
+                            removeMailboxMessageAfterProcessing(message);
+                        }))
+                .setup(tasks(
+                        SellerProcessCounterCurrencyTransferStartedMessage.class,
+                        ApplyFilter.class,
+                        getVerifyPeersFeePaymentClass()))
+                .executeTasks();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // User interaction
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    public void onPaymentReceived(ResultHandler resultHandler, ErrorMessageHandler errorMessageHandler) {
+        SellerEvent event = SellerEvent.PAYMENT_RECEIVED;
+        expect(anyPhase(Phase.FIAT_SENT, Phase.PAYOUT_PUBLISHED)
+                .with(event)
+                .preCondition(trade.confirmPermitted()))
+                .setup(tasks(
+                        ApplyFilter.class,
+                        getVerifyPeersFeePaymentClass(),
+                        SellerSignAndFinalizePayoutTx.class,
+                        SellerBroadcastPayoutTx.class,
+                        SellerSendPayoutTxPublishedMessage.class)
+                        .using(new TradeTaskRunner(trade,
+                                () -> {
+                                    resultHandler.handleResult();
+                                    handleTaskRunnerSuccess(event);
+                                },
+                                (errorMessage) -> {
+                                    errorMessageHandler.handleErrorMessage(errorMessage);
+                                    handleTaskRunnerFault(event, errorMessage);
+                                })))
+                .run(() -> {
+                    trade.setState(Trade.State.SELLER_CONFIRMED_IN_UI_FIAT_PAYMENT_RECEIPT);
+                    processModel.getTradeManager().requestPersistence();
+                })
+                .executeTasks();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Massage dispatcher
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+    protected void onTradeMessage(TradeMessage message, NodeAddress peer) {
+        log.info("Received {} from {} with tradeId {} and uid {}",
+                message.getClass().getSimpleName(), peer, message.getTradeId(), message.getUid());
+
+        super.onTradeMessage(message, peer);
+
+        if (message instanceof PreparedTxBuyerSignaturesMessage) {
+            handle((PreparedTxBuyerSignaturesMessage) message, peer);
+        } else if (message instanceof ShareBuyerPaymentAccountMessage) {
+            handle((ShareBuyerPaymentAccountMessage) message, peer);
+        } else if (message instanceof CounterCurrencyTransferStartedMessage) {
+            handle((CounterCurrencyTransferStartedMessage) message, peer);
+        }
+    }
+
+    abstract protected Class<? extends TradeTask> getVerifyPeersFeePaymentClass();
+}
