@@ -21,6 +21,7 @@ package bisq.core.trade.protocol.bsq_swap;
 import bisq.core.trade.model.bsq_swap.BsqSwapBuyerAsMakerTrade;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.TradeTaskRunner;
+import bisq.core.trade.protocol.bisq_v1.tasks.EnforceFilterVersion;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapFinalizeTxRequest;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapRequest;
 import bisq.core.trade.protocol.bsq_swap.messages.SellersBsqSwapRequest;
@@ -59,6 +60,7 @@ public class BsqSwapBuyerAsMakerProtocol extends BsqSwapBuyerProtocol implements
                 .with(request)
                 .from(sender))
                 .setup(tasks(
+                        EnforceFilterVersion.class,
                         ApplyFilter.class,
                         ProcessSellersBsqSwapRequest.class,
                         BuyerAsMakerCreatesBsqInputsAndChange.class,

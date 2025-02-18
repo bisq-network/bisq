@@ -22,6 +22,7 @@ import bisq.core.offer.Offer;
 import bisq.core.trade.model.bsq_swap.BsqSwapBuyerAsTakerTrade;
 import bisq.core.trade.protocol.TradeMessage;
 import bisq.core.trade.protocol.TradeTaskRunner;
+import bisq.core.trade.protocol.bisq_v1.tasks.EnforceFilterVersion;
 import bisq.core.trade.protocol.bsq_swap.messages.BsqSwapFinalizeTxRequest;
 import bisq.core.trade.protocol.bsq_swap.tasks.ApplyFilter;
 import bisq.core.trade.protocol.bsq_swap.tasks.buyer.BuyerPublishesTx;
@@ -56,6 +57,7 @@ public class BsqSwapBuyerAsTakerProtocol extends BsqSwapBuyerProtocol implements
                 .with(TAKE_OFFER)
                 .from(trade.getTradingPeerNodeAddress()))
                 .setup(tasks(
+                        EnforceFilterVersion.class,
                         ApplyFilter.class,
                         BuyerAsTakerCreatesBsqInputsAndChange.class,
                         SendBuyersBsqSwapRequest.class)
