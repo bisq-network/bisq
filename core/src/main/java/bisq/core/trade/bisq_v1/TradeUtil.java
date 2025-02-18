@@ -266,9 +266,6 @@ public class TradeUtil {
         } else if (paymentAccountPayload != null && filterManager.arePeersPaymentAccountDataBanned(paymentAccountPayload)) {
             failed.handleErrorMessage("Other trader is banned by their trading account data.\n" +
                     "paymentAccountPayload=" + paymentAccountPayload.getPaymentDetails());
-        } else if (filterManager.requireUpdateToNewVersionForTrading()) {
-            failed.handleErrorMessage("Your version of Bisq is not compatible for trading anymore. " +
-                    "Please update to the latest Bisq version at https://bisq.network/downloads.");
         } else {
             complete.handleResult();
         }
