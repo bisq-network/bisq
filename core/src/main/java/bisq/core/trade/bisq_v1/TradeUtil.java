@@ -273,4 +273,15 @@ public class TradeUtil {
             complete.handleResult();
         }
     }
+
+    public static void enforceFilterVersion(FilterManager filterManager,
+                                            ResultHandler complete,
+                                            ErrorMessageHandler failed) {
+        if (filterManager.requireUpdateToNewVersionForTrading()) {
+            failed.handleErrorMessage("Your version of Bisq is not compatible for trading anymore. " +
+                    "Please update to the latest Bisq version at https://bisq.network/downloads.");
+        } else {
+            complete.handleResult();
+        }
+    }
 }
