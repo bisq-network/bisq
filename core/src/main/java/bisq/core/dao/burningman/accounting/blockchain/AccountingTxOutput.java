@@ -68,8 +68,8 @@ public final class AccountingTxOutput implements NetworkPayload {
 
     @Override
     public protobuf.AccountingTxOutput toProtoMessage() {
-        checkArgument(value < 2147483647,
-                "We only support integer value in protobuf storage for the amount and it need to be below 21.47483647 BTC");
+        checkArgument(value < Integer.MAX_VALUE,
+                "We only support integer values in protobuf storage for the amount.");
         return protobuf.AccountingTxOutput.newBuilder()
                 .setValue((int) value)
                 .setName(name).build();
