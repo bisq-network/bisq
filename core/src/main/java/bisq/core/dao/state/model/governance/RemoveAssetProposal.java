@@ -133,7 +133,7 @@ public final class RemoveAssetProposal extends Proposal implements ImmutableDaoS
 
     @Override
     public String toString() {
-        return "GenericProposal{" +
+        return "RemoveAssetProposal{" +
                 "\n     tickerSymbol=" + tickerSymbol +
                 "\n} " + super.toString();
     }
