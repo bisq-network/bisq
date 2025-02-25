@@ -5,5 +5,6 @@ plugins {
 dependencies {
     constraints {
         api libs.protobuf.java
+        api libs.slf4j.api
     }
 }
