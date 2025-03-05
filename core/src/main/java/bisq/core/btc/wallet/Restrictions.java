@@ -23,7 +23,7 @@ import org.bitcoinj.core.Coin;
 
 public class Restrictions {
     private static final Coin MIN_TRADE_AMOUNT = Coin.valueOf(10_000);
-    private static final Coin MIN_SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.0003");
+    private static final Coin MIN_SECURITY_DEPOSIT = Coin.parseCoin("0.0003");
     private static final double MIN_SECURITY_DEPOSIT_AS_PERCENT = 0.15; // 15% of trade amount.
     private static final double MAX_BUYER_SECURITY_DEPOSIT_AS_PERCENT = 0.5; // 50% of trade amount.
     // At mediation, we require a min. payout to the losing party to keep incentive for the trader to accept the
@@ -64,7 +64,7 @@ public class Restrictions {
 
     // We use MIN_BUYER_SECURITY_DEPOSIT as well as lower bound in case of small trade amounts.
     public static Coin getMinBuyerSecurityDepositAsCoin() {
-        return MIN_SELLER_SECURITY_DEPOSIT;
+        return MIN_SECURITY_DEPOSIT;
     }
 
     public static double getSellerSecurityDepositAsPercent() {
@@ -76,13 +76,13 @@ public class Restrictions {
     }
 
     public static Coin getMinSellerSecurityDepositAsCoin() {
-        return MIN_SELLER_SECURITY_DEPOSIT;
+        return MIN_SECURITY_DEPOSIT;
     }
 
     // 5% or at least half of the deposit (0.00015 BTC) to keep incentive for trader to accept mediation result.
     public static Coin getMinRefundAtMediatedDispute(Coin tradeAmount) {
         if (MIN_REFUND_AT_MEDIATED_DISPUTE == null) {
-            MIN_REFUND_AT_MEDIATED_DISPUTE = getMinSellerSecurityDepositAsCoin().divide(2);
+            MIN_REFUND_AT_MEDIATED_DISPUTE = MIN_SECURITY_DEPOSIT.divide(2);
         }
         Coin fivePercentOfTradeAmount = tradeAmount.div(20); // 5%
         if (fivePercentOfTradeAmount.isLessThan(MIN_REFUND_AT_MEDIATED_DISPUTE)) {
