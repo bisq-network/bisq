@@ -33,7 +33,7 @@ public class Restrictions {
     // For the seller we use a fixed one as there is no way the seller can cancel the trade
     // To make it editable would just increase complexity.
     private static Coin MIN_SELLER_SECURITY_DEPOSIT;
-    // At mediation we require a min. payout to the losing party to keep incentive for the trader to accept the
+    // At mediation, we require a min. payout to the losing party to keep incentive for the trader to accept the
     // mediated payout. For Refund agent cases we do not have that restriction.
     private static Coin MIN_REFUND_AT_MEDIATED_DISPUTE;
 
@@ -110,13 +110,15 @@ public class Restrictions {
         }
     }
 
-    // This value must be lower than MIN_BUYER_SECURITY_DEPOSIT and SELLER_SECURITY_DEPOSIT
+    // 5% or at least half of the deposit (0.00015 BTC) to keep incentive for trader to accept mediation result.
     public static Coin getMinRefundAtMediatedDispute(Coin tradeAmount) {
-        if (MIN_REFUND_AT_MEDIATED_DISPUTE == null)
-            MIN_REFUND_AT_MEDIATED_DISPUTE = Coin.parseCoin("0.0005"); // 0.0005 BTC is 30 USD @ 60000 USD/BTC
-        Coin fivePercentOfTradeAmount = tradeAmount.div(20);
-        if (fivePercentOfTradeAmount.isLessThan(MIN_REFUND_AT_MEDIATED_DISPUTE))
+        if (MIN_REFUND_AT_MEDIATED_DISPUTE == null) {
+            MIN_REFUND_AT_MEDIATED_DISPUTE = getMinSellerSecurityDepositAsCoin().divide(2);
+        }
+        Coin fivePercentOfTradeAmount = tradeAmount.div(20); // 5%
+        if (fivePercentOfTradeAmount.isLessThan(MIN_REFUND_AT_MEDIATED_DISPUTE)) {
             return MIN_REFUND_AT_MEDIATED_DISPUTE;
+        }
         return fivePercentOfTradeAmount;
     }
 
