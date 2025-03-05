@@ -28,15 +28,14 @@ public class Restrictions {
     private static final double MAX_BUYER_SECURITY_DEPOSIT_AS_PERCENT = 0.5; // 50% of trade amount.
     // At mediation, we require a min. payout to the losing party to keep incentive for the trader to accept the
     // mediated payout. For Refund agent cases we do not have that restriction.
-    private static Coin MIN_REFUND_AT_MEDIATED_DISPUTE;
+    private static final Coin MIN_REFUND_AT_MEDIATED_DISPUTE = MIN_SECURITY_DEPOSIT.divide(2);
+    private static Coin minNonDustOutput;
 
     public static Coin getMinNonDustOutput() {
         if (minNonDustOutput == null)
             minNonDustOutput = Config.baseCurrencyNetwork().getParameters().getMinNonDustOutput();
         return minNonDustOutput;
     }
-
-    private static Coin minNonDustOutput;
 
     public static boolean isAboveDust(Coin amount) {
         return amount.compareTo(getMinNonDustOutput()) >= 0;
@@ -81,9 +80,6 @@ public class Restrictions {
 
     // 5% or at least half of the deposit (0.00015 BTC) to keep incentive for trader to accept mediation result.
     public static Coin getMinRefundAtMediatedDispute(Coin tradeAmount) {
-        if (MIN_REFUND_AT_MEDIATED_DISPUTE == null) {
-            MIN_REFUND_AT_MEDIATED_DISPUTE = MIN_SECURITY_DEPOSIT.divide(2);
-        }
         Coin fivePercentOfTradeAmount = tradeAmount.div(20); // 5%
         if (fivePercentOfTradeAmount.isLessThan(MIN_REFUND_AT_MEDIATED_DISPUTE)) {
             return MIN_REFUND_AT_MEDIATED_DISPUTE;
