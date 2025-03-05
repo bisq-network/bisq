@@ -101,13 +101,12 @@ public class Restrictions {
             if (MIN_SELLER_SECURITY_DEPOSIT == null || MIN_SELLER_SECURITY_DEPOSIT.equals(Coin.parseCoin("0.001"))) {
                 MIN_SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.0003"); // 0.0003 BTC is 27 USD @ 90000 USD/BTC
             }
-            return MIN_SELLER_SECURITY_DEPOSIT;
         } else {
             if (MIN_SELLER_SECURITY_DEPOSIT == null) {
                 MIN_SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.001"); // 0.001 BTC is 60 USD @ 60000 USD/BTC
             }
-            return MIN_SELLER_SECURITY_DEPOSIT;
         }
+        return MIN_SELLER_SECURITY_DEPOSIT;
     }
 
     // 5% or at least half of the deposit (0.00015 BTC) to keep incentive for trader to accept mediation result.
@@ -118,8 +117,9 @@ public class Restrictions {
         Coin fivePercentOfTradeAmount = tradeAmount.div(20); // 5%
         if (fivePercentOfTradeAmount.isLessThan(MIN_REFUND_AT_MEDIATED_DISPUTE)) {
             return MIN_REFUND_AT_MEDIATED_DISPUTE;
+        } else {
+            return fivePercentOfTradeAmount;
         }
-        return fivePercentOfTradeAmount;
     }
 
     public static int getLockTime(boolean isAsset) {
