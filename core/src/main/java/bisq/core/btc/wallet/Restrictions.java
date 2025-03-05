@@ -23,7 +23,8 @@ import org.bitcoinj.core.Coin;
 
 public class Restrictions {
     private static Coin MIN_TRADE_AMOUNT;
-    private static Coin MIN_SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.0003");
+    private static final Coin MIN_SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.0003");
+    private static final double MIN_SECURITY_DEPOSIT_AS_PERCENT = 0.15; // 15% of trade amount.
     // At mediation, we require a min. payout to the losing party to keep incentive for the trader to accept the
     // mediated payout. For Refund agent cases we do not have that restriction.
     private static Coin MIN_REFUND_AT_MEDIATED_DISPUTE;
@@ -51,11 +52,11 @@ public class Restrictions {
     }
 
     public static double getDefaultBuyerSecurityDepositAsPercent() {
-        return 0.15; // 15% of trade amount.
+        return MIN_SECURITY_DEPOSIT_AS_PERCENT;
     }
 
     public static double getMinBuyerSecurityDepositAsPercent() {
-        return 0.15; // 15% of trade amount.
+        return MIN_SECURITY_DEPOSIT_AS_PERCENT;
     }
 
     public static double getMaxBuyerSecurityDepositAsPercent() {
@@ -68,11 +69,11 @@ public class Restrictions {
     }
 
     public static double getSellerSecurityDepositAsPercent() {
-        return 0.15; // 15% of trade amount.
+        return MIN_SECURITY_DEPOSIT_AS_PERCENT;
     }
 
     public static double getMinSellerSecurityDepositAsPercent() {
-        return 0.15; // 15% of trade amount.
+        return MIN_SECURITY_DEPOSIT_AS_PERCENT;
     }
 
     public static Coin getMinSellerSecurityDepositAsCoin() {
