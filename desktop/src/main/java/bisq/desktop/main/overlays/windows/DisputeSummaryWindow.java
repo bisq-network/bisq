@@ -199,6 +199,9 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         if (tradeAmountToggleGroup != null)
             tradeAmountToggleGroup.selectedToggleProperty().removeListener(tradeAmountToggleGroupListener);
 
+        if (compensationOrPenalty != null)
+            compensationOrPenalty.textProperty().removeListener(compensationOrPenaltyListener);
+
         removePayoutAmountListeners();
     }
 
