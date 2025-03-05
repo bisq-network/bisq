@@ -22,7 +22,7 @@ import bisq.common.config.Config;
 import org.bitcoinj.core.Coin;
 
 public class Restrictions {
-    private static Coin MIN_TRADE_AMOUNT;
+    private static final Coin MIN_TRADE_AMOUNT = Coin.valueOf(10_000);
     private static final Coin MIN_SELLER_SECURITY_DEPOSIT = Coin.parseCoin("0.0003");
     private static final double MIN_SECURITY_DEPOSIT_AS_PERCENT = 0.15; // 15% of trade amount.
     private static final double MAX_BUYER_SECURITY_DEPOSIT_AS_PERCENT = 0.5; // 50% of trade amount.
@@ -47,8 +47,6 @@ public class Restrictions {
     }
 
     public static Coin getMinTradeAmount() {
-        if (MIN_TRADE_AMOUNT == null)
-            MIN_TRADE_AMOUNT = Coin.valueOf(10_000); // 0,7 USD @ 7000 USD/BTC
         return MIN_TRADE_AMOUNT;
     }
 
