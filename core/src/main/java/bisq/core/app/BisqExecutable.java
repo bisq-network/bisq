@@ -150,7 +150,7 @@ public abstract class BisqExecutable implements GracefulShutDownHandler, BisqSet
             // If user tried to downgrade we do not read the persisted data to avoid data corruption
             // We call startApplication to enable UI to show popup. We prevent in BisqSetup to go further
             // in the process and require a shut down.
-            startApplication();
+            UserThread.execute(this::startApplication);
         } else {
             readAllPersisted(this::startApplication);
         }
