@@ -54,13 +54,12 @@ public class BtcNodes {
                         new BtcNode(null, "oe6lfkjeuqkcvjw62dadzqfsiyd7xpeiznqvy4ugvboks6tcf3bgmjyd.onion", null, BtcNode.DEFAULT_PORT, "@jester4042"),
 
                         // node_op_324
-                        new BtcNode(null, "qs535l32ne43rxr5iqexbhu4r6zifrfez653pm7j3rpi7c7omaz7xcqd.onion", null, BtcNode.DEFAULT_PORT, "@node_op_324"),
-                        new BtcNode(null, "oxbj7g4fybthmfm42bnjtelf3zfxnhnpvbixqp3abvnxh4sjatpfdpqd.onion", null, BtcNode.DEFAULT_PORT, "@node_op_324"),
                         new BtcNode(null, "a2vr3buoei2dfnocjl4ilwjwruxqofv6kzagmn7dfdtoilsxlx45flad.onion", null, BtcNode.DEFAULT_PORT, "@node_op_324"),
 
                         // suddenwhipvapor
                         new BtcNode(null, "2oalsctcn76axnrnaqjddiiu5qhrc7hv3raik2lyfxb7eoktk4vw6sad.onion", null, BtcNode.DEFAULT_PORT, "@suddenwhipvapor"),
                         new BtcNode(null, "ybryiy2k4p4pery4qseap4iu2rxput2akuvpvczwvg4eyfafcdsvyqid.onion", null, BtcNode.DEFAULT_PORT, "@suddenwhipvapor"),
+                        new BtcNode(null, "o7clg6znpl7a5kk6s6l75lskm63orxubygasuh73iscnffhvij2k5qqd.onion", null, BtcNode.DEFAULT_PORT, "@suddenwhipvapor"),
 
                         // runbtc
                         new BtcNode(null, "runbtcnd22qxdwlmhzsrw6zyfmkivuy5nuqbhasaztekildcxc7lseyd.onion", null, BtcNode.DEFAULT_PORT, "@runbtc"),
