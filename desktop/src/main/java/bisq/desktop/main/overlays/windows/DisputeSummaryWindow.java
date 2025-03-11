@@ -127,7 +127,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
     private ChangeListener<Boolean> customRadioButtonSelectedListener, buyerGetsTradeAmountSelectedListener, sellerGetsTradeAmountSelectedListener;
     private ChangeListener<Toggle> reasonToggleSelectionListener;
-    private InputTextField buyerPayoutAmountInputTextField, sellerPayoutAmountInputTextField, compensationOrPenalty;
+    private InputTextField buyerPayoutAmountInputTextField, sellerPayoutAmountInputTextField, compensationOrPenaltyInputTextField;
     private ChangeListener<Boolean> buyerPayoutAmountListener, sellerPayoutAmountListener;
     private ChangeListener<Toggle> tradeAmountToggleGroupListener;
     private ChangeListener<String> compensationOrPenaltyListener;
@@ -198,8 +198,8 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         if (tradeAmountToggleGroup != null)
             tradeAmountToggleGroup.selectedToggleProperty().removeListener(tradeAmountToggleGroupListener);
 
-        if (compensationOrPenalty != null)
-            compensationOrPenalty.textProperty().removeListener(compensationOrPenaltyListener);
+        if (compensationOrPenaltyInputTextField != null)
+            compensationOrPenaltyInputTextField.textProperty().removeListener(compensationOrPenaltyListener);
 
         removePayoutAmountListeners();
     }
@@ -266,10 +266,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
             buyerPayoutAmountInputTextField.setDisable(true);
             sellerPayoutAmountInputTextField.setDisable(true);
-            compensationOrPenalty.setDisable(true);
+            compensationOrPenaltyInputTextField.setDisable(true);
             buyerPayoutAmountInputTextField.setEditable(false);
             sellerPayoutAmountInputTextField.setEditable(false);
-            compensationOrPenalty.setEditable(false);
+            compensationOrPenaltyInputTextField.setEditable(false);
 
             reasonWasBugRadioButton.setDisable(true);
             reasonWasUsabilityIssueRadioButton.setDisable(true);
@@ -380,19 +380,19 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         sellerPayoutAmountListener = (observable, oldValue, newValue) -> applyCustomAmounts(sellerPayoutAmountInputTextField, oldValue, newValue);
 
         buyerGetsTradeAmountSelectedListener = (observable, oldValue, newValue) -> {
-            compensationOrPenalty.setEditable(!newValue);
+            compensationOrPenaltyInputTextField.setEditable(!newValue);
         };
         buyerGetsTradeAmountRadioButton.selectedProperty().addListener(buyerGetsTradeAmountSelectedListener);
 
         sellerGetsTradeAmountSelectedListener = (observable, oldValue, newValue) -> {
-            compensationOrPenalty.setEditable(!newValue);
+            compensationOrPenaltyInputTextField.setEditable(!newValue);
         };
         sellerGetsTradeAmountRadioButton.selectedProperty().addListener(sellerGetsTradeAmountSelectedListener);
 
         customRadioButtonSelectedListener = (observable, oldValue, newValue) -> {
             buyerPayoutAmountInputTextField.setEditable(newValue);
             sellerPayoutAmountInputTextField.setEditable(newValue);
-            compensationOrPenalty.setEditable(!newValue);
+            compensationOrPenaltyInputTextField.setEditable(!newValue);
             if (newValue) {
                 buyerPayoutAmountInputTextField.focusedProperty().addListener(buyerPayoutAmountListener);
                 sellerPayoutAmountInputTextField.focusedProperty().addListener(sellerPayoutAmountListener);
@@ -514,10 +514,10 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         sellerPayoutAmountInputTextField.setPromptText(Res.get("disputeSummaryWindow.payoutAmount.seller"));
         sellerPayoutAmountInputTextField.setEditable(false);
 
-        compensationOrPenalty = new InputTextField();
-        compensationOrPenalty.setPromptText("Comp|Penalty percent");
-        compensationOrPenalty.setLabelFloat(true);
-        HBox hBoxPenalty = new HBox(compensationOrPenalty);
+        compensationOrPenaltyInputTextField = new InputTextField();
+        compensationOrPenaltyInputTextField.setPromptText("Comp|Penalty percent");
+        compensationOrPenaltyInputTextField.setLabelFloat(true);
+        HBox hBoxPenalty = new HBox(compensationOrPenaltyInputTextField);
         HBox hBoxPayouts = new HBox(buyerPayoutAmountInputTextField, sellerPayoutAmountInputTextField);
         hBoxPayouts.setSpacing(15);
 
@@ -538,7 +538,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
             applyUpdateFromUi(tradeAmountToggleGroup.selectedToggleProperty().get());
         };
 
-        compensationOrPenalty.textProperty().addListener(compensationOrPenaltyListener);
+        compensationOrPenaltyInputTextField.textProperty().addListener(compensationOrPenaltyListener);
     }
 
     private void addReasonControls() {
@@ -1080,7 +1080,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
         Coin penalizedPortionOfTradeAmount = Coin.ZERO;
         try {
-            disputeResult.setPayoutAdjustmentPercent(compensationOrPenalty.getText().replaceAll("[^0-9,.]", ""));
+            disputeResult.setPayoutAdjustmentPercent(compensationOrPenaltyInputTextField.getText().replaceAll("[^0-9,.]", ""));
             double percentPenalty = ParsingUtils.parsePercentStringToDouble(disputeResult.getPayoutAdjustmentPercent());
             penalizedPortionOfTradeAmount = Coin.valueOf((long) (contract.getTradeAmount().getValue() * percentPenalty));
         } catch (NumberFormatException | NullPointerException e) {
@@ -1141,7 +1141,7 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
         updatingUi = true;
         buyerPayoutAmountInputTextField.setText(formatter.formatCoin(disputeResult.getBuyerPayoutAmount()));
         sellerPayoutAmountInputTextField.setText(formatter.formatCoin(disputeResult.getSellerPayoutAmount()));
-        compensationOrPenalty.setText(disputeResult.getPayoutAdjustmentPercent());
+        compensationOrPenaltyInputTextField.setText(disputeResult.getPayoutAdjustmentPercent());
         if (disputeResult.getPayoutSuggestion() == DisputeResult.PayoutSuggestion.BUYER_GETS_TRADE_AMOUNT) {
             buyerGetsTradeAmountRadioButton.setSelected(true);
         } else if (disputeResult.getPayoutSuggestion() == DisputeResult.PayoutSuggestion.SELLER_GETS_TRADE_AMOUNT) {
