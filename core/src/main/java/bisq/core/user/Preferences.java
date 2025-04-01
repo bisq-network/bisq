@@ -61,7 +61,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -169,6 +168,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     private final boolean fullDaoNodeFromOptions, fullAccountingNodeFromOptions, useFullModeDaoMonitorFromOptions;
     @Getter
     private final BooleanProperty useStandbyModeProperty = new SimpleBooleanProperty(prefPayload.isUseStandbyMode());
+    private final BlockchainExplorerSelection blockchainExplorerSelection;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -233,6 +233,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
 
         fiatCurrenciesAsObservable.addListener(this::updateTradeCurrencies);
         cryptoCurrenciesAsObservable.addListener(this::updateTradeCurrencies);
+
+        blockchainExplorerSelection = new BlockchainExplorerSelection(this, prefPayload, persistenceManager);
     }
 
     @Override
@@ -317,7 +319,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         useStandbyModeProperty.set(prefPayload.isUseStandbyMode());
         cssThemeProperty.set(prefPayload.getCssTheme());
 
-        clearRetiredNodes();
+        blockchainExplorerSelection.selectNodes();
 
         tradeCurrenciesAsObservable.addAll(prefPayload.getFiatCurrencies());
         tradeCurrenciesAsObservable.addAll(prefPayload.getCryptoCurrencies());
@@ -362,50 +364,6 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         initialReadDone = true;
         requestPersistence();
     }
-
-    private void clearRetiredNodes() {
-        // a list of previously-used federated explorers
-        // if user preference references any deprecated explorers we need to select a new valid explorer
-        String deprecatedExplorers = "(bsq.bisq.cc|bsq.vante.me|bsq.emzy.de|bsq.sqrrm.net|bsq.bisq.services|bsq.ninja|bisq.mempool.emzy.de).*";
-
-        // if no valid Bitcoin block explorer is set, select the 1st valid Bitcoin block explorer
-        ArrayList<BlockChainExplorer> btcExplorers = getBlockChainExplorers();
-        if (getBlockChainExplorer() == null ||
-                getBlockChainExplorer().name.length() == 0 ||
-                getBlockChainExplorer().name.matches(deprecatedExplorers)) {
-            setBlockChainExplorer(btcExplorers.get(0));
-        }
-
-        // if no valid BSQ block explorer is set, randomly select a valid BSQ block explorer
-        ArrayList<BlockChainExplorer> bsqExplorers = getBsqBlockChainExplorers();
-        if (getBsqBlockChainExplorer() == null ||
-                getBsqBlockChainExplorer().name.length() == 0 ||
-                getBsqBlockChainExplorer().name.matches(deprecatedExplorers)) {
-            setBsqBlockChainExplorer(bsqExplorers.get((new Random()).nextInt(bsqExplorers.size())));
-        }
-
-        // Remove retired XMR AutoConfirm addresses
-        List<String> retiredAddresses = List.of(
-                "monero3bec7m26vx6si6qo7q7imlaoz45ot5m2b5z2ppgoooo6jx2rqd",
-                "devinxmrwu4jrfq2zmq5kqjpxb44hx7i7didebkwrtvmvygj4uuop2ad"
-        );
-        var doApplyDefaults = prefPayload.getAutoConfirmSettingsList().stream()
-                .map(autoConfirmSettings -> autoConfirmSettings.getServiceAddresses().stream()
-                        .anyMatch(address -> retiredAddresses.stream()
-                                .anyMatch(address::contains)))
-                .findAny()
-                .orElse(true);
-        if (doApplyDefaults) {
-            prefPayload.getAutoConfirmSettingsList().clear();
-            List<String> defaultXmrTxProofServices = getDefaultXmrTxProofServices();
-            AutoConfirmSettings.getDefault(defaultXmrTxProofServices, "XMR")
-                    .ifPresent(xmrAutoConfirmSettings -> {
-                        getAutoConfirmSettingsList().add(xmrAutoConfirmSettings);
-                    });
-            persistenceManager.forcePersistNow();
-        }
-    }
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////
     // API
