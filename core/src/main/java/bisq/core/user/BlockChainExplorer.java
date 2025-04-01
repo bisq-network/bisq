@@ -22,11 +22,14 @@ import bisq.common.proto.persistable.PersistablePayload;
 import com.google.protobuf.Message;
 
 import lombok.Getter;
+import lombok.ToString;
 
 @Getter
+@ToString
 public final class BlockChainExplorer implements PersistablePayload {
     private final String name;
     private final String txUrl;
+    @ToString.Exclude
     private final String addressUrl;
 
     public BlockChainExplorer(String name, String txUrl, String addressUrl) {
