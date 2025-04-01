@@ -1221,19 +1221,19 @@ public class GUIUtil {
     }
 
     public static String getAddressUrl(String address) {
-        return preferences.getBlockChainExplorer().addressUrl + address;
+        return preferences.getBlockChainExplorer().getAddressUrl() + address;
     }
 
     public static String getBsqAddressUrl(String address) {
-        return preferences.getBsqBlockChainExplorer().addressUrl + address;
+        return preferences.getBsqBlockChainExplorer().getAddressUrl() + address;
     }
 
     public static String getTxUrl(String txId) {
-        return preferences.getBlockChainExplorer().txUrl + txId;
+        return preferences.getBlockChainExplorer().getTxUrl() + txId;
     }
 
     public static String getBsqTxUrl(String txId) {
-        return preferences.getBsqBlockChainExplorer().txUrl + txId;
+        return preferences.getBsqBlockChainExplorer().getTxUrl() + txId;
     }
 
     public static String getBsqInUsd(Price bsqPrice,

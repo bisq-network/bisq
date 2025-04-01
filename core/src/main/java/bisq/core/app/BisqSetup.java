@@ -786,11 +786,11 @@ public class BisqSetup {
 
     private void maybeUpgradeBsqExplorerUrl() {
         // if wiz BSQ explorer selected, replace with 1st explorer in the list of available.
-        if (preferences.getBsqBlockChainExplorer().name.equalsIgnoreCase("mempool.space (@wiz)") &&
+        if (preferences.getBsqBlockChainExplorer().getName().equalsIgnoreCase("mempool.space (@wiz)") &&
                 preferences.getBsqBlockChainExplorers().size() > 0) {
             preferences.setBsqBlockChainExplorer(preferences.getBsqBlockChainExplorers().get(0));
         }
-        if (preferences.getBsqBlockChainExplorer().name.equalsIgnoreCase("bisq.mempool.emzy.de (@emzy)") &&
+        if (preferences.getBsqBlockChainExplorer().getName().equalsIgnoreCase("bisq.mempool.emzy.de (@emzy)") &&
                 preferences.getBsqBlockChainExplorers().size() > 0) {
             preferences.setBsqBlockChainExplorer(preferences.getBsqBlockChainExplorers().get(0));
         }
