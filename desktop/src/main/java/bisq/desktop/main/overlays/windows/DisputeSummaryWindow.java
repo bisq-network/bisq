@@ -108,7 +108,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
     private final MempoolService mempoolService;
     private final DaoFacade daoFacade;
     private Dispute dispute;
-    private Optional<Runnable> finalizeDisputeHandlerOptional = Optional.empty();
     private ToggleGroup tradeAmountToggleGroup, reasonToggleGroup;
     private DisputeResult disputeResult;
     private RadioButton buyerGetsTradeAmountRadioButton, sellerGetsTradeAmountRadioButton,
@@ -198,6 +197,9 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
 
         if (tradeAmountToggleGroup != null)
             tradeAmountToggleGroup.selectedToggleProperty().removeListener(tradeAmountToggleGroupListener);
+
+        if (compensationOrPenalty != null)
+            compensationOrPenalty.textProperty().removeListener(compensationOrPenaltyListener);
 
         removePayoutAmountListeners();
     }
@@ -1023,8 +1025,6 @@ public class DisputeSummaryWindow extends Overlay<DisputeSummaryWindow> {
                         200, TimeUnit.MILLISECONDS);
             }
         });
-
-        finalizeDisputeHandlerOptional.ifPresent(Runnable::run);
 
         disputeManager.requestPersistence();
 
