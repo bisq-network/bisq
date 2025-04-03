@@ -106,7 +106,7 @@ public class PriceFeedNodeAddressProvider {
                 // If we run in localhost mode we don't have the tor node running, so we need a clearnet host
                 // Use localhost for using a locally running provider
                 // providerAsString = Collections.singletonList("http://localhost:8080/");
-                providers = Collections.singletonList("https://price.bisq.wiz.biz/"); // @wiz
+                providers = Collections.singletonList("http://172.86.75.7:8080/");
             } else {
                 providers = DEFAULT_NODES;
             }
