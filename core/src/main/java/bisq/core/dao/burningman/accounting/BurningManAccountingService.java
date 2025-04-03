@@ -55,6 +55,7 @@ import javafx.collections.SetChangeListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -93,7 +94,7 @@ public class BurningManAccountingService implements DaoSetupService, DaoStateLis
     private final Map<Date, Price> averageBsqPriceByMonth = new HashMap<>(getHistoricalAverageBsqPriceByMonth());
     private boolean averagePricesValid;
     @Getter
-    private final Map<String, BalanceModel> balanceModelByBurningManName = new HashMap<>();
+    private final Map<String, BalanceModel> balanceModelByBurningManName = Collections.synchronizedMap(new HashMap<>());
     @Getter
     private final BooleanProperty isProcessing = new SimpleBooleanProperty();
 
@@ -134,7 +135,7 @@ public class BurningManAccountingService implements DaoSetupService, DaoStateLis
             Map<String, BalanceModel> map = new HashMap<>();
             // addAccountingBlockToBalanceModel takes about 500ms for 100k items, so we run it in a non UI thread.
             burningManAccountingStoreService.forEachBlock(block -> addAccountingBlockToBalanceModel(map, block));
-            UserThread.execute(() -> balanceModelByBurningManName.putAll(map));
+            balanceModelByBurningManName.putAll(map);
         });
     }
 
@@ -253,21 +254,25 @@ public class BurningManAccountingService implements DaoSetupService, DaoStateLis
             return receivedBtcBalanceEntryListExcludingLegacyBM;
         }
 
-        receivedBtcBalanceEntryListExcludingLegacyBM.addAll(balanceModelByBurningManName.entrySet().stream()
-                .filter(e -> !e.getKey().equals(BurningManPresentationService.LEGACY_BURNING_MAN_DPT_NAME) &&
-                        !e.getKey().equals(BurningManPresentationService.LEGACY_BURNING_MAN_BTC_FEES_NAME))
-                .map(Map.Entry::getValue)
-                .flatMap(balanceModel -> balanceModel.getReceivedBtcBalanceEntries().stream())
-                .collect(Collectors.toList()));
+        synchronized (balanceModelByBurningManName) {
+            receivedBtcBalanceEntryListExcludingLegacyBM.addAll(balanceModelByBurningManName.entrySet().stream()
+                    .filter(e -> !e.getKey().equals(BurningManPresentationService.LEGACY_BURNING_MAN_DPT_NAME) &&
+                            !e.getKey().equals(BurningManPresentationService.LEGACY_BURNING_MAN_BTC_FEES_NAME))
+                    .map(Map.Entry::getValue)
+                    .flatMap(balanceModel -> balanceModel.getReceivedBtcBalanceEntries().stream())
+                    .collect(Collectors.toList()));
+        }
         return receivedBtcBalanceEntryListExcludingLegacyBM;
     }
 
     public Stream<ReceivedBtcBalanceEntry> getDistributedBtcBalanceByMonth(Date month) {
-        return balanceModelByBurningManName.entrySet().stream()
-                .filter(e -> !e.getKey().equals(BurningManPresentationService.LEGACY_BURNING_MAN_DPT_NAME) &&
-                        !e.getKey().equals(BurningManPresentationService.LEGACY_BURNING_MAN_BTC_FEES_NAME))
-                .map(Map.Entry::getValue)
-                .flatMap(balanceModel -> balanceModel.getReceivedBtcBalanceEntriesByMonth(month).stream());
+        synchronized (balanceModelByBurningManName) {
+            return balanceModelByBurningManName.entrySet().stream()
+                    .filter(e -> !e.getKey().equals(BurningManPresentationService.LEGACY_BURNING_MAN_DPT_NAME) &&
+                            !e.getKey().equals(BurningManPresentationService.LEGACY_BURNING_MAN_BTC_FEES_NAME))
+                    .map(Map.Entry::getValue)
+                    .flatMap(balanceModel -> balanceModel.getReceivedBtcBalanceEntriesByMonth(month).stream());
+        }
     }
 
 
@@ -311,7 +316,9 @@ public class BurningManAccountingService implements DaoSetupService, DaoStateLis
     }
 
     private void addAccountingBlockToBalanceModel(AccountingBlock accountingBlock) {
-        addAccountingBlockToBalanceModel(balanceModelByBurningManName, accountingBlock);
+        synchronized (balanceModelByBurningManName) {
+            addAccountingBlockToBalanceModel(balanceModelByBurningManName, accountingBlock);
+        }
     }
 
     private void addAccountingBlockToBalanceModel(Map<String, BalanceModel> balanceModelByBurningManName,
