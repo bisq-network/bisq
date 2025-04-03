@@ -115,6 +115,7 @@ public class TakerVerifyAndSignContract extends TradeTask {
             if (!contractAsJson.equals(processModel.getTradePeer().getContractAsJson())) {
                 contract.printDiff(processModel.getTradePeer().getContractAsJson());
                 failed("Contracts are not matching");
+                return;
             }
 
             String signature = Sig.sign(processModel.getKeyRing().getSignatureKeyPair().getPrivate(), contractAsJson);
