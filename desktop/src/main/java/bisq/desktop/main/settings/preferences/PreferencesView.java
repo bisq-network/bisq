@@ -1001,8 +1001,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         useBisqWalletForFundingToggle.setOnAction(e ->
                 preferences.setUseBisqWalletFunding(useBisqWalletForFundingToggle.isSelected()));
 
-        btcExplorerTextField.setText(preferences.getBlockChainExplorer().name);
-        bsqExplorerTextField.setText(preferences.getBsqBlockChainExplorer().name);
+        btcExplorerTextField.setText(preferences.getBlockChainExplorer().getName());
+        bsqExplorerTextField.setText(preferences.getBsqBlockChainExplorer().getName());
 
         deviationInputTextField.setText(FormattingUtils.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent()));
         deviationInputTextField.textProperty().addListener(deviationListener);
@@ -1110,7 +1110,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                     .actionButtonText(Res.get("shared.save"))
                     .onAction(() -> {
                         preferences.setBlockChainExplorer(urlWindow.getEditedBlockChainExplorer());
-                        btcExplorerTextField.setText(preferences.getBlockChainExplorer().name);
+                        btcExplorerTextField.setText(preferences.getBlockChainExplorer().getName());
                     })
                     .closeButtonText(Res.get("shared.cancel"))
                     .onClose(urlWindow::hide)
@@ -1124,7 +1124,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                     .actionButtonText(Res.get("shared.save"))
                     .onAction(() -> {
                         preferences.setBsqBlockChainExplorer(urlWindow.getEditedBlockChainExplorer());
-                        bsqExplorerTextField.setText(preferences.getBsqBlockChainExplorer().name);
+                        bsqExplorerTextField.setText(preferences.getBsqBlockChainExplorer().getName());
                     })
                     .closeButtonText(Res.get("shared.cancel"))
                     .onClose(urlWindow::hide)

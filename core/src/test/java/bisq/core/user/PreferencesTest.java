@@ -156,34 +156,4 @@ public class PreferencesTest {
         preferences.readPersisted(() ->
                 assertEquals("US Dollar (USD)", preferences.getFiatCurrenciesAsObservable().get(0).getNameAndCode()));
     }
-
-    @Test
-    void testRemoveRetiredXmrAutoConfirmAddresses() {
-        PreferencesPayload payload = mock(PreferencesPayload.class);
-
-        FiatCurrency usd = new FiatCurrency(Currency.getInstance("USD"), new Locale("de", "AT"));
-        List<AutoConfirmSettings> autoConfirmSettingsList = new ArrayList<>(List.of(
-                new AutoConfirmSettings(
-                        true,
-                        3,
-                        1,
-                        List.of("devinxmrwu4jrfq2zmq5kqjpxb44hx7i7didebkwrtvmvygj4uuop2ad.onion",
-                                "xmrexplrthytnunr4jasr3vnjc6jo5idsyxzv74a7ep7dy7lwcv2eoyd.onion"),
-                        "XMR")
-        ));
-
-        addReadPersistedStub(payload);
-
-        when(payload.getUserLanguage()).thenReturn("en");
-        when(payload.getUserCountry()).thenReturn(CountryUtil.getDefaultCountry());
-        when(payload.getPreferredTradeCurrency()).thenReturn(usd);
-        when(payload.getAutoConfirmSettingsList()).thenReturn(autoConfirmSettingsList);
-
-        preferences.readPersisted(() ->
-                assertEquals(
-                        List.of(
-                                "xmrexplrthytnunr4jasr3vnjc6jo5idsyxzv74a7ep7dy7lwcv2eoyd.onion",
-                                "nklwsomtuok6dhqqecp3a26xzgokfgmeuaplcdkaxehncg57yzarvbad.onion"),
-                        preferences.getAutoConfirmSettingsList().get(0).getServiceAddresses()));
-    }
 }

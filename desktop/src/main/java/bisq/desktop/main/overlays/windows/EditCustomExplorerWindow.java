@@ -130,9 +130,9 @@ public class EditCustomExplorerWindow extends Overlay<EditCustomExplorerWindow> 
         button.setOnAction(e -> {
             BlockChainExplorer blockChainExplorer = listView.getSelectionModel().getSelectedItem();
             if (blockChainExplorer != null) {
-                nameInputTextField.setText(blockChainExplorer.name);
-                txUrlInputTextField.setText(blockChainExplorer.txUrl);
-                addressUrlInputTextField.setText(blockChainExplorer.addressUrl);
+                nameInputTextField.setText(blockChainExplorer.getName());
+                txUrlInputTextField.setText(blockChainExplorer.getTxUrl());
+                addressUrlInputTextField.setText(blockChainExplorer.getAddressUrl());
             }
         });
         button.setStyle("-fx-pref-width: 50px; -fx-pref-height: 30; -fx-padding: 3 3 3 3;");
@@ -159,7 +159,7 @@ public class EditCustomExplorerWindow extends Overlay<EditCustomExplorerWindow> 
                     public void updateItem(final BlockChainExplorer item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            label.setText(item.name);
+                            label.setText(item.getName());
                             setGraphic(pane);
                         } else {
                             setGraphic(null);
@@ -172,9 +172,9 @@ public class EditCustomExplorerWindow extends Overlay<EditCustomExplorerWindow> 
                     public void handle(MouseEvent event) {
                         if (event.getClickCount() == 2) {
                             BlockChainExplorer blockChainExplorer = listView.getSelectionModel().getSelectedItem();
-                            nameInputTextField.setText(blockChainExplorer.name);
-                            txUrlInputTextField.setText(blockChainExplorer.txUrl);
-                            addressUrlInputTextField.setText(blockChainExplorer.addressUrl);
+                            nameInputTextField.setText(blockChainExplorer.getName());
+                            txUrlInputTextField.setText(blockChainExplorer.getTxUrl());
+                            addressUrlInputTextField.setText(blockChainExplorer.getAddressUrl());
                         }
                     }
                 });
@@ -192,8 +192,8 @@ public class EditCustomExplorerWindow extends Overlay<EditCustomExplorerWindow> 
         nameInputTextField.setPrefWidth(Layout.INITIAL_WINDOW_WIDTH);
         txUrlInputTextField = addInputTextField(autoConfirmGridPane, ++localRowIndex, Res.get("settings.preferences.editCustomExplorer.txUrl"));
         addressUrlInputTextField = addInputTextField(autoConfirmGridPane, ++localRowIndex, Res.get("settings.preferences.editCustomExplorer.addressUrl"));
-        nameInputTextField.setText(currentExplorer.name);
-        txUrlInputTextField.setText(currentExplorer.txUrl);
-        addressUrlInputTextField.setText(currentExplorer.addressUrl);
+        nameInputTextField.setText(currentExplorer.getName());
+        txUrlInputTextField.setText(currentExplorer.getTxUrl());
+        addressUrlInputTextField.setText(currentExplorer.getAddressUrl());
     }
 }
