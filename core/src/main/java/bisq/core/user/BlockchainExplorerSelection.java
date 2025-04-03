@@ -26,7 +26,6 @@ public class BlockchainExplorerSelection {
         // if no valid Bitcoin block explorer is set, select the 1st valid Bitcoin block explorer
         ArrayList<BlockChainExplorer> btcExplorers = preferences.getBlockChainExplorers();
         if (preferences.getBlockChainExplorer() == null ||
-                preferences.getBlockChainExplorer().getName().length() == 0 ||
                 preferences.getBlockChainExplorer().getName().matches(deprecatedExplorers)) {
             preferences.setBlockChainExplorer(btcExplorers.get(0));
         }
@@ -34,7 +33,6 @@ public class BlockchainExplorerSelection {
         // if no valid BSQ block explorer is set, randomly select a valid BSQ block explorer
         ArrayList<BlockChainExplorer> bsqExplorers = preferences.getBsqBlockChainExplorers();
         if (preferences.getBsqBlockChainExplorer() == null ||
-                preferences.getBsqBlockChainExplorer().getName().length() == 0 ||
                 preferences.getBsqBlockChainExplorer().getName().matches(deprecatedExplorers)) {
             preferences.setBsqBlockChainExplorer(bsqExplorers.get((new Random()).nextInt(bsqExplorers.size())));
         }
