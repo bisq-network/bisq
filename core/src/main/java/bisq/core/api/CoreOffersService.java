@@ -150,12 +150,34 @@ class CoreOffersService {
                 new NotFoundException(format("offer with id '%s' not found", id)));
     }
 
-    Optional<Offer> findAvailableOffer(String id) {
-        return offerBookService.getOffers().stream()
+    Optional<Offer> findAvailableOffer(String id) throws IllegalStateException {
+        var optionalOffer = offerBookService.getOffers().stream()
                 .filter(o -> o.getId().equals(id))
-                .filter(o -> !o.isMyOffer(keyRing))
-                .filter(o -> offerFilterService.canTakeOffer(o, coreContext.isApiUser()).isValid())
                 .findAny();
+        if (optionalOffer.isPresent()) {
+            var offer = optionalOffer.get();
+            if (!offer.isMyOffer(keyRing)) {
+                throw new IllegalStateException(
+                        format(
+                                "Offer id '%s' is not available to take: ITS_MY_OWN_OFFER",
+                                id
+                        )
+                );
+            }
+            var inquiryResult = offerFilterService.canTakeOffer(offer, coreContext.isApiUser());
+            if (inquiryResult.isValid()) {
+                return optionalOffer;
+            } else {
+                throw new IllegalStateException(
+                        format(
+                                "Offer id '%s' is not available to take: %s",
+                                id,
+                                inquiryResult.name()
+                        )
+                );
+            }
+        }
+        return Optional.empty();
     }
 
     OpenOffer getMyOffer(String id) {
