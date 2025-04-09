@@ -2,21 +2,12 @@ package bisq.core.user;
 
 import bisq.common.persistence.PersistenceManager;
 
-import com.google.common.collect.Sets;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
 public class BlockchainExplorerSelection {
-    private final Set<String> deprecatedExplorers = Sets.newHashSet("bsq.bisq.cc",
-            "bsq.vante.me",
-            "bsq.emzy.de",
-            "bsq.sqrrm.net",
-            "bsq.bisq.services",
-            "bsq.ninja",
-            "bisq.mempool.emzy.de");
+
 
     private final Preferences preferences;
     private final PreferencesPayload prefPayload;
@@ -67,7 +58,7 @@ public class BlockchainExplorerSelection {
 
     private boolean isBsqBlockchainExplorerDeprecated(BlockChainExplorer blockChainExplorer) {
         String txUrl = blockChainExplorer.getTxUrl();
-        return deprecatedExplorers.stream()
+        return Preferences.DEPRECATED_BSQ_MAIN_NET_EXPLORERS.stream()
                 .anyMatch(txUrl::contains);
     }
 }
