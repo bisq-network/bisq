@@ -2,11 +2,22 @@ package bisq.core.user;
 
 import bisq.common.persistence.PersistenceManager;
 
+import com.google.common.collect.Sets;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 public class BlockchainExplorerSelection {
+    private final Set<String> deprecatedExplorers = Sets.newHashSet("bsq.bisq.cc",
+            "bsq.vante.me",
+            "bsq.emzy.de",
+            "bsq.sqrrm.net",
+            "bsq.bisq.services",
+            "bsq.ninja",
+            "bisq.mempool.emzy.de");
+
     private final Preferences preferences;
     private final PreferencesPayload prefPayload;
     private final PersistenceManager<PreferencesPayload> persistenceManager;
@@ -19,10 +30,6 @@ public class BlockchainExplorerSelection {
     }
 
     public void selectNodes() {
-        // a list of previously-used federated explorers
-        // if user preference references any deprecated explorers we need to select a new valid explorer
-        String deprecatedExplorers = "(bsq.bisq.cc|bsq.vante.me|bsq.emzy.de|bsq.sqrrm.net|bsq.bisq.services|bsq.ninja|bisq.mempool.emzy.de).*";
-
         // if no valid Bitcoin block explorer is set, select the 1st valid Bitcoin block explorer
         ArrayList<BlockChainExplorer> btcExplorers = preferences.getBlockChainExplorers();
         if (preferences.getBlockChainExplorer() == null) {
@@ -30,9 +37,9 @@ public class BlockchainExplorerSelection {
         }
 
         // if no valid BSQ block explorer is set, randomly select a valid BSQ block explorer
-        ArrayList<BlockChainExplorer> bsqExplorers = preferences.getBsqBlockChainExplorers();
-        if (preferences.getBsqBlockChainExplorer() == null ||
-                preferences.getBsqBlockChainExplorer().getName().matches(deprecatedExplorers)) {
+        BlockChainExplorer currentBsqExplorer = preferences.getBsqBlockChainExplorer();
+        if (currentBsqExplorer == null || isBsqBlockchainExplorerDeprecated(currentBsqExplorer)) {
+            ArrayList<BlockChainExplorer> bsqExplorers = preferences.getBsqBlockChainExplorers();
             preferences.setBsqBlockChainExplorer(bsqExplorers.get((new Random()).nextInt(bsqExplorers.size())));
         }
 
@@ -56,5 +63,11 @@ public class BlockchainExplorerSelection {
                     });
             persistenceManager.forcePersistNow();
         }
+    }
+
+    private boolean isBsqBlockchainExplorerDeprecated(BlockChainExplorer blockChainExplorer) {
+        String txUrl = blockChainExplorer.getTxUrl();
+        return deprecatedExplorers.stream()
+                .anyMatch(txUrl::contains);
     }
 }

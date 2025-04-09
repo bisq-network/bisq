@@ -75,7 +75,7 @@ public class BlockchainExplorerSelectionTest {
                 mock(PersistenceManager.class));
 
         BlockChainExplorer selectedExplorer = mock(BlockChainExplorer.class);
-        doReturn("bisq.mempool.emzy.de").when(selectedExplorer).getName();
+        doReturn("https://bisq.mempool.emzy.de/tx/").when(selectedExplorer).getTxUrl();
         doReturn(selectedExplorer).when(preferences).getBsqBlockChainExplorer();
 
         explorerSelection.selectNodes();
