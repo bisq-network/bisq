@@ -128,7 +128,8 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             "bsq.sqrrm.net",
             "bsq.bisq.services",
             "bsq.ninja",
-            "bisq.mempool.emzy.de"
+            "bisq.mempool.emzy.de",
+            "mempool.space"
     );
 
     private static final ArrayList<String> XMR_TX_PROOF_SERVICES_CLEAR_NET = new ArrayList<>(Arrays.asList(
