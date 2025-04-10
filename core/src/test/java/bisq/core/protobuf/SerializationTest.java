@@ -74,6 +74,7 @@ public class SerializationTest {
         try {
             var oldParsed = oldprotobuf.DaoState.parseFrom(trimmedDumpData);
             var newParsed = protobuf.DaoState.parseFrom(trimmedDumpData);
+            assertEquals(oldParsed.getSerializedSize(), newParsed.getSerializedSize());
             // ensure that all modified data exists in edited definition
             for (var oldEntry : oldParsed.getUnspentTxOutputMapMap().entrySet()) {
                 assertTrue(
