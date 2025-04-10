@@ -341,7 +341,6 @@ public class BisqSetup {
         maybeShowLocalhostRunningInfo();
         maybeShowAccountSigningStateInfo();
         maybeShowTorAddressUpgradeInformation();
-        maybeUpgradeBsqExplorerUrl();
         checkInboundConnections();
     }
 
@@ -781,18 +780,6 @@ public class BisqSetup {
         if (signingStateFound && preferences.showAgain(key) &&
                 displayHandler != null) {
             displayHandler.accept(key);
-        }
-    }
-
-    private void maybeUpgradeBsqExplorerUrl() {
-        // if wiz BSQ explorer selected, replace with 1st explorer in the list of available.
-        if (preferences.getBsqBlockChainExplorer().getName().equalsIgnoreCase("mempool.space (@wiz)") &&
-                preferences.getBsqBlockChainExplorers().size() > 0) {
-            preferences.setBsqBlockChainExplorer(preferences.getBsqBlockChainExplorers().get(0));
-        }
-        if (preferences.getBsqBlockChainExplorer().getName().equalsIgnoreCase("bisq.mempool.emzy.de (@emzy)") &&
-                preferences.getBsqBlockChainExplorers().size() > 0) {
-            preferences.setBsqBlockChainExplorer(preferences.getBsqBlockChainExplorers().get(0));
         }
     }
 
