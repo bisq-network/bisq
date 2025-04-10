@@ -4,15 +4,19 @@ import bisq.common.util.Hex;
 
 import protobuf.StringMapEntry;
 
+import com.google.protobuf.InvalidProtocolBufferException;
+
 import java.io.IOException;
 import java.io.InputStream;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SerializationTest {
     @Test
@@ -109,5 +113,24 @@ public class SerializationTest {
         } catch (com.google.protobuf.InvalidProtocolBufferException ignored) {
             fail("Failed to parse into both new and old protobuf classes from the same bytes");
         }
+    }
+
+    @Test
+    public void assertThatMapOrderIsPreservedAfterRoundTripInOldPb() throws InvalidProtocolBufferException {
+        // these two keys were problematic in C impl of protobuf,
+        // causing the map to be more likely to reorder on round trip
+        Map<String, String> myMap = new LinkedHashMap<>();
+        myMap.put("capabilities", "1");
+        myMap.put("accountAgeWitnessHash", "2");
+        var reference = oldprotobuf.GetInventoryResponse.newBuilder().putAllInventory(myMap).build().toByteArray();
+        var roundTripped = reference;
+        var mismatchObserved = false;
+        for (var i = 0; i < 50; i++) {
+            roundTripped = oldprotobuf.GetInventoryResponse.parseFrom(roundTripped).toByteArray();
+            if (!Arrays.equals(reference, roundTripped)) {
+                mismatchObserved = true;
+            }
+        }
+        assertFalse(mismatchObserved);
     }
 }
