@@ -122,13 +122,13 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
     ));
 
     public static final Set<String> DEPRECATED_BSQ_MAIN_NET_EXPLORERS = Sets.newHashSet(
-            "bsq.bisq.cc",
-            "bsq.vante.me",
-            "bsq.emzy.de",
-            "bsq.sqrrm.net",
-            "bsq.bisq.services",
-            "bsq.ninja",
             "bisq.mempool.emzy.de",
+            "bsq.bisq.cc",
+            "bsq.bisq.services",
+            "bsq.emzy.de",
+            "bsq.ninja",
+            "bsq.sqrrm.net",
+            "bsq.vante.me",
             "mempool.space"
     );
 
