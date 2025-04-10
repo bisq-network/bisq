@@ -24,6 +24,7 @@ import bisq.network.p2p.storage.payload.ProcessOncePersistableNetworkPayload;
 import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.crypto.Sig;
+import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
@@ -44,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+
 
 /**
  * TempProposalPayload is wrapper for proposal sent over wire as well as it gets persisted.
@@ -95,7 +97,7 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
         final protobuf.TempProposalPayload.Builder builder = protobuf.TempProposalPayload.newBuilder()
                 .setProposal(proposal.getProposalBuilder())
                 .setOwnerPubKeyEncoded(ByteString.copyFrom(ownerPubKeyEncoded));
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
+        Optional.ofNullable(extraDataMap).ifPresent(map -> builder.addAllExtraData(ProtoUtil.toStringMapEntryList(map)));
         return builder;
     }
 
@@ -107,7 +109,7 @@ public class TempProposalPayload implements ProcessOncePersistableNetworkPayload
     public static TempProposalPayload fromProto(protobuf.TempProposalPayload proto) {
         return new TempProposalPayload(Proposal.fromProto(proto.getProposal()),
                 proto.getOwnerPubKeyEncoded().toByteArray(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+                CollectionUtils.isEmpty(proto.getExtraDataList()) ? null : ProtoUtil.toStringMap(proto.getExtraDataList()));
     }
 
 

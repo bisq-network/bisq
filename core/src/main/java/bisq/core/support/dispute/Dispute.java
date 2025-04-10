@@ -72,6 +72,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+
 @Slf4j
 @EqualsAndHashCode
 @Getter
@@ -287,7 +288,7 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
         Optional.ofNullable(mediatorsDisputeResult).ifPresent(result -> builder.setMediatorsDisputeResult(mediatorsDisputeResult));
         Optional.ofNullable(delayedPayoutTxId).ifPresent(result -> builder.setDelayedPayoutTxId(delayedPayoutTxId));
         Optional.ofNullable(donationAddressOfDelayedPayoutTx).ifPresent(result -> builder.setDonationAddressOfDelayedPayoutTx(donationAddressOfDelayedPayoutTx));
-        Optional.ofNullable(getExtraDataMap()).ifPresent(builder::putAllExtraData);
+        Optional.ofNullable(getExtraDataMap()).ifPresent(map -> builder.addAllExtraData(ProtoUtil.toStringMapEntryList(map)));
         return builder.build();
     }
 
@@ -313,8 +314,8 @@ public final class Dispute implements NetworkPayload, PersistablePayload {
                 proto.getIsSupportTicket(),
                 SupportType.fromProto(proto.getSupportType()));
 
-        dispute.setExtraDataMap(CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                null : ExtraDataMapValidator.getValidatedExtraDataMap(proto.getExtraDataMap()));
+        dispute.setExtraDataMap(CollectionUtils.isEmpty(proto.getExtraDataList()) ?
+                null : ExtraDataMapValidator.getValidatedExtraDataMap(ProtoUtil.toStringMap(proto.getExtraDataList())));
 
         dispute.chatMessages.addAll(proto.getChatMessageList().stream()
                 .map(ChatMessage::fromPayloadProto)

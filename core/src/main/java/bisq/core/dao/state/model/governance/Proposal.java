@@ -23,6 +23,7 @@ import bisq.core.dao.governance.proposal.ProposalType;
 import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
 
+import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.ProtobufferRuntimeException;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
@@ -83,7 +84,7 @@ public abstract class Proposal implements PersistablePayload, NetworkPayload, Co
                 .setLink(link)
                 .setVersion(version)
                 .setCreationDate(creationDate);
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
+        Optional.ofNullable(extraDataMap).ifPresent(map -> builder.addAllExtraData(ProtoUtil.toStringMapEntryList(map)));
         Optional.ofNullable(txId).ifPresent(builder::setTxId);
         return builder;
     }

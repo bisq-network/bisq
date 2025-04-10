@@ -19,6 +19,7 @@ package bisq.core.dao.governance.blindvote;
 
 import bisq.core.dao.governance.ConsensusCritical;
 
+import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.CollectionUtils;
@@ -36,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.concurrent.Immutable;
+
 
 /**
  * Holds encryptedVotes, encryptedMeritList, txId of blindVote tx and stake.
@@ -96,7 +98,7 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
                 .setStake(stake)
                 .setEncryptedMeritList(ByteString.copyFrom(encryptedMeritList))
                 .setDate(date);
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
+        Optional.ofNullable(extraDataMap).ifPresent(map -> builder.addAllExtraData(ProtoUtil.toStringMapEntryList(map)));
         return builder;
     }
 
@@ -106,8 +108,7 @@ public final class BlindVote implements PersistablePayload, NetworkPayload, Cons
                 proto.getStake(),
                 proto.getEncryptedMeritList().toByteArray(),
                 proto.getDate(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                CollectionUtils.isEmpty(proto.getExtraDataList()) ? null : ProtoUtil.toStringMap(proto.getExtraDataList()));
     }
 
 

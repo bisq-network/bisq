@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.common.proto.ProtoUtil;
+
 import bisq.core.locale.Res;
 
 import com.google.protobuf.Message;
@@ -74,7 +76,7 @@ public final class PaxumAccountPayload extends PaymentAccountPayload {
                 proto.getId(),
                 proto.getPaxumAccountPayload().getEmail(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(ProtoUtil.toStringMap(proto.getExcludeFromJsonDataList())));
     }
 
 

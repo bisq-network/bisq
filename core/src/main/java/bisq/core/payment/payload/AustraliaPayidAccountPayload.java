@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.common.proto.ProtoUtil;
+
 import bisq.core.locale.Res;
 
 import bisq.common.util.CollectionUtils;
@@ -84,7 +86,7 @@ public final class AustraliaPayidAccountPayload extends PaymentAccountPayload {
                 AustraliaPayidPayload.getPayid(),
                 AustraliaPayidPayload.getBankAccountName(),
                 proto.getMaxTradePeriod(),
-                CollectionUtils.isEmpty(proto.getExcludeFromJsonDataMap()) ? null : new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                CollectionUtils.isEmpty(ProtoUtil.toStringMap(proto.getExcludeFromJsonDataList())) ? null : new HashMap<>(ProtoUtil.toStringMap(proto.getExcludeFromJsonDataList())));
     }
 
 

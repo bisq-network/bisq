@@ -275,7 +275,7 @@ public final class OfferPayload extends OfferPayloadBase {
         Optional.ofNullable(acceptedBankIds).ifPresent(builder::addAllAcceptedBankIds);
         Optional.ofNullable(acceptedCountryCodes).ifPresent(builder::addAllAcceptedCountryCodes);
         Optional.ofNullable(hashOfChallenge).ifPresent(builder::setHashOfChallenge);
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
+        Optional.ofNullable(extraDataMap).ifPresent(map -> builder.addAllExtraData(ProtoUtil.toStringMapEntryList(map)));
 
         return protobuf.StoragePayload.newBuilder().setOfferPayload(builder).build();
     }
@@ -287,8 +287,8 @@ public final class OfferPayload extends OfferPayloadBase {
         List<String> acceptedCountryCodes = proto.getAcceptedCountryCodesList().isEmpty() ?
                 null : new ArrayList<>(proto.getAcceptedCountryCodesList());
         String hashOfChallenge = ProtoUtil.stringOrNullFromProto(proto.getHashOfChallenge());
-        Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                null : proto.getExtraDataMap();
+        Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataList()) ?
+                null : ProtoUtil.toStringMap(proto.getExtraDataList());
 
         return new OfferPayload(proto.getId(),
                 proto.getDate(),

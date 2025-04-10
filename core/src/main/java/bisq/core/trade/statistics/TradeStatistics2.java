@@ -225,7 +225,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
                 .setTradeAmount(tradeAmount)
                 .setTradeDate(tradeDate)
                 .setHash(ByteString.copyFrom(hash));
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
+        Optional.ofNullable(extraDataMap).ifPresent(map -> builder.addAllExtraData(ProtoUtil.toStringMapEntryList(map)));
         Optional.ofNullable(depositTxId).ifPresent(builder::setDepositTxId);
         return builder;
     }
@@ -256,7 +256,7 @@ public final class TradeStatistics2 implements ProcessOncePersistableNetworkPayl
                 proto.getTradeDate(),
                 ProtoUtil.stringOrNullFromProto(proto.getDepositTxId()),
                 null,   // We want to clean up the hashes with the changed hash method in v.1.2.0 so we don't use the value from the proto
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+                CollectionUtils.isEmpty(proto.getExtraDataList()) ? null : ProtoUtil.toStringMap(proto.getExtraDataList()));
     }
 
 

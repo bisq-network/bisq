@@ -17,7 +17,11 @@
 
 package bisq.core.payment.payload;
 
+import bisq.common.proto.ProtoUtil;
+
 import bisq.core.locale.Res;
+
+
 import bisq.common.util.JsonExclude;
 
 import com.google.protobuf.Message;
@@ -86,7 +90,7 @@ public class AmazonGiftCardAccountPayload extends PaymentAccountPayload {
                 amazonGiftCardAccountPayload.getEmailOrMobileNr(),
                 amazonGiftCardAccountPayload.getCountryCode(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(ProtoUtil.toStringMap(proto.getExcludeFromJsonDataList())));
     }
 
 

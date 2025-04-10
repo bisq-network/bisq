@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.common.proto.ProtoUtil;
+
 import bisq.core.locale.Res;
 
 import com.google.protobuf.Message;
@@ -87,7 +89,7 @@ public final class ImpsAccountPayload extends IfscBasedAccountPayload {
                 ifscBasedAccountPayloadPB.getAccountNr(),
                 ifscBasedAccountPayloadPB.getIfsc(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(ProtoUtil.toStringMap(proto.getExcludeFromJsonDataList())));
     }
 
     @Override

@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.common.proto.ProtoUtil;
+
 import bisq.core.locale.Res;
 
 import com.google.protobuf.Message;
@@ -110,7 +112,7 @@ public final class JapanBankAccountPayload extends PaymentAccountPayload impleme
                 japanBankAccountPayload.getBankAccountName(),
                 japanBankAccountPayload.getBankAccountNumber(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(ProtoUtil.toStringMap(proto.getExcludeFromJsonDataList())));
     }
 
 

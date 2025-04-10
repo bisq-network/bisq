@@ -335,7 +335,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                 .setHash(ByteString.copyFrom(hash));
         Optional.ofNullable(mediator).ifPresent(builder::setMediator);
         Optional.ofNullable(refundAgent).ifPresent(builder::setRefundAgent);
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
+        Optional.ofNullable(extraDataMap).ifPresent(map -> builder.addAllExtraData(ProtoUtil.toStringMapEntryList(map)));
         return builder;
     }
 
@@ -357,7 +357,7 @@ public final class TradeStatistics3 implements ProcessOncePersistableNetworkPayl
                 proto.getDate(),
                 ProtoUtil.stringOrNullFromProto(proto.getMediator()),
                 ProtoUtil.stringOrNullFromProto(proto.getRefundAgent()),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap(),
+                CollectionUtils.isEmpty(proto.getExtraDataList()) ? null : ProtoUtil.toStringMap(proto.getExtraDataList()),
                 proto.getHash().toByteArray());
     }
 

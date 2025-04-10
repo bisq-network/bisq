@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.common.proto.ProtoUtil;
+
 import bisq.core.locale.Res;
 
 import com.google.protobuf.Message;
@@ -83,7 +85,7 @@ public final class VenmoAccountPayload extends PaymentAccountPayload {
                 proto.getVenmoAccountPayload().getVenmoUserName(),
                 proto.getVenmoAccountPayload().getHolderName(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(ProtoUtil.toStringMap(proto.getExcludeFromJsonDataList())));
     }
 
 

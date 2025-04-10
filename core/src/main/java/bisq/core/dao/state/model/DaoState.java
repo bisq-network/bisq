@@ -32,6 +32,10 @@ import bisq.core.dao.state.model.governance.ParamChange;
 import bisq.common.proto.persistable.PersistablePayload;
 import bisq.common.util.JsonExclude;
 
+import protobuf.BaseTxOutputMapEntry;
+import protobuf.IssuanceMapEntry;
+import protobuf.SpentInfoMapEntry;
+
 import com.google.protobuf.Message;
 
 import javax.inject.Inject;
@@ -193,13 +197,30 @@ public class DaoState implements PersistablePayload {
         protobuf.DaoState.Builder builder = protobuf.DaoState.newBuilder();
         builder.setChainHeight(chainHeight)
                 .addAllCycles(cycles.stream().map(Cycle::toProtoMessage).collect(Collectors.toList()))
-                .putAllUnspentTxOutputMap(unspentTxOutputMap.entrySet().stream()
-                        .collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().toProtoMessage())))
-                .putAllSpentInfoMap(spentInfoMap.entrySet().stream()
-                        .collect(Collectors.toMap(e -> e.getKey().toString(), entry -> entry.getValue().toProtoMessage())))
+                .addAllUnspentTxOutputMapEntries(
+                        unspentTxOutputMap.entrySet().stream()
+                                .map(e -> BaseTxOutputMapEntry.newBuilder()
+                                        .setKey(e.getKey().toString())
+                                        .setValue(e.getValue().toProtoMessage())
+                                        .build()
+                                ).collect(Collectors.toList())
+                )
+                .addAllSpentInfoMapEntries(
+                        spentInfoMap.entrySet().stream()
+                                .map(e -> SpentInfoMapEntry.newBuilder()
+                                        .setKey(e.getKey().toString())
+                                        .setValue(e.getValue().toProtoMessage())
+                                        .build()
+                                ).collect(Collectors.toList())
+                )
                 .addAllConfiscatedLockupTxList(confiscatedLockupTxList)
-                .putAllIssuanceMap(issuanceMap.entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProtoMessage())))
+                .addAllIssuanceMapEntries(
+                        issuanceMap.entrySet().stream().map( e -> IssuanceMapEntry.newBuilder()
+                                        .setKey(e.getKey())
+                                        .setValue(e.getValue().toProtoMessage())
+                                        .build()
+                                ).collect(Collectors.toList())
+                )
                 .addAllParamChangeList(paramChangeList.stream().map(ParamChange::toProtoMessage).collect(Collectors.toList()))
                 .addAllEvaluatedProposalList(evaluatedProposalList.stream().map(EvaluatedProposal::toProtoMessage).collect(Collectors.toList()))
                 .addAllDecryptedBallotsWithMeritsList(decryptedBallotsWithMeritsList.stream().map(DecryptedBallotsWithMerits::toProtoMessage).collect(Collectors.toList()));
@@ -216,13 +237,13 @@ public class DaoState implements PersistablePayload {
     public static DaoState fromProto(protobuf.DaoState proto, LinkedList<Block> blocks) {
         LinkedList<Cycle> cycles = proto.getCyclesList().stream()
                 .map(Cycle::fromProto).collect(Collectors.toCollection(LinkedList::new));
-        TreeMap<TxOutputKey, TxOutput> unspentTxOutputMap = new TreeMap<>(proto.getUnspentTxOutputMapMap().entrySet().stream()
+        TreeMap<TxOutputKey, TxOutput> unspentTxOutputMap = new TreeMap<>(proto.getUnspentTxOutputMapEntriesList().stream()
                 .collect(Collectors.toMap(e -> TxOutputKey.getKeyFromString(e.getKey()), e -> TxOutput.fromProto(e.getValue()))));
-        TreeMap<TxOutputKey, SpentInfo> spentInfoMap = new TreeMap<>(proto.getSpentInfoMapMap().entrySet().stream()
+        TreeMap<TxOutputKey, SpentInfo> spentInfoMap = new TreeMap<>(proto.getSpentInfoMapEntriesList().stream()
                 .collect(Collectors.toMap(e -> TxOutputKey.getKeyFromString(e.getKey()), e -> SpentInfo.fromProto(e.getValue()))));
         List<String> confiscatedLockupTxList = new ArrayList<>(proto.getConfiscatedLockupTxListList());
-        TreeMap<String, Issuance> issuanceMap = new TreeMap<>(proto.getIssuanceMapMap().entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> Issuance.fromProto(e.getValue()))));
+        TreeMap<String, Issuance> issuanceMap = new TreeMap<>(proto.getIssuanceMapEntriesList().stream()
+                .collect(Collectors.toMap(protobuf.IssuanceMapEntry::getKey, e -> Issuance.fromProto(e.getValue()))));
         List<ParamChange> paramChangeList = proto.getParamChangeListList().stream()
                 .map(ParamChange::fromProto).collect(Collectors.toCollection(ArrayList::new));
         List<EvaluatedProposal> evaluatedProposalList = proto.getEvaluatedProposalListList().stream()
@@ -319,7 +340,7 @@ public class DaoState implements PersistablePayload {
     }
 
     public void addBlock(Block block) {
-        // The block added here does not have any tx, 
+        // The block added here does not have any tx,
         // so we do not need to update the txCache or txOutputsByTxOutputType
         blocks.add(block);
         blocksByHeight.put(block.getHeight(), block);

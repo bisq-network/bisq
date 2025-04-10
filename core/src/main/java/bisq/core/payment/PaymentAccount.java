@@ -108,7 +108,7 @@ public abstract class PaymentAccount implements PersistablePayload {
                 .setAccountName(accountName)
                 .addAllTradeCurrencies(ProtoUtil.collectionToProto(tradeCurrencies, protobuf.TradeCurrency.class));
         Optional.ofNullable(selectedTradeCurrency).ifPresent(selectedTradeCurrency -> builder.setSelectedTradeCurrency((protobuf.TradeCurrency) selectedTradeCurrency.toProtoMessage()));
-        Optional.ofNullable(extraData).ifPresent(builder::putAllExtraData);
+        Optional.ofNullable(extraData).ifPresent(map -> builder.addAllExtraData(ProtoUtil.toStringMapEntryList(map)));
         return builder.build();
     }
 
@@ -139,10 +139,10 @@ public abstract class PaymentAccount implements PersistablePayload {
             if (proto.hasSelectedTradeCurrency())
                 account.setSelectedTradeCurrency(TradeCurrency.fromProto(proto.getSelectedTradeCurrency()));
 
-            if (CollectionUtils.isEmpty(proto.getExtraDataMap())) {
+            if (CollectionUtils.isEmpty(proto.getExtraDataList())) {
                 account.setExtraData(null);
             } else {
-                account.setExtraData(new HashMap<>(proto.getExtraDataMap()));
+                account.setExtraData(new HashMap<>(ProtoUtil.toStringMap(proto.getExtraDataList())));
             }
             return account;
         } catch (RuntimeException e) {

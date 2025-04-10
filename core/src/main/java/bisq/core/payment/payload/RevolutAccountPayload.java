@@ -17,7 +17,10 @@
 
 package bisq.core.payment.payload;
 
+import bisq.common.proto.ProtoUtil;
+
 import bisq.core.locale.Res;
+
 
 import bisq.common.util.JsonExclude;
 import bisq.common.util.Tuple2;
@@ -100,7 +103,7 @@ public final class RevolutAccountPayload extends PaymentAccountPayload {
                 revolutAccountPayload.getAccountId(),
                 revolutAccountPayload.getUserName(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(ProtoUtil.toStringMap(proto.getExcludeFromJsonDataList())));
     }
 
 

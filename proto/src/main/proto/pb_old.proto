@@ -16,19 +16,9 @@
  */
 
 syntax = "proto3";
-package io.bisq.protobuffer;
-option java_package = "protobuf";
+package io.bisq.protobuffer.old;
+option java_package = "oldprotobuf";
 option java_multiple_files = true;
-
-message StringMapEntry {
-    string key = 1;
-    // we should use optional keyword, but older versions do not support it,
-    // so we use this hack instead.
-    // this is to ensure that serialized bytes are same as a map<string, string>
-    oneof value_oneof {
-      string value = 2;
-    }
-}
 
 message NetworkEnvelope {
     int32 message_version = 1;
@@ -178,7 +168,7 @@ message GetInventoryRequest {
 }
 
 message GetInventoryResponse {
-    repeated StringMapEntry inventory = 1;
+    map<string, string> inventory = 1;
 }
 
 message OfferAvailabilityRequest {
@@ -698,7 +688,7 @@ message Alert {
     bool is_update_info = 3;
     string signature_as_base64 = 4;
     bytes owner_pub_key_bytes = 5;
-    repeated StringMapEntry extra_data = 6;
+    map<string, string> extra_data = 6;
     bool is_pre_release_info = 7;
 }
 
@@ -713,7 +703,7 @@ message Arbitrator {
     string btc_address = 8;
     string email_address = 9;
     string info = 10;
-    repeated StringMapEntry extra_data = 11;
+    map<string, string> extra_data = 11;
 }
 
 message Mediator {
@@ -725,7 +715,7 @@ message Mediator {
     PubKeyRing pub_key_ring = 6;
     string email_address = 7;
     string info = 8;
-    repeated StringMapEntry extra_data = 9;
+    map<string, string> extra_data = 9;
 }
 
 message RefundAgent {
@@ -737,7 +727,7 @@ message RefundAgent {
     PubKeyRing pub_key_ring = 6;
     string email_address = 7;
     string info = 8;
-    repeated StringMapEntry extra_data = 9;
+    map<string, string> extra_data = 9;
 }
 
 message Filter {
@@ -746,7 +736,7 @@ message Filter {
     repeated PaymentAccountFilter banned_payment_accounts = 3;
     string signature_as_base64 = 4;
     bytes owner_pub_key_bytes = 5;
-    repeated StringMapEntry extra_data = 6;
+    map<string, string> extra_data = 6;
     repeated string banned_currencies = 7;
     repeated string banned_payment_methods = 8;
     repeated string arbitrators = 9;
@@ -799,7 +789,7 @@ message TradeStatistics2 {
     string offer_id = 13 [deprecated = true];
     string deposit_tx_id = 14 [deprecated = true];
     bytes hash = 15 [deprecated = true];
-    repeated StringMapEntry extra_data = 16 [deprecated = true];
+    map<string, string> extra_data = 16 [deprecated = true];
 }
 
 message TradeStatistics3 {
@@ -811,14 +801,14 @@ message TradeStatistics3 {
     string mediator = 6;
     string refund_agent = 7;
     bytes hash = 8;
-    repeated StringMapEntry extra_data = 9;
+    map<string, string> extra_data = 9;
 }
 
 message MailboxStoragePayload {
     PrefixedSealedAndSignedMessage prefixed_sealed_and_signed_message = 1;
     bytes sender_pub_key_for_add_operation_bytes = 2;
     bytes owner_pub_key_bytes = 3;
-    repeated StringMapEntry extra_data = 4;
+    map<string, string> extra_data = 4;
 }
 
 message OfferPayload {
@@ -860,7 +850,7 @@ message OfferPayload {
     int64 upper_close_price = 34;
     bool is_private_offer = 35;
     string hash_of_challenge = 36;
-    repeated StringMapEntry extra_data = 37;
+    map<string, string> extra_data = 37;
     int32 protocol_version = 38;
 }
 
@@ -880,7 +870,7 @@ message BsqSwapOfferPayload {
     int64 amount = 7;
     int64 min_amount = 8;
     ProofOfWork proof_of_work = 9;
-    repeated StringMapEntry extra_data = 10;
+    map<string, string> extra_data = 10;
     string version_nr = 11;
     int32 protocol_version = 12;
 }
@@ -954,7 +944,7 @@ message Dispute {
     string donation_address_of_delayed_payout_tx = 27;
     State state = 28;
     int64 trade_period_end = 29;
-    repeated StringMapEntry extra_data = 30;
+    map<string, string> extra_data = 30;
     int32 burning_man_selection_height = 31;  // Added in v 1.9.7
     int64 trade_tx_fee = 32;  // Added in v 1.9.7
 }
@@ -1115,7 +1105,7 @@ message PaymentAccountPayload {
         BsqSwapAccountPayload bsq_swap_account_payload = 40;
         SbpAccountPayload sbp_account_payload = 41;
     }
-    repeated StringMapEntry exclude_from_json_data = 15;
+    map<string, string> exclude_from_json_data = 15;
 }
 
 message AliPayAccountPayload {
@@ -1955,7 +1945,7 @@ message PreferencesPayload {
     bool resync_Spv_requested = 23;
     bool sort_market_currencies_numerically = 24;
     bool use_percentage_based_price = 25;
-    repeated StringMapEntry peer_tag_map = 26;
+    map<string, string> peer_tag_map = 26;
     string bitcoin_nodes = 27;
     repeated string ignore_traders_list = 28;
     string directory_chooser_path = 29;
@@ -2028,7 +2018,7 @@ message UserPayload {
     repeated MarketAlertFilter market_alert_filters = 13;
     repeated RefundAgent accepted_refund_agents = 14;
     RefundAgent registered_refund_agent = 15;
-    repeated StringMapEntry cookie = 16;
+    map<string, string> cookie = 16;
     repeated SubAccountMapEntry sub_account_map_entries = 17;
 }
 
@@ -2248,31 +2238,16 @@ message Cycle {
     repeated DaoPhase dao_phase = 2;
 }
 
-message BaseTxOutputMapEntry {
-    string key = 1;
-    BaseTxOutput value = 2;
-}
-
-message IssuanceMapEntry {
-    string key = 1;
-    Issuance value = 2;
-}
-
-message SpentInfoMapEntry {
-    string key = 1;
-    SpentInfo value = 2;
-}
-
 message DaoState {
     int32 chain_height = 1;
     // Because of the way how PB implements inheritance we need to use the super class as type.
     repeated BaseBlock blocks = 2;
     repeated Cycle cycles = 3;
     // Because of the way how PB implements inheritance we need to use the super class as type.
-    repeated BaseTxOutputMapEntry unspent_tx_output_map_entries = 4;
-    repeated IssuanceMapEntry issuance_map_entries = 5;
+    map<string, BaseTxOutput> unspent_tx_output_map = 4;
+    map<string, Issuance> issuance_map = 5;
     repeated string confiscated_lockup_tx_list = 6;
-    repeated SpentInfoMapEntry spent_info_map_entries = 7;
+    map<string, SpentInfo> spent_info_map = 7;
     repeated ParamChange param_change_list = 8;
     repeated EvaluatedProposal evaluated_proposal_list = 9;
     repeated DecryptedBallotsWithMerits decrypted_ballots_with_merits_list = 10;
@@ -2302,7 +2277,7 @@ message Proposal {
         RemoveAssetProposal remove_asset_proposal = 12;
     }
     // We leave some index space here in case we add more subclasses.
-    repeated StringMapEntry extra_data = 20;
+    map<string, string> extra_data = 20;
 }
 
 message CompensationProposal {
@@ -2369,7 +2344,7 @@ message UnconfirmedBsqChangeOutputList {
 message TempProposalPayload {
     Proposal proposal = 1;
     bytes owner_pub_key_encoded = 2;
-    repeated StringMapEntry extra_data = 3;
+    map<string, string> extra_data = 3;
 }
 
 message ProposalPayload {
@@ -2436,7 +2411,7 @@ message BlindVote {
     int64 stake = 3;
     bytes encrypted_merit_list = 4;
     int64 date = 5;
-    repeated StringMapEntry extra_data = 6;
+    map<string, string> extra_data = 6;
 }
 
 message MyBlindVoteList {
@@ -2528,7 +2503,7 @@ message PaymentAccount {
     repeated TradeCurrency trade_currencies = 5;
     TradeCurrency selected_trade_currency = 6;
     PaymentAccountPayload payment_account_payload = 7;
-    repeated StringMapEntry extra_data = 8;
+    map<string, string> extra_data = 8;
 }
 
 message PaymentMethod {

@@ -27,6 +27,7 @@ import bisq.core.support.dispute.arbitration.arbitrator.Arbitrator;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.support.dispute.refund.refundagent.RefundAgent;
 
+import bisq.common.Proto;
 import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.persistable.PersistableEnvelope;
 
@@ -165,7 +166,7 @@ public class UserPayload implements PersistableEnvelope {
         Optional.ofNullable(acceptedRefundAgents)
                 .ifPresent(e -> builder.addAllAcceptedRefundAgents(ProtoUtil.collectionToProto(acceptedRefundAgents,
                         message -> ((protobuf.StoragePayload) message).getRefundAgent())));
-        Optional.ofNullable(cookie).ifPresent(e -> builder.putAllCookie(cookie.toProtoMessage()));
+        Optional.ofNullable(cookie).ifPresent(e -> builder.addAllCookie(ProtoUtil.toStringMapEntryList(cookie.toProtoMessage())));
 
         // We transform our map to a list of SubAccountEntries because protobuf has no good support for maps
         builder.addAllSubAccountMapEntries(subAccountsById.entrySet().stream()
@@ -214,7 +215,7 @@ public class UserPayload implements PersistableEnvelope {
                 proto.getAcceptedRefundAgentsList().isEmpty() ? new ArrayList<>() : new ArrayList<>(proto.getAcceptedRefundAgentsList().stream()
                         .map(RefundAgent::fromProto)
                         .collect(Collectors.toList())),
-                Cookie.fromProto(proto.getCookieMap()),
+                Cookie.fromProto(ProtoUtil.toStringMap(proto.getCookieList())),
                 subAccounts
         );
     }

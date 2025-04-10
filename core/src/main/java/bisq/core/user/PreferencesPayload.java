@@ -190,7 +190,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 .setResyncSpvRequested(resyncSpvRequested)
                 .setSortMarketCurrenciesNumerically(sortMarketCurrenciesNumerically)
                 .setUsePercentageBasedPrice(usePercentageBasedPrice)
-                .putAllPeerTagMap(peerTagMap)
+                .addAllPeerTagMap(ProtoUtil.toStringMapEntryList(peerTagMap))
                 .setBitcoinNodes(bitcoinNodes)
                 .addAllIgnoreTradersList(ignoreTradersList)
                 .setDirectoryChooserPath(directoryChooserPath)
@@ -291,7 +291,7 @@ public final class PreferencesPayload implements PersistableEnvelope {
                 proto.getResyncSpvRequested(),
                 proto.getSortMarketCurrenciesNumerically(),
                 proto.getUsePercentageBasedPrice(),
-                Maps.newHashMap(proto.getPeerTagMapMap()),
+                Maps.newHashMap(ProtoUtil.toStringMap(proto.getPeerTagMapList())),
                 proto.getBitcoinNodes(),
                 proto.getIgnoreTradersListList(),
                 proto.getDirectoryChooserPath(),

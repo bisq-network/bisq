@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.common.proto.ProtoUtil;
+
 import com.google.protobuf.Message;
 
 import java.util.HashMap;
@@ -69,6 +71,6 @@ public final class CryptoCurrencyAccountPayload extends AssetsAccountPayload {
                 proto.getId(),
                 proto.getCryptoCurrencyAccountPayload().getAddress(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(ProtoUtil.toStringMap(proto.getExcludeFromJsonDataList())));
     }
 }

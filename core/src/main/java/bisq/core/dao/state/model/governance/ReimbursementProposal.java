@@ -24,6 +24,7 @@ import bisq.core.dao.state.model.ImmutableDaoStateModel;
 import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.app.Version;
+import bisq.common.proto.ProtoUtil;
 import bisq.common.util.CollectionUtils;
 
 import org.bitcoinj.core.Coin;
@@ -36,6 +37,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.concurrent.Immutable;
+
 
 @Immutable
 @Slf4j
@@ -101,8 +103,7 @@ public final class ReimbursementProposal extends Proposal implements IssuancePro
                 (byte) proto.getVersion(),
                 proto.getCreationDate(),
                 proto.getTxId(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                CollectionUtils.isEmpty(proto.getExtraDataList()) ? null : ProtoUtil.toStringMap(proto.getExtraDataList()));
     }
 
 

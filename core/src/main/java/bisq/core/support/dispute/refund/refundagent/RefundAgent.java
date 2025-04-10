@@ -41,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
 @Getter
@@ -82,7 +83,7 @@ public final class RefundAgent extends DisputeAgent implements CapabilityRequiri
                 .setRegistrationSignature(registrationSignature);
         Optional.ofNullable(emailAddress).ifPresent(builder::setEmailAddress);
         Optional.ofNullable(info).ifPresent(builder::setInfo);
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
+        Optional.ofNullable(extraDataMap).ifPresent(map -> builder.addAllExtraData(ProtoUtil.toStringMapEntryList(map)));
         return protobuf.StoragePayload.newBuilder().setRefundAgent(builder).build();
     }
 
@@ -95,7 +96,7 @@ public final class RefundAgent extends DisputeAgent implements CapabilityRequiri
                 proto.getRegistrationSignature(),
                 ProtoUtil.stringOrNullFromProto(proto.getEmailAddress()),
                 ProtoUtil.stringOrNullFromProto(proto.getInfo()),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap());
+                CollectionUtils.isEmpty(proto.getExtraDataList()) ? null : ProtoUtil.toStringMap(proto.getExtraDataList()));
     }
 
 
