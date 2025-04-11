@@ -1952,7 +1952,7 @@ message PreferencesPayload {
     string buy_screen_currency_code = 20;
     string sell_screen_currency_code = 21;
     int32 trade_statistics_tick_unit_index = 22;
-    bool resync_Spv_requested = 23;
+    bool resync_spv_requested = 23;
     bool sort_market_currencies_numerically = 24;
     bool use_percentage_based_price = 25;
     repeated StringMapEntry peer_tag_map = 26;
@@ -1963,7 +1963,7 @@ message PreferencesPayload {
     int64 buyer_security_deposit_as_long = 30 [deprecated = true];
     bool use_animations = 31;
     PaymentAccount selected_payment_account_for_create_offer = 32;
-    bool pay_fee_in_Btc = 33;
+    bool pay_fee_in_btc = 33;
     repeated string bridge_addresses = 34;
     int32 bridge_option_ordinal = 35;
     int32 tor_transport_ordinal = 36;
@@ -2467,8 +2467,8 @@ message MeritList {
 
 message ProposalVoteResult {
     Proposal proposal = 1;
-    int64 stake_of_Accepted_votes = 2;
-    int64 stake_of_Rejected_votes = 3;
+    int64 stake_of_accepted_votes = 2;
+    int64 stake_of_rejected_votes = 3;
     int32 num_accepted_votes = 4;
     int32 num_rejected_votes = 5;
     int32 num_ignored_votes = 6;
