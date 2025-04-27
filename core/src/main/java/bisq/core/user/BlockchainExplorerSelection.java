@@ -25,8 +25,7 @@ public class BlockchainExplorerSelection {
 
         // if no valid Bitcoin block explorer is set, select the 1st valid Bitcoin block explorer
         ArrayList<BlockChainExplorer> btcExplorers = preferences.getBlockChainExplorers();
-        if (preferences.getBlockChainExplorer() == null ||
-                preferences.getBlockChainExplorer().getName().matches(deprecatedExplorers)) {
+        if (preferences.getBlockChainExplorer() == null) {
             preferences.setBlockChainExplorer(btcExplorers.get(0));
         }
 

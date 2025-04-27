@@ -55,22 +55,6 @@ public class BlockchainExplorerSelectionTest {
     }
 
     @Test
-    void deprecatedBtcExplorerSelected() {
-        //noinspection unchecked
-        var explorerSelection = new BlockchainExplorerSelection(preferences, mock(PreferencesPayload.class),
-                mock(PersistenceManager.class));
-
-        BlockChainExplorer selectedExplorer = mock(BlockChainExplorer.class);
-        doReturn("bsq.emzy.de").when(selectedExplorer).getName();
-        doReturn(selectedExplorer).when(preferences).getBlockChainExplorer();
-
-        explorerSelection.selectNodes();
-
-        BlockChainExplorer expectedBtcNode = ALL_BTC_EXPLORERS.get(0);
-        verify(preferences).setBlockChainExplorer(expectedBtcNode);
-    }
-
-    @Test
     void noBsqExploreSet() {
         //noinspection unchecked
         var explorerSelection = new BlockchainExplorerSelection(preferences, mock(PreferencesPayload.class),
