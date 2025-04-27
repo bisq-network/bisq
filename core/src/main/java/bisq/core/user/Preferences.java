@@ -44,6 +44,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import com.google.common.collect.Sets;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -61,6 +63,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.Getter;
@@ -117,6 +120,16 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
             new BlockChainExplorer("mempool.bisq.services (@devinbileck)", "https://mempool.bisq.services/tx/", "https://mempool.bisq.services/address/"),
             new BlockChainExplorer("BSQ Explorer - Tor (@runbtc)", "http://runbtcxzz4v2haszypwbrn2baqdo7tlwt6dw7g27cwwaootd4gktwayd.onion/tx/", "http://runbtcxzz4v2haszypwbrn2baqdo7tlwt6dw7g27cwwaootd4gktwayd.onion/address/")
     ));
+
+    public static final Set<String> DEPRECATED_BSQ_MAIN_NET_EXPLORERS = Sets.newHashSet(
+            "bsq.bisq.cc",
+            "bsq.vante.me",
+            "bsq.emzy.de",
+            "bsq.sqrrm.net",
+            "bsq.bisq.services",
+            "bsq.ninja",
+            "bisq.mempool.emzy.de"
+    );
 
     private static final ArrayList<String> XMR_TX_PROOF_SERVICES_CLEAR_NET = new ArrayList<>(Arrays.asList(
             "xmrchain.net"
