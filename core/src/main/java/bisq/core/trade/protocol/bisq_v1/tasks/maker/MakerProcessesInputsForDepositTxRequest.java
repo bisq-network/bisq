@@ -18,7 +18,6 @@
 package bisq.core.trade.protocol.bisq_v1.tasks.maker;
 
 import bisq.core.dao.burningman.DelayedPayoutTxReceiverService;
-import bisq.core.exceptions.TradePriceOutOfToleranceException;
 import bisq.core.offer.Offer;
 import bisq.core.support.dispute.mediation.mediator.Mediator;
 import bisq.core.trade.model.bisq_v1.Trade;
@@ -115,17 +114,9 @@ public class MakerProcessesInputsForDepositTxRequest extends TradeTask {
                     "mediator.getPubKeyRing() must not be null"));
 
             Offer offer = checkNotNull(trade.getOffer(), "Offer must not be null");
-            try {
-                long takersTradePrice = request.getTradePrice();
-                offer.verifyTakersTradePrice(takersTradePrice);
-                trade.setPriceAsLong(takersTradePrice);
-            } catch (TradePriceOutOfToleranceException e) {
-                failed(e.getMessage());
-                return;
-            } catch (Throwable e2) {
-                failed(e2);
-                return;
-            }
+            long takersTradePrice = request.getTradePrice();
+            offer.verifyTakersTradePrice(takersTradePrice);
+            trade.setPriceAsLong(takersTradePrice);
 
             checkArgument(request.getTradeAmount() > 0);
             trade.setAmount(Coin.valueOf(request.getTradeAmount()));
