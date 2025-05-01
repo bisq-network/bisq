@@ -131,8 +131,8 @@ public class BurningManAccountingStore implements PersistableEnvelope {
     }
 
     private boolean contains(AccountingBlock block) {
-        var blockAtSameHeight = getBlockAtHeight(block.getHeight());
-        return blockAtSameHeight.isPresent() && blockAtSameHeight.get().equals(block);
+        int idx = block.getHeight() - EARLIEST_BLOCK_HEIGHT;
+        return idx >= 0 && idx < blocks.size() && blocks.get(idx).equals(block);
     }
 
     private void tryToAddNewBlock(AccountingBlock newBlock) throws BlockHeightNotConnectingException, BlockHashNotConnectingException {
