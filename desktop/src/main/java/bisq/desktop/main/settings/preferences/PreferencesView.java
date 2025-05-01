@@ -240,7 +240,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     protected void activate() {
         String key = "sensitiveDataRemovalInfo";
         if (DontShowAgainLookup.showAgain(key) &&
-                preferences.getClearDataAfterDays() == preferences.CLEAR_DATA_AFTER_DAYS_INITIAL) {
+                preferences.getClearDataAfterDays() == Preferences.CLEAR_DATA_AFTER_DAYS_INITIAL) {
             new Popup()
                     .headLine(Res.get("setting.info.headline"))
                     .backgroundInfo(Res.get("settings.preferences.sensitiveDataRemoval.msg"))
@@ -248,7 +248,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                     .onAction(() -> {
                         DontShowAgainLookup.dontShowAgain(key, true);
                         // user has acknowledged, enable the feature with a reasonable default value
-                        preferences.setClearDataAfterDays(preferences.CLEAR_DATA_AFTER_DAYS_DEFAULT);
+                        preferences.setClearDataAfterDays(Preferences.CLEAR_DATA_AFTER_DAYS_DEFAULT);
                         clearDataAfterDaysInputTextField.setText(String.valueOf(preferences.getClearDataAfterDays()));
                     })
                     .closeButtonText(Res.get("shared.cancel"))
@@ -365,7 +365,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                     UserThread.runAfter(() -> deviationInputTextField.setText(FormattingUtils.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
                 }
             } catch (NumberFormatException t) {
-                log.error("Exception at parseDouble deviation: " + t.toString());
+                log.error("Exception at parseDouble deviation: {}", t.toString());
                 UserThread.runAfter(() -> deviationInputTextField.setText(FormattingUtils.formatToPercentWithSymbol(preferences.getMaxPriceDistanceInPercent())), 100, TimeUnit.MILLISECONDS);
             }
         };
@@ -466,7 +466,6 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
     }
 
     private void initializeDisplayCurrencies() {
-
         TitledGroupBg titledGroupBg = addTitledGroupBg(root, displayCurrenciesGridRowIndex, 8,
                 Res.get("setting.preferences.currenciesInList"));
         GridPane.setColumnIndex(titledGroupBg, 2);
@@ -742,7 +741,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                             preferences.getBsqAverageTrimThreshold())), 100, TimeUnit.MILLISECONDS);
                 }
             } catch (NumberFormatException t) {
-                log.error("Exception: " + t.toString());
+                log.error("Exception: {}", t.toString());
                 UserThread.runAfter(() -> bsqAverageTrimThresholdTextField.setText(FormattingUtils.formatToPercentWithSymbol(
                         preferences.getBsqAverageTrimThreshold())), 100, TimeUnit.MILLISECONDS);
             }
@@ -818,7 +817,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
                 // if *.onion hostname, we use Tor normally
                 // if localhost, LAN address, or *.local FQDN we use HTTP without Tor
                 // otherwise we enforce https:// for any clearnet FQDN hostname
-                List<String> serviceAddressesParsed = new ArrayList<String>();
+                List<String> serviceAddressesParsed = new ArrayList<>();
                 serviceAddressesRaw.forEach((addr) -> {
                     addr = addr.replaceAll("http://", "").replaceAll("https://", "");
                     if (onionRegex.validate(addr).isValid) {
@@ -881,9 +880,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             }
         };
 
-        filterChangeListener = (observable, oldValue, newValue) -> {
-            autoConfirmGridPane.setDisable(newValue != null && newValue.isDisableAutoConf());
-        };
+        filterChangeListener = (observable, oldValue, newValue) ->
+                autoConfirmGridPane.setDisable(newValue != null && newValue.isDisableAutoConf());
         autoConfirmGridPane.setDisable(filterManager.getFilter() != null && filterManager.getFilter().isDisableAutoConf());
     }
 
@@ -1020,7 +1018,7 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         Coin fee = (preferences.isUseCustomWithdrawalTxFee()) ?
                 Coin.valueOf(preferences.getWithdrawalTxFeeInVbytes()) :
                 feeService.getTxFeePerVbyte();
-        log.info("tx fee = " + fee.toFriendlyString());
+        log.info("tx fee = {}", fee.toFriendlyString());
         return fee;
     }
 
@@ -1241,14 +1239,14 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
         resyncDaoFromGenesisButton.setOnAction(e ->
                 new Popup().attention(Res.get("setting.preferences.dao.resyncFromGenesis.popup"))
                         .actionButtonText(Res.get("setting.preferences.dao.resyncFromGenesis.resync"))
-                        .onAction(() -> daoFacade.resyncDaoStateFromGenesis(() -> BisqApp.getShutDownHandler().run()))
+                        .onAction(() -> daoFacade.resyncDaoStateFromGenesis(BisqApp.getShutDownHandler()))
                         .closeButtonText(Res.get("shared.cancel"))
                         .show());
 
         resyncBMAccFromScratchButton.setOnAction(e ->
                 new Popup().attention(Res.get("setting.preferences.dao.resyncBMAccFromScratch.popup"))
                         .actionButtonText(Res.get("setting.preferences.dao.resyncBMAccFromScratch.resync"))
-                        .onAction(() -> burningManAccountingService.resyncAccountingDataFromScratch(BisqApp::getShutDownHandler))
+                        .onAction(() -> burningManAccountingService.resyncAccountingDataFromScratch(BisqApp.getShutDownHandler()))
                         .closeButtonText(Res.get("shared.cancel"))
                         .show());
 
@@ -1307,9 +1305,8 @@ public class PreferencesView extends ActivatableViewAndModel<GridPane, Preferenc
             autoConfTradeLimitTf.textProperty().addListener(autoConfTradeLimitListener);
             autoConfServiceAddressTf.textProperty().addListener(autoConfServiceAddressListener);
             autoConfServiceAddressTf.focusedProperty().addListener(autoConfServiceAddressFocusOutListener);
-            autoConfirmXmrToggle.setOnAction(e -> {
-                preferences.setAutoConfEnabled(autoConfirmSettings.getCurrencyCode(), autoConfirmXmrToggle.isSelected());
-            });
+            autoConfirmXmrToggle.setOnAction(e ->
+                    preferences.setAutoConfEnabled(autoConfirmSettings.getCurrencyCode(), autoConfirmXmrToggle.isSelected()));
             filterManager.filterProperty().addListener(filterChangeListener);
         });
     }

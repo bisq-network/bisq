@@ -27,9 +27,7 @@ import com.google.protobuf.Message;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
@@ -44,10 +42,20 @@ import static bisq.core.dao.burningman.accounting.BurningManAccountingService.EA
 @Slf4j
 public class BurningManAccountingStore implements PersistableEnvelope {
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-    private final LinkedList<AccountingBlock> blocks = new LinkedList<>();
+
+    // We preserve the invariant that block heights are contiguous, starting from EARLIEST_BLOCK_HEIGHT:
+    private final List<AccountingBlock> blocks = new ArrayList<>();
 
     public BurningManAccountingStore(List<AccountingBlock> blocks) {
-        this.blocks.addAll(blocks);
+        AccountingBlock previousBlock = null;
+        for (var block : blocks) {
+            if (block.getHeight() != (previousBlock != null ? previousBlock.getHeight() + 1 : EARLIEST_BLOCK_HEIGHT)) {
+                log.error("Initializing with non-connecting block at height {}. Ignoring it and all subsequent blocks.", block.getHeight());
+                break;
+            }
+            this.blocks.add(block);
+            previousBlock = block;
+        }
     }
 
     public void addIfNewBlock(AccountingBlock newBlock) throws BlockHeightNotConnectingException, BlockHashNotConnectingException {
@@ -74,9 +82,7 @@ public class BurningManAccountingStore implements PersistableEnvelope {
         Lock writeLock = readWriteLock.writeLock();
         writeLock.lock();
         try {
-            for (int i = 0; i < 10 && !blocks.isEmpty(); i++) {
-                blocks.removeLast();
-            }
+            blocks.subList(Math.max(blocks.size() - 10, 0), blocks.size()).clear();
         } finally {
             writeLock.unlock();
         }
@@ -96,8 +102,7 @@ public class BurningManAccountingStore implements PersistableEnvelope {
         Lock readLock = readWriteLock.readLock();
         readLock.lock();
         try {
-            return blocks.stream()
-                    .max(Comparator.comparing(AccountingBlock::getHeight));
+            return !blocks.isEmpty() ? Optional.of(blocks.get(blocks.size() - 1)) : Optional.empty();
         } finally {
             readLock.unlock();
         }
@@ -107,9 +112,8 @@ public class BurningManAccountingStore implements PersistableEnvelope {
         Lock readLock = readWriteLock.readLock();
         readLock.lock();
         try {
-            return blocks.stream()
-                    .filter(block -> block.getHeight() == height)
-                    .findAny();
+            return height >= EARLIEST_BLOCK_HEIGHT && height < EARLIEST_BLOCK_HEIGHT + blocks.size() ?
+                    Optional.of(blocks.get(height - EARLIEST_BLOCK_HEIGHT)) : Optional.empty();
         } finally {
             readLock.unlock();
         }
@@ -119,16 +123,20 @@ public class BurningManAccountingStore implements PersistableEnvelope {
         Lock readLock = readWriteLock.readLock();
         readLock.lock();
         try {
-            return blocks.stream()
-                    .filter(block -> block.getHeight() >= minHeight)
-                    .collect(Collectors.toList());
+            return minHeight >= EARLIEST_BLOCK_HEIGHT && minHeight < EARLIEST_BLOCK_HEIGHT + blocks.size() ?
+                    List.copyOf(blocks.subList(minHeight - EARLIEST_BLOCK_HEIGHT, blocks.size())) : List.of();
         } finally {
             readLock.unlock();
         }
     }
 
+    private boolean contains(AccountingBlock block) {
+        int idx = block.getHeight() - EARLIEST_BLOCK_HEIGHT;
+        return idx >= 0 && idx < blocks.size() && blocks.get(idx).equals(block);
+    }
+
     private void tryToAddNewBlock(AccountingBlock newBlock) throws BlockHeightNotConnectingException, BlockHashNotConnectingException {
-        if (!blocks.contains(newBlock)) {
+        if (!contains(newBlock)) {
             Optional<AccountingBlock> optionalLastBlock = getLastBlock();
             if (optionalLastBlock.isPresent()) {
                 AccountingBlock lastBlock = optionalLastBlock.get();
