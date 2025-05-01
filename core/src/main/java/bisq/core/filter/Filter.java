@@ -52,6 +52,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 
+
 @Slf4j
 @Getter
 @EqualsAndHashCode
@@ -461,7 +462,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 .setUid(uid);
 
         Optional.ofNullable(signatureAsBase64).ifPresent(builder::setSignatureAsBase64);
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
+        Optional.ofNullable(extraDataMap).ifPresent(map -> builder.addAllExtraData(ProtoUtil.toStringMapEntryList(map)));
 
         return builder;
     }
@@ -493,7 +494,7 @@ public final class Filter implements ProtectedStoragePayload, ExpirablePayload, 
                 ProtoUtil.protocolStringListToList(proto.getBtcFeeReceiverAddressesList()),
                 proto.getOwnerPubKeyBytes().toByteArray(),
                 proto.getCreationDate(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ? null : proto.getExtraDataMap(),
+                CollectionUtils.isEmpty(proto.getExtraDataList()) ? null : ProtoUtil.toStringMap(proto.getExtraDataList()),
                 proto.getSignatureAsBase64(),
                 proto.getSignerPubKeyAsHex(),
                 ProtoUtil.protocolStringListToList(proto.getBannedPrivilegedDevPubKeysList()),

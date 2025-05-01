@@ -592,4 +592,24 @@ public class Utilities {
     public static String cleanString(String string) {
         return string.replaceAll("[\\t\\n\\r]+", " ");
     }
+
+    public static String snakeToCamel(String snakeCase) {
+        if (snakeCase == null || snakeCase.isEmpty()) {
+            return snakeCase;
+        }
+
+        StringBuilder camelCase = new StringBuilder();
+        boolean toUpperCase = false;
+
+        for (char c : snakeCase.toLowerCase().toCharArray()) { // normalize all characters to lowercase just in case
+            if (c == '_') {
+                toUpperCase = true; // Set flag to capitalize the next character
+            } else {
+                camelCase.append(toUpperCase ? Character.toUpperCase(c) : c);
+                toUpperCase = false; // Reset flag
+            }
+        }
+
+        return camelCase.toString();
+    }
 }
