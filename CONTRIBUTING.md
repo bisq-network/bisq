@@ -59,7 +59,7 @@ See https://help.github.com/articles/setting-your-username-in-git/ for instructi
 
 ### Write well-formed commit messages
 
-From https://chris.beams.io/posts/git-commit/#seven-rules:
+From https://cbea.ms/posts/git-commit/#seven-rules:
 
  1. Separate subject from body with a blank line
  2. Limit the subject line to 50 characters (*)
