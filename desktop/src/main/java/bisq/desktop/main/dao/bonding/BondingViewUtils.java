@@ -34,13 +34,14 @@ import bisq.core.dao.state.model.blockchain.TxOutput;
 import bisq.core.dao.state.model.governance.Role;
 import bisq.core.dao.state.model.governance.RoleProposal;
 import bisq.core.locale.Res;
+import bisq.core.util.FormattingUtils;
 import bisq.core.util.coin.BsqFormatter;
 import bisq.core.util.coin.CoinUtil;
-import bisq.core.util.FormattingUtils;
 
 import bisq.network.p2p.P2PService;
 
 import bisq.common.app.DevEnv;
+import bisq.common.util.Hex;
 import bisq.common.util.Tuple2;
 
 import org.bitcoinj.core.Coin;
@@ -98,9 +99,23 @@ public class BondingViewUtils {
         }
     }
 
-    public void lockupBondForReputation(Coin lockupAmount, int lockupTime, byte[] salt, Consumer<String> resultHandler) {
+    public void lockupBondForReputation(Coin lockupAmount,
+                                        int lockupTime,
+                                        byte[] salt,
+                                        Consumer<String> resultHandler) {
         MyReputation myReputation = new MyReputation(salt);
-        lockupBond(myReputation.getHash(), lockupAmount, lockupTime, LockupReason.REPUTATION, resultHandler);
+        byte[] hash = myReputation.getHash();
+        log.info("Lockup bond for reputation: \n" +
+                        "lockupAmount={}\n" +
+                        "lockupTime={}" +
+                        "salt={}\n" +
+                        "hash={}",
+                lockupAmount.value,
+                lockupTime,
+                Hex.encode(salt),
+                Hex.encode(hash)
+        );
+        lockupBond(hash, lockupAmount, lockupTime, LockupReason.REPUTATION, resultHandler);
         myReputationListService.addReputation(myReputation);
     }
 
@@ -137,7 +152,11 @@ public class BondingViewUtils {
         }
     }
 
-    private void publishLockupTx(Coin lockupAmount, int lockupTime, LockupReason lockupReason, byte[] hash, Consumer<String> resultHandler) {
+    private void publishLockupTx(Coin lockupAmount,
+                                 int lockupTime,
+                                 LockupReason lockupReason,
+                                 byte[] hash,
+                                 Consumer<String> resultHandler) {
         daoFacade.publishLockupTx(lockupAmount,
                 lockupTime,
                 lockupReason,

@@ -169,7 +169,9 @@ public class MyReputationView extends ActivatableView<GridPane, Void> implements
         lockupButton.setOnAction((event) -> {
             Coin lockupAmount = ParsingUtils.parseToCoin(amountInputTextField.getText(), bsqFormatter);
             int lockupTime = Integer.parseInt(timeInputTextField.getText());
-            byte[] salt = Utilities.decodeFromHex(saltInputTextField.getText());
+            String saltAsString = saltInputTextField.getText();
+            log.info("Lockup BSQ: salt as hex string={}", saltAsString);
+            byte[] salt = Utilities.decodeFromHex(saltAsString);
             bondingViewUtils.lockupBondForReputation(lockupAmount,
                     lockupTime,
                     salt,
