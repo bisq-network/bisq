@@ -56,6 +56,10 @@ public class DisputeAgentLookupMap {
         // the table above is updated in the software.
         // as a stopgap measure, replace unknown ones with a link to the Bisq team
         String agentName = getMatrixUserName(onion).replaceAll(Res.get("shared.na"), "bisq");
-        return "https://matrix.to/#/@" + agentName + ":matrix.org";
+        if ("refundagent2".equals(agentName)) {
+            return "https://matrix.to/#/@" + agentName + ":bitcoinist.org";
+        } else {
+            return "https://matrix.to/#/@" + agentName + ":matrix.org";
+        }
     }
 }
