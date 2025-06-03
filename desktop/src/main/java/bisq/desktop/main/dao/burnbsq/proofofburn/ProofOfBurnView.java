@@ -80,7 +80,6 @@ import javafx.collections.transformation.SortedList;
 
 import javafx.util.Callback;
 
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -191,22 +190,15 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
         onUpdateAvailableBalance(bsqWalletService.getAvailableBalance());
 
         burnButton.setOnAction((event) -> {
-            Coin amount = getAmountFee();
-            try {
-                String preImageAsString = preImageTextField.getText();
-                Transaction transaction = proofOfBurnService.burn(preImageAsString, amount.value);
-                Coin miningFee = transaction.getFee();
-                int txVsize = transaction.getVsize();
-
-                if (!DevEnv.isDevMode()) {
-                    GUIUtil.showBsqFeeInfoPopup(amount, miningFee, txVsize, bsqFormatter, btcFormatter,
-                            Res.get("dao.proofOfBurn.header"), () -> doPublishFeeTx(transaction, preImageAsString));
-                } else {
-                    doPublishFeeTx(transaction, preImageAsString);
-                }
-            } catch (InsufficientMoneyException | TxException e) {
-                e.printStackTrace();
-                new Popup().error(e.toString()).show();
+            String preImageAsString = preImageTextField.getText();
+            if (!preImageAsString.equals(preImageAsString.trim())) {
+                new Popup().warning(Res.get("dao.proofOfBurn.preImage.notTrimmedWarning"))
+                        .actionButtonText(Res.get("dao.proofOfBurn.preImage.notTrimmedWarning.ignore"))
+                        .onAction(() -> confirmBurn(preImageAsString))
+                        .closeButtonText(Res.get("shared.cancel"))
+                        .show();
+            } else {
+                confirmBurn(preImageAsString);
             }
         });
 
@@ -217,6 +209,34 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
         GUIUtil.setFitToRowsForTableView(myItemsTableView, 41, 28, 4, 6);
         GUIUtil.setFitToRowsForTableView(allTxsTableView, 41, 28, 2, 10);
         updateButtonState();
+    }
+
+    private void confirmBurn(String preImageAsString) {
+        Coin amount = getAmountFee();
+        String formattedAmount = bsqFormatter.formatCoinWithCode(amount);
+        new Popup().confirmation(Res.get("dao.proofOfBurn.preImage.confirmPopup", formattedAmount, preImageAsString))
+                .actionButtonText(Res.get("dao.proofOfBurn.preImage.confirmPopup.confirm"))
+                .onAction(() -> doBurn(preImageAsString, amount))
+                .closeButtonText(Res.get("shared.cancel"))
+                .show();
+    }
+
+    private void doBurn(String preImageAsString, Coin amount) {
+        try {
+            Transaction transaction = proofOfBurnService.burn(preImageAsString, amount.value);
+            Coin miningFee = transaction.getFee();
+            int txVsize = transaction.getVsize();
+
+            if (!DevEnv.isDevMode()) {
+                GUIUtil.showBsqFeeInfoPopup(amount, miningFee, txVsize, bsqFormatter, btcFormatter,
+                        Res.get("dao.proofOfBurn.header"), () -> doPublishFeeTx(transaction, preImageAsString));
+            } else {
+                doPublishFeeTx(transaction, preImageAsString);
+            }
+        } catch (InsufficientMoneyException | TxException e) {
+            e.printStackTrace();
+            new Popup().error(e.toString()).show();
+        }
     }
 
     @Override
@@ -327,7 +347,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
         String tableColumns = "Amount~Date~Hash~TxId~Pubkey";
         CSVEntryConverter<String> headerConverter = item -> tableColumns.split(separator);
         CSVEntryConverter<String> contentConverter = item -> item.split(separator);
-        for (ProofOfBurnListItem item: allItemsSortedList) {
+        for (ProofOfBurnListItem item : allItemsSortedList) {
             String line = bsqFormatter.formatCoin(item.getAmount())
                     + separator + item.getDateAsString()
                     + separator + item.getHashAsHex()
@@ -408,7 +428,7 @@ public class ProofOfBurnView extends ActivatableView<GridPane, Void> implements 
                     public void updateItem(final MyProofOfBurnListItem item, boolean empty) {
                         super.updateItem(item, empty);
                         if (item != null && !empty) {
-                            setText(item.getPreImage());
+                            setText("'" + item.getPreImage() + "'");
                         } else
                             setText("");
                     }

@@ -107,7 +107,7 @@ public class BondingViewUtils {
         byte[] hash = myReputation.getHash();
         log.info("Lockup bond for reputation: \n" +
                         "lockupAmount={}\n" +
-                        "lockupTime={}" +
+                        "lockupTime={}\n" +
                         "salt={}\n" +
                         "hash={}",
                 lockupAmount.value,
