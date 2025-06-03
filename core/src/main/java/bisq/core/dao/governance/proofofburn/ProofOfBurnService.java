@@ -36,6 +36,7 @@ import bisq.core.dao.state.model.blockchain.TxType;
 
 import bisq.common.handlers.ErrorMessageHandler;
 import bisq.common.handlers.ResultHandler;
+import bisq.common.util.Hex;
 import bisq.common.util.Utilities;
 
 import org.bitcoinj.core.Coin;
@@ -142,7 +143,15 @@ public class ProofOfBurnService implements DaoSetupService, DaoStateListener {
             Transaction txWithBtcFee = btcWalletService.completePreparedBurnBsqTx(preparedBurnFeeTx, opReturnData);
             // We sign the BSQ inputs of the final tx.
             Transaction transaction = bsqWalletService.signTxAndVerifyNoDustOutputs(txWithBtcFee);
-            log.info("Proof of burn tx: " + transaction);
+            log.info("Proof of burn transaction details:\n" +
+                            "preImage={}" +
+                            "hash={}" +
+                            "opReturnData={}" +
+                            "transaction={}",
+                    preImageAsString,
+                    Hex.encode(hash),
+                    Hex.encode(opReturnData),
+                    transaction);
             return transaction;
         } catch (WalletException | TransactionVerificationException e) {
             throw new TxException(e);

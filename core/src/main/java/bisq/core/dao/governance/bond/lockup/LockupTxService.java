@@ -73,6 +73,7 @@ public class LockupTxService {
                 lockTime >= BondConsensus.getMinLockTime(), "lockTime not in range");
         try {
             Transaction lockupTx = getLockupTx(lockupAmount, lockTime, lockupReason, hash);
+            log.info("lockupTx {}", lockupTx);
             walletsManager.publishAndCommitBsqTx(lockupTx, TxType.LOCKUP, new TxBroadcaster.Callback() {
                 @Override
                 public void onSuccess(Transaction transaction) {
@@ -86,12 +87,15 @@ public class LockupTxService {
             });
 
         } catch (TransactionVerificationException | InsufficientMoneyException | WalletException |
-                IOException exception) {
+                 IOException exception) {
             exceptionHandler.handleException(exception);
         }
     }
 
-    public Tuple2<Coin, Integer> getMiningFeeAndTxVsize(Coin lockupAmount, int lockTime, LockupReason lockupReason, byte[] hash)
+    public Tuple2<Coin, Integer> getMiningFeeAndTxVsize(Coin lockupAmount,
+                                                        int lockTime,
+                                                        LockupReason lockupReason,
+                                                        byte[] hash)
             throws InsufficientMoneyException, WalletException, TransactionVerificationException, IOException {
         Transaction tx = getLockupTx(lockupAmount, lockTime, lockupReason, hash);
         Coin miningFee = tx.getFee();
