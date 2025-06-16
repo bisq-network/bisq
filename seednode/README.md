@@ -12,9 +12,8 @@ Highly recommended to use SSD! Minimum specs:
 
 The following OS's are known to work well:
 
-* Ubuntu 18.04
-* Ubuntu 20.04
-* FreeBSD 12
+* Ubuntu 22.04
+* Ubuntu 24.04
 
 ### Installation
 
@@ -67,9 +66,9 @@ macOS:
 If you run a main seednode, you also are obliged to activate the monitoring feed by running
 
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/bisq-network/bisq/master/monitor/install_collectd_debian.sh)
+bash <(curl -s https://raw.githubusercontent.com/bisq-network/bisq-monitor/refs/heads/main/scripts/install_collectd_debian.sh)
 ```
-Follow the instruction given by the script and report your certificate to the seednode group!
+Follow the instruction given by the script and report your public key to the [Bisq monitoring maintainer](https://github.com/bisq-network/roles/issues/10)!
 
 ### Upgrading
 
