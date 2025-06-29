@@ -183,7 +183,7 @@ gencreateoffercommand() {
     PORT="$1"
     ACCT_ID="$2"
     CMD="$CLI_BASE --port=$PORT createoffer"
-    CMD+=" --payment-account=$ACCT_ID"
+    CMD+=" --payment-account-id=$ACCT_ID"
     CMD+=" --direction=$DIRECTION"
     CMD+=" --currency-code=$CURRENCY_CODE"
     CMD+=" --amount=$AMOUNT"
@@ -476,7 +476,7 @@ executetrade() {
     printdate "First offer found: $OFFER_ID"
 
     # Take Alice's offer.
-    CMD="$CLI_BASE --port=$BOB_PORT takeoffer --offer-id=$OFFER_ID --payment-account=$BOB_ACCT_ID --fee-currency=BSQ"
+    CMD="$CLI_BASE --port=$BOB_PORT takeoffer --offer-id=$OFFER_ID --payment-account-id=$BOB_ACCT_ID --fee-currency=BSQ"
     printdate "BOB CLI: $CMD"
     TRADE=$($CMD)
     commandalert $? "Could not take offer."
