@@ -38,6 +38,7 @@ public class OptLabel {
     public final static String OPT_MKT_PRICE_MARGIN = "market-price-margin";
     public final static String OPT_MIN_AMOUNT = "min-amount";
     public final static String OPT_OFFER_ID = "offer-id";
+    public final static String OPT_ONLY_FUNDED = "only-funded";
     public final static String OPT_PASSWORD = "password";
     public final static String OPT_PAYMENT_ACCOUNT_ID = "payment-account-id";
     public final static String OPT_PAYMENT_ACCOUNT_FORM = "payment-account-form";
