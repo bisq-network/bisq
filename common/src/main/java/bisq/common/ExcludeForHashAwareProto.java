@@ -33,6 +33,8 @@ import java.lang.reflect.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static bisq.common.util.Utilities.snakeToCamel;
+
 /**
  * Borrowed from Bisq2, but as we want to reduce risk of breaking things, specially for the DAO we pack
  * the support for ExcludeForHash annotations into a dedicated interface.
@@ -105,8 +107,12 @@ public interface ExcludeForHashAwareProto extends Proto {
         if (!excludedFields.isEmpty()) {
             getLogger().debug("Clear fields in builder annotated with @ExcludeForHash: {}", excludedFields);
         }
+
         for (Descriptors.FieldDescriptor fieldDesc : builder.getAllFields().keySet()) {
-            if (excludedFields.contains(fieldDesc.getName())) {
+            if (
+                    excludedFields.contains(fieldDesc.getName())
+                    || excludedFields.contains(snakeToCamel(fieldDesc.getName()))
+            ) {
                 builder.clearField(fieldDesc);
             }
         }

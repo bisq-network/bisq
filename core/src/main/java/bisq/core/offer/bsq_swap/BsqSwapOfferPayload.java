@@ -42,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.jetbrains.annotations.Nullable;
 
+
 @EqualsAndHashCode(callSuper = true)
 @Getter
 @Slf4j
@@ -127,14 +128,14 @@ public final class BsqSwapOfferPayload extends OfferPayloadBase
                 .setVersionNr(versionNr)
                 .setProtocolVersion(protocolVersion);
 
-        Optional.ofNullable(extraDataMap).ifPresent(builder::putAllExtraData);
+        Optional.ofNullable(extraDataMap).ifPresent(map -> builder.addAllExtraData(ProtoUtil.toStringMapEntryList(map)));
 
         return protobuf.StoragePayload.newBuilder().setBsqSwapOfferPayload(builder).build();
     }
 
     public static BsqSwapOfferPayload fromProto(protobuf.BsqSwapOfferPayload proto) {
-        Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                null : proto.getExtraDataMap();
+        Map<String, String> extraDataMapMap = CollectionUtils.isEmpty(proto.getExtraDataList()) ?
+                null : ProtoUtil.toStringMap(proto.getExtraDataList());
         return new BsqSwapOfferPayload(proto.getId(),
                 proto.getDate(),
                 NodeAddress.fromProto(proto.getOwnerNodeAddress()),

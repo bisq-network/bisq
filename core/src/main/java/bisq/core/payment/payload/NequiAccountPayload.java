@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.common.proto.ProtoUtil;
+
 import bisq.core.locale.Res;
 
 import com.google.protobuf.Message;
@@ -79,7 +81,7 @@ public final class NequiAccountPayload extends CountryBasedPaymentAccountPayload
                 countryBasedPaymentAccountPayload.getCountryCode(),
                 paytmAccountPayloadPB.getMobileNr(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(ProtoUtil.toStringMap(proto.getExcludeFromJsonDataList())));
     }
 
     @Override

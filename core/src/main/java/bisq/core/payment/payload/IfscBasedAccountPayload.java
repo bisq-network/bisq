@@ -1,5 +1,7 @@
 package bisq.core.payment.payload;
 
+import bisq.common.proto.ProtoUtil;
+
 
 import bisq.core.locale.BankUtil;
 import bisq.core.locale.CountryUtil;

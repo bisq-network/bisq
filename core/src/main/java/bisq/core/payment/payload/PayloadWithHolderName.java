@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.common.proto.ProtoUtil;
+
 public interface PayloadWithHolderName {
     String getHolderName();
 }

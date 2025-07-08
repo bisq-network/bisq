@@ -28,8 +28,11 @@ import com.google.common.base.Enums;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
@@ -108,5 +111,29 @@ public class ProtoUtil {
 
     public static Set<String> protocolStringListToSet(ProtocolStringList protocolStringList) {
         return CollectionUtils.isEmpty(protocolStringList) ? new HashSet<>() : new HashSet<>(protocolStringList);
+    }
+
+    public static List<protobuf.StringMapEntry> toStringMapEntryList(Map<String, String> map) {
+        if (map == null || map.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return map.entrySet().stream()
+                .map(e ->
+                        protobuf.StringMapEntry.newBuilder()
+                                .setKey(e.getKey())
+                                .setValue(e.getValue())
+                                .build()
+                ).collect(Collectors.toList());
+    }
+
+    public static LinkedHashMap<String, String> toStringMap(List<protobuf.StringMapEntry> entriesList) {
+        return entriesList.stream()
+                .collect(Collectors.toMap(
+                        protobuf.StringMapEntry::getKey,
+                        protobuf.StringMapEntry::getValue,
+                        (oldValue, newValue) -> newValue, // Replace old value with new value on duplicate key
+                        LinkedHashMap::new
+                ));
     }
 }

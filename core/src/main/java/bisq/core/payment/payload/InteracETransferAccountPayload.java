@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.common.proto.ProtoUtil;
+
 import bisq.core.locale.Res;
 
 import com.google.protobuf.Message;
@@ -91,7 +93,7 @@ public final class InteracETransferAccountPayload extends PaymentAccountPayload 
                 proto.getInteracETransferAccountPayload().getQuestion(),
                 proto.getInteracETransferAccountPayload().getAnswer(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(ProtoUtil.toStringMap(proto.getExcludeFromJsonDataList())));
     }
 
 
