@@ -27,7 +27,7 @@ public class AddressCliOutputDiffTest extends AbstractCliTest {
     }
 
     private void getFundingAddresses() {
-        var fundingAddresses = aliceClient.getFundingAddresses();
+        var fundingAddresses = aliceClient.getFundingAddresses(false);
         if (fundingAddresses.size() > 0) {
             // TableFormat class had been deprecated, then deleted on 17-Feb-2022, but
             // these diff tests can be useful for testing changes to the current tbl formatting api.
@@ -42,7 +42,7 @@ public class AddressCliOutputDiffTest extends AbstractCliTest {
     }
 
     private void getAddressBalance() {
-        List<AddressBalanceInfo> addresses = aliceClient.getFundingAddresses();
+        List<AddressBalanceInfo> addresses = aliceClient.getFundingAddresses(false);
         int numAddresses = addresses.size();
         // Check output for last 2 addresses.
         for (int i = numAddresses - 2; i < addresses.size(); i++) {

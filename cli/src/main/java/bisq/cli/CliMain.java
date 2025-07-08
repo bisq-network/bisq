@@ -67,6 +67,7 @@ import bisq.cli.opts.GetAddressBalanceOptionParser;
 import bisq.cli.opts.GetAvgBsqPriceOptionParser;
 import bisq.cli.opts.GetBTCMarketPriceOptionParser;
 import bisq.cli.opts.GetBalanceOptionParser;
+import bisq.cli.opts.GetFundingAddressesOptionParser;
 import bisq.cli.opts.GetOffersOptionParser;
 import bisq.cli.opts.GetPaymentAcctFormOptionParser;
 import bisq.cli.opts.GetTradeOptionParser;
@@ -249,11 +250,14 @@ public class CliMain {
                     return;
                 }
                 case getfundingaddresses: {
-                    if (new SimpleMethodOptionParser(args).parse().isForHelp()) {
+                    var opts = new GetFundingAddressesOptionParser(args).parse();
+                    if (opts.isForHelp()) {
                         out.println(client.getMethodHelp(method));
                         return;
                     }
-                    var fundingAddresses = client.getFundingAddresses();
+                    var onlyFunded = opts.getIsOnlyFunded();
+
+                    var fundingAddresses = client.getFundingAddresses(onlyFunded);
                     new TableBuilder(ADDRESS_BALANCE_TBL, fundingAddresses).build().print(out);
                     return;
                 }
@@ -897,6 +901,7 @@ public class CliMain {
             stream.format(rowFormat, getbtcprice.name(), "--currency-code=<currency-code>", "Get current market btc price");
             stream.println();
             stream.format(rowFormat, getfundingaddresses.name(), "", "Get BTC funding addresses");
+            stream.format(rowFormat, "", "[--only-funded=<true|false>]", "");
             stream.println();
             stream.format(rowFormat, getunusedbsqaddress.name(), "", "Get unused BSQ address");
             stream.println();

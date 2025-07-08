@@ -115,8 +115,8 @@ public final class GrpcClient {
         return walletsServiceRequest.getBtcPrice(currencyCode);
     }
 
-    public List<AddressBalanceInfo> getFundingAddresses() {
-        return walletsServiceRequest.getFundingAddresses();
+    public List<AddressBalanceInfo> getFundingAddresses(boolean onlyFunded) {
+        return walletsServiceRequest.getFundingAddresses(onlyFunded);
     }
 
     public String getUnusedBsqAddress() {
