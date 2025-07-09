@@ -209,7 +209,7 @@ public class Config {
     public final int msgThrottlePer10Sec;
     public final int sendMsgThrottleTrigger;
     public final int sendMsgThrottleSleep;
-    public final String btcNodes;
+    public final List<String> btcNodes;
     public final boolean useTorForBtc;
     public final boolean useTorForBtcOptionSetExplicitly;
     public final String socks5DiscoverMode;
@@ -853,7 +853,7 @@ public class Config {
             this.msgThrottlePer10Sec = options.valueOf(msgThrottlePer10SecOpt);
             this.sendMsgThrottleTrigger = options.valueOf(sendMsgThrottleTriggerOpt);
             this.sendMsgThrottleSleep = options.valueOf(sendMsgThrottleSleepOpt);
-            this.btcNodes = options.valueOf(btcNodesOpt);
+            this.btcNodes = options.valuesOf(btcNodesOpt);
             this.useTorForBtc = options.valueOf(useTorForBtcOpt);
             this.useTorForBtcOptionSetExplicitly = options.has(useTorForBtcOpt);
             this.socks5DiscoverMode = options.valueOf(socks5DiscoverModeOpt);
