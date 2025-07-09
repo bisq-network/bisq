@@ -75,7 +75,9 @@ public class BitcoinModule extends AppModule {
 
         bind(File.class).annotatedWith(named(WALLET_DIR)).toInstance(config.walletDir);
 
-        bindConstant().annotatedWith(named(Config.BTC_NODES)).to(config.btcNodes);
+        bind(new com.google.inject.TypeLiteral<java.util.List<String>>() {})
+            .annotatedWith(named(Config.BTC_NODES))
+            .toInstance(config.btcNodes);
         bindConstant().annotatedWith(named(Config.USER_AGENT)).to(config.userAgent);
         bindConstant().annotatedWith(named(Config.NUM_CONNECTIONS_FOR_BTC)).to(config.numConnectionsForBtc);
         bindConstant().annotatedWith(named(Config.USE_ALL_PROVIDED_NODES)).to(config.useAllProvidedNodes);
