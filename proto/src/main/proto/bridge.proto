@@ -1,0 +1,126 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+syntax = "proto3";
+
+package bisq.bridge.protobuf;
+
+option java_package = "bisq.bridge.protobuf";
+option java_multiple_files = true;
+
+service BsqBlockGrpcService {
+    rpc Subscribe (BsqBlockSubscription) returns (stream BsqBlockDto);
+
+    rpc RequestBsqBlocks (BsqBlocksRequest) returns (BsqBlocksResponse);
+}
+
+message BsqBlockSubscription {
+}
+
+message BsqBlocksRequest {
+    sint32 startBlockHeight = 1;
+}
+
+message BsqBlocksResponse {
+    repeated BsqBlockDto bsqBlocks = 1;
+}
+
+message BsqBlockDto {
+    sint32 height = 1;
+    sint64 time = 2;
+    repeated TxDto txDto = 3;
+}
+
+message TxDto {
+    string txId = 1;
+    optional ProofOfBurnDto proofOfBurnDto = 2;
+    optional BondedReputationDto bondedReputationDto = 3;
+}
+
+message ProofOfBurnDto {
+    sint64 amount = 1;
+    bytes proofOfBurnHash = 2;
+}
+
+message BondedReputationDto {
+    sint64 amount = 1;
+    bytes bondedReputationHash = 2;
+    sint32 lockTime = 3;
+}
+
+service BurningmanGrpcService {
+    rpc Subscribe (BurningmanBlockSubscription) returns (stream BurningmanBlockDto);
+
+    rpc RequestBurningmanBlocks (BurningmanBlocksRequest) returns (BurningmanBlocksResponse);
+}
+
+message BurningmanBlockSubscription {
+}
+
+message BurningmanBlocksRequest {
+    sint32 startBlockHeight = 1;
+}
+
+message BurningmanBlocksResponse {
+    repeated BurningmanBlockDto burningmanBlocks = 1;
+}
+
+message BurningmanBlockDto {
+    sint32 height = 1;
+    repeated BurningmanDto burningmanItems = 2;
+}
+
+message BurningmanDto {
+    string receiverAddress = 1;
+    double cappedBurnAmountShare = 2;
+}
+
+service AccountAgeWitnessGrpcService {
+    rpc RequestAccountAgeWitnessDate (AccountAgeWitnessDateRequest) returns (AccountAgeWitnessDateResponse);
+}
+
+message AccountAgeWitnessDateRequest {
+    string hashAsHex = 1;
+}
+message AccountAgeWitnessDateResponse {
+    sint64 date = 1;
+}
+
+service SignedWitnessGrpcService {
+    rpc RequestSignedWitnessDate (SignedWitnessDateRequest) returns (SignedWitnessDateResponse);
+}
+
+message SignedWitnessDateRequest {
+    string hashAsHex = 1;
+}
+message SignedWitnessDateResponse {
+    sint64 date = 1;
+}
+
+
+service BondedRoleGrpcService {
+    rpc RequestBondedRoleVerification (BondedRoleVerificationRequest) returns (BondedRoleVerificationResponse);
+}
+message BondedRoleVerificationRequest {
+    string bondUserName = 1;
+    string roleType = 2;
+    string profileId = 3;
+    string signatureBase64 = 4;
+}
+message BondedRoleVerificationResponse {
+    optional string errorMessage = 1;
+}
