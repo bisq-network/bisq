@@ -118,7 +118,11 @@ public class DelayedPayoutTxReceiverService implements DaoStateListener {
     // The block height is the last mod(10) height from the range of the last 10-20 blocks (139 -> 120; 140 -> 130, 141 -> 130).
     // We do not have the latest dao state by that but can ensure maker and taker have the same block.
     public int getBurningManSelectionHeight() {
-        return getSnapshotHeight(daoStateService.getGenesisBlockHeight(), currentChainHeight,
+        return getBurningManSelectionHeight(currentChainHeight);
+    }
+
+    public int getBurningManSelectionHeight(int chainHeight) {
+        return getSnapshotHeight(daoStateService.getGenesisBlockHeight(), chainHeight,
                 SNAPSHOT_SELECTION_GRID_SIZE);
     }
 
