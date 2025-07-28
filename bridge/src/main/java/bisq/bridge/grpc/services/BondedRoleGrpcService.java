@@ -22,6 +22,7 @@ import bisq.core.dao.governance.bond.BondState;
 import bisq.core.dao.governance.bond.role.BondedRolesRepository;
 import bisq.core.dao.state.DaoStateService;
 
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
@@ -94,6 +95,10 @@ public class BondedRoleGrpcService extends BondedRoleGrpcServiceGrpc.BondedRoleG
             responseObserver.onCompleted();
         } catch (Exception e) {
             log.error("requestBondedRoleVerification failed", e);
+            responseObserver.onError(Status.INTERNAL
+                    .withDescription("Error at bonded role verification")
+                    .withCause(e)
+                    .asRuntimeException());
         }
     }
 }

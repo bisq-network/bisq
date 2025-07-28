@@ -19,6 +19,7 @@ package bisq.bridge.grpc.services;
 
 import bisq.core.account.witness.AccountAgeWitnessService;
 
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
@@ -52,7 +53,9 @@ public class SignedWitnessGrpcService extends SignedWitnessGrpcServiceGrpc.Signe
             Optional<Long> date = accountAgeWitnessService.getWitnessByHashAsHex(hashAsHex)
                     .map(accountAgeWitnessService::getWitnessSignDate);
             if (date.isEmpty()) {
-                responseObserver.onError(new RuntimeException("No witness found for hashAsHex: " + hashAsHex));
+                responseObserver.onError(Status.NOT_FOUND
+                        .withDescription("No witness found for hashAsHex: " + hashAsHex)
+                        .asRuntimeException());
                 return;
             }
             log.info("SignedWitness sign date for hash {}: {} ({})", hashAsHex, date, new Date(date.get()));
@@ -63,6 +66,10 @@ public class SignedWitnessGrpcService extends SignedWitnessGrpcServiceGrpc.Signe
             responseObserver.onCompleted();
         } catch (Exception e) {
             log.error("requestSignedWitnessDate failed", e);
+            responseObserver.onError(Status.INTERNAL
+                    .withDescription("Internal server error")
+                    .withCause(e)
+                    .asRuntimeException());
         }
     }
 }

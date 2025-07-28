@@ -696,7 +696,7 @@ public class Config {
                 parser.accepts(BRIDGE_PORT, "GRPC Bisq 2 bridge port")
                         .withRequiredArg()
                         .ofType(Integer.class)
-                        .defaultsTo(50051);
+                        .defaultsTo(50091);
 
         ArgumentAcceptingOptionSpec<Boolean> preventPeriodicShutdownAtSeedNodeOpt =
                 parser.accepts(PREVENT_PERIODIC_SHUTDOWN_AT_SEED_NODE,

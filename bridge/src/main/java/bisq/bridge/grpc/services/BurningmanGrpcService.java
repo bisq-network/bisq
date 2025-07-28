@@ -26,6 +26,7 @@ import bisq.core.dao.state.model.blockchain.Block;
 import bisq.common.util.ExecutorFactory;
 
 import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 import javax.inject.Inject;
@@ -47,13 +48,15 @@ import bisq.bridge.protobuf.BurningmanGrpcServiceGrpc;
 
 @Slf4j
 public class BurningmanGrpcService extends BurningmanGrpcServiceGrpc.BurningmanGrpcServiceImplBase implements DaoStateListener {
+    private static final int NUM_PAST_BLOCKS = 10000; // Approximately 70 days of blocks
+
     private final DaoStateService daoStateService;
     private final BurningManService burningManService;
     private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
     private final ExecutorService notifyObserversExecutor, requestBlocksExecutor;
     private final Set<ManagedStreamObserver<bisq.bridge.protobuf.BurningmanBlockDto>> streamObservers = new CopyOnWriteArraySet<>();
     private final Object snapshotLock = new Object();
-    private int snapshotHeight;
+    private int snapshotHeight = -1;
 
     @Inject
     public BurningmanGrpcService(DaoStateService daoStateService,
@@ -99,8 +102,14 @@ public class BurningmanGrpcService extends BurningmanGrpcServiceGrpc.BurningmanG
                         try {
                             observer.onNext(responseProto);
                         } catch (Exception e) {
-                            log.error("Failed to notify observer", e);
-                            notifyOnError(observer, e);
+                            if (e instanceof StatusRuntimeException &&
+                                    ((StatusRuntimeException) e).getStatus().getCode() == Status.Code.CANCELLED) {
+                                log.debug("Observer cancelled; removing from subscribers.");
+                                streamObservers.remove(observer);
+                            } else {
+                                log.error("Failed to notify observer", e);
+                                notifyOnError(observer, e);
+                            }
                         }
                     });
                 } catch (Exception e) {
@@ -122,8 +131,13 @@ public class BurningmanGrpcService extends BurningmanGrpcServiceGrpc.BurningmanG
     @Override
     public void requestBurningmanBlocks(bisq.bridge.protobuf.BurningmanBlocksRequest burningmanBlocksRequest,
                                         StreamObserver<bisq.bridge.protobuf.BurningmanBlocksResponse> streamObserver) {
-        CompletableFuture.runAsync(() -> {
+        io.grpc.Context context = io.grpc.Context.current();
+        CompletableFuture.runAsync(context.wrap(() -> {
             try {
+                if (context.isCancelled()) {
+                    log.warn("requestBurningmanBlocks cancelled by client before processing.");
+                    return;
+                }
                 if (!daoStateService.isParseBlockChainComplete()) {
                     log.warn("Request rejected because blockchain parsing is not completed yet. Chain height={}", daoStateService.getChainHeight());
                     streamObserver.onError(Status.FAILED_PRECONDITION
@@ -132,11 +146,10 @@ public class BurningmanGrpcService extends BurningmanGrpcServiceGrpc.BurningmanG
                     return;
                 }
 
-                // Last 100 days will result in 1440 blocks takes about 10 seconds (toBurningmanBlockDto is slow,
-                // we could add caching...)
                 long ts = System.currentTimeMillis();
                 int chainHeight = daoStateService.getChainHeight();
-                int startBlockHeight = chainHeight - 10000;
+                int genesisHeight = daoStateService.getGenesisBlockHeight();
+                int startBlockHeight = Math.max(genesisHeight, chainHeight - NUM_PAST_BLOCKS);
                 // We only provide blocks with heights which can be a snapshot height (mod 10)
                 List<BurningmanBlockDto> blocks = daoStateService.getBlocksFromBlockHeight(startBlockHeight).stream()
                         .filter(block -> BurningmanRetention.includeBlock(chainHeight, block.getHeight()))
@@ -145,13 +158,19 @@ public class BurningmanGrpcService extends BurningmanGrpcServiceGrpc.BurningmanG
                 // Takes about 13 sec for 28 items, size about 43 KB
                 log.info("Creating {} BurningmanBlockDto blocks took {} ms", blocks.size(), System.currentTimeMillis() - ts);
                 var responseProto = new bisq.bridge.grpc.messages.BurningmanBlocksResponse(blocks).toProtoMessage();
+
+                if (context.isCancelled()) {
+                    log.warn("requestBurningmanBlocks cancelled by client before sending response");
+                    return;
+                }
+
                 streamObserver.onNext(responseProto);
                 streamObserver.onCompleted();
             } catch (Exception e) {
                 log.error("Error at processing burningman blocks", e);
                 notifyOnError(streamObserver, e);
             }
-        }, requestBlocksExecutor);
+        }), requestBlocksExecutor);
     }
 
     public void shutDown() {
@@ -192,7 +211,7 @@ public class BurningmanGrpcService extends BurningmanGrpcServiceGrpc.BurningmanG
     private void notifyOnError(StreamObserver<?> observer,
                                Exception exception) {
         observer.onError(Status.INTERNAL
-                .withDescription("Error processing bsqBlock data")
+                .withDescription("Error processing burningman data")
                 .withCause(exception)
                 .asRuntimeException());
     }

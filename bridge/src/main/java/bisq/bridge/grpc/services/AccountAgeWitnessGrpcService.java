@@ -52,16 +52,22 @@ public class AccountAgeWitnessGrpcService extends AccountAgeWitnessGrpcServiceGr
             Optional<Long> date = accountAgeWitnessService.getWitnessByHashAsHex(hashAsHex)
                     .map(AccountAgeWitness::getDate);
             if (date.isEmpty()) {
-                responseObserver.onError(new RuntimeException("No account age found for hashAsHex: " + hashAsHex));
+                responseObserver.onError(io.grpc.Status.NOT_FOUND
+                        .withDescription("No account age witness found for the provided hash " + hashAsHex)
+                        .asRuntimeException());
                 return;
             }
-            log.info("Account age for hash {}: {} ({})", hashAsHex, date, new Date(date.get()));
 
+            log.info("Account age for hash {}: {} ({})", hashAsHex, date, new Date(date.get()));
             var response = AccountAgeWitnessDateResponse.newBuilder().setDate(date.get()).build();
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (Exception e) {
             log.error("requestAccountAgeWitnessData failed", e);
+            responseObserver.onError(io.grpc.Status.INTERNAL
+                    .withDescription("Internal server error")
+                    .withCause(e)
+                    .asRuntimeException());
         }
     }
 }

@@ -45,7 +45,8 @@ public class BridgeMain extends ExecutableForAppWithP2p {
             // Prevent from terminating
             Thread.currentThread().join();
         } catch (InterruptedException e) {
-            log.error("Failed to run BridgeClient", e);
+            log.error("Thread interrupted while running BridgeMain", e);
+            Thread.currentThread().interrupt();
             throw new RuntimeException(e);
         }
     }
@@ -69,8 +70,9 @@ public class BridgeMain extends ExecutableForAppWithP2p {
 
     @Override
     public void gracefulShutDown(ResultHandler resultHandler) {
-        bridge.shutDown();
-
+        if (bridge != null) {
+            bridge.shutDown();
+        }
         super.gracefulShutDown(resultHandler);
     }
 }

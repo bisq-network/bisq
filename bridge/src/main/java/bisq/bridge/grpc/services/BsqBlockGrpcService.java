@@ -58,6 +58,8 @@ import bisq.bridge.protobuf.BsqBlockGrpcServiceGrpc;
 
 @Slf4j
 public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcServiceImplBase implements DaoStateListener {
+    private static final int MIN_BONDED_REPUTATION_LOCK_TIME = 50_000;
+
     private final DaoStateService daoStateService;
     private final BondedReputationRepository bondedReputationRepository;
     private final ExecutorService notifyObserversExecutor, requestBlocksExecutor;
@@ -221,7 +223,7 @@ public class BsqBlockGrpcService extends BsqBlockGrpcServiceGrpc.BsqBlockGrpcSer
         try {
             return bondedReputationRepository.getBondedReputationStream()
                     .filter(BondedReputation::isActive)
-                    .filter(bondedReputation -> bondedReputation.getLockTime() >= 50_000)
+                    .filter(bondedReputation -> bondedReputation.getLockTime() >= MIN_BONDED_REPUTATION_LOCK_TIME)
                     .collect(Collectors.toMap(Bond::getLockupTxId, bondedReputation -> bondedReputation));
         } catch (Exception e) {
             log.error("getBondedReputationByTxId failed", e);
