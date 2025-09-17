@@ -35,7 +35,6 @@ import bisq.proto.grpc.GetBsqSwapOffersReply;
 import bisq.proto.grpc.GetBsqSwapOffersRequest;
 import bisq.proto.grpc.GetMyBsqSwapOfferReply;
 import bisq.proto.grpc.GetMyBsqSwapOffersReply;
-import bisq.proto.grpc.GetMyOfferReply;
 import bisq.proto.grpc.GetMyOfferRequest;
 import bisq.proto.grpc.GetMyOffersReply;
 import bisq.proto.grpc.GetMyOffersRequest;
@@ -58,7 +57,6 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.core.api.model.OfferInfo.toMyOfferInfo;
 import static bisq.core.api.model.OfferInfo.toMyPendingOfferInfo;
 import static bisq.core.api.model.OfferInfo.toOfferInfo;
 import static bisq.daemon.grpc.interceptor.GrpcServiceRateMeteringConfig.getCustomRateMeteringInterceptor;
@@ -146,23 +144,6 @@ class GrpcOffersService extends OffersImplBase {
             Offer offer = coreApi.getMyBsqSwapOffer(req.getId());
             var reply = GetMyBsqSwapOfferReply.newBuilder()
                     .setBsqSwapOffer(toOfferInfo(offer /* TODO support triggerPrice */).toProtoMessage())
-                    .build();
-            responseObserver.onNext(reply);
-            responseObserver.onCompleted();
-        } catch (Throwable cause) {
-            exceptionHandler.handleException(log, cause, responseObserver);
-        }
-    }
-
-    @Deprecated // Since 27-Dec-2021.
-    // Endpoint to be removed from future version.  Use getOffer service method instead.
-    @Override
-    public void getMyOffer(GetMyOfferRequest req,
-                           StreamObserver<GetMyOfferReply> responseObserver) {
-        try {
-            OpenOffer openOffer = coreApi.getMyOffer(req.getId());
-            var reply = GetMyOfferReply.newBuilder()
-                    .setOffer(toMyOfferInfo(openOffer).toProtoMessage())
                     .build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();
@@ -349,7 +330,6 @@ class GrpcOffersService extends OffersImplBase {
                         new HashMap<>() {{
                             put(getGetOfferCategoryMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getGetOfferMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
-                            put(getGetMyOfferMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getGetOffersMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getGetMyOffersMethod().getFullMethodName(), new GrpcCallRateMeter(1, SECONDS));
                             put(getCreateOfferMethod().getFullMethodName(), new GrpcCallRateMeter(1, MINUTES));

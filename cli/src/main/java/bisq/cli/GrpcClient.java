@@ -291,12 +291,6 @@ public final class GrpcClient {
         return offersServiceRequest.getOffer(offerId);
     }
 
-    @Deprecated // Since 5-Dec-2021.
-    // Endpoint to be removed from future version.  Use getOffer service method instead.
-    public OfferInfo getMyOffer(String offerId) {
-        return offersServiceRequest.getMyOffer(offerId);
-    }
-
     public List<OfferInfo> getBsqSwapOffers(String direction) {
         return offersServiceRequest.getBsqSwapOffers(direction);
     }

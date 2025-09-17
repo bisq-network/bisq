@@ -73,9 +73,6 @@ service Offers {
     // Get user's BSQ swap offer with offer-id.
     rpc GetMyBsqSwapOffer (GetMyOfferRequest) returns (GetMyBsqSwapOfferReply) {
     }
-    // Get my open v1 protocol offer with offer-id.  Deprecated since 27-Dec-2021 (v1.8.0).  Use GetOffer.
-    rpc GetMyOffer (GetMyOfferRequest) returns (GetMyOfferReply) {
-    }
     // Get all available BSQ swap offers with a BUY (BTC) or SELL (BTC) direction.
     rpc GetBsqSwapOffers (GetBsqSwapOffersRequest) returns (GetBsqSwapOffersReply) {
     }
@@ -138,11 +135,6 @@ message GetMyBsqSwapOfferReply {
 // Deprecated with rpc method GetMyOffer since 27-Dec-2021 (v1.8.0).
 message GetMyOfferRequest {
     string id = 1;  // The offer's unique identifier.
-}
-
-// Deprecated with rpc method GetMyOffer since 27-Dec-2021 (v1.8.0).
-message GetMyOfferReply {
-    OfferInfo offer = 1; // The returned v1 protocol offer.
 }
 
 message GetOffersRequest {
