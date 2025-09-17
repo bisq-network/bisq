@@ -22,7 +22,6 @@ import bisq.proto.grpc.CreateBsqSwapOfferRequest;
 import bisq.proto.grpc.CreateOfferRequest;
 import bisq.proto.grpc.EditOfferRequest;
 import bisq.proto.grpc.GetBsqSwapOffersRequest;
-import bisq.proto.grpc.GetMyOfferRequest;
 import bisq.proto.grpc.GetMyOffersRequest;
 import bisq.proto.grpc.GetOfferCategoryRequest;
 import bisq.proto.grpc.GetOfferRequest;
@@ -125,7 +124,7 @@ public class OffersServiceRequest {
     }
 
     public void editOfferActivationState(String offerId, int enable) {
-        var offer = getMyOffer(offerId);
+        var offer = getOffer(offerId);
         var offerPrice = offer.getUseMarketBasedPrice()
                 ? "0.00"
                 : offer.getPrice();
@@ -139,7 +138,7 @@ public class OffersServiceRequest {
     }
 
     public void editOfferFixedPrice(String offerId, String rawPriceString) {
-        var offer = getMyOffer(offerId);
+        var offer = getOffer(offerId);
         editOffer(offerId,
                 rawPriceString,
                 false,
@@ -150,7 +149,7 @@ public class OffersServiceRequest {
     }
 
     public void editOfferPriceMargin(String offerId, double marketPriceMarginPct) {
-        var offer = getMyOffer(offerId);
+        var offer = getOffer(offerId);
         editOffer(offerId,
                 "0.00",
                 true,
@@ -161,7 +160,7 @@ public class OffersServiceRequest {
     }
 
     public void editOfferTriggerPrice(String offerId, String triggerPrice) {
-        var offer = getMyOffer(offerId);
+        var offer = getOffer(offerId);
         editOffer(offerId,
                 "0.00",
                 offer.getUseMarketBasedPrice(),
@@ -214,13 +213,6 @@ public class OffersServiceRequest {
                 .setId(offerId)
                 .build();
         return grpcStubs.offersService.getOffer(request).getOffer();
-    }
-
-    public OfferInfo getMyOffer(String offerId) {
-        var request = GetMyOfferRequest.newBuilder()
-                .setId(offerId)
-                .build();
-        return grpcStubs.offersService.getMyOffer(request).getOffer();
     }
 
     public List<OfferInfo> getBsqSwapOffers(String direction) {
