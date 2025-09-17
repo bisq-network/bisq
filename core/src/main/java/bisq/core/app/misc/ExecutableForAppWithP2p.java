@@ -265,6 +265,7 @@ public abstract class ExecutableForAppWithP2p extends BisqExecutable {
     protected void keepRunning() {
         while (true) {
             try {
+                //noinspection BusyWait
                 Thread.sleep(Long.MAX_VALUE);
             } catch (InterruptedException ignore) {
             }

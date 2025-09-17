@@ -21,6 +21,7 @@ toolchainManagement {
 
 include 'proto'
 include 'assets'
+include 'bridge'
 include 'btcnodemonitor'
 include 'common'
 include 'p2p'
