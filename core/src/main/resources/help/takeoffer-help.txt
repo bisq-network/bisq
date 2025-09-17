@@ -8,7 +8,7 @@ SYNOPSIS
 --------
 takeoffer  (Bisq v1 Protocol)
 		--offer-id=<offer-id>
-		--payment-account=<payment-acct-id>
+		--payment-account-id=<payment-acct-id>
 		[--fee-currency=<btc|bsq>]
 		[--amount=<offer.min-btc-amount >= amount <= offer.btc-amount>]
 
@@ -25,7 +25,7 @@ Take an existing offer. There are currently two types offers and trade protocols
         The takeoffer command only requires an offer-id parameter, and sufficient BSQ and/or BTC
         to cover the trade amount and the taker fee.
         The amount parameter is optional.
-        The payment-account parameter is invalid;  BSQ Swap transactions use the default BsqSwapAccount.
+        The payment-account-id parameter is invalid;  BSQ Swap transactions use the default BsqSwapAccount.
         The fee-currency parameter is invalid;  BSQ is always used to pay BSQ swap trade fees.
         The swap will be executed immediately after being successfully taken.
 
@@ -39,7 +39,7 @@ OPTIONS
 --offer-id
 		The ID of the buy or sell offer to take.
 
---payment-account
+--payment-account-id
 		The ID of the fiat payment account used to send or receive funds during the Bisq v1 protocol trade.
 		The payment account's payment method must match that of the offer.
 		This parameter is not valid for taking BSQ Swaps, due to swaps' different transaction structure,
@@ -66,6 +66,6 @@ To take an offer with ID 83e8b2e2-51b6-4f39-a748-3ebd29c22aea
 	paying the Bisq trading fee in BSQ,
 	and setting the trade amount = the offer's min-amount (0.025 BTC):
 $ ./bisq-cli --password=xyz --port=9998 takeoffer --offer-id=83e8b2e2-51b6-4f39-a748-3ebd29c22aea \
-    --payment-account=fe20cdbd-22be-4b8a-a4b6-d2608ff09d6e \
+    --payment-account-id=fe20cdbd-22be-4b8a-a4b6-d2608ff09d6e \
     --fee-currency=bsq \
     --amount=0.025
