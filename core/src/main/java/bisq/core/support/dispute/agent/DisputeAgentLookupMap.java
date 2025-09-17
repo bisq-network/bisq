@@ -33,15 +33,17 @@ public class DisputeAgentLookupMap {
             return fullAddress; // on regtest, agent displays as localhost
         }
         switch (fullAddress) {
-            case "saavbszijyrqrj4opgiirusnrpv6ntabttuzvjaqmx7j4r7mlz5eibqd.onion:9999":
+            case "saavbszijyrqrj4opgiirusnrpv6ntabttuzvjaqmx7j4r7mlz5eibqd.onion:9999": //retired cycle 66
             case "7hkpotiyaukuzcfy6faihjaols5r2mkysz7bm3wrhhbpbphzz3zbwyqd.onion:9999": //old
                 return "leo816";
-            case "3z5jnirlccgxzoxc6zwkcgwj66bugvqplzf6z2iyd5oxifiaorhnanqd.onion:9999":
+            case "3z5jnirlccgxzoxc6zwkcgwj66bugvqplzf6z2iyd5oxifiaorhnanqd.onion:9999": //retired cycle 68
                 return "refundagent2";
+            case "yjlcxr6rho6zkpecwdp3vlpduzcl7i6cbgaquvxqmvsbw3dnheus6qad.onion:9999": 
+                return "refundagent3";
             case "aguejpkhhl67nbtifvekfjvlcyagudi6d2apalcwxw7fl5n7qm2ll5id.onion:9999":
                 return "luis3672";
-            case "d7m3j3u4jo2yuymgvxisklpitd3n5xbsnnpyz2mjh6bl6gmj5rjdxead.onion:9999":
-            case "6c4cim7h7t3bm4bnchbf727qrhdfrfr6lhod25wjtizm2sifpkktvwad.onion:9999": //old
+            case "e2whe6q34o5mnta7b2rai4uspmj5wxhnhvipjjohicx6sgekw47apjqd.onion:9999": //started cycle 72
+            case "d7m3j3u4jo2yuymgvxisklpitd3n5xbsnnpyz2mjh6bl6gmj5rjdxead.onion:9999": //used in cycles 50-71
                 return "pazza83";
             case "5wmuzi76l4ogbdh6ahvdafzlebk4c3sp3q5njhz5h5qa5fwbalexa7id.onion:9999":
                 return "suddenwhipvapor";
@@ -58,6 +60,8 @@ public class DisputeAgentLookupMap {
         String agentName = getMatrixUserName(onion).replaceAll(Res.get("shared.na"), "bisq");
         if ("refundagent2".equals(agentName)) {
             return "https://matrix.to/#/@" + agentName + ":bitcoinist.org";
+        } else if ("refundagent3".equals(agentName)) {
+            return "https://matrix.to/#/@" + agentName + ":imagisphe.re";
         } else {
             return "https://matrix.to/#/@" + agentName + ":matrix.org";
         }
