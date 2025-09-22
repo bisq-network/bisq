@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.common.proto.ProtoUtil;
+
 import bisq.core.locale.Res;
 
 import com.google.protobuf.Message;
@@ -69,7 +71,7 @@ public final class CelPayAccountPayload extends PaymentAccountPayload {
                 proto.getId(),
                 proto.getCelPayAccountPayload().getEmail(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(ProtoUtil.toStringMap(proto.getExcludeFromJsonDataList())));
     }
 
     @Override

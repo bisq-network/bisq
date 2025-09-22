@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.common.proto.ProtoUtil;
+
 import bisq.core.locale.Res;
 
 import com.google.protobuf.Message;
@@ -76,7 +78,7 @@ public final class TransferwiseAccountPayload extends PaymentAccountPayload {
                 proto.getId(),
                 proto.getTransferwiseAccountPayload().getEmail(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(ProtoUtil.toStringMap(proto.getExcludeFromJsonDataList())));
     }
 
 

@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.common.proto.ProtoUtil;
+
 import bisq.core.locale.Country;
 import bisq.core.locale.CountryUtil;
 import bisq.core.locale.Res;
@@ -123,7 +125,7 @@ public final class SepaAccountPayload extends CountryBasedPaymentAccountPayload 
                 sepaAccountPayloadPB.getEmail(),
                 new ArrayList<>(sepaAccountPayloadPB.getAcceptedCountryCodesList()),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(ProtoUtil.toStringMap(proto.getExcludeFromJsonDataList())));
     }
 
 

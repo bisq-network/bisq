@@ -17,6 +17,8 @@
 
 package bisq.core.payment.payload;
 
+import bisq.common.proto.ProtoUtil;
+
 import bisq.core.locale.Res;
 
 import bisq.common.util.JsonExclude;
@@ -85,7 +87,7 @@ public final class UpholdAccountPayload extends PaymentAccountPayload {
                 proto.getUpholdAccountPayload().getAccountId(),
                 proto.getUpholdAccountPayload().getAccountOwner(),
                 proto.getMaxTradePeriod(),
-                new HashMap<>(proto.getExcludeFromJsonDataMap()));
+                new HashMap<>(ProtoUtil.toStringMap(proto.getExcludeFromJsonDataList())));
     }
 
 

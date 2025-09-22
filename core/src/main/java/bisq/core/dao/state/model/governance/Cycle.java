@@ -59,7 +59,7 @@ public class Cycle implements PersistablePayload, ImmutableDaoStateModel {
     @Override
     public protobuf.Cycle toProtoMessage() {
         return protobuf.Cycle.newBuilder()
-                .setHeightOfFirstLock(heightOfFirstBlock)
+                .setHeightOfFirstBlock(heightOfFirstBlock)
                 .addAllDaoPhase(daoPhaseList.stream()
                         .map(DaoPhase::toProtoMessage)
                         .collect(Collectors.toList()))
@@ -70,7 +70,7 @@ public class Cycle implements PersistablePayload, ImmutableDaoStateModel {
         final ImmutableList<DaoPhase> daoPhaseList = ImmutableList.copyOf(proto.getDaoPhaseList().stream()
                 .map(DaoPhase::fromProto)
                 .collect(Collectors.toList()));
-        return new Cycle(proto.getHeightOfFirstLock(), daoPhaseList);
+        return new Cycle(proto.getHeightOfFirstBlock(), daoPhaseList);
     }
 
 

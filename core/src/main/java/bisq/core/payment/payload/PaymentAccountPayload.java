@@ -17,10 +17,13 @@
 
 package bisq.core.payment.payload;
 
+import bisq.common.proto.ProtoUtil;
+
 import bisq.core.locale.Res;
 
 import bisq.common.consensus.UsedForTradeContractJson;
 import bisq.common.crypto.CryptoUtils;
+
 import bisq.common.proto.network.NetworkPayload;
 import bisq.common.util.JsonExclude;
 import bisq.common.util.Utilities;
@@ -33,6 +36,7 @@ import java.nio.charset.StandardCharsets;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -108,7 +112,7 @@ public abstract class PaymentAccountPayload implements NetworkPayload, UsedForTr
                 .setMaxTradePeriod(maxTradePeriod)
                 .setId(id);
 
-        builder.putAllExcludeFromJsonData(excludeFromJsonDataMap);
+        builder.addAllExcludeFromJsonData(ProtoUtil.toStringMapEntryList(excludeFromJsonDataMap));
 
         return builder;
     }

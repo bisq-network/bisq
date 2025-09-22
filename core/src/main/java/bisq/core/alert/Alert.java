@@ -24,6 +24,7 @@ import bisq.network.p2p.storage.payload.ProtectedStoragePayload;
 
 import bisq.common.app.Version;
 import bisq.common.crypto.Sig;
+import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.GetDataResponsePriority;
 import bisq.common.util.CollectionUtils;
 import bisq.common.util.ExtraDataMapValidator;
@@ -115,7 +116,7 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
                 .setVersion(version)
                 .setOwnerPubKeyBytes(ByteString.copyFrom(ownerPubKeyBytes))
                 .setSignatureAsBase64(signatureAsBase64);
-        Optional.ofNullable(getExtraDataMap()).ifPresent(builder::putAllExtraData);
+        Optional.ofNullable(extraDataMap).ifPresent(map -> builder.addAllExtraData(ProtoUtil.toStringMapEntryList(map)));
         return protobuf.StoragePayload.newBuilder().setAlert(builder).build();
     }
 
@@ -132,8 +133,7 @@ public final class Alert implements ProtectedStoragePayload, ExpirablePayload {
                 proto.getVersion(),
                 proto.getOwnerPubKeyBytes().toByteArray(),
                 proto.getSignatureAsBase64(),
-                CollectionUtils.isEmpty(proto.getExtraDataMap()) ?
-                        null : proto.getExtraDataMap());
+                CollectionUtils.isEmpty(proto.getExtraDataList()) ? null : ProtoUtil.toStringMap(proto.getExtraDataList()));
     }
 
 

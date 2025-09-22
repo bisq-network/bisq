@@ -20,6 +20,7 @@ package bisq.core.network.p2p.inventory.messages;
 import bisq.core.network.p2p.inventory.model.InventoryItem;
 
 import bisq.common.app.Version;
+import bisq.common.proto.ProtoUtil;
 import bisq.common.proto.network.NetworkEnvelope;
 
 import com.google.common.base.Enums;
@@ -59,13 +60,13 @@ public class GetInventoryResponse extends NetworkEnvelope {
         inventory.forEach((key, value) -> map.put(key.getKey(), value));
         return getNetworkEnvelopeBuilder()
                 .setGetInventoryResponse(protobuf.GetInventoryResponse.newBuilder()
-                        .putAllInventory(map))
+                        .addAllInventory(ProtoUtil.toStringMapEntryList(map)))
                 .build();
     }
 
     public static GetInventoryResponse fromProto(protobuf.GetInventoryResponse proto, int messageVersion) {
         // For protobuf we use a map with a string key
-        Map<String, String> map = proto.getInventoryMap();
+        Map<String, String> map = ProtoUtil.toStringMap(proto.getInventoryList());
         Map<InventoryItem, String> inventory = new HashMap<>();
         map.forEach((key, value) -> {
             Optional<InventoryItem> optional = Enums.getIfPresent(InventoryItem.class, key);
