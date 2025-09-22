@@ -7,10 +7,17 @@ getfundingaddresses - list BTC receiving address
 SYNOPSIS
 --------
 getfundingaddresses
+		[--only-funded=<true|false>]
 
 DESCRIPTION
 -----------
 Returns a list of receiving BTC addresses.
+
+OPTIONS
+-------
+--only-funded
+        If true, only addresses with a positive balance will be included.
+        Useful for filtering out empty addresses.
 
 EXAMPLES
 --------
