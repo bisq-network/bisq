@@ -927,6 +927,7 @@ message GetTransactionReply {
 }
 
 message GetFundingAddressesRequest {
+    optional bool only_funded = 1; // Return only addresses with positive balance.
 }
 
 message GetFundingAddressesReply {

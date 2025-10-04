@@ -161,7 +161,8 @@ class GrpcWalletsService extends WalletsImplBase {
     public void getFundingAddresses(GetFundingAddressesRequest req,
                                     StreamObserver<GetFundingAddressesReply> responseObserver) {
         try {
-            List<AddressBalanceInfo> balanceInfo = coreApi.getFundingAddresses();
+            boolean onlyFunded = req.getOnlyFunded();
+            List<AddressBalanceInfo> balanceInfo = coreApi.getFundingAddresses(onlyFunded);
             var reply = GetFundingAddressesReply.newBuilder()
                     .addAllAddressBalanceInfo(
                             balanceInfo.stream()
