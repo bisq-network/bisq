@@ -44,6 +44,7 @@ import bisq.proto.grpc.UnsetTxFeeRatePreferenceRequest;
 import bisq.proto.grpc.VerifyBsqSentToAddressRequest;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 
@@ -99,9 +100,18 @@ public class WalletsServiceRequest {
         return grpcStubs.priceService.getMarketPrice(request).getPrice();
     }
 
-    public List<AddressBalanceInfo> getFundingAddresses() {
+    public List<AddressBalanceInfo> getFundingAddresses(boolean onlyFunded) {
         var request = GetFundingAddressesRequest.newBuilder().build();
-        return grpcStubs.walletsService.getFundingAddresses(request).getAddressBalanceInfoList();
+        var addressBalances = grpcStubs.walletsService.getFundingAddresses(request)
+                .getAddressBalanceInfoList();
+        if (onlyFunded) {
+            return addressBalances.stream()
+                    .filter(address -> address.getBalance() > 0L)
+                    .collect(Collectors.toList());
+
+        } else {
+            return addressBalances;
+        }
     }
 
     public String getUnusedBsqAddress() {
