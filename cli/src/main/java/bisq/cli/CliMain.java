@@ -920,7 +920,7 @@ public class CliMain {
             stream.println();
             stream.format(rowFormat, gettransaction.name(), "--transaction-id=<transaction-id>", "Get transaction with id");
             stream.println();
-            stream.format(rowFormat, createoffer.name(), "--payment-account=<payment-account-id> \\", "Create and place an offer");
+            stream.format(rowFormat, createoffer.name(), "--payment-account-id=<payment-account-id> \\", "Create and place an offer");
             stream.format(rowFormat, "", "--direction=<buy|sell> \\", "");
             stream.format(rowFormat, "", "--currency-code=<currency-code> \\", "");
             stream.format(rowFormat, "", "--amount=<btc-amount> \\", "");
@@ -950,7 +950,7 @@ public class CliMain {
             stream.format(rowFormat, "", "--currency-code=<currency-code>", "");
             stream.println();
             stream.format(rowFormat, takeoffer.name(), "--offer-id=<offer-id> \\", "Take offer with id");
-            stream.format(rowFormat, "", "[--payment-account=<payment-account-id>]", "");
+            stream.format(rowFormat, "", "[--payment-account-id=<payment-account-id>]", "");
             stream.format(rowFormat, "", "[--fee-currency=<btc|bsq>]", "");
             stream.format(rowFormat, "", "[--amount=<min-btc-amount >= amount <= btc-amount>]", "");
             stream.println();

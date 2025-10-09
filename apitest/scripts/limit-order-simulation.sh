@@ -115,7 +115,7 @@ done
 
 printdate "ALICE: Creating $DIRECTION $CURRENCY_CODE offer with payment acct $ALICE_ACCT_ID."
 CMD="$CLI_BASE --port=$ALICE_PORT createoffer"
-CMD+=" --payment-account=$ALICE_ACCT_ID"
+CMD+=" --payment-account-id=$ALICE_ACCT_ID"
 CMD+=" --direction=$DIRECTION"
 CMD+=" --currency-code=$CURRENCY_CODE"
 CMD+=" --amount=$AMOUNT"
