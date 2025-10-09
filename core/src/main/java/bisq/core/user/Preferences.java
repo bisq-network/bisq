@@ -195,7 +195,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
                        Config config,
                        FeeService feeService,
                        LocalBitcoinNode localBitcoinNode,
-                       @Named(Config.BTC_NODES) String btcNodesFromOptions,
+                       @Named(Config.BTC_NODES) List<String> btcNodesFromOptions,
                        @Named(Config.REFERRAL_ID) String referralId,
                        @Named(Config.FULL_DAO_NODE) boolean fullDaoNode,
                        @Named(Config.IS_BM_FULL_NODE) boolean fullAccountingNode,
@@ -208,7 +208,7 @@ public final class Preferences implements PersistedDataHost, BridgeAddressProvid
         this.config = config;
         this.feeService = feeService;
         this.localBitcoinNode = localBitcoinNode;
-        this.btcNodesFromOptions = btcNodesFromOptions;
+        this.btcNodesFromOptions = String.join(",", btcNodesFromOptions);
         this.referralIdFromOptions = referralId;
         this.fullDaoNodeFromOptions = fullDaoNode;
         this.fullAccountingNodeFromOptions = fullAccountingNode;
