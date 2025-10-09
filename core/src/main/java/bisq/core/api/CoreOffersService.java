@@ -17,6 +17,7 @@
 
 package bisq.core.api;
 
+import bisq.core.api.exception.CannotTakeOfferException;
 import bisq.core.api.exception.NotFoundException;
 import bisq.core.monetary.Altcoin;
 import bisq.core.monetary.Price;
@@ -151,33 +152,28 @@ class CoreOffersService {
     }
 
     Optional<Offer> findAvailableOffer(String id) throws IllegalStateException {
-        var optionalOffer = offerBookService.getOffers().stream()
+        return offerBookService.getOffers().stream()
                 .filter(o -> o.getId().equals(id))
+                .filter(this::checkIsNotMyOffer)
+                .filter(this::checkCanTakeOffer)
                 .findAny();
-        if (optionalOffer.isPresent()) {
-            var offer = optionalOffer.get();
-            if (offer.isMyOffer(keyRing)) {
-                throw new IllegalStateException(
-                        format(
-                                "Offer id '%s' is not available to take: ITS_MY_OWN_OFFER",
-                                id
-                        )
-                );
-            }
-            var inquiryResult = offerFilterService.canTakeOffer(offer, coreContext.isApiUser());
-            if (inquiryResult.isValid()) {
-                return optionalOffer;
-            } else {
-                throw new IllegalStateException(
-                        format(
-                                "Offer id '%s' is not available to take: %s",
-                                id,
-                                inquiryResult.name()
-                        )
-                );
-            }
+    }
+
+    private boolean checkIsNotMyOffer(Offer offer) {
+        if (offer.isMyOffer(keyRing)) {
+            throw new CannotTakeOfferException(format("You can't take your own offer ('%s').", offer.getId()));
         }
-        return Optional.empty();
+        return true;
+    }
+
+    private boolean checkCanTakeOffer(Offer offer) {
+        var canTakeOffer = offerFilterService.canTakeOffer(offer, coreContext.isApiUser());
+        if (!canTakeOffer.isValid()) {
+            throw new CannotTakeOfferException(format("You can't take this offer ('%s') because of the following " +
+                            "reason: %s.",
+                    offer.getId(), canTakeOffer.name()));
+        }
+        return true;
     }
 
     OpenOffer getMyOffer(String id) {
@@ -198,41 +194,19 @@ class CoreOffersService {
     }
 
     Optional<Offer> findAvailableBsqSwapOffer(String id) {
-        var optionalOffer = offerBookService.getOffers().stream()
+        return offerBookService.getOffers().stream()
                 .filter(o -> o.getId().equals(id))
+                .filter(this::checkIsNotMyOffer)
+                .filter(this::checkIsBsqOffer)
+                .filter(this::checkCanTakeOffer)
                 .findAny();
-        if (optionalOffer.isPresent()) {
-            var offer = optionalOffer.get();
-            if (offer.isMyOffer(keyRing)) {
-                throw new IllegalStateException(
-                        format(
-                                "Offer id '%s' is not available to take: ITS_MY_OWN_OFFER",
-                                id
-                        )
-                );
-            }
-            if (!offer.isBsqSwapOffer()) {
-                throw new IllegalStateException(
-                        format(
-                                "Offer id '%s' is not available to take: IS_NOT_BSQ_SWAP_OFFER",
-                                id
-                        )
-                );
-            }
-            var inquiryResult = offerFilterService.canTakeOffer(offer, coreContext.isApiUser());
-            if (inquiryResult.isValid()) {
-                return optionalOffer;
-            } else {
-                throw new IllegalStateException(
-                        format(
-                                "Offer id '%s' is not available to take: %s",
-                                id,
-                                inquiryResult.name()
-                        )
-                );
-            }
+    }
+
+    private boolean checkIsBsqOffer(Offer offer) {
+        if (!offer.isBsqSwapOffer()) {
+            throw new CannotTakeOfferException(format("You can't take a non-BSQ offer ('%s')", offer.getId()));
         }
-        return Optional.empty();
+        return true;
     }
 
     Offer getMyBsqSwapOffer(String id) {
