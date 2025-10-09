@@ -78,6 +78,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -201,7 +202,7 @@ class CoreWalletsService {
                 btcWalletService.isAddressUnused(address));
     }
 
-    List<AddressBalanceInfo> getFundingAddresses() {
+    List<AddressBalanceInfo> getFundingAddresses(boolean onlyFunded) {
         verifyWalletsAreAvailable();
         verifyEncryptedWalletIsUnlocked();
 
@@ -231,7 +232,12 @@ class CoreWalletsService {
             addressStrings.add(newZeroBalanceAddress.getAddressString());
         }
 
-        return addressStrings.stream().map(address ->
+        Stream<String> resultStream = addressStrings.stream();
+        if (onlyFunded) {
+            resultStream = resultStream.filter(address -> balances.getUnchecked(address) > 0);
+        }
+
+        return resultStream.map(address ->
                         new AddressBalanceInfo(address,
                                 balances.getUnchecked(address),
                                 getNumConfirmationsForMostRecentTransaction(address),

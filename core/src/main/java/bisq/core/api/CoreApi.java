@@ -388,8 +388,8 @@ public class CoreApi {
         return walletsService.getAddressBalanceInfo(addressString);
     }
 
-    public List<AddressBalanceInfo> getFundingAddresses() {
-        return walletsService.getFundingAddresses();
+    public List<AddressBalanceInfo> getFundingAddresses(boolean onlyFunded) {
+        return walletsService.getFundingAddresses(onlyFunded);
     }
 
     public String getUnusedBsqAddress() {
