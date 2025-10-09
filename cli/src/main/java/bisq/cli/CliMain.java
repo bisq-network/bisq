@@ -472,17 +472,6 @@ public class CliMain {
                     new TableBuilder(OFFER_TBL, offer).build().print(out);
                     return;
                 }
-                case getmyoffer: {
-                    var opts = new OfferIdOptionParser(args).parse();
-                    if (opts.isForHelp()) {
-                        out.println(client.getMethodHelp(method));
-                        return;
-                    }
-                    var offerId = opts.getOfferId();
-                    var offer = client.getMyOffer(offerId);
-                    new TableBuilder(OFFER_TBL, offer).build().print(out);
-                    return;
-                }
                 case getoffers: {
                     var opts = new GetOffersOptionParser(args).parse();
                     if (opts.isForHelp()) {
@@ -945,8 +934,6 @@ public class CliMain {
             stream.format(rowFormat, canceloffer.name(), "--offer-id=<offer-id>", "Cancel offer with id");
             stream.println();
             stream.format(rowFormat, getoffer.name(), "--offer-id=<offer-id>", "Get current offer with id");
-            stream.println();
-            stream.format(rowFormat, getmyoffer.name(), "--offer-id=<offer-id>", "Get my current offer with id");
             stream.println();
             stream.format(rowFormat, getoffers.name(), "--direction=<buy|sell> \\", "Get current offers");
             stream.format(rowFormat, "", "--currency-code=<currency-code>", "");

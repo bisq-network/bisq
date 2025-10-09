@@ -150,10 +150,6 @@ public class CoreApi {
         return coreOffersService.findAvailableOffer(id);
     }
 
-    public OpenOffer getMyOffer(String id) {
-        return coreOffersService.getMyOffer(id);
-    }
-
     public Optional<OpenOffer> findMyOpenOffer(String id) {
         return coreOffersService.findMyOpenOffer(id);
     }
