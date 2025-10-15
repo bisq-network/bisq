@@ -30,11 +30,14 @@ import bisq.core.proto.persistable.CorePersistenceProtoResolver;
 import bisq.core.trade.TradeModule;
 import bisq.core.user.Preferences;
 import bisq.core.user.User;
+import bisq.core.util.FormattingUtils;
+import bisq.core.util.coin.CoinFormatter;
+import bisq.core.util.coin.ImmutableCoinFormatter;
 
 import bisq.network.crypto.EncryptionServiceModule;
 import bisq.network.p2p.P2PModule;
-import bisq.network.p2p.network.BridgeAddressProvider;
 import bisq.network.p2p.network.BanFilter;
+import bisq.network.p2p.network.BridgeAddressProvider;
 import bisq.network.p2p.seed.SeedNodeRepository;
 
 import bisq.common.ClockWatcher;
@@ -76,6 +79,9 @@ public class ModuleForAppWithP2p extends AppModule {
 
         bind(SeedNodeRepository.class).to(DefaultSeedNodeRepository.class).in(Singleton.class);
         bind(BanFilter.class).to(CoreBanFilter.class).in(Singleton.class);
+
+        CoinFormatter btcFormatter = new ImmutableCoinFormatter(config.networkParameters.getMonetaryFormat());
+        bind(CoinFormatter.class).annotatedWith(named(FormattingUtils.BTC_FORMATTER_KEY)).toInstance(btcFormatter);
 
         bind(File.class).annotatedWith(named(STORAGE_DIR)).toInstance(config.storageDir);
         bind(File.class).annotatedWith(named(KEY_STORAGE_DIR)).toInstance(config.keyStorageDir);
