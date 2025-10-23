@@ -5,8 +5,8 @@
    ```sh
    git clone https://github.com/bisq-network/bisq
    # if you intend to do testing on the latest release, you can clone the respective branch selectively, without downloading the whole repository
-   # for the 1.9.18 release, you would do it like this:
-   git clone --recurse-submodules --branch release/v1.9.19 https://github.com/bisq-network/bisq
+   # for the 1.9.22 release, you would do it like this:
+   git clone --recurse-submodules --branch release/v1.9.22 https://github.com/bisq-network/bisq
    cd bisq
    ```
 
