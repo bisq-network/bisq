@@ -355,7 +355,7 @@ public class PersistenceManager<T extends PersistableEnvelope> {
         long ts = System.currentTimeMillis();
         try (FileInputStream fileInputStream = new FileInputStream(storageFile)) {
             protobuf.PersistableEnvelope proto = protobuf.PersistableEnvelope.parseDelimitedFrom(fileInputStream);
-            //noinspection unchecked
+            @SuppressWarnings("unchecked")
             T persistableEnvelope = (T) persistenceProtoResolver.fromProto(proto);
             log.info("Reading {} completed in {} ms", fileName, System.currentTimeMillis() - ts);
             return persistableEnvelope;

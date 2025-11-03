@@ -31,6 +31,7 @@ import java.util.Set;
  * {@link joptsimple.ArgumentAcceptingOptionSpec#ofType(Class)} when the type in question
  * is an enum.
  */
+@SuppressWarnings("rawtypes")
 class EnumValueConverter implements ValueConverter<Enum> {
 
     private final Class<? extends Enum> enumType;
@@ -50,6 +51,7 @@ class EnumValueConverter implements ValueConverter<Enum> {
     public Enum convert(String value) {
         Set<String> candidates = Sets.newHashSet(value, value.toUpperCase(), value.toLowerCase());
         for (String candidate : candidates) {
+            @SuppressWarnings("unchecked")
             Optional<? extends Enum> result = Enums.getIfPresent(enumType, candidate);
             if (result.isPresent())
                 return result.get();
