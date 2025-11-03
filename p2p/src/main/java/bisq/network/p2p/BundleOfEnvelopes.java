@@ -94,6 +94,7 @@ public final class BundleOfEnvelopes extends BroadcastMessage implements Extende
     // CapabilityRequiringPayload
     ///////////////////////////////////////////////////////////////////////////////////////////
 
+    @SuppressWarnings("deprecation")
     @Override
     public Capabilities getRequiredCapabilities() {
         return new Capabilities(Capability.BUNDLE_OF_ENVELOPES);
