@@ -115,6 +115,7 @@ public class CoreNetworkProtoResolver extends CoreProtoResolver implements Netwo
         this.clock = clock;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public NetworkEnvelope fromProto(protobuf.NetworkEnvelope proto) throws ProtobufferException {
         if (proto != null) {
