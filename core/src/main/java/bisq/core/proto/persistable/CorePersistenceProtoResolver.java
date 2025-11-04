@@ -78,6 +78,7 @@ public class CorePersistenceProtoResolver extends CoreProtoResolver implements P
         this.networkProtoResolver = networkProtoResolver;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public PersistableEnvelope fromProto(protobuf.PersistableEnvelope proto) {
         if (proto != null) {
