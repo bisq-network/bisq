@@ -31,8 +31,8 @@ public class TradeTaskRunner extends TaskRunner<TradeModel> {
         super(sharedModel, getSharedModelClass(sharedModel), resultHandler, errorMessageHandler);
     }
 
+    @SuppressWarnings("unchecked")
     static Class<TradeModel> getSharedModelClass(TradeModel sharedModel) {
-        //noinspection unchecked
         return (Class<TradeModel>) sharedModel.getClass().getSuperclass().getSuperclass();
     }
 }
