@@ -281,6 +281,7 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
         log.info("Param {} for rawtransaction request {}", param, this);
         String json = httpClient.get(param, "User-Agent", "bisq/" + Version.VERSION);
         try {
+            @SuppressWarnings("deprecation")
             String prettyJson = new GsonBuilder().setPrettyPrinting().create().toJson(new JsonParser().parse(json));
             log.info("Response json from rawtransaction request {}\n{}", this, prettyJson);
         } catch (Throwable error) {
@@ -302,6 +303,7 @@ class XmrTxProofRequest implements AssetTxProofRequest<XmrTxProofRequest.Result>
         log.info("Param {} for {}", param, this);
         String json = httpClient.get(param, "User-Agent", "bisq/" + Version.VERSION);
         try {
+            @SuppressWarnings("deprecation")
             String prettyJson = new GsonBuilder().setPrettyPrinting().create().toJson(new JsonParser().parse(json));
             log.info("Response json from {}\n{}", this, prettyJson);
         } catch (Throwable error) {
