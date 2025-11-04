@@ -55,6 +55,7 @@ public final class NewDaoStateHashMessage extends NewStateHashMessage<DaoStateHa
         return new NewDaoStateHashMessage(DaoStateHash.fromProto(proto.getStateHash()), messageVersion);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public Capabilities getRequiredCapabilities() {
         return new Capabilities(Capability.DAO_STATE);
