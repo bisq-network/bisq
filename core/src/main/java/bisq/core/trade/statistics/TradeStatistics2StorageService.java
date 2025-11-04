@@ -90,6 +90,7 @@ public class TradeStatistics2StorageService extends MapStoreService<TradeStatist
         return store.getMap();
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public boolean canHandle(PersistableNetworkPayload payload) {
         return payload instanceof TradeStatistics2;
